@@ -6,8 +6,9 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import Main from 'my-remote/App'
-
+import RemoteCard1 from 'my-remote/App'
+import RemoteCard2 from 'my-remote-2/App'
+import RemoteCard3 from 'my-remote-3/App'
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -38,7 +39,9 @@ function App() {
             
           </Typography>
         </Container>
-       <Main />
+       <RemoteCard1 />
+       <RemoteCard2 />
+       <RemoteCard3 />
       </Box>
     </ThemeProvider>
   );

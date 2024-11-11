@@ -17,9 +17,13 @@ async function createRemoteCommand(name, options) {
       throw new Error('Invalid MUI version format. Expected x.y.z');
     }
 
-    const port = parseInt(options.port || '3001', 10);
-    if (isNaN(port) || port < 1 || port > 65535) {
-      throw new Error('Invalid port number. Must be between 1 and 65535');
+    // Parse and validate port
+    let port = 3001; // default port
+    if (options.port) {
+      port = parseInt(options.port, 10);
+      if (isNaN(port) || port < 1 || port > 65535) {
+        throw new Error('Invalid port number. Must be between 1 and 65535');
+      }
     }
 
     // Create target directory if it doesn't exist
