@@ -1,0 +1,23 @@
+{
+  "name": "my-remote",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx @rspack/cli serve --mode development",
+    "build": "npx @rspack/cli build",
+    "serve": "npx @rspack/cli serve --mode production"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "5.15.0",
+    "@mui/system": "5.15.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@rspack/cli": "latest",
+    "@rspack/core": "latest",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  }
+}

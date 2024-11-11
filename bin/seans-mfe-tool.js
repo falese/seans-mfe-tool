@@ -2,6 +2,7 @@
 
 const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
+const { createRemoteCommand } = require('../src/commands/create-remote');
 const { version } = require('../package.json');
 
 program
@@ -16,6 +17,16 @@ program
   .option('-r, --remotes <remotes>', 'Remote MFEs configuration as JSON string')
   .action((name, options) => {
     createShellCommand(name, options);
+  });
+
+program
+  .command('remote')
+  .description('Create a new remote MFE')
+  .argument('<name>', 'Remote MFE name')
+  .option('-p, --port <port>', 'Port number for the remote MFE', '3001')
+  .option('-m, --mui-version <version>', 'Material UI version', '5.15.0')
+  .action((name, options) => {
+    createRemoteCommand(name, options);
   });
 
 program
