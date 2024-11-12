@@ -1,108 +1,68 @@
-# Sean's MFE Tool
+# Module Federation CLI Tool
 
-A CLI tool for creating and managing Module Federation applications with React and Material UI.
+A CLI tool for creating and managing Module Federation applications with React and MUI.
 
 ## Features
 
 - Create shell (container) applications
-- Create remote MFEs with configurable Material UI versions
-- RSpack-based build configuration
-- Module Federation setup out of the box
+- Create remote MFEs
+- Deploy applications to development and production environments
+- Native rspack support for Module Federation
 
-## Installation
+## Commands
 
-```bash
-npm install -g seans-mfe-tool
-```
-
-## Usage
-
-### Creating a Shell Application
+### Create Shell Application
 
 ```bash
-seans-mfe-tool shell my-shell-app --port 3000
+npx seans-mfe-tool shell my-shell-app --port 3000
 ```
 
-Options:
-
-- `--port`: Port number for the shell application (default: 3000)
-- `--remotes`: JSON string containing remote MFE configurations
-
-### Creating a Remote MFE
+### Create Remote MFE
 
 ```bash
-seans-mfe-tool remote my-remote-app --port 3001 --mui-version 5.15.0
+npx seans-mfe-tool remote my-remote-app --port 3001 --mui-version 5.15.0
 ```
 
-Options:
+### Deploy Applications
 
-- `--port`: Port number for the remote MFE (default: 3001)
-- `--mui-version`: Material UI version to use (default: 5.15.0)
-
-### Initializing a Workspace
+#### Development Deployment
 
 ```bash
-seans-mfe-tool init my-workspace --package-manager pnpm
+# Deploy shell application
+npx seans-mfe-tool deploy my-shell-app --type shell --env development --port 8080
+
+# Deploy remote MFE
+npx seans-mfe-tool deploy my-remote-app --type remote --env development --port 8081
 ```
 
-Options:
-
-- `--package-manager`: Package manager to use (npm, yarn, or pnpm)
-
-## Project Structure
-
-When creating a remote MFE, the following structure is generated:
-
-```
-my-remote-app/
-├── public/
-│   └── index.html
-├── src/
-│   ├── App.jsx
-│   └── bootstrap.jsx
-├── package.json
-└── rspack.config.js
-```
-
-## Features of Remote MFEs
-
-- RSpack-based build configuration
-- Module Federation setup
-- Material UI integration with configurable versions
-- Version display component
-- Theme support
-- Development and production builds
-
-## Configuration
-
-### RSpack Configuration
-
-The RSpack configuration includes:
-
-- Module Federation setup
-- Shared dependencies configuration
-- Development server settings
-- SWC loader for React
-
-### Material UI Setup
-
-- Configurable Material UI version
-- Theme provider setup
-- CSS baseline integration
-
-## Development
+#### Production Deployment
 
 ```bash
-# Start development server
-npm start
-
-# Create production build
-npm run build
-
-# Serve production build
-npm run serve
+# Deploy to production (requires Docker registry)
+npx seans-mfe-tool deploy my-app --type shell --env production --registry registry.example.com
 ```
 
-## License
+## Docker Deployment
 
-MIT
+The tool supports Docker-based deployment for both development and production environments:
+
+### Development
+
+- Builds the application and creates a Docker image
+- Runs the container locally with port mapping
+- Supports hot reloading and development features
+
+### Production
+
+- Optimized multi-stage Docker builds
+- Pushes images to specified registry
+- Nginx-based serving with optimized configuration
+- CORS support for Module Federation
+- Static asset caching
+- Security headers
+
+## Requirements
+
+- Node.js 18 or higher
+- Docker
+- npm or pnpm

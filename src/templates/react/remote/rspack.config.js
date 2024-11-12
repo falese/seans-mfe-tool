@@ -56,7 +56,7 @@ module.exports = {
       name: '__EXPOSED_NAME__',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App',
+        './App': './src/app.jsx',
       },
       shared: {
         react: { 
