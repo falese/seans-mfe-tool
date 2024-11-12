@@ -16,22 +16,26 @@ const theme = createTheme({
   },
 });
 
-const mount = (containerId) => {
+const mount = async (containerId) => {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) return null;
 
   const root = createRoot(container);
   root.render(
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <React.StrictMode>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </React.StrictMode>
   );
+  return root;
 };
 
-// Mount immediately if we're running in isolation
+// Mount immediately if we're running in standalone mode (not loaded via Module Federation)
 if (!window.__POWERED_BY_FEDERATION__) {
   mount('root');
 }
 
+export default App;
 export { mount };

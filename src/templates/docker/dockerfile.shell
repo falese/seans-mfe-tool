@@ -1,0 +1,40 @@
+# Build stage
+FROM node:18-alpine as build
+
+WORKDIR /usr/src/app
+
+# Debug: Print working directory and list contents before copy
+RUN pwd && ls -la
+
+# First copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source files preserving directory structure
+COPY . .
+
+# Debug: Print full directory structure
+RUN echo "Full directory structure:" && \
+    find . -type f | sort
+
+# Debug: Check if App.jsx exists
+RUN find . -name "App.jsx"
+
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Copy build output from previous stage
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Debug: List contents of nginx html directory
+RUN ls -la /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

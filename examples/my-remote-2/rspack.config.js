@@ -13,7 +13,7 @@ module.exports = {
     extensions: ['.jsx', '.js', '.json'],
   },
   devServer: {
-    port: 3002,
+    port: 3001,
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
@@ -53,7 +53,7 @@ module.exports = {
       publicPath: '/'
     }),
     new ModuleFederationPlugin({
-      name: 'myremote',
+      name: 'myremote2',
       filename: 'remoteEntry.js',
       exposes: {
         './App': './src/App.jsx',
@@ -71,12 +71,12 @@ module.exports = {
         },
         '@mui/material': { 
           singleton: false, 
-          requiredVersion: '5.15.0',
+          requiredVersion: '5.16.1',
           eager: false
         },
         '@mui/system': { 
           singleton: false, 
-          requiredVersion: '5.15.0',
+          requiredVersion: '5.16.1',
           eager: false
         },
         '@emotion/react': { 

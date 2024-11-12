@@ -3,6 +3,7 @@
 const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
 const { createRemoteCommand } = require('../src/commands/create-remote');
+const { deployCommand } = require('../src/commands/deploy');
 const { version } = require('../package.json');
 
 program
@@ -27,6 +28,18 @@ program
   .option('-m, --mui-version <version>', 'Material UI version', '5.15.0')
   .action((name, options) => {
     createRemoteCommand(name, options);
+  });
+
+program
+  .command('deploy')
+  .description('Deploy a shell or remote application')
+  .argument('<name>', 'Application name')
+  .requiredOption('-t, --type <type>', 'Application type (shell or remote)')
+  .option('-e, --env <environment>', 'Deployment environment (development or production)', 'development')
+  .option('-p, --port <port>', 'Port number for development deployment', '8080')
+  .option('-r, --registry <url>', 'Docker registry URL for production deployment')
+  .action((name, options) => {
+    deployCommand({ name, ...options });
   });
 
 program

@@ -13,7 +13,7 @@ module.exports = {
     extensions: ['.jsx', '.js', '.json'],
   },
   devServer: {
-    port: 3002,
+    port: 3005,
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
@@ -53,7 +53,7 @@ module.exports = {
       publicPath: '/'
     }),
     new ModuleFederationPlugin({
-      name: 'myremote',
+      name: 'myremote3',
       filename: 'remoteEntry.js',
       exposes: {
         './App': './src/App.jsx',

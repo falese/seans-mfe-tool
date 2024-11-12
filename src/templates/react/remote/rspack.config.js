@@ -56,15 +56,39 @@ module.exports = {
       name: '__EXPOSED_NAME__',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App',
+        './App': './src/App.jsx',
       },
       shared: {
-        react: { singleton: true, requiredVersion: '^18.2.0' },
-        'react-dom': { singleton: true, requiredVersion: '^18.2.0' },
-        '@mui/material': { singleton: false, requiredVersion: '__MUI_VERSION__' },
-        '@mui/system': { singleton: false, requiredVersion: '__MUI_VERSION__' },
-        '@emotion/react': { singleton: true, requiredVersion: '^11.11.1' },
-        '@emotion/styled': { singleton: true, requiredVersion: '^11.11.0' }
+        react: { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        'react-dom': { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        '@mui/material': { 
+          singleton: false, 
+          requiredVersion: '__MUI_VERSION__',
+          eager: false
+        },
+        '@mui/system': { 
+          singleton: false, 
+          requiredVersion: '__MUI_VERSION__',
+          eager: false
+        },
+        '@emotion/react': { 
+          singleton: true, 
+          requiredVersion: '^11.11.1',
+          eager: false
+        },
+        '@emotion/styled': { 
+          singleton: true, 
+          requiredVersion: '^11.11.0',
+          eager: false
+        }
       },
     }),
   ]
