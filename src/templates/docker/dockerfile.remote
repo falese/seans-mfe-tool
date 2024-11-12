@@ -21,7 +21,6 @@ RUN echo "Full directory structure:" && \
 RUN find . -name "App.jsx"
 
 
-# Rest of your Dockerfile remains the same...
 # Build the application
 RUN npm run build
 

@@ -65,9 +65,9 @@ module.exports = {
       name: "shell",
       filename: "remoteEntry.js",
       remotes: {
-        "my-remote": "myremote@http://localhost:3002/remoteEntry.js",
-        "my-remote-2": "myremote2@http://localhost:3001/remoteEntry.js",
-        "my-remote-3": "myremote3@http://localhost:3005/remoteEntry.js"
+        "my-remote": "myremote@http://localhost:8081/remoteEntry.js",
+        "my-remote-2": "myremote2@http://localhost:8082/remoteEntry.js",
+        "my-remote-3": "myremote3@http://localhost:8083/remoteEntry.js"
       },
       shared: {
         react: { singleton: true, eager: true },
