@@ -8,6 +8,7 @@ import {
   Paper,
   Divider 
 } from '@mui/material';
+import ROIDashboard from './dashboard';
 
 const App = () => {
   const theme = useTheme();
@@ -50,6 +51,15 @@ const App = () => {
               Last Updated: {new Date().toLocaleString()}
             </Typography>
           </Box>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Business Case Dashboard
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <ROIDashboard />
         </CardContent>
       </Card>
     </Box>
