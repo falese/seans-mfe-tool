@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const logger = require('../../utils/logger');
+const logger = require('../utils/logger');
 
 async function clearCollections() {
     logger.info('Clearing existing data...');
@@ -27,7 +27,7 @@ async function seed() {
         // Ensure we have a database connection
         if (mongoose.connection.readyState !== 1) {
             logger.info('Waiting for database connection...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 30000));
             if (mongoose.connection.readyState !== 1) {
                 throw new Error('Database connection not ready');
             }
@@ -39,7 +39,7 @@ async function seed() {
         await clearCollections();
         
         // Load all models
-        const models = require('../../models');
+        const models = require('../models');
         
         // Get example data from OpenAPI spec
         const exampleData = require('../seeds/examples');

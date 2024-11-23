@@ -1,0 +1,267 @@
+{
+	"info": {
+		"_postman_id": "a2b2ffcd-adfa-4dc4-a890-4e84add4a26e",
+		"name": "Cost Benefit Analysis API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "API for managing phased cost-benefit analysis data for the seans-mfe-tool project"
+	},
+	"item": [
+		{
+			"name": "Phase Metrics",
+			"item": [
+				{
+					"name": "Get all phase metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3033/phase-metrics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"phase-metrics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new phase metrics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phaseId\": \"current\",\n  \"teamSize\": 17,\n  \"newHires\": 3,\n  \"personnelCost\": 2833339,\n  \"transitionCost\": 67709,\n  \"totalCost\": 2833339,\n  \"benefitsRealized\": 100,\n  \"quarterBenefits\": 5887805,\n  \"quarterRoi\": 108\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3033/phase-metrics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"phase-metrics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get phase metrics by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3033/phase-metrics/current",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"phase-metrics",
+								"current"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update phase metrics",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phaseId\": \"current\",\n  \"teamSize\": 17,\n  \"newHires\": 3,\n  \"personnelCost\": 2833339,\n  \"transitionCost\": 67709,\n  \"totalCost\": 2833339,\n  \"benefitsRealized\": 100,\n  \"quarterBenefits\": 5887805,\n  \"quarterRoi\": 108\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3033/phase-metrics/current",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"phase-metrics",
+								"current"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Benefits Breakdown",
+			"item": [
+				{
+					"name": "Get all benefits breakdown data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3033/benefits-breakdown",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"benefits-breakdown"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new benefits breakdown entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phaseId\": \"current\",\n  \"devTimeSavings\": 1209343,\n  \"supportEfficiency\": 38462,\n  \"timeToMarket\": 4640000,\n  \"totalBenefits\": 5887805\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3033/benefits-breakdown",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"benefits-breakdown"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cumulative ROI",
+			"item": [
+				{
+					"name": "Get all cumulative ROI data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3033/cumulative-roi",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"cumulative-roi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new cumulative ROI entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 1,\n  \"period\": \"Q1\",\n  \"costs\": 3401049,\n  \"benefits\": 1471951,\n  \"net\": -1929098,\n  \"cumulativeRoi\": -56.7\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3033/cumulative-roi",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"cumulative-roi"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Performance Gate",
+			"item": [
+				{
+					"name": "Get all performance gate metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3033/performance-gate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"performance-gate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new performance gate entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phase\": \"Core seans-mfe-tool\",\n  \"teamSize\": 20,\n  \"teamsOnboarded\": 3,\n  \"automation\": 25,\n  \"supportReduction\": 25\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3033/performance-gate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3033",
+							"path": [
+								"performance-gate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

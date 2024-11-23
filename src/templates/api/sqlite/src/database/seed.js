@@ -1,4 +1,4 @@
-// src/templates/api/mongodb/src/database/seed.js
+
 
 const logger = require('../utils/logger');
 const { connectDatabase, disconnectDatabase } = require('./index');

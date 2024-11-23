@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js --watch src",
+    "dev": "nodemon src/index.js",
     "test": "jest",
     "lint": "eslint .",
+    "db:setup": "node src/database/setup.js",
     "db:seed": "node src/database/seed.js",
+    "db:migrate": "sequelize-cli db:migrate",
     "db:reset": "node src/database/reset.js"
   },
   "dependencies": {
