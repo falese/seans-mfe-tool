@@ -4,6 +4,7 @@ const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
 const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
+const { createApiCommand } = require('../src/commands/create-api')
 const { version } = require('../package.json');
 
 program
@@ -30,15 +31,22 @@ program
     createRemoteCommand(name, options);
   });
 
-program
+  program
   .command('deploy')
-  .description('Deploy a shell or remote application')
+  .description('Deploy an application')
   .argument('<name>', 'Application name')
-  .requiredOption('-t, --type <type>', 'Application type (shell or remote)')
+  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
   .option('-e, --env <environment>', 'Deployment environment (development or production)', 'development')
   .option('-p, --port <port>', 'Port number for development deployment', '8080')
   .option('-r, --registry <url>', 'Docker registry URL for production deployment')
+  .option('-m, --memory <limit>', 'Memory limit for API containers', '256Mi')
+  .option('-c, --cpu <limit>', 'CPU limit for API containers', '0.5')
+  .option('--replicas <count>', 'Number of API replicas', '2')
   .action((name, options) => {
+    if (!['shell', 'remote', 'api'].includes(options.type)) {
+      console.error('Type must be shell, remote, or api');
+      process.exit(1);
+    }
     deployCommand({ name, ...options });
   });
 
@@ -52,4 +60,35 @@ program
     console.log('Options:', options);
   });
 
+  program
+  .command('api')
+  .description('Create a new API from OpenAPI specification')
+  .argument('<name>', 'API name')
+  .option('-p, --port <port>', 'Port number for the API', '3001')
+  .option('-s, --spec <path>', 'Path to OpenAPI specification file or URL', 'openapi.yaml')
+  .option('-d, --database <type>', 'Database type to use (mongodb or sqlite)', 'sqlite')
+  .addHelpText('after', `
+Examples:
+  $ seans-mfe-tool api my-store --spec store.yaml --database mongodb
+  $ seans-mfe-tool api pet-store --spec https://petstore3.swagger.io/api/v3/openapi.json --database sqlite
+
+Database Options:
+  mongodb    Uses MongoDB with MongoDB Memory Server for development
+  sqlite     Uses SQLite with file-based storage (default)
+
+Notes:
+  - MongoDB option will use in-memory database for development and testing
+  - SQLite option will create a local database file in src/data/
+  - Both options can be configured for production use through environment variables`)
+  .action((name, options) => {
+    // Validate database option
+    const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
+    if (!validDatabases.includes(options.database.toLowerCase())) {
+      console.error(chalk.red(`Error: Invalid database type '${options.database}'.`));
+      console.log(chalk.blue('Valid options are: mongodb, sqlite'));
+      process.exit(1);
+    }
+    
+    createApiCommand(name, options);
+  });
 program.parse(process.argv);

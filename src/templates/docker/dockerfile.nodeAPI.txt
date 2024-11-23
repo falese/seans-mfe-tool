@@ -1,0 +1,36 @@
+FROM node:18-alpine as builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM node:18-alpine
+
+RUN apk add --no-cache curl && \
+  addgroup -S appgroup && \
+  adduser -S appuser -G appgroup && \
+  mkdir -p /app/logs && \
+  chown -R appuser:appgroup /app
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=appuser:appgroup . .
+
+ENV NODE_ENV=production \
+  TZ=UTC \
+  NPM_CONFIG_LOGLEVEL=warn
+
+ARG PORT
+ENV PORT=$PORT
+
+USER appuser
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:$PORT/health || exit 1
+
+VOLUME ["/app/logs"]
+
+EXPOSE $PORT
+
+CMD ["node", "src/index.js"]

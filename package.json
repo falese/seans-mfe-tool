@@ -23,6 +23,7 @@
     "seans-mfe-tool": "./bin/seans-mfe-tool.js"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "fs-extra": "^11.2.0",

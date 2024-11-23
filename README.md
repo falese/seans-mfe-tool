@@ -1,68 +1,54 @@
-# Module Federation CLI Tool
+# MFE Development Tool
 
-A CLI tool for creating and managing Module Federation applications with React and MUI.
-
-## Features
-
-- Create shell (container) applications
-- Create remote MFEs
-- Deploy applications to development and production environments
-- Native rspack support for Module Federation
+A CLI tool for creating and managing Micro-Frontend applications using Module Federation.
 
 ## Commands
 
 ### Create Shell Application
 
 ```bash
-npx seans-mfe-tool shell my-shell-app --port 3000
+mfe shell <name> [options]
 ```
+
+Options:
+
+- `-p, --port <port>`: Port number (default: 3000)
+- `-r, --remotes <remotes>`: Remote MFEs configuration
 
 ### Create Remote MFE
 
 ```bash
-npx seans-mfe-tool remote my-remote-app --port 3001 --mui-version 5.15.0
+mfe remote <name> [options]
 ```
 
-### Deploy Applications
+Options:
 
-#### Development Deployment
+- `-p, --port <port>`: Port number (default: 3001)
+- `-m, --mui-version <version>`: Material UI version (default: 5.15.0)
+
+### Create API
 
 ```bash
-# Deploy shell application
-npx seans-mfe-tool deploy my-shell-app --type shell --env development --port 8080
-
-# Deploy remote MFE
-npx seans-mfe-tool deploy my-remote-app --type remote --env development --port 8081
+mfe api <name> [options]
 ```
 
-#### Production Deployment
+Options:
+
+- `-p, --port <port>`: Port number (default: 3001)
+- `-s, --spec <path>`: OpenAPI specification file path or URL
+
+### Initialize Workspace
 
 ```bash
-# Deploy to production (requires Docker registry)
-npx seans-mfe-tool deploy my-app --type shell --env production --registry registry.example.com
+mfe init <name> [options]
 ```
 
-## Docker Deployment
+Options:
 
-The tool supports Docker-based deployment for both development and production environments:
+- `-p, --package-manager <manager>`: Package manager (npm, yarn, or pnpm)
 
-### Development
+## Recent Updates
 
-- Builds the application and creates a Docker image
-- Runs the container locally with port mapping
-- Supports hot reloading and development features
-
-### Production
-
-- Optimized multi-stage Docker builds
-- Pushes images to specified registry
-- Nginx-based serving with optimized configuration
-- CORS support for Module Federation
-- Static asset caching
-- Security headers
-
-## Requirements
-
-- Node.js 18 or higher
-- Docker
-- npm or pnpm
+- Added API generation command with OpenAPI specification support
+- Integrated rspack for improved build performance
+- Added MUI version configuration for remote MFEs
