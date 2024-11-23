@@ -3,6 +3,12 @@ const path = require('path');
 const chalk = require('chalk');
 
 class RouteGenerator {
+  
+  static toKebabCase(str) {
+    // Convert camelCase to kebab-case for path matching
+    return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+  
   static async generate(routesDir, spec) {
     console.log(chalk.blue('\nGenerating routes...'));
     
@@ -37,7 +43,20 @@ class RouteGenerator {
   static getRouteName(pathKey) {
     // Extract the base resource name (e.g., 'pets' from '/pets' or '/pets/{id}')
     const parts = pathKey.split('/').filter(Boolean);
-    return parts[0];
+    return this.toCamelCase(parts[0]);
+  }
+
+  static toCamelCase(str) {
+    // Convert kebab-case or snake_case to camelCase
+    return str
+      .split(/[-_]/)
+      .map((word, index) => {
+        if (index === 0) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join('');
   }
 
   static getBasePath(pathKey) {
@@ -48,8 +67,10 @@ class RouteGenerator {
 
   static generateRouteFile(pathKey, pathObj, routeName, spec) {
     // Get all paths that start with the same base resource
+    // Convert the routeName back to kebab case for path matching
+    const basePathKebab = this.toKebabCase(routeName);
     const resourcePaths = Object.entries(spec.paths)
-      .filter(([path]) => path.startsWith(`/${routeName}`));
+      .filter(([path]) => path.startsWith(`/${basePathKebab}`));
 
     // Collect all methods and operations across related paths
     const operationMap = {};
@@ -58,8 +79,9 @@ class RouteGenerator {
 
     resourcePaths.forEach(([path, operations]) => {
       Object.entries(operations).forEach(([method, operation]) => {
+        // Convert operation ID to camelCase if it exists, otherwise generate from method and route
         const functionName = operation.operationId
-          ? operation.operationId.charAt(0).toLowerCase() + operation.operationId.slice(1)
+          ? this.toCamelCase(operation.operationId)
           : `${method.toLowerCase()}${routeName.charAt(0).toUpperCase() + routeName.slice(1)}`;
         
         operationMap[functionName] = true;
