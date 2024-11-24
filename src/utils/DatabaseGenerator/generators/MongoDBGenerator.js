@@ -7,8 +7,8 @@ const chalk = require('chalk');
 class MongoDBGenerator extends BaseGenerator {
   generateModelFile(schemaName, schema) {
     this.validateSchema(schema);
-    const modelName = NameGenerator.toModelName(schemaName);
-    const pascalModelName = NameGenerator.toPascalCase(schemaName);
+    const modelName = NameGenerator.toModelName(schemaName); // e.g., PhaseMetric
+    const modelNamePlural = `${modelName}s`; // e.g., PhaseMetrics
     
     return `const mongoose = require('mongoose');
 const { Schema } = mongoose;
@@ -60,9 +60,18 @@ ${modelName}Schema.statics = {
   }
 };
 
-const ${pascalModelName} = mongoose.model('${pascalModelName}', ${modelName}Schema);
+const ${modelName} = mongoose.model('${modelNamePlural}', ${modelName}Schema);
 
-module.exports = ${pascalModelName};`;
+// Export both singular and plural forms for compatibility
+module.exports = ${modelName};
+module.exports.${modelNamePlural} = ${modelName};
+module.exports.${modelName} = ${modelName};`;
+  }
+
+  validateSchema(schema) {
+    if (!schema || !schema.properties) {
+      throw new Error('Invalid schema: schema must have properties defined');
+    }
   }
 
   generateSchemaObject(schema) {
@@ -209,20 +218,23 @@ ${modelName}Schema.path('${prop}').validate(async function(value) {
 ${Object.keys(schemas)
   .map(schemaName => {
     const modelName = NameGenerator.toModelName(schemaName);
-    const pascalName = NameGenerator.toPascalCase(schemaName);
-    return `const ${pascalName} = require('./${modelName}.model');`;
+    return `const ${modelName} = require('./${modelName}.model');`;
   })
   .join('\n')}
 
-// Export all models
+// Export both singular and plural forms for each model
 module.exports = {
   ${Object.keys(schemas)
-    .map(schemaName => NameGenerator.toPascalCase(schemaName))
+    .map(schemaName => {
+      const modelName = NameGenerator.toModelName(schemaName);
+      const modelNamePlural = `${modelName}s`;
+      return `${modelName},\n  ${modelNamePlural}: ${modelName}`;
+    })
     .join(',\n  ')}
 };`;
 
     await fs.writeFile(indexPath, content);
-    console.log(chalk.green('✓ Generated MongoDB models index file'));
+    console.log(chalk.green('✓ Generated models index file'));
   }
 }
 

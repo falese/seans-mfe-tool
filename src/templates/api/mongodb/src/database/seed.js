@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const logger = require('../../utils/logger');
+const logger = require('../utils/logger');
 
 async function clearCollections() {
     logger.info('Clearing existing data...');
@@ -39,7 +39,7 @@ async function seed() {
         await clearCollections();
         
         // Load all models
-        const models = require('../../models');
+        const models = require('../models');
         
         // Get example data from OpenAPI spec
         const exampleData = require('../seeds/examples');

@@ -1,48 +1,79 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const CumulativeRoiSchema = new Schema(
+const PhaseMetricSchema = new Schema(
   {
-  "year": {
-    "type": Number,
-    "required": [
-      true,
-      "year is required"
-    ]
-  },
-  "period": {
+  "phaseId": {
     "type": String,
     "required": [
       true,
-      "period is required"
+      "phaseId is required"
+    ],
+    "enum": [
+      "current",
+      "phase1",
+      "phase2",
+      "phase3",
+      "phase4",
+      "steady"
     ]
   },
-  "costs": {
+  "teamSize": {
     "type": Number,
     "required": [
       true,
-      "costs is required"
+      "teamSize is required"
     ]
   },
-  "benefits": {
+  "newHires": {
     "type": Number,
     "required": [
       true,
-      "benefits is required"
+      "newHires is required"
     ]
   },
-  "net": {
+  "personnelCost": {
     "type": Number,
     "required": [
       true,
-      "net is required"
+      "personnelCost is required"
     ]
   },
-  "cumulativeRoi": {
+  "transitionCost": {
     "type": Number,
     "required": [
       true,
-      "cumulativeRoi is required"
+      "transitionCost is required"
+    ]
+  },
+  "totalCost": {
+    "type": Number,
+    "required": [
+      true,
+      "totalCost is required"
+    ]
+  },
+  "benefitsRealized": {
+    "type": Number,
+    "required": [
+      true,
+      "benefitsRealized is required"
+    ],
+    "min": 0,
+    "max": 100
+  },
+  "quarterBenefits": {
+    "type": Number,
+    "required": [
+      true,
+      "quarterBenefits is required"
+    ]
+  },
+  "quarterRoi": {
+    "type": Number,
+    "required": [
+      true,
+      "quarterRoi is required"
     ]
   }
 },
@@ -65,7 +96,7 @@ const CumulativeRoiSchema = new Schema(
 
 
 // Add schema methods
-CumulativeRoiSchema.methods = {
+PhaseMetricSchema.methods = {
   async toDTO() {
     return {
       id: this._id,
@@ -77,7 +108,7 @@ CumulativeRoiSchema.methods = {
 };
 
 // Add schema statics
-CumulativeRoiSchema.statics = {
+PhaseMetricSchema.statics = {
   async findByIdOrThrow(id) {
     const doc = await this.findById(id);
     if (!doc) throw new Error('Document not found');
@@ -91,6 +122,9 @@ CumulativeRoiSchema.statics = {
   }
 };
 
-const CumulativeRoi = mongoose.model('CumulativeRoi', CumulativeRoiSchema);
+const PhaseMetric = mongoose.model('PhaseMetrics', PhaseMetricSchema);
 
-module.exports = CumulativeRoi;
+// Export both singular and plural forms for compatibility
+module.exports = PhaseMetric;
+module.exports.PhaseMetrics = PhaseMetric;
+module.exports.PhaseMetric = PhaseMetric;

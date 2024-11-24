@@ -8,16 +8,14 @@
     "helmet": "^7.0.0",
     "http-errors": "^2.0.0",
     "joi": "^17.9.2",
-    "js-yaml": "^4.1.0",
-    "jsonwebtoken": "9.0.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb-memory-server": "^9.1.6",
     "mongoose": "^8.1.1",
-    "nanoid": "^3.3.6",
     "winston": "^3.8.2"
   },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js --watch src",
+    "dev": "nodemon src/index.js",
     "test": "jest",
     "lint": "eslint .",
     "db:seed": "node src/database/seed.js",

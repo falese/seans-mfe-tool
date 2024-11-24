@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 // Request logging middleware
 router.use((req, res, next) => {
   req.requestId = require('crypto').randomUUID();
-  logger.info('Incoming request we got this far', {
+  logger.info('Incoming request', {
     requestId: req.requestId,
     method: req.method,
     path: req.path,
@@ -16,15 +16,15 @@ router.use((req, res, next) => {
 });
 
 // Mount /phase-metrics routes
-router.use('/phase-metrics', require('./phaseMetrics.route'));
+router.use('', require('./phaseMetrics.route'));
 
 // Mount /benefits-breakdown routes
-router.use('/benefits-breakdown', require('./benefitsBreakdown.route'));
+router.use('', require('./benefitsBreakdown.route'));
 
 // Mount /cumulative-roi routes
-router.use('/cumulative-roi', require('./cumulativeRoi.route'));
+router.use('', require('./cumulativeRoi.route'));
 
-// Mount /performance-gates routes
-router.use('/performance-gates', require('./performanceGates.route'));
+// Mount /performance-gate routes
+router.use('', require('./performanceGate.route'));
 
 module.exports = router;
