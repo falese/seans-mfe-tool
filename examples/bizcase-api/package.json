@@ -23,6 +23,10 @@
   },
   "name": "bizcase-api",
   "version": "1.0.0",
+  "mfe":{
+    "serverType": "nodemon",
+    "type": "api"
+  },
   "devDependencies": {
     "eslint": "^8.40.0",
     "jest": "^29.5.0",

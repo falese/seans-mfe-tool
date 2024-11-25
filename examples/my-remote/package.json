@@ -1,6 +1,10 @@
 {
   "name": "my-remote",
   "version": "1.0.0",
+  "mfe":{
+    "serverType": "rspack",
+    "type": "remote"
+  },
   "scripts": {
     "start": "npx @rspack/cli serve --mode development",
     "build": "npx @rspack/cli build",
@@ -17,8 +21,6 @@
     "recharts": "^2.13.3"
   },
   "devDependencies": {
-    "@rspack/cli": "latest",
-    "@rspack/core": "latest",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0"
   }

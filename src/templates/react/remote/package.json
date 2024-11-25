@@ -1,6 +1,10 @@
 {
   "name": "__PROJECT_NAME__",
   "version": "1.0.0",
+  "mfe":{
+    "serverType": "rspack",
+    "type": "remote"
+  },
   "scripts": {
     "start": "npx @rspack/cli serve --mode development",
     "build": "npx @rspack/cli build",

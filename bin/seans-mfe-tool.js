@@ -5,6 +5,7 @@ const { createShellCommand } = require('../src/commands/create-shell');
 const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
+const { buildCommand } = require('../src/commands/build');
 const { version } = require('../package.json');
 
 program
@@ -90,5 +91,23 @@ Notes:
     }
     
     createApiCommand(name, options);
+  });
+
+
+  program
+  .command('build')
+  .description('Build an application')
+  .argument('<name>', 'Application name')
+  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
+  .option('-m, --mode <mode>', 'Build mode (development or production)', 'development')
+  .option('-p, --port <port>', 'Port number for development server')
+  .option('-s, --serve', 'Start development server')
+  .option('--analyze', 'Enable bundle analysis')
+  .action((name, options) => {
+    if (!['shell', 'remote', 'api'].includes(options.type)) {
+      console.error(chalk.red('Error: Type must be shell, remote, or api'));
+      process.exit(1);
+    }
+    buildCommand({ name, ...options });
   });
 program.parse(process.argv);
