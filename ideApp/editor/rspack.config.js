@@ -11,24 +11,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.jsx', '.js', '.json'],
-    fallback: {
-      "path": require.resolve("path-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "util": require.resolve("util/"),
-      "url": require.resolve("url/"),
-      "buffer": require.resolve("buffer/"),
-      "crypto": require.resolve("crypto-browserify"),
-      "fs": false,
-      "os": require.resolve("os-browserify/browser"),
-      "http": require.resolve("stream-http"),
-      "https": require.resolve("https-browserify"),
-      "assert": require.resolve("assert/"),
-      "process": require.resolve("process/browser"),
-      "events": require.resolve("events/")
-    }
   },
   devServer: {
-    port: __PORT__,
+    port: 3001,
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
@@ -42,7 +27,6 @@ module.exports = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules\/(?!(@huggingface|other-problematic-packages)\/).*/,
         use: {
           loader: 'builtin:swc-loader',
           options: {
@@ -63,26 +47,17 @@ module.exports = {
     ],
   },
   plugins: [
-    new rspack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env': '{}',
-      'process.browser': true,
-      'process.version': JSON.stringify(process.version),
-    }),
-    new rspack.ProvidePlugin({
-      process: 'process/browser',
-      Buffer: ['buffer', 'Buffer']
-    }),
     new rspack.HtmlRspackPlugin({
       template: path.join(__dirname, 'public/index.html'),
       inject: true,
       publicPath: '/'
     }),
     new ModuleFederationPlugin({
-      name: '__EXPOSED_NAME__',
+      name: 'editor',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App.jsx',
+        './EditorPanel': './src/EditorPanel.jsx',
+        './EditorService': './src/services/EditorService.js'
       },
       shared: {
         react: { 
@@ -95,14 +70,18 @@ module.exports = {
           requiredVersion: '^18.2.0',
           eager: true
         },
+        '@monaco-editor/react': {
+          singleton: true,
+          requiredVersion: deps['@monaco-editor/react']
+        },
         '@mui/material': { 
           singleton: false, 
-          requiredVersion: '__MUI_VERSION__',
+          requiredVersion: '5.15.0',
           eager: false
         },
         '@mui/system': { 
           singleton: false, 
-          requiredVersion: '__MUI_VERSION__',
+          requiredVersion: '5.15.0',
           eager: false
         },
         '@emotion/react': { 
