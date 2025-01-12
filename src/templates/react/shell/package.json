@@ -1,5 +1,5 @@
 {
-  "name": "first-shell",
+  "name": "__PROJECT_NAME__",
   "version": "1.0.0",
   "scripts": {
     "start": "rspack serve",
