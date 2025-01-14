@@ -3,7 +3,6 @@ const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { processTemplates } = require('../utils/templateProcessor');
-const ejs = require('ejs');
 
 async function createShellCommand(name, options) {
   try {
