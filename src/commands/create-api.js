@@ -6,7 +6,7 @@ const { execSync } = require('child_process');
 const { DatabaseGenerator } = require('../utils/databaseGenerator');
 const { ControllerGenerator } = require('../utils/ControllerGenerator/');
 const { generateRoutes } = require('../utils/RouteGenerator');
-const { ensureMiddlewareAndUtils } = require('../utils/ensureFiles');
+const { ensureMiddleware, ensureUtils } = require('../utils/ensureFiles');
 
 async function createApiCommand(name, options) {
   let tmpSpec = null;
@@ -30,12 +30,18 @@ async function createApiCommand(name, options) {
     
     // Create project structure from base template
     await fs.ensureDir(targetDir);
-    await fs.copy(baseTemplateDir, targetDir);
+    if (await fs.pathExists(baseTemplateDir)) {
+      await fs.copy(baseTemplateDir, targetDir);
+    } else {
+      throw new Error(`Base template directory not found: ${baseTemplateDir}`);
+    }
     
     // Copy database-specific templates
     const dbTemplateDir = path.join(projectRoot, `src/templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
       await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
+    } else {
+      throw new Error(`Database template directory not found: ${dbTemplateDir}`);
     }
     
     // Generate API components
@@ -55,7 +61,8 @@ async function createApiCommand(name, options) {
     ]);
 
     // Ensure middleware and utilities exist
-    await ensureMiddlewareAndUtils(middlewareDir, utilsDir);
+    await ensureMiddleware(middlewareDir);
+    await ensureUtils(utilsDir);
 
     console.log(chalk.blue(`\nGenerating API with ${dbType} database...`));
 
