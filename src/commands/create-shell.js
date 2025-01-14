@@ -2,6 +2,9 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
+const ejs = require('ejs'); // Added ejs module import
+
+const { processTemplates } = require('../utils/templateProcessor'); // Use shared utility function
 
 async function createShellCommand(name, options) {
   try {
@@ -55,37 +58,6 @@ async function createShellCommand(name, options) {
       console.error(error.stack);
     }
     process.exit(1);
-  }
-}
-
-async function processTemplates(targetDir, vars) {
-  try {
-    // Process each file individually
-    const processFile = async (filePath) => {
-      console.log('Processing:', filePath);
-      const content = await fs.readFile(filePath, 'utf8');
-      const processedContent = content
-        .replace(/__PROJECT_NAME__/g, vars.name)
-        .replace(/__PORT__/g, vars.port)
-        .replace(/__REMOTES__/g, vars.remotes);
-      await fs.writeFile(filePath, processedContent);
-    };
-
-    // Process package.json
-    await processFile(path.join(targetDir, 'package.json'));
-
-    // Process rspack.config.js
-    await processFile(path.join(targetDir, 'rspack.config.js'));
-
-    // Process index.html
-    await processFile(path.join(targetDir, 'public', 'index.html'));
-
-    // Process App.jsx
-    await processFile(path.join(targetDir, 'src', 'App.jsx'));
-
-  } catch (error) {
-    console.error('Error processing templates:', error);
-    throw error;
   }
 }
 

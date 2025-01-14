@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
+const { processTemplates } = require('../utils/templateProcessor'); // Import shared utility function
 
 async function createRemoteCommand(name, options) {
   try {
@@ -61,29 +62,6 @@ async function createRemoteCommand(name, options) {
     process.exit(1);
   }
 }
-
-async function processTemplates(targetDir, vars) {
-  const processFile = async (filePath) => {
-    console.log('Processing:', filePath);
-    const content = await fs.readFile(filePath, 'utf8');
-    const processedContent = content
-      .replace(/__PROJECT_NAME__/g, vars.name)
-      .replace(/__PORT__/g, vars.port)
-      .replace(/__MUI_VERSION__/g, vars.muiVersion)
-      .replace(/__EXPOSED_NAME__/g, vars.exposedName);
-    await fs.writeFile(filePath, processedContent);
-  };
-
-  // Process each configuration file
-  await processFile(path.join(targetDir, 'package.json'));
-  await processFile(path.join(targetDir, 'rspack.config.js'));
-  await fs.ensureDir(path.join(targetDir, 'public'));
-  await processFile(path.join(targetDir, 'public', 'index.html'));
-  await processFile(path.join(targetDir, 'src', 'App.jsx'));
-  await processFile(path.join(targetDir, 'src', 'bootstrap.jsx'));
-  
-}
-
 
 module.exports = {
   createRemoteCommand

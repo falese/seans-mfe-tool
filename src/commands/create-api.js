@@ -54,8 +54,7 @@ async function createApiCommand(name, options) {
     ]);
 
     // Ensure middleware and utilities exist
-    await ensureMiddleware(middlewareDir);
-    await ensureUtils(utilsDir);
+    await ensureMiddlewareAndUtils(middlewareDir, utilsDir);
 
     console.log(chalk.blue(`\nGenerating API with ${dbType} database...`));
 
@@ -148,7 +147,7 @@ function logSuccessInfo(name, dbType, spec, options) {
   console.log(chalk.blue('3. npm run dev'));
 }
 
-async function ensureMiddleware(middlewareDir) {
+async function ensureMiddlewareAndUtils(middlewareDir, utilsDir) {
   const middleware = {
     'validator.js': `const createError = require('http-errors');
 const { ValidationError } = require('../utils/errors');
@@ -230,13 +229,6 @@ function errorHandler(err, req, res, next) {
 module.exports = errorHandler;`
   };
 
-  for (const [file, content] of Object.entries(middleware)) {
-    const filePath = path.join(middlewareDir, file);
-    await fs.writeFile(filePath, content);
-  }
-}
-
-async function ensureUtils(utilsDir) {
   const utils = {
     'logger.js': `const winston = require('winston');
 
@@ -293,10 +285,10 @@ module.exports = {
 };`
   };
 
-  for (const [file, content] of Object.entries(utils)) {
-    const filePath = path.join(utilsDir, file);
-    await fs.writeFile(filePath, content);
-  }
+  await Promise.all([
+    ...Object.entries(middleware).map(([file, content]) => fs.writeFile(path.join(middlewareDir, file), content)),
+    ...Object.entries(utils).map(([file, content]) => fs.writeFile(path.join(utilsDir, file), content))
+  ]);
 }
 
 async function processTemplates(targetDir, vars) {
