@@ -43,7 +43,7 @@ module.exports = {
     extensions: [".js", ".jsx", ".json"]
   },
   devServer: {
-    port: __PORT__,
+    port: '<%= port %>',
     host: 'localhost',
     hot: true,
     historyApiFallback: true,
@@ -64,7 +64,7 @@ module.exports = {
     new ModuleFederationPlugin({
       name: "shell",
       filename: "remoteEntry.js",
-      remotes: __REMOTES__ || {},
+      remotes: '<%= remotes %>' || {},
       shared: {
         react: { singleton: true, eager: true },
         "react-dom": { singleton: true, eager: true },
