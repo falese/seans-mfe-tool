@@ -7,14 +7,16 @@ async function processTemplates(targetDir, vars) {
 
   for (const file of files) {
     const filePath = path.join(targetDir, file);
-    const stats = await fs.stat(filePath);
+    const stat = await fs.stat(filePath);
 
-    if (stats.isDirectory()) {
+    if (stat.isDirectory()) {
       await processTemplates(filePath, vars);
-    } else if (stats.isFile()) {
-      const content = await fs.readFile(filePath, 'utf8');
-      const rendered = ejs.render(content, vars);
-      await fs.writeFile(filePath, rendered);
+    } else if (file.endsWith('.ejs')) {
+      const templateContent = await fs.readFile(filePath, 'utf8');
+      const renderedContent = ejs.render(templateContent, vars);
+      const newFilePath = filePath.replace('.ejs', '');
+      await fs.writeFile(newFilePath, renderedContent);
+      await fs.remove(filePath);
     }
   }
 }

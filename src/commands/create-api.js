@@ -149,8 +149,9 @@ function logSuccessInfo(name, dbType, spec, options) {
 }
 
 async function ensureMiddlewareAndUtils(middlewareDir, utilsDir) {
-  const middleware = {
-    'validator.js': `const createError = require('http-errors');
+  try {
+    const middleware = {
+      'validator.js': `const createError = require('http-errors');
 const { ValidationError } = require('../utils/errors');
 
 function validateSchema(property, schema) {
@@ -170,7 +171,7 @@ function validateSchema(property, schema) {
 
 module.exports = { validateSchema };`,
 
-    'auth.js': `const jwt = require('jsonwebtoken');
+      'auth.js': `const jwt = require('jsonwebtoken');
 const { UnauthorizedError } = require('../utils/errors');
 
 function auth(req, res, next) {
@@ -190,7 +191,7 @@ function auth(req, res, next) {
 
 module.exports = { auth };`,
 
-    'error-handler.js': `const logger = require('../utils/logger');
+      'error-handler.js': `const logger = require('../utils/logger');
 const { BaseError, ValidationError, UnauthorizedError } = require('../utils/errors');
 
 function errorHandler(err, req, res, next) {
@@ -228,10 +229,10 @@ function errorHandler(err, req, res, next) {
 }
 
 module.exports = errorHandler;`
-  };
+    };
 
-  const utils = {
-    'logger.js': `const winston = require('winston');
+    const utils = {
+      'logger.js': `const winston = require('winston');
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -251,7 +252,7 @@ const logger = winston.createLogger({
 
 module.exports = logger;`,
 
-    'errors.js': `class BaseError extends Error {
+      'errors.js': `class BaseError extends Error {
   constructor(message, statusCode = 500, details = null) {
     super(message);
     this.statusCode = statusCode;
@@ -276,7 +277,6 @@ class NotFoundError extends BaseError {
   constructor(message) {
     super(message, 404);
   }
-}
 
 module.exports = {
   BaseError,
@@ -284,12 +284,16 @@ module.exports = {
   UnauthorizedError,
   NotFoundError
 };`
-  };
+    };
 
-  await Promise.all([
-    ...Object.entries(middleware).map(([file, content]) => fs.writeFile(path.join(middlewareDir, file), content)),
-    ...Object.entries(utils).map(([file, content]) => fs.writeFile(path.join(utilsDir, file), content))
-  ]);
+    await Promise.all([
+      ...Object.entries(middleware).map(([file, content]) => fs.writeFile(path.join(middlewareDir, file), content)),
+      ...Object.entries(utils).map(([file, content]) => fs.writeFile(path.join(utilsDir, file), content))
+    ]);
+  } catch (error) {
+    console.error(chalk.red('Error ensuring middleware and utilities:'), error);
+    throw error;
+  }
 }
 
 async function processTemplates(targetDir, vars) {

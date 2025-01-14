@@ -2,9 +2,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
-const ejs = require('ejs'); // Added ejs module import
-
-const { processTemplates } = require('../utils/templateProcessor'); // Use shared utility function
+const { processTemplates } = require('../utils/templateProcessor');
+const ejs = require('ejs');
 
 async function createShellCommand(name, options) {
   try {
