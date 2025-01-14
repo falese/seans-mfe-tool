@@ -2,7 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
-const { processTemplates } = require('../utils/templateProcessor');
+const { processTemplates } = require('../utils/templateProcessor'); // Import shared utility function
 
 async function createRemoteCommand(name, options) {
   try {

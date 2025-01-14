@@ -3,29 +3,20 @@ const path = require('path');
 const ejs = require('ejs');
 
 async function processTemplates(targetDir, vars) {
-  const files = await getFiles(targetDir);
+  const files = await fs.readdir(targetDir);
 
   for (const file of files) {
-    const content = await fs.readFile(file, 'utf8');
-    const processedContent = ejs.render(content, vars);
-    await fs.writeFile(file, processedContent);
-  }
-}
+    const filePath = path.join(targetDir, file);
+    const stats = await fs.stat(filePath);
 
-async function getFiles(dir) {
-  let files = [];
-  const items = await fs.readdir(dir, { withFileTypes: true });
-
-  for (const item of items) {
-    const fullPath = path.join(dir, item.name);
-    if (item.isDirectory()) {
-      files = files.concat(await getFiles(fullPath));
-    } else {
-      files.push(fullPath);
+    if (stats.isDirectory()) {
+      await processTemplates(filePath, vars);
+    } else if (stats.isFile()) {
+      const content = await fs.readFile(filePath, 'utf8');
+      const rendered = ejs.render(content, vars);
+      await fs.writeFile(filePath, rendered);
     }
   }
-
-  return files;
 }
 
 module.exports = {
