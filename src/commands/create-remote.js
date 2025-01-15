@@ -19,7 +19,7 @@ async function createRemoteCommand(name, options) {
     }
 
     // Parse and validate port
-    let port = 3001; // default port
+    let port = options.port || 3001; // default port
     if (options.port) {
       port = parseInt(options.port, 10);
       if (isNaN(port) || port < 1 || port > 65535) {
@@ -37,7 +37,7 @@ async function createRemoteCommand(name, options) {
     console.log('\nProcessing template files...');
     await processTemplates(targetDir, {
       name,
-      port: options.port || 3001,
+      port,
       muiVersion,
       exposedName: name.toLowerCase().replace(/[^a-z0-9]/g, '')
     });
@@ -54,7 +54,7 @@ async function createRemoteCommand(name, options) {
     console.log('\nNext steps:');
     console.log(chalk.blue(`1. cd ${name}`));
     console.log(chalk.blue('2. npm start'));
-    console.log(`\nYour MFE will be available at: http://localhost:${options.port || 3001}`);
+    console.log(`\nYour MFE will be available at: http://localhost:${port}`);
 
   } catch (error) {
     console.error(chalk.red('\n✗ Failed to create remote MFE:'));
