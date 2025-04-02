@@ -1,6 +1,7 @@
 class BaseError extends Error {
   constructor(message, statusCode = 500, details = null) {
     super(message);
+    this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.details = details;
     Error.captureStackTrace(this, this.constructor);
@@ -25,9 +26,16 @@ class NotFoundError extends BaseError {
   }
 }
 
+class ConflictError extends BaseError {
+  constructor(message) {
+    super(message, 409);
+  }
+}
+
 module.exports = {
   BaseError,
   ValidationError,
   UnauthorizedError,
-  NotFoundError
+  NotFoundError,
+  ConflictError
 };

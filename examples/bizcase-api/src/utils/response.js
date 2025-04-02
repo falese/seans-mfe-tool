@@ -1,29 +1,25 @@
-/**
- * Standard response formatter
- */
-function formatResponse(data, message = 'Success') {
-  return {
+function success(res, data = null, message = 'Success') {
+  return res.json({
     success: true,
     message,
-    data
-  };
+    ...(data && { data })
+  });
 }
 
-/**
- * Error response formatter
- */
-function formatError(error, message = 'An error occurred') {
-  return {
-    success: false,
-    message,
-    error: {
-      message: error.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+function paginate(res, { items, total, page, limit }) {
+  return res.json({
+    success: true,
+    data: items,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit)
     }
-  };
+  });
 }
 
 module.exports = {
-  formatResponse,
-  formatError
+  success,
+  paginate
 };

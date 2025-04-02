@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const performanceGateSchema = new Schema(
+const PerformanceGateSchema = new Schema(
   {
   "phase": {
     "type": String,
@@ -61,6 +61,36 @@ const performanceGateSchema = new Schema(
 // Add schema validations
 
 
-const PerformanceGate = mongoose.model('PerformanceGate', performanceGateSchema);
+// Add schema methods
+PerformanceGateSchema.methods = {
+  async toDTO() {
+    return {
+      id: this._id,
+      ...this.toObject(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
+};
 
+// Add schema statics
+PerformanceGateSchema.statics = {
+  async findByIdOrThrow(id) {
+    const doc = await this.findById(id);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  },
+  
+  async findOneOrThrow(conditions) {
+    const doc = await this.findOne(conditions);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  }
+};
+
+const PerformanceGate = mongoose.model('PerformanceGates', PerformanceGateSchema);
+
+// Export both singular and plural forms for compatibility
 module.exports = PerformanceGate;
+module.exports.PerformanceGates = PerformanceGate;
+module.exports.PerformanceGate = PerformanceGate;

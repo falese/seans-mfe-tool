@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const cumulativeRoiSchema = new Schema(
+const CumulativeRoiSchema = new Schema(
   {
   "year": {
     "type": Number,
@@ -64,6 +64,36 @@ const cumulativeRoiSchema = new Schema(
 // Add schema validations
 
 
-const CumulativeRoi = mongoose.model('CumulativeRoi', cumulativeRoiSchema);
+// Add schema methods
+CumulativeRoiSchema.methods = {
+  async toDTO() {
+    return {
+      id: this._id,
+      ...this.toObject(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
+};
 
+// Add schema statics
+CumulativeRoiSchema.statics = {
+  async findByIdOrThrow(id) {
+    const doc = await this.findById(id);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  },
+  
+  async findOneOrThrow(conditions) {
+    const doc = await this.findOne(conditions);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  }
+};
+
+const CumulativeRoi = mongoose.model('CumulativeRois', CumulativeRoiSchema);
+
+// Export both singular and plural forms for compatibility
 module.exports = CumulativeRoi;
+module.exports.CumulativeRois = CumulativeRoi;
+module.exports.CumulativeRoi = CumulativeRoi;

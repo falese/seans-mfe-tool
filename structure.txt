@@ -1,0 +1,248 @@
+.
+├── LICENSE
+├── README.md
+├── bin
+│   └── seans-mfe-tool.js
+├── docs
+│   ├── api-generator-readme.md
+│   ├── benefit-analysis.md
+│   ├── benefit-model.yml
+│   ├── mid-term-phase-approach.md
+│   ├── phased-benefit-analysis.md
+│   └── postman.json
+├── examples
+│   ├── bizcase-api
+│   │   ├── jest-config.js
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   ├── readme.md
+│   │   └── src
+│   │       ├── config
+│   │       │   └── database.js
+│   │       ├── config.js
+│   │       ├── controllers
+│   │       │   ├── benefitsBreakdown.controller.js
+│   │       │   ├── cumulativeRoi.controller.js
+│   │       │   ├── performanceGate.controller.js
+│   │       │   └── phaseMetrics.controller.js
+│   │       ├── database
+│   │       │   ├── index.js
+│   │       │   ├── init.js
+│   │       │   ├── migrations
+│   │       │   │   └── 20241124030354-initial-schema.js
+│   │       │   ├── seed.js
+│   │       │   ├── seeds
+│   │       │   │   ├── BenefitsBreakdown.seed.js
+│   │       │   │   ├── CumulativeRoi.seed.js
+│   │       │   │   ├── PerformanceGate.seed.js
+│   │       │   │   ├── PhaseMetric.seed.js
+│   │       │   │   └── index.js
+│   │       │   └── setup.js
+│   │       ├── index.js
+│   │       ├── middleware
+│   │       │   ├── auth.js
+│   │       │   ├── error-handler.js
+│   │       │   ├── errorHandler.js
+│   │       │   ├── request-id.js
+│   │       │   └── validator.js
+│   │       ├── models
+│   │       │   ├── BenefitsBreakdown.model.js
+│   │       │   ├── CumulativeRoi.model.js
+│   │       │   ├── PerformanceGate.model.js
+│   │       │   ├── PhaseMetric.model.js
+│   │       │   ├── index.js
+│   │       │   └── schemaVersion.model.js
+│   │       ├── routes
+│   │       │   ├── benefitsBreakdown.route.js
+│   │       │   ├── cumulativeRoi.route.js
+│   │       │   ├── index.js
+│   │       │   ├── performanceGate.route.js
+│   │       │   └── phaseMetrics.route.js
+│   │       └── utils
+│   │           ├── errors.js
+│   │           ├── logger.js
+│   │           ├── response.js
+│   │           └── schemaManager.js
+│   ├── cost-benefit-api.yaml
+│   ├── my-remote
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── index.html
+│   │   ├── rspack.config.js
+│   │   └── src
+│   │       ├── app.jsx
+│   │       ├── bootstrap.jsx
+│   │       ├── dashboard.jsx
+│   │       └── index.js
+│   ├── my-remote-2
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── index.html
+│   │   ├── rspack.config.js
+│   │   └── src
+│   │       ├── EditorPanel.jsx
+│   │       ├── app.jsx
+│   │       └── bootstrap.jsx
+│   ├── my-remote-3
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── index.html
+│   │   ├── rspack.config.js
+│   │   └── src
+│   │       ├── app.jsx
+│   │       └── bootstrap.jsx
+│   ├── my-shell
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── index.html
+│   │   ├── rspack.config.js
+│   │   └── src
+│   │       ├── App.jsx
+│   │       ├── bootstrap.jsx
+│   │       └── index.js
+│   └── petstore.yaml
+├── ideApp
+│   ├── editor
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── index.html
+│   │   ├── rspack.config.js
+│   │   └── src
+│   │       ├── EditorPanel.jsx
+│   │       ├── app.jsx
+│   │       ├── bootstrap.jsx
+│   │       └── services
+│   │           └── EditorService.jsx
+│   └── ide
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── public
+│       │   └── index.html
+│       ├── rspack.config.js
+│       └── src
+│           ├── App.jsx
+│           ├── bootstrap.jsx
+│           ├── components
+│           │   └── ErrorBoundary.jsx
+│           └── index.js
+├── package-lock.json
+├── package.json
+├── quickstart-deploy.md
+├── src
+│   ├── commands
+│   │   ├── build.js
+│   │   ├── create-api.js
+│   │   ├── create-remote.js
+│   │   ├── create-shell.js
+│   │   └── deploy.js
+│   ├── templates
+│   │   ├── api
+│   │   │   ├── base
+│   │   │   │   ├── jest-config.js
+│   │   │   │   ├── package.json
+│   │   │   │   ├── readme.md
+│   │   │   │   └── src
+│   │   │   │       ├── config
+│   │   │   │       ├── config.js
+│   │   │   │       ├── database
+│   │   │   │       │   ├── index.js
+│   │   │   │       │   ├── seed.js
+│   │   │   │       │   └── setup.js
+│   │   │   │       ├── index.js
+│   │   │   │       ├── middleware
+│   │   │   │       │   ├── auth.js
+│   │   │   │       │   ├── errorHandler.js
+│   │   │   │       │   └── validator.js
+│   │   │   │       ├── models
+│   │   │   │       └── utils
+│   │   │   │           ├── logger.js
+│   │   │   │           └── response.js
+│   │   │   ├── mongodb
+│   │   │   │   ├── package.json
+│   │   │   │   └── src
+│   │   │   │       ├── config
+│   │   │   │       │   └── database.js
+│   │   │   │       ├── database
+│   │   │   │       │   ├── index.js
+│   │   │   │       │   ├── seed.js
+│   │   │   │       │   └── setup.js
+│   │   │   │       └── models
+│   │   │   └── sqlite
+│   │   │       ├── package.json
+│   │   │       └── src
+│   │   │           ├── config
+│   │   │           │   └── database.js
+│   │   │           ├── database
+│   │   │           │   ├── index.js
+│   │   │           │   └── seed.js
+│   │   │           └── models
+│   │   ├── docker
+│   │   │   ├── dockerfile.nodeAPI.txt
+│   │   │   ├── dockerfile.remote
+│   │   │   ├── dockerfile.shell
+│   │   │   └── nginx.conf
+│   │   └── react
+│   │       ├── remote
+│   │       │   ├── package.json
+│   │       │   ├── public
+│   │       │   │   └── index.html
+│   │       │   ├── rspack.config.js
+│   │       │   └── src
+│   │       │       ├── App.jsx
+│   │       │       └── bootstrap.jsx
+│   │       └── shell
+│   │           ├── package.json
+│   │           ├── public
+│   │           │   └── index.html
+│   │           ├── rspack.config.js
+│   │           └── src
+│   │               ├── App.jsx
+│   │               ├── bootstrap.jsx
+│   │               └── index.js
+│   └── utils
+│       ├── ControllerGenerator
+│       │   ├── ControllerGenerator.js
+│       │   ├── README.md
+│       │   ├── adapters
+│       │   │   └── DatabaseAdapter.js
+│       │   ├── generators
+│       │   │   ├── ImplementationGenerator.js
+│       │   │   ├── MethodGenerator.js
+│       │   │   └── ValidationGenerator.js
+│       │   └── index.js
+│       ├── DatabaseGenerator
+│       │   ├── DatabaseGenerator.js
+│       │   ├── generators
+│       │   │   ├── BaseGenerator.js
+│       │   │   ├── MigrationGenerator.js
+│       │   │   ├── MongoDBGenerator.js
+│       │   │   ├── MongoSchemaManager.js
+│       │   │   ├── SQLiteGenerator.js
+│       │   │   └── SeedGenerator.js
+│       │   └── index.js
+│       ├── RouteGenerator
+│       │   ├── README.md
+│       │   ├── RouteGenerator.js
+│       │   ├── RouteGenerator.test.js
+│       │   ├── __tests__
+│       │   │   ├── NameGenrator.test.js
+│       │   │   ├── PathGenerator.test.js
+│       │   │   ├── SchemaGenerator.test.js
+│       │   │   └── ValidationGenerator.test.js
+│       │   ├── generators
+│       │   │   ├── PathGenerator.js
+│       │   │   ├── SchemaGenerator.js
+│       │   │   └── ValidationGenerator.js
+│       │   └── index.js
+│       └── generators
+│           ├── NameGenerator.js
+│           └── ResourceMapper.js
+└── structure.txt
+
+76 directories, 170 files

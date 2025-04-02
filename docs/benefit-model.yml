@@ -1,0 +1,320 @@
+openapi: 3.1.0
+info:
+  title: Cost Benefit Analysis API
+  version: '1.0.0'
+  description: API for managing phased cost-benefit analysis data for the seans-mfe-tool project
+  contact:
+    name: Engineering Team
+    email: engineering@company.com
+
+servers:
+  - url: https://api.company.com/v1
+    description: Production server
+  - url: https://staging-api.company.com/v1
+    description: Staging server
+
+components:
+  schemas:
+    PhaseMetrics:
+      type: object
+      required:
+        - phaseId
+        - teamSize
+        - newHires
+        - personnelCost
+        - transitionCost
+        - totalCost
+        - benefitsRealized
+        - quarterBenefits
+        - quarterRoi
+      properties:
+        phaseId:
+          type: string
+          enum: [current, phase1, phase2, phase3, phase4, steady]
+        teamSize:
+          type: integer
+          example: 17
+        newHires:
+          type: integer
+          example: 3
+        personnelCost:
+          type: number
+          format: float
+          example: 2833339
+        transitionCost:
+          type: number
+          format: float
+          example: 67709
+        totalCost:
+          type: number
+          format: float
+          example: 2833339
+        benefitsRealized:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 100
+        quarterBenefits:
+          type: number
+          format: float
+          example: 5887805
+        quarterRoi:
+          type: number
+          format: float
+          example: 108
+
+    BenefitsBreakdown:
+      type: object
+      required:
+        - phaseId
+        - devTimeSavings
+        - supportEfficiency
+        - timeToMarket
+        - totalBenefits
+      properties:
+        phaseId:
+          type: string
+          enum: [current, phase1, phase2, phase3, phase4, steady]
+        devTimeSavings:
+          type: number
+          format: float
+          example: 1209343
+        supportEfficiency:
+          type: number
+          format: float
+          example: 38462
+        timeToMarket:
+          type: number
+          format: float
+          example: 4640000
+        totalBenefits:
+          type: number
+          format: float
+          example: 5887805
+
+    CumulativeRoi:
+      type: object
+      required:
+        - year
+        - period
+        - costs
+        - benefits
+        - net
+        - cumulativeRoi
+      properties:
+        year:
+          type: integer
+          example: 1
+        period:
+          type: string
+          example: "Q1"
+        costs:
+          type: number
+          format: float
+          example: 3401049
+        benefits:
+          type: number
+          format: float
+          example: 1471951
+        net:
+          type: number
+          format: float
+          example: -1929098
+        cumulativeRoi:
+          type: number
+          format: float
+          example: -56.7
+
+    PerformanceGate:
+      type: object
+      required:
+        - phase
+        - teamSize
+        - teamsOnboarded
+        - automation
+        - supportReduction
+      properties:
+        phase:
+          type: string
+          example: "Core seans-mfe-tool"
+        teamSize:
+          type: integer
+          example: 20
+        teamsOnboarded:
+          type: integer
+          example: 3
+        automation:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 25
+        supportReduction:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 25
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+
+paths:
+  /phase-metrics:
+    get:
+      summary: Get all phase metrics
+      responses:
+        '200':
+          description: List of phase metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhaseMetrics'
+    post:
+      summary: Create new phase metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseMetrics'
+      responses:
+        '201':
+          description: Phase metrics created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+
+  /phase-metrics/{phaseId}:
+    parameters:
+      - name: phaseId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get phase metrics by ID
+      responses:
+        '200':
+          description: Phase metrics found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+    put:
+      summary: Update phase metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseMetrics'
+      responses:
+        '200':
+          description: Phase metrics updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+
+  /benefits-breakdown:
+    get:
+      summary: Get all benefits breakdown data
+      responses:
+        '200':
+          description: List of benefits breakdown data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitsBreakdown'
+    post:
+      summary: Create new benefits breakdown entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BenefitsBreakdown'
+      responses:
+        '201':
+          description: Benefits breakdown created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenefitsBreakdown'
+
+  /cumulative-roi:
+    get:
+      summary: Get all cumulative ROI data
+      responses:
+        '200':
+          description: List of cumulative ROI data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CumulativeRoi'
+    post:
+      summary: Create new cumulative ROI entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CumulativeRoi'
+      responses:
+        '201':
+          description: Cumulative ROI entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CumulativeRoi'
+
+  /performance-gate:
+    get:
+      summary: Get all performance gate metrics
+      responses:
+        '200':
+          description: List of performance gate metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceGate'
+    post:
+      summary: Create new performance gate entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceGate'
+      responses:
+        '201':
+          description: Performance gate entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceGate'

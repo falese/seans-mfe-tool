@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const benefitsBreakdownSchema = new Schema(
+const BenefitsBreakdownSchema = new Schema(
   {
   "phaseId": {
     "type": String,
@@ -65,6 +65,36 @@ const benefitsBreakdownSchema = new Schema(
 // Add schema validations
 
 
-const BenefitsBreakdown = mongoose.model('BenefitsBreakdown', benefitsBreakdownSchema);
+// Add schema methods
+BenefitsBreakdownSchema.methods = {
+  async toDTO() {
+    return {
+      id: this._id,
+      ...this.toObject(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
+};
 
+// Add schema statics
+BenefitsBreakdownSchema.statics = {
+  async findByIdOrThrow(id) {
+    const doc = await this.findById(id);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  },
+  
+  async findOneOrThrow(conditions) {
+    const doc = await this.findOne(conditions);
+    if (!doc) throw new Error('Document not found');
+    return doc;
+  }
+};
+
+const BenefitsBreakdown = mongoose.model('BenefitsBreakdowns', BenefitsBreakdownSchema);
+
+// Export both singular and plural forms for compatibility
 module.exports = BenefitsBreakdown;
+module.exports.BenefitsBreakdowns = BenefitsBreakdown;
+module.exports.BenefitsBreakdown = BenefitsBreakdown;

@@ -2,12 +2,18 @@
   "name": "__PROJECT_NAME__",
   "version": "__VERSION__",
   "private": true,
+  "mfe": {
+    "serverType": "nodemon",
+    "type": "api"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js --watch src",
+    "dev": "nodemon src/index.js",
     "test": "jest",
     "lint": "eslint .",
+    "db:setup": "node src/database/setup.js",
     "db:seed": "node src/database/seed.js",
+    "db:migrate": "sequelize-cli db:migrate",
     "db:reset": "node src/database/reset.js"
   },
   "dependencies": {

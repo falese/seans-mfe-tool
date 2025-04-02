@@ -1,3 +1,4 @@
+// src/commands/deploy.js
 const { execSync } = require('child_process');
 const fs = require('fs-extra');
 const path = require('path');
@@ -11,7 +12,7 @@ const tempDirs = new Set();
 async function cleanupTempDirs() {
   for (const dir of tempDirs) {
     try {
-      if (fs.existsSync(dir)) {
+      if (await fs.exists(dir)) {
         console.log(chalk.blue(`\nCleaning up temporary directory: ${dir}`));
         await fs.remove(dir);
         console.log(chalk.green('✓ Cleanup complete'));
@@ -33,13 +34,6 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   console.log(chalk.yellow('\nReceived SIGTERM. Cleaning up...'));
-  await cleanupTempDirs();
-  process.exit(1);
-});
-
-process.on('uncaughtException', async (error) => {
-  console.error(chalk.red('\nUncaught exception:'));
-  console.error(error);
   await cleanupTempDirs();
   process.exit(1);
 });
@@ -106,144 +100,136 @@ async function copyDockerFiles(tempDir, type) {
   console.log(chalk.green('✓ Copied nginx configuration'));
 }
 
-// Print directory structure
-function printDirStructure(dir, indent = '') {
-  const items = fs.readdirSync(dir);
-  for (const item of items) {
-    const fullPath = path.join(dir, item);
-    const stat = fs.statSync(fullPath);
-    console.log(chalk.gray(`${indent}${item}${stat.isDirectory() ? '/' : ''}`));
-    if (stat.isDirectory() && !item.includes('node_modules')) {
-      printDirStructure(fullPath, `${indent}  `);
-    }
-  }
-}
+// Development deployment function
+async function developmentDeploy(options) {
+  const { name, port, type } = options;
+  const containerName = `${name}-dev`;
+  const imageTag = `${name}:development`;
+  const projectDir = process.cwd();
 
-// Main deployment function
-async function deployCommand(options) {
-  let tempDir = null;
-  
   try {
-    const {
-      type,
-      env = 'development',
-      port,
-      name,
-      registry
-    } = options;
+    // Stop existing container if it exists
+    try {
+      execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
+      execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
+      console.log(chalk.blue(`Removed existing container: ${containerName}`));
+    } catch (e) {
+      // Container doesn't exist, continue
+    }
 
-    console.log(chalk.blue(`Deploying ${type} application "${name}" to ${env} environment...`));
-
-    // Verify project structure before proceeding
-    await verifyProjectStructure();
-    
     // Create temporary build directory
-    tempDir = path.join(os.tmpdir(), `mfe-deploy-${name}-${Date.now()}`);
+    const tempDir = path.join(os.tmpdir(), `mfe-deploy-${name}-${Date.now()}`);
     tempDirs.add(tempDir);
-    
-    console.log(chalk.gray(`Using temporary directory: ${tempDir}`));
     await fs.ensureDir(tempDir);
 
     // Copy project files
-    console.log(chalk.blue('\nCopying project files...'));
-    const projectFiles = [
-      'src',
-      'public',
-      'package.json',
-      'package-lock.json',
-      'rspack.config.js'
-    ];
-
+    console.log(chalk.blue('\nPreparing deployment files...'));
+    const projectFiles = ['src', 'public', 'package.json', 'package-lock.json', 'rspack.config.js'];
     for (const file of projectFiles) {
-      const sourcePath = path.join(process.cwd(), file);
-      const targetPath = path.join(tempDir, file);
-      
-      if (fs.existsSync(sourcePath)) {
-        await fs.copy(sourcePath, targetPath);
-        console.log(chalk.gray(`Copied ${file}`));
+      const sourcePath = path.join(projectDir, file);
+      if (await fs.pathExists(sourcePath)) {
+        await fs.copy(sourcePath, path.join(tempDir, file));
       }
     }
 
-    // Copy Docker configuration files
-    console.log(chalk.blue('\nCopying Docker configuration files...'));
+    // Copy Docker configuration
     await copyDockerFiles(tempDir, type);
 
-    // Print directory structure for verification
-    console.log(chalk.blue('\nVerifying deployment files:'));
-    printDirStructure(tempDir);
-
-    // Generate Docker image tag
-    const imageTag = `${registry ? registry + '/' : ''}${name}:${env}`;
-
-    // Build Docker image
+    // Build image
     console.log(chalk.blue('\nBuilding Docker image...'));
     execSync(
-      `docker build -t ${imageTag} ${tempDir}`, 
+      `docker build -t ${imageTag} --target development ${tempDir}`, 
       { 
         stdio: 'inherit',
         env: { ...process.env, DOCKER_BUILDKIT: '1' }
       }
     );
 
-    if (env === 'development') {
-      // Run container in development mode
-      console.log(chalk.blue('\nStarting development container...'));
-      const containerName = `${name}-${env}`;
-      
-      // Stop existing container if it exists
-      try {
-        execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
-        execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
-      } catch (e) {
-        // Container doesn't exist, continue
-      }
+    // Run container with development settings
+    console.log(chalk.blue('\nStarting development container...'));
+    execSync(
+      `docker run -d \
+        --name ${containerName} \
+        -p ${port}:80 \
+        -v ${projectDir}/src:/app/src \
+        -v ${projectDir}/public:/app/public \
+        --env-file .env.development \
+        ${imageTag}`,
+      { stdio: 'inherit' }
+    );
 
-      execSync(
-        `docker run -d -p ${port}:80 --name ${containerName} ${imageTag}`,
-        { stdio: 'inherit' }
-      );
-      
-      // Verify container is running
-      console.log(chalk.blue('\nVerifying container status...'));
-      execSync(`docker ps | grep ${containerName}`, { stdio: 'inherit' });
-      
-      console.log(chalk.green(`\n✓ Development container started at http://localhost:${port}`));
-      
-      // Show container logs
-      console.log(chalk.blue('\nContainer logs:'));
-      execSync(`docker logs ${containerName}`, { stdio: 'inherit' });
-    } else {
-      // Push to registry for production
-      console.log(chalk.blue('\nPushing to registry...'));
-      execSync(`docker push ${imageTag}`, { stdio: 'inherit' });
-      console.log(chalk.green('\n✓ Image pushed to registry successfully'));
+    // Wait for container to be ready
+    await waitForContainer(containerName);
+    
+    // Show container info
+    console.log(chalk.green(`\n✓ Development container ready at http://localhost:${port}`));
+    console.log(chalk.blue('\nUseful commands:'));
+    console.log(`  Logs: docker logs -f ${containerName}`);
+    console.log(`  Shell: docker exec -it ${containerName} /bin/sh`);
+    console.log(`  Stop: docker stop ${containerName}`);
+    
+    // Stream logs if requested
+    if (options.logs) {
+      console.log(chalk.blue('\nStreaming container logs...'));
+      execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
     }
 
   } catch (error) {
-    console.error(chalk.red('\n✗ Deployment failed:'));
-    console.error(chalk.red(error.message));
-    if (error.stack) {
-      console.error(chalk.gray('\nStack trace:'));
-      console.error(error.stack);
-    }
+    console.error(chalk.red('\n✗ Development deployment failed:'));
+    console.error(error.message);
     throw error;
   } finally {
-    if (tempDir) {
-      await cleanupTempDirs();
-    }
+    await cleanupTempDirs();
   }
 }
 
-// Wrap the deployCommand to ensure proper error handling
-async function safeDeploy(options) {
+// Helper function to wait for container readiness
+async function waitForContainer(containerName, timeout = 30000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    try {
+      const status = execSync(
+        `docker inspect -f '{{.State.Status}}' ${containerName}`,
+        { encoding: 'utf8' }
+      ).trim();
+      
+      if (status === 'running') {
+        return true;
+      }
+    } catch (e) {
+      // Container not ready yet
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  throw new Error('Container failed to start within timeout');
+}
+
+// Main deployment command
+async function deployCommand(options) {
   try {
-    await deployCommand(options);
+    // Verify project structure
+    await verifyProjectStructure();
+
+    if (options.env === 'development') {
+      await developmentDeploy(options);
+    } else {
+      throw new Error('Production deployment not yet implemented');
+    }
   } catch (error) {
+    console.error(chalk.red('\n✗ Deployment failed:'));
+    console.error(chalk.red(error.message));
+    if (error.stack && process.env.DEBUG) {
+      console.error(chalk.gray('\nStack trace:'));
+      console.error(error.stack);
+    }
     process.exit(1);
   }
 }
 
 module.exports = {
-  deployCommand: safeDeploy,
-  verifyProjectStructure
+  deployCommand,
+  verifyProjectStructure,
+  copyDockerFiles,
+  developmentDeploy,
+  waitForContainer
 };

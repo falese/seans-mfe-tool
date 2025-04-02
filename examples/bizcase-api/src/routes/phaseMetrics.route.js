@@ -9,9 +9,9 @@ const CreatenewphasemetricsBodySchema = Joi.any();
 
 const UpdatephasemetricsBodySchema = Joi.any();
 
-router.get('/', getAllPhaseMetrics); console.log('got to the route')
-router.post('/', validateSchema('body', CreatenewphasemetricsBodySchema), createPhaseMetrics);
-router.get('/{phaseId}', getPhaseMetricsById);
-router.put('/{phaseId}', validateSchema('body', UpdatephasemetricsBodySchema), updatePhaseMetrics);
+router.get('/phase-metrics', getAllPhaseMetrics);
+router.post('/phase-metrics', validateSchema('body', CreatenewphasemetricsBodySchema), createPhaseMetrics);
+router.get('/phase-metrics/{phaseId}', getPhaseMetricsById);
+router.put('/phase-metrics/{phaseId}', validateSchema('body', UpdatephasemetricsBodySchema), updatePhaseMetrics);
 
 module.exports = router;

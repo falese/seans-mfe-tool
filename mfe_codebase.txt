@@ -1,0 +1,3516 @@
+<documents>
+<document>
+<source>bin/seans-mfe-tool.js</source>
+<document_content>
+#!/usr/bin/env node
+
+const { program } = require('commander');
+const { createShellCommand } = require('../src/commands/create-shell');
+const { createRemoteCommand } = require('../src/commands/create-remote');
+const { deployCommand } = require('../src/commands/deploy');
+const { createApiCommand } = require('../src/commands/create-api')
+const { buildCommand } = require('../src/commands/build');
+const { version } = require('../package.json');
+
+program
+  .version(version)
+  .description('Create and manage Module Federation applications with React and MUI');
+
+program
+  .command('shell')
+  .description('Create a new shell (container) application')
+  .argument('<name>', 'Shell application name')
+  .option('-p, --port <port>', 'Port number for the shell application', '3000')
+  .option('-r, --remotes <remotes>', 'Remote MFEs configuration as JSON string')
+  .action((name, options) => {
+    createShellCommand(name, options);
+  });
+
+program
+  .command('remote')
+  .description('Create a new remote MFE')
+  .argument('<name>', 'Remote MFE name')
+  .option('-p, --port <port>', 'Port number for the remote MFE', '3001')
+  .option('-m, --mui-version <version>', 'Material UI version', '5.15.0')
+  .action((name, options) => {
+    createRemoteCommand(name, options);
+  });
+
+  program
+  .command('deploy')
+  .description('Deploy an application')
+  .argument('<name>', 'Application name')
+  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
+  .option('-e, --env <environment>', 'Deployment environment (development or production)', 'development')
+  .option('-p, --port <port>', 'Port number for development deployment', '8080')
+  .option('-r, --registry <url>', 'Docker registry URL for production deployment')
+  .option('-m, --memory <limit>', 'Memory limit for API containers', '256Mi')
+  .option('-c, --cpu <limit>', 'CPU limit for API containers', '0.5')
+  .option('--replicas <count>', 'Number of API replicas', '2')
+  .action((name, options) => {
+    if (!['shell', 'remote', 'api'].includes(options.type)) {
+      console.error('Type must be shell, remote, or api');
+      process.exit(1);
+    }
+    deployCommand({ name, ...options });
+  });
+
+program
+  .command('init')
+  .description('Initialize a new Module Federation workspace')
+  .argument('<name>', 'Project name')
+  .option('-p, --package-manager <manager>', 'Package manager to use (npm, yarn, or pnpm)', 'pnpm')
+  .action((name, options) => {
+    console.log('Creating new workspace:', name);
+    console.log('Options:', options);
+  });
+
+  program
+  .command('api')
+  .description('Create a new API from OpenAPI specification')
+  .argument('<name>', 'API name')
+  .option('-p, --port <port>', 'Port number for the API', '3001')
+  .option('-s, --spec <path>', 'Path to OpenAPI specification file or URL', 'openapi.yaml')
+  .option('-d, --database <type>', 'Database type to use (mongodb or sqlite)', 'sqlite')
+  .addHelpText('after', `
+Examples:
+  $ seans-mfe-tool api my-store --spec store.yaml --database mongodb
+  $ seans-mfe-tool api pet-store --spec https://petstore3.swagger.io/api/v3/openapi.json --database sqlite
+
+Database Options:
+  mongodb    Uses MongoDB with MongoDB Memory Server for development
+  sqlite     Uses SQLite with file-based storage (default)
+
+Notes:
+  - MongoDB option will use in-memory database for development and testing
+  - SQLite option will create a local database file in src/data/
+  - Both options can be configured for production use through environment variables`)
+  .action((name, options) => {
+    // Validate database option
+    const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
+    if (!validDatabases.includes(options.database.toLowerCase())) {
+      console.error(chalk.red(`Error: Invalid database type '${options.database}'.`));
+      console.log(chalk.blue('Valid options are: mongodb, sqlite'));
+      process.exit(1);
+    }
+    
+    createApiCommand(name, options);
+  });
+
+
+  program
+  .command('build')
+  .description('Build an application')
+  .argument('<name>', 'Application name')
+  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
+  .option('-m, --mode <mode>', 'Build mode (development or production)', 'development')
+  .option('-p, --port <port>', 'Port number for development server')
+  .option('-s, --serve', 'Start development server')
+  .option('--analyze', 'Enable bundle analysis')
+  .action((name, options) => {
+    if (!['shell', 'remote', 'api'].includes(options.type)) {
+      console.error(chalk.red('Error: Type must be shell, remote, or api'));
+      process.exit(1);
+    }
+    buildCommand({ name, ...options });
+  });
+program.parse(process.argv);</document_content>
+</document>
+
+
+<document>
+<source>src/commands/create-api.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const SwaggerParser = require('@apidevtools/swagger-parser');
+const { execSync } = require('child_process');
+const { DatabaseGenerator } = require('../utils/DatabaseGenerator');
+const { ControllerGenerator } = require('../utils/ControllerGenerator');
+const { generateRoutes } = require('../utils/RouteGenerator');
+
+function validateDatabaseType(dbType) {
+  const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
+  if (!validDatabases.includes(dbType.toLowerCase())) {
+    throw new Error(`Unsupported database type: ${dbType}. Valid options are: ${validDatabases.join(', ')}`);
+  }
+  return true;
+}
+
+async function loadOASSpec(specPath) {
+  try {
+    if (specPath.startsWith('http')) {
+      return await SwaggerParser.parse(specPath);
+    }
+    const localPath = path.resolve(process.cwd(), specPath);
+    return await SwaggerParser.parse(localPath);
+  } catch (error) {
+    throw new Error(`Failed to parse OpenAPI spec: ${error.message}`);
+  }
+}
+
+async function ensureMiddleware(middlewareDir) {
+  const middleware = {
+    'auth.js': `const jwt = require('jsonwebtoken');
+const { UnauthorizedError } = require('../utils/errors');
+
+function auth(req, res, next) {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedError('Authorization token required');
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    next(new UnauthorizedError('Invalid authorization token'));
+  }
+}
+
+module.exports = { auth };`,
+
+    'validator.js': `const createError = require('http-errors');
+const { ValidationError } = require('../utils/errors');
+
+function validateSchema(property, schema) {
+  return (req, res, next) => {
+    const { error } = schema.validate(req[property], { abortEarly: false });
+    if (error) {
+      const errors = error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }));
+      next(new ValidationError('Validation Error', errors));
+      return;
+    }
+    next();
+  };
+}
+
+module.exports = { validateSchema };`,
+
+    'error-handler.js': `const logger = require('../utils/logger');
+const { BaseError, ValidationError, UnauthorizedError } = require('../utils/errors');
+
+function errorHandler(err, req, res, next) {
+  // Log error details
+  logger.error('Request failed:', {
+    requestId: req.id,
+    path: req.path,
+    method: req.method,
+    error: err.message,
+    stack: err.stack
+  });
+
+  // Handle known errors
+  if (err instanceof BaseError) {
+    return res.status(err.statusCode).json({
+      error: {
+        message: err.message,
+        ...(err.details && { details: err.details })
+      }
+    });
+  }
+
+  // Handle unknown errors
+  res.status(500).json({
+    error: {
+      message: 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
+  });
+}
+
+module.exports = errorHandler;`,
+
+    'request-id.js': `const { nanoid } = require('nanoid');
+
+function requestId(req, res, next) {
+  req.id = nanoid();
+  res.setHeader('X-Request-ID', req.id);
+  next();
+}
+
+module.exports = requestId;`
+  };
+
+  for (const [file, content] of Object.entries(middleware)) {
+    const filePath = path.join(middlewareDir, file);
+    await fs.writeFile(filePath, content);
+    console.log(chalk.green(`✓ Generated middleware: ${file}`));
+  }
+}
+
+async function ensureUtils(utilsDir) {
+  const utils = {
+    'logger.js': `const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+module.exports = logger;`,
+
+    'errors.js': `class BaseError extends Error {
+  constructor(message, statusCode = 500, details = null) {
+    super(message);
+    this.name = this.constructor.name;
+    this.statusCode = statusCode;
+    this.details = details;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ValidationError extends BaseError {
+  constructor(message, details) {
+    super(message, 400, details);
+  }
+}
+
+class UnauthorizedError extends BaseError {
+  constructor(message) {
+    super(message, 401);
+  }
+}
+
+class NotFoundError extends BaseError {
+  constructor(message) {
+    super(message, 404);
+  }
+}
+
+class ConflictError extends BaseError {
+  constructor(message) {
+    super(message, 409);
+  }
+}
+
+module.exports = {
+  BaseError,
+  ValidationError,
+  UnauthorizedError,
+  NotFoundError,
+  ConflictError
+};`,
+
+    'response.js': `function success(res, data = null, message = 'Success') {
+  return res.json({
+    success: true,
+    message,
+    ...(data && { data })
+  });
+}
+
+function paginate(res, { items, total, page, limit }) {
+  return res.json({
+    success: true,
+    data: items,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit)
+    }
+  });
+}
+
+module.exports = {
+  success,
+  paginate
+};`
+  };
+
+  for (const [file, content] of Object.entries(utils)) {
+    const filePath = path.join(utilsDir, file);
+    await fs.writeFile(filePath, content);
+    console.log(chalk.green(`✓ Generated utility: ${file}`));
+  }
+}
+
+async function processTemplates(targetDir, vars) {
+  try {
+    await mergePackageJson(targetDir, vars.database, vars);
+    await processConfigFiles(targetDir, vars);
+    await generateEnvironmentFiles(targetDir, vars);
+  } catch (error) {
+    throw new Error(`Failed to process templates: ${error.message}`);
+  }
+}
+
+async function mergePackageJson(targetDir, dbType, vars) {
+  try {
+    const basePkgPath = path.join(targetDir, 'package.json');
+    const dbPkgPath = path.join(targetDir, `package.json.addon`);
+    
+    let basePkg = await fs.readJson(basePkgPath);
+    basePkg.name = vars.name;
+    basePkg.version = vars.version;
+
+    if (await fs.pathExists(dbPkgPath)) {
+      const dbPkg = await fs.readJson(dbPkgPath);
+      basePkg = {
+        ...basePkg,
+        scripts: { ...basePkg.scripts, ...dbPkg.scripts },
+        dependencies: { ...basePkg.dependencies, ...dbPkg.dependencies },
+        devDependencies: { ...basePkg.devDependencies, ...dbPkg.devDependencies }
+      };
+      await fs.remove(dbPkgPath);
+    }
+
+    // Ensure core scripts and dependencies
+    basePkg.scripts = {
+      "start": "node src/index.js",
+      "dev": "nodemon src/index.js",
+      "test": "jest",
+      "lint": "eslint .",
+      ...basePkg.scripts
+    };
+
+    // Add database-specific scripts
+    if (dbType.includes('mongo')) {
+      basePkg.scripts["db:seed"] = "node src/database/seed.js";
+      basePkg.scripts["db:reset"] = "node src/database/reset.js";
+    } else {
+      basePkg.scripts["db:migrate"] = "sequelize-cli db:migrate";
+      basePkg.scripts["db:migrate:undo"] = "sequelize-cli db:migrate:undo";
+      basePkg.scripts["db:seed"] = "sequelize-cli db:seed:all";
+      basePkg.scripts["db:reset"] = "node src/database/reset.js";
+    }
+
+    // Core dependencies
+    basePkg.dependencies = {
+      "@apidevtools/swagger-parser": "^10.1.0",
+      "compression": "^1.7.4",
+      "cors": "^2.8.5",
+      "dotenv": "^16.0.3",
+      "express": "^4.18.2",
+      "helmet": "^7.0.0",
+      "http-errors": "^2.0.0",
+      "joi": "^17.9.2",
+      "jsonwebtoken": "^9.0.2",
+      "winston": "^3.8.2",
+      ...basePkg.dependencies
+    };
+
+    // Database-specific dependencies
+    if (dbType.includes('mongo')) {
+      basePkg.dependencies = {
+        ...basePkg.dependencies,
+        "mongoose": "^8.1.1",
+        "mongodb-memory-server": "^9.1.6"
+      };
+    } else {
+      basePkg.dependencies = {
+        ...basePkg.dependencies,
+        "sequelize": "^6.35.2",
+        "sqlite3": "^5.1.7"
+      };
+      basePkg.devDependencies = {
+        ...basePkg.devDependencies,
+        "sequelize-cli": "^6.6.2"
+      };
+    }
+
+    // Dev dependencies
+    basePkg.devDependencies = {
+      "eslint": "^8.40.0",
+      "jest": "^29.5.0",
+      "nodemon": "^2.0.22",
+      "supertest": "^6.3.3",
+      ...basePkg.devDependencies
+    };
+
+    // Sort dependencies
+    basePkg.dependencies = Object.fromEntries(
+      Object.entries(basePkg.dependencies).sort()
+    );
+    basePkg.devDependencies = Object.fromEntries(
+      Object.entries(basePkg.devDependencies).sort()
+    );
+
+    await fs.writeJson(basePkgPath, basePkg, { spaces: 2 });
+    console.log(chalk.green('✓ Generated package.json'));
+  } catch (error) {
+    throw new Error(`Failed to process package.json: ${error.message}`);
+  }
+}
+
+async function processConfigFiles(targetDir, vars) {
+  const configFiles = [
+    'src/config.js',
+    'src/config/database.js',
+    'src/index.js'
+  ];
+
+  for (const file of configFiles) {
+    const filePath = path.join(targetDir, file);
+    if (await fs.pathExists(filePath)) {
+      let content = await fs.readFile(filePath, 'utf8');
+      content = content
+        .replace(/__PROJECT_NAME__/g, vars.name)
+        .replace(/__PORT__/g, vars.port)
+        .replace(/__VERSION__/g, vars.version)
+        .replace(/__DATABASE__/g, vars.database);
+      await fs.writeFile(filePath, content);
+      console.log(chalk.green(`✓ Processed ${file}`));
+    }
+  }
+}
+
+async function generateEnvironmentFiles(targetDir, vars) {
+  const envContent = `# Server Configuration
+NODE_ENV=development
+PORT=${vars.port}
+API_VERSION=${vars.version}
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=1d
+
+# Database Configuration
+${vars.database.includes('mongo') ? 
+  'MONGODB_URI=mongodb://localhost:27017/' + vars.name.toLowerCase() :
+  'DB_PATH=./src/database/development.sqlite'}
+
+# Logging
+LOG_LEVEL=debug
+
+# CORS
+CORS_ORIGIN=*`;
+
+  const envPath = path.join(targetDir, '.env');
+  const envExamplePath = path.join(targetDir, '.env.example');
+
+  await fs.writeFile(envPath, envContent);
+  await fs.writeFile(envExamplePath, envContent);
+  
+  console.log(chalk.green('✓ Generated environment files'));
+}
+
+async function generateDatabaseInit(targetDir, dbType) {
+  const initPath = path.join(targetDir, 'src', 'database', 'init.js');
+  const content = dbType.toLowerCase().includes('mongo') ? 
+    generateMongoInitContent() : 
+    generateSqliteInitContent();
+
+  await fs.writeFile(initPath, content);
+  console.log(chalk.green('✓ Generated database initialization script'));
+}
+
+function generateMongoInitContent() {
+  return `const mongoose = require('mongoose');
+const { SchemaManager } = require('../utils/schemaManager');
+
+async function initializeDatabase() {
+  try {
+    const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/your_database';
+    
+    await mongoose.connect(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+
+    console.log('MongoDB connected successfully');
+
+    // Initialize schema management
+    await SchemaManager.initialize();
+    
+    console.log('Database initialization complete');
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    throw error;
+  }
+}
+
+module.exports = initializeDatabase;`;
+}
+
+function generateSqliteInitContent() {
+  return `const { sequelize } = require('../models');
+const logger = require('../utils/logger');
+
+async function initializeDatabase() {
+  try {
+    // Test connection
+    await sequelize.authenticate();
+    logger.info('Database connection established successfully');
+
+    // Run migrations if in development
+    if (process.env.NODE_ENV === 'development') {
+      await sequelize.sync({ alter: true });
+      logger.info('Development database synchronized');
+    }
+
+    logger.info('Database initialization complete');
+  } catch (error) {
+    logger.error('Database initialization failed:', error);
+    throw error;
+  }
+}
+
+module.exports = initializeDatabase;`;
+}
+
+
+
+async function createApiCommand(name, options) {
+  let tmpSpec = null;
+  try {
+    console.log(chalk.blue(`Creating API "${name}"...`));
+    
+    const projectRoot = path.resolve(__dirname, '..');
+    const baseTemplateDir = path.join(projectRoot, 'templates/api/base');
+    const targetDir = path.resolve(process.cwd(), name);
+    
+    const dbType = options.database?.toLowerCase() || 'sqlite';
+    validateDatabaseType(dbType);
+    
+    console.log(chalk.blue('\nParsing OpenAPI specification...'));
+    tmpSpec = await loadOASSpec(options.spec);
+    const spec = await SwaggerParser.dereference(tmpSpec);
+    
+    await fs.ensureDir(targetDir);
+    await fs.copy(baseTemplateDir, targetDir);
+    
+    const dbTemplateDir = path.join(projectRoot, `templates/api/${dbType}`);
+    if (await fs.pathExists(dbTemplateDir)) {
+      await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
+    }
+    
+    const dirs = {
+      routes: path.join(targetDir, 'src', 'routes'),
+      controllers: path.join(targetDir, 'src', 'controllers'),
+      models: path.join(targetDir, 'src', 'models'),
+      middleware: path.join(targetDir, 'src', 'middleware'),
+      utils: path.join(targetDir, 'src', 'utils'),
+      database: path.join(targetDir, 'src', 'database'),
+      config: path.join(targetDir, 'src', 'config')
+    };
+
+    // Ensure all directories exist
+    await Promise.all(Object.values(dirs).map(dir => fs.ensureDir(dir)));
+
+    console.log(chalk.blue('\nGenerating project structure...'));
+    await ensureMiddleware(dirs.middleware);
+    await ensureUtils(dirs.utils);
+
+    console.log(chalk.blue(`\nGenerating API with ${dbType} database...`));
+
+    try {
+      // Generate all components in parallel
+      await Promise.all([
+        DatabaseGenerator.generate(dbType, targetDir, spec),
+        ControllerGenerator.generate(dbType, dirs.controllers, spec),
+        generateRoutes(dirs.routes, spec)
+      ]);
+
+      console.log(chalk.green('✓ Generated API components successfully'));
+    } catch (error) {
+      console.error(chalk.red('Failed to generate API components:'));
+      console.error(error);
+      throw error;
+    }
+    
+    // Process templates and configurations
+    await processTemplates(targetDir, {
+      name,
+      version: spec.info.version || '1.0.0',
+      database: dbType,
+      port: options.port || 3001
+    });
+
+    // Generate database initialization
+    await generateDatabaseInit(targetDir, dbType);
+
+    // Install dependencies
+    console.log(chalk.blue('\nInstalling dependencies...'));
+    execSync('npm install', { 
+      cwd: targetDir, 
+      stdio: 'inherit',
+      env: { 
+        ...process.env, 
+        ADBLOCK: '1',
+        DISABLE_OPENCOLLECTIVE: '1',
+        NO_UPDATE_NOTIFIER: '1'
+      }
+    });
+
+    // Success output
+    logSuccessInfo(name, dbType, spec, options);
+
+  } catch (error) {
+    console.error(chalk.red('\nFailed to create API:'));
+    console.error(error.message);
+    if (error.stack && process.env.DEBUG) {
+      console.error(chalk.gray('\nStack trace:'));
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+function logSuccessInfo(name, dbType, spec, options) {
+  console.log(chalk.green('\n✓ API created successfully!'));
+  
+  console.log(chalk.blue(`\nAPI Structure generated from ${options.spec}:`));
+  console.log(`Database: ${dbType}`);
+  console.log(`Routes: ${Object.keys(spec.paths).length}`);
+  console.log(`Models: ${Object.keys(spec.components?.schemas || {}).length}`);
+  console.log(`Port: ${options.port || 3001}`);
+  
+  console.log('\nProject Structure:');
+  console.log('src/');
+  console.log('  ├── config/         # Configuration files');
+  console.log('  ├── controllers/    # Route handlers');
+  console.log('  ├── database/       # Database related files');
+  console.log('  ├── middleware/     # Express middleware');
+  console.log('  ├── models/         # Database models');
+  console.log('  ├── routes/         # API routes');
+  console.log('  └── utils/          # Utility functions');
+  
+  console.log('\nAvailable Scripts:');
+  console.log('  npm start          # Start the production server');
+  console.log('  npm run dev        # Start development server with hot reload');
+  console.log('  npm test           # Run tests');
+  console.log('  npm run lint       # Run linter');
+  
+  if (dbType.includes('mongo')) {
+    console.log('  npm run db:seed    # Seed the database with sample data');
+    console.log('  npm run db:reset   # Reset database to initial state');
+  } else {
+    console.log('  npm run db:migrate # Run database migrations');
+    console.log('  npm run db:seed    # Seed the database with sample data');
+  }
+  
+  console.log('\nNext steps:');
+  console.log(chalk.blue(`1. cd ${name}`));
+  
+  if (dbType.includes('mongo')) {
+    console.log(chalk.blue('2. Configure MongoDB connection in .env file'));
+    console.log(chalk.blue('3. Run npm run db:seed to initialize the database'));
+  } else {
+    console.log(chalk.blue('2. Run npm run db:migrate to create database tables'));
+    console.log(chalk.blue('3. Run npm run db:seed to add sample data'));
+  }
+  
+  console.log(chalk.blue('4. npm run dev'));
+  
+  console.log('\nAPI Documentation:');
+  console.log(chalk.blue(`http://localhost:${options.port || 3001}/api-docs`));
+}
+
+module.exports = {
+  createApiCommand,
+  // Export other functions for testing
+  validateDatabaseType,
+  ensureMiddleware,
+  ensureUtils,
+  processTemplates,
+  generateDatabaseInit,
+  logSuccessInfo
+};</document_content>
+</document>
+
+
+<document>
+<source>src/commands/create-remote.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const { execSync } = require('child_process');
+
+async function createRemoteCommand(name, options) {
+  try {
+    console.log(chalk.blue(`Creating remote MFE "${name}"...`));
+
+    // Resolve paths
+    const targetDir = path.resolve(process.cwd(), name);
+    const templateDir = path.resolve(__dirname, '..', 'templates', 'react', 'remote');
+
+    // Validate MUI version format
+    const muiVersion = options.muiVersion || '5.15.0';
+    if (!/^\d+\.\d+\.\d+$/.test(muiVersion)) {
+      throw new Error('Invalid MUI version format. Expected x.y.z');
+    }
+
+    // Parse and validate port
+    let port = 3001; // default port
+    if (options.port) {
+      port = parseInt(options.port, 10);
+      if (isNaN(port) || port < 1 || port > 65535) {
+        throw new Error('Invalid port number. Must be between 1 and 65535');
+      }
+    }
+
+    // Create target directory if it doesn't exist
+    await fs.ensureDir(targetDir);
+
+    // Copy template to target directory
+    await fs.copy(templateDir, targetDir);
+
+    // Process templates
+    console.log('\nProcessing template files...');
+    await processTemplates(targetDir, {
+      name,
+      port: options.port || 3001,
+      muiVersion,
+      exposedName: name.toLowerCase().replace(/[^a-z0-9]/g, '')
+    });
+
+    // Install dependencies
+    console.log(chalk.blue('\nInstalling dependencies...'));
+    execSync('npm install', { 
+      cwd: targetDir, 
+      stdio: 'inherit',
+      env: { ...process.env, ADBLOCK: '1', DISABLE_OPENCOLLECTIVE: '1' }
+    });
+
+    console.log(chalk.green('\n✓ Remote MFE created successfully!'));
+    console.log('\nNext steps:');
+    console.log(chalk.blue(`1. cd ${name}`));
+    console.log(chalk.blue('2. npm start'));
+    console.log(`\nYour MFE will be available at: http://localhost:${options.port || 3001}`);
+
+  } catch (error) {
+    console.error(chalk.red('\n✗ Failed to create remote MFE:'));
+    console.error(chalk.red(error.message));
+    process.exit(1);
+  }
+}
+
+async function processTemplates(targetDir, vars) {
+  const processFile = async (filePath) => {
+    console.log('Processing:', filePath);
+    const content = await fs.readFile(filePath, 'utf8');
+    const processedContent = content
+      .replace(/__PROJECT_NAME__/g, vars.name)
+      .replace(/__PORT__/g, vars.port)
+      .replace(/__MUI_VERSION__/g, vars.muiVersion)
+      .replace(/__EXPOSED_NAME__/g, vars.exposedName);
+    await fs.writeFile(filePath, processedContent);
+  };
+
+  // Process each configuration file
+  await processFile(path.join(targetDir, 'package.json'));
+  await processFile(path.join(targetDir, 'rspack.config.js'));
+  await fs.ensureDir(path.join(targetDir, 'public'));
+  await processFile(path.join(targetDir, 'public', 'index.html'));
+  await processFile(path.join(targetDir, 'src', 'App.jsx'));
+  await processFile(path.join(targetDir, 'src', 'bootstrap.jsx'));
+  
+}
+
+
+module.exports = {
+  createRemoteCommand
+};
+</document_content>
+</document>
+
+
+<document>
+<source>src/commands/create-shell.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const { execSync } = require('child_process');
+
+async function createShellCommand(name, options) {
+  try {
+    console.log(chalk.blue(`Creating shell application "${name}"...`));
+
+    // Resolve paths
+    const targetDir = path.resolve(process.cwd(), name);
+    const templateDir = path.resolve(__dirname, '..', 'templates', 'react', 'shell');
+
+    console.log('Target directory:', targetDir);
+    console.log('Template directory:', templateDir);
+
+    // Verify template directory exists
+    if (!fs.existsSync(templateDir)) {
+      throw new Error(`Template directory not found: ${templateDir}`);
+    }
+
+    // Create target directory if it doesn't exist
+    await fs.ensureDir(targetDir);
+
+    // Copy template to target directory
+    await fs.copy(templateDir, targetDir);
+
+    // Process templates
+    console.log('\nProcessing template files...');
+    await processTemplates(targetDir, {
+      name,
+      port: options.port || 3000,
+      remotes: options.remotes || '{}'
+    });
+
+    // Install dependencies
+    console.log(chalk.blue('\nInstalling dependencies...'));
+    execSync('npm install', { 
+      cwd: targetDir, 
+      stdio: 'inherit',
+      env: { ...process.env, ADBLOCK: '1', DISABLE_OPENCOLLECTIVE: '1' }
+    });
+
+    console.log(chalk.green('\n✓ Shell application created successfully!'));
+    console.log('\nNext steps:');
+    console.log(chalk.blue(`1. cd ${name}`));
+    console.log(chalk.blue('2. npm start'));
+    console.log(`\nYour application will be available at: http://localhost:${options.port || 3000}`);
+
+  } catch (error) {
+    console.error(chalk.red('\n✗ Failed to create shell application:'));
+    console.error(chalk.red(error.message));
+    if (error.stack) {
+      console.error(chalk.gray('\nStack trace:'));
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+async function processTemplates(targetDir, vars) {
+  try {
+    // Process each file individually
+    const processFile = async (filePath) => {
+      console.log('Processing:', filePath);
+      const content = await fs.readFile(filePath, 'utf8');
+      const processedContent = content
+        .replace(/__PROJECT_NAME__/g, vars.name)
+        .replace(/__PORT__/g, vars.port)
+        .replace(/__REMOTES__/g, vars.remotes);
+      await fs.writeFile(filePath, processedContent);
+    };
+
+    // Process package.json
+    await processFile(path.join(targetDir, 'package.json'));
+
+    // Process rspack.config.js
+    await processFile(path.join(targetDir, 'rspack.config.js'));
+
+    // Process index.html
+    await processFile(path.join(targetDir, 'public', 'index.html'));
+
+    // Process App.jsx
+    await processFile(path.join(targetDir, 'src', 'App.jsx'));
+
+  } catch (error) {
+    console.error('Error processing templates:', error);
+    throw error;
+  }
+}
+
+module.exports = {
+  createShellCommand
+};</document_content>
+</document>
+
+
+<document>
+<source>src/commands/deploy.js</source>
+<document_content>
+const { execSync } = require('child_process');
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const os = require('os');
+
+// Keep track of temp directories for cleanup
+const tempDirs = new Set();
+
+// Cleanup function
+async function cleanupTempDirs() {
+  for (const dir of tempDirs) {
+    try {
+      if (fs.existsSync(dir)) {
+        console.log(chalk.blue(`\nCleaning up temporary directory: ${dir}`));
+        await fs.remove(dir);
+        console.log(chalk.green('✓ Cleanup complete'));
+      }
+    } catch (error) {
+      console.error(chalk.yellow(`Warning: Failed to clean up directory: ${dir}`));
+      console.error(chalk.gray(error.message));
+    }
+  }
+  tempDirs.clear();
+}
+
+// Register cleanup handlers
+process.on('SIGINT', async () => {
+  console.log(chalk.yellow('\nReceived SIGINT. Cleaning up...'));
+  await cleanupTempDirs();
+  process.exit(1);
+});
+
+process.on('SIGTERM', async () => {
+  console.log(chalk.yellow('\nReceived SIGTERM. Cleaning up...'));
+  await cleanupTempDirs();
+  process.exit(1);
+});
+
+process.on('uncaughtException', async (error) => {
+  console.error(chalk.red('\nUncaught exception:'));
+  console.error(error);
+  await cleanupTempDirs();
+  process.exit(1);
+});
+
+// Verify project structure
+async function verifyProjectStructure() {
+  console.log(chalk.blue('Checking required files...'));
+  
+  const requiredFiles = [
+    'package.json',
+    'rspack.config.js',
+    'src/App.jsx',
+    'src/bootstrap.jsx',
+    'public/index.html'
+  ];
+
+  const missingFiles = [];
+  for (const file of requiredFiles) {
+    const filePath = path.resolve(process.cwd(), file);
+    if (!fs.existsSync(filePath)) {
+      missingFiles.push(file);
+      console.log(chalk.red(`❌ Missing: ${file}`));
+    } else {
+      console.log(chalk.green(`✓ Found: ${file}`));
+    }
+  }
+
+  if (missingFiles.length > 0) {
+    throw new Error(
+      'Missing required files:\n' +
+      missingFiles.map(file => `  - ${file}`).join('\n') +
+      '\n\nPlease ensure all required files are present before deployment.'
+    );
+  }
+
+  console.log(chalk.green('\n✓ Project structure verification complete'));
+}
+
+// Copy Docker configuration files
+async function copyDockerFiles(tempDir, type) {
+  const templateDir = path.resolve(__dirname, '..', 'templates', 'docker');
+  console.log(chalk.gray(`Template directory: ${templateDir}`));
+  
+  // Copy Dockerfile
+  const dockerfileSource = path.join(templateDir, `Dockerfile.${type}`);
+  const dockerfileDest = path.join(tempDir, 'Dockerfile');
+  
+  if (!fs.existsSync(dockerfileSource)) {
+    throw new Error(`Docker template not found: ${dockerfileSource}`);
+  }
+  
+  await fs.copy(dockerfileSource, dockerfileDest);
+  console.log(chalk.green('✓ Copied Dockerfile'));
+
+  // Copy nginx configuration
+  const nginxSource = path.join(templateDir, 'nginx.conf');
+  const nginxDest = path.join(tempDir, 'nginx.conf');
+  
+  if (!fs.existsSync(nginxSource)) {
+    throw new Error(`Nginx configuration not found: ${nginxSource}`);
+  }
+  
+  await fs.copy(nginxSource, nginxDest);
+  console.log(chalk.green('✓ Copied nginx configuration'));
+}
+
+// Print directory structure
+function printDirStructure(dir, indent = '') {
+  const items = fs.readdirSync(dir);
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    const stat = fs.statSync(fullPath);
+    console.log(chalk.gray(`${indent}${item}${stat.isDirectory() ? '/' : ''}`));
+    if (stat.isDirectory() && !item.includes('node_modules')) {
+      printDirStructure(fullPath, `${indent}  `);
+    }
+  }
+}
+
+// Main deployment function
+async function deployCommand(options) {
+  let tempDir = null;
+  
+  try {
+    const {
+      type,
+      env = 'development',
+      port,
+      name,
+      registry
+    } = options;
+
+    console.log(chalk.blue(`Deploying ${type} application "${name}" to ${env} environment...`));
+
+    // Verify project structure before proceeding
+    await verifyProjectStructure();
+    
+    // Create temporary build directory
+    tempDir = path.join(os.tmpdir(), `mfe-deploy-${name}-${Date.now()}`);
+    tempDirs.add(tempDir);
+    
+    console.log(chalk.gray(`Using temporary directory: ${tempDir}`));
+    await fs.ensureDir(tempDir);
+
+    // Copy project files
+    console.log(chalk.blue('\nCopying project files...'));
+    const projectFiles = [
+      'src',
+      'public',
+      'package.json',
+      'package-lock.json',
+      'rspack.config.js'
+    ];
+
+    for (const file of projectFiles) {
+      const sourcePath = path.join(process.cwd(), file);
+      const targetPath = path.join(tempDir, file);
+      
+      if (fs.existsSync(sourcePath)) {
+        await fs.copy(sourcePath, targetPath);
+        console.log(chalk.gray(`Copied ${file}`));
+      }
+    }
+
+    // Copy Docker configuration files
+    console.log(chalk.blue('\nCopying Docker configuration files...'));
+    await copyDockerFiles(tempDir, type);
+
+    // Print directory structure for verification
+    console.log(chalk.blue('\nVerifying deployment files:'));
+    printDirStructure(tempDir);
+
+    // Generate Docker image tag
+    const imageTag = `${registry ? registry + '/' : ''}${name}:${env}`;
+
+    // Build Docker image
+    console.log(chalk.blue('\nBuilding Docker image...'));
+    execSync(
+      `docker build -t ${imageTag} ${tempDir}`, 
+      { 
+        stdio: 'inherit',
+        env: { ...process.env, DOCKER_BUILDKIT: '1' }
+      }
+    );
+
+    if (env === 'development') {
+      // Run container in development mode
+      console.log(chalk.blue('\nStarting development container...'));
+      const containerName = `${name}-${env}`;
+      
+      // Stop existing container if it exists
+      try {
+        execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
+        execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
+      } catch (e) {
+        // Container doesn't exist, continue
+      }
+
+      execSync(
+        `docker run -d -p ${port}:80 --name ${containerName} ${imageTag}`,
+        { stdio: 'inherit' }
+      );
+      
+      // Verify container is running
+      console.log(chalk.blue('\nVerifying container status...'));
+      execSync(`docker ps | grep ${containerName}`, { stdio: 'inherit' });
+      
+      console.log(chalk.green(`\n✓ Development container started at http://localhost:${port}`));
+      
+      // Show container logs
+      console.log(chalk.blue('\nContainer logs:'));
+      execSync(`docker logs ${containerName}`, { stdio: 'inherit' });
+    } else {
+      // Push to registry for production
+      console.log(chalk.blue('\nPushing to registry...'));
+      execSync(`docker push ${imageTag}`, { stdio: 'inherit' });
+      console.log(chalk.green('\n✓ Image pushed to registry successfully'));
+    }
+
+  } catch (error) {
+    console.error(chalk.red('\n✗ Deployment failed:'));
+    console.error(chalk.red(error.message));
+    if (error.stack) {
+      console.error(chalk.gray('\nStack trace:'));
+      console.error(error.stack);
+    }
+    throw error;
+  } finally {
+    if (tempDir) {
+      await cleanupTempDirs();
+    }
+  }
+}
+
+// Wrap the deployCommand to ensure proper error handling
+async function safeDeploy(options) {
+  try {
+    await deployCommand(options);
+  } catch (error) {
+    process.exit(1);
+  }
+}
+
+module.exports = {
+  deployCommand: safeDeploy,
+  verifyProjectStructure
+};</document_content>
+</document>
+
+
+<document>
+<source>src/commands/build.js</source>
+<document_content>
+const { BuildManager } = require('../build/BuildManager');
+const chalk = require('chalk');
+
+async function buildCommand(options) {
+  try {
+    const manager = new BuildManager(options);
+    await manager.initialize();
+    
+    if (options.serve) {
+      await manager.serve();
+    } else {
+      await manager.build();
+    }
+  } catch (error) {
+    console.error(chalk.red('\n✗ Command failed:'));
+    console.error(chalk.red(error.message));
+    if (process.env.DEBUG && error.stack) {
+      console.error(chalk.gray('\nStack trace:'));
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+module.exports = { buildCommand };</document_content>
+</document>
+
+
+<document>
+<source>src/utils/DatabaseGenerator/DatabaseGenerator.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const { MongoDBGenerator } = require('./generators/MongoDBGenerator');
+const { SQLiteGenerator } = require('./generators/SQLiteGenerator');
+const { SeedGenerator } = require('./generators/SeedGenerator');
+const { MigrationGenerator } = require('./generators/MigrationGenerator');
+const { MongoSchemaManager } = require('./generators/MongoSchemaManager');
+
+class DatabaseGenerator {
+  static async generate(dbType, outputDir, spec) {
+    if (!dbType) {
+      throw new Error('Database type is required');
+    }
+
+    console.log(chalk.blue('\nGenerating database components...'));
+    
+    // Get the appropriate generator
+    const generator = this.getGenerator(dbType);
+    const seedGenerator = new SeedGenerator(spec);
+    
+    try {
+      // Generate components in parallel
+      await Promise.all([
+        // Generate models
+        generator.generateModels(outputDir, spec),
+        
+        // Generate seed data based on example values in spec
+        seedGenerator.generateSeedData(outputDir, dbType),
+        
+        // Generate appropriate schema management system
+        dbType.toLowerCase().includes('sql') ? 
+          new MigrationGenerator(spec).generateMigrations(outputDir) :
+          new MongoSchemaManager(spec).generateSchemaManagement(outputDir)
+      ]);
+
+      console.log(chalk.green('✓ Generated database components successfully'));
+    } catch (error) {
+      console.error(chalk.red('Failed to generate database components:'));
+      console.error(error);
+      throw error;
+    }
+  }
+
+  static getGenerator(dbType) {
+    switch (dbType.toLowerCase()) {
+      case 'mongodb':
+      case 'mongo':
+        return new MongoDBGenerator();
+      case 'sqlite':
+      case 'sql':
+        return new SQLiteGenerator();
+      default:
+        throw new Error(`Unsupported database type: ${dbType}. Supported types are: mongodb, sqlite`);
+    }
+  }
+}
+
+module.exports = { DatabaseGenerator };</document_content>
+</document>
+
+
+<document>
+<source>src/utils/ControllerGenerator/ControllerGenerator.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const { MethodGenerator } = require('./generators/MethodGenerator');
+const { ValidationGenerator } = require('./generators/ValidationGenerator');
+const { ImplementationGenerator } = require('./generators/ImplementationGenerator');
+const { DatabaseAdapter } = require('./adapters/DatabaseAdapter');
+const { NameGenerator } = require('../generators/NameGenerator');
+
+class ControllerGenerator {
+  static async generate(dbType, controllersDir, spec) {
+    console.log(chalk.blue('\nStarting controller generation...'));
+    console.log('Database type:', dbType);
+    console.log('Available paths:', Object.keys(spec.paths));
+    
+    if (!spec?.paths) {
+      throw new Error('Invalid OpenAPI specification: missing paths');
+    }
+
+    const dbAdapter = DatabaseAdapter.create(dbType);
+    await this.generateControllers(controllersDir, spec, dbAdapter);
+  }
+
+  static async generateControllers(controllersDir, spec, dbAdapter) {
+    try {
+      const resources = this.groupPathsByResource(spec.paths);
+      console.log('\nResources found:', Object.keys(resources));
+
+      for (const [resourcePath, pathGroup] of Object.entries(resources)) {
+        console.log(`\nProcessing resource: ${resourcePath}`);
+        
+        const normalizedName = NameGenerator.toCamelCase(resourcePath);
+        console.log('Normalized name:', normalizedName);
+        
+        const modelName = NameGenerator.toModelName(resourcePath);
+        console.log('Model name:', modelName);
+        
+        const controllerContent = await this.generateControllerContent(normalizedName, modelName, pathGroup, dbAdapter);
+        const filePath = path.join(controllersDir, `${normalizedName}.controller.js`);
+        
+        await fs.writeFile(filePath, controllerContent);
+        console.log(chalk.green(`✓ Generated controller: ${normalizedName}`));
+      }
+    } catch (error) {
+      console.error(chalk.red('Error generating controllers:'), error);
+      throw error;
+    }
+  }
+
+  static groupPathsByResource(paths) {
+    const resources = {};
+    
+    for (const [pathKey, operations] of Object.entries(paths)) {
+      // Extract resource name from path
+      const parts = pathKey.split('/');
+      const resource = parts[1]; // Get first path segment after leading slash
+      
+      if (!resources[resource]) {
+        resources[resource] = { paths: [] };
+      }
+      
+      // Filter out parameters from operations
+      const { parameters, ...pathOperations } = operations;
+      
+      resources[resource].paths.push({
+        path: pathKey,
+        operations: pathOperations,
+        pathParameters: parameters
+      });
+    }
+    
+    return resources;
+  }
+
+  static async generateControllerContent(resourceName, modelName, pathGroup, dbAdapter) {
+    const imports = this.generateImports(dbAdapter);
+    const methods = this.generateMethods(resourceName, modelName, pathGroup, dbAdapter);
+    const exports = this.generateExports(methods.map(m => m.name));
+
+    return [imports, ...methods.map(m => m.content), exports].join('\n\n');
+  }
+
+  static generateImports(dbAdapter) {
+    return [
+      `const { ApiError } = require('../middleware/errorHandler');`,
+      `const logger = require('../utils/logger');`,
+      dbAdapter.getImportStatement()
+    ].join('\n');
+  }
+
+  static generateMethods(resourceName, modelName, pathGroup, dbAdapter) {
+    const methods = [];
+
+    for (const { path, operations, pathParameters } of pathGroup.paths) {
+      for (const [method, operation] of Object.entries(operations)) {
+        // Skip parameters
+        if (method === 'parameters') continue;
+
+        const functionName = NameGenerator.generateControllerMethodName(method, resourceName, path);
+        const validations = ValidationGenerator.generateValidations({
+          ...operation,
+          parameters: [...(pathParameters || []), ...(operation.parameters || [])]
+        });
+
+        const implementation = ImplementationGenerator.generate(
+          method,
+          path,
+          operation,
+          modelName,
+          dbAdapter
+        );
+
+        const methodContent = MethodGenerator.generateControllerMethod(
+          functionName,
+          method,
+          path,
+          operation,
+          validations,
+          implementation
+        );
+
+        methods.push({ name: functionName, content: methodContent });
+      }
+    }
+
+    return methods;
+  }
+
+  static generateExports(methodNames) {
+    return `module.exports = {\n  ${methodNames.join(',\n  ')}\n};`;
+  }
+}
+
+module.exports = { ControllerGenerator };</document_content>
+</document>
+
+
+<document>
+<source>src/utils/RouteGenerator/RouteGenerator.js</source>
+<document_content>
+const fs = require('fs-extra');
+const path = require('path');
+const chalk = require('chalk');
+const { SchemaGenerator } = require('./generators/SchemaGenerator');
+const { PathGenerator } = require('./generators/PathGenerator');
+const { NameGenerator } = require('../generators/NameGenerator');
+
+class RouteGenerator {
+  static async generate(routesDir, spec) {
+    console.log(chalk.blue('\nGenerating routes...'));
+    
+    if (!spec.paths) {
+      console.log(chalk.yellow('No paths found in OpenAPI spec'));
+      return;
+    }
+
+    await fs.ensureDir(routesDir);
+    const routes = [];
+
+    try {
+      // Group paths by resource
+      const resourceGroups = this.groupPathsByResource(spec.paths);
+      console.log('Found resources:', Object.keys(resourceGroups));
+
+      // Generate route files for each resource
+      for (const [resource, paths] of Object.entries(resourceGroups)) {
+        console.log(`\nProcessing resource: ${resource}`);
+        
+        // Convert resource names
+        const camelResource = NameGenerator.toCamelCase(resource); // for imports
+        const fileName = camelResource; // for file names
+        const routePath = NameGenerator.toKebabCase(resource); // for URL paths
+        
+        console.log(`Resource name: ${resource}`);
+        console.log(`Camel case: ${camelResource}`);
+        console.log(`File name: ${fileName}`);
+        console.log(`Route path: ${routePath}`);
+        
+        // Generate route file
+        const routeFilePath = path.join(routesDir, `${fileName}.route.js`);
+        const routeContent = this.generateRouteFile(paths, camelResource, spec);
+        
+        await fs.writeFile(routeFilePath, routeContent);
+        routes.push({ 
+          name: fileName,
+          path: `/${routePath}`,
+          camelName: camelResource 
+        });
+        console.log(chalk.green(`✓ Generated route: ${fileName}`));
+      }
+
+      // Generate index file
+      await this.generateIndexFile(path.join(routesDir, 'index.js'), routes);
+      console.log(chalk.green('✓ Generated routes index file'));
+    } catch (error) {
+      console.error(chalk.red('Error generating routes:'), error);
+      throw error;
+    }
+  }
+
+  static generateRouteFile(paths, resourceName, spec) {
+    console.log(`Generating route file for ${resourceName}`);
+    const { operationMap, validationSchemas, routes } = PathGenerator.generatePathContent(
+      paths, 
+      resourceName,
+      spec
+    );
+
+    const imports = [
+      `const express = require('express');`,
+      `const { ${Object.keys(operationMap).join(', ')} } = require('../controllers/${resourceName}.controller');`,
+      `const { validateSchema } = require('../middleware/validator');`,
+      `const { auth } = require('../middleware/auth');`,
+      `const Joi = require('joi');`,
+      `const router = express.Router();`
+    ].join('\n');
+
+    return [
+      imports,
+      '',
+      validationSchemas.join('\n\n'),
+      '',
+      routes.join('\n'),
+      '',
+      'module.exports = router;'
+    ].join('\n');
+  }
+
+  static async generateIndexFile(indexPath, routes) {
+    const content = `const express = require('express');
+const router = express.Router();
+const logger = require('../utils/logger');
+
+// Request logging middleware
+router.use((req, res, next) => {
+  req.requestId = require('crypto').randomUUID();
+  logger.info('Incoming request', {
+    requestId: req.requestId,
+    method: req.method,
+    path: req.path,
+    query: req.query,
+    body: req.body
+  });
+  next();
+});
+
+${routes.map(({ name, path }) => 
+  `// Mount ${path} routes
+router.use('', require('./${name}.route'));`
+).join('\n\n')}
+
+module.exports = router;`;
+
+    await fs.writeFile(indexPath, content);
+  }
+
+  static groupPathsByResource(paths) {
+    const groups = {};
+    
+    for (const [pathKey, operations] of Object.entries(paths)) {
+      const resource = pathKey.split('/')[1];
+      if (!resource) continue;
+      
+      if (!groups[resource]) {
+        groups[resource] = [];
+      }
+      groups[resource].push([pathKey, operations]);
+    }
+    
+    return groups;
+  }
+}
+
+module.exports = { RouteGenerator };</document_content>
+</document>
+
+
+<document>
+<source>src/utils/generators/NameGenerator.js</source>
+<document_content>
+class NameGenerator {
+  static toCamelCase(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/[^a-zA-Z0-9]+(.)/g, (_, char) => char.toUpperCase())
+      .replace(/^[A-Z]/, c => c.toLowerCase());
+  }
+
+  static toPascalCase(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/[^a-zA-Z0-9]+(.)/g, (_, char) => char.toUpperCase())
+      .replace(/^[a-z]/, c => c.toUpperCase());
+  }
+
+  static toKebabCase(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .toLowerCase();
+  }
+
+  static toSingular(str) {
+    if (!str) return '';
+    str = String(str);
+    
+    if (str.endsWith('ies')) {
+      return str.slice(0, -3) + 'y';
+    }
+    if (str.endsWith('s') && !str.endsWith('ss')) {
+      return str.slice(0, -1);
+    }
+    return str;
+  }
+
+  static toPlural(str) {
+    if (!str) return '';
+    str = String(str);
+    
+    if (str.endsWith('y')) {
+      return str.slice(0, -1) + 'ies';
+    }
+    if (str.endsWith('s') || str.endsWith('sh') || str.endsWith('ch') || str.endsWith('x')) {
+      return str + 'es';
+    }
+    return str + 's';
+  }
+
+  // Returns singular PascalCase for model class and variable names
+  static toModelName(resourceName) {
+    const singular = this.toSingular(resourceName);
+    return this.toPascalCase(singular);
+  }
+
+  // Returns plural PascalCase for mongoose model registration
+  static toMongooseName(resourceName) {
+    const singular = this.toSingular(resourceName);
+    const plural = this.toPlural(singular);
+    return this.toPascalCase(plural);
+  }
+
+  // Returns singular PascalCase for file naming
+  static toFileName(resourceName) {
+    const modelName = this.toModelName(resourceName);
+    return `${modelName}.model.js`;
+  }
+
+  static getRouteName(path) {
+    const resource = path.split('/')[1];
+    return `${this.toKebabCase(resource)}`;
+  }
+
+  static getControllerName(resourceName) {
+    return `${this.toCamelCase(resourceName)}Controller`;
+  }
+
+  static normalizePathParams(path) {
+    return path.replace(/{([^}]+)}/g, ':$1');
+  }
+
+  static generateControllerMethodName(method, resourceName, path) {
+    const isCollection = !path.includes('{');
+    const base = this.toPascalCase(resourceName);
+    
+    if (isCollection) {
+      switch (method.toLowerCase()) {
+        case 'get': return `getAll${base}`;
+        case 'post': return `create${base}`;
+        default: return `${method.toLowerCase()}${base}`;
+      }
+    } else {
+      switch (method.toLowerCase()) {
+        case 'get': return `get${base}ById`;
+        case 'put': return `update${base}`;
+        case 'patch': return `patch${base}`;
+        case 'delete': return `delete${base}`;
+        default: return `${method.toLowerCase()}${base}ById`;
+      }
+    }
+  }
+
+  static generateRouteMethodName(method, resourceName) {
+    const base = this.toPascalCase(resourceName);
+    const methodPrefix = method.toLowerCase();
+    return `${methodPrefix}${base}`;
+  }
+}
+
+module.exports = { NameGenerator };</document_content>
+</document>
+
+
+<document>
+<source>src/utils/generators/ResourceMapper.js</source>
+<document_content>
+const { NameGenerator } = require('./NameGenerator');
+
+class ResourceMapper {
+  constructor() {
+    this.nameGenerator = new NameGenerator();
+  }
+
+  mapResources(spec) {
+    const resourceMap = new Map();
+
+    // Group paths by resource
+    Object.entries(spec.paths).forEach(([path, operations]) => {
+      const resourceName = this.getResourceName(path);
+      if (!resourceMap.has(resourceName)) {
+        resourceMap.set(resourceName, { paths: [] });
+      }
+      
+      // Clean up operations - remove parameters operation
+      const cleanedOperations = this.cleanOperations(operations);
+      
+      resourceMap.get(resourceName).paths.push({ 
+        path, 
+        operations: cleanedOperations,
+        routePath: this.nameGenerator.toRouteName(path),
+        controllerName: this.nameGenerator.getControllerName(resourceName),
+        routerName: this.nameGenerator.getRouteName(resourceName)
+      });
+    });
+
+    return resourceMap;
+  }
+
+  getResourceName(pathKey) {
+    const segments = pathKey.split('/');
+    const rawName = segments[1]; // Get first path segment after leading slash
+    return this.nameGenerator.toCamelCase(rawName);
+  }
+
+  cleanOperations(operations) {
+    const cleanedOps = {};
+    Object.entries(operations).forEach(([method, operation]) => {
+      if (method !== 'parameters') {
+        cleanedOps[method] = {
+          ...operation,
+          controllerMethod: this.nameGenerator.generateControllerMethodName(method, operation),
+          routeMethod: this.nameGenerator.generateRouteMethodName(method, operation)
+        };
+      }
+    });
+    return cleanedOps;
+  }
+}
+
+module.exports = { ResourceMapper };</document_content>
+</document>
+
+
+<document>
+<source>src/templates/react/remote/rspack.config.js</source>
+<document_content>
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
+
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = {
+  entry: './src/bootstrap.jsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'auto',
+  },
+  resolve: {
+    extensions: ['.jsx', '.js', '.json'],
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "util": require.resolve("util/"),
+      "url": require.resolve("url/"),
+      "buffer": require.resolve("buffer/"),
+      "crypto": require.resolve("crypto-browserify"),
+      "fs": false,
+      "os": require.resolve("os-browserify/browser"),
+      "http": require.resolve("stream-http"),
+      "https": require.resolve("https-browserify"),
+      "assert": require.resolve("assert/"),
+      "process": require.resolve("process/browser"),
+      "events": require.resolve("events/")
+    }
+  },
+  devServer: {
+    port: __PORT__,
+    host: '0.0.0.0',
+    hot: true,
+    historyApiFallback: true,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        exclude: /node_modules\/(?!(@huggingface|other-problematic-packages)\/).*/,
+        use: {
+          loader: 'builtin:swc-loader',
+          options: {
+            jsc: {
+              parser: {
+                syntax: 'ecmascript',
+                jsx: true,
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic',
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+  plugins: [
+    new rspack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env': '{}',
+      'process.browser': true,
+      'process.version': JSON.stringify(process.version),
+    }),
+    new rspack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer']
+    }),
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/'
+    }),
+    new ModuleFederationPlugin({
+      name: '__EXPOSED_NAME__',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './App': './src/App.jsx',
+      },
+      shared: {
+        react: { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        'react-dom': { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        '@mui/material': { 
+          singleton: false, 
+          requiredVersion: '__MUI_VERSION__',
+          eager: false
+        },
+        '@mui/system': { 
+          singleton: false, 
+          requiredVersion: '__MUI_VERSION__',
+          eager: false
+        },
+        '@emotion/react': { 
+          singleton: true, 
+          requiredVersion: '^11.11.1',
+          eager: false
+        },
+        '@emotion/styled': { 
+          singleton: true, 
+          requiredVersion: '^11.11.0',
+          eager: false
+        }
+      },
+    }),
+  ]
+};</document_content>
+</document>
+
+
+<document>
+<source>src/templates/react/shell/rspack.config.js</source>
+<document_content>
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
+
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = {
+  context: __dirname,
+  entry: {
+    main: './src/index.js'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].bundle.js',
+    publicPath: 'auto',
+    clean: true,
+  },
+  mode: "development",
+  target: "web",
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        use: {
+          loader: "builtin:swc-loader",
+          options: {
+            jsc: {
+              parser: {
+                syntax: "ecmascript",
+                jsx: true
+              },
+              transform: {
+                react: {
+                  runtime: "automatic"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  resolve: {
+    extensions: [".js", ".jsx", ".json"]
+  },
+  devServer: {
+    port: __PORT__,
+    host: 'localhost',
+    hot: true,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/'
+    },
+    devMiddleware: {
+      publicPath: '/'
+    }
+  },
+  plugins: [
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/'
+    }),
+    new ModuleFederationPlugin({
+      name: "shell",
+      filename: "remoteEntry.js",
+      remotes: __REMOTES__ || {},
+      shared: {
+        react: { singleton: true, eager: true },
+        "react-dom": { singleton: true, eager: true },
+        "@mui/material": { singleton: true },
+        "@mui/system": { singleton: true },
+        "@emotion/react": { singleton: true },
+        "@emotion/styled": { singleton: true }
+      }
+    })
+  ],
+  optimization: {
+    moduleIds: 'named',
+    chunkIds: 'named'
+  }
+};</document_content>
+</document>
+
+
+<document>
+<source>src/templates/react/remote/src/App.jsx</source>
+<document_content>
+import React from 'react';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Typography, 
+  useTheme,
+  Paper,
+  Divider 
+} from '@mui/material';
+
+const App = () => {
+  const theme = useTheme();
+  const muiVersion = require('@mui/material/package.json').version;
+  const pkgJson = require('../package.json');
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+        <Typography variant="h4" gutterBottom color="primary">
+          {pkgJson.name}
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Remote MFE Component
+        </Typography>
+      </Paper>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Package Information
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            MUI Version: {muiVersion}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            Package Version: {pkgJson.version}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            Primary Color: {theme.palette.primary.main}
+          </Typography>
+          
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="caption" display="block">
+              Running in {process.env.NODE_ENV} mode
+            </Typography>
+            <Typography variant="caption" display="block">
+              Last Updated: {new Date().toLocaleString()}
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};
+
+export default App;</document_content>
+</document>
+
+
+<document>
+<source>src/templates/react/shell/src/App.jsx</source>
+<document_content>
+import * as React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              __PROJECT_NAME__
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Container component="main" sx={{ mt: 4, mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Welcome to __PROJECT_NAME__
+          </Typography>
+          <Typography variant="body1">
+            Your Module Federation shell is running on port __PORT__.
+          </Typography>
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+export default App;</document_content>
+</document>
+
+
+<document>
+<source>docs/api-generator-readme.md</source>
+<document_content>
+# MFE API Generator
+
+Generate complete, production-ready APIs from OpenAPI specifications with a single command.
+
+## Features
+
+### Database Integration
+- Automatic MongoDB model generation with proper schemas
+- Smart type conversion from OpenAPI to Mongoose types
+- Built-in validation based on schema definitions
+- Support for both singular and plural model references
+- Automatic relationship handling with x-ref support
+
+### API Structure
+- Clean MVC architecture
+- Standardized controller generation
+- Middleware integration for validation
+- Error handling and logging
+- Request/Response transformation
+- Proper routing with parameter handling
+
+### Validation & Security
+- OpenAPI schema-based validation
+- Custom validators for email, URLs, and relationships
+- Built-in error handling middleware
+- Request validation middleware
+- Proper error response formatting
+
+### Developer Experience
+- Single command generation
+- Consistent naming conventions
+- Auto-generated documentation
+- Built-in logging system
+- Easy to extend and customize
+
+## Usage
+
+```bash
+seans-mfe-tool api my-api --spec api.yaml --database mongodb
+```
+
+## Project Structure
+
+```
+generated-api/
+├── src/
+│   ├── controllers/
+│   │   └── [resource]Controller.js
+│   ├── models/
+│   │   ├── index.js
+│   │   └── [Resource].model.js
+│   ├── middleware/
+│   │   ├── errorHandler.js
+│   │   └── validator.js
+│   ├── routes/
+│   │   └── [resource].routes.js
+│   └── utils/
+│       └── logger.js
+├── package.json
+└── README.md
+```
+
+## Best Practices
+- Models support both singular and plural forms for flexibility
+- Consistent error handling across all endpoints
+- Proper separation of concerns
+- Built-in logging for debugging and monitoring
+- Standardized response formats
+
+## Next Steps
+Potential enhancements could include:
+1. Additional database support (SQLite, PostgreSQL)
+2. Authentication/Authorization generation
+3. Auto-generated tests
+4. OpenAPI documentation UI integration
+5. Rate limiting and security middleware
+6. Docker deployment configurations
+7. Monitoring and metrics integration
+
+</document_content>
+</document>
+
+
+<document>
+<source>docs/benefit-analysis.md</source>
+<document_content>
+# seans-mfe-tool Team Phasing Scenarios Analysis
+
+## 1. Baseline for Comparison
+
+Current State: 17 engineers
+Target State: 30 engineers
+Total New Hires Needed: 13 engineers
+
+## 2. Phasing Scenarios
+
+### Scenario A: Aggressive (6-Month Phase)
+
+```
+Phase 1 (Months 1-3): +7 engineers (to 24)
+Phase 2 (Months 4-6): +6 engineers (to 30)
+
+Benefits Realization:
+- 60% of benefits by Month 4
+- 85% of benefits by Month 7
+- 100% of benefits by Month 9
+
+Costs:
+Month 1-3: $3,999,993 ($166,667 × 24/12)
+Month 4-6: $5,000,010 ($166,667 × 30/12)
+Transition Costs: $270,836 (split across 6 months)
+```
+
+### Scenario B: Moderate (12-Month Phase)
+
+```
+Phase 1 (Months 1-4): +5 engineers (to 22)
+Phase 2 (Months 5-8): +4 engineers (to 26)
+Phase 3 (Months 9-12): +4 engineers (to 30)
+
+Benefits Realization:
+- 40% of benefits by Month 4
+- 70% of benefits by Month 8
+- 90% of benefits by Month 12
+- 100% of benefits by Month 15
+
+Costs:
+Month 1-4: $3,666,674 ($166,667 × 22/12)
+Month 5-8: $4,333,342 ($166,667 × 26/12)
+Month 9-12: $5,000,010 ($166,667 × 30/12)
+Transition Costs: $270,836 (split across 12 months)
+```
+
+### Scenario C: Conservative (18-Month Phase)
+
+```
+Phase 1 (Months 1-6): +4 engineers (to 21)
+Phase 2 (Months 7-12): +4 engineers (to 25)
+Phase 3 (Months 13-18): +5 engineers (to 30)
+
+Benefits Realization:
+- 30% of benefits by Month 6
+- 60% of benefits by Month 12
+- 85% of benefits by Month 18
+- 100% of benefits by Month 21
+
+Costs:
+Month 1-6: $3,500,007 ($166,667 × 21/12)
+Month 7-12: $4,166,675 ($166,667 × 25/12)
+Month 13-18: $5,000,010 ($166,667 × 30/12)
+Transition Costs: $270,836 (split across 18 months)
+```
+
+## 3. First Year Financial Comparison
+
+| Metric                             | Aggressive       | Moderate         | Conservative     |
+| ---------------------------------- | ---------------- | ---------------- | ---------------- |
+| Average Team Size                  | 27               | 24.3             | 23               |
+| Total Costs                        | $4,770,846       | $4,333,342       | $3,833,341       |
+| Benefits Realized                  | $4,710,244 (80%) | $3,532,683 (60%) | $2,649,512 (45%) |
+| Net Benefit                        | -$60,602         | -$800,659        | -$1,183,829      |
+| Time to Positive Monthly Cash Flow | Month 7          | Month 10         | Month 13         |
+
+## 4. Three Year Cumulative Comparison
+
+| Metric           | Aggressive | Moderate  | Conservative |
+| ---------------- | ---------- | --------- | ------------ |
+| Year 1 Net       | -$60,602   | -$800,659 | -$1,183,829  |
+| Year 2 Net       | $887,795   | $887,795  | $443,897     |
+| Year 3 Net       | $887,795   | $887,795  | $887,795     |
+| Cumulative Net   | $1,714,988 | $974,931  | $147,863     |
+| Break-Even Month | Month 19   | Month 25  | Month 32     |
+
+## 5. Risk Analysis by Scenario
+
+### Aggressive (6-Month)
+
+```
+Advantages:
+- Fastest path to full benefits
+- Earlier break-even potential
+- Minimal prolonged understaffing
+
+Risks:
+- Higher initial cash requirement
+- Compressed onboarding might reduce effectiveness
+- More concurrent hiring/training overhead
+```
+
+### Moderate (12-Month)
+
+```
+Advantages:
+- Balanced risk/reward profile
+- More time for culture/process adaptation
+- Manageable hiring pipeline
+
+Risks:
+- Extended period of partial benefits
+- Longer time to break-even
+- Potential team cohesion challenges
+```
+
+### Conservative (18-Month)
+
+```
+Advantages:
+- Lowest initial cash requirement
+- More time for process refinement
+- Easier knowledge transfer
+
+Risks:
+- Significantly delayed full benefits
+- Longest time to break-even
+- Extended period of hybrid processes
+```
+
+## 6. Recommended Approach: Modified Moderate (12-Month)
+
+```
+Phase 1 (Months 1-3): +3 engineers (to 20)
+- Focus: Core seans-mfe-tool capabilities
+- Expected Benefits: 25%
+
+Phase 2 (Months 4-6): +4 engineers (to 24)
+- Focus: Development automation
+- Expected Benefits: 50%
+
+Phase 3 (Months 7-9): +3 engineers (to 27)
+- Focus: Support automation
+- Expected Benefits: 75%
+
+Phase 4 (Months 10-12): +3 engineers (to 30)
+- Focus: Scale & optimization
+- Expected Benefits: 90%
+
+Full Benefits Achievement: Month 15
+Break-Even: Month 22
+First Year Net: -$687,523
+```
+
+## 7. Key Performance Metrics for Tracking
+
+1. **Monthly Metrics**
+
+   - New feature velocity
+   - Support ticket resolution time
+   - seans-mfe-tool adoption rate
+   - Development time savings
+
+2. **Phase Gate Criteria**
+
+   - Benefit realization vs. target
+   - Team productivity metrics
+   - seans-mfe-tool stability metrics
+   - Customer satisfaction scores
+
+3. **Go/No-Go Decision Points**
+   - End of each phase
+   - 25% benefit shortfall trigger
+   - Customer satisfaction threshold
+   - seans-mfe-tool adoption rate minimum
+
+Would you like me to:
+
+1. Detail specific phase gate criteria?
+2. Create a more detailed monthly cash flow analysis?
+3. Add specific risk mitigation strategies?
+4. Develop specific team structure recommendations for each phase?
+</document_content>
+</document>
+
+
+<document>
+<source>docs/phased-benefit-analysis.md</source>
+<document_content>
+# seans-mfe-tool Team Formalization: Phased Cost-Benefit Analysis
+
+## Current State (Baseline)
+
+- 17 engineers: $2,833,339/year
+- Supporting 50 teams (2500 engineers TAM)
+- Annual Benefits: $5,887,805
+- Current ROI: 108%
+
+## Phased Implementation Analysis
+
+### Phase 1: Core seans-mfe-tool (Months 1-3)
+
+```
+Team Size: 20 engineers (+3)
+Costs:
+- Personnel: $3,333,340/quarter
+- Transition Cost: $67,709 (25% of total transition cost)
+Benefits (25% of total):
+- Development Time Savings: $302,336
+- Support Efficiency: $9,615
+- Time-to-Market: $1,160,000
+Total Phase Benefits: $1,471,951
+Phase ROI: -56%
+```
+
+### Phase 2: Development Automation (Months 4-6)
+
+```
+Team Size: 24 engineers (+4)
+Costs:
+- Personnel: $4,000,008/quarter
+- Transition Cost: $67,709
+Benefits (50% of total):
+- Development Time Savings: $604,672
+- Support Efficiency: $19,230
+- Time-to-Market: $2,320,000
+Total Phase Benefits: $2,943,902
+Phase ROI: -26%
+```
+
+### Phase 3: Support Automation (Months 7-9)
+
+```
+Team Size: 27 engineers (+3)
+Costs:
+- Personnel: $4,500,009/quarter
+- Transition Cost: $67,709
+Benefits (75% of total):
+- Development Time Savings: $907,007
+- Support Efficiency: $28,846
+- Time-to-Market: $3,480,000
+Total Phase Benefits: $4,415,853
+Phase ROI: -2%
+```
+
+### Phase 4: Scale & Optimization (Months 10-12)
+
+```
+Team Size: 30 engineers (+3)
+Costs:
+- Personnel: $5,000,010/quarter
+- Transition Cost: $67,709
+Benefits (90% of total):
+- Development Time Savings: $1,088,409
+- Support Efficiency: $34,615
+- Time-to-Market: $4,174,000
+Total Phase Benefits: $5,297,024
+Phase ROI: 5%
+```
+
+## First Year Summary
+
+```
+Total Costs: $16,833,367
+Total Benefits: $14,128,730
+Net: -$2,704,637
+Year 1 ROI: -16%
+```
+
+## Steady State (Year 2+)
+
+```
+Annual Costs: $5,000,010
+Annual Benefits: $5,887,805
+Net Benefit: $887,795
+ROI: 17.8%
+Break-even: Month 22
+```
+
+## Key Phase Gate Metrics
+
+### Development Time Savings
+
+- Phase 1: 25% (82.5 weeks saved)
+- Phase 2: 50% (174 weeks saved)
+- Phase 3: 75% (261 weeks saved)
+- Phase 4: 90% (313.2 weeks saved)
+
+### Support Efficiency
+
+- Phase 1: 25% (120 hours/year)
+- Phase 2: 50% (240 hours/year)
+- Phase 3: 75% (360 hours/year)
+- Phase 4: 90% (432 hours/year)
+
+### Time-to-Market Impact
+
+- Phase 1: 25% reduction
+- Phase 2: 50% reduction
+- Phase 3: 75% reduction
+- Phase 4: 90% reduction
+
+## Risk Management Triggers
+
+1. Benefits Realization
+
+   - <20% by Month 3
+   - <40% by Month 6
+   - <65% by Month 9
+   - <85% by Month 12
+
+2. Cost Control
+
+   - > 10% variance from phase budget
+   - > 15% transition cost overrun
+   - > 5% unplanned attrition
+
+3. Schedule Adherence
+   - > 1 month phase delay
+   - <80% phase deliverables completed
+   - <90% team staffing targets
+
+## Phase Success Criteria
+
+1. Phase 1: Core seans-mfe-tool stability, +3 teams onboarded
+2. Phase 2: +15 teams onboarded, 50% automation
+3. Phase 3: +30 teams onboarded,
+
+## Phased Metrics
+
+Legend:
+
+- Team Size: Number of engineers on the seans-mfe-tool team
+- New Hires: Additional engineers added in this phase
+- Personnel Cost: Total engineer salary costs for the quarter
+- Transition Cost: One-time costs associated with onboarding/training
+- Total Cost: Personnel + transition costs
+- Benefits Realized: Percentage of target steady state benefits achieved
+- Quarter Benefits: Dollar value of benefits realized in the quarter
+- Quarter ROI: (Quarter Benefits - Total Cost) / Total Cost
+
+| Metric            | Phase 0 (Current) | Phase 1 (Q1) | Phase 2 (Q2) | Phase 3 (Q3) | Phase 4 (Q4) | Steady State |
+| ----------------- | ----------------- | ------------ | ------------ | ------------ | ------------ | ------------ |
+| Team Size         | 17                | 20           | 24           | 27           | 30           | 30           |
+| New Hires         | -                 | +3           | +4           | +3           | +3           | -            |
+| Personnel Cost    | $2,833,339        | $3,333,340   | $4,000,008   | $4,500,009   | $5,000,010   | $5,000,010   |
+| Transition Cost   | -                 | $67,709      | $67,709      | $67,709      | $67,709      | -            |
+| Total Cost        | $2,833,339        | $3,401,049   | $4,067,717   | $4,567,718   | $5,067,719   | $5,000,010   |
+| Benefits Realized | 100%              | 25%          | 50%          | 75%          | 90%          | 100%         |
+| Quarter Benefits  | $5,887,805        | $1,471,951   | $2,943,902   | $4,415,853   | $5,297,024   | $5,887,805   |
+| Quarter ROI       | 108%              | -56%         | -26%         | -2%          | 5%           | 17.8%        |
+
+## Benefits Breakdown by Phase
+
+Legend:
+
+- Dev Time Savings: Financial impact from reduced development time
+- Support Efficiency: Dollar value of automated support hours
+- Time-to-Market: Value of faster feature delivery
+- Total Benefits: Sum of all benefit categories
+- Full Benefit: Target steady state annual benefit
+
+| Benefit Type       | Phase 0    | Phase 1    | Phase 2    | Phase 3    | Phase 4    | Full Benefit |
+| ------------------ | ---------- | ---------- | ---------- | ---------- | ---------- | ------------ |
+| Dev Time Savings   | $1,209,343 | $302,336   | $604,672   | $907,007   | $1,088,409 | $1,209,343   |
+| Support Efficiency | $38,462    | $9,615     | $19,230    | $28,846    | $34,615    | $38,462      |
+| Time-to-Market     | $4,640,000 | $1,160,000 | $2,320,000 | $3,480,000 | $4,174,000 | $4,640,000   |
+| Total Benefits     | $5,887,805 | $1,471,951 | $2,943,902 | $4,415,853 | $5,297,024 | $5,887,805   |
+
+## Cumulative ROI Analysis (5 Year)
+
+Legend:
+
+- Period: Measurement timeframe
+- Costs: Total cumulative costs to date
+- Benefits: Total cumulative benefits to date
+- Net: Benefits minus Costs
+- Cumulative ROI: (Cumulative Net / Cumulative Costs)
+
+| Year | Period  | Costs       | Benefits     | Net         | Cumulative ROI |
+| ---- | ------- | ----------- | ------------ | ----------- | -------------- |
+| 0    | Current | $2,833,339  | $5,887,805   | $3,054,466  | 108%           |
+| 1    | Q1      | $3,401,049  | $1,471,951   | -$1,929,098 | -56.7%         |
+| 1    | Q2      | $7,468,766  | $4,415,853   | -$3,052,913 | -40.9%         |
+| 1    | Q3      | $12,036,484 | $8,831,706   | -$3,204,778 | -26.6%         |
+| 1    | Q4      | $17,104,203 | $14,128,730  | -$2,975,473 | -17.4%         |
+| 2    | EOY     | $37,104,243 | $37,780,090  | $675,847    | 1.8%           |
+| 3    | EOY     | $57,104,283 | $61,431,450  | $4,327,167  | 7.6%           |
+| 4    | EOY     | $77,104,323 | $85,082,810  | $7,978,487  | 10.3%          |
+| 5    | EOY     | $97,104,363 | $108,734,170 | $11,629,807 | 12.0%          |
+
+## Key Performance Gates
+
+Legend:
+
+- Team Size: Number of seans-mfe-tool engineers
+- Teams Onboarded: Development teams using the seans-mfe-tool
+- Automation: Percentage of targetable processes automated
+- Support Reduction: Percentage reduction in support hours
+
+| Phase               | Team Size | Teams Onboarded | Automation | Support Reduction |
+| ------------------- | --------- | --------------- | ---------- | ----------------- |
+| Current             | 17        | 50              | 100%       | 50%               |
+| Core seans-mfe-tool | 20        | +3              | 25%        | 25%               |
+| Dev Automation      | 24        | +15             | 50%        | 50%               |
+| Support Auto        | 27        | +30             | 75%        | 75%               |
+| Scale & Opt         | 30        | +50             | 90%        | 90%               |
+</document_content>
+</document>
+
+
+<document>
+<source>docs/mid-term-phase-approach.md</source>
+<document_content>
+# seans-mfe-tool Team Phasing Implementation Plan
+
+## Phase 1: Core seans-mfe-tool (Months 1-3)
+
+### Team Growth: +3 engineers (to 20)
+
+- 1 Senior seans-mfe-tool Engineer
+- 1 Infrastructure Engineer
+- 1 Developer Experience Engineer
+
+### Key Deliverables
+
+1. seans-mfe-tool Architecture
+
+   - Core services framework
+   - Infrastructure templates
+   - Base APIs
+
+2. Initial Automation
+   - Basic CI/CD pipelines
+   - Environment provisioning
+   - Configuration management
+
+### Success Metrics
+
+- seans-mfe-tool uptime: 99.9%
+- Deployment frequency: 2x increase
+- Environment setup time: 50% reduction
+- Core API response time: <100ms
+
+### Phase Gate Criteria
+
+- 3 teams successfully onboarded
+- 25% of target benefits achieved
+- Zero P1 incidents
+- seans-mfe-tool documentation coverage >80%
+
+## Phase 2: Development Automation (Months 4-6)
+
+### Team Growth: +4 engineers (to 24)
+
+- 2 Automation Engineers
+- 1 seans-mfe-tool Engineer
+- 1 Developer Experience Engineer
+
+### Key Deliverables
+
+1. Developer Tools
+
+   - Self-service portal
+   - Automated testing framework
+   - Code generation tools
+
+2. Integration Framework
+   - Standard integration patterns
+   - Automated dependency management
+   - API gateway implementation
+
+### Success Metrics
+
+- Test automation coverage: 80%
+- Code review time: 40% reduction
+- Integration setup time: 60% reduction
+- Developer satisfaction: >8/10
+
+### Phase Gate Criteria
+
+- 15 teams onboarded
+- 50% of target benefits achieved
+- Automated testing adopted by >60% teams
+- Self-service usage >40%
+
+## Phase 3: Support Automation (Months 7-9)
+
+### Team Growth: +3 engineers (to 27)
+
+- 1 Site Reliability Engineer
+- 1 Support Automation Engineer
+- 1 seans-mfe-tool Engineer
+
+### Key Deliverables
+
+1. Support Systems
+
+   - Automated troubleshooting
+   - Self-healing systems
+   - Monitoring framework
+
+2. Knowledge Management
+   - Automated documentation
+   - Learning management system
+   - Best practices engine
+
+### Success Metrics
+
+- Support ticket volume: 40% reduction
+- Resolution time: 50% reduction
+- Self-service resolution: 60% of issues
+- Documentation accuracy: >95%
+
+### Phase Gate Criteria
+
+- 30 teams onboarded
+- 75% of target benefits achieved
+- Automated resolution >50%
+- Knowledge base coverage >90%
+
+## Phase 4: Scale & Optimization (Months 10-12)
+
+### Team Growth: +3 engineers (to 30)
+
+- 1 Performance Engineer
+- 1 Security Engineer
+- 1 seans-mfe-tool Engineer
+
+### Key Deliverables
+
+1. seans-mfe-tool Scaling
+
+   - Performance optimization
+   - Cost optimization
+   - Security hardening
+
+2. Analytics & Insights
+   - Usage analytics
+   - Performance metrics
+   - Cost allocation
+
+### Success Metrics
+
+- seans-mfe-tool response time: 30% improvement
+- Resource utilization: 25% optimization
+- Security compliance: 100%
+- Cost per transaction: 35% reduction
+
+### Phase Gate Criteria
+
+- 50 teams onboarded
+- 90% of target benefits achieved
+- Zero security findings
+- Cost optimization targets met
+
+## Monthly Tracking Metrics
+
+### Technical
+
+1. Performance
+
+   - API response times
+   - Build/deployment times
+   - Error rates
+   - Resource utilization
+
+2. Adoption
+   - Active teams
+   - Feature usage
+   - API calls
+   - Self-service usage
+
+### Financial
+
+1. Costs
+
+   - Infrastructure spend
+   - Support costs
+   - Development costs
+   - Training costs
+
+2. Benefits
+   - Time savings
+   - Resource optimization
+   - Productivity gains
+   - Support reduction
+
+### Quality
+
+1. seans-mfe-tool
+
+   - Availability
+   - Reliability
+   - Security scores
+   - Technical debt
+
+2. Support
+   - Ticket volume
+   - Resolution time
+   - Customer satisfaction
+   - Knowledge base coverage
+
+## Risk Management
+
+### Technical Risks
+
+1. Integration Complexity
+
+   - Weekly architecture reviews
+   - Integration testing coverage
+   - Fallback mechanisms
+
+2. Performance Impact
+   - Load testing
+   - Monitoring thresholds
+   - Capacity planning
+
+### Organizational Risks
+
+1. Adoption Resistance
+
+   - Success stories tracking
+   - Training completion
+   - Feedback loops
+
+2. Knowledge Transfer
+   - Documentation coverage
+   - Training effectiveness
+   - Knowledge sharing sessions
+
+## Adjustment Triggers
+
+1. Benefits Realization
+
+   - <20% by Month 3
+   - <40% by Month 6
+   - <65% by Month 9
+
+2. Technical Performance
+
+   - <99.9% availability
+   - > 5% error rate
+   - > 20% performance degradation
+
+3. Team Productivity
+   - <80% velocity target
+   - > 15% defect rate
+   - <70% automation coverage
+</document_content>
+</document>
+
+
+<document>
+<source>examples/bizcase-api/src/index.js</source>
+<document_content>
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const logger = require('./utils/logger');
+const { errorHandler } = require('./middleware/errorHandler');
+const database = require('./database');
+
+async function startServer() {
+    try {
+        const app = express();
+        const port = process.env.PORT || 3001;
+
+        // Initialize database first
+        await database.connect();
+
+        // Optional seeding in development
+        if (process.env.NODE_ENV === 'development' && process.env.SEED_DATA === 'true') {
+            const seed = require('./database/seed');
+            await seed();
+        }
+
+        // Middleware
+        app.use(helmet());
+        app.use(cors());
+        app.use(compression());
+        app.use(express.json());
+
+        // Request ID middleware
+        app.use((req, res, next) => {
+            req.id = require('crypto').randomUUID();
+            res.setHeader('X-Request-ID', req.id);
+            next();
+        });
+
+        // Routes
+        app.use('/api', require('./routes'));
+
+        // Error handling
+        app.use(errorHandler);
+
+        // Start server
+        app.listen(port, '0.0.0.0', () => {
+            logger.info(`Server running on port ${port} in ${process.env.NODE_ENV} mode`);
+        });
+
+        // Graceful shutdown
+        process.on('SIGTERM', async () => {
+            logger.info('SIGTERM received, shutting down...');
+            await database.disconnect();
+            process.exit(0);
+        });
+
+    } catch (error) {
+        logger.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+startServer();</document_content>
+</document>
+
+
+<document>
+<source>examples/my-remote/src/app.jsx</source>
+<document_content>
+import React from 'react';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Typography, 
+  useTheme,
+  Paper,
+  Divider 
+} from '@mui/material';
+import ROIDashboard from './dashboard';
+
+const App = () => {
+  const theme = useTheme();
+  const muiVersion = require('@mui/material/package.json').version;
+  const pkgJson = require('../package.json');
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+        <Typography variant="h4" gutterBottom color="primary">
+          {pkgJson.name}
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Remote MFE Component
+        </Typography>
+      </Paper>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Package Information
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            MUI Version: {muiVersion}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            Package Version: {pkgJson.version}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            Primary Color: {theme.palette.primary.main}
+          </Typography>
+          
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="caption" display="block">
+              Running in {process.env.NODE_ENV} mode
+            </Typography>
+            <Typography variant="caption" display="block">
+              Last Updated: {new Date().toLocaleString()}
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Business Case Dashboard
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <ROIDashboard />
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};
+
+export default App;</document_content>
+</document>
+
+
+<document>
+<source>examples/my-shell/src/App.jsx</source>
+<document_content>
+import * as React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import RemoteCard1 from 'my-remote/App'
+import RemoteCard2 from 'my-remote-2/App'
+import RemoteCard3 from 'my-remote-3/App'
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              my-shell
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Container component="main" sx={{ mt: 4, mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Welcome to my-shell
+          </Typography>
+          <Typography variant="body1">
+            Your Module Federation shell is running on port 3000.
+            
+          </Typography>
+        </Container>
+       <RemoteCard1 />
+       <RemoteCard2 />
+       <RemoteCard3 />
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+export default App;</document_content>
+</document>
+
+
+<document>
+<source>ideApp/editor/src/EditorPanel.jsx</source>
+<document_content>
+// editor/src/EditorPanel.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import Editor from '@monaco-editor/react';
+import { Tabs, TabList, Tab, TabPanel } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Save, Split, PlayCircle } from 'lucide-react';
+
+const SUPPORTED_LANGUAGES = {
+  'jsx': 'javascript',
+  'tsx': 'typescript',
+  'js': 'javascript',
+  'ts': 'typescript',
+  'css': 'css',
+  'json': 'json',
+  'html': 'html'
+};
+
+const EditorPanel = () => {
+  const [files, setFiles] = useState([]);
+  const [activeFile, setActiveFile] = useState(null);
+  const [editorValue, setEditorValue] = useState('');
+  const [isModified, setIsModified] = useState(false);
+  
+  // Handle file change
+  const handleFileChange = (newValue) => {
+    setEditorValue(newValue);
+    setIsModified(true);
+  };
+
+  // Save current file
+  const handleSave = async () => {
+    if (!activeFile) return;
+    
+    try {
+      // We'll implement this in the FileSystem service
+      await window.electronAPI.saveFile(activeFile.path, editorValue);
+      setIsModified(false);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+    }
+  };
+
+  // Get file language
+  const getFileLanguage = (filename) => {
+    const ext = filename.split('.').pop();
+    return SUPPORTED_LANGUAGES[ext] || 'plaintext';
+  };
+
+  // Editor configuration
+  const editorOptions = {
+    minimap: { enabled: false },
+    fontSize: 14,
+    lineHeight: 24,
+    padding: { top: 16 },
+    fontFamily: 'JetBrains Mono, monospace',
+    formatOnType: true,
+    formatOnPaste: true,
+    suggestOnTriggerCharacters: true,
+    quickSuggestions: true,
+    rulers: [80],
+    bracketPairColorization: {
+      enabled: true
+    }
+  };
+
+  // Custom completions for MFE components
+  const setupCustomCompletions = (monaco) => {
+    monaco.languages.registerCompletionItemProvider('javascript', {
+      provideCompletionItems: (model, position) => {
+        const suggestions = [
+          {
+            label: 'createFederatedModule',
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: [
+              'createFederatedModule({',
+              '\tname: "${1:moduleName}",',
+              '\tfilename: "remoteEntry.js",',
+              '\texposes: {',
+              '\t\t"./Component": "./src/Component"',
+              '\t},',
+              '\tshared: {',
+              '\t\treact: { singleton: true },',
+              '\t\t"react-dom": { singleton: true }',
+              '\t}',
+              '})'
+            ].join('\n'),
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Creates a new federated module configuration'
+          },
+          {
+            label: 'federatedComponent',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: [
+              'const ${1:ComponentName} = React.lazy(() => import("${2:remote}/${1:ComponentName}"));',
+              '',
+              'export default function Wrapped${1:ComponentName}() {',
+              '\treturn (',
+              '\t\t<React.Suspense fallback={<div>Loading...</div>}>',
+              '\t\t\t<${1:ComponentName} />',
+              '\t\t</React.Suspense>',
+              '\t);',
+              '}'
+            ].join('\n'),
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Creates a wrapped federated component with Suspense'
+          }
+        ];
+        
+        return { suggestions };
+      }
+    });
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between p-2 bg-gray-100">
+        <Tabs value={activeFile?.path} onValueChange={(path) => {
+          const file = files.find(f => f.path === path);
+          setActiveFile(file);
+        }}>
+          <TabList>
+            {files.map(file => (
+              <Tab key={file.path} value={file.path} className="flex items-center">
+                {file.name}
+                {isModified && activeFile?.path === file.path && ' •'}
+              </Tab>
+            ))}
+          </TabList>
+        </Tabs>
+        
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleSave}
+            disabled={!isModified}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {/* Implement split view */}}
+          >
+            <Split className="w-4 h-4 mr-2" />
+            Split
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {/* Implement preview */}}
+          >
+            <PlayCircle className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1">
+        {activeFile && (
+          <Editor
+            height="100%"
+            language={getFileLanguage(activeFile.name)}
+            value={editorValue}
+            onChange={handleFileChange}
+            options={editorOptions}
+            beforeMount={setupCustomCompletions}
+            theme="vs-dark"
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EditorPanel;</document_content>
+</document>
+
+
+<document>
+<source>examples/cost-benefit-api.yaml</source>
+<document_content>
+openapi: 3.1.0
+info:
+  title: Cost Benefit Analysis API
+  version: '1.0.0'
+  description: API for managing phased cost-benefit analysis data for the seans-mfe-tool project
+  contact:
+    name: Engineering Team
+    email: engineering@company.com
+
+servers:
+  - url: https://api.company.com/v1
+    description: Production server
+  - url: https://staging-api.company.com/v1
+    description: Staging server
+
+components:
+  schemas:
+    PhaseMetrics:
+      type: object
+      required:
+        - phaseId
+        - teamSize
+        - newHires
+        - personnelCost
+        - transitionCost
+        - totalCost
+        - benefitsRealized
+        - quarterBenefits
+        - quarterRoi
+      properties:
+        phaseId:
+          type: string
+          enum: [current, phase1, phase2, phase3, phase4, steady]
+        teamSize:
+          type: integer
+          example: 17
+        newHires:
+          type: integer
+          example: 3
+        personnelCost:
+          type: number
+          format: float
+          example: 2833339
+        transitionCost:
+          type: number
+          format: float
+          example: 67709
+        totalCost:
+          type: number
+          format: float
+          example: 2833339
+        benefitsRealized:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 100
+        quarterBenefits:
+          type: number
+          format: float
+          example: 5887805
+        quarterRoi:
+          type: number
+          format: float
+          example: 108
+
+    BenefitsBreakdown:
+      type: object
+      required:
+        - phaseId
+        - devTimeSavings
+        - supportEfficiency
+        - timeToMarket
+        - totalBenefits
+      properties:
+        phaseId:
+          type: string
+          enum: [current, phase1, phase2, phase3, phase4, steady]
+        devTimeSavings:
+          type: number
+          format: float
+          example: 1209343
+        supportEfficiency:
+          type: number
+          format: float
+          example: 38462
+        timeToMarket:
+          type: number
+          format: float
+          example: 4640000
+        totalBenefits:
+          type: number
+          format: float
+          example: 5887805
+
+    CumulativeRoi:
+      type: object
+      required:
+        - year
+        - period
+        - costs
+        - benefits
+        - net
+        - cumulativeRoi
+      properties:
+        year:
+          type: integer
+          example: 1
+        period:
+          type: string
+          example: "Q1"
+        costs:
+          type: number
+          format: float
+          example: 3401049
+        benefits:
+          type: number
+          format: float
+          example: 1471951
+        net:
+          type: number
+          format: float
+          example: -1929098
+        cumulativeRoi:
+          type: number
+          format: float
+          example: -56.7
+
+    PerformanceGate:
+      type: object
+      required:
+        - phase
+        - teamSize
+        - teamsOnboarded
+        - automation
+        - supportReduction
+      properties:
+        phase:
+          type: string
+          example: "Core seans-mfe-tool"
+        teamSize:
+          type: integer
+          example: 20
+        teamsOnboarded:
+          type: integer
+          example: 3
+        automation:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 25
+        supportReduction:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 25
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+
+paths:
+  /phase-metrics:
+    get:
+      summary: Get all phase metrics
+      responses:
+        '200':
+          description: List of phase metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhaseMetrics'
+    post:
+      summary: Create new phase metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseMetrics'
+      responses:
+        '201':
+          description: Phase metrics created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+
+  /phase-metrics/{phaseId}:
+    parameters:
+      - name: phaseId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get phase metrics by ID
+      responses:
+        '200':
+          description: Phase metrics found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+    put:
+      summary: Update phase metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseMetrics'
+      responses:
+        '200':
+          description: Phase metrics updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseMetrics'
+
+  /benefits-breakdown:
+    get:
+      summary: Get all benefits breakdown data
+      responses:
+        '200':
+          description: List of benefits breakdown data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitsBreakdown'
+    post:
+      summary: Create new benefits breakdown entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BenefitsBreakdown'
+      responses:
+        '201':
+          description: Benefits breakdown created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenefitsBreakdown'
+
+  /cumulative-roi:
+    get:
+      summary: Get all cumulative ROI data
+      responses:
+        '200':
+          description: List of cumulative ROI data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CumulativeRoi'
+    post:
+      summary: Create new cumulative ROI entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CumulativeRoi'
+      responses:
+        '201':
+          description: Cumulative ROI entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CumulativeRoi'
+
+  /performance-gate:
+    get:
+      summary: Get all performance gate metrics
+      responses:
+        '200':
+          description: List of performance gate metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceGate'
+    post:
+      summary: Create new performance gate entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceGate'
+      responses:
+        '201':
+          description: Performance gate entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceGate'
+</document_content>
+</document>
+
+
+</documents>

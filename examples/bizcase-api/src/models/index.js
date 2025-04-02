@@ -1,14 +1,19 @@
 const mongoose = require('mongoose');
 
 // Import all models
-const PhaseMetrics = require('./phaseMetrics.model');
-const BenefitsBreakdown = require('./benefitsBreakdown.model');
-const CumulativeRoi = require('./cumulativeRoi.model');
-const PerformanceGate = require('./performanceGate.model');
+const PhaseMetric = require('./PhaseMetric.model');
+const BenefitsBreakdown = require('./BenefitsBreakdown.model');
+const CumulativeRoi = require('./CumulativeRoi.model');
+const PerformanceGate = require('./PerformanceGate.model');
 
+// Export both singular and plural forms for each model
 module.exports = {
-  PhaseMetrics,
+  PhaseMetric,
+  PhaseMetrics: PhaseMetric,
   BenefitsBreakdown,
+  BenefitsBreakdowns: BenefitsBreakdown,
   CumulativeRoi,
-  PerformanceGate
+  CumulativeRois: CumulativeRoi,
+  PerformanceGate,
+  PerformanceGates: PerformanceGate
 };
