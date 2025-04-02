@@ -6,10 +6,7 @@ const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
-<<<<<<< HEAD
-=======
 const { analyzeCommand } = require('../src/commands/analyze');
->>>>>>> analyze-tool
 const { version } = require('../package.json');
 
 program
