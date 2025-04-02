@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFE Component Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    .node { cursor: pointer; }
+    .link { stroke-opacity: 0.6; }
+    .node text { font-size: 10px; font-family: sans-serif; }
+  </style>
+</head>
+<body>
+  <svg id="visualization" width="100%" height="100vh"></svg>
+  
+  <script>
+    // Data
+    const data = {
+      nodes: [{"id":"DashboardMFE","group":1,"size":15,"type":"mfe"},{"id":"dashboard","group":2,"size":8,"type":"component"}],
+      links: [{"source":"DashboardMFE","target":"dashboard","value":2},{"source":"app","target":"ROIDashboard","value":1},{"source":"bootstrap","target":"App","value":1},{"source":"index","target":"App","value":1}]
+    };
+    
+    // Create visualization
+    const svg = d3.select("#visualization");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Create force simulation
+    const simulation = d3.forceSimulation(data.nodes)
+      .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-100))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+    
+    // Create links
+    const link = svg.append("g")
+      .selectAll("line")
+      .data(data.links)
+      .join("line")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .attr("stroke-width", d => Math.sqrt(d.value));
+    
+    // Create node groups
+    const node = svg.append("g")
+      .selectAll(".node")
+      .data(data.nodes)
+      .join("g")
+      .attr("class", "node")
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+    
+    // Add circles to nodes
+    node.append("circle")
+      .attr("r", d => d.size)
+      .attr("fill", d => d.type === 'mfe' ? "#ff7f0e" : "#1f77b4");
+    
+    // Add text to nodes
+    node.append("text")
+      .attr("dx", d => d.size + 5)
+      .attr("dy", ".35em")
+      .text(d => d.id);
+    
+    // Update positions
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+      
+      node
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+    
+    // Drag functions
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+    
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+    
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+  </script>
+</body>
+</html>
+  

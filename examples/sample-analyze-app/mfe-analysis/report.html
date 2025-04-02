@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFE Analysis Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 20px; }
+    .card { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-4">Micro Frontend Analysis Report</h1>
+    
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h2>Summary</h2>
+          </div>
+          <div class="card-body">
+            <p><strong>Total Components Analyzed:</strong> 84</p>
+            <p><strong>Potential MFEs Identified:</strong> 11</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h2>Potential Micro Frontends</h2>
+          </div>
+          <div class="card-body">
+            <div class="accordion" id="mfeAccordion">
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading0">
+                    <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse0">
+                      FormMFE (12 components)
+                    </button>
+                  </h2>
+                  <div id="collapse0" class="accordion-collapse collapse show" data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> application</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">DatePickerWithLabelFormGroup.test.tsx</li><li class="list-group-item">DateTimePickerWithLabelFormGroup.test.tsx</li><li class="list-group-item">SelectWithLabelFormGroup.test.tsx</li><li class="list-group-item">TestInputWithLabelFormGroup.test.tsx</li><li class="list-group-item">TextFieldWithLabelFormGroup.test.tsx</li><li class="list-group-item">GeneralInformation.test.tsx</li><li class="list-group-item">DatePickerWithLabelFormGroup.tsx</li><li class="list-group-item">DateTimePickerWithLabelFormGroup.tsx</li><li class="list-group-item">SelectWithLableFormGroup.tsx</li><li class="list-group-item">TextFieldWithLabelFormGroup.tsx</li><li class="list-group-item">TextInputWithLabelFormGroup.tsx</li><li class="list-group-item">GeneralInformation.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading1">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                      ListMFE (2 components)
+                    </button>
+                  </h2>
+                  <div id="collapse1" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">AppointmentsList.test.tsx</li><li class="list-group-item">AppointmentsList.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">../../scheduling/appointments/appointments-slice</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                      DetailMFE (2 components)
+                    </button>
+                  </h2>
+                  <div id="collapse2" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">AppointmentDetailForm.test.tsx</li><li class="list-group-item">AppointmentDetailForm.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                      DashboardMFE (1 components)
+                    </button>
+                  </h2>
+                  <div id="collapse3" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">Dashboard.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading4">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                      AppMFE (11 components)
+                    </button>
+                  </h2>
+                  <div id="collapse4" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">App.test.tsx</li><li class="list-group-item">HospitalRun.test.tsx</li><li class="list-group-item">AppointmentsList.test.tsx</li><li class="list-group-item">AppointmentDetailForm.test.tsx</li><li class="list-group-item">Appointments.test.tsx</li><li class="list-group-item">App.tsx</li><li class="list-group-item">HospitalRun.tsx</li><li class="list-group-item">index.tsx</li><li class="list-group-item">AppointmentsList.tsx</li><li class="list-group-item">AppointmentDetailForm.tsx</li><li class="list-group-item">Appointments.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading5">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                      PatientRepositoryMFE (22 components)
+                    </button>
+                  </h2>
+                  <div id="collapse5" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">HospitalRun.test.tsx</li><li class="list-group-item">NewAllergyModal.test.tsx</li><li class="list-group-item">AddDiagnosisModal.test.tsx</li><li class="list-group-item">EditPatient.test.tsx</li><li class="list-group-item">ViewPatients.test.tsx</li><li class="list-group-item">NewPatient.test.tsx</li><li class="list-group-item">NewNoteModal.test.tsx</li><li class="list-group-item">Patients.test.tsx</li><li class="list-group-item">AddRelatedPersonModal.test.tsx</li><li class="list-group-item">ViewPatient.test.tsx</li><li class="list-group-item">EditAppointment.test.tsx</li><li class="list-group-item">HospitalRun.tsx</li><li class="list-group-item">NewAllergyModal.tsx</li><li class="list-group-item">AddDiagnosisModal.tsx</li><li class="list-group-item">EditPatient.tsx</li><li class="list-group-item">ViewPatients.tsx</li><li class="list-group-item">NewPatient.tsx</li><li class="list-group-item">NewNoteModal.tsx</li><li class="list-group-item">Patients.tsx</li><li class="list-group-item">AddRelatedPersonModal.tsx</li><li class="list-group-item">ViewPatient.tsx</li><li class="list-group-item">EditAppointment.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading6">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">
+                      PatientMFE (20 components)
+                    </button>
+                  </h2>
+                  <div id="collapse6" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">HospitalRun.test.tsx</li><li class="list-group-item">NewAllergyModal.test.tsx</li><li class="list-group-item">AddDiagnosisModal.test.tsx</li><li class="list-group-item">EditPatient.test.tsx</li><li class="list-group-item">LabsTab.test.tsx</li><li class="list-group-item">NewPatient.test.tsx</li><li class="list-group-item">NewNoteModal.test.tsx</li><li class="list-group-item">Patients.test.tsx</li><li class="list-group-item">ViewPatient.test.tsx</li><li class="list-group-item">EditAppointment.test.tsx</li><li class="list-group-item">HospitalRun.tsx</li><li class="list-group-item">NewAllergyModal.tsx</li><li class="list-group-item">AddDiagnosisModal.tsx</li><li class="list-group-item">EditPatient.tsx</li><li class="list-group-item">LabsTab.tsx</li><li class="list-group-item">NewPatient.tsx</li><li class="list-group-item">NewNoteModal.tsx</li><li class="list-group-item">Patients.tsx</li><li class="list-group-item">ViewPatient.tsx</li><li class="list-group-item">EditAppointment.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading7">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse7">
+                      PermissionsMFE (10 components)
+                    </button>
+                  </h2>
+                  <div id="collapse7" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">HospitalRun.test.tsx</li><li class="list-group-item">LabsTab.test.tsx</li><li class="list-group-item">NotesTab.test.tsx</li><li class="list-group-item">Patients.test.tsx</li><li class="list-group-item">ViewPatient.test.tsx</li><li class="list-group-item">HospitalRun.tsx</li><li class="list-group-item">LabsTab.tsx</li><li class="list-group-item">NoteTab.tsx</li><li class="list-group-item">Patients.tsx</li><li class="list-group-item">ViewPatient.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading8">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse8">
+                      ViewLabMFE (6 components)
+                    </button>
+                  </h2>
+                  <div id="collapse8" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">Labs.test.tsx</li><li class="list-group-item">ViewLab.test.tsx</li><li class="list-group-item">ViewLabs.test.tsx</li><li class="list-group-item">Labs.tsx</li><li class="list-group-item">ViewLab.tsx</li><li class="list-group-item">ViewLabs.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading9">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse9">
+                      LabRepositoryMFE (6 components)
+                    </button>
+                  </h2>
+                  <div id="collapse9" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">LabsTab.test.tsx</li><li class="list-group-item">ViewPatient.test.tsx</li><li class="list-group-item">NewAppointment.test.tsx</li><li class="list-group-item">LabsTab.tsx</li><li class="list-group-item">ViewPatient.tsx</li><li class="list-group-item">NewAppointment.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading10">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse10">
+                      RootStateMFE (33 components)
+                    </button>
+                  </h2>
+                  <div id="collapse10" class="accordion-collapse collapse " data-bs-parent="#mfeAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Type:</strong> component</p>
+                      <p><strong>Components:</strong></p>
+                      <ul class="list-group mb-3">
+                        <li class="list-group-item">Breadcrumbs.test.tsx</li><li class="list-group-item">Sidebar.test.tsx</li><li class="list-group-item">HospitalRun.test.tsx</li><li class="list-group-item">Labs.test.tsx</li><li class="list-group-item">ViewLab.test.tsx</li><li class="list-group-item">ViewLabs.test.tsx</li><li class="list-group-item">NewAllergyModal.test.tsx</li><li class="list-group-item">AddDiagnosisModal.test.tsx</li><li class="list-group-item">EditPatient.test.tsx</li><li class="list-group-item">ViewPatients.test.tsx</li><li class="list-group-item">NewPatient.test.tsx</li><li class="list-group-item">NewNoteModal.test.tsx</li><li class="list-group-item">Patients.test.tsx</li><li class="list-group-item">AddRelatedPersonModal.test.tsx</li><li class="list-group-item">ViewPatient.test.tsx</li><li class="list-group-item">EditAppointment.test.tsx</li><li class="list-group-item">Breadcrumbs.tsx</li><li class="list-group-item">Sidebar.tsx</li><li class="list-group-item">HospitalRun.tsx</li><li class="list-group-item">Labs.tsx</li><li class="list-group-item">ViewLab.tsx</li><li class="list-group-item">ViewLabs.tsx</li><li class="list-group-item">NewAllergyModal.tsx</li><li class="list-group-item">AddDiagnosisModal.tsx</li><li class="list-group-item">EditPatient.tsx</li><li class="list-group-item">ViewPatients.tsx</li><li class="list-group-item">NewPatient.tsx</li><li class="list-group-item">NewNoteModal.tsx</li><li class="list-group-item">NoteTab.tsx</li><li class="list-group-item">Patients.tsx</li><li class="list-group-item">AddRelatedPersonModal.tsx</li><li class="list-group-item">ViewPatient.tsx</li><li class="list-group-item">EditAppointment.tsx</li>
+                      </ul>
+                      <p><strong>API Dependencies:</strong></p>
+                      <ul class="list-group">
+                        <li class="list-group-item">None detected</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h2>Next Steps</h2>
+          </div>
+          <div class="card-body">
+            <p>Based on this analysis, consider these steps to implement Module Federation:</p>
+            <ol>
+              <li>Start with the most isolated MFEs first (those with minimal dependencies)</li>
+              <li>Use the seans-mfe-tool to create shell and remote applications</li>
+              <li>Move related components into their respective MFE repositories</li>
+              <li>Configure shared dependencies appropriately</li>
+            </ol>
+            <p>Example commands:</p>
+            <pre><code>
+# Create shell application
+seans-mfe-tool shell my-shell --port 3000
+
+# Create remote MFEs
+seans-mfe-tool remote formmfe --port 3001
+seans-mfe-tool remote listmfe --port 3002
+seans-mfe-tool remote detailmfe --port 3003
+            </code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+  

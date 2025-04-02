@@ -6,11 +6,37 @@ const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
+<<<<<<< HEAD
+=======
+const { analyzeCommand } = require('../src/commands/analyze');
+>>>>>>> analyze-tool
 const { version } = require('../package.json');
 
 program
   .version(version)
   .description('Create and manage Module Federation applications with React and MUI');
+
+  program
+  .command('analyze')
+  .description('Analyze a project for potential MFE candidates')
+  .option('-d, --dir <directory>', 'Project directory to analyze', process.cwd())
+  .option('-o, --output <directory>', 'Output directory for analysis results', './mfe-analysis')
+  .option('-p, --patterns <patterns>', 'JSON array of glob patterns for finding components')
+  .addHelpText('after', `
+Examples:
+  $ seans-mfe-tool analyze
+  $ seans-mfe-tool analyze --dir ./my-project --output ./analysis-results
+  $ seans-mfe-tool analyze --patterns '["src/**/*.jsx","components/**/*.tsx"]'
+
+Notes:
+  - Analysis will identify potential MFE candidates based on component usage patterns
+  - Results include recommended MFE structure and integration steps
+  - Interactive visualizations help understand component relationships`)
+  .action((options) => {
+    analyzeCommand(options);
+  });
+
+
 
 program
   .command('shell')
