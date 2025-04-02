@@ -1,0 +1,345 @@
+{
+  "files": {
+    "app.jsx": {
+      "path": "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx",
+      "name": "app",
+      "imports": [
+        {
+          "name": "React",
+          "source": "react"
+        },
+        {
+          "name": "Box",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Card",
+          "source": "@mui/material"
+        },
+        {
+          "name": "CardContent",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Typography",
+          "source": "@mui/material"
+        },
+        {
+          "name": "useTheme",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Paper",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Divider",
+          "source": "@mui/material"
+        },
+        {
+          "name": "ROIDashboard",
+          "source": "./dashboard"
+        }
+      ],
+      "exports": [
+        {
+          "name": "App",
+          "default": true
+        }
+      ],
+      "apiCalls": [],
+      "props": [],
+      "stateVars": []
+    },
+    "bootstrap.jsx": {
+      "path": "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/bootstrap.jsx",
+      "name": "bootstrap",
+      "imports": [
+        {
+          "name": "React",
+          "source": "react"
+        },
+        {
+          "name": "createRoot",
+          "source": "react-dom/client"
+        },
+        {
+          "name": "ThemeProvider",
+          "source": "@mui/material/styles"
+        },
+        {
+          "name": "createTheme",
+          "source": "@mui/material/styles"
+        },
+        {
+          "name": "CssBaseline",
+          "source": "@mui/material/CssBaseline"
+        },
+        {
+          "name": "App",
+          "source": "./App"
+        }
+      ],
+      "exports": [
+        {
+          "name": "App",
+          "default": true
+        }
+      ],
+      "apiCalls": [],
+      "props": [],
+      "stateVars": []
+    },
+    "dashboard.jsx": {
+      "path": "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx",
+      "name": "dashboard",
+      "imports": [
+        {
+          "name": "React",
+          "source": "react"
+        },
+        {
+          "name": "Box",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Card",
+          "source": "@mui/material"
+        },
+        {
+          "name": "CardContent",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Typography",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Grid",
+          "source": "@mui/material"
+        },
+        {
+          "name": "Stack",
+          "source": "@mui/material"
+        },
+        {
+          "name": "LineChart",
+          "source": "recharts"
+        },
+        {
+          "name": "Line",
+          "source": "recharts"
+        },
+        {
+          "name": "BarChart",
+          "source": "recharts"
+        },
+        {
+          "name": "Bar",
+          "source": "recharts"
+        },
+        {
+          "name": "XAxis",
+          "source": "recharts"
+        },
+        {
+          "name": "YAxis",
+          "source": "recharts"
+        },
+        {
+          "name": "ResponsiveContainer",
+          "source": "recharts"
+        },
+        {
+          "name": "Tooltip",
+          "source": "recharts"
+        },
+        {
+          "name": "Legend",
+          "source": "recharts"
+        },
+        {
+          "name": "PieChart",
+          "source": "recharts"
+        },
+        {
+          "name": "Pie",
+          "source": "recharts"
+        },
+        {
+          "name": "Cell",
+          "source": "recharts"
+        }
+      ],
+      "exports": [
+        {
+          "name": "ROIDashboard",
+          "default": true
+        }
+      ],
+      "apiCalls": [],
+      "props": [],
+      "stateVars": []
+    },
+    "index.js": {
+      "path": "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/index.js",
+      "name": "index",
+      "imports": [
+        {
+          "name": "React",
+          "source": "react"
+        },
+        {
+          "name": "createRoot",
+          "source": "react-dom/client"
+        },
+        {
+          "name": "App",
+          "source": "./App"
+        }
+      ],
+      "exports": [],
+      "apiCalls": [],
+      "props": [],
+      "stateVars": []
+    }
+  },
+  "imports": {},
+  "components": {
+    "Box": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx",
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Card": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx",
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "CardContent": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx",
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Typography": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx",
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Paper": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx"
+      ]
+    },
+    "Divider": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx"
+      ]
+    },
+    "ROIDashboard": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/app.jsx"
+      ]
+    },
+    "ThemeProvider": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/bootstrap.jsx"
+      ]
+    },
+    "CssBaseline": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/bootstrap.jsx"
+      ]
+    },
+    "App": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/bootstrap.jsx",
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/index.js"
+      ]
+    },
+    "Grid": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Stack": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "LineChart": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Line": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "BarChart": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Bar": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "XAxis": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "YAxis": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "ResponsiveContainer": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Tooltip": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Legend": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "PieChart": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Pie": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    },
+    "Cell": {
+      "usedIn": [
+        "/Users/sean/Documents/Development/seans-mfe-tool/examples/my-remote/src/dashboard.jsx"
+      ]
+    }
+  },
+  "potentialMFEs": [
+    {
+      "name": "DashboardMFE",
+      "components": [
+        "dashboard.jsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    }
+  ]
+}

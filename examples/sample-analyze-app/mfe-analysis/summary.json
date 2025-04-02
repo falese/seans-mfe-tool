@@ -1,0 +1,17 @@
+{
+  "totalComponents": 84,
+  "potentialMFEs": 11,
+  "domainsIdentified": [
+    "form",
+    "list",
+    "detail",
+    "dashboard",
+    "app",
+    "patientrepository",
+    "patient",
+    "permissions",
+    "viewlab",
+    "labrepository",
+    "rootstate"
+  ]
+}

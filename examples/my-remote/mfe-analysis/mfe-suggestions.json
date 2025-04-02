@@ -1,0 +1,12 @@
+{
+  "potentialMFEs": [
+    {
+      "name": "DashboardMFE",
+      "components": [
+        "dashboard.jsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    }
+  ]
+}

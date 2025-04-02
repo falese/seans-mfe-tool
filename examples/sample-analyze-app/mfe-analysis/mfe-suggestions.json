@@ -1,0 +1,208 @@
+{
+  "potentialMFEs": [
+    {
+      "name": "FormMFE",
+      "components": [
+        "DatePickerWithLabelFormGroup.test.tsx",
+        "DateTimePickerWithLabelFormGroup.test.tsx",
+        "SelectWithLabelFormGroup.test.tsx",
+        "TestInputWithLabelFormGroup.test.tsx",
+        "TextFieldWithLabelFormGroup.test.tsx",
+        "GeneralInformation.test.tsx",
+        "DatePickerWithLabelFormGroup.tsx",
+        "DateTimePickerWithLabelFormGroup.tsx",
+        "SelectWithLableFormGroup.tsx",
+        "TextFieldWithLabelFormGroup.tsx",
+        "TextInputWithLabelFormGroup.tsx",
+        "GeneralInformation.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "application"
+    },
+    {
+      "name": "ListMFE",
+      "components": [
+        "AppointmentsList.test.tsx",
+        "AppointmentsList.tsx"
+      ],
+      "apiDependencies": [
+        "../../scheduling/appointments/appointments-slice"
+      ],
+      "type": "component"
+    },
+    {
+      "name": "DetailMFE",
+      "components": [
+        "AppointmentDetailForm.test.tsx",
+        "AppointmentDetailForm.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "DashboardMFE",
+      "components": [
+        "Dashboard.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "AppMFE",
+      "components": [
+        "App.test.tsx",
+        "HospitalRun.test.tsx",
+        "AppointmentsList.test.tsx",
+        "AppointmentDetailForm.test.tsx",
+        "Appointments.test.tsx",
+        "App.tsx",
+        "HospitalRun.tsx",
+        "index.tsx",
+        "AppointmentsList.tsx",
+        "AppointmentDetailForm.tsx",
+        "Appointments.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "PatientRepositoryMFE",
+      "components": [
+        "HospitalRun.test.tsx",
+        "NewAllergyModal.test.tsx",
+        "AddDiagnosisModal.test.tsx",
+        "EditPatient.test.tsx",
+        "ViewPatients.test.tsx",
+        "NewPatient.test.tsx",
+        "NewNoteModal.test.tsx",
+        "Patients.test.tsx",
+        "AddRelatedPersonModal.test.tsx",
+        "ViewPatient.test.tsx",
+        "EditAppointment.test.tsx",
+        "HospitalRun.tsx",
+        "NewAllergyModal.tsx",
+        "AddDiagnosisModal.tsx",
+        "EditPatient.tsx",
+        "ViewPatients.tsx",
+        "NewPatient.tsx",
+        "NewNoteModal.tsx",
+        "Patients.tsx",
+        "AddRelatedPersonModal.tsx",
+        "ViewPatient.tsx",
+        "EditAppointment.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "PatientMFE",
+      "components": [
+        "HospitalRun.test.tsx",
+        "NewAllergyModal.test.tsx",
+        "AddDiagnosisModal.test.tsx",
+        "EditPatient.test.tsx",
+        "LabsTab.test.tsx",
+        "NewPatient.test.tsx",
+        "NewNoteModal.test.tsx",
+        "Patients.test.tsx",
+        "ViewPatient.test.tsx",
+        "EditAppointment.test.tsx",
+        "HospitalRun.tsx",
+        "NewAllergyModal.tsx",
+        "AddDiagnosisModal.tsx",
+        "EditPatient.tsx",
+        "LabsTab.tsx",
+        "NewPatient.tsx",
+        "NewNoteModal.tsx",
+        "Patients.tsx",
+        "ViewPatient.tsx",
+        "EditAppointment.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "PermissionsMFE",
+      "components": [
+        "HospitalRun.test.tsx",
+        "LabsTab.test.tsx",
+        "NotesTab.test.tsx",
+        "Patients.test.tsx",
+        "ViewPatient.test.tsx",
+        "HospitalRun.tsx",
+        "LabsTab.tsx",
+        "NoteTab.tsx",
+        "Patients.tsx",
+        "ViewPatient.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "ViewLabMFE",
+      "components": [
+        "Labs.test.tsx",
+        "ViewLab.test.tsx",
+        "ViewLabs.test.tsx",
+        "Labs.tsx",
+        "ViewLab.tsx",
+        "ViewLabs.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "LabRepositoryMFE",
+      "components": [
+        "LabsTab.test.tsx",
+        "ViewPatient.test.tsx",
+        "NewAppointment.test.tsx",
+        "LabsTab.tsx",
+        "ViewPatient.tsx",
+        "NewAppointment.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    },
+    {
+      "name": "RootStateMFE",
+      "components": [
+        "Breadcrumbs.test.tsx",
+        "Sidebar.test.tsx",
+        "HospitalRun.test.tsx",
+        "Labs.test.tsx",
+        "ViewLab.test.tsx",
+        "ViewLabs.test.tsx",
+        "NewAllergyModal.test.tsx",
+        "AddDiagnosisModal.test.tsx",
+        "EditPatient.test.tsx",
+        "ViewPatients.test.tsx",
+        "NewPatient.test.tsx",
+        "NewNoteModal.test.tsx",
+        "Patients.test.tsx",
+        "AddRelatedPersonModal.test.tsx",
+        "ViewPatient.test.tsx",
+        "EditAppointment.test.tsx",
+        "Breadcrumbs.tsx",
+        "Sidebar.tsx",
+        "HospitalRun.tsx",
+        "Labs.tsx",
+        "ViewLab.tsx",
+        "ViewLabs.tsx",
+        "NewAllergyModal.tsx",
+        "AddDiagnosisModal.tsx",
+        "EditPatient.tsx",
+        "ViewPatients.tsx",
+        "NewPatient.tsx",
+        "NewNoteModal.tsx",
+        "NoteTab.tsx",
+        "Patients.tsx",
+        "AddRelatedPersonModal.tsx",
+        "ViewPatient.tsx",
+        "EditAppointment.tsx"
+      ],
+      "apiDependencies": [],
+      "type": "component"
+    }
+  ]
+}
