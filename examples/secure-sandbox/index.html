@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enhanced Runtime Protection Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .demo-container {
+      display: flex;
+      gap: 20px;
+    }
+    .demo-panel {
+      flex: 1;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .control-panel {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    .security-report {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .security-report ul {
+      color: #d32f2f;
+    }
+    .test-button {
+      margin: 5px;
+      padding: 8px 16px;
+    }
+    .test-category {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .resource-monitor {
+      display: flex;
+      justify-content: space-between;
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    .resource-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .resource-value {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enhanced Runtime Protection Demo</h1>
+  
+  <!-- Control Panel for Testing -->
+  <div class="control-panel">
+    <h3>Test Scenarios</h3>
+    
+    <div class="test-category">
+      <h4>DOM Security</h4>
+      <button class="test-button" id="test-script-injection">Script Injection</button>
+      <button class="test-button" id="test-dom-access">Global DOM Access</button>
+      <button class="test-button" id="test-global-events">Global Event Handlers</button>
+    </div>
+    
+    <div class="test-category">
+      <h4>Data Access Security</h4>
+      <button class="test-button" id="test-storage-access">Storage Access</button>
+      <button class="test-button" id="test-storage-limits">Storage Limits</button>
+      <button class="test-button" id="test-restricted-apis">Restricted APIs</button>
+    </div>
+    
+    <div class="test-category">
+      <h4>Network Security</h4>
+      <button class="test-button" id="test-fetch-allowed">Fetch (Allowed Domain)</button>
+      <button class="test-button" id="test-fetch-blocked">Fetch (Blocked Domain)</button>
+      <button class="test-button" id="test-fetch-rate-limit">Fetch Rate Limiting</button>
+    </div>
+    
+    <div class="test-category">
+      <h4>Resource Management</h4>
+      <button class="test-button" id="test-cpu-limits">CPU Limits</button>
+      <button class="test-button" id="test-memory-limits">Memory Limits</button>
+      <button class="test-button" id="test-timeout-limits">Timeout Management</button>
+    </div>
+    
+    <div class="test-category">
+      <h4>Communication</h4>
+      <button class="test-button" id="test-event-bus">Event Bus</button>
+      <button class="test-button" id="test-platform-events">Platform Events</button>
+    </div>
+  </div>
+  
+  <div class="demo-container">
+    <div class="demo-panel">
+      <h2>Standard Integration (Unprotected)</h2>
+      <div id="standard-widget"></div>
+      <div class="resource-monitor">
+        <div class="resource-item">
+          <div>CPU Usage</div>
+          <div class="resource-value" id="standard-cpu">0%</div>
+        </div>
+        <div class="resource-item">
+          <div>Memory</div>
+          <div class="resource-value" id="standard-memory">0 MB</div>
+        </div>
+        <div class="resource-item">
+          <div>API Calls</div>
+          <div class="resource-value" id="standard-api-calls">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="demo-panel">
+      <h2>Protected Integration</h2>
+      <div id="protected-widget"></div>
+      <div class="resource-monitor">
+        <div class="resource-item">
+          <div>CPU Usage</div>
+          <div class="resource-value" id="protected-cpu">0%</div>
+        </div>
+        <div class="resource-item">
+          <div>Memory</div>
+          <div class="resource-value" id="protected-memory">0 MB</div>
+        </div>
+        <div class="resource-item">
+          <div>API Calls</div>
+          <div class="resource-value" id="protected-api-calls">0</div>
+        </div>
+      </div>
+      <div class="security-report" id="security-log">
+        <h3>Security Events</h3>
+        <ul id="violation-log"></ul>
+      </div>
+    </div>
+  </div>
+  
+  <script src="mock-api.js"></script>
+  <script src="runtime-protection.js"></script>
+  <script src="sample-financial-widget.js"></script>
+  <script>
+    // Initialize both widgets
+    document.addEventListener('DOMContentLoaded', function() {
+      // Standard widget initialization
+      const standardContainer = document.getElementById('standard-widget');
+      window.standardWidget = new FinancialWidget(standardContainer, {
+        theme: 'light',
+        currency: 'USD'
+      });
+      
+      // Protected widget initialization
+      const protectedContainer = document.getElementById('protected-widget');
+      window.protectionSandbox = new RuntimeProtection(protectedContainer);
+      window.protectionSandbox.initializeWidget();
+      
+      // Set up test buttons
+      setupTestButtons();
+      
+      // Start resource monitoring
+      startResourceMonitoring();
+    });
+    
+    function setupTestButtons() {
+      // DOM Security Tests
+      document.getElementById('test-script-injection').addEventListener('click', function() {
+        console.log("Testing script injection...");
+        window.standardWidget.testScriptInjection();
+        window.protectionSandbox.testScriptInjection();
+      });
+      
+      document.getElementById('test-dom-access').addEventListener('click', function() {
+        console.log("Testing DOM access...");
+        window.standardWidget.testDOMAccess();
+        window.protectionSandbox.testDOMAccess();
+      });
+      
+      document.getElementById('test-global-events').addEventListener('click', function() {
+        console.log("Testing global event handlers...");
+        window.standardWidget.testGlobalEvents();
+        window.protectionSandbox.testGlobalEvents();
+      });
+      
+      // Data Access Security Tests
+      document.getElementById('test-storage-access').addEventListener('click', function() {
+        console.log("Testing storage access...");
+        window.standardWidget.testStorageAccess();
+        window.protectionSandbox.testStorageAccess();
+      });
+      
+      document.getElementById('test-storage-limits').addEventListener('click', function() {
+        console.log("Testing storage limits...");
+        window.standardWidget.testStorageLimits();
+        window.protectionSandbox.testStorageLimits();
+      });
+      
+      document.getElementById('test-restricted-apis').addEventListener('click', function() {
+        console.log("Testing restricted APIs...");
+        window.standardWidget.testRestrictedAPIs();
+        window.protectionSandbox.testRestrictedAPIs();
+      });
+      
+      // Network Security Tests
+      document.getElementById('test-fetch-allowed').addEventListener('click', function() {
+        console.log("Testing fetch to allowed domain...");
+        window.standardWidget.testFetchAllowed();
+        window.protectionSandbox.testFetchAllowed();
+      });
+      
+      document.getElementById('test-fetch-blocked').addEventListener('click', function() {
+        console.log("Testing fetch to blocked domain...");
+        window.standardWidget.testFetchBlocked();
+        window.protectionSandbox.testFetchBlocked();
+      });
+      
+      document.getElementById('test-fetch-rate-limit').addEventListener('click', function() {
+        console.log("Testing fetch rate limits...");
+        window.standardWidget.testFetchRateLimit();
+        window.protectionSandbox.testFetchRateLimit();
+      });
+      
+      // Resource Management Tests
+      document.getElementById('test-cpu-limits').addEventListener('click', function() {
+        console.log("Testing CPU limits...");
+        window.standardWidget.testCPULimits();
+        window.protectionSandbox.testCPULimits();
+      });
+      
+      document.getElementById('test-memory-limits').addEventListener('click', function() {
+        console.log("Testing memory limits...");
+        window.standardWidget.testMemoryLimits();
+        window.protectionSandbox.testMemoryLimits();
+      });
+      
+      document.getElementById('test-timeout-limits').addEventListener('click', function() {
+        console.log("Testing timeout management...");
+        window.standardWidget.testTimeoutLimits();
+        window.protectionSandbox.testTimeoutLimits();
+      });
+      
+      // Communication Tests
+      document.getElementById('test-event-bus').addEventListener('click', function() {
+        console.log("Testing event bus...");
+        window.standardWidget.testEventBus();
+        window.protectionSandbox.testEventBus();
+      });
+      
+      document.getElementById('test-platform-events').addEventListener('click', function() {
+        console.log("Testing platform events...");
+        window.standardWidget.testPlatformEvents();
+        window.protectionSandbox.testPlatformEvents();
+      });
+    }
+    
+    function startResourceMonitoring() {
+      // Set up basic resource monitoring for visual feedback
+      let standardApiCalls = 0;
+      let protectedApiCalls = 0;
+      
+      // Fake monitoring for demo purposes
+      setInterval(() => {
+        // Standard widget "monitoring"
+        const standardCPU = Math.floor(Math.random() * 30) + 10;
+        const standardMemory = Math.floor(Math.random() * 50) + 20;
+        standardApiCalls += Math.floor(Math.random() * 3);
+        
+        document.getElementById('standard-cpu').textContent = `${standardCPU}%`;
+        document.getElementById('standard-memory').textContent = `${standardMemory} MB`;
+        document.getElementById('standard-api-calls').textContent = standardApiCalls;
+        
+        // Protected widget monitoring (actually controlled by sandbox)
+        const protectedCPU = window.protectionSandbox.getCPUUsage();
+        const protectedMemory = window.protectionSandbox.getMemoryUsage();
+        protectedApiCalls = window.protectionSandbox.getAPICallCount();
+        
+        document.getElementById('protected-cpu').textContent = `${protectedCPU}%`;
+        document.getElementById('protected-memory').textContent = `${protectedMemory} MB`;
+        document.getElementById('protected-api-calls').textContent = protectedApiCalls;
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
