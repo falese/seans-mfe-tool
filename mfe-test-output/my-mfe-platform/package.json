@@ -1,0 +1,21 @@
+{
+  "name": "my-mfe-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "main-shell",
+    "dashboard",
+    "user-profile",
+    "settings",
+    "user-api",
+    "settings-api"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=main-shell\" \"npm run dev --workspace=dashboard\" \"npm run dev --workspace=user-profile\" \"npm run dev --workspace=settings\" \"npm run dev --workspace=user-api\" \"npm run dev --workspace=settings-api\"",
+    "build": "npm run build --workspaces",
+    "start": "concurrently \"npm run start --workspace=main-shell\" \"npm run start --workspace=dashboard\" \"npm run start --workspace=user-profile\" \"npm run start --workspace=settings\" \"npm run start --workspace=user-api\" \"npm run start --workspace=settings-api\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

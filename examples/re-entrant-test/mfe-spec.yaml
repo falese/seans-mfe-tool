@@ -1,0 +1,122 @@
+version: '1.0'
+name: my-mfe-platform
+description: "A modular micro-frontend platform"
+
+metadata:
+  author: "Team MFE"
+  createdAt: "2025-05-17"
+  organization: "Example Corp"
+  tags:
+    - microfrontends
+    - react
+    - mui
+    - rspack
+
+shell:
+  name: main-shell
+  port: 3000
+  type: react
+  theme:
+    primaryColor: "#1976d2"
+    secondaryColor: "#dc004e"
+    mode: "light"
+  dependencies:
+    react: "^18.2.0"
+    react-dom: "^18.2.0"
+    "@mui/material": "^5.15.0"
+  layout:
+    header: true
+    footer: true
+    sidebar: false
+    navigation:
+      type: "tabs"
+      location: "top"
+
+remotes:
+  - name: dashboard
+    port: 3001
+    type: react
+    exposedComponents:
+      - name: "Dashboard"
+        path: "./Dashboard"
+      - name: "DashboardWidget"
+        path: "./DashboardWidget"
+    dependencies:
+      "@mui/material": "^5.15.0"
+      "recharts": "^2.7.2"
+    routes:
+      - path: "/"
+        component: "Dashboard"
+        exact: true
+      - path: "/dashboard"
+        component: "Dashboard"
+    
+  - name: user-profile
+    port: 3002
+    type: react
+    exposedComponents:
+      - name: "Profile"
+        path: "./Profile"
+      - name: "ProfileIcon"
+        path: "./ProfileIcon"
+    dependencies:
+      "@mui/material": "^5.15.0"
+    routes:
+      - path: "/profile"
+        component: "Profile"
+
+  - name: settings
+    port: 3003
+    type: react
+    exposedComponents:
+      - name: "Settings"
+        path: "./Settings"
+      - name: "SettingsForm"
+        path: "./SettingsForm"
+    dependencies:
+      "@mui/material": "^5.15.0"
+    routes:
+      - path: "/settings"
+        component: "Settings"
+
+apis:
+  - name: user-api
+    port: 4001
+    type: api
+    database: mongodb
+    spec: "./api-specs/user-api.yaml"
+    routes:
+      - path: "/api/users"
+        methods: ["GET", "POST"]
+      - path: "/api/users/:id"
+        methods: ["GET", "PUT", "DELETE"]
+
+  - name: settings-api
+    port: 4002
+    type: api
+    database: sqlite
+    spec: "./api-specs/settings-api.yaml"
+    routes:
+      - path: "/api/settings"
+        methods: ["GET", "POST", "PUT"]
+
+deployment:
+  development:
+    mode: "container"
+  production:
+    registry: "example.io/mfe"
+    replicas:
+      shell: 2
+      remotes: 1
+      apis: 2
+
+shared:
+  dependencies:
+    react: "^18.2.0"
+    react-dom: "^18.2.0"
+    "@emotion/react": "^11.11.1"
+    "@emotion/styled": "^11.11.0"
+  
+  state:
+    type: "context"
+    scope: "global"
