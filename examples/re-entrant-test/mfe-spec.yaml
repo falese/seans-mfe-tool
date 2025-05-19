@@ -51,7 +51,7 @@ remotes:
       - path: "/dashboard"
         component: "Dashboard"
     
-  - name: user-profile
+  - name: profile
     port: 3002
     type: react
     exposedComponents:
@@ -74,7 +74,7 @@ remotes:
       - name: "SettingsForm"
         path: "./SettingsForm"
     dependencies:
-      "@mui/material": "^5.15.0"
+      "@mui/material": "^5.17.0"
     routes:
       - path: "/settings"
         component: "Settings"

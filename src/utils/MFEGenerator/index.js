@@ -207,113 +207,6 @@ function detectChanges(oldSpec, newSpec) {
   return changes;
 }
 
-// Find all annotated sections in a file
-function findAnnotatedSections(fileContent) {
-  const sections = [];
-  let startIndex = -1;
-  let currentID = null;
-  
-  // Read the file line by line to find annotations
-  const lines = fileContent.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Look for start annotation
-    if (line.includes(ANNOTATION_START)) {
-      startIndex = i;
-      
-      // Check for ID annotation
-      const idMatch = line.match(new RegExp(`${ANNOTATION_ID_PREFIX}([^\\s]+)${ANNOTATION_ID_SUFFIX}`));
-      if (idMatch) {
-        currentID = idMatch[1];
-      }
-    }
-    
-    // Look for end annotation
-    else if (line.includes(ANNOTATION_END) && startIndex !== -1) {
-      sections.push({
-        id: currentID,
-        startLine: startIndex,
-        endLine: i,
-        content: lines.slice(startIndex + 1, i).join('\n')
-      });
-      
-      startIndex = -1;
-      currentID = null;
-    }
-  }
-  
-  return sections;
-}
-
-// Update annotated sections in a file
-async function updateAnnotatedFile(filePath, sectionUpdates, dryRun) {
-  if (!await fs.pathExists(filePath)) {
-    console.log(chalk.yellow(`File not found: ${filePath}`));
-    return false;
-  }
-  
-  // Read the file content
-  const fileContent = await fs.readFile(filePath, 'utf8');
-  const lines = fileContent.split('\n');
-  
-  // Find all sections
-  const sections = findAnnotatedSections(fileContent);
-  
-  // Create a map for quick lookup
-  const sectionMap = {};
-  sections.forEach(section => {
-    if (section.id) {
-      sectionMap[section.id] = section;
-    }
-  });
-  
-  // Apply updates (in reverse order to avoid line number changes)
-  const updates = Object.entries(sectionUpdates)
-    .filter(([id]) => sectionMap[id])
-    .sort((a, b) => sectionMap[b[0]].startLine - sectionMap[a[0]].startLine);
-  
-  let updatedLines = [...lines];
-  for (const [id, newContent] of updates) {
-    const section = sectionMap[id];
-    
-    // Replace content between start and end annotations
-    updatedLines = [
-      ...updatedLines.slice(0, section.startLine + 1),
-      newContent,
-      ...updatedLines.slice(section.endLine)
-    ];
-    
-    console.log(chalk.blue(`Updating section '${id}' in ${path.basename(filePath)}`));
-  }
-  
-  // Only write if changes were made
-  if (updates.length > 0) {
-    const newContent = updatedLines.join('\n');
-    
-    // Show diff if dry run
-    if (dryRun) {
-      console.log(chalk.yellow('\nChanges for', filePath, '(dry run):'));
-      const changes = diff.diffLines(fileContent, newContent);
-      changes.forEach(change => {
-        const color = change.added ? 'green' : change.removed ? 'red' : 'grey';
-        const prefix = change.added ? '+' : change.removed ? '-' : ' ';
-        const lines = change.value.split('\n').filter(Boolean);
-        lines.forEach(line => {
-          console.log(chalk[color](`${prefix} ${line}`));
-        });
-      });
-    } else {
-      await fs.writeFile(filePath, newContent);
-      console.log(chalk.green(`✓ Updated ${path.basename(filePath)}`));
-    }
-    
-    return true;
-  }
-  
-  return false;
-}
-
 // Generate a new MFE project
 async function generateMFE(spec, outputDir, dryRun) {
   console.log(chalk.blue(`\nGenerating MFE project: ${spec.name}`));
@@ -420,8 +313,6 @@ module.exports = {
   parseArgs,
   loadSpec,
   detectChanges,
-  findAnnotatedSections,
-  updateAnnotatedFile,
   generateMFE,
   updateMFE,
   ANNOTATION_START,

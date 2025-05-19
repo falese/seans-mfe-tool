@@ -66,43 +66,307 @@ ${spec.metadata ? Object.entries(spec.metadata)
   console.log(chalk.green('✓ Created README.md'));
 }
 
-// Generate shell application
-async function generateShell(projectDir, spec, dryRun) {
-  console.log(chalk.blue(`\nGenerating shell application: ${spec.shell.name}`));
+// Create a shell application directly (bypassing the seans-mfe-tool command)
+async function createShellApp(projectDir, shell, remotesConfig) {
+  const shellDir = path.join(projectDir, shell.name);
   
-  // Build the remotes configuration
-  const remotesConfig = {};
-  if (spec.remotes) {
-    spec.remotes.forEach(remote => {
-      remotesConfig[remote.name] = `http://localhost:${remote.port}/remoteEntry.js`;
-    });
+  // Create directory structure
+  await fs.ensureDir(path.join(shellDir, 'src'));
+  await fs.ensureDir(path.join(shellDir, 'public'));
+  
+  // Create package.json
+  const packageJson = {
+    "name": shell.name,
+    "version": "1.0.0",
+    "scripts": {
+      "start": "rspack serve",
+      "build": "rspack build",
+      "dev": "rspack serve"
+    },
+    "dependencies": {
+      "@emotion/react": "^11.11.1",
+      "@emotion/styled": "^11.11.0",
+      "@mui/material": "^5.15.0",
+      "@mui/system": "^5.15.0",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+      "@rspack/cli": "^1.1.0",
+      "@rspack/core": "^1.1.0"
+    }
+  };
+  
+  // Add additional dependencies from spec
+  if (shell.dependencies) {
+    for (const [name, version] of Object.entries(shell.dependencies)) {
+      packageJson.dependencies[name] = version;
+    }
   }
   
-  const shellDir = path.join(projectDir, spec.shell.name);
+  await fs.writeJson(path.join(shellDir, 'package.json'), packageJson, { spaces: 2 });
   
-  // Use the mfe-tool to create shell
-  if (!dryRun) {
-    try {
-      execSync(`npx seans-mfe-tool shell ${spec.shell.name} --port ${spec.shell.port} --remotes '${JSON.stringify(remotesConfig)}'`, { 
-        cwd: projectDir,
-        stdio: 'inherit'
-      });
-      
-      // Customize theme if specified
-      if (spec.shell.theme) {
-        await customizeTheme(path.join(projectDir, spec.shell.name), spec.shell.theme);
+  // Format remotes config with proper indentation for rspack config
+  const remotesStr = JSON.stringify(remotesConfig, null, 6)
+    .replace(/"/g, "'")
+    .replace(/},/g, '},')
+    .replace(/'/g, '"');
+  
+  // Create rspack.config.js
+  const rspackConfig = `const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
+
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = {
+  context: __dirname,
+  entry: {
+    main: './src/index.js'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].bundle.js',
+    publicPath: 'auto',
+    clean: true,
+  },
+  mode: "development",
+  target: "web",
+  module: {
+    rules: [
+      {
+        test: /\\.jsx?$/,
+        use: {
+          loader: "builtin:swc-loader",
+          options: {
+            jsc: {
+              parser: {
+                syntax: "ecmascript",
+                jsx: true
+              },
+              transform: {
+                react: {
+                  runtime: "automatic"
+                }
+              }
+            }
+          }
+        }
       }
-      
-      // Annotate the rspack.config.js file for future updates
-      await annotateShellConfig(shellDir, remotesConfig);
-      
-      console.log(chalk.green(`✓ Generated shell application: ${spec.shell.name}`));
-    } catch (error) {
-      console.error(chalk.red(`Error generating shell: ${error.message}`));
-      throw error;
+    ]
+  },
+  resolve: {
+    extensions: [".js", ".jsx", ".json"]
+  },
+  devServer: {
+    port: ${shell.port},
+    host: 'localhost',
+    hot: true,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/'
+    },
+    devMiddleware: {
+      publicPath: '/'
     }
-  } else {
-    console.log(chalk.yellow(`[DRY RUN] Would generate shell application: ${spec.shell.name}`));
+  },
+  plugins: [
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/'
+    }),
+    new ModuleFederationPlugin({
+      name: "shell",
+      filename: "remoteEntry.js",
+      remotes: ${ANNOTATION_START} ${ANNOTATION_ID_PREFIX}remotes${ANNOTATION_ID_SUFFIX}
+      ${remotesStr}
+      ${ANNOTATION_END},
+      shared: {
+        react: { singleton: true, eager: true },
+        "react-dom": { singleton: true, eager: true },
+        "@mui/material": { singleton: true },
+        "@mui/system": { singleton: true },
+        "@emotion/react": { singleton: true },
+        "@emotion/styled": { singleton: true }
+      }
+    })
+  ],
+  optimization: {
+    moduleIds: 'named',
+    chunkIds: 'named'
+  }
+};`;
+
+  await fs.writeFile(path.join(shellDir, 'rspack.config.js'), rspackConfig);
+  
+  // Create public/index.html
+  const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${shell.name}</title>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+</html>`;
+
+  await fs.writeFile(path.join(shellDir, 'public', 'index.html'), indexHtml);
+  
+  // Create index.js
+  const indexJs = `// src/index.js
+import('./bootstrap');`;
+
+  await fs.writeFile(path.join(shellDir, 'src', 'index.js'), indexJs);
+  
+  // Create bootstrap.jsx
+  const bootstrapJsx = `import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const mount = () => {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('Failed to find root element');
+  }
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+};
+
+mount();`;
+
+  await fs.writeFile(path.join(shellDir, 'src', 'bootstrap.jsx'), bootstrapJsx);
+  
+  // Create App.jsx
+  const themeConfig = shell.theme || { 
+    mode: 'light', 
+    primaryColor: '#1976d2', 
+    secondaryColor: '#dc004e' 
+  };
+  
+  const appJsx = `import * as React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+
+const theme = createTheme({
+  ${ANNOTATION_START} ${ANNOTATION_ID_PREFIX}theme${ANNOTATION_ID_SUFFIX}
+  palette: {
+    mode: '${themeConfig.mode || 'light'}',
+    primary: {
+      main: '${themeConfig.primaryColor || '#1976d2'}',
+    },
+    secondary: {
+      main: '${themeConfig.secondaryColor || '#dc004e'}',
+    },
+  }
+  ${ANNOTATION_END}
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              ${shell.name}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Container component="main" sx={{ mt: 4, mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Welcome to ${shell.name}
+          </Typography>
+          <Typography variant="body1">
+            Your Module Federation shell is running on port ${shell.port}.
+          </Typography>
+          ${ANNOTATION_START} ${ANNOTATION_ID_PREFIX}remote-components${ANNOTATION_ID_SUFFIX}
+          ${ANNOTATION_END}
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+export default App;`;
+
+  await fs.writeFile(path.join(shellDir, 'src', 'App.jsx'), appJsx);
+  
+  // Install dependencies
+  console.log(chalk.blue(`Installing dependencies for ${shell.name}...`));
+  try {
+    execSync('npm install', { 
+      cwd: shellDir, 
+      stdio: 'inherit',
+      env: { ...process.env, ADBLOCK: '1', DISABLE_OPENCOLLECTIVE: '1' }
+    });
+  } catch (error) {
+    console.warn(chalk.yellow(`Warning: Error installing dependencies for ${shell.name}: ${error.message}`));
+    // Continue anyway - we've generated the files
+  }
+  
+  return shellDir;
+}
+
+
+
+// Update the shell app with remote component imports and usage
+async function updateShellWithRemotes(shellDir, remotes) {
+  if (!remotes || remotes.length === 0) {
+    return;
+  }
+  
+  const appJsxPath = path.join(shellDir, 'src', 'App.jsx');
+  
+  if (await fs.pathExists(appJsxPath)) {
+    // Read the current App.jsx file
+    let appContent = await fs.readFile(appJsxPath, 'utf8');
+    
+    // Generate import statements for remotes
+    const imports = remotes.map(remote => {
+      // For each remote, we need to import its App component
+      return `const ${remote.name}App = React.lazy(() => import('${remote.name}/App'));`;
+    }).join('\n');
+    
+    // Add the imports at the top of the file after the first React import
+    appContent = appContent.replace(
+      /(import \* as React from 'react';)/,
+      `$1\n\n// Dynamic imports from remote MFEs\n${imports}`
+    );
+    
+    // Generate component usage
+    const componentUsage = remotes.map(remote => `
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Remote: ${remote.name}
+          </Typography>
+          <React.Suspense fallback={<div>Loading ${remote.name}...</div>}>
+            <${remote.name}App />
+          </React.Suspense>`
+    ).join('\n');
+    
+    // Replace the annotated section for remote components
+    appContent = appContent.replace(
+      new RegExp(`${ANNOTATION_START} ${ANNOTATION_ID_PREFIX}remote-components${ANNOTATION_ID_SUFFIX}[\\s\\S]*?${ANNOTATION_END}`),
+      `${ANNOTATION_START} ${ANNOTATION_ID_PREFIX}remote-components${ANNOTATION_ID_SUFFIX}
+          ${componentUsage}
+          ${ANNOTATION_END}`
+    );
+    
+    await fs.writeFile(appJsxPath, appContent);
+    console.log(chalk.green(`✓ Updated shell with remote component imports`));
   }
 }
 
@@ -192,6 +456,315 @@ $3`
     }
   }
 }
+
+//Corrected rspack config generation with proper Module Federation remote format
+function generateRspackConfig(shellName, port, remotesConfig) {
+  // Create a clean object for remotes configuration with proper format:
+  // "remoteName": "remoteName@http://localhost:port/remoteEntry.js"
+  let remotesObj = {};
+  
+  if (remotesConfig && Object.keys(remotesConfig).length > 0) {
+    remotesObj = Object.fromEntries(
+      Object.entries(remotesConfig).map(([name, url]) => 
+        // Format remote as "name": "name@url"
+        [name, `${name}@${url}`]
+      )
+    );
+  }
+  
+  // Return the entire config as a string
+  return `const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
+
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = {
+  context: __dirname,
+  entry: {
+    main: './src/index.js'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].bundle.js',
+    publicPath: 'auto',
+    clean: true,
+  },
+  mode: "development",
+  target: "web",
+  module: {
+    rules: [
+      {
+        test: /\\.jsx?$/,
+        use: {
+          loader: "builtin:swc-loader",
+          options: {
+            jsc: {
+              parser: {
+                syntax: "ecmascript",
+                jsx: true
+              },
+              transform: {
+                react: {
+                  runtime: "automatic"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  resolve: {
+    extensions: [".js", ".jsx", ".json"]
+  },
+  devServer: {
+    port: ${port},
+    host: 'localhost',
+    hot: true,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/'
+    },
+    devMiddleware: {
+      publicPath: '/'
+    }
+  },
+  plugins: [
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/'
+    }),
+    new ModuleFederationPlugin({
+      name: "${shellName}",
+      filename: "remoteEntry.js",
+      remotes: ${JSON.stringify(remotesObj, null, 6)},
+      shared: {
+        react: { singleton: true, eager: true },
+        "react-dom": { singleton: true, eager: true },
+        "@mui/material": { singleton: true },
+        "@mui/system": { singleton: true },
+        "@emotion/react": { singleton: true },
+        "@emotion/styled": { singleton: true }
+      }
+    })
+  ],
+  optimization: {
+    moduleIds: 'named',
+    chunkIds: 'named'
+  }
+};`;
+}
+
+// Completely rewritten generateShell function with no annotations in critical parts
+async function generateShell(projectDir, spec, dryRun) {
+  console.log(chalk.blue(`\nGenerating shell application: ${spec.shell.name}`));
+  
+  // Build the remotes configuration
+  const remotesConfig = {};
+  if (spec.remotes) {
+    spec.remotes.forEach(remote => {
+      remotesConfig[remote.name] = `http://localhost:${remote.port}/remoteEntry.js`;
+    });
+  }
+  
+  if (!dryRun) {
+    try {
+      // Create shell directory
+      const shellDir = path.join(projectDir, spec.shell.name);
+      await fs.ensureDir(shellDir);
+      await fs.ensureDir(path.join(shellDir, 'src'));
+      await fs.ensureDir(path.join(shellDir, 'public'));
+      
+      // Create package.json
+      const packageJson = {
+        "name": spec.shell.name,
+        "version": "1.0.0",
+        "scripts": {
+          "start": "rspack serve",
+          "build": "rspack build",
+          "dev": "rspack serve"
+        },
+        "dependencies": {
+          "@emotion/react": "^11.11.1",
+          "@emotion/styled": "^11.11.0",
+          "@mui/material": "^5.15.0",
+          "@mui/system": "^5.15.0",
+          "react": "^18.2.0",
+          "react-dom": "^18.2.0"
+        },
+        "devDependencies": {
+          "@rspack/cli": "^1.1.0",
+          "@rspack/core": "^1.1.0"
+        }
+      };
+      
+      // Add additional dependencies from spec
+      if (spec.shell.dependencies) {
+        for (const [name, version] of Object.entries(spec.shell.dependencies)) {
+          packageJson.dependencies[name] = version;
+        }
+      }
+      
+      await fs.writeJson(path.join(shellDir, 'package.json'), packageJson, { spaces: 2 });
+      
+      // Create rspack.config.js with our simplified generator
+      const rspackConfig = generateRspackConfig(
+        spec.shell.name,
+        spec.shell.port,
+        remotesConfig
+      );
+      
+      await fs.writeFile(path.join(shellDir, 'rspack.config.js'), rspackConfig);
+      
+      // Create public/index.html
+      const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${spec.shell.name}</title>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+</html>`;
+
+      await fs.writeFile(path.join(shellDir, 'public', 'index.html'), indexHtml);
+      
+      // Create index.js
+      const indexJs = `// src/index.js
+import('./bootstrap');`;
+
+      await fs.writeFile(path.join(shellDir, 'src', 'index.js'), indexJs);
+      
+      // Create bootstrap.jsx
+      const bootstrapJsx = `import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const mount = () => {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('Failed to find root element');
+  }
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+};
+
+mount();`;
+
+      await fs.writeFile(path.join(shellDir, 'src', 'bootstrap.jsx'), bootstrapJsx);
+      
+      // Process remote app imports for App.jsx
+      const remoteImports = [];
+      const remoteComponents = [];
+      
+      if (spec.remotes && spec.remotes.length > 0) {
+        for (const remote of spec.remotes) {
+          // Convert kebab-case to camelCase for variable names
+          const safeVarName = remote.name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()) + 'App';
+          
+          remoteImports.push(`const ${safeVarName} = React.lazy(() => import('${remote.name}/App'));`);
+          
+          remoteComponents.push(`
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Remote: ${remote.name}
+          </Typography>
+          <React.Suspense fallback={<div>Loading ${remote.name}...</div>}>
+            <${safeVarName} />
+          </React.Suspense>`);
+        }
+      }
+      
+      // Create App.jsx with proper imports
+      const themeConfig = spec.shell.theme || { 
+        mode: 'light', 
+        primaryColor: '#1976d2', 
+        secondaryColor: '#dc004e' 
+      };
+      
+      const appJsx = `import * as React from 'react';
+${remoteImports.length > 0 ? '\n// Dynamic imports from remote MFEs\n' + remoteImports.join('\n') : ''}
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+
+const theme = createTheme({
+  palette: {
+    mode: '${themeConfig.mode || 'light'}',
+    primary: {
+      main: '${themeConfig.primaryColor || '#1976d2'}',
+    },
+    secondary: {
+      main: '${themeConfig.secondaryColor || '#dc004e'}',
+    },
+  }
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              ${spec.shell.name}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Container component="main" sx={{ mt: 4, mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Welcome to ${spec.shell.name}
+          </Typography>
+          <Typography variant="body1">
+            Your Module Federation shell is running on port ${spec.shell.port}.
+          </Typography>
+          ${remoteComponents.join('\n')}
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+export default App;`;
+
+      await fs.writeFile(path.join(shellDir, 'src', 'App.jsx'), appJsx);
+      
+      // Install dependencies
+      console.log(chalk.blue(`Installing dependencies for ${spec.shell.name}...`));
+      try {
+        execSync('npm install', { 
+          cwd: shellDir, 
+          stdio: 'inherit',
+          env: { ...process.env, ADBLOCK: '1', DISABLE_OPENCOLLECTIVE: '1' }
+        });
+      } catch (error) {
+        console.warn(chalk.yellow(`Warning: Error installing dependencies for ${spec.shell.name}: ${error.message}`));
+      }
+      
+      console.log(chalk.green(`✓ Generated shell application: ${spec.shell.name}`));
+    } catch (error) {
+      console.error(chalk.red(`Error generating shell: ${error.message}`));
+      throw error;
+    }
+  } else {
+    console.log(chalk.yellow(`[DRY RUN] Would generate shell application: ${spec.shell.name}`));
+  }
+}
+
+
 
 // Fix package.json after remote MFE creation
 async function fixRemotePackageJson(remoteDir, muiVersion) {
@@ -862,5 +1435,7 @@ module.exports = {
   createWorkspacePackage,
   findAnnotatedSections,
   fixRemotePackageJson,
-  createRemoteMFE
+  createRemoteMFE,
+  createShellApp,
+  updateShellWithRemotes
 };
