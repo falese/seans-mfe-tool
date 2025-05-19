@@ -80,16 +80,6 @@ remotes:
         component: "Settings"
 
 apis:
-  - name: user-api
-    port: 4001
-    type: api
-    database: mongodb
-    spec: "./api-specs/user-api.yaml"
-    routes:
-      - path: "/api/users"
-        methods: ["GET", "POST"]
-      - path: "/api/users/:id"
-        methods: ["GET", "PUT", "DELETE"]
 
   - name: settings-api
     port: 4002

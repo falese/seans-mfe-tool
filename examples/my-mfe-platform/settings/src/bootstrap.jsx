@@ -33,10 +33,3 @@ export { mount };
 export { default as Settings } from './components/Settings';
 export { default as SettingsForm } from './components/SettingsForm';
 /* MFE-GENERATOR:END */
-
-
-/* MFE-GENERATOR:START */ /* MFE-GENERATOR:ID:exports */
-// Export components for Module Federation
-export { default as Settings } from './components/Settings';
-export { default as SettingsForm } from './components/SettingsForm';
-/* MFE-GENERATOR:END */

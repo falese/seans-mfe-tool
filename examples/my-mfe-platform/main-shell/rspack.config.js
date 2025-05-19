@@ -64,13 +64,11 @@ module.exports = {
     new ModuleFederationPlugin({
       name: "main-shell",
       filename: "remoteEntry.js",
-      remotes: /* MFE-GENERATOR:START */ /* MFE-GENERATOR:ID:remotes */
-      {
-      "dashboard": "http://localhost:3001/remoteEntry.js",
-      "profile": "http://localhost:3002/remoteEntry.js",
-      "settings": "http://localhost:3003/remoteEntry.js"
-}
-      /* MFE-GENERATOR:END */,
+      remotes: {
+      "dashboard": "dashboard@http://localhost:3001/remoteEntry.js",
+      "profile": "profile@http://localhost:3002/remoteEntry.js",
+      "settings": "settings@http://localhost:3003/remoteEntry.js"
+},
       shared: {
         react: { singleton: true, eager: true },
         "react-dom": { singleton: true, eager: true },

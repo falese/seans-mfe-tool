@@ -99,12 +99,12 @@ module.exports = {
         },
         '@mui/material': { 
           singleton: false, 
-          requiredVersion: '^5.15.0',
+          requiredVersion: '^5.17.0',
           eager: false
         },
         '@mui/system': { 
           singleton: false, 
-          requiredVersion: '^5.15.0',
+          requiredVersion: '^5.17.0',
           eager: false
         },
         '@emotion/react': { 

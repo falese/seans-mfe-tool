@@ -16,7 +16,7 @@ This project was generated with Sean's MFE Tool based on the provided specificat
 - settings (Port: 3003)
 
 ### APIs
-- user-api (Port: 4001, Database: mongodb)
+- petstore-api (Port: 4001, Database: mongodb)
 - settings-api (Port: 4002, Database: sqlite)
 
 ## Getting Started
