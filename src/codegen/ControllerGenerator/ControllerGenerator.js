@@ -38,7 +38,7 @@ class ControllerGenerator {
         const controllerContent = await this.generateControllerContent(normalizedName, modelName, pathGroup, dbAdapter);
         const filePath = path.join(controllersDir, `${normalizedName}.controller.js`);
         
-        await fs.writeFile(filePath, controllerContent);
+        await fs.writeFile(filePath, controllerContent, 'utf8');
         console.log(chalk.green(`✓ Generated controller: ${normalizedName}`));
       }
     } catch (error) {

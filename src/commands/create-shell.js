@@ -4,6 +4,14 @@ const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { processTemplates } = require('../utils/templateProcessor');
 
+function validatePort(port) {
+  const n = typeof port === 'string' ? Number(port) : port;
+  if (!Number.isInteger(n) || n < 1 || n > 65535) {
+    throw new Error('Invalid port');
+  }
+  return n;
+}
+
 async function createShellCommand(name, options) {
   try {
     console.log(chalk.blue(`Creating shell application "${name}"...`));
@@ -26,13 +34,13 @@ async function createShellCommand(name, options) {
     // Copy template to target directory
     await fs.copy(templateDir, targetDir);
 
+    // Validate and normalize inputs
+    const port = validatePort(options.port || 3000);
+    const remotes = options.remotes || '{}';
+
     // Process templates
     console.log('\nProcessing template files...');
-    await processTemplates(targetDir, {
-      name,
-      port: options.port || 3000,
-      remotes: options.remotes || '{}'
-    });
+    await processTemplates(targetDir, { name, port, remotes });
 
     // Install dependencies
     console.log(chalk.blue('\nInstalling dependencies...'));
@@ -46,7 +54,7 @@ async function createShellCommand(name, options) {
     console.log('\nNext steps:');
     console.log(chalk.blue(`1. cd ${name}`));
     console.log(chalk.blue('2. npm start'));
-    console.log(`\nYour application will be available at: http://localhost:${options.port || 3000}`);
+    console.log(`\nYour application will be available at: http://localhost:${port}`);
 
   } catch (error) {
     console.error(chalk.red('\n✗ Failed to create shell application:'));
@@ -55,7 +63,7 @@ async function createShellCommand(name, options) {
       console.error(chalk.gray('\nStack trace:'));
       console.error(error.stack);
     }
-    process.exit(1);
+    throw error;
   }
 }
 

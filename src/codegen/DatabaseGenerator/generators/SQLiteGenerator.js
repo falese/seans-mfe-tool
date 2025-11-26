@@ -194,7 +194,7 @@ module.exports = {
     .join(',\n  ')}
 };`;
 
-    await fs.writeFile(indexPath, content);
+    await fs.writeFile(indexPath, content, 'utf8');
     console.log(chalk.green('✓ Generated SQLite models index file'));
   }
 }

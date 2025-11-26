@@ -1,5 +1,7 @@
 // jest.config.js
 /** @type {import('@jest/types').Config.InitialOptions} */
+const isCI = !!process.env.CI;
+
 module.exports = {
   // Test environment
   testEnvironment: 'node',
@@ -40,15 +42,24 @@ module.exports = {
     '!src/**/index.js'
   ],
   
-  // Coverage thresholds
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  },
+  // Coverage thresholds (relaxed locally, strict in CI)
+  coverageThreshold: isCI
+    ? {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
+    : {
+        global: {
+          branches: 0,
+          functions: 0,
+          lines: 0,
+          statements: 0
+        }
+      },
 
   // Handle timers
   timers: 'fake',

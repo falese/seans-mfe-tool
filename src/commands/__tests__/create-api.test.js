@@ -1,7 +1,5 @@
 // src/commands/__tests__/create-api.test.js
-const fs = require('fs-extra');
-const SwaggerParser = require('@apidevtools/swagger-parser');
-const { createApiCommand } = require('../create-api');
+// Import test utils first to activate module mocks
 const { 
   mockProcessExit, 
   mockConsole, 
@@ -11,6 +9,9 @@ const {
   expectProcessExit,
   createTestData
 } = require('./test-utils');
+
+const SwaggerParser = require('@apidevtools/swagger-parser');
+const { createApiCommand } = require('../create-api');
 
 // Mock external modules
 jest.mock('@apidevtools/swagger-parser', () => ({

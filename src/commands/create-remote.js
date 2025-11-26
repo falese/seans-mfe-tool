@@ -4,6 +4,14 @@ const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { processTemplates } = require('../utils/templateProcessor');
 
+function validatePort(port) {
+  const n = typeof port === 'string' ? Number(port) : port;
+  if (!Number.isInteger(n) || n < 1 || n > 65535) {
+    throw new Error('Invalid port number');
+  }
+  return n;
+}
+
 async function createRemoteCommand(name, options) {
   try {
     console.log(chalk.blue(`Creating remote MFE "${name}"...`));
@@ -18,13 +26,12 @@ async function createRemoteCommand(name, options) {
       throw new Error('Invalid MUI version format. Expected x.y.z');
     }
 
-    // Parse and validate port
-    let port = options.port || 3001; // default port
-    if (options.port) {
-      port = parseInt(options.port, 10);
-      if (isNaN(port) || port < 1 || port > 65535) {
-        throw new Error('Invalid port number. Must be between 1 and 65535');
-      }
+    // Validate port
+    const port = validatePort(options.port || 3001);
+
+    // Verify template directory exists
+    if (!fs.existsSync(templateDir)) {
+      throw new Error(`Template directory not found: ${templateDir}`);
     }
 
     // Create target directory if it doesn't exist
@@ -59,7 +66,7 @@ async function createRemoteCommand(name, options) {
   } catch (error) {
     console.error(chalk.red('\n✗ Failed to create remote MFE:'));
     console.error(chalk.red(error.message));
-    process.exit(1);
+    throw error;
   }
 }
 

@@ -74,7 +74,7 @@ const SchemaVersion = mongoose.model('SchemaVersion', schemaVersionSchema);
 
 module.exports = SchemaVersion;`;
 
-    await fs.writeFile(modelPath, content);
+    await fs.writeFile(modelPath, content, 'utf8');
     console.log(chalk.green('✓ Generated schema version model'));
   }
 
@@ -125,7 +125,7 @@ module.exports = {
   down
 };`;
 
-    await fs.writeFile(migrationPath, content);
+    await fs.writeFile(migrationPath, content, 'utf8');
     console.log(chalk.green('✓ Generated initial schema version'));
   }
 
@@ -222,7 +222,7 @@ module.exports = {
 module.exports = SchemaManager;
 `;
 
-    await fs.writeFile(utilsPath, content);
+    await fs.writeFile(utilsPath, content, 'utf8');
     console.log(chalk.green('✓ Generated schema management utilities'));
   }
 

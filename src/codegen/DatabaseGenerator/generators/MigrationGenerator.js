@@ -22,7 +22,7 @@ class MigrationGenerator {
     const migrationPath = path.join(migrationsDir, `${timestamp}-create-initial-tables.js`);
     
     const migrationContent = this.generateInitialMigration();
-    await fs.writeFile(migrationPath, migrationContent);
+    await fs.writeFile(migrationPath, migrationContent, 'utf8');
     console.log(chalk.green('✓ Generated initial migration file'));
 
     // Generate config file for sequelize-cli
@@ -221,7 +221,7 @@ module.exports = {
   }
 };`;
 
-    await fs.writeFile(configPath, configContent);
+    await fs.writeFile(configPath, configContent, 'utf8');
 
     // Generate sequelize CLI config file
     const cliConfigPath = path.join(outputDir, '.sequelizerc');
@@ -234,7 +234,7 @@ module.exports = {
   'migrations-path': path.resolve('src', 'database', 'migrations')
 };`;
 
-    await fs.writeFile(cliConfigPath, cliConfigContent);
+    await fs.writeFile(cliConfigPath, cliConfigContent, 'utf8');
   }
 
   toSnakeCase(str) {

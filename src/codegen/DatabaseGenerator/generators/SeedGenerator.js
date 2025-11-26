@@ -29,7 +29,7 @@ class SeedGenerator {
       const modelName = NameGenerator.toModelName(schemaName);
       const seedPath = path.join(seedDir, `${modelName}.seed.js`);
       const seedData = this.generateSeedDataForSchema(schema);
-      await fs.writeFile(seedPath, seedData);
+      await fs.writeFile(seedPath, seedData, 'utf8');
       console.log(chalk.green(`✓ Generated seed data for: ${modelName}`));
     }
   }
@@ -104,7 +104,7 @@ module.exports = ${modelName}Seed;`;
   async generateMainSeedFile(seedDir, dbType) {
     const content = this.generateMainSeedContent(dbType);
     const mainSeedPath = path.join(seedDir, 'index.js');
-    await fs.writeFile(mainSeedPath, content);
+    await fs.writeFile(mainSeedPath, content, 'utf8');
     console.log(chalk.green('✓ Generated main seed file'));
   }
 

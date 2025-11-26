@@ -1,8 +1,5 @@
 // src/commands/__tests__/create-shell.test.js
-const fs = require('fs-extra');
-const path = require('path');
-const { execSync } = require('child_process');
-const { createShellCommand } = require('../create-shell');
+// Import test utils first to activate module mocks
 const { 
   mockProcessExit, 
   mockConsole, 
@@ -10,6 +7,8 @@ const {
   mockFs,
   mockExec
 } = require('./test-utils');
+
+const { createShellCommand } = require('../create-shell');
 
 describe('Create Shell Command', () => {
   mockProcessExit();

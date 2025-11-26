@@ -21,7 +21,7 @@ class BaseGenerator {
       const modelName = NameGenerator.toModelName(schemaName);
       const modelPath = path.join(modelsDir, `${modelName}.model.js`);
       const modelContent = this.generateModelFile(schemaName, schema);
-      await fs.writeFile(modelPath, modelContent);
+      await fs.writeFile(modelPath, modelContent, 'utf8');
       console.log(chalk.green(`✓ Generated model: ${modelName}`));
     }
 

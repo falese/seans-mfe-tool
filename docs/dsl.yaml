@@ -1,0 +1,46 @@
+# Example MFE capability declaration
+name: csv-analyzer
+type: tool
+version: 1.0.0
+description: Analyzes CSV files and generates statistical summaries
+capabilities:
+  - data-analysis:
+      inputs:
+      - name: file
+        type: file
+        formats: [csv, tsv]
+        required: true
+      - name: analysis-type
+        type: enum
+        values: [summary, correlation, regression]
+        required: false
+      outputs:
+      - name: report
+        type: object
+        schema: {...}
+    lifecycle:
+      - before: 
+        - validateFile:
+            handler: validateCsvFile
+            requiredInput: file
+            authorization: user.permission.true
+      - main:
+        - file-processing:
+            handler: processCsvFile
+            requiredInput: file
+            authorization: user.permission.true
+      - after:
+        - generateReport:
+            handler: createAnalysisReport
+            requiredInput: file.data
+            authorization: user.permission.true
+      - error:
+        - handleError:
+            handler: logAndNotifyError
+            requiredInput: error
+            authorization: system.permission.admi
+language: javascript  # or python, go, etc
+endpoint: http://localhost:3002
+remoteEntry: http://localhost:3002/remoteEntry.js
+dependencies:
+  - design-system@^1.2.0

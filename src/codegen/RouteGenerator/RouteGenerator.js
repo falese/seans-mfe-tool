@@ -40,7 +40,7 @@ class RouteGenerator {
         const routeFilePath = path.join(routesDir, `${fileName}.route.js`);
         const routeContent = this.generateRouteFile(paths, camelResource, spec);
         
-        await fs.writeFile(routeFilePath, routeContent);
+        await fs.writeFile(routeFilePath, routeContent, 'utf8');
         routes.push({ 
           name: fileName,
           path: `/${routePath}`,
@@ -111,7 +111,7 @@ router.use('', require('./${name}.route'));`
 
 module.exports = router;`;
 
-    await fs.writeFile(indexPath, content);
+    await fs.writeFile(indexPath, content, 'utf8');
   }
 
   static groupPathsByResource(paths) {
