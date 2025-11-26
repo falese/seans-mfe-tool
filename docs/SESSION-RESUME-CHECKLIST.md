@@ -9,6 +9,7 @@
 ## What's Already Captured ✅
 
 ### Core Vision & Objectives (Session 1)
+
 - ✅ Problem statement: Runtime dynamic MFE composition
 - ✅ Primary use case: AI agents discovering and invoking MFEs via DSL
 - ✅ Success metrics: <5s availability, 100+ MFE scale, zero config, self-documenting, self-building
@@ -18,6 +19,7 @@
 - ✅ Non-goals: Not build tool, not deploy tool (but integrates), not data persistence
 
 ### Architecture Decisions (Sessions 1 & 2)
+
 - ✅ ADR-009: Hybrid architecture (centralized service + shell runtime)
 - ✅ ADR-010: Lightweight registry (metadata only, DSL endpoints)
 - ✅ ADR-011: Three-phase discovery (A/C/B)
@@ -32,11 +34,13 @@
 - ✅ ADR-007: Module Federation loading
 
 ### Component Scope (Session 2)
+
 - ✅ IN SCOPE: Shells, Remotes (UI), Tool MFEs, Agent MFEs, API MFEs
 - ✅ OUT OF SCOPE: Databases (owned by APIs), Build artifacts (deferred), Static assets/CDN (deferred), Monitoring/logging (deferred), CI/CD (deferred), Starting services (CLI, not orchestration)
 - ✅ DEFERRED: Design system strategy, shared dependencies management
 
 ### Platform Contract (Session 2)
+
 - ✅ Standard capabilities ALL MFEs must implement:
   - authorizeAccess (JWT validation)
   - health (status check)
@@ -48,6 +52,7 @@
 - ✅ Abstract base class pattern (works in any language)
 
 ### CLI Integration (Session 2)
+
 - ✅ `mfe shell <name>` - generates shell + orchestration service
 - ✅ `mfe remote <name>` - generates remote MFE (never orchestration)
 - ✅ `mfe init <workspace>` - scaffolds workspace with remotes only
@@ -57,6 +62,7 @@
 - ✅ Auto-generated registration code in all MFE templates
 
 ### Deployment Model (Session 2)
+
 - ✅ Docker Compose for all deployments (dev/staging/prod)
 - ✅ Orchestration service always in Docker
 - ✅ Shell always in Docker
@@ -65,6 +71,7 @@
 - ✅ Service discovery via Docker network or localhost
 
 ### Requirements Catalog
+
 - ✅ 24 requirements documented (REQ-001 through REQ-024)
 - ✅ Priority levels assigned (P0/P1/P2)
 - ✅ Dependencies mapped
@@ -78,18 +85,21 @@
 ### Technical Implementation Details
 
 **1. Orchestration Service Technology Stack**
+
 - ❓ Language choice: Node.js? Go? Python?
 - ❓ Framework: Express? Fastify? Koa?
 - ❓ Registry storage: Redis? PostgreSQL? In-memory?
 - ❓ Recommendation: **Node.js + Fastify + Redis** (consistency with ecosystem)
 
 **2. DSL Schema Specification**
+
 - ✅ Reference DSL in `/docs/dsl.yaml`
 - ❓ JSON Schema for validation - needs formal definition
 - ❓ Platform-level schema vs MFE-specific schema separation
 - ❓ Versioning strategy for DSL evolution
 
 **3. Module Federation Configuration**
+
 - ❓ Shared dependency strategy for 100+ MFEs
 - ❓ Version conflict resolution
 - ❓ Design system distribution approach
@@ -97,24 +107,28 @@
 - ⚠️ **Explicitly deferred** but needs eventual solution
 
 **4. WebSocket Protocol**
+
 - ❓ Message format for registry updates
 - ❓ Reconnection strategy
 - ❓ Heartbeat/keepalive mechanism
 - ❓ Authentication for WebSocket connections
 
 **5. Health Check Specification**
+
 - ❓ Health check interval (30s mentioned)
 - ❓ Timeout before marking unhealthy
 - ❓ Circuit breaker pattern details
 - ❓ Recovery/retry logic
 
 **6. Error Handling & Resilience**
+
 - ❓ What happens when orchestration service is down?
 - ❓ Fallback modes for shell runtime
 - ❓ MFE loading failure handling
 - ❓ Partial system degradation strategy
 
 **7. Security Model**
+
 - ✅ JWT-based authorization defined
 - ❓ Token refresh mechanism
 - ❓ Service-to-service authentication (agent tokens)
@@ -123,18 +137,21 @@
 - ⚠️ Zanzibar tuples **explicitly deferred** to future
 
 **8. Telemetry & Observability**
+
 - ⚠️ **Explicitly deferred** to V2
 - ❓ What minimal telemetry needed for V1?
 - ❓ Error tracking/logging approach
 - ❓ Performance monitoring basics
 
 **9. Testing Strategy**
+
 - ❓ How to test orchestration locally?
 - ❓ Integration test approach for multi-MFE scenarios
 - ❓ Mock orchestration service for MFE unit tests
 - ❓ CI/CD testing strategy
 
 **10. Migration & Backwards Compatibility**
+
 - ❓ How do existing MFEs adopt orchestration?
 - ❓ Can MFEs work without orchestration?
 - ❓ Gradual rollout strategy
@@ -147,20 +164,25 @@
 Based on your progress, Session 3 should focus on:
 
 ### Session 3A: Orchestration Service Specification
+
 **Questions to answer:**
+
 1. **Service Implementation**
+
    - Technology stack decision (Node.js + Fastify recommended)
    - Registry storage choice (Redis for prod, in-memory for dev)
    - REST API endpoint design
    - WebSocket protocol specification
 
 2. **Registry Schema**
+
    - Exact data structure for MFE registry entries
    - Index structures for discovery queries
    - Health status state machine
    - Update/versioning strategy
 
 3. **API Contract**
+
    - POST /api/mfes/register - registration payload
    - DELETE /api/mfes/:name - deregistration
    - GET /api/mfes - Phase A discovery (list all)
@@ -175,14 +197,18 @@ Based on your progress, Session 3 should focus on:
    - WebSocket settings
 
 ### Session 3B: DSL Schema Formalization
+
 **Questions to answer:**
+
 1. **JSON Schema Definition**
+
    - Platform-level required fields
    - MFE-specific optional fields
    - Validation rules
    - Examples for each MFE type
 
 2. **Capability Schema**
+
    - Input/output specifications
    - Handler definitions
    - Lifecycle phases
@@ -195,14 +221,18 @@ Based on your progress, Session 3 should focus on:
    - Introspection format
 
 ### Session 3C: Shell Runtime Specification
+
 **Questions to answer:**
+
 1. **Runtime Architecture**
+
    - Registry cache implementation
    - Module Federation loader
    - WebSocket client
    - Discovery client API
 
 2. **MFE Lifecycle**
+
    - Initialize phase
    - Execute phase
    - Cleanup phase
@@ -219,24 +249,29 @@ Based on your progress, Session 3 should focus on:
 ## What You Should Do Before Next Session
 
 ### Option A: Continue Requirements Gathering
+
 If you want to complete requirements before implementation:
 
 **Next:** Schedule Session 3 (Technical Specifications)
+
 - Focus: Orchestration service API design
 - Focus: DSL JSON Schema definition
 - Focus: Shell runtime architecture
 - Duration: ~1 hour
 
 Then: Session 4 (Implementation Planning)
+
 - Break down into implementation tasks
 - Define milestones
 - Create POC/MVP scope
 - Identify first iteration
 
 ### Option B: Start Implementation POC
+
 If you want to validate with code:
 
 **Next:** Build minimal orchestration POC
+
 1. Generate orchestration service (Node.js + Fastify + in-memory registry)
 2. Update shell generator to include orchestration service
 3. Update remote generator with auto-registration code
@@ -246,7 +281,9 @@ If you want to validate with code:
 Then: Use POC learnings to refine requirements
 
 ### Option C: Hybrid Approach (Recommended)
+
 **Next:** Parallel track
+
 1. **Design track:** Complete Session 3 specs (1-2 hours)
 2. **Code track:** Start orchestration service POC (parallel)
 3. **Validate:** Use POC to test assumptions from Session 3
@@ -259,17 +296,20 @@ Then: Use POC learnings to refine requirements
 Before implementation, these decisions would be helpful:
 
 1. **Technology Stack**
+
    - Orchestration service language/framework
    - Registry storage (Redis vs PostgreSQL vs in-memory)
    - WebSocket library
 
 2. **Scope for V1**
+
    - Which requirements are MVP vs V2?
    - Phase A only, or A+C+B?
    - Basic auth only, or full JWT?
    - In-memory registry only, or Redis?
 
 3. **Testing Strategy**
+
    - How to test locally?
    - Integration test approach?
    - CI/CD strategy?
@@ -284,20 +324,14 @@ Before implementation, these decisions would be helpful:
 ## Next Steps Recommendations
 
 **Immediate (Today/Tomorrow):**
+
 1. ✅ Review this checklist - confirm nothing major missing
 2. ⏭️ Make technology stack decisions (see recommendations above)
 3. ⏭️ Define V1 MVP scope clearly (which REQs are must-have?)
 
-**Short-term (This Week):**
-4. ⏭️ Session 3: Technical Specifications (1-2 hours)
-5. ⏭️ Start orchestration service POC
-6. ⏭️ Generate and test basic registration flow
+**Short-term (This Week):** 4. ⏭️ Session 3: Technical Specifications (1-2 hours) 5. ⏭️ Start orchestration service POC 6. ⏭️ Generate and test basic registration flow
 
-**Medium-term (Next 1-2 Weeks):**
-7. ⏭️ Complete orchestration service implementation
-8. ⏭️ Update shell/remote generators
-9. ⏭️ Build self-building validation (tool generates tool)
-10. ⏭️ Documentation and examples
+**Medium-term (Next 1-2 Weeks):** 7. ⏭️ Complete orchestration service implementation 8. ⏭️ Update shell/remote generators 9. ⏭️ Build self-building validation (tool generates tool) 10. ⏭️ Documentation and examples
 
 ---
 
@@ -329,6 +363,7 @@ Which path should we take?
 ## Documentation Files
 
 All content captured in:
+
 - `/docs/orchestration-requirements.md` (2517 lines)
 - `/docs/architecture-decisions.md` (1972 lines)
 - `/docs/dsl.yaml` (reference DSL)
