@@ -1918,7 +1918,7 @@ export async function generateShell(name: string): Promise<void> {
 
 ---
 
-## ADR-021: Deprecate `analyze` Command (Static Heuristic MFE Suggestions)
+## ADR-021: Remove `analyze` Command (Static Heuristic MFE Suggestions)
 
 **Status:** Accepted  
 **Date:** 2025-11-26  
@@ -1928,7 +1928,7 @@ export async function generateShell(name: string): Promise<void> {
 The `analyze` command (`src/commands/analyze.js`) performs static heuristic analysis of a codebase (file name/domain pattern matching, local import relationships, inferred API call detection) to suggest potential Micro Frontend boundaries. The platform direction (ADR-009 through ADR-014, ADR-016–ADR-020) pivots discovery to runtime registration, DSL-driven capability contracts, and multi-phase orchestration (probabilistic/semantic/deterministic). Static import heuristics neither leverage DSL semantics nor reflect actual deployed/runtime behavior and risk encouraging premature boundary carving.
 
 **Decision:**  
-Deprecate the `analyze` command immediately (retain short-term with banner) and plan removal in a future major release. No refactor/investment will be made beyond minimal deprecation safety changes.
+Remove the `analyze` command immediately. Code, CLI registration, and help text eliminated in this release. ADR retained only for historical context; no transitional invocation path.
 
 **Rationale:**
 
@@ -1938,27 +1938,20 @@ Deprecate the `analyze` command immediately (retain short-term with banner) and 
 - Encourages adoption of self-describing DSL and orchestration discovery phases.
 - Frees coverage efforts to focus on generator/orchestrator core.
 
-**Changes Implemented (Phase 1 – Current Release):**
+**Changes Implemented (Immediate):**
 
-- Added deprecation banner on invocation.
-- Replaced `process.exit(1)` with structured return object (`{ success: false }`).
-- Added JSDoc `@deprecated` annotation.
-- Updated CLI help text marking command deprecated and referencing ADR-021.
-- Updated README with Deprecated Commands section (to be patched).
-
-**Planned Removal Timeline:**
-
-- Phase 1 (Current Minor): Deprecation notice, still callable.
-- Phase 2 (Next Minor): Hidden from default help; shown only via `--show-deprecated` (future enhancement).
-- Phase 3 (Next Major): Remove code, tests, help entry; retain ADR-021 as historical record + migration guidance.
+- Deleted `src/commands/analyze.js`.
+- Removed import and command registration from `bin/seans-mfe-tool.js`.
+- Updated README with removal notice and migration guidance.
+- Updated coverage plan: analyzer excluded from future test targets.
 
 **Migration Path:**
 
-1. Define capabilities in `mfe-spec.yaml` / DSL manifest (ADR-013).
-2. Register MFEs via push registration (ADR-012) → orchestration service populates lightweight registry (ADR-010).
-3. Use Phase A (full registry + per-MFE DSL fetch) for exploratory reasoning.
-4. Use Phase C semantic search & Phase B deterministic querying for refined selection (ADR-011).
-5. Iterate boundaries informed by runtime telemetry (REQ-010 future) rather than static import graphs.
+1. Define capabilities in DSL manifests (`/.well-known/mfe-manifest.yaml`) or `mfe-spec.yaml` (ADR-013).
+2. Register MFEs (ADR-012, ADR-016) so the orchestration service maintains the runtime index (ADR-010).
+3. Use Phase A discovery (ADR-011) to fetch DSLs for exploratory boundary reasoning.
+4. Apply Phase C (semantic) and Phase B (deterministic) to refine selection.
+5. Adjust boundaries using runtime telemetry (future REQ-010) instead of static import graphs.
 
 **Non-Goals:**
 
@@ -1971,9 +1964,9 @@ Negative: Loss of quick heuristic boundary suggestions for legacy monoliths.
 Mitigation: Documentation describes how to reason about boundaries using actual capability contracts and runtime usage.
 
 **Rollback Criteria:**  
-If significant user feedback indicates dependency on heuristic analysis for migration, we may temporarily freeze (without refactor) and introduce a DSL derivation command; otherwise proceed to planned removal.
+If critical migration blockers emerge, introduce a new DSL derivation command (fresh implementation). Restoration of the removed heuristic analyzer is out of scope.
 
 **Reference in Comments:**  
-"Following ADR-021: `analyze` deprecated – use runtime DSL discovery instead."
+"Following ADR-021: `analyze` removed – use runtime DSL discovery instead."
 
 ---

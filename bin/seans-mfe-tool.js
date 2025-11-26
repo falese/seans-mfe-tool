@@ -6,7 +6,6 @@ const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
-const { analyzeCommand } = require('../src/commands/analyze');
 const { initCommand } = require('../src/commands/init');
 const { version } = require('../package.json');
 
@@ -46,29 +45,7 @@ program
   .version(version)
   .description('Create and manage Module Federation applications with React and MUI');
 
-  program
-  .command('analyze')
-  .description('Analyze a project for potential MFE candidates (deprecated – see ADR-021)')
-  .option('-d, --dir <directory>', 'Project directory to analyze', process.cwd())
-  .option('-o, --output <directory>', 'Output directory for analysis results', './mfe-analysis')
-  .option('-p, --patterns <patterns>', 'JSON array of glob patterns for finding components')
-  .addHelpText('after', `
-DEPRECATION NOTICE:
-  This command is deprecated (ADR-021). Prefer using DSL manifests + orchestration
-  discovery phases (ADR-009 through ADR-014). It will be removed in a future major release.
-
-Examples (legacy):
-  $ seans-mfe-tool analyze
-  $ seans-mfe-tool analyze --dir ./my-project --output ./analysis-results
-  $ seans-mfe-tool analyze --patterns '["src/**/*.jsx","components/**/*.tsx"]'
-
-Legacy Notes:
-  - Heuristically suggests MFE boundaries from static imports & naming.
-  - Does NOT integrate with runtime registry or DSL contracts.
-  - Use only for exploratory migration; avoid in new projects.`)
-  .action((options) => {
-    analyzeCommand(options);
-  });
+  // 'analyze' command removed per ADR-021 (immediate removal). Historical reference only.
 
 
 

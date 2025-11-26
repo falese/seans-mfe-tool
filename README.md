@@ -170,21 +170,22 @@ They are not part of the runtime; they serve as reference templates only (see AD
 
 ## Contributing
 
-## Deprecated Commands
+## Deprecated / Removed Commands
 
-The `analyze` command is deprecated (see ADR-021). It provided heuristic static suggestions for potential MFE boundaries based on file naming and import graphs. The platform now favors runtime + DSL-driven discovery:
+`analyze` (static heuristic boundary suggestion) has been **removed** (see ADR-021).
+It previously inferred potential MFEs from filename/import patterns. The platform now
+uses runtime + DSL-driven discovery:
 
-- Register MFEs with the orchestration service (ADR-012, ADR-016).
-- Fetch DSL manifests on-demand from each MFE (ADR-010, ADR-013).
-- Use discovery phases A (full registry), C (semantic search), and B (deterministic query) (ADR-011).
+- Register MFEs with orchestration (ADR-012, ADR-016)
+- Fetch DSL manifests on-demand (ADR-010, ADR-013)
+- Apply discovery phases A (probabilistic), C (semantic), B (deterministic) (ADR-011)
 
-Migration Recommendation:
+Migration Guidance:
+1. Define capability contracts directly in DSL manifests (`/.well-known/mfe-manifest.yaml`).
+2. Use runtime registry + telemetry to evolve boundaries incrementally.
+3. Replace any `mfe analyze` automation with DSL authoring + orchestration queries.
 
-1. Define explicit capability contracts in `mfe-spec.yaml` / DSL manifests, not inferred from static imports.
-2. Allow runtime registration + telemetry to inform decomposition over time rather than one-off static analysis.
-3. Avoid new usage of `mfe analyze`; it will be removed in a future major release.
-
-Invocation now shows a deprecation banner; remove from automation scripts.
+If assisted DSL derivation is needed, a future command may provide structured generation (not a restoration of the old analyzer).
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
