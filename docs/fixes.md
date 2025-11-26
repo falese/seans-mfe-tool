@@ -18,13 +18,12 @@ This document provides a detailed description of the fixes and improvements made
 - **Add `ejs` module import**: Resolved missing module error by adding the `ejs` module import.
 - **Fix template values issue**: Resolved the issue where template values were not getting created due to a `ReferenceError`.
 
-### 4. `src/utils/ControllerGenerator/ControllerGenerator.js`
+### 4. `src/codegen/` (formerly `src/utils/ControllerGenerator`, `src/utils/DatabaseGenerator`, `src/utils/RouteGenerator`)
+- **Consolidated all code generation modules**: Moved all API/database code generation from `src/utils/*` to `src/codegen/*` for better organization.
 - **Add proper error handling and logging**: Enhanced error handling and logging for all operations to ensure safe code execution.
+- **Add null safety for OpenAPI schemas**: Added validation to skip schemas without properties during model/seed generation.
 
-### 5. `src/utils/databaseGenerator.js`
-- **Optimize code for generating model files and indexes**: Reduced redundancy and optimized the code for generating model files and indexes.
-
-### 6. `src/utils/templateProcessor.js`
+### 5. `src/utils/templateProcessor.js`
 - **Create shared utility function for processing templates**: Created a shared utility function to consolidate the template processing logic.
 
 ## Conclusion

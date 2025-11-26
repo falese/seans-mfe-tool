@@ -138,6 +138,11 @@ The project follows a modular architecture with clear separation of concerns:
 └── docs/               # Documentation
 ```
 
+## AI Agent Guide
+
+- For repo-specific AI coding guidance, see `.github/copilot-instructions.md`.
+- For the separate browser agent system, see `agent-orchestrator/README.md`.
+
 ## Contributing
 
 1. Fork the repository

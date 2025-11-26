@@ -3,9 +3,10 @@ const path = require('path');
 const chalk = require('chalk');
 const SwaggerParser = require('@apidevtools/swagger-parser');
 const { execSync } = require('child_process');
-const { DatabaseGenerator } = require('../utils/DatabaseGenerator');
-const { ControllerGenerator } = require('../utils/ControllerGenerator');
-const { generateRoutes } = require('../utils/RouteGenerator');
+const { DatabaseGenerator } = require('../codegen/DatabaseGenerator');
+const { ControllerGenerator } = require('../codegen/ControllerGenerator');
+const { generateRoutes } = require('../codegen/RouteGenerator');
+const { generateJWTSecret } = require('../utils/securityUtils');
 
 function validateDatabaseType(dbType) {
   const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
@@ -350,13 +351,40 @@ async function processConfigFiles(targetDir, vars) {
 }
 
 async function generateEnvironmentFiles(targetDir, vars) {
+  const jwtSecret = generateJWTSecret();
+  
   const envContent = `# Server Configuration
 NODE_ENV=development
 PORT=${vars.port}
 API_VERSION=${vars.version}
 
 # JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key
+# WARNING: Keep this secret secure! Never commit this file to version control.
+# This secret has been randomly generated for security.
+JWT_SECRET=${jwtSecret}
+JWT_EXPIRES_IN=1d
+
+# Database Configuration
+${vars.database.includes('mongo') ? 
+  'MONGODB_URI=mongodb://localhost:27017/' + vars.name.toLowerCase() :
+  'DB_PATH=./src/database/development.sqlite'}
+
+# Logging
+LOG_LEVEL=debug
+
+# CORS
+CORS_ORIGIN=*`;
+
+  const envExampleContent = `# Server Configuration
+NODE_ENV=development
+PORT=${vars.port}
+API_VERSION=${vars.version}
+
+# JWT Configuration
+# SECURITY WARNING: Generate a secure random secret for production!
+# Never use the example value in production environments.
+# You can generate a secure secret with: node -e "console.log(require('crypto').randomBytes(64).toString('base64url'))"
+JWT_SECRET=CHANGE_THIS_TO_A_SECURE_RANDOM_SECRET_IN_PRODUCTION
 JWT_EXPIRES_IN=1d
 
 # Database Configuration
@@ -374,9 +402,11 @@ CORS_ORIGIN=*`;
   const envExamplePath = path.join(targetDir, '.env.example');
 
   await fs.writeFile(envPath, envContent);
-  await fs.writeFile(envExamplePath, envContent);
+  await fs.writeFile(envExamplePath, envExampleContent);
   
   console.log(chalk.green('✓ Generated environment files'));
+  console.log(chalk.yellow('⚠️  SECURITY: .env file contains a randomly generated JWT secret'));
+  console.log(chalk.yellow('   Keep this file secure and never commit it to version control!'));
 }
 
 async function generateDatabaseInit(targetDir, dbType) {

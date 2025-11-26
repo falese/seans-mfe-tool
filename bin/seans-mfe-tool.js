@@ -7,6 +7,7 @@ const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
 const { analyzeCommand } = require('../src/commands/analyze');
+const { initCommand } = require('../src/commands/init');
 const { version } = require('../package.json');
 
 program
@@ -95,6 +96,10 @@ program
   .option('-e, --env <environment>', 'Deployment environment (development or production)', 'development')
   .option('-p, --port <port>', 'Port number for development deployment', '8080')
   .option('-r, --registry <url>', 'Docker registry URL for production deployment')
+    .option('--mode <mode>', 'Production deployment mode (docker-compose or kubernetes)', 'docker-compose')
+    .option('-n, --namespace <namespace>', 'Kubernetes namespace', 'default')
+    .option('-d, --domain <domain>', 'Domain name for production deployment')
+    .option('--tag <tag>', 'Docker image tag', 'latest')
   .option('-m, --memory <limit>', 'Memory limit for API containers', '256Mi')
   .option('-c, --cpu <limit>', 'CPU limit for API containers', '0.5')
   .option('--replicas <count>', 'Number of API replicas', '2')
@@ -112,8 +117,7 @@ program
   .argument('<name>', 'Project name')
   .option('-p, --package-manager <manager>', 'Package manager to use (npm, yarn, or pnpm)', 'pnpm')
   .action((name, options) => {
-    console.log('Creating new workspace:', name);
-    console.log('Options:', options);
+    initCommand(name, options);
   });
 
   program
