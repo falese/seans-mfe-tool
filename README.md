@@ -181,6 +181,7 @@ uses runtime + DSL-driven discovery:
 - Apply discovery phases A (probabilistic), C (semantic), B (deterministic) (ADR-011)
 
 Migration Guidance:
+
 1. Define capability contracts directly in DSL manifests (`/.well-known/mfe-manifest.yaml`).
 2. Use runtime registry + telemetry to evolve boundaries incrementally.
 3. Replace any `mfe analyze` automation with DSL authoring + orchestration queries.
