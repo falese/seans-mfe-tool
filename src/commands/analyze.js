@@ -6,6 +6,11 @@ const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
 const { exec } = require('child_process');
 
+// ADR-021: Deprecate analyze command (heuristic static boundary suggestions).
+// @deprecated The analyze command is deprecated in favor of runtime DSL + orchestration discovery
+// phases (ADR-009 – ADR-014). It will be removed in a future major release. See docs/architecture-decisions.md.
+let deprecationBannerShown = false;
+
 // Remove ora and use a simple spinner implementation instead
 const simpleSpinner = {
     interval: null,
@@ -64,9 +69,13 @@ const DEFAULT_CONFIG = {
  * Analyze a project for potential MFE candidates
  */
 async function analyzeCommand(options) {
+  if (!deprecationBannerShown) {
+    console.warn(chalk.yellow('[DEPRECATED] The analyze command is deprecated (ADR-021). Use DSL + orchestration discovery phases instead.'));
+    deprecationBannerShown = true;
+  }
   try {
     const spinner = simpleSpinner.start('Starting project analysis');
-    console.log(chalk.blue('\nAnalyzing project for MFE candidates...'));
+    console.log(chalk.blue('\nAnalyzing project for MFE candidates (legacy heuristic) ...'));
     
     // Initialize configuration
     const config = initializeConfig(options);
@@ -110,7 +119,7 @@ async function analyzeCommand(options) {
     // Generate visualization
     await generateVisualization(mfeResults, config);
     
-    console.log(chalk.green('\n✓ Project analysis complete!'));
+    console.log(chalk.green('\n✓ Project analysis complete (deprecated command)'));
     console.log(`\nResults available in: ${chalk.blue(config.outputDir)}`);
     
     // Print summary
@@ -120,14 +129,16 @@ async function analyzeCommand(options) {
     printNextSteps(mfeResults, config);
     
   } catch (error) {
-    console.error(chalk.red('\n✗ Analysis failed:'));
+    console.error(chalk.red('\n✗ Analysis failed (deprecated command):'));
     console.error(chalk.red(error.message));
     if (process.env.DEBUG && error.stack) {
       console.error(chalk.gray('\nStack trace:'));
       console.error(error.stack);
     }
-    process.exit(1);
+    // Return structured failure instead of exiting (ADR-021)
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
+  return { success: true };
 }
 
 /**
@@ -879,14 +890,17 @@ function printNextSteps(results, config) {
 }
 
 module.exports = {
+  /**
+   * @deprecated See ADR-021. Prefer runtime DSL + orchestration discovery.
+   */
   analyzeCommand
 };
 
 process.on('exit', () => {
-    simpleSpinner.stop();
-  });
-  
-  process.on('SIGINT', () => {
-    simpleSpinner.stop();
-    process.exit(1);
-  });
+  simpleSpinner.stop();
+});
+
+process.on('SIGINT', () => {
+  simpleSpinner.stop();
+  console.warn(chalk.yellow('\nAnalysis interrupted (deprecated command).'));
+});

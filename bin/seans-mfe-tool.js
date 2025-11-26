@@ -48,20 +48,24 @@ program
 
   program
   .command('analyze')
-  .description('Analyze a project for potential MFE candidates')
+  .description('Analyze a project for potential MFE candidates (deprecated – see ADR-021)')
   .option('-d, --dir <directory>', 'Project directory to analyze', process.cwd())
   .option('-o, --output <directory>', 'Output directory for analysis results', './mfe-analysis')
   .option('-p, --patterns <patterns>', 'JSON array of glob patterns for finding components')
   .addHelpText('after', `
-Examples:
+DEPRECATION NOTICE:
+  This command is deprecated (ADR-021). Prefer using DSL manifests + orchestration
+  discovery phases (ADR-009 through ADR-014). It will be removed in a future major release.
+
+Examples (legacy):
   $ seans-mfe-tool analyze
   $ seans-mfe-tool analyze --dir ./my-project --output ./analysis-results
   $ seans-mfe-tool analyze --patterns '["src/**/*.jsx","components/**/*.tsx"]'
 
-Notes:
-  - Analysis will identify potential MFE candidates based on component usage patterns
-  - Results include recommended MFE structure and integration steps
-  - Interactive visualizations help understand component relationships`)
+Legacy Notes:
+  - Heuristically suggests MFE boundaries from static imports & naming.
+  - Does NOT integrate with runtime registry or DSL contracts.
+  - Use only for exploratory migration; avoid in new projects.`)
   .action((options) => {
     analyzeCommand(options);
   });

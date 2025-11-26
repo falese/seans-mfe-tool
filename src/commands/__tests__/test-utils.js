@@ -1,17 +1,11 @@
 // src/commands/__tests__/test-utils.js
 // Centralized mocks for command tests
-const mockFs = {
+
+// Hoisted module mocks - MUST be at the top
+jest.mock('fs-extra', () => ({
   ensureDir: jest.fn().mockResolvedValue(undefined),
   copy: jest.fn().mockResolvedValue(undefined),
-  readFile: jest.fn().mockImplementation(async (filePath) => {
-    if (filePath.endsWith('package.json.ejs')) {
-      return '{"name": "<%= name %>", "version": "<%= version || \"1.0.0\" %>" }';
-    }
-    if (filePath.endsWith('rspack.config.js.ejs')) {
-      return 'module.exports = { devServer: { port: <%= port %> }, remotes: <%= remotes %> }';
-    }
-    return 'template content';
-  }),
+  readFile: jest.fn().mockResolvedValue('template content'),
   writeFile: jest.fn().mockResolvedValue(undefined),
   writeJson: jest.fn().mockResolvedValue(undefined),
   readdir: jest.fn().mockResolvedValue(['package.json.ejs', 'rspack.config.js.ejs']),
@@ -26,29 +20,23 @@ const mockFs = {
     devDependencies: {},
     scripts: {}
   })
-};
+}));
 
-const mockPath = {
+jest.mock('child_process', () => ({
+  execSync: jest.fn().mockReturnValue('')
+}));
+
+jest.mock('path', () => ({
   resolve: jest.fn((...args) => args.join('/')),
   join: jest.fn((...args) => args.join('/')),
   dirname: jest.fn(p => p.split('/').slice(0, -1).join('/')),
   basename: jest.fn(p => p.split('/').pop())
-};
-
-const mockExec = {
-  execSync: jest.fn().mockReturnValue('')
-};
-
-// Hoisted module mocks for tests that import this helper first
-// These ensure command modules use the mocked implementations
-jest.mock('fs-extra', () => mockFs);
-jest.mock('child_process', () => ({ execSync: mockExec.execSync }));
-jest.mock('path', () => ({
-  resolve: (...args) => args.join('/'),
-  join: (...args) => args.join('/'),
-  dirname: (p) => p.split('/').slice(0, -1).join('/'),
-  basename: (p) => p.split('/').pop()
 }));
+
+// Get references to the mocked modules
+const mockFs = require('fs-extra');
+const mockPath = require('path');
+const { execSync: mockExec } = require('child_process');
 
 /**
  * Setup function to mock process.exit
@@ -69,37 +57,50 @@ const mockConsole = () => {
 };
 
 /**
- * Setup common mocks for fs-extra, path, and child_process
- * Returns a function that sets up the mocks in beforeAll
+ * Reset and configure common mocks for fs-extra, path, and child_process
+ * Call this function directly in beforeEach blocks
  */
 const setupCommonMocks = () => {
-  beforeEach(() => {
-    // Reset and restore default implementations before each test
-    mockFs.ensureDir.mockReset().mockResolvedValue(undefined);
-    mockFs.copy.mockReset().mockResolvedValue(undefined);
-    mockFs.readFile.mockReset().mockResolvedValue('template content');
-    mockFs.writeFile.mockReset().mockResolvedValue(undefined);
-    mockFs.writeJson.mockReset().mockResolvedValue(undefined);
-    mockFs.readdir.mockReset().mockResolvedValue(['package.json.ejs', 'rspack.config.js.ejs']);
-    mockFs.stat.mockReset().mockResolvedValue({ isDirectory: () => false });
-    mockFs.pathExists.mockReset().mockResolvedValue(true);
-    mockFs.existsSync.mockReset().mockReturnValue(true);
-    mockFs.remove.mockReset().mockResolvedValue(undefined);
-    mockFs.readJson.mockReset().mockResolvedValue({
-      name: '',
-      version: '1.0.0',
-      dependencies: {},
-      devDependencies: {},
-      scripts: {}
-    });
-
-    mockPath.resolve.mockReset().mockImplementation((...args) => args.join('/'));
-    mockPath.join.mockReset().mockImplementation((...args) => args.join('/'));
-    mockPath.dirname.mockReset().mockImplementation(p => p.split('/').slice(0, -1).join('/'));
-    mockPath.basename.mockReset().mockImplementation(p => p.split('/').pop());
-
-    mockExec.execSync.mockReset().mockReturnValue('');
+  // Reset and restore default implementations
+  mockFs.ensureDir.mockReset().mockResolvedValue(undefined);
+  mockFs.copy.mockReset().mockResolvedValue(undefined);
+  mockFs.readFile.mockReset().mockImplementation(async (filePath) => {
+    if (filePath.endsWith('package.json.ejs')) {
+      return '{"name": "<%= name %>", "version": "<%= version || \\"1.0.0\\" %>" }';
+    }
+    if (filePath.endsWith('rspack.config.js.ejs')) {
+      return 'module.exports = { devServer: { port: <%= port %> }, remotes: <%= remotes %> }';
+    }
+    return 'template content';
   });
+  mockFs.writeFile.mockReset().mockResolvedValue(undefined);
+  mockFs.writeJson.mockReset().mockResolvedValue(undefined);
+  mockFs.readdir.mockReset().mockResolvedValue(['package.json.ejs', 'rspack.config.js.ejs']);
+  mockFs.stat.mockReset().mockResolvedValue({ isDirectory: () => false });
+  mockFs.pathExists.mockReset().mockResolvedValue(true);
+  mockFs.existsSync.mockReset().mockReturnValue(true);
+  mockFs.remove.mockReset().mockResolvedValue(undefined);
+  mockFs.readJson.mockReset().mockResolvedValue({
+    name: '',
+    version: '1.0.0',
+    dependencies: {},
+    devDependencies: {},
+    scripts: {}
+  });
+
+  mockPath.resolve.mockReset().mockImplementation((...args) => args.join('/'));
+  mockPath.join.mockReset().mockImplementation((...args) => args.join('/'));
+  mockPath.dirname.mockReset().mockImplementation(p => p.split('/').slice(0, -1).join('/'));
+  mockPath.basename.mockReset().mockImplementation(p => p.split('/').pop());
+
+  mockExec.mockReset().mockReturnValue('');
+
+  // Stable cwd for path expectations
+  if (process.cwd.mockRestore) {
+    // If previously mocked, restore then re-mock
+    process.cwd.mockRestore();
+  }
+  jest.spyOn(process, 'cwd').mockReturnValue('/mock/cwd');
 };
 
 /**
