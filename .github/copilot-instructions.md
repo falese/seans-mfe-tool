@@ -1,225 +1,510 @@
-# Copilot Instructions for Agent Orchestrator
+# GitHub Copilot Instructions
 
-## Project Context
+## Project Overview
 
-You are working on a browser-based agent orchestration system and MFE tool kit that generates full stack mfe and a dynamically loading and orchestration framework for micro-frontends (MFEs) using Module Federation. Agents communicate via a typed event bus and expose capabilities through a standard interface. The goal of this project is to provide a robust, production-ready platform for building and managing MFEs with strong developer experience, security, and testing. The secondary goal is to describe a common DSL for how Agents, tools, or skills can be exposed via common module federation patterns. The tertiary goal is to develop this same archteicture to extend to hardware native "MFEs" that expose specific functionality the target platform for this goal is Raspberry PI.
+**seans-mfe-tool** is a CLI tool for scaffolding Module Federation micro-frontend applications. It generates shell apps, remote MFEs, and full-stack APIs from OpenAPI specs, with integrated orchestration capabilities for runtime MFE discovery and composition.
 
-We will start by reviewing the code base already created that generates full stack MFEs, identify issues and complete code coverage.
+**Two parallel architectures exist:**
 
-## Code Style
+1. **CLI/CodeGen** (production-ready): Generates MFE projects with rspack/Module Federation
+2. **Agent Orchestrator** (design phase): Browser-based dynamic MFE loading system (`src/agent-orchestrator/`)
 
-### TypeScript
+Focus on **CLI/CodeGen** for implementation work. Reference `docs/architecture-decisions.md` ADR-009 through ADR-021 for orchestration design principles.
 
-- Use strict typing - no `any` types
-- Prefer interfaces over type aliases for object shapes
-- Use readonly for immutable properties
-- Explicit return types on all public methods
-- Use generics for type safety in event handling
+## Architecture & Key Components
 
-### Naming Conventions
+### CLI Commands Structure (`bin/seans-mfe-tool.js`)
 
-- Interfaces: `IInterfaceName` (e.g., `IAgent`, `IEventBus`)
-- Types: `PascalCase` with descriptive suffix (e.g., `AgentManifest`, `EventHandler`)
-- Classes: `PascalCase` (e.g., `Orchestrator`, `BaseAgent`)
-- Methods: `camelCase`, verb-first (e.g., `registerAgent`, `executeCapability`)
-- Events: `namespace.action` format (e.g., `agent.registered`, `capability.executed`)
-- Private methods: prefix with underscore `_methodName`
-- Protected fields: standard camelCase with `protected` keyword
+```bash
+mfe shell <name>      # Shell (host) with orchestration service
+mfe remote <name>     # Remote MFE (Module Federation)
+mfe api <name>        # Full-stack API from OpenAPI spec
+mfe init <name>       # Workspace (remotes only, no shell)
+mfe build <name>      # Build with rspack
+mfe deploy <name>     # Docker/K8s deployment
+```
+
+**Command removed:** `analyze` (ADR-021) - use runtime DSL discovery instead
+
+### Code Generation Flow
+
+1. **Template Resolution** (`src/templates/`)
+
+   - `react/shell/` - Host application with orchestration
+   - `react/remote/` - Federated module with auto-registration
+   - `api/base/` - Express + OpenAPI + DB layers
+
+2. **Template Processing** (`src/utils/templateProcessor.js`)
+
+   - Recursively processes `.ejs` files
+   - Variable substitution: `<%= name %>`, `<%= port %>`, etc.
+   - Preserves directory structure
+
+3. **Code Generation Utilities**
+   - `src/codegen/ControllerGenerator/` - REST controllers from OpenAPI paths
+   - `src/codegen/DatabaseGenerator/` - MongoDB schemas or SQLite migrations
+   - `src/codegen/RouteGenerator/` - Express route wiring
+
+### Module Federation Integration
+
+**rspack.config.js patterns** (generated):
+
+```javascript
+// Shell exposes orchestration, consumes remotes
+new ModuleFederationPlugin({
+  name: 'shell',
+  remotes: {
+    remote1: 'remote1@http://localhost:3001/remoteEntry.js',
+  },
+  shared: ['react', 'react-dom', '@mui/material'], // Singleton dependencies
+});
+
+// Remote exposes components
+new ModuleFederationPlugin({
+  name: 'remote1',
+  filename: 'remoteEntry.js',
+  exposes: {
+    './App': './src/App.tsx',
+  },
+  shared: { react: { singleton: true } },
+});
+```
+
+**Critical:** Shared dependencies use `singleton: true` for React/MUI to prevent version conflicts
+
+### API Generation from OpenAPI
+
+`src/commands/create-api.js` → Full stack in one command:
+
+1. **Parse OpenAPI** (`@apidevtools/swagger-parser`)
+2. **Generate Models** - Schemas from `#/components/schemas`
+3. **Generate Controllers** - CRUD endpoints from `paths`
+4. **Generate Routes** - Express router wiring
+5. **Database Layer**
+   - **MongoDB**: Schema versioning, migrations, seeding (`src/codegen/DatabaseGenerator/MongoDBGenerator.js`)
+   - **SQLite**: File-based storage, migrations (`src/codegen/DatabaseGenerator/SQLiteGenerator.js`)
+
+**Example:** `examples/bizcase-api/` shows generated API structure
+
+## Development Patterns
+
+### Testing with Jest
+
+- **Config:** `jest.config.js` - Node environment, Babel transform
+- **Pattern:** Tests in `__tests__/` directories adjacent to source
+- **Mocking:** `src/commands/__tests__/test-utils.js` provides common mocks (fs, exec, console)
+- **Coverage:** Run `npm test -- --coverage` (targets 80% in CI)
+
+**Test structure:**
+
+```javascript
+const { setupCommonMocks, mockFs, mockExec } = require('./test-utils');
+
+describe('CommandName', () => {
+  setupCommonMocks();
+
+  it('should generate project structure', async () => {
+    await commandFunction('test-name', options);
+    expect(mockFs.ensureDir).toHaveBeenCalled();
+    expect(mockExec.execSync).toHaveBeenCalledWith('npm install', ...);
+  });
+});
+```
+
+### Template Development
+
+When adding new templates:
+
+1. Place in `src/templates/{type}/{name}/`
+2. Use `.ejs` extension for variable substitution
+3. Reference variables: `<%= name %>`, `<%= port %>`, `<%= muiVersion %>`
+4. Update command to pass variables to `processTemplates()`
 
 ### Error Handling
 
-- Use custom error classes that extend Error
-- Always wrap external calls in try-catch
-- Log errors but don't let one agent crash the system
-- Return error information in result objects, not exceptions for expected failures
+**CLI commands use try-catch with chalk:**
 
-### Async Patterns
-
-- Always return Promise for operations that might be async
-- Use `async/await` over `.then()` chains
-- Parallel operations use `Promise.all()` with proper error handling
-- Sequential operations when order matters
-
-## Architecture Patterns
-
-### Agent Contract
-
-Every agent MUST implement `IAgent` interface with:
-
-- Lifecycle methods: `initialize()`, `suspend()`, `resume()`, `cleanup()`
-- Capability methods: `getCapabilities()`, `execute()`
-- Communication: `subscribe()` to event bus
-- Health: `getHealth()` for monitoring
-
-### Event-Driven Communication
-
-- All inter-agent communication goes through event bus
-- Events are strongly typed with payload interfaces
-- No direct agent-to-agent method calls
-- Publish events for state changes, execution results
-
-### Capability Routing
-
-- Agents declare capabilities with name and version
-- Orchestrator maintains index: capability → agent IDs
-- Multiple agents can provide same capability
-- Execute on all matching agents, return array of results
-
-### Module Federation Loading
-
-- Agents loaded dynamically via native Module Federation
-- Each agent has manifest with remote entry URL
-- Orchestrator handles loading and initialization
-- Graceful failure if agent fails to load
-
-## Comment Style for Copilot
-
-### Method Implementation Prompts
-
-```typescript
-/**
- * Brief description of what this does.
- *
- * Implementation approach:
- * 1. Step one with specific detail
- * 2. Step two with specific detail
- * 3. Step three with specific detail
- *
- * @param paramName - What this parameter does
- * @returns What is returned
- */
-methodName(paramName: Type): ReturnType {
-  // Copilot will implement based on steps above
+```javascript
+try {
+  // Command logic
+  console.log(chalk.green('✓ Success message'));
+} catch (error) {
+  console.error(chalk.red('\n✗ Failed:'));
+  console.error(chalk.red(error.message));
+  throw error; // Re-throw for exit code
 }
 ```
 
-### Algorithm Guidance
+## Orchestration Design (Implementation Phase)
 
-```typescript
-// Find all agents that provide the requested capability
-// Use the capability index for O(1) lookup
-// Filter out agents in 'suspended' or 'error' state
-// Return array of agent instances
+### DSL-Driven Architecture (ADR-013, ADR-018)
+
+**Every MFE exposes DSL at `/.well-known/mfe-manifest.yaml`:**
+
+```yaml
+name: csv-analyzer
+version: 1.0.0
+type: tool
+capabilities:
+  - data-analysis:
+      inputs:
+        - name: file
+          type: file
+          formats: [csv]
+      outputs:
+        - name: report
+          type: object
+      lifecycle:
+        - before: [validateFile]
+        - main: [processData]
+        - after: [generateReport]
+remoteEntry: http://localhost:3002/remoteEntry.js
 ```
 
-### Error Handling Guidance
+### Hybrid Orchestration (ADR-009, ADR-016, ADR-017)
 
-```typescript
-// Wrap in try-catch - agent errors should not crash orchestrator
-// Log error with context (agent ID, capability name)
-// Return error in result object with success: false
-// Continue processing other agents even if one fails
+**Two-layer system:**
+
+1. **Orchestration Service** (Node.js, Docker-only)
+
+   - Registry storage (Redis/memory)
+   - REST API: `/api/register`, `/api/discover`
+   - WebSocket: Real-time registry updates
+   - **Generated WITH every shell** (`mfe shell` creates both)
+
+2. **Shell Runtime** (Browser)
+   - Local registry cache
+   - Module Federation loader
+   - On-demand DSL fetch
+   - Three-phase discovery (ADR-011)
+
+**Development workflow:**
+
+```bash
+cd my-shell
+docker-compose up -d      # Shell + orchestration service
+cd ../my-remote
+npm run dev               # Dev server, auto-registers with :3100
 ```
 
-## Type Definitions Reference
+### Auto-Registration Pattern (ADR-012)
 
-When implementing classes, always reference the interface:
+**CLI generates registration code:**
 
-- `IAgent` interface in `types/agent.types.ts`
-- `IOrchestrator` interface in `types/orchestrator.types.ts`
-- `IEventBus` interface in `types/eventbus.types.ts`
+```javascript
+// Auto-generated in src/orchestration/register.ts
+export async function registerMFE() {
+  const registration = {
+    name: 'feature-a',
+    endpoint: process.env.MFE_ENDPOINT || 'http://localhost:3001',
+    remoteEntry: 'http://localhost:3001/remoteEntry.js',
+    dslEndpoint: `${endpoint}/.well-known/mfe-manifest.yaml`,
+    healthCheck: `${endpoint}/health`,
+  };
 
-## Testing Patterns
+  await fetch(`${orchestrationUrl}/api/register`, {
+    method: 'POST',
+    body: JSON.stringify(registration),
+  });
+}
 
-Every feature should be developed with Test Driven development (TDD) in mind. Each new feature should be started with creating a failing test then making it pass.
+// Called on startup
+if (process.env.NODE_ENV !== 'test') {
+  registerMFE().catch(console.error);
+}
+```
 
-Use Jest for unit tests and follow these patterns:
+### Three-Phase Discovery (ADR-011)
 
-### Test Structure
+AI agents choose discovery strategy:
 
-```typescript
-describe('ComponentName', () => {
-  let instance: ComponentName;
-  let mockDependency: jest.Mocked<IDependency>;
+- **Phase A (Probabilistic)**: Fetch all DSLs, agent reasons
+- **Phase C (Semantic)**: Natural language query → ranked results
+- **Phase B (Deterministic)**: Query DSL filtering
 
-  beforeEach(() => {
-    // Setup
+## Code Style & Conventions
+
+### JavaScript (Current Codebase)
+
+- **Node.js modules:** Use `require()` and `module.exports`
+- **Async/await:** Preferred over callbacks/promises chains
+- **Validation:** Early return with error messages
+- **Path resolution:** Always use `path.resolve()` for absolute paths
+- **Console output:** Use `chalk` for colored messages (green=success, red=error, blue=info)
+
+```javascript
+// Pattern: Validate inputs first
+function validatePort(port) {
+  const n = typeof port === 'string' ? Number(port) : port;
+  if (!Number.isInteger(n) || n < 1 || n > 65535) {
+    throw new Error('Invalid port');
+  }
+  return n;
+}
+
+// Pattern: Template processing
+const targetDir = path.resolve(process.cwd(), name);
+await fs.copy(templateDir, targetDir);
+await processTemplates(targetDir, { name, port, muiVersion });
+```
+
+### TypeScript (Orchestrator - Future)
+
+- Use strict typing - no `any` types
+- Prefer interfaces over type aliases for object shapes
+- Explicit return types on all public methods
+- Naming: `IInterfaceName` for interfaces (e.g., `IAgent`, `IEventBus`)
+
+## Working with This Codebase
+
+### Adding a New CLI Command
+
+1. **Create command file:** `src/commands/my-command.js`
+
+   ```javascript
+   async function myCommand(name, options) {
+     const templateDir = path.resolve(__dirname, '..', 'templates', 'my-type');
+     // ... validation, copy, process
+     execSync('npm install', { cwd: targetDir, stdio: 'inherit' });
+   }
+   module.exports = { myCommand };
+   ```
+
+2. **Register in CLI:** `bin/seans-mfe-tool.js`
+
+   ```javascript
+   program
+     .command('my-command')
+     .description('Description')
+     .argument('<name>', 'Name')
+     .option('-p, --port <port>', 'Port', '3000')
+     .action((name, options) => {
+       myCommand(name, options);
+     });
+   ```
+
+3. **Add tests:** `src/commands/__tests__/my-command.test.js`
+
+### Adding to Generated Templates
+
+**Modify template structure:**
+
+```
+src/templates/react/remote/
+├── package.json.ejs          # <%= name %>, <%= port %>
+├── rspack.config.js.ejs      # Module Federation config
+├── src/
+│   ├── App.tsx.ejs
+│   └── index.tsx
+└── public/
+    └── index.html.ejs
+```
+
+**Variable substitution:**
+
+- Use `<%= variable %>` for escaped HTML
+- Use `<%- variable %>` for unescaped (JSON objects)
+- Access nested: `<%= config.remotes['remote1'] %>`
+
+### Extending API Generation
+
+**Add new database type:**
+
+1. Create generator: `src/codegen/DatabaseGenerator/MyDBGenerator.js`
+2. Implement interface:
+   ```javascript
+   class MyDBGenerator {
+     async generateModels(schemas, outputDir) {}
+     async generateMigrations(schemas, outputDir) {}
+     async generateSeeds(schemas, exampleData, outputDir) {}
+   }
+   ```
+3. Register in `create-api.js`:
+   ```javascript
+   const generators = {
+     mongodb: MongoDBGenerator,
+     sqlite: SQLiteGenerator,
+     mydb: MyDBGenerator,
+   };
+   ```
+
+### Understanding Module Federation Config
+
+**Shell (host) pattern:**
+
+```javascript
+remotes: {
+  'remote-name': 'remoteName@http://host:port/remoteEntry.js'
+  //              ↑ global    ↑ URL to federated module
+  //                scope
+}
+```
+
+**Remote pattern:**
+
+```javascript
+exposes: {
+  './ComponentName': './src/path/to/Component'
+  // ↑ Public name    ↑ Local file path
+}
+```
+
+**Shared dependencies:**
+
+- React/React-DOM: `singleton: true` (prevents duplicate instances)
+- MUI: `singleton: true` (theme consistency)
+- Utilities: Can be duplicated per MFE
+
+### Running Tests Locally
+
+```bash
+npm test                    # Run all tests
+npm test -- --watch        # Watch mode
+npm test -- --coverage     # Coverage report
+npm test create-shell      # Specific test file
+
+# CI mode (strict thresholds)
+CI=1 npm test
+```
+
+### Debugging Generated Projects
+
+1. **Check template variables:**
+
+   - Add `console.log(vars)` before `processTemplates()`
+   - Inspect generated `package.json` for correct substitution
+
+2. **Verify file structure:**
+
+   ```javascript
+   const { list_dir } = require('./utils');
+   await list_dir(targetDir); // Check what was generated
+   ```
+
+3. **Test Module Federation:**
+   - Start shell: `cd my-shell && npm start`
+   - Start remote: `cd my-remote && npm start`
+   - Open browser console, check for federation errors
+   - Look for `Uncaught Error: Shared module is not available for eager consumption`
+
+## Common Pitfalls & Solutions
+
+### Module Federation
+
+**Problem:** "Shared module not available"
+
+- **Cause:** Missing `singleton: true` for React
+- **Fix:** Ensure both shell and remote share React with `singleton: true`
+
+**Problem:** Remote not loading
+
+- **Cause:** CORS or wrong URL
+- **Fix:** Check remoteEntry URL in shell's rspack.config, verify remote is running
+
+### Template Generation
+
+**Problem:** Variables not substituting
+
+- **Cause:** Missing `.ejs` extension
+- **Fix:** Rename file to `filename.ext.ejs` (e.g., `package.json.ejs`)
+
+**Problem:** npm install fails
+
+- **Cause:** Invalid package.json from template errors
+- **Fix:** Validate JSON syntax in template, check variable escaping
+
+### API Generation
+
+**Problem:** OpenAPI parsing fails
+
+- **Cause:** Invalid spec or unsupported features
+- **Fix:** Validate spec at https://editor.swagger.io, check console for specifics
+
+**Problem:** Database connection errors
+
+- **Cause:** Missing environment variables
+- **Fix:** Check generated `.env.example`, ensure `DATABASE_URL` set
+
+## ADR Quick Reference
+
+When implementing orchestration features, reference these:
+
+- **ADR-009**: Hybrid architecture (centralized service + shell runtime)
+- **ADR-010**: Lightweight registry (metadata only, fetch DSL on-demand)
+- **ADR-011**: Three-phase discovery (A→C→B)
+- **ADR-012**: Push-based registration (auto-generated code)
+- **ADR-013**: Language-agnostic DSL (YAML/JSON)
+- **ADR-016**: Orchestration service per shell
+- **ADR-017**: Docker-only orchestration, dev servers for MFEs
+- **ADR-018**: Abstract MFE base class (standard capabilities)
+- **ADR-019**: JWT-based authorization
+- **ADR-020**: `mfe init` = workspace only, shell = explicit
+- **ADR-021**: `analyze` command removed (use runtime DSL)
+
+**Full details:** `docs/architecture-decisions.md`
+
+## Testing Strategy (TDD Required)
+
+Every new feature starts with a failing test:
+
+```javascript
+describe('NewFeature', () => {
+  it('should handle expected case', async () => {
+    // Arrange - setup test data
+    // Act - call the method
+    // Assert - verify results
   });
 
-  describe('methodName', () => {
-    it('should handle expected case', async () => {
-      // Arrange - setup test data
-      // Act - call the method
-      // Assert - verify results
-    });
-
-    it('should handle error case', async () => {
-      // Test error paths
-    });
+  it('should handle error case', async () => {
+    // Test error paths
   });
 });
 ```
 
-## File Organization
+## File Organization Patterns
 
-- `/types` - Only interfaces and types, no implementations
-- `/core` - Core orchestrator and event bus implementations
-- `/agents` - Concrete agent implementations, one per directory
-- `/utils` - Pure utility functions, no state
-- `/__tests__` - Tests mirror source structure
-
-## Common Patterns to Follow
-
-### Subscription Cleanup
-
-```typescript
-private subscriptions: (() => void)[] = [];
-
-// In subscribe method:
-const unsubscribe = eventBus.subscribe(...);
-this.subscriptions.push(unsubscribe);
-
-// In cleanup:
-this.subscriptions.forEach(unsub => unsub());
-this.subscriptions = [];
+```
+src/
+├── commands/          # CLI command implementations
+│   ├── create-*.js   # Generators (shell, remote, api)
+│   └── __tests__/    # Command tests
+├── templates/         # EJS templates for code generation
+│   ├── api/
+│   ├── docker/
+│   └── react/
+├── codegen/          # Code generation utilities
+│   ├── ControllerGenerator/
+│   ├── DatabaseGenerator/
+│   └── RouteGenerator/
+├── utils/            # Shared utilities
+│   ├── templateProcessor.js
+│   └── securityUtils.js
+└── agent-orchestrator/  # Future: browser runtime (design only)
 ```
 
-### State Validation
+## Environment-Specific Notes
 
-```typescript
-// Always validate state before operations
-if (!this.registry.has(agentId)) {
-  throw new AgentNotFoundError(agentId);
-}
+### Local Development
 
-if (entry.state !== 'ready') {
-  throw new InvalidStateError(agentId, entry.state);
-}
-```
+- CLI installed globally: `npm link` in project root
+- Test with: `mfe <command> <args>`
+- Cleanup test outputs: `npm run clean:test-workspaces`
 
-### Event Publishing Pattern
+### CI/CD (GitHub Actions)
 
-```typescript
-this.eventBus.publish<PayloadType>({
-  type: SystemEventTypes.EVENT_NAME,
-  timestamp: new Date().toISOString(),
-  source: this.id,
-  payload: {
-    /* typed payload */
-  },
-  correlationId: context.correlationId,
-});
-```
+- Jest runs in CI mode (strict coverage thresholds: 80%)
+- Tests must be deterministic (no reliance on external services)
+- Use mocks from `test-utils.js`
 
-## What to Avoid
+## Getting Help
 
-- ❌ Using `any` type
-- ❌ Direct agent-to-agent method calls
-- ❌ Mutating shared state without synchronization
-- ❌ Throwing exceptions for expected failures
-- ❌ Blocking operations without async
-- ❌ Large methods - break into smaller private helpers
-- ❌ Side effects in getters
-- ❌ Exposing internal implementation details
+- **Architecture decisions:** `docs/architecture-decisions.md` (ADR-001 through ADR-021)
+- **Orchestration requirements:** `docs/orchestration-requirements.md`
+- **API generation:** `docs/api-generator-readme.md`
+- **Examples:** `examples/` directory (working projects)
+- **Agent system design:** `src/agent-orchestrator/README.md` (future work)
 
-## Copilot Trigger Phrases
+## Deprecated Features
 
-Use these in comments to get specific patterns:
-
-- "Following the pattern from ARCHITECTURE-DECISIONS.md" - References architecture doc
-- "Use the subscription cleanup pattern" - Generates cleanup code
-- "Implement with O(1) lookup using the index" - Uses Map/Set
-- "Handle errors gracefully without crashing system" - Adds try-catch
-- "Following the event publishing pattern" - Generates typed event
-- "Validate agent implements IAgent interface" - Generates validation
-- "Use Map for O(1) access" - Chooses efficient data structure
+- ~~`mfe analyze`~~ - Removed per ADR-021 (use runtime DSL discovery instead)
+- See `README.md` "Deprecated / Removed Commands" section for migration guidance
