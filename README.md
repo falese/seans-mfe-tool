@@ -146,6 +146,7 @@ Reference scaffold workspaces have been relocated under `examples/workspaces/`:
 - `examples/workspaces/yarn/` – yarn-based monorepo template
 
 Each contains:
+
 ```
 README.md
 package.json
@@ -154,6 +155,7 @@ apps/  packages/  docs/
 ```
 
 Use them as starting points:
+
 ```bash
 npx seans-mfe-tool init my-workspace --package-manager npm
 npx seans-mfe-tool init my-workspace --package-manager yarn
@@ -177,6 +179,7 @@ The `analyze` command is deprecated (see ADR-021). It provided heuristic static 
 - Use discovery phases A (full registry), C (semantic search), and B (deterministic query) (ADR-011).
 
 Migration Recommendation:
+
 1. Define explicit capability contracts in `mfe-spec.yaml` / DSL manifests, not inferred from static imports.
 2. Allow runtime registration + telemetry to inform decomposition over time rather than one-off static analysis.
 3. Avoid new usage of `mfe analyze`; it will be removed in a future major release.

@@ -1151,12 +1151,14 @@ Early CLI runs and exploratory tests generated example workspaces (`npm-workspac
 Move all persistent scaffold examples into `examples/workspaces/<package-manager>/` and remove root-level workspace folders. Treat them strictly as reference templates; they are not part of the CLI runtime or orchestration implementation.
 
 **Rationale:**
+
 - Cleaner root focusing contributors on `src/`, `docs/`, `agent-orchestrator/`.
 - Single convention: all samples under `examples/`.
 - Prevents accidental commits of ad‑hoc test scaffolds.
 - Improves onboarding—clear separation of source vs examples.
 
 **Implementation Layout:**
+
 ```
 examples/
   workspaces/
@@ -1173,11 +1175,13 @@ examples/
 ```
 
 **Repository Guardrails:**
+
 1. Cleanup script (`scripts/clean-test-workspaces.js`) removes stray `*-test` directories.
 2. Unit tests use mocks; integration tests (future) will isolate under `scripts/tmp/`.
 3. Root `README.md` links to examples section for discoverability.
 
 **Consequences:**
+
 - Positive: Reduced root clutter.
 - Positive: Easier to evolve examples independently.
 - Negative: Slight indirection (one more path to reach examples).
@@ -1200,6 +1204,7 @@ Need to determine where orchestration service lives and how it's deployed. Optio
 **Orchestration service is generated in EVERY shell** and deployed together as single unit via Docker Compose.
 
 **Rationale:**
+
 - **Natural ownership** - shell owns its orchestration, clear responsibility
 - **Deployment simplicity** - one command deploys both (docker-compose up)
 - **Host → Remote workflow** - elegant pattern where shell is host, remotes register
@@ -1209,6 +1214,7 @@ Need to determine where orchestration service lives and how it's deployed. Optio
 - **Development experience** - same deployment model dev through prod
 
 **Shell Generation Structure:**
+
 ```
 my-shell/
 ├── src/                           # Shell application (React)
@@ -1237,6 +1243,7 @@ my-shell/
 ```
 
 **Generated Docker Compose:**
+
 ```yaml
 version: '3.8'
 services:
@@ -1244,29 +1251,30 @@ services:
     build:
       context: ./orchestration-service
     ports:
-      - "3100:3100"
+      - '3100:3100'
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - REGISTRY_STORAGE=${REGISTRY_STORAGE:-memory}
     depends_on:
       - redis
-  
+
   shell:
     build:
       context: .
       dockerfile: Dockerfile.shell
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - ORCHESTRATION_URL=http://orchestration-service:3100
     depends_on:
       - orchestration-service
-  
+
   redis:
     image: redis:alpine
 ```
 
 **Deployment Workflow:**
+
 ```bash
 # Generate shell (includes orchestration)
 mfe shell my-app
@@ -1282,6 +1290,7 @@ npm run dev  # Registers with localhost:3100
 ```
 
 **Consequences:**
+
 - Positive: Simplest deployment model - one command
 - Positive: Clear ownership - shell owns its orchestration
 - Positive: Flexible - can configure multiple shells to share one orchestration
@@ -1306,6 +1315,7 @@ Need to determine how orchestration and MFEs run in development. Options include
 **Orchestration always runs in Docker containers** (dev, staging, prod). **MFEs run as dev servers** in development for hot reload.
 
 **Rationale:**
+
 - **Consistent infrastructure** - orchestration deployment identical across environments
 - **Hot reload where it matters** - MFEs get fast refresh during active development
 - **Clean separation** - infrastructure (orchestration) vs application code (MFEs)
@@ -1314,6 +1324,7 @@ Need to determine how orchestration and MFEs run in development. Options include
 - **Best of both** - stability of containers + speed of dev servers
 
 **Development Architecture:**
+
 ```
 ┌─────────────────────────────────────┐
 │  Docker Compose                     │
@@ -1339,6 +1350,7 @@ feature-a   feature-b   tool-x      api-y
 ```
 
 **Implementation Pattern:**
+
 ```bash
 # Terminal 1: Start infrastructure (Docker)
 cd my-shell
@@ -1354,25 +1366,24 @@ npm run dev  # Port 3002, auto-registers with localhost:3100
 ```
 
 **Auto-Generated Registration Code:**
+
 ```typescript
 // In every generated MFE
 export async function registerMFE() {
-  const orchestrationUrl = 
-    process.env.ORCHESTRATION_URL ||
-    'http://localhost:3100';  // Dev default
-  
+  const orchestrationUrl = process.env.ORCHESTRATION_URL || 'http://localhost:3100'; // Dev default
+
   const registration = {
     name: 'feature-a',
     endpoint: process.env.MFE_ENDPOINT || 'http://localhost:3001',
     remoteEntry: process.env.REMOTE_ENTRY || 'http://localhost:3001/remoteEntry.js',
     dslEndpoint: `${process.env.MFE_ENDPOINT || 'http://localhost:3001'}/.well-known/mfe-manifest.yaml`,
-    healthCheck: `${process.env.MFE_ENDPOINT || 'http://localhost:3001'}/health`
+    healthCheck: `${process.env.MFE_ENDPOINT || 'http://localhost:3001'}/health`,
   };
-  
+
   await fetch(`${orchestrationUrl}/api/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(registration)
+    body: JSON.stringify(registration),
   });
 }
 
@@ -1385,11 +1396,12 @@ if (process.env.NODE_ENV !== 'test') {
 **Environment Progression:**
 | Environment | Orchestration | MFEs | Registry |
 |-------------|--------------|------|----------|
-| Development | Docker       | Dev servers | In-memory |
-| Staging     | Docker       | Docker | Redis |
-| Production  | Docker       | Docker | Redis |
+| Development | Docker | Dev servers | In-memory |
+| Staging | Docker | Docker | Redis |
+| Production | Docker | Docker | Redis |
 
 **Consequences:**
+
 - Positive: Consistent orchestration behavior across environments
 - Positive: Fast hot reload for MFEs during development
 - Positive: Simple mental model - infrastructure vs application
@@ -1414,6 +1426,7 @@ Need uniform interface for all MFEs regardless of type (UI/Tool/Agent/API) or im
 Define **abstract MFE base class** with required standard capabilities that ALL MFEs must implement. Use **GraphQL-style schema** for introspection.
 
 **Rationale:**
+
 - **Uniform interface** - all MFEs (UI/Tool/Agent/API) implement same methods
 - **Language agnostic** - abstract contract, any language can implement
 - **Self-documenting** - introspection via GraphQL schema
@@ -1426,7 +1439,6 @@ Define **abstract MFE base class** with required standard capabilities that ALL 
 ```yaml
 # ALL MFEs must implement these capabilities
 standardCapabilities:
-  
   # 1. Authorization
   - authorizeAccess:
       handler: checkAuthorization
@@ -1439,7 +1451,7 @@ standardCapabilities:
           type: boolean
         - name: permissions
           type: array
-  
+
   # 2. Health check
   - health:
       handler: checkHealth
@@ -1447,14 +1459,14 @@ standardCapabilities:
         - name: status
           type: enum
           values: [healthy, degraded, unhealthy]
-  
+
   # 3. Self-description
   - describe:
       handler: describeSelf
       outputs:
         - name: dsl
           type: object
-  
+
   # 4. Schema introspection (GraphQL)
   - schema:
       handler: introspectSchema
@@ -1462,7 +1474,7 @@ standardCapabilities:
         - name: schema
           type: object
           format: graphql-schema
-  
+
   # 5. Generic query (GraphQL)
   - query:
       handler: executeQuery
@@ -1478,6 +1490,7 @@ standardCapabilities:
 ```
 
 **Abstract Base Class (TypeScript):**
+
 ```typescript
 // Following ADR-018: Abstract MFE base class
 abstract class BaseMFE {
@@ -1487,7 +1500,7 @@ abstract class BaseMFE {
   abstract async describeSelf(): Promise<DSLDocument>;
   abstract async introspectSchema(): Promise<GraphQLSchema>;
   abstract async executeQuery(token: JWT, query: string, variables?: object): Promise<QueryResult>;
-  
+
   // MFE-specific capabilities (OPTIONAL)
   abstract async execute<T, R>(capability: string, params: T): Promise<R>;
 }
@@ -1512,9 +1525,9 @@ class UserManagementMFE extends BaseMFE {
       }
     `);
   }
-  
+
   async executeQuery(token: JWT, query: string): Promise<QueryResult> {
-    if (!await this.authorizeAccess(token)) {
+    if (!(await this.authorizeAccess(token))) {
       throw new UnauthorizedError();
     }
     return graphql({ schema: this.schema, source: query, contextValue: { token } });
@@ -1523,6 +1536,7 @@ class UserManagementMFE extends BaseMFE {
 ```
 
 **Python Implementation:**
+
 ```python
 # Following ADR-018: Abstract MFE base class
 from abc import ABC, abstractmethod
@@ -1532,15 +1546,15 @@ class BaseMFE(ABC):
     @abstractmethod
     async def authorize_access(self, token: str) -> AuthResult:
         pass
-    
+
     @abstractmethod
     async def check_health(self) -> HealthStatus:
         pass
-    
+
     @abstractmethod
     async def introspect_schema(self) -> Schema:
         pass
-    
+
     @abstractmethod
     async def execute_query(self, token: str, query: str) -> QueryResult:
         pass
@@ -1548,7 +1562,7 @@ class BaseMFE(ABC):
 class UserManagementMFE(BaseMFE):
     async def introspect_schema(self) -> Schema:
         return strawberry.Schema(Query, Mutation)
-    
+
     async def execute_query(self, token: str, query: str) -> QueryResult:
         if not await self.authorize_access(token):
             raise UnauthorizedError()
@@ -1556,6 +1570,7 @@ class UserManagementMFE(BaseMFE):
 ```
 
 **GraphQL Schema Benefits:**
+
 - Introspection built-in (`__schema`, `__type` queries)
 - Type system with validation
 - Tools available (GraphiQL, Playground)
@@ -1564,6 +1579,7 @@ class UserManagementMFE(BaseMFE):
 - Agents understand GraphQL naturally
 
 **Consequences:**
+
 - Positive: Uniform interface across all MFE types and languages
 - Positive: Self-documenting via GraphQL introspection
 - Positive: Agents can query any MFE the same way
@@ -1589,6 +1605,7 @@ Need consistent authorization model across all MFEs. Must support both user acce
 Use **JWT tokens** for all MFE access. Every MFE implements `authorizeAccess` standard capability that validates JWT and returns permissions.
 
 **Rationale:**
+
 - **Industry standard** - JWT widely adopted, well understood
 - **Stateless** - no session storage required
 - **Portable** - works across languages and platforms
@@ -1598,19 +1615,21 @@ Use **JWT tokens** for all MFE access. Every MFE implements `authorizeAccess` st
 - **Interoperable** - works with OAuth2, OIDC, custom auth
 
 **JWT Structure:**
+
 ```typescript
 interface MFEToken {
   // Standard claims
-  sub: string;        // User/agent ID
-  iss: string;        // Token issuer
-  aud: string[];      // Intended audiences
-  exp: number;        // Expiration
-  iat: number;        // Issued at
-  
+  sub: string; // User/agent ID
+  iss: string; // Token issuer
+  aud: string[]; // Intended audiences
+  exp: number; // Expiration
+  iat: number; // Issued at
+
   // MFE-specific claims
-  permissions: string[];   // ['mfe.read', 'data.write', etc.]
-  roles: string[];         // ['admin', 'developer', etc.]
-  context?: {              // Additional context
+  permissions: string[]; // ['mfe.read', 'data.write', etc.]
+  roles: string[]; // ['admin', 'developer', etc.]
+  context?: {
+    // Additional context
     team?: string;
     environment?: string;
     [key: string]: any;
@@ -1619,6 +1638,7 @@ interface MFEToken {
 ```
 
 **Standard Capability Implementation:**
+
 ```typescript
 // Following ADR-019: JWT authorization
 class MyMFE extends BaseMFE {
@@ -1626,33 +1646,33 @@ class MyMFE extends BaseMFE {
     try {
       // Validate JWT signature
       const decoded = await verifyJWT(token, this.publicKey);
-      
+
       // Check expiration
       if (decoded.exp < Date.now() / 1000) {
         return { authorized: false, reason: 'Token expired' };
       }
-      
+
       // Check required permissions
       const hasPermission = decoded.permissions.includes('mfe.my-mfe.access');
-      
+
       return {
         authorized: hasPermission,
         permissions: decoded.permissions,
         userId: decoded.sub,
-        roles: decoded.roles
+        roles: decoded.roles,
       };
     } catch (error) {
       return { authorized: false, reason: error.message };
     }
   }
-  
+
   // All capability executions check auth first
   async execute(capability: string, params: any): Promise<any> {
     const authResult = await this.authorizeAccess(params.token);
     if (!authResult.authorized) {
       throw new UnauthorizedError(authResult.reason);
     }
-    
+
     // Execute capability
     return this.handlers[capability](params);
   }
@@ -1660,11 +1680,12 @@ class MyMFE extends BaseMFE {
 ```
 
 **Agent Access Pattern:**
+
 ```typescript
 // Agent obtains token (from auth service or orchestration)
 const agentToken = await getAgentToken({
   agentId: 'csv-analyzer-agent',
-  permissions: ['mfe.*.query', 'data.read']
+  permissions: ['mfe.*.query', 'data.read'],
 });
 
 // Agent uses token for all MFE interactions
@@ -1673,12 +1694,13 @@ for (const mfe of mfes) {
   // authorizeAccess called automatically
   const result = await mfe.execute('data-analysis', {
     token: agentToken,
-    data: csvData
+    data: csvData,
   });
 }
 ```
 
 **Token Propagation:**
+
 ```typescript
 // Browser: User logs in, gets token
 const userToken = await auth.login(credentials);
@@ -1693,6 +1715,7 @@ await shellOrchestrator.loadMFE('feature-a', { token: userToken });
 ```
 
 **Permission Naming Convention:**
+
 ```
 mfe.<mfe-name>.<action>
 mfe.csv-analyzer.access
@@ -1704,6 +1727,7 @@ admin.*              # Role-based wildcard
 ```
 
 **Future: Zanzibar-Style Tuples (Deferred):**
+
 ```typescript
 // More granular authorization (future enhancement)
 interface AuthorizationTuple {
@@ -1717,6 +1741,7 @@ interface AuthorizationTuple {
 ```
 
 **Consequences:**
+
 - Positive: Industry-standard security
 - Positive: Works for users and agents
 - Positive: Stateless and scalable
@@ -1742,6 +1767,7 @@ Need to define what `mfe init` command generates and how shells are created. Opt
 **`mfe init` scaffolds workspace with remotes only**. **Shell is created explicitly** via `mfe shell` command.
 
 **Rationale:**
+
 - **Clear intent** - init = workspace setup, shell = application creation
 - **Flexibility** - workspace can have 0, 1, or many shells
 - **Orchestration coupling** - shell brings orchestration, should be intentional
@@ -1780,6 +1806,7 @@ apps/
 **Typical Workflows:**
 
 **Monorepo Style:**
+
 ```bash
 mfe init my-monorepo
 cd my-monorepo
@@ -1806,6 +1833,7 @@ my-monorepo/
 ```
 
 **Polyrepo Style:**
+
 ```bash
 # Separate repositories
 mkdir my-org && cd my-org
@@ -1826,6 +1854,7 @@ git init
 ```
 
 **Init Command Options:**
+
 ```bash
 mfe init <workspace>                  # Default: workspace with sample remotes
 mfe init <workspace> --empty          # Workspace only, no remotes
@@ -1834,6 +1863,7 @@ mfe init <workspace> --package-manager yarn  # Use yarn workspaces
 ```
 
 **Consequences:**
+
 - Positive: Clear separation of concerns
 - Positive: Flexible workspace topology
 - Positive: Shell creation is intentional (brings orchestration)
@@ -1848,6 +1878,7 @@ mfe init <workspace> --package-manager yarn  # Use yarn workspaces
 ## Session 2 ADR Summary
 
 **New ADRs from Session 2:**
+
 - ADR-016: Orchestration service generated in every shell
 - ADR-017: Docker-only orchestration, dev servers for MFEs
 - ADR-018: Abstract MFE base class with standard capabilities
@@ -1855,6 +1886,7 @@ mfe init <workspace> --package-manager yarn  # Use yarn workspaces
 - ADR-020: mfe init for workspace, shell explicit
 
 **Complete ADR Set (Session 1 + Session 2):**
+
 - ADR-009: Hybrid orchestration (centralized + distributed)
 - ADR-010: Lightweight registry with DSL endpoints
 - ADR-011: Three-phase discovery (A→C→B)
@@ -1868,10 +1900,11 @@ mfe init <workspace> --package-manager yarn  # Use yarn workspaces
 - ADR-020: mfe init workspace-first
 
 **Reference Pattern:**
+
 ```typescript
 /**
  * Generate shell with embedded orchestration service
- * 
+ *
  * Following ADR-016: Orchestration service per shell
  * Following ADR-017: Docker-only orchestration
  * Following ADR-018: Generate abstract MFE base class
@@ -1897,34 +1930,39 @@ The `analyze` command (`src/commands/analyze.js`) performs static heuristic anal
 **Decision:**  
 Deprecate the `analyze` command immediately (retain short-term with banner) and plan removal in a future major release. No refactor/investment will be made beyond minimal deprecation safety changes.
 
-**Rationale:**  
+**Rationale:**
+
 - Aligns tool surface with runtime + DSL-first strategy (ADR-009, ADR-010, ADR-011, ADR-013).
-- Reduces maintenance burden (≈900 LOC untested, monolithic).  
-- Avoids misleading architectural guidance based on static structure vs capability contracts.  
-- Encourages adoption of self-describing DSL and orchestration discovery phases.  
+- Reduces maintenance burden (≈900 LOC untested, monolithic).
+- Avoids misleading architectural guidance based on static structure vs capability contracts.
+- Encourages adoption of self-describing DSL and orchestration discovery phases.
 - Frees coverage efforts to focus on generator/orchestrator core.
 
-**Changes Implemented (Phase 1 – Current Release):**  
-- Added deprecation banner on invocation.  
-- Replaced `process.exit(1)` with structured return object (`{ success: false }`).  
-- Added JSDoc `@deprecated` annotation.  
-- Updated CLI help text marking command deprecated and referencing ADR-021.  
-- Updated README with Deprecated Commands section (to be patched).  
+**Changes Implemented (Phase 1 – Current Release):**
 
-**Planned Removal Timeline:**  
-- Phase 1 (Current Minor): Deprecation notice, still callable.  
-- Phase 2 (Next Minor): Hidden from default help; shown only via `--show-deprecated` (future enhancement).  
+- Added deprecation banner on invocation.
+- Replaced `process.exit(1)` with structured return object (`{ success: false }`).
+- Added JSDoc `@deprecated` annotation.
+- Updated CLI help text marking command deprecated and referencing ADR-021.
+- Updated README with Deprecated Commands section (to be patched).
+
+**Planned Removal Timeline:**
+
+- Phase 1 (Current Minor): Deprecation notice, still callable.
+- Phase 2 (Next Minor): Hidden from default help; shown only via `--show-deprecated` (future enhancement).
 - Phase 3 (Next Major): Remove code, tests, help entry; retain ADR-021 as historical record + migration guidance.
 
-**Migration Path:**  
-1. Define capabilities in `mfe-spec.yaml` / DSL manifest (ADR-013).  
-2. Register MFEs via push registration (ADR-012) → orchestration service populates lightweight registry (ADR-010).  
-3. Use Phase A (full registry + per-MFE DSL fetch) for exploratory reasoning.  
-4. Use Phase C semantic search & Phase B deterministic querying for refined selection (ADR-011).  
+**Migration Path:**
+
+1. Define capabilities in `mfe-spec.yaml` / DSL manifest (ADR-013).
+2. Register MFEs via push registration (ADR-012) → orchestration service populates lightweight registry (ADR-010).
+3. Use Phase A (full registry + per-MFE DSL fetch) for exploratory reasoning.
+4. Use Phase C semantic search & Phase B deterministic querying for refined selection (ADR-011).
 5. Iterate boundaries informed by runtime telemetry (REQ-010 future) rather than static import graphs.
 
-**Non-Goals:**  
-- No partial modularization of existing static analyzer.  
+**Non-Goals:**
+
+- No partial modularization of existing static analyzer.
 - No attempt to auto-generate DSL manifests from heuristic output (separate future feature may implement explicit DSL derivation via `mfe-spec derive`).
 
 **Consequences:**  
