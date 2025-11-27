@@ -33,13 +33,13 @@ Requirements Update (Implemented)
 
 Location: `docs/*-requirements.md`
 
-| Document                             | Prefix            | Scope                             |
-| ------------------------------------ | ----------------- | --------------------------------- |
-| `orchestration-requirements.md`      | REQ-001 to 041    | Runtime orchestration system      |
-| `graphql-bff-requirements.md`        | REQ-BFF-001 to 008 | GraphQL BFF layer                 |
-| `dsl-contract-requirements.md`       | REQ-042 to 053    | DSL platform standards            |
-| `dsl-remote-requirements.md`         | REQ-REMOTE-001+   | DSL-first remote generation       |
-| `scaffolding-requirements.md`        | REQ-SCAFFOLD-001+ | Test templates and code scaffolds |
+| Document                        | Prefix             | Scope                             |
+| ------------------------------- | ------------------ | --------------------------------- |
+| `orchestration-requirements.md` | REQ-001 to 041     | Runtime orchestration system      |
+| `graphql-bff-requirements.md`   | REQ-BFF-001 to 008 | GraphQL BFF layer                 |
+| `dsl-contract-requirements.md`  | REQ-042 to 053     | DSL platform standards            |
+| `dsl-remote-requirements.md`    | REQ-REMOTE-001+    | DSL-first remote generation       |
+| `scaffolding-requirements.md`   | REQ-SCAFFOLD-001+  | Test templates and code scaffolds |
 
 **Format:**
 
@@ -55,6 +55,7 @@ Location: `docs/*-requirements.md`
 **Rationale:** [Why this requirement exists]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
@@ -382,12 +383,12 @@ grep -r "REQ-042" src/
 
 ## Traceability Matrix Example
 
-| Issue   | Requirements | ADRs             | Acceptance        | Epic                        | Status    |
-| ------- | ------------ | ---------------- | ----------------- | --------------------------- | --------- |
-| #123    | REQ-042      | ADR-036, ADR-037 | dsl-lifecycle.feature | DSL Contract Implementation | Complete  |
-| #124    | REQ-BFF-001  | ADR-046          | bff.feature       | GraphQL BFF Layer           | Complete  |
-| #125    | REQ-REMOTE-001 | ADR-047, ADR-048 | remote-mfe.feature | DSL-First Remote            | Complete  |
-| #126    | REQ-002      | ADR-016, ADR-017 | (new)             | Core Orchestration          | Planned   |
+| Issue | Requirements   | ADRs             | Acceptance            | Epic                        | Status   |
+| ----- | -------------- | ---------------- | --------------------- | --------------------------- | -------- |
+| #123  | REQ-042        | ADR-036, ADR-037 | dsl-lifecycle.feature | DSL Contract Implementation | Complete |
+| #124  | REQ-BFF-001    | ADR-046          | bff.feature           | GraphQL BFF Layer           | Complete |
+| #125  | REQ-REMOTE-001 | ADR-047, ADR-048 | remote-mfe.feature    | DSL-First Remote            | Complete |
+| #126  | REQ-002        | ADR-016, ADR-017 | (new)                 | Core Orchestration          | Planned  |
 
 ---
 
@@ -474,6 +475,7 @@ When requirements are superseded or no longer relevant:
 [Why this requirement exists]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
@@ -520,16 +522,20 @@ When requirements are superseded or no longer relevant:
 **Epic:** [Epic Name]
 
 ##### Description
+
 [Problem statement]
 
 ##### Requirements Mapping
+
 - **REQ-XXX:** [Requirement description]
 
 ##### Acceptance Criteria
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
 ##### Technical Notes
+
 [Implementation guidance]
 ```
 
@@ -538,7 +544,7 @@ When requirements are superseded or no longer relevant:
 ## References
 
 - **Backlog:** [docs/BACKLOG.md](./BACKLOG.md)
-- **Requirements Docs:** [docs/*-requirements.md](./orchestration-requirements.md)
+- **Requirements Docs:** [docs/\*-requirements.md](./orchestration-requirements.md)
 - **ADRs:** [docs/architecture-decisions.md](./architecture-decisions.md)
 - **Acceptance Criteria:** [docs/acceptance-criteria/](./acceptance-criteria/)
 - **Issue Templates:** [.github/ISSUE_TEMPLATE/](./.github/ISSUE_TEMPLATE/)
@@ -548,6 +554,6 @@ When requirements are superseded or no longer relevant:
 
 ## Revision History
 
-| Date       | Version | Changes                            | Author         |
-| ---------- | ------- | ---------------------------------- | -------------- |
-| 2025-11-27 | 1.0     | Initial traceability system        | Sean + Copilot |
+| Date       | Version | Changes                     | Author         |
+| ---------- | ------- | --------------------------- | -------------- |
+| 2025-11-27 | 1.0     | Initial traceability system | Sean + Copilot |

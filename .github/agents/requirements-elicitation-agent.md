@@ -132,7 +132,7 @@ When requirements session concludes:
 When requirements are finalized and ready for implementation:
 
 1. **Reference the backlog**: Check `docs/BACKLOG.md` for existing issue templates
-2. **Map requirements to issues**: Each REQ-* should have corresponding issue(s)
+2. **Map requirements to issues**: Each REQ-\* should have corresponding issue(s)
 3. **Use standard labels**: Apply labels from backlog label system
    - Priority: `priority: critical|high|medium|low`
    - Type: `type: feature|bug|enhancement`

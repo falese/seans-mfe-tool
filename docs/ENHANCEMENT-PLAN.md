@@ -151,6 +151,7 @@ Exit criteria:
 - Implemented: production deployment paths in `deploy` (compose and k8s) + CLI flags.
 
 2025-11-27 Updates:
+
 - Implemented DSL-first remote commands: `remote:init`, `remote:generate`, `remote:generate:capability`.
 - Validated manifest schema and generation; rspack exposes updated.
 - Added acceptance criteria: `docs/acceptance-criteria/remote-mfe.feature`, `docs/acceptance-criteria/bff.feature`.

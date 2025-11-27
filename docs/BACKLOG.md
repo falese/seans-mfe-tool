@@ -1,6 +1,6 @@
 # Product Backlog — seans-mfe-tool
 
-**Purpose:** This backlog consolidates all requirements from feature requirements documents into actionable GitHub Issues. Each item maps to specific REQ-* requirements, ADRs, and acceptance criteria for end-to-end traceability.
+**Purpose:** This backlog consolidates all requirements from feature requirements documents into actionable GitHub Issues. Each item maps to specific REQ-\* requirements, ADRs, and acceptance criteria for end-to-end traceability.
 
 **Last Updated:** 2025-11-27  
 **Source Documents:**
@@ -20,14 +20,14 @@
 
 Labels follow GitHub conventions for easy filtering and tracking:
 
-| Label Category    | Labels                                                                                   |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| **Type**          | `type: feature`, `type: bug`, `type: enhancement`, `type: refactor`, `type: docs`       |
-| **Priority**      | `priority: critical`, `priority: high`, `priority: medium`, `priority: low`              |
-| **Status**        | `status: planned`, `status: in-progress`, `status: blocked`, `status: needs-discussion` |
-| **Component**     | `component: cli`, `component: codegen`, `component: orchestration`, `component: bff`     |
-| **Requirement**   | `req: orchestration`, `req: dsl`, `req: bff`, `req: remote`, `req: scaffold`            |
-| **Implementation** | `impl: typescript`, `impl: testing`, `impl: security`, `impl: deployment`                |
+| Label Category     | Labels                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| **Type**           | `type: feature`, `type: bug`, `type: enhancement`, `type: refactor`, `type: docs`       |
+| **Priority**       | `priority: critical`, `priority: high`, `priority: medium`, `priority: low`             |
+| **Status**         | `status: planned`, `status: in-progress`, `status: blocked`, `status: needs-discussion` |
+| **Component**      | `component: cli`, `component: codegen`, `component: orchestration`, `component: bff`    |
+| **Requirement**    | `req: orchestration`, `req: dsl`, `req: bff`, `req: remote`, `req: scaffold`            |
+| **Implementation** | `impl: typescript`, `impl: testing`, `impl: security`, `impl: deployment`               |
 
 ### Issue Template
 
@@ -1053,31 +1053,31 @@ Include screenshots and code snippets for clarity.
 
 ## Traceability Matrix
 
-| Issue       | Requirements                     | ADRs                      | Acceptance              | Epic                          |
-| ----------- | -------------------------------- | ------------------------- | ----------------------- | ----------------------------- |
-| ISSUE-001   | REQ-002, REQ-003                 | ADR-016, ADR-017          | N/A (new)               | Core Orchestration System     |
-| ISSUE-002   | REQ-004                          | ADR-012                   | remote-mfe.feature      | Core Orchestration System     |
-| ISSUE-003   | REQ-011                          | ADR-011                   | N/A (new)               | Core Orchestration System     |
-| ISSUE-004   | REQ-010                          | ADR-010                   | N/A (new)               | Core Orchestration System     |
-| ISSUE-005   | REQ-002 (sub)                    | N/A                       | N/A (new)               | Core Orchestration System     |
-| ISSUE-006   | REQ-BFF-001 to REQ-BFF-004       | ADR-046                   | bff.feature             | GraphQL BFF Layer             |
-| ISSUE-007   | REQ-BFF-002                      | ADR-046                   | bff.feature             | GraphQL BFF Layer             |
-| ISSUE-008   | REQ-042, 043, 044, 045           | ADR-036, 037, 038         | N/A (new)               | DSL Contract Implementation   |
-| ISSUE-009   | REQ-046                          | ADR-039                   | N/A (new)               | DSL Contract Implementation   |
-| ISSUE-010   | REQ-047                          | ADR-040                   | N/A (new)               | DSL Contract Implementation   |
-| ISSUE-011   | REQ-048 (deferred)               | ADR-041 (pending)         | N/A (future)            | DSL Contract Implementation   |
-| ISSUE-012   | REQ-REMOTE-001 to 009            | ADR-047, 048              | remote-mfe.feature      | DSL-First Remote Generation   |
-| ISSUE-013   | REQ-REMOTE-004                   | ADR-046, 047              | N/A (new)               | DSL-First Remote Generation   |
-| ISSUE-014   | REQ-SCAFFOLD-001, 002            | ADR-047                   | N/A (generated)         | Testing & Quality             |
-| ISSUE-015   | REQ-SCAFFOLD-003                 | ADR-047                   | N/A (generated)         | Testing & Quality             |
-| ISSUE-016   | REQ-SCAFFOLD-004                 | ADR-047                   | N/A (generated)         | Testing & Quality             |
-| ISSUE-017   | Enhancement Plan Phase 1         | TBD                       | N/A (new)               | Production Readiness          |
-| ISSUE-018   | Enhancement Plan Phase 1         | TBD                       | N/A (new)               | Production Readiness          |
-| ISSUE-019   | Enhancement Plan Phase 1         | TBD                       | N/A (new)               | Production Readiness          |
-| ISSUE-020   | Enhancement Plan Phase 3         | TBD                       | N/A (new)               | Production Readiness          |
-| ISSUE-021   | Enhancement Plan Phase 4         | TBD                       | N/A (new)               | Developer Experience          |
-| ISSUE-022   | Enhancement Plan Phase 4         | ADR-048                   | N/A (new)               | Developer Experience          |
-| ISSUE-023   | Enhancement Plan Session 6       | N/A                       | N/A (docs)              | Developer Experience          |
+| Issue     | Requirements               | ADRs              | Acceptance         | Epic                        |
+| --------- | -------------------------- | ----------------- | ------------------ | --------------------------- |
+| ISSUE-001 | REQ-002, REQ-003           | ADR-016, ADR-017  | N/A (new)          | Core Orchestration System   |
+| ISSUE-002 | REQ-004                    | ADR-012           | remote-mfe.feature | Core Orchestration System   |
+| ISSUE-003 | REQ-011                    | ADR-011           | N/A (new)          | Core Orchestration System   |
+| ISSUE-004 | REQ-010                    | ADR-010           | N/A (new)          | Core Orchestration System   |
+| ISSUE-005 | REQ-002 (sub)              | N/A               | N/A (new)          | Core Orchestration System   |
+| ISSUE-006 | REQ-BFF-001 to REQ-BFF-004 | ADR-046           | bff.feature        | GraphQL BFF Layer           |
+| ISSUE-007 | REQ-BFF-002                | ADR-046           | bff.feature        | GraphQL BFF Layer           |
+| ISSUE-008 | REQ-042, 043, 044, 045     | ADR-036, 037, 038 | N/A (new)          | DSL Contract Implementation |
+| ISSUE-009 | REQ-046                    | ADR-039           | N/A (new)          | DSL Contract Implementation |
+| ISSUE-010 | REQ-047                    | ADR-040           | N/A (new)          | DSL Contract Implementation |
+| ISSUE-011 | REQ-048 (deferred)         | ADR-041 (pending) | N/A (future)       | DSL Contract Implementation |
+| ISSUE-012 | REQ-REMOTE-001 to 009      | ADR-047, 048      | remote-mfe.feature | DSL-First Remote Generation |
+| ISSUE-013 | REQ-REMOTE-004             | ADR-046, 047      | N/A (new)          | DSL-First Remote Generation |
+| ISSUE-014 | REQ-SCAFFOLD-001, 002      | ADR-047           | N/A (generated)    | Testing & Quality           |
+| ISSUE-015 | REQ-SCAFFOLD-003           | ADR-047           | N/A (generated)    | Testing & Quality           |
+| ISSUE-016 | REQ-SCAFFOLD-004           | ADR-047           | N/A (generated)    | Testing & Quality           |
+| ISSUE-017 | Enhancement Plan Phase 1   | TBD               | N/A (new)          | Production Readiness        |
+| ISSUE-018 | Enhancement Plan Phase 1   | TBD               | N/A (new)          | Production Readiness        |
+| ISSUE-019 | Enhancement Plan Phase 1   | TBD               | N/A (new)          | Production Readiness        |
+| ISSUE-020 | Enhancement Plan Phase 3   | TBD               | N/A (new)          | Production Readiness        |
+| ISSUE-021 | Enhancement Plan Phase 4   | TBD               | N/A (new)          | Developer Experience        |
+| ISSUE-022 | Enhancement Plan Phase 4   | ADR-048           | N/A (new)          | Developer Experience        |
+| ISSUE-023 | Enhancement Plan Session 6 | N/A               | N/A (docs)         | Developer Experience        |
 
 ---
 
@@ -1125,8 +1125,7 @@ When closing an issue:
 
 ## Revision History
 
-| Date       | Version | Changes                                               | Author         |
-| ---------- | ------- | ----------------------------------------------------- | -------------- |
-| 2025-11-27 | 1.0     | Initial backlog from all requirements documents       | Sean + Copilot |
-| 2025-11-27 | 1.1     | Added traceability matrix and workflow integration    | Sean + Copilot |
-
+| Date       | Version | Changes                                            | Author         |
+| ---------- | ------- | -------------------------------------------------- | -------------- |
+| 2025-11-27 | 1.0     | Initial backlog from all requirements documents    | Sean + Copilot |
+| 2025-11-27 | 1.1     | Added traceability matrix and workflow integration | Sean + Copilot |
