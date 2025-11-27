@@ -1,24 +1,142 @@
 /**
  * BFF Commands - GraphQL Mesh CLI Integration
  * Following ADR-046: GraphQL Mesh with DSL-embedded configuration
+ * Following ADR-048: Incremental TypeScript migration
  * Implements REQ-BFF-001 through REQ-BFF-008
  */
 
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const yaml = require('js-yaml');
-const { execSync, spawn } = require('child_process');
-const { processTemplates } = require('../utils/templateProcessor');
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import chalk = require('chalk');
+import * as yaml from 'js-yaml';
+import { execSync, spawn, ChildProcess } from 'child_process';
+import { processTemplates } from '../utils/templateProcessor';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/** OpenAPI source handler configuration */
+interface OpenAPIHandler {
+  source: string;
+  operationHeaders?: Record<string, string>;
+}
+
+/** Mesh source configuration */
+interface MeshSource {
+  name: string;
+  handler: {
+    openapi: OpenAPIHandler;
+  };
+  transforms?: MeshTransform[];
+}
+
+/** Mesh transform configuration */
+interface MeshTransform {
+  prefix?: { value: string; includeRootOperations?: boolean };
+  rename?: Record<string, string>;
+  filterSchema?: { filters: string[] };
+  encapsulate?: { applyTo: { query: boolean; mutation: boolean } };
+  namingConvention?: { typeNames: string; fieldNames: string };
+  [key: string]: unknown;
+}
+
+/** Mesh plugin configuration */
+interface MeshPlugin {
+  responseCache?: { ttl: number };
+  rateLimit?: { config: Array<{ type: string; field: string; max: number; window: string }> };
+  prometheus?: Record<string, unknown>;
+  depthLimit?: { maxDepth: number };
+  csrf?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** Mesh serve configuration */
+interface MeshServe {
+  endpoint: string;
+  playground: boolean;
+}
+
+/** DSL data section - maps to Mesh configuration */
+interface DSLDataSection {
+  sources: MeshSource[];
+  transforms?: MeshTransform[];
+  plugins?: MeshPlugin[];
+  serve?: MeshServe;
+}
+
+/** MFE Manifest structure */
+interface MFEManifest {
+  name: string;
+  version?: string;
+  type?: string;
+  data?: DSLDataSection;
+  [key: string]: unknown;
+}
+
+/** Extracted Mesh configuration */
+interface MeshConfig {
+  sources: MeshSource[];
+  transforms?: MeshTransform[];
+  plugins?: MeshPlugin[];
+  serve: MeshServe;
+}
+
+/** Result of extractMeshConfig */
+interface ExtractMeshConfigResult {
+  meshConfig: MeshConfig;
+  manifest: MFEManifest;
+  manifestPath: string;
+}
+
+/** BFF command options */
+interface BFFCommandOptions {
+  manifest?: string;
+  cwd?: string;
+  port?: number;
+  specs?: string[];
+  static?: boolean;
+  version?: string;
+}
+
+/** Validation result */
+interface ValidationResult {
+  valid: boolean;
+  meshConfig: MeshConfig;
+  manifest: MFEManifest;
+}
+
+/** Template source for bff:init */
+interface TemplateSource {
+  name: string;
+  spec: string;
+}
+
+/** Template variables for EJS processing */
+interface TemplateVars {
+  name: string;
+  version: string;
+  port: number;
+  type: string;
+  includeStatic: boolean;
+  sources: TemplateSource[];
+  transforms: MeshTransform[];
+  plugins: MeshPlugin[];
+  playground: boolean;
+}
+
+// ============================================================================
+// Core Functions
+// ============================================================================
 
 /**
  * Extract Mesh configuration from DSL data: section
  * REQ-BFF-001: DSL Data Section as Mesh Configuration
  * 
- * @param {string} manifestPath - Path to mfe-manifest.yaml
- * @returns {object} Extracted Mesh configuration
+ * @param manifestPath - Path to mfe-manifest.yaml
+ * @returns Extracted Mesh configuration
  */
-async function extractMeshConfig(manifestPath) {
+async function extractMeshConfig(manifestPath: string): Promise<ExtractMeshConfigResult> {
   const absolutePath = path.resolve(process.cwd(), manifestPath);
   
   if (!await fs.pathExists(absolutePath)) {
@@ -26,7 +144,7 @@ async function extractMeshConfig(manifestPath) {
   }
 
   const manifestContent = await fs.readFile(absolutePath, 'utf8');
-  const manifest = yaml.load(manifestContent);
+  const manifest = yaml.load(manifestContent) as MFEManifest;
 
   if (!manifest.data) {
     throw new Error('No "data:" section found in manifest. BFF requires data configuration.');
@@ -37,7 +155,7 @@ async function extractMeshConfig(manifestPath) {
   }
 
   // Extract Mesh-compatible config from data: section
-  const meshConfig = {
+  const meshConfig: MeshConfig = {
     sources: manifest.data.sources,
     ...(manifest.data.transforms && { transforms: manifest.data.transforms }),
     ...(manifest.data.plugins && { plugins: manifest.data.plugins }),
@@ -55,10 +173,11 @@ async function extractMeshConfig(manifestPath) {
  * Write Mesh configuration to .meshrc.yaml
  * REQ-BFF-001: CLI extracts data: section and writes to .meshrc.yaml
  * 
- * @param {object} meshConfig - Mesh configuration object
- * @param {string} targetDir - Directory to write .meshrc.yaml
+ * @param meshConfig - Mesh configuration object
+ * @param targetDir - Directory to write .meshrc.yaml
+ * @returns Path to written file
  */
-async function writeMeshConfig(meshConfig, targetDir) {
+async function writeMeshConfig(meshConfig: MeshConfig, targetDir: string): Promise<string> {
   const meshrcPath = path.join(targetDir, '.meshrc.yaml');
   const meshrcContent = yaml.dump(meshConfig, { 
     indent: 2,
@@ -76,9 +195,10 @@ async function writeMeshConfig(meshConfig, targetDir) {
  * Validate Mesh configuration syntax
  * REQ-BFF-005: mfe bff:validate - Validates Mesh config syntax
  * 
- * @param {object} options - Command options
+ * @param options - Command options
+ * @returns Validation result
  */
-async function bffValidateCommand(options = {}) {
+async function bffValidateCommand(options: BFFCommandOptions = {}): Promise<ValidationResult> {
   try {
     console.log(chalk.blue('Validating BFF configuration...'));
 
@@ -142,7 +262,7 @@ async function bffValidateCommand(options = {}) {
 
   } catch (error) {
     console.error(chalk.red('\n✗ Validation failed:'));
-    console.error(chalk.red(error.message));
+    console.error(chalk.red((error as Error).message));
     throw error;
   }
 }
@@ -151,9 +271,9 @@ async function bffValidateCommand(options = {}) {
  * Build BFF artifacts
  * REQ-BFF-005: mfe bff:build - Extracts DSL → .meshrc.yaml → mesh build
  * 
- * @param {object} options - Command options
+ * @param options - Command options
  */
-async function bffBuildCommand(options = {}) {
+async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
   try {
     console.log(chalk.blue('Building BFF...'));
 
@@ -179,7 +299,7 @@ async function bffBuildCommand(options = {}) {
       });
     } catch (meshError) {
       // Check if it's a missing dependency issue
-      if (meshError.message.includes('mesh') || meshError.status === 127) {
+      if ((meshError as Error).message.includes('mesh') || (meshError as NodeJS.ErrnoException).code === 'ENOENT') {
         console.log(chalk.yellow('\nGraphQL Mesh CLI not found. Installing...'));
         execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', {
           cwd: targetDir,
@@ -202,7 +322,7 @@ async function bffBuildCommand(options = {}) {
 
   } catch (error) {
     console.error(chalk.red('\n✗ BFF build failed:'));
-    console.error(chalk.red(error.message));
+    console.error(chalk.red((error as Error).message));
     throw error;
   }
 }
@@ -211,9 +331,9 @@ async function bffBuildCommand(options = {}) {
  * Start BFF development server
  * REQ-BFF-005: mfe bff:dev - Development mode with hot reload
  * 
- * @param {object} options - Command options
+ * @param options - Command options
  */
-async function bffDevCommand(options = {}) {
+async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
   try {
     console.log(chalk.blue('Starting BFF development server...'));
 
@@ -227,17 +347,17 @@ async function bffDevCommand(options = {}) {
     console.log(chalk.blue('\nStarting mesh dev...'));
     
     // Use spawn for interactive process
-    const meshDev = spawn('npx', ['mesh', 'dev'], {
+    const meshDev: ChildProcess = spawn('npx', ['mesh', 'dev'], {
       cwd: targetDir,
       stdio: 'inherit',
       shell: true
     });
 
-    meshDev.on('error', (error) => {
+    meshDev.on('error', (error: Error) => {
       console.error(chalk.red('Failed to start mesh dev:'), error.message);
     });
 
-    meshDev.on('close', (code) => {
+    meshDev.on('close', (code: number | null) => {
       if (code !== 0) {
         console.log(chalk.yellow(`mesh dev exited with code ${code}`));
       }
@@ -250,7 +370,7 @@ async function bffDevCommand(options = {}) {
 
   } catch (error) {
     console.error(chalk.red('\n✗ BFF dev failed:'));
-    console.error(chalk.red(error.message));
+    console.error(chalk.red((error as Error).message));
     throw error;
   }
 }
@@ -259,10 +379,10 @@ async function bffDevCommand(options = {}) {
  * Initialize a new BFF project
  * REQ-BFF-005: mfe bff:init - Standalone BFF project or add to existing
  * 
- * @param {string} name - Project name
- * @param {object} options - Command options
+ * @param name - Project name
+ * @param options - Command options
  */
-async function bffInitCommand(name, options = {}) {
+async function bffInitCommand(name: string | undefined, options: BFFCommandOptions = {}): Promise<void> {
   try {
     const isAddToExisting = !name;
     const targetDir = isAddToExisting 
@@ -299,14 +419,14 @@ async function bffInitCommand(name, options = {}) {
     const includeStatic = options.static !== false && !isAddToExisting;
 
     // Build sources array from specs
-    const sources = specs.length > 0 
-      ? specs.map((spec, index) => ({
+    const sources: TemplateSource[] = specs.length > 0 
+      ? specs.map((spec) => ({
           name: path.basename(spec, path.extname(spec)).replace(/[^a-zA-Z0-9]/g, '') + 'API',
           spec: spec
         }))
       : [{ name: 'DefaultAPI', spec: './specs/api.yaml' }];
 
-    const templateVars = {
+    const templateVars: TemplateVars = {
       name: name || path.basename(targetDir),
       version: options.version || '1.0.0',
       port,
@@ -391,15 +511,16 @@ async function bffInitCommand(name, options = {}) {
 
   } catch (error) {
     console.error(chalk.red('\n✗ BFF init failed:'));
-    console.error(chalk.red(error.message));
+    console.error(chalk.red((error as Error).message));
     throw error;
   }
 }
 
 /**
  * Add Mesh dependencies to existing package.json
+ * @param targetDir - Directory containing package.json
  */
-async function addMeshDependencies(targetDir) {
+async function addMeshDependencies(targetDir: string): Promise<void> {
   const pkgPath = path.join(targetDir, 'package.json');
   
   if (!await fs.pathExists(pkgPath)) {
@@ -407,7 +528,13 @@ async function addMeshDependencies(targetDir) {
     return;
   }
 
-  const pkg = await fs.readJson(pkgPath);
+  interface PackageJson {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    scripts?: Record<string, string>;
+  }
+
+  const pkg: PackageJson = await fs.readJson(pkgPath);
   
   // Add mesh dependencies
   pkg.dependencies = pkg.dependencies || {};
@@ -434,7 +561,11 @@ async function addMeshDependencies(targetDir) {
   console.log(chalk.green('✓ Updated package.json with Mesh dependencies'));
 }
 
-module.exports = {
+// ============================================================================
+// Exports
+// ============================================================================
+
+export {
   bffBuildCommand,
   bffDevCommand,
   bffValidateCommand,
@@ -442,4 +573,18 @@ module.exports = {
   extractMeshConfig,
   writeMeshConfig,
   addMeshDependencies
+};
+
+// Also export types for consumers
+export type {
+  MeshConfig,
+  MeshSource,
+  MeshTransform,
+  MeshPlugin,
+  MeshServe,
+  MFEManifest,
+  DSLDataSection,
+  BFFCommandOptions,
+  ValidationResult,
+  ExtractMeshConfigResult
 };

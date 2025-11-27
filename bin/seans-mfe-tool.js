@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Enable TypeScript imports via ts-node (ADR-048: Incremental TypeScript migration)
+require('ts-node/register/transpile-only');
+
 const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
 const { createRemoteCommand } = require('../src/commands/create-remote');

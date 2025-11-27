@@ -4,6 +4,7 @@
 **Status:** Canonical Reference  
 **Updated:** 2025-11-27  
 **Related Docs:**
+
 - [DSL Contract Requirements](./dsl-contract-requirements.md) - Runtime semantics
 - [DSL Remote Requirements](./dsl-remote-requirements.md) - Code generation workflow
 - [GraphQL BFF Requirements](./graphql-bff-requirements.md) - Data layer generation
@@ -28,29 +29,29 @@ The DSL is **implementation-agnostic**. The CLI reads DSL and generates implemen
 
 ```yaml
 # Required sections
-name: string              # MFE identifier
-version: string           # Semantic version
-type: enum                # MFE type
-language: enum            # Implementation language
+name: string # MFE identifier
+version: string # Semantic version
+type: enum # MFE type
+language: enum # Implementation language
 
 # Optional identity
-description: string       # Human-readable description
-owner: string             # Team/owner identifier
-tags: string[]            # Searchable tags
-category: string          # Categorization
+description: string # Human-readable description
+owner: string # Team/owner identifier
+tags: string[] # Searchable tags
+category: string # Categorization
 
 # Required for runtime
-endpoint: url             # Base URL
-remoteEntry: url          # Module Federation entry
-discovery: url            # DSL manifest endpoint
+endpoint: url # Base URL
+remoteEntry: url # Module Federation entry
+discovery: url # DSL manifest endpoint
 
 # Core sections
-capabilities: Capability[]    # What this MFE provides
-data: DataConfig             # GraphQL/REST data layer
-dependencies: Dependencies   # Shared deps and MFE deps
+capabilities: Capability[] # What this MFE provides
+data: DataConfig # GraphQL/REST data layer
+dependencies: Dependencies # Shared deps and MFE deps
 
 # Future sections (deferred)
-authorization: AuthConfig    # Access control rules
+authorization: AuthConfig # Access control rules
 ```
 
 ---
@@ -59,18 +60,19 @@ authorization: AuthConfig    # Access control rules
 
 ### Core Identity (Required)
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | `string` | ✅ | Unique MFE identifier (kebab-case) |
-| `version` | `string` | ✅ | Semantic version (e.g., `1.0.0`) |
-| `type` | `enum` | ✅ | MFE type: `tool`, `agent`, `feature`, `service`, `remote`, `shell`, `bff` |
-| `language` | `enum` | ✅ | V1: `javascript`, `typescript` only |
-| `description` | `string` | ❌ | Human-readable description |
-| `owner` | `string` | ❌ | Team/owner identifier for attribution |
-| `tags` | `string[]` | ❌ | Custom tags for search/filtering |
-| `category` | `string` | ❌ | Categorization for grouping |
+| Field         | Type       | Required | Description                                                               |
+| ------------- | ---------- | -------- | ------------------------------------------------------------------------- |
+| `name`        | `string`   | ✅       | Unique MFE identifier (kebab-case)                                        |
+| `version`     | `string`   | ✅       | Semantic version (e.g., `1.0.0`)                                          |
+| `type`        | `enum`     | ✅       | MFE type: `tool`, `agent`, `feature`, `service`, `remote`, `shell`, `bff` |
+| `language`    | `enum`     | ✅       | V1: `javascript`, `typescript` only                                       |
+| `description` | `string`   | ❌       | Human-readable description                                                |
+| `owner`       | `string`   | ❌       | Team/owner identifier for attribution                                     |
+| `tags`        | `string[]` | ❌       | Custom tags for search/filtering                                          |
+| `category`    | `string`   | ❌       | Categorization for grouping                                               |
 
 **Example:**
+
 ```yaml
 name: user-dashboard
 version: 1.0.0
@@ -86,13 +88,14 @@ category: user-experience
 
 ### Endpoints (Required for Runtime)
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `endpoint` | `url` | ✅ | Base URL for MFE |
-| `remoteEntry` | `url` | ✅ | Module Federation remote entry |
-| `discovery` | `url` | ✅ | DSL manifest endpoint (`.well-known/mfe-manifest.yaml`) |
+| Field         | Type  | Required | Description                                             |
+| ------------- | ----- | -------- | ------------------------------------------------------- |
+| `endpoint`    | `url` | ✅       | Base URL for MFE                                        |
+| `remoteEntry` | `url` | ✅       | Module Federation remote entry                          |
+| `discovery`   | `url` | ✅       | DSL manifest endpoint (`.well-known/mfe-manifest.yaml`) |
 
 **Example:**
+
 ```yaml
 endpoint: http://localhost:3001
 remoteEntry: http://localhost:3001/remoteEntry.js
@@ -109,46 +112,47 @@ Capabilities describe **what the MFE provides** to consumers. Each capability be
 
 #### Capability Types
 
-| Type | Description |
-|------|-------------|
+| Type       | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
 | `platform` | Standard capabilities all MFEs must implement (load, render, health, etc.) |
-| `domain` | Custom capabilities specific to this MFE's business logic |
+| `domain`   | Custom capabilities specific to this MFE's business logic                  |
 
 #### Capability Schema
 
 ```yaml
 capabilities:
-  - name:                    # Capability name (PascalCase)
-      type: platform|domain  # Capability type
-      description: string    # Human-readable description
-      handler: string        # Handler function name
-      inputs: Input[]        # Input parameters
-      outputs: Output[]      # Return values
-      lifecycle: Lifecycle   # Hook definitions
-      authorization: string  # Auth expression (deferred)
+  - name: # Capability name (PascalCase)
+      type: platform|domain # Capability type
+      description: string # Human-readable description
+      handler: string # Handler function name
+      inputs: Input[] # Input parameters
+      outputs: Output[] # Return values
+      lifecycle: Lifecycle # Hook definitions
+      authorization: string # Auth expression (deferred)
 ```
 
 #### Platform Capabilities (Required)
 
 All MFEs must implement these platform capabilities:
 
-| Capability | Purpose |
-|------------|---------|
-| `load` | Initialize MFE runtime |
-| `render` | Display UI or return data |
-| `refresh` | Reload/update state |
+| Capability        | Purpose                      |
+| ----------------- | ---------------------------- |
+| `load`            | Initialize MFE runtime       |
+| `render`          | Display UI or return data    |
+| `refresh`         | Reload/update state          |
 | `authorizeAccess` | Validate JWT and permissions |
-| `health` | Report operational status |
-| `describe` | Return DSL manifest |
-| `schema` | GraphQL schema introspection |
-| `query` | Execute GraphQL queries |
-| `emit` | Telemetry and event emission |
+| `health`          | Report operational status    |
+| `describe`        | Return DSL manifest          |
+| `schema`          | GraphQL schema introspection |
+| `query`           | Execute GraphQL queries      |
+| `emit`            | Telemetry and event emission |
 
 #### Domain Capabilities (Custom)
 
 Domain capabilities are specific to your MFE. They become exposed functions in `remote.tsx`.
 
 **Example:**
+
 ```yaml
 capabilities:
   # Domain capabilities - each becomes an exposed function
@@ -159,26 +163,21 @@ capabilities:
   - SettingsPanel:
       type: domain
       description: User settings and preferences
-      
+
   - NotificationCenter:
       type: domain
       description: View and manage notifications
 ```
 
 **Generated Output:**
+
 ```typescript
 // remote.tsx - Generated from capabilities
-export const UserProfile = React.lazy(() => 
-  import('./features/UserProfile')
-);
+export const UserProfile = React.lazy(() => import('./features/UserProfile'));
 
-export const SettingsPanel = React.lazy(() => 
-  import('./features/SettingsPanel')
-);
+export const SettingsPanel = React.lazy(() => import('./features/SettingsPanel'));
 
-export const NotificationCenter = React.lazy(() => 
-  import('./features/NotificationCenter')
-);
+export const NotificationCenter = React.lazy(() => import('./features/NotificationCenter'));
 ```
 
 ---
@@ -189,12 +188,12 @@ Lifecycle hooks define behavior at different phases of capability execution.
 
 #### Phases
 
-| Phase | Purpose | Failure Behavior |
-|-------|---------|------------------|
-| `before` | Pre-execution validation, setup | Silent (logged, continues) |
-| `main` | Core capability logic | **Propagates** (capability fails) |
-| `after` | Post-execution cleanup, notifications | Silent (logged, continues) |
-| `error` | Error handling, recovery | Silent (logged, continues) |
+| Phase    | Purpose                               | Failure Behavior                  |
+| -------- | ------------------------------------- | --------------------------------- |
+| `before` | Pre-execution validation, setup       | Silent (logged, continues)        |
+| `main`   | Core capability logic                 | **Propagates** (capability fails) |
+| `after`  | Post-execution cleanup, notifications | Silent (logged, continues)        |
+| `error`  | Error handling, recovery              | Silent (logged, continues)        |
 
 **Note:** Only `main` phase failures propagate to the caller. All other phases fail silently with telemetry.
 
@@ -204,10 +203,10 @@ Lifecycle hooks define behavior at different phases of capability execution.
 lifecycle:
   before:
     - hookName:
-        handler: string | string[]  # Single or multiple handlers
+        handler: string | string[] # Single or multiple handlers
         description: string
-        mandatory: boolean          # Execute even if previous hooks failed
-        contained: boolean          # Wrap in try-catch
+        mandatory: boolean # Execute even if previous hooks failed
+        contained: boolean # Wrap in try-catch
   main:
     - hookName:
         handler: string | string[]
@@ -237,6 +236,7 @@ handler: [validateFile, checkSize, scanForMalware]
 ```
 
 **Execution Semantics:**
+
 - `main` phase: AND semantics - first failure stops execution
 - Other phases: OR-like - all run, failures logged but don't stop
 
@@ -250,11 +250,11 @@ The `data:` section defines the GraphQL BFF layer. It IS the GraphQL Mesh config
 
 ```yaml
 data:
-  sources: Source[]           # OpenAPI specs to expose as GraphQL
-  transforms: Transform[]     # Schema shaping (optional)
-  plugins: Plugin[]           # Production concerns (optional)
-  serve: ServeConfig         # Server configuration
-  generatedFrom: Lineage[]   # Data lineage tracking
+  sources: Source[] # OpenAPI specs to expose as GraphQL
+  transforms: Transform[] # Schema shaping (optional)
+  plugins: Plugin[] # Production concerns (optional)
+  serve: ServeConfig # Server configuration
+  generatedFrom: Lineage[] # Data lineage tracking
 ```
 
 #### Sources
@@ -269,9 +269,9 @@ data:
         openapi:
           source: ./specs/user-api.yaml
           operationHeaders:
-            Authorization: "Bearer {context.jwt}"
-            X-Request-ID: "{context.requestId}"
-    
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+
     - name: OrderAPI
       handler:
         openapi:
@@ -290,12 +290,12 @@ data:
         filters:
           - Query.!internal*
           - Mutation.!admin*
-    
+
     # Namespace to avoid conflicts
     - prefix:
         value: User_
         includeRootOperations: true
-    
+
     # Fix naming
     - rename:
         renames:
@@ -313,7 +313,7 @@ data:
     - responseCache:
         ttl: 60000
         invalidateViaMutation: true
-    
+
     - rateLimit:
         config:
           - type: Query
@@ -342,14 +342,14 @@ data:
 
 ```yaml
 dependencies:
-  runtime:                    # npm packages for Module Federation shared
+  runtime: # npm packages for Module Federation shared
     react: ^18.0.0
     react-dom: ^18.0.0
-  
-  design-system:              # Design system dependencies
+
+  design-system: # Design system dependencies
     '@mui/material': ^5.14.0
-  
-  mfes:                       # Other MFE dependencies (future)
+
+  mfes: # Other MFE dependencies (future)
     user-service: '>=1.0.0'
 ```
 
@@ -365,6 +365,7 @@ dependencies:
 ```
 
 **Generated:**
+
 ```javascript
 // rspack.config.js
 shared: {
@@ -381,15 +382,15 @@ DSL uses a unified type system that maps to GraphQL and TypeScript/Python.
 
 #### Primitive Types
 
-| DSL Type | GraphQL | TypeScript | Python |
-|----------|---------|------------|--------|
-| `string` | `String` | `string \| null` | `Optional[str]` |
-| `string!` | `String!` | `string` | `str` |
-| `number` | `Float` | `number \| null` | `Optional[float]` |
-| `number!` | `Float!` | `number` | `float` |
-| `boolean` | `Boolean` | `boolean \| null` | `Optional[bool]` |
-| `boolean!` | `Boolean!` | `boolean` | `bool` |
-| `object` | `JSON` | `Record<string, unknown>` | `Dict[str, Any]` |
+| DSL Type   | GraphQL    | TypeScript                | Python            |
+| ---------- | ---------- | ------------------------- | ----------------- |
+| `string`   | `String`   | `string \| null`          | `Optional[str]`   |
+| `string!`  | `String!`  | `string`                  | `str`             |
+| `number`   | `Float`    | `number \| null`          | `Optional[float]` |
+| `number!`  | `Float!`   | `number`                  | `float`           |
+| `boolean`  | `Boolean`  | `boolean \| null`         | `Optional[bool]`  |
+| `boolean!` | `Boolean!` | `boolean`                 | `bool`            |
+| `object`   | `JSON`     | `Record<string, unknown>` | `Dict[str, Any]`  |
 
 #### Nullability
 
@@ -398,22 +399,22 @@ DSL uses a unified type system that maps to GraphQL and TypeScript/Python.
 ```yaml
 inputs:
   - name: userId
-    type: string!    # Required (non-null)
+    type: string! # Required (non-null)
   - name: filter
-    type: object     # Optional (nullable)
+    type: object # Optional (nullable)
 ```
 
 #### Specialized Types
 
-| Type | Extends | Purpose |
-|------|---------|---------|
-| `jwt` | `string` | JWT token with validation |
-| `datetime` | `string` | ISO 8601 datetime |
-| `email` | `string` | RFC 5322 email format |
-| `url` | `string` | Valid URL with protocol |
-| `id` | `string` | Non-empty identifier |
-| `file` | `object` | File reference with format/size |
-| `element` | `object` | DOM element reference |
+| Type       | Extends  | Purpose                         |
+| ---------- | -------- | ------------------------------- |
+| `jwt`      | `string` | JWT token with validation       |
+| `datetime` | `string` | ISO 8601 datetime               |
+| `email`    | `string` | RFC 5322 email format           |
+| `url`      | `string` | Valid URL with protocol         |
+| `id`       | `string` | Non-empty identifier            |
+| `file`     | `object` | File reference with format/size |
+| `element`  | `object` | DOM element reference           |
 
 #### Enums
 
@@ -430,7 +431,7 @@ inputs:
 ```yaml
 outputs:
   - name: users
-    type: array<User!>!  # Non-null array of non-null Users
+    type: array<User!>! # Non-null array of non-null Users
 ```
 
 ---
@@ -456,13 +457,13 @@ mfe-manifest.yaml (DSL)
 
 ### CLI Commands
 
-| Command | Input | Output |
-|---------|-------|--------|
-| `mfe remote:init <name>` | name | DSL scaffold |
-| `mfe remote:generate` | DSL | All implementation files |
-| `mfe remote:validate` | DSL | Validation result |
-| `mfe bff:build` | DSL `data:` section | `.meshrc.yaml`, `.mesh/` |
-| `mfe bff:dev` | DSL `data:` section | Running dev server |
+| Command                  | Input               | Output                   |
+| ------------------------ | ------------------- | ------------------------ |
+| `mfe remote:init <name>` | name                | DSL scaffold             |
+| `mfe remote:generate`    | DSL                 | All implementation files |
+| `mfe remote:validate`    | DSL                 | Validation result        |
+| `mfe bff:build`          | DSL `data:` section | `.meshrc.yaml`, `.mesh/` |
+| `mfe bff:dev`            | DSL `data:` section | Running dev server       |
 
 ---
 
@@ -472,10 +473,10 @@ mfe-manifest.yaml (DSL)
 
 ```yaml
 # These fields are REQUIRED
-name: string        # Must be kebab-case
-version: string     # Must be semver
-type: enum          # Must be valid type
-language: enum      # Must be javascript|typescript (V1)
+name: string # Must be kebab-case
+version: string # Must be semver
+type: enum # Must be valid type
+language: enum # Must be javascript|typescript (V1)
 ```
 
 ### Capability Validation
@@ -497,11 +498,13 @@ language: enum      # Must be javascript|typescript (V1)
 ### From CLI Options to DSL
 
 **Before (deprecated):**
+
 ```bash
 mfe remote my-app --port 3001 --mui-version 5.14.0
 ```
 
 **After:**
+
 ```bash
 mfe remote:init my-app
 # Edit mfe-manifest.yaml
@@ -510,13 +513,13 @@ mfe remote:generate
 
 ### DSL Changes
 
-| Old | New | Notes |
-|-----|-----|-------|
-| `--port` flag | Not in DSL | Use `.env` or CLI flag |
-| `--remotes` flag | Not applicable | Remotes don't consume other remotes |
-| `lifecycle.custom:` | Removed | Use standard phases with custom hooks |
-| `lifecycle.loading:` | Removed | Use handlers in `main` phase |
-| `handler: wrapped` | `handler: contained` | Renamed for clarity |
+| Old                  | New                  | Notes                                 |
+| -------------------- | -------------------- | ------------------------------------- |
+| `--port` flag        | Not in DSL           | Use `.env` or CLI flag                |
+| `--remotes` flag     | Not applicable       | Remotes don't consume other remotes   |
+| `lifecycle.custom:`  | Removed              | Use standard phases with custom hooks |
+| `lifecycle.loading:` | Removed              | Use handlers in `main` phase          |
+| `handler: wrapped`   | `handler: contained` | Renamed for clarity                   |
 
 ---
 
@@ -567,11 +570,11 @@ data:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 3.0 | 2025-11-26 | Initial DSL contract (Session 6) |
-| 3.1 | 2025-11-27 | Added `data:` section as Mesh config (ADR-046) |
-| 3.2 | 2025-11-27 | Added `capabilities:` for code generation, unified schema reference |
+| Version | Date       | Changes                                                             |
+| ------- | ---------- | ------------------------------------------------------------------- |
+| 3.0     | 2025-11-26 | Initial DSL contract (Session 6)                                    |
+| 3.1     | 2025-11-27 | Added `data:` section as Mesh config (ADR-046)                      |
+| 3.2     | 2025-11-27 | Added `capabilities:` for code generation, unified schema reference |
 
 ---
 

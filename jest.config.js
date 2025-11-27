@@ -6,20 +6,27 @@ module.exports = {
   // Test environment
   testEnvironment: 'node',
   
-  // Test patterns
+  // Test patterns - support both JS and TS
   testMatch: [
-    '**/src/**/__tests__/**/*.test.js',
-    '**/src/**/*.test.js'
+    '**/src/**/__tests__/**/*.test.[jt]s',
+    '**/src/**/*.test.[jt]s'
   ],
   
-  // Transform configuration
+  // Transform configuration - ts-jest for TS, babel-jest for JS
   transform: {
-    '^.+\\.js$': ['babel-jest', {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true
+    }],
+    '^.+\\.jsx?$': ['babel-jest', {
       presets: [
         ['@babel/preset-env', { targets: { node: 'current' } }]
       ]
     }]
   },
+
+  // File extensions to consider
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 
   // Test timeout (increased for deployment tests)
   testTimeout: 30000,
@@ -32,20 +39,21 @@ module.exports = {
   // Module paths
   moduleDirectories: ['node_modules', 'src'],
 
-  // Coverage configuration
-  collectCoverage: true,
+  // Coverage configuration (only collect when explicitly requested)
+  collectCoverage: false,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
-    'src/commands/*.js',
-    'src/utils/**/*.js',
-    'src/codegen/generators/**/*.js',
-    'src/codegen/RouteGenerator/**/*.js',
-    'src/codegen/ControllerGenerator/**/*.js',
-    'src/codegen/DatabaseGenerator/**/*.js',
-    '!src/**/index.js',
+    'src/commands/*.{js,ts}',
+    'src/utils/**/*.{js,ts}',
+    'src/codegen/generators/**/*.{js,ts}',
+    'src/codegen/RouteGenerator/**/*.{js,ts}',
+    'src/codegen/ControllerGenerator/**/*.{js,ts}',
+    'src/codegen/DatabaseGenerator/**/*.{js,ts}',
+    'src/dsl/**/*.{js,ts}',
+    '!src/**/index.{js,ts}',
     '!src/**/__tests__/**',
-    '!src/**/*.test.js',
+    '!src/**/*.test.{js,ts}',
     '!src/**/fixtures/**'
   ],
   
@@ -142,6 +150,13 @@ module.exports = {
   fakeTimers: {
     enableGlobally: true
   },
+
+  // Ignore patterns - exclude example projects and dist
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/examples/'
+  ],
 
   // Test environment configuration
   testEnvironmentOptions: {

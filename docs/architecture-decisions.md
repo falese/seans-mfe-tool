@@ -319,14 +319,14 @@ module.exports = {
 
 **Migration Scope:**
 
-| Component | Language | Notes |
-|-----------|----------|-------|
-| `src/dsl/` (new) | TypeScript | Parser, validator, generators |
+| Component                        | Language   | Notes                            |
+| -------------------------------- | ---------- | -------------------------------- |
+| `src/dsl/` (new)                 | TypeScript | Parser, validator, generators    |
 | `src/commands/remote-*.ts` (new) | TypeScript | `remote:init`, `remote:generate` |
-| `src/codegen/BffGenerator/` | TypeScript | Convert 7 existing JS files |
-| `src/commands/create-*.js` | JavaScript | Convert when modified |
-| `src/utils/` | JavaScript | Convert when modified |
-| `bin/seans-mfe-tool.js` | JavaScript | Commander entry point stays JS |
+| `src/codegen/BffGenerator/`      | TypeScript | Convert 7 existing JS files      |
+| `src/commands/create-*.js`       | JavaScript | Convert when modified            |
+| `src/utils/`                     | JavaScript | Convert when modified            |
+| `bin/seans-mfe-tool.js`          | JavaScript | Commander entry point stays JS   |
 
 **TypeScript Configuration:**
 
@@ -454,7 +454,7 @@ data:
       handler:
         openapi:
           source: https://inventory.internal/swagger.json
-````
+```
 
 **JWT Authentication Forwarding:**
 
