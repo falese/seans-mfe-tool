@@ -6,6 +6,17 @@ const { spawn } = require('child_process');
 
 jest.mock('nodemon');
 jest.mock('child_process');
+jest.mock('../../BaseServer', () => {
+  const actual = jest.requireActual('../../BaseServer');
+  return {
+    ...actual,
+    BaseServer: class MockBaseServer extends actual.BaseServer {
+      setupProcessHandling() {
+        // Override to prevent BaseServer from setting up its own handlers
+      }
+    }
+  };
+});
 jest.mock('chalk', () => ({
   green: jest.fn((msg) => msg),
   blue: jest.fn((msg) => msg),
