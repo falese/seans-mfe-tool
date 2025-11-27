@@ -1,6 +1,17 @@
 # MFE DSL Platform Contract v3.0
 # This file defines the complete platform contract that ALL MFEs must conform to
 # regardless of implementation language (JavaScript, Python, Go, etc.)
+#
+# Session 6 Decisions Applied:
+# - DEC-016: Lifecycle hooks use `contained` (not `wrapped`), mandatory/contained flags
+# - DEC-017: Only 4 lifecycle phases: before, main, after, error (no custom phases)
+# - DEC-018: handler can be string OR array of strings
+# - DEC-019: Handler names are language-neutral, mapped by code generators
+# - DEC-020: Unified type system (nullable by default, `!` for required)
+# - DEC-021: Type metadata (owner, tags) for tooling and future access control
+# - DEC-022: V1 supports JavaScript/TypeScript only
+# - DEC-023: Data lifecycle aligns with capability lifecycle (no `loading` phase)
+# - DEC-024: generatedFrom tracks data lineage for dependency analysis
 
 # =============================================================================
 # CORE IDENTITY (Required)
@@ -306,19 +317,19 @@ capabilities:
         error:
           - emitErrorEvent:
               handler: emitError
-              description: Send error event via emit capability (mandatory, wrapped)
+              description: Send error event via emit capability (mandatory, contained)
               mandatory: true
-              wrapped: true
+              contained: true
           - emitFailureMetrics:
               handler: emitMetrics
-              description: Send failure metrics via emit capability (mandatory, wrapped)
+              description: Send failure metrics via emit capability (mandatory, contained)
               mandatory: true
-              wrapped: true
+              contained: true
           - cleanup:
               handler: formatGraphQLError
-              description: Format errors per GraphQL spec (mandatory, wrapped)
+              description: Format errors per GraphQL spec (mandatory, contained)
               mandatory: true
-              wrapped: true
+              contained: true
 
   # 9. EMIT - Generic event/telemetry emission
   - emit:
@@ -370,23 +381,24 @@ capabilities:
               handler: emitSelfError
               description: Emit error about emit failure (uses fallback)
               mandatory: true
-              wrapped: true
+              contained: true
           - emitFailureMetrics:
               handler: emitSelfMetrics
               description: Track emit failure metrics
               mandatory: true
-              wrapped: true
+              contained: true
           - cleanup:
               handler: logLocallyAsBackup
               description: Log event locally as backup when telemetry fails
               mandatory: true
-              wrapped: true
+              contained: true
 
   # =============================================================================
   # DOMAIN-SPECIFIC CAPABILITIES (Custom to this MFE)
   # =============================================================================
   # Domain capabilities follow same structure as platform capabilities
-  # Can use standard lifecycle hooks and extend with custom phases
+  # MFE teams extend standard lifecycle phases with their own hooks
+  # handler can be a single function or array of functions
   
   - data-analysis:
       type: domain
@@ -421,49 +433,29 @@ capabilities:
           type: object
           description: Analysis metadata
       lifecycle:
-        # Standard lifecycle hooks
+        # before/after/error: handlers run sequentially, failures logged but don't stop execution (OR-like)
+        # main: handlers run sequentially, first failure stops and propagates (AND-like)
         before:
+          # handler can be single string or array of functions
           - validateFile:
-              handler: validateCsvFile
-              description: Validate file format and size
+              handler: [validateCsvFile, checkFileSize, scanForMalicious]
+              description: Validate file format, size, and security
           - checkQuota:
               handler: verifyUserQuota
               description: Check if user has quota for analysis
         main:
-          - parseFile:
-              handler: parseCsv
-              description: Parse CSV into data structure
-          - analyzeData:
-              handler: performAnalysis
-              description: Run statistical analysis
+          # main phase handlers are AND - all must succeed, first failure stops execution
+          - processData:
+              handler: [parseCsv, cleanDataset, detectOutliers, performAnalysis]
+              description: Parse, clean, detect outliers, and analyze data
         after:
-          - generateReport:
-              handler: createAnalysisReport
-              description: Format results as report
-          - notifyCompletion:
-              handler: sendNotification
-              description: Notify user of completion
+          - completeAnalysis:
+              handler: [createAnalysisReport, sendNotification]
+              description: Format results and notify user
         error:
           - handleError:
               handler: logAndNotifyError
               description: Log error and notify user
-        # Custom lifecycle phases (domain-specific extension)
-        custom:
-          validation:
-            - checkFormat:
-                handler: validateFileFormat
-                description: Verify file is valid CSV
-            - scanContent:
-                handler: scanForMalicious
-                description: Scan for malicious content
-          processing:
-            - cleanData:
-                handler: cleanDataset
-                description: Clean and normalize data
-            - detectOutliers:
-                handler: findOutliers
-                description: Identify statistical outliers
-
 # =============================================================================
 # DATA LAYER (Optional - only if MFE exposes data)
 # =============================================================================
@@ -505,9 +497,10 @@ data:
             - id: ID!
           returns: AnalysisResult
           authorization: user.owns.resource OR user.role.admin
+          # Data queries use same 4-phase lifecycle as capabilities (DEC-023)
           lifecycle:
             before: [validateToken, checkRateLimit]
-            loading: [showLoadingIndicator]
+            main: [executeQuery]
             after: [cacheResponse, trackAccess]
             error: [logError, showErrorMessage]
       
@@ -520,6 +513,7 @@ data:
           authorization: user.authenticated
           lifecycle:
             before: [validateToken]
+            main: [executeQuery]
             after: [cacheResponse]
     
     # Mutation operations (write)
@@ -530,10 +524,22 @@ data:
             - input: AnalysisInput!
           returns: AnalysisResult
           authorization: user.permission.create_analysis
+          # Mutations also use same 4-phase lifecycle (DEC-023)
           lifecycle:
             before: [validateToken, validateFileSize, checkQuota]
+            main: [executeMutation]
             after: [invalidateCache, notifyUser, trackUsage]
             error: [logError, rollback, notifyError]
+
+  # =============================================================================
+  # DATA LINEAGE (Optional - DEC-024)
+  # =============================================================================
+  # Tracks source of data for dependency analysis and impact assessment
+  generatedFrom:
+    - openapi: ./specs/analysis-api.yaml
+      service: analysis-api
+      baseUrl: http://analysis-api:8080
+      version: 2.1.0
 
 # =============================================================================
 # DEPENDENCIES (Optional)

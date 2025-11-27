@@ -45,6 +45,19 @@ Reference these in code comments to guide AI assistants and document architectur
 - ADR-034: Health check and replacement strategy
 - ADR-035: Deterministic discovery default
 
+**DSL Contract (Session 6):**
+
+- ADR-036: Lifecycle hook execution model (contained, mandatory)
+- ADR-037: No custom lifecycle phases (only before/main/after/error)
+- ADR-038: Handler array support (string or array)
+- ADR-039: Handler discovery convention (neutral naming)
+- ADR-040: Unified type system (nullable by default)
+- ADR-041: Authorization expression grammar (deferred)
+- ADR-042: Data type metadata (owner, tags)
+- ADR-043: Language field and template selection (JS/TS only V1)
+- ADR-044: Data lifecycle alignment (same as capabilities)
+- ADR-045: GeneratedFrom traceability (data lineage)
+
 ---
 
 ## Core Orchestration ADRs (Active)
@@ -1257,7 +1270,192 @@ class ProgressiveDiscovery {
 
 ---
 
-## Agent Orchestrator ADRs (Design Phase)
+## DSL Contract ADRs (Session 6)
+
+These ADRs define how the DSL contract is executed, validated, and enforced at runtime.
+
+### ADR-036: Lifecycle Hook Execution Model
+
+**Decision:** Hooks use `contained` flag (not `wrapped`), `mandatory` flag for must-run hooks. Main phase failures propagate; before/after/error failures are silent with telemetry.
+
+**Why:** Resilience over strict error propagation. Hooks enhance capabilities without breaking them.
+
+**Execution Rules:**
+- `mandatory: true` = Hook executes even if previous hooks failed
+- `contained: true` = Platform wraps hook in try-catch
+- `main` phase failures propagate to caller
+- `before`/`after`/`error` phase failures are caught, logged via telemetry
+- ALL hook failures emit telemetry automatically
+
+**Reference:** DEC-016, REQ-042, REQ-043
+
+---
+
+### ADR-037: No Custom Lifecycle Phases
+
+**Decision:** Only 4 standard lifecycle phases: `before`, `main`, `after`, `error`. No custom phases.
+
+**Why:** Simplifies mental model, ensures all hooks follow same execution semantics, eliminates phase ordering ambiguity.
+
+**Pattern:**
+```yaml
+lifecycle:
+  before: [validateInput, checkAuth]    # All run, failures logged
+  main: [executeCore]                    # First failure stops and propagates
+  after: [logSuccess, updateCache]       # All run, failures logged
+  error: [rollback, notify]              # All run, failures logged
+```
+
+**Reference:** DEC-017, REQ-044
+
+---
+
+### ADR-038: Handler Array Support
+
+**Decision:** `handler` field can be string OR array of strings with phase-specific semantics.
+
+**Why:** Flexibility to group related operations while maintaining clear AND/OR semantics.
+
+**Semantics:**
+- `main` phase: AND - all must succeed, first failure stops
+- `before`/`after`/`error` phases: OR-like - all run, failures logged
+
+```yaml
+# Single handler
+handler: validateFile
+
+# Multiple handlers
+handler: [validateFile, checkSize, scanForMalware]
+```
+
+**Reference:** DEC-018, REQ-045
+
+---
+
+### ADR-039: Handler Discovery Convention
+
+**Decision:** Convention-based hybrid. DSL defines conformance contract with neutral handler names; code generators map to language-specific conventions.
+
+**Why:** DSL remains language-agnostic while generated code feels native to each language.
+
+**Validation Timing:**
+- Capability handlers: Fail fast at MFE startup
+- Lifecycle handlers: Deferred validation on first invocation
+
+**Naming Conventions:**
+- JavaScript/TypeScript: `camelCase`
+- Python: `snake_case`
+- Go: `PascalCase`
+
+**Reference:** DEC-019, REQ-046
+
+---
+
+### ADR-040: Unified Type System
+
+**Decision:** Single type system flowing DSL → GraphQL → TypeScript/Python. Nullable by default (GraphQL convention), `!` for required. Compile-time validation heavy.
+
+**Why:** DSL is source of truth. Failing builds are better than runtime errors.
+
+**Type Categories:**
+- Primitives: `string`, `number`, `boolean`, `object`, `array`
+- Collections: `array<T>`, `array<T!>` (non-null items)
+- Specialized: `jwt`, `datetime`, `email`, `url`, `id`, `file`, `element`
+- Custom: Team-defined types extending primitives
+
+**Extensibility:** MFE teams can define custom specialized types in DSL `types:` section.
+
+**Reference:** DEC-020, REQ-047
+
+---
+
+### ADR-041: Authorization Expression Grammar
+
+**Decision:** DEFERRED - Will become separate feature with its own requirements document.
+
+**Placeholder:** Expressions support `AND`, `OR`, `NOT` with atoms like `user.authenticated`, `user.role.<role>`, `user.permission.<perm>`, `user.owns.resource`.
+
+**Reference:** REQ-048 (deferred)
+
+---
+
+### ADR-042: Data Type Metadata
+
+**Decision:** Type metadata (`owner`, `tags`) for documentation, tooling search, and future access control. Custom tags (team-defined vocabulary).
+
+**Why:** Registry search is primary value driver. Owner attribution enables future ACL.
+
+**Usage:**
+```yaml
+types:
+  - CustomerRecord:
+      owner: customer-team
+      tags: [pii, gdpr-relevant]
+      fields: [...]
+```
+
+**Reference:** DEC-021, REQ-049
+
+---
+
+### ADR-043: Language Field and Template Selection
+
+**Decision:** V1 supports JavaScript/TypeScript only. Language field drives template selection and build tooling.
+
+**Why:** Module Federation is JavaScript-native. Non-JS backends are data-only services consumed by JS shell.
+
+**Pattern:**
+- `language: javascript` or `language: typescript` → React/rspack templates
+- Future: `language: python` → FastAPI/Flask templates (backend-only)
+
+**Reference:** DEC-022, REQ-052
+
+---
+
+### ADR-044: Data Lifecycle Alignment
+
+**Decision:** Data lifecycle uses same 4 phases as capability lifecycle. No `loading` phase. Data fetching is a capability.
+
+**Why:** Single lifecycle model for everything. Loading indicators are handler implementation details.
+
+**Corrected Pattern:**
+```yaml
+queries:
+  - getAnalysis:
+      lifecycle:
+        before: [validateToken]
+        main: [executeQuery]      # NOT loading: [showIndicator]
+        after: [cacheResponse]
+        error: [logError]
+```
+
+**Reference:** DEC-023
+
+---
+
+### ADR-045: GeneratedFrom Traceability
+
+**Decision:** `generatedFrom` section tracks data lineage (SOR) for dependency analysis and registry search.
+
+**Why:** Understanding which MFEs share data sources enables impact analysis and regeneration workflows.
+
+**Pattern:**
+```yaml
+data:
+  generatedFrom:
+    - openapi: ./specs/api.yaml
+      service: analysis-api
+      version: 2.1.0
+```
+
+**Enables:**
+- "Which MFEs use this API?"
+- "Which MFEs share data sources?"
+- Impact analysis for API changes
+
+**Reference:** DEC-024, REQ-053
+
+---
 
 ## Agent Orchestrator ADRs (Design Phase)
 

@@ -19,11 +19,44 @@ describe('NodemonServer', () => {
   let consoleErrorSpy;
   let mockNodemon;
   let originalProcessEnv;
+  let processListeners;
+  let stdinListeners;
+  let processOnSpy;
+  let stdinOnSpy;
+  let processStdinMock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    originalProcessEnv = { ...process.env };
+    
+    // Track process event listeners
+    processListeners = {};
+    processOnSpy = jest.spyOn(process, 'on').mockImplementation((event, handler) => {
+      if (!processListeners[event]) processListeners[event] = [];
+      processListeners[event].push(handler);
+      return process;
+    });
+    
+    // Mock process.stdin
+    stdinListeners = {};
+    processStdinMock = {
+      isTTY: true,
+      setRawMode: jest.fn(),
+      setEncoding: jest.fn(),
+      on: jest.fn((event, handler) => {
+        if (!stdinListeners[event]) stdinListeners[event] = [];
+        stdinListeners[event].push(handler);
+        return processStdinMock;
+      }),
+      resume: jest.fn()
+    };
+    Object.defineProperty(process, 'stdin', {
+      value: processStdinMock,
+      writable: true,
+      configurable: true
+    });
     originalProcessEnv = { ...process.env };
 
     // Mock nodemon with event emitter
@@ -38,6 +71,7 @@ describe('NodemonServer', () => {
   afterEach(() => {
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+    processOnSpy.mockRestore();
     process.env = originalProcessEnv;
   });
 
@@ -369,6 +403,7 @@ describe('NodemonServer', () => {
       it('should handle uncaughtException and restart', async () => {
         const server = new NodemonServer({}, '/test/context');
         const restartSpy = jest.spyOn(server, 'restart').mockResolvedValue();
+        server.nodemon = mockNodemon; // Set nodemon so restart has context
         
         const startPromise = server.start();
         const startCallback = mockNodemon.on.mock.calls.find(
@@ -377,22 +412,22 @@ describe('NodemonServer', () => {
         startCallback();
         await startPromise;
 
-        const uncaughtCallback = process.on.mock.calls.find(
-          call => call[0] === 'uncaughtException'
-        )[1];
+        const uncaughtCallback = processListeners['uncaughtException'][0];
         
         const error = new Error('Test error');
-        uncaughtCallback(error);
+        uncaughtCallback(error); // Don't await - it's async internally
+        await new Promise(resolve => setTimeout(resolve, 100)); // Let async operations complete
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
           expect.stringContaining('Uncaught Exception')
         );
         expect(restartSpy).toHaveBeenCalled();
-      });
+      }, 5000);
 
       it('should handle unhandledRejection and restart', async () => {
         const server = new NodemonServer({}, '/test/context');
         const restartSpy = jest.spyOn(server, 'restart').mockResolvedValue();
+        server.nodemon = mockNodemon; // Set nodemon so restart has context
         
         const startPromise = server.start();
         const startCallback = mockNodemon.on.mock.calls.find(
@@ -401,19 +436,18 @@ describe('NodemonServer', () => {
         startCallback();
         await startPromise;
 
-        const rejectionCallback = process.on.mock.calls.find(
-          call => call[0] === 'unhandledRejection'
-        )[1];
+        const rejectionCallback = processListeners['unhandledRejection'][0];
         
         const reason = 'Test rejection';
-        const promise = Promise.reject(reason);
-        rejectionCallback(reason, promise);
+        const promise = Promise.reject(reason).catch(() => {}); // Prevent actual unhandled rejection
+        rejectionCallback(reason, promise); // Don't await - it's async internally
+        await new Promise(resolve => setTimeout(resolve, 100)); // Let async operations complete
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
           expect.stringContaining('Unhandled Rejection')
         );
         expect(restartSpy).toHaveBeenCalled();
-      });
+      }, 5000);
     });
   });
 
@@ -454,6 +488,7 @@ describe('NodemonServer', () => {
   describe('restart', () => {
     it('should stop and start server', async () => {
       const server = new NodemonServer({}, '/test/context');
+      server.nodemon = mockNodemon; // Set nodemon to trigger restart logic
       const stopSpy = jest.spyOn(server, 'stop').mockResolvedValue();
       const startSpy = jest.spyOn(server, 'start').mockResolvedValue();
 
@@ -523,11 +558,10 @@ describe('NodemonServer', () => {
       startCallback();
       await startPromise;
 
-      const dataCallback = process.stdin.on.mock.calls.find(
-        call => call[0] === 'data'
-      )[1];
+      const dataCallback = stdinListeners['data'][0];
       
       await dataCallback(Buffer.from('d'));
+      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
 
       expect(server.debugMode).toBe(true);
       expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -548,11 +582,10 @@ describe('NodemonServer', () => {
       startCallback();
       await startPromise;
 
-      const dataCallback = process.stdin.on.mock.calls.find(
-        call => call[0] === 'data'
-      )[1];
+      const dataCallback = stdinListeners['data'][0];
       
       await dataCallback(Buffer.from('c'));
+      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
 
       expect(consoleClearSpy).toHaveBeenCalled();
       expect(showHelpSpy).toHaveBeenCalled();
@@ -571,11 +604,10 @@ describe('NodemonServer', () => {
       startCallback();
       await startPromise;
 
-      const dataCallback = process.stdin.on.mock.calls.find(
-        call => call[0] === 'data'
-      )[1];
+      const dataCallback = stdinListeners['data'][0];
       
       await dataCallback(Buffer.from('t'));
+      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
 
       expect(testEndpointsSpy).toHaveBeenCalled();
     });

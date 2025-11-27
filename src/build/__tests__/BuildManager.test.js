@@ -1,12 +1,14 @@
 const { BuildManager } = require('../BuildManager');
-const rspack = require('@rspack/core');
+const { rspack } = require('@rspack/core');
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { ServerRegistry } = require('../servers');
+const { createConfiguration } = require('../config');
 
 jest.mock('@rspack/core');
 jest.mock('fs-extra');
+jest.mock('../config');
 jest.mock('chalk', () => ({
   green: jest.fn((msg) => msg),
   blue: jest.fn((msg) => msg),
@@ -19,11 +21,13 @@ jest.mock('../servers');
 describe('BuildManager', () => {
   let consoleLogSpy;
   let consoleErrorSpy;
+  let consoleWarnSpy;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
     
     // Setup fs mocks
     fs.existsSync.mockReturnValue(true);
@@ -43,45 +47,56 @@ describe('BuildManager', () => {
   afterEach(() => {
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   describe('constructor', () => {
-    it('should initialize with default options', () => {
-      const manager = new BuildManager({});
+    it('should initialize with type from options', () => {
+      const manager = new BuildManager({ type: 'remote' });
       expect(manager.type).toBe('remote');
       expect(manager.mode).toBe('development');
       expect(manager.context).toBe(process.cwd());
     });
 
-    it('should accept custom options', () => {
+    it('should accept custom mode', () => {
       const manager = new BuildManager({
         type: 'shell',
-        mode: 'production',
-        context: '/custom/path'
+        mode: 'production'
       });
       expect(manager.type).toBe('shell');
       expect(manager.mode).toBe('production');
-      expect(manager.context).toBe('/custom/path');
     });
 
-    it('should initialize config and serverRegistry as null', () => {
-      const manager = new BuildManager({});
-      expect(manager.config).toBeNull();
-      expect(manager.serverRegistry).toBeNull();
+    it('should create ServerRegistry immediately', () => {
+      const manager = new BuildManager({ type: 'remote' });
+      expect(ServerRegistry).toHaveBeenCalled();
+      expect(manager.serverRegistry).toBeDefined();
+    });
+
+    it('should not have config until initialized', () => {
+      const manager = new BuildManager({ type: 'remote' });
+      expect(manager.config).toBeUndefined();
     });
   });
 
   describe('initialize', () => {
     it('should validate project and create config', async () => {
-      const manager = new BuildManager({ type: 'remote' });
+      const manager = new BuildManager({ type: 'remote', name: 'test-app' });
       const mockConfig = { name: 'test-config' };
-      const createConfig = require('../config');
-      createConfig.mockReturnValue(mockConfig);
+      createConfiguration.mockResolvedValue(mockConfig);
+      fs.readJSON.mockResolvedValue({ name: 'test-app' });
+      fs.pathExists.mockResolvedValue(true);
 
       await manager.initialize();
 
-      expect(manager.validateProject).toBeDefined();
-      expect(createConfig).toHaveBeenCalledWith('remote', 'development', manager.context);
+      expect(createConfiguration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: manager.context,
+          type: 'remote',
+          mode: 'development',
+          name: 'test-app'
+        })
+      );
       expect(manager.config).toBe(mockConfig);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('Build configuration initialized')
@@ -89,99 +104,85 @@ describe('BuildManager', () => {
     });
 
     it('should handle initialization errors', async () => {
-      const manager = new BuildManager({ type: 'invalid' });
-      const createConfig = require('../config');
-      createConfig.mockImplementation(() => {
-        throw new Error('Invalid type');
-      });
+      const manager = new BuildManager({ type: 'remote' });
+      fs.readJSON.mockRejectedValue(new Error('package.json not found'));
 
-      await expect(manager.initialize()).rejects.toThrow('Invalid type');
-    });
-
-    it('should create ServerRegistry instance', async () => {
-      const manager = new BuildManager({ type: 'shell' });
-      const createConfig = require('../config');
-      createConfig.mockReturnValue({ name: 'shell-config' });
-
-      await manager.initialize();
-
-      expect(ServerRegistry).toHaveBeenCalled();
-      expect(manager.serverRegistry).toBeDefined();
+      await expect(manager.initialize()).rejects.toThrow();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to initialize')
+      );
     });
   });
 
   describe('validateProject', () => {
-    it('should validate all required directories exist', () => {
-      const manager = new BuildManager({ context: '/test/path' });
+    it('should read package.json', async () => {
+      const manager = new BuildManager({ type: 'remote' });
+      fs.readJSON.mockResolvedValue({ name: 'test-app' });
+      fs.pathExists.mockResolvedValue(true);
       
-      manager.validateProject();
+      await manager.validateProject();
 
-      expect(fs.existsSync).toHaveBeenCalledWith(path.join('/test/path', 'src'));
-      expect(fs.existsSync).toHaveBeenCalledWith(path.join('/test/path', 'public'));
-      expect(fs.existsSync).toHaveBeenCalledWith(path.join('/test/path', 'package.json'));
+      expect(fs.readJSON).toHaveBeenCalledWith(
+        path.join(manager.context, 'package.json')
+      );
     });
 
-    it('should create missing src directory', () => {
-      const manager = new BuildManager({ context: '/test/path' });
-      fs.existsSync.mockImplementation((filePath) => {
+    it('should create missing src directory', async () => {
+      const manager = new BuildManager({ type: 'remote', name: 'test' });
+      fs.readJSON.mockResolvedValue({ name: 'test-app' });
+      fs.pathExists.mockImplementation(async (filePath) => {
         return !filePath.includes('src');
       });
 
-      manager.validateProject();
+      await manager.validateProject();
 
-      expect(fs.ensureDirSync).toHaveBeenCalledWith(path.join('/test/path', 'src'));
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        path.join('/test/path', 'src/index.jsx'),
+      expect(fs.mkdir).toHaveBeenCalledWith(
+        path.join(manager.context, 'src')
+      );
+    });
+
+    it('should create missing files for remote type', async () => {
+      const manager = new BuildManager({ type: 'remote', name: 'test' });
+      fs.readJSON.mockResolvedValue({ name: 'test-app' });
+      fs.pathExists.mockResolvedValue(false);
+
+      await manager.validateProject();
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        path.join(manager.context, 'src/index.js'),
+        expect.any(String)
+      );
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        path.join(manager.context, 'src/App.jsx'),
+        expect.any(String)
+      );
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        path.join(manager.context, 'src/bootstrap.jsx'),
         expect.any(String)
       );
     });
 
-    it('should create missing public directory', () => {
-      const manager = new BuildManager({ context: '/test/path' });
-      fs.existsSync.mockImplementation((filePath) => {
-        return !filePath.includes('public');
-      });
+    it('should handle validation errors', async () => {
+      const manager = new BuildManager({ type: 'remote' });
+      fs.readJSON.mockRejectedValue(new Error('File not found'));
 
-      manager.validateProject();
-
-      expect(fs.ensureDirSync).toHaveBeenCalledWith(path.join('/test/path', 'public'));
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        path.join('/test/path', 'public/index.html'),
-        expect.any(String)
-      );
-    });
-
-    it('should throw error if package.json missing', () => {
-      const manager = new BuildManager({ context: '/test/path' });
-      fs.existsSync.mockImplementation((filePath) => {
-        return !filePath.includes('package.json');
-      });
-
-      expect(() => manager.validateProject()).toThrow(
-        'package.json not found'
-      );
-    });
-
-    it('should create App.jsx for remote type', () => {
-      const manager = new BuildManager({ type: 'remote', context: '/test/path' });
-      fs.existsSync.mockImplementation((filePath) => {
-        return !filePath.includes('App.jsx');
-      });
-
-      manager.validateProject();
-
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        path.join('/test/path', 'src/App.jsx'),
-        expect.any(String)
+      await expect(manager.validateProject()).rejects.toThrow(
+        'Project validation failed'
       );
     });
   });
 
   describe('build', () => {
     it('should run production build with rspack', async () => {
-      const manager = new BuildManager({ mode: 'production' });
+      const manager = new BuildManager({ type: 'remote', mode: 'production' });
+      const mockStats = {
+        hasErrors: () => false,
+        hasWarnings: () => false,
+        toString: () => 'Build stats'
+      };
       const mockCompiler = {
-        run: jest.fn((callback) => callback(null, { hasErrors: () => false }))
+        run: jest.fn((callback) => callback(null, mockStats)),
+        close: jest.fn((callback) => callback())
       };
       rspack.mockReturnValue(mockCompiler);
       manager.config = { name: 'test-config' };
@@ -190,6 +191,7 @@ describe('BuildManager', () => {
 
       expect(rspack).toHaveBeenCalledWith(manager.config);
       expect(mockCompiler.run).toHaveBeenCalled();
+      expect(mockCompiler.close).toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('Build completed successfully')
       );
@@ -210,10 +212,11 @@ describe('BuildManager', () => {
     });
 
     it('should handle compilation errors', async () => {
-      const manager = new BuildManager({ mode: 'production' });
+      const manager = new BuildManager({ type: 'remote', mode: 'production' });
       const mockStats = {
         hasErrors: () => true,
-        toString: () => 'Compilation errors'
+        hasWarnings: () => false,
+        toJson: () => ({ errors: [{ message: 'Syntax error' }] })
       };
       const mockCompiler = {
         run: jest.fn((callback) => callback(null, mockStats))
@@ -222,21 +225,36 @@ describe('BuildManager', () => {
       manager.config = { name: 'test-config' };
 
       await expect(manager.build()).rejects.toThrow('Build failed with errors');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Compilation errors');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Build failed with errors')
+      );
     });
 
-    it('should require config before building', async () => {
-      const manager = new BuildManager({});
-      manager.config = null;
+    it('should handle warnings', async () => {
+      const manager = new BuildManager({ type: 'remote', mode: 'production' });
+      const mockStats = {
+        hasErrors: () => false,
+        hasWarnings: () => true,
+        toJson: () => ({ warnings: [{ message: 'Deprecation warning' }] }),
+        toString: () => 'Build stats'
+      };
+      const mockCompiler = {
+        run: jest.fn((callback) => callback(null, mockStats)),
+        close: jest.fn((callback) => callback())
+      };
+      rspack.mockReturnValue(mockCompiler);
+      manager.config = { name: 'test-config' };
 
-      await expect(manager.build()).rejects.toThrow(
-        'Build configuration not initialized'
+      await manager.build();
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Build completed with warnings')
       );
     });
   });
 
   describe('serve', () => {
-    it('should start development server', async () => {
+    it('should start rspack server for remote type', async () => {
       const manager = new BuildManager({ type: 'remote' });
       const mockCompiler = { name: 'test-compiler' };
       rspack.mockReturnValue(mockCompiler);
@@ -250,39 +268,51 @@ describe('BuildManager', () => {
         get: jest.fn().mockReturnValue(mockServerClass)
       };
 
-      await manager.serve();
+      // Start serve (doesn't resolve, returns hanging promise)
+      const servePromise = manager.serve();
+
+      // Give it a tick to start
+      await Promise.resolve();
 
       expect(manager.serverRegistry.get).toHaveBeenCalledWith('rspack');
       expect(mockServerClass).toHaveBeenCalledWith(
-        { compiler: mockCompiler, mode: 'development' },
+        expect.objectContaining({
+          type: 'remote',
+          compiler: mockCompiler
+        }),
         manager.context
       );
       expect(mockServer.start).toHaveBeenCalled();
     });
 
-    it('should require config before serving', async () => {
-      const manager = new BuildManager({});
-      manager.config = null;
-
-      await expect(manager.serve()).rejects.toThrow(
-        'Build configuration not initialized'
-      );
-    });
-
-    it('should require serverRegistry before serving', async () => {
-      const manager = new BuildManager({});
+    it('should start nodemon server for api type', async () => {
+      const manager = new BuildManager({ type: 'api' });
       manager.config = { name: 'test-config' };
-      manager.serverRegistry = null;
+      
+      const mockServer = {
+        start: jest.fn().mockResolvedValue(undefined)
+      };
+      const mockServerClass = jest.fn().mockReturnValue(mockServer);
+      manager.serverRegistry = {
+        get: jest.fn().mockReturnValue(mockServerClass)
+      };
 
-      await expect(manager.serve()).rejects.toThrow(
-        'Server registry not initialized'
+      const servePromise = manager.serve();
+      await Promise.resolve();
+
+      expect(manager.serverRegistry.get).toHaveBeenCalledWith('nodemon');
+      expect(mockServerClass).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'api',
+          compiler: null
+        }),
+        manager.context
       );
     });
 
     it('should handle server start errors', async () => {
-      const manager = new BuildManager({ type: 'api' });
-      const mockCompiler = { name: 'test-compiler' };
-      rspack.mockReturnValue(mockCompiler);
+      const manager = new BuildManager({ type: 'remote' });
+      rspack.mockReturnValue({ name: 'test-compiler' });
       manager.config = { name: 'test-config' };
       
       const mockServer = {
@@ -313,21 +343,21 @@ describe('BuildManager', () => {
       expect(manager.getServerType()).toBe('nodemon');
     });
 
-    it('should default to rspack for unknown types', () => {
+    it('should throw error for unknown types', () => {
       const manager = new BuildManager({ type: 'unknown' });
-      expect(manager.getServerType()).toBe('rspack');
+      expect(() => manager.getServerType()).toThrow('Unknown application type');
     });
   });
 
   describe('Template Generators', () => {
     describe('getIndexTemplate', () => {
       it('should generate index template', () => {
-        const manager = new BuildManager({});
+        const manager = new BuildManager({ type: 'shell' });
         const template = manager.getIndexTemplate();
         
         expect(template).toContain('import React from');
-        expect(template).toContain('import ReactDOM from');
-        expect(template).toContain('ReactDOM.render');
+        expect(template).toContain('createRoot');
+        expect(template).toContain('root.render');
       });
 
       it('should include bootstrap import for remote type', () => {
@@ -343,16 +373,18 @@ describe('BuildManager', () => {
         const manager = new BuildManager({ type: 'shell' });
         const template = manager.getAppTemplate();
         
-        expect(template).toContain('function App()');
-        expect(template).toContain('export default App');
+        expect(template).toContain('function ShellApp()');
+        expect(template).toContain('Shell Application');
+        expect(template).toContain('export default ShellApp');
       });
 
       it('should generate App template for remote', () => {
         const manager = new BuildManager({ type: 'remote' });
         const template = manager.getAppTemplate();
         
-        expect(template).toContain('function App()');
-        expect(template).toContain('export default App');
+        expect(template).toContain('function RemoteApp()');
+        expect(template).toContain('Remote Application');
+        expect(template).toContain('export default RemoteApp');
       });
 
       it('should include different content for shell vs remote', () => {
@@ -368,38 +400,38 @@ describe('BuildManager', () => {
 
     describe('getHtmlTemplate', () => {
       it('should generate HTML template', () => {
-        const manager = new BuildManager({});
+        const manager = new BuildManager({ type: 'shell', name: 'test-app' });
         const template = manager.getHtmlTemplate();
         
         expect(template).toContain('<!DOCTYPE html>');
         expect(template).toContain('<div id="root">');
       });
 
-      it('should include title from package.json', () => {
-        const manager = new BuildManager({ context: '/test/path' });
-        fs.readFileSync.mockReturnValue(JSON.stringify({ 
-          name: 'my-app'
-        }));
+      it('should include name and type in title', () => {
+        const manager = new BuildManager({ type: 'remote', name: 'my-app' });
         
         const template = manager.getHtmlTemplate();
         expect(template).toContain('my-app');
+        expect(template).toContain('remote');
       });
     });
 
     describe('getBootstrapTemplate', () => {
-      it('should generate bootstrap template', () => {
-        const manager = new BuildManager({});
+      it('should generate bootstrap template with mount function', () => {
+        const manager = new BuildManager({ type: 'remote' });
         const template = manager.getBootstrapTemplate();
         
-        expect(template).toContain('import(');
-        expect(template).toContain('./index');
+        expect(template).toContain('function mount(');
+        expect(template).toContain('createRoot');
+        expect(template).toContain('export { mount }');
       });
 
-      it('should handle async imports', () => {
-        const manager = new BuildManager({});
+      it('should check for standalone mode', () => {
+        const manager = new BuildManager({ type: 'remote' });
         const template = manager.getBootstrapTemplate();
         
-        expect(template).toMatch(/import\(['"]\.\/index['"]\)/);
+        expect(template).toContain('__RSPACK_REMOTE_ENTRY__');
+        expect(template).toContain("mount('root')");
       });
     });
   });

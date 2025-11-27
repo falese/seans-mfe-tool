@@ -7,7 +7,9 @@ jest.mock('@rspack/dev-server');
 jest.mock('chalk', () => ({
   green: jest.fn((msg) => msg),
   yellow: jest.fn((msg) => msg),
-  red: jest.fn((msg) => msg)
+  red: jest.fn((msg) => msg),
+  blue: jest.fn((msg) => msg),
+  gray: jest.fn((msg) => msg)
 }));
 
 describe('RspackServer', () => {
