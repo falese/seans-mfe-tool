@@ -204,3 +204,23 @@ All content captured in:
 - `/docs/SESSION-RESUME-CHECKLIST.md` (this file)
 
 **Status:** Requirements Complete - Ready for Implementation ✨
+
+---
+
+## Session 6 Update (2025-11-27)
+
+### Quick Status
+- Session 6 summary added in `docs/SESSION-6-SUMMARY.md`.
+- CLI/CodeGen remains primary implementation track; agent orchestrator stays design-only.
+- Examples and coverage reports present; commands stable.
+
+### Immediate Priorities
+- Strengthen negative-path tests for `src/commands/create-api.js`.
+- Add `docs/troubleshooting.md` for MF shared conflicts, CORS, remoteEntry URL issues.
+- Create minimal E2E shell+remote sanity script in `scripts/`.
+- Provide reproducible `mfe deploy` example in `examples/`.
+
+### Decision Reminders
+- Runtime DSL discovery; registry stores metadata only.
+- Per-shell Docker orchestration; remotes via dev servers.
+- React/MUI `singleton: true` shared deps enforced in generated configs.

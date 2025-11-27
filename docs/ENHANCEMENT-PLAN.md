@@ -155,3 +155,23 @@ Next up (suggested):
 - Standardize error handling patterns across commands.
 - Add unit/integration tests focusing on new deploy/init flows.
 - Create CI workflow (`.github/workflows/ci.yml`).
+
+---
+
+## Session 6 Addendum (2025-11-27)
+
+### Immediate Actions
+- Strengthen negative-path Jest tests for `src/commands/create-api.js` with edge OpenAPI specs.
+- Create `docs/troubleshooting.md` to cover MF shared conflicts (React/MUI), CORS, and remoteEntry URL validation.
+- Add a minimal E2E sanity script under `scripts/` to start a generated shell and remote, verify registration and remote loading.
+- Provide a reproducible `mfe deploy` example in `examples/` with concise README.
+
+### Dependencies
+- Existing Jest setup and `__tests__/` mocks.
+- Generated templates for shell/remote to be used in E2E sanity.
+
+### Acceptance Criteria
+- New tests fail on invalid/edge OpenAPI inputs and pass on fixed logic.
+- Troubleshooting doc gives actionable steps for the three common issues and is linked from README.
+- E2E script runs locally on macOS with zsh and reports success/failure succinctly.
+- Deploy example can be built and run with one copy-paste command sequence.
