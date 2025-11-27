@@ -15,25 +15,26 @@
 
 ## Implementation Status
 
-| Component | Status | Coverage | Notes |
-|-----------|--------|----------|-------|
-| `src/commands/bff.js` | ✅ Complete | 100% Stmts, 100% Funcs, 100% Lines, 96.93% Branch | All 7 functions implemented |
-| `src/templates/bff/` | ✅ Complete | — | 8 template files |
-| CLI Integration | ✅ Complete | — | 4 commands wired |
-| Tests | ✅ Complete | 65 passing | `src/commands/__tests__/bff.test.js` |
-| GWT Scenarios | ✅ Complete | — | `docs/acceptance-criteria/bff.feature` |
-| **E2E Testing** | ✅ Complete | — | All 4 commands verified manually |
+| Component             | Status      | Coverage                                          | Notes                                  |
+| --------------------- | ----------- | ------------------------------------------------- | -------------------------------------- |
+| `src/commands/bff.js` | ✅ Complete | 100% Stmts, 100% Funcs, 100% Lines, 96.93% Branch | All 7 functions implemented            |
+| `src/templates/bff/`  | ✅ Complete | —                                                 | 8 template files                       |
+| CLI Integration       | ✅ Complete | —                                                 | 4 commands wired                       |
+| Tests                 | ✅ Complete | 65 passing                                        | `src/commands/__tests__/bff.test.js`   |
+| GWT Scenarios         | ✅ Complete | —                                                 | `docs/acceptance-criteria/bff.feature` |
+| **E2E Testing**       | ✅ Complete | —                                                 | All 4 commands verified manually       |
 
 ### E2E Test Results (2025-11-27)
 
-| Command | Status | Verified Behavior |
-|---------|--------|-------------------|
-| `bff:init` | ✅ Pass | Creates project, npm install succeeds, templates render correctly |
-| `bff:validate` | ✅ Pass | Validates DSL `data:` section, sources, transforms, plugins |
-| `bff:build` | ✅ Pass | Extracts `.meshrc.yaml`, generates `.mesh/` directory with schema |
-| `bff:dev` | ✅ Pass | Starts GraphQL server on configured port, playground available |
+| Command        | Status  | Verified Behavior                                                 |
+| -------------- | ------- | ----------------------------------------------------------------- |
+| `bff:init`     | ✅ Pass | Creates project, npm install succeeds, templates render correctly |
+| `bff:validate` | ✅ Pass | Validates DSL `data:` section, sources, transforms, plugins       |
+| `bff:build`    | ✅ Pass | Extracts `.meshrc.yaml`, generates `.mesh/` directory with schema |
+| `bff:dev`      | ✅ Pass | Starts GraphQL server on configured port, playground available    |
 
 **E2E Test Execution:**
+
 ```bash
 # 1. Create new BFF project
 mfe bff:init test-bff-e2e --port 4000
@@ -61,36 +62,36 @@ mfe bff:dev
 
 ### Bugs Fixed During E2E Testing
 
-| Issue | Root Cause | Fix |
-|-------|-----------|-----|
-| npm ERESOLVE error | Outdated GraphQL Mesh versions (0.40.0 doesn't exist) | Updated to `@graphql-mesh/cli@^0.100.0`, `@graphql-mesh/openapi@^1.0.0` |
-| package.json showing `<%= name %>` | EJS templates copied without `.ejs` extension before `processTemplates` | Keep `.ejs` extension during copy, let `processTemplates` handle rendering |
-| Template processor hardcoded special cases | `package.json.ejs` had special handling that broke BFF templates | Use consistent EJS rendering for ALL `.ejs` files |
+| Issue                                      | Root Cause                                                              | Fix                                                                        |
+| ------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| npm ERESOLVE error                         | Outdated GraphQL Mesh versions (0.40.0 doesn't exist)                   | Updated to `@graphql-mesh/cli@^0.100.0`, `@graphql-mesh/openapi@^1.0.0`    |
+| package.json showing `<%= name %>`         | EJS templates copied without `.ejs` extension before `processTemplates` | Keep `.ejs` extension during copy, let `processTemplates` handle rendering |
+| Template processor hardcoded special cases | `package.json.ejs` had special handling that broke BFF templates        | Use consistent EJS rendering for ALL `.ejs` files                          |
 
 ### Implemented Functions
 
-| Function | Purpose | Tests |
-|----------|---------|-------|
-| `extractMeshConfig()` | Extracts Mesh config from DSL `data:` section | 7 |
-| `writeMeshConfig()` | Writes `.meshrc.yaml` from config object | 1 |
-| `bffValidateCommand()` | Validates sources, transforms, plugins | 12 |
-| `bffBuildCommand()` | Extracts DSL → .meshrc.yaml → mesh build | 6 |
-| `bffDevCommand()` | Starts mesh dev with hot reload | 8 |
-| `bffInitCommand()` | Creates new BFF or adds to existing project | 16 |
-| `addMeshDependencies()` | Updates package.json with Mesh packages | 7 |
+| Function                | Purpose                                       | Tests |
+| ----------------------- | --------------------------------------------- | ----- |
+| `extractMeshConfig()`   | Extracts Mesh config from DSL `data:` section | 7     |
+| `writeMeshConfig()`     | Writes `.meshrc.yaml` from config object      | 1     |
+| `bffValidateCommand()`  | Validates sources, transforms, plugins        | 12    |
+| `bffBuildCommand()`     | Extracts DSL → .meshrc.yaml → mesh build      | 6     |
+| `bffDevCommand()`       | Starts mesh dev with hot reload               | 8     |
+| `bffInitCommand()`      | Creates new BFF or adds to existing project   | 16    |
+| `addMeshDependencies()` | Updates package.json with Mesh packages       | 7     |
 
 ### Generated Templates
 
-| Template | Purpose |
-|----------|---------|
-| `server.ts.ejs` | Express + Mesh + static assets server |
-| `Dockerfile.ejs` | Multi-stage build for BFF + assets |
-| `docker-compose.yaml.ejs` | Local development setup |
-| `package.json.ejs` | Dependencies with Mesh packages |
-| `tsconfig.json` | TypeScript configuration |
-| `mfe-manifest.yaml.ejs` | DSL template with data section |
-| `README.md.ejs` | Project documentation |
-| `.gitignore` | Standard ignores |
+| Template                  | Purpose                               |
+| ------------------------- | ------------------------------------- |
+| `server.ts.ejs`           | Express + Mesh + static assets server |
+| `Dockerfile.ejs`          | Multi-stage build for BFF + assets    |
+| `docker-compose.yaml.ejs` | Local development setup               |
+| `package.json.ejs`        | Dependencies with Mesh packages       |
+| `tsconfig.json`           | TypeScript configuration              |
+| `mfe-manifest.yaml.ejs`   | DSL template with data section        |
+| `README.md.ejs`           | Project documentation                 |
+| `.gitignore`              | Standard ignores                      |
 
 ---
 
@@ -711,11 +712,11 @@ Should registry cache generated GraphQL schemas?
 
 ## Revision History
 
-| Date       | Version | Changes                                                                                      | Author |
-| ---------- | ------- | -------------------------------------------------------------------------------------------- | ------ |
-| 2025-11-26 | 0.1     | Initial draft (R1-R8 code generation)                                                        | Sean   |
-| 2025-11-27 | 1.0     | Pivoted to GraphQL Mesh (ADR-046)                                                            | Sean   |
-| 2025-11-27 | 1.1     | DSL-embedded config, single source truth                                                     | Sean   |
-| 2025-11-27 | 1.2     | Clarified CLI structure: shell=orchestration, remote=MFE+BFF, bff:init for standalone/add-on | Sean   |
-| 2025-11-27 | 2.0     | **Implementation Complete:** bff.js (7 functions), 8 templates, 65 tests (100% coverage)     | Copilot |
+| Date       | Version | Changes                                                                                                | Author  |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| 2025-11-26 | 0.1     | Initial draft (R1-R8 code generation)                                                                  | Sean    |
+| 2025-11-27 | 1.0     | Pivoted to GraphQL Mesh (ADR-046)                                                                      | Sean    |
+| 2025-11-27 | 1.1     | DSL-embedded config, single source truth                                                               | Sean    |
+| 2025-11-27 | 1.2     | Clarified CLI structure: shell=orchestration, remote=MFE+BFF, bff:init for standalone/add-on           | Sean    |
+| 2025-11-27 | 2.0     | **Implementation Complete:** bff.js (7 functions), 8 templates, 65 tests (100% coverage)               | Copilot |
 | 2025-11-27 | 2.1     | **E2E Verified:** All 4 CLI commands tested manually. Fixed version conflicts, template rendering bugs | Copilot |
