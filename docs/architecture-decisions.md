@@ -62,6 +62,7 @@ Reference these in code comments to guide AI assistants and document architectur
 
 - ADR-046: GraphQL Mesh with DSL-embedded configuration
 - ADR-047: Generated MFE test templates (starter tests for scaffolded projects)
+- ADR-048: Incremental TypeScript migration (new code in TS, convert on touch)
 
 ---
 
@@ -304,24 +305,130 @@ module.exports = {
 
 ---
 
-app.use(
-'/graphql',
-createBuiltMeshHTTPHandler({
-context: (req) => ({
-jwt: req.headers.authorization?.replace('Bearer ', ''),
-requestId: req.headers['x-request-id'],
-}),
-})
-);
+### ADR-048: Incremental TypeScript Migration
 
-// Static MFE assets
-app.use(express.static('dist'));
+**Decision:** Adopt TypeScript incrementally for the CLI codebase. New code (DSL parser, validators, generators) and recently-completed code (BFF generators) will be TypeScript. Existing JavaScript remains until touched.
 
-app.listen(3000);
+**Why:**
 
-````
+1. DSL parsing benefits most from type safety - complex nested structures
+2. RTK Query codegen expects TypeScript - natural fit for data layer
+3. Generated `.d.ts` files improve consumer experience
+4. Incremental approach avoids scope creep / big-bang migration risk
+5. Developer is proficient in TypeScript - no velocity impact
 
-**Multi-Source Merging (Multiple OpenAPI Specs):**
+**Migration Scope:**
+
+| Component | Language | Notes |
+|-----------|----------|-------|
+| `src/dsl/` (new) | TypeScript | Parser, validator, generators |
+| `src/commands/remote-*.ts` (new) | TypeScript | `remote:init`, `remote:generate` |
+| `src/codegen/BffGenerator/` | TypeScript | Convert 7 existing JS files |
+| `src/commands/create-*.js` | JavaScript | Convert when modified |
+| `src/utils/` | JavaScript | Convert when modified |
+| `bin/seans-mfe-tool.js` | JavaScript | Commander entry point stays JS |
+
+**TypeScript Configuration:**
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**"]
+}
+```
+
+**Key Decisions:**
+
+1. **`strict: false`** - Add strictness rules incrementally as codebase matures
+2. **`outDir: ./dist`** - Clean separation of source and compiled output
+3. **`allowJs: true`** - Enables mixed JS/TS codebase during migration
+4. **`declaration: true`** - Generate `.d.ts` for all TypeScript files
+
+**Build Strategy:**
+
+```json
+// package.json scripts
+{
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  }
+}
+```
+
+**Test Configuration:**
+
+```javascript
+// jest.config.js (updated)
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.jsx?$': 'babel-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+};
+```
+
+**Dependencies Added:**
+
+```json
+{
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "@types/ejs": "^3.1.0",
+    "ts-jest": "^29.0.0"
+  }
+}
+```
+
+**Generated Code Types:**
+
+For MFE code generation, produce `.d.ts` alongside source:
+
+```typescript
+// Generated: src/api/userApi.ts
+export const userApi = createApi({...});
+export type User = { id: string; name: string; };
+
+// Generated: src/api/userApi.d.ts (alongside)
+export declare const userApi: ReturnType<typeof createApi>;
+export interface User { id: string; name: string; }
+```
+
+**Migration Order:**
+
+1. Add TypeScript tooling (tsconfig, ts-jest, dependencies)
+2. Convert `src/codegen/BffGenerator/*.js` → `.ts`
+3. Create `src/dsl/` in TypeScript from start
+4. Convert other files as touched
+
+**Reference:** Session 7 requirements elicitation
+
+---
+
+## Multi-Source Merging (Supplementary to ADR-046)
 
 ```yaml
 data:

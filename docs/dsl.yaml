@@ -1,4 +1,4 @@
-# MFE DSL Platform Contract v3.1
+# MFE DSL Platform Contract v3.2
 # This file defines the complete platform contract that ALL MFEs must conform to
 # regardless of implementation language (JavaScript, Python, Go, etc.)
 #
@@ -17,6 +17,13 @@
 # - ADR-046: data: section IS GraphQL Mesh configuration (single source of truth)
 #            CLI extracts data: → .meshrc.yaml → runs mesh build
 #            Mesh provides pure passthrough from GraphQL to REST APIs
+#
+# Session 7 DSL-First Remote Generation:
+# - capabilities[] now drives code generation (remote.tsx, features/)
+# - Domain capabilities describe WHAT, not WHERE (no entryPoints in DSL)
+# - CLI generates file structure from capability names
+# - RTK Query auto-generated from data.sources[]
+# - See: docs/dsl-remote-requirements.md, docs/dsl-schema-reference.md
 
 # =============================================================================
 # CORE IDENTITY (Required)
@@ -401,11 +408,30 @@ capabilities:
   # =============================================================================
   # DOMAIN-SPECIFIC CAPABILITIES (Custom to this MFE)
   # =============================================================================
-  # Domain capabilities follow same structure as platform capabilities
-  # MFE teams extend standard lifecycle phases with their own hooks
-  # handler can be a single function or array of functions
+  # Domain capabilities describe WHAT this MFE provides, not WHERE files are.
+  # CLI generates file structure from capability names:
+  #   - src/remote.tsx exports all capabilities with lazy loading
+  #   - src/features/{CapabilityName}/ created for each capability
+  #   - src/platform/api.ts auto-generates RTK Query hooks from data.sources[]
+  #
+  # Each capability becomes an exposed function in remote.tsx:
+  #   export const DataAnalysis = React.lazy(() => import('./features/DataAnalysis'));
+  #
+  # MFE teams implement features in src/features/{Name}/{Name}.tsx
+  # Platform code (handlers/hooks) auto-generated in src/platform/
   
-  - data-analysis:
+  # Simple capability - just name and description (minimal for code generation)
+  - DataAnalysis:
+      type: domain
+      description: Analyze CSV files and generate statistical summaries
+
+  # Another simple capability
+  - ReportViewer:
+      type: domain
+      description: View and export analysis reports
+
+  # Detailed capability with full lifecycle (optional - for documentation)
+  - DataAnalysisDetailed:
       type: domain
       description: Analyze CSV files and generate statistical summaries
       handler: analyzeFile
@@ -572,15 +598,23 @@ data:
       version: 2.1.0
 
 # =============================================================================
-# DEPENDENCIES (Optional)
+# DEPENDENCIES
 # =============================================================================
+# Dependencies drive Module Federation shared config and package.json generation.
+# CLI extracts these to generate rspack.config.js shared section.
 dependencies:
-  # Shared libraries (design systems, utilities)
-  shared:
-    - design-system@^1.2.0
-    - ui-components@^2.0.0
+  # Runtime dependencies - become Module Federation shared singletons
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
   
-  # Other MFE dependencies
-  mfes:
-    - user-service: ">=1.0.0"
-    - auth-service: "^2.1.0"
+  # Design system dependencies - also shared singletons
+  design-system:
+    '@mui/material': ^5.14.0
+    '@emotion/react': ^11.11.0
+    '@emotion/styled': ^11.11.0
+  
+  # Other MFE dependencies (future - for orchestrator validation)
+  # mfes:
+  #   user-service: ">=1.0.0"
+  #   auth-service: "^2.1.0"
