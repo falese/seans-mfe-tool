@@ -17,24 +17,25 @@ Implement DSL parsing, validation, and code generation infrastructure with 100% 
 
 ### 1. DSL Core Modules (100% Coverage)
 
-| Module | Purpose | Lines | Branches | Functions |
-|--------|---------|-------|----------|-----------|
-| `src/dsl/schema.ts` | Zod schemas for DSL v3.2 | 100% | 100% | 100% |
-| `src/dsl/parser.ts` | YAML parsing & manifest utilities | 100% | 100% | 100% |
-| `src/dsl/validator.ts` | Validation & error formatting | 100% | 100% | 100% |
-| `src/dsl/generator.ts` | Capability file generation | 100% | 100% | 100% |
-| `src/dsl/types.ts` | TypeScript type exports | N/A (types only) | - | - |
-| `src/dsl/index.ts` | Barrel exports | N/A (re-exports) | - | - |
+| Module                 | Purpose                           | Lines            | Branches | Functions |
+| ---------------------- | --------------------------------- | ---------------- | -------- | --------- |
+| `src/dsl/schema.ts`    | Zod schemas for DSL v3.2          | 100%             | 100%     | 100%      |
+| `src/dsl/parser.ts`    | YAML parsing & manifest utilities | 100%             | 100%     | 100%      |
+| `src/dsl/validator.ts` | Validation & error formatting     | 100%             | 100%     | 100%      |
+| `src/dsl/generator.ts` | Capability file generation        | 100%             | 100%     | 100%      |
+| `src/dsl/types.ts`     | TypeScript type exports           | N/A (types only) | -        | -         |
+| `src/dsl/index.ts`     | Barrel exports                    | N/A (re-exports) | -        | -         |
 
 ### 2. CLI Commands Implemented
 
-| Command | Description | Tests |
-|---------|-------------|-------|
-| `mfe remote:init <name>` | Scaffold new remote MFE with mfe-manifest.yaml | 22 tests |
-| `mfe remote:generate` | Generate files from manifest | 20 tests |
-| `mfe remote:generate:capability <name>` | Generate single capability | 10 tests |
+| Command                                 | Description                                    | Tests    |
+| --------------------------------------- | ---------------------------------------------- | -------- |
+| `mfe remote:init <name>`                | Scaffold new remote MFE with mfe-manifest.yaml | 22 tests |
+| `mfe remote:generate`                   | Generate files from manifest                   | 20 tests |
+| `mfe remote:generate:capability <name>` | Generate single capability                     | 10 tests |
 
 **Command Options:**
+
 - `--port <port>` - Dev server port (default: 3001)
 - `--force` - Overwrite existing files
 - `--dry-run` - Preview without writing
@@ -51,8 +52,9 @@ Command Tests:    51 tests
 ```
 
 **Breakdown by Test File:**
+
 - `parser.test.ts` - 35 tests
-- `validator.test.ts` - 32 tests  
+- `validator.test.ts` - 32 tests
 - `generator.test.ts` - 26 tests
 - `remote-init.test.ts` - 22 tests
 - `remote-generate.test.ts` - 29 tests
@@ -79,7 +81,7 @@ export const DSLManifestSchema = z.object({
   discovery: z.string().optional(),
   capabilities: z.array(CapabilityEntrySchema).optional(),
   data: DataConfigSchema.optional(),
-  dependencies: DependenciesSchema.optional()
+  dependencies: DependenciesSchema.optional(),
 });
 ```
 
@@ -189,6 +191,7 @@ program
 **Problem:** `jest.Mocked<typeof fs>` caused type conflicts with fs-extra's overloaded functions.
 
 **Solution:** Cast through `unknown` first:
+
 ```typescript
 // Before (error)
 (mockFs.readFile as jest.Mock).mockResolvedValue('content');
@@ -202,14 +205,15 @@ program
 **Problem:** Console spies reset by `jest.clearAllMocks()`.
 
 **Solution:** Setup spies AFTER clearAllMocks:
+
 ```typescript
 beforeEach(() => {
   jest.clearAllMocks();
-  
+
   // Setup AFTER clearAllMocks
   mockConsole = {
     log: jest.spyOn(console, 'log').mockImplementation(),
-    error: jest.spyOn(console, 'error').mockImplementation()
+    error: jest.spyOn(console, 'error').mockImplementation(),
   };
 });
 ```
@@ -224,14 +228,16 @@ beforeEach(() => {
 jest.mock('fs-extra');
 jest.mock('../../dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
-  formatErrorsForCLI: jest.fn()
+  formatErrorsForCLI: jest.fn(),
 }));
 ```
 
 ### 2. Type-Safe Mock Functions
 
 ```typescript
-const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
+const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<
+  typeof parseAndValidateDirectory
+>;
 ```
 
 ### 3. Arrange-Act-Assert
@@ -240,10 +246,10 @@ const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<ty
 it('should validate manifest', async () => {
   // Arrange
   mockParseAndValidate.mockResolvedValue({ valid: true, manifest, errors: [] });
-  
+
   // Act
   await remoteGenerateCommand();
-  
+
   // Assert
   expect(mockParseAndValidate).toHaveBeenCalledWith('/test');
 });
@@ -329,14 +335,14 @@ mfe remote:generate:capability Dashboard
 
 ## Metrics
 
-| Metric | Value |
-|--------|-------|
-| Tests Written | 144 |
-| Test Coverage (DSL) | 100% |
-| Files Created | 12 |
-| Commands Added | 3 |
-| TypeScript Errors Fixed | 8 |
-| Session Duration | ~2 hours |
+| Metric                  | Value    |
+| ----------------------- | -------- |
+| Tests Written           | 144      |
+| Test Coverage (DSL)     | 100%     |
+| Files Created           | 12       |
+| Commands Added          | 3        |
+| TypeScript Errors Fixed | 8        |
+| Session Duration        | ~2 hours |
 
 ---
 
