@@ -58,6 +58,184 @@ Reference these in code comments to guide AI assistants and document architectur
 - ADR-044: Data lifecycle alignment (same as capabilities)
 - ADR-045: GeneratedFrom traceability (data lineage)
 
+**GraphQL BFF (Session 7):**
+
+- ADR-046: GraphQL Mesh with DSL-embedded configuration
+
+---
+
+## GraphQL BFF ADRs
+
+### ADR-046: GraphQL Mesh for BFF Layer with DSL-Embedded Configuration
+
+**Decision:** Use GraphQL Mesh as the BFF (Backend for Frontend) passthrough layer. Embed Mesh configuration directly in the MFE DSL `data:` section as the single source of configuration truth.
+
+**Why:**
+
+1. Mesh provides production-ready pure passthrough from GraphQL to REST APIs
+2. Configuration-based (not code generation) is simpler and more re-entrant
+3. Single source of truth - DSL defines both MFE contract AND Mesh config
+4. The Guild actively maintains Mesh alongside their GraphQL ecosystem
+
+**DSL Data Section Becomes Mesh Config:**
+
+```yaml
+# mfe-manifest.yaml - data section IS the Mesh configuration
+name: user-dashboard
+version: 1.0.0
+type: feature
+
+data:
+  # Sources map directly to Mesh sources
+  sources:
+    - name: UserAPI
+      handler:
+        openapi:
+          source: ./specs/user-api.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+
+    - name: InventoryAPI
+      handler:
+        openapi:
+          source: https://inventory.internal/swagger.json
+
+    - name: OrdersAPI
+      handler:
+        openapi:
+          source: ./specs/orders.yaml
+
+  # Transforms for schema shaping
+  transforms:
+    - prefix:
+        value: User_
+        includeRootOperations: true
+    - filterSchema:
+        filters:
+          - Query.!internal*
+
+  # Plugins for production concerns
+  plugins:
+    - responseCache:
+        ttl: 60000
+    - rateLimit:
+        config:
+          - type: Query
+            field: '*'
+            max: 100
+            window: '1m'
+
+  # Server configuration
+  serve:
+    endpoint: /graphql
+    playground: true
+```
+
+**CLI Extracts Mesh Config from DSL:**
+
+```typescript
+// mfe bff command extracts data section → .meshrc.yaml
+async function generateBFF(mfeManifest: MFEManifest) {
+  const meshConfig = {
+    sources: mfeManifest.data.sources,
+    transforms: mfeManifest.data.transforms,
+    plugins: mfeManifest.data.plugins,
+    serve: mfeManifest.data.serve,
+  };
+
+  await writeYaml('.meshrc.yaml', meshConfig);
+  await execSync('mesh build');
+}
+```
+
+**Deployment: BFF + Static Assets Same Container:**
+
+```typescript
+// Generated server.ts
+import express from 'express';
+import { createBuiltMeshHTTPHandler } from './.mesh';
+
+const app = express();
+
+// GraphQL BFF (from Mesh)
+app.use(
+  '/graphql',
+  createBuiltMeshHTTPHandler({
+    context: (req) => ({
+      jwt: req.headers.authorization?.replace('Bearer ', ''),
+      requestId: req.headers['x-request-id'],
+    }),
+  })
+);
+
+// Static MFE assets
+app.use(express.static('dist'));
+
+app.listen(3000);
+```
+
+**Multi-Source Merging (Multiple OpenAPI Specs):**
+
+```yaml
+data:
+  sources:
+    # Each API becomes part of unified GraphQL schema
+    - name: UserService
+      handler:
+        openapi:
+          source: ./specs/users.yaml
+      transforms:
+        - prefix:
+            value: User_
+
+    - name: OrderService
+      handler:
+        openapi:
+          source: ./specs/orders.yaml
+      transforms:
+        - prefix:
+            value: Order_
+
+    - name: InventoryService
+      handler:
+        openapi:
+          source: https://inventory.internal/swagger.json
+```
+
+**JWT Authentication Forwarding:**
+
+```yaml
+data:
+  sources:
+    - name: SecureAPI
+      handler:
+        openapi:
+          source: ./api.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+          # Or custom fetch for complex auth
+          customFetch: ./src/auth-fetch.ts
+```
+
+**Benefits of DSL-Embedded Config:**
+
+- ✅ Single source of truth (no separate .meshrc.yaml to maintain)
+- ✅ DSL validation catches config errors early
+- ✅ Version control tracks all config in one file
+- ✅ CLI can extract and generate Mesh artifacts
+- ✅ Registry can index data sources for discovery
+
+**Trade-offs:**
+
+- ✅ Production-tested by The Guild ecosystem
+- ✅ Zero custom resolver code for passthrough
+- ✅ Supports all major deployment targets
+- ⚠️ External dependency (but mature, well-maintained)
+- ⚠️ DSL becomes larger (but self-contained)
+
+**Reference:** Replaces custom code generation approach from R1-R8 draft
+
 ---
 
 ## Core Orchestration ADRs (Active)

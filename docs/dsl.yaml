@@ -1,4 +1,4 @@
-# MFE DSL Platform Contract v3.0
+# MFE DSL Platform Contract v3.1
 # This file defines the complete platform contract that ALL MFEs must conform to
 # regardless of implementation language (JavaScript, Python, Go, etc.)
 #
@@ -12,6 +12,11 @@
 # - DEC-022: V1 supports JavaScript/TypeScript only
 # - DEC-023: Data lifecycle aligns with capability lifecycle (no `loading` phase)
 # - DEC-024: generatedFrom tracks data lineage for dependency analysis
+#
+# Session 7 Decisions Applied:
+# - ADR-046: data: section IS GraphQL Mesh configuration (single source of truth)
+#            CLI extracts data: → .meshrc.yaml → runs mesh build
+#            Mesh provides pure passthrough from GraphQL to REST APIs
 
 # =============================================================================
 # CORE IDENTITY (Required)
@@ -457,84 +462,109 @@ capabilities:
               handler: logAndNotifyError
               description: Log error and notify user
 # =============================================================================
-# DATA LAYER (Optional - only if MFE exposes data)
+# DATA LAYER - GraphQL Mesh Configuration (ADR-046)
 # =============================================================================
-# All data access via GraphQL following standard pattern
+# The data section IS the GraphQL Mesh configuration - single source of truth.
+# CLI extracts this section to .meshrc.yaml and runs `mesh build`.
+# Mesh provides pure passthrough from GraphQL to REST APIs.
 data:
-  # GraphQL endpoint path (relative to base endpoint)
-  endpoint: /graphql
-  
-  # GraphQL schema definition
-  schema:
-    # Type definitions
-    types:
-      - AnalysisResult:
-          owner: analytics-team
-          tags: [pii-possible]
-          fields:
-            - id: ID!
-            - fileName: String!
-            - analysisType: AnalysisType!
-            - results: JSON!
-            - timestamp: DateTime!
-            - userId: String
-            - metadata: AnalysisMetadata
-      
-      - AnalysisType:
-          enum: [SUMMARY, CORRELATION, REGRESSION]
-      
-      - AnalysisMetadata:
-          fields:
-            - rowCount: Int
-            - columnCount: Int
-            - processingTimeMs: Int
+  # ===========================================================================
+  # SOURCES - One or more OpenAPI specs merged into unified GraphQL schema
+  # ===========================================================================
+  sources:
+    # Primary API for this MFE
+    - name: AnalysisAPI
+      handler:
+        openapi:
+          source: ./specs/analysis-api.yaml
+          # JWT forwarding - context populated by Express middleware
+          operationHeaders:
+            Authorization: "Bearer {context.jwt}"
+            X-Request-ID: "{context.requestId}"
+            X-User-ID: "{context.userId}"
     
-    # Query operations (read-only)
-    queries:
-      - getAnalysis:
-          description: Retrieve specific analysis by ID
-          args:
-            - id: ID!
-          returns: AnalysisResult
-          authorization: user.owns.resource OR user.role.admin
-          # Data queries use same 4-phase lifecycle as capabilities (DEC-023)
-          lifecycle:
-            before: [validateToken, checkRateLimit]
-            main: [executeQuery]
-            after: [cacheResponse, trackAccess]
-            error: [logError, showErrorMessage]
-      
-      - listAnalyses:
-          description: List analyses for current user
-          args:
-            - limit: Int = 10
-            - offset: Int = 0
-          returns: [AnalysisResult!]!
-          authorization: user.authenticated
-          lifecycle:
-            before: [validateToken]
-            main: [executeQuery]
-            after: [cacheResponse]
-    
-    # Mutation operations (write)
-    mutations:
-      - createAnalysis:
-          description: Create new analysis
-          args:
-            - input: AnalysisInput!
-          returns: AnalysisResult
-          authorization: user.permission.create_analysis
-          # Mutations also use same 4-phase lifecycle (DEC-023)
-          lifecycle:
-            before: [validateToken, validateFileSize, checkQuota]
-            main: [executeMutation]
-            after: [invalidateCache, notifyUser, trackUsage]
-            error: [logError, rollback, notifyError]
+    # Additional APIs can be merged into unified schema
+    # - name: UserAPI
+    #   handler:
+    #     openapi:
+    #       source: https://user-service.internal/swagger.json
+    #       operationHeaders:
+    #         Authorization: "Bearer {context.jwt}"
+    #   transforms:
+    #     - prefix:
+    #         value: User_
+    #         includeRootOperations: true
 
-  # =============================================================================
-  # DATA LINEAGE (Optional - DEC-024)
-  # =============================================================================
+  # ===========================================================================
+  # TRANSFORMS - Shape the unified GraphQL schema (optional)
+  # ===========================================================================
+  transforms:
+    # Remove internal/admin endpoints from public schema
+    - filterSchema:
+        filters:
+          - Query.!internal*
+          - Mutation.!admin*
+    
+    # Fix naming conventions from OpenAPI
+    # - rename:
+    #     renames:
+    #       - from:
+    #           type: Query
+    #           field: API_V1_GetAnalysis
+    #         to:
+    #           type: Query
+    #           field: getAnalysis
+    
+    # Namespace to avoid conflicts with other sources
+    # - prefix:
+    #     value: Analysis_
+    #     includeRootOperations: true
+
+  # ===========================================================================
+  # PLUGINS - Production concerns (optional)
+  # ===========================================================================
+  plugins:
+    # Response caching
+    - responseCache:
+        ttl: 60000  # 1 minute
+        # cacheKey: "{context.userId}:{operationName}"
+        invalidateViaMutation: true
+    
+    # Rate limiting
+    - rateLimit:
+        config:
+          - type: Query
+            field: '*'
+            max: 100
+            window: '1m'
+          - type: Mutation
+            field: '*'
+            max: 20
+            window: '1m'
+    
+    # Query depth limiting (prevent abuse)
+    # - depthLimit:
+    #     maxDepth: 10
+    
+    # Prometheus metrics
+    # - prometheus:
+    #     endpoint: /metrics
+
+  # ===========================================================================
+  # SERVE - GraphQL server configuration
+  # ===========================================================================
+  serve:
+    endpoint: /graphql
+    playground: true  # Disable in production
+    # cors:
+    #   origin: '*'
+    #   credentials: true
+
+  # ===========================================================================
+  # DATA LINEAGE (DEC-024, ADR-045)
+  # ===========================================================================
   # Tracks source of data for dependency analysis and impact assessment
+  # Registry can query: "Which MFEs use this API?"
   generatedFrom:
     - openapi: ./specs/analysis-api.yaml
       service: analysis-api
