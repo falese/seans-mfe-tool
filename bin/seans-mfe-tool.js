@@ -14,6 +14,7 @@ require('ts-node').register({
   }
 });
 
+const chalk = require('chalk');
 const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
 const { createRemoteCommand } = require('../src/commands/create-remote');
