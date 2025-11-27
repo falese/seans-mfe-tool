@@ -7,6 +7,7 @@ const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
 const { initCommand } = require('../src/commands/init');
+const { bffBuildCommand, bffDevCommand, bffValidateCommand, bffInitCommand } = require('../src/commands/bff');
 const { version } = require('../package.json');
 
 program
@@ -150,4 +151,70 @@ Notes:
     }
     buildCommand({ name, ...options });
   });
+
+// BFF Commands - Following ADR-046: GraphQL Mesh with DSL-embedded configuration
+program
+  .command('bff:init')
+  .description('Initialize a new BFF project or add BFF to existing project')
+  .argument('[name]', 'BFF project name (optional - omit to add to existing project)')
+  .option('-p, --port <port>', 'Port number for the BFF server', '3000')
+  .option('-s, --specs <specs...>', 'OpenAPI specification file(s)')
+  .option('--no-static', 'Create standalone BFF without static asset serving')
+  .option('-v, --version <version>', 'Project version', '1.0.0')
+  .addHelpText('after', `
+Examples:
+  # Create new standalone BFF project
+  $ seans-mfe-tool bff:init my-bff --specs ./specs/users.yaml ./specs/orders.yaml
+
+  # Add BFF to existing MFE project
+  $ cd my-existing-remote && seans-mfe-tool bff:init
+
+  # Create BFF without static asset serving (pure API gateway)
+  $ seans-mfe-tool bff:init api-gateway --specs ./api.yaml --no-static
+
+Following ADR-046: GraphQL Mesh with DSL-embedded configuration`)
+  .action((name, options) => {
+    bffInitCommand(name, options);
+  });
+
+program
+  .command('bff:build')
+  .description('Build BFF artifacts from mfe-manifest.yaml')
+  .option('-m, --manifest <path>', 'Path to mfe-manifest.yaml', 'mfe-manifest.yaml')
+  .addHelpText('after', `
+This command:
+  1. Reads the data: section from mfe-manifest.yaml
+  2. Extracts Mesh configuration to .meshrc.yaml
+  3. Runs 'mesh build' to generate GraphQL runtime
+
+Following REQ-BFF-001: DSL Data Section as Mesh Configuration`)
+  .action((options) => {
+    bffBuildCommand(options);
+  });
+
+program
+  .command('bff:dev')
+  .description('Start BFF development server with hot reload')
+  .option('-m, --manifest <path>', 'Path to mfe-manifest.yaml', 'mfe-manifest.yaml')
+  .addHelpText('after', `
+Starts GraphQL Mesh in development mode with hot reload.
+Changes to mfe-manifest.yaml data: section will be reflected immediately.`)
+  .action((options) => {
+    bffDevCommand(options);
+  });
+
+program
+  .command('bff:validate')
+  .description('Validate BFF configuration without building')
+  .option('-m, --manifest <path>', 'Path to mfe-manifest.yaml', 'mfe-manifest.yaml')
+  .addHelpText('after', `
+Validates:
+  - data: section exists in manifest
+  - At least one source is defined
+  - OpenAPI spec files exist (for local paths)
+  - Transform and plugin configurations are valid`)
+  .action((options) => {
+    bffValidateCommand(options);
+  });
+
 program.parse(process.argv);

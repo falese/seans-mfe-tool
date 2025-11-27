@@ -30,7 +30,17 @@ jest.mock('path', () => ({
   resolve: jest.fn((...args) => args.join('/')),
   join: jest.fn((...args) => args.join('/')),
   dirname: jest.fn(p => p.split('/').slice(0, -1).join('/')),
-  basename: jest.fn(p => p.split('/').pop())
+  basename: jest.fn((p, ext) => {
+    const base = p.split('/').pop();
+    if (ext && base.endsWith(ext)) {
+      return base.slice(0, -ext.length);
+    }
+    return base;
+  }),
+  extname: jest.fn(p => {
+    const match = p.match(/\.[^./]+$/);
+    return match ? match[0] : '';
+  })
 }));
 
 // Get references to the mocked modules
@@ -91,7 +101,17 @@ const setupCommonMocks = () => {
   mockPath.resolve.mockReset().mockImplementation((...args) => args.join('/'));
   mockPath.join.mockReset().mockImplementation((...args) => args.join('/'));
   mockPath.dirname.mockReset().mockImplementation(p => p.split('/').slice(0, -1).join('/'));
-  mockPath.basename.mockReset().mockImplementation(p => p.split('/').pop());
+  mockPath.basename.mockReset().mockImplementation((p, ext) => {
+    const base = p.split('/').pop();
+    if (ext && base.endsWith(ext)) {
+      return base.slice(0, -ext.length);
+    }
+    return base;
+  });
+  mockPath.extname.mockReset().mockImplementation(p => {
+    const match = p.match(/\.[^./]+$/);
+    return match ? match[0] : '';
+  });
 
   mockExec.execSync.mockReset().mockReturnValue('');
 

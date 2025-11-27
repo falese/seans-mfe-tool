@@ -77,38 +77,36 @@ describe('templateProcessor', () => {
         expect(fs.readdir).toHaveBeenCalledWith(path.join(targetDir, 'subdir'));
       });
 
-      it('should handle package.json.ejs specially', async () => {
+      it('should process package.json.ejs with EJS rendering', async () => {
         fs.readdir.mockResolvedValue(['package.json.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('{"name": "<%= name %>"}');
+        ejs.render.mockReturnValue('{"name": "test-project"}');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
         await processTemplates(targetDir, vars);
 
-        expect(ejs.render).not.toHaveBeenCalled();
+        expect(ejs.render).toHaveBeenCalledWith('{"name": "<%= name %>"}', vars);
         const writeCall = fs.writeFile.mock.calls[0];
         expect(writeCall[0]).toBe(path.join(targetDir, 'package.json'));
-        
-        const content = JSON.parse(writeCall[1]);
-        expect(content.name).toBe('test-project');
-        expect(content.version).toBe('1.0.0');
+        expect(writeCall[1]).toBe('{"name": "test-project"}');
       });
 
-      it('should handle rspack.config.js.ejs specially', async () => {
+      it('should process rspack.config.js.ejs with EJS rendering', async () => {
         fs.readdir.mockResolvedValue(['rspack.config.js.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('port: <%= port %>');
+        ejs.render.mockReturnValue('port: 3000');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
         await processTemplates(targetDir, vars);
 
-        expect(ejs.render).not.toHaveBeenCalled();
-        
-        // The code uses String(vars.remotes) which produces "[object Object]"
-        // This is the actual behavior to test
+        expect(ejs.render).toHaveBeenCalledWith('port: <%= port %>', vars);
         expect(fs.writeFile).toHaveBeenCalledWith(
           path.join(targetDir, 'rspack.config.js'),
-          '[object Object]\nport:3000',
+          'port: 3000',
           'utf8'
         );
       });
@@ -315,24 +313,29 @@ describe('templateProcessor', () => {
     });
 
     describe('Special file handling', () => {
-      it('should format package.json with proper indentation', async () => {
+      it('should process package.json.ejs template correctly', async () => {
         fs.readdir.mockResolvedValue(['package.json.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('{\n  "name": "<%= name %>",\n  "version": "<%= version %>"\n}');
+        ejs.render.mockReturnValue('{\n  "name": "test-project",\n  "version": "1.0.0"\n}');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
         await processTemplates(targetDir, vars);
 
+        expect(ejs.render).toHaveBeenCalled();
         const writeCall = fs.writeFile.mock.calls[0];
         const content = writeCall[1];
         
-        // Check for 2-space indentation
-        expect(content).toContain('{\n  "name"');
+        // Check that EJS rendering worked
+        expect(content).toContain('"name": "test-project"');
       });
 
-      it('should handle package.json with missing version', async () => {
+      it('should process package.json.ejs with EJS vars', async () => {
         fs.readdir.mockResolvedValue(['package.json.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('{"name": "<%= name %>"}');
+        ejs.render.mockReturnValue('{"name": "test-project"}');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
@@ -341,28 +344,29 @@ describe('templateProcessor', () => {
 
         await processTemplates(targetDir, varsWithoutVersion);
 
-        const writeCall = fs.writeFile.mock.calls[0];
-        const content = JSON.parse(writeCall[1]);
-        
-        expect(content.version).toBe('1.0.0'); // Default version
+        expect(ejs.render).toHaveBeenCalledWith('{"name": "<%= name %>"}', varsWithoutVersion);
       });
 
-      it('should concatenate remotes and port for rspack.config.js', async () => {
+      it('should process rspack.config.js.ejs with port variable', async () => {
         fs.readdir.mockResolvedValue(['rspack.config.js.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('devServer: { port: <%= port %> }');
+        ejs.render.mockReturnValue('devServer: { port: 3000 }');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
         await processTemplates(targetDir, vars);
 
+        expect(ejs.render).toHaveBeenCalled();
         const writeCall = fs.writeFile.mock.calls[0];
-        expect(writeCall[1]).toContain('[object Object]');
-        expect(writeCall[1]).toContain('\nport:3000');
+        expect(writeCall[1]).toContain('port: 3000');
       });
 
-      it('should handle rspack.config.js with only remotes', async () => {
+      it('should process rspack.config.js.ejs with remotes', async () => {
         fs.readdir.mockResolvedValue(['rspack.config.js.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('remotes: <%- JSON.stringify(remotes) %>');
+        ejs.render.mockReturnValue('remotes: {"remote1":"remote1@http://localhost:3001/remoteEntry.js"}');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
@@ -371,14 +375,15 @@ describe('templateProcessor', () => {
 
         await processTemplates(targetDir, varsWithoutPort);
 
-        const writeCall = fs.writeFile.mock.calls[0];
-        expect(writeCall[1]).toContain('[object Object]');
-        expect(writeCall[1]).not.toContain('port:');
+        expect(ejs.render).toHaveBeenCalled();
+        expect(fs.writeFile).toHaveBeenCalled();
       });
 
-      it('should handle rspack.config.js with only port', async () => {
+      it('should process rspack.config.js.ejs with only port', async () => {
         fs.readdir.mockResolvedValue(['rspack.config.js.ejs']);
         fs.stat.mockResolvedValue({ isDirectory: () => false });
+        fs.readFile.mockResolvedValue('port: <%= port %>');
+        ejs.render.mockReturnValue('port: 3000');
         fs.writeFile.mockResolvedValue(undefined);
         fs.remove.mockResolvedValue(undefined);
 
@@ -388,7 +393,7 @@ describe('templateProcessor', () => {
         await processTemplates(targetDir, varsWithoutRemotes);
 
         const writeCall = fs.writeFile.mock.calls[0];
-        expect(writeCall[1]).toBe('\nport:3000');
+        expect(writeCall[1]).toBe('port: 3000');
       });
     });
 

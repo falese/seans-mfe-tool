@@ -143,7 +143,7 @@ describe('<%= name %> Shell', () => {
   it('handles remote loading failure gracefully', async () => {
     const { loadRemote } = require('../remotes');
     loadRemote.mockRejectedValueOnce(new Error('Network error'));
-    
+
     render(<App />);
     await waitFor(() => {
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
@@ -230,18 +230,18 @@ describe('<%= name %> Controller', () => {
   describe('GET /<%= pluralName %>', () => {
     it('returns all items', async () => {
       (db.findAll as jest.Mock).mockResolvedValue([{ id: 1, name: 'Test' }]);
-      
+
       const res = await request(app).get('/<%= pluralName %>');
-      
+
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
     });
 
     it('handles database errors', async () => {
       (db.findAll as jest.Mock).mockRejectedValue(new Error('DB Error'));
-      
+
       const res = await request(app).get('/<%= pluralName %>');
-      
+
       expect(res.status).toBe(500);
       expect(res.body.error).toBeDefined();
     });
@@ -250,11 +250,11 @@ describe('<%= name %> Controller', () => {
   describe('POST /<%= pluralName %>', () => {
     it('creates new item with valid data', async () => {
       (db.create as jest.Mock).mockResolvedValue({ id: 1, name: 'New' });
-      
+
       const res = await request(app)
         .post('/<%= pluralName %>')
         .send({ name: 'New' });
-      
+
       expect(res.status).toBe(201);
       expect(res.body.id).toBeDefined();
     });
@@ -263,7 +263,7 @@ describe('<%= name %> Controller', () => {
       const res = await request(app)
         .post('/<%= pluralName %>')
         .send({});
-      
+
       expect(res.status).toBe(400);
       expect(res.body.errors).toBeDefined();
     });
@@ -288,7 +288,7 @@ describe('<%= name %> BFF GraphQL', () => {
     const res = await request(app)
       .post('/graphql')
       .send({ query: '{ __schema { types { name } } }' });
-    
+
     expect(res.status).toBe(200);
     expect(res.body.data.__schema).toBeDefined();
   });
@@ -296,12 +296,12 @@ describe('<%= name %> BFF GraphQL', () => {
   it('forwards JWT to upstream services', async () => {
     const { execute } = require('../mesh');
     execute.mockResolvedValue({ data: { items: [] } });
-    
+
     await request(app)
       .post('/graphql')
       .set('Authorization', 'Bearer test-token')
       .send({ query: '{ items { id } }' });
-    
+
     expect(execute).toHaveBeenCalledWith(
       expect.objectContaining({
         context: expect.objectContaining({
@@ -316,11 +316,11 @@ describe('<%= name %> BFF GraphQL', () => {
   it('handles upstream service failures', async () => {
     const { execute } = require('../mesh');
     execute.mockRejectedValue(new Error('Upstream unavailable'));
-    
+
     const res = await request(app)
       .post('/graphql')
       .send({ query: '{ items { id } }' });
-    
+
     expect(res.status).toBe(200); // GraphQL returns 200 with errors
     expect(res.body.errors).toBeDefined();
   });
@@ -632,14 +632,14 @@ TDD Guardian should:
 
 ## Testing Responsibilities Summary
 
-| Test Type              | Owner                | Trigger                           | Coverage                      |
-| ---------------------- | -------------------- | --------------------------------- | ----------------------------- |
-| **Unit Tests**         | TDD Guardian         | After implementation              | 100% code coverage            |
-| **Acceptance Tests**   | TDD Guardian         | GWT from Implementation Agent     | All scenarios                 |
-| **Integration Tests**  | TDD Guardian         | CLI command verification          | Happy + error paths           |
-| **Regression Tests**   | Both Agents          | `npm test` before/after changes   | No failures                   |
-| **E2E Tests**          | Future agent         | When orchestration runtime exists | Browser-based MFE loading     |
-| **Generated MFE Tests** | Implementation Agent | Template creation                 | Starter coverage for teams    |
+| Test Type               | Owner                | Trigger                           | Coverage                   |
+| ----------------------- | -------------------- | --------------------------------- | -------------------------- |
+| **Unit Tests**          | TDD Guardian         | After implementation              | 100% code coverage         |
+| **Acceptance Tests**    | TDD Guardian         | GWT from Implementation Agent     | All scenarios              |
+| **Integration Tests**   | TDD Guardian         | CLI command verification          | Happy + error paths        |
+| **Regression Tests**    | Both Agents          | `npm test` before/after changes   | No failures                |
+| **E2E Tests**           | Future agent         | When orchestration runtime exists | Browser-based MFE loading  |
+| **Generated MFE Tests** | Implementation Agent | Template creation                 | Starter coverage for teams |
 
 ### Generated MFE Test Value Proposition
 
@@ -656,12 +656,12 @@ Teams get immediate value from scaffolded projects:
 
 ### Generated Test Coverage Targets
 
-| MFE Type   | Generated Tests Cover                                 | Team Responsibility              |
-| ---------- | ----------------------------------------------------- | -------------------------------- |
-| **Shell**  | App mount, remote loading, routing basics             | Business logic, specific routes  |
-| **Remote** | Component render, standalone mode, federation contract| Feature components, state logic  |
-| **API**    | CRUD happy paths, validation, error handling          | Business rules, edge cases       |
-| **BFF**    | Introspection, JWT forwarding, upstream errors        | Query-specific tests, caching    |
+| MFE Type   | Generated Tests Cover                                  | Team Responsibility             |
+| ---------- | ------------------------------------------------------ | ------------------------------- |
+| **Shell**  | App mount, remote loading, routing basics              | Business logic, specific routes |
+| **Remote** | Component render, standalone mode, federation contract | Feature components, state logic |
+| **API**    | CRUD happy paths, validation, error handling           | Business rules, edge cases      |
+| **BFF**    | Introspection, JWT forwarding, upstream errors         | Query-specific tests, caching   |
 
 **Note:** E2E testing for generated MFE projects is the responsibility of those projects, not this CLI tool.
 

@@ -434,5 +434,73 @@ describe('BuildManager', () => {
         expect(template).toContain("mount('root')");
       });
     });
+
+    describe('DEBUG mode logging', () => {
+      it('should log build configuration when DEBUG is enabled', async () => {
+        const originalDebug = process.env.DEBUG;
+        process.env.DEBUG = 'true';
+
+        try {
+          const manager = new BuildManager({ type: 'shell', mode: 'development' });
+          const mockConfig = { name: 'test-config', mode: 'development' };
+          createConfiguration.mockResolvedValue(mockConfig);
+          fs.readJSON.mockResolvedValue({ name: 'test-app' });
+          fs.pathExists.mockResolvedValue(true);
+
+          await manager.initialize();
+
+          expect(consoleLogSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Build configuration')
+          );
+          expect(consoleLogSpy).toHaveBeenCalledWith(
+            expect.stringContaining('"name": "test-config"')
+          );
+        } finally {
+          process.env.DEBUG = originalDebug;
+        }
+      });
+
+      it('should handle compiler close errors', async () => {
+        const manager = new BuildManager({ type: 'remote', mode: 'production' });
+        const mockStats = {
+          hasErrors: () => false,
+          hasWarnings: () => false,
+          toJson: () => ({ time: 1000 })
+        };
+        const mockCompiler = {
+          run: jest.fn((callback) => callback(null, mockStats)),
+          close: jest.fn((callback) => callback(new Error('Close error')))
+        };
+        rspack.mockReturnValue(mockCompiler);
+        createConfiguration.mockReturnValue({ name: 'test-config' });
+        manager.config = { name: 'test-config' };
+
+        await manager.build();
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Error while closing compiler'),
+          expect.any(Error)
+        );
+      });
+
+      it('should log build errors to console', async () => {
+        const manager = new BuildManager({ type: 'shell', mode: 'production' });
+        const mockCompiler = {
+          run: jest.fn((callback) => callback(new Error('Compilation error'), null))
+        };
+        rspack.mockReturnValue(mockCompiler);
+        createConfiguration.mockReturnValue({ name: 'test-config' });
+        manager.config = { name: 'test-config' };
+
+        await expect(manager.build()).rejects.toThrow('Compilation error');
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Build failed')
+        );
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          expect.any(Error)
+        );
+      });
+    });
   });
 });

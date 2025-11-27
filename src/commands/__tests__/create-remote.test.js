@@ -79,4 +79,18 @@ describe('Create Remote Command', () => {
     await expect(createRemoteCommand('test-remote', options))
       .rejects.toThrow('Invalid port number');
   });
+
+  describe('Error handling', () => {
+    it('should throw error when template directory does not exist', async () => {
+      fs.existsSync.mockReturnValueOnce(false);
+      
+      const options = {
+        port: '3001',
+        muiVersion: '5.15.0'
+      };
+
+      await expect(createRemoteCommand('test-remote', options))
+        .rejects.toThrow('Template directory not found');
+    });
+  });
 });

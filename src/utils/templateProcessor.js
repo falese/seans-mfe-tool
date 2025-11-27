@@ -54,24 +54,9 @@ async function processTemplates(targetDir, vars) {
     if (stat.isDirectory()) {
       await processTemplates(filePath, vars);
     } else if (file.endsWith('.ejs')) {
-      let renderedContent;
-      if (file === 'package.json.ejs') {
-        renderedContent = JSON.stringify(
-          {
-            name: vars.name,
-            version: vars.version || '1.0.0'
-          },
-          null,
-          2
-        );
-      } else if (file === 'rspack.config.js.ejs') {
-        renderedContent = '';
-        if (vars.remotes) renderedContent += String(vars.remotes);
-        if (vars.port) renderedContent += `\nport:${vars.port}`;
-      } else {
-        const templateContent = await fs.readFile(filePath, 'utf8');
-        renderedContent = ejs.render(templateContent, vars);
-      }
+      // Always use EJS rendering for .ejs files
+      const templateContent = await fs.readFile(filePath, 'utf8');
+      const renderedContent = ejs.render(templateContent, vars);
       const newFilePath = filePath.replace('.ejs', '');
       await fs.writeFile(newFilePath, renderedContent, 'utf8');
       await fs.remove(filePath);

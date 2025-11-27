@@ -101,4 +101,14 @@ describe('Create Shell Command', () => {
       expect.any(String)
     );
   });
+
+  describe('Error handling', () => {
+    it('should throw error when template directory does not exist', async () => {
+      mockFs.existsSync.mockReturnValueOnce(false);
+
+      await expect(createShellCommand('test-shell', defaultOptions))
+        .rejects
+        .toThrow('Template directory not found');
+    });
+  });
 });

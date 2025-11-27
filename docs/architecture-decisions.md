@@ -177,12 +177,12 @@ const app = express();
 
 **Generated Test Structure by MFE Type:**
 
-| MFE Type   | Generated Test Files                          | Key Coverage                                    |
-|------------|-----------------------------------------------|------------------------------------------------|
-| **Shell**  | `App.test.tsx`, `routing.test.tsx`            | Remote loading, error boundaries, navigation    |
-| **Remote** | `App.test.tsx`, `federation.test.tsx`         | Component render, standalone mode, contracts    |
-| **API**    | `<entity>.controller.test.ts`                 | CRUD operations, validation, error handling     |
-| **BFF**    | `graphql.test.ts`                             | Introspection, JWT forwarding, upstream errors  |
+| MFE Type   | Generated Test Files                  | Key Coverage                                   |
+| ---------- | ------------------------------------- | ---------------------------------------------- |
+| **Shell**  | `App.test.tsx`, `routing.test.tsx`    | Remote loading, error boundaries, navigation   |
+| **Remote** | `App.test.tsx`, `federation.test.tsx` | Component render, standalone mode, contracts   |
+| **API**    | `<entity>.controller.test.ts`         | CRUD operations, validation, error handling    |
+| **BFF**    | `graphql.test.ts`                     | Introspection, JWT forwarding, upstream errors |
 
 **Generated Test Infrastructure:**
 
@@ -241,8 +241,7 @@ describe('Federation Contract', () => {
   it('does not bundle React (uses shared)', () => {
     // Verify singleton shared modules work correctly
     const webpackModules = (window as any).__webpack_modules__;
-    const reactModules = Object.keys(webpackModules || {})
-      .filter(k => k.includes('react'));
+    const reactModules = Object.keys(webpackModules || {}).filter((k) => k.includes('react'));
     expect(reactModules.length).toBeLessThanOrEqual(1);
   });
 });
@@ -285,40 +284,42 @@ module.exports = {
       branches: 80,
       functions: 80,
       lines: 80,
-      statements: 80
-    }
-  }
+      statements: 80,
+    },
+  },
 };
 ```
 
 **Value to Teams:**
 
-| Before (typical scaffolding) | After (with ADR-047) |
-|------------------------------|----------------------|
-| No tests, no setup           | Working tests on day one |
-| Manual mock configuration    | MF mocks pre-configured |
-| Unknown patterns             | Patterns to copy/extend |
-| No coverage gates            | 80% threshold from start |
+| Before (typical scaffolding) | After (with ADR-047)          |
+| ---------------------------- | ----------------------------- |
+| No tests, no setup           | Working tests on day one      |
+| Manual mock configuration    | MF mocks pre-configured       |
+| Unknown patterns             | Patterns to copy/extend       |
+| No coverage gates            | 80% threshold from start      |
 | Provider setup required      | `renderWithProviders()` ready |
 
 **Reference:** REQ-SCAFFOLD-001 through REQ-SCAFFOLD-005
 
 ---
+
 app.use(
-  '/graphql',
-  createBuiltMeshHTTPHandler({
-    context: (req) => ({
-      jwt: req.headers.authorization?.replace('Bearer ', ''),
-      requestId: req.headers['x-request-id'],
-    }),
-  })
+'/graphql',
+createBuiltMeshHTTPHandler({
+context: (req) => ({
+jwt: req.headers.authorization?.replace('Bearer ', ''),
+requestId: req.headers['x-request-id'],
+}),
+})
 );
 
 // Static MFE assets
 app.use(express.static('dist'));
 
 app.listen(3000);
-```
+
+````
 
 **Multi-Source Merging (Multiple OpenAPI Specs):**
 
@@ -346,7 +347,7 @@ data:
       handler:
         openapi:
           source: https://inventory.internal/swagger.json
-```
+````
 
 **JWT Authentication Forwarding:**
 
