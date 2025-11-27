@@ -15,7 +15,6 @@ const utils = require('./utils');
 
 // Import functions from implementation and update files
 const implementation = require('./implementation');
-const updateFunctions = require('./update-functions');
 
 // Annotation constants
 const ANNOTATION_START = '/* MFE-GENERATOR:START */';

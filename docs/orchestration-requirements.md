@@ -5,6 +5,7 @@
 **Owner:** Sean  
 **Feature:** MFE Orchestration System  
 **Related Docs:**
+
 - [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
 - [Architecture Decisions](./architecture-decisions.md)
 - [Session 2 Summary](./SESSION-2-SUMMARY.md)
@@ -52,6 +53,7 @@ This document captures requirements for adding orchestration capabilities to the
 
 **Summary:**
 All MFEs will expose data via GraphQL, generated automatically from OpenAPI specifications. This provides:
+
 - Unified interface for all MFE types (frontend, backend, tool, agent)
 - Backend-only MFEs without UI components
 - Robust BFF (Backend for Frontend) pattern
@@ -61,6 +63,7 @@ All MFEs will expose data via GraphQL, generated automatically from OpenAPI spec
 **Detailed requirements moved to:** [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
 
 **Key Decisions:**
+
 - ✅ All MFE data exposed as GraphQL
 - ✅ GraphQL resolvers auto-generated from OpenAPI specs
 - ✅ Generic data handler with lifecycle events (loading, error, etc.)
@@ -174,7 +177,7 @@ const resolvers = {
     user: async (_, { id }, context) => {
       // Calls original REST API
       const response = await fetch(`${API_BASE}/users?id=${id}`, {
-        headers: { Authorization: context.token }
+        headers: { Authorization: context.token },
       });
       return response.json();
     },
@@ -182,11 +185,11 @@ const resolvers = {
       const response = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         body: JSON.stringify(filter),
-        headers: { Authorization: context.token }
+        headers: { Authorization: context.token },
       });
       return response.json();
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -215,26 +218,21 @@ const resolvers = {
 class MFEDataHandler {
   async query(mfeId: string, query: string, variables?: object): Promise<any> {
     const mfe = await this.orchestration.getMFE(mfeId);
-    
+
     // Before lifecycle
     await this.lifecycle.trigger('data.before', { mfeId, query });
-    
+
     try {
       // Loading state
       this.lifecycle.trigger('data.loading', { mfeId });
-      
+
       // Execute query via standard interface
-      const result = await mfe.executeQuery(
-        this.context.token,
-        query,
-        variables
-      );
-      
-      // After lifecycle  
+      const result = await mfe.executeQuery(this.context.token, query, variables);
+
+      // After lifecycle
       await this.lifecycle.trigger('data.after', { mfeId, result });
-      
+
       return result.data;
-      
     } catch (error) {
       // Error lifecycle
       await this.lifecycle.trigger('data.error', { mfeId, error });
@@ -267,18 +265,18 @@ dataLifecycle:
       - validateToken
       - checkRateLimit
       - logDataAccess
-  
+
   - loading:
       # Called when data fetch starts
       - showLoadingIndicator
       - cacheCheck
-  
+
   - after:
       # Called after successful data operation
       - cacheResponse
       - hideLoadingIndicator
       - trackDataUsage
-  
+
   - error:
       # Called on data operation failure
       - logError
@@ -325,17 +323,17 @@ orchestration.data.onLifecycle('loading', (event) => {
 ```yaml
 # Authorization hierarchy
 1. MFE Level
-   - Can user access this MFE at all?
-   - Checked via authorizeAccess() standard method
+- Can user access this MFE at all?
+- Checked via authorizeAccess() standard method
 
-2. Capability Level  
-   - Can user execute this specific capability?
-   - Checked per capability in DSL
+2. Capability Level
+- Can user execute this specific capability?
+- Checked per capability in DSL
 
 3. NOT Field Level
-   - We do NOT do field-level authorization in GraphQL
-   - Too granular, adds complexity
-   - Handle in resolver if absolutely needed
+- We do NOT do field-level authorization in GraphQL
+- Too granular, adds complexity
+- Handle in resolver if absolutely needed
 ```
 
 **Example DSL with Auth:**
@@ -358,13 +356,13 @@ data:
           - id: ID!
         returns: User
         authorization: user.permission.read_users
-    
+
     - getUserSensitive:
         args:
           - id: ID!
         returns: UserWithPII
         authorization: user.role.admin OR user.owns.resource
-    
+
     - listAllUsers:
         returns: [User!]!
         authorization: user.role.admin
@@ -374,12 +372,12 @@ data:
 
 ```typescript
 // 1. Check MFE access (platform enforced)
-if (!await mfe.authorizeAccess(token)) {
+if (!(await mfe.authorizeAccess(token))) {
   throw new UnauthorizedError('Cannot access MFE');
 }
 
 // 2. Check capability access (platform enforced via DSL)
-const capability = mfe.dsl.data.queries.find(q => q.name === 'getUser');
+const capability = mfe.dsl.data.queries.find((q) => q.name === 'getUser');
 if (!checkAuthorization(capability.authorization, token)) {
   throw new UnauthorizedError('Cannot execute this query');
 }
@@ -459,7 +457,7 @@ const DashboardMFE = () => {
       }
     }
   `);
-  
+
   return <Dashboard data={data} />;
 };
 ```
@@ -476,7 +474,7 @@ class AnalyzerMFE(BaseMFE):
           getAnalysis(id: ID!): AnalysisResult
         }
         """
-    
+
     async def execute_query(self, token: str, query: str):
         # Same GraphQL execution as frontend MFE
         return await self.schema.execute(query, context={'token': token})
@@ -492,11 +490,11 @@ const agent = {
     const schema = await orchestration.introspect(mfeId);
     return schema.queries;
   },
-  
+
   async fetchData(mfeId: string, query: string) {
-    // Same query execution for all MFEs  
+    // Same query execution for all MFEs
     return await orchestration.data.query(mfeId, query);
-  }
+  },
 };
 ```
 
@@ -523,7 +521,7 @@ data:
     - Order:
         fields:
           - userId: ID!
-            relatesTo: user-management.User  # ❌ No explicit relations
+            relatesTo: user-management.User # ❌ No explicit relations
 ```
 
 **Instead: Agent-Driven Discovery:**
@@ -533,22 +531,21 @@ data:
 class DataDiscoveryAgent {
   async findRelatedData(entityType: string, fieldName: string) {
     // 1. Introspect all MFEs
-    const allSchemas = await Promise.all(
-      mfeIds.map(id => orchestration.introspect(id))
-    );
-    
+    const allSchemas = await Promise.all(mfeIds.map((id) => orchestration.introspect(id)));
+
     // 2. Find types by name/structure similarity
-    const relatedTypes = allSchemas.flatMap(schema => 
-      schema.types.filter(type => 
-        type.name === fieldName || 
-        type.fields.some(f => f.name === 'id' && f.type === fieldName)
+    const relatedTypes = allSchemas.flatMap((schema) =>
+      schema.types.filter(
+        (type) =>
+          type.name === fieldName ||
+          type.fields.some((f) => f.name === 'id' && f.type === fieldName)
       )
     );
-    
+
     // 3. Agent can now query both MFEs and join data
     const orderData = await orchestration.data.query('orders', orderQuery);
     const userData = await orchestration.data.query('users', userQuery);
-    
+
     // Agent joins the data
     return this.joinData(orderData, userData, 'userId');
   }
@@ -576,7 +573,7 @@ const enrichedOrders = await agent.execute(`
 // Agent does:
 // 1. Query orders-mfe: getOrders()
 // 2. Extract userIds from orders
-// 3. Query user-management-mfe: getUsers(ids: [userIds])  
+// 3. Query user-management-mfe: getUsers(ids: [userIds])
 // 4. Join orders + users by userId
 // 5. Return enriched data
 ```
@@ -593,6 +590,7 @@ const enrichedOrders = await agent.execute(`
 **Context:**
 
 MFEs need a standardized way to expose data that works for:
+
 - Frontend MFEs rendering UI
 - Backend MFEs providing services
 - Agent MFEs querying data
@@ -757,7 +755,7 @@ category: data-processing
 data:
   # Single endpoint for all operations
   endpoint: /graphql
-  
+
   # GraphQL schema (generated from OpenAPI or manually defined)
   schema:
     types:
@@ -771,16 +769,16 @@ data:
             - results: JSON!
             - timestamp: DateTime!
             - userId: String
-      
+
       - AnalysisType:
           enum: [SUMMARY, CORRELATION, REGRESSION]
-      
+
       - AnalysisHistory:
           fields:
             - items: [AnalysisResult!]!
             - totalCount: Int!
             - hasMore: Boolean!
-    
+
     queries:
       - getAnalysis:
           description: Retrieve specific analysis by ID
@@ -788,7 +786,7 @@ data:
             - id: ID!
           returns: AnalysisResult
           authorization: user.owns.resource OR user.role.admin
-      
+
       - listAnalyses:
           description: List analyses for current user
           args:
@@ -797,7 +795,7 @@ data:
             - filter: AnalysisFilter
           returns: AnalysisHistory
           authorization: user.authenticated
-    
+
     mutations:
       - createAnalysis:
           description: Create new analysis
@@ -805,14 +803,14 @@ data:
             - input: AnalysisInput!
           returns: AnalysisResult
           authorization: user.permission.create_analysis
-      
+
       - deleteAnalysis:
           description: Delete analysis
           args:
             - id: ID!
           returns: Boolean
           authorization: user.owns.resource OR user.role.admin
-    
+
     subscriptions:
       - analysisProgress:
           description: Real-time progress updates
@@ -820,7 +818,7 @@ data:
             - analysisId: ID!
           returns: ProgressUpdate
           authorization: user.owns.resource
-  
+
   # Generated from OpenAPI (optional)
   generatedFrom:
     - openapi: ./api-spec.yaml
@@ -2377,8 +2375,11 @@ Ultimate validation of orchestration design. Enables autonomous system evolution
 
 ### Decisions Pending
 
+- [x] ~~Registry storage backend~~ → **RESOLVED: ADR-033** (Neo4j + Redis)
+- [x] ~~DSL Schema Validation strategy~~ → **RESOLVED: ADR-032** (Hybrid validation)
+- [x] ~~Health check frequency~~ → **RESOLVED: ADR-034** (5 minutes)
+- [x] ~~Discovery strategy default~~ → **RESOLVED: ADR-035** (Phase B deterministic)
 - [ ] Orchestration service implementation language (Node.js, Go, Python?)
-- [ ] Registry storage backend (Redis, PostgreSQL, in-memory?)
 - [ ] Semantic search implementation for Phase C (pgvector, Pinecone, other?)
 - [ ] Query DSL syntax for Phase B (GraphQL, custom, OData?)
 - [ ] Telemetry storage solution (InfluxDB, TimescaleDB, Prometheus?)
@@ -2449,6 +2450,41 @@ Ultimate validation of orchestration design. Enables autonomous system evolution
 - Date: 2025-11-26
 - Decision: DSL includes before/main/after/error lifecycle phases
 - Rationale: Clear execution model for orchestration and agent understanding
+
+**DEC-011: DSL Schema Validation Strategy**
+
+- Date: 2025-11-26
+- Decision: Hybrid validation - strict on required fields (name, version, type, remoteEntry), environment-based on optional fields
+- Rationale: Balance early error detection with development flexibility
+- Reference: ADR-032
+
+**DEC-012: Registry Storage - Neo4j + Redis**
+
+- Date: 2025-11-26
+- Decision: Neo4j for graph storage (MFE relationships, Zanzibar auth tuples), Redis for <10ms caching
+- Rationale: Graph database natural fit for MFE relationships and authorization patterns
+- Reference: ADR-033
+
+**DEC-013: Health Check and Replacement Strategy**
+
+- Date: 2025-11-26
+- Decision: 5-minute health checks, auto-replacement via capability matching, WebSocket notifications
+- Rationale: Balance monitoring overhead with timely failure detection, enable graceful degradation
+- Reference: ADR-034
+
+**DEC-014: Discovery Strategy Default**
+
+- Date: 2025-11-26
+- Decision: Phase B (deterministic) as default, no AI infrastructure required, progressive enhancement to C/A
+- Rationale: Developers and agents are primary users; deterministic queries work without AI
+- Reference: ADR-035
+
+**DEC-015: MFE Type Enum**
+
+- Date: 2025-11-26
+- Decision: MFE types are `tool | agent | feature | service`
+- Rationale: Clear distinction between capabilities (tool), AI agents (agent), UI features (feature), and backend services (service)
+- Reference: ADR-032
 
 ---
 
@@ -3575,6 +3611,13 @@ This suggests:
 - ADR-030: Render returns data for backend MFEs → REQ-032
 - ADR-031: Standardized extensible lifecycle hooks → REQ-033
 
+**Session 5: Open Questions Resolution ADRs (2025-11-26):**
+
+- ADR-032: DSL schema validation strategy → REQ-034, REQ-035
+- ADR-033: Neo4j registry with Redis caching → REQ-036, REQ-037
+- ADR-034: Health check and replacement strategy → REQ-038, REQ-039
+- ADR-035: Deterministic discovery default → REQ-040
+
 ---
 
 ## Session 4: Platform Contract Refinement
@@ -3598,6 +3641,7 @@ This suggests:
 Enable polyglot ecosystem (JavaScript, Python, Go, etc.) while maintaining uniform loading pattern across all MFE types.
 
 **Acceptance Criteria:**
+
 - [ ] RemoteEntry defined as abstract interface
 - [ ] JavaScript MFEs use Module Federation remoteEntry.js
 - [ ] Python/Go MFEs expose HTTP endpoint returning module descriptor
@@ -3606,7 +3650,8 @@ Enable polyglot ecosystem (JavaScript, Python, Go, etc.) while maintaining unifo
 
 **Dependencies:** REQ-004 (Language-Agnostic DSL), REQ-015 (Abstract Base Class)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```yaml
 # Abstract interface (language-agnostic)
 interface RemoteEntry {
@@ -3635,6 +3680,7 @@ All 8 platform standard capabilities must be explicitly listed in every MFE's DS
 Enable re-entrant evolution - platform can modify standard capabilities over time without breaking existing MFEs. Makes contract explicit and verifiable.
 
 **Acceptance Criteria:**
+
 - [ ] DSL schema requires 8 standard capabilities present
 - [ ] Code generator includes all platform capabilities in scaffolded DSL
 - [ ] Validation tool checks for missing platform capabilities
@@ -3661,6 +3707,7 @@ All capabilities (platform and custom) must have `type: platform | domain` field
 Enables agents to distinguish between platform-standard and MFE-specific capabilities. Supports validation and discovery.
 
 **Acceptance Criteria:**
+
 - [ ] DSL schema requires `type` field on all capabilities
 - [ ] Platform capabilities have `type: platform`
 - [ ] Custom capabilities have `type: domain`
@@ -3669,7 +3716,8 @@ Enables agents to distinguish between platform-standard and MFE-specific capabil
 
 **Dependencies:** REQ-026 (Listed Capabilities)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```yaml
 capabilities:
   - authorizeAccess:
@@ -3693,6 +3741,7 @@ Add load, render, refresh as standard platform capabilities for explicit lifecyc
 Provides uniform initialization, rendering, and state update contract. Backend MFEs need lifecycle management just like UI MFEs.
 
 **Acceptance Criteria:**
+
 - [ ] Load capability initializes MFE runtime
 - [ ] Render capability returns UI component or data representation
 - [ ] Refresh capability reloads state
@@ -3701,11 +3750,12 @@ Provides uniform initialization, rendering, and state update contract. Backend M
 
 **Dependencies:** REQ-026 (Listed Capabilities), REQ-032 (Backend Render)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```typescript
-await mfe.load({ config })        // Initialize
-const ui = await mfe.render({ props })  // UI or data
-await mfe.refresh({ full: false })      // Update state
+await mfe.load({ config }); // Initialize
+const ui = await mfe.render({ props }); // UI or data
+await mfe.refresh({ full: false }); // Update state
 ```
 
 ---
@@ -3723,6 +3773,7 @@ One base endpoint URL per MFE, standard paths for all services (health, graphql,
 Simplified configuration, conventional routing, consistent URL structure across all MFEs.
 
 **Acceptance Criteria:**
+
 - [ ] DSL requires single `endpoint` field
 - [ ] Standard paths documented: /health, /graphql, /.well-known/mfe-manifest.yaml
 - [ ] Capability invocation via /capability/{name}
@@ -3731,7 +3782,8 @@ Simplified configuration, conventional routing, consistent URL structure across 
 
 **Dependencies:** REQ-028 (Discovery Convention)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```yaml
 endpoint: http://localhost:3002
 # Standard paths:
@@ -3756,6 +3808,7 @@ MFE manifests located at `/.well-known/mfe-manifest.yaml` following web standard
 Zero-config discovery, follows web standards, enables automatic manifest location without configuration.
 
 **Acceptance Criteria:**
+
 - [ ] All MFEs serve manifest at /.well-known/mfe-manifest.yaml
 - [ ] `discovery` field defaults to ${endpoint}/.well-known/mfe-manifest.yaml
 - [ ] Code generator scaffolds manifest endpoint
@@ -3764,7 +3817,8 @@ Zero-config discovery, follows web standards, enables automatic manifest locatio
 
 **Dependencies:** REQ-029 (Path-Based APIs)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```yaml
 # DSL field (optional, defaults shown)
 discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
@@ -3785,6 +3839,7 @@ ALL MFE types (remote, tool, agent, api) must provide `remoteEntry` field, not j
 Creates uniform loading pattern. Backend MFEs are first-class loadable modules, not second-class citizens.
 
 **Acceptance Criteria:**
+
 - [ ] DSL schema requires `remoteEntry` for all types
 - [ ] Backend MFEs (Python, Go) provide remoteEntry endpoint
 - [ ] Validation enforces remoteEntry presence
@@ -3811,6 +3866,7 @@ Backend MFEs implement `render` capability, returning JSON data representation v
 Consistent render contract across all MFE types. Backend MFEs "render" their data, UI MFEs render components.
 
 **Acceptance Criteria:**
+
 - [ ] Backend MFEs implement render capability
 - [ ] Render executes GraphQL query and returns data
 - [ ] Return format: `{ type: 'data', format: 'json', content: {...} }`
@@ -3819,7 +3875,8 @@ Consistent render contract across all MFE types. Backend MFEs "render" their dat
 
 **Dependencies:** REQ-028 (Load-Render-Refresh), REQ-022 (GraphQL Standardization)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```python
 async def render(self, container=None, props=None):
     query = "query { ... }"
@@ -3842,6 +3899,7 @@ before/main/after/error are standard lifecycle phases for ALL capabilities. Doma
 Consistency with flexibility. Platform can inject standard behavior, domain capabilities can add specific phases.
 
 **Acceptance Criteria:**
+
 - [ ] All capabilities have before/main/after/error phases
 - [ ] Domain capabilities can add custom phases
 - [ ] Lifecycle hook structure documented
@@ -3850,17 +3908,247 @@ Consistency with flexibility. Platform can inject standard behavior, domain capa
 
 **Dependencies:** REQ-026 (Listed Capabilities), REQ-027 (Type Discrimination)
 
-**Technical Notes:**  
+**Technical Notes:**
+
 ```yaml
 lifecycle:
   before: [...]
   main: [...]
   after: [...]
   error: [...]
-  custom:          # Optional for domain capabilities
+  custom: # Optional for domain capabilities
     validation: [...]
     transformation: [...]
 ```
+
+---
+
+## Session 5: Open Questions Resolution (2025-11-26)
+
+**Status:** ✅ COMPLETE
+
+### New Requirements from Session 5
+
+#### REQ-034: Hybrid DSL Schema Validation
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+Hybrid validation strategy - strict on required fields in all environments, environment-based (strict/lenient) on optional fields.
+
+**Rationale:**  
+Balance early error detection with development flexibility and production safety.
+
+**Acceptance Criteria:**
+
+- [ ] Required fields (name, version, type, remoteEntry) always strictly validated
+- [ ] Type enum enforced: `tool | agent | feature | service`
+- [ ] Optional fields (capabilities, lifecycle, metadata) validated per environment
+- [ ] Config flag `VALIDATION_MODE=strict|lenient` controls behavior
+- [ ] Production: strict validation, silently ignore malformed optional fields
+- [ ] Development: warn but allow registration for malformed optional fields
+
+**Dependencies:** REQ-004 (DSL), REQ-009 (Validation)
+
+**Technical Notes:**  
+Reference ADR-032 for implementation details.
+
+---
+
+#### REQ-035: Validation Endpoint
+
+**Priority:** P0 (Critical)  
+**Category:** Orchestration API  
+**Status:** Accepted
+
+**Description:**  
+REST endpoint `GET /api/validate/:mfeId?` to validate specific MFE or all registered MFEs on-demand.
+
+**Rationale:**  
+Enable debugging and health verification without waiting for background checks.
+
+**Acceptance Criteria:**
+
+- [ ] `GET /api/validate/:mfeId` validates specific MFE
+- [ ] `GET /api/validate` validates all registered MFEs
+- [ ] Response includes: dslValid, healthy, warnings, lastCheck
+- [ ] Checks both `/health` endpoint (HTTP 200) AND valid DSL response
+- [ ] Summary response for all-MFE check includes totals
+
+**Dependencies:** REQ-002 (Registry), REQ-038 (Health Check)
+
+**Technical Notes:**  
+Reference ADR-032 for response format.
+
+---
+
+#### REQ-036: Neo4j Graph Registry
+
+**Priority:** P0 (Critical)  
+**Category:** Infrastructure  
+**Status:** Accepted
+
+**Description:**  
+Use Neo4j as primary registry storage for MFE relationships, capability graphs, and Zanzibar-style authorization tuples.
+
+**Rationale:**  
+Graph database natural fit for MFE relationships and authorization patterns. Enables capability chain queries and replacement discovery.
+
+**Acceptance Criteria:**
+
+- [ ] Neo4j deployed per shell via Docker Compose
+- [ ] Nodes: MFE, Capability, User, Role
+- [ ] Relationships: HAS_CAPABILITY, DEPENDS_ON, CAN_REPLACE, HAS_ROLE, CAN_ACCESS
+- [ ] Lazy node creation (created as MFEs register)
+- [ ] Neo4j Browser exposed on port 7474 for dev debugging
+- [ ] Named volumes for data persistence across restarts
+- [ ] Capability chain queries (2-3 hops) for discovery
+
+**Dependencies:** REQ-002 (Registry), REQ-014 (Orchestration per Shell)
+
+**Technical Notes:**  
+Reference ADR-033 for Cypher schema and queries.
+
+---
+
+#### REQ-037: Redis Auth Caching
+
+**Priority:** P0 (Critical)  
+**Category:** Infrastructure  
+**Status:** Accepted
+
+**Description:**  
+Redis caching layer in front of Neo4j for <10ms authorization checks and hot query paths.
+
+**Rationale:**  
+Real-time auth checks require sub-10ms response times; Redis provides fast cache with TTL-based invalidation.
+
+**Acceptance Criteria:**
+
+- [ ] Redis deployed per shell via Docker Compose
+- [ ] LRU cache for auth queries (user → MFE access)
+- [ ] 60-second TTL for cached authorization results
+- [ ] Cache invalidation on permission changes via WebSocket
+- [ ] Named volumes for persistence
+- [ ] Cache key pattern: `auth:{userId}:{mfeId}`
+
+**Dependencies:** REQ-036 (Neo4j), REQ-017 (JWT Auth)
+
+**Technical Notes:**  
+Reference ADR-033 for caching implementation.
+
+---
+
+#### REQ-038: Background Health Monitoring
+
+**Priority:** P0 (Critical)  
+**Category:** Orchestration  
+**Status:** Accepted
+
+**Description:**  
+Registry component performs background health checks every 5 minutes on all registered MFEs.
+
+**Rationale:**  
+Balance monitoring overhead with timely failure detection; 5-minute interval acceptable for most use cases.
+
+**Acceptance Criteria:**
+
+- [ ] Health check interval: 5 minutes
+- [ ] Check criteria: `/health` HTTP 200 AND valid DSL from `/.well-known/mfe-manifest.yaml`
+- [ ] Update MFE status in Neo4j (healthy/unhealthy)
+- [ ] Track lastHealthCheck timestamp per MFE
+- [ ] 5-second timeout per health check request
+
+**Dependencies:** REQ-002 (Registry), REQ-036 (Neo4j)
+
+**Technical Notes:**  
+Reference ADR-034 for implementation.
+
+---
+
+#### REQ-039: Auto-Replacement on Failure
+
+**Priority:** P1 (High)  
+**Category:** Orchestration  
+**Status:** Accepted
+
+**Description:**  
+When MFE becomes unhealthy, discover replacement candidates via capability matching and notify shell via WebSocket for auto-switch.
+
+**Rationale:**  
+Enable graceful degradation through loose coupling; maintain service continuity when MFEs fail.
+
+**Acceptance Criteria:**
+
+- [ ] Find replacements via Neo4j capability matching query
+- [ ] Support explicit CAN_REPLACE relationships with score
+- [ ] Calculate compatibility score based on capability overlap
+- [ ] WebSocket notification includes ranked replacements
+- [ ] Shell auto-switches to top replacement
+- [ ] If no replacement available, notify user with error
+
+**Dependencies:** REQ-038 (Health Check), REQ-036 (Neo4j), REQ-007 (WebSocket Sync)
+
+**Technical Notes:**  
+Reference ADR-034 for replacement discovery Cypher query.
+
+---
+
+#### REQ-040: Deterministic Discovery Default
+
+**Priority:** P0 (Critical)  
+**Category:** Discovery  
+**Status:** Accepted
+
+**Description:**  
+Phase B (deterministic query-based discovery) as the default strategy. No AI infrastructure required. Progressive enhancement path to Phase C/A.
+
+**Rationale:**  
+Developers and AI agents are primary users; deterministic queries work without AI infrastructure and are fast/predictable.
+
+**Acceptance Criteria:**
+
+- [ ] Phase B (structured queries) is default discovery method
+- [ ] Works with Neo4j only (no embedding service, no LLM)
+- [ ] Configurable per shell via `defaultPhase` setting
+- [ ] Graceful fallback when preferred phase unavailable
+- [ ] Query patterns documented: type, capabilities, inputType, accessibleBy
+- [ ] Future: detect input type (structured vs NL) for auto-phase selection
+
+**Dependencies:** REQ-003 (Three-Phase Discovery), REQ-036 (Neo4j)
+
+**Technical Notes:**  
+Reference ADR-035 for configuration and progressive enhancement.
+
+---
+
+#### REQ-041: Emit Platform Capability
+
+**Priority:** P1 (High)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+Add `emit` as 9th platform capability for generic telemetry/event emission (errors, metrics, traces, logs).
+
+**Rationale:**  
+Standardize event emission across all MFEs; enable platform-level telemetry aggregation.
+
+**Acceptance Criteria:**
+
+- [ ] `emit` capability added to platform standard capabilities
+- [ ] Supports event types: error, metric, trace, log, custom
+- [ ] Includes severity levels: debug, info, warn, error, critical
+- [ ] Outputs: emitted (boolean), eventId (string)
+- [ ] Lifecycle hooks include self-error handling (emit failure → local fallback)
+- [ ] Code generator includes emit in all MFE templates
+
+**Dependencies:** REQ-026 (Standard Capabilities), REQ-015 (Abstract Base Class)
+
+**Technical Notes:**  
+See DSL reference `/docs/dsl.yaml` for full emit capability definition.
 
 ---
 
@@ -3872,7 +4160,7 @@ lifecycle:
 # Identity
 name: string
 version: string
-type: remote | tool | agent | api
+type: tool | agent | feature | service
 description: string
 owner: string
 tags: [string]
@@ -3895,7 +4183,7 @@ capabilities:
   - describe: { type: platform, ... }
   - schema: { type: platform, ... }
   - query: { type: platform, ... }
-  
+
   # Domain capabilities (MFE-specific)
   - customCapability: { type: domain, ... }
 
@@ -3924,7 +4212,7 @@ capabilityName:
     main: [{ hookName, handler, description }]
     after: [{ hookName, handler, description }]
     error: [{ hookName, handler, description }]
-    custom:        # Optional for domain capabilities
+    custom: # Optional for domain capabilities
       phaseName: [{ hookName, handler, description }]
   authorization: string (optional)
 ```
@@ -3949,12 +4237,36 @@ capabilityName:
 - REQ-018: GraphQL Introspection
 - REQ-019: Docker-Only Orchestration
 - REQ-020: mfe init Workspace-First
-- **REQ-025: RemoteEntry as Abstract Convention** ⭐ NEW
-- **REQ-026: Standard Capabilities Listed in DSL** ⭐ NEW
-- **REQ-027: Capability Type Discrimination** ⭐ NEW
-- **REQ-028: Load-Render-Refresh Lifecycle** ⭐ NEW
-- **REQ-029: Single Endpoint Path-Based APIs** ⭐ NEW
-- **REQ-030: Discovery via .well-known Convention** ⭐ NEW
-- **REQ-031: RemoteEntry for All MFE Types** ⭐ NEW
-- **REQ-032: Render Returns Data for Backend MFEs** ⭐ NEW
-- **REQ-033: Standardized Extensible Lifecycle Hooks** ⭐ NEW
+- **REQ-025: RemoteEntry as Abstract Convention** ⭐ Session 4
+- **REQ-026: Standard Capabilities Listed in DSL** ⭐ Session 4
+- **REQ-027: Capability Type Discrimination** ⭐ Session 4
+- **REQ-028: Load-Render-Refresh Lifecycle** ⭐ Session 4
+- **REQ-029: Single Endpoint Path-Based APIs** ⭐ Session 4
+- **REQ-030: Discovery via .well-known Convention** ⭐ Session 4
+- **REQ-031: RemoteEntry for All MFE Types** ⭐ Session 4
+- **REQ-032: Render Returns Data for Backend MFEs** ⭐ Session 4
+- **REQ-033: Standardized Extensible Lifecycle Hooks** ⭐ Session 4
+- **REQ-034: Hybrid DSL Schema Validation** ⭐ Session 5
+- **REQ-035: Validation Endpoint** ⭐ Session 5
+- **REQ-036: Neo4j Graph Registry** ⭐ Session 5
+- **REQ-037: Redis Auth Caching** ⭐ Session 5
+- **REQ-038: Background Health Monitoring** ⭐ Session 5
+- **REQ-040: Deterministic Discovery Default** ⭐ Session 5
+
+### P1 (High) Requirements - V1 or Early V2
+
+- REQ-006: Zero-Config Integration
+- REQ-007: Real-Time Sync
+- REQ-012: Self-Building System
+- REQ-013: Health Monitoring
+- REQ-021: API Data Interrogation
+- REQ-022: CLI Command Integration
+- REQ-023: Environment Configuration
+- **REQ-039: Auto-Replacement on Failure** ⭐ Session 5
+- **REQ-041: Emit Platform Capability** ⭐ Session 5
+
+### P2 (Medium) Requirements - V2+
+
+- REQ-010: Semantic Search (Phase C)
+- REQ-011: Telemetry & Observability
+- REQ-024: Shared Dependency Management

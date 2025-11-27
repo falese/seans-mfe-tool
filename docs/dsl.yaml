@@ -7,7 +7,7 @@
 # =============================================================================
 name: csv-analyzer
 version: 1.0.0
-type: tool  # remote | tool | agent | api
+type: tool  # tool | agent | feature | service
 description: Analyzes CSV files and generates statistical summaries
 owner: analytics-team
 tags: [data-analysis, csv, statistics, file-processing]

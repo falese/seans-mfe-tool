@@ -85,6 +85,13 @@ module.exports = {
           functions: 97,
           lines: 98,
           statements: 98
+        },
+        // Enforce 95%+ for Utils module (TDD mandate - Phase 1)
+        'src/utils/*.js': {
+          branches: 90,
+          functions: 95,
+          lines: 95,
+          statements: 95
         }
       }
     : {
@@ -121,6 +128,13 @@ module.exports = {
           functions: 97,
           lines: 98,
           statements: 98
+        },
+        // Enforce 95%+ for Utils module even locally (TDD mandate - Phase 1)
+        'src/utils/*.js': {
+          branches: 90,
+          functions: 95,
+          lines: 95,
+          statements: 95
         }
       },
 

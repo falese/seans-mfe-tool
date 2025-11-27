@@ -40,6 +40,10 @@ Reference these in code comments to guide AI assistants and document architectur
 - ADR-029: RemoteEntry for all MFE types
 - ADR-030: Render returns data for backend MFEs
 - ADR-031: Standardized extensible lifecycle hooks
+- ADR-032: DSL schema validation strategy
+- ADR-033: Neo4j registry with Redis caching
+- ADR-034: Health check and replacement strategy
+- ADR-035: Deterministic discovery default
 
 ---
 
@@ -531,6 +535,7 @@ interface RemoteEntry {
 ```
 
 **Trade-offs:**
+
 - ✅ Unified loading pattern across languages
 - ✅ Orchestration treats all MFEs identically
 - ⚠️ Non-JS MFEs need wrapper/shim for remoteEntry concept
@@ -564,6 +569,7 @@ capabilities:
 ```
 
 **Trade-offs:**
+
 - ✅ Re-entrant: can evolve standard capabilities
 - ✅ Clear documentation: see exactly what MFE implements
 - ✅ Validation: ensure all platform capabilities present
@@ -590,6 +596,7 @@ capabilities:
 ```
 
 **Trade-offs:**
+
 - ✅ Easy for agents to distinguish standard vs custom
 - ✅ Validation can enforce platform capabilities present
 - ✅ Clear separation of concerns
@@ -618,6 +625,7 @@ await mfe.refresh({ full: false })
 ```
 
 **Trade-offs:**
+
 - ✅ Uniform lifecycle across all MFE types
 - ✅ Backend MFEs are first-class (not just UI components)
 - ✅ Orchestration can manage lifecycle consistently
@@ -634,7 +642,6 @@ await mfe.refresh({ full: false })
 
 ```yaml
 endpoint: http://localhost:3002
-
 # Standard paths (conventions):
 # GET  /health                           -> Health check
 # POST /graphql                          -> Data queries
@@ -643,6 +650,7 @@ endpoint: http://localhost:3002
 ```
 
 **Trade-offs:**
+
 - ✅ One URL to configure per MFE
 - ✅ Conventional paths, no per-path config
 - ✅ Simplified service discovery
@@ -660,12 +668,12 @@ endpoint: http://localhost:3002
 ```yaml
 # MFE DSL field
 discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
-
 # Can be omitted, defaults to:
 # ${endpoint}/.well-known/mfe-manifest.yaml
 ```
 
 **Trade-offs:**
+
 - ✅ Web standard convention
 - ✅ Zero configuration needed
 - ✅ Easy discovery for agents/orchestration
@@ -682,11 +690,12 @@ discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
 
 ```yaml
 # Required for ALL types: remote, tool, agent, api
-type: api        # Even backend APIs have remoteEntry
+type: api # Even backend APIs have remoteEntry
 remoteEntry: http://localhost:3002/entry
 ```
 
 **Trade-offs:**
+
 - ✅ Uniform loading pattern
 - ✅ All MFEs loaded via same mechanism
 - ⚠️ Backend MFEs need entry point abstraction
@@ -707,7 +716,7 @@ async def render(self, container=None, props=None):
     # Execute GraphQL query
     query = "query GetDashboardData { ... }"
     data = await self.executeQuery(query)
-    
+
     # Return JSON representation
     return {
         "type": "data",
@@ -717,6 +726,7 @@ async def render(self, container=None, props=None):
 ```
 
 **Trade-offs:**
+
 - ✅ Uniform capability across all MFE types
 - ✅ Backend MFEs are "renderable" via data
 - ✅ GraphQL provides data representation
@@ -741,7 +751,7 @@ capabilities:
         main: [executeCore]
         after: [notifyComplete]
         error: [handleError]
-        
+
         # Custom phases (domain-specific)
         custom:
           validation:
@@ -753,10 +763,497 @@ capabilities:
 ```
 
 **Trade-offs:**
+
 - ✅ Predictable execution model
 - ✅ Extensible for domain needs
 - ✅ Consistent hook naming
 - ✅ Platform can inject standard lifecycle behavior
+
+---
+
+### ADR-032: DSL Schema Validation Strategy
+
+**Decision:** Hybrid validation - strict on required fields, environment-based on optional fields
+
+**Why:** Balance early error detection with development flexibility and production safety
+
+**Required Fields (Strict in All Environments):**
+
+- `name` - MFE identifier
+- `version` - Semantic version
+- `type` - Enum: `tool | agent | feature | service`
+- `remoteEntry` - Entry point URL
+
+**Optional Fields (Environment-Based):**
+
+- `capabilities` - Can be empty (platform-generated)
+- `lifecycle` - Custom execution phases
+- `metadata` - Additional descriptive info
+
+**Environment Modes:**
+
+```typescript
+// Config flag determines mode
+VALIDATION_MODE = strict; // Production: reject malformed optional fields
+VALIDATION_MODE = lenient; // Development: warn but allow registration
+
+// Validation implementation
+async function validateDSL(dsl: DSLManifest, mode: string): Promise<ValidationResult> {
+  // Always strict on required fields
+  if (!dsl.name || !dsl.version || !dsl.type || !dsl.remoteEntry) {
+    return { valid: false, errors: ['Missing required fields'] };
+  }
+
+  // Type enum validation
+  if (!['tool', 'agent', 'feature', 'service'].includes(dsl.type)) {
+    return { valid: false, errors: ['Invalid type'] };
+  }
+
+  // Environment-based optional field validation
+  const warnings = [];
+  if (dsl.capabilities && !isValidCapabilities(dsl.capabilities)) {
+    if (mode === 'strict') {
+      return { valid: false, errors: ['Malformed capabilities'] };
+    }
+    warnings.push('Capabilities structure invalid, ignoring');
+  }
+
+  return { valid: true, warnings };
+}
+```
+
+**Validation Endpoint:**
+
+```typescript
+// GET /api/validate/:mfeId?
+// Optional parameter: check specific MFE or all
+
+router.get('/api/validate/:mfeId?', async (req, res) => {
+  const { mfeId } = req.params;
+
+  if (mfeId) {
+    // Validate specific MFE
+    const mfe = await registry.get(mfeId);
+    const dsl = await fetch(mfe.dslEndpoint).then((r) => r.yaml());
+    const result = await validateDSL(dsl, config.validationMode);
+    const health = await checkHealth(mfe);
+
+    return res.json({
+      mfeId,
+      dslValid: result.valid,
+      healthy: health.status === 200,
+      warnings: result.warnings,
+      lastCheck: new Date().toISOString(),
+    });
+  } else {
+    // Validate all registered MFEs
+    const all = await registry.getAll();
+    const results = await Promise.all(
+      all.map(async (mfe) => {
+        const dsl = await fetch(mfe.dslEndpoint).then((r) => r.yaml());
+        const validation = await validateDSL(dsl, config.validationMode);
+        const health = await checkHealth(mfe);
+        return { mfeId: mfe.name, ...validation, healthy: health.status === 200 };
+      })
+    );
+
+    return res.json({
+      summary: {
+        total: results.length,
+        valid: results.filter((r) => r.dslValid && r.healthy).length,
+        warnings: results.filter((r) => r.warnings?.length > 0).length,
+      },
+      results,
+    });
+  }
+});
+```
+
+**Health Check Criteria:**
+Both conditions must pass:
+
+1. `/health` endpoint returns HTTP 200
+2. `/.well-known/mfe-manifest.yaml` returns valid YAML/JSON
+
+**Trade-offs:**
+
+- ✅ Catch critical errors early (required fields)
+- ✅ Flexible development (lenient on optional fields)
+- ✅ Production safety (strict mode rejects malformed MFEs)
+- ✅ Explicit validation endpoint for debugging
+- ⚠️ Different behavior across environments (documented and configurable)
+
+---
+
+### ADR-033: Neo4j Registry with Redis Caching
+
+**Decision:** Neo4j for registry storage, Redis for auth/query caching, both per shell in Docker
+
+**Why:** Graph database natural fit for MFE relationships and Zanzibar-style authorization tuples, Redis provides <10ms auth checks
+
+**Architecture:**
+
+```yaml
+# Generated docker-compose.yml for every shell
+services:
+  orchestration:
+    image: orchestration-service
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      REDIS_URL: redis://redis:6379
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/devpassword
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - '7474:7474' # Browser UI
+      - '7687:7687' # Bolt protocol
+    volumes:
+      - neo4j_data:/data # Named volume, survives docker-compose down
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  neo4j_data:
+  redis_data:
+```
+
+**Graph Schema:**
+
+```cypher
+// MFE nodes (created lazily as MFEs register)
+CREATE (mfe:MFE {
+  id: 'csv-analyzer',
+  name: 'csv-analyzer',
+  version: '1.0.0',
+  type: 'tool',
+  endpoint: 'http://localhost:3002',
+  remoteEntry: 'http://localhost:3002/remoteEntry.js',
+  healthy: true,
+  lastHealthCheck: datetime()
+})
+
+// Capability nodes
+CREATE (cap:Capability {
+  name: 'data-analysis',
+  type: 'domain',
+  inputType: 'csv',
+  outputType: 'report'
+})
+
+// Relationships
+CREATE (mfe)-[:HAS_CAPABILITY]->(cap)
+CREATE (mfe1)-[:DEPENDS_ON]->(mfe2)
+CREATE (mfe)-[:CAN_REPLACE {score: 0.95}]->(backup)
+
+// Authorization tuples (Zanzibar pattern)
+CREATE (user:User {id: 'user123'})
+CREATE (role:Role {name: 'analyst'})
+CREATE (user)-[:HAS_ROLE]->(role)
+CREATE (role)-[:CAN_ACCESS]->(mfe)
+CREATE (role)-[:CAN_INVOKE]->(cap)
+```
+
+**Redis Caching Layer:**
+
+```typescript
+class AuthCache {
+  private redis: RedisClient;
+  private ttl = 60; // 1 minute
+
+  async canUserAccessMFE(userId: string, mfeId: string): Promise<boolean> {
+    const cacheKey = `auth:${userId}:${mfeId}`;
+
+    // Check cache first
+    const cached = await this.redis.get(cacheKey);
+    if (cached !== null) return cached === 'true';
+
+    // Query Neo4j on cache miss (2-3 hop traversal)
+    const result = await neo4j.run(
+      `
+      MATCH (u:User {id: $userId})-[:CAN_ACCESS*1..3]->(m:MFE {id: $mfeId})
+      RETURN count(m) > 0 as allowed
+    `,
+      { userId, mfeId }
+    );
+
+    const allowed = result.records[0]?.get('allowed') || false;
+    await this.redis.setex(cacheKey, this.ttl, allowed.toString());
+
+    return allowed;
+  }
+
+  async invalidateUser(userId: string) {
+    const keys = await this.redis.keys(`auth:${userId}:*`);
+    if (keys.length > 0) await this.redis.del(...keys);
+  }
+}
+```
+
+**Authorization Scopes:**
+All three levels supported in graph:
+
+1. **MFE access** - User → Role → MFE
+2. **Capability invocation** - Role → Capability
+3. **Data-level access** - User → Resource (within MFE)
+
+**Trade-offs:**
+
+- ✅ Graph-native storage for relationships
+- ✅ Proven Zanzibar authorization pattern
+- ✅ <10ms auth checks with Redis cache
+- ✅ Visual debugging with Neo4j Browser (port 7474)
+- ✅ Named volumes persist data across restarts
+- ⚠️ Requires Docker (consistent with ADR-017)
+- ⚠️ Two databases to manage (Neo4j + Redis)
+
+---
+
+### ADR-034: Health Check and Replacement Strategy
+
+**Decision:** Registry performs health checks every 5 minutes, marks unhealthy MFEs, notifies shell with ranked replacements via WebSocket, shell auto-switches
+
+**Why:** Balance monitoring overhead with timely failure detection, enable graceful degradation through loose coupling
+
+**Health Check Implementation:**
+
+```typescript
+class RegistryHealthMonitor {
+  start() {
+    // Check all registered MFEs every 5 minutes
+    setInterval(() => this.checkAllMFEs(), 5 * 60 * 1000);
+  }
+
+  async checkMFE(mfe: MFEEntry) {
+    try {
+      // Check both health endpoint and DSL
+      const [healthRes, dslRes] = await Promise.all([
+        fetch(`${mfe.endpoint}/health`, { timeout: 5000 }),
+        fetch(mfe.dslEndpoint, { timeout: 5000 }),
+      ]);
+
+      const healthy = healthRes.status === 200 && dslRes.status === 200;
+
+      if (!healthy && mfe.healthy) {
+        await this.handleUnhealthy(mfe);
+      }
+
+      // Update status in Neo4j
+      await neo4j.run(
+        `
+        MATCH (m:MFE {id: $id})
+        SET m.healthy = $healthy, m.lastHealthCheck = datetime()
+      `,
+        { id: mfe.id, healthy }
+      );
+    } catch (error) {
+      await this.handleUnhealthy(mfe);
+    }
+  }
+
+  async handleUnhealthy(mfe: MFEEntry) {
+    const replacements = await this.findReplacements(mfe.id);
+
+    this.websocket.broadcast({
+      event: 'mfe.unhealthy',
+      mfeId: mfe.id,
+      status: 'unhealthy',
+      replacements: replacements.map((r) => ({
+        mfeId: r.id,
+        compatibilityScore: r.score,
+        reason: r.reason,
+      })),
+    });
+  }
+}
+```
+
+**Replacement Discovery (Neo4j):**
+
+```cypher
+// Find replacements with matching capabilities (loose coupling)
+MATCH (unhealthy:MFE {id: $mfeId})-[:HAS_CAPABILITY]->(cap:Capability)
+MATCH (replacement:MFE)-[:HAS_CAPABILITY]->(cap)
+WHERE replacement.healthy = true AND replacement.id <> $mfeId
+
+// Check explicit replacement relationships
+OPTIONAL MATCH (unhealthy)-[r:CAN_REPLACE]-(replacement)
+
+RETURN replacement,
+       count(DISTINCT cap) as matchingCapabilities,
+       r.score as explicitScore
+ORDER BY COALESCE(r.score, 0) DESC, matchingCapabilities DESC
+LIMIT 5
+```
+
+**Shell Auto-Switch:**
+
+```typescript
+// Shell receives WebSocket notification
+this.ws.on('mfe.unhealthy', async (event) => {
+  const { mfeId, replacements } = event;
+
+  if (replacements.length > 0) {
+    const top = replacements[0];
+    await this.unloadMFE(mfeId);
+    await this.loadMFE(top.mfeId);
+    console.log(`Switched ${mfeId} → ${top.mfeId}`);
+  } else {
+    this.showError(`${mfeId} unavailable, no replacement found`);
+  }
+});
+```
+
+**Validation Endpoint:**
+
+```typescript
+// GET /api/validate/:mfeId? - check specific or all MFEs on-demand
+router.get('/api/validate/:mfeId?', async (req, res) => {
+  const { mfeId } = req.params;
+
+  if (mfeId) {
+    const result = await healthMonitor.checkMFE(mfeId);
+    res.json(result);
+  } else {
+    const results = await healthMonitor.checkAllMFEs();
+    res.json({
+      summary: {
+        total: results.length,
+        healthy: results.filter((r) => r.healthy).length,
+        unhealthy: results.filter((r) => !r.healthy).length,
+      },
+      results,
+    });
+  }
+});
+```
+
+**Trade-offs:**
+
+- ✅ 5-minute detection delay acceptable for most use cases
+- ✅ Low overhead (120 requests/hour per 10 MFEs)
+- ✅ Graceful degradation through auto-replacement
+- ✅ Loose coupling via capability matching
+- ✅ On-demand validation via `/api/validate/:mfeId?`
+- ⚠️ 5-minute window where users may encounter failed MFE
+
+---
+
+### ADR-035: Deterministic Discovery Default
+
+**Decision:** Phase B (deterministic query-based discovery) as default, configurable per shell, progressive enhancement to Phase C/A
+
+**Why:** Developers and AI agents are primary users; deterministic queries work without AI infrastructure; provides foundation for future semantic/agentic discovery
+
+**Default Discovery (Phase B):**
+
+```typescript
+class DiscoveryService {
+  async discover(query: DiscoveryQuery): Promise<MFEMatch[]> {
+    const cypher = this.buildQuery(query);
+    return await neo4j.run(cypher);
+  }
+
+  private buildQuery(query: DiscoveryQuery): string {
+    return `
+      MATCH (m:MFE {type: $type})-[:HAS_CAPABILITY]->(c:Capability)
+      WHERE c.name IN $capabilities
+        AND c.inputType = $inputType
+        AND m.healthy = true
+      RETURN m, collect(c) as capabilities
+    `;
+  }
+}
+
+// Usage
+const mfes = await discovery.discover({
+  type: 'tool',
+  capabilities: ['data-analysis'],
+  inputType: 'csv',
+});
+```
+
+**Configuration Per Shell:**
+
+```typescript
+interface ShellConfig {
+  discovery: {
+    defaultPhase: 'A' | 'B' | 'C'; // Default: 'B'
+    enabledPhases: ('A' | 'B' | 'C')[];
+    fallbackOrder: ('A' | 'B' | 'C')[];
+  };
+}
+
+// Example: AI-powered shell
+const aiShellConfig = {
+  discovery: {
+    defaultPhase: 'C', // Semantic first
+    enabledPhases: ['C', 'B'],
+    fallbackOrder: ['C', 'B'],
+  },
+};
+```
+
+**Progressive Enhancement:**
+
+```typescript
+class ProgressiveDiscovery {
+  async discover(input: string | DiscoveryQuery): Promise<MFEMatch[]> {
+    const phase = this.detectPhase(input);
+
+    try {
+      switch (phase) {
+        case 'C':
+          return await this.phaseC(input as string); // Future: semantic
+        case 'A':
+          return await this.phaseA(input); // Future: agentic
+        case 'B':
+        default:
+          return await this.phaseB(input as DiscoveryQuery);
+      }
+    } catch {
+      return await this.fallback(input);
+    }
+  }
+
+  private detectPhase(input: string | DiscoveryQuery): 'A' | 'B' | 'C' {
+    if (typeof input === 'string') {
+      if (input.includes('help me') || input.includes('build')) {
+        return 'A'; // Complex task → agent
+      }
+      return 'C'; // Natural language → semantic
+    }
+    return 'B'; // Structured query → deterministic
+  }
+}
+```
+
+**No AI Infrastructure Required:**
+
+- Phase B works with Neo4j only
+- Fast, deterministic, cacheable queries
+- Upgrade to Phase C/A when AI services available
+
+**Primary Users:**
+
+- **Developers:** Explicit queries in code
+- **AI Agents:** Structured queries via API
+- **Future End Users:** Natural language (Phase C) when enabled
+
+**Trade-offs:**
+
+- ✅ Works immediately without AI infrastructure
+- ✅ Fast, deterministic, predictable
+- ✅ Suitable for developers and agents
+- ✅ Clear upgrade path to semantic/agentic discovery
+- ⚠️ Less intuitive for non-technical end users (until Phase C)
 
 ---
 

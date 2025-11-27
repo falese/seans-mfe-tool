@@ -26,6 +26,30 @@ describe('DatabaseGenerator', () => {
   });
 
   describe('generate', () => {
+    let consoleLogSpy;
+    let consoleErrorSpy;
+
+    beforeEach(() => {
+      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    });
+
+    afterEach(() => {
+      consoleLogSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should throw error when dbType is missing', async () => {
+      await expect(DatabaseGenerator.generate(null, '/output', simpleSchema))
+        .rejects.toThrow('Database type is required');
+      
+      await expect(DatabaseGenerator.generate(undefined, '/output', simpleSchema))
+        .rejects.toThrow('Database type is required');
+      
+      await expect(DatabaseGenerator.generate('', '/output', simpleSchema))
+        .rejects.toThrow('Database type is required');
+    });
+
     it('should call appropriate generators for mongodb', async () => {
       await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
       
@@ -46,6 +70,65 @@ describe('DatabaseGenerator', () => {
       expect(SeedGenerator.prototype.generateSeedData).toHaveBeenCalledWith('/output', 'sqlite');
       expect(MigrationGenerator).toHaveBeenCalledWith(simpleSchema);
       expect(MigrationGenerator.prototype.generateMigrations).toHaveBeenCalledWith('/output');
+    });
+
+    it('should log start message', async () => {
+      await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
+      
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Generating database components')
+      );
+    });
+
+    it('should log success message', async () => {
+      await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
+      
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Generated database components successfully')
+      );
+    });
+
+    it('should handle errors during generation', async () => {
+      const testError = new Error('Generation failed');
+      MongoDBGenerator.prototype.generateModels.mockRejectedValue(testError);
+
+      await expect(DatabaseGenerator.generate('mongodb', '/output', simpleSchema))
+        .rejects.toThrow('Generation failed');
+      
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to generate database components')
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(testError);
+    });
+
+    it('should generate components in parallel using Promise.all', async () => {
+      // Verify all three generators are called
+      await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
+      
+      expect(MongoDBGenerator.prototype.generateModels).toHaveBeenCalled();
+      expect(SeedGenerator.prototype.generateSeedData).toHaveBeenCalled();
+      expect(MongoSchemaManager.prototype.generateSchemaManagement).toHaveBeenCalled();
+      
+      // Verify they were all instantiated (parallel execution)
+      expect(MongoDBGenerator).toHaveBeenCalled();
+      expect(SeedGenerator).toHaveBeenCalled();
+      expect(MongoSchemaManager).toHaveBeenCalled();
+    });
+
+    it('should use MigrationGenerator for SQL databases', async () => {
+      await DatabaseGenerator.generate('sqlite', '/output', simpleSchema);
+      
+      expect(MigrationGenerator).toHaveBeenCalledWith(simpleSchema);
+      expect(MigrationGenerator.prototype.generateMigrations).toHaveBeenCalledWith('/output');
+      expect(MongoSchemaManager).not.toHaveBeenCalled();
+    });
+
+    it('should use MongoSchemaManager for MongoDB databases', async () => {
+      await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
+      
+      expect(MongoSchemaManager).toHaveBeenCalledWith(simpleSchema);
+      expect(MongoSchemaManager.prototype.generateSchemaManagement).toHaveBeenCalledWith('/output');
+      expect(MigrationGenerator).not.toHaveBeenCalled();
     });
   });
 

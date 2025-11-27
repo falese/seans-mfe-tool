@@ -1,6 +1,26 @@
 ---
 description: 'Structured requirements gathering through iterative questioning, capturing architectural decisions and documenting technical specifications for complex features.'
-tools: ['str_replace_editor', 'bash']
+tools:
+  [
+    'edit',
+    'runNotebooks',
+    'search',
+    'new',
+    'runCommands',
+    'runTasks',
+    'usages',
+    'vscodeAPI',
+    'problems',
+    'changes',
+    'testFailure',
+    'openSimpleBrowser',
+    'fetch',
+    'githubRepo',
+    'extensions',
+    'todos',
+    'runSubagent',
+    'runTests',
+  ]
 ---
 
 # Requirements Elicitation Agent

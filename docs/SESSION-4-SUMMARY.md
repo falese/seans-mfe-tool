@@ -26,6 +26,7 @@ Refine the platform contract that defines what ALL MFEs must provide to be "orch
 - Demonstrated both UI and backend MFE patterns
 
 **Standard Platform Capabilities Defined:**
+
 1. **load** - Initialize MFE runtime
 2. **render** - Display UI or return data representation
 3. **refresh** - Reload/update MFE state
@@ -76,6 +77,7 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 **Decision:** `remoteEntry` is a language-agnostic convention, not JavaScript-specific.
 
 **Impact:**
+
 - JavaScript MFEs use Module Federation remoteEntry.js
 - Python/Go MFEs expose HTTP endpoint returning module descriptor
 - All MFEs follow same abstract interface: init/get/destroy
@@ -86,6 +88,7 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 **Decision:** All 8 platform capabilities must be listed in every MFE's DSL.
 
 **Impact:**
+
 - Re-entrant evolution possible (can modify standards over time)
 - Clear contract validation
 - Self-documenting MFEs
@@ -96,6 +99,7 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 **Decision:** All capabilities have `type: platform | domain` field.
 
 **Impact:**
+
 - Clear separation between standard and custom
 - Easier agent discovery and filtering
 - Validation can enforce platform capabilities
@@ -106,6 +110,7 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 **Decision:** Backend MFEs implement same lifecycle (load, render, refresh) as UI MFEs.
 
 **Impact:**
+
 - Render returns JSON data representation for backend
 - Consistent orchestration for all MFE types
 - Backend MFEs not second-class citizens
@@ -116,6 +121,7 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 **Decision:** Standard before/main/after/error phases, with optional custom phases for domain capabilities.
 
 **Impact:**
+
 - Predictable execution model
 - Platform can inject standard behavior
 - Domain capabilities can extend as needed
@@ -123,12 +129,14 @@ Added 9 new P0 requirements (REQ-025 through REQ-033):
 
 ### 6. URL Convention Standardization
 
-**Decision:** 
+**Decision:**
+
 - One base endpoint per MFE
 - Standard paths: /health, /graphql, /.well-known/mfe-manifest.yaml
 - Discovery via .well-known web convention
 
 **Impact:**
+
 - Zero-config discovery
 - Simplified service configuration
 - Follows web standards
@@ -169,7 +177,7 @@ capabilityName:
     main: [...]
     after: [...]
     error: [...]
-    custom: {...}  # Optional for domain capabilities
+    custom: { ... } # Optional for domain capabilities
   authorization: string (optional)
 ```
 
@@ -180,6 +188,7 @@ capabilityName:
 ### 1. CSV Analyzer Tool (Complete Example)
 
 Full DSL with:
+
 - All 8 platform capabilities defined
 - 1 domain capability (data-analysis) with custom lifecycle
 - GraphQL data layer
@@ -188,6 +197,7 @@ Full DSL with:
 ### 2. Backend MFE Render Pattern
 
 Python example showing how backend MFE implements render:
+
 ```python
 async def render(self, container=None, props=None):
     query = "query { ... }"
@@ -198,6 +208,7 @@ async def render(self, container=None, props=None):
 ### 3. Domain Capability Extension
 
 File processing capability with:
+
 - Standard lifecycle (before/main/after/error)
 - Custom phases (validation, transformation)
 - Demonstrates extensibility pattern
@@ -209,6 +220,7 @@ File processing capability with:
 ### Immediate (High Priority)
 
 1. **Error Handling Standards (Question 6)**
+
    - Standard error format
    - HTTP status codes
    - Error types/categories
@@ -216,6 +228,7 @@ File processing capability with:
    - Error lifecycle flow
 
 2. **DSL JSON Schema**
+
    - Create formal validation schema
    - Implement CLI validation command
    - Add to code generation pipeline
@@ -229,12 +242,14 @@ File processing capability with:
 ### Medium Priority
 
 1. **Abstract Base Class Implementation**
+
    - TypeScript base class
    - Python base class
    - Go base class
    - Reference implementations
 
 2. **Orchestration Service Updates**
+
    - Support new discovery convention
    - Validate platform capabilities presence
    - Handle remoteEntry abstraction
@@ -248,6 +263,7 @@ File processing capability with:
 ### Lower Priority
 
 1. **Testing**
+
    - Validation test suite
    - Cross-language integration tests
    - Lifecycle execution tests
@@ -297,7 +313,7 @@ File processing capability with:
 ✅ Re-entrant evolution enabled  
 ✅ Extensibility preserved  
 ✅ Web standards followed  
-✅ Documentation comprehensive  
+✅ Documentation comprehensive
 
 ---
 
@@ -312,6 +328,7 @@ _To be added after review_
 **Topic:** Error Handling Standards (Question 6)
 
 **Agenda:**
+
 - Standard error format definition
 - HTTP status code conventions
 - Error categorization

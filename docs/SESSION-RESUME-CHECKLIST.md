@@ -1,8 +1,8 @@
 # Orchestration Requirements - Session Resume Checklist
 
-**Date:** 2025-11-26  
-**Status:** Sessions 1 & 2 Complete  
-**Next:** Ready for Session 3 or Implementation
+**Date:** 2025-11-26 (Updated)  
+**Status:** Sessions 1-5 Complete  
+**Next:** Implementation Phase - Neo4j + Redis integration, DSL manifest generation
 
 ---
 
@@ -18,7 +18,9 @@
 - ✅ Discovery strategy: Three phases (A→C→B) - Probabilistic → Semantic → Deterministic
 - ✅ Non-goals: Not build tool, not deploy tool (but integrates), not data persistence
 
-### Architecture Decisions (Sessions 1 & 2)
+### Architecture Decisions (Sessions 1-5)
+
+**Session 1 & 2:**
 
 - ✅ ADR-009: Hybrid architecture (centralized service + shell runtime)
 - ✅ ADR-010: Lightweight registry (metadata only, DSL endpoints)
@@ -28,310 +30,142 @@
 - ✅ ADR-014: Self-building system capability
 - ✅ ADR-016: Orchestration service generated per shell
 - ✅ ADR-017: Docker-only orchestration, dev servers for MFEs
-- ✅ ADR-018: Abstract base class with standard capabilities (authorizeAccess, health, describe, schema, query)
+- ✅ ADR-018: Abstract base class with standard capabilities
 - ✅ ADR-019: JWT-based authorization
 - ✅ ADR-020: mfe init for workspace, shell explicit
 - ✅ ADR-007: Module Federation loading
 
-### Component Scope (Session 2)
+**Session 4 (Platform Contract):**
 
-- ✅ IN SCOPE: Shells, Remotes (UI), Tool MFEs, Agent MFEs, API MFEs
-- ✅ OUT OF SCOPE: Databases (owned by APIs), Build artifacts (deferred), Static assets/CDN (deferred), Monitoring/logging (deferred), CI/CD (deferred), Starting services (CLI, not orchestration)
-- ✅ DEFERRED: Design system strategy, shared dependencies management
+- ✅ ADR-022: GraphQL data standardization
+- ✅ ADR-023: RemoteEntry as abstract convention
+- ✅ ADR-024: Standard capabilities listed in DSL
+- ✅ ADR-025: Capability type discrimination (platform vs domain)
+- ✅ ADR-026: Load-Render-Refresh lifecycle
+- ✅ ADR-027: Single endpoint, path-based APIs
+- ✅ ADR-028: Discovery via .well-known convention
+- ✅ ADR-029: RemoteEntry for all MFE types
+- ✅ ADR-030: Render returns data for backend MFEs
+- ✅ ADR-031: Standardized extensible lifecycle hooks
 
-### Platform Contract (Session 2)
+**Session 5 (Open Questions Resolved):**
 
-- ✅ Standard capabilities ALL MFEs must implement:
-  - authorizeAccess (JWT validation)
-  - health (status check)
-  - describe (introspection)
-  - schema (GraphQL schema)
-  - query (GraphQL query interface)
-- ✅ GraphQL-style introspection and querying
-- ✅ API data interrogation via DSL methods
-- ✅ Abstract base class pattern (works in any language)
+- ✅ ADR-032: DSL schema validation strategy (hybrid: strict required, lenient optional)
+- ✅ ADR-033: Neo4j registry with Redis caching
+- ✅ ADR-034: Health check and replacement strategy (5 min, auto-replace)
+- ✅ ADR-035: Deterministic discovery default (Phase B)
 
-### CLI Integration (Session 2)
+### Resolved Questions (Session 5) ✅
 
-- ✅ `mfe shell <name>` - generates shell + orchestration service
-- ✅ `mfe remote <name>` - generates remote MFE (never orchestration)
-- ✅ `mfe init <workspace>` - scaffolds workspace with remotes only
-- ✅ `mfe register <mfe>` - shared kernel, validates and registers DSL
-- ✅ `mfe validate <mfe>` - DSL validation
-- ✅ `mfe registry status` - query orchestration registry
-- ✅ Auto-generated registration code in all MFE templates
+| Question               | Resolution                                                                 |
+| ---------------------- | -------------------------------------------------------------------------- |
+| DSL Schema Validation  | ADR-032: Hybrid (strict on required fields, environment-based on optional) |
+| Registry Storage       | ADR-033: Neo4j + Redis (graph + cache)                                     |
+| Health Check Frequency | ADR-034: 5 minutes, auto-replacement                                       |
+| Discovery Default      | ADR-035: Phase B (deterministic), progressive to C/A                       |
 
-### Deployment Model (Session 2)
+### MFE Type Enum (Updated)
 
-- ✅ Docker Compose for all deployments (dev/staging/prod)
-- ✅ Orchestration service always in Docker
-- ✅ Shell always in Docker
-- ✅ MFEs in dev servers (development) or Docker (staging/prod)
-- ✅ Environment-specific configs (docker-compose.yml vs docker-compose.prod.yml)
-- ✅ Service discovery via Docker network or localhost
+- ✅ `tool` - Utility MFEs (capabilities for agents)
+- ✅ `agent` - AI agents
+- ✅ `feature` - UI feature modules
+- ✅ `service` - Backend services
+
+### Platform Capabilities (9 Total)
+
+1. ✅ load - Initialize MFE runtime
+2. ✅ render - Display UI or return data
+3. ✅ refresh - Reload/update state
+4. ✅ authorizeAccess - JWT validation
+5. ✅ health - Status check
+6. ✅ describe - Self-description
+7. ✅ schema - GraphQL schema introspection
+8. ✅ query - GraphQL query execution
+9. ✅ emit - Telemetry/event emission (NEW)
 
 ### Requirements Catalog
 
-- ✅ 24 requirements documented (REQ-001 through REQ-024)
+- ✅ 41 requirements documented (REQ-001 through REQ-041)
 - ✅ Priority levels assigned (P0/P1/P2)
 - ✅ Dependencies mapped
 - ✅ Acceptance criteria defined
-- ✅ Technical notes included
+- ✅ Session 5 requirements: REQ-034 to REQ-041
 
 ---
 
-## Potential Gaps / Areas to Validate 🔍
+## Implementation Ready Items 🚀
 
-### Technical Implementation Details
+### Infrastructure (Ready to Implement)
 
-**1. Orchestration Service Technology Stack**
+1. **Neo4j Graph Registry**
 
-- ❓ Language choice: Node.js? Go? Python?
-- ❓ Framework: Express? Fastify? Koa?
-- ❓ Registry storage: Redis? PostgreSQL? In-memory?
-- ❓ Recommendation: **Node.js + Fastify + Redis** (consistency with ecosystem)
+   - Docker Compose config ready (ADR-033)
+   - Graph schema defined (MFE, Capability, User, Role nodes)
+   - Cypher queries for discovery and replacement documented
 
-**2. DSL Schema Specification**
+2. **Redis Caching Layer**
 
-- ✅ Reference DSL in `/docs/dsl.yaml`
-- ❓ JSON Schema for validation - needs formal definition
-- ❓ Platform-level schema vs MFE-specific schema separation
-- ❓ Versioning strategy for DSL evolution
+   - Docker Compose config ready (ADR-033)
+   - Cache key pattern: `auth:{userId}:{mfeId}`
+   - 60-second TTL for auth cache
 
-**3. Module Federation Configuration**
+3. **Validation Endpoint**
+   - `GET /api/validate/:mfeId?` (REQ-035)
+   - Both health + DSL validation
+   - Summary response for all-MFE check
 
-- ❓ Shared dependency strategy for 100+ MFEs
-- ❓ Version conflict resolution
-- ❓ Design system distribution approach
-- ❓ Bundle size optimization strategies
-- ⚠️ **Explicitly deferred** but needs eventual solution
+### Code Generation Updates Needed
 
-**4. WebSocket Protocol**
+1. **DSL Manifest Generation**
 
-- ❓ Message format for registry updates
-- ❓ Reconnection strategy
-- ❓ Heartbeat/keepalive mechanism
-- ❓ Authentication for WebSocket connections
+   - Add `emit` capability to templates
+   - Update type enum to `tool | agent | feature | service`
+   - Include all 9 platform capabilities
 
-**5. Health Check Specification**
+2. **Docker Compose Updates**
 
-- ❓ Health check interval (30s mentioned)
-- ❓ Timeout before marking unhealthy
-- ❓ Circuit breaker pattern details
-- ❓ Recovery/retry logic
+   - Add Neo4j service
+   - Add Redis service
+   - Named volumes for persistence
+   - Expose Neo4j Browser (port 7474)
 
-**6. Error Handling & Resilience**
-
-- ❓ What happens when orchestration service is down?
-- ❓ Fallback modes for shell runtime
-- ❓ MFE loading failure handling
-- ❓ Partial system degradation strategy
-
-**7. Security Model**
-
-- ✅ JWT-based authorization defined
-- ❓ Token refresh mechanism
-- ❓ Service-to-service authentication (agent tokens)
-- ❓ Rate limiting on orchestration API
-- ❓ CORS configuration for cross-origin MFEs
-- ⚠️ Zanzibar tuples **explicitly deferred** to future
-
-**8. Telemetry & Observability**
-
-- ⚠️ **Explicitly deferred** to V2
-- ❓ What minimal telemetry needed for V1?
-- ❓ Error tracking/logging approach
-- ❓ Performance monitoring basics
-
-**9. Testing Strategy**
-
-- ❓ How to test orchestration locally?
-- ❓ Integration test approach for multi-MFE scenarios
-- ❓ Mock orchestration service for MFE unit tests
-- ❓ CI/CD testing strategy
-
-**10. Migration & Backwards Compatibility**
-
-- ❓ How do existing MFEs adopt orchestration?
-- ❓ Can MFEs work without orchestration?
-- ❓ Gradual rollout strategy
-- ❓ Versioning and deprecation policy
+3. **Health Monitoring**
+   - 5-minute background health checks
+   - Auto-replacement via capability matching
+   - WebSocket notifications
 
 ---
 
-## Session 3 Prep: Technical Specifications
+## What Was Already Built (From Session 4)
 
-Based on your progress, Session 3 should focus on:
-
-### Session 3A: Orchestration Service Specification
-
-**Questions to answer:**
-
-1. **Service Implementation**
-
-   - Technology stack decision (Node.js + Fastify recommended)
-   - Registry storage choice (Redis for prod, in-memory for dev)
-   - REST API endpoint design
-   - WebSocket protocol specification
-
-2. **Registry Schema**
-
-   - Exact data structure for MFE registry entries
-   - Index structures for discovery queries
-   - Health status state machine
-   - Update/versioning strategy
-
-3. **API Contract**
-
-   - POST /api/mfes/register - registration payload
-   - DELETE /api/mfes/:name - deregistration
-   - GET /api/mfes - Phase A discovery (list all)
-   - GET /api/mfes/:name/dsl - fetch full DSL
-   - WS /ws - WebSocket protocol
-   - GET /health - service health
-
-4. **Configuration**
-   - Environment variables
-   - Redis connection settings
-   - Health check intervals
-   - WebSocket settings
-
-### Session 3B: DSL Schema Formalization
-
-**Questions to answer:**
-
-1. **JSON Schema Definition**
-
-   - Platform-level required fields
-   - MFE-specific optional fields
-   - Validation rules
-   - Examples for each MFE type
-
-2. **Capability Schema**
-
-   - Input/output specifications
-   - Handler definitions
-   - Lifecycle phases
-   - Authorization requirements
-
-3. **GraphQL Schema Standards**
-   - Query interface contract
-   - Mutation interface contract
-   - Type system conventions
-   - Introspection format
-
-### Session 3C: Shell Runtime Specification
-
-**Questions to answer:**
-
-1. **Runtime Architecture**
-
-   - Registry cache implementation
-   - Module Federation loader
-   - WebSocket client
-   - Discovery client API
-
-2. **MFE Lifecycle**
-
-   - Initialize phase
-   - Execute phase
-   - Cleanup phase
-   - Error handling
-
-3. **UI Integration**
-   - How shell loads remote UI components
-   - Routing integration
-   - State management across MFEs
-   - Error boundaries
+- ✅ Orchestration service core (TypeScript)
+- ✅ Registration and discovery endpoints
+- ✅ Health monitoring (basic)
+- ✅ WebSocket support
 
 ---
 
-## What You Should Do Before Next Session
+## Next Steps for Implementation
 
-### Option A: Continue Requirements Gathering
+### Immediate (Next Session)
 
-If you want to complete requirements before implementation:
+1. ⏭️ Update docker-compose template with Neo4j + Redis
+2. ⏭️ Implement Neo4j graph schema and queries
+3. ⏭️ Add Redis caching layer for auth checks
+4. ⏭️ Update DSL templates with emit capability and new type enum
 
-**Next:** Schedule Session 3 (Technical Specifications)
+### Short-term
 
-- Focus: Orchestration service API design
-- Focus: DSL JSON Schema definition
-- Focus: Shell runtime architecture
-- Duration: ~1 hour
+5. ⏭️ Implement `/api/validate/:mfeId?` endpoint
+6. ⏭️ Add 5-minute background health monitoring
+7. ⏭️ Implement auto-replacement logic
+8. ⏭️ Update WebSocket notifications for health/replacement events
 
-Then: Session 4 (Implementation Planning)
+### Medium-term
 
-- Break down into implementation tasks
-- Define milestones
-- Create POC/MVP scope
-- Identify first iteration
-
-### Option B: Start Implementation POC
-
-If you want to validate with code:
-
-**Next:** Build minimal orchestration POC
-
-1. Generate orchestration service (Node.js + Fastify + in-memory registry)
-2. Update shell generator to include orchestration service
-3. Update remote generator with auto-registration code
-4. Test: Generate shell + 2 remotes, validate registration
-5. Measure: <5s availability, zero config validation
-
-Then: Use POC learnings to refine requirements
-
-### Option C: Hybrid Approach (Recommended)
-
-**Next:** Parallel track
-
-1. **Design track:** Complete Session 3 specs (1-2 hours)
-2. **Code track:** Start orchestration service POC (parallel)
-3. **Validate:** Use POC to test assumptions from Session 3
-4. **Iterate:** Refine specs based on POC learnings
-
----
-
-## Key Questions to Resolve
-
-Before implementation, these decisions would be helpful:
-
-1. **Technology Stack**
-
-   - Orchestration service language/framework
-   - Registry storage (Redis vs PostgreSQL vs in-memory)
-   - WebSocket library
-
-2. **Scope for V1**
-
-   - Which requirements are MVP vs V2?
-   - Phase A only, or A+C+B?
-   - Basic auth only, or full JWT?
-   - In-memory registry only, or Redis?
-
-3. **Testing Strategy**
-
-   - How to test locally?
-   - Integration test approach?
-   - CI/CD strategy?
-
-4. **Migration Path**
-   - Existing MFEs without orchestration?
-   - Gradual adoption strategy?
-   - Backwards compatibility?
-
----
-
-## Next Steps Recommendations
-
-**Immediate (Today/Tomorrow):**
-
-1. ✅ Review this checklist - confirm nothing major missing
-2. ⏭️ Make technology stack decisions (see recommendations above)
-3. ⏭️ Define V1 MVP scope clearly (which REQs are must-have?)
-
-**Short-term (This Week):** 4. ⏭️ Session 3: Technical Specifications (1-2 hours) 5. ⏭️ Start orchestration service POC 6. ⏭️ Generate and test basic registration flow
-
-**Medium-term (Next 1-2 Weeks):** 7. ⏭️ Complete orchestration service implementation 8. ⏭️ Update shell/remote generators 9. ⏭️ Build self-building validation (tool generates tool) 10. ⏭️ Documentation and examples
+9. ⏭️ Test full registration → health → replacement flow
+10. ⏭️ Self-building validation (tool generates tool)
+11. ⏭️ Documentation and examples
 
 ---
 
@@ -340,22 +174,20 @@ Before implementation, these decisions would be helpful:
 When you're ready to continue:
 
 ```
-I'm ready to continue orchestration design. We've completed:
-- Session 1: Vision & Core Objectives ✅
-- Session 2: Scope & Architecture ✅
+I'm ready to continue orchestration implementation. We've completed:
+- Sessions 1-5: All requirements and open questions resolved ✅
+- 35 ADRs documented (ADR-001 to ADR-035)
+- 41 requirements documented (REQ-001 to REQ-041)
+- Key decisions: Neo4j + Redis, 5-min health checks, Phase B default
 
-We have:
-- 24 requirements documented (REQ-001 to REQ-024)
-- 21 ADRs recorded (ADR-001 to ADR-021)
-- Architecture decisions made
-- Component scope defined
+Implementation status:
+- Orchestration service core exists
+- Need: Neo4j + Redis integration
+- Need: DSL manifest updates (emit, type enum)
+- Need: Validation endpoint
+- Need: Auto-replacement logic
 
-Next options:
-A) Session 3: Technical Specifications
-B) Start implementation POC
-C) Hybrid: Specs + POC in parallel
-
-Which path should we take?
+Ready to start implementation!
 ```
 
 ---
@@ -364,10 +196,11 @@ Which path should we take?
 
 All content captured in:
 
-- `/docs/orchestration-requirements.md` (2517 lines)
-- `/docs/architecture-decisions.md` (1972 lines)
-- `/docs/dsl.yaml` (reference DSL)
+- `/docs/orchestration-requirements.md` (~4000 lines)
+- `/docs/architecture-decisions.md` (~2500 lines)
+- `/docs/dsl.yaml` (reference DSL with 9 capabilities)
 - `/docs/SESSION-2-SUMMARY.md`
+- `/docs/SESSION-4-SUMMARY.md`
 - `/docs/SESSION-RESUME-CHECKLIST.md` (this file)
 
-**Status:** Ready to proceed ✨
+**Status:** Requirements Complete - Ready for Implementation ✨

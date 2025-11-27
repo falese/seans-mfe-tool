@@ -13,7 +13,6 @@ const { createShellCommand } = require('../create-shell');
 describe('Create Shell Command', () => {
   mockProcessExit();
   mockConsole();
-  setupCommonMocks();
 
   const defaultOptions = {
     port: '3000',
@@ -21,6 +20,8 @@ describe('Create Shell Command', () => {
   };
 
   beforeEach(() => {
+    setupCommonMocks();
+    
     // Setup specific mock for package.json
     mockFs.readFile.mockImplementation(async (filePath) => {
       if (filePath.endsWith('package.json')) {

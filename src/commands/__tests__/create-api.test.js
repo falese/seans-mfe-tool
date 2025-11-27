@@ -22,9 +22,10 @@ jest.mock('@apidevtools/swagger-parser', () => ({
 describe('Create API Command', () => {
   mockProcessExit();
   mockConsole();
-  setupCommonMocks();
 
   beforeEach(() => {
+    setupCommonMocks();
+    
     // Setup basic API spec
     const mockSpec = createTestData.apiSpec({
       '/test': {

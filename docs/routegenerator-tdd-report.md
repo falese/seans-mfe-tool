@@ -12,13 +12,13 @@ Successfully achieved 100% test coverage for the entire `src/codegen/RouteGenera
 ```
 File                       | % Stmts | % Branch | % Funcs | % Lines | Uncovered Lines
 ---------------------------|---------|----------|---------|---------|----------------
-All files                  |     100 |      100 |     100 |     100 |                
-RouteGenerator            |     100 |      100 |     100 |     100 |                
-  RouteGenerator.js        |     100 |      100 |     100 |     100 |                
-  index.js                 |     100 |      100 |     100 |     100 |                
-RouteGenerator/generators |     100 |      100 |     100 |     100 |                
-  PathGenerator.js         |     100 |      100 |     100 |     100 |                
-  SchemaGenerator.js       |     100 |      100 |     100 |     100 |                
+All files                  |     100 |      100 |     100 |     100 |
+RouteGenerator            |     100 |      100 |     100 |     100 |
+  RouteGenerator.js        |     100 |      100 |     100 |     100 |
+  index.js                 |     100 |      100 |     100 |     100 |
+RouteGenerator/generators |     100 |      100 |     100 |     100 |
+  PathGenerator.js         |     100 |      100 |     100 |     100 |
+  SchemaGenerator.js       |     100 |      100 |     100 |     100 |
 ```
 
 **Total Tests:** 120
@@ -27,6 +27,7 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 ## Test Files Created
 
 ### 1. SchemaGenerator.test.js (56 tests)
+
 - **Lines of Code:** 370
 - **Test Categories:**
   - transformSchema (30 tests)
@@ -45,6 +46,7 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
   - getSchemaName (5 tests)
 
 **Key Features Tested:**
+
 - Recursive schema transformation
 - OpenAPI 3.0/3.1 schema types
 - Joi validator code generation
@@ -52,10 +54,12 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 - Edge case handling (null, undefined, missing properties)
 
 **Bugs Fixed During TDD:**
+
 - JSON.stringify quote handling in object properties (expected `{name:...}` not `{"name":...}`)
 - Test design error in generateSchemaDefinition (passed raw schema instead of transformed)
 
 ### 2. PathGenerator.test.js (39 tests)
+
 - **Lines of Code:** 339
 - **Test Categories:**
   - generatePathContent (5 tests): operations, schemas, routes, filtering
@@ -69,6 +73,7 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
   - generateMiddleware (11 tests): auth, body/params/query validation, combinations
 
 **Key Features Tested:**
+
 - Path content generation orchestration
 - Method name generation (collection vs item)
 - Route string assembly
@@ -76,10 +81,12 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 - Middleware pipeline assembly (auth, validation)
 
 **Bugs Fixed During TDD:**
+
 - Mock return values needed per-operation granularity
 - Path parameter conversion applies regardless of prefix
 
 ### 3. RouteGenerator.test.js (23 tests)
+
 - **Lines of Code:** 359
 - **Test Categories:**
   - generate (6 tests): spec validation, file generation, error handling
@@ -88,6 +95,7 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
   - groupPathsByResource (7 tests): grouping logic, edge cases
 
 **Key Features Tested:**
+
 - Full route generation workflow
 - Resource grouping by path segments
 - File system operations (mocked)
@@ -95,11 +103,13 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 - Error propagation
 
 **Bugs Fixed During TDD:**
+
 - TypeScript syntax (`as jest.Mock`) in JS tests
 - Spec without paths returns early (no ensureDir call)
 - Query parameters in path keys handled correctly
 
 ### 4. index.test.js (2 tests)
+
 - **Lines of Code:** 29
 - **Purpose:** Ensure barrel export works correctly
 - **Tests:**
@@ -109,12 +119,15 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 ## Implementation Changes
 
 ### Bug Fixes
+
 1. **PathGenerator.js Line 16** - Removed unreachable defensive code
    - The `if (method === 'parameters') return;` was dead code because destructuring already removed `parameters`
    - Improved code clarity and achieved 100% branch coverage
 
 ### Test Infrastructure
+
 1. **Fixtures** (`__tests__/fixtures/openapi-specs.js`)
+
    - 320 lines of comprehensive test data
    - Derived from examples/petstore.yaml and examples/cost-benefit-api.yaml
    - Includes: simpleSpec, petStoreSpec, schemaExamples, operationExamples
@@ -128,6 +141,7 @@ RouteGenerator/generators |     100 |      100 |     100 |     100 |
 ## Jest Configuration Updates
 
 ### jest.config.js Changes
+
 ```javascript
 collectCoverageFrom: [
   'src/commands/*.js',
@@ -155,6 +169,7 @@ coverageThreshold: {
 ## TDD Workflow Applied
 
 ### Red → Green → Refactor Cycle
+
 1. **Red:** Wrote 56 SchemaGenerator tests, 54 initially failing
 2. **Green:** Fixed implementation bugs (quote handling, test design)
 3. **Refactor:** Cleaned up test structure, added fixtures
@@ -169,6 +184,7 @@ coverageThreshold: {
 12. **Refactor:** None needed
 
 ### Bottom-Up Testing Strategy
+
 - **Rationale:** Start with most complex (SchemaGenerator) to build confidence
 - **Sequence:**
   1. SchemaGenerator (most complex, recursive logic)
@@ -190,20 +206,22 @@ Time:        1.057 s
 
 ## Code Metrics
 
-| File | Lines | Tests | Tests/LOC Ratio |
-|------|-------|-------|-----------------|
-| SchemaGenerator.js | 157 | 56 | 0.36 |
-| PathGenerator.js | 114 | 39 | 0.34 |
-| RouteGenerator.js | 135 | 23 | 0.17 |
-| index.js | 6 | 2 | 0.33 |
-| **Total** | **412** | **120** | **0.29** |
+| File               | Lines   | Tests   | Tests/LOC Ratio |
+| ------------------ | ------- | ------- | --------------- |
+| SchemaGenerator.js | 157     | 56      | 0.36            |
+| PathGenerator.js   | 114     | 39      | 0.34            |
+| RouteGenerator.js  | 135     | 23      | 0.17            |
+| index.js           | 6       | 2       | 0.33            |
+| **Total**          | **412** | **120** | **0.29**        |
 
 ## Next Steps
 
 ### Remaining codegen/ Folders
+
 Following the same TDD pattern, next targets:
 
 1. **ControllerGenerator/** (~250 lines)
+
    - Estimated 60-80 tests
    - CRUD operation generation
    - HTTP response handling
@@ -217,6 +235,7 @@ Following the same TDD pattern, next targets:
    - Schema versioning
 
 ### CI/CD Integration
+
 - ✅ jest.config.js updated with 100% thresholds
 - ✅ GitHub Actions workflow exists (.github/workflows/test.yml)
 - ✅ Pre-commit hooks configured (.husky/pre-commit)
@@ -225,17 +244,21 @@ Following the same TDD pattern, next targets:
 ## Lessons Learned
 
 1. **JSON.stringify gotcha:** When generating Joi code, property names in objects must be unquoted
+
    - Initial: `Joi.object({"name": Joi.string()})`
    - Correct: `Joi.object({name: Joi.string()})`
 
 2. **Dead code detection:** TDD exposes unreachable code
+
    - PathGenerator line 16 was defensive but never executed
 
-3. **Mock ordering matters:** 
+3. **Mock ordering matters:**
+
    - Jest mocks must be defined before imports when using module mocks
    - Function mocks can be set per-test in beforeEach
 
 4. **TypeScript syntax in JS tests:**
+
    - Avoid `as jest.Mock` type assertions
    - Use JSDoc comments: `/** @type {jest.Mock} */`
 
@@ -248,12 +271,14 @@ Following the same TDD pattern, next targets:
 Successfully completed 100% test coverage for RouteGenerator/ (412 lines of production code, 120 comprehensive tests). This follows the TDD Guardian agent pattern and ADR-022 mandate for codegen modules.
 
 **Coverage Status:**
+
 - ✅ src/codegen/generators/ - 100% (NameGenerator, ResourceMapper)
 - ✅ src/codegen/RouteGenerator/ - 100% (SchemaGenerator, PathGenerator, RouteGenerator, index)
 - ⏳ src/codegen/ControllerGenerator/ - Next target
 - ⏳ src/codegen/DatabaseGenerator/ - Future target
 
 **Quality Metrics:**
+
 - 120 tests, 100% passing
 - 100% coverage (statements, branches, functions, lines)
 - No flaky tests

@@ -36,7 +36,7 @@ jest.mock('path', () => ({
 // Get references to the mocked modules
 const mockFs = require('fs-extra');
 const mockPath = require('path');
-const { execSync: mockExec } = require('child_process');
+const mockExec = require('child_process');
 
 /**
  * Setup function to mock process.exit
@@ -93,7 +93,7 @@ const setupCommonMocks = () => {
   mockPath.dirname.mockReset().mockImplementation(p => p.split('/').slice(0, -1).join('/'));
   mockPath.basename.mockReset().mockImplementation(p => p.split('/').pop());
 
-  mockExec.mockReset().mockReturnValue('');
+  mockExec.execSync.mockReset().mockReturnValue('');
 
   // Stable cwd for path expectations
   if (process.cwd.mockRestore) {
