@@ -37,13 +37,13 @@ class BaseGenerator {
   }
 
   validateSchema(schema) {
-    if (!schema.properties) {
+    if (!schema || !schema.properties) {
       throw new Error('Schema must have properties defined');
     }
   }
 
   getPropertyType(property) {
-    if (!property.type) {
+    if (!property || !property.type) {
       throw new Error('Property must have a type defined');
     }
     return property.type;

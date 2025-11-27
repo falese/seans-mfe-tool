@@ -13,8 +13,6 @@ class PathGenerator {
       const { parameters: pathParams, ...pathOperations } = operations;
       
       Object.entries(pathOperations).forEach(([method, operation]) => {
-        if (method === 'parameters') return;
-
         const functionName = this.generateMethodName(method, resourceName, path, operation);
         operationMap[functionName] = true;
 

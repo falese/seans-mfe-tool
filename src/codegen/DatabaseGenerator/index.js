@@ -4,6 +4,7 @@ const { MongoDBGenerator } = require('./generators/MongoDBGenerator');
 const { SQLiteGenerator } = require('./generators/SQLiteGenerator');
 const { SeedGenerator } = require('./generators/SeedGenerator');
 const { MigrationGenerator } = require('./generators/MigrationGenerator');
+const { MongoSchemaManager } = require('./generators/MongoSchemaManager');
 
 module.exports = {
   DatabaseGenerator,
@@ -11,5 +12,6 @@ module.exports = {
   MongoDBGenerator,
   SQLiteGenerator,
   SeedGenerator,
-  MigrationGenerator
+  MigrationGenerator,
+  MongoSchemaManager
 };

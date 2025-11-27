@@ -11,11 +11,12 @@ class ControllerGenerator {
   static async generate(dbType, controllersDir, spec) {
     console.log(chalk.blue('\nStarting controller generation...'));
     console.log('Database type:', dbType);
-    console.log('Available paths:', Object.keys(spec.paths));
     
     if (!spec?.paths) {
       throw new Error('Invalid OpenAPI specification: missing paths');
     }
+    
+    console.log('Available paths:', Object.keys(spec.paths));
 
     const dbAdapter = DatabaseAdapter.create(dbType);
     await this.generateControllers(controllersDir, spec, dbAdapter);

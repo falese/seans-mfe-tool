@@ -20,7 +20,8 @@ class DatabaseAdapter {
     }
     // Extract resource name from path
     const resource = String(resourcePath).split('/')[1] || resourcePath;
-    return NameGenerator.toPascalCase(resource);
+    const singular = NameGenerator.toSingular(resource);
+    return NameGenerator.toPascalCase(singular);
   }
 
   getImportStatement() {

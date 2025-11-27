@@ -39,7 +39,14 @@ module.exports = {
   collectCoverageFrom: [
     'src/commands/*.js',
     'src/utils/**/*.js',
-    '!src/**/index.js'
+    'src/codegen/generators/**/*.js',
+    'src/codegen/RouteGenerator/**/*.js',
+    'src/codegen/ControllerGenerator/**/*.js',
+    'src/codegen/DatabaseGenerator/**/*.js',
+    '!src/**/index.js',
+    '!src/**/__tests__/**',
+    '!src/**/*.test.js',
+    '!src/**/fixtures/**'
   ],
   
   // Coverage thresholds (relaxed locally, strict in CI)
@@ -50,6 +57,34 @@ module.exports = {
           functions: 80,
           lines: 80,
           statements: 80
+        },
+        // Enforce 100% for code generators (TDD mandate - ADR-022)
+        'src/codegen/generators/**/*.js': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        // Enforce 100% for RouteGenerator (TDD mandate - ADR-022)
+        'src/codegen/RouteGenerator/**/*.js': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        // Enforce 99%+ for ControllerGenerator (TDD mandate - ADR-022)
+        'src/codegen/ControllerGenerator/**/*.js': {
+          branches: 100,
+          functions: 97,
+          lines: 99,
+          statements: 99
+        },
+        // Enforce 98%+ for DatabaseGenerator (TDD mandate - ADR-022)
+        'src/codegen/DatabaseGenerator/**/*.js': {
+          branches: 95,
+          functions: 97,
+          lines: 98,
+          statements: 98
         }
       }
     : {
@@ -58,11 +93,41 @@ module.exports = {
           functions: 0,
           lines: 0,
           statements: 0
+        },
+        // Enforce 100% for code generators even locally (TDD mandate - ADR-022)
+        'src/codegen/generators/**/*.js': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        // Enforce 100% for RouteGenerator even locally (TDD mandate - ADR-022)
+        'src/codegen/RouteGenerator/**/*.js': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        // Enforce 99%+ for ControllerGenerator even locally (TDD mandate - ADR-022)
+        'src/codegen/ControllerGenerator/**/*.js': {
+          branches: 100,
+          functions: 97,
+          lines: 99,
+          statements: 99
+        },
+        // Enforce 98%+ for DatabaseGenerator even locally (TDD mandate - ADR-022)
+        'src/codegen/DatabaseGenerator/**/*.js': {
+          branches: 95,
+          functions: 97,
+          lines: 98,
+          statements: 98
         }
       },
 
   // Handle timers
-  timers: 'fake',
+  fakeTimers: {
+    enableGlobally: true
+  },
 
   // Test environment configuration
   testEnvironmentOptions: {

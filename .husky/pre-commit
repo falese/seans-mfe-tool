@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run generator tests with 100% coverage requirement
+echo "Running generator tests with 100% coverage requirement..."
+npm test -- src/codegen/generators --coverage --collectCoverageFrom='src/codegen/generators/**/*.js' --passWithNoTests
+
+if [ $? -ne 0 ]; then
+  echo "❌ Generator tests failed or coverage is below 100%"
+  echo "TDD mandate (ADR-022): All generators must have 100% test coverage"
+  exit 1
+fi
+
+echo "✅ Generator tests passed with 100% coverage"

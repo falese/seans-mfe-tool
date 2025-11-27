@@ -1,10 +1,6 @@
 const { NameGenerator } = require('./NameGenerator');
 
 class ResourceMapper {
-  constructor() {
-    this.nameGenerator = new NameGenerator();
-  }
-
   mapResources(spec) {
     const resourceMap = new Map();
 
@@ -16,14 +12,14 @@ class ResourceMapper {
       }
       
       // Clean up operations - remove parameters operation
-      const cleanedOperations = this.cleanOperations(operations);
+      const cleanedOperations = this.cleanOperations(operations, resourceName, path);
       
       resourceMap.get(resourceName).paths.push({ 
         path, 
         operations: cleanedOperations,
-        routePath: this.nameGenerator.toRouteName(path),
-        controllerName: this.nameGenerator.getControllerName(resourceName),
-        routerName: this.nameGenerator.getRouteName(resourceName)
+        routePath: NameGenerator.getRouteName(path),
+        controllerName: NameGenerator.getControllerName(resourceName),
+        routerName: NameGenerator.getRouteName(path)
       });
     });
 
@@ -31,19 +27,21 @@ class ResourceMapper {
   }
 
   getResourceName(pathKey) {
-    const segments = pathKey.split('/');
+    // Strip query parameters if present
+    const cleanPath = pathKey.split('?')[0];
+    const segments = cleanPath.split('/');
     const rawName = segments[1]; // Get first path segment after leading slash
-    return this.nameGenerator.toCamelCase(rawName);
+    return NameGenerator.toCamelCase(rawName);
   }
 
-  cleanOperations(operations) {
+  cleanOperations(operations, resourceName, path) {
     const cleanedOps = {};
     Object.entries(operations).forEach(([method, operation]) => {
       if (method !== 'parameters') {
         cleanedOps[method] = {
           ...operation,
-          controllerMethod: this.nameGenerator.generateControllerMethodName(method, operation),
-          routeMethod: this.nameGenerator.generateRouteMethodName(method, operation)
+          controllerMethod: NameGenerator.generateControllerMethodName(method, resourceName, path),
+          routeMethod: NameGenerator.generateRouteMethodName(method, resourceName)
         };
       }
     });

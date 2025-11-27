@@ -30,6 +30,16 @@ Reference these in code comments to guide AI assistants and document architectur
 - ADR-019: JWT authorization
 - ADR-020: `init` = workspace, `shell` = explicit
 - ADR-021: `analyze` command removed
+- ADR-022: GraphQL data standardization
+- ADR-023: RemoteEntry as abstract convention
+- ADR-024: Standard capabilities listed in DSL
+- ADR-025: Capability type discrimination (platform vs domain)
+- ADR-026: Load-Render-Refresh lifecycle
+- ADR-027: Single endpoint, path-based APIs
+- ADR-028: Discovery via .well-known convention
+- ADR-029: RemoteEntry for all MFE types
+- ADR-030: Render returns data for backend MFEs
+- ADR-031: Standardized extensible lifecycle hooks
 
 ---
 
@@ -390,6 +400,363 @@ mfe remote packages/feature-a # Remote MFE
 **Migration:** Use Phase A discovery + DSL manifests instead
 
 **Status:** Removed from CLI, historical reference only
+
+---
+
+### ADR-022: GraphQL Data Standardization
+
+**Decision:** Single `/graphql` endpoint for all data operations across all MFE types
+
+**Why:** Consistent data access for UI, API, tool, and agent MFEs; self-documenting; agent-friendly
+
+**Pattern:**
+
+```yaml
+# Every MFE (UI, API, Tool) exposes data this way
+data:
+  endpoint: /graphql # REQUIRED - single endpoint
+  schema:
+    types:
+      - ResourceType:
+          fields:
+            - id: ID!
+            - name: String!
+    queries:
+      - getResource:
+          args:
+            - id: ID!
+          returns: ResourceType
+          authorization: user.authenticated
+    mutations:
+      - updateResource:
+          args:
+            - id: ID!
+            - input: UpdateInput!
+          returns: ResourceType
+          authorization: user.owns.resource
+    subscriptions: # Optional
+      - resourceUpdated:
+          args:
+            - id: ID!
+          returns: ResourceType
+          authorization: user.owns.resource
+```
+
+**Base Class Implementation:**
+
+```typescript
+abstract class BaseMFE {
+  // All MFEs must implement
+  abstract async executeQuery(token: JWT, query: string, variables?: object): Promise<QueryResult>;
+
+  abstract async introspectSchema(): Promise<GraphQLSchema>;
+}
+
+// Backend API example
+class UserServiceMFE extends BaseMFE {
+  async executeQuery(token: JWT, query: string) {
+    return graphql({
+      schema: this.schema,
+      source: query,
+      contextValue: { token },
+    });
+  }
+}
+
+// Frontend MFE example - same pattern!
+class DashboardMFE extends BaseMFE {
+  async executeQuery(token: JWT, query: string) {
+    // Query local state or remote data
+    return graphql({
+      schema: this.localSchema,
+      source: query,
+      contextValue: { token },
+    });
+  }
+}
+```
+
+**Agent Benefits:**
+
+```typescript
+// Agent queries any MFE the same way
+const result = await mfe.executeQuery(token, `query { getUser(id: "123") { name email } }`);
+
+// Agent discovers schema
+const schema = await mfe.introspectSchema();
+console.log(schema.queries); // What can I query?
+```
+
+**Trade-offs:**
+
+- ✅ Uniform interface (UI/API/Tool all use GraphQL)
+- ✅ Self-documenting (introspectable schema)
+- ✅ Efficient (request exactly what you need)
+- ✅ Type-safe (validated against schema)
+- ⚠️ Learning curve (GraphQL knowledge required)
+- ⚠️ Overhead for simple CRUD (but tooling helps)
+
+**Code Generation:** CLI scaffolds GraphQL endpoint + schema for all MFE types automatically
+
+**Future:** Schema federation (compose queries across multiple MFEs)
+
+---
+
+### ADR-023: RemoteEntry as Abstract Convention
+
+**Decision:** `remoteEntry` is a language-agnostic convention, not JavaScript-specific implementation
+
+**Why:** Enable polyglot MFE ecosystem while maintaining uniform loading pattern
+
+**Pattern:**
+
+```yaml
+# JavaScript MFE (Module Federation)
+remoteEntry: http://localhost:3002/remoteEntry.js
+
+# Python MFE (HTTP endpoint returning module descriptor)
+remoteEntry: http://localhost:3002/entry
+# Returns: { "module": "my_mfe", "capabilities": [...], "loadHandler": "/api/load" }
+
+# Go MFE (HTTP endpoint returning module descriptor)
+remoteEntry: http://localhost:3002/entry
+# Returns JSON with same structure
+
+# Abstract interface all must support:
+interface RemoteEntry {
+  init(config?: object): Promise<MFEInstance>
+  get(capabilityName: string): Promise<CapabilityHandler>
+  destroy(): Promise<void>
+}
+```
+
+**Trade-offs:**
+- ✅ Unified loading pattern across languages
+- ✅ Orchestration treats all MFEs identically
+- ⚠️ Non-JS MFEs need wrapper/shim for remoteEntry concept
+
+---
+
+### ADR-024: Standard Capabilities Listed in DSL
+
+**Decision:** All platform capabilities explicitly listed in each MFE's DSL, not assumed
+
+**Why:** Enable re-entrant evolution - platform can modify standard capabilities over time
+
+**Pattern:**
+
+```yaml
+capabilities:
+  # Platform capabilities explicitly listed
+  - load:
+      type: platform
+      handler: initialize
+      ...
+  - render:
+      type: platform
+      handler: renderComponent
+      ...
+  # Custom capabilities
+  - customCapability:
+      type: domain
+      handler: customHandler
+      ...
+```
+
+**Trade-offs:**
+- ✅ Re-entrant: can evolve standard capabilities
+- ✅ Clear documentation: see exactly what MFE implements
+- ✅ Validation: ensure all platform capabilities present
+- ⚠️ Verbosity: more YAML per MFE
+
+---
+
+### ADR-025: Capability Type Discrimination
+
+**Decision:** All capabilities have `type: platform | domain` field
+
+**Why:** Clear distinction between platform contract and custom features for agents and validation
+
+**Pattern:**
+
+```yaml
+capabilities:
+  - authorizeAccess:
+      type: platform  # Platform-defined standard capability
+      ...
+  - data-analysis:
+      type: domain    # MFE-specific custom capability
+      ...
+```
+
+**Trade-offs:**
+- ✅ Easy for agents to distinguish standard vs custom
+- ✅ Validation can enforce platform capabilities present
+- ✅ Clear separation of concerns
+
+---
+
+### ADR-026: Load-Render-Refresh Lifecycle
+
+**Decision:** Add load, render, refresh as standard platform capabilities
+
+**Why:** Explicit lifecycle management for initialization, rendering, and state updates across all MFE types
+
+**Pattern:**
+
+```typescript
+// Load: Initialize MFE
+await mfe.load({ config: {...} })
+
+// Render: Display UI or return data
+const result = await mfe.render({ container: element, props: {...} })
+// UI MFE returns: React component
+// Backend MFE returns: { type: 'data', format: 'json', content: {...} }
+
+// Refresh: Reload state
+await mfe.refresh({ full: false })
+```
+
+**Trade-offs:**
+- ✅ Uniform lifecycle across all MFE types
+- ✅ Backend MFEs are first-class (not just UI components)
+- ✅ Orchestration can manage lifecycle consistently
+
+---
+
+### ADR-027: Single Endpoint, Path-Based APIs
+
+**Decision:** One base endpoint URL, standard paths for all MFE services
+
+**Why:** Simplified configuration, conventional routing
+
+**Pattern:**
+
+```yaml
+endpoint: http://localhost:3002
+
+# Standard paths (conventions):
+# GET  /health                           -> Health check
+# POST /graphql                          -> Data queries
+# GET  /.well-known/mfe-manifest.yaml    -> DSL discovery
+# POST /capability/{name}                -> Invoke capability
+```
+
+**Trade-offs:**
+- ✅ One URL to configure per MFE
+- ✅ Conventional paths, no per-path config
+- ✅ Simplified service discovery
+
+---
+
+### ADR-028: Discovery via .well-known Convention
+
+**Decision:** MFE manifests located at `/.well-known/mfe-manifest.yaml`
+
+**Why:** Follow web standard convention for well-known resources, enables zero-config discovery
+
+**Pattern:**
+
+```yaml
+# MFE DSL field
+discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
+
+# Can be omitted, defaults to:
+# ${endpoint}/.well-known/mfe-manifest.yaml
+```
+
+**Trade-offs:**
+- ✅ Web standard convention
+- ✅ Zero configuration needed
+- ✅ Easy discovery for agents/orchestration
+
+---
+
+### ADR-029: RemoteEntry for All MFE Types
+
+**Decision:** ALL MFE types must provide `remoteEntry`, not just web components
+
+**Why:** Creates uniform loading pattern across web and non-web MFEs
+
+**Pattern:**
+
+```yaml
+# Required for ALL types: remote, tool, agent, api
+type: api        # Even backend APIs have remoteEntry
+remoteEntry: http://localhost:3002/entry
+```
+
+**Trade-offs:**
+- ✅ Uniform loading pattern
+- ✅ All MFEs loaded via same mechanism
+- ⚠️ Backend MFEs need entry point abstraction
+
+---
+
+### ADR-030: Render Returns Data for Backend MFEs
+
+**Decision:** Backend MFEs implement `render` capability, returning JSON data representation
+
+**Why:** Consistent render contract across all MFE types
+
+**Pattern:**
+
+```python
+# Backend MFE render implementation
+async def render(self, container=None, props=None):
+    # Execute GraphQL query
+    query = "query GetDashboardData { ... }"
+    data = await self.executeQuery(query)
+    
+    # Return JSON representation
+    return {
+        "type": "data",
+        "format": "json",
+        "content": data
+    }
+```
+
+**Trade-offs:**
+- ✅ Uniform capability across all MFE types
+- ✅ Backend MFEs are "renderable" via data
+- ✅ GraphQL provides data representation
+
+---
+
+### ADR-031: Standardized Extensible Lifecycle Hooks
+
+**Decision:** before/main/after/error are standard lifecycle phases for ALL capabilities. Domain capabilities can extend with custom phases.
+
+**Why:** Consistency with flexibility for domain-specific execution needs
+
+**Pattern:**
+
+```yaml
+capabilities:
+  - customCapability:
+      type: domain
+      lifecycle:
+        # Standard phases (all capabilities)
+        before: [validateInput, checkAuth]
+        main: [executeCore]
+        after: [notifyComplete]
+        error: [handleError]
+        
+        # Custom phases (domain-specific)
+        custom:
+          validation:
+            - checkFormat
+            - scanContent
+          transformation:
+            - resize
+            - compress
+```
+
+**Trade-offs:**
+- ✅ Predictable execution model
+- ✅ Extensible for domain needs
+- ✅ Consistent hook naming
+- ✅ Platform can inject standard lifecycle behavior
 
 ---
 

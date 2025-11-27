@@ -3,13 +3,19 @@
 **Document Status:** Draft - In Progress  
 **Created:** 2025-11-26  
 **Owner:** Sean  
-**Feature:** MFE Orchestration System
+**Feature:** MFE Orchestration System  
+**Related Docs:**
+- [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
+- [Architecture Decisions](./architecture-decisions.md)
+- [Session 2 Summary](./SESSION-2-SUMMARY.md)
 
 ---
 
 ## Purpose
 
 This document captures requirements for adding orchestration capabilities to the MFE Development Tool. The orchestration feature will manage coordination, lifecycle, and communication between multiple MFE applications (shells, remotes, and APIs).
+
+**Note:** GraphQL code generation requirements have been moved to a [separate document](./graphql-codegen-requirements.md) for detailed technical specifications.
 
 ---
 
@@ -35,6 +41,812 @@ This document captures requirements for adding orchestration capabilities to the
 - [x] Constraints and non-goals
 
 **Status:** ✅ COMPLETE
+
+---
+
+### Session 3: Data Layer & GraphQL Integration
+
+**Goal:** Define how MFEs expose and access data through standardized interfaces.
+
+**Status:** ✅ COMPLETE
+
+**Summary:**
+All MFEs will expose data via GraphQL, generated automatically from OpenAPI specifications. This provides:
+- Unified interface for all MFE types (frontend, backend, tool, agent)
+- Backend-only MFEs without UI components
+- Robust BFF (Backend for Frontend) pattern
+- AI agent introspection and discovery
+- Self-documenting data layer
+
+**Detailed requirements moved to:** [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
+
+**Key Decisions:**
+- ✅ All MFE data exposed as GraphQL
+- ✅ GraphQL resolvers auto-generated from OpenAPI specs
+- ✅ Generic data handler with lifecycle events (loading, error, etc.)
+- ✅ Same BFF pattern for frontend and backend MFEs
+- ✅ Authorization at MFE and capability level (not per-field)
+- ✅ Agent introspection for data discovery
+
+---
+
+## Session 3: Data Layer & GraphQL Integration - RESPONSES
+
+**Date:** 2025-11-26
+
+### Question 1: Data Metadata
+
+**Response:**
+
+**Metadata to include:**
+
+- **tags** - Searchable/filterable keywords for data discovery
+- **category** - Logical grouping (e.g., "user-data", "analytics", "configuration")
+- **owner** - Team/person responsible for this data
+
+These should be included at the MFE level and optionally at individual data type level for fine-grained discovery.
+
+**Example in DSL:**
+
+```yaml
+name: user-management
+type: api
+owner: identity-team
+tags: [user, authentication, profile]
+category: user-data
+
+data:
+  schema:
+    types:
+      - User:
+          owner: identity-team
+          tags: [pii, gdpr]
+          fields:
+            - id: ID!
+            - email: String!
+```
+
+---
+
+### Question 2: Data Exposure - GraphQL for All MFEs
+
+**Response:**
+
+**Key Decision: All MFE data exposed as GraphQL**
+
+> "We should expose all MFE data as GraphQL. This will make it easier to provide 'backend only' MFEs. Plus it will provide a much more robust BFF approach for MFEs that provide user experience."
+
+**Why GraphQL:**
+
+1. **Unified interface** - Same query pattern for all MFE types (frontend, backend, tool, agent)
+2. **Backend-only MFEs** - Services can expose data without UI
+3. **Better BFF** - Frontend MFEs get optimized data access
+4. **Self-documenting** - Introspection built-in
+5. **Type safety** - Schema validation
+6. **Agent-friendly** - AI agents already understand GraphQL
+
+**Implementation Strategy:**
+
+**Generate GraphQL resolvers from OpenAPI:**
+
+```bash
+# Code generation flow
+1. Developer provides OpenAPI spec (one or many APIs)
+2. CLI generates GraphQL schema from OpenAPI
+3. CLI generates resolvers that call APIs
+4. MFE exposes unified GraphQL endpoint
+5. Orchestration discovers via introspection
+```
+
+**Example Mapping:**
+
+```yaml
+# OpenAPI spec
+/api/users:
+  get:
+    parameters:
+      - name: id
+        in: query
+    responses:
+      200:
+        schema:
+          $ref: '#/components/schemas/User'
+
+# Generated GraphQL
+type Query {
+  user(id: ID!): User
+  users(filter: UserFilter): [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+```
+
+**Resolver Generation:**
+
+```typescript
+// Generated resolver
+const resolvers = {
+  Query: {
+    user: async (_, { id }, context) => {
+      // Calls original REST API
+      const response = await fetch(`${API_BASE}/users?id=${id}`, {
+        headers: { Authorization: context.token }
+      });
+      return response.json();
+    },
+    users: async (_, { filter }, context) => {
+      const response = await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        body: JSON.stringify(filter),
+        headers: { Authorization: context.token }
+      });
+      return response.json();
+    }
+  }
+};
+```
+
+**Benefits:**
+
+- **No API rewrites** - Keep REST APIs, add GraphQL layer
+- **Progressive adoption** - Can wrap existing APIs
+- **Code generation** - Automated from OpenAPI spec
+- **Consistency** - All MFEs speak GraphQL
+- **Flexibility** - Can manually enhance generated resolvers
+
+---
+
+### Question 3: Data Access - Generic Handler
+
+**Response:**
+
+**Decision: Provide generic data handler for all MFEs**
+
+> "We should provide a generic handler that interacts with each BFF. We should also define similar lifecycle events like for the other capabilities as we could standardize loading experiences, error handling and other cross cutting concerns."
+
+**Generic Data Handler Pattern:**
+
+```typescript
+// Platform-provided handler (part of orchestration runtime)
+class MFEDataHandler {
+  async query(mfeId: string, query: string, variables?: object): Promise<any> {
+    const mfe = await this.orchestration.getMFE(mfeId);
+    
+    // Before lifecycle
+    await this.lifecycle.trigger('data.before', { mfeId, query });
+    
+    try {
+      // Loading state
+      this.lifecycle.trigger('data.loading', { mfeId });
+      
+      // Execute query via standard interface
+      const result = await mfe.executeQuery(
+        this.context.token,
+        query,
+        variables
+      );
+      
+      // After lifecycle  
+      await this.lifecycle.trigger('data.after', { mfeId, result });
+      
+      return result.data;
+      
+    } catch (error) {
+      // Error lifecycle
+      await this.lifecycle.trigger('data.error', { mfeId, error });
+      throw error;
+    }
+  }
+}
+
+// Usage in application
+const data = await orchestration.data.query(
+  'csv-analyzer',
+  `query GetAnalysis($id: ID!) {
+    getAnalysis(id: $id) {
+      id
+      fileName
+      results
+    }
+  }`,
+  { id: '123' }
+);
+```
+
+**Lifecycle Events for Data:**
+
+```yaml
+# Standard data lifecycle events (platform-level)
+dataLifecycle:
+  - before:
+      # Called before any data operation
+      - validateToken
+      - checkRateLimit
+      - logDataAccess
+  
+  - loading:
+      # Called when data fetch starts
+      - showLoadingIndicator
+      - cacheCheck
+  
+  - after:
+      # Called after successful data operation
+      - cacheResponse
+      - hideLoadingIndicator
+      - trackDataUsage
+  
+  - error:
+      # Called on data operation failure
+      - logError
+      - showErrorNotification
+      - retryLogic
+```
+
+**Cross-Cutting Concerns Standardized:**
+
+1. **Loading states** - Consistent spinner/skeleton UIs
+2. **Error handling** - Unified error messages and retry logic
+3. **Caching** - Automatic based on query signatures
+4. **Authorization** - JWT validation before every query
+5. **Logging** - Data access audit trail
+6. **Rate limiting** - Protection against abuse
+7. **Telemetry** - Performance monitoring
+
+**Example - Generated Loading Experience:**
+
+```typescript
+// MFE can provide custom loading UI
+// Or use platform default
+const LoadingUI = mfe.ui?.loading || DefaultLoadingSpinner;
+
+orchestration.data.onLifecycle('loading', (event) => {
+  if (event.mfeId === 'csv-analyzer') {
+    renderUI(<LoadingUI message="Loading analysis..." />);
+  }
+});
+```
+
+---
+
+### Question 4: Authorization at Data vs Capability Level
+
+**Response:**
+
+**Decision: Authorization at MFE and capability level, not granular data fields**
+
+> "I don't think we want to get granular on the graph level. Let's keep the auth to the MFE and particular functions within the MFE."
+
+**Authorization Model:**
+
+```yaml
+# Authorization hierarchy
+1. MFE Level
+   - Can user access this MFE at all?
+   - Checked via authorizeAccess() standard method
+
+2. Capability Level  
+   - Can user execute this specific capability?
+   - Checked per capability in DSL
+
+3. NOT Field Level
+   - We do NOT do field-level authorization in GraphQL
+   - Too granular, adds complexity
+   - Handle in resolver if absolutely needed
+```
+
+**Example DSL with Auth:**
+
+```yaml
+name: user-management
+type: api
+
+# MFE-level authorization (required for all access)
+authorization:
+  required: true
+  method: authorizeAccess
+  requires: user.authenticated
+
+data:
+  queries:
+    # Capability-level authorization
+    - getUser:
+        args:
+          - id: ID!
+        returns: User
+        authorization: user.permission.read_users
+    
+    - getUserSensitive:
+        args:
+          - id: ID!
+        returns: UserWithPII
+        authorization: user.role.admin OR user.owns.resource
+    
+    - listAllUsers:
+        returns: [User!]!
+        authorization: user.role.admin
+```
+
+**Authorization Check Flow:**
+
+```typescript
+// 1. Check MFE access (platform enforced)
+if (!await mfe.authorizeAccess(token)) {
+  throw new UnauthorizedError('Cannot access MFE');
+}
+
+// 2. Check capability access (platform enforced via DSL)
+const capability = mfe.dsl.data.queries.find(q => q.name === 'getUser');
+if (!checkAuthorization(capability.authorization, token)) {
+  throw new UnauthorizedError('Cannot execute this query');
+}
+
+// 3. Execute query (MFE handles internal logic)
+const result = await mfe.executeQuery(token, query);
+```
+
+**Benefits:**
+
+- **Simple authorization model** - Two levels, not N levels
+- **Performance** - No per-field checks
+- **Clear boundaries** - MFE owns its authorization logic
+- **Flexible** - MFE can still do field-level internally if needed
+- **Agent-friendly** - Easy for AI to understand access rules
+
+---
+
+### Question 5: Frontend vs Backend MFE Data Patterns
+
+**Response:**
+
+**Decision: Same BFF for all MFE types**
+
+> "No, exact same. The BFF a 'front end MFE' utilizes would be the same BFF a backend MFE utilizes."
+
+**Unified BFF Architecture:**
+
+```
+┌─────────────────────┐
+│  Frontend MFE       │
+│  (React Component)  │
+│  - UI rendering     │
+│  - User interaction │
+└──────────┬──────────┘
+           │
+           │ GraphQL query
+           ▼
+┌─────────────────────┐
+│   MFE BFF Layer     │◄─────────┐
+│   (GraphQL)         │          │
+│   - Schema          │          │ Same BFF!
+│   - Resolvers       │          │
+│   - Authorization   │          │
+└──────────┬──────────┘          │
+           │                     │
+           │ REST/gRPC           │
+           ▼                     │
+┌─────────────────────┐          │
+│   APIs              │          │
+│   (Existing)        │          │
+└─────────────────────┘          │
+                                 │
+┌─────────────────────┐          │
+│  Backend MFE        │          │
+│  (Service/Tool)     │          │
+│  - No UI            │          │
+│  - Business logic   │──────────┘
+└─────────────────────┘
+```
+
+**Frontend MFE Example:**
+
+```typescript
+// Frontend MFE uses its BFF
+const DashboardMFE = () => {
+  const { data } = useQuery(gql`
+    query GetDashboardData {
+      recentAnalyses(limit: 5) {
+        id
+        fileName
+        timestamp
+      }
+      userStats {
+        totalAnalyses
+        lastLogin
+      }
+    }
+  `);
+  
+  return <Dashboard data={data} />;
+};
+```
+
+**Backend MFE Example:**
+
+```python
+# Backend MFE exposes same GraphQL interface
+class AnalyzerMFE(BaseMFE):
+    async def introspect_schema(self) -> str:
+        return """
+        type Query {
+          analyzeFile(file: Upload!): AnalysisResult!
+          getAnalysis(id: ID!): AnalysisResult
+        }
+        """
+    
+    async def execute_query(self, token: str, query: str):
+        # Same GraphQL execution as frontend MFE
+        return await self.schema.execute(query, context={'token': token})
+```
+
+**Agent Usage (treats both the same):**
+
+```typescript
+// Agent doesn't care if MFE is frontend or backend
+const agent = {
+  async discoverData(mfeId: string) {
+    // Same introspection for all MFEs
+    const schema = await orchestration.introspect(mfeId);
+    return schema.queries;
+  },
+  
+  async fetchData(mfeId: string, query: string) {
+    // Same query execution for all MFEs  
+    return await orchestration.data.query(mfeId, query);
+  }
+};
+```
+
+**Key Insight:**
+
+Every MFE type (UI component, tool, agent, API service) exposes data the same way through GraphQL. The BFF layer is consistent regardless of whether the MFE renders UI or not.
+
+---
+
+### Question 6: Data Relationships Between MFEs
+
+**Response:**
+
+**Decision: No explicit relationships, enable introspection instead**
+
+> "I don't think we care about relations between data. We should enable the same methods to fetch data and easy to understand types where possible. We could enable the agents to introspect each MFE to understand its data and interpret from that."
+
+**No Foreign Key Declarations:**
+
+```yaml
+# We DON'T do this:
+data:
+  types:
+    - Order:
+        fields:
+          - userId: ID!
+            relatesTo: user-management.User  # ❌ No explicit relations
+```
+
+**Instead: Agent-Driven Discovery:**
+
+```typescript
+// Agent introspects and infers relationships
+class DataDiscoveryAgent {
+  async findRelatedData(entityType: string, fieldName: string) {
+    // 1. Introspect all MFEs
+    const allSchemas = await Promise.all(
+      mfeIds.map(id => orchestration.introspect(id))
+    );
+    
+    // 2. Find types by name/structure similarity
+    const relatedTypes = allSchemas.flatMap(schema => 
+      schema.types.filter(type => 
+        type.name === fieldName || 
+        type.fields.some(f => f.name === 'id' && f.type === fieldName)
+      )
+    );
+    
+    // 3. Agent can now query both MFEs and join data
+    const orderData = await orchestration.data.query('orders', orderQuery);
+    const userData = await orchestration.data.query('users', userQuery);
+    
+    // Agent joins the data
+    return this.joinData(orderData, userData, 'userId');
+  }
+}
+```
+
+**Benefits:**
+
+- **Loose coupling** - MFEs don't need to know about each other
+- **Flexibility** - Relationships can be inferred dynamically
+- **Agent intelligence** - AI determines how to connect data
+- **Schema simplicity** - Each MFE describes only its own data
+- **Scalability** - No cross-MFE schema coordination needed
+
+**Example - Agent Joins Data:**
+
+```typescript
+// Agent queries multiple MFEs and joins results
+const enrichedOrders = await agent.execute(`
+  Find all orders from the orders-mfe,
+  then fetch user details from user-management-mfe,
+  and combine them into a single view
+`);
+
+// Agent does:
+// 1. Query orders-mfe: getOrders()
+// 2. Extract userIds from orders
+// 3. Query user-management-mfe: getUsers(ids: [userIds])  
+// 4. Join orders + users by userId
+// 5. Return enriched data
+```
+
+---
+
+## Key Architectural Decisions - Data Layer
+
+### ADR-004: GraphQL as Universal Data Interface
+
+**Status:** Accepted  
+**Date:** 2025-11-26
+
+**Context:**
+
+MFEs need a standardized way to expose data that works for:
+- Frontend MFEs rendering UI
+- Backend MFEs providing services
+- Agent MFEs querying data
+- Tool MFEs with no UI
+
+**Decision:**
+
+All MFEs expose data via GraphQL regardless of type. Generate GraphQL schemas and resolvers from OpenAPI specifications.
+
+**Rationale:**
+
+- **Unified interface** - Same query pattern everywhere
+- **Self-documenting** - Introspection built-in
+- **Type safe** - Schema validation
+- **Industry standard** - Well understood
+- **Agent friendly** - AI agents understand GraphQL
+- **Progressive adoption** - Can wrap existing REST APIs
+
+**Consequences:**
+
+- ✅ Consistent data access across all MFE types
+- ✅ Code generation from OpenAPI reduces manual work
+- ✅ Agents can introspect any MFE's data
+- ⚠️ Adds GraphQL layer (small performance overhead)
+- ⚠️ Team must learn GraphQL (but common skill)
+
+---
+
+### ADR-005: BFF Pattern for All MFEs
+
+**Status:** Accepted  
+**Date:** 2025-11-26
+
+**Context:**
+
+Frontend and backend MFEs both need data access. Question is whether they should use different patterns.
+
+**Decision:**
+
+Every MFE (frontend or backend) has identical BFF (Backend for Frontend) pattern with GraphQL interface.
+
+**Rationale:**
+
+- **Consistency** - Same data access everywhere
+- **Abstract class** - All MFEs implement same interface
+- **Flexibility** - Backend-only MFEs can expose data without UI
+- **Orchestration simplicity** - One pattern to manage
+
+**Consequences:**
+
+- ✅ Backend MFEs are first-class data citizens
+- ✅ Agents treat all MFEs identically
+- ✅ Simpler orchestration (one data pattern)
+- ⚠️ Even simple MFEs need GraphQL setup
+
+---
+
+### ADR-006: No Cross-MFE Data Relationships
+
+**Status:** Accepted  
+**Date:** 2025-11-26
+
+**Context:**
+
+Data often relates across MFEs (e.g., Order.userId → User). Should we declare these relationships in DSL?
+
+**Decision:**
+
+No explicit cross-MFE relationships in DSL. Agents introspect schemas and infer relationships dynamically.
+
+**Rationale:**
+
+- **Loose coupling** - MFEs independent
+- **Agent intelligence** - AI determines connections
+- **Simpler DSL** - Each MFE describes only its data
+- **Scalability** - No coordination needed
+- **Flexibility** - Relationships can be dynamic
+
+**Consequences:**
+
+- ✅ MFEs fully independent
+- ✅ Agents must be smart enough to join data
+- ✅ Schema changes don't cascade
+- ⚠️ No compile-time relationship validation
+- ⚠️ Agents may infer incorrect relationships
+
+---
+
+### ADR-007: Authorization at MFE/Capability Level Only
+
+**Status:** Accepted  
+**Date:** 2025-11-26
+
+**Context:**
+
+GraphQL supports field-level authorization. Should we use it?
+
+**Decision:**
+
+Authorization only at MFE level and capability (query/mutation) level. Not at field level.
+
+**Rationale:**
+
+- **Simplicity** - Two-level auth is sufficient
+- **Performance** - No per-field checks
+- **Clear boundaries** - MFE owns internal logic
+- **Agent friendly** - Simple rules to understand
+- **Flexibility** - MFE can still do field-level internally
+
+**Consequences:**
+
+- ✅ Simple authorization model
+- ✅ Better performance
+- ✅ Clear security boundaries
+- ⚠️ Cannot hide individual fields via platform
+- ⚠️ MFE must handle sensitive fields internally if needed
+
+---
+
+### ADR-008: Generic Data Handler with Lifecycle Events
+
+**Status:** Accepted  
+**Date:** 2025-11-26
+
+**Context:**
+
+Every data operation needs loading states, error handling, caching, etc. Should each MFE implement this?
+
+**Decision:**
+
+Platform provides generic data handler with lifecycle events (before, loading, after, error) that all MFEs use.
+
+**Rationale:**
+
+- **DRY** - Don't repeat data access logic
+- **Consistency** - Same loading/error UX everywhere
+- **Cross-cutting concerns** - Caching, logging, telemetry standardized
+- **Easy adoption** - MFEs get this for free
+
+**Consequences:**
+
+- ✅ Standardized loading/error experiences
+- ✅ Less code in each MFE
+- ✅ Centralized telemetry
+- ⚠️ Less control for MFEs (can be overridden)
+- ⚠️ Platform responsibility grows
+
+---
+
+## Updated DSL - Data Section
+
+Based on Session 3 decisions, the data section of DSL should be:
+
+```yaml
+name: csv-analyzer
+type: tool
+owner: analytics-team
+tags: [data-analysis, csv, statistics]
+category: data-processing
+
+# Data exposure (GraphQL)
+data:
+  # Single endpoint for all operations
+  endpoint: /graphql
+  
+  # GraphQL schema (generated from OpenAPI or manually defined)
+  schema:
+    types:
+      - AnalysisResult:
+          owner: analytics-team
+          tags: [pii-possible]
+          fields:
+            - id: ID!
+            - fileName: String!
+            - analysisType: AnalysisType!
+            - results: JSON!
+            - timestamp: DateTime!
+            - userId: String
+      
+      - AnalysisType:
+          enum: [SUMMARY, CORRELATION, REGRESSION]
+      
+      - AnalysisHistory:
+          fields:
+            - items: [AnalysisResult!]!
+            - totalCount: Int!
+            - hasMore: Boolean!
+    
+    queries:
+      - getAnalysis:
+          description: Retrieve specific analysis by ID
+          args:
+            - id: ID!
+          returns: AnalysisResult
+          authorization: user.owns.resource OR user.role.admin
+      
+      - listAnalyses:
+          description: List analyses for current user
+          args:
+            - limit: Int = 10
+            - offset: Int = 0
+            - filter: AnalysisFilter
+          returns: AnalysisHistory
+          authorization: user.authenticated
+    
+    mutations:
+      - createAnalysis:
+          description: Create new analysis
+          args:
+            - input: AnalysisInput!
+          returns: AnalysisResult
+          authorization: user.permission.create_analysis
+      
+      - deleteAnalysis:
+          description: Delete analysis
+          args:
+            - id: ID!
+          returns: Boolean
+          authorization: user.owns.resource OR user.role.admin
+    
+    subscriptions:
+      - analysisProgress:
+          description: Real-time progress updates
+          args:
+            - analysisId: ID!
+          returns: ProgressUpdate
+          authorization: user.owns.resource
+  
+  # Generated from OpenAPI (optional)
+  generatedFrom:
+    - openapi: ./api-spec.yaml
+      service: analysis-api
+      baseUrl: http://analysis-api:8080
+```
+
+**Key Fields Explained:**
+
+1. **endpoint** - Always `/graphql` (single endpoint pattern)
+2. **schema** - GraphQL type system
+3. **queries/mutations/subscriptions** - Operations with authorization
+4. **generatedFrom** - Links to OpenAPI specs (for code generation)
+5. **authorization** - Capability-level auth rules
+6. **owner/tags** - Metadata for discovery
+
+---
+
+## Next Steps After Session 3
+
+1. **Update DSL schema** - Add data section validation
+2. **Create GraphQL generator** - OpenAPI → GraphQL transformer
+3. **Implement generic data handler** - Platform-level data access
+4. **Define lifecycle events** - Loading, error, caching hooks
+5. **Update orchestration service** - Add schema introspection API
+6. **Document BFF pattern** - Examples for different MFE types
 
 ---
 
@@ -75,11 +887,13 @@ This document captures requirements for adding orchestration capabilities to the
 **Response:**
 
 **Architecture Separation:**
+
 - **Orchestration** = Runtime component in shell managing MFE lifecycle and discovery
 - **CLI/CodeGen** = Development tooling for generating and building MFEs
 - **Shared Kernel** = DSL registry and validation
 
 **Component Scope - IN SCOPE:**
+
 - Shell applications (orchestration lives here)
 - Remote MFEs (UI components)
 - Tool MFEs (capabilities for agents)
@@ -87,6 +901,7 @@ This document captures requirements for adding orchestration capabilities to the
 - API MFEs (backend services)
 
 **Component Scope - OUT OF SCOPE:**
+
 - Databases (owned by APIs, not orchestrated)
 - API internals (but APIs expose DSL methods for data interrogation)
 - Build artifacts (deferred to deployment discussion)
@@ -96,10 +911,12 @@ This document captures requirements for adding orchestration capabilities to the
 - Starting services (that's CLI, not orchestration)
 
 **Key Design Principle:**
+
 > "Orchestration is runtime discovery and coordination. CLI is development and generation."
 
 **API Data Interrogation Pattern:**
 Each MFE (especially APIs) should expose standard methods in DSL to allow direct data queries:
+
 ```yaml
 capabilities:
   - data-query:
@@ -114,6 +931,7 @@ capabilities:
 ```
 
 **Design System Strategy - DEFERRED for deeper discussion:**
+
 - Acknowledge: "big bang visual design challenges" concern
 - Teams won't want forced upgrades
 - Need gradual migration path
@@ -126,6 +944,7 @@ capabilities:
 **Response:**
 
 **Architecture Clarity:**
+
 ```
 ┌─────────────────────────────────────────┐
 │          CLI (Development)              │
@@ -159,6 +978,7 @@ capabilities:
 ```
 
 **CLI Command Proposal:**
+
 ```bash
 # CLI handles code generation and development
 mfe remote my-tool              # Generate MFE
@@ -176,6 +996,7 @@ mfe dev my-tool                 # Start specific MFE
 ```
 
 **Orchestration Service:**
+
 - Separate architecture from CLI
 - Standalone service (Express/Fastify)
 - REST API + WebSocket
@@ -183,11 +1004,13 @@ mfe dev my-tool                 # Start specific MFE
 - No code generation, no building, no starting
 
 **Shared Kernel:**
+
 - DSL validation logic (used by both CLI and orchestration)
 - Registry client library
 - Common types/interfaces
 
 **Key Decision:**
+
 > CLI command `mfe register` is the bridge between CLI and orchestration
 
 ---
@@ -204,7 +1027,6 @@ All MFEs conform to same abstract contract regardless of type (UI/Tool/Agent/API
 ```yaml
 # Standard capabilities - REQUIRED for all MFEs
 standardCapabilities:
-  
   # Authorization check - can user/agent access this MFE?
   - authorizeAccess:
       handler: checkAuthorization
@@ -224,7 +1046,7 @@ standardCapabilities:
       description: >
         Validates JWT token and determines if requester can access MFE.
         Equivalent to authorization needed for user to see/use MFE.
-  
+
   # Health check
   - health:
       handler: checkHealth
@@ -234,7 +1056,7 @@ standardCapabilities:
           values: [healthy, degraded, unhealthy]
         - name: details
           type: object
-  
+
   # Self-description (introspection)
   - describe:
       handler: describeSelf
@@ -245,7 +1067,7 @@ standardCapabilities:
         - name: runtime
           type: object
           description: Runtime info (uptime, version, etc)
-  
+
   # Schema introspection (GraphQL-style)
   - schema:
       handler: introspectSchema
@@ -256,7 +1078,7 @@ standardCapabilities:
           description: >
             GraphQL-style schema describing all available
             queries, mutations, types
-  
+
   # Generic query interface (GraphQL-style)
   - query:
       handler: executeQuery
@@ -291,6 +1113,7 @@ standardCapabilities:
 5. **Abstract MFE class** - Implementation can be in any language, but conforms to contract
 
 **GraphQL Alignment Benefits:**
+
 - Industry-standard introspection
 - Well-understood query language
 - Type system for validation
@@ -298,6 +1121,7 @@ standardCapabilities:
 - Agents already understand GraphQL
 
 **Example - API MFE Schema (GraphQL):**
+
 ```graphql
 type Query {
   users(filter: UserFilter): [User!]!
@@ -317,6 +1141,7 @@ input UserFilter {
 ```
 
 **Example - Tool MFE Schema (GraphQL):**
+
 ```graphql
 type Query {
   analyzeFile(file: Upload!, type: AnalysisType): AnalysisReport!
@@ -345,7 +1170,7 @@ abstract class BaseMFE {
   abstract async describeSelf(): Promise<DSLDocument>;
   abstract async introspectSchema(): Promise<GraphQLSchema>;
   abstract async executeQuery(token: JWT, query: string, variables?: object): Promise<QueryResult>;
-  
+
   // MFE-specific capabilities defined in subclass
   abstract async execute<T, R>(capability: string, params: T): Promise<R>;
 }
@@ -357,10 +1182,10 @@ class CsvAnalyzerMFE extends BaseMFE {
     const decoded = verifyJWT(token);
     return {
       authorized: decoded.permissions.includes('data.read'),
-      permissions: decoded.permissions
+      permissions: decoded.permissions,
     };
   }
-  
+
   async introspectSchema(): Promise<GraphQLSchema> {
     return buildSchema(`
       type Query {
@@ -369,15 +1194,15 @@ class CsvAnalyzerMFE extends BaseMFE {
       ...
     `);
   }
-  
+
   async executeQuery(token: JWT, query: string): Promise<QueryResult> {
     // Execute GraphQL query against this MFE's capabilities
     return graphql({ schema: this.schema, source: query, contextValue: { token } });
   }
-  
+
   // MFE-specific capability
   async execute(capability: string, params: any) {
-    if (!await this.authorizeAccess(params.token)) {
+    if (!(await this.authorizeAccess(params.token))) {
       throw new UnauthorizedError();
     }
     // Execute capability
@@ -386,6 +1211,7 @@ class CsvAnalyzerMFE extends BaseMFE {
 ```
 
 **Python Example:**
+
 ```python
 from abc import ABC, abstractmethod
 
@@ -393,16 +1219,16 @@ class BaseMFE(ABC):
     @abstractmethod
     async def authorize_access(self, token: str, context: dict = None) -> AuthResult:
         pass
-    
+
     @abstractmethod
     async def check_health(self) -> HealthStatus:
         pass
-    
+
     @abstractmethod
     async def introspect_schema(self) -> str:
         """Return GraphQL schema as string"""
         pass
-    
+
     @abstractmethod
     async def execute_query(self, token: str, query: str, variables: dict = None) -> QueryResult:
         pass
@@ -415,20 +1241,21 @@ class CsvAnalyzerMFE(BaseMFE):
             authorized='data.read' in decoded.permissions,
             permissions=decoded.permissions
         )
-    
+
     async def introspect_schema(self) -> str:
         return """
         type Query {
           analyzeFile(file: Upload!, type: AnalysisType): AnalysisReport!
         }
         """
-    
+
     async def execute_query(self, token: str, query: str, variables: dict = None):
         # Execute with strawberry/graphene
         return await schema.execute(query, variable_values=variables)
 ```
 
 **Consequences:**
+
 - Consistent contract across all MFE types and languages
 - Agents can interrogate any MFE the same way
 - Security built-in (JWT everywhere)
@@ -460,9 +1287,11 @@ mfe shell my-app
 ```
 
 **Key Architecture Decision:**
+
 > **Orchestration service is generated in EVERY shell**
 
 **Rationale:**
+
 1. **Shell owns its orchestration** - natural coupling
 2. **Docker Compose elegance** - shell + orchestration as single deployable unit
 3. **Host → Remote workflow** - clean deployment pattern
@@ -471,6 +1300,7 @@ mfe shell my-app
 6. **Consistent with tool philosophy** - generate everything, including orchestration
 
 **Shell Generation Pattern:**
+
 ```
 my-app/
 ├── src/
@@ -499,6 +1329,7 @@ my-app/
 ```
 
 **Docker Compose Pattern:**
+
 ```yaml
 # Generated docker-compose.yml
 version: '3.8'
@@ -508,31 +1339,32 @@ services:
       context: .
       dockerfile: Dockerfile.orchestration
     ports:
-      - "3100:3100"
+      - '3100:3100'
     environment:
       - REGISTRY_STORAGE=redis
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
-  
+
   shell:
     build:
       context: .
       dockerfile: Dockerfile.shell
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - ORCHESTRATION_SERVICE_URL=http://orchestration-service:3100
     depends_on:
       - orchestration-service
-  
+
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
 ```
 
 **Deployment Workflow:**
+
 ```bash
 # Developer workflow
 mfe shell my-app                    # Generate shell with orchestration
@@ -551,6 +1383,7 @@ docker-compose up -d                # Deploy shell + orchestration
 ```
 
 **Host → Remote Flow:**
+
 ```
 1. Generate shell (includes orchestration service)
 2. Generate remotes (include auto-registration)
@@ -561,6 +1394,7 @@ docker-compose up -d                # Deploy shell + orchestration
 ```
 
 **Benefits:**
+
 - One command deploys shell + orchestration
 - Natural ownership model (shell owns its registry)
 - Multiple shells can have independent orchestrations
@@ -594,6 +1428,7 @@ my-workspace/
 ```
 
 **Rationale:**
+
 1. **init = workspace setup** - structure and shared config
 2. **Shell is intentional** - developer explicitly creates: `mfe shell my-app`
 3. **Orchestration tied to shell** - generated together
@@ -601,6 +1436,7 @@ my-workspace/
 5. **Flexibility** - workspace can have 0 or many shells
 
 **Typical Workflow:**
+
 ```bash
 # Setup workspace
 mfe init my-project
@@ -623,6 +1459,7 @@ npm run dev  # Auto-registers with localhost:3100
 ```
 
 **Alternative: Monorepo Style**
+
 ```bash
 mfe init my-monorepo
 cd my-monorepo
@@ -646,6 +1483,7 @@ Since orchestration service is generated in shell, clarify the relationship:
 **Shell Contains TWO orchestration components:**
 
 1. **Orchestration Service** (Node.js backend)
+
    - Registry storage
    - REST API
    - WebSocket server
@@ -660,6 +1498,7 @@ Since orchestration service is generated in shell, clarify the relationship:
    - Runs in browser
 
 **Communication Flow:**
+
 ```
 Remote MFE (Port 3002)
     │
@@ -691,9 +1530,11 @@ Shell renders remote
 **Decision: All orchestration in Docker containers across all environments**
 
 **Key Principle:**
+
 > "Orchestration/service always in Docker. Dev servers reserved for MFEs only."
 
 **Architecture:**
+
 ```
 Local Development:
 ┌─────────────────────────────────────────┐
@@ -713,6 +1554,7 @@ feature-a:3001  feature-b:3002  tool-x:3003  api:3004
 ```
 
 **Workflow:**
+
 ```bash
 # 1. Start shell + orchestration (Docker)
 cd my-shell
@@ -732,6 +1574,7 @@ npm run dev  # Port 3003, registers with docker:3100
 ```
 
 **Benefits:**
+
 - **Consistent deployment model** - same docker-compose for dev/staging/prod
 - **Hot reload where it matters** - MFEs get fast refresh during development
 - **Orchestration stability** - container isolation, production-like
@@ -750,7 +1593,7 @@ services:
     environment:
       - NODE_ENV=development
       - REGISTRY_STORAGE=memory  # Fast for dev
-  
+
   shell:
     build: ./shell
     ports:
@@ -767,7 +1610,7 @@ services:
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
-  
+
   redis:
     image: redis:alpine
     volumes:
@@ -775,6 +1618,7 @@ services:
 ```
 
 **Cross-Environment:**
+
 ```bash
 # Development
 docker-compose up
@@ -787,19 +1631,22 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 **Service Discovery:**
+
 - Local dev: MFEs register to `http://localhost:3100`
 - Docker network: MFEs use `http://orchestration-service:3100`
 - Kubernetes: Service names via DNS `http://orchestration-service.default.svc.cluster.local:3100`
 
 **Registry Isolation:**
+
 - Development: Each developer has own orchestration container (isolated registry)
 - Staging: Shared orchestration service (shared registry for team)
 - Production: Shared orchestration service (production registry)
 
 **Environment-Specific MFE Registration:**
+
 ```typescript
 // Auto-generated registration code
-const orchestrationUrl = 
+const orchestrationUrl =
   process.env.ORCHESTRATION_URL ||
   (process.env.NODE_ENV === 'production'
     ? 'http://orchestration-service:3100'
@@ -887,6 +1734,7 @@ mfe registry status
 ```
 
 **Integration Pattern:**
+
 ```bash
 # Full workflow
 mfe shell my-app                # Generate shell with orchestration
@@ -1784,6 +2632,154 @@ Thinking out loud, all MFEs might need:
 
 ---
 
+### Question 4A: Data Standardization & Access Patterns
+
+**Requirement:** The ability to fetch data should be standardized whether this is a backend MFE or a full-blown federated module. This data should be normalized to a schema and should enable a single endpoint for all data (GraphQL pattern).
+
+**Key Principles:**
+
+1. **Single Data Endpoint:** Every MFE exposes a single `/graphql` endpoint for all data operations
+2. **Schema-First:** Data structures are defined in GraphQL schema format
+3. **Unified Query Interface:** Same query patterns for UI MFEs, backend MFEs, tools, and agents
+4. **Type Safety:** All data operations are typed and validated against schema
+5. **Authorization Embedded:** Every query/mutation respects JWT-based authorization
+
+**Standard Data Contract (ALL MFEs):**
+
+```yaml
+data:
+  endpoint: /graphql # Single endpoint - REQUIRED
+
+  schema:
+    # Define types using GraphQL SDL
+    types:
+      - ResourceType:
+          fields:
+            - fieldName: Type!
+            - ...
+
+    # Queries - read operations
+    queries:
+      - queryName:
+          description: 'What this query does'
+          args:
+            - argName: Type!
+          returns: ReturnType
+          authorization: 'authorization rule'
+
+    # Mutations - write operations
+    mutations:
+      - mutationName:
+          description: 'What this mutation does'
+          args:
+            - argName: Type!
+          returns: ReturnType
+          authorization: 'authorization rule'
+
+    # Subscriptions - real-time updates (optional)
+    subscriptions:
+      - subscriptionName:
+          description: 'What this subscription provides'
+          args:
+            - argName: Type!
+          returns: StreamType
+          authorization: 'authorization rule'
+```
+
+**Why GraphQL Pattern:**
+
+- **Single Endpoint:** `/graphql` handles all data operations (no REST endpoint sprawl)
+- **Introspectable:** Schema is self-documenting and queryable
+- **Flexible:** Clients request exactly what they need
+- **Typed:** Strong typing prevents runtime errors
+- **Familiar:** Industry standard that agents/developers already understand
+- **Efficient:** Batch operations, avoid over-fetching
+
+**Example - Backend API MFE:**
+
+```yaml
+name: user-service
+type: api
+data:
+  endpoint: /graphql
+  schema:
+    types:
+      - User:
+          fields:
+            - id: ID!
+            - name: String!
+            - email: String!
+            - role: String!
+      - UserConnection:
+          fields:
+            - items: [User!]!
+            - totalCount: Int!
+    queries:
+      - getUser:
+          args:
+            - id: ID!
+          returns: User
+          authorization: user.authenticated
+      - listUsers:
+          args:
+            - limit: Int
+            - offset: Int
+          returns: UserConnection
+          authorization: user.role.admin
+    mutations:
+      - createUser:
+          args:
+            - input: CreateUserInput!
+          returns: User
+          authorization: user.role.admin
+```
+
+**Example - Frontend MFE (with data):**
+
+```yaml
+name: dashboard-widget
+type: remote
+data:
+  endpoint: /graphql # Same pattern!
+  schema:
+    types:
+      - WidgetState:
+          fields:
+            - config: JSON!
+            - data: JSON!
+            - lastRefresh: DateTime
+    queries:
+      - getWidgetState:
+          args:
+            - widgetId: String!
+          returns: WidgetState
+          authorization: user.owns.widget
+    mutations:
+      - updateWidgetConfig:
+          args:
+            - widgetId: String!
+            - config: JSON!
+          returns: WidgetState
+          authorization: user.owns.widget
+```
+
+**Benefits for AI Agents:**
+
+1. **Consistent Interface:** Agent queries data the same way regardless of MFE type
+2. **Self-Discovery:** Agent can introspect schema to understand available data
+3. **Type Validation:** Agent knows what types to expect/provide
+4. **Authorization Clarity:** Agent sees authorization requirements in schema
+5. **Composability:** Agent can compose data from multiple MFEs in single query
+
+**Implementation Requirements:**
+
+- Code generator must scaffold GraphQL endpoint for all MFEs
+- Orchestration service aggregates schemas from all MFEs
+- Shell can execute federated queries across multiple MFEs
+- Standard GraphQL tooling (introspection, validation) just works
+
+---
+
 ### Question 5: AI Agent Query & Selection Mechanism
 
 **Response:**
@@ -2109,6 +3105,7 @@ This suggests:
 ### From Session 1: Problem & Vision
 
 **REQ-001: Dynamic MFE Discovery and Loading**
+
 - Priority: P0 (Critical)
 - Category: Core Orchestration
 - Status: Requirements Defined
@@ -2123,6 +3120,7 @@ This suggests:
 - Technical Notes: Following ADR-009 (Hybrid orchestration), ADR-010 (Lightweight registry), ADR-012 (Push registration)
 
 **REQ-002: Centralized MFE Registry**
+
 - Priority: P0 (Critical)
 - Category: Core Orchestration
 - Status: Requirements Defined
@@ -2138,6 +3136,7 @@ This suggests:
 - Technical Notes: Following ADR-010 (Lightweight registry - metadata only, not full DSL)
 
 **REQ-003: Three-Phase Discovery (A/C/B)**
+
 - Priority: P0 (Critical)
 - Category: Agent Integration
 - Status: Requirements Defined
@@ -2152,6 +3151,7 @@ This suggests:
 - Technical Notes: Following ADR-011 (Three-phase discovery strategy)
 
 **REQ-004: Language-Agnostic DSL Contract**
+
 - Priority: P0 (Critical)
 - Category: Platform Contract
 - Status: Requirements Defined
@@ -2167,6 +3167,7 @@ This suggests:
 - Technical Notes: Following ADR-013 (Language-agnostic DSL), ADR-018 (GraphQL schema)
 
 **REQ-005: Module Federation Dynamic Loading**
+
 - Priority: P0 (Critical)
 - Category: Runtime Integration
 - Status: Requirements Defined
@@ -2181,6 +3182,7 @@ This suggests:
 - Technical Notes: Following ADR-007 (Module Federation loading), ADR-017 (Dev servers for MFEs)
 
 **REQ-006: Zero-Config Integration**
+
 - Priority: P1 (High)
 - Category: Developer Experience
 - Status: Requirements Defined
@@ -2195,6 +3197,7 @@ This suggests:
 - Technical Notes: Following ADR-012 (Push registration), ADR-016 (Shell owns orchestration)
 
 **REQ-007: Real-Time Registry Synchronization**
+
 - Priority: P1 (High)
 - Category: Core Orchestration
 - Status: Requirements Defined
@@ -2209,6 +3212,7 @@ This suggests:
 - Technical Notes: Following ADR-009 (Hybrid orchestration), ADR-010 (Lightweight sync)
 
 **REQ-008: CLI Code Generation**
+
 - Priority: P0 (Critical)
 - Category: Developer Tooling
 - Status: Requirements Defined
@@ -2224,6 +3228,7 @@ This suggests:
 - Technical Notes: Following ADR-016 (Shell owns orchestration), ADR-020 (Explicit shell creation)
 
 **REQ-009: DSL Validation and Registration**
+
 - Priority: P0 (Critical)
 - Category: Developer Tooling
 - Status: Requirements Defined
@@ -2238,6 +3243,7 @@ This suggests:
 - Technical Notes: Following ADR-013 (DSL validation), ADR-018 (Platform contract)
 
 **REQ-010: Semantic Search (Phase C) - Future**
+
 - Priority: P2 (Medium - Future Enhancement)
 - Category: Agent Integration
 - Status: Deferred to V2
@@ -2252,6 +3258,7 @@ This suggests:
 - Technical Notes: Requires vector database (pgvector, Pinecone, Weaviate)
 
 **REQ-011: Telemetry and Observability - Future**
+
 - Priority: P2 (Medium - Future Enhancement)
 - Category: Operations
 - Status: Deferred
@@ -2266,6 +3273,7 @@ This suggests:
 - Technical Notes: Platform-level DSL for telemetry hooks
 
 **REQ-012: Self-Building System**
+
 - Priority: P1 (High - Validation Goal)
 - Category: System Capability
 - Status: Requirements Defined
@@ -2275,11 +3283,12 @@ This suggests:
   - Code generator MFE creates new MFE projects
   - Generated MFEs conform to platform contract
   - Generated MFEs auto-register on deployment
- gen3) works
+    gen3) works
 - Dependencies: REQ-008 (Code Generation), REQ-006 (Zero-Config)
 - Technical Notes: Following ADR-014 (Self-building system design)
 
 **REQ-013: Health Monitoring and Recovery**
+
 - Priority: P1 (High)
 - Category: Operations
 - Status: Requirements Defined
@@ -2297,6 +3306,7 @@ This suggests:
 ### From Session 2: Scope & Architecture
 
 **REQ-014: Orchestration Service per Shell**
+
 - Priority: P0 (Critical)
 - Category: Architecture
 - Status: Requirements Defined
@@ -2312,6 +3322,7 @@ This suggests:
 - Technical Notes: Following ADR-016 (Orchestration per shell), ADR-009 (Hybrid architecture)
 
 **REQ-015: Abstract MFE Base Class**
+
 - Priority: P0 (Critical)
 - Category: Platform Contract
 - Status: Requirements Defined
@@ -2327,6 +3338,7 @@ This suggests:
 - Technical Notes: Following ADR-018 (Abstract base class), ADR-013 (Language-agnostic)
 
 **REQ-016: Docker Compose Deployment**
+
 - Priority: P0 (Critical)
 - Category: Deployment
 - Status: Requirements Defined
@@ -2342,6 +3354,7 @@ This suggests:
 - Technical Notes: Following ADR-016 (Orchestration per shell), ADR-017 (Docker-only orchestration)
 
 **REQ-017: JWT-Based Authorization**
+
 - Priority: P0 (Critical)
 - Category: Security
 - Status: Requirements Defined
@@ -2358,6 +3371,7 @@ This suggests:
 - Technical Notes: Following ADR-019 (JWT authorization), Zanzibar-style tuples deferred
 
 **REQ-018: GraphQL Schema Introspection**
+
 - Priority: P0 (Critical)
 - Category: Platform Contract
 - Status: Requirements Defined
@@ -2367,12 +3381,35 @@ This suggests:
   - schema standard capability returns GraphQL schema
   - query standard capability executes GraphQL queries
   - Agents can introspect MFE capabilities
+  - Schema includes queries, mutations, types, authorization rules
+  - Code generator scaffolds GraphQL endpoint automatically
+- Dependencies: REQ-015 (Base Class), REQ-004 (DSL Contract), REQ-019 (Data Standardization)
+- Technical Notes: Following ADR-019 (GraphQL alignment)
+
+**REQ-019: Standardized Data Access**
+
+- Priority: P0 (Critical)
+- Category: Platform Contract
+- Status: Requirements Defined
+- Description: Single GraphQL endpoint for all data operations across all MFE types
+- Rationale: Consistent data access pattern for UI, API, tool, and agent MFEs
+- Acceptance Criteria:
+  - Every MFE exposes /graphql endpoint
+  - Data schema defined in GraphQL SDL format
+  - Supports queries, mutations, subscriptions
+  - Authorization rules embedded in schema
+  - Frontend and backend MFEs use same pattern
+  - Orchestration can aggregate schemas (federated queries)
+  - Agents query data same way regardless of MFE type
+- Dependencies: REQ-018 (GraphQL Schema), REQ-015 (Base Class), REQ-004 (DSL Contract)
+- Technical Notes: Following ADR-019 (GraphQL alignment), enables schema federation in V2
   - Schema includes: Queries, Mutations, Types
   - Works across all languages (graphql-js, strawberry, graphql-go)
 - Dependencies: REQ-015 (Base Class), REQ-004 (DSL Contract)
 - Technical Notes: Following ADR-018 (GraphQL introspection), ADR-013 (Language-agnostic)
 
 **REQ-019: Docker-Only Orchestration, Dev Servers for MFEs**
+
 - Priority: P0 (Critical)
 - Category: Architecture
 - Status: Requirements Defined
@@ -2389,6 +3426,7 @@ This suggests:
 - Technical Notes: Following ADR-017 (Docker-only orchestration)
 
 **REQ-020: mfe init Workspace-First**
+
 - Priority: P0 (Critical)
 - Category: Developer Experience
 - Status: Requirements Defined
@@ -2404,6 +3442,7 @@ This suggests:
 - Technical Notes: Following ADR-020 (Workspace-first), ADR-016 (Shell explicit)
 
 **REQ-021: API Data Interrogation via DSL**
+
 - Priority: P1 (High)
 - Category: Platform Contract
 - Status: Requirements Defined
@@ -2419,6 +3458,7 @@ This suggests:
 - Technical Notes: Following ADR-018 (GraphQL query interface)
 
 **REQ-022: CLI Command Integration**
+
 - Priority: P1 (High)
 - Category: Developer Tooling
 - Status: Requirements Defined
@@ -2434,6 +3474,7 @@ This suggests:
 - Technical Notes: New commands: validate, register, registry status
 
 **REQ-023: Environment Configuration**
+
 - Priority: P1 (High)
 - Category: Deployment
 - Status: Requirements Defined
@@ -2449,6 +3490,7 @@ This suggests:
 - Technical Notes: Following ADR-017 (Environment consistency)
 
 **REQ-024: Shared Dependency Management - Deferred**
+
 - Priority: P2 (Medium - Future)
 - Category: Build & Deployment
 - Status: Deferred
@@ -2467,6 +3509,7 @@ This suggests:
 ## Requirements Traceability
 
 ### P0 (Critical) Requirements - V1 MVP
+
 - REQ-001: Dynamic MFE Discovery
 - REQ-002: Centralized Registry
 - REQ-003: Three-Phase Discovery (Phase A only in V1)
@@ -2483,6 +3526,7 @@ This suggests:
 - REQ-020: mfe init Workspace-First
 
 ### P1 (High) Requirements - V1 or Early V2
+
 - REQ-006: Zero-Config Integration
 - REQ-007: Real-Time Sync
 - REQ-012: Self-Building System
@@ -2492,6 +3536,7 @@ This suggests:
 - REQ-023: Environment Configuration
 
 ### P2 (Medium) Requirements - V2+
+
 - REQ-010: Semantic Search (Phase C)
 - REQ-011: Telemetry & Observability
 - REQ-024: Shared Dependency Management
@@ -2501,17 +3546,415 @@ This suggests:
 ## ADR Cross-Reference
 
 **Session 1 ADRs:**
- REQ-001, REQ-002, REQ-014
- REQ-002, REQ-003
- REQ-003, REQ-010
- REQ-006, REQ-008
- REQ-004, REQ-015
- REQ-012
+
+- ADR-009: Hybrid orchestration → REQ-001, REQ-002, REQ-014
+- ADR-010: Lightweight registry → REQ-002, REQ-003
+- ADR-011: Three-phase discovery → REQ-003, REQ-010
+- ADR-012: Push registration → REQ-006, REQ-008
+- ADR-013: Language-agnostic DSL → REQ-004, REQ-015
+- ADR-014: Self-building → REQ-012
 
 **Session 2 ADRs:**
- REQ-014, REQ-016
- REQ-019, REQ-023
- REQ-015, REQ-018, REQ-021
- REQ-017
- REQ-020
 
+- ADR-016: Orchestration per shell → REQ-014, REQ-016
+- ADR-017: Docker-only orchestration → REQ-016, REQ-019, REQ-023
+- ADR-018: Abstract base class → REQ-015, REQ-018, REQ-021
+- ADR-019: JWT authorization → REQ-017
+- ADR-020: Shell explicit generation → REQ-020
+- ADR-022: GraphQL data standardization → REQ-019, REQ-018, REQ-015
+
+**Session 4: Platform Contract Refinement ADRs (2025-11-27):**
+
+- ADR-023: RemoteEntry as abstract convention → REQ-025
+- ADR-024: Standard capabilities listed in DSL → REQ-026
+- ADR-025: Capability type discrimination → REQ-027
+- ADR-026: Load-Render-Refresh lifecycle → REQ-028
+- ADR-027: Single endpoint, path-based APIs → REQ-029
+- ADR-028: Discovery via .well-known convention → REQ-030
+- ADR-029: RemoteEntry for all MFE types → REQ-031
+- ADR-030: Render returns data for backend MFEs → REQ-032
+- ADR-031: Standardized extensible lifecycle hooks → REQ-033
+
+---
+
+## Session 4: Platform Contract Refinement
+
+**Date:** 2025-11-27  
+**Goal:** Define comprehensive platform contract that ALL MFEs must conform to  
+**Status:** ✅ COMPLETE
+
+### New Requirements Identified
+
+#### REQ-025: RemoteEntry as Abstract Convention
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+`remoteEntry` is a language-agnostic convention, not JavaScript-specific implementation. All MFEs must provide entry point following abstract interface.
+
+**Rationale:**  
+Enable polyglot ecosystem (JavaScript, Python, Go, etc.) while maintaining uniform loading pattern across all MFE types.
+
+**Acceptance Criteria:**
+- [ ] RemoteEntry defined as abstract interface
+- [ ] JavaScript MFEs use Module Federation remoteEntry.js
+- [ ] Python/Go MFEs expose HTTP endpoint returning module descriptor
+- [ ] All implementations support init/get/destroy operations
+- [ ] Code generator scaffolds appropriate remoteEntry per language
+
+**Dependencies:** REQ-004 (Language-Agnostic DSL), REQ-015 (Abstract Base Class)
+
+**Technical Notes:**  
+```yaml
+# Abstract interface (language-agnostic)
+interface RemoteEntry {
+  init(config?: object): Promise<MFEInstance>
+  get(capabilityName: string): Promise<CapabilityHandler>
+  destroy(): Promise<void>
+}
+
+# JavaScript: remoteEntry.js via Module Federation
+# Python: /entry endpoint returning JSON descriptor
+# Go: /entry endpoint returning JSON descriptor
+```
+
+---
+
+#### REQ-026: Standard Capabilities Listed in DSL
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+All 8 platform standard capabilities must be explicitly listed in every MFE's DSL, not assumed.
+
+**Rationale:**  
+Enable re-entrant evolution - platform can modify standard capabilities over time without breaking existing MFEs. Makes contract explicit and verifiable.
+
+**Acceptance Criteria:**
+- [ ] DSL schema requires 8 standard capabilities present
+- [ ] Code generator includes all platform capabilities in scaffolded DSL
+- [ ] Validation tool checks for missing platform capabilities
+- [ ] Documentation explains each platform capability
+- [ ] Examples show both platform and domain capabilities
+
+**Dependencies:** REQ-004 (DSL), REQ-015 (Abstract Base Class), REQ-027 (Type Discrimination)
+
+**Technical Notes:**  
+Standard capabilities: load, render, refresh, authorizeAccess, health, describe, schema, query
+
+---
+
+#### REQ-027: Capability Type Discrimination
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+All capabilities (platform and custom) must have `type: platform | domain` field for clear discrimination.
+
+**Rationale:**  
+Enables agents to distinguish between platform-standard and MFE-specific capabilities. Supports validation and discovery.
+
+**Acceptance Criteria:**
+- [ ] DSL schema requires `type` field on all capabilities
+- [ ] Platform capabilities have `type: platform`
+- [ ] Custom capabilities have `type: domain`
+- [ ] Validation enforces type field presence
+- [ ] Discovery API can filter by capability type
+
+**Dependencies:** REQ-026 (Listed Capabilities)
+
+**Technical Notes:**  
+```yaml
+capabilities:
+  - authorizeAccess:
+      type: platform
+  - customCapability:
+      type: domain
+```
+
+---
+
+#### REQ-028: Load-Render-Refresh Lifecycle
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+Add load, render, refresh as standard platform capabilities for explicit lifecycle management across all MFE types.
+
+**Rationale:**  
+Provides uniform initialization, rendering, and state update contract. Backend MFEs need lifecycle management just like UI MFEs.
+
+**Acceptance Criteria:**
+- [ ] Load capability initializes MFE runtime
+- [ ] Render capability returns UI component or data representation
+- [ ] Refresh capability reloads state
+- [ ] All three have defined inputs/outputs/lifecycle
+- [ ] Backend and frontend MFEs implement consistently
+
+**Dependencies:** REQ-026 (Listed Capabilities), REQ-032 (Backend Render)
+
+**Technical Notes:**  
+```typescript
+await mfe.load({ config })        // Initialize
+const ui = await mfe.render({ props })  // UI or data
+await mfe.refresh({ full: false })      // Update state
+```
+
+---
+
+#### REQ-029: Single Endpoint Path-Based APIs
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+One base endpoint URL per MFE, standard paths for all services (health, graphql, discovery, capabilities).
+
+**Rationale:**  
+Simplified configuration, conventional routing, consistent URL structure across all MFEs.
+
+**Acceptance Criteria:**
+- [ ] DSL requires single `endpoint` field
+- [ ] Standard paths documented: /health, /graphql, /.well-known/mfe-manifest.yaml
+- [ ] Capability invocation via /capability/{name}
+- [ ] Code generator scaffolds routing for standard paths
+- [ ] All MFEs follow same path conventions
+
+**Dependencies:** REQ-028 (Discovery Convention)
+
+**Technical Notes:**  
+```yaml
+endpoint: http://localhost:3002
+# Standard paths:
+# GET  /health
+# POST /graphql
+# GET  /.well-known/mfe-manifest.yaml
+# POST /capability/{name}
+```
+
+---
+
+#### REQ-030: Discovery via .well-known Convention
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+MFE manifests located at `/.well-known/mfe-manifest.yaml` following web standard convention.
+
+**Rationale:**  
+Zero-config discovery, follows web standards, enables automatic manifest location without configuration.
+
+**Acceptance Criteria:**
+- [ ] All MFEs serve manifest at /.well-known/mfe-manifest.yaml
+- [ ] `discovery` field defaults to ${endpoint}/.well-known/mfe-manifest.yaml
+- [ ] Code generator scaffolds manifest endpoint
+- [ ] Orchestration service discovers via well-known path
+- [ ] Validation ensures manifest is accessible
+
+**Dependencies:** REQ-029 (Path-Based APIs)
+
+**Technical Notes:**  
+```yaml
+# DSL field (optional, defaults shown)
+discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
+```
+
+---
+
+#### REQ-031: RemoteEntry Required for All MFE Types
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+ALL MFE types (remote, tool, agent, api) must provide `remoteEntry` field, not just web components.
+
+**Rationale:**  
+Creates uniform loading pattern. Backend MFEs are first-class loadable modules, not second-class citizens.
+
+**Acceptance Criteria:**
+- [ ] DSL schema requires `remoteEntry` for all types
+- [ ] Backend MFEs (Python, Go) provide remoteEntry endpoint
+- [ ] Validation enforces remoteEntry presence
+- [ ] Code generator scaffolds remoteEntry for all types
+- [ ] Orchestration loads all MFEs via remoteEntry
+
+**Dependencies:** REQ-025 (Abstract RemoteEntry)
+
+**Technical Notes:**  
+Even type: api requires remoteEntry for uniform orchestration pattern.
+
+---
+
+#### REQ-032: Render Returns Data for Backend MFEs
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+Backend MFEs implement `render` capability, returning JSON data representation via GraphQL query execution.
+
+**Rationale:**  
+Consistent render contract across all MFE types. Backend MFEs "render" their data, UI MFEs render components.
+
+**Acceptance Criteria:**
+- [ ] Backend MFEs implement render capability
+- [ ] Render executes GraphQL query and returns data
+- [ ] Return format: `{ type: 'data', format: 'json', content: {...} }`
+- [ ] UI MFEs return React/Vue components
+- [ ] Both follow same capability signature
+
+**Dependencies:** REQ-028 (Load-Render-Refresh), REQ-022 (GraphQL Standardization)
+
+**Technical Notes:**  
+```python
+async def render(self, container=None, props=None):
+    query = "query { ... }"
+    data = await self.executeQuery(query)
+    return { "type": "data", "format": "json", "content": data }
+```
+
+---
+
+#### REQ-033: Standardized Extensible Lifecycle Hooks
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** Accepted
+
+**Description:**  
+before/main/after/error are standard lifecycle phases for ALL capabilities. Domain capabilities can extend with custom phases.
+
+**Rationale:**  
+Consistency with flexibility. Platform can inject standard behavior, domain capabilities can add specific phases.
+
+**Acceptance Criteria:**
+- [ ] All capabilities have before/main/after/error phases
+- [ ] Domain capabilities can add custom phases
+- [ ] Lifecycle hook structure documented
+- [ ] Code generator scaffolds lifecycle hooks
+- [ ] Orchestration can inject platform hooks
+
+**Dependencies:** REQ-026 (Listed Capabilities), REQ-027 (Type Discrimination)
+
+**Technical Notes:**  
+```yaml
+lifecycle:
+  before: [...]
+  main: [...]
+  after: [...]
+  error: [...]
+  custom:          # Optional for domain capabilities
+    validation: [...]
+    transformation: [...]
+```
+
+---
+
+## Platform Contract Summary (Session 4)
+
+### Required Fields (All MFEs)
+
+```yaml
+# Identity
+name: string
+version: string
+type: remote | tool | agent | api
+description: string
+owner: string
+tags: [string]
+category: string
+language: string
+
+# Endpoints
+endpoint: url
+remoteEntry: url
+discovery: url (defaults to ${endpoint}/.well-known/mfe-manifest.yaml)
+
+# Capabilities (8 platform + N domain)
+capabilities:
+  # Platform capabilities (required for all)
+  - load: { type: platform, ... }
+  - render: { type: platform, ... }
+  - refresh: { type: platform, ... }
+  - authorizeAccess: { type: platform, ... }
+  - health: { type: platform, ... }
+  - describe: { type: platform, ... }
+  - schema: { type: platform, ... }
+  - query: { type: platform, ... }
+  
+  # Domain capabilities (MFE-specific)
+  - customCapability: { type: domain, ... }
+
+# Data (optional, if MFE exposes data)
+data:
+  endpoint: /graphql
+  schema: ...
+
+# Dependencies (optional)
+dependencies:
+  shared: [...]
+  mfes: [...]
+```
+
+### Capability Structure (All Capabilities)
+
+```yaml
+capabilityName:
+  type: platform | domain
+  description: string
+  handler: string
+  inputs: [{ name, type, required }]
+  outputs: [{ name, type }]
+  lifecycle:
+    before: [{ hookName, handler, description }]
+    main: [{ hookName, handler, description }]
+    after: [{ hookName, handler, description }]
+    error: [{ hookName, handler, description }]
+    custom:        # Optional for domain capabilities
+      phaseName: [{ hookName, handler, description }]
+  authorization: string (optional)
+```
+
+---
+
+## Updated Requirements Traceability
+
+### P0 (Critical) Requirements - V1 MVP
+
+- REQ-001: Dynamic MFE Discovery
+- REQ-002: Centralized Registry
+- REQ-003: Three-Phase Discovery (Phase A only in V1)
+- REQ-004: Language-Agnostic DSL
+- REQ-005: Module Federation Loading
+- REQ-008: CLI Code Generation
+- REQ-009: DSL Validation
+- REQ-014: Orchestration per Shell
+- REQ-015: Abstract Base Class
+- REQ-016: Docker Compose Deployment
+- REQ-017: JWT Authorization
+- REQ-018: GraphQL Introspection
+- REQ-019: Docker-Only Orchestration
+- REQ-020: mfe init Workspace-First
+- **REQ-025: RemoteEntry as Abstract Convention** ⭐ NEW
+- **REQ-026: Standard Capabilities Listed in DSL** ⭐ NEW
+- **REQ-027: Capability Type Discrimination** ⭐ NEW
+- **REQ-028: Load-Render-Refresh Lifecycle** ⭐ NEW
+- **REQ-029: Single Endpoint Path-Based APIs** ⭐ NEW
+- **REQ-030: Discovery via .well-known Convention** ⭐ NEW
+- **REQ-031: RemoteEntry for All MFE Types** ⭐ NEW
+- **REQ-032: Render Returns Data for Backend MFEs** ⭐ NEW
+- **REQ-033: Standardized Extensible Lifecycle Hooks** ⭐ NEW
