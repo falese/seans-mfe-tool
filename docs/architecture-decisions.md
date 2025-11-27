@@ -71,6 +71,7 @@ Reference these in code comments to guide AI assistants and document architectur
 ### ADR-046: GraphQL Mesh for BFF Layer with DSL-Embedded Configuration
 
 **Decision:** Use GraphQL Mesh as the BFF (Backend for Frontend) passthrough layer. Embed Mesh configuration directly in the MFE DSL `data:` section as the single source of configuration truth.
+**Status:** Implemented (2025-11-27). See acceptance criteria in `docs/acceptance-criteria/bff.feature` and CLI commands `bff:build`, `bff:dev`, `bff:validate`.
 
 **Why:**
 
@@ -308,6 +309,7 @@ module.exports = {
 ### ADR-048: Incremental TypeScript Migration
 
 **Decision:** Adopt TypeScript incrementally for the CLI codebase. New code (DSL parser, validators, generators) and recently-completed code (BFF generators) will be TypeScript. Existing JavaScript remains until touched.
+**Status:** Implemented (ongoing). DSL modules and remote commands delivered; CLI wired with ts-node inline registration.
 
 **Why:**
 
@@ -848,7 +850,7 @@ mfe remote packages/feature-a # Remote MFE
 
 **Migration:** Use Phase A discovery + DSL manifests instead
 
-**Status:** Removed from CLI, historical reference only
+**Status:** Removed from CLI, historical reference only (confirmed).
 
 ---
 

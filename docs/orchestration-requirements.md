@@ -1,6 +1,6 @@
 # Orchestration Feature - Requirements Elicitation Plan
 
-**Document Status:** Draft - In Progress  
+**Document Status:** Draft - In Progress (updated Nov 27, 2025)  
 **Created:** 2025-11-26  
 **Owner:** Sean  
 **Feature:** MFE Orchestration System  
@@ -8,6 +8,8 @@
 
 - [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
 - [Architecture Decisions](./architecture-decisions.md)
+  - ADR-046: Implemented (BFF Mesh via DSL data)
+  - ADR-048: Implemented (DSL-first remote generation)
 - [Session 2 Summary](./SESSION-2-SUMMARY.md)
 
 ---
@@ -837,14 +839,21 @@ data:
 
 ---
 
-## Next Steps After Session 3
+## Next Steps After Session 3 (Status Updates)
 
-1. **Update DSL schema** - Add data section validation
-2. **Create GraphQL generator** - OpenAPI → GraphQL transformer
-3. **Implement generic data handler** - Platform-level data access
+1. **Update DSL schema** - Add data section validation — Implemented
+2. **Create GraphQL generator** - OpenAPI → GraphQL transformer — Partial (BFF commands wired; generator tracked separately)
+3. **Implement generic data handler** - Platform-level data access — Accepted (design captured; implementation tracked under orchestration runtime)
 4. **Define lifecycle events** - Loading, error, caching hooks
 5. **Update orchestration service** - Add schema introspection API
-6. **Document BFF pattern** - Examples for different MFE types
+6. **Document BFF pattern** - Examples for different MFE types — Implemented (see `docs/acceptance-criteria/bff.feature`)
+
+## Completion Notes (DSL-Driven Remote & BFF)
+
+- DSL-first remote workflow implemented: `remote:init`, `remote:generate`, `remote:generate:capability`.
+- Manifest structure validated: `language` + `capabilities` (array of name→config records).
+- E2E functional test executed: project scaffolding, file generation, rspack dev server running, remoteEntry served.
+- BFF commands wired and documented; acceptance criteria in `docs/acceptance-criteria/bff.feature`.
 
 ---
 

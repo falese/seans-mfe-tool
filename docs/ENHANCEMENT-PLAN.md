@@ -12,9 +12,9 @@ This plan upgrades seans-mfe-tool from an alpha-quality generator to a productio
 
 ## Current State (Summary)
 
-- Core commands exist (shell, remote, api, build, analyze, deploy, spec), some gaps.
+- Core commands exist (shell, remote, api, build, deploy, spec); analyze removed per ADR-021.
 - API generation strong; deploy production path incomplete; `init` stubbed.
-- Tests present but coverage uneven; ESLint/Prettier config missing.
+- Tests improved; DSL modules at 100% coverage; ESLint/Prettier pending.
 - Docs good breadth but missing production, security, and CI/CD guidance.
 
 ## Roadmap (Phased)
@@ -37,13 +37,13 @@ Exit criteria:
 ### Phase 2 — Quality & Coverage (Weeks 3–4)
 
 - Unit tests for generators, template processor, BuildManager, and commands.
-- Integration tests: end‑to‑end command execution on a temp workspace.
+- Integration tests: end‑to‑end command execution on a temp workspace (DSL remote E2E complete).
 - E2E smoke: build generated shell/remote/api; verify dev server starts and basic routes.
 - Analyze performance: reduce logging/complexity hot spots.
 
 Exit criteria:
 
-- Global coverage ≥80%; failing tests block CI.
+- Global coverage ≥80%; failing tests block CI (DSL modules at 100%).
 - `analyze` runs on sample app within acceptable time and log volume.
 
 ### Phase 3 — Security & CI/CD (Weeks 5–6)
@@ -113,7 +113,7 @@ Exit criteria:
 - Command reference with all flags, examples, and exit codes.
 - Production deployment guide (Docker/K8s), plus security hardening.
 - Troubleshooting (ports, Docker issues, K8s ingress), and migration notes.
-- ADRs for major decisions (Rspack, Module Federation strategy, templates).
+- ADRs for major decisions (Rspack, Module Federation strategy, templates). Updated ADR-048 (DSL-first) and ADR-046 (BFF Mesh) with implementation confirmations.
 
 ## Estimates (high level)
 
@@ -150,6 +150,12 @@ Exit criteria:
 - Added: production templates (`src/templates/docker/*`, `src/templates/kubernetes/*`).
 - Implemented: production deployment paths in `deploy` (compose and k8s) + CLI flags.
 
+2025-11-27 Updates:
+- Implemented DSL-first remote commands: `remote:init`, `remote:generate`, `remote:generate:capability`.
+- Validated manifest schema and generation; rspack exposes updated.
+- Added acceptance criteria: `docs/acceptance-criteria/remote-mfe.feature`, `docs/acceptance-criteria/bff.feature`.
+- Confirmed BFF command wiring and documented acceptance scenarios.
+
 Next up (suggested):
 
 - Standardize error handling patterns across commands.
@@ -161,16 +167,19 @@ Next up (suggested):
 ## Session 6 Addendum (2025-11-27)
 
 ### Immediate Actions
+
 - Strengthen negative-path Jest tests for `src/commands/create-api.js` with edge OpenAPI specs.
 - Create `docs/troubleshooting.md` to cover MF shared conflicts (React/MUI), CORS, and remoteEntry URL validation.
 - Add a minimal E2E sanity script under `scripts/` to start a generated shell and remote, verify registration and remote loading.
 - Provide a reproducible `mfe deploy` example in `examples/` with concise README.
 
 ### Dependencies
+
 - Existing Jest setup and `__tests__/` mocks.
 - Generated templates for shell/remote to be used in E2E sanity.
 
 ### Acceptance Criteria
+
 - New tests fail on invalid/edge OpenAPI inputs and pass on fixed logic.
 - Troubleshooting doc gives actionable steps for the three common issues and is linked from README.
 - E2E script runs locally on macOS with zsh and reports success/failure succinctly.

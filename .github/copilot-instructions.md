@@ -498,11 +498,107 @@ src/
 
 ## Getting Help
 
-- **Architecture decisions:** `docs/architecture-decisions.md` (ADR-001 through ADR-021)
+- **Architecture decisions:** `docs/architecture-decisions.md` (ADR-001 through ADR-021+)
 - **Orchestration requirements:** `docs/orchestration-requirements.md`
 - **API generation:** `docs/api-generator-readme.md`
 - **Examples:** `examples/` directory (working projects)
 - **Agent system design:** `src/agent-orchestrator/README.md` (future work)
+- **Backlog:** `docs/BACKLOG.md` - GitHub Issues-ready feature tracking
+
+## Requirements & Issue Tracking
+
+### Traceability System
+
+Every feature follows a traceable path from requirements → implementation → verification:
+
+```
+Requirements Doc (REQ-XXX)
+    ↓
+ADR (ADR-NNN) ← Architectural decisions
+    ↓
+Backlog Entry (docs/BACKLOG.md)
+    ↓
+GitHub Issue (#NNN)
+    ↓
+Implementation (PR)
+    ↓
+Acceptance Criteria (docs/acceptance-criteria/*.feature)
+    ↓
+Requirements Update (Status: ✅ Complete)
+```
+
+### Working with Requirements
+
+**Locating Requirements:**
+
+- **Orchestration:** `docs/orchestration-requirements.md` (REQ-001 to REQ-041)
+- **BFF:** `docs/graphql-bff-requirements.md` (REQ-BFF-001 to REQ-BFF-008)
+- **DSL Contract:** `docs/dsl-contract-requirements.md` (REQ-042 to REQ-053)
+- **Remote Generation:** `docs/dsl-remote-requirements.md` (REQ-REMOTE-001 to REQ-REMOTE-010)
+- **Scaffolding:** `docs/scaffolding-requirements.md` (REQ-SCAFFOLD-001 to REQ-SCAFFOLD-006)
+
+**Requirement Document Status:**
+
+- 📋 **Planned**: Requirements defined, not yet implemented
+- 🟡 **In Progress**: Active implementation work
+- ✅ **Complete**: Implemented and verified
+- 🔶 **Deferred**: Postponed for future consideration
+
+**When Implementing a Feature:**
+
+1. **Find the requirement**: Search `docs/*-requirements.md` for REQ-XXX
+2. **Check ADRs**: Look for related architectural decisions
+3. **Check backlog**: See if GitHub Issue exists in `docs/BACKLOG.md`
+4. **Implement with traceability**: Reference REQ-XXX and issue number in commits
+5. **Update status**: Mark requirement as implemented when complete
+6. **Link artifacts**: Update requirements doc with PR/issue links
+
+### Referencing Requirements in Code
+
+Use consistent comments to link code to requirements:
+
+```typescript
+// REQ-042: Lifecycle hook execution semantics
+// Implements mandatory and contained flags per ADR-036
+async function executeHook(hook: Hook, context: Context): Promise<void> {
+  // ...
+}
+```
+
+```yaml
+# REQ-BFF-001: DSL data section as Mesh configuration
+# ADR-046: GraphQL Mesh with DSL-embedded config
+data:
+  sources:
+    - name: UserAPI
+      handler:
+        openapi:
+          source: ./specs/user-api.yaml
+```
+
+### Creating GitHub Issues
+
+When a requirement is ready for implementation:
+
+1. **Check backlog**: Find the corresponding backlog entry in `docs/BACKLOG.md`
+2. **Copy template**: Use the issue structure from backlog
+3. **Apply labels**: Use standard label system (priority, type, component, req)
+4. **Link requirements**: Reference REQ-XXX, ADR-NNN, acceptance files
+5. **Update backlog**: Add issue number to backlog document
+
+### Acceptance Criteria Files
+
+GWT (Given-When-Then) scenarios in `docs/acceptance-criteria/`:
+
+- `remote-mfe.feature` - Remote generation and federation
+- `bff.feature` - GraphQL BFF and Mesh integration
+
+**When adding features:**
+
+1. Create or update `.feature` file with scenarios
+2. Reference in requirements doc and GitHub Issue
+3. Implement feature to satisfy scenarios
+4. Run manual or automated tests against scenarios
 
 ## Deprecated Features
 

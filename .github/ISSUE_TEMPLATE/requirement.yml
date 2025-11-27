@@ -1,0 +1,136 @@
+name: Requirement Implementation
+description: Track implementation of documented requirements
+title: "[REQ] "
+labels: ["type: feature", "req: tracked", "status: planned"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Requirement Implementation Template
+        
+        Use this template when implementing a requirement from docs/*-requirements.md.
+
+  - type: input
+    id: requirement-id
+    attributes:
+      label: Requirement ID
+      description: The REQ-XXX identifier
+      placeholder: "REQ-042"
+    validations:
+      required: true
+
+  - type: input
+    id: requirement-doc
+    attributes:
+      label: Requirements Document
+      description: Link to the requirements document
+      placeholder: "docs/dsl-contract-requirements.md#req-042"
+    validations:
+      required: true
+
+  - type: input
+    id: adrs
+    attributes:
+      label: Related ADRs
+      description: Link to architectural decisions
+      placeholder: "ADR-036, ADR-037"
+    validations:
+      required: false
+
+  - type: input
+    id: acceptance-file
+    attributes:
+      label: Acceptance Criteria File
+      description: GWT feature file (if exists)
+      placeholder: "docs/acceptance-criteria/dsl-lifecycle.feature"
+    validations:
+      required: false
+
+  - type: input
+    id: backlog-entry
+    attributes:
+      label: Backlog Reference
+      description: Link to docs/BACKLOG.md entry
+      placeholder: "docs/BACKLOG.md#issue-008"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Requirement Description
+      description: Copy requirement description from docs
+      placeholder: |
+        **REQ-042:** Lifecycle Hook Execution Semantics
+        
+        Define execution semantics for lifecycle hooks including failure handling,
+        mandatory execution, and containment behavior.
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: From requirements document
+      placeholder: |
+        - [ ] `mandatory: true` hooks execute even after failures
+        - [ ] `contained: true` hooks wrapped in try-catch
+        - [ ] `main` phase failures propagate to caller
+        - [ ] Non-main failures logged + telemetry
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: Implementation guidance from requirements
+      placeholder: |
+        From requirements doc:
+        - Use BaseMFE abstract class
+        - Implement executeHook() method
+        - Leverage existing telemetry utils
+      render: markdown
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: From requirements document
+      options:
+        - priority: critical
+        - priority: high
+        - priority: medium
+        - priority: low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      multiple: true
+      options:
+        - component: cli
+        - component: codegen
+        - component: orchestration
+        - component: bff
+        - component: dsl
+        - component: deployment
+        - component: testing
+    validations:
+      required: true
+
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: Which epic from backlog?
+      placeholder: "DSL Contract Implementation"
+    validations:
+      required: false

@@ -124,3 +124,55 @@ When requirements session concludes:
 - ADRs guide implementation decisions
 - Requirements doc becomes acceptance criteria
 - Can pause/resume across multiple sessions
+
+## Issue Tracking Integration
+
+### Creating GitHub Issues from Requirements
+
+When requirements are finalized and ready for implementation:
+
+1. **Reference the backlog**: Check `docs/BACKLOG.md` for existing issue templates
+2. **Map requirements to issues**: Each REQ-* should have corresponding issue(s)
+3. **Use standard labels**: Apply labels from backlog label system
+   - Priority: `priority: critical|high|medium|low`
+   - Type: `type: feature|bug|enhancement`
+   - Component: `component: cli|codegen|orchestration|bff`
+   - Requirement: `req: orchestration|dsl|bff|remote|scaffold`
+4. **Link traceability**: Issue description must reference:
+   - Requirements (REQ-XXX)
+   - ADRs (ADR-NNN)
+   - Acceptance criteria files (`docs/acceptance-criteria/*.feature`)
+5. **Update backlog**: Mark issue number in backlog document
+
+### Tracking Requirements Status
+
+In requirements documents, use consistent status markers:
+
+```markdown
+**Document Status:** 📋 Planned | 🟡 In Progress | ✅ Complete | 🔶 Deferred
+**Implementation Status:** [Not Started | In Progress | Complete]
+**GitHub Issues:** #123, #124
+```
+
+### Requirements-to-Issue Workflow
+
+```
+1. Elicitation Session
+   └─> Requirements Doc (REQ-XXX defined)
+       └─> ADR created (if architectural decision)
+           └─> Backlog entry created in docs/BACKLOG.md
+               └─> GitHub Issue created from backlog template
+                   └─> Issue linked back to requirements doc
+                       └─> Implementation tracked via issue
+                           └─> Requirements doc updated on completion
+```
+
+### Updating Requirements After Implementation
+
+When an issue is closed:
+
+1. Update requirements doc with `Status: ✅ Implemented`
+2. Add implementation notes and lessons learned
+3. Link to closed issue and PR
+4. Update ADR with "Implementation Confirmed" section
+5. Update acceptance criteria file if tests were added

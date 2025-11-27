@@ -1,0 +1,124 @@
+name: Feature Request
+description: Propose a new feature or capability
+title: "[FEATURE] "
+labels: ["type: feature", "status: needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request Template
+        
+        Use this template to propose new features. Link to requirements documents and ADRs when applicable.
+
+  - type: input
+    id: requirements
+    attributes:
+      label: Requirements Reference
+      description: Link to REQ-XXX in requirements documents
+      placeholder: "REQ-042, REQ-043 from docs/dsl-contract-requirements.md"
+    validations:
+      required: false
+
+  - type: input
+    id: adrs
+    attributes:
+      label: Architecture Decisions
+      description: Link to relevant ADRs
+      placeholder: "ADR-036, ADR-037 from docs/architecture-decisions.md"
+    validations:
+      required: false
+
+  - type: input
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria File
+      description: Link to GWT scenarios
+      placeholder: "docs/acceptance-criteria/orchestration.feature"
+    validations:
+      required: false
+
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: Which epic does this belong to?
+      placeholder: "Core Orchestration System"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clear problem statement and feature overview
+      placeholder: Describe what you want to build and why
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements-mapping
+    attributes:
+      label: Requirements Mapping
+      description: List specific requirements this addresses
+      placeholder: |
+        - **REQ-042:** Lifecycle hook execution semantics
+        - **REQ-043:** Automatic telemetry on hook failure
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Checklist of what must be true when complete
+      placeholder: |
+        - [ ] Feature A works as expected
+        - [ ] Tests pass with 80% coverage
+        - [ ] Documentation updated
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: Implementation guidance, constraints, dependencies
+      placeholder: |
+        - Use Zod for validation
+        - Leverage existing securityUtils.js
+        - Consider backwards compatibility
+      render: markdown
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this feature?
+      options:
+        - priority: critical
+        - priority: high
+        - priority: medium
+        - priority: low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system?
+      multiple: true
+      options:
+        - component: cli
+        - component: codegen
+        - component: orchestration
+        - component: bff
+        - component: dsl
+        - component: deployment
+        - component: testing
+    validations:
+      required: true
