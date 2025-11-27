@@ -44,6 +44,8 @@ This agent implements production features based on documented requirements (from
 - Utility modules (src/utils/, src/codegen/)
 - Integration with existing test infrastructure
 - Updated package.json dependencies if needed
+- **GWT Acceptance Criteria** for each REQ-* implemented (see below)
+- **Generated MFE Test Templates** (starter tests for scaffolded projects)
 
 ## Working Style
 
@@ -74,6 +76,340 @@ This agent implements production features based on documented requirements (from
 - Descriptive variable names matching domain
 - Extract reusable utilities to src/utils/
 - Keep functions under 50 lines (extract helpers)
+
+### GWT Generation (Given-When-Then)
+
+For each REQ-* being implemented, generate acceptance criteria in GWT format:
+
+```gherkin
+# REQ-BFF-001: DSL as Single Source of Truth
+
+Scenario: Extract Mesh config from DSL
+  Given a valid mfe-manifest.yaml with a data.graphql section
+  When the user runs `mfe bff:build`
+  Then a .meshrc.yaml file is generated
+  And it contains all sources from data.graphql.sources
+  And no manual Mesh config editing is required
+
+Scenario: Missing GraphQL config in DSL
+  Given a mfe-manifest.yaml without a data.graphql section
+  When the user runs `mfe bff:build`
+  Then an error message explains "No GraphQL configuration found in DSL"
+  And suggests adding a data.graphql section
+
+Scenario: Invalid source URL
+  Given a data.graphql.sources entry with unreachable endpoint
+  When the user runs `mfe bff:build --validate`
+  Then the validation fails with specific source name
+  And suggests checking network/endpoint availability
+```
+
+**GWT Rules:**
+- One scenario per happy path
+- One scenario per error/edge case
+- Use concrete examples (actual command names, file names)
+- Given = preconditions, When = action, Then = observable outcome
+- Store in `docs/acceptance-criteria/<feature>.feature` or inline in handoff
+
+### Generated MFE Test Templates
+
+When generating MFE projects (shell, remote, API, BFF), include starter test files that give teams a head start. These are **templates in src/templates/**, not tests for this CLI.
+
+#### Shell Test Template (`src/templates/react/shell/src/__tests__/`)
+
+```typescript
+// App.test.tsx.ejs - Generated for every shell
+import { render, screen, waitFor } from '@testing-library/react';
+import App from '../App';
+
+// Mock Module Federation remotes
+jest.mock('../remotes', () => ({
+  loadRemote: jest.fn().mockResolvedValue({ default: () => <div>Mock Remote</div> })
+}));
+
+describe('<%= name %> Shell', () => {
+  it('renders without crashing', () => {
+    render(<App />);
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
+  it('loads remote components lazily', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Mock Remote')).toBeInTheDocument();
+    });
+  });
+
+  it('handles remote loading failure gracefully', async () => {
+    const { loadRemote } = require('../remotes');
+    loadRemote.mockRejectedValueOnce(new Error('Network error'));
+    
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+```typescript
+// routing.test.tsx.ejs - Navigation tests
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
+
+describe('<%= name %> Routing', () => {
+  it('renders home route', () => {
+    render(<MemoryRouter initialEntries={['/']}><App /></MemoryRouter>);
+    expect(screen.getByTestId('home-page')).toBeInTheDocument();
+  });
+
+  it('renders 404 for unknown routes', () => {
+    render(<MemoryRouter initialEntries={['/unknown']}><App /></MemoryRouter>);
+    expect(screen.getByText(/not found/i)).toBeInTheDocument();
+  });
+});
+```
+
+#### Remote Test Template (`src/templates/react/remote/src/__tests__/`)
+
+```typescript
+// App.test.tsx.ejs - Generated for every remote
+import { render, screen } from '@testing-library/react';
+import App from '../App';
+
+describe('<%= name %> Remote', () => {
+  it('renders exposed component', () => {
+    render(<App />);
+    expect(screen.getByTestId('<%= name %>-root')).toBeInTheDocument();
+  });
+
+  it('works in standalone mode', () => {
+    // Remote should render independently for development
+    render(<App standalone />);
+    expect(document.body).toMatchSnapshot();
+  });
+});
+```
+
+```typescript
+// federation.test.tsx.ejs - Module Federation contract tests
+describe('<%= name %> Federation Contract', () => {
+  it('exports App component', async () => {
+    // Verify the exposed module exists
+    const module = await import('../App');
+    expect(module.default).toBeDefined();
+    expect(typeof module.default).toBe('function');
+  });
+
+  it('does not have singleton violations', () => {
+    // Ensure React is not bundled (should be shared)
+    const webpackModules = (window as any).__webpack_modules__;
+    const reactModules = Object.keys(webpackModules || {})
+      .filter(k => k.includes('react'));
+    expect(reactModules.length).toBeLessThanOrEqual(1);
+  });
+});
+```
+
+#### API Test Template (`src/templates/api/base/src/__tests__/`)
+
+```typescript
+// controllers/<%= name %>.controller.test.ts.ejs
+import request from 'supertest';
+import app from '../app';
+import { db } from '../db';
+
+jest.mock('../db');
+
+describe('<%= name %> Controller', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('GET /<%= pluralName %>', () => {
+    it('returns all items', async () => {
+      (db.findAll as jest.Mock).mockResolvedValue([{ id: 1, name: 'Test' }]);
+      
+      const res = await request(app).get('/<%= pluralName %>');
+      
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+    });
+
+    it('handles database errors', async () => {
+      (db.findAll as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      
+      const res = await request(app).get('/<%= pluralName %>');
+      
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBeDefined();
+    });
+  });
+
+  describe('POST /<%= pluralName %>', () => {
+    it('creates new item with valid data', async () => {
+      (db.create as jest.Mock).mockResolvedValue({ id: 1, name: 'New' });
+      
+      const res = await request(app)
+        .post('/<%= pluralName %>')
+        .send({ name: 'New' });
+      
+      expect(res.status).toBe(201);
+      expect(res.body.id).toBeDefined();
+    });
+
+    it('validates required fields', async () => {
+      const res = await request(app)
+        .post('/<%= pluralName %>')
+        .send({});
+      
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toBeDefined();
+    });
+  });
+});
+```
+
+#### BFF Test Template (`src/templates/bff/src/__tests__/`)
+
+```typescript
+// graphql.test.ts.ejs - GraphQL endpoint tests
+import request from 'supertest';
+import app from '../server';
+
+// Mock upstream services
+jest.mock('../mesh', () => ({
+  execute: jest.fn()
+}));
+
+describe('<%= name %> BFF GraphQL', () => {
+  it('responds to introspection query', async () => {
+    const res = await request(app)
+      .post('/graphql')
+      .send({ query: '{ __schema { types { name } } }' });
+    
+    expect(res.status).toBe(200);
+    expect(res.body.data.__schema).toBeDefined();
+  });
+
+  it('forwards JWT to upstream services', async () => {
+    const { execute } = require('../mesh');
+    execute.mockResolvedValue({ data: { items: [] } });
+    
+    await request(app)
+      .post('/graphql')
+      .set('Authorization', 'Bearer test-token')
+      .send({ query: '{ items { id } }' });
+    
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({
+          headers: expect.objectContaining({
+            authorization: 'Bearer test-token'
+          })
+        })
+      })
+    );
+  });
+
+  it('handles upstream service failures', async () => {
+    const { execute } = require('../mesh');
+    execute.mockRejectedValue(new Error('Upstream unavailable'));
+    
+    const res = await request(app)
+      .post('/graphql')
+      .send({ query: '{ items { id } }' });
+    
+    expect(res.status).toBe(200); // GraphQL returns 200 with errors
+    expect(res.body.errors).toBeDefined();
+  });
+});
+```
+
+#### Test Configuration Templates
+
+```javascript
+// jest.config.js.ejs - Generated for all MFE types
+module.exports = {
+  testEnvironment: '<%= testEnv %>', // 'jsdom' for shell/remote, 'node' for API/BFF
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss)$': 'identity-obj-proxy'
+  },
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/index.tsx'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  }
+};
+```
+
+```typescript
+// setupTests.ts.ejs - Test setup for React projects
+import '@testing-library/jest-dom';
+
+// Mock Module Federation runtime
+jest.mock('@module-federation/runtime', () => ({
+  loadRemote: jest.fn(),
+  init: jest.fn()
+}));
+
+// Suppress console noise in tests
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterAll(() => {
+  jest.restoreAllMocks();
+});
+```
+
+#### Generated Test Utility Helpers
+
+```typescript
+// testUtils.ts.ejs - Shared test utilities
+import { render, RenderOptions } from '@testing-library/react';
+import { ReactElement } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from '../theme';
+
+// Wrapper with all providers
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
+  <BrowserRouter>
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
+  </BrowserRouter>
+);
+
+export const renderWithProviders = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>
+) => render(ui, { wrapper: AllTheProviders, ...options });
+
+// Mock remote component factory
+export const createMockRemote = (name: string) => ({
+  default: () => <div data-testid={`mock-${name}`}>Mock {name}</div>
+});
+
+// API response factory
+export const createMockResponse = <T>(data: T, status = 200) => ({
+  status,
+  ok: status >= 200 && status < 300,
+  json: async () => data
+});
+```
 
 ### Integration Points
 
@@ -269,12 +605,22 @@ Beginning implementation phase...
    - Mock requirements: fs-extra, child_process (mesh CLI)
    - Edge cases: missing manifest, invalid YAML, mesh build failure
 
-TDD Guardian should achieve 100% coverage before merge.
+📋 GWT Acceptance Criteria (for test structure):
+   - See docs/acceptance-criteria/bff.feature
+   - 3 scenarios for REQ-BFF-001
+   - 2 scenarios for REQ-BFF-002
+   - Each scenario → at least one test case
+
+TDD Guardian should:
+   ✅ Achieve 100% code coverage (unit tests)
+   ✅ Cover all GWT scenarios (acceptance tests)
+   ✅ Include integration tests for CLI commands
 ```
 
 ## Success Criteria
 
 - ✅ All documented requirements (REQ-\*) have corresponding implementation
+- ✅ **GWT scenarios generated for each REQ-\*** (acceptance criteria)
 - ✅ Code follows existing patterns (proven by grep similarity)
 - ✅ All ADR references included in code comments
 - ✅ Existing tests still pass (no regressions)
@@ -283,6 +629,41 @@ TDD Guardian should achieve 100% coverage before merge.
 - ✅ Templates follow EJS conventions
 - ✅ Error messages use chalk with consistent styling
 - ✅ Code ready for TDD Guardian coverage
+
+## Testing Responsibilities Summary
+
+| Test Type              | Owner                | Trigger                           | Coverage                      |
+| ---------------------- | -------------------- | --------------------------------- | ----------------------------- |
+| **Unit Tests**         | TDD Guardian         | After implementation              | 100% code coverage            |
+| **Acceptance Tests**   | TDD Guardian         | GWT from Implementation Agent     | All scenarios                 |
+| **Integration Tests**  | TDD Guardian         | CLI command verification          | Happy + error paths           |
+| **Regression Tests**   | Both Agents          | `npm test` before/after changes   | No failures                   |
+| **E2E Tests**          | Future agent         | When orchestration runtime exists | Browser-based MFE loading     |
+| **Generated MFE Tests** | Implementation Agent | Template creation                 | Starter coverage for teams    |
+
+### Generated MFE Test Value Proposition
+
+Teams get immediate value from scaffolded projects:
+
+| What Teams Get         | Why It Matters                                        |
+| ---------------------- | ----------------------------------------------------- |
+| **Working test setup** | Jest, React Testing Library, supertest pre-configured |
+| **Mock patterns**      | Module Federation mocks, DB mocks, API mocks ready    |
+| **Example tests**      | Real tests they can copy/extend, not empty stubs      |
+| **80% threshold**      | Coverage gates encourage TDD from day one             |
+| **Provider wrappers**  | `renderWithProviders()` handles Router, Theme, etc.   |
+| **Contract tests**     | Federation exports validated, singleton checks        |
+
+### Generated Test Coverage Targets
+
+| MFE Type   | Generated Tests Cover                                 | Team Responsibility              |
+| ---------- | ----------------------------------------------------- | -------------------------------- |
+| **Shell**  | App mount, remote loading, routing basics             | Business logic, specific routes  |
+| **Remote** | Component render, standalone mode, federation contract| Feature components, state logic  |
+| **API**    | CRUD happy paths, validation, error handling          | Business rules, edge cases       |
+| **BFF**    | Introspection, JWT forwarding, upstream errors        | Query-specific tests, caching    |
+
+**Note:** E2E testing for generated MFE projects is the responsibility of those projects, not this CLI tool.
 
 ## Example Session
 

@@ -61,6 +61,7 @@ Reference these in code comments to guide AI assistants and document architectur
 **GraphQL BFF (Session 7):**
 
 - ADR-046: GraphQL Mesh with DSL-embedded configuration
+- ADR-047: Generated MFE test templates (starter tests for scaffolded projects)
 
 ---
 
@@ -158,6 +159,151 @@ import { createBuiltMeshHTTPHandler } from './.mesh';
 const app = express();
 
 // GraphQL BFF (from Mesh)
+```
+
+---
+
+### ADR-047: Generated MFE Test Templates
+
+**Decision:** Generate working test files as part of MFE scaffolding. Every shell, remote, API, and BFF project includes starter tests that teams can run immediately and extend.
+
+**Why:**
+
+1. Teams get immediate value - `npm test` works out of the box
+2. Tests demonstrate patterns teams should follow (mocking, providers, etc.)
+3. 80% coverage threshold from day one encourages TDD culture
+4. Module Federation mocks and contract tests prevent integration surprises
+5. Reduces "setup overhead" that often delays testing
+
+**Generated Test Structure by MFE Type:**
+
+| MFE Type   | Generated Test Files                          | Key Coverage                                    |
+|------------|-----------------------------------------------|------------------------------------------------|
+| **Shell**  | `App.test.tsx`, `routing.test.tsx`            | Remote loading, error boundaries, navigation    |
+| **Remote** | `App.test.tsx`, `federation.test.tsx`         | Component render, standalone mode, contracts    |
+| **API**    | `<entity>.controller.test.ts`                 | CRUD operations, validation, error handling     |
+| **BFF**    | `graphql.test.ts`                             | Introspection, JWT forwarding, upstream errors  |
+
+**Generated Test Infrastructure:**
+
+```
+my-mfe/
+├── src/
+│   ├── __tests__/
+│   │   ├── App.test.tsx           # Working component tests
+│   │   ├── routing.test.tsx       # Navigation tests (shells)
+│   │   └── federation.test.tsx    # Contract tests (remotes)
+│   ├── setupTests.ts              # Jest/RTL setup, MF mocks
+│   └── testUtils.ts               # renderWithProviders, factories
+├── jest.config.js                 # 80% threshold, proper env
+└── package.json                   # test scripts configured
+```
+
+**Shell Test Example (Generated):**
+
+```typescript
+// src/__tests__/App.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import App from '../App';
+
+jest.mock('../remotes', () => ({
+  loadRemote: jest.fn().mockResolvedValue({ default: () => <div>Mock Remote</div> })
+}));
+
+describe('Shell App', () => {
+  it('renders without crashing', () => {
+    render(<App />);
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
+  it('handles remote loading failure gracefully', async () => {
+    const { loadRemote } = require('../remotes');
+    loadRemote.mockRejectedValueOnce(new Error('Network error'));
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+**Remote Federation Contract Test (Generated):**
+
+```typescript
+// src/__tests__/federation.test.tsx
+describe('Federation Contract', () => {
+  it('exports App component', async () => {
+    const module = await import('../App');
+    expect(module.default).toBeDefined();
+    expect(typeof module.default).toBe('function');
+  });
+
+  it('does not bundle React (uses shared)', () => {
+    // Verify singleton shared modules work correctly
+    const webpackModules = (window as any).__webpack_modules__;
+    const reactModules = Object.keys(webpackModules || {})
+      .filter(k => k.includes('react'));
+    expect(reactModules.length).toBeLessThanOrEqual(1);
+  });
+});
+```
+
+**API Controller Test (Generated):**
+
+```typescript
+// src/__tests__/controllers/user.controller.test.ts
+import request from 'supertest';
+import app from '../app';
+import { db } from '../db';
+
+jest.mock('../db');
+
+describe('User Controller', () => {
+  it('GET /users returns all users', async () => {
+    (db.findAll as jest.Mock).mockResolvedValue([{ id: 1, name: 'Test' }]);
+    const res = await request(app).get('/users');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('POST /users validates required fields', async () => {
+    const res = await request(app).post('/users').send({});
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toBeDefined();
+  });
+});
+```
+
+**Coverage Configuration (Generated jest.config.js):**
+
+```javascript
+module.exports = {
+  testEnvironment: 'jsdom', // or 'node' for API/BFF
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  }
+};
+```
+
+**Value to Teams:**
+
+| Before (typical scaffolding) | After (with ADR-047) |
+|------------------------------|----------------------|
+| No tests, no setup           | Working tests on day one |
+| Manual mock configuration    | MF mocks pre-configured |
+| Unknown patterns             | Patterns to copy/extend |
+| No coverage gates            | 80% threshold from start |
+| Provider setup required      | `renderWithProviders()` ready |
+
+**Reference:** REQ-SCAFFOLD-001 through REQ-SCAFFOLD-005
+
+---
 app.use(
   '/graphql',
   createBuiltMeshHTTPHandler({

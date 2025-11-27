@@ -144,5 +144,135 @@ describe('Deploy Command', () => {
 
       await expect(deployCommand(options)).rejects.toThrow('Production deployment not yet implemented');
     });
+
+    it('should throw error for unknown environment', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'staging',
+        port: 3000
+      };
+
+      await expect(deployCommand(options)).rejects.toThrow('Unknown environment: staging');
+    });
+
+    it('should handle deployment errors with DEBUG flag', async () => {
+      const originalDebug = process.env.DEBUG;
+      process.env.DEBUG = 'true';
+
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      const error = new Error('Deployment failed');
+      error.stack = 'Error: Deployment failed\n  at test';
+      execSync.mockImplementation(() => {
+        throw error;
+      });
+
+      await expect(deployCommand(options)).rejects.toThrow('Deployment failed');
+
+      process.env.DEBUG = originalDebug;
+    });
+
+    it('should handle deployment errors without DEBUG flag', async () => {
+      const originalDebug = process.env.DEBUG;
+      delete process.env.DEBUG;
+
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      execSync.mockImplementation(() => {
+        throw new Error('Deployment failed');
+      });
+
+      await expect(deployCommand(options)).rejects.toThrow('Deployment failed');
+
+      if (originalDebug) {
+        process.env.DEBUG = originalDebug;
+      }
+    });
+
+    it('should pass through verifyProjectStructure errors', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      fs.existsSync.mockReturnValue(false);
+
+      await expect(deployCommand(options)).rejects.toThrow('Missing required files');
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('should handle logs option in development deployment', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000,
+        logs: true
+      };
+
+      execSync.mockImplementation((cmd) => {
+        if (cmd.includes('inspect')) return 'running';
+        if (cmd.includes('logs -f')) return '';
+        return '';
+      });
+
+      await expect(deployCommand(options)).resolves.not.toThrow();
+    });
+
+    it('should handle missing project files gracefully', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      fs.pathExists.mockImplementation((filePath) => {
+        // Only package.json exists
+        return Promise.resolve(filePath.includes('package.json'));
+      });
+
+      execSync.mockImplementation((cmd) => {
+        if (cmd.includes('inspect')) return 'running';
+        return '';
+      });
+
+      await expect(deployCommand(options)).resolves.not.toThrow();
+    });
+
+    it('should handle Docker build errors', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      execSync.mockImplementation((cmd) => {
+        if (cmd.includes('docker build')) {
+          const error = new Error('Build failed');
+          error.message = 'Build failed';
+          throw error;
+        }
+        if (cmd.includes('inspect')) return 'running';
+        return '';
+      });
+
+      await expect(deployCommand(options)).rejects.toThrow();
+    });
   });
 });
