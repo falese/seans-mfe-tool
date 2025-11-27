@@ -1281,6 +1281,7 @@ These ADRs define how the DSL contract is executed, validated, and enforced at r
 **Why:** Resilience over strict error propagation. Hooks enhance capabilities without breaking them.
 
 **Execution Rules:**
+
 - `mandatory: true` = Hook executes even if previous hooks failed
 - `contained: true` = Platform wraps hook in try-catch
 - `main` phase failures propagate to caller
@@ -1298,12 +1299,13 @@ These ADRs define how the DSL contract is executed, validated, and enforced at r
 **Why:** Simplifies mental model, ensures all hooks follow same execution semantics, eliminates phase ordering ambiguity.
 
 **Pattern:**
+
 ```yaml
 lifecycle:
-  before: [validateInput, checkAuth]    # All run, failures logged
-  main: [executeCore]                    # First failure stops and propagates
-  after: [logSuccess, updateCache]       # All run, failures logged
-  error: [rollback, notify]              # All run, failures logged
+  before: [validateInput, checkAuth] # All run, failures logged
+  main: [executeCore] # First failure stops and propagates
+  after: [logSuccess, updateCache] # All run, failures logged
+  error: [rollback, notify] # All run, failures logged
 ```
 
 **Reference:** DEC-017, REQ-044
@@ -1317,6 +1319,7 @@ lifecycle:
 **Why:** Flexibility to group related operations while maintaining clear AND/OR semantics.
 
 **Semantics:**
+
 - `main` phase: AND - all must succeed, first failure stops
 - `before`/`after`/`error` phases: OR-like - all run, failures logged
 
@@ -1339,10 +1342,12 @@ handler: [validateFile, checkSize, scanForMalware]
 **Why:** DSL remains language-agnostic while generated code feels native to each language.
 
 **Validation Timing:**
+
 - Capability handlers: Fail fast at MFE startup
 - Lifecycle handlers: Deferred validation on first invocation
 
 **Naming Conventions:**
+
 - JavaScript/TypeScript: `camelCase`
 - Python: `snake_case`
 - Go: `PascalCase`
@@ -1358,6 +1363,7 @@ handler: [validateFile, checkSize, scanForMalware]
 **Why:** DSL is source of truth. Failing builds are better than runtime errors.
 
 **Type Categories:**
+
 - Primitives: `string`, `number`, `boolean`, `object`, `array`
 - Collections: `array<T>`, `array<T!>` (non-null items)
 - Specialized: `jwt`, `datetime`, `email`, `url`, `id`, `file`, `element`
@@ -1386,6 +1392,7 @@ handler: [validateFile, checkSize, scanForMalware]
 **Why:** Registry search is primary value driver. Owner attribution enables future ACL.
 
 **Usage:**
+
 ```yaml
 types:
   - CustomerRecord:
@@ -1405,6 +1412,7 @@ types:
 **Why:** Module Federation is JavaScript-native. Non-JS backends are data-only services consumed by JS shell.
 
 **Pattern:**
+
 - `language: javascript` or `language: typescript` → React/rspack templates
 - Future: `language: python` → FastAPI/Flask templates (backend-only)
 
@@ -1419,12 +1427,13 @@ types:
 **Why:** Single lifecycle model for everything. Loading indicators are handler implementation details.
 
 **Corrected Pattern:**
+
 ```yaml
 queries:
   - getAnalysis:
       lifecycle:
         before: [validateToken]
-        main: [executeQuery]      # NOT loading: [showIndicator]
+        main: [executeQuery] # NOT loading: [showIndicator]
         after: [cacheResponse]
         error: [logError]
 ```
@@ -1440,6 +1449,7 @@ queries:
 **Why:** Understanding which MFEs share data sources enables impact analysis and regeneration workflows.
 
 **Pattern:**
+
 ```yaml
 data:
   generatedFrom:
@@ -1449,6 +1459,7 @@ data:
 ```
 
 **Enables:**
+
 - "Which MFEs use this API?"
 - "Which MFEs share data sources?"
 - Impact analysis for API changes

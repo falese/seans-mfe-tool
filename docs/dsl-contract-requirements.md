@@ -286,11 +286,13 @@ DSL uses various types (primitives, specialized, GraphQL-aligned, enums, unions)
 **Decision:**
 
 1. **Nullability: Follow GraphQL convention** - Types are nullable by default, use `!` for required
+
    - `string` = nullable string
    - `string!` = required string (non-null)
    - Consistent with GraphQL schema generation
 
 2. **Validation: Hybrid, compile-time heavy** - Failing build is better than runtime defensive coding
+
    - Code generators produce validation code from DSL constraints
    - Runtime validation is optional double-check, not primary defense
    - Build fails if types/constraints are invalid
@@ -331,23 +333,23 @@ Custom Types (team-defined)
 
 **Type Mapping:**
 
-| DSL | GraphQL | TypeScript | Python |
-|-----|---------|------------|--------|
-| `string` | `String` | `string \| null` | `Optional[str]` |
-| `string!` | `String!` | `string` | `str` |
-| `number` | `Float` | `number \| null` | `Optional[float]` |
-| `number!` | `Float!` | `number` | `float` |
-| `boolean` | `Boolean` | `boolean \| null` | `Optional[bool]` |
-| `boolean!` | `Boolean!` | `boolean` | `bool` |
-| `array<T>` | `[T]` | `T[] \| null` | `Optional[List[T]]` |
-| `array<T>!` | `[T]!` | `T[]` | `List[T]` |
-| `array<T!>!` | `[T!]!` | `T[]` (no null items) | `List[T]` |
-| `object` | `JSON` | `Record<string, unknown>` | `Dict[str, Any]` |
-| `enum` | `enum Name {...}` | `type Name = 'a' \| 'b'` | `Literal['a', 'b']` |
-| `A \| B` | `union Name = A \| B` | `A \| B` | `Union[A, B]` |
-| `jwt` | `String` + directive | `string` + validator | `str` + validator |
-| `datetime` | `DateTime` scalar | `string` (ISO) | `datetime` |
-| `id!` | `ID!` | `string` | `str` |
+| DSL          | GraphQL               | TypeScript                | Python              |
+| ------------ | --------------------- | ------------------------- | ------------------- |
+| `string`     | `String`              | `string \| null`          | `Optional[str]`     |
+| `string!`    | `String!`             | `string`                  | `str`               |
+| `number`     | `Float`               | `number \| null`          | `Optional[float]`   |
+| `number!`    | `Float!`              | `number`                  | `float`             |
+| `boolean`    | `Boolean`             | `boolean \| null`         | `Optional[bool]`    |
+| `boolean!`   | `Boolean!`            | `boolean`                 | `bool`              |
+| `array<T>`   | `[T]`                 | `T[] \| null`             | `Optional[List[T]]` |
+| `array<T>!`  | `[T]!`                | `T[]`                     | `List[T]`           |
+| `array<T!>!` | `[T!]!`               | `T[]` (no null items)     | `List[T]`           |
+| `object`     | `JSON`                | `Record<string, unknown>` | `Dict[str, Any]`    |
+| `enum`       | `enum Name {...}`     | `type Name = 'a' \| 'b'`  | `Literal['a', 'b']` |
+| `A \| B`     | `union Name = A \| B` | `A \| B`                  | `Union[A, B]`       |
+| `jwt`        | `String` + directive  | `string` + validator      | `str` + validator   |
+| `datetime`   | `DateTime` scalar     | `string` (ISO)            | `datetime`          |
+| `id!`        | `ID!`                 | `string`                  | `str`               |
 
 **Consequences:**
 
@@ -371,11 +373,13 @@ DSL type definitions include metadata fields (`owner`, `tags`). Need to define t
 **Decision:**
 
 1. **`owner` field purpose:**
+
    - Primary: Documentation and attribution
    - Future: Access control (only owner team can modify type definition)
    - Potential: Alert routing (notifications go to owner team)
 
 2. **`tags` field purpose:**
+
    - Custom tags are the default - teams define their own tag vocabulary
    - No platform-enforced tag semantics (e.g., `pii-possible` is informational)
    - Tags enable filtering and categorization
@@ -396,16 +400,17 @@ DSL type definitions include metadata fields (`owner`, `tags`). Need to define t
 ```yaml
 types:
   - AnalysisResult:
-      owner: analytics-team          # Team responsible for this type
-      tags: [pii-possible, cached]   # Custom tags for filtering
+      owner: analytics-team # Team responsible for this type
+      tags: [pii-possible, cached] # Custom tags for filtering
       fields:
         - name: id
           type: id!
         - name: userId
-          type: string!              # pii-possible tag signals this
+          type: string! # pii-possible tag signals this
 ```
 
 **Registry search (orchestration):**
+
 ```graphql
 query {
   searchTypes(tags: ["pii-possible"]) {
@@ -437,10 +442,12 @@ DSL includes a `language` field. Need to define supported languages and how lang
 **Decision:**
 
 1. **Supported languages for V1**: JavaScript/TypeScript only
+
    - Primary focus on web MFEs using Module Federation
    - Python, Go, Rust are future considerations
 
 2. **Language affects code generation**:
+
    - Template selection (language-specific template folders)
    - Build tooling selection (rspack for JS/TS)
    - Handler naming conventions (per DEC-019)
@@ -469,7 +476,7 @@ type: tool
 # → Browser-loadable via remoteEntry.js
 
 # Future: Python backend service
-name: analysis-service  
+name: analysis-service
 language: python
 type: service
 # → Uses src/templates/python/service/
@@ -498,11 +505,13 @@ DSL example showed a `loading` phase in data lifecycle. Need to clarify if data 
 **Decision:**
 
 1. **No `loading` phase** - It's actually part of `main`
+
    - `loading` is a handler implementation detail, not a phase
    - UI feedback (loading indicators) is one way to implement a handler
    - Handlers in `main` can do whatever they need (show loading, fetch, etc.)
 
 2. **Data lifecycle aligns with capability lifecycle**
+
    - Same 4 phases: `before`, `main`, `after`, `error`
    - No special phases for data operations
    - Consistency across all lifecycle definitions
@@ -525,7 +534,7 @@ DSL example showed a `loading` phase in data lifecycle. Need to clarify if data 
 queries:
   - getAnalysis:
       lifecycle:
-        loading: [showLoadingIndicator]  # ✗ Invalid
+        loading: [showLoadingIndicator] # ✗ Invalid
 
 # CORRECT - loading indicator is a handler in main
 capabilities:
@@ -573,11 +582,13 @@ DSL includes a `generatedFrom` section indicating source specifications (OpenAPI
 **Decision:**
 
 1. **Purpose: Data lineage and SOR (System of Record) traceability**
+
    - Shows downstream source of data/API
    - Documents which spec(s) the MFE's data layer was generated from
    - Enables understanding of data dependencies across MFEs
 
 2. **Indexed for search and dependency analysis**
+
    - Registry indexes `generatedFrom` for search
    - Query: "Which MFEs use this API spec?"
    - Query: "Which MFEs depend on the same data source?"
@@ -757,6 +768,7 @@ Simplifies mental model, ensures all hooks follow same execution semantics, elim
 **Dependencies:** REQ-042 (Hook Execution Semantics)
 
 **Technical Notes:**
+
 - Migration: Move hooks from `custom.validation` to `before`, from `custom.processing` to `main`
 - DSL v3.0 removes `custom:` section entirely
 
@@ -796,13 +808,13 @@ async function executeHandlers(
   context: Context
 ): Promise<void> {
   const handlerList = Array.isArray(handlers) ? handlers : [handlers];
-  
+
   for (const handler of handlerList) {
     try {
       await invokeHandler(handler, context);
     } catch (error) {
       await emitHookFailure(handler, phase, error);
-      
+
       // main phase: AND semantics - stop on first failure
       if (phase === 'main') {
         throw error;
@@ -859,12 +871,14 @@ function validateCapabilityHandlers(mfe: BaseMFE, dsl: DSL): void {
           handler: handlerName,
           capability: capability.name,
           mfe: dsl.name,
-          error: { message: `Handler not found: ${handlerName}` }
+          error: { message: `Handler not found: ${handlerName}` },
         },
         severity: 'error',
-        tags: ['startup', 'handler-missing']
+        tags: ['startup', 'handler-missing'],
       });
-      throw new Error(`MFE ${dsl.name}: Missing handler "${handlerName}" for capability "${capability.name}"`);
+      throw new Error(
+        `MFE ${dsl.name}: Missing handler "${handlerName}" for capability "${capability.name}"`
+      );
     }
   }
 }
@@ -873,11 +887,11 @@ function validateCapabilityHandlers(mfe: BaseMFE, dsl: DSL): void {
 function mapHandlerName(neutralName: string, language: string): string {
   switch (language) {
     case 'python':
-      return toSnakeCase(neutralName);  // initializeRuntime → initialize_runtime
+      return toSnakeCase(neutralName); // initializeRuntime → initialize_runtime
     case 'go':
       return toPascalCase(neutralName); // initializeRuntime → InitializeRuntime
     default: // javascript, typescript
-      return toCamelCase(neutralName);  // already camelCase
+      return toCamelCase(neutralName); // already camelCase
   }
 }
 ```
@@ -901,6 +915,7 @@ DSL types are the source of truth. They map deterministically to GraphQL schema 
 **Acceptance Criteria:**
 
 **Nullability (GraphQL convention):**
+
 - [ ] Types are nullable by default (`string` = nullable)
 - [ ] `!` suffix marks required/non-null (`string!` = required)
 - [ ] Nullability maps consistently: DSL → GraphQL → TypeScript/Python
@@ -908,6 +923,7 @@ DSL types are the source of truth. They map deterministically to GraphQL schema 
 - [ ] `string!` → `String!` (GraphQL) → `string` (TS) → `str` (Python)
 
 **Validation (compile-time heavy, hybrid):**
+
 - [ ] Code generators produce validation code from DSL constraints
 - [ ] Build fails if types/constraints are invalid in DSL
 - [ ] Generated code includes type guards and assertions
@@ -915,6 +931,7 @@ DSL types are the source of truth. They map deterministically to GraphQL schema 
 - [ ] Constraint violations at build time > runtime errors
 
 **Type Categories:**
+
 - [ ] **Primitives**: `string`, `number`, `boolean`, `object`, `array`
 - [ ] **Collections**: `array<T>`, `array<T!>` (non-null items)
 - [ ] **Enums**: `type: enum` with `values: [...]`
@@ -923,6 +940,7 @@ DSL types are the source of truth. They map deterministically to GraphQL schema 
 - [ ] **Custom** (team-defined): Extend primitives with validation rules
 
 **Extensibility:**
+
 - [ ] MFE teams can define custom specialized types
 - [ ] Custom types specify: base type, validation rules, metadata
 - [ ] Custom types registered in DSL `types:` section
@@ -930,6 +948,7 @@ DSL types are the source of truth. They map deterministically to GraphQL schema 
 - [ ] Custom types inherit base type's GraphQL/language mappings
 
 **Constraints:**
+
 - [ ] `string`: `minLength`, `maxLength`, `pattern` (regex)
 - [ ] `number`: `min`, `max`, `integer` (boolean)
 - [ ] `array`: `minItems`, `maxItems`, `itemConstraints`
@@ -949,15 +968,15 @@ inputs:
     constraints:
       minLength: 3
       maxLength: 50
-      pattern: "^[a-zA-Z0-9_]+$"
-  
+      pattern: '^[a-zA-Z0-9_]+$'
+
   - name: severity
     type: enum
     values: [debug, info, warn, error, fatal]
     default: info
-  
+
   - name: result
-    type: AnalysisResult | ErrorResult  # union
+    type: AnalysisResult | ErrorResult # union
 
 # Custom type definition
 types:
@@ -1019,6 +1038,7 @@ Type metadata enables registry search, team attribution, and lays groundwork for
 **Acceptance Criteria:**
 
 **Owner field:**
+
 - [ ] `owner` is optional string field on type definitions
 - [ ] Owner value included in generated code comments
 - [ ] Owner indexed in registry for search/filtering
@@ -1026,6 +1046,7 @@ Type metadata enables registry search, team attribution, and lays groundwork for
 - [ ] Future: Owner used for access control decisions
 
 **Tags field:**
+
 - [ ] `tags` is optional array of strings
 - [ ] Tags are custom (team-defined vocabulary)
 - [ ] No platform-enforced tag semantics
@@ -1033,12 +1054,14 @@ Type metadata enables registry search, team attribution, and lays groundwork for
 - [ ] Tags included in generated code annotations
 
 **Registry integration:**
+
 - [ ] Types searchable by owner in registry
 - [ ] Types searchable by tags in registry
 - [ ] Metadata available via registry GraphQL API
 - [ ] Orchestration service indexes metadata on registration
 
 **Code generation:**
+
 - [ ] Owner added as comment in generated type definitions
 - [ ] Tags added as annotations/decorators where supported
 
@@ -1104,22 +1127,26 @@ Language field is the primary driver for code generation pipeline. V1 focuses on
 **Acceptance Criteria:**
 
 **V1 Language Support:**
+
 - [ ] `javascript` and `typescript` are only valid V1 values
 - [ ] Invalid language values fail DSL validation at build time
 - [ ] Language field is required in DSL
 
 **Template Selection:**
+
 - [ ] Language maps to template folder: `src/templates/{language}/`
 - [ ] Template folders: `react/shell/`, `react/remote/` for JS/TS
 - [ ] Future: `python/service/`, `go/service/` for backend services
 
 **Build Tooling:**
+
 - [ ] JS/TS uses rspack for bundling
 - [ ] JS/TS generates `rspack.config.js` with Module Federation
 - [ ] Future: Python uses appropriate build (pip, poetry)
 - [ ] Future: Go uses go build
 
 **Runtime Behavior:**
+
 - [ ] JS/TS MFEs are browser-loadable via `remoteEntry.js`
 - [ ] JS/TS MFEs use Module Federation for composition
 - [ ] Non-JS backends (future) are data-only services
@@ -1165,6 +1192,7 @@ Understanding which MFEs share data sources enables impact analysis, dependency 
 **Acceptance Criteria:**
 
 **DSL Structure:**
+
 - [ ] `generatedFrom` is optional array in `data:` section
 - [ ] Each entry specifies source type: `openapi`, `graphql`, `asyncapi`, etc.
 - [ ] Each entry includes `service` name (SOR identifier)
@@ -1172,18 +1200,21 @@ Understanding which MFEs share data sources enables impact analysis, dependency 
 - [ ] Optional `version` for spec versioning
 
 **Registry Indexing:**
+
 - [ ] `generatedFrom` entries indexed in registry
 - [ ] Searchable by service name
 - [ ] Searchable by spec type (openapi, graphql)
 - [ ] Searchable by spec file path
 
 **Dependency Analysis:**
+
 - [ ] Query: "Which MFEs use this API/service?"
 - [ ] Query: "Which MFEs share data sources with this MFE?"
 - [ ] Impact analysis: "If this API changes, which MFEs are affected?"
 - [ ] Dependency graph generation from registry data
 
 **Regeneration Support:**
+
 - [ ] Source spec path enables re-running code generation
 - [ ] Version tracking for detecting spec drift
 - [ ] Tooling can compare current vs generated-from version
@@ -1297,6 +1328,7 @@ authorization: user.authenticated
 **🔶 DEFERRED** - Will become its own larger feature. Placeholder for now.
 
 **Representative placeholder:**
+
 - Authorization expressions support boolean operators (`AND`, `OR`, `NOT`)
 - Base atoms: `user.authenticated`, `user.role.<role>`, `user.permission.<perm>`, `user.owns.resource`
 - Full grammar, resource binding, and evaluation semantics to be defined in dedicated requirements document
@@ -1329,6 +1361,7 @@ dependencies:
 **🔶 DEFERRED** - Larger decisions to be made.
 
 **Representative placeholder:**
+
 - `shared`: npm packages shared via Module Federation (build-time validation)
 - `mfes`: Other MFEs this one depends on (registry validation)
 - Version resolution, failure modes, and graceful degradation to be defined
@@ -1371,30 +1404,30 @@ dependencies:
 
 ### P0 (Critical) - Must Have for V1
 
-| ID      | Requirement                              | Status      |
-| ------- | ---------------------------------------- | ----------- |
-| REQ-042 | Lifecycle Hook Execution Semantics       | ✅ Accepted |
-| REQ-043 | Automatic Telemetry on Hook Failure      | ✅ Accepted |
-| REQ-044 | Standard Lifecycle Phases Only           | ✅ Accepted |
-| REQ-045 | Handler Array Support                    | ✅ Accepted |
-| REQ-046 | Handler Discovery and Validation         | ✅ Accepted |
-| REQ-047 | Unified Type System                      | ✅ Accepted |
-| REQ-048 | Authorization Expression Syntax          | 🔶 Deferred |
-| REQ-052 | Language Field and Template Mapping      | ✅ Accepted |
+| ID      | Requirement                         | Status      |
+| ------- | ----------------------------------- | ----------- |
+| REQ-042 | Lifecycle Hook Execution Semantics  | ✅ Accepted |
+| REQ-043 | Automatic Telemetry on Hook Failure | ✅ Accepted |
+| REQ-044 | Standard Lifecycle Phases Only      | ✅ Accepted |
+| REQ-045 | Handler Array Support               | ✅ Accepted |
+| REQ-046 | Handler Discovery and Validation    | ✅ Accepted |
+| REQ-047 | Unified Type System                 | ✅ Accepted |
+| REQ-048 | Authorization Expression Syntax     | 🔶 Deferred |
+| REQ-052 | Language Field and Template Mapping | ✅ Accepted |
 
 ### P1 (High) - Should Have for V1
 
-| ID      | Requirement                        | Status      |
-| ------- | ---------------------------------- | ----------- |
-| REQ-049 | Data Type Metadata (owner, tags)   | ✅ Accepted |
-| REQ-050 | Dependency Version Semantics       | 🔶 Deferred |
-| REQ-053 | GeneratedFrom Traceability         | ✅ Accepted |
+| ID      | Requirement                      | Status      |
+| ------- | -------------------------------- | ----------- |
+| REQ-049 | Data Type Metadata (owner, tags) | ✅ Accepted |
+| REQ-050 | Dependency Version Semantics     | 🔶 Deferred |
+| REQ-053 | GeneratedFrom Traceability       | ✅ Accepted |
 
 ### P2 (Medium) - V2+
 
-| ID      | Requirement                       | Status     |
-| ------- | --------------------------------- | ---------- |
-| REQ-051 | GraphQL Subscription Support      | ⏳ Pending |
+| ID      | Requirement                  | Status     |
+| ------- | ---------------------------- | ---------- |
+| REQ-051 | GraphQL Subscription Support | ⏳ Pending |
 
 ---
 
