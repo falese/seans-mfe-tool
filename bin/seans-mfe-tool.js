@@ -1,7 +1,18 @@
 #!/usr/bin/env node
 
 // Enable TypeScript imports via ts-node (ADR-048: Incremental TypeScript migration)
-require('ts-node/register/transpile-only');
+// Use custom compiler options to avoid tsconfig conflicts
+require('ts-node').register({
+  transpileOnly: true,
+  compilerOptions: {
+    module: 'CommonJS',
+    moduleResolution: 'node',
+    target: 'ES2020',
+    esModuleInterop: true,
+    allowJs: true,
+    resolveJsonModule: true
+  }
+});
 
 const { program } = require('commander');
 const { createShellCommand } = require('../src/commands/create-shell');
@@ -11,6 +22,8 @@ const { createApiCommand } = require('../src/commands/create-api')
 const { buildCommand } = require('../src/commands/build');
 const { initCommand } = require('../src/commands/init');
 const { bffBuildCommand, bffDevCommand, bffValidateCommand, bffInitCommand } = require('../src/commands/bff');
+const { remoteInitCommand } = require('../src/commands/remote-init');
+const { remoteGenerateCommand, remoteGenerateCapabilityCommand } = require('../src/commands/remote-generate');
 const { version } = require('../package.json');
 
 program
@@ -218,6 +231,68 @@ Validates:
   - Transform and plugin configurations are valid`)
   .action((options) => {
     bffValidateCommand(options);
+  });
+
+// Remote DSL Commands - Following ADR-048: DSL-First Development
+program
+  .command('remote:init')
+  .description('Initialize a new DSL-first remote MFE project')
+  .argument('<name>', 'Remote MFE name')
+  .option('-p, --port <port>', 'Port number for the remote MFE', '3001')
+  .option('-t, --template <path>', 'Path to DSL template file')
+  .option('--skip-install', 'Skip npm install')
+  .option('-f, --force', 'Overwrite existing files')
+  .addHelpText('after', `
+This command creates a new remote MFE with DSL-first architecture:
+  1. Creates project structure with mfe-manifest.yaml
+  2. Generates initial capability scaffolding from DSL
+  3. Sets up rspack for Module Federation
+  
+Examples:
+  $ seans-mfe-tool remote:init my-feature
+  $ seans-mfe-tool remote:init my-feature --port 3005
+  $ seans-mfe-tool remote:init my-feature --template ./custom-dsl.yaml
+
+Following REQ-REMOTE-002: DSL Template for New Remotes`)
+  .action((name, options) => {
+    remoteInitCommand(name, options);
+  });
+
+program
+  .command('remote:generate')
+  .description('Generate files from mfe-manifest.yaml capabilities')
+  .option('-d, --dry-run', 'Show what would be generated without writing')
+  .option('-f, --force', 'Overwrite existing files')
+  .addHelpText('after', `
+Reads mfe-manifest.yaml and generates:
+  - Feature components for each domain capability
+  - Test files for each feature
+  - Updated rspack.config.js exposes section
+
+Examples:
+  $ cd my-remote && seans-mfe-tool remote:generate
+  $ seans-mfe-tool remote:generate --dry-run  # Preview changes
+  $ seans-mfe-tool remote:generate --force     # Overwrite existing
+
+Following REQ-REMOTE-003: Capability → File Structure`)
+  .action((options) => {
+    remoteGenerateCommand(options);
+  });
+
+program
+  .command('remote:generate:capability')
+  .description('Generate a single capability from mfe-manifest.yaml')
+  .argument('<name>', 'Capability name to generate')
+  .option('-d, --dry-run', 'Show what would be generated without writing')
+  .option('-f, --force', 'Overwrite existing files')
+  .addHelpText('after', `
+Generates files for a specific capability defined in mfe-manifest.yaml.
+
+Examples:
+  $ seans-mfe-tool remote:generate:capability UserProfile
+  $ seans-mfe-tool remote:generate:capability Dashboard --force`)
+  .action((name, options) => {
+    remoteGenerateCapabilityCommand(name, options);
   });
 
 program.parse(process.argv);

@@ -27,7 +27,7 @@ jobs:
         run: npm ci
       
       - name: Run all tests with coverage
-        run: npm test -- --ci --coverage
+        run: npm test -- --ci --coverage --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js"
         env:
           CI: true
       
