@@ -1,3 +1,12 @@
+## Acceptance Criteria Files
+
+Acceptance criteria for the following requirements are defined as GWT `.feature` files and should be used for verification:
+
+- REQ-042..REQ-045, REQ-054..REQ-056 (Lifecycle semantics, telemetry, handler arrays, BaseMFE, state machine): `docs/acceptance-criteria/lifecycle-hooks.feature`
+- REQ-047 (Unified type system parsing/generation/validation): `docs/acceptance-criteria/type-system.feature`
+
+These files are part of the traceability chain (Requirements → ADRs → Issues → Implementation → Acceptance Criteria) and are required for sign-off.
+
 # Orchestration Feature - Requirements Elicitation Plan
 
 **Document Status:** Draft - In Progress (updated Nov 27, 2025)  

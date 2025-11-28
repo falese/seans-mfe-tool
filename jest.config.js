@@ -51,7 +51,9 @@ module.exports = {
     'src/codegen/RouteGenerator/**/*.{js,ts}',
     'src/codegen/ControllerGenerator/**/*.{js,ts}',
     'src/codegen/DatabaseGenerator/**/*.{js,ts}',
-    '!src/dsl/**', // Skip - not yet implemented
+    // Include DSL/runtime for TDD Guardian phase
+    'src/dsl/**/*.{js,ts}',
+    'src/runtime/**/*.{js,ts}',
     'src/build/**/*.{js,ts}',
     '!src/**/index.{js,ts}',
     '!src/**/__tests__/**',
@@ -67,6 +69,19 @@ module.exports = {
           functions: 80,
           lines: 80,
           statements: 80
+        },
+        // Enforce 100% for DSL Type System and Runtime BaseMFE (TDD Guardian scope)
+        'src/dsl/type-system.ts': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        'src/runtime/base-mfe.ts': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
         },
         // Enforce 100% for code generators (TDD mandate - ADR-022)
         'src/codegen/generators/**/*.js': {
@@ -110,6 +125,19 @@ module.exports = {
           functions: 0,
           lines: 0,
           statements: 0
+        },
+        // Enforce 100% locally for DSL Type System and Runtime BaseMFE
+        'src/dsl/type-system.ts': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        },
+        'src/runtime/base-mfe.ts': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
         },
         // Enforce 100% for code generators even locally (TDD mandate - ADR-022)
         'src/codegen/generators/**/*.js': {

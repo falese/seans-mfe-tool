@@ -1,3 +1,12 @@
+## Acceptance Criteria References
+
+To maintain traceability from ADRs to verification artifacts, acceptance criteria are captured as GWT `.feature` files under `docs/acceptance-criteria/`.
+
+- Lifecycle Hook Execution & BaseMFE orchestration (covers REQ-042..045, REQ-054..056): `docs/acceptance-criteria/lifecycle-hooks.feature`
+- Unified Type System (covers REQ-047): `docs/acceptance-criteria/type-system.feature`
+
+These files validate decisions around lifecycle semantics, handler arrays, state transitions, BaseMFE capability contracts, and the unified type mapping across DSL → GraphQL → TypeScript/Python.
+
 # Architecture Decision Records (ADRs)
 
 Reference these in code comments to guide AI assistants and document architectural choices. Format: `// Following ADR-XXX: <pattern>`
