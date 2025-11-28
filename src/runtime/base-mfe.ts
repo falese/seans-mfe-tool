@@ -22,6 +22,8 @@ export interface PlatformHandlerMap {
   [key: string]: (context: Context) => Promise<any>;
 }
 
+
+
 export interface CustomHandlerMap {
   [key: string]: (context: Context) => Promise<any>;
 }
