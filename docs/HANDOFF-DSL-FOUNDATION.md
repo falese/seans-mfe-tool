@@ -12,6 +12,7 @@
 This handoff document captures architectural decisions from Requirements Elicitation Session #7 that clarify the DSL Foundation implementation approach. Three new requirements (REQ-057, REQ-058, REQ-059) have been added to `docs/dsl-contract-requirements.md` based on critical architectural clarifications.
 
 **Strategic Context:**
+
 - **DSL Foundation must complete BEFORE Orchestration** - User decision: "everything is an MFE," DSL informs orchestration
 - **GitHub Issues #22 (Lifecycle Hooks) and #24 (Type System) are implementation-ready**
 - **Implementation Priority:** Complete DSL contract → Generate boilerplate → Test with examples → Orchestration
@@ -25,12 +26,14 @@ This handoff document captures architectural decisions from Requirements Elicita
 **Previous Misunderstanding:** DSL was runtime contract for reflection/dynamic method lookup
 
 **Clarification:**
+
 - DSL is **code generation blueprint** - describes WHAT to generate, not WHAT is exposed at runtime
 - Handlers listed in DSL → inform code generation → create methods in generated class
 - No runtime reflection of DSL structure required
 - DSL can be discarded after code generation (kept for documentation)
 
 **Impact:**
+
 - Handler discovery = code generation problem, not runtime reflection
 - Generator reads DSL → creates abstract methods in BaseMFE → developer implements
 - Platform handlers pre-exist in standard library, referenced during generation
@@ -42,6 +45,7 @@ This handoff document captures architectural decisions from Requirements Elicita
 **Previous Misunderstanding:** Different BaseMFE classes per MFE type (RemoteMFE, BffMFE, ToolMFE)
 
 **Clarification:**
+
 - **One BaseMFE per language** (TypeScript, JavaScript, Python)
 - BaseMFE is abstract with 9 platform capabilities as abstract methods
 - MFE `type` (remote/bff/tool) determines generated code CONTENT in capability implementations
@@ -59,7 +63,7 @@ abstract class BaseMFE {
     await executeLifecycle('load', 'after', ctx);
     return result;
   }
-  
+
   protected abstract doLoad(ctx: Context): Promise<LoadResult>;
   // ... 8 more abstract capability methods
 }
@@ -94,17 +98,20 @@ class MyBffMFE extends BaseMFE {
 **Clarification:**
 
 **Platform Handlers (`platform.handlerName`):**
+
 - Pre-implemented in `src/runtime/handlers/` directory
 - Standard library: `platform.verifyJWT`, `platform.checkCORS`, `platform.rateLimit`
 - Available to all MFEs without implementation
 - Code generator validates existence at generation time
 
 **Custom Handlers (`custom.handlerName` or just `handlerName`):**
+
 - Developer implements as private/protected methods in their MFE class
 - Referenced in DSL, generator creates method stub with TODO comment
 - Runtime error if custom handler not implemented
 
 **Resolution Order:**
+
 1. `platform.` prefix → Look in platform handlers, throw at generation if not found
 2. `custom.` prefix or no prefix → Look in developer class, throw at runtime if not found
 
@@ -116,9 +123,9 @@ capabilities:
       lifecycle:
         before:
           - auth:
-              handler: platform.verifyJWT  # Pre-implemented
+              handler: platform.verifyJWT # Pre-implemented
           - validation:
-              handler: custom.checkFileSize  # Developer implements
+              handler: custom.checkFileSize # Developer implements
 ```
 
 **Generated Code:**
@@ -145,6 +152,7 @@ class MyMFE extends BaseMFE {
 **Clarification:**
 
 **Template Organization:**
+
 ```
 src/templates/
 ├── typescript/          # All TS MFEs (any type)
@@ -177,6 +185,7 @@ protected async doLoad(context: Context): Promise<LoadResult> {
 ```
 
 **Rationale:**
+
 - Type is declaration of intent, not structural difference
 - Keeps templates DRY (one BaseMFE per language)
 - Enables flexible type mixing (one MFE can implement multiple type patterns)
@@ -189,12 +198,14 @@ protected async doLoad(context: Context): Promise<LoadResult> {
 **Clarification:**
 
 **Platform Responsibility (Generated Boilerplate):**
+
 - Wrapper methods for all 9 capabilities
 - Execute lifecycle phases: `before hooks → doCapability() → after/error hooks`
 - Handle state transitions, telemetry, error containment
 - Implement `mandatory` and `contained` semantics
 
 **Developer Responsibility (Custom Implementation):**
+
 - Implement abstract `doCapability()` methods with business logic
 - Implement custom lifecycle handlers referenced in DSL
 - No need to understand lifecycle orchestration internals
@@ -206,17 +217,17 @@ protected async doLoad(context: Context): Promise<LoadResult> {
 async load(context: Context): Promise<LoadResult> {
   this.assertState('ready');
   this.transitionState('loading');
-  
+
   try {
     // Execute before hooks
     await this.executeLifecycle('load', 'before', context);
-    
+
     // Call developer implementation
     const result = await this.doLoad(context);
-    
+
     // Execute after hooks
     await this.executeLifecycle('load', 'after', context);
-    
+
     this.transitionState('ready');
     return result;
   } catch (error) {
@@ -241,6 +252,7 @@ protected abstract doLoad(context: Context): Promise<LoadResult>;
 **Status:** ✅ Accepted (Session: 2025-11-28)
 
 **Key Points:**
+
 - Platform generates wrapper methods that orchestrate lifecycle phases
 - Developer implements abstract `doCapability()` methods with business logic
 - Custom lifecycle handlers implemented as class methods
@@ -248,6 +260,7 @@ protected abstract doLoad(context: Context): Promise<LoadResult>;
 - Code generation creates boilerplate in `src/runtime/base-mfe.{ts,js}`
 
 **Implementation Notes:**
+
 - Templates: `src/templates/{language}/base-mfe.{ts,js}.ejs`
 - Generator resolves handlers during code generation, not at runtime
 - Missing platform handlers → generation error
@@ -261,6 +274,7 @@ protected abstract doLoad(context: Context): Promise<LoadResult>;
 **Status:** ✅ Accepted (Session: 2025-11-28)
 
 **Key Points:**
+
 - Platform provides reusable handlers: auth, validation, telemetry, caching
 - Developers reference with `platform.handlerName` syntax
 - Handlers implemented in `src/runtime/handlers/` directory
@@ -269,25 +283,30 @@ protected abstract doLoad(context: Context): Promise<LoadResult>;
 **V1 Standard Handlers:**
 
 **Authentication & Authorization:**
+
 - `platform.verifyJWT` - JWT validation and parsing
 - `platform.checkCORS` - CORS header validation
 - `platform.extractUser` - User context from JWT
 
 **Validation:**
+
 - `platform.validateSchema` - JSON schema validation
 - `platform.checkRequired` - Required field validation
 - `platform.sanitizeInput` - XSS/injection sanitization
 
 **Telemetry & Logging:**
+
 - `platform.recordMetrics` - Metrics emission
 - `platform.logRequest` / `platform.logResponse` - Request/response logging
 - `platform.startTrace` / `platform.endTrace` - Distributed tracing
 
 **Performance:**
+
 - `platform.rateLimit` - Token bucket rate limiting
 - `platform.cacheCheck` / `platform.cacheWrite` - Cache operations
 
 **Implementation Notes:**
+
 - Each handler: standard signature `async (context: Context) => Promise<void>`
 - Organized exports: `export * as auth from './auth'`
 - Code generator validates platform handler existence at generation time
@@ -300,6 +319,7 @@ protected abstract doLoad(context: Context): Promise<LoadResult>;
 **Status:** ✅ Accepted (Session: 2025-11-28)
 
 **Key Points:**
+
 - Templates organized by language: `typescript/`, `javascript/`, `python/`
 - NOT organized by type: ~~`remote/`, `bff/`, `tool/`~~
 - MFE `type` affects generated code CONTENT via conditional logic
@@ -318,6 +338,7 @@ src/templates/
 ```
 
 **Type-Conditional Generation:**
+
 - `type: 'remote'` → Module Federation logic in `doLoad()`
 - `type: 'bff'` → GraphQL Mesh logic in `doLoad()`
 - `type: 'tool'` → Web Worker logic in `doLoad()`
@@ -332,6 +353,7 @@ src/templates/
 ### Phase 1: Foundation (Issues #22, #24)
 
 **Issue #22: Lifecycle Hook Execution**
+
 - Create `src/runtime/base-mfe.ts` with abstract class
 - Implement `executeLifecycle(capability, phase, context)` method
 - Support `mandatory`, `contained` flags per REQ-042
@@ -340,6 +362,7 @@ src/templates/
 - Tests: `src/dsl/__tests__/lifecycle-executor.test.ts`
 
 **Issue #24: Type System Implementation**
+
 - Implement Zod-based type parser/validator
 - GraphQL nullability conventions: `string` = nullable, `string!` = required
 - Support specialized types: `jwt`, `datetime`, `email`, `url`, `id`, `file`, `element`
@@ -347,6 +370,7 @@ src/templates/
 - Tests: `src/dsl/__tests__/type-system.test.ts`
 
 **Dependencies:**
+
 - REQ-054 (BaseMFE Abstract Class)
 - REQ-055 (Context Object)
 - REQ-056 (Lifecycle State Machine)
@@ -356,6 +380,7 @@ src/templates/
 ### Phase 2: Code Generation (New Work)
 
 **REQ-057 Implementation:**
+
 - Create `src/codegen/MFEGenerator/` directory
 - Implement boilerplate generator reading DSL
 - Generate BaseMFE wrapper methods with lifecycle orchestration
@@ -364,6 +389,7 @@ src/templates/
 - Tests: `src/codegen/MFEGenerator/__tests__/boilerplate-generator.test.ts`
 
 **REQ-058 Implementation:**
+
 - Create `src/runtime/handlers/` directory structure
 - Implement V1 platform handlers (auth, validation, telemetry, caching)
 - Export handlers with consistent signature
@@ -371,6 +397,7 @@ src/templates/
 - Tests: `src/runtime/handlers/__tests__/*.test.ts`
 
 **REQ-059 Implementation:**
+
 - Restructure `src/templates/` by language (not type)
 - Create `typescript/`, `javascript/` template directories
 - Implement type-conditional logic in capability templates
@@ -382,6 +409,7 @@ src/templates/
 ### Phase 3: Integration & Validation
 
 **End-to-End Flow:**
+
 1. Write DSL manifest: `mfe-manifest.yaml`
 2. Run: `mfe remote my-mfe --language typescript --type remote`
 3. Generator reads DSL, creates project with:
@@ -393,6 +421,7 @@ src/templates/
 5. MFE runs with full lifecycle support
 
 **Validation Tests:**
+
 - Generate remote MFE, verify Module Federation boilerplate
 - Generate bff MFE, verify GraphQL Mesh boilerplate
 - Generate tool MFE, verify Web Worker boilerplate
@@ -413,6 +442,7 @@ src/templates/
 | (TBD)        | REQ-059                | (TBD: Template Structure) | 📋 Planned     |
 
 **New Issues to Create:**
+
 1. "Boilerplate Capability Generation (REQ-057)"
    - Labels: `priority-high`, `component-codegen`, `type-feature`, `req-dsl`
 2. "Platform Handler Library (REQ-058)"
@@ -453,6 +483,7 @@ src/templates/
 ## Files Modified
 
 1. **docs/dsl-contract-requirements.md**
+
    - Added REQ-057: Boilerplate Generation
    - Added REQ-058: Platform Handlers
    - Added REQ-059: Language-Based Templates
@@ -469,11 +500,13 @@ src/templates/
 ### Immediate Actions
 
 1. **Review Documentation:**
+
    - Read this handoff document fully
    - Review `docs/dsl-contract-requirements.md` REQ-054 through REQ-059
    - Review existing DSL infrastructure: `src/dsl/schema.ts`, `parser.ts`, `validator.ts`
 
 2. **Start with Issue #22 (Lifecycle Hooks):**
+
    - Create `src/runtime/base-mfe.ts` with abstract BaseMFE class
    - Implement `executeLifecycle()` method
    - Write tests: `src/dsl/__tests__/lifecycle-executor.test.ts`
@@ -487,11 +520,13 @@ src/templates/
 ### Follow-Up Work
 
 4. **REQ-057: Boilerplate Generator**
+
    - Create `src/codegen/MFEGenerator/`
    - Generate BaseMFE wrappers and abstract methods
    - Test with example DSL manifests
 
 5. **REQ-058: Platform Handlers**
+
    - Create `src/runtime/handlers/` directory
    - Implement V1 handler library
    - Document handler API
@@ -536,18 +571,22 @@ Implementation complete when:
 ## References
 
 **Requirements Documents:**
+
 - `docs/dsl-contract-requirements.md` - Complete DSL contract specification
 - `docs/orchestration-requirements.md` - Orchestration context (post-DSL)
 
 **Code Files:**
+
 - `src/dsl/schema.ts` - Zod schemas for DSL validation
 - `src/dsl/parser.ts`, `validator.ts`, `generator.ts` - Existing DSL infrastructure
 
 **GitHub Issues:**
+
 - Issue #22: Lifecycle Hook Execution Implementation
 - Issue #24: Unified Type System Implementation
 
 **Architecture Decisions:**
+
 - `docs/architecture-decisions.md` - See ADRs 036-040, pending ADRs 046-049
 
 ---
@@ -559,4 +598,3 @@ This document captures all architectural decisions from Requirements Elicitation
 **Priority:** DSL Foundation → Code Generation → Orchestration
 
 **Next Session:** Implementation review and validation testing
-
