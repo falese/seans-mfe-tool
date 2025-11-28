@@ -7,7 +7,7 @@ import { BaseMFE, VALID_TRANSITIONS } from '../../runtime/base-mfe';
 
 describe('BaseMFE Full Coverage', () => {
   class TestMFE extends BaseMFE {
-    constructor(manifest: any) { super(manifest); }
+    constructor(manifest: any, deps: any = {}) { super(manifest, deps); }
     protected async doLoad(context: any): Promise<{ status: "loaded"; timestamp: Date }> {
       return { status: "loaded", timestamp: new Date() };
     }
@@ -45,14 +45,47 @@ describe('BaseMFE Full Coverage', () => {
     }
     async customA(context: any) { context.calledA = true; }
     async customB(context: any) { context.calledB = true; }
+
+    // Public setters for DI handler mocks
+    public setCustomHandler(name: string, fn: (ctx: any) => Promise<any>) {
+      if (this.deps.customHandlers) {
+        this.deps.customHandlers[name] = fn;
+      }
+    }
+    public setPlatformHandler(name: string, fn: (ctx: any) => Promise<any>) {
+      if (this.deps.platformHandlers) {
+        this.deps.platformHandlers[name] = fn;
+      }
+    }
   }
 
   let mfe: TestMFE;
   let manifest: any;
+  let telemetryEvents: any[];
+
+  const platformHandlers = {
+    emit: async (context: any) => { context._emitCalled = true; return { emitted: true }; }
+  };
+  const customHandlers = {
+    customA: async (context: any) => { context.calledA = true; },
+    customB: async (context: any) => { context.calledB = true; }
+  };
+  const telemetry = {
+    emit: (event: any) => { telemetryEvents.push(event); }
+  };
+  const errorHandler = {
+    handle: (error: Error, context: any) => { context._errorHandled = true; }
+  };
 
   beforeEach(() => {
     manifest = { name: 'full-mfe', capabilities: [{ load: { type: 'platform', lifecycle: { before: [{ customA: { handler: 'custom.customA' } }], main: [], after: [], error: [] } } }] };
-    mfe = new TestMFE(manifest);
+    telemetryEvents = [];
+    mfe = new TestMFE(manifest, {
+      platformHandlers,
+      customHandlers,
+      telemetry,
+      errorHandler
+    });
   });
 
   // Statement coverage: public methods and error paths
@@ -222,18 +255,17 @@ describe('BaseMFE Full Coverage', () => {
   });
 
   it('executeHook propagates error in main phase', async () => {
-    mfe.customA = async () => { throw new Error('failA'); };
+    mfe.setCustomHandler('customA', async () => { throw new Error('failA'); });
     const entry = { customA: { handler: 'custom.customA' } };
     const context: any = { timestamp: new Date(), requestId: 'test2' };
     await expect((mfe as any)["executeHookEntry"](entry, context, 'main')).rejects.toThrow('failA');
   });
 
   it('emitHookFailure emits telemetry', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const context: any = { timestamp: new Date(), requestId: 'test3' };
     await (mfe as any)["emitHookFailure"]('hook', 'handler', new Error('fail'), context, 'warn');
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    expect(telemetryEvents.length).toBeGreaterThan(0);
+    expect(telemetryEvents[0].eventType).toBe('error');
   });
 
   it('findCapabilityConfig returns correct config and null', () => {
@@ -288,6 +320,8 @@ describe('BaseMFE Full Coverage', () => {
   });
 
   it('executeHookEntry iterates all entries', async () => {
+    mfe.setCustomHandler('customA', async (ctx: any) => { ctx.calledA = true; });
+    mfe.setCustomHandler('customB', async (ctx: any) => { ctx.calledB = true; });
     const context: any = { timestamp: new Date(), requestId: 'test10' };
     const entry = { customA: { handler: 'custom.customA' }, customB: { handler: 'custom.customB' } };
     await (mfe as any).executeHookEntry(entry, context, 'before');
@@ -296,35 +330,30 @@ describe('BaseMFE Full Coverage', () => {
   });
 
   it('executeHook handles contained errors and continues', async () => {
-    const customBSpy = jest.fn(async (ctx: any) => { ctx.calledB = true; });
-    mfe.customA = async () => { throw new Error('failA'); };
-    mfe.customB = customBSpy;
+    let calledB = false;
+    mfe.setCustomHandler('customA', async () => { throw new Error('failA'); });
+    mfe.setCustomHandler('customB', async (ctx: any) => { calledB = true; ctx.calledB = true; });
     const entry = { customA: { handler: 'custom.customA', contained: true }, customB: { handler: 'custom.customB' } };
     const context: any = { timestamp: new Date(), requestId: 'test11' };
     await (mfe as any).executeHookEntry(entry, context, 'before');
-    expect(customBSpy).toHaveBeenCalled();
+    expect(calledB).toBe(true);
     expect(context.calledB).toBe(true);
   });
 
   it('executeHook propagates error in main phase', async () => {
-    mfe.customA = async () => { throw new Error('failA'); };
+    mfe.setCustomHandler('customA', async () => { throw new Error('failA'); });
     const entry = { customA: { handler: 'custom.customA' } };
     const context: any = { timestamp: new Date(), requestId: 'test12' };
     await expect((mfe as any).executeHookEntry(entry, context, 'main')).rejects.toThrow('failA');
   });
 
   it('invokeHandler calls platform and custom handlers', async () => {
-    (mfe as any)._emitCalled = false;
-    (mfe as any).testDoEmit = async function() { (mfe as any)._emitCalled = true; return { emitted: true }; };
-    (mfe as any).invokePlatformHandler = async function(name: string, context: any) {
-      if (name === 'emit') {
-        return await (mfe as any).testDoEmit(context);
-      }
-      throw new Error('Platform handler not implemented: platform.' + name);
-    };
+    let emitCalled = false;
+    mfe.setPlatformHandler('emit', async (context: any) => { emitCalled = true; context._emitCalled = true; return { emitted: true }; });
+    mfe.setCustomHandler('customA', async (context: any) => { context.calledA = true; });
     const context: any = { timestamp: new Date(), requestId: 'test13' };
     await (mfe as any).invokeHandler('platform.emit', context);
-    expect((mfe as any)._emitCalled).toBe(true);
+    expect(emitCalled).toBe(true);
     await (mfe as any).invokeHandler('custom.customA', { ...context, calledA: false });
     expect(mfe instanceof TestMFE).toBe(true);
   });
@@ -340,11 +369,10 @@ describe('BaseMFE Full Coverage', () => {
   });
 
   it('emitHookFailure logs telemetry', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const context: any = { timestamp: new Date(), requestId: 'test16' };
     await (mfe as any).emitHookFailure('hook', 'handler', new Error('fail'), context, 'warn');
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    expect(telemetryEvents.length).toBeGreaterThan(0);
+    expect(telemetryEvents[0].eventType).toBe('error');
   });
 
   it('findCapabilityConfig returns correct config', () => {
