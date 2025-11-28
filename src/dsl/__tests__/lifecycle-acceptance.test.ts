@@ -1,3 +1,32 @@
+  it('Handler array in before phase: contained failure allows next handler (REQ-042)', async () => {
+    mfe.hookA = async () => { throw new Error('failA'); };
+    mfe.hookB = async () => { mfe.calls.push('hookB'); };
+    setLifecycle(mfe, {
+      before: [{ chain: { handler: ['custom.hookA', 'custom.hookB'], contained: true } }],
+      main: [{ runQuery: { handler: 'custom.runQuery' } }]
+    });
+    const res = await mfe.query(makeContext());
+    expect(res).toEqual({ data: 'ok' });
+    expect(mfe.calls).toContain('hookB');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+
+  it('Mandatory hook executes after contained failure in before phase (REQ-042)', async () => {
+    let executedMandatory = false;
+    mfe.hookA = async () => { throw new Error('failA'); };
+    mfe.auth = async () => { executedMandatory = true; };
+    setLifecycle(mfe, {
+      before: [
+        { hookA: { handler: 'custom.hookA', contained: true } },
+        { auth: { handler: 'custom.auth', mandatory: true } },
+      ],
+      main: [{ runQuery: { handler: 'custom.runQuery' } }]
+    });
+    const res = await mfe.query(makeContext());
+    expect(res).toEqual({ data: 'ok' });
+    expect(executedMandatory).toBe(true);
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
 /**
  * Lifecycle Acceptance Tests mapped from docs/acceptance-criteria/lifecycle-hooks.feature
  * REQ-042..045, REQ-054..056

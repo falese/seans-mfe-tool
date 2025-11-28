@@ -15,6 +15,50 @@
 import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
 
 // =============================================================================
+// Dependency Injection Interfaces
+// =============================================================================
+
+export interface PlatformHandlerMap {
+  [key: string]: (context: Context) => Promise<any>;
+}
+
+
+
+export interface CustomHandlerMap {
+  [key: string]: (context: Context) => Promise<any>;
+}
+
+export interface TelemetryService {
+  emit(event: TelemetryEvent): void;
+}
+
+export interface StateValidator {
+  isValidTransition(from: MFEState, to: MFEState): boolean;
+}
+
+export interface ManifestParser {
+  parse(manifest: DSLManifest): any;
+}
+
+export interface LifecycleExecutor {
+  execute(hook: LifecycleHook, context: Context, phase: string): Promise<void>;
+}
+
+export interface ErrorHandler {
+  handle(error: Error, context: Context): void;
+}
+
+export interface BaseMFEDependencies {
+  platformHandlers?: PlatformHandlerMap;
+  customHandlers?: CustomHandlerMap;
+  telemetry?: TelemetryService;
+  stateValidator?: StateValidator;
+  manifestParser?: ManifestParser;
+  lifecycleExecutor?: LifecycleExecutor;
+  errorHandler?: ErrorHandler;
+}
+
+// =============================================================================
 // Context Types (REQ-055)
 // =============================================================================
 
@@ -188,15 +232,19 @@ export interface TelemetryEvent {
 export abstract class BaseMFE {
   /** DSL manifest for this MFE */
   protected readonly manifest: DSLManifest;
-  
+
+  /** DI dependencies */
+  protected readonly deps: BaseMFEDependencies;
+
   /** Current lifecycle state */
   protected state: MFEState = 'uninitialized';
-  
+
   /** State transition history (for debugging) */
   protected stateHistory: Array<{ from: MFEState; to: MFEState; timestamp: Date }> = [];
-  
-  constructor(manifest: DSLManifest) {
+
+  constructor(manifest: DSLManifest, deps: BaseMFEDependencies = {}) {
     this.manifest = manifest;
+    this.deps = deps;
   }
   
   // ===========================================================================
@@ -216,6 +264,12 @@ export abstract class BaseMFE {
    */
   protected assertState(...expectedStates: MFEState[]): void {
     if (!expectedStates.includes(this.state)) {
+      if (this.deps?.errorHandler) {
+        this.deps.errorHandler.handle(
+          new Error(`Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`),
+          {} as Context
+        );
+      }
       throw new Error(
         `Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`
       );
@@ -228,17 +282,26 @@ export abstract class BaseMFE {
    */
   protected transitionState(newState: MFEState): void {
     const validTransitions = VALID_TRANSITIONS[this.state];
-    
-    if (!validTransitions.includes(newState)) {
+    const isValid = this.deps?.stateValidator
+      ? this.deps.stateValidator.isValidTransition(this.state, newState)
+      : validTransitions.includes(newState);
+
+    if (!isValid) {
+      if (this.deps?.errorHandler) {
+        this.deps.errorHandler.handle(
+          new Error(`Invalid state transition: ${this.state} → ${newState}. Valid transitions: ${validTransitions.join(', ')}`),
+          {} as Context
+        );
+      }
       throw new Error(
         `Invalid state transition: ${this.state} → ${newState}. ` +
         `Valid transitions: ${validTransitions.join(', ')}`
       );
     }
-    
+
     const oldState = this.state;
     this.state = newState;
-    
+
     this.stateHistory.push({
       from: oldState,
       to: newState,
@@ -262,22 +325,32 @@ export abstract class BaseMFE {
     phase: 'before' | 'main' | 'after' | 'error',
     context: Context
   ): Promise<void> {
-    // Find capability config
-    const capabilityConfig = this.findCapabilityConfig(capability);
+    // DI: allow manifest parsing override
+    const capabilityConfig = this.deps?.manifestParser
+      ? this.deps.manifestParser.parse(this.manifest)[capability]
+      : this.findCapabilityConfig(capability);
     if (!capabilityConfig?.lifecycle) {
       return; // No lifecycle hooks defined
     }
-    
+
     const hooks = capabilityConfig.lifecycle[phase];
     if (!hooks || hooks.length === 0) {
       return; // No hooks for this phase
     }
-    
+
     // Update context with phase and capability
     context.phase = phase;
     context.capability = capability;
-    
-    // Execute hooks sequentially
+
+    // DI: allow lifecycle executor override
+    if (this.deps?.lifecycleExecutor) {
+      for (const hookEntry of hooks) {
+        await this.deps.lifecycleExecutor.execute(hookEntry, context, phase);
+      }
+      return;
+    }
+
+    // Default: Execute hooks sequentially
     for (const hookEntry of hooks) {
       await this.executeHookEntry(hookEntry, context, phase);
     }
@@ -355,13 +428,19 @@ export abstract class BaseMFE {
    */
   protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
     if (handlerName.startsWith('platform.')) {
-      // Platform handler (REQ-058)
-      const platformHandlerName = handlerName.slice(9); // Remove 'platform.' prefix
-      await this.invokePlatformHandler(platformHandlerName, context);
+      const platformHandlerName = handlerName.slice(9);
+      if (this.deps?.platformHandlers && this.deps.platformHandlers[platformHandlerName]) {
+        await this.deps.platformHandlers[platformHandlerName](context);
+      } else {
+        await this.invokePlatformHandler(platformHandlerName, context);
+      }
     } else {
-      // Custom handler (REQ-057)
       const customHandlerName = handlerName.replace('custom.', '');
-      await this.invokeCustomHandler(customHandlerName, context);
+      if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
+        await this.deps.customHandlers[customHandlerName](context);
+      } else {
+        await this.invokeCustomHandler(customHandlerName, context);
+      }
     }
   }
   
@@ -429,10 +508,13 @@ export abstract class BaseMFE {
       timestamp: new Date(),
       mfe: this.manifest.name
     };
-    
-    // Use emit capability to send telemetry
-    // In real implementation, this would send to monitoring system
-    console.error('[Telemetry]', JSON.stringify(event, null, 2));
+
+    if (this.deps?.telemetry) {
+      this.deps.telemetry.emit(event);
+    } else {
+      // Default: log to console
+      console.error('[Telemetry]', JSON.stringify(event, null, 2));
+    }
   }
   
   /**
