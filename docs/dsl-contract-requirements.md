@@ -1400,20 +1400,897 @@ dependencies:
 
 ---
 
+## Code Generation & Handler Requirements (Session 7: 2025-11-28)
+
+### REQ-057: Boilerplate Capability Generation with Custom Lifecycle Hooks
+
+**Priority:** P0 (Critical)  
+**Category:** Code Generation  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Platform generates boilerplate capability methods that orchestrate lifecycle phases. Developers implement abstract `doCapability()` methods with their specific logic and optionally implement custom lifecycle handlers referenced in DSL.
+
+**Rationale:**
+Separates platform concerns (lifecycle orchestration, error handling, telemetry) from developer concerns (business logic). Enables standardized MFE behavior while allowing complete customization of capability implementations.
+
+**Acceptance Criteria:**
+
+**Generated Boilerplate (Platform Responsibility):**
+
+- [ ] BaseMFE provides wrapper methods for all 9 platform capabilities
+- [ ] Each wrapper orchestrates: `before hooks → doCapability() → after/error hooks`
+- [ ] Wrappers handle state transitions, telemetry, error containment
+- [ ] Code generator creates boilerplate in `src/runtime/base-mfe.{ts,js}`
+
+**Developer Implementation (Custom Logic):**
+
+- [ ] `doCapability()` methods are abstract (must be implemented by concrete MFE)
+- [ ] Developers implement: `doLoad()`, `doRender()`, `doRefresh()`, etc.
+- [ ] Custom lifecycle handlers implemented as private/protected methods
+- [ ] Handler naming follows language conventions (camelCase for TS/JS)
+
+**Handler Resolution:**
+
+- [ ] Platform resolves handlers with `platform.` prefix from standard library
+- [ ] Platform resolves handlers with `custom.` prefix or no prefix from developer class
+- [ ] Missing platform handlers throw at code generation time
+- [ ] Missing custom handlers throw at runtime with clear error message
+
+**Dependencies:** REQ-054 (BaseMFE), REQ-058 (Platform Handlers)
+
+**Technical Notes:**
+
+```typescript
+// GENERATED: src/runtime/base-mfe.ts
+abstract class BaseMFE {
+  // Generated wrapper - orchestrates lifecycle
+  async load(context: Context): Promise<LoadResult> {
+    this.assertState('ready');
+    this.transitionState('loading');
+
+    try {
+      await this.executeLifecycle('load', 'before', context);
+      const result = await this.doLoad(context); // ← Developer implements
+      await this.executeLifecycle('load', 'after', context);
+
+      this.transitionState('ready');
+      return result;
+    } catch (error) {
+      await this.executeLifecycle('load', 'error', { ...context, error });
+      this.transitionState('error');
+      throw error;
+    }
+  }
+
+  // Abstract - developer must implement
+  protected abstract doLoad(context: Context): Promise<LoadResult>;
+  protected abstract doRender(context: Context): Promise<RenderResult>;
+  protected abstract doRefresh(context: Context): Promise<void>;
+  // ... etc for all 9 platform capabilities
+}
+
+// DEVELOPER CODE: src/MyMFE.ts
+class MyMFE extends BaseMFE {
+  // Implement capability logic
+  protected async doLoad(context: Context): Promise<LoadResult> {
+    // Type-specific logic (Module Federation for 'remote', GraphQL Mesh for 'bff', etc.)
+    const container = await import(this.manifest.remoteEntry);
+    await container.init(__webpack_share_scopes__.default);
+    return { status: 'loaded', container };
+  }
+
+  // Implement custom lifecycle handlers referenced in DSL
+  private async checkFileSize(context: Context): Promise<void> {
+    if (context.inputs.file.size > 10_000_000) {
+      throw new Error('File too large');
+    }
+  }
+}
+```
+
+**Code Generation Pattern:**
+
+```ejs
+<!-- templates/typescript/base-mfe.ts.ejs -->
+<% capabilities.forEach(cap => { %>
+async <%= cap.name %>(context: Context): Promise<<%= cap.returnType %>> {
+  this.assertState('ready');
+
+  try {
+    await this.executeLifecycle('<%= cap.name %>', 'before', context);
+    const result = await this.do<%= capitalize(cap.name) %>(context);
+    await this.executeLifecycle('<%= cap.name %>', 'after', context);
+    return result;
+  } catch (error) {
+    await this.executeLifecycle('<%= cap.name %>', 'error', { ...context, error });
+    throw error;
+  }
+}
+
+protected abstract do<%= capitalize(cap.name) %>(context: Context): Promise<<%= cap.returnType %>>;
+<% }); %>
+```
+
+---
+
+### REQ-058: Standard Platform Handler Library
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Platform provides a standard library of reusable lifecycle handlers that developers can reference in DSL using `platform.handlerName` syntax. These handlers implement common cross-cutting concerns.
+
+**Rationale:**
+Reduces boilerplate, ensures consistent behavior across MFEs, provides best-practice implementations of common patterns (JWT validation, CORS, rate limiting, telemetry).
+
+**Acceptance Criteria:**
+
+**Standard Handler Library:**
+
+- [ ] Handlers implemented in `src/runtime/handlers/` directory
+- [ ] Each handler exported as named function with standard signature
+- [ ] Handlers organized by category: `auth/`, `validation/`, `telemetry/`, `caching/`
+
+**Standard Handlers (V1):**
+
+**Authentication & Authorization:**
+
+- [ ] `platform.verifyJWT` - JWT token validation and parsing
+- [ ] `platform.checkCORS` - CORS header validation
+- [ ] `platform.extractUser` - User context extraction from JWT
+
+**Validation:**
+
+- [ ] `platform.validateSchema` - JSON schema validation of inputs
+- [ ] `platform.checkRequired` - Required field validation
+- [ ] `platform.sanitizeInput` - XSS/injection sanitization
+
+**Telemetry & Logging:**
+
+- [ ] `platform.recordMetrics` - Automatic metrics emission
+- [ ] `platform.logRequest` - Request logging with context
+- [ ] `platform.logResponse` - Response logging with timing
+- [ ] `platform.startTrace` - Distributed tracing span start
+- [ ] `platform.endTrace` - Distributed tracing span end
+
+**Performance:**
+
+- [ ] `platform.rateLimit` - Request rate limiting with token bucket
+- [ ] `platform.cacheCheck` - Cache hit check (before hook)
+- [ ] `platform.cacheWrite` - Cache write (after hook)
+
+**DSL Syntax:**
+
+- [ ] `handler: platform.handlerName` - Uses platform handler
+- [ ] `handler: custom.handlerName` - Uses developer handler
+- [ ] `handler: handlerName` - Defaults to custom (backward compat)
+
+**Handler Resolution Order:**
+
+1. If `platform.` prefix → Look in platform handlers, throw if not found
+2. If `custom.` prefix → Look in developer class, throw if not found
+3. No prefix → Look in developer class first, fallback to platform (deprecated pattern)
+
+**Dependencies:** REQ-057 (Code Generation), REQ-055 (Context Object)
+
+**Technical Notes:**
+
+```typescript
+// src/runtime/handlers/auth.ts
+export async function verifyJWT(context: Context): Promise<void> {
+  if (!context.jwt) {
+    throw new Error('JWT token required');
+  }
+
+  try {
+    const decoded = jwt.verify(context.jwt, process.env.JWT_SECRET!);
+    context.user = {
+      id: decoded.sub,
+      username: decoded.username,
+      roles: decoded.roles || []
+    };
+  } catch (error) {
+    throw new Error('Invalid JWT token');
+  }
+}
+
+export async function checkCORS(context: Context): Promise<void> {
+  const origin = context.headers?.['origin'];
+  const allowed = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
+  if (origin && !allowed.includes(origin)) {
+    throw new Error('CORS: Origin not allowed');
+  }
+}
+
+// src/runtime/handlers/index.ts
+export * as auth from './auth';
+export * as validation from './validation';
+export * as telemetry from './telemetry';
+export * as caching from './caching';
+
+// Handler resolution in BaseMFE
+protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
+  if (handlerName.startsWith('platform.')) {
+    const name = handlerName.slice(9); // Remove 'platform.' prefix
+    const [category, handler] = name.split('.'); // e.g., 'auth.verifyJWT'
+
+    if (category && handler) {
+      await PlatformHandlers[category][handler](context);
+    } else {
+      await PlatformHandlers[name](context); // Legacy flat namespace
+    }
+  } else {
+    const customName = handlerName.replace('custom.', '');
+    const method = this[customName];
+
+    if (typeof method !== 'function') {
+      throw new Error(`Custom handler not found: ${customName}`);
+    }
+
+    await method.call(this, context);
+  }
+}
+```
+
+**DSL Example:**
+
+```yaml
+capabilities:
+  - load:
+      lifecycle:
+        before:
+          - auth:
+              handler: platform.verifyJWT
+              mandatory: true
+          - validation:
+              handler: custom.checkFileSize
+        after:
+          - metrics:
+              handler: platform.recordMetrics
+          - cache:
+              handler: platform.cacheWrite
+```
+
+---
+
+### REQ-059: Language-Based Code Generation (Not Type-Based)
+
+**Priority:** P0 (Critical)  
+**Category:** Code Generation  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Code generation templates are organized by programming language (TypeScript, JavaScript), NOT by MFE type (remote, bff, tool). MFE type affects generated code CONTENT within language templates via conditional logic.
+
+**Rationale:**
+MFE type is a declaration of intent, not a class hierarchy. Any MFE can be any type - the type determines what code is generated in capability implementations, not the base structure. This keeps templates DRY and enables flexible type mixing.
+
+**Acceptance Criteria:**
+
+**Template Organization:**
+
+- [ ] Templates organized: `src/templates/{language}/` not `src/templates/{type}/`
+- [ ] TypeScript template: `src/templates/typescript/`
+- [ ] JavaScript template: `src/templates/javascript/`
+- [ ] Python template: `src/templates/python/` (future)
+
+**Universal BaseMFE per Language:**
+
+- [ ] One BaseMFE implementation per language (not per type)
+- [ ] TypeScript: `src/runtime/base-mfe.ts` (works for all types)
+- [ ] JavaScript: `src/runtime/base-mfe.js` (works for all types)
+- [ ] All MFE types extend the same BaseMFE for their language
+
+**Type-Specific Code Generation:**
+
+- [ ] Template uses `manifest.type` to conditionally generate capability implementations
+- [ ] `type: 'remote'` → Generates Module Federation logic in `doLoad()`
+- [ ] `type: 'bff'` → Generates GraphQL Mesh startup in `doLoad()`
+- [ ] `type: 'tool'` → Generates Web Worker initialization in `doLoad()`
+- [ ] `type: 'agent'` → Generates agentic runtime bootstrap in `doLoad()`
+
+**Type Can Change Without Structural Changes:**
+
+- [ ] Changing `type: remote` → `type: bff` only regenerates capability logic
+- [ ] Base class, lifecycle orchestration, handler resolution unchanged
+- [ ] Developer can manually implement multiple type patterns in one MFE
+
+**Dependencies:** REQ-057 (Code Generation), REQ-054 (BaseMFE)
+
+**Technical Notes:**
+
+```
+src/
+├── runtime/
+│   ├── base-mfe.ts          # Universal BaseMFE (TypeScript)
+│   ├── base-mfe.js          # Universal BaseMFE (JavaScript)
+│   └── handlers/            # Platform handlers (language-agnostic logic)
+├── templates/
+│   ├── typescript/          # TS-specific scaffolding
+│   │   ├── base-mfe.ts.ejs
+│   │   ├── package.json.ejs
+│   │   ├── tsconfig.json.ejs
+│   │   └── capability-impl.ts.ejs  # Type-specific logic
+│   ├── javascript/          # JS-specific scaffolding
+│   │   ├── base-mfe.js.ejs
+│   │   ├── package.json.ejs
+│   │   └── capability-impl.js.ejs
+```
+
+**Template Example (Type-Conditional Logic):**
+
+```typescript
+// templates/typescript/capability-impl.ts.ejs
+protected async doLoad(context: Context): Promise<LoadResult> {
+<% if (type === 'remote') { %>
+  // Module Federation implementation
+  const remoteEntry = this.manifest.remoteEntry;
+  const container = await import(remoteEntry);
+  await container.init(__webpack_share_scopes__.default);
+
+  return {
+    status: 'loaded',
+    container,
+    timestamp: new Date()
+  };
+<% } else if (type === 'bff') { %>
+  // GraphQL Mesh implementation
+  const { getMesh } = await import('@graphql-mesh/runtime');
+  const meshConfig = this.extractMeshConfig(this.manifest.data);
+  const mesh = await getMesh(meshConfig);
+
+  return {
+    status: 'loaded',
+    mesh,
+    timestamp: new Date()
+  };
+<% } else if (type === 'tool') { %>
+  // Web Worker implementation
+  const workerUrl = this.manifest.endpoint + '/worker.js';
+  const worker = new Worker(workerUrl, { type: 'module' });
+
+  return {
+    status: 'loaded',
+    worker,
+    timestamp: new Date()
+  };
+<% } else { %>
+  // Generic implementation (developer must customize)
+  throw new Error('doLoad() must be implemented for type: <%= type %>');
+<% } %>
+}
+```
+
+**Key Insight:**
+
+```yaml
+# These two MFEs use IDENTICAL base class structure
+name: user-dashboard
+type: remote
+language: typescript
+
+name: api-gateway
+type: bff
+language: typescript
+
+# Only difference: generated content in doLoad(), doRender(), etc.
+# NOT different class hierarchies
+```
+
+---
+
+## BaseMFE Abstract Class Requirements
+
+### REQ-054: BaseMFE Abstract Class Contract
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Define the abstract base class that all MFEs must extend. BaseMFE provides the platform lifecycle orchestration while requiring concrete implementations of all 9 platform capabilities.
+
+**Rationale:**
+BaseMFE enforces the MFE contract at the code level. Abstract methods ensure every MFE implements required capabilities, while BaseMFE handles cross-cutting concerns (lifecycle execution, telemetry, handler discovery).
+
+**Acceptance Criteria:**
+
+**Class Structure:**
+
+- [ ] BaseMFE is an abstract class (cannot be instantiated directly)
+- [ ] All 9 platform capabilities are abstract methods (must be implemented by subclasses)
+- [ ] BaseMFE provides concrete lifecycle execution logic
+- [ ] BaseMFE provides concrete handler discovery and validation
+- [ ] BaseMFE provides concrete telemetry emission
+
+**Constructor:**
+
+- [ ] Accepts `DSLManifest` as required parameter
+- [ ] Validates manifest against schema on construction
+- [ ] Initializes lifecycle state machine
+- [ ] Validates capability handlers (fail-fast)
+- [ ] Throws if required handlers missing
+
+**Platform Capabilities (Abstract Methods):**
+All must be implemented by concrete MFE classes:
+
+- [ ] `load(context: Context): Promise<LoadResult>`
+- [ ] `render(context: Context): Promise<RenderResult>`
+- [ ] `refresh(context: Context): Promise<void>`
+- [ ] `authorizeAccess(context: Context): Promise<boolean>`
+- [ ] `health(context: Context): Promise<HealthStatus>`
+- [ ] `describe(context: Context): Promise<Description>`
+- [ ] `schema(context: Context): Promise<JSONSchema>`
+- [ ] `query(context: Context): Promise<QueryResult>`
+- [ ] `emit(event: EmitEvent): Promise<void>`
+
+**Lifecycle Management Methods (Concrete):**
+
+- [ ] `executeLifecycle(capability: string, phase: Phase, context: Context): Promise<void>`
+- [ ] `executeHook(hook: LifecycleHook, context: Context): Promise<void>`
+- [ ] `executeHandlers(handlers: string | string[], phase: Phase, context: Context): Promise<void>`
+- [ ] `invokeHandler(handlerName: string, context: Context): Promise<unknown>`
+
+**State Management:**
+
+- [ ] Lifecycle state: `initializing | ready | loading | error | disposed`
+- [ ] State transitions tracked and validated
+- [ ] State exposed via `getState(): LifecycleState`
+- [ ] State changes emit telemetry events
+
+**Handler Discovery (Concrete):**
+
+- [ ] `validateCapabilityHandlers(): void` - called in constructor
+- [ ] `discoverHandler(handlerName: string): Function | null` - lazy discovery
+- [ ] Naming convention mapping per language (camelCase, snake_case, PascalCase)
+- [ ] Handler signature validation
+
+**Telemetry (Concrete):**
+
+- [ ] Default `emit()` implementation sends to configured backend
+- [ ] Subclasses can override `emit()` for custom telemetry routing
+- [ ] Automatic telemetry on: hook failures, state changes, handler errors
+- [ ] Fallback to console.error if emit fails (contained)
+
+**Language-Specific Implementations:**
+
+- [ ] `BaseMFE` interface/abstract class exists per language:
+  - TypeScript: `src/runtime/base-mfe.ts`
+  - JavaScript: `src/runtime/base-mfe.js`
+  - Python: `src/runtime/base_mfe.py` (future)
+  - Go: `src/runtime/base_mfe.go` (future)
+- [ ] All implementations adhere to same contract
+- [ ] Shared test suite validates contract compliance across languages
+
+**Dependencies:** REQ-042 (Lifecycle Execution), REQ-043 (Telemetry), REQ-046 (Handler Discovery)
+
+**Technical Notes:**
+
+```typescript
+// TypeScript BaseMFE signature
+abstract class BaseMFE {
+  protected readonly manifest: DSLManifest;
+  protected state: LifecycleState;
+  protected handlers: Map<string, Function>;
+
+  constructor(manifest: DSLManifest) {
+    this.manifest = this.validateManifest(manifest);
+    this.state = 'initializing';
+    this.handlers = new Map();
+    this.validateCapabilityHandlers(); // Fail-fast
+    this.state = 'ready';
+  }
+
+  // Abstract - must implement
+  abstract load(context: Context): Promise<LoadResult>;
+  abstract render(context: Context): Promise<RenderResult>;
+  abstract refresh(context: Context): Promise<void>;
+  abstract authorizeAccess(context: Context): Promise<boolean>;
+  abstract health(context: Context): Promise<HealthStatus>;
+  abstract describe(context: Context): Promise<Description>;
+  abstract schema(context: Context): Promise<JSONSchema>;
+  abstract query(context: Context): Promise<QueryResult>;
+  abstract emit(event: EmitEvent): Promise<void>;
+
+  // Concrete - provided by BaseMFE
+  async executeLifecycle(capability: string, phase: Phase, context: Context): Promise<void> {
+    const capabilityConfig = this.getCapabilityConfig(capability);
+    const hooks = capabilityConfig?.lifecycle?.[phase] || [];
+
+    for (const hookEntry of hooks) {
+      for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
+        await this.executeHook(hookConfig, { ...context, phase, hookName });
+      }
+    }
+  }
+
+  async executeHook(hook: LifecycleHook, context: HookContext): Promise<void> {
+    const contained = hook.contained ?? true; // Default to contained
+    const mandatory = hook.mandatory ?? false;
+
+    try {
+      await this.executeHandlers(hook.handler, context.phase, context);
+    } catch (error) {
+      // Always emit telemetry
+      await this.emitHookFailure(hook, context, error);
+
+      // Propagate only if main phase
+      if (context.phase === 'main' && !contained) {
+        throw error;
+      }
+      // Otherwise silent (logged via telemetry)
+    }
+  }
+
+  protected getState(): LifecycleState {
+    return this.state;
+  }
+
+  protected validateCapabilityHandlers(): void {
+    const capabilities = this.manifest.capabilities.flat();
+    for (const capEntry of capabilities) {
+      for (const [capName, capConfig] of Object.entries(capEntry)) {
+        const handler = capConfig.handler;
+        if (!handler) {
+          throw new Error(`Capability ${capName} missing handler`);
+        }
+        if (!this.discoverHandler(handler)) {
+          throw new Error(`Handler not found: ${handler} for capability ${capName}`);
+        }
+      }
+    }
+  }
+
+  protected discoverHandler(handlerName: string): Function | null {
+    // Language-specific reflection
+    const mapped = this.mapHandlerName(handlerName);
+    const handler = (this as any)[mapped];
+    return typeof handler === 'function' ? handler.bind(this) : null;
+  }
+
+  protected mapHandlerName(neutralName: string): string {
+    // For TypeScript: already camelCase
+    return neutralName;
+  }
+}
+```
+
+---
+
+### REQ-055: Context Object Contract
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Define the Context object structure passed to all capability handlers and lifecycle hooks. Context provides execution metadata, inputs, and platform services.
+
+**Rationale:**
+Consistent context structure across all MFEs enables predictable handler signatures, testability, and access to platform services.
+
+**Acceptance Criteria:**
+
+**Core Context Fields (Always Present):**
+
+- [ ] `mfeName: string` - Name of the MFE from manifest
+- [ ] `mfeVersion: string` - Version from manifest
+- [ ] `capability: string` - Capability being invoked
+- [ ] `timestamp: Date` - When capability was invoked
+- [ ] `requestId: string` - Unique ID for request tracing
+
+**Phase-Specific Fields (Lifecycle Hooks Only):**
+
+- [ ] `phase?: 'before' | 'main' | 'after' | 'error'` - Current lifecycle phase
+- [ ] `hookName?: string` - Name of the hook being executed
+
+**Input/Output Fields:**
+
+- [ ] `inputs?: Record<string, unknown>` - Validated inputs from caller
+- [ ] `metadata?: Record<string, unknown>` - Additional context metadata
+
+**Platform Services:**
+
+- [ ] `emit: (event: EmitEvent) => Promise<void>` - Telemetry emission
+- [ ] `logger: Logger` - Structured logging interface
+
+**Runtime Context (HTTP/Network Triggered):**
+
+- [ ] `request?: Request` - HTTP request object (if applicable)
+- [ ] `headers?: Record<string, string>` - Request headers
+- [ ] `user?: UserContext` - Authenticated user info (if applicable)
+
+**Authorization Context:**
+
+- [ ] `jwt?: string` - JWT token for authorization checks
+- [ ] `permissions?: string[]` - User permissions
+
+**Immutability:**
+
+- [ ] Context is read-only (frozen object)
+- [ ] Cannot be modified by handlers
+- [ ] New context created for each phase/hook
+
+**Context Builder:**
+
+- [ ] BaseMFE provides `createContext(options)` factory
+- [ ] Ensures all required fields present
+- [ ] Validates field types
+
+**Dependencies:** REQ-054 (BaseMFE)
+
+**Technical Notes:**
+
+```typescript
+interface Context {
+  // Core (always present)
+  mfeName: string;
+  mfeVersion: string;
+  capability: string;
+  timestamp: Date;
+  requestId: string;
+
+  // Lifecycle (hooks only)
+  phase?: 'before' | 'main' | 'after' | 'error';
+  hookName?: string;
+
+  // Data
+  inputs?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+
+  // Platform services
+  emit: (event: EmitEvent) => Promise<void>;
+  logger: Logger;
+
+  // Runtime (optional)
+  request?: Request;
+  headers?: Record<string, string>;
+  user?: UserContext;
+
+  // Authorization
+  jwt?: string;
+  permissions?: string[];
+}
+
+interface Logger {
+  debug(message: string, data?: Record<string, unknown>): void;
+  info(message: string, data?: Record<string, unknown>): void;
+  warn(message: string, data?: Record<string, unknown>): void;
+  error(message: string, error?: Error, data?: Record<string, unknown>): void;
+}
+
+interface UserContext {
+  id: string;
+  username?: string;
+  email?: string;
+  roles?: string[];
+}
+
+// Context factory in BaseMFE
+protected createContext(options: Partial<Context>): Context {
+  const context: Context = Object.freeze({
+    mfeName: this.manifest.name,
+    mfeVersion: this.manifest.version,
+    capability: options.capability!,
+    timestamp: new Date(),
+    requestId: options.requestId || generateRequestId(),
+    emit: this.emit.bind(this),
+    logger: this.logger,
+    ...options
+  });
+  return context;
+}
+```
+
+---
+
+### REQ-056: Lifecycle State Machine
+
+**Priority:** P0 (Critical)  
+**Category:** Platform Contract  
+**Status:** ✅ Accepted (Session: 2025-11-28)
+
+**Description:**
+Define the lifecycle state machine for all MFEs. States track MFE readiness and capability execution phases.
+
+**Rationale:**
+Explicit state management prevents invalid operations (e.g., calling capabilities before initialization), enables health checks, and provides debugging visibility.
+
+**Acceptance Criteria:**
+
+**States:**
+
+- [ ] `initializing` - Constructor running, validating manifest and handlers
+- [ ] `ready` - MFE ready to accept capability calls
+- [ ] `loading` - Currently executing `load` capability
+- [ ] `error` - Fatal error occurred, MFE cannot operate
+- [ ] `disposed` - MFE has been shut down, cannot be reused
+
+**State Transitions:**
+
+- [ ] `null → initializing` - Constructor called
+- [ ] `initializing → ready` - Validation passed, handlers discovered
+- [ ] `initializing → error` - Validation failed or handlers missing
+- [ ] `ready → loading` - `load()` capability called
+- [ ] `loading → ready` - `load()` completed successfully
+- [ ] `loading → error` - `load()` threw unhandled error
+- [ ] `ready → error` - Fatal error in capability execution
+- [ ] `any → disposed` - `dispose()` called, cleanup complete
+
+**Invalid Transitions (Throw Error):**
+
+- [ ] `loading → loading` - Cannot call `load()` while already loading
+- [ ] `error → ready` - Cannot recover from error state (must recreate MFE)
+- [ ] `disposed → any` - Cannot use disposed MFE
+
+**State Guards:**
+
+- [ ] Capabilities check state before execution: `if (state !== 'ready') throw`
+- [ ] `load()` can transition `ready → loading`
+- [ ] Other capabilities require `state === 'ready'`
+
+**State Observability:**
+
+- [ ] `getState(): LifecycleState` - Current state
+- [ ] `onStateChange(callback: (newState) => void)` - Subscribe to state changes
+- [ ] State transitions emit telemetry events
+
+**Health Check Integration:**
+
+- [ ] `health()` capability returns state information
+- [ ] `ready` → healthy
+- [ ] `loading` → degraded (temporarily unavailable)
+- [ ] `error` → unhealthy (requires restart)
+- [ ] `disposed` → unhealthy (terminated)
+
+**Dependencies:** REQ-054 (BaseMFE), REQ-043 (Telemetry)
+
+**Technical Notes:**
+
+```typescript
+type LifecycleState = 'initializing' | 'ready' | 'loading' | 'error' | 'disposed';
+
+interface StateTransition {
+  from: LifecycleState;
+  to: LifecycleState;
+  reason?: string;
+  timestamp: Date;
+}
+
+class BaseMFE {
+  protected state: LifecycleState = 'initializing';
+  protected stateHistory: StateTransition[] = [];
+  protected stateCallbacks: Array<(state: LifecycleState) => void> = [];
+
+  protected transitionState(to: LifecycleState, reason?: string): void {
+    const from = this.state;
+
+    // Validate transition
+    if (!this.isValidTransition(from, to)) {
+      throw new Error(`Invalid state transition: ${from} → ${to}`);
+    }
+
+    // Record transition
+    const transition: StateTransition = {
+      from,
+      to,
+      reason,
+      timestamp: new Date(),
+    };
+    this.stateHistory.push(transition);
+    this.state = to;
+
+    // Emit telemetry
+    this.emit({
+      eventType: 'info',
+      eventData: {
+        source: 'lifecycle-state',
+        transition,
+      },
+      severity: 'info',
+      tags: ['lifecycle', 'state-change'],
+    }).catch(console.error);
+
+    // Notify subscribers
+    this.stateCallbacks.forEach((cb) => cb(to));
+  }
+
+  protected isValidTransition(from: LifecycleState, to: LifecycleState): boolean {
+    const validTransitions: Record<LifecycleState, LifecycleState[]> = {
+      initializing: ['ready', 'error'],
+      ready: ['loading', 'error', 'disposed'],
+      loading: ['ready', 'error', 'disposed'],
+      error: ['disposed'],
+      disposed: [],
+    };
+    return validTransitions[from]?.includes(to) ?? false;
+  }
+
+  getState(): LifecycleState {
+    return this.state;
+  }
+
+  onStateChange(callback: (state: LifecycleState) => void): () => void {
+    this.stateCallbacks.push(callback);
+    return () => {
+      const index = this.stateCallbacks.indexOf(callback);
+      if (index > -1) this.stateCallbacks.splice(index, 1);
+    };
+  }
+
+  protected assertState(expected: LifecycleState | LifecycleState[]): void {
+    const expectedStates = Array.isArray(expected) ? expected : [expected];
+    if (!expectedStates.includes(this.state)) {
+      throw new Error(`Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`);
+    }
+  }
+
+  // Usage in capabilities
+  async load(context: Context): Promise<LoadResult> {
+    this.assertState(['ready', 'error']); // Can reload from error
+    this.transitionState('loading', 'load capability called');
+
+    try {
+      await this.executeLifecycle('load', 'before', context);
+      const result = await this.doLoad(context); // Abstract method
+      await this.executeLifecycle('load', 'after', context);
+
+      this.transitionState('ready', 'load completed successfully');
+      return result;
+    } catch (error) {
+      await this.executeLifecycle('load', 'error', context);
+      this.transitionState('error', `load failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async health(context: Context): Promise<HealthStatus> {
+    const stateHealth: Record<LifecycleState, 'healthy' | 'degraded' | 'unhealthy'> = {
+      initializing: 'degraded',
+      ready: 'healthy',
+      loading: 'degraded',
+      error: 'unhealthy',
+      disposed: 'unhealthy',
+    };
+
+    return {
+      status: stateHealth[this.state],
+      state: this.state,
+      timestamp: new Date(),
+      details: {
+        lastTransition: this.stateHistory[this.stateHistory.length - 1],
+      },
+    };
+  }
+}
+```
+
+---
+
 ## Requirements Summary
 
 ### P0 (Critical) - Must Have for V1
 
-| ID      | Requirement                         | Status      |
-| ------- | ----------------------------------- | ----------- |
-| REQ-042 | Lifecycle Hook Execution Semantics  | ✅ Accepted |
-| REQ-043 | Automatic Telemetry on Hook Failure | ✅ Accepted |
-| REQ-044 | Standard Lifecycle Phases Only      | ✅ Accepted |
-| REQ-045 | Handler Array Support               | ✅ Accepted |
-| REQ-046 | Handler Discovery and Validation    | ✅ Accepted |
-| REQ-047 | Unified Type System                 | ✅ Accepted |
-| REQ-048 | Authorization Expression Syntax     | 🔶 Deferred |
-| REQ-052 | Language Field and Template Mapping | ✅ Accepted |
+| ID          | Requirement                                    | Status      |
+| ----------- | ---------------------------------------------- | ----------- |
+| REQ-042     | Lifecycle Hook Execution Semantics             | ✅ Accepted |
+| REQ-043     | Automatic Telemetry on Hook Failure            | ✅ Accepted |
+| REQ-044     | Standard Lifecycle Phases Only                 | ✅ Accepted |
+| REQ-045     | Handler Array Support                          | ✅ Accepted |
+| REQ-046     | Handler Discovery and Validation               | ✅ Accepted |
+| REQ-047     | Unified Type System                            | ✅ Accepted |
+| REQ-048     | Authorization Expression Syntax                | 🔶 Deferred |
+| REQ-052     | Language Field and Template Mapping            | ✅ Accepted |
+| **REQ-054** | **BaseMFE Abstract Class Contract**            | ✅ Accepted |
+| **REQ-055** | **Context Object Contract**                    | ✅ Accepted |
+| **REQ-056** | **Lifecycle State Machine**                    | ✅ Accepted |
+| **REQ-057** | **Boilerplate Generation w/ Custom Lifecycle** | ✅ Accepted |
+| **REQ-058** | **Standard Platform Handler Library**          | ✅ Accepted |
+| **REQ-059** | **Language-Based Code Generation (Not Type)**  | ✅ Accepted |
 
 ### P1 (High) - Should Have for V1
 

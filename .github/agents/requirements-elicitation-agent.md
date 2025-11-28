@@ -16,14 +16,18 @@ tools:
     'openSimpleBrowser',
     'fetch',
     'githubRepo',
+    'github.vscode-pull-request-github/copilotCodingAgent',
+    'github.vscode-pull-request-github/issue_fetch',
+    'github.vscode-pull-request-github/suggest-fix',
+    'github.vscode-pull-request-github/searchSyntax',
+    'github.vscode-pull-request-github/doSearch',
+    'github.vscode-pull-request-github/renderIssues',
+    'github.vscode-pull-request-github/activePullRequest',
+    'github.vscode-pull-request-github/openPullRequest',
     'extensions',
     'todos',
     'runSubagent',
     'runTests',
-    'github-pull-request_formSearchQuery',
-    'github-pull-request_doSearch',
-    'github-pull-request_issue_fetch',
-    'github-pull-request_renderIssues',
   ]
 ---
 
@@ -452,6 +456,7 @@ Agent detects closed issues via periodic queries or user notification:
 1. **Query closed issues**: `formSearchQuery("recently closed requirement issues", repo)`
 2. **Fetch details**: `issue_fetch(issueNumber, repo)` to get PR links and completion info
 3. **Update requirements doc**:
+
    ```markdown
    ## REQ-BFF-001: DSL as Single Source of Truth
 
@@ -467,7 +472,9 @@ Agent detects closed issues via periodic queries or user notification:
    - Mesh config requires absolute paths for local specs
    - Docker build needs mesh artifacts pre-generated
    ```
+
 4. **Update ADR** with "Implementation Confirmed" section:
+
    ```markdown
    ## Implementation Confirmed (Issue #45, PR #46)
 
@@ -475,6 +482,7 @@ Agent detects closed issues via periodic queries or user notification:
    - No deviations from architectural plan
    - Performance: Mesh build < 2s for typical API
    ```
+
 5. **Update acceptance criteria** if tests added:
    ```gherkin
    # Status: ✅ Implemented (see src/commands/__tests__/bff.test.js)
