@@ -3,13 +3,14 @@
 ## Feature: Dependency Injection, Error Path Coverage, and Lifecycle Orchestration
 
 ### Summary
+
 - **File:** `src/runtime/base-mfe.ts`
 - **Test File:** `src/dsl/__tests__/base-mfe.coverage.test.ts`
 - **Coverage:**
   - Statements: 100%
-  - Branches:   94.59%
-  - Functions:  100%
-  - Lines:      100%
+  - Branches: 94.59%
+  - Functions: 100%
+  - Lines: 100%
 - **Uncovered Branches:** Lines 285, 329 (see below)
 - **Tested Features:**
   - DI for platform/custom handlers, telemetry, error handler, lifecycle executor
@@ -19,6 +20,7 @@
   - Robust error path coverage for all capability methods
 
 ### TDD Process
+
 1. **Test-First:**
    - Wrote failing tests for DI, error paths, lifecycle phases, handler fallback, telemetry, and state transitions.
    - Used Arrange-Act-Assert pattern, mocking DI and context as needed.
@@ -36,6 +38,7 @@
    - All lifecycle phases, contained/mandatory hooks, and context mutation paths covered.
 
 ### Acceptance Criteria Mapping
+
 - **REQ-042:** Lifecycle hook execution semantics (mandatory/contained flags)
 - **REQ-054:** BaseMFE abstract class contract
 - **REQ-055:** Context mutation and propagation
@@ -43,16 +46,19 @@
 - **ADR-047:** Abstract base, not type hierarchy
 
 ### Uncovered Branches
+
 - **Line 285:** Edge branch in state transition logic (may require artificial test to reach)
 - **Line 329:** Edge branch in capability config lookup (manifest edge case)
 
 ### Recommendations
+
 - Add artificial tests for unreachable branches if 100% coverage is required.
 - All critical error, DI, and lifecycle paths are robustly covered.
 
 ---
 
 ## Test Artifacts
+
 - `src/dsl/__tests__/base-mfe.coverage.test.ts`: 62 passing tests, full DI and error path coverage
 - All compile errors resolved, robust against edge cases
 - Coverage validated with `npx jest --coverage`
@@ -60,6 +66,7 @@
 ---
 
 ## Next Steps: PR Details
+
 - [ ] Prepare PR summary and checklist
 - [ ] Reference this TDD report in PR description
 - [ ] Link acceptance criteria and requirements
