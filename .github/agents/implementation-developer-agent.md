@@ -31,6 +31,7 @@ This agent implements production features based on documented requirements (from
 ## Ideal Inputs
 
 - Requirements document section (e.g., REQ-BFF-001 through REQ-BFF-008)
+- GitHub Issue number with full context (fetched via Requirements Elicitation Agent)
 - Relevant ADRs (e.g., ADR-046 for GraphQL Mesh)
 - DSL contract (dsl.yaml) for capability/data structure
 - Existing similar code to follow patterns from
@@ -569,7 +570,8 @@ When implementation complete:
 3. **Dependencies**: List packages added to package.json
 4. **Validation**: Confirm existing tests still pass
 5. **Coverage Gap**: Note that TDD Guardian should add tests
-6. **Manual Testing**: Provide commands for user verification:
+6. **GitHub Issue**: Suggest commenting on issue with implementation notes
+7. **Manual Testing**: Provide commands for user verification:
 
    ```bash
    # Verify new command works
@@ -583,6 +585,23 @@ When implementation complete:
    ls -la .meshrc.yaml .mesh/
    ```
 
+8. **Issue Update Template**:
+
+   ```markdown
+   ## Implementation Complete
+
+   Files created:
+
+   - src/commands/bff.js (180 lines)
+   - src/templates/bff/\* (4 templates)
+
+   Ready for:
+
+   - [ ] TDD Guardian: Add test coverage
+   - [ ] Code review
+   - [ ] Integration testing
+   ```
+
 ## Integration with Other Agents
 
 ### After Requirements Elicitation Agent
@@ -592,6 +611,11 @@ When implementation complete:
    - docs/graphql-bff-requirements.md (REQ-BFF-001 to REQ-BFF-008)
    - docs/architecture-decisions.md (ADR-046)
    - docs/dsl.yaml (updated data section)
+   - GitHub Issue: #45 (BFF Layer Code Generation)
+
+Fetching issue details for context...
+Issue #45: Priority high, component-bff, assigned to @dev
+Labels: priority-high, component-bff, type-feature, req-bff
 
 Beginning implementation phase...
 ```
@@ -600,6 +624,8 @@ Beginning implementation phase...
 
 ```
 📤 Handoff to TDD Guardian:
+   - GitHub Issue: #45 (BFF Layer Code Generation)
+   - Requirements: REQ-BFF-001 to REQ-BFF-008
    - New file: src/commands/bff.js
    - Functions to test: extractMeshConfig, buildMesh, generateServer
    - Mock requirements: fs-extra, child_process (mesh CLI)
@@ -615,6 +641,7 @@ TDD Guardian should:
    ✅ Achieve 100% code coverage (unit tests)
    ✅ Cover all GWT scenarios (acceptance tests)
    ✅ Include integration tests for CLI commands
+   ✅ Update Issue #45 when tests complete
 ```
 
 ## Success Criteria

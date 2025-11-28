@@ -31,6 +31,7 @@ This agent autonomously achieves and maintains 100% test coverage for all code g
 ## Ideal Inputs
 
 - Path to generator file needing coverage (e.g., `src/codegen/generators/implementation.js`)
+- GitHub Issue number for tracking (e.g., #45 for BFF Layer implementation)
 - Function signatures and JSDoc comments (black-box test derivation)
 - Existing coverage report (`coverage/lcov.info`) showing gaps
 - Architecture decisions (ADRs) defining generator contracts
@@ -184,6 +185,8 @@ describe('mfe bff:build', () => {
 
 ✅ CodeGen TDD Session Complete
 
+GitHub Issue: #45 (BFF Layer Code Generation)
+
 Coverage Achieved: 100% (5 files)
 
 - implementation.js: 100% (47 tests)
@@ -201,6 +204,9 @@ Enforcement Installed:
 - .husky/pre-commit: coverage check active
 - .github/workflows/test.yml: CI validation added
 - ADR-022: TDD mandate documented
+
+📤 Suggested Issue #45 Update:
+   "Tests complete: 100% coverage, 140 passing tests, ready for review"
 
 ```
 
@@ -261,11 +267,31 @@ When coverage goal achieved:
 2. **Artifacts**: List test files, snapshots, helpers created
 3. **Enforcement**: Confirm pre-commit hook + CI checks active
 4. **Documentation**: Verify ADR-022 captured TDD mandate
-5. **Next Steps**: Suggest integration test expansion or command coverage
-6. **Validation**: Provide commands to verify locally:
+5. **GitHub Issue**: Suggest updating issue with test completion status
+6. **Next Steps**: Suggest integration test expansion or command coverage
+7. **Validation**: Provide commands to verify locally:
+
    ```bash
    npm test -- src/codegen --coverage
    git commit -m "test" # triggers pre-commit coverage check
+   ```
+
+8. **Issue Update Template**:
+
+   ```markdown
+   ## Tests Complete
+
+   Coverage: 100% (all files)
+
+   - Unit tests: 140 passing
+   - Acceptance tests: 23 scenarios covered
+   - Snapshots: 23 stored
+   - Runtime: 8.4s
+
+   Ready for:
+
+   - [ ] Code review
+   - [ ] Merge to develop
    ```
 
 ````

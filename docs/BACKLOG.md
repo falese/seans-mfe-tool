@@ -1,6 +1,25 @@
 # Product Backlog — seans-mfe-tool
 
-**Purpose:** This backlog consolidates all requirements from feature requirements documents into actionable GitHub Issues. Each item maps to specific REQ-\* requirements, ADRs, and acceptance criteria for end-to-end traceability.
+> ⚠️ **DEPRECATED (2025-11-28)**: This file is maintained for historical reference only.  
+> **Current backlog location:** [GitHub Issues](https://github.com/falese/seans-mfe-tool/issues)
+>
+> All active work is tracked in GitHub Issues with proper labels. Use the Requirements Elicitation Agent to query issues dynamically instead of maintaining this file.
+>
+> **Migration Status:** All entries below have been migrated to GitHub Issues. See label system below for query patterns.
+
+---
+
+## Historical Context
+
+**Original Purpose:** This backlog consolidated all requirements from feature requirements documents into actionable GitHub Issues. Each item mapped to specific REQ-\* requirements, ADRs, and acceptance criteria for end-to-end traceability.
+
+**Why Deprecated:**
+
+- ✅ GitHub Issues are single source of truth (no sync needed)
+- ✅ Real-time status updates (queries always current)
+- ✅ Rich metadata (labels, assignees, milestones, comments)
+- ✅ Team collaboration (developers update issues directly)
+- ✅ Automation ready (GitHub Actions, webhooks)
 
 **Last Updated:** 2025-11-27  
 **Source Documents:**

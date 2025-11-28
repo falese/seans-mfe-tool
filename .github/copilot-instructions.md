@@ -503,7 +503,8 @@ src/
 - **API generation:** `docs/api-generator-readme.md`
 - **Examples:** `examples/` directory (working projects)
 - **Agent system design:** `src/agent-orchestrator/README.md` (future work)
-- **Backlog:** `docs/BACKLOG.md` - GitHub Issues-ready feature tracking
+- **GitHub Issues:** [Live backlog](https://github.com/falese/seans-mfe-tool/issues) - Use Requirements Elicitation Agent to query
+- **BACKLOG.md (deprecated):** `docs/BACKLOG.md` - Historical reference only, see GitHub Issues for current work
 
 ## Requirements & Issue Tracking
 
@@ -516,9 +517,7 @@ Requirements Doc (REQ-XXX)
     ↓
 ADR (ADR-NNN) ← Architectural decisions
     ↓
-Backlog Entry (docs/BACKLOG.md)
-    ↓
-GitHub Issue (#NNN)
+GitHub Issue (#NNN) ← Direct creation in GitHub
     ↓
 Implementation (PR)
     ↓
@@ -548,7 +547,7 @@ Requirements Update (Status: ✅ Complete)
 
 1. **Find the requirement**: Search `docs/*-requirements.md` for REQ-XXX
 2. **Check ADRs**: Look for related architectural decisions
-3. **Check backlog**: See if GitHub Issue exists in `docs/BACKLOG.md`
+3. **Query GitHub Issues**: Use Requirements Elicitation Agent to find related issues
 4. **Implement with traceability**: Reference REQ-XXX and issue number in commits
 5. **Update status**: Mark requirement as implemented when complete
 6. **Link artifacts**: Update requirements doc with PR/issue links
@@ -580,11 +579,12 @@ data:
 
 When a requirement is ready for implementation:
 
-1. **Check backlog**: Find the corresponding backlog entry in `docs/BACKLOG.md`
-2. **Copy template**: Use the issue structure from backlog
+1. **Query for duplicates**: Use Requirements Elicitation Agent to search existing issues
+2. **Use issue templates**: `.github/ISSUE_TEMPLATE/` (feature.yml, requirement.yml, bug.yml)
 3. **Apply labels**: Use standard label system (priority, type, component, req)
 4. **Link requirements**: Reference REQ-XXX, ADR-NNN, acceptance files
-5. **Update backlog**: Add issue number to backlog document
+5. **Create in GitHub**: Issues are created directly in GitHub (not through agent)
+6. **Update requirements**: Add issue number to requirements doc after creation
 
 ### Acceptance Criteria Files
 
