@@ -21,10 +21,6 @@ class TestMFE extends BaseMFE {
     super(manifest);
   }
 
-  async emit(event: any) {
-    this.telemetry.push(event);
-    return { success: true };
-  }
 
   // Capability implementations
   protected async doLoad(context: any) { this.calls.push('doLoad'); return { status: 'loaded', timestamp: new Date() }; }
@@ -35,6 +31,7 @@ class TestMFE extends BaseMFE {
   protected async doDescribe(context: any) { this.calls.push('doDescribe'); return { description: 'desc' }; }
   protected async doSchema(context: any) { this.calls.push('doSchema'); return { schema: {} }; }
   protected async doQuery(context: any) { this.calls.push('doQuery'); return { data: 'ok' }; }
+  protected async doEmit(context: any) { this.calls.push('doEmit'); return { ok: true }; }
 
   // Custom handlers referenced in tests
   async validateInputs(context: any) { this.calls.push('validateInputs'); }
@@ -63,6 +60,147 @@ function setLifecycle(mfe: any, lifecycle: any) {
 }
 
 describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
+        it('throws if health called in destroyed state', async () => {
+          mfe.state = 'destroyed';
+          await expect(mfe.health(makeContext())).rejects.toThrow('Invalid state: expected uninitialized or loading or ready or rendering or error, got destroyed');
+        });
+
+          it('throws if load called in invalid state', async () => {
+            mfe.state = 'rendering';
+            await expect(mfe.load(makeContext())).rejects.toThrow('Invalid state: expected uninitialized or ready or error, got rendering');
+          });
+
+          it('throws if render called in invalid state', async () => {
+            mfe.state = 'uninitialized';
+            await expect(mfe.render(makeContext())).rejects.toThrow('Invalid state: expected ready, got uninitialized');
+          });
+
+          it('throws if refresh called in invalid state', async () => {
+            mfe.state = 'loading';
+            await expect(mfe.refresh(makeContext())).rejects.toThrow('Invalid state: expected ready, got loading');
+          });
+
+          it('throws if authorizeAccess called in invalid state', async () => {
+            mfe.state = 'error';
+            await expect(mfe.authorizeAccess(makeContext())).rejects.toThrow('Invalid state: expected ready, got error');
+          });
+
+          it('throws if schema called in invalid state', async () => {
+            mfe.state = 'uninitialized';
+            await expect(mfe.schema(makeContext())).rejects.toThrow('Invalid state: expected ready, got uninitialized');
+          });
+
+          it('findCapabilityConfig returns null if capabilities missing', () => {
+            mfe.manifest.capabilities = undefined;
+            expect(mfe.findCapabilityConfig('query')).toBeNull();
+          });
+
+          it('findCapabilityConfig returns null if capability not found', () => {
+            mfe.manifest.capabilities = [{ render: { type: 'platform' } }];
+            expect(mfe.findCapabilityConfig('query')).toBeNull();
+          });
+
+          it('invokePlatformHandler throws if method not implemented', async () => {
+            mfe.manifest.capabilities.push({ missing: { type: 'platform' } });
+            await expect(mfe.invokePlatformHandler('missing', makeContext({ capability: 'missing' }))).rejects.toThrow('Platform handler not implemented: platform.missing. Expected method doMissing on MFE class.');
+          });
+
+        it('throws if describe called in destroyed state', async () => {
+          mfe.state = 'destroyed';
+          await expect(mfe.describe(makeContext())).rejects.toThrow('Invalid state: expected uninitialized or loading or ready or rendering or error, got destroyed');
+        });
+
+        it('throws if render called in wrong state', async () => {
+          mfe.state = 'loading';
+          await expect(mfe.render(makeContext())).rejects.toThrow('Invalid state: expected ready, got loading');
+        });
+
+        it('throws if refresh called in wrong state', async () => {
+          mfe.state = 'error';
+          await expect(mfe.refresh(makeContext())).rejects.toThrow('Invalid state: expected ready, got error');
+        });
+
+        it('throws if authorizeAccess called in wrong state', async () => {
+          mfe.state = 'rendering';
+          await expect(mfe.authorizeAccess(makeContext())).rejects.toThrow('Invalid state: expected ready, got rendering');
+        });
+
+        it('executeLifecycle returns early if no hooks defined', async () => {
+          mfe.manifest.capabilities = [{ query: { type: 'platform' } }];
+          // No lifecycle property
+          await expect(mfe.executeLifecycle('query', 'before', makeContext())).resolves.toBeUndefined();
+        });
+
+        it('executeLifecycle returns early if hooks array is empty', async () => {
+          mfe.manifest.capabilities = [{ query: { type: 'platform', lifecycle: { before: [] } } }];
+          await expect(mfe.executeLifecycle('query', 'before', makeContext())).resolves.toBeUndefined();
+        });
+
+        it('allows valid transition to destroyed state', () => {
+          mfe.state = 'ready';
+          expect(() => mfe.transitionState('destroyed')).not.toThrow();
+          expect(mfe.state).toBe('destroyed');
+        });
+      it('throws on invalid state assertion', () => {
+        mfe.state = 'loading';
+        expect(() => mfe.assertState('ready')).toThrow('Invalid state: expected ready, got loading');
+      });
+
+      it('throws on invalid state transition', () => {
+        mfe.state = 'ready';
+        expect(() => mfe.transitionState('uninitialized')).toThrow('Invalid state transition: ready → uninitialized');
+      });
+
+      it('throws if platform handler not found', async () => {
+        // Add a capability not implemented by TestMFE
+        mfe.manifest.capabilities.push({ nonexistent: { type: 'platform' } });
+        await expect(mfe.invokePlatformHandler('nonexistent', makeContext({ capability: 'nonexistent' }))).rejects.toThrow('Platform handler not implemented: platform.nonexistent. Expected method doNonexistent on MFE class.');
+      });
+
+      it('throws if custom handler not found', async () => {
+        await expect(mfe.invokeCustomHandler('nonExistentHandler', makeContext())).rejects.toThrow('Custom handler not found: nonExistentHandler.');
+      });
+    it('Platform wrappers: render, refresh, authorizeAccess, health, describe, schema, emit', async () => {
+      // Register all platform capabilities in manifest
+      mfe.manifest.capabilities = [
+        { render: { type: 'platform' } },
+        { refresh: { type: 'platform' } },
+        { authorizeAccess: { type: 'platform' } },
+        { health: { type: 'platform' } },
+        { describe: { type: 'platform' } },
+        { schema: { type: 'platform' } },
+        { emit: { type: 'platform' } }
+      ];
+      mfe.calls = [];
+      // render
+      const r = await mfe.render(makeContext({ capability: 'render' }));
+      expect(mfe.calls).toContain('doRender');
+      // refresh
+      mfe.calls = [];
+      const rf = await mfe.refresh(makeContext({ capability: 'refresh' }));
+      expect(mfe.calls).toContain('doRefresh');
+      // authorizeAccess
+      mfe.calls = [];
+      const aa = await mfe.authorizeAccess(makeContext({ capability: 'authorizeAccess' }));
+      expect(mfe.calls).toContain('doAuthorizeAccess');
+      // health
+      mfe.calls = [];
+      const h = await mfe.health(makeContext({ capability: 'health' }));
+      expect(mfe.calls).toContain('doHealth');
+      // describe
+      mfe.calls = [];
+      const d = await mfe.describe(makeContext({ capability: 'describe' }));
+      expect(mfe.calls).toContain('doDescribe');
+      // schema
+      mfe.calls = [];
+      const s = await mfe.schema(makeContext({ capability: 'schema' }));
+      expect(mfe.calls).toContain('doSchema');
+      // emit
+      mfe.calls = [];
+      const e = await mfe.emit(makeContext({ capability: 'emit' }));
+      expect(mfe.calls).toContain('doEmit');
+    });
+    });
   let mfe: TestMFE;
   let manifest: any;
   let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
@@ -246,4 +384,4 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
     const payload = args && args[1] ? JSON.parse(args[1] as string) : null;
     expect(payload?.severity).toBe('error');
   });
-});
+// ...existing code...

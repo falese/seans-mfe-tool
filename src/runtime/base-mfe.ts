@@ -3,6 +3,10 @@
  * Following REQ-054: BaseMFE Abstract Class Contract
  * Following REQ-042: Lifecycle Hook Execution Semantics
  * Following ADR-047: BaseMFE Abstract Base (Not Type Hierarchy)
+
+
+
+
  * 
  * Universal base class for all MFE types (remote, bff, tool, agent).
  * MFE type determines generated code CONTENT in doCapability() methods.
@@ -13,6 +17,17 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/sche
 // =============================================================================
 // Context Types (REQ-055)
 // =============================================================================
+
+type Worker = any;
+
+/** Result from load capability */
+export interface LoadResult {
+  status: 'loaded' | 'error';
+  container?: unknown;  // Module Federation container
+  mesh?: unknown;       // GraphQL Mesh instance
+  worker?: Worker;      // Web Worker instance
+  timestamp: Date;
+}
 
 /** User context extracted from JWT */
 export interface UserContext {
@@ -129,7 +144,7 @@ export type MFEState =
   | 'destroyed';     // Destroyed, cannot recover
 
 /** Valid state transitions */
-const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
+export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
   uninitialized: ['loading'],
   loading: ['ready', 'error'],
   ready: ['loading', 'rendering', 'destroyed'],
@@ -355,12 +370,16 @@ export abstract class BaseMFE {
    * @throws Error if platform handler not found
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
-    // Platform handlers will be implemented in REQ-058
-    // For now, throw error - this will be replaced with actual handler invocation
-    throw new Error(
-      `Platform handler not implemented: platform.${name}. ` +
-      `Platform handlers will be available after REQ-058 implementation.`
-    );
+    // Temporary implementation: resolve doX method (e.g., doEmit) for platform wrappers
+    const methodName = `do${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    const method = (this as any)[methodName];
+    if (typeof method !== 'function') {
+      throw new Error(
+        `Platform handler not implemented: platform.${name}. ` +
+        `Expected method ${methodName} on MFE class.`
+      );
+    }
+    await method.call(this, context);
   }
   
   /**
