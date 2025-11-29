@@ -28,13 +28,15 @@
 ---
 
 **Traceability:**
+
 - ADR-036: Lifecycle execution model
 - ADR-046: Codegen approach
 - Issue #39: MFE Boilerplate Code Generation from DSL
 
 ---
 
-*Session notes and answers to these questions will be appended below as requirements are clarified.*
+_Session notes and answers to these questions will be appended below as requirements are clarified._
+
 ## Acceptance Criteria
 
 - [ ] CLI generates `/src/platform/base-mfe/mfe.ts` containing a BaseMFE subclass with all lifecycle hook stubs and 9 capability methods, mapped from DSL manifest.
