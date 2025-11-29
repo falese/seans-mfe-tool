@@ -1514,145 +1514,73 @@ protected abstract do<%= capitalize(cap.name) %>(context: Context): Promise<<%= 
 
 ---
 
-### REQ-058: Standard Platform Handler Library
 
-**Priority:** P0 (Critical)  
-**Category:** Platform Contract  
-**Status:** ✅ Accepted (Session: 2025-11-28)
+### REQ-058: Platform Handler Library (Updated 2025-11-28)
+
+**Priority:** P0 (Critical)
+**Category:** Platform Contract
+**Status:** 🟡 In Progress
 
 **Description:**
-Platform provides a standard library of reusable lifecycle handlers that developers can reference in DSL using `platform.handlerName` syntax. These handlers implement common cross-cutting concerns.
+Implement a strict, standardized library of platform handlers for lifecycle operations (authentication, authorization, validation, telemetry, caching, logging, error handling, rate limiting) to be referenced in DSL as `platform.*`.
 
 **Rationale:**
-Reduces boilerplate, ensures consistent behavior across MFEs, provides best-practice implementations of common patterns (JWT validation, CORS, rate limiting, telemetry).
+- Standardization and developer productivity
+- Repeatable pattern for adding new platform functions
+- Uniform lifecycle support for all MFEs
 
 **Acceptance Criteria:**
+- Handlers must support all lifecycle phases (`before`, `main`, `after`, `error`)
+- Platform handlers are strictly standardized; custom handlers remain flexible
+- User-related concerns (permissions) driven by DSL metadata; technical concerns by standard logic
+- All handlers support async operations and propagate errors per lifecycle semantics
+- Mandatory failures throw errors and halt lifecycle
+- All invocations emit telemetry (success/failure)
+- Retry logic allowed for error-handling handlers
+- 100% test coverage required
+- Adding new platform handlers must follow documented pattern and update API reference docs
 
-**Standard Handler Library:**
+**Implementation:**
+- Handlers reside in `src/runtime/handlers/` (organized by category)
+- Registered with `platform.*` prefix only
+- Handler registration and invocation via `BaseMFE.invokeHandler`
+- Telemetry emitted for all handler invocations
 
-- [ ] Handlers implemented in `src/runtime/handlers/` directory
-- [ ] Each handler exported as named function with standard signature
-- [ ] Handlers organized by category: `auth/`, `validation/`, `telemetry/`, `caching/`
+**Async/Error Propagation:**
+- Handlers use `async`/`await` and return Promises
+- Mandatory failures throw errors (halt lifecycle)
+- All handler invocations emit telemetry (success/failure)
+- Error-handling handlers may implement retry logic
 
-**Standard Handlers (V1):**
+**Documentation:**
+- Requirements in `/docs/requirements/dsl-contract-requirements.md`
+- API reference in `docs/platform-handlers.md`
+- Document process for adding new platform handlers
 
-**Authentication & Authorization:**
+**Dependencies:**
+- ADR-058 (Platform Handler Library)
+- ADR-036 (Handler Resolution)
+- ADR-041 (Platform Handler API)
 
-- [ ] `platform.verifyJWT` - JWT token validation and parsing
-- [ ] `platform.checkCORS` - CORS header validation
-- [ ] `platform.extractUser` - User context extraction from JWT
-
-**Validation:**
-
-- [ ] `platform.validateSchema` - JSON schema validation of inputs
-- [ ] `platform.checkRequired` - Required field validation
-- [ ] `platform.sanitizeInput` - XSS/injection sanitization
-
-**Telemetry & Logging:**
-
-- [ ] `platform.recordMetrics` - Automatic metrics emission
-- [ ] `platform.logRequest` - Request logging with context
-- [ ] `platform.logResponse` - Response logging with timing
-- [ ] `platform.startTrace` - Distributed tracing span start
-- [ ] `platform.endTrace` - Distributed tracing span end
-
-**Performance:**
-
-- [ ] `platform.rateLimit` - Request rate limiting with token bucket
-- [ ] `platform.cacheCheck` - Cache hit check (before hook)
-- [ ] `platform.cacheWrite` - Cache write (after hook)
-
-**DSL Syntax:**
-
-- [ ] `handler: platform.handlerName` - Uses platform handler
-- [ ] `handler: custom.handlerName` - Uses developer handler
-- [ ] `handler: handlerName` - Defaults to custom (backward compat)
-
-**Handler Resolution Order:**
-
-1. If `platform.` prefix → Look in platform handlers, throw if not found
-2. If `custom.` prefix → Look in developer class, throw if not found
-3. No prefix → Look in developer class first, fallback to platform (deprecated pattern)
-
-**Dependencies:** REQ-057 (Code Generation), REQ-055 (Context Object)
-
-**Technical Notes:**
-
-```typescript
-// src/runtime/handlers/auth.ts
-export async function verifyJWT(context: Context): Promise<void> {
-  if (!context.jwt) {
-    throw new Error('JWT token required');
-  }
-
-  try {
-    const decoded = jwt.verify(context.jwt, process.env.JWT_SECRET!);
-    context.user = {
-      id: decoded.sub,
-      username: decoded.username,
-      roles: decoded.roles || []
-    };
-  } catch (error) {
-    throw new Error('Invalid JWT token');
-  }
-}
-
-export async function checkCORS(context: Context): Promise<void> {
-  const origin = context.headers?.['origin'];
-  const allowed = process.env.ALLOWED_ORIGINS?.split(',') || [];
-
-  if (origin && !allowed.includes(origin)) {
-    throw new Error('CORS: Origin not allowed');
-  }
-}
-
-// src/runtime/handlers/index.ts
-export * as auth from './auth';
-export * as validation from './validation';
-export * as telemetry from './telemetry';
-export * as caching from './caching';
-
-// Handler resolution in BaseMFE
-protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
-  if (handlerName.startsWith('platform.')) {
-    const name = handlerName.slice(9); // Remove 'platform.' prefix
-    const [category, handler] = name.split('.'); // e.g., 'auth.verifyJWT'
-
-    if (category && handler) {
-      await PlatformHandlers[category][handler](context);
-    } else {
-      await PlatformHandlers[name](context); // Legacy flat namespace
-    }
-  } else {
-    const customName = handlerName.replace('custom.', '');
-    const method = this[customName];
-
-    if (typeof method !== 'function') {
-      throw new Error(`Custom handler not found: ${customName}`);
-    }
-
-    await method.call(this, context);
-  }
-}
-```
-
-**DSL Example:**
-
+**Example DSL Usage:**
 ```yaml
 capabilities:
-  - load:
+  - query:
       lifecycle:
         before:
-          - auth:
-              handler: platform.verifyJWT
-              mandatory: true
-          - validation:
-              handler: custom.checkFileSize
+          - handler: platform.validateJWT
+            mandatory: true
+          - handler: platform.checkPermissions
+            mandatory: true
+            metadata:
+              requiredRoles: [admin, analyst]
+        main:
+          - handler: custom.executeQuery
         after:
-          - metrics:
-              handler: platform.recordMetrics
-          - cache:
-              handler: platform.cacheWrite
+          - handler: platform.cacheResult
+            metadata:
+              ttl: 3600
+          - handler: platform.logTelemetry
 ```
 
 ---

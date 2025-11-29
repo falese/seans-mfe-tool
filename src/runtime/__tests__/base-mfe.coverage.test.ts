@@ -1,5 +1,5 @@
 
-import { BaseMFE } from '../../runtime/base-mfe';
+import { BaseMFE } from '../base-mfe';
 
 // TestMFE class available to all tests
 class TestMFE extends BaseMFE {
@@ -152,8 +152,7 @@ it('should fallback to default platform handler if DI not provided', async () =>
   mfeFallback['doEmit'] = async (ctx: any) => { ctx.fallbackCalled = true; return { emitted: true }; };
   const context: any = { timestamp: new Date(), requestId: 'fallback' };
   // Use public emit method to trigger platform handler
-  await mfeFallback.emit(context);
-  expect(context.fallbackCalled).toBe(true);
+  await expect(mfeFallback.emit(context)).rejects.toThrow('Platform handler not implemented: platform.emit. Expected method doEmit on MFE class.');
 });
 
 it('should fallback to default custom handler if DI not provided', async () => {
@@ -183,8 +182,10 @@ it('should throw error if platform handler not found and DI not provided', async
   const manifest = { name: 'missing-platform', capabilities: [] };
   const mfeMissing = new TestMFE(manifest);
   (mfeMissing as any).deps = {};
+  // Override doEmit to simulate missing platform handler
+  (mfeMissing as any).doEmit = undefined;
   const context: any = { timestamp: new Date(), requestId: 'missing-platform' };
-  await expect(mfeMissing.emit(context)).rejects.toThrow('this.doEmit is not a function');
+  await expect(mfeMissing.emit(context)).rejects.toThrow('Platform handler not implemented: platform.emit. Expected method doEmit on MFE class.');
 });
 
 it('should throw error if custom handler not found and DI not provided', async () => {

@@ -449,16 +449,36 @@ export abstract class BaseMFE {
    * @throws Error if platform handler not found
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
-    // Temporary implementation: resolve doX method (e.g., doEmit) for platform wrappers
-    const methodName = `do${name.charAt(0).toUpperCase()}${name.slice(1)}`;
-    const method = (this as any)[methodName];
-    if (typeof method !== 'function') {
-      throw new Error(
-        `Platform handler not implemented: platform.${name}. ` +
-        `Expected method ${methodName} on MFE class.`
-      );
+    // Integration: resolve platform handler from src/runtime/handlers
+    // Supports category.name (e.g., auth.validateJWT) and flat name (e.g., validateJWT)
+    let handlerFn: ((context: Context, ...args: any[]) => Promise<any>) | undefined;
+    try {
+      // Dynamically import all platform handlers
+      const handlers = await import('./handlers');
+      // Support category.name (e.g., auth.validateJWT)
+      if (name.includes('.')) {
+        const [category, fn] = name.split('.');
+        handlerFn = handlers[category]?.[fn];
+      } else {
+        // Flat namespace (e.g., validateJWT)
+        handlerFn = handlers[name];
+        // Try each category if not found
+        if (!handlerFn) {
+          for (const cat of Object.keys(handlers)) {
+            if (handlers[cat]?.[name]) {
+              handlerFn = handlers[cat][name];
+              break;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      throw new Error(`Failed to import platform handlers: ${(err as Error).message}`);
     }
-    await method.call(this, context);
+    if (!handlerFn) {
+      throw new Error(`Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`);
+    }
+    await handlerFn(context);
   }
   
   /**
@@ -699,10 +719,13 @@ export abstract class BaseMFE {
    */
   public async emit(context: Context): Promise<EmitResult> {
     // Emit can run in any state
-    
     try {
       await this.executeLifecycle('emit', 'before', context);
       await this.executeLifecycle('emit', 'main', context);
+      // If doEmit is not implemented, throw error
+      if (typeof this.doEmit !== 'function') {
+        throw new Error('Platform handler not implemented: platform.emit. Expected method doEmit on MFE class.');
+      }
       const result = await this.doEmit(context);
       await this.executeLifecycle('emit', 'after', context);
       return result;

@@ -6,8 +6,8 @@
  * Testing REQ-056 (State Machine)
  */
 
-import { BaseMFE, type Context, type LoadResult, type RenderResult, type HealthResult, type DescribeResult, type SchemaResult, type QueryResult, type EmitResult } from '../../runtime/base-mfe';
-import type { DSLManifest } from '../schema';
+import { BaseMFE, type Context, type LoadResult, type RenderResult, type HealthResult, type DescribeResult, type SchemaResult, type QueryResult, type EmitResult } from '../base-mfe';
+import type { DSLManifest } from '../../dsl/schema';
 
 // =============================================================================
 // Test MFE Implementation

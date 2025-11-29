@@ -7,8 +7,8 @@
     "serve": "serve dist -p __PORT__"
   },
   "dependencies": {
-    "@mui/material": "__MUI_VERSION__",
-    "@mui/system": "__MUI_VERSION__",
+    "@mui/material": "<%= muiVersion %>",
+    "@mui/system": "<%= muiVersion %>",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "react": "^18.2.0",

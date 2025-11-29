@@ -95,16 +95,16 @@ module.exports = {
           requiredVersion: '^18.2.0',
           eager: true
         },
-        '@mui/material': { 
-          singleton: false, 
-          requiredVersion: '__MUI_VERSION__',
-          eager: false
-        },
-        '@mui/system': { 
-          singleton: false, 
-          requiredVersion: '__MUI_VERSION__',
-          eager: false
-        },
+          '@mui/material': { 
+            singleton: false, 
+            requiredVersion: '<%= muiVersion %>',
+            eager: false
+          },
+          '@mui/system': { 
+            singleton: false, 
+            requiredVersion: '<%= muiVersion %>',
+            eager: false
+          },
         '@emotion/react': { 
           singleton: true, 
           requiredVersion: '^11.11.1',
