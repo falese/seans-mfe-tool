@@ -1,10 +1,8 @@
 /**
  * DataAnalysis Feature Component
  * Analyze CSV files and generate statistical summaries
- * 
  * Generated from mfe-manifest.yaml capability definition
  */
-
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 
@@ -12,9 +10,6 @@ export interface DataAnalysisProps {
   // TODO: Define props based on capability inputs
 }
 
-/**
- * DataAnalysis - Analyze CSV files and generate statistical summaries
- */
 export const DataAnalysis: React.FC<DataAnalysisProps> = (props) => {
   return (
     <Paper elevation={2} sx={{ p: 2 }}>

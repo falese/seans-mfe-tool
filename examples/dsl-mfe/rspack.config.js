@@ -1,95 +1,121 @@
-const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
-const { defineConfig } = require('@rspack/cli');
-const { HtmlRspackPlugin } = require('@rspack/core');
-const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
 
-const isDev = process.env.NODE_ENV === 'development';
-
-module.exports = defineConfig({
-  entry: './src/index.tsx',
-  mode: isDev ? 'development' : 'production',
-  devtool: isDev ? 'eval-source-map' : 'source-map',
-  
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = {
+  entry: './src/bootstrap.jsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'auto',
+  },
+  resolve: {
+    extensions: ['.jsx', '.js', '.json'],
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "util": require.resolve("util/"),
+      "url": require.resolve("url/"),
+      "buffer": require.resolve("buffer/"),
+      "crypto": require.resolve("crypto-browserify"),
+      "fs": false,
+      "os": require.resolve("os-browserify/browser"),
+      "http": require.resolve("stream-http"),
+      "https": require.resolve("https-browserify"),
+      "assert": require.resolve("assert/"),
+      "process": require.resolve("process/browser"),
+      "events": require.resolve("events/")
+    }
+  },
   devServer: {
     port: 3002,
+    host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    }
   },
-
-  resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-  },
-
   module: {
     rules: [
       {
-        test: /\.[jt]sx?$/,
-        exclude: /node_modules/,
+        test: /\.jsx?$/,
+        exclude: /node_modules\/(?!(@huggingface|other-problematic-packages)\/).*/,
         use: {
           loader: 'builtin:swc-loader',
           options: {
             jsc: {
               parser: {
-                syntax: 'typescript',
-                tsx: true,
+                syntax: 'ecmascript',
+                jsx: true,
               },
               transform: {
                 react: {
                   runtime: 'automatic',
-                  development: isDev,
-                  refresh: isDev,
                 },
               },
             },
           },
         },
       },
-      {
-        test: /\.css$/,
-        type: 'css',
-      },
     ],
   },
-
   plugins: [
-    new HtmlRspackPlugin({
-      template: './public/index.html',
+    new rspack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env': '{}',
+      'process.browser': true,
+      'process.version': JSON.stringify(process.version),
     }),
-    isDev && new ReactRefreshPlugin(),
+    new rspack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer']
+    }),
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/'
+    }),
     new ModuleFederationPlugin({
-      name: 'csv_analyzer',
+      name: 'csv-analyzer',
       filename: 'remoteEntry.js',
       exposes: {
-      './App': './src/App',
-      './DataAnalysis': './src/features/DataAnalysis',
-      './ReportViewer': './src/features/ReportViewer',
-      './DataAnalysisDetailed': './src/features/DataAnalysisDetailed'
-},
+        './App': './src/remote.tsx',
+      },
       shared: {
-      'react': {
-            'singleton': true,
-            'requiredVersion': '^18.0.0'
+        react: { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        'react-dom': { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+          '@mui/material': { 
+            singleton: false, 
+            requiredVersion: '^5.14.0',
+            eager: false
+          },
+          '@mui/system': { 
+            singleton: false, 
+            requiredVersion: '^5.14.0',
+            eager: false
+          },
+        '@emotion/react': { 
+          singleton: true, 
+          requiredVersion: '^11.11.1',
+          eager: false
+        },
+        '@emotion/styled': { 
+          singleton: true, 
+          requiredVersion: '^11.11.0',
+          eager: false
+        }
       },
-      'react-dom': {
-            'singleton': true,
-            'requiredVersion': '^18.0.0'
-      },
-      '@mui/material': {
-            'singleton': true,
-            'requiredVersion': '^5.14.0'
-      },
-      '@emotion/react': {
-            'singleton': true,
-            'requiredVersion': '^11.11.0'
-      },
-      '@emotion/styled': {
-            'singleton': true,
-            'requiredVersion': '^11.11.0'
-      }
-},
     }),
-  ].filter(Boolean),
-});
+  ]
+};

@@ -1,10 +1,8 @@
 /**
  * ReportViewer Feature Component
  * View and export analysis reports
- * 
  * Generated from mfe-manifest.yaml capability definition
  */
-
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 
@@ -12,9 +10,6 @@ export interface ReportViewerProps {
   // TODO: Define props based on capability inputs
 }
 
-/**
- * ReportViewer - View and export analysis reports
- */
 export const ReportViewer: React.FC<ReportViewerProps> = (props) => {
   return (
     <Paper elevation={2} sx={{ p: 2 }}>

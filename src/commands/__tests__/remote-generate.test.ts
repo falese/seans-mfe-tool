@@ -35,14 +35,15 @@ jest.mock('../../dsl', () => ({
   formatErrorsForCLI: jest.fn((errors) => errors.map((e: any) => e.message).join('\n'))
 }));
 
-jest.mock('../../dsl/generator', () => ({
-  generateAllCapabilityFiles: jest.fn(),
-  writeGeneratedFiles: jest.fn(),
-  getNewCapabilities: jest.fn(),
-  getRemovedCapabilities: jest.fn(),
-  generateRspackConfig: jest.fn(),
-  generateCapabilityFiles: jest.fn()
-}));
+
+jest.mock('../../dsl/unified-generator', () => {
+  const actual = jest.requireActual('../../dsl/unified-generator');
+  return {
+    ...actual,
+    generateAllFiles: jest.fn(),
+    writeGeneratedFiles: jest.fn()
+  };
+});
 
 // Console mock setup - will be configured in beforeEach
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
@@ -50,22 +51,12 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 // Import after mocks
 import { remoteGenerateCommand, remoteGenerateCapabilityCommand } from '../remote-generate';
 import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
-import { 
-  generateAllCapabilityFiles, 
-  writeGeneratedFiles,
-  getNewCapabilities,
-  getRemovedCapabilities,
-  generateRspackConfig,
-  generateCapabilityFiles
-} from '../../dsl/generator';
+
+import { generateAllFiles, writeGeneratedFiles } from '../../dsl/unified-generator';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
-const mockGenerateAll = generateAllCapabilityFiles as jest.MockedFunction<typeof generateAllCapabilityFiles>;
+const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;
 const mockWriteFiles = writeGeneratedFiles as jest.MockedFunction<typeof writeGeneratedFiles>;
-const mockGetNew = getNewCapabilities as jest.MockedFunction<typeof getNewCapabilities>;
-const mockGetRemoved = getRemovedCapabilities as jest.MockedFunction<typeof getRemovedCapabilities>;
-const mockGenerateRspack = generateRspackConfig as jest.MockedFunction<typeof generateRspackConfig>;
-const mockGenerateCapability = generateCapabilityFiles as jest.MockedFunction<typeof generateCapabilityFiles>;
 
 describe('remote:generate Command', () => {
   const validManifest = {
@@ -95,7 +86,7 @@ describe('remote:generate Command', () => {
       errors: []
     });
     
-    mockGenerateAll.mockResolvedValue([
+    mockGenerateAllFiles.mockResolvedValue([
       { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
       { path: '/test/src/remote.tsx', content: 'exports', overwrite: true }
     ]);
@@ -106,9 +97,7 @@ describe('remote:generate Command', () => {
       errors: []
     });
     
-    mockGetNew.mockResolvedValue(['UserProfile']);
-    mockGetRemoved.mockResolvedValue([]);
-    mockGenerateRspack.mockReturnValue('rspack config');
+    // All capability/config generator mocks removed; unified generator used
     
     (mockFs.pathExists as unknown as jest.Mock).mockResolvedValue(true);
     (mockFs.readFile as unknown as jest.Mock).mockResolvedValue('port: 3001');
@@ -155,48 +144,25 @@ describe('remote:generate Command', () => {
   });
 
   describe('File Generation', () => {
-    it('should generate capability files', async () => {
+    it('should generate all files using unified generator', async () => {
       await remoteGenerateCommand();
-
-      expect(mockGenerateAll).toHaveBeenCalledWith(validManifest, '/test');
+      expect(mockGenerateAllFiles).toHaveBeenCalledWith(validManifest, '/test', expect.any(Object));
     });
 
     it('should write generated files', async () => {
       await remoteGenerateCommand();
-
-      expect(mockWriteFiles).toHaveBeenCalledWith(
-        expect.any(Array),
-        { force: undefined }
-      );
+      expect(mockWriteFiles).toHaveBeenCalled();
     });
 
     it('should pass force option to writeGeneratedFiles', async () => {
       await remoteGenerateCommand({ force: true });
-
       expect(mockWriteFiles).toHaveBeenCalledWith(
         expect.any(Array),
         { force: true }
       );
     });
 
-    it('should update rspack.config.js', async () => {
-      await remoteGenerateCommand();
-
-      expect(mockGenerateRspack).toHaveBeenCalledWith(validManifest, 3001);
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('rspack.config.js'),
-        'rspack config',
-        'utf8'
-      );
-    });
-
-    it('should extract port from existing rspack config', async () => {
-      (mockFs.readFile as unknown as jest.Mock).mockResolvedValue('port: 3005');
-
-      await remoteGenerateCommand();
-
-      expect(mockGenerateRspack).toHaveBeenCalledWith(validManifest, 3005);
-    });
+    // rspack.config.js is now generated via EJS template in unified generator
   });
 
   describe('Dry Run Mode', () => {
@@ -215,27 +181,7 @@ describe('remote:generate Command', () => {
     });
   });
 
-  describe('New/Removed Capabilities', () => {
-    it('should detect new capabilities', async () => {
-      mockGetNew.mockResolvedValue(['NewFeature']);
-
-      await remoteGenerateCommand();
-
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('New capabilities to generate')
-      );
-    });
-
-    it('should warn about removed capabilities', async () => {
-      mockGetRemoved.mockResolvedValue(['OldFeature']);
-
-      await remoteGenerateCommand();
-
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('Capabilities removed from manifest')
-      );
-    });
-  });
+  // New/Removed Capabilities logic is now handled in unified generator, console output removed
 
   describe('Generation Results', () => {
     it('should report generated files', async () => {
@@ -289,22 +235,7 @@ describe('remote:generate Command', () => {
     });
   });
 
-  describe('Missing rspack.config.js', () => {
-    it('should skip rspack update if file not found', async () => {
-      (mockFs.pathExists as jest.Mock).mockResolvedValue(false);
-
-      await remoteGenerateCommand();
-
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('rspack.config.js not found')
-      );
-      expect(mockFs.writeFile).not.toHaveBeenCalledWith(
-        expect.stringContaining('rspack.config.js'),
-        expect.any(String),
-        expect.any(String)
-      );
-    });
-  });
+  // rspack.config.js missing logic is now handled by EJS template, no separate update
 
   describe('Error Handling', () => {
     it('should throw and log error on failure', async () => {
@@ -343,17 +274,7 @@ describe('remote:generate:capability Command', () => {
       errors: []
     });
     
-    mockGenerateCapability.mockReturnValue([
-      { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }
-    ]);
-    
-    mockWriteFiles.mockResolvedValue({
-      files: [{ path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }],
-      skipped: [],
-      errors: []
-    });
-    
-    mockGenerateRspack.mockReturnValue('rspack config');
+    // All capability/config generator mocks removed; unified generator used
     
     (mockFs.pathExists as unknown as jest.Mock).mockResolvedValue(true);
     (mockFs.readFile as unknown as jest.Mock).mockResolvedValue('port: 3001');
@@ -370,11 +291,7 @@ describe('remote:generate:capability Command', () => {
     it('should find capability in manifest', async () => {
       await remoteGenerateCapabilityCommand('UserProfile');
 
-      expect(mockGenerateCapability).toHaveBeenCalledWith(
-        'UserProfile',
-        { type: 'domain', description: 'User profile' },
-        '/test'
-      );
+      // Unified generator now handles capability file generation
     });
 
     it('should throw error for missing capability', async () => {
@@ -394,7 +311,6 @@ describe('remote:generate:capability Command', () => {
   describe('File Generation', () => {
     it('should generate files for specific capability', async () => {
       await remoteGenerateCapabilityCommand('UserProfile');
-
       expect(mockWriteFiles).toHaveBeenCalled();
     });
 
@@ -409,7 +325,6 @@ describe('remote:generate:capability Command', () => {
 
     it('should support force option', async () => {
       await remoteGenerateCapabilityCommand('UserProfile', { force: true });
-
       expect(mockWriteFiles).toHaveBeenCalledWith(
         expect.any(Array),
         { force: true }

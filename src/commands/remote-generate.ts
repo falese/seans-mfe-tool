@@ -10,13 +10,7 @@ import {
   parseAndValidateDirectory, 
   formatErrorsForCLI 
 } from '../dsl';
-import { 
-  generateAllCapabilityFiles, 
-  writeGeneratedFiles,
-  getNewCapabilities,
-  getRemovedCapabilities,
-  generateRspackConfig
-} from '../dsl/generator';
+import { generateAllFiles, writeGeneratedFiles } from '../dsl/unified-generator';
 import * as fs from 'fs-extra';
 import type { RemoteGenerateOptions } from '../dsl/schema';
 
@@ -49,32 +43,10 @@ export async function remoteGenerateCommand(
     const manifest = result.manifest;
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
 
-    // Check for new/removed capabilities
-    const newCaps = await getNewCapabilities(manifest, cwd);
-    const removedCaps = await getRemovedCapabilities(manifest, cwd);
 
-    if (newCaps.length > 0) {
-      console.log(chalk.blue(`\nNew capabilities to generate: ${newCaps.join(', ')}`));
-    }
-
-    if (removedCaps.length > 0) {
-      console.log(chalk.yellow(`\n⚠ Capabilities removed from manifest but files exist:`));
-      for (const cap of removedCaps) {
-        console.log(chalk.yellow(`  - ${cap} (files preserved in src/features/${cap}/)`));
-      }
-    }
-
-    // Generate capability files
+    // Generate all files (capabilities + platform) using unified generator
     console.log(chalk.blue('\nGenerating files...'));
-
-    const capabilityFiles = await (await import('../dsl/generator')).generateAllCapabilityFiles(manifest, cwd);
-
-    // Generate platform files (BaseMFE, types, tests, BFF)
-    const { generateAllFiles } = await import('../dsl/unified-generator');
-    const platformFiles = await generateAllFiles(manifest, cwd, { force: true });
-
-    // Merge all files
-    const allFiles = [...capabilityFiles, ...platformFiles];
+    const allFiles = await generateAllFiles(manifest, cwd, { force: true });
 
     if (options.dryRun) {
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
@@ -111,9 +83,6 @@ export async function remoteGenerateCommand(
       }
     }
 
-    // Regenerate rspack.config.js to update exposes
-    await updateRspackConfig(manifest, cwd);
-
     // Summary
     const totalGenerated = genResult.files.length;
     const totalSkipped = genResult.skipped.length;
@@ -138,28 +107,7 @@ export async function remoteGenerateCommand(
   }
 }
 
-/**
- * Update rspack.config.js with current capabilities
- */
-async function updateRspackConfig(manifest: import('../dsl/schema').DSLManifest, cwd: string): Promise<void> {
-  const rspackPath = path.join(cwd, 'rspack.config.js');
-  
-  if (!await fs.pathExists(rspackPath)) {
-    console.log(chalk.yellow('⚠ rspack.config.js not found, skipping update'));
-    return;
-  }
 
-  // Read current config to extract port
-  const currentConfig = await fs.readFile(rspackPath, 'utf8');
-  const portMatch = currentConfig.match(/port:\s*(\d+)/);
-  const port = portMatch ? parseInt(portMatch[1], 10) : 3001;
-
-  // Generate new config
-  const newConfig = generateRspackConfig(manifest, port);
-  await fs.writeFile(rspackPath, newConfig, 'utf8');
-  
-  console.log(chalk.green('✓ Updated rspack.config.js with current exposes'));
-}
 
 /**
  * Generate a single capability (for targeted generation)
@@ -229,7 +177,7 @@ export async function remoteGenerateCapabilityCommand(
     }
 
     // Update rspack config
-    await updateRspackConfig(manifest, cwd);
+    // rspack.config.js is now generated via EJS template in unified generator
 
     console.log(chalk.green(`\n✓ Capability "${capabilityName}" generated!`));
 
