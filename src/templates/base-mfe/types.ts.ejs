@@ -1,0 +1,20 @@
+<% /*
+  EJS template for type definitions from DSL manifest
+  For each capability, generate its own input/output types
+  capabilities: Array<{ method: string, config: CapabilityConfig }>
+*/ %>
+<% capabilities.forEach(function(cap) { %>
+export interface <%= cap.method %>Inputs {
+<% (cap.config.inputs || []).forEach(function(input) { %>
+  /** <%= input.description %> */
+  <%= input.name %>: <%= input.type %>;
+<% }); %>
+}
+
+export interface <%= cap.method %>Outputs {
+<% (cap.config.outputs || []).forEach(function(output) { %>
+  /** <%= output.description %> */
+  <%= output.name %>: <%= output.type %>;
+<% }); %>
+}
+<% }); %>

@@ -28,7 +28,7 @@ module.exports = {
     }
   },
   devServer: {
-    port: __PORT__,
+    port: <%= port %>,
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
@@ -79,10 +79,10 @@ module.exports = {
       publicPath: '/'
     }),
     new ModuleFederationPlugin({
-      name: '__EXPOSED_NAME__',
+      name: '<%= name %>',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App.jsx',
+        './App': './src/remote.tsx',
       },
       shared: {
         react: { 

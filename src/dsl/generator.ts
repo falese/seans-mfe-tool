@@ -130,22 +130,12 @@ export {};
 `;
   }
 
-  const imports = domainCapabilities
-    .map(name => `import { ${name} } from './features/${name}';`)
-    .join('\n');
-  
-  const exports = domainCapabilities
-    .map(name => `export { ${name} };`)
-    .join('\n');
-
-  return `/**
  * Remote Entry Point
  * Exports all domain capabilities for Module Federation
  * 
  * Generated from mfe-manifest.yaml
  */
 
-import React from 'react';
 
 // Feature imports
 ${imports}
@@ -156,12 +146,25 @@ ${exports}
 // Default export for standalone rendering
 export { default } from './App';
 `;
+    const imports = domainCapabilities
+      .map(name => `import { ${name} } from './features/${name}';`)
+      .join('\n');
+
+    // Import platform BaseMFE
+    const platformImport = 'import * as PlatformMFE from "./platform/base-mfe/mfe";';
+
+    const exports = domainCapabilities
+      .map(name => `export { ${name} };`)
+      .join('\n');
+
+    return `/**
 }
 
 /**
  * Generate rspack.config.js exposes section
  */
 function generateModuleFederationExposes(
+    import React from 'react';
   capabilities: CapabilityEntry[],
   manifestName: string
 ): Record<string, string> {
@@ -227,11 +230,46 @@ export function generateCapabilityFiles(
 /**
  * Generate files for all capabilities in a manifest
  */
-export function generateAllCapabilityFiles(
+export async function generateAllCapabilityFiles(
   manifest: DSLManifest,
   basePath: string
-): GeneratedFile[] {
+): Promise<GeneratedFile[]> {
   const files: GeneratedFile[] = [];
+
+  // Ensure src/index.tsx and src/App.tsx are generated for entry points
+  const srcDir = path.join(basePath, 'src');
+  const indexTsxPath = path.join(srcDir, 'index.tsx');
+  const appTsxPath = path.join(srcDir, 'App.tsx');
+
+  if (!await fs.pathExists(indexTsxPath)) {
+    const indexTsxContent = `import React from 'react';\nimport { createRoot } from 'react-dom/client';\nimport App from './App';\n\nconst root = createRoot(document.getElementById('root')!);\nroot.render(<App />);\n`;
+    files.push({
+      path: indexTsxPath,
+      content: indexTsxContent,
+      overwrite: false
+    });
+  }
+
+  if (!await fs.pathExists(appTsxPath)) {
+    const appTsxContent = `import React from 'react';\n\nconst App: React.FC = () => {\n  return (\n    <main>\n      <h1>${manifest.name}</h1>\n      <p>Welcome to your generated MFE!</p>\n    </main>\n  );\n};\n\nexport default App;\n`;
+    files.push({
+      path: appTsxPath,
+      content: appTsxContent,
+      overwrite: false
+    });
+  }
+
+  // Ensure public/index.html is generated for dev server
+  const publicDir = path.join(basePath, 'public');
+  const indexHtmlPath = path.join(publicDir, 'index.html');
+  if (!await fs.pathExists(indexHtmlPath)) {
+    const defaultHtml = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>${manifest.name}</title>\n</head>\n<body>\n  <div id=\"root\"></div>\n</body>\n</html>\n`;
+    files.push({
+      path: indexHtmlPath,
+      content: defaultHtml,
+      overwrite: false
+    });
+  }
 
   for (const entry of manifest.capabilities) {
     for (const [name, config] of Object.entries(entry)) {
@@ -245,6 +283,35 @@ export function generateAllCapabilityFiles(
     content: generateRemoteExports(manifest.capabilities),
     overwrite: true  // Always regenerate exports
   });
+
+  // Process root-level EJS templates (package.json, rspack.config.js)
+  // These templates are in src/templates/react/remote/
+  const templateDir = path.resolve(__dirname, '../templates/react/remote');
+  const rootTemplates = [
+    { name: 'package.json', ejs: 'package.json' },
+    { name: 'rspack.config.js', ejs: 'rspack.config.js' }
+  ];
+
+  for (const tpl of rootTemplates) {
+    const templatePath = path.join(templateDir, tpl.ejs);
+    if (await fs.pathExists(templatePath)) {
+      const templateContent = await fs.readFile(templatePath, 'utf8');
+      // Prepare manifest variables for EJS
+      const vars = {
+        name: manifest.name,
+        version: manifest.version,
+        port: manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001,
+        muiVersion: manifest.dependencies?.['design-system']?.['@mui/material'] || '^5.15.0',
+        remotes: manifest.dependencies?.mfes || {}
+      };
+      const renderedContent = require('ejs').render(templateContent, vars);
+      files.push({
+        path: path.join(basePath, tpl.name),
+        content: renderedContent,
+        overwrite: true
+      });
+    }
+  }
 
   return files;
 }
@@ -350,8 +417,6 @@ export async function getRemovedCapabilities(
   for (const dir of existingDirs) {
     const stat = await fs.stat(path.join(featuresPath, dir));
     if (stat.isDirectory() && !currentCapabilities.has(dir)) {
-      removedCapabilities.push(dir);
-    }
   }
 
   return removedCapabilities;
@@ -360,17 +425,6 @@ export async function getRemovedCapabilities(
 // =============================================================================
 // Module Federation Config Generation
 // =============================================================================
-
-/**
- * Generate Module Federation shared config from dependencies
- */
-export function generateSharedConfig(manifest: DSLManifest): Record<string, object> {
-  const shared: Record<string, object> = {};
-
-  // Runtime dependencies become shared modules
-  if (manifest.dependencies?.runtime) {
-    for (const [pkg, version] of Object.entries(manifest.dependencies.runtime)) {
-      shared[pkg] = {
         singleton: true,
         requiredVersion: version
       };
@@ -388,6 +442,8 @@ export function generateSharedConfig(manifest: DSLManifest): Record<string, obje
   }
 
   return shared;
+      if (domainCapabilities.length === 0) {
+        return `/**
 }
 
 /**
@@ -398,6 +454,20 @@ export function generateRspackConfig(manifest: DSLManifest, port: number): strin
   const shared = generateSharedConfig(manifest);
 
   const exposesJson = JSON.stringify(exposes, null, 6).replace(/"/g, "'");
+      }
+
+      const imports = domainCapabilities
+        .map(name => `import { ${name} } from './features/${name}';`)
+        .join('\n');
+
+      // Import platform BaseMFE
+      const platformImport = `import * as PlatformMFE from './platform/base-mfe/mfe';`;
+
+      const exports = domainCapabilities
+        .map(name => `export { ${name} };`)
+        .join('\n');
+
+      return `/**
   const sharedJson = JSON.stringify(shared, null, 6).replace(/"/g, "'");
 
   return `const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');

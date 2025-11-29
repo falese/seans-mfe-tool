@@ -66,12 +66,19 @@ export async function remoteGenerateCommand(
 
     // Generate capability files
     console.log(chalk.blue('\nGenerating files...'));
-    
-    const files = generateAllCapabilityFiles(manifest, cwd);
+
+    const capabilityFiles = await (await import('../dsl/generator')).generateAllCapabilityFiles(manifest, cwd);
+
+    // Generate platform files (BaseMFE, types, tests, BFF)
+    const { generatePlatformFiles } = await import('../dsl/platform-generator');
+    const platformFiles = await generatePlatformFiles(manifest, cwd);
+
+    // Merge all files
+    const allFiles = [...capabilityFiles, ...platformFiles];
 
     if (options.dryRun) {
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
-      for (const file of files) {
+      for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);
         const status = file.overwrite ? '(overwrite)' : '(new)';
         console.log(`  ${relativePath} ${chalk.gray(status)}`);
@@ -79,7 +86,7 @@ export async function remoteGenerateCommand(
       return;
     }
 
-    const genResult = await writeGeneratedFiles(files, { force: options.force });
+    const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
 
     // Report results
     if (genResult.files.length > 0) {
