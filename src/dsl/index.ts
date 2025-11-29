@@ -40,18 +40,7 @@ export {
   formatErrorsForCLI,
   getErrorSummary
 } from './validator';
-
 // Generator functions
-// export {
-//   generateCapabilityFiles,
-//   generateAllCapabilityFiles,
-//   writeGeneratedFiles,
-//   getNewCapabilities,
-//   getRemovedCapabilities,
-//   generateSharedConfig,
-//   generateRspackConfig
-// } from './generator';
-
 export {
   generateAllFiles,
   writeGeneratedFiles,
