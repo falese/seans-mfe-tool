@@ -5,6 +5,10 @@
 import { BaseMFE } from '../base-mfe';
 
 class TestMFE extends BaseMFE {
+    async fail(context: any) {
+      console.log('fail method called');
+      throw new Error('boom');
+    }
   handlers: Record<string, any>;
   constructor(manifest: any) {
     console.log('TestMFE constructor called');
@@ -13,6 +17,7 @@ class TestMFE extends BaseMFE {
       'custom.load': async (ctx: any) => { console.log('custom.load handler called'); return { status: 'loaded', timestamp: new Date(), context: ctx }; },
       'custom.query': async (ctx: any) => { console.log('custom.query handler called'); return { data: 123, errors: [], timestamp: new Date() }; },
       'custom.fail': async () => { console.log('custom.fail handler called'); throw new Error('boom'); },
+      'fail': async () => { console.log('fail handler called'); throw new Error('boom'); },
       'custom.noop': async () => { console.log('custom.noop handler called'); return { emitted: true }; }
     };
   }
@@ -93,28 +98,28 @@ describe('BaseMFE state and platform wrappers', () => {
   });
 });
 
-// describe('BaseMFE error hooks and telemetry', () => {
-//   let mfe: TestMFE;
-//   beforeEach(async () => {
-//     const manifest = {
-//       name: 't', version: '1.0.0', type: 'tool', language: 'typescript', capabilities: [
-//         { query: { type: 'domain', lifecycle: { main: [{ doQuery: { handler: 'custom.fail' } }], error: [{ onError: { handler: 'custom.noop' } }] } } }
-//       ]
-//     };
-//     mfe = new TestMFE(manifest);
-//     (mfe as any).state = 'ready';
-//     jest.spyOn(console, 'error').mockImplementation(() => {});
-//   });
+describe('BaseMFE error hooks and telemetry', () => {
+  let mfe: TestMFE;
+  beforeEach(async () => {
+    const manifest = {
+      name: 't', version: '1.0.0', type: 'tool', language: 'typescript', capabilities: [
+        { query: { type: 'domain', lifecycle: { main: [{ doQuery: { handler: 'custom.fail' } }], error: [{ onError: { handler: 'custom.noop' } }] } } }
+      ]
+    };
+    mfe = new TestMFE(manifest);
+    (mfe as any).state = 'ready';
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
 
-//   afterEach(() => {
-//     jest.restoreAllMocks();
-//   });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-//   it('main failure propagates and telemetry logs error', async () => {
-//     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-//     const context = { timestamp: new Date(), requestId: 'fail-query', phase: 'main' as 'main', capability: 'query' };
-//     await expect(mfe.query(context)).rejects.toThrow('boom');
-//     expect(spy).toHaveBeenCalled();
-//     spy.mockRestore();
-//   });
-// });
+  it('main failure propagates and telemetry logs error', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const context = { timestamp: new Date(), requestId: 'fail-query', phase: 'main' as 'main', capability: 'query' };
+    await expect(mfe.query(context)).rejects.toThrow('boom');
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});

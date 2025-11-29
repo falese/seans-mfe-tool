@@ -182,7 +182,6 @@ export const NotificationCenter = React.lazy(() => import('./features/Notificati
 
 ---
 
-
 ### Lifecycle Hooks
 
 Lifecycle hooks define behavior at different phases of capability execution.
@@ -243,6 +242,7 @@ handler: [validateFile, checkSize, scanForMalware]
 
 ---
 
+
 ### Lifecycle Hook Handler Validation
 
 **Handler Reference Constraints:**
@@ -271,6 +271,52 @@ lifecycle:
 
 **Enforcement:**  
 This rule is enforced by the DSL Zod schema. Any manifest referencing a forbidden handler will fail validation and be rejected by the CLI and runtime.
+
+---
+
+### Custom Handler Resolution and Developer Extension
+
+Custom handlers referenced in the manifest (e.g., `custom.myHandler`) are resolved at runtime as follows:
+
+1. **Handler Object Lookup:**
+   - The runtime first looks for the full handler name (e.g., `custom.myHandler`) in the MFE's handler registry object.
+   - If not found, it falls back to the last segment (e.g., `myHandler`).
+2. **Class Method Invocation:**
+   - If the handler is not found in the registry, the runtime attempts to invoke a method with the same name on the MFE class.
+   - This allows codegen to generate stub methods for each custom handler referenced in the manifest.
+3. **Developer Extension:**
+   - Developers extend the generated MFE class and implement the logic for each custom handler method.
+
+**Example Manifest:**
+
+```yaml
+capabilities:
+  - query:
+      type: domain
+      lifecycle:
+        main:
+          - doQuery:
+              handler: custom.fail
+        error:
+          - onError:
+              handler: custom.noop
+```
+
+**Example Generated Class Stub:**
+
+```typescript
+class MyMFE extends BaseMFE {
+  async fail(context: any) {
+    // Developer implements custom logic here
+    throw new Error('boom');
+  }
+  // ... other generated stubs ...
+}
+```
+
+**Best Practice:**
+- Codegen should generate both the manifest and stub methods for all custom handlers referenced.
+- Developers fill in the logic for each handler method as needed.
 
 ---
 

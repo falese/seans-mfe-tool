@@ -462,14 +462,23 @@ export abstract class BaseMFE {
         await this.invokePlatformHandler(platformHandlerName, context);
       }
     } else {
-      const customHandlerName = handlerName.replace('custom.', '');
+      // Try full custom handler name first, then fallback to last segment
+      let customHandlerName = handlerName;
       if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
         console.log(`[BaseMFE] Found DI custom handler: ${customHandlerName}`);
         await this.deps.customHandlers[customHandlerName](context);
-      } else {
-        console.log(`[BaseMFE] Invoking custom handler: ${customHandlerName}`);
-        await this.invokeCustomHandler(customHandlerName, context);
+        return;
       }
+      // Fallback: strip prefix (e.g., 'custom.fail' -> 'fail')
+      const lastSegment = customHandlerName.includes('.') ? customHandlerName.split('.').pop() : customHandlerName;
+      if (lastSegment && this.deps?.customHandlers && this.deps.customHandlers[lastSegment]) {
+        console.log(`[BaseMFE] Found DI custom handler (fallback): ${lastSegment}`);
+        await this.deps.customHandlers[lastSegment](context);
+        return;
+      }
+      // Fallback: invoke as method
+      console.log(`[BaseMFE] Invoking custom handler: ${lastSegment}`);
+      await this.invokeCustomHandler(lastSegment, context);
     }
   }
   
