@@ -11,6 +11,11 @@ describe('platform.validateInputs', () => {
     await validateInputs(context);
     expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'telemetry' }));
   });
+
+  it('should not throw if emit is not a function', async () => {
+    const context = { inputs: { foo: 'bar' }, emit: 42 } as any;
+    await expect(validateInputs(context)).resolves.toBeUndefined();
+  });
 });
 
 describe('platform.sanitizeInputs', () => {

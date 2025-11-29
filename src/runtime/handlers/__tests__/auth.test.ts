@@ -45,6 +45,15 @@ describe('platform.validateJWT', () => {
     await expect(validateJWT(context)).resolves.toBeUndefined();
     expect(context.user).toEqual(decoded);
   });
+
+  it('should work if emit is not a function', async () => {
+    const decoded = { sub: '123', username: 'test', roles: ['admin'] };
+    const context = { jwt: 'goodtoken', emit: 42 } as any;
+    process.env.JWT_SECRET = 'testsecret';
+    jest.spyOn(require('jsonwebtoken'), 'verify').mockReturnValue(decoded);
+    await expect(validateJWT(context)).resolves.toBeUndefined();
+    expect(context.user).toEqual(decoded);
+  });
 });
 
 describe('platform.checkPermissions', () => {
@@ -65,5 +74,20 @@ describe('platform.checkPermissions', () => {
   it('should work if emit is missing', async () => {
     const context = { user: { roles: ['admin'] } } as any;
     await expect(checkPermissions(context, ['admin'])).resolves.toBeUndefined();
+  });
+
+  it('should work if emit is not a function', async () => {
+    const context = { user: { roles: ['admin'] }, emit: 42 } as any;
+    await expect(checkPermissions(context, ['admin'])).resolves.toBeUndefined();
+  });
+
+  it('should default userRoles to empty array if not present', async () => {
+    const context = { user: {}, emit: jest.fn() } as any;
+    await expect(checkPermissions(context, ['admin'])).rejects.toThrow(/Insufficient permissions/);
+  });
+
+  it('should throw if requiredRoles is empty', async () => {
+    const context = { user: { roles: ['admin'] }, emit: jest.fn() } as any;
+    await expect(checkPermissions(context, [])).rejects.toThrow(/Insufficient permissions/);
   });
 });

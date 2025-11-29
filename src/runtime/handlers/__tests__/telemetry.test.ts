@@ -27,4 +27,9 @@ describe('platform.logTelemetry', () => {
       severity: 'info',
     });
   });
+
+  it('should not throw if emit is not a function', async () => {
+    const context = { emit: 42 } as any;
+    await expect(logTelemetry(context)).resolves.toBeUndefined();
+  });
 });

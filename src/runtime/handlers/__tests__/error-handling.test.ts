@@ -8,4 +8,10 @@ describe('platform.handleError', () => {
     await handleError(context, error);
     expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'error', eventData: expect.objectContaining({ error: 'fail' }) }));
   });
+
+  it('should not throw if emit is not a function', async () => {
+    const context = { emit: 42 } as any;
+    const error = new Error('fail');
+    await expect(handleError(context, error)).resolves.toBeUndefined();
+  });
 });

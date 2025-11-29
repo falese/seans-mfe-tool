@@ -1514,58 +1514,33 @@ protected abstract do<%= capitalize(cap.name) %>(context: Context): Promise<<%= 
 
 ---
 
-
 ### REQ-058: Platform Handler Library (Updated 2025-11-28)
 
 **Priority:** P0 (Critical)
+**Priority:** P0 (Critical)
 **Category:** Platform Contract
-**Status:** 🟡 In Progress
-
+**Status:** ✅ Complete
 **Description:**
 Implement a strict, standardized library of platform handlers for lifecycle operations (authentication, authorization, validation, telemetry, caching, logging, error handling, rate limiting) to be referenced in DSL as `platform.*`.
 
 **Rationale:**
+
 - Standardization and developer productivity
-- Repeatable pattern for adding new platform functions
-- Uniform lifecycle support for all MFEs
-
 **Acceptance Criteria:**
-- Handlers must support all lifecycle phases (`before`, `main`, `after`, `error`)
-- Platform handlers are strictly standardized; custom handlers remain flexible
-- User-related concerns (permissions) driven by DSL metadata; technical concerns by standard logic
-- All handlers support async operations and propagate errors per lifecycle semantics
-- Mandatory failures throw errors and halt lifecycle
-- All invocations emit telemetry (success/failure)
-- Retry logic allowed for error-handling handlers
-- 100% test coverage required
-- Adding new platform handlers must follow documented pattern and update API reference docs
 
-**Implementation:**
-- Handlers reside in `src/runtime/handlers/` (organized by category)
-- Registered with `platform.*` prefix only
-- Handler registration and invocation via `BaseMFE.invokeHandler`
+- Handlers must support all lifecycle phases (`before`, `main`, `after`, `error`)
 - Telemetry emitted for all handler invocations
 
 **Async/Error Propagation:**
-- Handlers use `async`/`await` and return Promises
-- Mandatory failures throw errors (halt lifecycle)
-- All handler invocations emit telemetry (success/failure)
 - Error-handling handlers may implement retry logic
 
 **Documentation:**
-- Requirements in `/docs/requirements/dsl-contract-requirements.md`
-- API reference in `docs/platform-handlers.md`
-- Document process for adding new platform handlers
 
 **Dependencies:**
-- ADR-058 (Platform Handler Library)
-- ADR-036 (Handler Resolution)
-- ADR-041 (Platform Handler API)
+
 
 **Example DSL Usage:**
-```yaml
-capabilities:
-  - query:
+
       lifecycle:
         before:
           - handler: platform.validateJWT
