@@ -1526,18 +1526,18 @@ Implement a strict, standardized library of platform handlers for lifecycle oper
 **Rationale:**
 
 - Standardization and developer productivity
-**Acceptance Criteria:**
+  **Acceptance Criteria:**
 
 - Handlers must support all lifecycle phases (`before`, `main`, `after`, `error`)
 - Telemetry emitted for all handler invocations
 
 **Async/Error Propagation:**
+
 - Error-handling handlers may implement retry logic
 
 **Documentation:**
 
 **Dependencies:**
-
 
 **Example DSL Usage:**
 
@@ -1556,14 +1556,15 @@ Implement a strict, standardized library of platform handlers for lifecycle oper
             metadata:
               ttl: 3600
           - handler: platform.logTelemetry
+
 ```
 
 ---
 
 ### REQ-059: Language-Based Code Generation (Not Type-Based)
 
-**Priority:** P0 (Critical)  
-**Category:** Code Generation  
+**Priority:** P0 (Critical)
+**Category:** Code Generation
 **Status:** ✅ Accepted (Session: 2025-11-28)
 
 **Description:**
@@ -1607,22 +1608,24 @@ MFE type is a declaration of intent, not a class hierarchy. Any MFE can be any t
 **Technical Notes:**
 
 ```
+
 src/
 ├── runtime/
-│   ├── base-mfe.ts          # Universal BaseMFE (TypeScript)
-│   ├── base-mfe.js          # Universal BaseMFE (JavaScript)
-│   └── handlers/            # Platform handlers (language-agnostic logic)
+│ ├── base-mfe.ts # Universal BaseMFE (TypeScript)
+│ ├── base-mfe.js # Universal BaseMFE (JavaScript)
+│ └── handlers/ # Platform handlers (language-agnostic logic)
 ├── templates/
-│   ├── typescript/          # TS-specific scaffolding
-│   │   ├── base-mfe.ts.ejs
-│   │   ├── package.json.ejs
-│   │   ├── tsconfig.json.ejs
-│   │   └── capability-impl.ts.ejs  # Type-specific logic
-│   ├── javascript/          # JS-specific scaffolding
-│   │   ├── base-mfe.js.ejs
-│   │   ├── package.json.ejs
-│   │   └── capability-impl.js.ejs
-```
+│ ├── typescript/ # TS-specific scaffolding
+│ │ ├── base-mfe.ts.ejs
+│ │ ├── package.json.ejs
+│ │ ├── tsconfig.json.ejs
+│ │ └── capability-impl.ts.ejs # Type-specific logic
+│ ├── javascript/ # JS-specific scaffolding
+│ │ ├── base-mfe.js.ejs
+│ │ ├── package.json.ejs
+│ │ └── capability-impl.js.ejs
+
+````
 
 **Template Example (Type-Conditional Logic):**
 
@@ -1666,7 +1669,7 @@ protected async doLoad(context: Context): Promise<LoadResult> {
   throw new Error('doLoad() must be implemented for type: <%= type %>');
 <% } %>
 }
-```
+````
 
 **Key Insight:**
 
