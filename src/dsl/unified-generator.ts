@@ -286,10 +286,29 @@ export async function generateAllFiles(
         content: renderedContent,
         overwrite: true
       });
+    } else {
+      // Diagnostic: warn if template missing
+      // eslint-disable-next-line no-console
+      console.warn(`[unified-generator] WARNING: Missing template for ${tpl.name}: ${templatePath}`);
     }
   }
 
-  // TODO: Add additional config/template processing as needed
+  // --- Entry files ---
+  // Generate src/App.tsx from EJS template
+  const appTemplatePath = path.join(templateDir, 'App.tsx.ejs');
+  const appOutPath = path.join(basePath, 'src', 'App.tsx');
+  if (await fs.pathExists(appTemplatePath)) {
+    const appContent = await renderTemplate(appTemplatePath, vars);
+    files.push({
+      path: appOutPath,
+      content: appContent,
+      overwrite: true
+    });
+  } else {
+    // Diagnostic: warn if App.tsx template missing
+    // eslint-disable-next-line no-console
+    console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
+  }
 
   return files;
 }
