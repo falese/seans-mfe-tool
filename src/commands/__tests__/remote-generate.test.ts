@@ -36,8 +36,8 @@ jest.mock('../../dsl', () => ({
 }));
 
 
-jest.mock('../../dsl/unified-generator', () => {
-  const actual = jest.requireActual('../../dsl/unified-generator');
+jest.mock('../../codegen/UnifiedGenerator/unified-generator', () => {
+  const actual = jest.requireActual('../../codegen/UnifiedGenerator/unified-generator');
   return {
     ...actual,
     generateAllFiles: jest.fn(),
@@ -52,7 +52,7 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 import { remoteGenerateCommand } from '../remote-generate';
 import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
 
-import { generateAllFiles, writeGeneratedFiles } from '../../dsl/unified-generator';
+import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;

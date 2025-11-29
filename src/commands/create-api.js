@@ -3,9 +3,9 @@ const path = require('path');
 const chalk = require('chalk');
 const SwaggerParser = require('@apidevtools/swagger-parser');
 const { execSync } = require('child_process');
-const { DatabaseGenerator } = require('../codegen/DatabaseGenerator');
-const { ControllerGenerator } = require('../codegen/ControllerGenerator');
-const { generateRoutes } = require('../codegen/RouteGenerator');
+const { DatabaseGenerator } = require('../codegen/APIGenerator/DatabaseGenerator');
+const { ControllerGenerator } = require('../codegen/APIGenerator/ControllerGenerator');
+const { generateRoutes } = require('../codegen/APIGenerator/RouteGenerator');
 const { generateJWTSecret } = require('../utils/securityUtils');
 
 function validateDatabaseType(dbType) {

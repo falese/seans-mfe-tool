@@ -45,4 +45,4 @@ export {
   generateAllFiles,
   writeGeneratedFiles,
   extractManifestVars
-} from './unified-generator';
+} from '../codegen/UnifiedGenerator/unified-generator';
