@@ -79,23 +79,31 @@ program
 
 
 
+
 program
   .command('shell')
-  .description('Create a new shell (container) application')
+  .description('[DEPRECATED] Create a new shell (container) application')
   .argument('<name>', 'Shell application name')
   .option('-p, --port <port>', 'Port number for the shell application', '3000')
   .option('-r, --remotes <remotes>', 'Remote MFEs configuration as JSON string')
   .action((name, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "shell" command is deprecated and will be removed in a future release. Please use the DSL-first workflow and "remote:init"/"remote:generate" commands instead. See documentation for migration guidance.')
+    );
     createShellCommand(name, options);
   });
 
+
 program
   .command('remote')
-  .description('Create a new remote MFE')
+  .description('[DEPRECATED] Create a new remote MFE')
   .argument('<name>', 'Remote MFE name')
   .option('-p, --port <port>', 'Port number for the remote MFE', '3001')
   .option('-m, --mui-version <version>', 'Material UI version', '5.15.0')
   .action((name, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "remote" command is deprecated and will be removed in a future release. Please use the DSL-first workflow and "remote:init"/"remote:generate" commands instead. See documentation for migration guidance.')
+    );
     createRemoteCommand(name, options);
   });
 
@@ -122,12 +130,16 @@ program
     deployCommand({ name, ...options });
   });
 
+
 program
   .command('init')
-  .description('Initialize a new Module Federation workspace')
+  .description('[DEPRECATED] Initialize a new Module Federation workspace')
   .argument('<name>', 'Project name')
   .option('-p, --package-manager <manager>', 'Package manager to use (npm, yarn, or pnpm)', 'pnpm')
   .action((name, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "init" command is deprecated and will be removed in a future release. Please use the DSL-first workflow and "remote:init"/"remote:generate" commands instead. See documentation for migration guidance.')
+    );
     initCommand(name, options);
   });
 
@@ -164,22 +176,26 @@ Notes:
   });
 
 
+
   program
-  .command('build')
-  .description('Build an application')
-  .argument('<name>', 'Application name')
-  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
-  .option('-m, --mode <mode>', 'Build mode (development or production)', 'development')
-  .option('-p, --port <port>', 'Port number for development server')
-  .option('-s, --serve', 'Start development server')
-  .option('--analyze', 'Enable bundle analysis')
-  .action((name, options) => {
-    if (!['shell', 'remote', 'api'].includes(options.type)) {
-      console.error(chalk.red('Error: Type must be shell, remote, or api'));
-      process.exit(1);
-    }
-    buildCommand({ name, ...options });
-  });
+    .command('build')
+    .description('[DEPRECATED] Build an application')
+    .argument('<name>', 'Application name')
+    .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
+    .option('-m, --mode <mode>', 'Build mode (development or production)', 'development')
+    .option('-p, --port <port>', 'Port number for development server')
+    .option('-s, --serve', 'Start development server')
+    .option('--analyze', 'Enable bundle analysis')
+    .action((name, options) => {
+      console.warn(
+        chalk.yellow('\n[DEPRECATION WARNING] The "build" command is deprecated and will be removed in a future release. Please use the DSL-first workflow and "remote:generate" for feature builds. See documentation for migration guidance.')
+      );
+      if (!['shell', 'remote', 'api'].includes(options.type)) {
+        console.error(chalk.red('Error: Type must be shell, remote, or api'));
+        process.exit(1);
+      }
+      buildCommand({ name, ...options });
+    });
 
 // BFF Commands - Following ADR-046: GraphQL Mesh with DSL-embedded configuration
 program
