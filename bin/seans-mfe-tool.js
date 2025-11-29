@@ -27,33 +27,45 @@ const { remoteInitCommand } = require('../src/commands/remote-init');
 const { remoteGenerateCommand, remoteGenerateCapabilityCommand } = require('../src/commands/remote-generate');
 const { version } = require('../package.json');
 
+
 program
   .command('generate <file>')
-  .description('Generate a new MFE project from a YAML specification')
+  .description('[DEPRECATED] Generate a new MFE project from a YAML specification')
   .option('-o, --output <dir>', 'Output directory', process.cwd())
   .option('-d, --dry-run', 'Show changes without applying them', false)
   .action((file, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "generate" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
+    );
     require('../src/commands/mfe-spec')('generate', file, options);
   });
 
+
 program
   .command('update <file>')
-  .description('Update an existing MFE project from a YAML specification')
+  .description('[DEPRECATED] Update an existing MFE project from a YAML specification')
   .option('-o, --output <dir>', 'Output directory', process.cwd())
   .option('-d, --dry-run', 'Show changes without applying them', false)
   .action((file, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "update" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
+    );
     require('../src/commands/mfe-spec')('update', file, options);
   });
 
 
+
 program
   .command('spec')
-  .description('Generate or update MFE project based on YAML specification')
+  .description('[DEPRECATED] Generate or update MFE project based on YAML specification')
   .argument('<command>', 'Command to execute (generate or update)')
   .argument('<file>', 'Path to the YAML specification file')
   .option('-o, --output <dir>', 'Output directory', process.cwd())
   .option('-d, --dry-run', 'Show changes without applying them', false)
   .action((command, file, options) => {
+    console.warn(
+      chalk.yellow('\n[DEPRECATION WARNING] The "spec" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
+    );
     const mfeSpecCommand = require('../src/commands/mfe-spec');
     mfeSpecCommand(command, file, options);
   });
