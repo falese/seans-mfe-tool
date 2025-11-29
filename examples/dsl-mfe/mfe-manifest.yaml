@@ -499,10 +499,10 @@ data:
   # ===========================================================================
   sources:
     # Primary API for this MFE
-    - name: cost-benefit-api
+    - name: AnalysisAPI
       handler:
         openapi:
-          source: .examples/cost-benefit-api.yaml
+          source: ./specs/analysis-api.yaml
           # JWT forwarding - context populated by Express middleware
           operationHeaders:
             Authorization: "Bearer {context.jwt}"

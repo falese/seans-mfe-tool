@@ -1,16 +1,16 @@
 {
-  "name": "<%= name %>",
+  "name": "csv-analyzer",
   "version": "1.0.0",
   "scripts": {
     "start": "concurrently \"rspack serve\" \"npm run bff:dev\"",
     "build": "rspack build && npm run bff:build",
-    "serve": "serve dist -p <%= port %>",
+    "serve": "serve dist -p 3002",
     "bff:dev": "ts-node src/platform/bff/server.ts",
     "bff:build": "mesh build"
   },
   "dependencies": {
-    "@mui/material": "<%= muiVersion %>",
-    "@mui/system": "<%= muiVersion %>",
+    "@mui/material": "^5.14.0",
+    "@mui/system": "^5.14.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "react": "^18.2.0",

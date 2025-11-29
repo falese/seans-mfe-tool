@@ -129,13 +129,23 @@ function generateRemoteExports(capabilities: CapabilityEntry[]): string {
 export {};
 `;
   }
+  
+const imports = domainCapabilities
+    .map(name => `import { ${name} } from './features/${name}';`)
+    .join('\n');
+  
+  const exports = domainCapabilities
+    .map(name => `export { ${name} };`)
+    .join('\n');
 
+  return `/**
  * Remote Entry Point
  * Exports all domain capabilities for Module Federation
  * 
  * Generated from mfe-manifest.yaml
  */
 
+import React from 'react';
 
 // Feature imports
 ${imports}
@@ -146,25 +156,12 @@ ${exports}
 // Default export for standalone rendering
 export { default } from './App';
 `;
-    const imports = domainCapabilities
-      .map(name => `import { ${name} } from './features/${name}';`)
-      .join('\n');
-
-    // Import platform BaseMFE
-    const platformImport = 'import * as PlatformMFE from "./platform/base-mfe/mfe";';
-
-    const exports = domainCapabilities
-      .map(name => `export { ${name} };`)
-      .join('\n');
-
-    return `/**
 }
 
 /**
  * Generate rspack.config.js exposes section
  */
 function generateModuleFederationExposes(
-    import React from 'react';
   capabilities: CapabilityEntry[],
   manifestName: string
 ): Record<string, string> {
@@ -417,6 +414,8 @@ export async function getRemovedCapabilities(
   for (const dir of existingDirs) {
     const stat = await fs.stat(path.join(featuresPath, dir));
     if (stat.isDirectory() && !currentCapabilities.has(dir)) {
+      removedCapabilities.push(dir);
+    }
   }
 
   return removedCapabilities;
@@ -425,6 +424,16 @@ export async function getRemovedCapabilities(
 // =============================================================================
 // Module Federation Config Generation
 // =============================================================================
+/**
+ * Generate Module Federation shared config from dependencies
+ */
+export function generateSharedConfig(manifest: DSLManifest): Record<string, object> {
+  const shared: Record<string, object> = {};
+
+  // Runtime dependencies become shared modules
+  if (manifest.dependencies?.runtime) {
+    for (const [pkg, version] of Object.entries(manifest.dependencies.runtime)) {
+      shared[pkg] = {
         singleton: true,
         requiredVersion: version
       };
@@ -442,8 +451,6 @@ export async function getRemovedCapabilities(
   }
 
   return shared;
-      if (domainCapabilities.length === 0) {
-        return `/**
 }
 
 /**
@@ -454,20 +461,6 @@ export function generateRspackConfig(manifest: DSLManifest, port: number): strin
   const shared = generateSharedConfig(manifest);
 
   const exposesJson = JSON.stringify(exposes, null, 6).replace(/"/g, "'");
-      }
-
-      const imports = domainCapabilities
-        .map(name => `import { ${name} } from './features/${name}';`)
-        .join('\n');
-
-      // Import platform BaseMFE
-      const platformImport = `import * as PlatformMFE from './platform/base-mfe/mfe';`;
-
-      const exports = domainCapabilities
-        .map(name => `export { ${name} };`)
-        .join('\n');
-
-      return `/**
   const sharedJson = JSON.stringify(shared, null, 6).replace(/"/g, "'");
 
   return `const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
