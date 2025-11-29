@@ -39,7 +39,9 @@ export function extractManifestVars(manifest: DSLManifest) {
     className,
     inputTypeName,
     outputTypeName,
-    manifest
+    manifest,
+    capabilities: [], // will be overwritten in generateAllFiles
+    lifecycleHooks: [] // will be overwritten in generateAllFiles
   };
 }
 
@@ -94,6 +96,69 @@ export async function generateAllFiles(
 ): Promise<GeneratedFile[]> {
   const files: GeneratedFile[] = [];
   const vars = extractManifestVars(manifest);
+  // --- Platform contract-driven capability and lifecycle aggregation ---
+  const platformCapabilities = {
+    Load: { method: 'load', returnTypeBase: 'LoadResult' },
+    Render: { method: 'render', returnTypeBase: 'RenderResult' },
+    Refresh: { method: 'refresh', returnTypeBase: 'void' },
+    AuthorizeAccess: { method: 'authorizeAccess', returnTypeBase: 'boolean' },
+    Health: { method: 'health', returnTypeBase: 'HealthResult' },
+    Describe: { method: 'describe', returnTypeBase: 'DescribeResult' },
+    Schema: { method: 'schema', returnTypeBase: 'SchemaResult' },
+    Query: { method: 'query', returnTypeBase: 'QueryResult' },
+    Emit: { method: 'emit', returnTypeBase: 'EmitResult' }
+  };
+
+  const capabilities: Array<{ method: string; config: any; returnTypeBase: string }> = [];
+  const lifecycleHookNames = new Set<string>();
+  const lifecycleHooks: Array<{ name: string }> = [];
+  let inputs: any[] = [];
+  let outputs: any[] = [];
+
+  for (const entry of manifest.capabilities) {
+    for (const [method, config] of Object.entries(entry)) {
+      // Ensure inputs/outputs are always arrays
+      const safeConfig = {
+        ...config,
+        inputs: Array.isArray(config.inputs) ? config.inputs : [],
+        outputs: Array.isArray(config.outputs) ? config.outputs : []
+      };
+      if (platformCapabilities[method]) {
+        capabilities.push({
+          method: platformCapabilities[method].method,
+          config: safeConfig,
+          returnTypeBase: platformCapabilities[method].returnTypeBase
+        });
+      } else {
+        capabilities.push({
+          method,
+          config: safeConfig,
+          returnTypeBase: method + 'Outputs'
+        });
+      }
+      // Collect lifecycle hooks from capability config, deduplicated
+      if (safeConfig.lifecycle) {
+        for (const phase of ['before', 'main', 'after', 'error']) {
+          if (safeConfig.lifecycle[phase]) {
+            for (const hookEntry of safeConfig.lifecycle[phase]) {
+              for (const hookName of Object.keys(hookEntry)) {
+                if (!lifecycleHookNames.has(hookName)) {
+                  lifecycleHookNames.add(hookName);
+                  lifecycleHooks.push({ name: hookName });
+                }
+              }
+            }
+          }
+        }
+      }
+      // Collect inputs/outputs from capability config
+      if (safeConfig.inputs) inputs = inputs.concat(safeConfig.inputs);
+      if (safeConfig.outputs) outputs = outputs.concat(safeConfig.outputs);
+    }
+  }
+
+  vars.capabilities = capabilities;
+  vars.lifecycleHooks = lifecycleHooks;
 
   // Standardized template directory
   const templateDir = path.resolve(__dirname, '../templates/base-mfe');
