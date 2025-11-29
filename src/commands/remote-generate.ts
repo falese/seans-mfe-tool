@@ -70,8 +70,8 @@ export async function remoteGenerateCommand(
     const capabilityFiles = await (await import('../dsl/generator')).generateAllCapabilityFiles(manifest, cwd);
 
     // Generate platform files (BaseMFE, types, tests, BFF)
-    const { generatePlatformFiles } = await import('../dsl/platform-generator');
-    const platformFiles = await generatePlatformFiles(manifest, cwd);
+    const { generateAllFiles } = await import('../dsl/unified-generator');
+    const platformFiles = await generateAllFiles(manifest, cwd, { force: true });
 
     // Merge all files
     const allFiles = [...capabilityFiles, ...platformFiles];

@@ -95,7 +95,7 @@ describe('remote:generate Command', () => {
       errors: []
     });
     
-    mockGenerateAll.mockReturnValue([
+    mockGenerateAll.mockResolvedValue([
       { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
       { path: '/test/src/remote.tsx', content: 'exports', overwrite: true }
     ]);
