@@ -68,12 +68,32 @@ export type DSLOutput = z.infer<typeof DSLOutputSchema>;
 // =============================================================================
 
 /** Single lifecycle hook */
+/** Platform wrapper methods forbidden as handler references */
+export const PLATFORM_WRAPPER_METHODS = [
+  'doLoad', 'doRender', 'doRefresh', 'doAuthorizeAccess', 'doHealth', 'doDescribe', 'doSchema', 'doQuery', 'doEmit'
+];
+
 export const LifecycleHookSchema = z.object({
   handler: z.union([z.string(), z.array(z.string())]),
   description: z.string().optional(),
   mandatory: z.boolean().optional(),
   contained: z.boolean().optional()
-});
+}).refine(
+  (hook) => {
+    const forbidden = PLATFORM_WRAPPER_METHODS;
+    if (typeof hook.handler === 'string') {
+      return !forbidden.includes(hook.handler);
+    }
+    if (Array.isArray(hook.handler)) {
+      return hook.handler.every(h => !forbidden.includes(h));
+    }
+    return true;
+  },
+  {
+    message: `Handler must not reference platform wrapper methods (${PLATFORM_WRAPPER_METHODS.join(', ')})`,
+    path: ['handler']
+  }
+);
 export type LifecycleHook = z.infer<typeof LifecycleHookSchema>;
 
 /** Lifecycle hook entry (name → config) */

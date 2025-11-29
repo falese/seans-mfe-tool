@@ -182,6 +182,7 @@ export const NotificationCenter = React.lazy(() => import('./features/Notificati
 
 ---
 
+
 ### Lifecycle Hooks
 
 Lifecycle hooks define behavior at different phases of capability execution.
@@ -239,6 +240,37 @@ handler: [validateFile, checkSize, scanForMalware]
 
 - `main` phase: AND semantics - first failure stops execution
 - Other phases: OR-like - all run, failures logged but don't stop
+
+---
+
+### Lifecycle Hook Handler Validation
+
+**Handler Reference Constraints:**
+
+- Handler names in lifecycle hooks (`handler:`) must NOT reference platform wrapper methods.
+- Forbidden handler names:  
+  `doLoad`, `doRender`, `doRefresh`, `doAuthorizeAccess`, `doHealth`, `doDescribe`, `doSchema`, `doQuery`, `doEmit`
+- Only user-defined handler names are allowed.
+- Violations will be rejected at schema validation (see `LifecycleHookSchema` in code).
+
+**Example:**
+
+```yaml
+# Valid
+lifecycle:
+  main:
+    - doQuery:
+        handler: customQueryHandler
+
+# Invalid (will be rejected)
+lifecycle:
+  main:
+    - doQuery:
+        handler: doQuery # ❌ Forbidden: platform wrapper
+```
+
+**Enforcement:**  
+This rule is enforced by the DSL Zod schema. Any manifest referencing a forbidden handler will fail validation and be rejected by the CLI and runtime.
 
 ---
 

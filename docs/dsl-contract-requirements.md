@@ -9,6 +9,7 @@
 Code generator produces complete BaseMFE implementations from DSL manifests, including TypeScript/JavaScript class structure, lifecycle hook placeholders, handler method stubs, and capability implementations.
 
 **Acceptance Criteria:**
+
 - `mfe remote:generate` creates TypeScript/JavaScript class extending BaseMFE
 - Generated class includes all 9 abstract `doCapability()` method implementations
 - Lifecycle hooks from DSL become method stubs (e.g., `validateFile()`, `processData()`)
@@ -19,6 +20,7 @@ Code generator produces complete BaseMFE implementations from DSL manifests, inc
 - Generated code passes linting and type checking out-of-the-box
 
 **Traceability:**
+
 - ADR-036 (lifecycle execution model)
 - ADR-046 (code generation approach)
 - Tests: `src/codegen/__tests__/MFEGenerator.test.ts`
