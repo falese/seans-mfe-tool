@@ -1206,7 +1206,7 @@ capabilities:
         before: [validateInput, checkAuth]
         main: [executeCore]
         after: [notifyComplete]
-        error: [handleError]
+        error: [rollback, notify] # ALL run, failures logged
 
         # Custom phases (domain-specific)
         custom:
@@ -2055,6 +2055,13 @@ async loadAgent(manifest: AgentManifest) {
 ```
 
 ---
+
+## Migration & Deprecation Notes
+
+- ADR-037: Custom lifecycle phases removed; only standard phases (`before`, `main`, `after`, `error`) are supported. See REQ-044.
+- ADR-021: `analyze` command removed; replaced by runtime DSL discovery.
+- ADR-048: Template folders restructured by language, not type; see REQ-059. Legacy folders (`src/templates/react/`, `src/templates/api/`, `src/templates/bff/`) removed.
+- Deprecated files: Old template folders and BACKLOG.md have been cleaned/archived. GitHub Issues are now the single source of truth for backlog tracking.
 
 ## How to Use ADRs
 

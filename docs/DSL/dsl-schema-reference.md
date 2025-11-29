@@ -40,7 +40,14 @@ owner: string # Team/owner identifier
 tags: string[] # Searchable tags
 category: string # Categorization
 
-# Required for runtime
+## Migration & Deprecation Notes
+
+- As of v3.2, the DSL no longer supports custom lifecycle phases; only `before`, `main`, `after`, and `error` are valid (see ADR-037, REQ-044).
+- Deprecated CLI flags (`--port`, `--remotes`) are no longer part of the DSL; use environment variables or manifest fields instead.
+- Handler field now supports arrays (see ADR-038, REQ-045).
+- All platform capabilities must be explicitly listed in the DSL manifest (ADR-024).
+- Legacy template folders (`src/templates/react/`, `src/templates/api/`, `src/templates/bff/`) have been removed after migration to language-based structure (see ADR-048, REQ-059).
+- BACKLOG.md is now archived; GitHub Issues are the single source of truth for backlog tracking.
 endpoint: url # Base URL
 remoteEntry: url # Module Federation entry
 discovery: url # DSL manifest endpoint
@@ -49,8 +56,8 @@ discovery: url # DSL manifest endpoint
 capabilities: Capability[] # What this MFE provides
 data: DataConfig # GraphQL/REST data layer
 dependencies: Dependencies # Shared deps and MFE deps
+| 3.3     | 2025-11-29 | Removed custom lifecycle phases, deprecated CLI flags, migrated templates to language-based structure, archived BACKLOG.md |
 
-# Future sections (deferred)
 authorization: AuthConfig # Access control rules
 ```
 
