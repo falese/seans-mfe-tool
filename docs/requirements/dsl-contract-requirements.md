@@ -6,23 +6,21 @@
 **Feature:** DSL Platform Contract Implementation  
 **Related Docs:**
 
-
-
-
 **Status:** ✅ Complete
 **Last Updated:** 2025-11-29
 **Owner:** Sean
 **Feature:** DSL Platform Contract Implementation
 
 ## Purpose
+
 - ADRs: docs/architecture-decisions.md (ADR-036, ADR-046, ADR-048)
 - Issues: #39, #41, #44, #46, #49
 - Acceptance Criteria: docs/acceptance-criteria/lifecycle-hooks.feature, type-system.feature
 
-
 All critical requirements (REQ-042 to REQ-058) are **✅ Complete** and implemented.
 
 This document captures detailed requirements for implementing the DSL (Domain Specific Language) platform contract. While the orchestration requirements define WHAT MFEs must expose, this document defines HOW the DSL contract is executed, validated, and enforced at runtime.
+
 - Authorization grammar, dependency resolution, and advanced context features are deferred. See deferred-backlog.md for tracking.
 
 - Language-specific implementation patterns
@@ -60,23 +58,20 @@ This document captures detailed requirements for implementing the DSL (Domain Sp
 
 **Execution Rules:**
 
-
 2. ✅ Mandatory hooks that fail → **fail silently** (log telemetry, continue chain)
 
 3. ✅ `before`/`main`/`after` phases CAN have `mandatory` and `contained` flags
 
-5. ✅ `before`/`after`/`error` phase failures → fail silently, continue
-6. ✅ **ALL hook failures emit telemetry** via `emit` capability
-
-
-
+4. ✅ `before`/`after`/`error` phase failures → fail silently, continue
+5. ✅ **ALL hook failures emit telemetry** via `emit` capability
 
 before hooks (fail silently + telemetry) →
-  main phase (failures propagate to caller) →
-    after hooks (fail silently + telemetry)
-      ↓ if main failed
-    error hooks (fail silently + telemetry)
-```
+main phase (failures propagate to caller) →
+after hooks (fail silently + telemetry)
+↓ if main failed
+error hooks (fail silently + telemetry)
+
+````
 
 **Automatic Telemetry on Hook Failure:**
 
@@ -93,7 +88,7 @@ emit:
     error: { message, stack } # Error details
   severity: warn # warn for hooks, error for main
   tags: [lifecycle, hook-failure]
-```
+````
 
 ---
 

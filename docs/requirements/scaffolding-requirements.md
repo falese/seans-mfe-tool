@@ -32,17 +32,16 @@ Teams shouldn't need to configure Jest, set up mocking patterns, or figure out h
 
 - `npm test` works immediately after scaffolding
 
+| MFE Type | Test Files Generated | Purpose                                        |
+| -------- | -------------------- | ---------------------------------------------- |
+| **BFF**  | `graphql.test.ts`    | Introspection, JWT forwarding, upstream errors |
 
-
-
-| MFE Type   | Test Files Generated                  | Purpose                                        |
-| ---------- | ------------------------------------- | ---------------------------------------------- |
-| **BFF**    | `graphql.test.ts`                     | Introspection, JWT forwarding, upstream errors |
 **Reference:** ADR-047
 
 ---
 
 ### REQ-SCAFFOLD-002: Module Federation Mock Configuration
+
 **Must:**
 
 - Shell projects include mocks for remote loading
@@ -51,7 +50,7 @@ Teams shouldn't need to configure Jest, set up mocking patterns, or figure out h
 
 **Shell Mock Pattern:**
 
-```typescript
+````typescript
 // src/setupTests.ts - Generated
 // Mock Module Federation runtime
   loadRemote: jest.fn(),
@@ -142,7 +141,7 @@ export const createMockResponse = <T>(data: T, status = 200) => ({
   json: async () => data,
   text: async () => JSON.stringify(data)
 });
-```
+````
 
 ---
 

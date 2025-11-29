@@ -5,14 +5,12 @@
 **Parent Feature:** MFE Orchestration System  
 **Related Docs:**
 
-
-
 ## Executive Summary
+
 **Status:** ✅ Complete
 **Last Updated:** 2025-11-29
 **Owner:** Sean
 **Feature:** DSL-First Remote Generation
-
 
 - ADRs: docs/architecture-decisions.md (ADR-047, ADR-048)
 - Issues: #51, #53, #55
@@ -21,9 +19,7 @@
 Refactor `mfe remote` to use DSL (`mfe-manifest.yaml`) as the single source of truth. The DSL describes **what** the MFE does (capabilities), and the CLI generates **how** it's implemented (rspack config, RTK Query hooks, file structure).
 All major requirements (REQ-REMOTE-001 to REQ-REMOTE-010) are **✅ Complete** and implemented.
 
-
 - Marker-aware regeneration, multiple bundler support, interactive capability wizard are deferred. See deferred-backlog.md for tracking.
-
 
 ---
 
