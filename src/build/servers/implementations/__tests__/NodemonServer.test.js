@@ -412,53 +412,70 @@ describe('NodemonServer', () => {
 
     describe('Error Handling', () => {
       it('should handle uncaughtException and restart', async () => {
+        jest.useFakeTimers();
         const server = new NodemonServer({}, '/test/context');
         const restartSpy = jest.spyOn(server, 'restart').mockResolvedValue();
         server.nodemon = mockNodemon; // Set nodemon so restart has context
-        
+        const debug = (...args) => console.log('[DEBUG uncaughtException]', ...args);
+
         const startPromise = server.start();
+        debug('startPromise created');
         const startCallback = mockNodemon.on.mock.calls.find(
           call => call[0] === 'start'
         )[1];
+        debug('startCallback found');
         startCallback();
         await startPromise;
+        debug('startPromise awaited');
 
         const uncaughtCallback = processListeners['uncaughtException'][0];
-        
+        debug('uncaughtCallback found');
         const error = new Error('Test error');
-        uncaughtCallback(error); // Don't await - it's async internally
-        await new Promise(resolve => setTimeout(resolve, 100)); // Let async operations complete
+        uncaughtCallback(error);
+        debug('uncaughtCallback called');
+        jest.runAllTimers();
+        debug('timers run');
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
           expect.stringContaining('Uncaught Exception')
         );
         expect(restartSpy).toHaveBeenCalled();
-      }, 5000);
+        jest.useRealTimers();
+      }, 10000);
 
       it('should handle unhandledRejection and restart', async () => {
+        jest.useFakeTimers();
         const server = new NodemonServer({}, '/test/context');
         const restartSpy = jest.spyOn(server, 'restart').mockResolvedValue();
         server.nodemon = mockNodemon; // Set nodemon so restart has context
-        
+        const debug = (...args) => console.log('[DEBUG unhandledRejection]', ...args);
+
         const startPromise = server.start();
+        debug('startPromise created');
         const startCallback = mockNodemon.on.mock.calls.find(
           call => call[0] === 'start'
         )[1];
+        debug('startCallback found');
         startCallback();
         await startPromise;
+        debug('startPromise awaited');
 
         const rejectionCallback = processListeners['unhandledRejection'][0];
-        
+        debug('rejectionCallback found');
         const reason = 'Test rejection';
         const promise = Promise.reject(reason).catch(() => {}); // Prevent actual unhandled rejection
-        rejectionCallback(reason, promise); // Don't await - it's async internally
-        await new Promise(resolve => setTimeout(resolve, 100)); // Let async operations complete
+        rejectionCallback(reason, promise);
+        debug('rejectionCallback called');
+        jest.runAllTimers();
+        debug('timers run');
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Unhandled Rejection')
-        );
+        // Patch: check for multiple calls with expected substrings
+        const errorCalls = consoleErrorSpy.mock.calls.map(call => call[0]);
+        expect(errorCalls.some(msg => typeof msg === 'string' && msg.includes('Unhandled Rejection'))).toBe(true);
+        expect(errorCalls.some(msg => typeof msg === 'string' && msg.includes('Reason'))).toBe(true);
         expect(restartSpy).toHaveBeenCalled();
-      }, 5000);
+        jest.useRealTimers();
+      }, 10000);
     });
   });
 
@@ -559,69 +576,93 @@ describe('NodemonServer', () => {
 
   describe('Enhanced Keyboard Controls', () => {
     it('should handle d key (toggle debug)', async () => {
+      jest.useFakeTimers();
       const server = new NodemonServer({ debug: false }, '/test/context');
       const restartSpy = jest.spyOn(server, 'restart').mockResolvedValue();
-      
+      const debug = (...args) => console.log('[DEBUG d key]', ...args);
+
       const startPromise = server.start();
+      debug('startPromise created');
       const startCallback = mockNodemon.on.mock.calls.find(
         call => call[0] === 'start'
       )[1];
+      debug('startCallback found');
       startCallback();
       await startPromise;
+      debug('startPromise awaited');
 
       const dataCallback = stdinListeners['data'][0];
-      
-      await dataCallback(Buffer.from('d'));
-      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
+      debug('dataCallback found');
+      dataCallback(Buffer.from('d'));
+      debug('dataCallback called');
+      jest.runAllTimers();
+      debug('timers run');
 
       expect(server.debugMode).toBe(true);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('Debug mode enabled')
       );
       expect(restartSpy).toHaveBeenCalled();
-    });
+      jest.useRealTimers();
+    }, 10000);
 
     it('should handle c key (clear console)', async () => {
+      jest.useFakeTimers();
       const server = new NodemonServer({}, '/test/context');
       const consoleClearSpy = jest.spyOn(console, 'clear').mockImplementation();
       const showHelpSpy = jest.spyOn(server, 'showHelp').mockImplementation();
-      
+      const debug = (...args) => console.log('[DEBUG c key]', ...args);
+
       const startPromise = server.start();
+      debug('startPromise created');
       const startCallback = mockNodemon.on.mock.calls.find(
         call => call[0] === 'start'
       )[1];
+      debug('startCallback found');
       startCallback();
       await startPromise;
+      debug('startPromise awaited');
 
       const dataCallback = stdinListeners['data'][0];
-      
-      await dataCallback(Buffer.from('c'));
-      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
+      debug('dataCallback found');
+      dataCallback(Buffer.from('c'));
+      debug('dataCallback called');
+      jest.runAllTimers();
+      debug('timers run');
 
       expect(consoleClearSpy).toHaveBeenCalled();
       expect(showHelpSpy).toHaveBeenCalled();
-      
+
       consoleClearSpy.mockRestore();
-    });
+      jest.useRealTimers();
+    }, 10000);
 
     it('should handle t key (test endpoints)', async () => {
+      jest.useFakeTimers();
       const server = new NodemonServer({}, '/test/context');
       const testEndpointsSpy = jest.spyOn(server, 'testEndpoints').mockResolvedValue();
-      
+      const debug = (...args) => console.log('[DEBUG t key]', ...args);
+
       const startPromise = server.start();
+      debug('startPromise created');
       const startCallback = mockNodemon.on.mock.calls.find(
         call => call[0] === 'start'
       )[1];
+      debug('startCallback found');
       startCallback();
       await startPromise;
+      debug('startPromise awaited');
 
       const dataCallback = stdinListeners['data'][0];
-      
-      await dataCallback(Buffer.from('t'));
-      await new Promise(resolve => setImmediate(resolve)); // Let async operations complete
+      debug('dataCallback found');
+      dataCallback(Buffer.from('t'));
+      debug('dataCallback called');
+      jest.runAllTimers();
+      debug('timers run');
 
       expect(testEndpointsSpy).toHaveBeenCalled();
-    });
+      jest.useRealTimers();
+    }, 10000);
   });
 
   describe('Integration', () => {

@@ -1070,32 +1070,24 @@ standardCapabilities:
         - name: status
           type: enum
           values: [healthy, degraded, unhealthy]
-        - name: details
-          type: object
-
-  # Self-description (introspection)
   - describe:
       handler: describeSelf
       outputs:
-        - name: dsl
-          type: object
           description: Full DSL document
         - name: runtime
           type: object
-          description: Runtime info (uptime, version, etc)
-
-  # Schema introspection (GraphQL-style)
   - schema:
-      handler: introspectSchema
+
       outputs:
+
         - name: schema
-          type: object
+
           format: graphql-schema
           description: >
             GraphQL-style schema describing all available
-            queries, mutations, types
 
-  # Generic query interface (GraphQL-style)
+
+
   - query:
       handler: executeQuery
       inputs:

@@ -6,17 +6,25 @@
 **Parent Feature:** MFE Orchestration System  
 **Related Docs:**
 
-- [Orchestration Requirements](./orchestration-requirements.md)
-- [Architecture Decisions](./architecture-decisions.md) - ADR-046
-- [DSL Contract Requirements](./dsl-contract-requirements.md)
-- [Acceptance Criteria](./acceptance-criteria/bff.feature) - GWT Scenarios
 
----
+
+
+**Status:** ✅ Complete
+**Last Updated:** 2025-11-29
+**Owner:** Sean
+**Feature:** GraphQL BFF Layer
 
 ## Implementation Status
+- ADRs: docs/architecture-decisions.md (ADR-046, ADR-022, ADR-045)
+- Issues: #71, #73
+- Acceptance Criteria: docs/acceptance-criteria/bff.feature
+
+
+All requirements (REQ-BFF-001 to REQ-BFF-008) are **✅ Complete** and implemented.
 
 | Component             | Status      | Coverage                                          | Notes                                  |
-| --------------------- | ----------- | ------------------------------------------------- | -------------------------------------- |
+- GraphQL subscriptions, custom resolvers, federation, non-OpenAPI sources, schema versioning are deferred. See deferred-backlog.md for tracking.
+
 | `src/commands/bff.js` | ✅ Complete | 100% Stmts, 100% Funcs, 100% Lines, 96.93% Branch | All 7 functions implemented            |
 | `src/templates/bff/`  | ✅ Complete | —                                                 | 8 template files                       |
 | CLI Integration       | ✅ Complete | —                                                 | 4 commands wired                       |

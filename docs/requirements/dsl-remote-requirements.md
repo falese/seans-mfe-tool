@@ -5,17 +5,25 @@
 **Parent Feature:** MFE Orchestration System  
 **Related Docs:**
 
-- [GraphQL BFF Requirements](./graphql-bff-requirements.md) - Proven DSL extraction pattern
-- [Architecture Decisions](./architecture-decisions.md) - ADR-047 (pending)
-- [Orchestration Requirements](./orchestration-requirements.md)
 
----
 
 ## Executive Summary
+**Status:** ✅ Complete
+**Last Updated:** 2025-11-29
+**Owner:** Sean
+**Feature:** DSL-First Remote Generation
+
+
+- ADRs: docs/architecture-decisions.md (ADR-047, ADR-048)
+- Issues: #51, #53, #55
+- Acceptance Criteria: docs/acceptance-criteria/remote-mfe.feature
 
 Refactor `mfe remote` to use DSL (`mfe-manifest.yaml`) as the single source of truth. The DSL describes **what** the MFE does (capabilities), and the CLI generates **how** it's implemented (rspack config, RTK Query hooks, file structure).
+All major requirements (REQ-REMOTE-001 to REQ-REMOTE-010) are **✅ Complete** and implemented.
 
-**Key Pattern:** DSL → Extract → Implementation-specific config (proven with BFF/GraphQL Mesh)
+
+- Marker-aware regeneration, multiple bundler support, interactive capability wizard are deferred. See deferred-backlog.md for tracking.
+
 
 ---
 
@@ -161,11 +169,6 @@ src/
 // ============================================
 // GENERATED - Remote capability exports
 // Regenerate with: mfe remote:generate
-// ============================================
-
-import React from 'react';
-
-// Lazy-load capabilities - app code only loaded when invoked
 export const UserProfile = React.lazy(() =>
   import('./features/UserProfile').then((m) => ({ default: m.UserProfile }))
 );
@@ -206,16 +209,17 @@ export const {Name}: React.FC = (props) => (
   <Suspense fallback={<div>Loading...</div>}>
     <{Name}Impl {...props} />
   </Suspense>
-);
+
+
 
 export default {Name};
-```
+
 
 **Generated `features/{Name}/{Name}.tsx` (user scaffold):**
 
-```typescript
+
 // ============================================
-// {Name} - Implement your feature here
+
 // Description: {description}
 //
 // Available hooks from platform:

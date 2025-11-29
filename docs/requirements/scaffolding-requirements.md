@@ -17,10 +17,6 @@ This document captures requirements for the scaffolding (code generation) capabi
 
 ---
 
-## Core Principle
-
-**Generated projects should be immediately runnable AND testable.**
-
 Teams shouldn't need to configure Jest, set up mocking patterns, or figure out how to test Module Federation. The CLI provides all of this out of the box.
 
 ---
@@ -33,28 +29,23 @@ Teams shouldn't need to configure Jest, set up mocking patterns, or figure out h
 
 - Every scaffolded MFE (shell, remote, API, BFF) includes working test files
 - Tests are not stubs - they contain real assertions that pass
-- Tests demonstrate patterns for the specific MFE type
+
 - `npm test` works immediately after scaffolding
 
-**Generated Test Coverage by Type:**
+
+
 
 | MFE Type   | Test Files Generated                  | Purpose                                        |
 | ---------- | ------------------------------------- | ---------------------------------------------- |
-| **Shell**  | `App.test.tsx`, `routing.test.tsx`    | Component mounting, remote loading, navigation |
-| **Remote** | `App.test.tsx`, `federation.test.tsx` | Component render, standalone mode, contracts   |
-| **API**    | `<entity>.controller.test.ts`         | CRUD operations, validation, error handling    |
 | **BFF**    | `graphql.test.ts`                     | Introspection, JWT forwarding, upstream errors |
-
 **Reference:** ADR-047
 
 ---
 
 ### REQ-SCAFFOLD-002: Module Federation Mock Configuration
-
 **Must:**
 
 - Shell projects include mocks for remote loading
-- Remote projects include federation contract tests
 - Mock patterns are reusable for team-written tests
 - Singleton shared module validation included
 
@@ -62,12 +53,8 @@ Teams shouldn't need to configure Jest, set up mocking patterns, or figure out h
 
 ```typescript
 // src/setupTests.ts - Generated
-import '@testing-library/jest-dom';
-
 // Mock Module Federation runtime
-jest.mock('@module-federation/runtime', () => ({
   loadRemote: jest.fn(),
-  init: jest.fn()
 }));
 
 // Mock remote modules
@@ -76,17 +63,12 @@ jest.mock('../remotes', () => ({
     default: () => <div data-testid="mock-remote">Mock Remote</div>
   })
 }));
-```
-
-**Remote Contract Test Pattern:**
 
 ```typescript
 // src/__tests__/federation.test.tsx - Generated
 describe('Federation Contract', () => {
   it('exports App component as default', async () => {
-    const module = await import('../App');
     expect(module.default).toBeDefined();
-    expect(typeof module.default).toBe('function');
   });
 
   it('component renders without provider dependencies', () => {
@@ -99,16 +81,10 @@ describe('Federation Contract', () => {
   it('does not bundle React (uses shared singleton)', () => {
     // Validate Module Federation sharing works
     const webpackModules = (window as any).__webpack_modules__ || {};
-    const reactModules = Object.keys(webpackModules)
       .filter(k => k.includes('node_modules/react/'));
     // Should be 0 or 1 (shared, not bundled)
     expect(reactModules.length).toBeLessThanOrEqual(1);
-  });
-});
-```
-
 ---
-
 ### REQ-SCAFFOLD-003: Test Utility Helpers
 
 **Must:**
@@ -122,7 +98,6 @@ describe('Federation Contract', () => {
 
 ```typescript
 // src/testUtils.ts - Generated for React projects
-import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -141,13 +116,10 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * Render with all providers configured.
  * @example
  * const { getByText } = renderWithProviders(<MyComponent />);
  */
-export const renderWithProviders = (
   ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
 ) => render(ui, { wrapper: AllTheProviders, ...options });
 
 /**

@@ -242,7 +242,6 @@ handler: [validateFile, checkSize, scanForMalware]
 
 ---
 
-
 ### Lifecycle Hook Handler Validation
 
 **Handler Reference Constraints:**
@@ -315,6 +314,7 @@ class MyMFE extends BaseMFE {
 ```
 
 **Best Practice:**
+
 - Codegen should generate both the manifest and stub methods for all custom handlers referenced.
 - Developers fill in the logic for each handler method as needed.
 
