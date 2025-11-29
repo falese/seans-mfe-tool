@@ -38,6 +38,7 @@ export async function generatePlatformFiles(manifest: DSLManifest, basePath: str
   const bffTemplate = path.resolve(__dirname, '../templates/bff/bff.ts.ejs');
   const bffTestTemplate = path.resolve(__dirname, '../templates/bff/bff.test.ts.ejs');
   const meshrcTemplate = path.resolve(__dirname, '../templates/bff/meshrc.yaml.ejs');
+
   // Render .meshrc.yaml from manifest.data
   if (manifest.data) {
     // Convert manifest.data to YAML string
@@ -117,7 +118,6 @@ export async function generatePlatformFiles(manifest: DSLManifest, basePath: str
     }
   }
 
-
   // Render BaseMFE class
   files.push({
     path: path.join(platformDir, 'mfe.ts'),
@@ -157,7 +157,7 @@ export async function generatePlatformFiles(manifest: DSLManifest, basePath: str
     overwrite: true
   });
 
-  // Render BFF
+  // Render BFF stub files (legacy, for compatibility)
   files.push({
     path: path.join(bffDir, 'bff.ts'),
     content: await renderTemplate(bffTemplate, {
@@ -167,8 +167,6 @@ export async function generatePlatformFiles(manifest: DSLManifest, basePath: str
     }),
     overwrite: true
   });
-
-  // Render BFF test
   files.push({
     path: path.join(bffDir, 'bff.test.ts'),
     content: await renderTemplate(bffTestTemplate, {
@@ -178,6 +176,61 @@ export async function generatePlatformFiles(manifest: DSLManifest, basePath: str
     }),
     overwrite: true
   });
+
+  // Render BFF main server and config files
+  const bffTemplatesDir = path.resolve(__dirname, '../templates/bff');
+
+  // --- BFF templates ---
+  const bffTemplates = [
+    { tpl: 'server.ts.ejs', out: 'server.ts' },
+    { tpl: 'package.json.ejs', out: 'package.json' },
+    { tpl: 'tsconfig.json', out: 'tsconfig.json' },
+    { tpl: 'Dockerfile.ejs', out: 'Dockerfile' },
+    { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml' },
+    { tpl: 'README.md.ejs', out: 'README.md' }
+  ];
+  const bffPort = manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 4000;
+  const includeStatic = true;
+  for (const { tpl, out } of bffTemplates) {
+    const templatePath = path.join(bffTemplatesDir, tpl);
+    if (await fs.pathExists(templatePath)) {
+      const vars = {
+        name: manifest.name,
+        version: manifest.version,
+        port: bffPort,
+        includeStatic,
+        manifest
+      };
+      const content = await renderTemplate(templatePath, vars);
+      files.push({
+        path: path.join(basePath, out),
+        content,
+        overwrite: true
+      });
+    }
+  }
+
+  // --- Rspack config template ---
+  const rspackTemplatePath = path.resolve(__dirname, '../templates/react/remote/rspack.config.js.ejs');
+  if (await fs.pathExists(rspackTemplatePath)) {
+    // Use manifest variables for EJS
+    const rspackVars = {
+      name: manifest.name,
+      version: manifest.version,
+      port: manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001,
+      muiVersion: manifest.dependencies?.['design-system']?.['@mui/material'] || '^5.15.0',
+      remotes: manifest.dependencies?.mfes || {},
+      exposes: {}, // Optionally add exposes if needed
+      shared: {}, // Optionally add shared if needed
+      manifest
+    };
+    const rspackContent = await renderTemplate(rspackTemplatePath, rspackVars);
+    files.push({
+      path: path.join(basePath, 'rspack.config.js'),
+      content: rspackContent,
+      overwrite: true
+    });
+  }
 
   return files;
 }
