@@ -42,12 +42,18 @@ export {
 } from './validator';
 
 // Generator functions
+// export {
+//   generateCapabilityFiles,
+//   generateAllCapabilityFiles,
+//   writeGeneratedFiles,
+//   getNewCapabilities,
+//   getRemovedCapabilities,
+//   generateSharedConfig,
+//   generateRspackConfig
+// } from './generator';
+
 export {
-  generateCapabilityFiles,
-  generateAllCapabilityFiles,
+  generateAllFiles,
   writeGeneratedFiles,
-  getNewCapabilities,
-  getRemovedCapabilities,
-  generateSharedConfig,
-  generateRspackConfig
-} from './generator';
+  extractManifestVars
+} from './unified-generator';
