@@ -310,5 +310,33 @@ export async function generateAllFiles(
     console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
   }
 
+  // --- Public assets ---
+  // Generate public/index.html and favicon.ico from EJS templates
+  const publicDir = path.join(basePath, 'public');
+  const indexHtmlTemplatePath = path.join(templateDir, 'public', 'index.html.ejs');
+  const faviconTemplatePath = path.join(templateDir, 'public', 'favicon.ico.ejs');
+  if (await fs.pathExists(indexHtmlTemplatePath)) {
+    const indexHtmlContent = await renderTemplate(indexHtmlTemplatePath, vars);
+    files.push({
+      path: path.join(publicDir, 'index.html'),
+      content: indexHtmlContent,
+      overwrite: true
+    });
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn(`[unified-generator] WARNING: Missing template for public/index.html: ${indexHtmlTemplatePath}`);
+  }
+  if (await fs.pathExists(faviconTemplatePath)) {
+    const faviconContent = await renderTemplate(faviconTemplatePath, vars);
+    files.push({
+      path: path.join(publicDir, 'favicon.ico'),
+      content: faviconContent,
+      overwrite: true
+    });
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn(`[unified-generator] WARNING: Missing template for public/favicon.ico: ${faviconTemplatePath}`);
+  }
+
   return files;
 }

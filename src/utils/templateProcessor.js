@@ -3,6 +3,10 @@ const path = require('path');
 const ejs = require('ejs');
 
 async function processTemplates(targetDir, vars) {
+    // Enforce valid library name convention: no hyphens
+    if (typeof vars.name === 'string' && vars.name.includes('-')) {
+      throw new Error(`Invalid library name: "${vars.name}". Library names must not contain hyphens. Use underscores or camelCase.`);
+    }
   // Fallback when fs is partially mocked in tests or returns invalid result
   const tryFallback = async () => {
     const pkgPath = path.join(targetDir, 'package.json');

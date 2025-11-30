@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-<% capabilities.forEach(function(name) { %>import { <%= name %> } from './features/<%= name %>';
+<% capabilities.forEach(function(name) { %>import { <%= name %> } from './features/<%= name %>/<%= name %>.tsx';
 <% }); %>
 <% capabilities.forEach(function(name) { %>export { <%= name %> };
 <% }); %>
-export { default } from './App';
+export { default } from './App.tsx';

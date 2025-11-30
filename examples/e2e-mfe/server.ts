@@ -7,9 +7,9 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
+import { createMeshHTTPHandler } from '@graphql-mesh/http';
 import { getMesh } from '@graphql-mesh/runtime';
 import { findAndParseConfig } from '@graphql-mesh/cli';
-import { graphqlHTTP } from 'express-graphql';
 
 const app = express();
 
@@ -41,53 +41,42 @@ app.use(cors({
 app.get('/health', (req: express.Request, res: express.Response) => {
   res.json({ 
     status: 'healthy',
-    name: '<%= name %>',
-    version: '<%= version %>',
+    name: 'csv-analyzer',
+    version: '1.0.0',
     timestamp: new Date().toISOString()
   });
 });
 
 // Initialize mesh at startup
-let meshSchema: any;
+let meshHandler: any;
 
 (async () => {
   const meshConfig = await findAndParseConfig({
     dir: __dirname,
   });
   const mesh = await getMesh(meshConfig);
-  meshSchema = mesh.schema;
-  console.log('✅ GraphQL Mesh schema loaded successfully');
+  meshHandler = createMeshHTTPHandler({
+    baseDir: __dirname,
+    getBuiltMesh: async () => mesh,
+  });
 })();
 
-// GraphQL BFF endpoint with GraphiQL playground
+// GraphQL BFF endpoint (from Mesh)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-app.use('/graphql', async (req: express.Request, res: express.Response) => {
-  if (!meshSchema) {
+app.use('/graphql', async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!meshHandler) {
     return res.status(503).json({ error: 'Mesh not ready' });
   }
   
-  const context = {
+  // Attach context if needed
+  (req as any).meshContext = {
     jwt: req.headers.authorization?.replace('Bearer ', ''),
     requestId: req.headers['x-request-id'] || (globalThis.crypto ? globalThis.crypto.randomUUID() : ''),
     userId: extractUserIdFromToken(req.headers.authorization),
   };
-  
-  return graphqlHTTP({
-    schema: meshSchema,
-    context,
-    graphiql: {
-      headerEditorEnabled: true,
-      defaultQuery: `# Welcome to <%= name %> GraphQL API
-# GraphiQL Playground - try your queries here
-
-query {
-  __typename
-}`,
-    },
-  })(req, res);
+  return meshHandler(req, res, next);
 });
 
-<% if (includeStatic) { %>
 // Static MFE assets
 // Following REQ-BFF-004: BFF + Static Assets Same Deployable
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -96,7 +85,6 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get('*', (req: express.Request, res: express.Response) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-<% } %>
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -119,14 +107,12 @@ function extractUserIdFromToken(authHeader?: string): string | undefined {
   }
 }
 
-const port = process.env.PORT || <%= port %>;
+const port = process.env.PORT || 3002;
 
 app.listen(port, () => {
-  console.log(`🚀 <%= name %> BFF server running on port ${port}`);
+  console.log(`🚀 csv-analyzer BFF server running on port ${port}`);
   console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
-<% if (includeStatic) { %>
   console.log(`   Static assets: http://localhost:${port}/`);
-<% } %>
   console.log(`   Health check: http://localhost:${port}/health`);
 });
 
