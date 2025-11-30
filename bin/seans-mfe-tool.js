@@ -16,59 +16,13 @@ require('ts-node').register({
 
 const chalk = require('chalk');
 const { program } = require('commander');
-const { createShellCommand } = require('../src/commands/create-shell');
-const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
-const { buildCommand } = require('../src/commands/build');
-const { initCommand } = require('../src/commands/init');
 const { bffBuildCommand, bffDevCommand, bffValidateCommand, bffInitCommand } = require('../src/commands/bff');
 const { remoteInitCommand } = require('../src/commands/remote-init');
 const { remoteGenerateCommand, remoteGenerateCapabilityCommand } = require('../src/commands/remote-generate');
 const { version } = require('../package.json');
 
-
-program
-  .command('generate <file>')
-  .description('[DEPRECATED] Generate a new MFE project from a YAML specification')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((file, options) => {
-    console.warn(
-      chalk.yellow('\n[DEPRECATION WARNING] The "generate" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
-    );
-    require('../src/commands/mfe-spec')('generate', file, options);
-  });
-
-
-program
-  .command('update <file>')
-  .description('[DEPRECATED] Update an existing MFE project from a YAML specification')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((file, options) => {
-    console.warn(
-      chalk.yellow('\n[DEPRECATION WARNING] The "update" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
-    );
-    require('../src/commands/mfe-spec')('update', file, options);
-  });
-
-
-
-program
-  .command('spec')
-  .description('[DEPRECATED] Generate or update MFE project based on YAML specification')
-  .argument('<command>', 'Command to execute (generate or update)')
-  .argument('<file>', 'Path to the YAML specification file')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((command, file, options) => {
-    console.warn(
-      chalk.yellow('\n[DEPRECATION WARNING] The "spec" command is deprecated and will be removed in a future release. Please use "init", "shell", "remote", or "api" commands instead. See documentation for migration guidance.')
-    );
-    const mfeSpecCommand = require('../src/commands/mfe-spec');
-    mfeSpecCommand(command, file, options);
-  });
 
 
 program
@@ -80,8 +34,63 @@ program
 
 
 
-program
-// ...removed deprecated shell/build command code...
+
+  program
+  .command('deploy')
+  .description('Deploy an application')
+  .argument('<name>', 'Application name')
+  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
+  .option('-e, --env <environment>', 'Deployment environment (development or production)', 'development')
+  .option('-p, --port <port>', 'Port number for development deployment', '8080')
+  .option('-r, --registry <url>', 'Docker registry URL for production deployment')
+    .option('--mode <mode>', 'Production deployment mode (docker-compose or kubernetes)', 'docker-compose')
+    .option('-n, --namespace <namespace>', 'Kubernetes namespace', 'default')
+    .option('-d, --domain <domain>', 'Domain name for production deployment')
+    .option('--tag <tag>', 'Docker image tag', 'latest')
+  .option('-m, --memory <limit>', 'Memory limit for API containers', '256Mi')
+  .option('-c, --cpu <limit>', 'CPU limit for API containers', '0.5')
+  .option('--replicas <count>', 'Number of API replicas', '2')
+  .action((name, options) => {
+    if (!['shell', 'remote', 'api'].includes(options.type)) {
+      console.error('Type must be shell, remote, or api');
+      process.exit(1);
+    }
+    deployCommand({ name, ...options });
+  });
+
+
+  program
+  .command('api')
+  .description('Create a new API from OpenAPI specification')
+  .argument('<name>', 'API name')
+  .option('-p, --port <port>', 'Port number for the API', '3001')
+  .option('-s, --spec <path>', 'Path to OpenAPI specification file or URL', 'openapi.yaml')
+  .option('-d, --database <type>', 'Database type to use (mongodb or sqlite)', 'sqlite')
+  .addHelpText('after', `
+Examples:
+  $ seans-mfe-tool api my-store --spec store.yaml --database mongodb
+  $ seans-mfe-tool api pet-store --spec https://petstore3.swagger.io/api/v3/openapi.json --database sqlite
+
+Database Options:
+  mongodb    Uses MongoDB with MongoDB Memory Server for development
+  sqlite     Uses SQLite with file-based storage (default)
+
+Notes:
+  - MongoDB option will use in-memory database for development and testing
+  - SQLite option will create a local database file in src/data/
+  - Both options can be configured for production use through environment variables`)
+  .action((name, options) => {
+    // Validate database option
+    const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
+    if (!validDatabases.includes(options.database.toLowerCase())) {
+      console.error(chalk.red(`Error: Invalid database type '${options.database}'.`));
+      console.log(chalk.blue('Valid options are: mongodb, sqlite'));
+      process.exit(1);
+    }
+    
+    createApiCommand(name, options);
+  });
+
 
 // BFF Commands - Following ADR-046: GraphQL Mesh with DSL-embedded configuration
 program
