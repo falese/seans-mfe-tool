@@ -10,7 +10,7 @@ import {
   parseAndValidateDirectory, 
   formatErrorsForCLI 
 } from '../dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../dsl/unified-generator';
+import { generateAllFiles, writeGeneratedFiles } from '../codegen/UnifiedGenerator/unified-generator';
 import * as fs from 'fs-extra';
 import type { RemoteGenerateOptions } from '../dsl/schema';
 

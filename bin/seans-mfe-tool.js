@@ -16,47 +16,13 @@ require('ts-node').register({
 
 const chalk = require('chalk');
 const { program } = require('commander');
-const { createShellCommand } = require('../src/commands/create-shell');
-const { createRemoteCommand } = require('../src/commands/create-remote');
 const { deployCommand } = require('../src/commands/deploy');
 const { createApiCommand } = require('../src/commands/create-api')
-const { buildCommand } = require('../src/commands/build');
-const { initCommand } = require('../src/commands/init');
 const { bffBuildCommand, bffDevCommand, bffValidateCommand, bffInitCommand } = require('../src/commands/bff');
 const { remoteInitCommand } = require('../src/commands/remote-init');
 const { remoteGenerateCommand, remoteGenerateCapabilityCommand } = require('../src/commands/remote-generate');
 const { version } = require('../package.json');
 
-program
-  .command('generate <file>')
-  .description('Generate a new MFE project from a YAML specification')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((file, options) => {
-    require('../src/commands/mfe-spec')('generate', file, options);
-  });
-
-program
-  .command('update <file>')
-  .description('Update an existing MFE project from a YAML specification')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((file, options) => {
-    require('../src/commands/mfe-spec')('update', file, options);
-  });
-
-
-program
-  .command('spec')
-  .description('Generate or update MFE project based on YAML specification')
-  .argument('<command>', 'Command to execute (generate or update)')
-  .argument('<file>', 'Path to the YAML specification file')
-  .option('-o, --output <dir>', 'Output directory', process.cwd())
-  .option('-d, --dry-run', 'Show changes without applying them', false)
-  .action((command, file, options) => {
-    const mfeSpecCommand = require('../src/commands/mfe-spec');
-    mfeSpecCommand(command, file, options);
-  });
 
 
 program
@@ -67,25 +33,7 @@ program
 
 
 
-program
-  .command('shell')
-  .description('Create a new shell (container) application')
-  .argument('<name>', 'Shell application name')
-  .option('-p, --port <port>', 'Port number for the shell application', '3000')
-  .option('-r, --remotes <remotes>', 'Remote MFEs configuration as JSON string')
-  .action((name, options) => {
-    createShellCommand(name, options);
-  });
 
-program
-  .command('remote')
-  .description('Create a new remote MFE')
-  .argument('<name>', 'Remote MFE name')
-  .option('-p, --port <port>', 'Port number for the remote MFE', '3001')
-  .option('-m, --mui-version <version>', 'Material UI version', '5.15.0')
-  .action((name, options) => {
-    createRemoteCommand(name, options);
-  });
 
   program
   .command('deploy')
@@ -110,14 +58,6 @@ program
     deployCommand({ name, ...options });
   });
 
-program
-  .command('init')
-  .description('Initialize a new Module Federation workspace')
-  .argument('<name>', 'Project name')
-  .option('-p, --package-manager <manager>', 'Package manager to use (npm, yarn, or pnpm)', 'pnpm')
-  .action((name, options) => {
-    initCommand(name, options);
-  });
 
   program
   .command('api')
@@ -151,23 +91,6 @@ Notes:
     createApiCommand(name, options);
   });
 
-
-  program
-  .command('build')
-  .description('Build an application')
-  .argument('<name>', 'Application name')
-  .requiredOption('-t, --type <type>', 'Application type (shell, remote, or api)')
-  .option('-m, --mode <mode>', 'Build mode (development or production)', 'development')
-  .option('-p, --port <port>', 'Port number for development server')
-  .option('-s, --serve', 'Start development server')
-  .option('--analyze', 'Enable bundle analysis')
-  .action((name, options) => {
-    if (!['shell', 'remote', 'api'].includes(options.type)) {
-      console.error(chalk.red('Error: Type must be shell, remote, or api'));
-      process.exit(1);
-    }
-    buildCommand({ name, ...options });
-  });
 
 // BFF Commands - Following ADR-046: GraphQL Mesh with DSL-embedded configuration
 program
