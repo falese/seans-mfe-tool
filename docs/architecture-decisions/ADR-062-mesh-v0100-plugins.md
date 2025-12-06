@@ -32,19 +32,19 @@ The `e2e2` example project revealed dependency conflicts with GraphQL Mesh due t
 ```typescript
 export const DEPENDENCY_VERSIONS = {
   graphqlMesh: {
-    cli: '^0.100.21',           // Stable CLI
-    openapi: '^0.109.26',       // OpenAPI handler
-    serveRuntime: '^1.2.4',     // Serve runtime (new API)
+    cli: '^0.100.21', // Stable CLI
+    openapi: '^0.109.26', // OpenAPI handler
+    serveRuntime: '^1.2.4', // Serve runtime (new API)
   },
   graphqlTools: {
-    delegate: '^10.2.4',        // Peer dependency
-    utils: '^10.5.7',           // Peer dependency
-    wrap: '^10.0.5',            // Peer dependency
+    delegate: '^10.2.4', // Peer dependency
+    utils: '^10.5.7', // Peer dependency
+    wrap: '^10.0.5', // Peer dependency
   },
   meshPlugins: {
     responseCache: '^0.104.20', // Performance
-    prometheus: '^2.1.8',       // Metrics
-    opentelemetry: '^1.3.67',   // Tracing
+    prometheus: '^2.1.8', // Metrics
+    opentelemetry: '^1.3.67', // Tracing
   },
   meshTransforms: {
     namingConvention: '^0.105.19',
@@ -62,6 +62,7 @@ export const DEPENDENCY_VERSIONS = {
 ### 2. New Mesh v0.100.x Runtime API
 
 **Old Pattern (deprecated)**:
+
 ```typescript
 import { getMesh } from '@graphql-mesh/runtime';
 import { findAndParseConfig } from '@graphql-mesh/cli';
@@ -72,6 +73,7 @@ app.use('/graphql', graphqlHTTP({ schema: mesh.schema }));
 ```
 
 **New Pattern (ADR-062)**:
+
 ```typescript
 import { createBuiltMeshHTTPHandler } from './.mesh';
 
@@ -80,6 +82,7 @@ app.use('/graphql', meshHandler);
 ```
 
 **Benefits**:
+
 - No async initialization at startup (Mesh pre-builds artifacts during `mesh build`)
 - Type-safe context passing
 - Automatic GraphiQL playground
@@ -88,6 +91,7 @@ app.use('/graphql', meshHandler);
 ### 3. Production Plugins (Three-Tier System)
 
 **Always Include (Standard Tier)**:
+
 - **Response Cache**: 5-minute default TTL, per-field override
   ```yaml
   plugins:
@@ -97,6 +101,7 @@ app.use('/graphql', meshHandler);
   ```
 
 **Production Enabled (Standard Tier)**:
+
 - **Prometheus Metrics**: `/metrics` endpoint on port 9090
   ```yaml
   plugins:
@@ -106,6 +111,7 @@ app.use('/graphql', meshHandler);
   ```
 
 **Opt-In (Advanced Tier)**:
+
 - **OpenTelemetry**: Distributed tracing (10% sampling default)
   ```yaml
   plugins:
@@ -117,6 +123,7 @@ app.use('/graphql', meshHandler);
 ### 4. Schema Transforms (DSL-Configurable)
 
 **Always Include**:
+
 - **Naming Convention**: Enforce PascalCase types, camelCase fields
   ```yaml
   transforms:
@@ -126,6 +133,7 @@ app.use('/graphql', meshHandler);
   ```
 
 **Opt-In via DSL**:
+
 - **Rate Limiting**: Per-field request limits
 - **Filter Schema**: Hide internal fields
 - **Resolvers Composition**: Custom resolver logic (auth, audit, masking)
@@ -151,6 +159,7 @@ export const DSLManifestSchema = z.object({
 ```
 
 **Example DSL Manifest**:
+
 ```yaml
 performance:
   caching:
@@ -184,18 +193,16 @@ transforms:
 ### 6. Template Updates
 
 **Files Modified**:
+
 1. `src/codegen/templates/bff/package.json.ejs`:
    - Versioned dependencies from `DEPENDENCY_VERSIONS`
    - Conditional plugin/transform packages
-   
 2. `src/codegen/templates/bff/server.ts.ejs`:
    - New `createBuiltMeshHTTPHandler()` API
    - Context middleware pattern
-   
 3. `src/codegen/templates/bff/tsconfig.json`:
    - Changed `module: "commonjs"` (was `NodeNext`)
    - Changed `moduleResolution: "node"` (was `NodeNext`)
-   
 4. `src/codegen/templates/bff/meshrc.yaml.ejs`:
    - Dynamic plugin injection from DSL
    - Dynamic transform injection from DSL
@@ -208,22 +215,23 @@ transforms:
 export function extractManifestVars(manifest: DSLManifest) {
   const performanceConfig = manifest.performance || {};
   const observabilityConfig = performanceConfig.observability || {};
-  
+
   return {
     // ... existing vars ...
     dependencyVersions: DEPENDENCY_VERSIONS,
-    
+
     meshPlugins: {
-      responseCache: performanceConfig.caching?.enabled !== false 
-        ? DEFAULT_MESH_PLUGINS.responseCache : null,
-      prometheus: observabilityConfig.prometheus?.enabled !== false
-        ? { ...DEFAULT_MESH_PLUGINS.prometheus, ...observabilityConfig.prometheus }
-        : null,
+      responseCache:
+        performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
+      prometheus:
+        observabilityConfig.prometheus?.enabled !== false
+          ? { ...DEFAULT_MESH_PLUGINS.prometheus, ...observabilityConfig.prometheus }
+          : null,
       opentelemetry: observabilityConfig.opentelemetry?.enabled
         ? { ...DEFAULT_MESH_PLUGINS.opentelemetry, ...observabilityConfig.opentelemetry }
         : null,
     },
-    
+
     meshTransforms: {
       namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
       rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
@@ -264,6 +272,7 @@ export function extractManifestVars(manifest: DSLManifest) {
 ### For Existing Projects
 
 **Step 1: Update package.json**
+
 ```bash
 npm install --save \
   @graphql-mesh/cli@^0.100.21 \
@@ -277,6 +286,7 @@ npm install --save \
 ```
 
 **Step 2: Update tsconfig.json**
+
 ```json
 {
   "compilerOptions": {
@@ -287,6 +297,7 @@ npm install --save \
 ```
 
 **Step 3: Update server.ts**
+
 ```typescript
 // OLD: Remove getMesh/findAndParseConfig
 import { createBuiltMeshHTTPHandler } from './.mesh';
@@ -296,6 +307,7 @@ app.use('/graphql', meshHandler);
 ```
 
 **Step 4: Update package.json scripts**
+
 ```json
 {
   "scripts": {
@@ -306,6 +318,7 @@ app.use('/graphql', meshHandler);
 ```
 
 **Step 5: Add performance config to mfe-manifest.yaml** (optional)
+
 ```yaml
 performance:
   caching:
@@ -316,6 +329,7 @@ performance:
 ```
 
 **Step 6: Rebuild**
+
 ```bash
 npm run bff:build
 npm run build
@@ -340,11 +354,13 @@ npm run build
 ## Traceability
 
 ### Related ADRs
+
 - **ADR-046**: GraphQL Mesh with DSL (foundation)
 - **ADR-048**: Incremental TypeScript migration
 - **ADR-058**: Platform Handler Library (observability patterns)
 
 ### Related Requirements
+
 - **REQ-BFF-001**: DSL as single source of truth
 - **REQ-BFF-003**: JWT authentication forwarding
 - **REQ-BFF-004**: BFF + static assets same deployable
@@ -354,6 +370,7 @@ npm run build
 - **REQ-BFF-008**: DSL-driven plugin configuration
 
 ### Implementation Files
+
 - `src/codegen/UnifiedGenerator/unified-generator.ts`
 - `src/codegen/templates/bff/package.json.ejs`
 - `src/codegen/templates/bff/server.ts.ejs`

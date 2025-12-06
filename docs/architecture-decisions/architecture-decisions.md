@@ -2074,6 +2074,7 @@ async loadAgent(manifest: AgentManifest) {
 **Key Features:**
 
 1. **Centralized Version Constants** (`unified-generator.ts`):
+
    ```typescript
    export const DEPENDENCY_VERSIONS = {
      graphqlMesh: { cli: '^0.100.21', openapi: '^0.109.26', serveRuntime: '^1.2.4' },
@@ -2083,6 +2084,7 @@ async loadAgent(manifest: AgentManifest) {
    ```
 
 2. **New Mesh Runtime API**:
+
    ```typescript
    import { createBuiltMeshHTTPHandler } from './.mesh';
    const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
@@ -2090,6 +2092,7 @@ async loadAgent(manifest: AgentManifest) {
    ```
 
 3. **DSL Performance Schema**:
+
    ```yaml
    performance:
      caching:
@@ -2115,6 +2118,7 @@ async loadAgent(manifest: AgentManifest) {
    ```
 
 4. **Three-Tier Plugin System**:
+
    - **Always Include**: Response cache (5-min TTL)
    - **Production Enabled**: Prometheus metrics
    - **Opt-In**: OpenTelemetry tracing
@@ -2124,6 +2128,7 @@ async loadAgent(manifest: AgentManifest) {
    - **Opt-In**: Rate limiting, schema filtering, resolver composition
 
 **Impact:**
+
 - ✅ Dependency stability (version lock)
 - ✅ Production-ready (caching, metrics, tracing)
 - ✅ DSL-driven (performance tuning via manifest)
@@ -2131,6 +2136,7 @@ async loadAgent(manifest: AgentManifest) {
 - ⚠️ Breaking change (requires migration for existing projects)
 
 **Traceability:**
+
 - REQ-BFF-005: Production-grade performance
 - REQ-BFF-006: Observability integration
 - REQ-BFF-007: Rate limiting and security
@@ -2142,6 +2148,7 @@ async loadAgent(manifest: AgentManifest) {
 See [ADR-062 Migration Guide](./ADR-062-mesh-v0100-plugins.md#migration-guide)
 
 **Files:**
+
 - `src/codegen/UnifiedGenerator/unified-generator.ts`
 - `src/codegen/templates/bff/*.ejs`
 - `src/dsl/schema.ts` (8 new schemas)
