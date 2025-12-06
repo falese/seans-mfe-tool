@@ -64,74 +64,74 @@ data:
 # =============================================================================
 # PERFORMANCE & OBSERVABILITY (ADR-062)
 # =============================================================================
-performance:
-  # Response caching (enabled by default)
-  caching:
-    enabled: true
-    ttl: 300000  # 5 minutes default
-    strategies:
-      # Cache pet queries for 1 minute
-      - type: Query
-        field: pet
-        ttl: 60000
-      # Cache store inventory for 10 minutes
-      - type: Query
-        field: storeInventory
-        ttl: 600000
-      # Cache report lists for 5 minutes
-      - type: Query
-        field: listReports
-        ttl: 300000
+# performance:
+#   # Response caching (enabled by default)
+#   caching:
+#     enabled: true
+#     ttl: 300000  # 5 minutes default
+#     strategies:
+#       # Cache pet queries for 1 minute
+#       - type: Query
+#         field: pet
+#         ttl: 60000
+#       # Cache store inventory for 10 minutes
+#       - type: Query
+#         field: storeInventory
+#         ttl: 600000
+#       # Cache report lists for 5 minutes
+#       - type: Query
+#         field: listReports
+#         ttl: 300000
 
-  # Observability configuration
-  observability:
-    # Prometheus metrics (enabled by default for production)
-    prometheus:
-      enabled: true
-      port: 9090
-      endpoint: /metrics
+#   # Observability configuration
+#   observability:
+#     # Prometheus metrics (enabled by default for production)
+#     prometheus:
+#       enabled: true
+#       port: 9090
+#       endpoint: /metrics
 
-    # OpenTelemetry distributed tracing (opt-in)
-    opentelemetry:
-      enabled: true
-      serviceName: csv-analyzer-bff
-      sampling:
-        probability: 0.1  # Sample 10% of requests
-      exporters:
-        - type: jaeger
-          endpoint: http://jaeger:14268/api/traces
+#     # OpenTelemetry distributed tracing (opt-in)
+#     opentelemetry:
+#       enabled: true
+#       serviceName: csv-analyzer-bff
+#       sampling:
+#         probability: 0.1  # Sample 10% of requests
+#       exporters:
+#         - type: jaeger
+#           endpoint: http://jaeger:14268/api/traces
 
-  # Rate limiting (opt-in for public APIs)
-  rateLimit:
-    enabled: true
-    config:
-      # Limit queries to 100/min per user
-      - type: Query
-        field: '*'
-        max: 100
-        ttl: 60000
-        identifyContext: userId
-      # Limit mutations to 20/min per user
-      - type: Mutation
-        field: '*'
-        max: 20
-        ttl: 60000
-        identifyContext: userId
-      # Stricter limit for expensive operations
-      - type: Query
-        field: findPetsByStatus
-        max: 50
-        ttl: 60000
-        identifyContext: userId
+#   # Rate limiting (opt-in for public APIs)
+#   rateLimit:
+#     enabled: true
+#     config:
+#       # Limit queries to 100/min per user
+#       - type: Query
+#         field: '*'
+#         max: 100
+#         ttl: 60000
+#         identifyContext: userId
+#       # Limit mutations to 20/min per user
+#       - type: Mutation
+#         field: '*'
+#         max: 20
+#         ttl: 60000
+#         identifyContext: userId
+#       # Stricter limit for expensive operations
+#       - type: Query
+#         field: findPetsByStatus
+#         max: 50
+#         ttl: 60000
+#         identifyContext: userId
 
-  # Schema filtering (hide internal fields)
-  filterSchema:
-    enabled: true
-    filters:
-      - Query.!internal*       # Remove internal queries
-      - Mutation.!admin*       # Remove admin mutations
-      - Type.!_internal*       # Remove internal types
-      - Type.!_metadata        # Remove metadata fields
+#   # Schema filtering (hide internal fields)
+#   filterSchema:
+#     enabled: true
+#     filters:
+#       - Query.!internal*       # Remove internal queries
+#       - Mutation.!admin*       # Remove admin mutations
+#       - Type.!_internal*       # Remove internal types
+#       - Type.!_metadata        # Remove metadata fields
 
 # =============================================================================
 # CUSTOM TRANSFORMS (ADR-062)

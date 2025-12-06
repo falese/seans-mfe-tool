@@ -5,7 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "start": "concurrently \"rspack serve\" \"npm run bff:dev\"",
-    "build": "rspack build",
+    "build": "seans-mfe-tool remote:generate && rspack build && mesh build",
     "serve": "serve dist -p <%= port %>",
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",

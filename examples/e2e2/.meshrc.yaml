@@ -31,36 +31,10 @@ plugins:
         service: csv-analyzer
         version: 1.0.0
         environment: ${NODE_ENV:-development}
-  - opentelemetry:
-      serviceName: csv-analyzer-bff
-      sampling:
-        probability: 0.1
 
 # Transforms (Schema Manipulation)
 transforms:
   - namingConvention:
       typeNames: pascalCase
       fieldNames: camelCase
-  - rateLimit:
-        - type: Query
-          field: "*"
-          max: 100
-          ttl: 60000
-          identifier: userId
-        - type: Mutation
-          field: "*"
-          max: 20
-          ttl: 60000
-          identifier: userId
-        - type: Query
-          field: "findPetsByStatus"
-          max: 50
-          ttl: 60000
-          identifier: userId
-  - filterSchema:
-      filters:
-        - Query.!internal*
-        - Mutation.!admin*
-        - Type.!_internal*
-        - Type.!_metadata
 

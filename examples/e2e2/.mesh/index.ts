@@ -7,7 +7,6 @@ import { PubSub } from '@graphql-mesh/utils';
 import { DefaultLogger } from '@graphql-mesh/utils';
 import type { MeshResolvedSource } from '@graphql-mesh/runtime';
 import type { MeshTransform, MeshPlugin } from '@graphql-mesh/types';
-import { useOpenTelemetry } from "@graphql-mesh/plugin-opentelemetry";
 import { createMeshHTTPHandler, MeshHTTPHandler } from '@graphql-mesh/http';
 import { getMesh, type ExecuteMeshFn, type SubscribeMeshFn, type MeshContext as BaseMeshContext, type MeshInstance } from '@graphql-mesh/runtime';
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
@@ -352,26 +351,6 @@ transforms[0] = new RootTransform_0({
             importFn,
             logger,
           })
-const RootTransform_1 = await import("@graphql-mesh/transform-rate-limit").then(handleImport);
-transforms[1] = new RootTransform_1({
-            apiName: '',
-            config: [{"type":"Query","field":"*","max":100,"ttl":60000,"identifier":"userId"},{"type":"Mutation","field":"*","max":20,"ttl":60000,"identifier":"userId"},{"type":"Query","field":"findPetsByStatus","max":50,"ttl":60000,"identifier":"userId"}],
-            baseDir,
-            cache,
-            pubsub,
-            importFn,
-            logger,
-          })
-const RootTransform_2 = await import("@graphql-mesh/transform-filter-schema").then(handleImport);
-transforms[2] = new RootTransform_2({
-            apiName: '',
-            config: {"filters":["Query.!internal*","Mutation.!admin*","Type.!_internal*","Type.!_metadata"]},
-            baseDir,
-            cache,
-            pubsub,
-            importFn,
-            logger,
-          })
 const useResponseCache = await import("@graphql-mesh/plugin-response-cache").then(handleImport);
 additionalEnvelopPlugins[0] = await useResponseCache({
           ...({
@@ -403,19 +382,6 @@ additionalEnvelopPlugins[1] = await usePrometheus({
           baseDir,
           importFn,
         })
-additionalEnvelopPlugins[2] = await useOpenTelemetry({
-          ...({
-  "serviceName": "csv-analyzer-bff",
-  "sampling": {
-    "probability": 0.1
-  }
-}),
-          logger: logger.child({ plugin: "opentelemetry" }),
-          cache,
-          pubsub,
-          baseDir,
-          importFn,
-        });
 const additionalResolvers = [] as any[]
 const Merger = await import("@graphql-mesh/merger-bare").then(handleImport);
 const merger = new Merger({

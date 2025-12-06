@@ -140,7 +140,7 @@ export const DEFAULT_MESH_PLUGINS = {
 export const DEFAULT_MESH_TRANSFORMS = {
   // Always include (API consistency)
   namingConvention: {
-    typeNames: 'PascalCase',
+    typeNames: 'pascalCase',
     fieldNames: 'camelCase',
   },
   
