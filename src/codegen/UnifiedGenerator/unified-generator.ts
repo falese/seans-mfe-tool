@@ -1,7 +1,7 @@
 /**
  * Unified MFE Codegen Generator
  * Consolidates feature/component and platform/BFF codegen
- * Implements ADR-048, REQ-REMOTE-003
+ * Implements ADR-048, REQ-REMOTE-003, ADR-062
  */
 
 import * as path from 'path';
@@ -15,6 +15,145 @@ export interface GeneratedFile {
   overwrite: boolean;
 }
 
+// =============================================================================
+// Dependency Version Constants (ADR-062)
+// =============================================================================
+
+/**
+ * Centralized dependency versions for template generation
+ * Following e2e2 dependency resolution (2025-12-06)
+ * Based on GraphQL Mesh v0.100.x stable releases
+ */
+export const DEPENDENCY_VERSIONS = {
+  // GraphQL Mesh (BFF Layer)
+  graphqlMesh: {
+    cli: '^0.100.21',
+    openapi: '^0.109.26',
+    serveRuntime: '^1.2.4',
+  },
+  
+  // GraphQL Tools (Peer Dependencies)
+  graphqlTools: {
+    delegate: '^10.2.4',
+    utils: '^10.5.7',
+    wrap: '^10.0.5',
+  },
+  
+  // Mesh Plugins (Production Features)
+  meshPlugins: {
+    responseCache: '^0.104.20',
+    prometheus: '^2.1.8',
+    opentelemetry: '^1.3.67',
+  },
+  
+  // Mesh Transforms (Schema Manipulation)
+  meshTransforms: {
+    namingConvention: '^0.105.19',
+    rateLimit: '^0.105.19',
+    filterSchema: '^0.105.19',
+    resolversComposition: '^0.105.19',
+    cache: '^0.105.19',
+  },
+  
+  // Core Dependencies
+  core: {
+    graphql: '^16.8.1',
+    express: '^4.18.2',
+    cors: '^2.8.5',
+    helmet: '^8.1.0',
+    tslib: '^2.6.0',
+  },
+  
+  // React (Module Federation - Singleton)
+  react: {
+    react: '~18.2.0',
+    reactDom: '~18.2.0',
+  },
+  
+  // MUI (Design System)
+  mui: {
+    material: '^5.14.0',
+    system: '^5.14.0',
+    emotionReact: '^11.11.1',
+    emotionStyled: '^11.11.0',
+  },
+  
+  // Module Federation
+  moduleFederation: {
+    enhancedRspack: '^0.1.1',
+  },
+  
+  // Build Tools
+  buildTools: {
+    rspackCli: '^0.5.0',
+    rspackCore: '^0.5.0',
+    typescript: '^5.3.3',
+    tsNode: '^10.9.1',
+    concurrently: '^8.2.0',
+    serve: '^14.2.1',
+  },
+  
+  // Browser Polyfills (for rspack)
+  polyfills: {
+    buffer: '^6.0.3',
+    cryptoBrowserify: '^3.12.0',
+    streamBrowserify: '^3.0.0',
+    streamHttp: '^3.2.0',
+    httpsBrowserify: '^1.0.0',
+    pathBrowserify: '^1.0.1',
+    osBrowserify: '^0.3.0',
+    assert: '^2.1.0',
+    process: '^0.11.10',
+    events: '^3.3.0',
+    url: '^0.11.3',
+    util: '^0.12.5',
+  },
+};
+
+/**
+ * Plugin configuration defaults
+ */
+export const DEFAULT_MESH_PLUGINS = {
+  // Always include (performance critical)
+  responseCache: {
+    ttl: 300000, // 5 minutes
+    invalidate: { ttl: 0 },
+  },
+  
+  // Production observability (standard tier)
+  prometheus: {
+    enabled: true,
+    port: 9090,
+    endpoint: '/metrics',
+  },
+  
+  // Optional (advanced tier)
+  opentelemetry: {
+    enabled: false,
+    sampling: { probability: 0.1 },
+  },
+};
+
+/**
+ * Transform configuration defaults
+ */
+export const DEFAULT_MESH_TRANSFORMS = {
+  // Always include (API consistency)
+  namingConvention: {
+    typeNames: 'PascalCase',
+    fieldNames: 'camelCase',
+  },
+  
+  // Optional (advanced tier)
+  rateLimit: {
+    enabled: false,
+  },
+  
+  filterSchema: {
+    enabled: false,
+  },
+};
+
 // =============================
 // Shared Utilities
 // =============================
@@ -27,8 +166,13 @@ export function extractManifestVars(manifest: DSLManifest) {
   const inputTypeName = className + 'Inputs';
   const outputTypeName = className + 'Outputs';
   const port = manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001;
-  const muiVersion = manifest.dependencies?.['design-system']?.['@mui/material'] || '^5.15.0';
+  const muiVersion = manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
   const remotes = manifest.dependencies?.mfes || {};
+  
+  // Extract performance/observability config from manifest (ADR-062)
+  const performanceConfig = (manifest as any).performance || {};
+  const observabilityConfig = performanceConfig.observability || {};
+  
   return {
     name: manifest.name,
     version: manifest.version,
@@ -41,7 +185,30 @@ export function extractManifestVars(manifest: DSLManifest) {
     outputTypeName,
     manifest,
     capabilities: [], // will be overwritten in generateAllFiles
-    lifecycleHooks: [] // will be overwritten in generateAllFiles
+    lifecycleHooks: [], // will be overwritten in generateAllFiles
+    
+    // NEW: Dependency versions for templates (ADR-062)
+    dependencyVersions: DEPENDENCY_VERSIONS,
+    
+    // NEW: Plugin/transform configs (ADR-062)
+    meshPlugins: {
+      responseCache: performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
+      prometheus: observabilityConfig.prometheus?.enabled !== false ? {
+        ...DEFAULT_MESH_PLUGINS.prometheus,
+        ...observabilityConfig.prometheus,
+      } : null,
+      opentelemetry: observabilityConfig.opentelemetry?.enabled ? {
+        ...DEFAULT_MESH_PLUGINS.opentelemetry,
+        ...observabilityConfig.opentelemetry,
+      } : null,
+    },
+    
+    meshTransforms: {
+      namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
+      rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
+      filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
+      customTransforms: (manifest as any).transforms || [],
+    },
   };
 }
 
@@ -212,7 +379,7 @@ export async function generateAllFiles(
     const meshConfigYaml = yaml.dump(manifest.data, { noRefs: true });
     files.push({
       path: path.join(basePath, '.meshrc.yaml'),
-      content: await renderTemplate(path.join(bffTemplateDir, 'meshrc.yaml.ejs'), { meshConfigYaml }),
+      content: await renderTemplate(path.join(bffTemplateDir, 'meshrc.yaml.ejs'), { ...vars, meshConfigYaml }),
       overwrite: true
     });
   }

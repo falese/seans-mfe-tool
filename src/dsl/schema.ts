@@ -184,6 +184,98 @@ export const DataConfigSchema = z.object({
 export type DataConfig = z.infer<typeof DataConfigSchema>;
 
 // =============================================================================
+// Performance & Observability Schemas (ADR-062)
+// =============================================================================
+
+/** Caching configuration */
+export const CachingConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  ttl: z.number().default(300000), // 5 minutes
+  strategies: z
+    .array(
+      z.object({
+        type: z.string(),
+        field: z.string(),
+        ttl: z.number(),
+      })
+    )
+    .optional(),
+});
+export type CachingConfig = z.infer<typeof CachingConfigSchema>;
+
+/** Prometheus observability configuration */
+export const PrometheusConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  port: z.number().default(9090),
+  endpoint: z.string().default('/metrics'),
+});
+export type PrometheusConfig = z.infer<typeof PrometheusConfigSchema>;
+
+/** OpenTelemetry observability configuration */
+export const OpenTelemetryConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  serviceName: z.string().optional(),
+  sampling: z
+    .object({
+      probability: z.number().min(0).max(1).default(0.1),
+    })
+    .optional(),
+  exporters: z
+    .array(
+      z.object({
+        type: z.string(),
+        endpoint: z.string(),
+      })
+    )
+    .optional(),
+});
+export type OpenTelemetryConfig = z.infer<typeof OpenTelemetryConfigSchema>;
+
+/** Observability configuration */
+export const ObservabilityConfigSchema = z.object({
+  prometheus: PrometheusConfigSchema.optional(),
+  opentelemetry: OpenTelemetryConfigSchema.optional(),
+});
+export type ObservabilityConfig = z.infer<typeof ObservabilityConfigSchema>;
+
+/** Rate limiting configuration */
+export const RateLimitConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  config: z
+    .array(
+      z.object({
+        type: z.string(), // Query, Mutation
+        field: z.string(), // Field name or "*"
+        max: z.number(), // Max requests
+        ttl: z.number(), // Time window (ms)
+        identifyContext: z.string().optional(), // Context field for per-user limits
+      })
+    )
+    .optional(),
+});
+export type RateLimitConfig = z.infer<typeof RateLimitConfigSchema>;
+
+/** Filter schema configuration */
+export const FilterSchemaConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  filters: z.array(z.string()).optional(),
+});
+export type FilterSchemaConfig = z.infer<typeof FilterSchemaConfigSchema>;
+
+/** Performance configuration */
+export const PerformanceConfigSchema = z.object({
+  caching: CachingConfigSchema.optional(),
+  observability: ObservabilityConfigSchema.optional(),
+  rateLimit: RateLimitConfigSchema.optional(),
+  filterSchema: FilterSchemaConfigSchema.optional(),
+});
+export type PerformanceConfig = z.infer<typeof PerformanceConfigSchema>;
+
+/** Custom transform configuration (resolvers composition) */
+export const CustomTransformSchema = z.string(); // YAML string for resolver composition
+export type CustomTransform = z.infer<typeof CustomTransformSchema>;
+
+// =============================================================================
 // Dependencies Schemas
 // =============================================================================
 
@@ -222,6 +314,10 @@ export const DSLManifestSchema = z.object({
   capabilities: z.array(CapabilityEntrySchema),
   dependencies: DependenciesSchema.optional(),
   data: DataConfigSchema.optional(),
+  
+  // Performance & observability config (ADR-062)
+  performance: PerformanceConfigSchema.optional(),
+  transforms: z.array(CustomTransformSchema).optional(),
   
   // Future sections (deferred)
   authorization: z.unknown().optional()  // ADR-041

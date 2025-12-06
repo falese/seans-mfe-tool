@@ -1,6 +1,7 @@
 # GraphQL Mesh Plugins & Transforms Research
 
 ## Overview
+
 GraphQL Mesh provides plugins for observability, performance, and transforms for schema manipulation. This document outlines recommended options for our BFF template.
 
 ## Recommended Plugins
@@ -8,11 +9,13 @@ GraphQL Mesh provides plugins for observability, performance, and transforms for
 ### 1. Performance & Caching
 
 #### Response Cache Plugin (`@graphql-mesh/plugin-response-cache`)
+
 **Purpose**: Cache GraphQL responses to reduce backend calls
 **Version**: Latest stable
 **Use Case**: High-traffic APIs, expensive computations, rate-limited upstream APIs
 
 **Configuration Example**:
+
 ```yaml
 plugins:
   - responseCache:
@@ -27,12 +30,14 @@ plugins:
 ```
 
 **Benefits**:
+
 - ✅ Reduces load on upstream APIs
 - ✅ Improves response times
 - ✅ Configurable per-type/per-field TTL
 - ✅ Automatic invalidation on mutations
 
 **Trade-offs**:
+
 - ⚠️ Adds complexity to cache management
 - ⚠️ Requires Redis or in-memory store for distributed systems
 - ⚠️ May serve stale data if TTL too long
@@ -44,11 +49,13 @@ plugins:
 ### 2. Observability & Monitoring
 
 #### Prometheus Plugin (`@graphql-mesh/plugin-prometheus`)
+
 **Purpose**: Export metrics for Prometheus/Grafana monitoring
 **Version**: ^2.1.8
 **Use Case**: Production monitoring, SLO tracking, performance analysis
 
 **Configuration Example**:
+
 ```yaml
 plugins:
   - prometheus:
@@ -64,6 +71,7 @@ plugins:
 ```
 
 **Metrics Exported**:
+
 - Request duration histograms
 - Request counts by operation
 - Error rates
@@ -71,12 +79,14 @@ plugins:
 - Cache hit/miss rates
 
 **Benefits**:
+
 - ✅ Standard observability platform integration
 - ✅ Pre-configured dashboards available
 - ✅ Alerting on SLO violations
 - ✅ Correlate with infra metrics
 
 **Trade-offs**:
+
 - ⚠️ Requires Prometheus setup
 - ⚠️ Small performance overhead (~1-2%)
 
@@ -85,11 +95,13 @@ plugins:
 ---
 
 #### OpenTelemetry Plugin (`@graphql-mesh/plugin-opentelemetry`)
+
 **Purpose**: Distributed tracing with OTEL standard
 **Version**: Latest stable
 **Use Case**: Microservices, complex call chains, debugging latency
 
 **Configuration Example**:
+
 ```yaml
 plugins:
   - opentelemetry:
@@ -104,12 +116,14 @@ plugins:
 ```
 
 **Benefits**:
+
 - ✅ Distributed trace visualization
 - ✅ Span context propagation to upstream services
 - ✅ Standard OTEL format (vendor-agnostic)
 - ✅ Integrates with Jaeger, Zipkin, Datadog, etc.
 
 **Trade-offs**:
+
 - ⚠️ Requires tracing backend
 - ⚠️ Performance overhead with high sampling
 - ⚠️ More complex setup than Prometheus
@@ -121,11 +135,13 @@ plugins:
 ### 3. Security & Rate Limiting
 
 #### Rate Limit Transform (`@graphql-mesh/transform-rate-limit`)
+
 **Purpose**: Rate limiting per operation/type/field
 **Version**: Latest stable
 **Use Case**: Protect against abuse, enforce quotas, prevent DDOS
 
 **Configuration Example**:
+
 ```yaml
 transforms:
   - rateLimit:
@@ -142,12 +158,14 @@ transforms:
 ```
 
 **Benefits**:
+
 - ✅ Granular rate limiting (operation/type/field level)
 - ✅ Per-user or global limits
 - ✅ Protects backend from overload
 - ✅ Returns clear error messages
 
 **Trade-offs**:
+
 - ⚠️ Requires state management (Redis for distributed)
 - ⚠️ May frustrate legitimate users if limits too low
 
@@ -160,11 +178,13 @@ transforms:
 ### 1. Schema Manipulation
 
 #### Naming Convention Transform (`@graphql-mesh/transform-naming-convention`)
+
 **Purpose**: Standardize field naming across sources (camelCase, snake_case, etc.)
 **Version**: Latest stable
 **Use Case**: Normalize APIs with different naming conventions
 
 **Configuration Example**:
+
 ```yaml
 transforms:
   - namingConvention:
@@ -175,6 +195,7 @@ transforms:
 ```
 
 **Benefits**:
+
 - ✅ Consistent API surface
 - ✅ Better developer experience
 - ✅ Aligns with GraphQL best practices
@@ -184,11 +205,13 @@ transforms:
 ---
 
 #### Filter Schema Transform (`@graphql-mesh/transform-filter-schema`)
+
 **Purpose**: Remove types/fields from schema
 **Version**: Latest stable
 **Use Case**: Hide internal fields, comply with GDPR, reduce schema size
 
 **Configuration Example**:
+
 ```yaml
 transforms:
   - filterSchema:
@@ -199,6 +222,7 @@ transforms:
 ```
 
 **Benefits**:
+
 - ✅ Security - hide sensitive operations
 - ✅ Compliance - remove fields per data regulations
 - ✅ Simplicity - smaller schema for consumers
@@ -208,11 +232,13 @@ transforms:
 ---
 
 #### Prefix/Encapsulate Transform
+
 **Purpose**: Namespace types from different sources
 **Version**: Latest stable
 **Use Case**: Multiple sources with conflicting type names
 
 **Configuration Example**:
+
 ```yaml
 sources:
   - name: Users
@@ -232,6 +258,7 @@ sources:
 ---
 
 #### Federation Transform (`@graphql-mesh/transform-federation`)
+
 **Purpose**: Convert to Apollo Federation schema
 **Version**: Latest stable
 **Use Case**: Integrate with Apollo Gateway
@@ -243,11 +270,13 @@ sources:
 ### 2. Performance Optimization
 
 #### Cache Transform (`@graphql-mesh/transform-cache`)
+
 **Purpose**: Cache resolver results (in addition to response cache)
 **Version**: Latest stable
 **Use Case**: Expensive field resolvers, computed fields
 
 **Configuration Example**:
+
 ```yaml
 transforms:
   - cache:
@@ -257,11 +286,13 @@ transforms:
 ```
 
 **Benefits**:
+
 - ✅ Granular field-level caching
 - ✅ Reduces resolver execution time
 - ✅ Works with response cache
 
 **Trade-offs**:
+
 - ⚠️ Two-level cache adds complexity
 - ⚠️ Memory usage increases
 
@@ -270,11 +301,13 @@ transforms:
 ---
 
 #### Hoist Field Transform (`@graphql-mesh/transform-hoist-field`)
+
 **Purpose**: Flatten nested structures for easier querying
 **Version**: Latest stable
 **Use Case**: Simplify deeply nested REST API responses
 
 **Configuration Example**:
+
 ```yaml
 transforms:
   - hoistField:
@@ -293,6 +326,7 @@ transforms:
 ## Proposed Template Configuration
 
 ### Minimal (Always Include)
+
 ```yaml
 plugins:
   - responseCache:
@@ -311,13 +345,14 @@ transforms:
 ---
 
 ### Standard (Production-Ready)
+
 ```yaml
 plugins:
   - responseCache:
       ttl: 300000
       invalidate:
         ttl: 0
-  
+
   - prometheus:
       port: 9090
       endpoint: /metrics
@@ -335,6 +370,7 @@ transforms:
 ---
 
 ### Advanced (Full-Featured)
+
 ```yaml
 plugins:
   - responseCache:
@@ -342,14 +378,14 @@ plugins:
       ttlPerType: {} # Configure per manifest
       invalidate:
         ttl: 0
-  
+
   - prometheus:
       port: 9090
       endpoint: /metrics
       labels:
         service: <%= name %>
         environment: ${NODE_ENV}
-  
+
   - opentelemetry:
       serviceName: <%= name %>-bff
       sampling:
@@ -359,10 +395,10 @@ transforms:
   - namingConvention:
       typeNames: PascalCase
       fieldNames: camelCase
-  
+
   - rateLimit:
       config: [] # Configure per manifest
-  
+
   - filterSchema:
       filters: [] # Configure per manifest
 ```
@@ -376,6 +412,7 @@ transforms:
 GraphQL Mesh supports custom transforms via:
 
 ### 1. Built-in Transform API
+
 ```typescript
 // src/platform/bff/transforms/my-transform.ts
 import { MeshTransform } from '@graphql-mesh/types';
@@ -384,11 +421,12 @@ export const myCustomTransform: MeshTransform = {
   transformSchema(schema, config) {
     // Modify schema using graphql-tools
     return transformedSchema;
-  }
+  },
 };
 ```
 
 ### 2. Resolvers Composition Transform
+
 ```yaml
 transforms:
   - resolversComposition:
@@ -398,13 +436,14 @@ transforms:
 
 ```typescript
 // src/platform/bff/composers/auth-check.ts
-export const authCheck = next => async (root, args, context, info) => {
+export const authCheck = (next) => async (root, args, context, info) => {
   if (!context.userId) throw new Error('Unauthorized');
   return next(root, args, context, info);
 };
 ```
 
 **Use Cases**:
+
 - Custom authorization logic
 - Field-level access control
 - Data transformation/enrichment
@@ -416,19 +455,23 @@ export const authCheck = next => async (root, args, context, info) => {
 ## Recommendation Summary
 
 ### Must Include (Template Defaults)
+
 1. ✅ **response-cache** - Performance critical
 2. ✅ **naming-convention** - API consistency
 
 ### Should Include (DSL-Configurable)
+
 3. ✅ **prometheus** - Production observability
 4. ✅ **Custom transforms support** - Flexibility
 
 ### Optional (User Opt-In via DSL)
+
 5. ⚠️ **opentelemetry** - Advanced tracing
 6. ⚠️ **rate-limit** - Public APIs
 7. ⚠️ **filter-schema** - Security/compliance
 
 ### Package Versions (for template)
+
 ```json
 {
   "@graphql-mesh/plugin-response-cache": "^1.0.0",
@@ -443,7 +486,9 @@ export const authCheck = next => async (root, args, context, info) => {
 ## Implementation in Templates
 
 ### 1. Update package.json.ejs
+
 Add conditional includes based on DSL manifest:
+
 ```json
 {
   "dependencies": {
@@ -457,12 +502,14 @@ Add conditional includes based on DSL manifest:
 ```
 
 ### 2. Update meshrc.yaml.ejs
+
 Generate plugins/transforms from DSL manifest:
+
 ```yaml
 plugins:
   - responseCache:
       ttl: <%= cacheConfig.ttl || 300000 %>
-  
+
 <% if (observability.prometheus) { %>
   - prometheus:
       port: 9090
@@ -483,6 +530,7 @@ transforms:
 ```
 
 ### 3. Support in DSL Manifest
+
 ```yaml
 name: my-mfe
 version: 1.0.0
@@ -497,7 +545,7 @@ performance:
       - type: Query
         field: user
         ttl: 60000
-  
+
   observability:
     prometheus:
       enabled: true

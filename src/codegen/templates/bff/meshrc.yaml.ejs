@@ -1,4 +1,58 @@
 # .meshrc.yaml - Auto-generated from DSL manifest data section
 # REQ-BFF-001: DSL as Single Source of Truth
 # ADR-046: GraphQL Mesh with DSL-embedded config
+# ADR-062: Mesh v0.100.x with production plugins
+
+# GraphQL Mesh Configuration
 <%- meshConfigYaml %>
+
+<% if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { %>
+# Plugins (Performance & Observability)
+plugins:
+<% if (meshPlugins.responseCache) { %>
+  - responseCache:
+      ttl: <%= meshPlugins.responseCache.ttl %>
+      invalidate:
+        ttl: <%= meshPlugins.responseCache.invalidate.ttl %>
+<% } %>
+<% if (meshPlugins.prometheus) { %>
+  - prometheus:
+      port: <%= meshPlugins.prometheus.port %>
+      endpoint: <%= meshPlugins.prometheus.endpoint %>
+      labels:
+        service: <%= name %>
+        version: <%= version %>
+        environment: ${NODE_ENV:-development}
+<% } %>
+<% if (meshPlugins.opentelemetry) { %>
+  - opentelemetry:
+      serviceName: <%= name %>-bff
+      sampling:
+        probability: <%= meshPlugins.opentelemetry.sampling.probability %>
+<% } %>
+<% } %>
+
+<% if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { %>
+# Transforms (Schema Manipulation)
+transforms:
+<% if (meshTransforms.namingConvention) { %>
+  - namingConvention:
+      typeNames: <%= meshTransforms.namingConvention.typeNames %>
+      fieldNames: <%= meshTransforms.namingConvention.fieldNames %>
+<% } %>
+<% if (meshTransforms.rateLimit) { %>
+  - rateLimit:
+      config: <%- JSON.stringify(meshTransforms.rateLimit.config || []) %>
+<% } %>
+<% if (meshTransforms.filterSchema) { %>
+  - filterSchema:
+      filters: <%- JSON.stringify(meshTransforms.filterSchema.filters || []) %>
+<% } %>
+<% if (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0) { %>
+<% meshTransforms.customTransforms.forEach(transform => { %>
+  - resolversComposition:
+      <%- transform %>
+<% }); %>
+<% } %>
+<% } %>
+

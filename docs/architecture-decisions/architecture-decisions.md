@@ -73,6 +73,11 @@ Reference these in code comments to guide AI assistants and document architectur
 - ADR-047: Generated MFE test templates (starter tests for scaffolded projects)
 - ADR-048: Incremental TypeScript migration (new code in TS, convert on touch)
 
+**Production Features (Session 8):**
+
+- ADR-058: Platform Handler Library Standardization
+- ADR-062: GraphQL Mesh v0.100.x with production plugins & transforms
+
 ---
 
 ## GraphQL BFF ADRs
@@ -2056,11 +2061,100 @@ async loadAgent(manifest: AgentManifest) {
 
 ---
 
+## Production Features ADRs
+
+### ADR-062: GraphQL Mesh v0.100.x with Production Plugins & Transforms
+
+**Status:** ✅ Implemented (2025-12-06)
+
+**Problem:** GraphQL Mesh dependency conflicts, missing production features (caching, observability, rate limiting), no DSL-driven plugin configuration.
+
+**Solution:** Lock to Mesh v0.100.x stable, add production plugins (response-cache, prometheus, opentelemetry), DSL-driven transforms (rate-limit, filter-schema, resolvers-composition).
+
+**Key Features:**
+
+1. **Centralized Version Constants** (`unified-generator.ts`):
+   ```typescript
+   export const DEPENDENCY_VERSIONS = {
+     graphqlMesh: { cli: '^0.100.21', openapi: '^0.109.26', serveRuntime: '^1.2.4' },
+     meshPlugins: { responseCache: '^0.104.20', prometheus: '^2.1.8', opentelemetry: '^1.3.67' },
+     meshTransforms: { namingConvention: '^0.105.19', rateLimit: '^0.105.19', ... },
+   };
+   ```
+
+2. **New Mesh Runtime API**:
+   ```typescript
+   import { createBuiltMeshHTTPHandler } from './.mesh';
+   const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
+   app.use('/graphql', meshHandler);
+   ```
+
+3. **DSL Performance Schema**:
+   ```yaml
+   performance:
+     caching:
+       enabled: true
+       ttl: 300000
+       strategies:
+         - type: Query
+           field: getUser
+           ttl: 60000
+     observability:
+       prometheus: { enabled: true, port: 9090 }
+       opentelemetry: { enabled: true, sampling: { probability: 0.1 } }
+     rateLimit:
+       enabled: true
+       config:
+         - type: Query
+           field: '*'
+           max: 100
+           ttl: 60000
+   transforms:
+     - resolver: Query.getUser
+       composer: ./src/platform/bff/composers/auth-check#authCheck
+   ```
+
+4. **Three-Tier Plugin System**:
+   - **Always Include**: Response cache (5-min TTL)
+   - **Production Enabled**: Prometheus metrics
+   - **Opt-In**: OpenTelemetry tracing
+
+5. **Schema Transforms**:
+   - **Always**: Naming convention (PascalCase types, camelCase fields)
+   - **Opt-In**: Rate limiting, schema filtering, resolver composition
+
+**Impact:**
+- ✅ Dependency stability (version lock)
+- ✅ Production-ready (caching, metrics, tracing)
+- ✅ DSL-driven (performance tuning via manifest)
+- ✅ Type safety (new Mesh API)
+- ⚠️ Breaking change (requires migration for existing projects)
+
+**Traceability:**
+- REQ-BFF-005: Production-grade performance
+- REQ-BFF-006: Observability integration
+- REQ-BFF-007: Rate limiting and security
+- REQ-BFF-008: DSL-driven plugin configuration
+- ADR-046: GraphQL Mesh with DSL (foundation)
+- ADR-058: Platform Handler Library (observability patterns)
+
+**Migration:**
+See [ADR-062 Migration Guide](./ADR-062-mesh-v0100-plugins.md#migration-guide)
+
+**Files:**
+- `src/codegen/UnifiedGenerator/unified-generator.ts`
+- `src/codegen/templates/bff/*.ejs`
+- `src/dsl/schema.ts` (8 new schemas)
+- `examples/e2e2/mfe-manifest-full.yaml`
+
+---
+
 ## Migration & Deprecation Notes
 
 - ADR-037: Custom lifecycle phases removed; only standard phases (`before`, `main`, `after`, `error`) are supported. See REQ-044.
 - ADR-021: `analyze` command removed; replaced by runtime DSL discovery.
 - ADR-048: Template folders restructured by language, not type; see REQ-059. Legacy folders (`src/templates/react/`, `src/templates/api/`, `src/templates/bff/`) removed.
+- ADR-062: GraphQL Mesh runtime API changed from `getMesh()` to `createBuiltMeshHTTPHandler()`. See migration guide.
 - Deprecated files: Old template folders and BACKLOG.md have been cleaned/archived. GitHub Issues are now the single source of truth for backlog tracking.
 
 ## How to Use ADRs

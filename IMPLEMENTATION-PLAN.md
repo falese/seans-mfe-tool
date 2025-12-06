@@ -1,4 +1,5 @@
 # Template Update Implementation Plan
+
 ## GraphQL Mesh Dependencies, Plugins, and DSL Enhancements
 
 **Date**: 2025-12-06  
@@ -36,25 +37,25 @@ Update code generation templates to use correct GraphQL Mesh versions (v0.100.x)
 export const DEPENDENCY_VERSIONS = {
   // GraphQL Mesh (BFF Layer)
   graphqlMesh: {
-    cli: '^0.100.21',           // Latest stable CLI
-    openapi: '^0.109.26',       // Latest OpenAPI handler
-    serveRuntime: '^1.2.4',     // HTTP handler runtime
+    cli: '^0.100.21', // Latest stable CLI
+    openapi: '^0.109.26', // Latest OpenAPI handler
+    serveRuntime: '^1.2.4', // HTTP handler runtime
   },
-  
+
   // GraphQL Tools (Peer Dependencies)
   graphqlTools: {
     delegate: '^10.2.4',
     utils: '^10.5.7',
     wrap: '^10.0.5',
   },
-  
+
   // Mesh Plugins (Production Features)
   meshPlugins: {
     responseCache: '^0.104.20',
     prometheus: '^2.1.8',
     opentelemetry: '^1.3.67',
   },
-  
+
   // Mesh Transforms (Schema Manipulation)
   meshTransforms: {
     namingConvention: '^0.105.19',
@@ -63,7 +64,7 @@ export const DEPENDENCY_VERSIONS = {
     resolversComposition: '^0.105.19',
     cache: '^0.105.19',
   },
-  
+
   // Core Dependencies
   core: {
     graphql: '^16.8.1',
@@ -72,13 +73,13 @@ export const DEPENDENCY_VERSIONS = {
     helmet: '^8.1.0',
     tslib: '^2.6.0',
   },
-  
+
   // React (Module Federation - Singleton)
   react: {
-    react: '~18.2.0',         // Tilde for tight version control
+    react: '~18.2.0', // Tilde for tight version control
     reactDom: '~18.2.0',
   },
-  
+
   // MUI (Design System)
   mui: {
     material: '^5.14.0',
@@ -86,12 +87,12 @@ export const DEPENDENCY_VERSIONS = {
     emotionReact: '^11.11.1',
     emotionStyled: '^11.11.0',
   },
-  
+
   // Module Federation
   moduleFederation: {
     enhancedRspack: '^0.1.1',
   },
-  
+
   // Build Tools
   buildTools: {
     rspackCli: '^0.5.0',
@@ -101,7 +102,7 @@ export const DEPENDENCY_VERSIONS = {
     concurrently: '^8.2.0',
     serve: '^14.2.1',
   },
-  
+
   // Browser Polyfills (for rspack)
   polyfills: {
     buffer: '^6.0.3',
@@ -128,14 +129,14 @@ export const DEFAULT_MESH_PLUGINS = {
     ttl: 300000, // 5 minutes
     invalidate: { ttl: 0 },
   },
-  
+
   // Production observability (standard tier)
   prometheus: {
     enabled: true,
     port: 9090,
     endpoint: '/metrics',
   },
-  
+
   // Optional (advanced tier)
   opentelemetry: {
     enabled: false,
@@ -152,12 +153,12 @@ export const DEFAULT_MESH_TRANSFORMS = {
     typeNames: 'PascalCase',
     fieldNames: 'camelCase',
   },
-  
+
   // Optional (advanced tier)
   rateLimit: {
     enabled: false,
   },
-  
+
   filterSchema: {
     enabled: false,
   },
@@ -172,13 +173,14 @@ export function extractManifestVars(manifest: DSLManifest) {
   const inputTypeName = className + 'Inputs';
   const outputTypeName = className + 'Outputs';
   const port = manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001;
-  const muiVersion = manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
+  const muiVersion =
+    manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
   const remotes = manifest.dependencies?.mfes || {};
-  
+
   // Extract performance/observability config from manifest (NEW)
   const performanceConfig = manifest.performance || {};
   const observabilityConfig = performanceConfig.observability || {};
-  
+
   return {
     name: manifest.name,
     version: manifest.version,
@@ -192,23 +194,29 @@ export function extractManifestVars(manifest: DSLManifest) {
     manifest,
     capabilities: [], // populated later in generateAllFiles
     lifecycleHooks: [], // populated later in generateAllFiles
-    
+
     // NEW: Dependency versions for templates
     dependencyVersions: DEPENDENCY_VERSIONS,
-    
+
     // NEW: Plugin/transform configs
     meshPlugins: {
-      responseCache: performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
-      prometheus: observabilityConfig.prometheus?.enabled !== false ? {
-        ...DEFAULT_MESH_PLUGINS.prometheus,
-        ...observabilityConfig.prometheus,
-      } : null,
-      opentelemetry: observabilityConfig.opentelemetry?.enabled ? {
-        ...DEFAULT_MESH_PLUGINS.opentelemetry,
-        ...observabilityConfig.opentelemetry,
-      } : null,
+      responseCache:
+        performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
+      prometheus:
+        observabilityConfig.prometheus?.enabled !== false
+          ? {
+              ...DEFAULT_MESH_PLUGINS.prometheus,
+              ...observabilityConfig.prometheus,
+            }
+          : null,
+      opentelemetry: observabilityConfig.opentelemetry?.enabled
+        ? {
+            ...DEFAULT_MESH_PLUGINS.opentelemetry,
+            ...observabilityConfig.opentelemetry,
+          }
+        : null,
     },
-    
+
     meshTransforms: {
       namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
       rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
@@ -311,6 +319,7 @@ export function extractManifestVars(manifest: DSLManifest) {
 ```
 
 **Key Changes**:
+
 - ✅ Remove `"type": "module"` (use CommonJS)
 - ✅ Use `<%= dependencyVersions.* %>` pattern
 - ✅ Conditional plugin includes based on DSL config
@@ -341,18 +350,23 @@ interface MeshContext {
 const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
 
 // Add context middleware before GraphQL handler
-app.use('/graphql', (req: Request, res: Response, next: NextFunction) => {
-  // Attach context to request for Mesh
-  (req as any).meshContext = {
-    jwt: req.headers.authorization?.replace('Bearer ', ''),
-    requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
-    userId: extractUserIdFromToken(req.headers.authorization as string),
-  };
-  next();
-}, meshHandler);
+app.use(
+  '/graphql',
+  (req: Request, res: Response, next: NextFunction) => {
+    // Attach context to request for Mesh
+    (req as any).meshContext = {
+      jwt: req.headers.authorization?.replace('Bearer ', ''),
+      requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
+      userId: extractUserIdFromToken(req.headers.authorization as string),
+    };
+    next();
+  },
+  meshHandler
+);
 ```
 
 **Remove** old imports:
+
 ```typescript
 // DELETE these lines:
 import { getMesh } from '@graphql-mesh/runtime';
@@ -361,6 +375,7 @@ import { graphqlHTTP } from 'express-graphql';
 ```
 
 **Key Changes**:
+
 - ✅ Use `createBuiltMeshHTTPHandler()` from generated `.mesh`
 - ✅ Middleware pattern for context injection
 - ✅ Remove runtime mesh initialization
@@ -397,6 +412,7 @@ import { graphqlHTTP } from 'express-graphql';
 ```
 
 **Key Changes**:
+
 - ✅ `"module": "commonjs"` (was NodeNext)
 - ✅ `"moduleResolution": "node"` (was NodeNext)
 - ✅ Add `"lib": ["ES2022"]`
@@ -410,6 +426,7 @@ import { graphqlHTTP } from 'express-graphql';
 **Apply same dependency pattern** as BFF template (use `<%= dependencyVersions.* %>`)
 
 **Key additions**:
+
 ```json
 {
   "dependencies": {
@@ -509,11 +526,15 @@ transforms:
 export const CachingConfigSchema = z.object({
   enabled: z.boolean().default(true),
   ttl: z.number().default(300000), // 5 minutes
-  strategies: z.array(z.object({
-    type: z.string(),
-    field: z.string(),
-    ttl: z.number(),
-  })).optional(),
+  strategies: z
+    .array(
+      z.object({
+        type: z.string(),
+        field: z.string(),
+        ttl: z.number(),
+      })
+    )
+    .optional(),
 });
 export type CachingConfig = z.infer<typeof CachingConfigSchema>;
 
@@ -529,13 +550,19 @@ export type PrometheusConfig = z.infer<typeof PrometheusConfigSchema>;
 export const OpenTelemetryConfigSchema = z.object({
   enabled: z.boolean().default(false),
   serviceName: z.string().optional(),
-  sampling: z.object({
-    probability: z.number().min(0).max(1).default(0.1),
-  }).optional(),
-  exporters: z.array(z.object({
-    type: z.string(),
-    endpoint: z.string(),
-  })).optional(),
+  sampling: z
+    .object({
+      probability: z.number().min(0).max(1).default(0.1),
+    })
+    .optional(),
+  exporters: z
+    .array(
+      z.object({
+        type: z.string(),
+        endpoint: z.string(),
+      })
+    )
+    .optional(),
 });
 export type OpenTelemetryConfig = z.infer<typeof OpenTelemetryConfigSchema>;
 
@@ -549,13 +576,15 @@ export type ObservabilityConfig = z.infer<typeof ObservabilityConfigSchema>;
 /** Rate limiting configuration */
 export const RateLimitConfigSchema = z.object({
   enabled: z.boolean().default(false),
-  config: z.array(z.object({
-    type: z.string(),
-    field: z.string(),
-    max: z.number(),
-    ttl: z.number(),
-    identifyContext: z.string().optional(),
-  })),
+  config: z.array(
+    z.object({
+      type: z.string(),
+      field: z.string(),
+      max: z.number(),
+      ttl: z.number(),
+      identifyContext: z.string().optional(),
+    })
+  ),
 });
 export type RateLimitConfig = z.infer<typeof RateLimitConfigSchema>;
 
@@ -585,18 +614,18 @@ export type CustomTransform = z.infer<typeof CustomTransformSchema>;
 ```typescript
 export const DSLManifestSchema = z.object({
   // ... existing fields ...
-  
+
   // Core sections
   capabilities: z.array(CapabilityEntrySchema),
   dependencies: DependenciesSchema.optional(),
   data: DataConfigSchema.optional(),
-  
+
   // NEW: Performance & observability config (ADR-062)
   performance: PerformanceConfigSchema.optional(),
   transforms: z.array(CustomTransformSchema).optional(),
-  
+
   // Future sections (deferred)
-  authorization: z.unknown().optional()  // ADR-041
+  authorization: z.unknown().optional(), // ADR-041
 });
 ```
 
@@ -645,15 +674,15 @@ performance:
   # Caching configuration
   caching:
     enabled: true
-    ttl: 300000  # 5 minutes default
+    ttl: 300000 # 5 minutes default
     strategies:
       - type: Query
         field: user
-        ttl: 60000  # 1 minute for user queries
+        ttl: 60000 # 1 minute for user queries
       - type: Query
         field: pets
-        ttl: 300000  # 5 minutes for pet queries
-  
+        ttl: 300000 # 5 minutes for pet queries
+
   # Observability configuration
   observability:
     # Prometheus metrics (always enabled by default)
@@ -661,7 +690,7 @@ performance:
       enabled: true
       port: 9090
       endpoint: /metrics
-    
+
     # OpenTelemetry tracing (opt-in)
     opentelemetry:
       enabled: false
@@ -671,7 +700,7 @@ performance:
       exporters:
         - type: jaeger
           endpoint: http://jaeger:14268/api/traces
-  
+
   # Rate limiting (opt-in for public APIs)
   rateLimit:
     enabled: false
@@ -679,9 +708,9 @@ performance:
       - type: Query
         field: search
         max: 100
-        ttl: 60000  # per minute
+        ttl: 60000 # per minute
         identifyContext: userId
-  
+
   # Filter schema (hide internal fields)
   filterSchema:
     enabled: false
@@ -714,7 +743,7 @@ dependencies:
 
 **File**: `docs/architecture-decisions/ADR-062-mesh-v0100-plugins.md`
 
-```markdown
+````markdown
 # ADR-062: GraphQL Mesh v0.100.x with Production Plugins
 
 **Date**: 2025-12-06  
@@ -735,8 +764,9 @@ Use GraphQL Mesh v0.100.21 (latest stable) with production-ready plugins for res
 ### Problem
 
 Generated BFF projects had dependency issues:
+
 1. Templates used non-existent Mesh v1.0.0 or "latest" (unreliable)
-2. Missing peer dependencies (@graphql-tools/*)
+2. Missing peer dependencies (@graphql-tools/\*)
 3. No observability/monitoring capabilities out-of-the-box
 4. No performance optimization (caching)
 5. Old API patterns (express-graphql deprecated)
@@ -744,12 +774,14 @@ Generated BFF projects had dependency issues:
 ### Investigation
 
 Analysis of e2e2 project revealed:
+
 - GraphQL Mesh v1.0.0 doesn't exist in stable releases
 - Latest stable is v0.100.21 (December 2024)
 - Mesh v0.100.x uses different API (`createBuiltMeshHTTPHandler`)
 - TypeScript NodeNext resolution incompatible with generated code
 
 Research on Mesh ecosystem identified production-critical plugins:
+
 - **response-cache**: Essential performance optimization
 - **prometheus**: Standard observability platform
 - **opentelemetry**: Advanced distributed tracing
@@ -775,6 +807,7 @@ Research on Mesh ecosystem identified production-critical plugins:
   "tslib": "^2.6.0"
 }
 ```
+````
 
 ### 2. Standard Tier Plugins (Production-Ready)
 
@@ -788,10 +821,11 @@ Research on Mesh ecosystem identified production-critical plugins:
 ```
 
 **Default Configuration**:
+
 ```yaml
 plugins:
   - responseCache:
-      ttl: 300000  # 5 minutes
+      ttl: 300000 # 5 minutes
       invalidate:
         ttl: 0
   - prometheus:
@@ -817,6 +851,7 @@ transforms:
 ### 4. API Pattern Update
 
 **Old** (express-graphql, deprecated):
+
 ```typescript
 import { getMesh } from '@graphql-mesh/runtime';
 import { graphqlHTTP } from 'express-graphql';
@@ -826,20 +861,26 @@ app.use('/graphql', graphqlHTTP({ schema: mesh.schema }));
 ```
 
 **New** (v0.100.x pattern):
+
 ```typescript
 import { createBuiltMeshHTTPHandler } from './.mesh';
 
 const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
 
-app.use('/graphql', (req, res, next) => {
-  (req as any).meshContext = { jwt, requestId, userId };
-  next();
-}, meshHandler);
+app.use(
+  '/graphql',
+  (req, res, next) => {
+    (req as any).meshContext = { jwt, requestId, userId };
+    next();
+  },
+  meshHandler
+);
 ```
 
 ### 5. TypeScript Configuration
 
 **Module Resolution**: CommonJS (not NodeNext)
+
 ```json
 {
   "compilerOptions": {
@@ -854,6 +895,7 @@ app.use('/graphql', (req, res, next) => {
 ### 6. DSL Extensions for Configuration
 
 **New `performance` section**:
+
 ```yaml
 performance:
   caching:
@@ -871,6 +913,7 @@ performance:
 ```
 
 **New `transforms` section** (custom resolvers):
+
 ```yaml
 transforms:
   - resolver: Query.user
@@ -908,28 +951,33 @@ transforms:
 ## Implementation
 
 ### Phase 1: Template Updates
+
 - Update dependency versions in package.json.ejs
 - Update server.ts.ejs with new API pattern
 - Update tsconfig.json with correct module resolution
 - Add version constants to unified-generator.ts
 
 ### Phase 2: Plugin Integration
+
 - Add meshrc.yaml.ejs template with plugin injection
 - Update unified-generator to pass plugin config
 - Create example custom transform composers
 
 ### Phase 3: DSL Schema
+
 - Add PerformanceConfig, ObservabilityConfig schemas
 - Add CustomTransform schema
 - Update DSLManifest to include new sections
 
 ### Phase 4: Documentation
+
 - Create ADR-062 (this document)
 - Update README with plugin options
 - Create migration guide for existing projects
 - Add examples/e2e2/mfe-manifest-full.yaml
 
 ### Phase 5: Testing
+
 - Test generated BFF-only project
 - Test generated full-stack MFE project
 - Verify npm install, build, runtime
@@ -961,7 +1009,8 @@ transforms:
 **Approved**: 2025-12-06  
 **Reviewers**: Sean (Project Lead)  
 **Implementation**: READY FOR IMPLEMENTATION
-```
+
+````
 
 ---
 
@@ -998,7 +1047,7 @@ transforms:
 - Conditional plugin includes based on DSL config
 
 **See**: docs/architecture-decisions/ADR-062-mesh-v0100-plugins.md
-```
+````
 
 ---
 
@@ -1035,12 +1084,12 @@ describe('extractManifestVars with performance config', () => {
         },
       },
     };
-    
+
     const vars = extractManifestVars(manifest);
     expect(vars.meshPlugins.prometheus).toBeTruthy();
     expect(vars.meshPlugins.prometheus.port).toBe(9090);
   });
-  
+
   it('should disable prometheus if explicitly disabled', () => {
     const manifest = {
       name: 'test-mfe',
@@ -1054,7 +1103,7 @@ describe('extractManifestVars with performance config', () => {
         },
       },
     };
-    
+
     const vars = extractManifestVars(manifest);
     expect(vars.meshPlugins.prometheus).toBeNull();
   });
@@ -1072,17 +1121,17 @@ describe('Template Generation E2E', () => {
   it('should generate BFF project with correct dependencies', async () => {
     const manifest = loadManifest('examples/e2e2/mfe-manifest.yaml');
     const basePath = '/tmp/test-bff-gen';
-    
+
     const files = await generateAllFiles(manifest, basePath);
-    
-    const packageJson = files.find(f => f.path.endsWith('package.json'));
+
+    const packageJson = files.find((f) => f.path.endsWith('package.json'));
     const parsed = JSON.parse(packageJson.content);
-    
+
     expect(parsed.dependencies['@graphql-mesh/cli']).toBe('^0.100.21');
     expect(parsed.dependencies['@graphql-mesh/plugin-prometheus']).toBeDefined();
     expect(parsed.dependencies['react']).toBe('~18.2.0');
   });
-  
+
   it('should generate meshrc.yaml with plugins', async () => {
     const manifest = {
       name: 'test',
@@ -1095,10 +1144,10 @@ describe('Template Generation E2E', () => {
         observability: { prometheus: { enabled: true } },
       },
     };
-    
+
     const files = await generateAllFiles(manifest, '/tmp/test-mesh');
-    const meshrc = files.find(f => f.path.endsWith('.meshrc.yaml'));
-    
+    const meshrc = files.find((f) => f.path.endsWith('.meshrc.yaml'));
+
     expect(meshrc.content).toContain('prometheus:');
     expect(meshrc.content).toContain('port: 9090');
   });
@@ -1154,7 +1203,7 @@ kill %1
 
 **File**: `docs/MIGRATION-GUIDE-v0100.md`
 
-```markdown
+````markdown
 # Migration Guide: Mesh v0.90/v0.99 → v0.100.x
 
 ## Summary
@@ -1186,10 +1235,12 @@ npm install \
   @graphql-tools/wrap@^10.0.5 \
   tslib@^2.6.0
 ```
+````
 
 ### 2. Update server.ts
 
 **Before**:
+
 ```typescript
 import { getMesh } from '@graphql-mesh/runtime';
 import { graphqlHTTP } from 'express-graphql';
@@ -1199,14 +1250,19 @@ app.use('/graphql', graphqlHTTP({ schema: mesh.schema }));
 ```
 
 **After**:
+
 ```typescript
 import { createBuiltMeshHTTPHandler } from './.mesh';
 
 const meshHandler = createBuiltMeshHTTPHandler();
-app.use('/graphql', (req, res, next) => {
-  (req as any).meshContext = { jwt, requestId, userId };
-  next();
-}, meshHandler);
+app.use(
+  '/graphql',
+  (req, res, next) => {
+    (req as any).meshContext = { jwt, requestId, userId };
+    next();
+  },
+  meshHandler
+);
 ```
 
 ### 3. Update tsconfig.json
@@ -1262,17 +1318,21 @@ curl http://localhost:9090/metrics
 ## Troubleshooting
 
 **Error**: `Cannot find module './.mesh'`
+
 - Solution: Run `npm run bff:build` first
 
 **Error**: `Module not found: graphql/jsutils/PromiseOrValue.cjs`
+
 - Solution: Update graphql to ^16.8.1
 
 **Error**: TypeScript errors in .mesh/index.ts
+
 - Solution: Set `"skipLibCheck": true` in tsconfig.json
 
 ## Questions?
 
 See docs/architecture-decisions/ADR-062-mesh-v0100-plugins.md
+
 ```
 
 ---
@@ -1364,3 +1424,4 @@ See docs/architecture-decisions/ADR-062-mesh-v0100-plugins.md
 ## Ready to Proceed?
 
 All dependencies resolved, plan reviewed, ADRs documented, DSL schema defined. Ready for implementation! 🚀
+```
