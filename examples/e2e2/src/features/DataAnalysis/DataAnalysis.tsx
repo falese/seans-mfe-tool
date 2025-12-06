@@ -1,6 +1,6 @@
 /**
  * DataAnalysis Feature Component
- * Analyze CSV files and generate statistical summaries
+ * Analyze CSV files and generate reports
  * Generated from mfe-manifest.yaml capability definition
  */
 import React from 'react';
@@ -19,7 +19,7 @@ export const DataAnalysis: React.FC<DataAnalysisProps> = (props) => {
       <Box>
         {/* TODO: Implement DataAnalysis */}
         <Typography variant="body2" color="text.secondary">
-          Analyze CSV files and generate statistical summaries
+          Analyze CSV files and generate reports
         </Typography>
       </Box>
     </Paper>

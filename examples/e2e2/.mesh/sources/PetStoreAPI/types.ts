@@ -25,7 +25,7 @@ export type Scalars = {
 
 export type Query = {
   /** List all pets */
-  listPets?: Maybe<listPets_200_response>;
+  listPets?: Maybe<ListPets_200Response>;
   /** Get pet by id */
   getPet?: Maybe<Pet>;
 };
@@ -40,7 +40,7 @@ export type QuerygetPetArgs = {
   petId: Scalars['String']['input'];
 };
 
-export type listPets_200_response = {
+export type ListPets_200Response = {
   items?: Maybe<Array<Maybe<Pet>>>;
 };
 
@@ -58,21 +58,21 @@ export type Mutation = {
 
 
 export type MutationcreatePetArgs = {
-  input?: InputMaybe<NewPet_Input>;
+  input?: InputMaybe<NewPetInput>;
 };
 
-export type NewPet_Input = {
+export type NewPetInput = {
   name: Scalars['String']['input'];
   tag?: InputMaybe<Scalars['String']['input']>;
-  status?: InputMaybe<mutationInput_createPet_input_status>;
+  status?: InputMaybe<MutationInputCreatePetInputStatus>;
 };
 
-export type mutationInput_createPet_input_status =
+export type MutationInputCreatePetInputStatus =
   | 'available'
   | 'pending'
   | 'sold';
 
-export type HTTPMethod =
+export type HttpMethod =
   | 'GET'
   | 'HEAD'
   | 'POST'

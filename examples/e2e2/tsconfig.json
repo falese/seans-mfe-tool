@@ -15,11 +15,5 @@
     "lib": ["ES2022"]
   },
   "include": ["*.ts", "src/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".mesh",
-    "src/platform",
-    "src/**/*.test.ts"
-  ]
+  "exclude": ["node_modules", "dist", ".mesh"]
 }

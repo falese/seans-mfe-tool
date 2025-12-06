@@ -5,18 +5,18 @@ schema @transport(subgraph: "PetStoreAPI", kind: "rest", headers: [["Authorizati
 
 directive @enum(subgraph: String, value: String) on ENUM_VALUE
 
-directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HttpMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
 
 directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
 
 type Query {
   """List all pets"""
-  listPets(limit: Int = 10): listPets_200_response @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"limit\":\"limit\"}")
+  listPets(limit: Int = 10): ListPets_200Response @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"limit\":\"limit\"}")
   """Get pet by id"""
   getPet(petId: String!): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets/{args.petId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
 }
 
-type listPets_200_response {
+type ListPets_200Response {
   items: [Pet]
 }
 
@@ -29,22 +29,22 @@ type Pet {
 
 type Mutation {
   """Create a pet"""
-  createPet(input: NewPet_Input): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+  createPet(input: NewPetInput): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
 }
 
-input NewPet_Input {
+input NewPetInput {
   name: String!
   tag: String
-  status: mutationInput_createPet_input_status = available
+  status: MutationInputCreatePetInputStatus = available
 }
 
-enum mutationInput_createPet_input_status {
+enum MutationInputCreatePetInputStatus {
   available
   pending
   sold
 }
 
-enum HTTPMethod {
+enum HttpMethod {
   GET
   HEAD
   POST

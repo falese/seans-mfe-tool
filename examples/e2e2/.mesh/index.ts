@@ -7,12 +7,12 @@ import { PubSub } from '@graphql-mesh/utils';
 import { DefaultLogger } from '@graphql-mesh/utils';
 import type { MeshResolvedSource } from '@graphql-mesh/runtime';
 import type { MeshTransform, MeshPlugin } from '@graphql-mesh/types';
+import { useOpenTelemetry } from "@graphql-mesh/plugin-opentelemetry";
 import { createMeshHTTPHandler, MeshHTTPHandler } from '@graphql-mesh/http';
 import { getMesh, type ExecuteMeshFn, type SubscribeMeshFn, type MeshContext as BaseMeshContext, type MeshInstance } from '@graphql-mesh/runtime';
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import type { ImportFn } from '@graphql-mesh/types';
-import type { UserApiTypes } from './sources/UserAPI/types';
 import type { PetStoreApiTypes } from './sources/PetStoreAPI/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -33,26 +33,15 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   /** The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1. */
   Int: { input: number; output: number; }
-  /** The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point). */
   Float: { input: number; output: number; }
   ObjMap: { input: any; output: any; }
 };
 
 export type Query = {
   /** List all pets */
-  listPets?: Maybe<listPets_200_response>;
+  listPets?: Maybe<ListPets_200Response>;
   /** Get pet by id */
   getPet?: Maybe<Pet>;
-  /** Get all phase metrics */
-  phase_metrics?: Maybe<Array<Maybe<PhaseMetrics>>>;
-  /** Get phase metrics by ID */
-  phase_metrics_by_phaseId?: Maybe<PhaseMetrics>;
-  /** Get all benefits breakdown data */
-  benefits_breakdown?: Maybe<Array<Maybe<BenefitsBreakdown>>>;
-  /** Get all cumulative ROI data */
-  cumulative_roi?: Maybe<Array<Maybe<CumulativeRoi>>>;
-  /** Get all performance gate metrics */
-  performance_gate?: Maybe<Array<Maybe<PerformanceGate>>>;
 };
 
 
@@ -65,58 +54,7 @@ export type QuerygetPetArgs = {
   petId: Scalars['String']['input'];
 };
 
-
-export type Queryphase_metrics_by_phaseIdArgs = {
-  phaseId: Scalars['String']['input'];
-};
-
-export type Mutation = {
-  /** Create a pet */
-  createPet?: Maybe<Pet>;
-  /** Create new phase metrics */
-  post_phase_metrics?: Maybe<PhaseMetrics>;
-  /** Update phase metrics */
-  put_phase_metrics_by_phaseId?: Maybe<PhaseMetrics>;
-  /** Create new benefits breakdown entry */
-  post_benefits_breakdown?: Maybe<BenefitsBreakdown>;
-  /** Create new cumulative ROI entry */
-  post_cumulative_roi?: Maybe<CumulativeRoi>;
-  /** Create new performance gate entry */
-  post_performance_gate?: Maybe<PerformanceGate>;
-};
-
-
-export type MutationcreatePetArgs = {
-  input?: InputMaybe<NewPet_Input>;
-};
-
-
-export type Mutationpost_phase_metricsArgs = {
-  input?: InputMaybe<PhaseMetrics_Input>;
-};
-
-
-export type Mutationput_phase_metrics_by_phaseIdArgs = {
-  phaseId: Scalars['String']['input'];
-  input?: InputMaybe<PhaseMetrics_Input>;
-};
-
-
-export type Mutationpost_benefits_breakdownArgs = {
-  input?: InputMaybe<BenefitsBreakdown_Input>;
-};
-
-
-export type Mutationpost_cumulative_roiArgs = {
-  input?: InputMaybe<CumulativeRoi_Input>;
-};
-
-
-export type Mutationpost_performance_gateArgs = {
-  input?: InputMaybe<PerformanceGate_Input>;
-};
-
-export type listPets_200_response = {
+export type ListPets_200Response = {
   items?: Maybe<Array<Maybe<Pet>>>;
 };
 
@@ -127,18 +65,28 @@ export type Pet = {
   tag?: Maybe<Scalars['String']['output']>;
 };
 
-export type NewPet_Input = {
-  name: Scalars['String']['input'];
-  tag?: InputMaybe<Scalars['String']['input']>;
-  status?: InputMaybe<mutationInput_createPet_input_status>;
+export type Mutation = {
+  /** Create a pet */
+  createPet?: Maybe<Pet>;
 };
 
-export type mutationInput_createPet_input_status =
+
+export type MutationcreatePetArgs = {
+  input?: InputMaybe<NewPetInput>;
+};
+
+export type NewPetInput = {
+  name: Scalars['String']['input'];
+  tag?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<MutationInputCreatePetInputStatus>;
+};
+
+export type MutationInputCreatePetInputStatus =
   | 'available'
   | 'pending'
   | 'sold';
 
-export type HTTPMethod =
+export type HttpMethod =
   | 'GET'
   | 'HEAD'
   | 'POST'
@@ -148,96 +96,6 @@ export type HTTPMethod =
   | 'OPTIONS'
   | 'TRACE'
   | 'PATCH';
-
-export type PhaseMetrics = {
-  phaseId: query_phase_metrics_items_phaseId;
-  teamSize: Scalars['Int']['output'];
-  newHires: Scalars['Int']['output'];
-  personnelCost: Scalars['Float']['output'];
-  transitionCost: Scalars['Float']['output'];
-  totalCost: Scalars['Float']['output'];
-  benefitsRealized: Scalars['Float']['output'];
-  quarterBenefits: Scalars['Float']['output'];
-  quarterRoi: Scalars['Float']['output'];
-};
-
-export type query_phase_metrics_items_phaseId =
-  | 'current'
-  | 'phase1'
-  | 'phase2'
-  | 'phase3'
-  | 'phase4'
-  | 'steady';
-
-export type BenefitsBreakdown = {
-  phaseId: query_benefits_breakdown_items_phaseId;
-  devTimeSavings: Scalars['Float']['output'];
-  supportEfficiency: Scalars['Float']['output'];
-  timeToMarket: Scalars['Float']['output'];
-  totalBenefits: Scalars['Float']['output'];
-};
-
-export type query_benefits_breakdown_items_phaseId =
-  | 'current'
-  | 'phase1'
-  | 'phase2'
-  | 'phase3'
-  | 'phase4'
-  | 'steady';
-
-export type CumulativeRoi = {
-  year: Scalars['Int']['output'];
-  period: Scalars['String']['output'];
-  costs: Scalars['Float']['output'];
-  benefits: Scalars['Float']['output'];
-  net: Scalars['Float']['output'];
-  cumulativeRoi: Scalars['Float']['output'];
-};
-
-export type PerformanceGate = {
-  phase: Scalars['String']['output'];
-  teamSize: Scalars['Int']['output'];
-  teamsOnboarded: Scalars['Int']['output'];
-  automation: Scalars['Float']['output'];
-  supportReduction: Scalars['Float']['output'];
-};
-
-export type PhaseMetrics_Input = {
-  phaseId: query_phase_metrics_items_phaseId;
-  teamSize: Scalars['Int']['input'];
-  newHires: Scalars['Int']['input'];
-  personnelCost: Scalars['Float']['input'];
-  transitionCost: Scalars['Float']['input'];
-  totalCost: Scalars['Float']['input'];
-  benefitsRealized: Scalars['Float']['input'];
-  quarterBenefits: Scalars['Float']['input'];
-  quarterRoi: Scalars['Float']['input'];
-};
-
-export type BenefitsBreakdown_Input = {
-  phaseId: query_benefits_breakdown_items_phaseId;
-  devTimeSavings: Scalars['Float']['input'];
-  supportEfficiency: Scalars['Float']['input'];
-  timeToMarket: Scalars['Float']['input'];
-  totalBenefits: Scalars['Float']['input'];
-};
-
-export type CumulativeRoi_Input = {
-  year: Scalars['Int']['input'];
-  period: Scalars['String']['input'];
-  costs: Scalars['Float']['input'];
-  benefits: Scalars['Float']['input'];
-  net: Scalars['Float']['input'];
-  cumulativeRoi: Scalars['Float']['input'];
-};
-
-export type PerformanceGate_Input = {
-  phase: Scalars['String']['input'];
-  teamSize: Scalars['Int']['input'];
-  teamsOnboarded: Scalars['Int']['input'];
-  automation: Scalars['Float']['input'];
-  supportReduction: Scalars['Float']['input'];
-};
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
@@ -328,49 +186,29 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
-  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
-  listPets_200_response: ResolverTypeWrapper<listPets_200_response>;
+  ListPets_200Response: ResolverTypeWrapper<ListPets_200Response>;
   Pet: ResolverTypeWrapper<Pet>;
-  NewPet_Input: NewPet_Input;
-  mutationInput_createPet_input_status: mutationInput_createPet_input_status;
-  HTTPMethod: HTTPMethod;
+  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  NewPetInput: NewPetInput;
+  MutationInputCreatePetInputStatus: MutationInputCreatePetInputStatus;
+  HttpMethod: HttpMethod;
   ObjMap: ResolverTypeWrapper<Scalars['ObjMap']['output']>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
-  PhaseMetrics: ResolverTypeWrapper<PhaseMetrics>;
-  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
-  query_phase_metrics_items_phaseId: query_phase_metrics_items_phaseId;
-  BenefitsBreakdown: ResolverTypeWrapper<BenefitsBreakdown>;
-  query_benefits_breakdown_items_phaseId: query_benefits_breakdown_items_phaseId;
-  CumulativeRoi: ResolverTypeWrapper<CumulativeRoi>;
-  PerformanceGate: ResolverTypeWrapper<PerformanceGate>;
-  PhaseMetrics_Input: PhaseMetrics_Input;
-  BenefitsBreakdown_Input: BenefitsBreakdown_Input;
-  CumulativeRoi_Input: CumulativeRoi_Input;
-  PerformanceGate_Input: PerformanceGate_Input;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   Query: Record<PropertyKey, never>;
-  Mutation: Record<PropertyKey, never>;
   Int: Scalars['Int']['output'];
-  listPets_200_response: listPets_200_response;
+  ListPets_200Response: ListPets_200Response;
   Pet: Pet;
-  NewPet_Input: NewPet_Input;
+  Mutation: Record<PropertyKey, never>;
+  NewPetInput: NewPetInput;
   ObjMap: Scalars['ObjMap']['output'];
   String: Scalars['String']['output'];
   Boolean: Scalars['Boolean']['output'];
-  PhaseMetrics: PhaseMetrics;
-  Float: Scalars['Float']['output'];
-  BenefitsBreakdown: BenefitsBreakdown;
-  CumulativeRoi: CumulativeRoi;
-  PerformanceGate: PerformanceGate;
-  PhaseMetrics_Input: PhaseMetrics_Input;
-  BenefitsBreakdown_Input: BenefitsBreakdown_Input;
-  CumulativeRoi_Input: CumulativeRoi_Input;
-  PerformanceGate_Input: PerformanceGate_Input;
 }>;
 
 export type enumDirectiveArgs = {
@@ -384,7 +222,7 @@ export type httpOperationDirectiveArgs = {
   subgraph?: Maybe<Scalars['String']['input']>;
   path?: Maybe<Scalars['String']['input']>;
   operationSpecificHeaders?: Maybe<Array<Maybe<Array<Maybe<Scalars['String']['input']>>>>>;
-  httpMethod?: Maybe<HTTPMethod>;
+  httpMethod?: Maybe<HttpMethod>;
   isBinary?: Maybe<Scalars['Boolean']['input']>;
   requestBaseBody?: Maybe<Scalars['ObjMap']['input']>;
   queryParamArgMap?: Maybe<Scalars['ObjMap']['input']>;
@@ -407,25 +245,11 @@ export type transportDirectiveArgs = {
 export type transportDirectiveResolver<Result, Parent, ContextType = MeshContext, Args = transportDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type QueryResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  listPets?: Resolver<Maybe<ResolversTypes['listPets_200_response']>, ParentType, ContextType, RequireFields<QuerylistPetsArgs, 'limit'>>;
+  listPets?: Resolver<Maybe<ResolversTypes['ListPets_200Response']>, ParentType, ContextType, RequireFields<QuerylistPetsArgs, 'limit'>>;
   getPet?: Resolver<Maybe<ResolversTypes['Pet']>, ParentType, ContextType, RequireFields<QuerygetPetArgs, 'petId'>>;
-  phase_metrics?: Resolver<Maybe<Array<Maybe<ResolversTypes['PhaseMetrics']>>>, ParentType, ContextType>;
-  phase_metrics_by_phaseId?: Resolver<Maybe<ResolversTypes['PhaseMetrics']>, ParentType, ContextType, RequireFields<Queryphase_metrics_by_phaseIdArgs, 'phaseId'>>;
-  benefits_breakdown?: Resolver<Maybe<Array<Maybe<ResolversTypes['BenefitsBreakdown']>>>, ParentType, ContextType>;
-  cumulative_roi?: Resolver<Maybe<Array<Maybe<ResolversTypes['CumulativeRoi']>>>, ParentType, ContextType>;
-  performance_gate?: Resolver<Maybe<Array<Maybe<ResolversTypes['PerformanceGate']>>>, ParentType, ContextType>;
 }>;
 
-export type MutationResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  createPet?: Resolver<Maybe<ResolversTypes['Pet']>, ParentType, ContextType, Partial<MutationcreatePetArgs>>;
-  post_phase_metrics?: Resolver<Maybe<ResolversTypes['PhaseMetrics']>, ParentType, ContextType, Partial<Mutationpost_phase_metricsArgs>>;
-  put_phase_metrics_by_phaseId?: Resolver<Maybe<ResolversTypes['PhaseMetrics']>, ParentType, ContextType, RequireFields<Mutationput_phase_metrics_by_phaseIdArgs, 'phaseId'>>;
-  post_benefits_breakdown?: Resolver<Maybe<ResolversTypes['BenefitsBreakdown']>, ParentType, ContextType, Partial<Mutationpost_benefits_breakdownArgs>>;
-  post_cumulative_roi?: Resolver<Maybe<ResolversTypes['CumulativeRoi']>, ParentType, ContextType, Partial<Mutationpost_cumulative_roiArgs>>;
-  post_performance_gate?: Resolver<Maybe<ResolversTypes['PerformanceGate']>, ParentType, ContextType, Partial<Mutationpost_performance_gateArgs>>;
-}>;
-
-export type listPets_200_responseResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['listPets_200_response'] = ResolversParentTypes['listPets_200_response']> = ResolversObject<{
+export type ListPets_200ResponseResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['ListPets_200Response'] = ResolversParentTypes['ListPets_200Response']> = ResolversObject<{
   items?: Resolver<Maybe<Array<Maybe<ResolversTypes['Pet']>>>, ParentType, ContextType>;
 }>;
 
@@ -436,57 +260,20 @@ export type PetResolvers<ContextType = MeshContext, ParentType extends Resolvers
   tag?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 }>;
 
+export type MutationResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  createPet?: Resolver<Maybe<ResolversTypes['Pet']>, ParentType, ContextType, Partial<MutationcreatePetArgs>>;
+}>;
+
 export interface ObjMapScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ObjMap'], any> {
   name: 'ObjMap';
 }
 
-export type PhaseMetricsResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['PhaseMetrics'] = ResolversParentTypes['PhaseMetrics']> = ResolversObject<{
-  phaseId?: Resolver<ResolversTypes['query_phase_metrics_items_phaseId'], ParentType, ContextType>;
-  teamSize?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  newHires?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  personnelCost?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  transitionCost?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  totalCost?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  benefitsRealized?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  quarterBenefits?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  quarterRoi?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-}>;
-
-export type BenefitsBreakdownResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['BenefitsBreakdown'] = ResolversParentTypes['BenefitsBreakdown']> = ResolversObject<{
-  phaseId?: Resolver<ResolversTypes['query_benefits_breakdown_items_phaseId'], ParentType, ContextType>;
-  devTimeSavings?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  supportEfficiency?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  timeToMarket?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  totalBenefits?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-}>;
-
-export type CumulativeRoiResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['CumulativeRoi'] = ResolversParentTypes['CumulativeRoi']> = ResolversObject<{
-  year?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  period?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  costs?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  benefits?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  net?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  cumulativeRoi?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-}>;
-
-export type PerformanceGateResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['PerformanceGate'] = ResolversParentTypes['PerformanceGate']> = ResolversObject<{
-  phase?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  teamSize?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  teamsOnboarded?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  automation?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  supportReduction?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-}>;
-
 export type Resolvers<ContextType = MeshContext> = ResolversObject<{
   Query?: QueryResolvers<ContextType>;
-  Mutation?: MutationResolvers<ContextType>;
-  listPets_200_response?: listPets_200_responseResolvers<ContextType>;
+  ListPets_200Response?: ListPets_200ResponseResolvers<ContextType>;
   Pet?: PetResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   ObjMap?: GraphQLScalarType;
-  PhaseMetrics?: PhaseMetricsResolvers<ContextType>;
-  BenefitsBreakdown?: BenefitsBreakdownResolvers<ContextType>;
-  CumulativeRoi?: CumulativeRoiResolvers<ContextType>;
-  PerformanceGate?: PerformanceGateResolvers<ContextType>;
 }>;
 
 export type DirectiveResolvers<ContextType = MeshContext> = ResolversObject<{
@@ -495,7 +282,7 @@ export type DirectiveResolvers<ContextType = MeshContext> = ResolversObject<{
   transport?: transportDirectiveResolver<any, any, ContextType>;
 }>;
 
-export type MeshContext = PetStoreApiTypes.Context & UserApiTypes.Context & BaseMeshContext;
+export type MeshContext = PetStoreApiTypes.Context & BaseMeshContext;
 
 
 const baseDir = pathModule.join(typeof __dirname === 'string' ? __dirname : '/', '..');
@@ -505,9 +292,6 @@ const importFn: ImportFn = <T>(moduleId: string) => {
   switch(relativeModuleId) {
     case ".mesh/sources/PetStoreAPI/schemaWithAnnotations":
       return import("./sources/PetStoreAPI/schemaWithAnnotations") as T;
-    
-    case ".mesh/sources/UserAPI/schemaWithAnnotations":
-      return import("./sources/UserAPI/schemaWithAnnotations") as T;
     
     default:
       return Promise.reject(new Error(`Cannot find module '${relativeModuleId}'.`));
@@ -523,7 +307,7 @@ const rootStore = new MeshStore('.mesh', new FsStoreStorageAdapter({
   validate: false
 });
 
-export const rawServeConfig: YamlConfig.Config['serve'] = undefined as any
+export const rawServeConfig: YamlConfig.Config['serve'] = {"endpoint":"/graphql","playground":true} as any
 export async function getMeshOptions(): Promise<GetMeshOptions> {
 const pubsub = new PubSub();
 const sourcesStore = rootStore.child('sources');
@@ -541,7 +325,6 @@ const sources: MeshResolvedSource[] = [];
 const transforms: MeshTransform[] = [];
 const additionalEnvelopPlugins: MeshPlugin<any>[] = [];
 const petStoreApiTransforms = [];
-const userApiTransforms = [];
 const additionalTypeDefs = [] as any[];
 const PetStoreApiHandler = await import("@graphql-mesh/openapi").then(handleImport);
 const petStoreApiHandler = new PetStoreApiHandler({
@@ -554,34 +337,92 @@ const petStoreApiHandler = new PetStoreApiHandler({
               logger: logger.child({ source: "PetStoreAPI" }),
               importFn,
             });
-const UserApiHandler = await import("@graphql-mesh/openapi").then(handleImport);
-const userApiHandler = new UserApiHandler({
-              name: "UserAPI",
-              config: {"source":"./benefit-model.yaml","operationHeaders":{"Authorization":"Bearer {context.jwt}"}},
-              baseDir,
-              cache,
-              pubsub,
-              store: sourcesStore.child("UserAPI"),
-              logger: logger.child({ source: "UserAPI" }),
-              importFn,
-            });
 sources[0] = {
           name: 'PetStoreAPI',
           handler: petStoreApiHandler,
           transforms: petStoreApiTransforms
         }
-sources[1] = {
-          name: 'UserAPI',
-          handler: userApiHandler,
-          transforms: userApiTransforms
-        }
+const RootTransform_0 = await import("@graphql-mesh/transform-naming-convention").then(handleImport);
+transforms[0] = new RootTransform_0({
+            apiName: '',
+            config: {"typeNames":"pascalCase","fieldNames":"camelCase"},
+            baseDir,
+            cache,
+            pubsub,
+            importFn,
+            logger,
+          })
+const RootTransform_1 = await import("@graphql-mesh/transform-rate-limit").then(handleImport);
+transforms[1] = new RootTransform_1({
+            apiName: '',
+            config: [{"type":"Query","field":"*","max":100,"ttl":60000,"identifier":"userId"},{"type":"Mutation","field":"*","max":20,"ttl":60000,"identifier":"userId"},{"type":"Query","field":"findPetsByStatus","max":50,"ttl":60000,"identifier":"userId"}],
+            baseDir,
+            cache,
+            pubsub,
+            importFn,
+            logger,
+          })
+const RootTransform_2 = await import("@graphql-mesh/transform-filter-schema").then(handleImport);
+transforms[2] = new RootTransform_2({
+            apiName: '',
+            config: {"filters":["Query.!internal*","Mutation.!admin*","Type.!_internal*","Type.!_metadata"]},
+            baseDir,
+            cache,
+            pubsub,
+            importFn,
+            logger,
+          })
+const useResponseCache = await import("@graphql-mesh/plugin-response-cache").then(handleImport);
+additionalEnvelopPlugins[0] = await useResponseCache({
+          ...({
+  "ttl": 300000,
+  "invalidate": {
+    "ttl": 0
+  }
+}),
+          logger: logger.child({ plugin: "responseCache" }),
+          cache,
+          pubsub,
+          baseDir,
+          importFn,
+        })
+const usePrometheus = await import("@graphql-mesh/plugin-prometheus").then(handleImport);
+additionalEnvelopPlugins[1] = await usePrometheus({
+          ...({
+  "port": 9090,
+  "endpoint": "/metrics",
+  "labels": {
+    "service": "csv-analyzer",
+    "version": "1.0.0",
+    "environment": "-development"
+  }
+}),
+          logger: logger.child({ plugin: "prometheus" }),
+          cache,
+          pubsub,
+          baseDir,
+          importFn,
+        })
+additionalEnvelopPlugins[2] = await useOpenTelemetry({
+          ...({
+  "serviceName": "csv-analyzer-bff",
+  "sampling": {
+    "probability": 0.1
+  }
+}),
+          logger: logger.child({ plugin: "opentelemetry" }),
+          cache,
+          pubsub,
+          baseDir,
+          importFn,
+        });
 const additionalResolvers = [] as any[]
-const Merger = await import("@graphql-mesh/merger-stitching").then(handleImport);
+const Merger = await import("@graphql-mesh/merger-bare").then(handleImport);
 const merger = new Merger({
         cache,
         pubsub,
-        logger: logger.child({ merger: "stitching" }),
-        store: rootStore.child("stitching")
+        logger: logger.child({ merger: "bare" }),
+        store: rootStore.child("bare")
       })
 
   return {
@@ -607,7 +448,7 @@ export function createBuiltMeshHTTPHandler<TServerContext = {}>(): MeshHTTPHandl
   return createMeshHTTPHandler<TServerContext>({
     baseDir,
     getBuiltMesh: getBuiltMesh,
-    rawServeConfig: undefined,
+    rawServeConfig: {"endpoint":"/graphql","playground":true},
   })
 }
 

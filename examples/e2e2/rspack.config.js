@@ -100,7 +100,7 @@ module.exports = {
         './App': './src/remote.tsx',
       },
       shared: {
-        'react': { 
+        react: { 
           singleton: true, 
           requiredVersion: '^18.2.0',
           eager: true
@@ -113,22 +113,22 @@ module.exports = {
         '@mui/material': { 
           singleton: true, 
           requiredVersion: '^5.14.0',
-          eager: true
+          eager: false
         },
         '@mui/system': { 
           singleton: true, 
           requiredVersion: '^5.14.0',
-          eager: true
+          eager: false
         },
         '@emotion/react': { 
           singleton: true, 
           requiredVersion: '^11.11.1',
-          eager: true
+          eager: false
         },
         '@emotion/styled': { 
           singleton: true, 
           requiredVersion: '^11.11.0',
-          eager: true
+          eager: false
         }
       },
     }),

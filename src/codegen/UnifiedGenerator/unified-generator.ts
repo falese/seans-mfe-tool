@@ -35,7 +35,7 @@ export const DEPENDENCY_VERSIONS = {
   // GraphQL Tools (Peer Dependencies)
   graphqlTools: {
     delegate: '^10.2.4',
-    utils: '^10.5.7',
+    utils: '^9.2.1',
     wrap: '^10.0.5',
   },
   
@@ -48,11 +48,11 @@ export const DEPENDENCY_VERSIONS = {
   
   // Mesh Transforms (Schema Manipulation)
   meshTransforms: {
-    namingConvention: '^0.105.19',
-    rateLimit: '^0.105.19',
-    filterSchema: '^0.105.19',
-    resolversComposition: '^0.105.19',
-    cache: '^0.105.19',
+    namingConvention: '^1.0.0',
+    rateLimit: '^1.0.0',
+    filterSchema: '^1.0.0',
+    resolversComposition: '^1.0.0',
+    cache: '^1.0.0',
   },
   
   // Core Dependencies
@@ -154,6 +154,171 @@ export const DEFAULT_MESH_TRANSFORMS = {
   },
 };
 
+// =============================================================================
+// Validation Layer (ADR-062)
+// =============================================================================
+
+/**
+ * Known GraphQL Mesh plugins (production-ready)
+ * Used to validate manifest plugin configurations
+ */
+export const KNOWN_MESH_PLUGINS = new Set([
+  'responseCache',
+  'prometheus',
+  'opentelemetry',
+  'liveQuery',
+  'httpCache',
+  'newrelic',
+  'statsd',
+  'mock',
+]);
+
+/**
+ * Known GraphQL Mesh transforms
+ * Used to validate manifest transform configurations
+ */
+export const KNOWN_MESH_TRANSFORMS = new Set([
+  'namingConvention',
+  'rateLimit',
+  'filterSchema',
+  'resolversComposition',
+  'cache',
+  'prefix',
+  'rename',
+  'encapsulate',
+  'federation',
+  'replace',
+  'typeMerging',
+]);
+
+/**
+ * Validation result for plugin/transform classification
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  classification: {
+    plugins: string[];
+    transforms: string[];
+    unknown: string[];
+  };
+}
+
+/**
+ * Validate and classify plugins from manifest
+ * Enforces separation between plugins and transforms
+ */
+export function validateManifestPlugins(manifest: DSLManifest): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: [],
+    classification: {
+      plugins: [],
+      transforms: [],
+      unknown: [],
+    },
+  };
+  
+  // Check if manifest has plugins section
+  const manifestPlugins = (manifest as any).plugins || {};
+  
+  for (const pluginName of Object.keys(manifestPlugins)) {
+    if (KNOWN_MESH_PLUGINS.has(pluginName)) {
+      result.classification.plugins.push(pluginName);
+    } else if (KNOWN_MESH_TRANSFORMS.has(pluginName)) {
+      // This is a transform, not a plugin!
+      result.errors.push(
+        `"${pluginName}" is a transform, not a plugin. Move it to the "transforms" section.`
+      );
+      result.classification.transforms.push(pluginName);
+      result.valid = false;
+    } else {
+      result.warnings.push(
+        `Unknown plugin "${pluginName}". Ensure it's a valid GraphQL Mesh plugin.`
+      );
+      result.classification.unknown.push(pluginName);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Validate and classify transforms from manifest
+ */
+export function validateManifestTransforms(manifest: DSLManifest): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: [],
+    classification: {
+      plugins: [],
+      transforms: [],
+      unknown: [],
+    },
+  };
+  
+  // Check if manifest has transforms section
+  const manifestTransforms = (manifest as any).transforms || {};
+  
+  for (const transformName of Object.keys(manifestTransforms)) {
+    if (KNOWN_MESH_TRANSFORMS.has(transformName)) {
+      result.classification.transforms.push(transformName);
+    } else if (KNOWN_MESH_PLUGINS.has(transformName)) {
+      // This is a plugin, not a transform!
+      result.errors.push(
+        `"${transformName}" is a plugin, not a transform. Move it to the "plugins" section.`
+      );
+      result.classification.plugins.push(transformName);
+      result.valid = false;
+    } else {
+      result.warnings.push(
+        `Unknown transform "${transformName}". Ensure it's a valid GraphQL Mesh transform.`
+      );
+      result.classification.unknown.push(transformName);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Comprehensive validation of manifest plugin/transform configuration
+ * Throws error if validation fails (protect code generation)
+ */
+export function validateManifestConfiguration(manifest: DSLManifest): void {
+  const pluginValidation = validateManifestPlugins(manifest);
+  const transformValidation = validateManifestTransforms(manifest);
+  
+  const allErrors = [...pluginValidation.errors, ...transformValidation.errors];
+  const allWarnings = [...pluginValidation.warnings, ...transformValidation.warnings];
+  
+  // Log warnings (non-fatal)
+  if (allWarnings.length > 0) {
+    console.warn('\n⚠️  Manifest Configuration Warnings:');
+    allWarnings.forEach(warning => console.warn(`  - ${warning}`));
+  }
+  
+  // Throw on errors (fatal - prevent bad generation)
+  if (allErrors.length > 0) {
+    console.error('\n❌ Manifest Configuration Errors:');
+    allErrors.forEach(error => console.error(`  - ${error}`));
+    throw new Error(
+      `Manifest validation failed with ${allErrors.length} error(s). ` +
+      `Please correct the plugin/transform configuration in your mfe-manifest.yaml.`
+    );
+  }
+  
+  // Log success for visibility
+  const totalPlugins = pluginValidation.classification.plugins.length;
+  const totalTransforms = transformValidation.classification.transforms.length;
+  console.log(
+    `✅ Manifest validation passed: ${totalPlugins} plugin(s), ${totalTransforms} transform(s)`
+  );
+}
+
 // =============================
 // Shared Utilities
 // =============================
@@ -173,6 +338,31 @@ export function extractManifestVars(manifest: DSLManifest) {
   const performanceConfig = (manifest as any).performance || {};
   const observabilityConfig = performanceConfig.observability || {};
   
+  // Determine which plugins are needed based on manifest config
+  const neededPlugins = new Set<string>();
+  if (performanceConfig.caching?.enabled !== false) {
+    neededPlugins.add('responseCache');
+  }
+  if (observabilityConfig.prometheus?.enabled !== false) {
+    neededPlugins.add('prometheus');
+  }
+  if (observabilityConfig.opentelemetry?.enabled) {
+    neededPlugins.add('opentelemetry');
+  }
+  
+  // Determine which transforms are needed
+  const neededTransforms = new Set<string>();
+  neededTransforms.add('namingConvention'); // Always include
+  if (performanceConfig.rateLimit?.enabled) {
+    neededTransforms.add('rateLimit');
+  }
+  if (performanceConfig.filterSchema?.enabled) {
+    neededTransforms.add('filterSchema');
+  }
+  if ((manifest as any).transforms && (manifest as any).transforms.length > 0) {
+    neededTransforms.add('resolversComposition');
+  }
+  
   return {
     name: manifest.name,
     version: manifest.version,
@@ -189,6 +379,10 @@ export function extractManifestVars(manifest: DSLManifest) {
     
     // NEW: Dependency versions for templates (ADR-062)
     dependencyVersions: DEPENDENCY_VERSIONS,
+    
+    // NEW: Track which plugins/transforms are needed (ADR-062)
+    neededPlugins: Array.from(neededPlugins),
+    neededTransforms: Array.from(neededTransforms),
     
     // NEW: Plugin/transform configs (ADR-062)
     meshPlugins: {
@@ -261,6 +455,11 @@ export async function generateAllFiles(
   basePath: string,
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<GeneratedFile[]> {
+  // === Validation Layer (ADR-062) ===
+  // Validate manifest configuration before generation
+  // Throws if validation fails (prevents bad configurations)
+  validateManifestConfiguration(manifest);
+  
   const files: GeneratedFile[] = [];
   const vars = extractManifestVars(manifest);
   // --- Platform contract-driven capability and lifecycle aggregation ---
@@ -376,7 +575,15 @@ export async function generateAllFiles(
   // .meshrc.yaml from manifest.data
   if (manifest.data) {
     const yaml = require('js-yaml');
-    const meshConfigYaml = yaml.dump(manifest.data, { noRefs: true });
+    
+    // Build base mesh config (sources, serve, etc.)
+    const meshBaseConfig: any = {
+      sources: manifest.data.sources || [],
+      serve: manifest.data.serve || { endpoint: '/graphql', playground: true }
+    };
+    
+    const meshConfigYaml = yaml.dump(meshBaseConfig, { noRefs: true, lineWidth: -1 });
+    
     files.push({
       path: path.join(basePath, '.meshrc.yaml'),
       content: await renderTemplate(path.join(bffTemplateDir, 'meshrc.yaml.ejs'), { ...vars, meshConfigYaml }),

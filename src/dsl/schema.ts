@@ -150,12 +150,67 @@ export const DataSourceSchema = z.object({
 });
 export type DataSource = z.infer<typeof DataSourceSchema>;
 
-/** Mesh transform - flexible schema */
-export const DataTransformSchema = z.record(z.string(), z.unknown());
+/** Mesh transform - flexible schema with validation */
+export const DataTransformSchema = z.record(z.string(), z.unknown()).superRefine((val, ctx) => {
+  const transformNames = Object.keys(val);
+  
+  for (const name of transformNames) {
+    // Check if this looks like a plugin that was put in transforms
+    if (KNOWN_PLUGINS.includes(name as any)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `"${name}" is a plugin, not a transform. Move it to the plugins section.`,
+        path: [name]
+      });
+    }
+  }
+});
 export type DataTransform = z.infer<typeof DataTransformSchema>;
 
-/** Mesh plugin - flexible schema */
-export const DataPluginSchema = z.record(z.string(), z.unknown());
+/** Known Mesh plugin names (validation list) */
+const KNOWN_PLUGINS = [
+  'prometheus',
+  'useMaskedErrors',
+  'useResponseCache',
+  'usePersistedOperations',
+  'newrelic',
+  'datadog',
+  'statsd',
+  'mock',
+  'snapshot'
+] as const;
+
+/** Known Mesh transform names (validation list) */
+const KNOWN_TRANSFORMS = [
+  'filterSchema',
+  'rateLimit',
+  'rename',
+  'prefix',
+  'encapsulate',
+  'federation',
+  'namingConvention',
+  'cache',
+  'snapshot',
+  'mock',
+  'resolversComposition',
+  'type-merging'
+] as const;
+
+/** Mesh plugin - flexible schema with validation */
+export const DataPluginSchema = z.record(z.string(), z.unknown()).superRefine((val, ctx) => {
+  const pluginNames = Object.keys(val);
+  
+  for (const name of pluginNames) {
+    // Check if this looks like a transform that was put in plugins
+    if (KNOWN_TRANSFORMS.includes(name as any)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `"${name}" is a transform, not a plugin. Move it to the transforms section.`,
+        path: [name]
+      });
+    }
+  }
+});
 export type DataPlugin = z.infer<typeof DataPluginSchema>;
 
 /** Serve configuration */

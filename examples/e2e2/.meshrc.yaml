@@ -1,8 +1,9 @@
 # .meshrc.yaml - Auto-generated from DSL manifest data section
 # REQ-BFF-001: DSL as Single Source of Truth
-# ADR-046: GraphQL Mesh v1 with DSL-embedded config
+# ADR-046: GraphQL Mesh with DSL-embedded config
+# ADR-062: Mesh v0.100.x with production plugins
 
-# GraphQL Mesh v1 Configuration
+# GraphQL Mesh Configuration
 sources:
   - name: PetStoreAPI
     handler:
@@ -12,10 +13,54 @@ sources:
           Authorization: Bearer {context.jwt}
           X-Request-ID: '{context.requestId}'
           X-User-ID: '{context.userId}'
-  - name: UserAPI
-    handler:
-      openapi:
-        source: ./benefit-model.yaml
-        operationHeaders:
-          Authorization: Bearer {context.jwt}
+serve:
+  endpoint: /graphql
+  playground: true
+
+
+# Plugins (Performance & Observability)
+plugins:
+  - responseCache:
+      ttl: 300000
+      invalidate:
+        ttl: 0
+  - prometheus:
+      port: 9090
+      endpoint: /metrics
+      labels:
+        service: csv-analyzer
+        version: 1.0.0
+        environment: ${NODE_ENV:-development}
+  - opentelemetry:
+      serviceName: csv-analyzer-bff
+      sampling:
+        probability: 0.1
+
+# Transforms (Schema Manipulation)
+transforms:
+  - namingConvention:
+      typeNames: pascalCase
+      fieldNames: camelCase
+  - rateLimit:
+        - type: Query
+          field: "*"
+          max: 100
+          ttl: 60000
+          identifier: userId
+        - type: Mutation
+          field: "*"
+          max: 20
+          ttl: 60000
+          identifier: userId
+        - type: Query
+          field: "findPetsByStatus"
+          max: 50
+          ttl: 60000
+          identifier: userId
+  - filterSchema:
+      filters:
+        - Query.!internal*
+        - Mutation.!admin*
+        - Type.!_internal*
+        - Type.!_metadata
 

@@ -130,6 +130,130 @@ export function validateDataConfig(data: unknown): ValidationResult {
 // Semantic Validation (Beyond Schema)
 // =============================================================================
 
+// =============================================================================
+// Known Plugin/Transform Classification (ADR-062)
+// =============================================================================
+
+/** Known GraphQL Mesh plugins (go in performance section) */
+const KNOWN_PLUGINS = new Set([
+  'response-cache',
+  'prometheus',
+  'newrelic',
+  'opentelemetry',
+  'http-details',
+  'snapshot',
+  'mock',
+  'live-query'
+]);
+
+/** Known GraphQL Mesh transforms (go in transforms array at root level) */
+const KNOWN_TRANSFORMS = new Set([
+  'rate-limit',
+  'filter-schema',
+  'rename',
+  'prefix',
+  'namingConvention',
+  'encapsulate',
+  'federation',
+  'resolvers-composition',
+  'cache'
+]);
+
+/**
+ * Validate performance configuration for proper plugin/transform categorization
+ * 
+ * @param manifest - Already schema-validated manifest
+ * @returns Array of validation errors (empty if valid)
+ */
+function validatePerformanceConfig(manifest: DSLManifest): ValidationError[] {
+  const errors: ValidationError[] = [];
+  
+  if (!manifest.performance) {
+    return errors;
+  }
+  
+  // Check if rateLimit is configured (it should be a transform, not plugin)
+  if (manifest.performance.rateLimit?.enabled) {
+    // rateLimit should generate a transform entry, not be in plugins
+    // This is handled by generator, just warn if it's misconfigured
+    
+    // Check if there's a corresponding transform
+    const hasRateLimitTransform = manifest.transforms?.some(t => 
+      typeof t === 'string' && t.includes('rate-limit')
+    );
+    
+    if (!hasRateLimitTransform) {
+      errors.push({
+        path: 'performance.rateLimit',
+        message: 'Rate limiting is enabled but no corresponding rate-limit transform found. Consider adding to transforms array.',
+        code: 'missing_transform'
+      });
+    }
+  }
+  
+  // Check filterSchema configuration
+  if (manifest.performance.filterSchema?.enabled) {
+    const hasFilterTransform = manifest.transforms?.some(t => 
+      typeof t === 'string' && t.includes('filter-schema')
+    );
+    
+    if (!hasFilterTransform) {
+      errors.push({
+        path: 'performance.filterSchema',
+        message: 'Schema filtering is enabled but no corresponding filter-schema transform found. Consider adding to transforms array.',
+        code: 'missing_transform'
+      });
+    }
+  }
+  
+  return errors;
+}
+
+/**
+ * Validate transforms array for known plugin misclassifications
+ * 
+ * @param manifest - Already schema-validated manifest
+ * @returns Array of validation errors (empty if valid)
+ */
+function validateTransformsConfig(manifest: DSLManifest): ValidationError[] {
+  const errors: ValidationError[] = [];
+  
+  if (!manifest.transforms || manifest.transforms.length === 0) {
+    return errors;
+  }
+  
+  // Check each transform entry
+  manifest.transforms.forEach((transform, index) => {
+    if (typeof transform !== 'string') {
+      return; // Complex transform configs are allowed
+    }
+    
+    // Extract the transform name (handles both simple names and configurations)
+    const transformName = transform.split(':')[0].trim();
+    
+    // Check if this is actually a plugin
+    if (KNOWN_PLUGINS.has(transformName)) {
+      errors.push({
+        path: `transforms[${index}]`,
+        message: `'${transformName}' is a plugin, not a transform. It should be configured in the 'performance' section instead.`,
+        code: 'misclassified_plugin'
+      });
+    }
+    
+    // Validate known transforms
+    if (!KNOWN_TRANSFORMS.has(transformName) && !KNOWN_PLUGINS.has(transformName)) {
+      // Could be a custom transform - just warn
+      errors.push({
+        path: `transforms[${index}]`,
+        message: `'${transformName}' is not a recognized Mesh transform or plugin. Ensure it's properly installed.`,
+        code: 'unknown_transform'
+      });
+    }
+  });
+  
+  return errors;
+}
+
 /**
  * Perform semantic validation beyond schema checks
  * 
@@ -190,6 +314,12 @@ export function validateSemantics(manifest: DSLManifest): ValidationError[] {
       code: 'naming_convention'
     });
   }
+  
+  // ADR-062: Validate performance configuration (plugins vs transforms)
+  errors.push(...validatePerformanceConfig(manifest));
+  
+  // ADR-062: Validate transforms array (ensure no plugins are misclassified)
+  errors.push(...validateTransformsConfig(manifest));
   
   return errors;
 }

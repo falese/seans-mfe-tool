@@ -6,16 +6,16 @@
 # GraphQL Mesh Configuration
 <%- meshConfigYaml %>
 
-<% if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { %>
+<%_ if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { _%>
 # Plugins (Performance & Observability)
 plugins:
-<% if (meshPlugins.responseCache) { %>
+<%_ if (meshPlugins.responseCache) { _%>
   - responseCache:
       ttl: <%= meshPlugins.responseCache.ttl %>
       invalidate:
         ttl: <%= meshPlugins.responseCache.invalidate.ttl %>
-<% } %>
-<% if (meshPlugins.prometheus) { %>
+<%_ } _%>
+<%_ if (meshPlugins.prometheus) { _%>
   - prometheus:
       port: <%= meshPlugins.prometheus.port %>
       endpoint: <%= meshPlugins.prometheus.endpoint %>
@@ -23,36 +23,69 @@ plugins:
         service: <%= name %>
         version: <%= version %>
         environment: ${NODE_ENV:-development}
-<% } %>
-<% if (meshPlugins.opentelemetry) { %>
+<%_ } _%>
+<%_ if (meshPlugins.opentelemetry) { _%>
   - opentelemetry:
       serviceName: <%= name %>-bff
       sampling:
         probability: <%= meshPlugins.opentelemetry.sampling.probability %>
-<% } %>
-<% } %>
+<%_ } _%>
+<%_ } _%>
 
-<% if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { %>
+<%_ if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { _%>
 # Transforms (Schema Manipulation)
 transforms:
-<% if (meshTransforms.namingConvention) { %>
+<%_ if (meshTransforms.namingConvention) { _%>
   - namingConvention:
       typeNames: <%= meshTransforms.namingConvention.typeNames %>
       fieldNames: <%= meshTransforms.namingConvention.fieldNames %>
-<% } %>
-<% if (meshTransforms.rateLimit) { %>
+<%_ } _%>
+<%_ if (meshTransforms.rateLimit) { _%>
   - rateLimit:
-      config: <%- JSON.stringify(meshTransforms.rateLimit.config || []) %>
-<% } %>
-<% if (meshTransforms.filterSchema) { %>
+<%_ if (Array.isArray(meshTransforms.rateLimit.config)) { _%>
+      config:
+<%_ meshTransforms.rateLimit.config.forEach(rule => { _%>
+        - type: <%= rule.type %>
+          field: "<%= rule.field %>"
+          max: <%= rule.max %>
+          ttl: <%= rule.ttl %>
+<%_ if (rule.identifyContext) { _%>
+          identifyContext: <%= rule.identifyContext %>
+<%_ } _%>
+<%_ }); _%>
+<%_ } else { _%>
+      config: []
+<%_ } _%>
+<%_ } _%>
+<%_ if (meshTransforms.filterSchema) { _%>
   - filterSchema:
-      filters: <%- JSON.stringify(meshTransforms.filterSchema.filters || []) %>
-<% } %>
-<% if (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0) { %>
-<% meshTransforms.customTransforms.forEach(transform => { %>
+<%_ if (Array.isArray(meshTransforms.filterSchema.filters)) { _%>
+      filters:
+<%_ meshTransforms.filterSchema.filters.forEach(filter => { _%>
+        - <%= filter %>
+<%_ }); _%>
+<%_ } else { _%>
+      filters: []
+<%_ } _%>
+<%_ } _%>
+<%_ if (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0) { _%>
+<%_ meshTransforms.customTransforms.forEach(transform => { _%>
+<%_
+  // Parse the transform string into key-value pairs
+  const lines = transform.trim().split('\n').map(line => line.trim());
+  const transformObj = {};
+  lines.forEach(line => {
+    const [key, ...valueParts] = line.split(':');
+    if (key && valueParts.length > 0) {
+      transformObj[key.trim()] = valueParts.join(':').trim();
+    }
+  });
+_%>
   - resolversComposition:
-      <%- transform %>
-<% }); %>
-<% } %>
-<% } %>
+<%_ Object.entries(transformObj).forEach(([key, value]) => { _%>
+      <%= key %>: <%= value %>
+<%_ }); _%>
+<%_ }); _%>
+<%_ } _%>
+<%_ } _%>
 
