@@ -57,3 +57,65 @@ dependencies:
 #     - openapi: ./specs/api.yaml
 #       service: my-service
 #       version: 1.0.0
+
+# =============================================================================
+# PERFORMANCE & OBSERVABILITY (Optional - ADR-062)
+# =============================================================================
+# Configure caching, monitoring, and rate limiting for production BFFs.
+# CLI generates plugin configuration in .meshrc.yaml.
+#
+# performance:
+#   # Response caching (enabled by default)
+#   caching:
+#     enabled: true
+#     ttl: 300000  # 5 minutes
+#     strategies:
+#       - type: Query
+#         field: user
+#         ttl: 60000  # 1 minute for user queries
+#   
+#   # Observability configuration
+#   observability:
+#     # Prometheus metrics (enabled by default)
+#     prometheus:
+#       enabled: true
+#       port: 9090
+#       endpoint: /metrics
+#     
+#     # OpenTelemetry tracing (opt-in)
+#     opentelemetry:
+#       enabled: false
+#       serviceName: {{name}}-bff
+#       sampling:
+#         probability: 0.1
+#   
+#   # Rate limiting (opt-in for public APIs)
+#   rateLimit:
+#     enabled: false
+#     config:
+#       - type: Query
+#         field: search
+#         max: 100
+#         ttl: 60000  # per minute
+#         identifyContext: userId
+#   
+#   # Schema filtering (hide internal fields)
+#   filterSchema:
+#     enabled: false
+#     filters:
+#       - Type.!_internal*
+#       - Query.!admin*
+
+# =============================================================================
+# CUSTOM TRANSFORMS (Optional - ADR-062)
+# =============================================================================
+# Define custom resolver composition for field-level logic (auth, logging, etc.)
+# CLI generates resolversComposition transform in .meshrc.yaml.
+#
+# transforms:
+#   - |
+#     resolver: Query.user
+#     composer: ./src/platform/bff/composers/auth-check#authCheck
+#   - |
+#     resolver: Mutation.*
+#     composer: ./src/platform/bff/composers/audit-log#auditLog

@@ -61,7 +61,7 @@ discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
 # Platform can modify standard capabilities over time
 capabilities:
   # 1. LOAD - Initialize the MFE runtime
-  - load:
+  - Load:
       type: platform
       description: Initialize MFE runtime, load dependencies, and prepare for execution
       handler: initialize
@@ -99,7 +99,7 @@ capabilities:
               description: Clean up partial initialization on failure
 
   # 2. RENDER - Display UI or return data representation
-  - render:
+  - Render:
       type: platform
       description: Render UI component (for web MFEs) or return JSON data representation (for backend MFEs)
       handler: renderComponent
@@ -126,7 +126,7 @@ capabilities:
               description: Verify user has permission to render
         main:
           - performRender:
-              handler: doRender
+              handler: RenderComponent
               description: Execute render (UI component or GraphQL data query)
         after:
           - attachEventHandlers:
@@ -138,7 +138,7 @@ capabilities:
               description: Display error state or return error response
 
   # 3. REFRESH - Reload/update MFE state
-  - refresh:
+  - Refresh:
       type: platform
       description: Reload MFE data or re-render UI with fresh state
       handler: refreshState
@@ -177,7 +177,7 @@ capabilities:
               description: Fall back to cached data on failure
 
   # 4. AUTHORIZEACCESS - Validate JWT and determine permissions
-  - authorizeAccess:
+  - AuthorizeAccess:
       type: platform
       description: Validates JWT token and determines user/agent permissions for MFE access
       handler: checkAuthorization
@@ -219,7 +219,7 @@ capabilities:
               description: Return 401/403 response
 
   # 5. HEALTH - Report operational status
-  - health:
+  - Health:
       type: platform
       description: Report MFE health status and operational metrics
       handler: checkHealth
@@ -248,7 +248,7 @@ capabilities:
               description: Report unhealthy status
 
   # 6. DESCRIBE - Self-description and introspection
-  - describe:
+  - Describe:
       type: platform
       description: Return full DSL manifest and runtime information
       handler: describeSelf
@@ -269,7 +269,7 @@ capabilities:
               description: Gather runtime metrics and info
 
   # 7. SCHEMA - GraphQL schema introspection
-  - schema:
+  - Schema:
       type: platform
       description: Return GraphQL schema for data/capability introspection
       handler: introspectSchema
@@ -285,7 +285,7 @@ capabilities:
               description: Generate or retrieve GraphQL schema
 
   # 8. QUERY - Execute GraphQL queries
-  - query:
+  - Query:
       type: platform
       description: Execute GraphQL query against MFE data or capabilities
       handler: executeQuery
@@ -344,7 +344,7 @@ capabilities:
               contained: true
 
   # 9. EMIT - Generic event/telemetry emission
-  - emit:
+  - Emit:
       type: platform
       description: Generic event and telemetry emission for all MFE events (errors, metrics, traces, logs)
       handler: emitEvent
@@ -522,6 +522,61 @@ data:
     #         includeRootOperations: true
 
   # ===========================================================================
+  # TRANSFORMS - Shape the unified GraphQL schema (optional)
+  # ===========================================================================
+  transforms:
+    # Remove internal/admin endpoints from public schema
+    - filterSchema:
+        filters:
+          - Query.!internal*
+          - Mutation.!admin*
+    
+    # Fix naming conventions from OpenAPI
+    # - rename:
+    #     renames:
+    #       - from:
+    #           type: Query
+    #           field: API_V1_GetAnalysis
+    #         to:
+    #           type: Query
+    #           field: getAnalysis
+    
+    # Namespace to avoid conflicts with other sources
+    # - prefix:
+    #     value: Analysis_
+    #     includeRootOperations: true
+
+  # ===========================================================================
+  # PLUGINS - Production concerns (optional)
+  # ===========================================================================
+  plugins:
+    # Response caching
+    - responseCache:
+        ttl: 60000  # 1 minute
+        # cacheKey: "{context.userId}:{operationName}"
+        invalidateViaMutation: true
+    
+    # Rate limiting
+    - rateLimit:
+        config:
+          - type: Query
+            field: '*'
+            max: 100
+            window: '1m'
+          - type: Mutation
+            field: '*'
+            max: 20
+            window: '1m'
+    
+    # Query depth limiting (prevent abuse)
+    # - depthLimit:
+    #     maxDepth: 10
+    
+    # Prometheus metrics
+    # - prometheus:
+    #     endpoint: /metrics
+
+  # ===========================================================================
   # SERVE - GraphQL server configuration
   # ===========================================================================
   serve:
@@ -541,85 +596,6 @@ data:
       service: analysis-api
       baseUrl: http://analysis-api:8080
       version: 2.1.0
-
-# =============================================================================
-# PERFORMANCE & OBSERVABILITY (ADR-062)
-# =============================================================================
-# Configure caching, monitoring, rate limiting, and schema filtering.
-# CLI generates plugin/transform configuration in .meshrc.yaml.
-performance:
-  # Response caching (enabled by default)
-  caching:
-    enabled: true
-    ttl: 300000  # 5 minutes default
-    strategies:
-      - type: Query
-        field: getAnalysis
-        ttl: 60000  # 1 minute for analysis queries
-      - type: Query
-        field: listReports
-        ttl: 300000  # 5 minutes for report lists
-  
-  # Observability configuration
-  observability:
-    # Prometheus metrics (enabled by default for production)
-    prometheus:
-      enabled: true
-      port: 9090
-      endpoint: /metrics
-    
-    # OpenTelemetry distributed tracing (opt-in)
-    opentelemetry:
-      enabled: false
-      serviceName: csv-analyzer-bff
-      sampling:
-        probability: 0.1  # Sample 10% of requests
-      exporters:
-        - type: jaeger
-          endpoint: http://jaeger:14268/api/traces
-  
-  # Rate limiting (opt-in for public APIs)
-  rateLimit:
-    enabled: true
-    config:
-      - type: Query
-        field: '*'
-        max: 100
-        ttl: 60000  # 100 requests per minute
-        identifyContext: userId
-      - type: Mutation
-        field: '*'
-        max: 20
-        ttl: 60000  # 20 mutations per minute
-  
-  # Schema filtering (hide internal fields)
-  filterSchema:
-    enabled: true
-    filters:
-      - Query.!internal*  # Remove internal queries
-      - Mutation.!admin*  # Remove admin mutations
-      - Type.!_internal*  # Remove internal types
-
-# =============================================================================
-# CUSTOM TRANSFORMS (ADR-062)
-# =============================================================================
-# Define custom resolver composition for field-level logic.
-# Each transform defines middleware that wraps resolver execution.
-transforms:
-  # Authentication check for user queries
-  - |
-    resolver: Query.getUser
-    composer: ./src/platform/bff/composers/auth-check#authCheck
-  
-  # Audit logging for all mutations
-  - |
-    resolver: Mutation.*
-    composer: ./src/platform/bff/composers/audit-log#auditLog
-  
-  # Rate limiting for expensive operations
-  - |
-    resolver: Query.generateReport
-    composer: ./src/platform/bff/composers/rate-limit#rateLimitExpensive
 
 # =============================================================================
 # DEPENDENCIES

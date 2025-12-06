@@ -56,8 +56,8 @@ discovery: url # DSL manifest endpoint
 capabilities: Capability[] # What this MFE provides
 data: DataConfig # GraphQL/REST data layer
 dependencies: Dependencies # Shared deps and MFE deps
-| 3.3     | 2025-11-29 | Removed custom lifecycle phases, deprecated CLI flags, migrated templates to language-based structure, archived BACKLOG.md |
-
+performance: PerformanceConfig # Caching, observability, rate-limit (ADR-062)
+transforms: CustomTransform[] # Custom resolvers composition (ADR-062)
 authorization: AuthConfig # Access control rules
 ```
 
@@ -458,6 +458,152 @@ shared: {
   'react-dom': { singleton: true, requiredVersion: '^18.0.0' },
 }
 ```
+
+---
+
+### Performance & Observability Section (ADR-062)
+
+**Added:** 2025-12-06 (v3.3)  
+**Purpose:** Configure caching, monitoring, rate limiting, and schema filtering for production BFFs.
+
+#### Schema
+
+```yaml
+performance:
+  # Response caching
+  caching:
+    enabled: boolean # Default: true
+    ttl: number # Default: 300000 (5 minutes)
+    strategies:
+      - type: string # GraphQL type name (e.g., "Query")
+        field: string # Field name
+        ttl: number # Field-specific TTL
+
+  # Observability
+  observability:
+    prometheus:
+      enabled: boolean # Default: true
+      port: number # Default: 9090
+      endpoint: string # Default: /metrics
+    opentelemetry:
+      enabled: boolean # Default: false
+      serviceName: string
+      sampling:
+        probability: number # 0.0-1.0, default: 0.1
+      exporters:
+        - type: string # jaeger, zipkin, etc.
+          endpoint: string
+
+  # Rate limiting
+  rateLimit:
+    enabled: boolean # Default: false
+    config:
+      - type: string # Query, Mutation
+        field: string # Field name or "*"
+        max: number # Max requests
+        ttl: number # Time window (ms)
+        identifyContext: string # Context field for per-user limits
+
+  # Schema filtering
+  filterSchema:
+    enabled: boolean # Default: false
+    filters:
+      - string # Filter patterns (e.g., "Query.!internal*")
+```
+
+#### Example
+
+```yaml
+performance:
+  caching:
+    enabled: true
+    ttl: 300000
+    strategies:
+      - type: Query
+        field: user
+        ttl: 60000 # Cache user queries for 1 minute
+
+  observability:
+    prometheus:
+      enabled: true
+      port: 9090
+    opentelemetry:
+      enabled: false
+
+  rateLimit:
+    enabled: true
+    config:
+      - type: Query
+        field: '*'
+        max: 100
+        ttl: 60000
+        identifyContext: userId
+
+  filterSchema:
+    enabled: true
+    filters:
+      - Query.!internal*
+      - Mutation.!admin*
+```
+
+**CLI Behavior:**
+
+- Generates plugin configuration in `.meshrc.yaml`
+- Conditionally includes npm packages based on `enabled` flags
+- Default tier: response-cache + prometheus + naming-convention
+- Advanced tier: + opentelemetry + rate-limit + filter-schema
+
+---
+
+### Custom Transforms Section (ADR-062)
+
+**Added:** 2025-12-06 (v3.3)  
+**Purpose:** Define custom resolver composition for field-level logic (auth, logging, auditing).
+
+#### Schema
+
+```yaml
+transforms:
+  - string # YAML block scalar with resolver composition config
+```
+
+#### Example
+
+```yaml
+transforms:
+  # Authentication check
+  - |
+    resolver: Query.user
+    composer: ./src/platform/bff/composers/auth-check#authCheck
+
+  # Audit logging for mutations
+  - |
+    resolver: Mutation.*
+    composer: ./src/platform/bff/composers/audit-log#auditLog
+
+  # Rate limiting for expensive operations
+  - |
+    resolver: Query.generateReport
+    composer: ./src/platform/bff/composers/rate-limit#rateLimitExpensive
+```
+
+#### Composer Implementation
+
+```typescript
+// src/platform/bff/composers/auth-check.ts
+export const authCheck = (next) => async (root, args, context, info) => {
+  if (!context.userId) {
+    throw new Error('Unauthorized');
+  }
+  return next(root, args, context, info);
+};
+```
+
+**CLI Behavior:**
+
+- Generates `resolversComposition` transform in `.meshrc.yaml`
+- Creates stub composer files in `src/platform/bff/composers/`
+- Developers implement custom logic in composer files
 
 ---
 
