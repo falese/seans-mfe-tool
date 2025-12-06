@@ -117,15 +117,10 @@ export const DEFAULT_MESH_PLUGINS = {
   // Always include (performance critical)
   responseCache: {
     ttl: 300000, // 5 minutes
-    invalidate: { ttl: 0 },
   },
   
   // Production observability (standard tier)
-  prometheus: {
-    enabled: true,
-    port: 9090,
-    endpoint: '/metrics',
-  },
+  prometheus: {},
   
   // Optional (advanced tier)
   opentelemetry: {

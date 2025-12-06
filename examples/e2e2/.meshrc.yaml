@@ -13,6 +13,8 @@ sources:
           Authorization: Bearer {context.jwt}
           X-Request-ID: '{context.requestId}'
           X-User-ID: '{context.userId}'
+cache:
+  inmemoryLru: {}
 serve:
   endpoint: /graphql
   playground: true
@@ -22,15 +24,9 @@ serve:
 plugins:
   - responseCache:
       ttl: 300000
-      invalidate:
-        ttl: 0
-  - prometheus:
-      port: 9090
-      endpoint: /metrics
-      labels:
-        service: csv-analyzer
-        version: 1.0.0
-        environment: ${NODE_ENV:-development}
+  
+  - prometheus: {}
+
 
 # Transforms (Schema Manipulation)
 transforms:

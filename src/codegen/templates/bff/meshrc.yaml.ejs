@@ -12,17 +12,11 @@ plugins:
 <%_ if (meshPlugins.responseCache) { _%>
   - responseCache:
       ttl: <%= meshPlugins.responseCache.ttl %>
-      invalidate:
-        ttl: <%= meshPlugins.responseCache.invalidate.ttl %>
+  
 <%_ } _%>
 <%_ if (meshPlugins.prometheus) { _%>
-  - prometheus:
-      port: <%= meshPlugins.prometheus.port %>
-      endpoint: <%= meshPlugins.prometheus.endpoint %>
-      labels:
-        service: <%= name %>
-        version: <%= version %>
-        environment: ${NODE_ENV:-development}
+  - prometheus: {}
+
 <%_ } _%>
 <%_ if (meshPlugins.opentelemetry) { _%>
   - opentelemetry:

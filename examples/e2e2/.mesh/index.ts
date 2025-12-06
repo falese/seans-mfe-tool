@@ -311,7 +311,7 @@ export async function getMeshOptions(): Promise<GetMeshOptions> {
 const pubsub = new PubSub();
 const sourcesStore = rootStore.child('sources');
 const logger = new DefaultLogger("");
-const MeshCache = await import("@graphql-mesh/cache-localforage").then(handleImport);
+const MeshCache = await import("@graphql-mesh/cache-inmemory-lru").then(handleImport);
   const cache = new MeshCache({
       ...{},
       importFn,
@@ -354,10 +354,7 @@ transforms[0] = new RootTransform_0({
 const useResponseCache = await import("@graphql-mesh/plugin-response-cache").then(handleImport);
 additionalEnvelopPlugins[0] = await useResponseCache({
           ...({
-  "ttl": 300000,
-  "invalidate": {
-    "ttl": 0
-  }
+  "ttl": 300000
 }),
           logger: logger.child({ plugin: "responseCache" }),
           cache,
@@ -367,15 +364,7 @@ additionalEnvelopPlugins[0] = await useResponseCache({
         })
 const usePrometheus = await import("@graphql-mesh/plugin-prometheus").then(handleImport);
 additionalEnvelopPlugins[1] = await usePrometheus({
-          ...({
-  "port": 9090,
-  "endpoint": "/metrics",
-  "labels": {
-    "service": "csv-analyzer",
-    "version": "1.0.0",
-    "environment": "-development"
-  }
-}),
+          ...({}),
           logger: logger.child({ plugin: "prometheus" }),
           cache,
           pubsub,
