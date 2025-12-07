@@ -16,18 +16,5 @@ sources:
         source: ./benefit-model.yaml
         operationHeaders:
           Authorization: Bearer {context.jwt}
-cache:
-  localforage:
-    driver: [WEBSQL, INDEXEDDB, LOCALSTORAGE]
-
-plugins:
-  - responseCache:
-      ttl: 60000
-      invalidateViaMutation: true
-
-serve:
-  endpoint: /graphql
-  playground: true
-  browser: true
 
 
