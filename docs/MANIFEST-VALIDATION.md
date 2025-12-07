@@ -13,6 +13,7 @@ We've implemented **Option 3: Auto-Classification with Override** for manifest v
 ### Two Validators (Intentional Duplication)
 
 1. **`src/utils/manifestValidator.js`** (JavaScript)
+
    - Used by CLI commands for pre-generation validation
    - Provides dependency resolution (maps plugin names → npm packages)
    - Pretty-printed error messages with chalk
@@ -27,6 +28,7 @@ We've implemented **Option 3: Auto-Classification with Override** for manifest v
 ### Why Two Validators?
 
 Per ADR-048 (incremental TypeScript migration), we maintain both:
+
 - **JavaScript version**: CLI utilities still in JS, need immediate validation
 - **TypeScript version**: Code generation requires compile-time type safety
 - **Strategy**: Keep lists synchronized until migration completes
@@ -34,6 +36,7 @@ Per ADR-048 (incremental TypeScript migration), we maintain both:
 ## Validation Rules
 
 ### Known Plugins (13 total)
+
 Source: `@graphql-mesh/plugin-*` packages
 
 ```
@@ -43,6 +46,7 @@ operationFieldPermissions, jwtAuth, hmac
 ```
 
 ### Known Transforms (15 total)
+
 Source: `@graphql-mesh/transform-*` packages
 
 ```
@@ -54,22 +58,26 @@ replace, typeMerging, mock, bare, type-merging
 ## Behavior
 
 ### Error (Blocks Generation)
+
 - Plugin in `transforms` section → Error: "Move to plugins section"
 - Transform in `plugins` section → Error: "Move to transforms section"
 - **Result**: Throws exception, prevents code generation
 
 ### Warning (Non-Fatal)
-- Unknown plugin name → Warning: "Ensure it's a valid @graphql-mesh/plugin-* package"
-- Unknown transform name → Warning: "Ensure it's a valid @graphql-mesh/transform-* package"
+
+- Unknown plugin name → Warning: "Ensure it's a valid @graphql-mesh/plugin-\* package"
+- Unknown transform name → Warning: "Ensure it's a valid @graphql-mesh/transform-\* package"
 - **Result**: Logs warning, continues generation
 
 ### Success
+
 - All plugins/transforms correctly classified
 - Logs: `✅ Manifest validation passed: X plugin(s), Y transform(s)`
 
 ## Usage
 
 ### In CLI Commands (Pre-Generation)
+
 ```javascript
 const { validateManifest, printValidationResults } = require('./utils/manifestValidator');
 
@@ -82,6 +90,7 @@ if (!result.valid) {
 ```
 
 ### In Code Generation (Runtime)
+
 ```typescript
 import { validateManifestConfiguration } from './unified-generator';
 
@@ -98,10 +107,11 @@ validateManifestConfiguration(manifest);
 **CRITICAL**: Update both files simultaneously:
 
 1. **`src/codegen/UnifiedGenerator/unified-generator.ts`**
+
    ```typescript
    export const KNOWN_MESH_PLUGINS = new Set([
      // ... existing
-     'newPluginName',  // ADD HERE
+     'newPluginName', // ADD HERE
    ]);
    ```
 
@@ -109,11 +119,12 @@ validateManifestConfiguration(manifest);
    ```javascript
    const KNOWN_PLUGINS = [
      // ... existing
-     'newPluginName',  // ADD HERE
+     'newPluginName', // ADD HERE
    ];
    ```
 
 ### Sync Check Script
+
 ```bash
 # TODO: Add pre-commit hook to verify sync
 npm run validate:sync
@@ -130,10 +141,10 @@ plugins:
   - responseCache:
       ttl: 300000
   - prometheus: {}
-  - rateLimit:  # ✅ CORRECT: Plugin, not transform
+  - rateLimit: # ✅ CORRECT: Plugin, not transform
       config:
         - type: Query
-          field: "search"
+          field: 'search'
           max: 10
           ttl: 60000
 
