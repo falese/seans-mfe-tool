@@ -48,7 +48,7 @@ export const DEPENDENCY_VERSIONS = {
   
   // Mesh Transforms (Schema Manipulation)
   meshTransforms: {
-    namingConvention: '^1.0.0',
+    namingConvention: '0.105.19',
     rateLimit: '^1.0.0',
     filterSchema: '^1.0.0',
     resolversComposition: '^1.0.0',
@@ -154,23 +154,36 @@ export const DEFAULT_MESH_TRANSFORMS = {
 // =============================================================================
 
 /**
+ * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
+ * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
+ * See ADR-048 for migration strategy.
+ */
+
+/**
  * Known GraphQL Mesh plugins (production-ready)
- * Used to validate manifest plugin configurations
+ * Source: @graphql-mesh/plugin-* packages
+ * Used to validate manifest plugin configurations and prevent misclassification
  */
 export const KNOWN_MESH_PLUGINS = new Set([
   'responseCache',
   'prometheus',
   'opentelemetry',
-  'liveQuery',
-  'httpCache',
   'newrelic',
   'statsd',
+  'liveQuery',
+  'defer-stream',
+  'meshHttp',
+  'snapshot',
   'mock',
+  'operationFieldPermissions',
+  'jwtAuth',
+  'hmac',
 ]);
 
 /**
  * Known GraphQL Mesh transforms
- * Used to validate manifest transform configurations
+ * Source: @graphql-mesh/transform-* packages
+ * Used to validate manifest transform configurations and prevent misclassification
  */
 export const KNOWN_MESH_TRANSFORMS = new Set([
   'namingConvention',
@@ -182,8 +195,12 @@ export const KNOWN_MESH_TRANSFORMS = new Set([
   'rename',
   'encapsulate',
   'federation',
+  'extend',
   'replace',
   'typeMerging',
+  'mock',
+  'bare',
+  'type-merging',
 ]);
 
 /**
@@ -203,6 +220,7 @@ export interface ValidationResult {
 /**
  * Validate and classify plugins from manifest
  * Enforces separation between plugins and transforms
+ * Supports both object format {pluginName: config} and array format [{pluginName: config}]
  */
 export function validateManifestPlugins(manifest: DSLManifest): ValidationResult {
   const result: ValidationResult = {
@@ -216,10 +234,16 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
     },
   };
   
-  // Check if manifest has plugins section
-  const manifestPlugins = (manifest as any).plugins || {};
+  // Check if manifest has plugins section (can be array or object)
+  const manifestPlugins = (manifest as any).plugins;
+  if (!manifestPlugins) return result;
   
-  for (const pluginName of Object.keys(manifestPlugins)) {
+  // Handle both array and object formats
+  const pluginEntries = Array.isArray(manifestPlugins) 
+    ? manifestPlugins.map(p => typeof p === 'string' ? p : Object.keys(p)[0])
+    : Object.keys(manifestPlugins);
+  
+  for (const pluginName of pluginEntries) {
     if (KNOWN_MESH_PLUGINS.has(pluginName)) {
       result.classification.plugins.push(pluginName);
     } else if (KNOWN_MESH_TRANSFORMS.has(pluginName)) {
@@ -231,7 +255,7 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
       result.valid = false;
     } else {
       result.warnings.push(
-        `Unknown plugin "${pluginName}". Ensure it's a valid GraphQL Mesh plugin.`
+        `Unknown plugin "${pluginName}". Ensure it's a valid @graphql-mesh/plugin-* package.`
       );
       result.classification.unknown.push(pluginName);
     }
@@ -242,6 +266,7 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
 
 /**
  * Validate and classify transforms from manifest
+ * Supports both object format {transformName: config} and array format [{transformName: config}]
  */
 export function validateManifestTransforms(manifest: DSLManifest): ValidationResult {
   const result: ValidationResult = {
@@ -255,10 +280,16 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
     },
   };
   
-  // Check if manifest has transforms section
-  const manifestTransforms = (manifest as any).transforms || {};
+  // Check if manifest has transforms section (can be array or object)
+  const manifestTransforms = (manifest as any).transforms;
+  if (!manifestTransforms) return result;
   
-  for (const transformName of Object.keys(manifestTransforms)) {
+  // Handle both array and object formats
+  const transformEntries = Array.isArray(manifestTransforms)
+    ? manifestTransforms.map(t => typeof t === 'string' ? t : Object.keys(t)[0])
+    : Object.keys(manifestTransforms);
+  
+  for (const transformName of transformEntries) {
     if (KNOWN_MESH_TRANSFORMS.has(transformName)) {
       result.classification.transforms.push(transformName);
     } else if (KNOWN_MESH_PLUGINS.has(transformName)) {
@@ -270,7 +301,7 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
       result.valid = false;
     } else {
       result.warnings.push(
-        `Unknown transform "${transformName}". Ensure it's a valid GraphQL Mesh transform.`
+        `Unknown transform "${transformName}". Ensure it's a valid @graphql-mesh/transform-* package.`
       );
       result.classification.unknown.push(transformName);
     }

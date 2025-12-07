@@ -2,11 +2,14 @@
  * DSL Manifest Validator
  * Validates MFE manifest structure and configuration
  * ADR-062: Ensures proper separation of plugins and transforms
+ * 
+ * SYNC WITH: src/codegen/UnifiedGenerator/unified-generator.ts (KNOWN_MESH_PLUGINS/TRANSFORMS)
  */
 
 const chalk = require('chalk');
 
 // Known GraphQL Mesh plugins (from @graphql-mesh/plugin-*)
+// IMPORTANT: Keep in sync with unified-generator.ts KNOWN_MESH_PLUGINS
 const KNOWN_PLUGINS = [
   'responseCache',
   'prometheus',
@@ -24,26 +27,33 @@ const KNOWN_PLUGINS = [
 ];
 
 // Known GraphQL Mesh transforms (from @graphql-mesh/transform-*)
+// IMPORTANT: Keep in sync with unified-generator.ts KNOWN_MESH_TRANSFORMS
 const KNOWN_TRANSFORMS = [
+  'namingConvention',
   'rateLimit',
   'filterSchema',
-  'rename',
-  'prefix',
-  'namingConvention',
   'resolversComposition',
+  'cache',
+  'prefix',
+  'rename',
   'encapsulate',
   'federation',
   'extend',
-  'cache',
+  'replace',
+  'typeMerging',
   'mock',
-  'type-merging',
   'bare',
+  'type-merging',
 ];
 
 /**
  * Validate manifest plugin configuration
  * @param {Object} manifest - The full manifest object
  * @returns {Object} - { valid: boolean, errors: string[], warnings: string[] }
+ * 
+ * NOTE: This JavaScript validator is used by CLI commands for pre-generation checks.
+ * The TypeScript version in unified-generator.ts is used during code generation.
+ * Both should be kept in sync until we fully migrate to TypeScript (ADR-048).
  */
 function validateManifest(manifest) {
   const errors = [];
