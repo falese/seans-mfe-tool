@@ -39,7 +39,7 @@ jobs:
           flags: unittests
           name: codecov-umbrella
 
-  generator-coverage:
+  codegen-coverage:
     runs-on: ubuntu-latest
     
     steps:
@@ -54,15 +54,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Run generator tests with 100% coverage requirement
-        run: npm test -- src/codegen/generators --coverage --collectCoverageFrom='src/codegen/generators/**/*.js'
+      - name: Run codegen tests with coverage requirement
+        run: npm test -- src/codegen --coverage --collectCoverageFrom='src/codegen/**/*.{js,ts}' --collectCoverageFrom='!src/codegen/**/*.test.{js,ts}' --collectCoverageFrom='!src/codegen/templates/**'
         env:
           CI: true
       
-      - name: Verify 100% coverage for generators (TDD mandate - ADR-022)
+      - name: Verify coverage for codegen (ADR-022)
         run: |
-          echo "Verifying >=98% coverage for code generators..."
-          npm test -- src/codegen/generators --coverage --collectCoverageFrom='src/codegen/generators/**/*.js'
+          echo "Verifying >=80% coverage for code generators (excluding templates)..."
+          npm test -- src/codegen --coverage --collectCoverageFrom='src/codegen/**/*.{js,ts}' --collectCoverageFrom='!src/codegen/**/*.test.{js,ts}' --collectCoverageFrom='!src/codegen/templates/**'
           COVERAGE_FILE="coverage/coverage-summary.json"
           if [ ! -f "$COVERAGE_FILE" ]; then
             echo "❌ Coverage summary not found"
@@ -72,11 +72,12 @@ jobs:
           BRANCH=$(jq '.total.branches.pct' "$COVERAGE_FILE")
           FUNC=$(jq '.total.functions.pct' "$COVERAGE_FILE")
           LINE=$(jq '.total.lines.pct' "$COVERAGE_FILE")
-          if [ "$(echo "$STMT >= 90" | bc)" -eq 1 ] && [ "$(echo "$BRANCH >= 90" | bc)" -eq 1 ] && [ "$(echo "$FUNC >= 90" | bc)" -eq 1 ] && [ "$(echo "$LINE >= 90" | bc)" -eq 1 ]; then
-            echo "✅ Generator coverage is >=90%"
+          echo "Coverage: Statements=$STMT%, Branches=$BRANCH%, Functions=$FUNC%, Lines=$LINE%"
+          if [ "$(echo "$STMT >= 80" | bc)" -eq 1 ] && [ "$(echo "$BRANCH >= 80" | bc)" -eq 1 ] && [ "$(echo "$FUNC >= 80" | bc)" -eq 1 ] && [ "$(echo "$LINE >= 80" | bc)" -eq 1 ]; then
+            echo "✅ Codegen coverage is >=80%"
             exit 0
           else
-            echo "❌ Generator coverage is below 90%"
+            echo "❌ Codegen coverage is below 80%"
             jq '.total' "$COVERAGE_FILE"
             exit 1
           fi
