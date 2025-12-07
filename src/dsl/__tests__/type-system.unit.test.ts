@@ -89,4 +89,53 @@ describe('Runtime validation branches', () => {
     expect(validateValue('bad.jwt', 'jwt!', {}).valid).toBe(false);
     expect(validateValue('not-a-date', 'datetime!', {}).valid).toBe(false);
   });
+  it('object type mismatch', () => {
+    const res = validateValue('string-not-object', 'object', {});
+    expect(res.valid).toBe(false);
+    expect(res.errors.some((e: { constraint?: string }) => e.constraint === 'type')).toBe(true);
+  });
+  it('object type with array rejected', () => {
+    const res = validateValue([], 'object', {});
+    expect(res.valid).toBe(false);
+    expect(res.errors.some((e: { message?: string }) => e.message?.includes('must be an object'))).toBe(true);
+  });
+  it('format validations pass', () => {
+    expect(validateValue('test@example.com', 'email!', {}).valid).toBe(true);
+    expect(validateValue('https://example.com', 'url!', {}).valid).toBe(true);
+    expect(validateValue('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', 'jwt!', {}).valid).toBe(true);
+    expect(validateValue('2024-01-01T00:00:00Z', 'datetime!', {}).valid).toBe(true);
+    expect(validateValue('2024-01-01', 'datetime!', {}).valid).toBe(true);
+  });
+  it('generateZodSchema for boolean type', () => {
+    const schema = generateZodSchema('flag', parseType('boolean!'), {});
+    expect(schema).toContain('z.boolean()');
+  });
+  it('generateZodSchema for object type', () => {
+    const schema = generateZodSchema('data', parseType('object'), {});
+    expect(schema).toContain('z.record(z.unknown())');
+  });
+  it('generateZodSchema for file type', () => {
+    const schema = generateZodSchema('upload', parseType('file'), {});
+    expect(schema).toContain('z.instanceof(File)');
+  });
+  it('generateZodSchema for file with maxSize', () => {
+    const schema = generateZodSchema('upload', parseType('file'), { maxSize: 1000000 });
+    expect(schema).toContain('z.instanceof(File)');
+    expect(schema).toContain('.refine');
+    expect(schema).toContain('1000000 bytes');
+  });
+  it('generateZodSchema for file with formats', () => {
+    const schema = generateZodSchema('upload', parseType('file'), { formats: ['image/png', 'image/jpeg'] });
+    expect(schema).toContain('z.instanceof(File)');
+    expect(schema).toContain('image/png');
+    expect(schema).toContain('image/jpeg');
+  });
+  it('generateZodSchema for element type', () => {
+    const schema = generateZodSchema('component', parseType('element'), {});
+    expect(schema).toContain('z.unknown()');
+  });
+  it('generateZodSchema for unknown type', () => {
+    const schema = generateZodSchema('data', parseType('CustomType'), {});
+    expect(schema).toContain('z.unknown()');
+  });
 });
