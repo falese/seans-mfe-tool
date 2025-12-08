@@ -358,7 +358,15 @@ export function extractManifestVars(manifest: DSLManifest) {
   const outputTypeName = className + 'Outputs';
   const port = manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001;
   const muiVersion = manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
-  const remotes = manifest.dependencies?.mfes || {};
+  
+  // Filter out empty/invalid remote entries from YAML parsing issues
+  const rawRemotes = manifest.dependencies?.mfes || {};
+  const remotes: Record<string, any> = {};
+  for (const [name, config] of Object.entries(rawRemotes)) {
+    if (name && name.trim() && config && typeof config === 'object') {
+      remotes[name] = config;
+    }
+  }
   
   // Extract performance/observability config from manifest (ADR-062)
   const performanceConfig = (manifest as any).performance || {};
@@ -564,9 +572,19 @@ export async function generateAllFiles(
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test
   const domainCapabilities: string[] = [];
-  for (const entry of manifest.capabilities) {
+  // Ensure capabilities array exists and is iterable
+  const capabilitiesArray = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
+  
+  for (const entry of capabilitiesArray) {
+    // Skip empty/null entries from YAML parsing issues
+    if (!entry || typeof entry !== 'object') continue;
+    
     for (const [name, config] of Object.entries(entry)) {
+      // Validate entry has valid name and config
+      if (!name || !name.trim()) continue;
+      if (!config || typeof config !== 'object') continue;
       if (config.type !== 'domain') continue;
+      
       domainCapabilities.push(name);
       const featurePath = path.join(featuresDir, name);
       // Feature component
@@ -603,8 +621,17 @@ export async function generateAllFiles(
     const yaml = require('js-yaml');
     
     // Build base mesh config (sources, serve, etc.)
+    // Filter out empty/invalid sources from YAML parsing issues
+    const validSources = (manifest.data.sources || []).filter(source => 
+      source && 
+      typeof source === 'object' && 
+      source.name && 
+      source.name.trim() &&
+      source.handler
+    );
+    
     const meshBaseConfig: any = {
-      sources: manifest.data.sources || [],
+      sources: validSources,
       serve: manifest.data.serve || { endpoint: '/graphql', playground: true }
     };
     
@@ -716,7 +743,19 @@ export async function generateAllFiles(
   const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
   const indexOutPath = path.join(basePath, 'src', 'index.tsx');
   if (await fs.pathExists(indexTemplatePath)) {
-    const indexContent = await renderTemplate(indexTemplatePath, vars);
+    // Build capability metadata for template
+    const capabilityMetadata = domainCapabilities.map(name => {
+      // Find the capability config to get icon/displayName
+      const capEntry = manifest.capabilities.find(c => Object.keys(c).includes(name));
+      const capConfig = capEntry?.[name];
+      return {
+        className: name,
+        displayName: (capConfig as any)?.displayName || name,
+        icon: (capConfig as any)?.icon || '📦'
+      };
+    });
+    
+    const indexContent = await renderTemplate(indexTemplatePath, { ...vars, capabilities: capabilityMetadata });
     files.push({
       path: indexOutPath,
       content: indexContent,
@@ -748,7 +787,7 @@ export async function generateAllFiles(
   // Generate public/demo.html (runtime demonstration page)
   const demoHtmlTemplatePath = path.join(templateDir, 'public', 'demo.html.ejs');
   if (await fs.pathExists(demoHtmlTemplatePath)) {
-    const demoHtmlContent = await renderTemplate(demoHtmlTemplatePath, vars);
+    const demoHtmlContent = await renderTemplate(demoHtmlTemplatePath, { ...vars, capabilities: domainCapabilities });
     files.push({
       path: path.join(publicDir, 'demo.html'),
       content: demoHtmlContent,

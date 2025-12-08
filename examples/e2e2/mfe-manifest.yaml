@@ -32,11 +32,12 @@ capabilities:
   - DataAnalysis:
       type: domain
       description: Analyze CSV files and generate reports
-
   - ReportViewer:
       type: domain
       description: View and export analysis reports
-
+  - ShareReports:
+      type: domain
+      description: Send a Report to a Colleague via Email
 # =============================================================================
 # DATA LAYER (GraphQL Mesh BFF)
 # =============================================================================

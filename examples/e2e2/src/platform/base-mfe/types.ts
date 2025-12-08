@@ -31,3 +31,11 @@ export interface ReportViewerInputs {
 export interface ReportViewerOutputs {
 
 }
+
+export interface ShareReportsInputs {
+
+}
+
+export interface ShareReportsOutputs {
+
+}

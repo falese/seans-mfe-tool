@@ -11,6 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { DataAnalysis } from './features/DataAnalysis/DataAnalysis';
 import { ReportViewer } from './features/ReportViewer/ReportViewer';
+import { ShareReports } from './features/ShareReports/ShareReports';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,7 +45,7 @@ const StandaloneApp: React.FC = () => {
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom>
-          CSV Analyzer
+          Csv Analyzer
         </Typography>
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
           Module Federation MFE - Standalone Mode
@@ -52,17 +53,20 @@ const StandaloneApp: React.FC = () => {
         
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="feature tabs">
-            <Tab label="📊 Data Analysis" id="tab-0" aria-controls="tabpanel-0" />
-            <Tab label="📈 Report Viewer" id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label="📦 DataAnalysis" id="tab-0" aria-controls="tabpanel-0" />
+            <Tab label="📦 ReportViewer" id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label="📦 ShareReports" id="tab-2" aria-controls="tabpanel-2" />
           </Tabs>
         </Box>
         
         <TabPanel value={tabValue} index={0}>
           <DataAnalysis />
         </TabPanel>
-        
         <TabPanel value={tabValue} index={1}>
           <ReportViewer />
+        </TabPanel>
+        <TabPanel value={tabValue} index={2}>
+          <ShareReports />
         </TabPanel>
       </Box>
     </Container>

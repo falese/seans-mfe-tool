@@ -48,6 +48,12 @@ describe('csvanalyzerMFE', () => {
         "type": "domain",
         "description": "View and export analysis reports"
       }
+    },
+    {
+      "ShareReports": {
+        "type": "domain",
+        "description": "Send a Report to a Colleague via Email"
+      }
     }
   ],
   "dependencies": {
@@ -116,6 +122,11 @@ describe('csvanalyzerMFE', () => {
   
   it('should call ReportViewer and return stub', async () => {
     const result = await mfe.ReportViewer(context);
+    expect(result).toBeDefined();
+  });
+  
+  it('should call ShareReports and return stub', async () => {
+    const result = await mfe.ShareReports(context);
     expect(result).toBeDefined();
   });
   

@@ -199,7 +199,7 @@
           });
           
           await new Promise(resolve => setTimeout(resolve, 200));
-          loadedComponents = [{"method":"load","config":{"type":"platform","description":"Initialize the analyzer module","inputs":[],"outputs":[]},"returnTypeBase":"LoadResult"},{"method":"render","config":{"type":"platform","description":"Render the analyzer UI","inputs":[],"outputs":[]},"returnTypeBase":"RenderResult"},{"method":"DataAnalysis","config":{"type":"domain","description":"Analyze CSV files and generate reports","inputs":[],"outputs":[]},"returnTypeBase":"DataAnalysisOutputs"},{"method":"ReportViewer","config":{"type":"domain","description":"View and export analysis reports","inputs":[],"outputs":[]},"returnTypeBase":"ReportViewerOutputs"}];
+          loadedComponents = ["DataAnalysis","ReportViewer","ShareReports"];
           mfeContainer = { ready: true };
           
           logToUI('✓ Mount: Container initialized, shared deps wired', 'success');
@@ -266,13 +266,11 @@
             <p>Visit <a href="http://localhost:3002" style="color: #1976d2; font-weight: bold;">http://localhost:3002</a> to see the full interactive app with:</ p>
             <ul style="text-align: left; display: inline-block;">
               
-              <li>[object Object] component</li>
+              <li>DataAnalysis component</li>
               
-              <li>[object Object] component</li>
+              <li>ReportViewer component</li>
               
-              <li>[object Object] component</li>
-              
-              <li>[object Object] component</li>
+              <li>ShareReports component</li>
               
               <li>Material-UI styled components</li>
               <li>Platform handler integration (REQ-RUNTIME-005)</li>
