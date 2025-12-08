@@ -9,6 +9,7 @@
 ### Core Files Created
 
 1. **`src/runtime/context.ts`** (375 lines)
+
    - `Context` interface - Shared context across all phases
    - `UserContext` interface - User authentication/authorization
    - `TelemetryEvent` interface - Observability event structure
@@ -17,6 +18,7 @@
    - `ContextValidator` class - Context validation utilities
 
 2. **`src/runtime/__tests__/context.test.ts`** (363 lines)
+
    - 19 comprehensive tests covering all context operations
    - Tests for context creation, cloning, validation
    - Tests for user role validation
@@ -36,23 +38,23 @@ interface Context {
   jwt?: string;
   requestId: string;
   timestamp: Date;
-  
+
   // Capability-specific data
   inputs?: Record<string, unknown>;
   outputs?: Record<string, unknown>;
-  
+
   // HTTP/Request metadata
   headers?: Record<string, string>;
   query?: Record<string, string>;
-  
+
   // Lifecycle tracking
   phase?: 'before' | 'main' | 'after' | 'error';
   capability?: 'load' | 'render' | 'query' | 'emit' | string;
-  
+
   // Error context
   error?: Error;
   retryCount?: number;
-  
+
   // Handler-specific data (extensible)
   telemetry?: {...};
   cache?: {...};
@@ -65,20 +67,24 @@ interface Context {
 ### ContextFactory Methods
 
 1. **`create(options)`** - Create new context with required fields
+
    - Auto-generates unique `requestId` (`req_<timestamp>_<random>`)
    - Sets current timestamp
    - Initializes inputs/outputs/retryCount
 
 2. **`cloneForCapability(source, capability, inputs)`** - Clone for new capability
+
    - Preserves user, jwt, headers from source
    - Generates new requestId and timestamp
    - Clears outputs, phase, error for fresh execution
    - Used for load → render transition
 
 3. **`setPhase(context, phase)`** - Update lifecycle phase
+
    - Sets context.phase to 'before' | 'main' | 'after' | 'error'
 
 4. **`recordError(context, error)`** - Record error
+
    - Sets context.error
    - Sets phase to 'error'
 
@@ -88,6 +94,7 @@ interface Context {
 ### ContextValidator Methods
 
 1. **`validate(context, requirements)`** - Validate context
+
    - Checks required fields (requestId, timestamp)
    - Validates authentication if required (JWT present)
    - Validates user context if required
@@ -160,15 +167,11 @@ loadContext.outputs = {
 };
 
 // Clone context for render
-const renderContext = ContextFactory.cloneForCapability(
-  loadContext,
-  'render',
-  {
-    component: 'DataAnalysis',
-    props: { data: [] },
-    containerId: 'root',
-  }
-);
+const renderContext = ContextFactory.cloneForCapability(loadContext, 'render', {
+  component: 'DataAnalysis',
+  props: { data: [] },
+  containerId: 'root',
+});
 
 // User and JWT preserved
 console.log(renderContext.user); // Same user from load
@@ -210,7 +213,7 @@ class AuthHandler implements PlatformHandler {
       if (!context.jwt) {
         throw new Error('Missing JWT token');
       }
-      
+
       // Extract user from JWT
       const decoded = jwt.verify(context.jwt, publicKey);
       context.user = {
@@ -218,13 +221,10 @@ class AuthHandler implements PlatformHandler {
         username: decoded.username,
         roles: decoded.roles,
       };
-      
+
       // Validate user has required role
-      const roleCheck = ContextValidator.validateUserRole(
-        context,
-        manifest.auth.requiredRoles
-      );
-      
+      const roleCheck = ContextValidator.validateUserRole(context, manifest.auth.requiredRoles);
+
       if (!roleCheck.valid) {
         throw new Error(roleCheck.error);
       }
@@ -261,20 +261,20 @@ async function demoLoad() {
     capability: 'load',
     inputs: { mfeEndpoint: 'http://localhost:3002' },
   });
-  
+
   console.log('Load context:', context);
-  
+
   // Simulate load phases
   ContextFactory.setPhase(context, 'before');
   // ... handlers run
-  
+
   ContextFactory.setPhase(context, 'main');
   // ... load operation
   context.outputs = { container: 'loaded', manifest: {...} };
-  
+
   ContextFactory.setPhase(context, 'after');
   // ... telemetry
-  
+
   return context;
 }
 ```
