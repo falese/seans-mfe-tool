@@ -13,7 +13,7 @@ sources:
           Authorization: Bearer {context.jwt}
           X-Request-ID: '{context.requestId}'
           X-User-ID: '{context.userId}'
-  - name: Pet Store API
+  - name: PetStoreAPI
     handler:
       openapi:
         source: ./pet-store-api.yaml

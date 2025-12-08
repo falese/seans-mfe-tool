@@ -510,7 +510,7 @@ data:
             X-User-ID: "{context.userId}"
     
     # Additional APIs can be merged into unified schema
-    - name: Pet Store API
+    - name: PetStoreAPI
       handler:
         openapi:
           source: ./pet-store-api.yaml

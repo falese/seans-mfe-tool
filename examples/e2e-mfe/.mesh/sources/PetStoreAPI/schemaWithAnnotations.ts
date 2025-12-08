@@ -81,32 +81,6 @@ const schemaAST = {
                         "value": "Bearer {context.jwt}"
                       }
                     ]
-                  },
-                  {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "X-Request-ID"
-                      },
-                      {
-                        "kind": "StringValue",
-                        "value": "{context.requestId}"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "X-User-ID"
-                      },
-                      {
-                        "kind": "StringValue",
-                        "value": "{context.userId}"
-                      }
-                    ]
                   }
                 ]
               }

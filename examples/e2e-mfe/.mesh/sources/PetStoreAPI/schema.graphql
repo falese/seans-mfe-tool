@@ -1,4 +1,4 @@
-schema @transport(subgraph: "PetStoreAPI", kind: "rest", headers: [["Authorization", "Bearer {context.jwt}"], ["X-Request-ID", "{context.requestId}"], ["X-User-ID", "{context.userId}"]]) {
+schema @transport(subgraph: "PetStoreAPI", kind: "rest", headers: [["Authorization", "Bearer {context.jwt}"]]) {
   query: Query
   mutation: Mutation
 }

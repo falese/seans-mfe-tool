@@ -738,7 +738,7 @@ describe('csvanalyzerMFE', () => {
         }
       },
       {
-        "name": "Pet Store API",
+        "name": "PetStoreAPI",
         "handler": {
           "openapi": {
             "source": "./pet-store-api.yaml",
