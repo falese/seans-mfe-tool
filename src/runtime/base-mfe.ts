@@ -3,16 +3,17 @@
  * Following REQ-054: BaseMFE Abstract Class Contract
  * Following REQ-042: Lifecycle Hook Execution Semantics
  * Following ADR-047: BaseMFE Abstract Base (Not Type Hierarchy)
-
-
-
-
+ * Following REQ-RUNTIME-002: Shared Context Across All Phases
  * 
  * Universal base class for all MFE types (remote, bff, tool, agent).
  * MFE type determines generated code CONTENT in doCapability() methods.
  */
 
 import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
+import { Context, UserContext, TelemetryEvent } from './context';
+
+// Re-export for convenience
+export { Context, UserContext, TelemetryEvent };
 
 // =============================================================================
 // Dependency Injection Interfaces
@@ -21,8 +22,6 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/sche
 export interface PlatformHandlerMap {
   [key: string]: (context: Context) => Promise<any>;
 }
-
-
 
 export interface CustomHandlerMap {
   [key: string]: (context: Context) => Promise<any>;
@@ -59,64 +58,10 @@ export interface BaseMFEDependencies {
 }
 
 // =============================================================================
-// Context Types (REQ-055)
+// Result Types
 // =============================================================================
 
 type Worker = any;
-
-/** Result from load capability */
-export interface LoadResult {
-  status: 'loaded' | 'error';
-  container?: unknown;  // Module Federation container
-  mesh?: unknown;       // GraphQL Mesh instance
-  worker?: Worker;      // Web Worker instance
-  timestamp: Date;
-}
-
-/** User context extracted from JWT */
-export interface UserContext {
-  id: string;
-  username: string;
-  roles: string[];
-  [key: string]: unknown;
-}
-
-/** Request context passed through lifecycle */
-export interface Context {
-  // Inputs to capability
-  inputs?: Record<string, unknown>;
-  
-  // Outputs from capability (populated after main)
-  outputs?: Record<string, unknown>;
-  
-  // Authentication
-  jwt?: string;
-  user?: UserContext;
-  
-  // HTTP context (if applicable)
-  headers?: Record<string, string>;
-  query?: Record<string, string>;
-  
-  // Runtime context
-  timestamp: Date;
-  requestId: string;
-  
-  // Error context (populated in error phase)
-  error?: Error;
-  
-  // Lifecycle phase (internal use)
-  phase?: 'before' | 'main' | 'after' | 'error';
-  
-  // Capability name (internal use)
-  capability?: string;
-  
-  // Allow additional context data
-  [key: string]: unknown;
-}
-
-// =============================================================================
-// Result Types
-// =============================================================================
 
 /** Result from load capability */
 export interface LoadResult {
@@ -196,20 +141,6 @@ export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
   error: ['loading', 'destroyed'],
   destroyed: []
 };
-
-// =============================================================================
-// Telemetry Event Types
-// =============================================================================
-
-/** Telemetry event */
-export interface TelemetryEvent {
-  eventType: 'error' | 'warn' | 'info' | 'metric';
-  eventData: Record<string, unknown>;
-  severity: 'error' | 'warn' | 'info';
-  tags: string[];
-  timestamp: Date;
-  mfe: string;
-}
 
 // =============================================================================
 // BaseMFE Abstract Class
