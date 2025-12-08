@@ -9,10 +9,10 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createBuiltMeshHTTPHandler } from './.mesh';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction, Express } from 'express';
 import crypto from 'crypto';
 
-const app = express();
+const app: Express = express();
 
 // Security middleware
 app.use(helmet({
