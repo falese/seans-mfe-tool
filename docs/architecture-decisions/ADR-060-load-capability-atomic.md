@@ -90,40 +90,40 @@ load(context): Promise<LoadResult>
 ```typescript
 interface LoadResult {
   status: 'loaded' | 'error';
-  
+
   // Module Federation container (if status === 'loaded')
   container?: ModuleFederationContainer;
-  
+
   // Parsed DSL manifest (if successfully loaded)
   manifest?: DSLManifest;
-  
+
   // List of component names from manifest.exposes
   // Used by shell to validate before render
   availableComponents?: string[];
-  
+
   // Capability metadata (which capabilities available, auth requirements, etc.)
   capabilities?: CapabilityMetadata[];
-  
+
   // Timing
   timestamp: Date;
-  duration: number;  // Total load duration in ms
-  
+  duration: number; // Total load duration in ms
+
   // Telemetry from each subphase
   telemetry: {
     entry: {
       start: Date;
-      duration: number;  // entry phase duration in ms
+      duration: number; // entry phase duration in ms
     };
     mount: {
       start: Date;
-      duration: number;  // mount phase duration in ms
+      duration: number; // mount phase duration in ms
     };
     enableRender: {
       start: Date;
-      duration: number;  // enable-render phase duration in ms
+      duration: number; // enable-render phase duration in ms
     };
   };
-  
+
   // Error (if status === 'error')
   error?: {
     message: string;
@@ -140,11 +140,11 @@ interface LoadResult {
 ```typescript
 // Shell initiates load
 const context = new Context();
-context.user = authenticatedUser;           // Set by shell auth
+context.user = authenticatedUser; // Set by shell auth
 context.requestId = generateRequestId();
 context.inputs = {
   mfeEndpoint: 'http://remote-mfe:3001',
-  mfeId: 'my-mfe'
+  mfeId: 'my-mfe',
 };
 
 // Load executes
@@ -211,11 +211,13 @@ if (loadResult.status !== 'loaded') {
 
 // Validate component is available
 if (!loadResult.availableComponents.includes('DataAnalysisView')) {
-  return showError(`Component not available. Available: ${loadResult.availableComponents.join(', ')}`);
+  return showError(
+    `Component not available. Available: ${loadResult.availableComponents.join(', ')}`
+  );
 }
 
 // Validate required capabilities
-if (loadResult.capabilities.find(c => c.name === 'render' && !c.available)) {
+if (loadResult.capabilities.find((c) => c.name === 'render' && !c.available)) {
   return showError('Render capability not available');
 }
 
@@ -241,7 +243,7 @@ Error-handling handler manages retries in error phase:
 Retry state tracked in context:
 
 ```typescript
-context.retryCount = 0;  // initial
+context.retryCount = 0; // initial
 
 // On first error in entry phase:
 context.retryCount = 1;
@@ -278,16 +280,19 @@ context.retryCount = 3;
 ## Implementation Strategy
 
 1. **Phase 1: Entry Phase** (fetch remote entry)
+
    - Fetch remoteEntry.js from MFE endpoint
    - Validate Module Federation container interface
    - Emit telemetry
 
 2. **Phase 2: Mount Phase** (initialize container)
+
    - Call container.init() with shared dependencies
    - Store container reference in context
    - Emit telemetry
 
 3. **Phase 3: Enable-Render Phase** (prepare for render)
+
    - Fetch and parse DSL manifest
    - Extract availableComponents
    - Build capabilities metadata
@@ -295,6 +300,7 @@ context.retryCount = 3;
    - Emit telemetry
 
 4. **Phase 4: Handler Integration**
+
    - Resolve handlers from manifest (auth, validation, telemetry, etc.)
    - Execute before handlers
    - Execute atomic load operation

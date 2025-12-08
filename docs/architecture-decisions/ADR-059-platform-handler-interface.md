@@ -115,6 +115,7 @@ interface PlatformHandlerRegistry {
 Handlers execute **sequentially** in the following order:
 
 #### Before Phase
+
 ```
 load(context)
   └─ Resolve handlers from manifest (e.g., [auth, validation, telemetry])
@@ -128,9 +129,11 @@ load(context)
 ```
 
 #### Main Phase
+
 Main phase executes the capability (load, render, etc.). Handlers don't execute here unless they have a "main" phase implementation (currently none).
 
 #### After Phase
+
 ```
       └─ after handlers execute (same order resolved)
           └─ handlers[i].execute(context, 'after')
@@ -140,6 +143,7 @@ Main phase executes the capability (load, render, etc.). Handlers don't execute 
 ```
 
 #### Error Phase
+
 ```
 On error (from before, main, or after):
   └─ context.error = thrownError
@@ -160,28 +164,28 @@ The registry's `resolve()` method examines the DSL manifest and returns handlers
 manifest:
   version: 1.0.0
   name: my-mfe
-  
+
   # Handler configuration (or true for defaults)
   auth:
     enabled: true
     requiredRoles: [admin, user]
-  
+
   validation:
     enabled: true
     inputSchema: { ... }
-  
+
   telemetry:
     enabled: true
-  
+
   errorHandling:
     enabled: true
     retry:
       maxAttempts: 3
       backoffMs: 1000
-  
+
   caching:
     enabled: false
-  
+
   custom:
     - name: myCustomHandler
       config: { ... }
@@ -198,13 +202,13 @@ manifest:
 
 Five standard platform handlers are pre-registered with the registry:
 
-| Handler | Phases | Responsibility |
-|---------|--------|-----------------|
-| **auth** | before | JWT validation, role checking, context.user population |
-| **validation** | before | Input schema validation (JSON Schema) |
-| **telemetry** | before, after, error | Observability events (no-op on failures) |
-| **error-handling** | error | Retry logic, exponential backoff, fallback prep |
-| **caching** | before, after | Load/render result memoization (performance) |
+| Handler            | Phases               | Responsibility                                         |
+| ------------------ | -------------------- | ------------------------------------------------------ |
+| **auth**           | before               | JWT validation, role checking, context.user population |
+| **validation**     | before               | Input schema validation (JSON Schema)                  |
+| **telemetry**      | before, after, error | Observability events (no-op on failures)               |
+| **error-handling** | error                | Retry logic, exponential backoff, fallback prep        |
+| **caching**        | before, after        | Load/render result memoization (performance)           |
 
 ### Custom Handlers
 
@@ -221,7 +225,7 @@ const myHandler: PlatformHandler = {
       // Custom logic: e.g., feature flag checking, custom auth
       context.featureFlags = await loadFeatureFlags(context.user);
     }
-  }
+  },
 };
 
 // Register at MFE startup
@@ -251,6 +255,7 @@ context.customData = { ... };
 **Handler errors have two behaviors:**
 
 1. **continueOnError: false** (default for auth, validation, custom)
+
    - Error halts execution
    - Jumps immediately to error phase
    - Error phase handlers (error-handling, telemetry) can attempt recovery
@@ -297,11 +302,13 @@ Telemetry handler never blocks (continueOnError: true) but emits events for all 
 ## Implementation Strategy
 
 1. **Phase 1: Handler Registry** (REQ-RUNTIME-005)
+
    - Implement PlatformHandlerRegistry
    - Implement resolve() logic from DSL
    - Create handler registration API
 
 2. **Phase 2: Standard Handlers** (REQ-RUNTIME-006 through REQ-RUNTIME-010)
+
    - auth: JWT + role validation
    - validation: JSON Schema validation
    - telemetry: Observability events
@@ -309,6 +316,7 @@ Telemetry handler never blocks (continueOnError: true) but emits events for all 
    - caching: Memoization
 
 3. **Phase 3: Integration** (REQ-RUNTIME-001, REQ-RUNTIME-004)
+
    - Integrate handlers into load capability
    - Integrate handlers into render capability
    - Wire DSL manifest to handler resolution

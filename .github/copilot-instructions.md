@@ -625,6 +625,7 @@ EOF
 ```
 
 **Batch Issue Creation:**
+
 - For multiple issues, use 3-second delays between creates: `sleep 3`
 - Verify creation: `gh issue list --search "REQ-XXX" --state open`
 - Close duplicates immediately: `gh issue close N --comment "Duplicate of #M"`
@@ -656,25 +657,30 @@ GWT (Given-When-Then) scenarios in `docs/acceptance-criteria/`:
 Follow this sequence for runtime platform handler implementation:
 
 1. **#49 - REQ-RUNTIME-002**: Shared Context (foundation for all capabilities)
+
    - File: `src/runtime/base-mfe.ts` - Context class with TypeScript interfaces
    - No dependencies, must be implemented first
 
 2. **#52 - REQ-RUNTIME-005**: Platform Handler Registry
+
    - File: `src/runtime/handlers/PlatformHandlerRegistry.ts`
    - Depends on: #49 (Context)
    - Enables all handler implementations
 
 3. **#47 - REQ-RUNTIME-001**: Load Capability (atomic operation)
+
    - File: `src/runtime/base-mfe.ts` - BaseMFE.load() method
    - Depends on: #49, #52
    - See: ADR-060 for atomic operation design
 
 4. **#51 - REQ-RUNTIME-004**: Render Capability
+
    - File: `src/runtime/base-mfe.ts` - BaseMFE.render() method
    - Depends on: #47, #49
    - React 18 createRoot() integration
 
 5. **#53 - REQ-RUNTIME-006**: Auth Handler (JWT validation)
+
    - File: `src/runtime/handlers/auth.ts`
    - Depends on: #52
    - Use `jsonwebtoken` library
@@ -685,28 +691,32 @@ Follow this sequence for runtime platform handler implementation:
    - Exponential backoff retry logic
 
 7-12. **Remaining Handlers** (can be implemented in parallel):
-   - #54: Validation Handler (`src/runtime/handlers/validation.ts`)
-   - #55: Telemetry Handler (`src/runtime/handlers/telemetry.ts`)
-   - #57: Caching Handler (`src/runtime/handlers/caching.ts`)
-   - #50: Load Result Validation (refinement)
-   - #58: Error Boundaries & Fallback UI
-   - #59: Telemetry Emission Points
+
+- #54: Validation Handler (`src/runtime/handlers/validation.ts`)
+- #55: Telemetry Handler (`src/runtime/handlers/telemetry.ts`)
+- #57: Caching Handler (`src/runtime/handlers/caching.ts`)
+- #50: Load Result Validation (refinement)
+- #58: Error Boundaries & Fallback UI
+- #59: Telemetry Emission Points
 
 ### Runtime Implementation Patterns
 
 **Test-Driven Development:**
+
 - Write Gherkin scenario from `docs/acceptance-criteria/runtime-load-render.feature`
 - Convert to Jest test in `src/runtime/__tests__/`
 - Implement feature to pass test
 - Target 100% coverage per ADR-059
 
 **TypeScript Strict Mode:**
+
 - All runtime code uses TypeScript strict mode
 - No `any` types allowed
 - Explicit return types on all public methods
 - Interface naming: `Context`, `LoadResult`, `RenderResult`, `PlatformHandler`
 
 **Handler Development Pattern:**
+
 ```typescript
 // src/runtime/handlers/example.ts
 import { PlatformHandler } from './PlatformHandlerRegistry';
@@ -725,6 +735,7 @@ export class ExampleHandler implements PlatformHandler {
 ```
 
 **Query Active Runtime Issues:**
+
 ```bash
 # All runtime issues
 gh issue list --search "REQ-RUNTIME" --state open

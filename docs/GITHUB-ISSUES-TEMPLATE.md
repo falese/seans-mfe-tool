@@ -11,6 +11,7 @@
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-001 from docs/runtime-requirements.md
@@ -52,6 +53,7 @@ The load() capability is the MFE entry point for shell-initiated loading. It per
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-002 from docs/runtime-requirements.md
@@ -99,6 +101,7 @@ All lifecycle phases (before, main, after, error) within a single capability exe
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-003 from docs/runtime-requirements.md
@@ -148,6 +151,7 @@ The load() capability returns a LoadResult containing component metadata that th
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-004 from docs/runtime-requirements.md
@@ -205,6 +209,7 @@ context.inputs = {
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-005 from docs/runtime-requirements.md
@@ -270,6 +275,7 @@ interface PlatformHandlerRegistry {
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-006 from docs/runtime-requirements.md
@@ -319,6 +325,7 @@ auth:
 **Labels**: `priority-medium`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-007 from docs/runtime-requirements.md
@@ -375,6 +382,7 @@ validation:
 **Labels**: `priority-medium`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-008 from docs/runtime-requirements.md
@@ -429,6 +437,7 @@ interface TelemetryEvent {
 **Labels**: `priority-high`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-009 from docs/runtime-requirements.md
@@ -489,6 +498,7 @@ errorHandling:
 **Labels**: `priority-medium`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-010 from docs/runtime-requirements.md
@@ -546,6 +556,7 @@ caching:
 **Labels**: `priority-medium`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-011 from docs/runtime-requirements.md
@@ -599,6 +610,7 @@ shell.registerFallbackHandler((error, context) => {
 **Labels**: `priority-medium`, `component-orchestration`, `type-feature`, `req-runtime`
 
 **Body**:
+
 ```
 ## Requirement
 Implement REQ-RUNTIME-012 from docs/runtime-requirements.md
@@ -664,20 +676,20 @@ error detected
 
 **Total Issues to Create: 12**
 
-| Issue | Title | Priority | Status |
-|-------|-------|----------|--------|
-| #1 | REQ-RUNTIME-001: Load Capability | high | 📋 Planned |
-| #2 | REQ-RUNTIME-002: Shared Context | high | 📋 Planned |
-| #3 | REQ-RUNTIME-003: Load Result Validation | high | 📋 Planned |
-| #4 | REQ-RUNTIME-004: Render Capability | high | 📋 Planned |
-| #5 | REQ-RUNTIME-005: Platform Handlers | high | 📋 Planned |
-| #6 | REQ-RUNTIME-006: Auth Handler | high | 📋 Planned |
-| #7 | REQ-RUNTIME-007: Validation Handler | medium | 📋 Planned |
-| #8 | REQ-RUNTIME-008: Telemetry Handler | medium | 📋 Planned |
-| #9 | REQ-RUNTIME-009: Error Handling Handler | high | 📋 Planned |
-| #10 | REQ-RUNTIME-010: Caching Handler | medium | 📋 Planned |
-| #11 | REQ-RUNTIME-011: Error Boundaries & Fallback UI | medium | 📋 Planned |
-| #12 | REQ-RUNTIME-012: Telemetry Emission Points | medium | 📋 Planned |
+| Issue | Title                                           | Priority | Status     |
+| ----- | ----------------------------------------------- | -------- | ---------- |
+| #1    | REQ-RUNTIME-001: Load Capability                | high     | 📋 Planned |
+| #2    | REQ-RUNTIME-002: Shared Context                 | high     | 📋 Planned |
+| #3    | REQ-RUNTIME-003: Load Result Validation         | high     | 📋 Planned |
+| #4    | REQ-RUNTIME-004: Render Capability              | high     | 📋 Planned |
+| #5    | REQ-RUNTIME-005: Platform Handlers              | high     | 📋 Planned |
+| #6    | REQ-RUNTIME-006: Auth Handler                   | high     | 📋 Planned |
+| #7    | REQ-RUNTIME-007: Validation Handler             | medium   | 📋 Planned |
+| #8    | REQ-RUNTIME-008: Telemetry Handler              | medium   | 📋 Planned |
+| #9    | REQ-RUNTIME-009: Error Handling Handler         | high     | 📋 Planned |
+| #10   | REQ-RUNTIME-010: Caching Handler                | medium   | 📋 Planned |
+| #11   | REQ-RUNTIME-011: Error Boundaries & Fallback UI | medium   | 📋 Planned |
+| #12   | REQ-RUNTIME-012: Telemetry Emission Points      | medium   | 📋 Planned |
 
 ## Recommended Implementation Order
 
@@ -697,6 +709,7 @@ error detected
 ---
 
 **Note**: Create these issues in GitHub using the web UI. Each issue includes:
+
 - Full requirement description
 - Acceptance criteria (from Gherkin scenarios)
 - Related documentation links

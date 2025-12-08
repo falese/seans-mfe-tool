@@ -39,12 +39,12 @@ load(context: Context): Promise<LoadResult>
 ```typescript
 interface LoadResult {
   status: 'loaded' | 'error';
-  container: ModuleFederationContainer;        // MFE container ref
-  manifest: DSLManifest;                       // Parsed DSL
-  availableComponents: string[];               // List of exposable components
-  capabilities: CapabilityMetadata[];          // Available capabilities
+  container: ModuleFederationContainer; // MFE container ref
+  manifest: DSLManifest; // Parsed DSL
+  availableComponents: string[]; // List of exposable components
+  capabilities: CapabilityMetadata[]; // Available capabilities
   timestamp: Date;
-  duration: number;                            // Load duration in ms
+  duration: number; // Load duration in ms
   telemetry: {
     entry: { start: Date; duration: number };
     mount: { start: Date; duration: number };
@@ -54,7 +54,7 @@ interface LoadResult {
 }
 
 interface CapabilityMetadata {
-  name: string;                  // e.g., "render", "query", "emit"
+  name: string; // e.g., "render", "query", "emit"
   available: boolean;
   requiresAuth?: boolean;
   requiresValidation?: boolean;
@@ -101,25 +101,25 @@ interface Context {
   jwt?: string;
   requestId: string;
   timestamp: Date;
-  
+
   // Capability-specific inputs (set before capability execution)
   inputs?: Record<string, unknown>;
-  
+
   // Capability-specific outputs (populated during/after capability)
   outputs?: Record<string, unknown>;
-  
+
   // HTTP/Request metadata (if applicable)
   headers?: Record<string, string>;
   query?: Record<string, string>;
-  
+
   // Lifecycle tracking (internal use by runtime)
   phase?: 'before' | 'main' | 'after' | 'error';
   capability?: string;
-  
+
   // Error context (populated in error phase)
   error?: Error;
   retryCount?: number;
-  
+
   // Handler-specific data (mutated by handlers, scoped to current phase)
   [key: string]: unknown;
 }
@@ -187,6 +187,7 @@ The `load()` capability returns a `LoadResult` containing component metadata tha
 **Metadata Exposure:**
 
 LoadResult.availableComponents includes:
+
 - Component name (from DSL exposes)
 - Component type if available (e.g., 'View', 'Widget', 'Tool')
 - Required context or props if defined in DSL
@@ -194,6 +195,7 @@ LoadResult.availableComponents includes:
 **Shell Validation:**
 
 Shell can use LoadResult to decide:
+
 - Is the MFE healthy? (all capabilities marked available: true)
 - Does the MFE expose the component I want to render? (check availableComponents)
 - Should I retry the load? (check telemetry durations, error reason)
@@ -252,9 +254,9 @@ interface ThemeConfig {
 ```typescript
 interface RenderResult {
   status: 'rendered' | 'error';
-  component: string;                    // Component that was rendered
-  element?: HTMLElement;                // Reference to mounted DOM element
-  componentInstance?: React.Component;  // React component instance (if available)
+  component: string; // Component that was rendered
+  element?: HTMLElement; // Reference to mounted DOM element
+  componentInstance?: React.Component; // React component instance (if available)
   timestamp: Date;
   duration: number;
   telemetry: {
@@ -326,14 +328,14 @@ Platform handlers are **standardized lifecycle functions** that execute in `befo
 interface PlatformHandler {
   name: string;
   phases: ('before' | 'main' | 'after' | 'error')[];
-  
+
   execute(context: Context, phase: string): Promise<void>;
 }
 
 interface PlatformHandlerRegistry {
   register(name: string, handler: PlatformHandler): void;
   get(name: string): PlatformHandler | null;
-  resolve(capability: string, manifest: DSLManifest): string[];  // Return handler names for this capability
+  resolve(capability: string, manifest: DSLManifest): string[]; // Return handler names for this capability
 }
 ```
 
@@ -387,9 +389,9 @@ manifest:
   name: my-mfe
   auth:
     enabled: true
-    requiredRoles: [admin, user]          # User must have one of these
+    requiredRoles: [admin, user] # User must have one of these
     requiresJWT: true
-    tokenLocation: headers.authorization  # Where to find JWT (default)
+    tokenLocation: headers.authorization # Where to find JWT (default)
 ```
 
 **Handler Behavior:**
@@ -515,11 +517,11 @@ telemetry.execute(context, 'error'): Promise<void>
 
 ```typescript
 interface TelemetryEvent {
-  name: string;                    // e.g., 'load.entry.start', 'render.completed'
-  capability: string;              // load, render, query, emit, etc.
-  phase: string;                   // before, main, after, error
-  user?: string;                   // user.id if available
-  duration?: number;               // ms
+  name: string; // e.g., 'load.entry.start', 'render.completed'
+  capability: string; // load, render, query, emit, etc.
+  phase: string; // before, main, after, error
+  user?: string; // user.id if available
+  duration?: number; // ms
   status: 'start' | 'end' | 'error' | 'success' | 'failure';
   metadata?: Record<string, unknown>;
   timestamp: Date;
@@ -561,10 +563,10 @@ manifest:
     retry:
       maxAttempts: 3
       backoffMs: 1000
-      exponential: true              # 1s, 2s, 4s
+      exponential: true # 1s, 2s, 4s
     fallback:
-      provideFallbackUI: true        # MFE provides fallback component
-      requestShellFallback: false    # Or shell provides fallback
+      provideFallbackUI: true # MFE provides fallback component
+      requestShellFallback: false # Or shell provides fallback
 ```
 
 **Handler Behavior:**
@@ -634,11 +636,11 @@ manifest:
     enabled: true
     strategies:
       load:
-        ttl: 3600000          # 1 hour in ms
-        keyBy: [mfeId]        # Cache key: mfeId
+        ttl: 3600000 # 1 hour in ms
+        keyBy: [mfeId] # Cache key: mfeId
       render:
-        ttl: 60000            # 1 minute in ms
-        keyBy: [component]    # Cache key: component name
+        ttl: 60000 # 1 minute in ms
+        keyBy: [component] # Cache key: component name
 ```
 
 **Handler Behavior:**
@@ -647,7 +649,7 @@ manifest:
 // before phase: check cache
 caching.execute(context, 'before'): Promise<void>
   ├─ Generate cache key from keyBy fields
-  ├─ If cache hit (within TTL): 
+  ├─ If cache hit (within TTL):
   │   └─ context.outputs = cachedResult
   │       context.fromCache = true
   └─ Else: proceed with capability
@@ -711,7 +713,7 @@ interface FallbackUIHandler {
 
 // Shell registers:
 shell.registerFallbackHandler((error, context) => {
-  return ErrorFallback;  // Generic error UI
+  return ErrorFallback; // Generic error UI
 });
 ```
 
@@ -807,7 +809,7 @@ const loadResult = await mfe.load(loadContext);
 
 // === RENDER SEQUENCE ===
 // Reuse loadContext, add render inputs
-loadContext.inputs = { 
+loadContext.inputs = {
   component: 'DataAnalysisView',
   props: { data: [...] },
   containerId: 'mfe-root'
@@ -831,11 +833,13 @@ if (nextComponent !== 'DataAnalysisView') {
 The following ADRs document the architectural approach:
 
 1. **ADR-059**: Platform Handler Interface & Execution Model (🟡 In Progress)
+
    - Handler interface, registry pattern, execution semantics
    - Standard handlers (auth, validation, telemetry, error-handling, caching)
    - DSL-driven handler resolution
 
 2. **ADR-060**: Load Capability Atomic Operation Design (🟡 In Progress)
+
    - Entry, mount, enable-render subphases
    - Telemetry checkpoints at each phase
    - Atomicity guarantee and error recovery

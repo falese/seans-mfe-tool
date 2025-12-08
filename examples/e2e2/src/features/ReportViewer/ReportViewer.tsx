@@ -4,7 +4,17 @@
  * Generated from mfe-manifest.yaml capability definition
  */
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Button, Stack, Divider, List, ListItem, ListItemText } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  Stack,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+} from '@mui/material';
 
 export interface ReportViewerProps {
   reportData?: any;

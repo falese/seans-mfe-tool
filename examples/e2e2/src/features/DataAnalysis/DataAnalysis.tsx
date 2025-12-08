@@ -39,17 +39,12 @@ export const DataAnalysis: React.FC<DataAnalysisProps> = ({ onAnalysisComplete }
             📊 CSV Data Analysis
           </Typography>
         </Box>
-        
+
         <Typography variant="body2" color="text.secondary">
           Upload and analyze CSV files to generate insights
         </Typography>
 
-        <Button
-          variant="contained"
-          onClick={handleAnalyze}
-          disabled={analyzing}
-          fullWidth
-        >
+        <Button variant="contained" onClick={handleAnalyze} disabled={analyzing} fullWidth>
           {analyzing ? '⏳ Analyzing...' : '📤 Upload & Analyze CSV'}
         </Button>
 

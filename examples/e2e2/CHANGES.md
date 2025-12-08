@@ -5,12 +5,14 @@ This document tracks all changes made to transform the basic e2e2 MFE template i
 ## Purpose
 
 These changes demonstrate:
+
 1. Standalone React app with interactive UI
 2. Module Federation remote consumption
 3. BFF GraphQL integration with separate ports
 4. Runtime capability demonstration
 
 **All changes below need to be incorporated into:**
+
 - `src/templates/react/remote/` (MFE template)
 - `src/commands/create-remote.js` (generator)
 - `src/codegen/generators/` (BFF integration templates)
@@ -34,11 +36,13 @@ const port = process.env.PORT || 3003;
 ```
 
 **Changes**:
+
 - BFF server moved to port 3003
 - Removed static file serving from BFF (let rspack handle it)
 - Removed SPA fallback route (`app.get('*', ...)`)
 
 **Console logs updated**:
+
 ```typescript
 console.log(`🚀 csv-analyzer BFF server running on port ${port}`);
 console.log(`   Note: MFE assets served by rspack dev server on port 3002`);
@@ -59,6 +63,7 @@ devServer: {
 ```
 
 **Template Impact**: Generators should create separate ports by default:
+
 - MFE dev server: 3000 + offset
 - BFF server: 3000 + offset + 1000 (e.g., 3002 → 4002)
 
@@ -132,6 +137,7 @@ new ModuleFederationPlugin({
 ```
 
 **Template Impact**:
+
 - Always generate BOTH `index.tsx` (standalone) and `remote.tsx` (federation)
 - rspack config should reference `index.tsx` for main entry
 - ModuleFederationPlugin exposes should reference `remote.tsx`
@@ -147,6 +153,7 @@ new ModuleFederationPlugin({
 **After**: Interactive CSV upload simulator with state machine
 
 **Key Changes**:
+
 ```typescript
 interface DataAnalysisProps {
   onAnalysisComplete?: (data: any) => void;
@@ -165,14 +172,15 @@ const handleAnalyze = () => {
       insights: [
         'Peak activity in Q3 2024',
         'Revenue increased by 23%',
-        'Top category: Enterprise Sales'
-      ]
+        'Top category: Enterprise Sales',
+      ],
     });
   }, 2000);
 };
 ```
 
 **UI Elements**:
+
 - Upload button with emoji icon (📊)
 - Status chips (idle/analyzing/complete)
 - Progress simulation
@@ -187,6 +195,7 @@ const handleAnalyze = () => {
 **After**: Report display with metrics and export options
 
 **Key Changes**:
+
 ```typescript
 interface ReportViewerProps {
   reportData: any | null;
@@ -206,6 +215,7 @@ interface ReportViewerProps {
 ```
 
 **UI Elements**:
+
 - Metrics cards with emoji icons
 - Key insights list
 - Export buttons (PDF, CSV, JSON)
@@ -218,6 +228,7 @@ interface ReportViewerProps {
 **After**: Tabbed interface with component orchestration
 
 **Key Changes**:
+
 ```typescript
 const [tabValue, setTabValue] = useState(0);
 const [reportData, setReportData] = useState<any>(null);
@@ -245,6 +256,7 @@ return (
 ```
 
 **Features**:
+
 - Tabbed navigation (MUI Tabs)
 - State management across tabs
 - Auto-switch to report after analysis
@@ -257,6 +269,7 @@ return (
 ## 4. MUI Configuration (Avoid rspack Crash)
 
 **Problem**: Importing `@mui/icons-material` caused rspack internal panic:
+
 ```
 Panic occurred at runtime. Please file an issue...
 internal error: entered unreachable code
@@ -296,6 +309,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 ## 5. rspack Shared Dependencies Configuration
 
 **Problem**: Module Federation failed to load MUI packages with:
+
 ```
 loadShareSync function was unable to load @mui/material
 ```
@@ -337,7 +351,7 @@ new ModuleFederationPlugin({
       eager: true, // CRITICAL: Must be eager
     },
   },
-})
+});
 ```
 
 **Template Impact**: All MUI packages MUST have `eager: true` in shared config
@@ -351,6 +365,7 @@ new ModuleFederationPlugin({
 **Purpose**: Demonstrate runtime Module Federation loading without bundler.
 
 **Key Features**:
+
 - Loads React from CDN
 - Imports `main.js` for Module Federation runtime
 - Simulates `RemoteMFE.load()` and `render()` flows
@@ -358,6 +373,7 @@ new ModuleFederationPlugin({
 - Links to main app at `/`
 
 **Critical Code**:
+
 ```html
 <script type="module">
   import('./main.js').then(() => {
@@ -389,8 +405,9 @@ new ModuleFederationPlugin({
 ### File: `public/index.html`
 
 **Current State** (simplified, HtmlRspackPlugin injects scripts):
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -426,25 +443,28 @@ rspackConfig = {
   entry: { main: './src/index.tsx' },
   plugins: [
     new ModuleFederationPlugin({
-      exposes: { './App': './src/remote.tsx' } // Use remote.tsx
-    })
-  ]
+      exposes: { './App': './src/remote.tsx' }, // Use remote.tsx
+    }),
+  ],
 };
 ```
 
 ### 2. `src/templates/react/remote/` Updates
 
 **New Files**:
+
 - `src/index.tsx.ejs` - Standalone entry point
 - `public/demo.html.ejs` - Runtime demonstration
 
 **Updated Files**:
+
 - `src/remote.tsx.ejs` - Federation-only exports
 - `rspack.config.js.ejs` - Dual entry + eager MUI
 - `server.ts.ejs` - Separate BFF port
 - `package.json.ejs` - Remove @mui/icons-material
 
 **Updated Configurations**:
+
 ```javascript
 // rspack.config.js.ejs
 entry: { main: './src/index.tsx' },
@@ -484,19 +504,23 @@ export const MyComponent = () => {
 ### 4. Documentation Updates
 
 **Add to generated README.md**:
+
 ```markdown
 ## Development
 
 ### Ports
+
 - MFE Dev Server: http://localhost:<%= mfePort %>/
 - BFF GraphQL: http://localhost:<%= bffPort %>/graphql
 - Runtime Demo: http://localhost:<%= mfePort %>/static/demo.html
 
 ### Entry Points
+
 - `src/index.tsx` - Standalone app bootstrap
 - `src/remote.tsx` - Module Federation exports
 
 ### MUI Icons
+
 ⚠️ Do NOT import from `@mui/icons-material` (causes rspack crash)
 ✅ Use emoji icons instead: 📊 📈 📥 📤
 ```
