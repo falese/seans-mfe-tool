@@ -13,6 +13,7 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
+    "@seans-mfe-tool/runtime": "file:../../dist/runtime",
     "@graphql-mesh/cli": "^0.100.21",
     "@graphql-mesh/openapi": "^0.109.26",
     "@graphql-mesh/serve-runtime": "^1.2.4",

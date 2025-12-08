@@ -263,4 +263,38 @@ describe('unified-generator', () => {
     // Verify sources array has exactly 1 valid entry
     expect((meshrc?.content.match(/name:/g) || []).length).toBe(1);
   });
+
+  it('generates server.ts with correct Mesh handler integration', async () => {
+    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const serverTs = files.find(f => f.path === path.join(basePath, 'server.ts'));
+    
+    expect(serverTs).toBeDefined();
+    
+    // Verify Mesh imports
+    expect(serverTs?.content).toContain('import { createBuiltMeshHTTPHandler } from \'./.mesh\';');
+    
+    // Verify MeshContext interface
+    expect(serverTs?.content).toContain('interface MeshContext {');
+    expect(serverTs?.content).toContain('jwt?: string;');
+    expect(serverTs?.content).toContain('requestId: string;');
+    expect(serverTs?.content).toContain('userId?: string;');
+    
+    // Verify handler instantiation
+    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();');
+    
+    // Verify context injection pattern (NOT the old middleware pattern)
+    expect(serverTs?.content).toContain('app.use(\'/graphql\', (req: Request, res: Response) => {');
+    expect(serverTs?.content).toContain('const context: MeshContext = {');
+    expect(serverTs?.content).toContain('const requestWithContext = Object.assign(req, { context });');
+    expect(serverTs?.content).toContain('return meshHandler(requestWithContext as any, res as any, context);');
+    
+    // Verify OLD broken pattern is NOT present
+    expect(serverTs?.content).not.toContain('next: NextFunction');
+    expect(serverTs?.content).not.toContain('(req as any).meshContext');
+    expect(serverTs?.content).not.toContain('next();');
+    
+    // Verify JWT extraction helper
+    expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
+    expect(serverTs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
+  });
 });

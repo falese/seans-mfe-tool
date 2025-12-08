@@ -59,16 +59,22 @@ interface MeshContext {
 
 const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
 
-// Add context middleware before GraphQL handler
-app.use('/graphql', (req: Request, res: Response, next: NextFunction) => {
-  // Attach context to request for Mesh
-  (req as any).meshContext = {
+// GraphQL endpoint with context injection
+// Mesh handler expects context in a specific format for @whatwg-node/server
+app.use('/graphql', (req: Request, res: Response) => {
+  // Create context object for Mesh
+  const context: MeshContext = {
     jwt: req.headers.authorization?.replace('Bearer ', ''),
-    requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+    requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     userId: extractUserIdFromToken(req.headers.authorization as string),
   };
-  next();
-}, meshHandler);
+  
+  // Mesh handler from @whatwg-node/server expects Request/Response objects
+  // We need to pass context via the request object
+  const requestWithContext = Object.assign(req, { context });
+  
+  return meshHandler(requestWithContext as any, res as any, context);
+});
 
 
 // Static MFE assets
