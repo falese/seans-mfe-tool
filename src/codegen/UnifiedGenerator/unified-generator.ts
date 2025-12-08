@@ -537,12 +537,15 @@ export async function generateAllFiles(
         });
       }
       // Collect lifecycle hooks from capability config, deduplicated
+      // Filter out base capability names to prevent conflicts
+      const baseCapabilityNames = Object.values(platformCapabilities).map(c => c.method);
       if (safeConfig.lifecycle) {
         for (const phase of ['before', 'main', 'after', 'error']) {
           if (safeConfig.lifecycle[phase]) {
             for (const hookEntry of safeConfig.lifecycle[phase]) {
               for (const hookName of Object.keys(hookEntry)) {
-                if (!lifecycleHookNames.has(hookName)) {
+                // Skip if it's a base capability name OR already added
+                if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
                   lifecycleHooks.push({ name: hookName });
                 }

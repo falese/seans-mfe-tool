@@ -26,10 +26,10 @@ npm start
 
 | Endpoint | Description |
 |----------|-------------|
-| `http://localhost:3002/graphql` | GraphQL endpoint |
-| `http://localhost:3002/health` | Health check |
+| `http://localhost:4002/graphql` | GraphQL endpoint |
+| `http://localhost:4002/health` | Health check |
 
-| `http://localhost:3002/` | Static MFE assets |
+| `http://localhost:4002/` | Static MFE assets |
 
 
 ## Configuration
@@ -76,7 +76,7 @@ npm run mesh:build
 docker build -t csv-analyzer .
 
 # Run container
-docker run -p 3002:3002 csv-analyzer
+docker run -p 4002:4002 csv-analyzer
 
 # Or use docker-compose
 docker-compose up

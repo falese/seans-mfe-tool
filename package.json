@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "bin/seans-mfe-tool.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-runtime-files.js",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",

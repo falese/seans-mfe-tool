@@ -4,7 +4,9 @@ const path = require('path');
 
 /** @type {import('@rspack/cli').Configuration} */
 module.exports = {
-  entry: './src/remote.tsx',
+  entry: {
+    main: './src/index.tsx',
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'auto',
@@ -32,6 +34,10 @@ module.exports = {
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/static',
+    },
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
@@ -42,7 +48,7 @@ module.exports = {
     rules: [
       {
         test: /\.(jsx?|tsx?)$/,
-        exclude: /node_modules\/(?!(@huggingface|other-problematic-packages)\/).*/,
+        exclude: /node_modules/,
         use: {
           loader: 'builtin:swc-loader',
           options: {
@@ -60,6 +66,18 @@ module.exports = {
           },
         },
       },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'builtin:lightningcss-loader',
+            options: {
+              targets: 'defaults'
+            }
+          }
+        ],
+        type: 'css'
+      }
     ],
   },
   plugins: [
@@ -95,25 +113,25 @@ module.exports = {
           requiredVersion: '^18.2.0',
           eager: true
         },
-          '@mui/material': { 
-            singleton: false, 
-            requiredVersion: '^5.14.0',
-            eager: false
-          },
-          '@mui/system': { 
-            singleton: false, 
-            requiredVersion: '^5.14.0',
-            eager: false
-          },
+        '@mui/material': { 
+          singleton: true, 
+          requiredVersion: '^5.14.0',
+          eager: true
+        },
+        '@mui/system': { 
+          singleton: true, 
+          requiredVersion: '^5.14.0',
+          eager: true
+        },
         '@emotion/react': { 
           singleton: true, 
           requiredVersion: '^11.11.1',
-          eager: false
+          eager: true
         },
         '@emotion/styled': { 
           singleton: true, 
           requiredVersion: '^11.11.0',
-          eager: false
+          eager: true
         }
       },
     }),

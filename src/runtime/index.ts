@@ -29,5 +29,11 @@ export {
   VALID_TRANSITIONS,
 } from './base-mfe';
 
+// RemoteMFE concrete implementation (REQ-RUNTIME-001, REQ-RUNTIME-004)
+export {
+  RemoteMFE,
+  ModuleFederationContainer,
+} from './remote-mfe';
+
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)
 export * from './handlers';

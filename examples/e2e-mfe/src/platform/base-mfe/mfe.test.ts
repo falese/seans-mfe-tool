@@ -738,10 +738,10 @@ describe('csvanalyzerMFE', () => {
         }
       },
       {
-        "name": "UserAPI",
+        "name": "Pet Store API",
         "handler": {
           "openapi": {
-            "source": "./benefit-model.yaml",
+            "source": "./pet-store-api.yaml",
             "operationHeaders": {
               "Authorization": "Bearer {context.jwt}"
             }
@@ -939,10 +939,6 @@ describe('csvanalyzerMFE', () => {
   
   it('should call generateSchema lifecycle hook', async () => {
     await expect(mfe.generateSchema(context)).resolves.not.toThrow();
-  });
-  
-  it('should call authorizeAccess lifecycle hook', async () => {
-    await expect(mfe.authorizeAccess(context)).resolves.not.toThrow();
   });
   
   it('should call validateQuery lifecycle hook', async () => {
