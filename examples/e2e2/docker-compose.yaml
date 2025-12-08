@@ -10,10 +10,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "4002:4002"
     environment:
       - NODE_ENV=development
-      - PORT=3002
+      - PORT=4002
       - CORS_ORIGIN=*
     volumes:
       # Mount source for development hot reload
@@ -21,7 +21,7 @@ services:
       - ./specs:/app/specs:ro
       - ./.meshrc.yaml:/app/.meshrc.yaml:ro
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 3s
       retries: 3

@@ -657,7 +657,9 @@ export async function generateAllFiles(
     { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml' },
     { tpl: 'README.md.ejs', out: 'README.md' }
   ];
-  const bffPort = vars.port || 4000;
+  // BFF port = MFE port + 1000 (e.g., 3002 → 4002, following e2e2 pattern)
+  const mfePort = vars.port || 3000;
+  const bffPort = mfePort + 1000;
   const includeStatic = true;
   for (const { tpl, out } of bffTemplates) {
     const templatePath = path.join(bffTemplateDir, tpl);
@@ -710,6 +712,22 @@ export async function generateAllFiles(
     console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
   }
 
+  // Generate src/index.tsx (standalone entry point with React bootstrap)
+  const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
+  const indexOutPath = path.join(basePath, 'src', 'index.tsx');
+  if (await fs.pathExists(indexTemplatePath)) {
+    const indexContent = await renderTemplate(indexTemplatePath, vars);
+    files.push({
+      path: indexOutPath,
+      content: indexContent,
+      overwrite: true
+    });
+  } else {
+    // Diagnostic: warn if index.tsx template missing
+    // eslint-disable-next-line no-console
+    console.warn(`[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`);
+  }
+
   // --- Public assets ---
   // Generate public/index.html and favicon.ico from EJS templates
   const publicDir = path.join(basePath, 'public');
@@ -726,6 +744,21 @@ export async function generateAllFiles(
     // eslint-disable-next-line no-console
     console.warn(`[unified-generator] WARNING: Missing template for public/index.html: ${indexHtmlTemplatePath}`);
   }
+  
+  // Generate public/demo.html (runtime demonstration page)
+  const demoHtmlTemplatePath = path.join(templateDir, 'public', 'demo.html.ejs');
+  if (await fs.pathExists(demoHtmlTemplatePath)) {
+    const demoHtmlContent = await renderTemplate(demoHtmlTemplatePath, vars);
+    files.push({
+      path: path.join(publicDir, 'demo.html'),
+      content: demoHtmlContent,
+      overwrite: true
+    });
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn(`[unified-generator] WARNING: Missing template for public/demo.html: ${demoHtmlTemplatePath}`);
+  }
+  
   if (await fs.pathExists(faviconTemplatePath)) {
     const faviconContent = await renderTemplate(faviconTemplatePath, vars);
     files.push({

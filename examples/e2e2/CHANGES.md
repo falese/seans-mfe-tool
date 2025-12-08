@@ -10,12 +10,21 @@ These changes demonstrate:
 2. Module Federation remote consumption
 3. BFF GraphQL integration with separate ports
 4. Runtime capability demonstration
+5. **REQ-RUNTIME-002: Context integration across load → render**
 
-**All changes below need to be incorporated into:**
+**✅ All changes have been incorporated into:**
 
-- `src/templates/react/remote/` (MFE template)
-- `src/commands/create-remote.js` (generator)
-- `src/codegen/generators/` (BFF integration templates)
+- `src/codegen/templates/base-mfe/` (Updated templates)
+  - `rspack.config.js.ejs` - Dual entry + eager MUI + static demo
+  - `index.tsx.ejs` - NEW: Standalone entry point
+  - `features/remote.tsx.ejs` - Federation-only exports (already correct)
+  - `public/demo.html.ejs` - NEW: Runtime demonstration
+  - `package.json.ejs` - No @mui/icons-material (already correct)
+- `src/runtime/context.ts` - REQ-RUNTIME-002 implementation
+- `src/runtime/base-mfe.ts` - Uses shared Context from context.ts
+- `src/codegen/generators/` - Uses updated templates
+
+**Generator Status:** ✅ Ready to generate MFEs with all improvements
 
 ---
 

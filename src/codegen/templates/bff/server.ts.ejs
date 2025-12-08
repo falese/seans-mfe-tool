@@ -111,6 +111,7 @@ app.listen(port, () => {
   console.log(`   Static assets: http://localhost:${port}/`);
 <% } %>
   console.log(`   Health check: http://localhost:${port}/health`);
+  console.log(`   Note: MFE assets served by rspack dev server on port <%= port - 1000 %>`);
 });
 
 export default app;

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>csv-analyzer MFE - Runtime Demo</title>
+    <title><%= name %> MFE - Runtime Demo</title>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -98,8 +98,8 @@
     <div class="container">
       <div class="header">
         <h1>🚀 RemoteMFE Runtime Demo</h1>
-        <p>This demonstrates the RemoteMFE runtime loading and rendering the csv-analyzer MFE via Module Federation</p>
-        <p><strong>Note:</strong> This is a simulation. For the actual working app, visit <a href="/">http://localhost:3002/</a></p>
+        <p>This demonstrates the RemoteMFE runtime loading and rendering the <%= name %> MFE via Module Federation</p>
+        <p><strong>Note:</strong> This is a simulation. For the actual working app, visit <a href="/">http://localhost:<%= port %>/</a></p>
       </div>
 
       <div class="controls">
@@ -199,7 +199,7 @@
           });
           
           await new Promise(resolve => setTimeout(resolve, 200));
-          loadedComponents = [{"method":"load","config":{"type":"platform","description":"Initialize the analyzer module","inputs":[],"outputs":[]},"returnTypeBase":"LoadResult"},{"method":"render","config":{"type":"platform","description":"Render the analyzer UI","inputs":[],"outputs":[]},"returnTypeBase":"RenderResult"},{"method":"DataAnalysis","config":{"type":"domain","description":"Analyze CSV files and generate reports","inputs":[],"outputs":[]},"returnTypeBase":"DataAnalysisOutputs"},{"method":"ReportViewer","config":{"type":"domain","description":"View and export analysis reports","inputs":[],"outputs":[]},"returnTypeBase":"ReportViewerOutputs"}];
+          loadedComponents = <%- JSON.stringify(capabilities) %>;
           mfeContainer = { ready: true };
           
           logToUI('✓ Mount: Container initialized, shared deps wired', 'success');
@@ -262,18 +262,12 @@
           wrapper.style.cssText = 'padding: 20px; background: white; border-radius: 8px; margin-top: 20px;';
           wrapper.innerHTML = `
             <h2>✅ MFE Component Loaded!</h2>
-            <p><strong>The actual React components from csv-analyzer MFE are now available.</strong></p>
-            <p>Visit <a href="http://localhost:3002" style="color: #1976d2; font-weight: bold;">http://localhost:3002</a> to see the full interactive app with:</ p>
+            <p><strong>The actual React components from <%= name %> MFE are now available.</strong></p>
+            <p>Visit <a href="http://localhost:<%= port %>" style="color: #1976d2; font-weight: bold;">http://localhost:<%= port %></a> to see the full interactive app with:</ p>
             <ul style="text-align: left; display: inline-block;">
-              
-              <li>[object Object] component</li>
-              
-              <li>[object Object] component</li>
-              
-              <li>[object Object] component</li>
-              
-              <li>[object Object] component</li>
-              
+              <% capabilities.forEach(function(name) { %>
+              <li><%= name %> component</li>
+              <% }); %>
               <li>Material-UI styled components</li>
               <li>Platform handler integration (REQ-RUNTIME-005)</li>
             </ul>
