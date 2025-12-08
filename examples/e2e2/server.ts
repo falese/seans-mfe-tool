@@ -70,17 +70,6 @@ app.use('/graphql', (req: Request, res: Response, next: NextFunction) => {
   next();
 }, meshHandler);
 
-
-// Static MFE assets
-// Following REQ-BFF-004: BFF + Static Assets Same Deployable
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// SPA fallback - serve index.html for client-side routing
-app.get('*', (req: express.Request, res: express.Response) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);
@@ -102,15 +91,13 @@ function extractUserIdFromToken(authHeader?: string): string | undefined {
   }
 }
 
-const port = process.env.PORT || 3002;
+const port = process.env.BFF_PORT || 3003;
 
 app.listen(port, () => {
   console.log(`🚀 csv-analyzer BFF server running on port ${port}`);
   console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
-
-  console.log(`   Static assets: http://localhost:${port}/`);
-
   console.log(`   Health check: http://localhost:${port}/health`);
+  console.log(`   Note: MFE assets served by rspack dev server on port 3002`);
 });
 
 export default app;

@@ -3,25 +3,71 @@
  * Analyze CSV files and generate reports
  * Generated from mfe-manifest.yaml capability definition
  */
-import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Paper, Button, Chip, Stack } from '@mui/material';
 
 export interface DataAnalysisProps {
-  // TODO: Define props based on capability inputs
+  onAnalysisComplete?: (data: any) => void;
 }
 
-export const DataAnalysis: React.FC<DataAnalysisProps> = (props) => {
+export const DataAnalysis: React.FC<DataAnalysisProps> = ({ onAnalysisComplete }) => {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+
+  const handleAnalyze = () => {
+    setAnalyzing(true);
+    // Simulate analysis
+    setTimeout(() => {
+      const mockStats = {
+        rows: 1500,
+        columns: 8,
+        numericColumns: 5,
+        categoricalColumns: 3,
+        missingValues: 23,
+      };
+      setStats(mockStats);
+      setAnalyzing(false);
+      onAnalysisComplete?.(mockStats);
+    }, 1500);
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        DataAnalysis
-      </Typography>
-      <Box>
-        {/* TODO: Implement DataAnalysis */}
+    <Paper elevation={2} sx={{ p: 3 }}>
+      <Stack spacing={2}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="h5" component="h2">
+            📊 CSV Data Analysis
+          </Typography>
+        </Box>
+        
         <Typography variant="body2" color="text.secondary">
-          Analyze CSV files and generate reports
+          Upload and analyze CSV files to generate insights
         </Typography>
-      </Box>
+
+        <Button
+          variant="contained"
+          onClick={handleAnalyze}
+          disabled={analyzing}
+          fullWidth
+        >
+          {analyzing ? '⏳ Analyzing...' : '📤 Upload & Analyze CSV'}
+        </Button>
+
+        {stats && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Analysis Results:
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip label={`${stats.rows} rows`} color="primary" size="small" />
+              <Chip label={`${stats.columns} columns`} color="secondary" size="small" />
+              <Chip label={`${stats.numericColumns} numeric`} color="success" size="small" />
+              <Chip label={`${stats.categoricalColumns} categorical`} color="info" size="small" />
+              <Chip label={`${stats.missingValues} missing`} color="warning" size="small" />
+            </Stack>
+          </Box>
+        )}
+      </Stack>
     </Paper>
   );
 };

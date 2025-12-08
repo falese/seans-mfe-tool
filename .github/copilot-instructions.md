@@ -427,7 +427,13 @@ CI=1 npm test
 
 ## ADR Quick Reference
 
-When implementing orchestration features, reference these:
+### Runtime & Platform Handlers (Active Implementation)
+
+- **ADR-059**: Platform Handler Interface & Execution Model ← **Issues #47-59**
+- **ADR-060**: Load Capability - Atomic Operation Design ← **Issues #47-59**
+- **ADR-061**: Error Boundary & Fallback UI Strategy (pending)
+
+### Orchestration Features
 
 - **ADR-009**: Hybrid architecture (centralized service + shell runtime)
 - **ADR-010**: Lightweight registry (metadata only, fetch DSL on-demand)
@@ -441,7 +447,7 @@ When implementing orchestration features, reference these:
 - **ADR-020**: `mfe init` = workspace only, shell = explicit
 - **ADR-021**: `analyze` command removed (use runtime DSL)
 
-**Full details:** `docs/architecture-decisions.md`
+**Full details:** `docs/architecture-decisions/` directory
 
 ## Testing Strategy (TDD Required)
 
@@ -503,7 +509,10 @@ src/
 - **API generation:** `docs/api-generator-readme.md`
 - **Examples:** `examples/` directory (working projects)
 - **Agent system design:** `src/agent-orchestrator/README.md` (future work)
-- **GitHub Issues:** [Live backlog](https://github.com/falese/seans-mfe-tool/issues) - Use Requirements Elicitation Agent to query
+- **GitHub Issues:** [Live backlog](https://github.com/falese/seans-mfe-tool/issues)
+  - **Runtime Platform:** Issues #47-59 (REQ-RUNTIME-001 through 012)
+  - Query with: `gh issue list --search "REQ-RUNTIME" --state open`
+  - Use Requirements Elicitation Agent for complex queries
 - **BACKLOG.md (deprecated):** `docs/BACKLOG.md` - Historical reference only, see GitHub Issues for current work
 
 ## Requirements & Issue Tracking
@@ -530,6 +539,7 @@ Requirements Update (Status: ✅ Complete)
 
 **Locating Requirements:**
 
+- **Runtime Platform:** `docs/runtime-requirements.md` (REQ-RUNTIME-001 to REQ-RUNTIME-012) ← **Active Implementation**
 - **Orchestration:** `docs/orchestration-requirements.md` (REQ-001 to REQ-041)
 - **BFF:** `docs/graphql-bff-requirements.md` (REQ-BFF-001 to REQ-BFF-008)
 - **DSL Contract:** `docs/dsl-contract-requirements.md` (REQ-042 to REQ-053)
@@ -583,15 +593,52 @@ When a requirement is ready for implementation:
 2. **Use issue templates**: `.github/ISSUE_TEMPLATE/` (feature.yml, requirement.yml, bug.yml)
 3. **Apply labels**: Use standard label system (priority, type, component, req)
 4. **Link requirements**: Reference REQ-XXX, ADR-NNN, acceptance files
-5. **Create in GitHub**: Issues are created directly in GitHub (not through agent)
+5. **Create via GitHub CLI**: Use `gh issue create` with `--body-file` for multiline content
 6. **Update requirements**: Add issue number to requirements doc after creation
+
+**Preferred CLI Pattern for Issue Creation:**
+
+```bash
+# Using --body-file with process substitution for multiline bodies
+gh issue create \
+  --title "REQ-XXX: Feature Title" \
+  --body-file <(cat <<'EOF'
+## Requirement
+Implement REQ-XXX from docs/requirements-file.md
+
+## Description
+[Detailed description]
+
+## Acceptance Criteria
+- Criterion 1
+- Criterion 2
+
+## Related Documentation
+- [REQ-XXX](link)
+- [ADR-NNN](link)
+
+## Implementation Notes
+- Depends on: REQ-YYY
+- Create src/path/to/file.ts
+EOF
+)
+```
+
+**Batch Issue Creation:**
+- For multiple issues, use 3-second delays between creates: `sleep 3`
+- Verify creation: `gh issue list --search "REQ-XXX" --state open`
+- Close duplicates immediately: `gh issue close N --comment "Duplicate of #M"`
 
 ### Acceptance Criteria Files
 
 GWT (Given-When-Then) scenarios in `docs/acceptance-criteria/`:
 
+- `runtime-load-render.feature` - Load/Render capabilities and platform handlers ← **Active**
 - `remote-mfe.feature` - Remote generation and federation
 - `bff.feature` - GraphQL BFF and Mesh integration
+- `lifecycle-hooks.feature` - DSL lifecycle hook execution
+- `platform-handlers.feature` - Platform handler patterns
+- `type-system.feature` - DSL type system validation
 
 **When adding features:**
 
@@ -599,6 +646,95 @@ GWT (Given-When-Then) scenarios in `docs/acceptance-criteria/`:
 2. Reference in requirements doc and GitHub Issue
 3. Implement feature to satisfy scenarios
 4. Run manual or automated tests against scenarios
+
+## Active Implementation: Runtime Platform Handlers
+
+**Current Focus:** Issues #47-59 (REQ-RUNTIME-001 through 012)
+
+### Implementation Priority Order
+
+Follow this sequence for runtime platform handler implementation:
+
+1. **#49 - REQ-RUNTIME-002**: Shared Context (foundation for all capabilities)
+   - File: `src/runtime/base-mfe.ts` - Context class with TypeScript interfaces
+   - No dependencies, must be implemented first
+
+2. **#52 - REQ-RUNTIME-005**: Platform Handler Registry
+   - File: `src/runtime/handlers/PlatformHandlerRegistry.ts`
+   - Depends on: #49 (Context)
+   - Enables all handler implementations
+
+3. **#47 - REQ-RUNTIME-001**: Load Capability (atomic operation)
+   - File: `src/runtime/base-mfe.ts` - BaseMFE.load() method
+   - Depends on: #49, #52
+   - See: ADR-060 for atomic operation design
+
+4. **#51 - REQ-RUNTIME-004**: Render Capability
+   - File: `src/runtime/base-mfe.ts` - BaseMFE.render() method
+   - Depends on: #47, #49
+   - React 18 createRoot() integration
+
+5. **#53 - REQ-RUNTIME-006**: Auth Handler (JWT validation)
+   - File: `src/runtime/handlers/auth.ts`
+   - Depends on: #52
+   - Use `jsonwebtoken` library
+
+6. **#56 - REQ-RUNTIME-009**: Error Handling Handler
+   - File: `src/runtime/handlers/error-handling.ts`
+   - Depends on: #52
+   - Exponential backoff retry logic
+
+7-12. **Remaining Handlers** (can be implemented in parallel):
+   - #54: Validation Handler (`src/runtime/handlers/validation.ts`)
+   - #55: Telemetry Handler (`src/runtime/handlers/telemetry.ts`)
+   - #57: Caching Handler (`src/runtime/handlers/caching.ts`)
+   - #50: Load Result Validation (refinement)
+   - #58: Error Boundaries & Fallback UI
+   - #59: Telemetry Emission Points
+
+### Runtime Implementation Patterns
+
+**Test-Driven Development:**
+- Write Gherkin scenario from `docs/acceptance-criteria/runtime-load-render.feature`
+- Convert to Jest test in `src/runtime/__tests__/`
+- Implement feature to pass test
+- Target 100% coverage per ADR-059
+
+**TypeScript Strict Mode:**
+- All runtime code uses TypeScript strict mode
+- No `any` types allowed
+- Explicit return types on all public methods
+- Interface naming: `Context`, `LoadResult`, `RenderResult`, `PlatformHandler`
+
+**Handler Development Pattern:**
+```typescript
+// src/runtime/handlers/example.ts
+import { PlatformHandler } from './PlatformHandlerRegistry';
+import { Context } from '../base-mfe';
+
+export class ExampleHandler implements PlatformHandler {
+  readonly name = 'example';
+  readonly phases = ['before', 'main', 'after'];
+  readonly errorConfig = { continueOnError: false, retryable: true };
+
+  async execute(context: Context, phase: string): Promise<void> {
+    // Handler logic here
+    // Can mutate context for cross-handler communication
+  }
+}
+```
+
+**Query Active Runtime Issues:**
+```bash
+# All runtime issues
+gh issue list --search "REQ-RUNTIME" --state open
+
+# High priority only
+gh issue list --search "REQ-RUNTIME" --label "priority-high" --state open
+
+# Specific requirement
+gh issue view 49  # REQ-RUNTIME-002
+```
 
 ## Deprecated Features
 

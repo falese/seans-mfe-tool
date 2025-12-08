@@ -13,8 +13,6 @@ sources:
           Authorization: Bearer {context.jwt}
           X-Request-ID: '{context.requestId}'
           X-User-ID: '{context.userId}'
-cache:
-  inmemoryLru: {}
 serve:
   endpoint: /graphql
   playground: true

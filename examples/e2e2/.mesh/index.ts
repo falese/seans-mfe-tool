@@ -311,7 +311,7 @@ export async function getMeshOptions(): Promise<GetMeshOptions> {
 const pubsub = new PubSub();
 const sourcesStore = rootStore.child('sources');
 const logger = new DefaultLogger("");
-const MeshCache = await import("@graphql-mesh/cache-inmemory-lru").then(handleImport);
+const MeshCache = await import("@graphql-mesh/cache-localforage").then(handleImport);
   const cache = new MeshCache({
       ...{},
       importFn,

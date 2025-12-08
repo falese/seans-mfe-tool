@@ -4,9 +4,12 @@ const path = require('path');
 
 /** @type {import('@rspack/cli').Configuration} */
 module.exports = {
-  entry: './src/remote.tsx',
+  entry: {
+    main: './src/index.tsx',
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js',
     publicPath: 'auto',
   },
   resolve: {
@@ -34,6 +37,7 @@ module.exports = {
     historyApiFallback: true,
     static: {
       directory: path.join(__dirname, 'public'),
+      publicPath: '/static',
     },
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -113,22 +117,22 @@ module.exports = {
         '@mui/material': { 
           singleton: true, 
           requiredVersion: '^5.14.0',
-          eager: false
+          eager: true
         },
         '@mui/system': { 
           singleton: true, 
           requiredVersion: '^5.14.0',
-          eager: false
+          eager: true
         },
         '@emotion/react': { 
           singleton: true, 
           requiredVersion: '^11.11.1',
-          eager: false
+          eager: true
         },
         '@emotion/styled': { 
           singleton: true, 
           requiredVersion: '^11.11.0',
-          eager: false
+          eager: true
         }
       },
     }),
