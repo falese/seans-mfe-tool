@@ -1,5 +1,93 @@
 # seans-mfe-tool - Current Architecture (December 2025)
 
+## Table of Contents
+
+- [System Overview](#system-overview)
+- [Subsystem Architectures](#subsystem-architectures)
+- [Detailed Module Breakdown](#detailed-module-breakdown)
+- [Data Flow Diagrams](#data-flow-mfe-generation)
+- [Technology Stack](#technology-stack)
+- [Key Architectural Patterns](#key-architectural-patterns)
+- [Active Development Areas](#active-development-areas)
+
+## Subsystem Architectures
+
+This document provides the high-level system architecture. For detailed subsystem designs, see:
+
+### 📐 **Runtime Platform**
+
+**[→ Runtime Platform Architecture](./architecture-runtime-platform.md)**
+
+The execution environment for all MFE types. Includes:
+
+- BaseMFE abstract class and RemoteMFE implementation
+- Context management (REQ-RUNTIME-002)
+- Platform handlers (auth, telemetry, validation, error-handling, caching, rate-limiting)
+- State machine and lifecycle execution
+- Load capability atomic operation (REQ-RUNTIME-001)
+- Dependency injection architecture
+
+**Status**: 🟡 In Progress (Issues #47-59)
+
+### 🔧 **Code Generation Engine**
+
+**[→ Code Generation Architecture](./architecture-codegen.md)** _(Coming Soon)_
+
+The DSL-driven code generation system. Will include:
+
+- UnifiedGenerator orchestration flow
+- Template processing system
+- Feature component generation
+- Platform code generation
+- BFF server generation
+- Configuration file generation
+
+**Status**: ✅ Complete (documentation pending)
+
+### 🎨 **DSL & Type System**
+
+**[→ DSL Architecture](./architecture-dsl.md)** _(Coming Soon)_
+
+The manifest schema and validation system. Will include:
+
+- DSL schema design (capabilities, lifecycle hooks, data sources)
+- Type system implementation
+- Validation rules and error handling
+- Parser implementation
+- Manifest transformation pipeline
+
+**Status**: ✅ Complete (documentation pending)
+
+### 🌐 **BFF Layer**
+
+**[→ BFF Architecture](./architecture-bff.md)** _(Coming Soon)_
+
+GraphQL Mesh integration and BFF generation. Will include:
+
+- Mesh configuration extraction from DSL
+- Server generation (Express + Mesh)
+- Context injection and JWT forwarding
+- Health checks and error handling
+- Static asset serving
+
+**Status**: ✅ Complete (documentation pending)
+
+### 📦 **API Generator**
+
+**[→ API Generator Architecture](./architecture-api-generator.md)** _(Coming Soon)_
+
+OpenAPI-driven REST API scaffolding. Will include:
+
+- OpenAPI spec parsing
+- Controller generation
+- Route generation
+- Database layer generation (MongoDB/SQLite)
+- Migration and seeding strategies
+
+**Status**: ✅ Complete (documentation pending)
+
+---
+
 ## System Overview
 
 ```mermaid
@@ -241,42 +329,41 @@ graph TB
 
 ### 5. Runtime Platform
 
+**📐 [See Detailed Architecture →](./architecture-runtime-platform.md)**
+
 **Location**: `src/runtime/`
 **Output**: `dist/runtime/` → `@seans-mfe-tool/runtime` npm package
 
-#### base-mfe.ts
+#### Overview
 
-- **BaseMFE**: Abstract base class for all MFEs
-- Lifecycle methods: `load()`, `render()`, `health()`, `describe()`, `schema()`
-- Template method pattern (do\* methods)
-- Context integration (REQ-RUNTIME-002)
+The runtime platform provides the execution environment for all MFE types (remote, bff, tool, agent). It implements:
 
-#### remote-mfe.ts
+- **BaseMFE**: Abstract base class with lifecycle methods (`load()`, `render()`, `health()`)
+- **RemoteMFE**: Module Federation implementation
+- **Context**: Shared state across all lifecycle phases (REQ-RUNTIME-002)
+- **Platform Handlers**: Reusable cross-cutting concerns
+- **State Machine**: Enforced lifecycle transitions
+- **Atomic Load Operation**: Three-phase load (entry, mount, enable-render) per REQ-RUNTIME-001
 
-- **RemoteMFE**: Concrete implementation for Module Federation
-- Module Federation integration
-- Container mounting/unmounting
-- Telemetry tracking
-- Error boundaries
+#### Key Components
 
-#### context.ts
+- `base-mfe.ts` - Abstract base class with template method pattern
+- `remote-mfe.ts` - Concrete Module Federation implementation
+- `context.ts` - Context interface, factory, and flow management
+- `handlers/` - Six platform handlers:
+  - `auth.ts` - JWT validation
+  - `telemetry.ts` - Event tracking at all checkpoints
+  - `validation.ts` - Input validation
+  - `error-handling.ts` - Retry logic with exponential backoff
+  - `caching.ts` - Response caching
+  - `rate-limiting.ts` - Request throttling
 
-- **Context**: Shared state across lifecycle phases
-- User context (auth, permissions)
-- Telemetry events
-- Validation errors
-- Factory pattern for context creation
+#### Status
 
-#### handlers/
+🟡 **In Progress** - Core classes complete, handlers implementation ongoing (Issues #47-59)
 
-**Platform handlers** (REQ-RUNTIME-001 through 012):
-
-- `auth.ts` - JWT validation
-- `telemetry.ts` - Event tracking
-- `error-handling.ts` - Retry logic, exponential backoff
-- `validation.ts` - Input validation
-- `caching.ts` - Response caching
-- `rate-limiting.ts` - Rate limiting
+**Related Requirements**: REQ-RUNTIME-001 through REQ-RUNTIME-012  
+**Related ADRs**: ADR-036, ADR-047, ADR-059, ADR-060
 
 ### 6. Templates
 
@@ -682,6 +769,49 @@ Key ADRs shaping the architecture:
 
 ---
 
-**Document Version**: 1.0.0  
-**Last Updated**: December 8, 2025  
-**Status**: Current State Documentation
+## Related Documentation
+
+### Architecture Documents
+
+- **[Runtime Platform Architecture](./architecture-runtime-platform.md)** - Detailed runtime subsystem design
+- [Code Generation Architecture](./architecture-codegen.md) _(Coming Soon)_
+- [DSL Architecture](./architecture-dsl.md) _(Coming Soon)_
+- [BFF Architecture](./architecture-bff.md) _(Coming Soon)_
+- [API Generator Architecture](./architecture-api-generator.md) _(Coming Soon)_
+
+### Requirements Documents
+
+- [Runtime Requirements](./runtime-requirements.md) - REQ-RUNTIME-001 through 012
+- [Orchestration Requirements](./orchestration-requirements.md) - REQ-001 through 041
+- [BFF Requirements](./graphql-bff-requirements.md) - REQ-BFF-001 through 008
+- [DSL Contract Requirements](./dsl-contract-requirements.md) - REQ-042 through 053
+- [Remote Generation Requirements](./dsl-remote-requirements.md) - REQ-REMOTE-001 through 010
+
+### Architecture Decision Records
+
+- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-062+
+- Key ADRs: ADR-009 (Hybrid Orchestration), ADR-059 (Platform Handlers), ADR-060 (Atomic Load)
+
+### Acceptance Criteria
+
+- [Acceptance Criteria](./acceptance-criteria/) - Gherkin scenarios for all features
+- [Runtime Load/Render](./acceptance-criteria/runtime-load-render.feature)
+- [Platform Handlers](./acceptance-criteria/platform-handlers.feature)
+- [BFF Integration](./acceptance-criteria/bff.feature)
+
+### Agent Documentation
+
+- [Architecture Governance Agent](./.github/agents/architecture-governance-agent.md) - Design for governance tooling
+
+---
+
+## Navigation
+
+**← [Back to Documentation Index](./README.md)**  
+**→ [Next: Runtime Platform Architecture](./architecture-runtime-platform.md)**
+
+---
+
+**Document Version**: 1.1.0  
+**Last Updated**: December 11, 2025  
+**Status**: Current State Documentation - Linked to Subsystems
