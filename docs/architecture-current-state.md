@@ -5,15 +5,15 @@
 ```mermaid
 graph TB
     subgraph "CLI Entry Point"
-        CLI[bin/seans-mfe-tool.js<br/>Commander.js CLI]
+        CLI["bin/seans-mfe-tool.js<br/>Commander.js CLI"]
     end
 
     subgraph "Command Layer"
-        RemoteGen[remote-generate.ts<br/>Generate MFE Projects]
-        RemoteInit[remote-init.ts<br/>Initialize Workspace]
-        BFF[bff.ts<br/>BFF Management]
-        API[create-api.js<br/>API Generation]
-        Deploy[deploy.js<br/>Docker/K8s Deploy]
+        RemoteGen["remote-generate.ts<br/>Generate MFE Projects"]
+        RemoteInit["remote-init.ts<br/>Initialize Workspace"]
+        BFF["bff.ts<br/>BFF Management"]
+        API["create-api.js<br/>API Generation"]
+        Deploy["deploy.js<br/>Docker/K8s Deploy"]
     end
 
     subgraph "Code Generation Engine"
@@ -23,8 +23,8 @@ graph TB
     end
 
     subgraph "DSL & Validation"
-        DSL[DSL Schema<br/>mfe-manifest.yaml]
-        Parser[YAML Parser]
+        DSL["DSL Schema<br/>mfe-manifest.yaml"]
+        Parser["YAML Parser"]
         Validator[Schema Validator]
         TypeSystem[Type System]
     end
@@ -37,9 +37,9 @@ graph TB
     end
 
     subgraph "Templates"
-        ReactTemplates[React/TypeScript<br/>Components, Features]
-        BFFTemplates[BFF Server<br/>GraphQL Mesh]
-        ConfigTemplates[Configuration<br/>rspack, Docker, etc.]
+        ReactTemplates["React/TypeScript<br/>Components, Features"]
+        BFFTemplates["BFF Server<br/>GraphQL Mesh"]
+        ConfigTemplates["Configuration<br/>rspack, Docker, etc."]
     end
 
     subgraph "Utilities"
@@ -49,8 +49,8 @@ graph TB
     end
 
     subgraph "Generated Output"
-        MFEProject[Complete MFE Project<br/>src/, config, server.ts]
-        APIProject[REST API Project<br/>Express + DB + Routes]
+        MFEProject["Complete MFE Project<br/>src/, config, server.ts"]
+        APIProject["REST API Project<br/>Express + DB + Routes"]
     end
 
     subgraph "Examples"
@@ -61,7 +61,7 @@ graph TB
     end
 
     subgraph "Build Artifacts"
-        RuntimePkg[dist/runtime/<br/>@seans-mfe-tool/runtime]
+        RuntimePkg["dist/runtime/<br/>@seans-mfe-tool/runtime"]
     end
 
     %% Connections

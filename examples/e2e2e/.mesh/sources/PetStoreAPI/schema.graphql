@@ -1,0 +1,59 @@
+schema @transport(subgraph: "PetStoreAPI", kind: "rest", headers: [["Authorization", "Bearer {context.jwt}"], ["X-Request-ID", "{context.requestId}"], ["X-User-ID", "{context.userId}"]]) {
+  query: Query
+  mutation: Mutation
+}
+
+directive @enum(subgraph: String, value: String) on ENUM_VALUE
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HttpMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """List all pets"""
+  listPets(limit: Int = 10): ListPets_200Response @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"limit\":\"limit\"}")
+  """Get pet by id"""
+  getPet(petId: String!): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets/{args.petId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+}
+
+type ListPets_200Response {
+  items: [Pet]
+}
+
+type Pet {
+  id: String!
+  name: String!
+  status: String!
+  tag: String
+}
+
+type Mutation {
+  """Create a pet"""
+  createPet(input: NewPetInput): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+}
+
+input NewPetInput {
+  name: String!
+  tag: String
+  status: MutationInputCreatePetInputStatus = available
+}
+
+enum MutationInputCreatePetInputStatus {
+  available
+  pending
+  sold
+}
+
+enum HttpMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
