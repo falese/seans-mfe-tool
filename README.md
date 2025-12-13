@@ -138,7 +138,55 @@ The project follows a modular architecture with clear separation of concerns:
 └── docs/               # Documentation
 ```
 
+## Workspace Examples (ADR-015)
+
+Reference scaffold workspaces have been relocated under `examples/workspaces/`:
+
+- `examples/workspaces/npm/` – npm-based monorepo template
+- `examples/workspaces/yarn/` – yarn-based monorepo template
+
+Each contains:
+
+```
+README.md
+package.json
+mfe-spec.yaml
+apps/  packages/  docs/
+```
+
+Use them as starting points:
+
+```bash
+npx seans-mfe-tool init my-workspace --package-manager npm
+npx seans-mfe-tool init my-workspace --package-manager yarn
+```
+
+They are not part of the runtime; they serve as reference templates only (see ADR-015 in `docs/architecture-decisions.md`).
+
+## AI Agent Guide
+
+- For repo-specific AI coding guidance, see `.github/copilot-instructions.md`.
+- For the separate browser agent system, see `agent-orchestrator/README.md`.
+
 ## Contributing
+
+## Deprecated / Removed Commands
+
+`analyze` (static heuristic boundary suggestion) has been **removed** (see ADR-021).
+It previously inferred potential MFEs from filename/import patterns. The platform now
+uses runtime + DSL-driven discovery:
+
+- Register MFEs with orchestration (ADR-012, ADR-016)
+- Fetch DSL manifests on-demand (ADR-010, ADR-013)
+- Apply discovery phases A (probabilistic), C (semantic), B (deterministic) (ADR-011)
+
+Migration Guidance:
+
+1. Define capability contracts directly in DSL manifests (`/.well-known/mfe-manifest.yaml`).
+2. Use runtime registry + telemetry to evolve boundaries incrementally.
+3. Replace any `mfe analyze` automation with DSL authoring + orchestration queries.
+
+If assisted DSL derivation is needed, a future command may provide structured generation (not a restoration of the old analyzer).
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)

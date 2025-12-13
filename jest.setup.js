@@ -30,5 +30,9 @@ jest.mock('chalk', () => ({
   green: jest.fn(str => str),
   blue: jest.fn(str => str),
   yellow: jest.fn(str => str),
-  gray: jest.fn(str => str)
+  gray: jest.fn(str => str),
+  cyan: jest.fn(str => str),
+  white: jest.fn(str => str),
+  bold: jest.fn(str => str),
+  dim: jest.fn(str => str)
 }));

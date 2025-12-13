@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  <%= name %>:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    image: <%= registry || 'myregistry' %>/<%= name %>:${VERSION:-latest}
+    container_name: <%= name %>
+    restart: unless-stopped
+    ports:
+      - "${PORT:-<%= port || 3000 %>}:<%= port || 3000 %>"
+    environment:
+      - NODE_ENV=production
+      - PORT=<%= port || 3000 %>
+    <% if (type === 'api') { %>
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    <% } %>
+    <% if (type === 'api' && database === 'mongodb') { %>
+    depends_on:
+      - mongodb
+    <% } %>
+    <% if (type === 'api' && database === 'postgres') { %>
+    depends_on:
+      - postgres
+    <% } %>
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:<%= port || 3000 %>/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+    volumes:
+      - <%= name %>-data:/app/data
+      - <%= name %>-logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '${CPU_LIMIT:-1.0}'
+          memory: ${MEMORY_LIMIT:-512M}
+        reservations:
+          cpus: '${CPU_RESERVATION:-0.25}'
+          memory: ${MEMORY_RESERVATION:-128M}
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+<% if (type === 'api' && database === 'mongodb') { %>
+  mongodb:
+    image: mongo:6
+    container_name: <%= name %>-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+<% } %>
+
+<% if (type === 'api' && database === 'postgres') { %>
+  postgres:
+    image: postgres:15-alpine
+    container_name: <%= name %>-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-<%= name %>}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+<% } %>
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  <%= name %>-data:
+  <%= name %>-logs:
+<% if (type === 'api' && database === 'mongodb') { %>
+  mongodb-data:
+  mongodb-config:
+<% } %>
+<% if (type === 'api' && database === 'postgres') { %>
+  postgres-data:
+<% } %>

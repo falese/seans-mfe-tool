@@ -1,0 +1,35 @@
+<% /*
+  EJS template for BaseMFE test file generation
+  All template variables are substituted by CLI codegen from DSL manifest
+*/ %>
+import { <%= className %> } from './mfe';
+import { Context } from 'platform-runtime';
+
+describe('<%= className %>', () => {
+  let mfe: <%= className %>;
+  let manifest: any;
+  let context: Context;
+
+  beforeEach(() => {
+    manifest = <%- JSON.stringify(manifest, null, 2) %>;
+    mfe = new <%= className %>(manifest);
+    context = { timestamp: new Date(), requestId: 'test' };
+  });
+
+  it('should instantiate without error', () => {
+    expect(mfe).toBeInstanceOf(<%= className %>);
+  });
+
+  <% capabilities.forEach(function(cap) { %>
+  it('should call <%= cap.method %> and return stub', async () => {
+    const result = await mfe.<%= cap.method %>(context);
+    expect(result).toBeDefined();
+  });
+  <% }); %>
+
+  <% lifecycleHooks.forEach(function(hook) { %>
+  it('should call <%= hook.name %> lifecycle hook', async () => {
+    await expect(mfe.<%= hook.name %>(context)).resolves.not.toThrow();
+  });
+  <% }); %>
+});

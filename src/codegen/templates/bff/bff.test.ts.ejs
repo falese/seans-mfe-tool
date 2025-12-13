@@ -1,0 +1,11 @@
+<% /*
+  EJS template for BFF test file generation
+  All template variables are substituted by CLI codegen from DSL manifest
+*/ %>
+import { startBFFServer } from './bff';
+
+describe('BFF Layer', () => {
+  it('should start BFF server without error', async () => {
+    await expect(startBFFServer(4000)).resolves.not.toThrow();
+  });
+});

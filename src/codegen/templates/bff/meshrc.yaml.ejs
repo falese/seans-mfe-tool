@@ -1,0 +1,85 @@
+# .meshrc.yaml - Auto-generated from DSL manifest data section
+# REQ-BFF-001: DSL as Single Source of Truth
+# ADR-046: GraphQL Mesh with DSL-embedded config
+# ADR-062: Mesh v0.100.x with production plugins
+
+# GraphQL Mesh Configuration
+<%- meshConfigYaml %>
+
+<%_ if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { _%>
+# Plugins (Performance & Observability)
+plugins:
+<%_ if (meshPlugins.responseCache) { _%>
+  - responseCache:
+      ttl: <%= meshPlugins.responseCache.ttl %>
+  
+<%_ } _%>
+<%_ if (meshPlugins.prometheus) { _%>
+  - prometheus: {}
+
+<%_ } _%>
+<%_ if (meshPlugins.opentelemetry) { _%>
+  - opentelemetry:
+      serviceName: <%= name %>-bff
+      sampling:
+        probability: <%= meshPlugins.opentelemetry.sampling.probability %>
+<%_ } _%>
+<%_ } _%>
+
+<%_ if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { _%>
+# Transforms (Schema Manipulation)
+transforms:
+<%_ if (meshTransforms.namingConvention) { _%>
+  - namingConvention:
+      typeNames: <%= meshTransforms.namingConvention.typeNames %>
+      fieldNames: <%= meshTransforms.namingConvention.fieldNames %>
+<%_ } _%>
+<%_ if (meshTransforms.rateLimit) { _%>
+  - rateLimit:
+<%_ if (Array.isArray(meshTransforms.rateLimit.config)) { _%>
+      config:
+<%_ meshTransforms.rateLimit.config.forEach(rule => { _%>
+        - type: <%= rule.type %>
+          field: "<%= rule.field %>"
+          max: <%= rule.max %>
+          ttl: <%= rule.ttl %>
+<%_ if (rule.identifyContext) { _%>
+          identifyContext: <%= rule.identifyContext %>
+<%_ } _%>
+<%_ }); _%>
+<%_ } else { _%>
+      config: []
+<%_ } _%>
+<%_ } _%>
+<%_ if (meshTransforms.filterSchema) { _%>
+  - filterSchema:
+<%_ if (Array.isArray(meshTransforms.filterSchema.filters)) { _%>
+      filters:
+<%_ meshTransforms.filterSchema.filters.forEach(filter => { _%>
+        - <%= filter %>
+<%_ }); _%>
+<%_ } else { _%>
+      filters: []
+<%_ } _%>
+<%_ } _%>
+<%_ if (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0) { _%>
+<%_ meshTransforms.customTransforms.forEach(transform => { _%>
+<%_
+  // Parse the transform string into key-value pairs
+  const lines = transform.trim().split('\n').map(line => line.trim());
+  const transformObj = {};
+  lines.forEach(line => {
+    const [key, ...valueParts] = line.split(':');
+    if (key && valueParts.length > 0) {
+      transformObj[key.trim()] = valueParts.join(':').trim();
+    }
+  });
+_%>
+  - resolversComposition:
+<%_ Object.entries(transformObj).forEach(([key, value]) => { _%>
+      <%= key %>: <%= value %>
+<%_ }); _%>
+<%_ }); _%>
+<%_ } _%>
+<%_ } _%>
+

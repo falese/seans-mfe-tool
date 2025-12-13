@@ -1,0 +1,171 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+directive @enum(subgraph: String, value: String) on ENUM_VALUE
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HttpMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """Get all phase metrics"""
+  phaseMetrics: [PhaseMetrics] @httpOperation(subgraph: "AnalysisAPI", path: "/phase-metrics", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """Get phase metrics by ID"""
+  phaseMetricsByPhaseId(phaseId: String!): PhaseMetrics @httpOperation(subgraph: "AnalysisAPI", path: "/phase-metrics/{args.phaseId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """Get all benefits breakdown data"""
+  benefitsBreakdown: [BenefitsBreakdown] @httpOperation(subgraph: "AnalysisAPI", path: "/benefits-breakdown", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """Get all cumulative ROI data"""
+  cumulativeRoi: [CumulativeRoi] @httpOperation(subgraph: "AnalysisAPI", path: "/cumulative-roi", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """Get all performance gate metrics"""
+  performanceGate: [PerformanceGate] @httpOperation(subgraph: "AnalysisAPI", path: "/performance-gate", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List all pets"""
+  listPets(limit: Int = 10): ListPets_200Response @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"limit\":\"limit\"}")
+  """Get pet by id"""
+  getPet(petId: String!): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets/{args.petId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+}
+
+type Mutation {
+  """Create new phase metrics"""
+  postPhaseMetrics(input: PhaseMetricsInput): PhaseMetrics @httpOperation(subgraph: "AnalysisAPI", path: "/phase-metrics", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+  """Update phase metrics"""
+  putPhaseMetricsByPhaseId(phaseId: String!, input: PhaseMetricsInput): PhaseMetrics @httpOperation(subgraph: "AnalysisAPI", path: "/phase-metrics/{args.phaseId}", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: PUT)
+  """Create new benefits breakdown entry"""
+  postBenefitsBreakdown(input: BenefitsBreakdownInput): BenefitsBreakdown @httpOperation(subgraph: "AnalysisAPI", path: "/benefits-breakdown", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+  """Create new cumulative ROI entry"""
+  postCumulativeRoi(input: CumulativeRoiInput): CumulativeRoi @httpOperation(subgraph: "AnalysisAPI", path: "/cumulative-roi", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+  """Create new performance gate entry"""
+  postPerformanceGate(input: PerformanceGateInput): PerformanceGate @httpOperation(subgraph: "AnalysisAPI", path: "/performance-gate", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+  """Create a pet"""
+  createPet(input: NewPetInput): Pet @httpOperation(subgraph: "PetStoreAPI", path: "/pets", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+}
+
+type PhaseMetrics {
+  phaseId: QueryPhaseMetricsItemsPhaseId!
+  teamSize: Int!
+  newHires: Int!
+  personnelCost: Float!
+  transitionCost: Float!
+  totalCost: Float!
+  benefitsRealized: Float!
+  quarterBenefits: Float!
+  quarterRoi: Float!
+}
+
+enum QueryPhaseMetricsItemsPhaseId {
+  current
+  phase1
+  phase2
+  phase3
+  phase4
+  steady
+}
+
+type BenefitsBreakdown {
+  phaseId: QueryBenefitsBreakdownItemsPhaseId!
+  devTimeSavings: Float!
+  supportEfficiency: Float!
+  timeToMarket: Float!
+  totalBenefits: Float!
+}
+
+enum QueryBenefitsBreakdownItemsPhaseId {
+  current
+  phase1
+  phase2
+  phase3
+  phase4
+  steady
+}
+
+type CumulativeRoi {
+  year: Int!
+  period: String!
+  costs: Float!
+  benefits: Float!
+  net: Float!
+  cumulativeRoi: Float!
+}
+
+type PerformanceGate {
+  phase: String!
+  teamSize: Int!
+  teamsOnboarded: Int!
+  automation: Float!
+  supportReduction: Float!
+}
+
+input PhaseMetricsInput {
+  phaseId: QueryPhaseMetricsItemsPhaseId!
+  teamSize: Int!
+  newHires: Int!
+  personnelCost: Float!
+  transitionCost: Float!
+  totalCost: Float!
+  benefitsRealized: Float!
+  quarterBenefits: Float!
+  quarterRoi: Float!
+}
+
+input BenefitsBreakdownInput {
+  phaseId: QueryBenefitsBreakdownItemsPhaseId!
+  devTimeSavings: Float!
+  supportEfficiency: Float!
+  timeToMarket: Float!
+  totalBenefits: Float!
+}
+
+input CumulativeRoiInput {
+  year: Int!
+  period: String!
+  costs: Float!
+  benefits: Float!
+  net: Float!
+  cumulativeRoi: Float!
+}
+
+input PerformanceGateInput {
+  phase: String!
+  teamSize: Int!
+  teamsOnboarded: Int!
+  automation: Float!
+  supportReduction: Float!
+}
+
+enum HttpMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
+
+type ListPets_200Response {
+  items: [Pet]
+}
+
+type Pet {
+  id: String!
+  name: String!
+  status: String!
+  tag: String
+}
+
+input NewPetInput {
+  name: String!
+  tag: String
+  status: MutationInputCreatePetInputStatus = available
+}
+
+enum MutationInputCreatePetInputStatus {
+  available
+  pending
+  sold
+}

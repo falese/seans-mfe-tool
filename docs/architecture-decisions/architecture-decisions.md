@@ -1,0 +1,2214 @@
+## Acceptance Criteria References
+
+To maintain traceability from ADRs to verification artifacts, acceptance criteria are captured as GWT `.feature` files under `docs/acceptance-criteria/`.
+
+- Lifecycle Hook Execution & BaseMFE orchestration (covers REQ-042..045, REQ-054..056): `docs/acceptance-criteria/lifecycle-hooks.feature`
+- Unified Type System (covers REQ-047): `docs/acceptance-criteria/type-system.feature`
+
+These files validate decisions around lifecycle semantics, handler arrays, state transitions, BaseMFE capability contracts, and the unified type mapping across DSL → GraphQL → TypeScript/Python.
+
+# Architecture Decision Records (ADRs)
+
+Reference these in code comments to guide AI assistants and document architectural choices. Format: `// Following ADR-XXX: <pattern>`
+
+## Quick Reference
+
+**Agent Orchestrator (Future - Design Phase):**
+
+- ADR-001: Map-based registry (O(1) lookups)
+- ADR-002: Capability index (Map of Sets)
+- ADR-003: Event bus pattern matching
+- ADR-004: Agent state machine
+- ADR-005: Isolated failures (try-catch)
+- ADR-006: Subscription cleanup
+- ADR-007: Module Federation loading
+- ADR-008: TypeScript strict mode
+
+**MFE Orchestration (Active Implementation):**
+
+- ADR-009: Hybrid architecture (service + runtime)
+- ADR-010: Lightweight registry (metadata only)
+- ADR-011: Three-phase discovery (A→C→B)
+- ADR-012: Push-based registration
+- ADR-013: Language-agnostic DSL
+- ADR-014: Self-building capability
+- ADR-015: Example workspaces location
+- ADR-016: Orchestration per shell
+- ADR-017: Docker-only orchestration
+- ADR-018: Abstract MFE base class
+- ADR-019: JWT authorization
+- ADR-020: `init` = workspace, `shell` = explicit
+- ADR-021: `analyze` command removed
+- ADR-022: GraphQL data standardization
+- ADR-023: RemoteEntry as abstract convention
+- ADR-024: Standard capabilities listed in DSL
+- ADR-025: Capability type discrimination (platform vs domain)
+- ADR-026: Load-Render-Refresh lifecycle
+- ADR-027: Single endpoint, path-based APIs
+- ADR-028: Discovery via .well-known convention
+- ADR-029: RemoteEntry for all MFE types
+- ADR-030: Render returns data for backend MFEs
+- ADR-031: Standardized extensible lifecycle hooks
+- ADR-032: DSL schema validation strategy
+- ADR-033: Neo4j registry with Redis caching
+- ADR-034: Health check and replacement strategy
+- ADR-035: Deterministic discovery default
+
+**DSL Contract (Session 6):**
+
+- ADR-036: Lifecycle hook execution model (contained, mandatory)
+- ADR-037: No custom lifecycle phases (only before/main/after/error)
+- ADR-038: Handler array support (string or array)
+- ADR-039: Handler discovery convention (neutral naming)
+- ADR-040: Unified type system (nullable by default)
+- ADR-041: Authorization expression grammar (deferred)
+- ADR-042: Data type metadata (owner, tags)
+- ADR-043: Language field and template selection (JS/TS only V1)
+- ADR-044: Data lifecycle alignment (same as capabilities)
+- ADR-045: GeneratedFrom traceability (data lineage)
+
+**GraphQL BFF (Session 7):**
+
+- ADR-046: GraphQL Mesh with DSL-embedded configuration
+- ADR-047: Generated MFE test templates (starter tests for scaffolded projects)
+- ADR-048: Incremental TypeScript migration (new code in TS, convert on touch)
+
+**Production Features (Session 8):**
+
+- ADR-058: Platform Handler Library Standardization
+- ADR-062: GraphQL Mesh v0.100.x with production plugins & transforms
+
+---
+
+## GraphQL BFF ADRs
+
+### ADR-046: GraphQL Mesh for BFF Layer with DSL-Embedded Configuration
+
+**Decision:** Use GraphQL Mesh as the BFF (Backend for Frontend) passthrough layer. Embed Mesh configuration directly in the MFE DSL `data:` section as the single source of configuration truth.
+**Status:** Implemented (2025-11-27). See acceptance criteria in `docs/acceptance-criteria/bff.feature` and CLI commands `bff:build`, `bff:dev`, `bff:validate`.
+
+**Why:**
+
+1. Mesh provides production-ready pure passthrough from GraphQL to REST APIs
+2. Configuration-based (not code generation) is simpler and more re-entrant
+3. Single source of truth - DSL defines both MFE contract AND Mesh config
+4. The Guild actively maintains Mesh alongside their GraphQL ecosystem
+
+**DSL Data Section Becomes Mesh Config:**
+
+```yaml
+# mfe-manifest.yaml - data section IS the Mesh configuration
+name: user-dashboard
+version: 1.0.0
+type: feature
+
+data:
+  # Sources map directly to Mesh sources
+  sources:
+    - name: UserAPI
+      handler:
+        openapi:
+          source: ./specs/user-api.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+
+    - name: InventoryAPI
+      handler:
+        openapi:
+          source: https://inventory.internal/swagger.json
+
+    - name: OrdersAPI
+      handler:
+        openapi:
+          source: ./specs/orders.yaml
+
+  # Transforms for schema shaping
+  transforms:
+    - prefix:
+        value: User_
+        includeRootOperations: true
+    - filterSchema:
+        filters:
+          - Query.!internal*
+
+  # Plugins for production concerns
+  plugins:
+    - responseCache:
+        ttl: 60000
+    - rateLimit:
+        config:
+          - type: Query
+            field: '*'
+            max: 100
+            window: '1m'
+
+  # Server configuration
+  serve:
+    endpoint: /graphql
+    playground: true
+```
+
+**CLI Extracts Mesh Config from DSL:**
+
+```typescript
+// mfe bff command extracts data section → .meshrc.yaml
+async function generateBFF(mfeManifest: MFEManifest) {
+  const meshConfig = {
+    sources: mfeManifest.data.sources,
+    transforms: mfeManifest.data.transforms,
+    plugins: mfeManifest.data.plugins,
+    serve: mfeManifest.data.serve,
+  };
+
+  await writeYaml('.meshrc.yaml', meshConfig);
+  await execSync('mesh build');
+}
+```
+
+**Deployment: BFF + Static Assets Same Container:**
+
+```typescript
+// Generated server.ts
+import express from 'express';
+import { createBuiltMeshHTTPHandler } from './.mesh';
+
+const app = express();
+
+// GraphQL BFF (from Mesh)
+```
+
+---
+
+### ADR-047: Generated MFE Test Templates
+
+**Decision:** Generate working test files as part of MFE scaffolding. Every shell, remote, API, and BFF project includes starter tests that teams can run immediately and extend.
+
+**Why:**
+
+1. Teams get immediate value - `npm test` works out of the box
+2. Tests demonstrate patterns teams should follow (mocking, providers, etc.)
+3. 80% coverage threshold from day one encourages TDD culture
+4. Module Federation mocks and contract tests prevent integration surprises
+5. Reduces "setup overhead" that often delays testing
+
+**Generated Test Structure by MFE Type:**
+
+| MFE Type   | Generated Test Files                  | Key Coverage                                   |
+| ---------- | ------------------------------------- | ---------------------------------------------- |
+| **Shell**  | `App.test.tsx`, `routing.test.tsx`    | Remote loading, error boundaries, navigation   |
+| **Remote** | `App.test.tsx`, `federation.test.tsx` | Component render, standalone mode, contracts   |
+| **API**    | `<entity>.controller.test.ts`         | CRUD operations, validation, error handling    |
+| **BFF**    | `graphql.test.ts`                     | Introspection, JWT forwarding, upstream errors |
+
+**Generated Test Infrastructure:**
+
+```
+my-mfe/
+├── src/
+│   ├── __tests__/
+│   │   ├── App.test.tsx           # Working component tests
+│   │   ├── routing.test.tsx       # Navigation tests (shells)
+│   │   └── federation.test.tsx    # Contract tests (remotes)
+│   ├── setupTests.ts              # Jest/RTL setup, MF mocks
+│   └── testUtils.ts               # renderWithProviders, factories
+├── jest.config.js                 # 80% threshold, proper env
+└── package.json                   # test scripts configured
+```
+
+**Shell Test Example (Generated):**
+
+```typescript
+// src/__tests__/App.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import App from '../App';
+
+jest.mock('../remotes', () => ({
+  loadRemote: jest.fn().mockResolvedValue({ default: () => <div>Mock Remote</div> })
+}));
+
+describe('Shell App', () => {
+  it('renders without crashing', () => {
+    render(<App />);
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
+  it('handles remote loading failure gracefully', async () => {
+    const { loadRemote } = require('../remotes');
+    loadRemote.mockRejectedValueOnce(new Error('Network error'));
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+**Remote Federation Contract Test (Generated):**
+
+```typescript
+// src/__tests__/federation.test.tsx
+describe('Federation Contract', () => {
+  it('exports App component', async () => {
+    const module = await import('../App');
+    expect(module.default).toBeDefined();
+    expect(typeof module.default).toBe('function');
+  });
+
+  it('does not bundle React (uses shared)', () => {
+    // Verify singleton shared modules work correctly
+    const webpackModules = (window as any).__webpack_modules__;
+    const reactModules = Object.keys(webpackModules || {}).filter((k) => k.includes('react'));
+    expect(reactModules.length).toBeLessThanOrEqual(1);
+  });
+});
+```
+
+**API Controller Test (Generated):**
+
+```typescript
+// src/__tests__/controllers/user.controller.test.ts
+import request from 'supertest';
+import app from '../app';
+import { db } from '../db';
+
+jest.mock('../db');
+
+describe('User Controller', () => {
+  it('GET /users returns all users', async () => {
+    (db.findAll as jest.Mock).mockResolvedValue([{ id: 1, name: 'Test' }]);
+    const res = await request(app).get('/users');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('POST /users validates required fields', async () => {
+    const res = await request(app).post('/users').send({});
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toBeDefined();
+  });
+});
+```
+
+**Coverage Configuration (Generated jest.config.js):**
+
+```javascript
+module.exports = {
+  testEnvironment: 'jsdom', // or 'node' for API/BFF
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+};
+```
+
+**Value to Teams:**
+
+| Before (typical scaffolding) | After (with ADR-047)          |
+| ---------------------------- | ----------------------------- |
+| No tests, no setup           | Working tests on day one      |
+| Manual mock configuration    | MF mocks pre-configured       |
+| Unknown patterns             | Patterns to copy/extend       |
+| No coverage gates            | 80% threshold from start      |
+| Provider setup required      | `renderWithProviders()` ready |
+
+**Reference:** REQ-SCAFFOLD-001 through REQ-SCAFFOLD-005
+
+---
+
+### ADR-048: Incremental TypeScript Migration
+
+**Decision:** Adopt TypeScript incrementally for the CLI codebase. New code (DSL parser, validators, generators) and recently-completed code (BFF generators) will be TypeScript. Existing JavaScript remains until touched.
+**Status:** Implemented (ongoing). DSL modules and remote commands delivered; CLI wired with ts-node inline registration.
+
+**Why:**
+
+1. DSL parsing benefits most from type safety - complex nested structures
+2. RTK Query codegen expects TypeScript - natural fit for data layer
+3. Generated `.d.ts` files improve consumer experience
+4. Incremental approach avoids scope creep / big-bang migration risk
+5. Developer is proficient in TypeScript - no velocity impact
+
+**Migration Scope:**
+
+| Component                        | Language   | Notes                            |
+| -------------------------------- | ---------- | -------------------------------- |
+| `src/dsl/` (new)                 | TypeScript | Parser, validator, generators    |
+| `src/commands/remote-*.ts` (new) | TypeScript | `remote:init`, `remote:generate` |
+| `src/codegen/BffGenerator/`      | TypeScript | Convert 7 existing JS files      |
+| `src/commands/create-*.js`       | JavaScript | Convert when modified            |
+| `src/utils/`                     | JavaScript | Convert when modified            |
+| `bin/seans-mfe-tool.js`          | JavaScript | Commander entry point stays JS   |
+
+**TypeScript Configuration:**
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**"]
+}
+```
+
+**Key Decisions:**
+
+1. **`strict: false`** - Add strictness rules incrementally as codebase matures
+2. **`outDir: ./dist`** - Clean separation of source and compiled output
+3. **`allowJs: true`** - Enables mixed JS/TS codebase during migration
+4. **`declaration: true`** - Generate `.d.ts` for all TypeScript files
+
+**Build Strategy:**
+
+```json
+// package.json scripts
+{
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  }
+}
+```
+
+**Test Configuration:**
+
+```javascript
+// jest.config.js (updated)
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.jsx?$': 'babel-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+};
+```
+
+**Dependencies Added:**
+
+```json
+{
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "@types/ejs": "^3.1.0",
+    "ts-jest": "^29.0.0"
+  }
+}
+```
+
+**Generated Code Types:**
+
+For MFE code generation, produce `.d.ts` alongside source:
+
+```typescript
+// Generated: src/api/userApi.ts
+export const userApi = createApi({...});
+export type User = { id: string; name: string; };
+
+// Generated: src/api/userApi.d.ts (alongside)
+export declare const userApi: ReturnType<typeof createApi>;
+export interface User { id: string; name: string; }
+```
+
+**Migration Order:**
+
+1. Add TypeScript tooling (tsconfig, ts-jest, dependencies)
+2. Convert `src/codegen/BffGenerator/*.js` → `.ts`
+3. Create `src/dsl/` in TypeScript from start
+4. Convert other files as touched
+
+**Reference:** Session 7 requirements elicitation
+
+---
+
+## Multi-Source Merging (Supplementary to ADR-046)
+
+```yaml
+data:
+  sources:
+    # Each API becomes part of unified GraphQL schema
+    - name: UserService
+      handler:
+        openapi:
+          source: ./specs/users.yaml
+      transforms:
+        - prefix:
+            value: User_
+
+    - name: OrderService
+      handler:
+        openapi:
+          source: ./specs/orders.yaml
+      transforms:
+        - prefix:
+            value: Order_
+
+    - name: InventoryService
+      handler:
+        openapi:
+          source: https://inventory.internal/swagger.json
+```
+
+**JWT Authentication Forwarding:**
+
+```yaml
+data:
+  sources:
+    - name: SecureAPI
+      handler:
+        openapi:
+          source: ./api.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+          # Or custom fetch for complex auth
+          customFetch: ./src/auth-fetch.ts
+```
+
+**Benefits of DSL-Embedded Config:**
+
+- ✅ Single source of truth (no separate .meshrc.yaml to maintain)
+- ✅ DSL validation catches config errors early
+- ✅ Version control tracks all config in one file
+- ✅ CLI can extract and generate Mesh artifacts
+- ✅ Registry can index data sources for discovery
+
+**Trade-offs:**
+
+- ✅ Production-tested by The Guild ecosystem
+- ✅ Zero custom resolver code for passthrough
+- ✅ Supports all major deployment targets
+- ⚠️ External dependency (but mature, well-maintained)
+- ⚠️ DSL becomes larger (but self-contained)
+
+**Reference:** Replaces custom code generation approach from R1-R8 draft
+
+---
+
+## Core Orchestration ADRs (Active)
+
+### ADR-009: Hybrid Orchestration Architecture
+
+**Decision:** Centralized service + distributed shell runtime
+
+**Why:** Balance single source of truth with local performance
+
+**Pattern:**
+
+```typescript
+// Orchestration Service (Node.js, port 3100)
+class OrchestrationService {
+  private registry: Map<string, MFEEntry>;
+  async register(mfe: MFERegistration) {
+    /* REST API */
+  }
+  async getRegistry() {
+    /* Phase A */
+  }
+  broadcastUpdate(mfe: MFEEntry) {
+    /* WebSocket */
+  }
+}
+
+// Shell Runtime (Browser)
+class ShellOrchestrator {
+  private localCache: Map<string, MFEEntry>;
+  async loadMFE(name: string) {
+    /* Module Federation */
+  }
+  async fetchDSL(endpoint: string) {
+    /* On-demand */
+  }
+}
+```
+
+**Generated with:** `mfe shell` creates both components
+
+---
+
+### ADR-010: Lightweight Registry + On-Demand DSL
+
+**Decision:** Store metadata only, fetch full DSL when needed
+
+**Why:** Keeps registry fast, supports large/complex DSL documents
+
+**Pattern:**
+
+```typescript
+// Registry stores pointers
+interface MFERegistryEntry {
+  name: string;
+  version: string;
+  endpoint: string;
+  dslEndpoint: string; // /.well-known/mfe-manifest.yaml
+  remoteEntry?: string; // Module Federation URL
+  healthCheck: string;
+  status: 'healthy' | 'unhealthy';
+}
+
+// Fetch DSL on-demand
+const dsl = await fetch(entry.dslEndpoint).then((r) => r.json());
+```
+
+**Trade-off:** Extra network call vs registry scalability
+
+---
+
+### ADR-011: Three-Phase Discovery (A→C→B)
+
+**Decision:** Probabilistic → Semantic → Deterministic progression
+
+**Why:** Dynamic experiences first, precision when needed
+
+**Phases:**
+
+- **A (Probabilistic)**: Return all, agent reasons with LLM
+- **C (Semantic)**: Natural language query → ranked results
+- **B (Deterministic)**: Query DSL → exact matches
+
+**Pattern:**
+
+```typescript
+// Phase A - Maximum flexibility
+const all = await orchestration.getAllMFEs();
+const dsls = await Promise.all(all.map((m) => fetch(m.dslEndpoint)));
+// Agent evaluates with LLM
+
+// Phase C - Semantic search
+const results = await orchestration.search('CSV analysis tool');
+// Returns: [{mfe, score: 0.92, reasoning}]
+
+// Phase B - Exact query
+const matches = await orchestration.query('type=tool AND capabilities.includes("data-analysis")');
+```
+
+**Implementation order:** A first (simple), then C (ML), then B (query parser)
+
+---
+
+### ADR-012: Push-Based Auto-Registration
+
+**Decision:** MFEs register on startup, code auto-generated by CLI
+
+**Why:** Zero manual config, <5s availability
+
+**Pattern:**
+
+```javascript
+// Generated in every MFE by CLI
+export async function registerMFE() {
+  await fetch(`${orchestrationUrl}/api/register`, {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'feature-a',
+      endpoint: process.env.MFE_ENDPOINT,
+      remoteEntry: process.env.REMOTE_ENTRY,
+      dslEndpoint: `${endpoint}/.well-known/mfe-manifest.yaml`,
+      healthCheck: `${endpoint}/health`,
+    }),
+  });
+}
+
+// Auto-called on startup
+if (process.env.NODE_ENV !== 'test') {
+  registerMFE().catch(console.error);
+}
+
+// De-register on shutdown
+process.on('SIGTERM', () => deregisterMFE());
+```
+
+**Key:** Graceful degradation if orchestration unavailable
+
+---
+
+### ADR-013: Language-Agnostic DSL Contract
+
+**Decision:** YAML/JSON DSL, JSON Schema validation
+
+**Why:** Polyglot ecosystem (JS, Python, Go, etc.)
+
+**Pattern:**
+
+```yaml
+# /.well-known/mfe-manifest.yaml
+name: csv-analyzer
+version: 1.0.0
+type: tool
+language: javascript
+capabilities:
+  - data-analysis:
+      inputs:
+        - name: file
+          type: file
+          formats: [csv]
+      outputs:
+        - name: report
+          type: object
+      lifecycle:
+        before: [validateFile]
+        main: [processData]
+        after: [generateReport]
+remoteEntry: http://localhost:3002/remoteEntry.js
+endpoint: http://localhost:3002
+```
+
+**Platform contract:** All MFEs expose `/.well-known/mfe-manifest.yaml`
+
+---
+
+### ADR-014: Self-Building System Design
+
+**Decision:** Tools generate tools, immediately usable
+
+**Why:** Ultimate validation of orchestration design
+
+**Validation:**
+
+```javascript
+// Code generator MFE creates new MFE
+const project = await codeGenerator.execute('generate', {
+  type: 'tool',
+  name: 'csv-analyzer',
+  capabilities: ['data-analysis'],
+});
+
+// Deploy generated project
+await deploy(project);
+
+// Wait for auto-registration (<5s)
+await waitFor(() => orchestration.has('csv-analyzer'));
+
+// Generated tool is now usable
+const result = await csvAnalyzer.execute('data-analysis', { file });
+```
+
+**Success:** First generated MFE works without manual fixes
+
+---
+
+### ADR-015: Example Workspaces Location
+
+**Decision:** Move scaffolds to `examples/workspaces/`
+
+**Why:** Cleaner root, clear source vs examples separation
+
+**Structure:**
+
+```
+examples/workspaces/
+  npm/          # npm-based monorepo
+  yarn/         # yarn-based monorepo
+```
+
+**Not runtime:** Reference templates only, not CLI implementation
+
+---
+
+### ADR-016: Orchestration Service per Shell
+
+**Decision:** Every `mfe shell` generates orchestration service
+
+**Why:** Natural ownership, simple deployment
+
+**Generated:**
+
+```
+my-shell/
+├── src/                        # Shell app (React)
+├── orchestration-service/      # Service (Node.js)
+│   ├── server.ts
+│   ├── registry/
+│   ├── api/
+│   └── websocket/
+├── docker-compose.yml
+├── Dockerfile.shell
+└── Dockerfile.orchestration
+```
+
+**Deployment:** `docker-compose up` starts both
+
+---
+
+### ADR-017: Docker-Only Orchestration
+
+**Decision:** Orchestration always in Docker, MFEs use dev servers locally
+
+**Why:** Consistent infrastructure, hot reload where it matters
+
+**Dev workflow:**
+
+```bash
+# Start infrastructure
+cd my-shell
+docker-compose up -d    # Shell + orchestration + Redis
+
+# Start MFEs (hot reload)
+cd ../feature-a
+npm run dev             # Registers with localhost:3100
+
+cd ../feature-b
+npm run dev             # Registers with localhost:3100
+```
+
+**Environments:**
+
+- Dev: Orchestration=Docker, MFEs=dev servers
+- Staging/Prod: Everything=Docker
+
+---
+
+### ADR-018: Abstract MFE Base Class
+
+**Decision:** Standard capabilities all MFEs must implement
+
+**Why:** Uniform interface across all types/languages
+
+**Required capabilities:**
+
+```yaml
+standardCapabilities:
+  - authorizeAccess: # JWT validation
+      inputs: [token]
+      outputs: [authorized, permissions]
+  - health: # Health check
+      outputs: [status, details]
+  - describe: # Self-description
+      outputs: [dsl, runtime]
+  - schema: # GraphQL-style introspection
+      outputs: [schema]
+  - query: # Generic query interface
+      inputs: [token, query, variables]
+      outputs: [data, errors]
+```
+
+**Implementation:** Any language, same contract
+
+---
+
+### ADR-019: JWT-Based Authorization
+
+**Decision:** JWT tokens for all MFE access
+
+**Why:** Industry standard, works for users and agents
+
+**Pattern:**
+
+```typescript
+class MyMFE extends BaseMFE {
+  async authorizeAccess(token: JWT): Promise<AuthResult> {
+    const decoded = verifyJWT(token, this.publicKey);
+    const hasPermission = decoded.permissions.includes('mfe.my-mfe.access');
+    return { authorized: hasPermission, permissions: decoded.permissions };
+  }
+
+  async execute(capability: string, params: any) {
+    const auth = await this.authorizeAccess(params.token);
+    if (!auth.authorized) throw new UnauthorizedError();
+    // Execute capability
+  }
+}
+```
+
+**Permission format:** `mfe.<name>.<action>`, `data.read`, `admin.*`
+
+---
+
+### ADR-020: `init` = Workspace, `shell` = Explicit
+
+**Decision:** `mfe init` creates workspace only, `mfe shell` creates shell+orchestration
+
+**Why:** Clear separation, intentional orchestration
+
+**Commands:**
+
+```bash
+mfe init my-workspace         # Workspace + remotes
+cd my-workspace
+mfe shell apps/main-app       # Shell + orchestration
+mfe remote packages/feature-a # Remote MFE
+```
+
+**Flexibility:** 0, 1, or many shells per workspace
+
+---
+
+### ADR-021: Remove `analyze` Command
+
+**Decision:** Remove static heuristic analyzer immediately
+
+**Why:** Conflicts with runtime DSL-first strategy
+
+**Migration:** Use Phase A discovery + DSL manifests instead
+
+**Status:** Removed from CLI, historical reference only (confirmed).
+
+---
+
+### ADR-022: GraphQL Data Standardization
+
+**Decision:** Single `/graphql` endpoint for all data operations across all MFE types
+
+**Why:** Consistent data access for UI, API, tool, and agent MFEs; self-documenting; agent-friendly
+
+**Pattern:**
+
+```yaml
+# Every MFE (UI, API, Tool) exposes data this way
+data:
+  endpoint: /graphql # REQUIRED - single endpoint
+  schema:
+    types:
+      - ResourceType:
+          fields:
+            - id: ID!
+            - name: String!
+    queries:
+      - getResource:
+          args:
+            - id: ID!
+          returns: ResourceType
+          authorization: user.authenticated
+    mutations:
+      - updateResource:
+          args:
+            - id: ID!
+            - input: UpdateInput!
+          returns: ResourceType
+          authorization: user.owns.resource
+    subscriptions: # Optional
+      - resourceUpdated:
+          args:
+            - id: ID!
+          returns: ResourceType
+          authorization: user.owns.resource
+```
+
+**Base Class Implementation:**
+
+```typescript
+abstract class BaseMFE {
+  // All MFEs must implement
+  abstract async executeQuery(token: JWT, query: string, variables?: object): Promise<QueryResult>;
+
+  abstract async introspectSchema(): Promise<GraphQLSchema>;
+}
+
+// Backend API example
+class UserServiceMFE extends BaseMFE {
+  async executeQuery(token: JWT, query: string) {
+    return graphql({
+      schema: this.schema,
+      source: query,
+      contextValue: { token },
+    });
+  }
+}
+
+// Frontend MFE example - same pattern!
+class DashboardMFE extends BaseMFE {
+  async executeQuery(token: JWT, query: string) {
+    // Query local state or remote data
+    return graphql({
+      schema: this.localSchema,
+      source: query,
+      contextValue: { token },
+    });
+  }
+}
+```
+
+**Agent Benefits:**
+
+```typescript
+// Agent queries any MFE the same way
+const result = await mfe.executeQuery(token, `query { getUser(id: "123") { name email } }`);
+
+// Agent discovers schema
+const schema = await mfe.introspectSchema();
+console.log(schema.queries); // What can I query?
+```
+
+**Trade-offs:**
+
+- ✅ Uniform interface (UI/API/Tool all use GraphQL)
+- ✅ Self-documenting (introspectable schema)
+- ✅ Efficient (request exactly what you need)
+- ✅ Type-safe (validated against schema)
+- ⚠️ Learning curve (GraphQL knowledge required)
+- ⚠️ Overhead for simple CRUD (but tooling helps)
+
+**Code Generation:** CLI scaffolds GraphQL endpoint + schema for all MFE types automatically
+
+**Future:** Schema federation (compose queries across multiple MFEs)
+
+---
+
+### ADR-023: RemoteEntry as Abstract Convention
+
+**Decision:** `remoteEntry` is a language-agnostic convention, not JavaScript-specific implementation
+
+**Why:** Enable polyglot MFE ecosystem while maintaining uniform loading pattern
+
+**Pattern:**
+
+```yaml
+# JavaScript MFE (Module Federation)
+remoteEntry: http://localhost:3002/remoteEntry.js
+
+# Python MFE (HTTP endpoint returning module descriptor)
+remoteEntry: http://localhost:3002/entry
+# Returns: { "module": "my_mfe", "capabilities": [...], "loadHandler": "/api/load" }
+
+# Go MFE (HTTP endpoint returning module descriptor)
+remoteEntry: http://localhost:3002/entry
+# Returns JSON with same structure
+
+# Abstract interface all must support:
+interface RemoteEntry {
+  init(config?: object): Promise<MFEInstance>
+  get(capabilityName: string): Promise<CapabilityHandler>
+  destroy(): Promise<void>
+}
+```
+
+**Trade-offs:**
+
+- ✅ Unified loading pattern across languages
+- ✅ Orchestration treats all MFEs identically
+- ⚠️ Non-JS MFEs need wrapper/shim for remoteEntry concept
+
+---
+
+### ADR-024: Standard Capabilities Listed in DSL
+
+**Decision:** All platform capabilities explicitly listed in each MFE's DSL, not assumed
+
+**Why:** Enable re-entrant evolution - platform can modify standard capabilities over time
+
+**Pattern:**
+
+```yaml
+capabilities:
+  # Platform capabilities explicitly listed
+  - load:
+      type: platform
+      handler: initialize
+      ...
+  - render:
+      type: platform
+      handler: renderComponent
+      ...
+  # Custom capabilities
+  - customCapability:
+      type: domain
+      handler: customHandler
+      ...
+```
+
+**Trade-offs:**
+
+- ✅ Re-entrant: can evolve standard capabilities
+- ✅ Clear documentation: see exactly what MFE implements
+- ✅ Validation: ensure all platform capabilities present
+- ⚠️ Verbosity: more YAML per MFE
+
+---
+
+### ADR-025: Capability Type Discrimination
+
+**Decision:** All capabilities have `type: platform | domain` field
+
+**Why:** Clear distinction between platform contract and custom features for agents and validation
+
+**Pattern:**
+
+```yaml
+capabilities:
+  - authorizeAccess:
+      type: platform  # Platform-defined standard capability
+      ...
+  - data-analysis:
+      type: domain    # MFE-specific custom capability
+      ...
+```
+
+**Trade-offs:**
+
+- ✅ Easy for agents to distinguish standard vs custom
+- ✅ Validation can enforce platform capabilities present
+- ✅ Clear separation of concerns
+
+---
+
+### ADR-026: Load-Render-Refresh Lifecycle
+
+**Decision:** Add load, render, refresh as standard platform capabilities
+
+**Why:** Explicit lifecycle management for initialization, rendering, and state updates across all MFE types
+
+**Pattern:**
+
+```typescript
+// Load: Initialize MFE
+await mfe.load({ config: {...} })
+
+// Render: Display UI or return data
+const result = await mfe.render({ container: element, props: {...} })
+// UI MFE returns: React component
+// Backend MFE returns: { type: 'data', format: 'json', content: {...} }
+
+// Refresh: Reload state
+await mfe.refresh({ full: false })
+```
+
+**Trade-offs:**
+
+- ✅ Uniform lifecycle across all MFE types
+- ✅ Backend MFEs are first-class (not just UI components)
+- ✅ Orchestration can manage lifecycle consistently
+
+---
+
+### ADR-027: Single Endpoint, Path-Based APIs
+
+**Decision:** One base endpoint URL, standard paths for all MFE services
+
+**Why:** Simplified configuration, conventional routing
+
+**Pattern:**
+
+```yaml
+endpoint: http://localhost:3002
+# Standard paths (conventions):
+# GET  /health                           -> Health check
+# POST /graphql                          -> Data queries
+# GET  /.well-known/mfe-manifest.yaml    -> DSL discovery
+# POST /capability/{name}                -> Invoke capability
+```
+
+**Trade-offs:**
+
+- ✅ One URL to configure per MFE
+- ✅ Conventional paths, no per-path config
+- ✅ Simplified service discovery
+
+---
+
+### ADR-028: Discovery via .well-known Convention
+
+**Decision:** MFE manifests located at `/.well-known/mfe-manifest.yaml`
+
+**Why:** Follow web standard convention for well-known resources, enables zero-config discovery
+
+**Pattern:**
+
+```yaml
+# MFE DSL field
+discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
+# Can be omitted, defaults to:
+# ${endpoint}/.well-known/mfe-manifest.yaml
+```
+
+**Trade-offs:**
+
+- ✅ Web standard convention
+- ✅ Zero configuration needed
+- ✅ Easy discovery for agents/orchestration
+
+---
+
+### ADR-029: RemoteEntry for All MFE Types
+
+**Decision:** ALL MFE types must provide `remoteEntry`, not just web components
+
+**Why:** Creates uniform loading pattern across web and non-web MFEs
+
+**Pattern:**
+
+```yaml
+# Required for ALL types: remote, tool, agent, api
+type: api # Even backend APIs have remoteEntry
+remoteEntry: http://localhost:3002/entry
+```
+
+**Trade-offs:**
+
+- ✅ Uniform loading pattern
+- ✅ All MFEs loaded via same mechanism
+- ⚠️ Backend MFEs need entry point abstraction
+
+---
+
+### ADR-030: Render Returns Data for Backend MFEs
+
+**Decision:** Backend MFEs implement `render` capability, returning JSON data representation
+
+**Why:** Consistent render contract across all MFE types
+
+**Pattern:**
+
+```python
+# Backend MFE render implementation
+async def render(self, container=None, props=None):
+    # Execute GraphQL query
+    query = "query GetDashboardData { ... }"
+    data = await self.executeQuery(query)
+
+    # Return JSON representation
+    return {
+        "type": "data",
+        "format": "json",
+        "content": data
+    }
+```
+
+**Trade-offs:**
+
+- ✅ Uniform capability across all MFE types
+- ✅ Backend MFEs are "renderable" via data
+- ✅ GraphQL provides data representation
+
+---
+
+### ADR-031: Standardized Extensible Lifecycle Hooks
+
+**Decision:** before/main/after/error are standard lifecycle phases for ALL capabilities. Domain capabilities can extend with custom phases.
+
+**Why:** Consistency with flexibility for domain-specific execution needs
+
+**Pattern:**
+
+```yaml
+capabilities:
+  - customCapability:
+      type: domain
+      lifecycle:
+        # Standard phases (all capabilities)
+        before: [validateInput, checkAuth]
+        main: [executeCore]
+        after: [notifyComplete]
+        error: [rollback, notify] # ALL run, failures logged
+
+        # Custom phases (domain-specific)
+        custom:
+          validation:
+            - checkFormat
+            - scanContent
+          transformation:
+            - resize
+            - compress
+```
+
+**Trade-offs:**
+
+- ✅ Predictable execution model
+- ✅ Extensible for domain needs
+- ✅ Consistent hook naming
+- ✅ Platform can inject standard lifecycle behavior
+
+---
+
+### ADR-032: DSL Schema Validation Strategy
+
+**Decision:** Hybrid validation - strict on required fields, environment-based on optional fields
+
+**Why:** Balance early error detection with development flexibility and production safety
+
+**Required Fields (Strict in All Environments):**
+
+- `name` - MFE identifier
+- `version` - Semantic version
+- `type` - Enum: `tool | agent | feature | service`
+- `remoteEntry` - Entry point URL
+
+**Optional Fields (Environment-Based):**
+
+- `capabilities` - Can be empty (platform-generated)
+- `lifecycle` - Custom execution phases
+- `metadata` - Additional descriptive info
+
+**Environment Modes:**
+
+```typescript
+// Config flag determines mode
+VALIDATION_MODE = strict; // Production: reject malformed optional fields
+VALIDATION_MODE = lenient; // Development: warn but allow registration
+
+// Validation implementation
+async function validateDSL(dsl: DSLManifest, mode: string): Promise<ValidationResult> {
+  // Always strict on required fields
+  if (!dsl.name || !dsl.version || !dsl.type || !dsl.remoteEntry) {
+    return { valid: false, errors: ['Missing required fields'] };
+  }
+
+  // Type enum validation
+  if (!['tool', 'agent', 'feature', 'service'].includes(dsl.type)) {
+    return { valid: false, errors: ['Invalid type'] };
+  }
+
+  // Environment-based optional field validation
+  const warnings = [];
+  if (dsl.capabilities && !isValidCapabilities(dsl.capabilities)) {
+    if (mode === 'strict') {
+      return { valid: false, errors: ['Malformed capabilities'] };
+    }
+    warnings.push('Capabilities structure invalid, ignoring');
+  }
+
+  return { valid: true, warnings };
+}
+```
+
+**Validation Endpoint:**
+
+```typescript
+// GET /api/validate/:mfeId?
+// Optional parameter: check specific MFE or all
+
+router.get('/api/validate/:mfeId?', async (req, res) => {
+  const { mfeId } = req.params;
+
+  if (mfeId) {
+    // Validate specific MFE
+    const mfe = await registry.get(mfeId);
+    const dsl = await fetch(mfe.dslEndpoint).then((r) => r.yaml());
+    const result = await validateDSL(dsl, config.validationMode);
+    const health = await checkHealth(mfe);
+
+    return res.json({
+      mfeId,
+      dslValid: result.valid,
+      healthy: health.status === 200,
+      warnings: result.warnings,
+      lastCheck: new Date().toISOString(),
+    });
+  } else {
+    // Validate all registered MFEs
+    const all = await registry.getAll();
+    const results = await Promise.all(
+      all.map(async (mfe) => {
+        const dsl = await fetch(mfe.dslEndpoint).then((r) => r.yaml());
+        const validation = await validateDSL(dsl, config.validationMode);
+        const health = await checkHealth(mfe);
+        return { mfeId: mfe.name, ...validation, healthy: health.status === 200 };
+      })
+    );
+
+    return res.json({
+      summary: {
+        total: results.length,
+        valid: results.filter((r) => r.dslValid && r.healthy).length,
+        warnings: results.filter((r) => r.warnings?.length > 0).length,
+      },
+      results,
+    });
+  }
+});
+```
+
+**Health Check Criteria:**
+Both conditions must pass:
+
+1. `/health` endpoint returns HTTP 200
+2. `/.well-known/mfe-manifest.yaml` returns valid YAML/JSON
+
+**Trade-offs:**
+
+- ✅ Catch critical errors early (required fields)
+- ✅ Flexible development (lenient on optional fields)
+- ✅ Production safety (strict mode rejects malformed MFEs)
+- ✅ Explicit validation endpoint for debugging
+- ⚠️ Different behavior across environments (documented and configurable)
+
+---
+
+### ADR-033: Neo4j Registry with Redis Caching
+
+**Decision:** Neo4j for registry storage, Redis for auth/query caching, both per shell in Docker
+
+**Why:** Graph database natural fit for MFE relationships and Zanzibar-style authorization tuples, Redis provides <10ms auth checks
+
+**Architecture:**
+
+```yaml
+# Generated docker-compose.yml for every shell
+services:
+  orchestration:
+    image: orchestration-service
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      REDIS_URL: redis://redis:6379
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/devpassword
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - '7474:7474' # Browser UI
+      - '7687:7687' # Bolt protocol
+    volumes:
+      - neo4j_data:/data # Named volume, survives docker-compose down
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  neo4j_data:
+  redis_data:
+```
+
+**Graph Schema:**
+
+```cypher
+// MFE nodes (created lazily as MFEs register)
+CREATE (mfe:MFE {
+  id: 'csv-analyzer',
+  name: 'csv-analyzer',
+  version: '1.0.0',
+  type: 'tool',
+  endpoint: 'http://localhost:3002',
+  remoteEntry: 'http://localhost:3002/remoteEntry.js',
+  healthy: true,
+  lastHealthCheck: datetime()
+})
+
+// Capability nodes
+CREATE (cap:Capability {
+  name: 'data-analysis',
+  type: 'domain',
+  inputType: 'csv',
+  outputType: 'report'
+})
+
+// Relationships
+CREATE (mfe)-[:HAS_CAPABILITY]->(cap)
+CREATE (mfe1)-[:DEPENDS_ON]->(mfe2)
+CREATE (mfe)-[:CAN_REPLACE {score: 0.95}]->(backup)
+
+// Authorization tuples (Zanzibar pattern)
+CREATE (user:User {id: 'user123'})
+CREATE (role:Role {name: 'analyst'})
+CREATE (user)-[:HAS_ROLE]->(role)
+CREATE (role)-[:CAN_ACCESS]->(mfe)
+CREATE (role)-[:CAN_INVOKE]->(cap)
+```
+
+**Redis Caching Layer:**
+
+```typescript
+class AuthCache {
+  private redis: RedisClient;
+  private ttl = 60; // 1 minute
+
+  async canUserAccessMFE(userId: string, mfeId: string): Promise<boolean> {
+    const cacheKey = `auth:${userId}:${mfeId}`;
+
+    // Check cache first
+    const cached = await this.redis.get(cacheKey);
+    if (cached !== null) return cached === 'true';
+
+    // Query Neo4j on cache miss (2-3 hop traversal)
+    const result = await neo4j.run(
+      `
+      MATCH (u:User {id: $userId})-[:CAN_ACCESS*1..3]->(m:MFE {id: $mfeId})
+      RETURN count(m) > 0 as allowed
+    `,
+      { userId, mfeId }
+    );
+
+    const allowed = result.records[0]?.get('allowed') || false;
+    await this.redis.setex(cacheKey, this.ttl, allowed.toString());
+
+    return allowed;
+  }
+
+  async invalidateUser(userId: string) {
+    const keys = await this.redis.keys(`auth:${userId}:*`);
+    if (keys.length > 0) await this.redis.del(...keys);
+  }
+}
+```
+
+**Authorization Scopes:**
+All three levels supported in graph:
+
+1. **MFE access** - User → Role → MFE
+2. **Capability invocation** - Role → Capability
+3. **Data-level access** - User → Resource (within MFE)
+
+**Trade-offs:**
+
+- ✅ Graph-native storage for relationships
+- ✅ Proven Zanzibar authorization pattern
+- ✅ <10ms auth checks with Redis cache
+- ✅ Visual debugging with Neo4j Browser (port 7474)
+- ✅ Named volumes persist data across restarts
+- ⚠️ Requires Docker (consistent with ADR-017)
+- ⚠️ Two databases to manage (Neo4j + Redis)
+
+---
+
+### ADR-034: Health Check and Replacement Strategy
+
+**Decision:** Registry performs health checks every 5 minutes, marks unhealthy MFEs, notifies shell with ranked replacements via WebSocket, shell auto-switches
+
+**Why:** Balance monitoring overhead with timely failure detection, enable graceful degradation through loose coupling
+
+**Health Check Implementation:**
+
+```typescript
+class RegistryHealthMonitor {
+  start() {
+    // Check all registered MFEs every 5 minutes
+    setInterval(() => this.checkAllMFEs(), 5 * 60 * 1000);
+  }
+
+  async checkMFE(mfe: MFEEntry) {
+    try {
+      // Check both health endpoint and DSL
+      const [healthRes, dslRes] = await Promise.all([
+        fetch(`${mfe.endpoint}/health`, { timeout: 5000 }),
+        fetch(mfe.dslEndpoint, { timeout: 5000 }),
+      ]);
+
+      const healthy = healthRes.status === 200 && dslRes.status === 200;
+
+      if (!healthy && mfe.healthy) {
+        await this.handleUnhealthy(mfe);
+      }
+
+      // Update status in Neo4j
+      await neo4j.run(
+        `
+        MATCH (m:MFE {id: $id})
+        SET m.healthy = $healthy, m.lastHealthCheck = datetime()
+      `,
+        { id: mfe.id, healthy }
+      );
+    } catch (error) {
+      await this.handleUnhealthy(mfe);
+    }
+  }
+
+  async handleUnhealthy(mfe: MFEEntry) {
+    const replacements = await this.findReplacements(mfe.id);
+
+    this.websocket.broadcast({
+      event: 'mfe.unhealthy',
+      mfeId: mfe.id,
+      status: 'unhealthy',
+      replacements: replacements.map((r) => ({
+        mfeId: r.id,
+        compatibilityScore: r.score,
+        reason: r.reason,
+      })),
+    });
+  }
+}
+```
+
+**Replacement Discovery (Neo4j):**
+
+```cypher
+// Find replacements with matching capabilities (loose coupling)
+MATCH (unhealthy:MFE {id: $mfeId})-[:HAS_CAPABILITY]->(cap:Capability)
+MATCH (replacement:MFE)-[:HAS_CAPABILITY]->(cap)
+WHERE replacement.healthy = true AND replacement.id <> $mfeId
+
+// Check explicit replacement relationships
+OPTIONAL MATCH (unhealthy)-[r:CAN_REPLACE]-(replacement)
+
+RETURN replacement,
+       count(DISTINCT cap) as matchingCapabilities,
+       r.score as explicitScore
+ORDER BY COALESCE(r.score, 0) DESC, matchingCapabilities DESC
+LIMIT 5
+```
+
+**Shell Auto-Switch:**
+
+```typescript
+// Shell receives WebSocket notification
+this.ws.on('mfe.unhealthy', async (event) => {
+  const { mfeId, replacements } = event;
+
+  if (replacements.length > 0) {
+    const top = replacements[0];
+    await this.unloadMFE(mfeId);
+    await this.loadMFE(top.mfeId);
+    console.log(`Switched ${mfeId} → ${top.mfeId}`);
+  } else {
+    this.showError(`${mfeId} unavailable, no replacement found`);
+  }
+});
+```
+
+**Validation Endpoint:**
+
+```typescript
+// GET /api/validate/:mfeId? - check specific or all MFEs on-demand
+router.get('/api/validate/:mfeId?', async (req, res) => {
+  const { mfeId } = req.params;
+
+  if (mfeId) {
+    const result = await healthMonitor.checkMFE(mfeId);
+    res.json(result);
+  } else {
+    const results = await healthMonitor.checkAllMFEs();
+    res.json({
+      summary: {
+        total: results.length,
+        healthy: results.filter((r) => r.healthy).length,
+        unhealthy: results.filter((r) => !r.healthy).length,
+      },
+      results,
+    });
+  }
+});
+```
+
+**Trade-offs:**
+
+- ✅ 5-minute detection delay acceptable for most use cases
+- ✅ Low overhead (120 requests/hour per 10 MFEs)
+- ✅ Graceful degradation through auto-replacement
+- ✅ Loose coupling via capability matching
+- ✅ On-demand validation via `/api/validate/:mfeId?`
+- ⚠️ 5-minute window where users may encounter failed MFE
+
+---
+
+### ADR-035: Deterministic Discovery Default
+
+**Decision:** Phase B (deterministic query-based discovery) as default, configurable per shell, progressive enhancement to Phase C/A
+
+**Why:** Developers and AI agents are primary users; deterministic queries work without AI infrastructure; provides foundation for future semantic/agentic discovery
+
+**Default Discovery (Phase B):**
+
+```typescript
+class DiscoveryService {
+  async discover(query: DiscoveryQuery): Promise<MFEMatch[]> {
+    const cypher = this.buildQuery(query);
+    return await neo4j.run(cypher);
+  }
+
+  private buildQuery(query: DiscoveryQuery): string {
+    return `
+      MATCH (m:MFE {type: $type})-[:HAS_CAPABILITY]->(c:Capability)
+      WHERE c.name IN $capabilities
+        AND c.inputType = $inputType
+        AND m.healthy = true
+      RETURN m, collect(c) as capabilities
+    `;
+  }
+}
+
+// Usage
+const mfes = await discovery.discover({
+  type: 'tool',
+  capabilities: ['data-analysis'],
+  inputType: 'csv',
+});
+```
+
+**Configuration Per Shell:**
+
+```typescript
+interface ShellConfig {
+  discovery: {
+    defaultPhase: 'A' | 'B' | 'C'; // Default: 'B'
+    enabledPhases: ('A' | 'B' | 'C')[];
+    fallbackOrder: ('A' | 'B' | 'C')[];
+  };
+}
+
+// Example: AI-powered shell
+const aiShellConfig = {
+  discovery: {
+    defaultPhase: 'C', // Semantic first
+    enabledPhases: ['C', 'B'],
+    fallbackOrder: ['C', 'B'],
+  },
+};
+```
+
+**Progressive Enhancement:**
+
+```typescript
+class ProgressiveDiscovery {
+  async discover(input: string | DiscoveryQuery): Promise<MFEMatch[]> {
+    const phase = this.detectPhase(input);
+
+    try {
+      switch (phase) {
+        case 'C':
+          return await this.phaseC(input as string); // Future: semantic
+        case 'A':
+          return await this.phaseA(input); // Future: agentic
+        case 'B':
+        default:
+          return await this.phaseB(input as DiscoveryQuery);
+      }
+    } catch {
+      return await this.fallback(input);
+    }
+  }
+
+  private detectPhase(input: string | DiscoveryQuery): 'A' | 'B' | 'C' {
+    if (typeof input === 'string') {
+      if (input.includes('help me') || input.includes('build')) {
+        return 'A'; // Complex task → agent
+      }
+      return 'C'; // Natural language → semantic
+    }
+    return 'B'; // Structured query → deterministic
+  }
+}
+```
+
+**No AI Infrastructure Required:**
+
+- Phase B works with Neo4j only
+- Fast, deterministic, cacheable queries
+- Upgrade to Phase C/A when AI services available
+
+**Primary Users:**
+
+- **Developers:** Explicit queries in code
+- **AI Agents:** Structured queries via API
+- **Future End Users:** Natural language (Phase C) when enabled
+
+**Trade-offs:**
+
+- ✅ Works immediately without AI infrastructure
+- ✅ Fast, deterministic, predictable
+- ✅ Suitable for developers and agents
+- ✅ Clear upgrade path to semantic/agentic discovery
+- ⚠️ Less intuitive for non-technical end users (until Phase C)
+
+---
+
+## DSL Contract ADRs (Session 6)
+
+These ADRs define how the DSL contract is executed, validated, and enforced at runtime.
+
+### ADR-036: Lifecycle Hook Execution Model
+
+**Decision:** Hooks use `contained` flag (not `wrapped`), `mandatory` flag for must-run hooks. Main phase failures propagate; before/after/error failures are silent with telemetry.
+
+**Why:** Resilience over strict error propagation. Hooks enhance capabilities without breaking them.
+
+**Execution Rules:**
+
+- `mandatory: true` = Hook executes even if previous hooks failed
+- `contained: true` = Platform wraps hook in try-catch
+- `main` phase failures propagate to caller
+- `before`/`after`/`error` phase failures are caught, logged via telemetry
+- ALL hook failures emit telemetry automatically
+
+**Reference:** DEC-016, REQ-042, REQ-043
+
+---
+
+### ADR-037: No Custom Lifecycle Phases
+
+**Decision:** Only 4 standard lifecycle phases: `before`, `main`, `after`, `error`. No custom phases.
+
+**Why:** Simplifies mental model, ensures all hooks follow same execution semantics, eliminates phase ordering ambiguity.
+
+**Pattern:**
+
+```yaml
+lifecycle:
+  before: [validateInput, checkAuth] # All run, failures logged
+  main: [executeCore] # First failure stops and propagates
+  after: [logSuccess, updateCache] # All run, failures logged
+  error: [rollback, notify] # All run, failures logged
+```
+
+**Reference:** DEC-017, REQ-044
+
+---
+
+### ADR-038: Handler Array Support
+
+**Decision:** `handler` field can be string OR array of strings with phase-specific semantics.
+
+**Why:** Flexibility to group related operations while maintaining clear AND/OR semantics.
+
+**Semantics:**
+
+- `main` phase: AND - all must succeed, first failure stops
+- `before`/`after`/`error` phases: OR-like - all run, failures logged
+
+```yaml
+# Single handler
+handler: validateFile
+
+# Multiple handlers
+handler: [validateFile, checkSize, scanForMalware]
+```
+
+**Reference:** DEC-018, REQ-045
+
+---
+
+### ADR-039: Handler Discovery Convention
+
+**Decision:** Convention-based hybrid. DSL defines conformance contract with neutral handler names; code generators map to language-specific conventions.
+
+**Why:** DSL remains language-agnostic while generated code feels native to each language.
+
+**Validation Timing:**
+
+- Capability handlers: Fail fast at MFE startup
+- Lifecycle handlers: Deferred validation on first invocation
+
+**Naming Conventions:**
+
+- JavaScript/TypeScript: `camelCase`
+- Python: `snake_case`
+- Go: `PascalCase`
+
+**Reference:** DEC-019, REQ-046
+
+---
+
+### ADR-040: Unified Type System
+
+**Decision:** Single type system flowing DSL → GraphQL → TypeScript/Python. Nullable by default (GraphQL convention), `!` for required. Compile-time validation heavy.
+
+**Why:** DSL is source of truth. Failing builds are better than runtime errors.
+
+**Type Categories:**
+
+- Primitives: `string`, `number`, `boolean`, `object`, `array`
+- Collections: `array<T>`, `array<T!>` (non-null items)
+- Specialized: `jwt`, `datetime`, `email`, `url`, `id`, `file`, `element`
+- Custom: Team-defined types extending primitives
+
+**Extensibility:** MFE teams can define custom specialized types in DSL `types:` section.
+
+**Reference:** DEC-020, REQ-047
+
+---
+
+### ADR-041: Authorization Expression Grammar
+
+**Decision:** DEFERRED - Will become separate feature with its own requirements document.
+
+**Placeholder:** Expressions support `AND`, `OR`, `NOT` with atoms like `user.authenticated`, `user.role.<role>`, `user.permission.<perm>`, `user.owns.resource`.
+
+**Reference:** REQ-048 (deferred)
+
+---
+
+### ADR-042: Data Type Metadata
+
+**Decision:** Type metadata (`owner`, `tags`) for documentation, tooling search, and future access control. Custom tags (team-defined vocabulary).
+
+**Why:** Registry search is primary value driver. Owner attribution enables future ACL.
+
+**Usage:**
+
+```yaml
+types:
+  - CustomerRecord:
+      owner: customer-team
+      tags: [pii, gdpr-relevant]
+      fields: [...]
+```
+
+**Reference:** DEC-021, REQ-049
+
+---
+
+### ADR-043: Language Field and Template Selection
+
+**Decision:** V1 supports JavaScript/TypeScript only. Language field drives template selection and build tooling.
+
+**Why:** Module Federation is JavaScript-native. Non-JS backends are data-only services consumed by JS shell.
+
+**Pattern:**
+
+- `language: javascript` or `language: typescript` → React/rspack templates
+- Future: `language: python` → FastAPI/Flask templates (backend-only)
+
+**Reference:** DEC-022, REQ-052
+
+---
+
+### ADR-044: Data Lifecycle Alignment
+
+**Decision:** Data lifecycle uses same 4 phases as capability lifecycle. No `loading` phase. Data fetching is a capability.
+
+**Why:** Single lifecycle model for everything. Loading indicators are handler implementation details.
+
+**Corrected Pattern:**
+
+```yaml
+queries:
+  - getAnalysis:
+      lifecycle:
+        before: [validateToken]
+        main: [executeQuery] # NOT loading: [showIndicator]
+        after: [cacheResponse]
+        error: [logError]
+```
+
+**Reference:** DEC-023
+
+---
+
+### ADR-045: GeneratedFrom Traceability
+
+**Decision:** `generatedFrom` section tracks data lineage (SOR) for dependency analysis and registry search.
+
+**Why:** Understanding which MFEs share data sources enables impact analysis and regeneration workflows.
+
+**Pattern:**
+
+```yaml
+data:
+  generatedFrom:
+    - openapi: ./specs/api.yaml
+      service: analysis-api
+      version: 2.1.0
+```
+
+**Enables:**
+
+- "Which MFEs use this API?"
+- "Which MFEs share data sources?"
+- Impact analysis for API changes
+
+**Reference:** DEC-024, REQ-053
+
+---
+
+## Agent Orchestrator ADRs (Design Phase)
+
+These apply to the browser-based agent system (`src/agent-orchestrator/`) - future work, not current CLI implementation.
+
+### ADR-001: Map-Based Registry
+
+**Pattern:** `Map<string, AgentRegistryEntry>` for O(1) lookups
+
+```typescript
+private registry: Map<string, AgentRegistryEntry> = new Map();
+const entry = this.registry.get(agentId);  // O(1)
+```
+
+---
+
+### ADR-002: Capability Index
+
+**Pattern:** `Map<string, Set<string>>` - capability name → agent IDs
+
+```typescript
+private capabilityIndex: Map<string, Set<string>> = new Map();
+if (!this.capabilityIndex.has(cap)) {
+  this.capabilityIndex.set(cap, new Set());
+}
+this.capabilityIndex.get(cap).add(agentId);
+```
+
+---
+
+### ADR-003: Event Bus Pattern Matching
+
+**Pattern:** Support `agent.*` wildcard subscriptions
+
+```typescript
+private matchesPattern(eventType: string, pattern: string): boolean {
+  const regex = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*');
+  return new RegExp(`^${regex}$`).test(eventType);
+}
+```
+
+---
+
+### ADR-004: Agent State Machine
+
+**States:** `loading` → `initializing` → `ready` → `suspended`/`error`/`unregistering`
+
+```typescript
+private validateReadyState(agentId: string): void {
+  const entry = this.registry.get(agentId);
+  if (entry.state !== 'ready') {
+    throw new InvalidStateError(agentId, entry.state);
+  }
+}
+```
+
+---
+
+### ADR-005: Isolated Agent Failures
+
+**Pattern:** Try-catch all agent ops, return errors in results
+
+```typescript
+async executeCapability<T, R>(capability: string, params: T): Promise<CapabilityResult<R>[]> {
+  const results = [];
+  for (const agent of agents) {
+    try {
+      const result = await agent.execute(capability, params);
+      results.push({ agentId: agent.id, result, success: true });
+    } catch (error) {
+      results.push({ agentId: agent.id, success: false, error: error.message });
+    }
+  }
+  return results;
+}
+```
+
+---
+
+### ADR-006: Subscription Cleanup
+
+**Pattern:** Store unsubscribe functions, cleanup on destroy
+
+```typescript
+protected subscriptions: (() => void)[] = [];
+
+subscribe<T>(eventType: string, handler: EventHandler<T>) {
+  const unsubscribe = this.eventBus.subscribe(eventType, handler);
+  this.subscriptions.push(unsubscribe);
+  return unsubscribe;
+}
+
+async cleanup() {
+  this.subscriptions.forEach(unsub => unsub());
+  this.subscriptions = [];
+}
+```
+
+---
+
+### ADR-007: Module Federation Loading
+
+**Pattern:** Dynamic loading with manifest-based config
+
+```typescript
+async loadAgent(manifest: AgentManifest) {
+  // Load remote entry script
+  const script = document.createElement('script');
+  script.src = manifest.remote.url;
+  await new Promise((resolve, reject) => {
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  // Initialize container
+  const container = window[manifest.remote.scope];
+  await container.init(globalThis.__share_scopes__);
+
+  // Get module
+  const factory = await container.get(manifest.remote.module);
+  const module = factory();
+  await this.registerAgent(manifest, module.default);
+}
+```
+
+---
+
+### ADR-008: TypeScript Strict Mode
+
+**Config:** All strict flags enabled
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}
+```
+
+---
+
+## Production Features ADRs
+
+### ADR-062: GraphQL Mesh v0.100.x with Production Plugins & Transforms
+
+**Status:** ✅ Implemented (2025-12-06)
+
+**Problem:** GraphQL Mesh dependency conflicts, missing production features (caching, observability, rate limiting), no DSL-driven plugin configuration.
+
+**Solution:** Lock to Mesh v0.100.x stable, add production plugins (response-cache, prometheus, opentelemetry), DSL-driven transforms (rate-limit, filter-schema, resolvers-composition).
+
+**Key Features:**
+
+1. **Centralized Version Constants** (`unified-generator.ts`):
+
+   ```typescript
+   export const DEPENDENCY_VERSIONS = {
+     graphqlMesh: { cli: '^0.100.21', openapi: '^0.109.26', serveRuntime: '^1.2.4' },
+     meshPlugins: { responseCache: '^0.104.20', prometheus: '^2.1.8', opentelemetry: '^1.3.67' },
+     meshTransforms: { namingConvention: '^0.105.19', rateLimit: '^0.105.19', ... },
+   };
+   ```
+
+2. **New Mesh Runtime API**:
+
+   ```typescript
+   import { createBuiltMeshHTTPHandler } from './.mesh';
+   const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
+   app.use('/graphql', meshHandler);
+   ```
+
+3. **DSL Performance Schema**:
+
+   ```yaml
+   performance:
+     caching:
+       enabled: true
+       ttl: 300000
+       strategies:
+         - type: Query
+           field: getUser
+           ttl: 60000
+     observability:
+       prometheus: { enabled: true, port: 9090 }
+       opentelemetry: { enabled: true, sampling: { probability: 0.1 } }
+     rateLimit:
+       enabled: true
+       config:
+         - type: Query
+           field: '*'
+           max: 100
+           ttl: 60000
+   transforms:
+     - resolver: Query.getUser
+       composer: ./src/platform/bff/composers/auth-check#authCheck
+   ```
+
+4. **Three-Tier Plugin System**:
+
+   - **Always Include**: Response cache (5-min TTL)
+   - **Production Enabled**: Prometheus metrics
+   - **Opt-In**: OpenTelemetry tracing
+
+5. **Schema Transforms**:
+   - **Always**: Naming convention (PascalCase types, camelCase fields)
+   - **Opt-In**: Rate limiting, schema filtering, resolver composition
+
+**Impact:**
+
+- ✅ Dependency stability (version lock)
+- ✅ Production-ready (caching, metrics, tracing)
+- ✅ DSL-driven (performance tuning via manifest)
+- ✅ Type safety (new Mesh API)
+- ⚠️ Breaking change (requires migration for existing projects)
+
+**Traceability:**
+
+- REQ-BFF-005: Production-grade performance
+- REQ-BFF-006: Observability integration
+- REQ-BFF-007: Rate limiting and security
+- REQ-BFF-008: DSL-driven plugin configuration
+- ADR-046: GraphQL Mesh with DSL (foundation)
+- ADR-058: Platform Handler Library (observability patterns)
+
+**Migration:**
+See [ADR-062 Migration Guide](./ADR-062-mesh-v0100-plugins.md#migration-guide)
+
+**Files:**
+
+- `src/codegen/UnifiedGenerator/unified-generator.ts`
+- `src/codegen/templates/bff/*.ejs`
+- `src/dsl/schema.ts` (8 new schemas)
+- `examples/e2e2/mfe-manifest-full.yaml`
+
+---
+
+## Migration & Deprecation Notes
+
+- ADR-037: Custom lifecycle phases removed; only standard phases (`before`, `main`, `after`, `error`) are supported. See REQ-044.
+- ADR-021: `analyze` command removed; replaced by runtime DSL discovery.
+- ADR-048: Template folders restructured by language, not type; see REQ-059. Legacy folders (`src/templates/react/`, `src/templates/api/`, `src/templates/bff/`) removed.
+- ADR-062: GraphQL Mesh runtime API changed from `getMesh()` to `createBuiltMeshHTTPHandler()`. See migration guide.
+- Deprecated files: Old template folders and BACKLOG.md have been cleaned/archived. GitHub Issues are now the single source of truth for backlog tracking.
+
+## How to Use ADRs
+
+**In code comments:**
+
+```typescript
+/**
+ * Execute capability across matching agents
+ *
+ * Following ADR-002: Use capability index for O(1) lookup
+ * Following ADR-005: Isolate failures with try-catch
+ */
+async executeCapability(capability: string, params: any) {
+  // Implementation follows patterns
+}
+```
+
+**In commit messages:**
+
+```
+feat: implement MFE registration
+
+Following ADR-012 (push registration) and ADR-013 (DSL contract).
+Generates registration code in all MFE templates.
+```
+
+**When making decisions:**
+
+1. Check if ADR exists for similar problem
+2. Follow existing pattern if applicable
+3. Create new ADR if breaking new ground
+4. Reference ADR number in implementation
+
+---
+
+## ADR Template (for new decisions)
+
+```markdown
+### ADR-XXX: [Decision Title]
+
+**Decision:** [What was decided]
+
+**Why:** [Core rationale in 1-2 sentences]
+
+**Pattern:**
+[Code example or workflow]
+
+**Trade-offs:** [Key consequences]
+```
