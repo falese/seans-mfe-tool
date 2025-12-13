@@ -1,4 +1,5 @@
 # Implementation Checkpoint
+
 ## Issues #60 & #61: Timeout Protection & Error Classification
 
 **Date**: 2025-12-13  
@@ -11,6 +12,7 @@
 Successfully implemented both **Timeout Protection** (Issue #60) and **Error Classification with Smart Retry** (Issue #61) following the implementation plan.
 
 ### Test Results
+
 ```
 Test Suites: 3 passed, 3 total
 Tests:       24 passed, 24 total
@@ -22,15 +24,18 @@ Time:        0.334 s
 ## Phase 1: Timeout Protection (✅ COMPLETE)
 
 ### Files Created
+
 1. **`src/runtime/errors/TimeoutError.ts`** - Typed timeout error class
 2. **`src/runtime/timeout-wrapper.ts`** - Promise.race timeout wrapper with AbortSignal
 3. **`src/runtime/__tests__/timeout-wrapper.test.ts`** - 5 passing tests
 
 ### Files Modified
+
 1. **`src/runtime/context.ts`** - Added timeout tracking fields
 2. **`src/runtime/errors/index.ts`** - Export TimeoutError
 
 ### Features Implemented
+
 - ✅ Handler-level timeout with `timeoutMs` parameter
 - ✅ Three `onTimeout` strategies: `error`, `warn`, `skip`
 - ✅ Context marking with timeout details
@@ -39,6 +44,7 @@ Time:        0.334 s
 - ✅ Promise.race pattern for timeout enforcement
 
 ### Test Coverage
+
 - Success cases: Handler completes before timeout
 - Error cases: Timeout with all three onTimeout modes
 - Telemetry: Events emitted correctly
@@ -49,6 +55,7 @@ Time:        0.334 s
 ## Phase 2: Error Classification (✅ COMPLETE)
 
 ### Files Created
+
 1. **`src/runtime/errors/NetworkError.ts`** - Retryable network errors
 2. **`src/runtime/errors/ValidationError.ts`** - User-facing validation errors
 3. **`src/runtime/errors/SecurityError.ts`** - Audit-logged security errors
@@ -60,12 +67,14 @@ Time:        0.334 s
 9. **`src/runtime/__tests__/retry-wrapper.test.ts`** - 9 passing tests
 
 ### Files Modified
+
 1. **`src/runtime/context.ts`** - Added retry, fallback, handlers fields
 2. **`src/runtime/errors/index.ts`** - Export all error types
 
 ### Features Implemented
 
 #### Error Classification
+
 - ✅ Typed error classes with `type`, `retryable`, `userFacing`, `auditLog` properties
 - ✅ Hybrid detection: Check error.type first, fallback to pattern matching
 - ✅ Case-insensitive regex pattern matching
@@ -73,6 +82,7 @@ Time:        0.334 s
 - ✅ Security error sanitization (generic "Access denied" message)
 
 #### Smart Retry
+
 - ✅ Exponential backoff: `delay = baseDelay * 2^attempt`
 - ✅ Linear backoff: `delay = baseDelay * (attempt + 1)`
 - ✅ Constant backoff: `delay = baseDelay`
@@ -88,6 +98,7 @@ Time:        0.334 s
 ### Test Coverage
 
 **Error Classifier (10 tests)**:
+
 - Typed error classification (NetworkError, ValidationError, SecurityError)
 - Pattern matching (network patterns, validation patterns, case-insensitive)
 - Unknown error handling
@@ -96,6 +107,7 @@ Time:        0.334 s
 - Internal error formatting
 
 **Retry Wrapper (9 tests)**:
+
 - Success on first attempt
 - Retry network errors with exponential backoff
 - Track retry state in context
@@ -111,6 +123,7 @@ Time:        0.334 s
 ## Architecture Highlights
 
 ### Hybrid Error Detection
+
 ```typescript
 // 1. Prefer typed errors (explicit type property)
 if ('type' in error) {
@@ -129,15 +142,17 @@ return { type: 'unknown', retryable: false };
 ```
 
 ### Exponential Backoff with Jitter
+
 ```typescript
-let delay = baseDelay * Math.pow(2, attempt);  // Exponential
-delay = Math.min(delay, maxDelay);             // Cap
+let delay = baseDelay * Math.pow(2, attempt); // Exponential
+delay = Math.min(delay, maxDelay); // Cap
 if (jitter) {
-  delay += Math.random() * (delay * 0.4) - (delay * 0.2);  // ±20%
+  delay += Math.random() * (delay * 0.4) - delay * 0.2; // ±20%
 }
 ```
 
 ### Context Flow
+
 ```typescript
 // Before execution
 context.retry = { attempt: 0, maxRetries: 3, isRetry: false, previousErrors: [] };
@@ -154,6 +169,7 @@ context.fallback = { active: true, reason: 'network', originalError, retriesExha
 ## Requirements Validation
 
 ### REQ-LIFECYCLE-002: Timeout Protection
+
 - [x] Handler-level timeout field enforces time limit
 - [x] onTimeout: error throws and triggers error phase
 - [x] onTimeout: warn logs warning and continues
@@ -163,11 +179,13 @@ context.fallback = { active: true, reason: 'network', originalError, retriesExha
 - [x] 100% test coverage
 
 **MISSING (for future)**:
+
 - [ ] Global timeout defaults (phase-level, handler-specific)
 - [ ] Timeout precedence (hook > handler > phase > global)
 - [ ] Integration with retry logic (tested separately)
 
 ### REQ-LIFECYCLE-005: Error Classification
+
 - [x] Handlers throw typed errors
 - [x] Pattern matching works for third-party handlers
 - [x] Retry strategy respects error type
@@ -185,12 +203,15 @@ context.fallback = { active: true, reason: 'network', originalError, retriesExha
 ## Integration Points
 
 ### Current State
+
 Both features are **standalone and testable**:
+
 - Timeout wrapper can be used independently
 - Retry wrapper can be used independently
 - Error classifier can be used independently
 
 ### Next Integration Steps
+
 1. **Update BaseMFE.invokeHandler()** to use `withTimeout()` and `withRetry()`
 2. **Add timeout config** to DSL schema (LifecycleHookEntry)
 3. **Add errorHandling config** to DSL schema
@@ -203,12 +224,14 @@ Both features are **standalone and testable**:
 ## Code Quality Metrics
 
 ### Test Coverage
+
 - **Timeout Wrapper**: 5 tests, all passing
 - **Error Classifier**: 10 tests, all passing
 - **Retry Wrapper**: 9 tests, all passing
 - **Total**: 24 tests, 0.334s execution time
 
 ### Lines of Code
+
 - **Timeout Wrapper**: ~94 lines
 - **Error Classifier**: ~107 lines
 - **Retry Wrapper**: ~228 lines
@@ -217,6 +240,7 @@ Both features are **standalone and testable**:
 - **Total**: ~919 lines
 
 ### Dependencies
+
 - Zero external dependencies added
 - Uses built-in `Promise`, `setTimeout`, `AbortController`
 - Jest for testing (already in project)
@@ -226,12 +250,14 @@ Both features are **standalone and testable**:
 ## Next Steps
 
 ### Immediate (Ready for Review)
+
 - [ ] Review timeout-wrapper.ts implementation
 - [ ] Review retry-wrapper.ts implementation
 - [ ] Review error-classifier.ts implementation
 - [ ] Approve test coverage and approach
 
 ### Short-term (Week 2-3)
+
 - [ ] Integrate into BaseMFE (ADR-047)
 - [ ] Update DSL schema with timeout/errorHandling fields
 - [ ] Create timeout demo example
@@ -240,6 +266,7 @@ Both features are **standalone and testable**:
 - [ ] Update ADR-065 with "Implementation Confirmed"
 
 ### Medium-term (Week 4-5)
+
 - [ ] Add global timeout defaults (config file)
 - [ ] Implement timeout precedence logic
 - [ ] Update all platform handlers with AbortSignal support

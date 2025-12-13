@@ -1,4 +1,5 @@
 # Code Review & Implementation Plan
+
 ## Issues #60 & #61: Timeout Protection & Error Classification
 
 **Date**: 2025-12-13  
@@ -10,6 +11,7 @@
 ## Executive Summary
 
 This document provides a comprehensive code review and implementation plan for:
+
 - **Issue #60**: REQ-LIFECYCLE-002 - Timeout Protection for Handler Execution
 - **Issue #61**: REQ-LIFECYCLE-005 - Error Classification with Hybrid Detection & Smart Retry
 
@@ -31,6 +33,7 @@ Both features are **Phase 1** (Foundation) enhancements critical for operational
 #### 1. Base Infrastructure (`src/runtime/base-mfe.ts`)
 
 **Current Handler Invocation**:
+
 ```typescript
 // Lines 1-100: BaseMFE has lifecycle executor abstraction
 export interface LifecycleExecutor {
@@ -39,6 +42,7 @@ export interface LifecycleExecutor {
 ```
 
 **Findings**:
+
 - ✅ **Dependency injection ready**: LifecycleExecutor interface allows timeout/retry wrappers
 - ✅ **Context-based**: All handlers receive Context object
 - ⚠️ **No timeout mechanism**: No Promise.race or AbortController integration
@@ -49,6 +53,7 @@ export interface LifecycleExecutor {
 #### 2. Error Handling (`src/runtime/handlers/error-handling.ts`)
 
 **Current Implementation**:
+
 ```typescript
 export async function handleError(context: Context, error: Error): Promise<void> {
   // Basic telemetry emission only
@@ -57,6 +62,7 @@ export async function handleError(context: Context, error: Error): Promise<void>
 ```
 
 **Findings**:
+
 - ❌ **No error classification**: All errors treated as generic Error
 - ❌ **No retry logic**: No retry mechanism exists
 - ❌ **No timeout handling**: No TimeoutError class or handling
@@ -67,6 +73,7 @@ export async function handleError(context: Context, error: Error): Promise<void>
 #### 3. Handler Registry (`src/runtime/handlers/`)
 
 **Current Handlers**:
+
 - `auth.ts` - Authentication (50 lines)
 - `caching.ts` - Cache operations (40 lines)
 - `rate-limiting.ts` - Rate limiting (45 lines)
@@ -74,6 +81,7 @@ export async function handleError(context: Context, error: Error): Promise<void>
 - `telemetry.ts` - Event emission (30 lines)
 
 **Findings**:
+
 - ✅ **Consistent pattern**: All handlers follow `(context: Context) => Promise<void>` signature
 - ⚠️ **No AbortSignal support**: None accept `options: { signal?: AbortSignal }`
 - ⚠️ **No timeout awareness**: Handlers don't check context.retry state
@@ -87,6 +95,7 @@ export async function handleError(context: Context, error: Error): Promise<void>
 ### Requirements Checklist
 
 #### REQ-LIFECYCLE-002.1: Handler-Level Timeout ✅
+
 ```yaml
 lifecycle:
   before:
@@ -97,11 +106,13 @@ lifecycle:
 ```
 
 **Implementation Approach**:
+
 1. Add `timeout` and `onTimeout` fields to LifecycleHookEntry schema
 2. Create TimeoutError class in `src/runtime/errors/TimeoutError.ts`
 3. Wrap handler invocation with Promise.race pattern
 
 #### REQ-LIFECYCLE-002.2: Global Timeout Defaults ✅
+
 ```yaml
 timeouts:
   phases:
@@ -113,6 +124,7 @@ timeouts:
 ```
 
 **Implementation Approach**:
+
 1. Add timeout config to manifest schema or runtime config
 2. Implement precedence resolution: hook → handler → phase → global (30s)
 3. Store in ManifestParser or configuration service
@@ -120,16 +132,18 @@ timeouts:
 #### REQ-LIFECYCLE-002.3: Timeout Behavior ✅
 
 **Context Marking**:
+
 ```typescript
 context.timeouts = context.timeouts || {};
 context.timeouts[hookName] = {
   occurred: true,
   elapsed: 5123,
-  onTimeout: 'error'
+  onTimeout: 'error',
 };
 ```
 
 **Interaction with `contained` flag**:
+
 ```yaml
 before:
   - slowOperation:
@@ -144,6 +158,7 @@ before:
 Integration tested in Issue #61 (Error Classification)
 
 #### REQ-LIFECYCLE-002.5: Telemetry ✅
+
 ```typescript
 telemetry.emit({
   eventType: 'lifecycle.timeout',
@@ -151,9 +166,9 @@ telemetry.emit({
     hook: 'validateFile',
     timeout: 5000,
     elapsed: 5123,
-    onTimeout: 'error'
+    onTimeout: 'error',
   },
-  severity: 'error'
+  severity: 'error',
 });
 ```
 
@@ -162,6 +177,7 @@ telemetry.emit({
 #### New Files
 
 1. **`src/runtime/errors/TimeoutError.ts`**
+
 ```typescript
 export class TimeoutError extends Error {
   readonly type = 'timeout';
@@ -179,6 +195,7 @@ export class TimeoutError extends Error {
 ```
 
 2. **`src/runtime/timeout-wrapper.ts`**
+
 ```typescript
 import { TimeoutError } from './errors/TimeoutError';
 import { Context } from './context';
@@ -201,31 +218,30 @@ export async function withTimeout<T>(
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
       abortController.abort();
-      reject(new TimeoutError(
-        `Handler '${options.hookName}' timed out after ${options.timeoutMs}ms`,
-        options.timeoutMs,
-        options.timeoutMs
-      ));
+      reject(
+        new TimeoutError(
+          `Handler '${options.hookName}' timed out after ${options.timeoutMs}ms`,
+          options.timeoutMs,
+          options.timeoutMs
+        )
+      );
     }, options.timeoutMs);
   });
 
   try {
-    const result = await Promise.race([
-      fn(),
-      timeoutPromise
-    ]);
+    const result = await Promise.race([fn(), timeoutPromise]);
     clearTimeout(timeoutId);
     return result;
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof TimeoutError) {
       // Mark context
       context.timeouts = context.timeouts || {};
       context.timeouts[options.hookName] = {
         occurred: true,
         elapsed: options.timeoutMs,
-        onTimeout: options.onTimeout
+        onTimeout: options.onTimeout,
       };
 
       // Emit telemetry
@@ -236,9 +252,9 @@ export async function withTimeout<T>(
             hook: options.hookName,
             timeout: options.timeoutMs,
             elapsed: options.timeoutMs,
-            onTimeout: options.onTimeout
+            onTimeout: options.onTimeout,
           },
-          severity: options.onTimeout === 'error' ? 'error' : 'warn'
+          severity: options.onTimeout === 'error' ? 'error' : 'warn',
         });
       }
 
@@ -252,13 +268,14 @@ export async function withTimeout<T>(
       // onTimeout === 'skip': silent continue
       return undefined as T;
     }
-    
+
     throw error;
   }
 }
 ```
 
 3. **`src/runtime/__tests__/timeout-wrapper.test.ts`**
+
 ```typescript
 import { withTimeout } from '../timeout-wrapper';
 import { TimeoutError } from '../errors/TimeoutError';
@@ -275,18 +292,22 @@ describe('withTimeout', () => {
       inputs: {},
       outputs: {},
       metadata: {},
-      emit: jest.fn()
+      emit: jest.fn(),
     };
   });
 
   it('should resolve if handler completes before timeout', async () => {
     const handler = jest.fn().mockResolvedValue('success');
-    
-    const result = await withTimeout(handler, {
-      timeoutMs: 1000,
-      onTimeout: 'error',
-      hookName: 'testHook'
-    }, context);
+
+    const result = await withTimeout(
+      handler,
+      {
+        timeoutMs: 1000,
+        onTimeout: 'error',
+        hookName: 'testHook',
+      },
+      context
+    );
 
     expect(result).toBe('success');
     expect(handler).toHaveBeenCalled();
@@ -294,69 +315,87 @@ describe('withTimeout', () => {
   });
 
   it('should throw TimeoutError if handler exceeds timeout', async () => {
-    const handler = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(resolve, 2000))
-    );
+    const handler = jest
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 2000)));
 
-    await expect(withTimeout(handler, {
-      timeoutMs: 100,
-      onTimeout: 'error',
-      hookName: 'slowHandler'
-    }, context)).rejects.toThrow(TimeoutError);
+    await expect(
+      withTimeout(
+        handler,
+        {
+          timeoutMs: 100,
+          onTimeout: 'error',
+          hookName: 'slowHandler',
+        },
+        context
+      )
+    ).rejects.toThrow(TimeoutError);
 
     expect(context.timeouts?.slowHandler).toEqual({
       occurred: true,
       elapsed: 100,
-      onTimeout: 'error'
+      onTimeout: 'error',
     });
   });
 
   it('should log warning and continue if onTimeout is warn', async () => {
     const consoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-    const handler = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(resolve, 2000))
-    );
+    const handler = jest
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 2000)));
 
-    const result = await withTimeout(handler, {
-      timeoutMs: 100,
-      onTimeout: 'warn',
-      hookName: 'slowHandler'
-    }, context);
+    const result = await withTimeout(
+      handler,
+      {
+        timeoutMs: 100,
+        onTimeout: 'warn',
+        hookName: 'slowHandler',
+      },
+      context
+    );
 
     expect(result).toBeUndefined();
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('timed out (continued)')
-    );
+    expect(consoleWarn).toHaveBeenCalledWith(expect.stringContaining('timed out (continued)'));
     expect(context.timeouts?.slowHandler?.occurred).toBe(true);
-    
+
     consoleWarn.mockRestore();
   });
 
   it('should silently continue if onTimeout is skip', async () => {
-    const handler = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(resolve, 2000))
-    );
+    const handler = jest
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 2000)));
 
-    const result = await withTimeout(handler, {
-      timeoutMs: 100,
-      onTimeout: 'skip',
-      hookName: 'slowHandler'
-    }, context);
+    const result = await withTimeout(
+      handler,
+      {
+        timeoutMs: 100,
+        onTimeout: 'skip',
+        hookName: 'slowHandler',
+      },
+      context
+    );
 
     expect(result).toBeUndefined();
     expect(context.timeouts?.slowHandler).toBeUndefined(); // No marking for skip
   });
 
   it('should emit telemetry event on timeout', async () => {
-    const handler = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(resolve, 2000))
-    );
+    const handler = jest
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 2000)));
 
-    await expect(withTimeout(handler, {
-      timeoutMs: 100,
-      onTimeout: 'error',
-      hookName: 'slowHandler'
-    }, context)).rejects.toThrow(TimeoutError);
+    await expect(
+      withTimeout(
+        handler,
+        {
+          timeoutMs: 100,
+          onTimeout: 'error',
+          hookName: 'slowHandler',
+        },
+        context
+      )
+    ).rejects.toThrow(TimeoutError);
 
     expect(context.emit).toHaveBeenCalledWith({
       eventType: 'lifecycle.timeout',
@@ -364,9 +403,9 @@ describe('withTimeout', () => {
         hook: 'slowHandler',
         timeout: 100,
         elapsed: 100,
-        onTimeout: 'error'
+        onTimeout: 'error',
       },
-      severity: 'error'
+      severity: 'error',
     });
   });
 });
@@ -426,6 +465,7 @@ Feature: Timeout Protection
 #### REQ-LIFECYCLE-005.1: Typed Error Classes ✅
 
 **Error Hierarchy**:
+
 ```typescript
 // Base typed error
 interface TypedError extends Error {
@@ -459,6 +499,7 @@ class SecurityError extends Error {
 #### REQ-LIFECYCLE-005.2: Hybrid Error Detection ✅
 
 **Detection Algorithm**:
+
 ```typescript
 function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassification {
   // 1. Check typed error
@@ -481,6 +522,7 @@ function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassifi
 #### REQ-LIFECYCLE-005.3: Retry Strategy ✅
 
 **Exponential Backoff**:
+
 ```typescript
 function calculateBackoff(config: RetryConfig, attempt: number): number {
   let delay: number;
@@ -507,6 +549,7 @@ function calculateBackoff(config: RetryConfig, attempt: number): number {
 ```
 
 **Expected Backoff Values**:
+
 - Attempt 0 (base): 1000ms
 - Attempt 1: 2000ms ± 400ms (jitter)
 - Attempt 2: 4000ms ± 800ms (capped at maxDelay if set)
@@ -519,9 +562,7 @@ context.retry = {
   attempt: 2,
   maxRetries: 3,
   isRetry: true,
-  previousErrors: [
-    { message: 'ETIMEDOUT', timestamp: '2025-12-13T14:00:00Z' }
-  ]
+  previousErrors: [{ message: 'ETIMEDOUT', timestamp: '2025-12-13T14:00:00Z' }],
 };
 ```
 
@@ -536,7 +577,7 @@ context.fallback = {
   active: true,
   reason: 'network',
   originalError: error,
-  retriesExhausted: 3
+  retriesExhausted: 3,
 };
 ```
 
@@ -557,6 +598,7 @@ Track classification, retry attempts, and fallback invocations.
 #### New Files
 
 1. **`src/runtime/errors/NetworkError.ts`**
+
 ```typescript
 export class NetworkError extends Error {
   readonly type = 'network';
@@ -572,6 +614,7 @@ export class NetworkError extends Error {
 ```
 
 2. **`src/runtime/errors/ValidationError.ts`**
+
 ```typescript
 export class ValidationError extends Error {
   readonly type = 'validation';
@@ -590,6 +633,7 @@ export class ValidationError extends Error {
 ```
 
 3. **`src/runtime/errors/SecurityError.ts`**
+
 ```typescript
 export class SecurityError extends Error {
   readonly type = 'security';
@@ -597,7 +641,10 @@ export class SecurityError extends Error {
   readonly auditLog = true;
   readonly userMessage = 'Access denied';
 
-  constructor(message: string, public details?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    public details?: Record<string, unknown>
+  ) {
     super(message);
     this.name = 'SecurityError';
   }
@@ -605,6 +652,7 @@ export class SecurityError extends Error {
 ```
 
 4. **`src/runtime/errors/BusinessError.ts`**
+
 ```typescript
 export class BusinessError extends Error {
   readonly type = 'business';
@@ -622,12 +670,16 @@ export class BusinessError extends Error {
 ```
 
 5. **`src/runtime/errors/SystemError.ts`**
+
 ```typescript
 export class SystemError extends Error {
   readonly type = 'system';
   readonly retryable = true;
 
-  constructor(message: string, public cause?: Error) {
+  constructor(
+    message: string,
+    public cause?: Error
+  ) {
     super(message);
     this.name = 'SystemError';
   }
@@ -635,6 +687,7 @@ export class SystemError extends Error {
 ```
 
 6. **`src/runtime/errors/index.ts`**
+
 ```typescript
 export { TimeoutError } from './TimeoutError';
 export { NetworkError } from './NetworkError';
@@ -645,6 +698,7 @@ export { SystemError } from './SystemError';
 ```
 
 7. **`src/runtime/error-classifier.ts`**
+
 ```typescript
 import { Context } from './context';
 
@@ -682,7 +736,7 @@ export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorC
       retryable: typedError.retryable ?? false,
       userFacing: typedError.userFacing ?? false,
       auditLog: typedError.auditLog ?? false,
-      userMessage: typedError.userMessage
+      userMessage: typedError.userMessage,
     };
   }
 
@@ -695,7 +749,7 @@ export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorC
           type: typeConfig.type as any,
           retryable: typeConfig.retryable,
           userFacing: typeConfig.userFacing,
-          userMessage: typeConfig.message
+          userMessage: typeConfig.message,
         };
       }
     }
@@ -705,7 +759,7 @@ export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorC
   return {
     type: 'unknown',
     retryable: false,
-    userFacing: false
+    userFacing: false,
   };
 }
 
@@ -717,8 +771,8 @@ export function formatErrorResponse(error: Error, classification: ErrorClassific
         type: classification.type,
         message: classification.userMessage || error.message,
         field: (error as any).field,
-        code: `ERR_${classification.type.toUpperCase()}`
-      }
+        code: `ERR_${classification.type.toUpperCase()}`,
+      },
     };
   } else if (classification.type === 'security') {
     // Generic message for security errors
@@ -726,8 +780,8 @@ export function formatErrorResponse(error: Error, classification: ErrorClassific
       error: {
         type: 'security',
         message: 'Access denied',
-        code: 'ERR_ACCESS_DENIED'
-      }
+        code: 'ERR_ACCESS_DENIED',
+      },
     };
   } else {
     // Internal error (developer-facing)
@@ -735,14 +789,15 @@ export function formatErrorResponse(error: Error, classification: ErrorClassific
       error: {
         type: classification.type,
         message: 'Internal server error',
-        code: 'ERR_INTERNAL'
-      }
+        code: 'ERR_INTERNAL',
+      },
     };
   }
 }
 ```
 
 8. **`src/runtime/retry-wrapper.ts`**
+
 ```typescript
 import { Context } from './context';
 import { classifyError, ErrorHandlingConfig, ErrorClassification } from './error-classifier';
@@ -774,7 +829,7 @@ export async function withRetry<T>(
         attempt,
         maxRetries: config.maxRetries,
         isRetry: attempt > 0,
-        previousErrors
+        previousErrors,
       };
 
       // Call onRetry hook if configured
@@ -789,24 +844,23 @@ export async function withRetry<T>(
           eventData: {
             attempt,
             previousError: lastError?.message,
-            handler: hookName
+            handler: hookName,
           },
-          severity: 'warn'
+          severity: 'warn',
         });
       }
 
       // Attempt handler execution
       const result = await fn();
-      
+
       // Success - clear retry state
       delete context.retry;
       return result;
-      
     } catch (error) {
       lastError = error as Error;
       previousErrors.push({
         message: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Classify error
@@ -821,9 +875,9 @@ export async function withRetry<T>(
             retryable: classification.retryable,
             attempt,
             maxRetries: config.maxRetries,
-            handler: hookName
+            handler: hookName,
           },
-          severity: 'error'
+          severity: 'error',
         });
       }
 
@@ -839,7 +893,7 @@ export async function withRetry<T>(
             classification
           );
         }
-        
+
         delete context.retry;
         throw error;
       }
@@ -855,9 +909,9 @@ export async function withRetry<T>(
             attempt,
             delay,
             backoff: config.backoff,
-            handler: hookName
+            handler: hookName,
           },
-          severity: 'info'
+          severity: 'info',
         });
       }
 
@@ -904,7 +958,7 @@ async function invokeFallbackHandler<T>(
     active: true,
     reason: classification.type,
     originalError,
-    retriesExhausted
+    retriesExhausted,
   };
 
   // Emit fallback telemetry
@@ -914,9 +968,9 @@ async function invokeFallbackHandler<T>(
       eventData: {
         retriesExhausted,
         fallbackHandler: fallbackHandlerName,
-        originalError: originalError.message
+        originalError: originalError.message,
       },
-      severity: 'warn'
+      severity: 'warn',
     });
   }
 
@@ -927,19 +981,20 @@ async function invokeFallbackHandler<T>(
   }
 
   const result = await handler(context);
-  
+
   // Clear fallback state
   delete context.fallback;
-  
+
   return result;
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
 9. **`src/runtime/__tests__/retry-wrapper.test.ts`**
+
 ```typescript
 import { withRetry, RetryConfig } from '../retry-wrapper';
 import { ErrorHandlingConfig } from '../error-classifier';
@@ -959,7 +1014,7 @@ describe('withRetry', () => {
       inputs: {},
       outputs: {},
       metadata: {},
-      emit: jest.fn()
+      emit: jest.fn(),
     };
 
     errorConfig = {
@@ -971,19 +1026,19 @@ describe('withRetry', () => {
           backoff: 'exponential',
           baseDelay: 100,
           maxDelay: 1000,
-          jitter: false
+          jitter: false,
         },
         {
           type: 'validation',
-          retryable: false
-        }
-      ]
+          retryable: false,
+        },
+      ],
     };
   });
 
   it('should succeed on first attempt', async () => {
     const handler = jest.fn().mockResolvedValue('success');
-    
+
     const result = await withRetry(
       handler,
       { maxRetries: 3, backoff: 'exponential', baseDelay: 100, maxDelay: 1000, jitter: false },
@@ -998,7 +1053,8 @@ describe('withRetry', () => {
   });
 
   it('should retry network errors with exponential backoff', async () => {
-    const handler = jest.fn()
+    const handler = jest
+      .fn()
       .mockRejectedValueOnce(new NetworkError('Connection refused', 503))
       .mockRejectedValueOnce(new NetworkError('Connection refused', 503))
       .mockResolvedValue('success');
@@ -1015,44 +1071,45 @@ describe('withRetry', () => {
     expect(handler).toHaveBeenCalledTimes(3);
     expect(context.emit).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventType: 'lifecycle.error.retry'
+        eventType: 'lifecycle.error.retry',
       })
     );
   });
 
   it('should not retry validation errors', async () => {
-    const handler = jest.fn().mockRejectedValue(
-      new ValidationError('Invalid input', 'email', 'format')
-    );
+    const handler = jest
+      .fn()
+      .mockRejectedValue(new ValidationError('Invalid input', 'email', 'format'));
 
-    await expect(withRetry(
-      handler,
-      { maxRetries: 3, backoff: 'exponential', baseDelay: 100, maxDelay: 1000, jitter: false },
-      errorConfig,
-      context,
-      'testHandler'
-    )).rejects.toThrow(ValidationError);
+    await expect(
+      withRetry(
+        handler,
+        { maxRetries: 3, backoff: 'exponential', baseDelay: 100, maxDelay: 1000, jitter: false },
+        errorConfig,
+        context,
+        'testHandler'
+      )
+    ).rejects.toThrow(ValidationError);
 
     expect(handler).toHaveBeenCalledTimes(1); // No retries
   });
 
   it('should track retry state in context', async () => {
-    const handler = jest.fn()
-      .mockImplementation(() => {
-        // Check retry state during execution
-        if (context.retry) {
-          expect(context.retry).toMatchObject({
-            attempt: expect.any(Number),
-            maxRetries: 3,
-            isRetry: context.retry.attempt > 0
-          });
-        }
-        
-        if ((context.retry?.attempt ?? 0) < 2) {
-          throw new NetworkError('Connection refused', 503);
-        }
-        return Promise.resolve('success');
-      });
+    const handler = jest.fn().mockImplementation(() => {
+      // Check retry state during execution
+      if (context.retry) {
+        expect(context.retry).toMatchObject({
+          attempt: expect.any(Number),
+          maxRetries: 3,
+          isRetry: context.retry.attempt > 0,
+        });
+      }
+
+      if ((context.retry?.attempt ?? 0) < 2) {
+        throw new NetworkError('Connection refused', 503);
+      }
+      return Promise.resolve('success');
+    });
 
     await withRetry(
       handler,
@@ -1148,6 +1205,7 @@ Feature: Error Classification
 ### Phase 1: Timeout Protection (Issue #60)
 
 **Week 1: Implementation**
+
 1. ✅ Create TimeoutError class
 2. ✅ Implement timeout-wrapper.ts
 3. ✅ Update base-mfe.ts to integrate timeout wrapper
@@ -1155,6 +1213,7 @@ Feature: Error Classification
 5. ✅ Write unit tests (100% coverage)
 
 **Week 2: Testing & Documentation**
+
 1. ✅ Integration tests (timeout + contained, timeout precedence)
 2. ✅ Performance tests (timeout overhead < 10ms)
 3. ✅ Update user documentation
@@ -1163,6 +1222,7 @@ Feature: Error Classification
 ### Phase 2: Error Classification (Issue #61)
 
 **Week 3: Implementation**
+
 1. ✅ Create all typed error classes
 2. ✅ Implement error-classifier.ts
 3. ✅ Implement retry-wrapper.ts
@@ -1170,6 +1230,7 @@ Feature: Error Classification
 5. ✅ Write unit tests (100% coverage)
 
 **Week 4: Testing & Documentation**
+
 1. ✅ Integration tests (retry + timeout, pattern matching, fallback)
 2. ✅ Security review (error sanitization)
 3. ✅ Update user documentation
@@ -1178,6 +1239,7 @@ Feature: Error Classification
 ### Cross-Feature Integration
 
 **Week 5: Integration Testing**
+
 1. ✅ Test TimeoutError with retry logic
 2. ✅ Test timeout + retry + fallback
 3. ✅ Test parallel execution + timeout + retry (future)
@@ -1190,6 +1252,7 @@ Feature: Error Classification
 ### High Risk
 
 1. **AbortSignal Compatibility** ⚠️
+
    - **Risk**: Platform handlers (auth, caching) don't support AbortSignal
    - **Impact**: Handlers continue running after timeout
    - **Mitigation**: Update all platform handlers in Phase 1, make optional for custom handlers
@@ -1204,6 +1267,7 @@ Feature: Error Classification
 ### Medium Risk
 
 1. **Pattern Matching Brittleness** ⚠️
+
    - **Risk**: Third-party error messages change format
    - **Impact**: Errors not classified correctly
    - **Mitigation**: Use broad patterns, document preferred typed errors
@@ -1257,15 +1321,19 @@ Feature: Error Classification
 ## Open Questions
 
 1. **Q**: Should timeout apply to retry delay or only handler execution?
+
    - **A**: Only handler execution. Retry delay is intentional wait.
 
 2. **Q**: Should fallback handler have its own timeout?
+
    - **A**: Yes, use same precedence logic (fallback.timeout → handler timeout → phase timeout)
 
 3. **Q**: How to handle TimeoutError in onRetry hook?
+
    - **A**: onRetry hook has shorter timeout (50% of handler timeout), no retry for onRetry itself
 
 4. **Q**: Should pattern matching be case-sensitive?
+
    - **A**: No, use case-insensitive regex by default (`/pattern/i`)
 
 5. **Q**: Should security errors trigger ops alerts?
@@ -1276,26 +1344,31 @@ Feature: Error Classification
 ## Next Steps
 
 1. **Immediate** (Today):
+
    - Assign Issue #60 to developer
    - Create feature branch: `feature/timeout-protection`
    - Set up test infrastructure
 
 2. **Week 1** (Dec 14-20):
+
    - Implement timeout protection
    - Daily standup to review progress
    - Mid-week code review (draft PR)
 
 3. **Week 2** (Dec 21-27):
+
    - Complete timeout testing
    - Create timeout demo example
    - Assign Issue #61 to developer
 
 4. **Week 3** (Dec 28-Jan 3):
+
    - Implement error classification
    - Daily standup to review progress
    - Mid-week code review (draft PR)
 
 5. **Week 4** (Jan 4-10):
+
    - Complete error classification testing
    - Security team review
    - Create error classification demo example
@@ -1365,18 +1438,18 @@ docs/
 
 ## Appendix B: Testing Matrix
 
-| Test Case | Timeout | Retry | Fallback | Expected Outcome |
-|-----------|---------|-------|----------|------------------|
-| T1: Handler succeeds | 5s | 3 | No | Success, no timeout |
-| T2: Handler times out, onTimeout=error | 1s | 0 | No | TimeoutError thrown |
-| T3: Handler times out, onTimeout=warn | 1s | 0 | No | Warning logged, continue |
-| T4: Handler times out, onTimeout=skip | 1s | 0 | No | Silent continue |
-| T5: Handler times out, retry enabled | 1s | 3 | No | 4 attempts, TimeoutError each |
-| T6: Network error, retry enabled | - | 3 | No | 4 attempts, exponential backoff |
-| T7: Validation error, retry enabled | - | 3 | No | 1 attempt, error propagated |
-| T8: Network error, fallback | - | 3 | Yes | Fallback invoked after 3 retries |
-| T9: Timeout + Retry + Fallback | 1s | 3 | Yes | 4 timeout attempts, then fallback |
-| T10: Security error | - | 0 | No | Generic message, audit log |
+| Test Case                              | Timeout | Retry | Fallback | Expected Outcome                  |
+| -------------------------------------- | ------- | ----- | -------- | --------------------------------- |
+| T1: Handler succeeds                   | 5s      | 3     | No       | Success, no timeout               |
+| T2: Handler times out, onTimeout=error | 1s      | 0     | No       | TimeoutError thrown               |
+| T3: Handler times out, onTimeout=warn  | 1s      | 0     | No       | Warning logged, continue          |
+| T4: Handler times out, onTimeout=skip  | 1s      | 0     | No       | Silent continue                   |
+| T5: Handler times out, retry enabled   | 1s      | 3     | No       | 4 attempts, TimeoutError each     |
+| T6: Network error, retry enabled       | -       | 3     | No       | 4 attempts, exponential backoff   |
+| T7: Validation error, retry enabled    | -       | 3     | No       | 1 attempt, error propagated       |
+| T8: Network error, fallback            | -       | 3     | Yes      | Fallback invoked after 3 retries  |
+| T9: Timeout + Retry + Fallback         | 1s      | 3     | Yes      | 4 timeout attempts, then fallback |
+| T10: Security error                    | -       | 0     | No       | Generic message, audit log        |
 
 ---
 
