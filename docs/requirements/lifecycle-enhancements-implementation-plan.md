@@ -4,6 +4,7 @@
 **Date**: December 11, 2025  
 **Status**: 📋 Planned  
 **Related Documents**:
+
 - [Requirements](./lifecycle-enhancements.md)
 - [Acceptance Criteria](../acceptance-criteria/lifecycle-enhancements.feature)
 - ADR-063 through ADR-067
@@ -22,18 +23,19 @@ This document provides a **phased implementation plan** for 5 lifecycle engine e
 
 ## Phase Breakdown
 
-| Phase | Duration | Enhancements | Rationale |
-|-------|----------|--------------|-----------|
-| **Phase 1: Foundation** | 2 weeks | Timeout Protection<br/>Error Classification | Operational safety, enables other features |
-| **Phase 2: Optimization** | 2 weeks | Conditional Execution<br/>Parallel Execution | Performance gains, business rules |
-| **Phase 3: Advanced** | 2 weeks | Inter-Hook Communication | Type safety, depends on others |
-| **Phase 4: DX Tooling** | 1 week | CLI validation command | Developer experience |
+| Phase                     | Duration | Enhancements                                 | Rationale                                  |
+| ------------------------- | -------- | -------------------------------------------- | ------------------------------------------ |
+| **Phase 1: Foundation**   | 2 weeks  | Timeout Protection<br/>Error Classification  | Operational safety, enables other features |
+| **Phase 2: Optimization** | 2 weeks  | Conditional Execution<br/>Parallel Execution | Performance gains, business rules          |
+| **Phase 3: Advanced**     | 2 weeks  | Inter-Hook Communication                     | Type safety, depends on others             |
+| **Phase 4: DX Tooling**   | 1 week   | CLI validation command                       | Developer experience                       |
 
 ---
 
 ## Phase 1: Foundation (Weeks 1-2)
 
 ### Goal
+
 Establish **operational safety** features: prevent hung operations, enable smart retry logic.
 
 ### Deliverables
@@ -45,25 +47,31 @@ Establish **operational safety** features: prevent hung operations, enable smart
 **Dependencies**: None
 
 **Tasks**:
+
 1. **Create TimeoutError class** (`src/runtime/errors/TimeoutError.ts`)
+
    - Extends Error
    - Properties: `elapsed`, `timeout`, `handler`
 
 2. **Implement timeout wrapper** (`src/runtime/timeout-wrapper.ts`)
+
    - `Promise.race()` pattern
    - AbortSignal integration
    - Precedence: hook > handler > phase > global
 
 3. **Update BaseMFE.invokeHandler()**
+
    - Add timeout parameter
    - Call timeout wrapper
    - Handle `onTimeout` flag (error/warn/skip)
 
 4. **Global timeout configuration**
+
    - Schema: `timeouts.phases`, `timeouts.handlers`
    - Default values: before=5s, main=30s, after=10s, error=5s
 
 5. **Manifest validation**
+
    - Validate `timeout` field (positive integer)
    - Validate `onTimeout` enum ("error"|"warn"|"skip")
 
@@ -72,6 +80,7 @@ Establish **operational safety** features: prevent hung operations, enable smart
    - Fields: hook, handler, phase, timeout, elapsed
 
 **Tests** (100% coverage):
+
 - [ ] Handler times out after configured duration
 - [ ] `onTimeout: error` throws and triggers error phase
 - [ ] `onTimeout: warn` logs and continues
@@ -81,6 +90,7 @@ Establish **operational safety** features: prevent hung operations, enable smart
 - [ ] Telemetry emitted
 
 **Example** (`examples/timeout-demo/`):
+
 - MFE with slow external API call
 - Demonstrates timeout + fallback pattern
 
@@ -93,7 +103,9 @@ Establish **operational safety** features: prevent hung operations, enable smart
 **Dependencies**: None (but integrates with Timeout)
 
 **Tasks**:
+
 1. **Create typed error classes** (`src/runtime/errors/`)
+
    - NetworkError
    - ValidationError
    - BusinessError
@@ -102,11 +114,13 @@ Establish **operational safety** features: prevent hung operations, enable smart
    - TimeoutError (from above)
 
 2. **Implement error classifier** (`src/runtime/error-classifier.ts`)
+
    - Detect typed errors (check `type` property)
    - Pattern matching fallback (regex on `error.message`)
    - Return `ErrorClassification` object
 
 3. **Implement retry logic** (`src/runtime/retry-wrapper.ts`)
+
    - Exponential backoff calculation
    - Linear backoff
    - Constant backoff
@@ -114,19 +128,23 @@ Establish **operational safety** features: prevent hung operations, enable smart
    - Respect `maxRetries`
 
 4. **Implement onRetry hook**
+
    - Modify context before retry
    - Track retry state: `context.retry`
 
 5. **Implement fallback handler**
+
    - Mark context: `context.fallback = { active: true, ... }`
    - Invoke fallback with modified context
 
 6. **User-facing error formatting**
+
    - Sanitize errors for user
    - Security errors: generic message
    - Audit logging for security errors
 
 7. **Manifest validation**
+
    - Validate `errorHandling` schema
    - Validate pattern regex syntax
 
@@ -136,6 +154,7 @@ Establish **operational safety** features: prevent hung operations, enable smart
    - Event: `lifecycle.error.fallback`
 
 **Tests** (100% coverage):
+
 - [ ] Typed error classification
 - [ ] Pattern matching fallback
 - [ ] Exponential backoff calculation
@@ -148,6 +167,7 @@ Establish **operational safety** features: prevent hung operations, enable smart
 - [ ] Integration: Retry + Timeout
 
 **Example** (`examples/error-classification-demo/`):
+
 - Payment processor with network retries
 - Validation errors (not retried)
 - Security errors (sanitized)
@@ -172,6 +192,7 @@ Establish **operational safety** features: prevent hung operations, enable smart
 ## Phase 2: Optimization (Weeks 3-4)
 
 ### Goal
+
 Enable **performance optimizations** and **business rule visibility** in manifest.
 
 ### Deliverables
@@ -183,27 +204,33 @@ Enable **performance optimizations** and **business rule visibility** in manifes
 **Dependencies**: None
 
 **Tasks**:
+
 1. **Install Jexl library**
+
    - `npm install jexl`
    - Add to dependencies
 
 2. **Create ConditionEvaluator** (`src/runtime/condition-evaluator.ts`)
+
    - Compile expressions (cache compiled)
    - Evaluate simple expressions
    - Evaluate complex boolean logic (and/or/not)
    - Access context, env, manifest
 
 3. **Add custom Jexl transforms**
+
    - `includes()`: Array membership
    - `matches()`: Regex match
    - `startsWith()`, `endsWith()`: String operations
 
 4. **Integrate with lifecycle engine**
+
    - Check `when` field before handler invocation
    - Skip handler if condition false
    - Log skip (optional `debugCondition`)
 
 5. **Manifest validation**
+
    - Compile all expressions at parse time
    - Fail fast on syntax errors
 
@@ -212,6 +239,7 @@ Enable **performance optimizations** and **business rule visibility** in manifes
    - Fields: hook, condition, result
 
 **Tests** (100% coverage):
+
 - [ ] Simple expression evaluation
 - [ ] Complex boolean logic (and/or/not)
 - [ ] Optional chaining (`?.`)
@@ -222,6 +250,7 @@ Enable **performance optimizations** and **business rule visibility** in manifes
 - [ ] Performance: < 1ms per evaluation
 
 **Example** (`examples/conditional-demo/`):
+
 - E-commerce recommender
 - Skip user profile load for anonymous users
 - Feature flag-based behavior
@@ -235,27 +264,33 @@ Enable **performance optimizations** and **business rule visibility** in manifes
 **Dependencies**: REQ-LIFECYCLE-005 (Error Classification)
 
 **Tasks**:
+
 1. **Implement context isolation** (`src/runtime/context-isolator.ts`)
+
    - Create read-only context copies
    - Namespace outputs: `context.parallelOutputs[handlerName]`
 
 2. **Implement parallel executor** (`src/runtime/parallel-executor.ts`)
+
    - Fail-fast strategy (Promise.race wrapper)
    - Complete-all strategy (Promise.allSettled)
    - Partial-success strategy (custom logic)
    - Respect `maxConcurrency`
 
 3. **Implement output merger** (`src/runtime/output-merger.ts`)
+
    - Deep merge objects
    - Concatenate arrays
    - Warn on conflicts
 
 4. **Integrate with lifecycle engine**
+
    - Detect `parallel: true` flag
    - Invoke parallel executor
    - Merge outputs to main context
 
 5. **Manifest validation**
+
    - Validate `failureStrategy` enum
    - Validate `maxConcurrency` (positive integer)
 
@@ -264,6 +299,7 @@ Enable **performance optimizations** and **business rule visibility** in manifes
    - Fields: handlers, durations, failures, strategy
 
 **Tests** (100% coverage):
+
 - [ ] Concurrent execution (3 handlers)
 - [ ] Fail-fast cancellation
 - [ ] Complete-all error collection
@@ -274,6 +310,7 @@ Enable **performance optimizations** and **business rule visibility** in manifes
 - [ ] Performance: 3x speedup vs sequential
 
 **Example** (`examples/parallel-demo/`):
+
 - Healthcare EHR viewer
 - Parallel security checks (auth + PCI + fraud)
 - Demonstrates fail-fast strategy
@@ -299,6 +336,7 @@ Enable **performance optimizations** and **business rule visibility** in manifes
 ## Phase 3: Advanced (Weeks 5-6)
 
 ### Goal
+
 Enable **type safety** and **explicit data flow** for maintainability.
 
 ### Deliverables
@@ -310,38 +348,46 @@ Enable **type safety** and **explicit data flow** for maintainability.
 **Dependencies**: None (but leverages all previous features)
 
 **Tasks**:
+
 1. **Extend manifest schema**
+
    - Add `outputs` field (array of output configs)
    - Add `inputs` field (array of input configs)
    - Define type system: primitives, arrays, unions
 
 2. **Create TypeGenerator** (`src/codegen/type-generator.ts`)
+
    - Generate output interfaces
    - Generate input interfaces
    - Generate handler type signatures
    - Use `ts-morph` for AST manipulation
 
 3. **Implement input resolver** (`src/runtime/input-resolver.ts`)
+
    - Parse `from` references (hookName.outputName)
    - Resolve from `context.hookOutputs`
    - Validate required inputs
 
 4. **Implement output validator** (`src/runtime/output-validator.ts`)
+
    - Validate output types match schema
    - Check required outputs present
 
 5. **Implement dependency graph validator** (`src/dsl/dependency-validator.ts`)
+
    - Build dependency graph from inputs/outputs
    - Detect circular dependencies (DFS)
    - Visualize cycles in error message
 
 6. **Integrate with lifecycle engine**
+
    - Resolve inputs before handler invocation
    - Pass inputs as second parameter
    - Validate outputs after handler execution
    - Store outputs in `context.hookOutputs[hookName]`
 
 7. **CLI integration**
+
    - `mfe generate-types <manifest>` command
    - Auto-generate on `mfe remote <name>`
    - Store in `src/generated/interfaces.ts`
@@ -352,6 +398,7 @@ Enable **type safety** and **explicit data flow** for maintainability.
    - Detect circular dependencies
 
 **Tests** (100% coverage):
+
 - [ ] Output interface generation
 - [ ] Input interface generation
 - [ ] Handler type generation
@@ -363,6 +410,7 @@ Enable **type safety** and **explicit data flow** for maintainability.
 - [ ] TypeScript compilation of generated code
 
 **Example** (`examples/typed-communication-demo/`):
+
 - Supply chain shipment tracker
 - Typed data flow: validate → enrich → geocode → notify
 - Demonstrates compile-time safety
@@ -388,6 +436,7 @@ Enable **type safety** and **explicit data flow** for maintainability.
 ## Phase 4: Developer Experience (Week 7)
 
 ### Goal
+
 Provide **tooling** for developers to validate manifests and discover optimizations.
 
 ### Deliverables
@@ -399,12 +448,15 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 **Dependencies**: All previous phases
 
 **Tasks**:
+
 1. **Create manifest validator** (`src/commands/validate-manifest.js`)
+
    - Load and parse manifest
    - Run all validation rules
    - Check for optimization opportunities
 
 2. **Validation rules**
+
    - Expression syntax (conditional execution)
    - Type definitions (inter-hook communication)
    - Circular dependencies (inter-hook communication)
@@ -412,11 +464,13 @@ Provide **tooling** for developers to validate manifests and discover optimizati
    - Parallel opportunities (if handlers independent, suggest `parallel: true`)
 
 3. **CLI command**
+
    - `mfe validate-manifest [path]`
    - Exit code: 0 (valid), 1 (errors), 2 (warnings)
    - JSON output option: `--json`
 
 4. **Pre-build integration**
+
    - Add to package.json scripts: `"prebuild": "mfe validate-manifest"`
    - Add to CI/CD pipeline
 
@@ -425,6 +479,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
    - Rule reference: What each rule checks
 
 **Tests** (100% coverage):
+
 - [ ] Valid manifest passes
 - [ ] Invalid expression caught
 - [ ] Circular dependency caught
@@ -433,6 +488,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 - [ ] JSON output format
 
 **Example** (`examples/validation-demo/`):
+
 - Manifest with intentional issues
 - Shows all validation rules in action
 
@@ -457,12 +513,14 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ### Documentation (Continuous)
 
 **User Guide** (`docs/user-guide/lifecycle-enhancements.md`):
+
 - Overview of each enhancement
 - Step-by-step examples
 - Best practices
 - Migration guide
 
 **API Reference** (`docs/api/lifecycle-engine.md`):
+
 - BaseMFE API updates
 - Manifest schema reference
 - Error classes
@@ -471,6 +529,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ### Telemetry (Continuous)
 
 **Events to Track**:
+
 - `lifecycle.timeout` (Phase 1)
 - `lifecycle.error.classified` (Phase 1)
 - `lifecycle.error.retry` (Phase 1)
@@ -482,17 +541,21 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ### Examples (Per Phase)
 
 **Phase 1**:
+
 - `examples/timeout-demo/` - Timeout protection
 - `examples/error-classification-demo/` - Retry logic
 
 **Phase 2**:
+
 - `examples/conditional-demo/` - Conditional execution
 - `examples/parallel-demo/` - Parallel execution
 
 **Phase 3**:
+
 - `examples/typed-communication-demo/` - Inter-hook communication
 
 **Phase 4**:
+
 - `examples/validation-demo/` - CLI validation
 
 ---
@@ -500,11 +563,13 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ## Testing Strategy
 
 ### Unit Tests
+
 - **Target**: 100% line coverage per phase
 - **Location**: `src/runtime/__tests__/`
 - **Pattern**: TDD (write test before implementation)
 
 ### Integration Tests
+
 - **Cross-enhancement interactions**
 - **Location**: `src/runtime/__tests__/integration/`
 - **Scenarios**:
@@ -514,6 +579,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
   - All 5 enhancements together
 
 ### Performance Tests
+
 - **Benchmarks** (`src/runtime/__tests__/performance/`):
   - Parallel execution: 3x speedup
   - Condition evaluation: < 1ms
@@ -521,6 +587,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
   - Output validation: < 1ms
 
 ### Example Tests
+
 - **Real-world scenarios** (`examples/*/__tests__/`):
   - Payment processor (timeout + retry + error classification)
   - E-commerce recommender (conditional + parallel)
@@ -534,6 +601,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 
 **Risk**: Context isolation bugs causing data corruption  
 **Mitigation**:
+
 - Extensive unit tests for context copy/merge
 - Integration test with mutation detection
 - Code review by 2+ developers
@@ -542,6 +610,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 
 **Risk**: Jexl expression injection  
 **Mitigation**:
+
 - Sandboxed execution (Jexl default)
 - Validation at manifest parse time
 - Security audit of expression evaluator
@@ -550,6 +619,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 
 **Risk**: Generated code doesn't compile  
 **Mitigation**:
+
 - Test generated code compilation
 - Use `ts-morph` (battle-tested)
 - Fallback to manual types if generation fails
@@ -558,6 +628,7 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 
 **Risk**: New features slow down execution  
 **Mitigation**:
+
 - Performance benchmarks in CI
 - Opt-in features (default = off)
 - Profiling during development
@@ -567,21 +638,25 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ## Success Metrics
 
 ### Phase 1 (Foundation)
+
 - [ ] Zero hung operations in examples
 - [ ] 90% reduction in unnecessary retries
 - [ ] 100% of security errors sanitized
 
 ### Phase 2 (Optimization)
+
 - [ ] 30% reduction in unnecessary handler execution (conditional)
 - [ ] 3x speedup for parallel operations
 - [ ] Expression evaluation < 1ms
 
 ### Phase 3 (Advanced)
+
 - [ ] 50% reduction in runtime type errors
 - [ ] Zero circular dependency bugs
 - [ ] Generated code compiles 100% of time
 
 ### Phase 4 (DX Tooling)
+
 - [ ] 100% of optimizations surfaced by CLI
 - [ ] 90% of validation issues caught pre-build
 
@@ -590,15 +665,18 @@ Provide **tooling** for developers to validate manifests and discover optimizati
 ## Dependencies & Prerequisites
 
 ### External Libraries
+
 - `jexl` (v2.3.0+) - Expression evaluation
 - `ts-morph` (v21.0.0+) - TypeScript AST
 - `lodash.merge` (v4.6.2+) - Deep merge
 
 ### Platform Updates
+
 - Node.js 18+ (AbortSignal support)
 - TypeScript 5+ (type generation)
 
 ### CI/CD Updates
+
 - Add `mfe validate-manifest` to pre-build
 - Add performance benchmarks to CI
 - Coverage threshold: 100% for new code

@@ -7,6 +7,7 @@
 ## Context
 
 Handlers can hang indefinitely (network timeouts, infinite loops, deadlocks), blocking MFE lifecycle execution. No mechanism exists to enforce time limits, leading to:
+
 - Hung requests (user waits forever)
 - Resource exhaustion (handlers never release connections)
 - Cascading failures (timeouts in dependent systems)
@@ -25,8 +26,8 @@ lifecycle:
   before:
     - validateFile:
         handler: checkFileSize
-        timeout: 5000            # 5 seconds
-        onTimeout: "error"       # "error" | "warn" | "skip"
+        timeout: 5000 # 5 seconds
+        onTimeout: 'error' # "error" | "warn" | "skip"
 
 # Config: Global defaults (lowest precedence)
 timeouts:
@@ -36,7 +37,7 @@ timeouts:
     after: 10000
     error: 5000
   handlers:
-    platform.auth: 3000          # Handler-specific override
+    platform.auth: 3000 # Handler-specific override
     queryEHR: 10000
 ```
 
@@ -57,14 +58,14 @@ protected async invokeHandlerWithTimeout(
   onTimeout: 'error' | 'warn' | 'skip'
 ): Promise<void> {
   const abortController = new AbortController();
-  
+
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {
       abortController.abort();
       reject(new TimeoutError(`Handler '${handlerName}' timed out after ${timeoutMs}ms`));
     }, timeoutMs);
   });
-  
+
   try {
     await Promise.race([
       this.invokeHandler(handlerName, context, { signal: abortController.signal }),
@@ -79,10 +80,10 @@ protected async invokeHandlerWithTimeout(
         elapsed: timeoutMs,
         onTimeout
       };
-      
+
       // Emit telemetry
       await this.emitTimeout(handlerName, context, timeoutMs);
-      
+
       // Handle based on onTimeout
       if (onTimeout === 'error') {
         throw error;  // Trigger error phase
@@ -105,9 +106,9 @@ Handlers receive AbortSignal for graceful cancellation:
 // Handler implementation
 async function fetchData(context: Context, options?: { signal?: AbortSignal }): Promise<void> {
   const response = await fetch('https://api.example.com/data', {
-    signal: options?.signal  // Pass to fetch for automatic cancellation
+    signal: options?.signal, // Pass to fetch for automatic cancellation
   });
-  
+
   context.outputs = await response.json();
 }
 
@@ -140,6 +141,7 @@ lifecycle:
 ```
 
 **Behavior**:
+
 1. Attempt 1: Timeout after 3s → Retry
 2. Attempt 2: Timeout after 3s → Retry
 3. Attempt 3: Timeout after 3s → Error phase

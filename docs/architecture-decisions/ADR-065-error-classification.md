@@ -7,12 +7,14 @@
 ## Context
 
 All errors are handled generically (log + continue/throw), regardless of error type. No distinction between:
+
 - **Network errors** (retryable, transient)
 - **Validation errors** (not retryable, user-facing)
 - **Business errors** (not retryable, custom handling)
 - **Security errors** (not retryable, audit log)
 
 This leads to:
+
 - Inappropriate retry (retrying validation errors wastes time)
 - Poor UX (showing stack traces to users)
 - Security issues (exposing sensitive error details)
@@ -33,7 +35,7 @@ export class NetworkError extends Error {
   readonly type = 'network';
   readonly retryable = true;
   statusCode: number;
-  
+
   constructor(message: string, statusCode: number) {
     super(message);
     this.name = 'NetworkError';
@@ -48,7 +50,7 @@ export class ValidationError extends Error {
   readonly userFacing = true;
   field: string;
   constraint: string;
-  
+
   constructor(message: string, field: string, constraint: string) {
     super(message);
     this.name = 'ValidationError';
@@ -62,8 +64,8 @@ export class SecurityError extends Error {
   readonly type = 'security';
   readonly retryable = false;
   readonly auditLog = true;
-  readonly userMessage = 'Access denied';  // Generic message for user
-  
+  readonly userMessage = 'Access denied'; // Generic message for user
+
   constructor(message: string, details?: Record<string, unknown>) {
     super(message);
     this.name = 'SecurityError';
@@ -73,6 +75,7 @@ export class SecurityError extends Error {
 ```
 
 **Error Types**:
+
 - `network`: Connectivity issues (retryable)
 - `validation`: User input errors (not retryable, user-facing)
 - `business`: Business logic violations (not retryable, custom handling)
@@ -97,20 +100,21 @@ lifecycle:
               baseDelay: 1000
               maxDelay: 10000
               jitter: true
-              
+
             # Pattern matching (fallback for third-party handlers)
-            - pattern: "ECONNREFUSED|ETIMEDOUT|ENOTFOUND"
+            - pattern: 'ECONNREFUSED|ETIMEDOUT|ENOTFOUND'
               type: network
               retryable: true
-              
-            - pattern: "Invalid|ValidationError"
+
+            - pattern: 'Invalid|ValidationError'
               type: validation
               retryable: false
               userFacing: true
-              message: "Invalid input"
+              message: 'Invalid input'
 ```
 
 **Detection Algorithm**:
+
 ```typescript
 function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassification {
   // 1. Check if error has 'type' property (typed error)
@@ -122,7 +126,7 @@ function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassifi
       // ... other properties from error object
     };
   }
-  
+
   // 2. Pattern matching (fallback)
   for (const typeConfig of config.types) {
     if (typeConfig.pattern) {
@@ -137,12 +141,12 @@ function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassifi
       }
     }
   }
-  
+
   // 3. Generic error (not retryable, log stack)
   return {
     type: 'unknown',
     retryable: false,
-    userFacing: false
+    userFacing: false,
   };
 }
 ```
@@ -156,7 +160,7 @@ async function retryWithBackoff(
   context: Context
 ): Promise<void> {
   let lastError: Error;
-  
+
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
       // Mark retry state in context
@@ -164,33 +168,32 @@ async function retryWithBackoff(
         attempt,
         maxRetries: config.maxRetries,
         isRetry: attempt > 0,
-        previousErrors: lastError ? [lastError] : []
+        previousErrors: lastError ? [lastError] : [],
       };
-      
+
       // Call onRetry hook if configured
       if (attempt > 0 && config.onRetry) {
         await this.invokeHandler(config.onRetry, context);
       }
-      
+
       // Attempt handler execution
       await handler();
-      return;  // Success
-      
+      return; // Success
     } catch (error) {
       lastError = error;
-      
+
       // Check if retryable
       const classification = classifyError(error, config);
       if (!classification.retryable || attempt === config.maxRetries) {
-        throw error;  // Not retryable or exhausted retries
+        throw error; // Not retryable or exhausted retries
       }
-      
+
       // Calculate backoff delay
       const delay = calculateBackoff(config, attempt);
-      
+
       // Emit telemetry
       await this.emitRetry(attempt, delay, error, context);
-      
+
       // Wait before retry
       await sleep(delay);
     }
@@ -199,24 +202,25 @@ async function retryWithBackoff(
 
 function calculateBackoff(config: RetryConfig, attempt: number): number {
   let delay: number;
-  
+
   if (config.backoff === 'exponential') {
     delay = config.baseDelay * Math.pow(2, attempt);
   } else if (config.backoff === 'linear') {
     delay = config.baseDelay * (attempt + 1);
-  } else {  // constant
+  } else {
+    // constant
     delay = config.baseDelay;
   }
-  
+
   // Cap at maxDelay
   delay = Math.min(delay, config.maxDelay);
-  
+
   // Add jitter (±20% random)
   if (config.jitter) {
     const jitterRange = delay * 0.2;
     delay += Math.random() * jitterRange - jitterRange / 2;
   }
-  
+
   return Math.round(delay);
 }
 ```
@@ -229,10 +233,11 @@ errorHandling:
     - type: network
       retryable: true
       maxRetries: 3
-      onRetry: adjustContext  # Custom handler called before each retry
+      onRetry: adjustContext # Custom handler called before each retry
 ```
 
 **Handler Implementation**:
+
 ```typescript
 async function adjustContext(context: Context): Promise<void> {
   // Modify context before retry
@@ -243,7 +248,7 @@ async function adjustContext(context: Context): Promise<void> {
     // Second retry: switch to backup endpoint
     context.endpoint = 'https://backup.api.example.com';
   }
-  
+
   // Log retry
   console.log(`Retrying (attempt ${context.retry.attempt})...`);
 }
@@ -261,13 +266,14 @@ errorHandling:
 ```
 
 **Context Modification**:
+
 ```typescript
 // After all retries exhausted
 context.fallback = {
   active: true,
   reason: 'network',
   originalError: error,
-  retriesExhausted: 3
+  retriesExhausted: 3,
 };
 
 // Invoke fallback handler
@@ -275,11 +281,12 @@ await this.invokeHandler('useCachedAuth', context);
 ```
 
 **Fallback Handler**:
+
 ```typescript
 async function useCachedAuth(context: Context): Promise<void> {
   if (context.fallback?.active) {
     console.log(`Using fallback: ${context.fallback.reason}`);
-    
+
     // Fetch from cache instead of API
     const cached = await cache.get('last_auth_result');
     if (cached) {
@@ -303,8 +310,8 @@ function formatErrorResponse(error: Error, classification: ErrorClassification) 
         type: classification.type,
         message: classification.message || error.message,
         field: (error as ValidationError).field,
-        code: `ERR_${classification.type.toUpperCase()}`
-      }
+        code: `ERR_${classification.type.toUpperCase()}`,
+      },
     };
   } else if (classification.type === 'security') {
     // Generic message for security errors
@@ -312,8 +319,8 @@ function formatErrorResponse(error: Error, classification: ErrorClassification) 
       error: {
         type: 'security',
         message: 'Access denied',
-        code: 'ERR_ACCESS_DENIED'
-      }
+        code: 'ERR_ACCESS_DENIED',
+      },
     };
   } else {
     // Internal error (developer-facing)
@@ -321,8 +328,8 @@ function formatErrorResponse(error: Error, classification: ErrorClassification) 
       error: {
         type: classification.type,
         message: 'Internal server error',
-        code: 'ERR_INTERNAL'
-      }
+        code: 'ERR_INTERNAL',
+      },
     };
   }
 }
@@ -334,16 +341,16 @@ function logError(error: Error, context: Context) {
     stack: error.stack,
     type: (error as any).type,
     context: sanitizeContext(context),
-    timestamp: new Date()
+    timestamp: new Date(),
   });
-  
+
   // Audit log for security errors
   if ((error as any).type === 'security') {
     auditLogger.log({
       event: 'security_error',
       user: context.user,
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 }
@@ -383,7 +390,7 @@ Require all handlers to throw typed errors.
 
 ```yaml
 errorHandling:
-  - pattern: "ECONNREFUSED"
+  - pattern: 'ECONNREFUSED'
     retryable: true
 ```
 

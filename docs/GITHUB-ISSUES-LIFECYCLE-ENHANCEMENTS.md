@@ -8,7 +8,7 @@ This document provides **ready-to-use issue descriptions** for creating GitHub I
 
 ### Command
 
-```bash
+````bash
 gh issue create \
   --title "REQ-LIFECYCLE-002: Timeout Protection for Handler Execution" \
   --label "priority-high,type-feature,component-runtime,req-lifecycle" \
@@ -41,7 +41,7 @@ export class TimeoutError extends Error {
   elapsed: number;
   timeout: number;
   handler: string;
-  
+
   constructor(message: string, handler: string, timeout: number, elapsed: number) {
     super(message);
     this.name = 'TimeoutError';
@@ -50,7 +50,7 @@ export class TimeoutError extends Error {
     this.elapsed = elapsed;
   }
 }
-```
+````
 
 ### 2. Implement Timeout Wrapper
 
@@ -146,7 +146,8 @@ See: [docs/acceptance-criteria/lifecycle-enhancements.feature](https://github.co
 
 EOF
 )
-```
+
+````
 
 ---
 
@@ -207,7 +208,7 @@ export class SecurityError extends Error {
 }
 
 // BusinessError.ts, SystemError.ts (similar)
-```
+````
 
 ### 2. Implement Error Classifier
 
@@ -328,7 +329,8 @@ See: [docs/acceptance-criteria/lifecycle-enhancements.feature](https://github.co
 
 EOF
 )
-```
+
+````
 
 ---
 
@@ -362,7 +364,7 @@ Add conditional execution capability to skip handlers based on runtime state. Us
 
 ```bash
 npm install jexl
-```
+````
 
 ### 2. Create ConditionEvaluator
 
@@ -374,24 +376,24 @@ import jexl from 'jexl';
 export class ConditionEvaluator {
   private jexl: Jexl;
   private compiledCache: Map<string, CompiledExpression>;
-  
+
   constructor() {
     this.jexl = new Jexl();
     this.compiledCache = new Map();
-    
+
     // Add custom transforms
     this.jexl.addTransform('includes', (arr, val) => arr?.includes(val));
     this.jexl.addTransform('matches', (str, pattern) => new RegExp(pattern).test(str));
     this.jexl.addTransform('startsWith', (str, prefix) => str?.startsWith(prefix));
     this.jexl.addTransform('endsWith', (str, suffix) => str?.endsWith(suffix));
   }
-  
+
   async evaluateCondition(condition, evaluationContext): Promise<boolean> {
     // Compile and evaluate expression
     // Handle complex boolean logic (and/or/not)
   }
-  
-  validateExpression(expression: string): { valid: boolean, error?: string } {
+
+  validateExpression(expression: string): { valid: boolean; error?: string } {
     // Compile to validate syntax
   }
 }
@@ -413,8 +415,8 @@ lifecycle:
   before:
     - checkAuth:
         handler: platform.auth
-        when: "context.jwt != null"
-        debugCondition: false  # Optional verbose logging
+        when: 'context.jwt != null'
+        debugCondition: false # Optional verbose logging
 ```
 
 ### 5. Manifest Validation
@@ -481,7 +483,8 @@ See: [docs/acceptance-criteria/lifecycle-enhancements.feature](https://github.co
 
 EOF
 )
-```
+
+````
 
 ---
 
@@ -529,7 +532,7 @@ async executeParallelHandlers(
   context: Context
 ): Promise<void> {
   const strategy = config.failureStrategy || 'fail-fast';
-  
+
   if (strategy === 'fail-fast') {
     // Use Promise.race wrapper with cancellation
   } else if (strategy === 'complete-all') {
@@ -537,11 +540,11 @@ async executeParallelHandlers(
   } else if (strategy === 'partial-success') {
     // Custom logic: continue if ≥1 succeeds
   }
-  
+
   // Merge outputs to main context
   this.mergeParallelOutputs(context, results);
 }
-```
+````
 
 ### 3. Implement Output Merger
 
@@ -567,8 +570,8 @@ lifecycle:
     - securityChecks:
         handler: [platform.auth, validatePCI, checkFraudRisk]
         parallel: true
-        maxConcurrency: 3  # Optional limit
-        failureStrategy: "fail-fast"  # or "complete-all" or "partial-success"
+        maxConcurrency: 3 # Optional limit
+        failureStrategy: 'fail-fast' # or "complete-all" or "partial-success"
 ```
 
 ### 6. Telemetry Integration
@@ -630,7 +633,8 @@ See: [docs/acceptance-criteria/lifecycle-enhancements.feature](https://github.co
 
 EOF
 )
-```
+
+````
 
 ---
 
@@ -683,7 +687,7 @@ lifecycle:
           - name: result
             from: validationResult
             required: true
-```
+````
 
 ### 2. Create TypeGenerator
 
@@ -796,7 +800,8 @@ See: [docs/acceptance-criteria/lifecycle-enhancements.feature](https://github.co
 
 EOF
 )
-```
+
+````
 
 ---
 
@@ -830,40 +835,40 @@ Create `mfe validate-manifest` CLI command to statically validate manifests and 
 async function validateManifest(manifestPath, options) {
   // Load and parse manifest
   const manifest = await loadManifest(manifestPath);
-  
+
   // Run all validation rules
   const results = {
     errors: [],
     warnings: [],
     suggestions: []
   };
-  
+
   // Check expression syntax (conditional execution)
   results.errors.push(...validateExpressions(manifest));
-  
+
   // Check type definitions (inter-hook communication)
   results.errors.push(...validateTypes(manifest));
-  
+
   // Check circular dependencies
   results.errors.push(...detectCircularDependencies(manifest));
-  
+
   // Suggest optimizations
   results.suggestions.push(...suggestTimeouts(manifest));
   results.suggestions.push(...suggestParallel(manifest));
-  
+
   // Output results
   if (options.json) {
     console.log(JSON.stringify(results, null, 2));
   } else {
     printResults(results);
   }
-  
+
   // Exit codes
   if (results.errors.length > 0) process.exit(1);
   if (results.warnings.length > 0) process.exit(2);
   process.exit(0);
 }
-```
+````
 
 ### 2. Validation Rules
 
@@ -939,6 +944,7 @@ Add to generated `package.json`:
 
 EOF
 )
+
 ```
 
 ---
@@ -970,6 +976,7 @@ Used in all issues above:
 
 ---
 
-**Total Issues**: 6  
-**Estimated Timeline**: 7 weeks  
+**Total Issues**: 6
+**Estimated Timeline**: 7 weeks
 **Status**: ✅ Ready to create in GitHub
+```

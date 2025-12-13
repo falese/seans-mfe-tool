@@ -7,6 +7,7 @@
 ## Context
 
 Handler arrays in lifecycle hooks execute sequentially, even when handlers are independent (no shared state dependencies). This increases latency for operations like:
+
 - Multiple validation checks (schema, business rules, security)
 - Fan-out API calls (fraud check + address validation + credit check)
 - Parallel notifications (email + SMS + webhook)
@@ -26,7 +27,7 @@ lifecycle:
         handler: [platform.auth, validatePCI, checkFraudRisk]
         parallel: true
         maxConcurrency: 3
-        failureStrategy: "fail-fast"  # or "complete-all" or "partial-success"
+        failureStrategy: 'fail-fast' # or "complete-all" or "partial-success"
 ```
 
 ### Context Isolation
@@ -35,19 +36,19 @@ Each parallel handler receives a **read-only copy** of context with an isolated 
 
 ```typescript
 // Before parallel execution
-context = { inputs: { file: 'data.csv' }, outputs: {} }
+context = { inputs: { file: 'data.csv' }, outputs: {} };
 
 // During parallel execution
-const contextCopies = handlers.map(h => ({
-  ...context,  // Read-only copy
-  _parallelOutput: {}  // Isolated write space
+const contextCopies = handlers.map((h) => ({
+  ...context, // Read-only copy
+  _parallelOutput: {}, // Isolated write space
 }));
 
 // After completion - merge outputs
 context.parallelOutputs = {
   'platform.auth': { user: { id: 123 } },
-  'validatePCI': { compliant: true },
-  'checkFraudRisk': { score: 0.12 }
+  validatePCI: { compliant: true },
+  checkFraudRisk: { score: 0.12 },
 };
 
 // Deep merge to main context
@@ -59,10 +60,12 @@ deepMerge(context, context.parallelOutputs['checkFraudRisk']);
 ### Failure Strategies
 
 1. **fail-fast** (Promise.race semantics):
+
    - Cancel remaining handlers on first error
    - Use case: Auth failure blocks further processing
 
 2. **complete-all** (Promise.allSettled semantics):
+
    - Wait for all handlers, collect all errors
    - Use case: Validation - need all error messages
 
@@ -80,14 +83,14 @@ protected async executeParallelHandlers(
 ): Promise<void> {
   const strategy = config.failureStrategy || 'fail-fast';
   const maxConcurrency = config.maxConcurrency || handlers.length;
-  
+
   // Create isolated context copies
   const contextCopies = handlers.map(h => this.createContextCopy(context));
-  
+
   // Execute based on strategy
   if (strategy === 'fail-fast') {
     await Promise.all(
-      handlers.map((h, i) => 
+      handlers.map((h, i) =>
         this.invokeHandler(h, contextCopies[i])
           .catch(err => {
             // Cancel remaining
@@ -101,7 +104,7 @@ protected async executeParallelHandlers(
     );
     // Collect all errors, continue
   }
-  
+
   // Merge outputs
   this.mergeParallelOutputs(context, contextCopies, handlers);
 }
@@ -136,7 +139,7 @@ protected async executeParallelHandlers(
 
 ```typescript
 // All handlers mutate same context
-await Promise.all(handlers.map(h => this.invokeHandler(h, context)));
+await Promise.all(handlers.map((h) => this.invokeHandler(h, context)));
 ```
 
 **Rejected**: Race conditions if handlers write to same fields.
@@ -148,7 +151,7 @@ lifecycle:
   before:
     - handlers:
         - auth: { dependencies: [] }
-        - validate: { dependencies: [auth] }  # Waits for auth
+        - validate: { dependencies: [auth] } # Waits for auth
         - cache: { dependencies: [] }
       parallel: true
 ```

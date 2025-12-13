@@ -103,6 +103,39 @@ export interface Context {
     retryStrategy?: 'exponential' | 'linear' | 'none';
   };
   
+  /** Timeout tracking (REQ-LIFECYCLE-002) */
+  timeouts?: Record<string, {
+    occurred: boolean;
+    elapsed: number;
+    onTimeout: 'error' | 'warn' | 'skip';
+  }>;
+  
+  /** Retry state (REQ-LIFECYCLE-005) */
+  retry?: {
+    attempt: number;
+    maxRetries: number;
+    isRetry: boolean;
+    previousErrors: Array<{ message: string; timestamp: string }>;
+  };
+  
+  /** Fallback handler state (REQ-LIFECYCLE-005) */
+  fallback?: {
+    active: boolean;
+    reason: string;
+    originalError: Error;
+    retriesExhausted: number;
+  };
+  
+  /** Handler registry for onRetry and fallback handlers */
+  handlers?: Record<string, (context: Context) => Promise<any>>;
+  
+  /** Telemetry emit function */
+  emit?: (event: {
+    eventType: string;
+    eventData: Record<string, unknown>;
+    severity?: 'info' | 'warn' | 'error';
+  }) => Promise<void>;
+  
   /** Custom handler data (extensible for MFE-specific needs) */
   [key: string]: unknown;
 }

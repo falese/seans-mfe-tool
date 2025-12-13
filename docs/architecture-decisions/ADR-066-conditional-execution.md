@@ -7,6 +7,7 @@
 ## Context
 
 Hooks always execute unless they fail and are marked `contained`. No mechanism exists to conditionally skip hooks based on runtime state, leading to:
+
 - Unnecessary execution (auth check when no JWT present)
 - Wasted resources (cache lookup when caching disabled)
 - Complex handler logic (handlers check conditions internally)
@@ -26,8 +27,8 @@ lifecycle:
   before:
     - checkAuth:
         handler: platform.auth
-        when: "context.jwt != null"
-        
+        when: 'context.jwt != null'
+
     - validateAdmin:
         handler: checkAdminRole
         when: "context.user?.roles?.includes('admin')"
@@ -44,13 +45,14 @@ lifecycle:
           or:
             - and:
                 - "context.user.role == 'admin'"
-                - "context.inputs.amount > 10000"
-            - "context.emergencyOverride == true"
+                - 'context.inputs.amount > 10000'
+            - 'context.emergencyOverride == true'
 ```
 
 ### Expression Language: Jexl
 
 **Why Jexl?**
+
 - ✅ Battle-tested (10M+ downloads/month)
 - ✅ Sandboxed (no eval, no code injection)
 - ✅ Familiar syntax (JavaScript-like)
@@ -58,24 +60,27 @@ lifecycle:
 - ✅ Optional chaining support
 
 **Supported Operators**:
+
 - Comparison: `==`, `!=`, `>`, `<`, `>=`, `<=`
 - Logical: `&&`, `||`, `!`
 - Ternary: `condition ? true : false`
 
 **Supported Functions**:
+
 ```javascript
 // Built-in Jexl transforms
-"array|length > 0"
-"string|upper == 'ADMIN'"
-"date|dateFormat('YYYY-MM-DD')"
+'array|length > 0';
+"string|upper == 'ADMIN'";
+"date|dateFormat('YYYY-MM-DD')";
 
 // Custom transforms (added by us)
-"context.user.roles|includes('admin')"
-"context.inputs.email|matches('^[a-z]+@[a-z]+\\.[a-z]+$')"
-"context.config.featureFlag|startsWith('enable_')"
+"context.user.roles|includes('admin')";
+"context.inputs.email|matches('^[a-z]+@[a-z]+\\.[a-z]+$')";
+"context.config.featureFlag|startsWith('enable_')";
 ```
 
 **Available Context**:
+
 - `context.*`: Full context object
 - `env.*`: Process environment variables
 - `manifest.*`: MFE manifest properties
@@ -89,32 +94,32 @@ import jexl from 'jexl';
 export class ConditionEvaluator {
   private jexl: Jexl;
   private compiledCache: Map<string, CompiledExpression>;
-  
+
   constructor() {
     this.jexl = new Jexl();
     this.compiledCache = new Map();
-    
+
     // Add custom transforms
     this.jexl.addTransform('includes', (array: any[], value: any) => {
       return Array.isArray(array) && array.includes(value);
     });
-    
+
     this.jexl.addTransform('matches', (str: string, pattern: string) => {
       return new RegExp(pattern).test(str);
     });
-    
+
     this.jexl.addTransform('startsWith', (str: string, prefix: string) => {
       return typeof str === 'string' && str.startsWith(prefix);
     });
-    
+
     this.jexl.addTransform('endsWith', (str: string, suffix: string) => {
       return typeof str === 'string' && str.endsWith(suffix);
     });
   }
-  
+
   async evaluateCondition(
     condition: string | ConditionObject,
-    evaluationContext: { context: Context, env: any, manifest: any }
+    evaluationContext: { context: Context; env: any; manifest: any }
   ): Promise<boolean> {
     if (typeof condition === 'string') {
       return this.evaluateExpression(condition, evaluationContext);
@@ -122,11 +127,8 @@ export class ConditionEvaluator {
       return this.evaluateBooleanLogic(condition, evaluationContext);
     }
   }
-  
-  private async evaluateExpression(
-    expression: string,
-    evaluationContext: any
-  ): Promise<boolean> {
+
+  private async evaluateExpression(expression: string, evaluationContext: any): Promise<boolean> {
     try {
       // Use compiled expression from cache
       let compiled = this.compiledCache.get(expression);
@@ -134,15 +136,15 @@ export class ConditionEvaluator {
         compiled = this.jexl.compile(expression);
         this.compiledCache.set(expression, compiled);
       }
-      
+
       const result = await compiled.eval(evaluationContext);
       return Boolean(result);
     } catch (error) {
       console.error(`Condition evaluation error: ${expression}`, error);
-      return false;  // Treat errors as false
+      return false; // Treat errors as false
     }
   }
-  
+
   private async evaluateBooleanLogic(
     condition: ConditionObject,
     evaluationContext: any
@@ -150,29 +152,29 @@ export class ConditionEvaluator {
     if ('and' in condition) {
       // All conditions must be true
       const results = await Promise.all(
-        condition.and.map(c => this.evaluateCondition(c, evaluationContext))
+        condition.and.map((c) => this.evaluateCondition(c, evaluationContext))
       );
-      return results.every(r => r === true);
+      return results.every((r) => r === true);
     }
-    
+
     if ('or' in condition) {
       // At least one condition must be true
       const results = await Promise.all(
-        condition.or.map(c => this.evaluateCondition(c, evaluationContext))
+        condition.or.map((c) => this.evaluateCondition(c, evaluationContext))
       );
-      return results.some(r => r === true);
+      return results.some((r) => r === true);
     }
-    
+
     if ('not' in condition) {
       // Invert condition
       return !(await this.evaluateCondition(condition.not, evaluationContext));
     }
-    
+
     return false;
   }
-  
+
   // Validate expression at manifest parse time
-  validateExpression(expression: string): { valid: boolean, error?: string } {
+  validateExpression(expression: string): { valid: boolean; error?: string } {
     try {
       this.jexl.compile(expression);
       return { valid: true };
@@ -200,12 +202,12 @@ protected async executeHook(
       env: process.env,
       manifest: this.manifest
     };
-    
+
     const shouldExecute = await this.conditionEvaluator.evaluateCondition(
       hookConfig.when,
       evaluationContext
     );
-    
+
     if (!shouldExecute) {
       // Skip handler
       if (hookConfig.debugCondition) {
@@ -214,13 +216,13 @@ protected async executeHook(
           `Handler '${hookName}' skipped.`
         );
       }
-      
+
       // Emit telemetry
       await this.emitConditionSkipped(hookName, hookConfig, context);
       return;
     }
   }
-  
+
   // Execute handler
   await this.invokeHandler(hookConfig.handler, context);
 }
@@ -234,10 +236,11 @@ lifecycle:
     - validateAdmin:
         handler: checkAdminRole
         when: "context.user?.roles?.includes('admin')"
-        debugCondition: true  # Enable verbose logging
+        debugCondition: true # Enable verbose logging
 ```
 
 **Debug Output**:
+
 ```
 [DEBUG] Condition 'context.user?.roles?.includes('admin')' evaluated to false
   Evaluation context:
@@ -259,7 +262,7 @@ for (const capability of manifest.capabilities) {
         const validation = conditionEvaluator.validateExpression(
           typeof hook.when === 'string' ? hook.when : JSON.stringify(hook.when)
         );
-        
+
         if (!validation.valid) {
           throw new ManifestValidationError(
             `Invalid condition in hook '${hook.name}': ${validation.error}`

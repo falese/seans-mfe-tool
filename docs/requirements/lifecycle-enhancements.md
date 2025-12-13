@@ -3,7 +3,8 @@
 **Document Version**: 1.0.0  
 **Last Updated**: December 11, 2025  
 **Status**: 📋 Planned  
-**Related Documents**: 
+**Related Documents**:
+
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)
 - [Runtime Requirements](../runtime-requirements.md)
 - [DSL Contract Requirements](../dsl-contract-requirements.md)
@@ -15,6 +16,7 @@
 This document defines requirements for 5 enhancements to the lifecycle engine that address operational needs discovered during production planning. These enhancements transform the lifecycle engine from a sequential orchestrator into a high-performance, fault-tolerant execution platform suitable for enterprise workloads.
 
 **Enhancement Scope:**
+
 1. ✅ Parallel handler execution (performance)
 2. ✅ Timeout protection (operational safety)
 3. ✅ Conditional execution (optimization)
@@ -54,8 +56,8 @@ lifecycle:
   before:
     - securityChecks:
         handler: [platform.auth, validatePCI, checkFraudRisk]
-        parallel: true           # Enables concurrent execution
-        maxConcurrency: 3        # Optional: Limit concurrent operations
+        parallel: true # Enables concurrent execution
+        maxConcurrency: 3 # Optional: Limit concurrent operations
 ```
 
 - `parallel: true` enables concurrent handler execution
@@ -70,7 +72,7 @@ lifecycle:
     - validations:
         handler: [checkA, checkB, checkC]
         parallel: true
-        failureStrategy: "fail-fast"  # "fail-fast" | "complete-all" | "partial-success"
+        failureStrategy: 'fail-fast' # "fail-fast" | "complete-all" | "partial-success"
 ```
 
 - **fail-fast**: Cancel remaining handlers on first error (Promise.race semantics)
@@ -83,23 +85,24 @@ Parallel handlers operate on **isolated context copies** with namespaced outputs
 
 ```typescript
 // Before parallel execution
-context = { inputs: { file: 'data.csv' }, outputs: {} }
+context = { inputs: { file: 'data.csv' }, outputs: {} };
 
 // During parallel execution (3 handlers)
 // Each handler gets read-only context + isolated output namespace
 context.parallelOutputs = {
   'platform.auth': { user: { id: 123, role: 'admin' } },
-  'validatePCI': { compliant: true },
-  'checkFraudRisk': { score: 0.12, risk: 'low' }
-}
+  validatePCI: { compliant: true },
+  checkFraudRisk: { score: 0.12, risk: 'low' },
+};
 
 // After parallel completion - merge to main context
-context.user = context.parallelOutputs['platform.auth'].user
-context.pciCompliant = context.parallelOutputs['validatePCI'].compliant
-context.fraudScore = context.parallelOutputs['checkFraudRisk'].score
+context.user = context.parallelOutputs['platform.auth'].user;
+context.pciCompliant = context.parallelOutputs['validatePCI'].compliant;
+context.fraudScore = context.parallelOutputs['checkFraudRisk'].score;
 ```
 
 **Merge Strategy**:
+
 - Objects: Deep merge (no conflicts expected, warn on collisions)
 - Arrays: Concatenate
 - Primitives: Last-write-wins (warn on conflicts)
@@ -111,12 +114,12 @@ telemetry.emit({
   eventType: 'lifecycle.parallel.complete',
   eventData: {
     handlers: ['platform.auth', 'validatePCI', 'checkFraudRisk'],
-    totalDuration: 150,  // Longest handler
-    handlerDurations: { 'platform.auth': 120, 'validatePCI': 80, 'checkFraudRisk': 150 },
+    totalDuration: 150, // Longest handler
+    handlerDurations: { 'platform.auth': 120, validatePCI: 80, checkFraudRisk: 150 },
     failureStrategy: 'fail-fast',
-    failures: []  // Empty if all succeeded
-  }
-})
+    failures: [], // Empty if all succeeded
+  },
+});
 ```
 
 #### Non-Functional Requirements
@@ -158,6 +161,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Paral
 #### Problem Statement
 
 Long-running or hung handlers block execution indefinitely. No mechanism exists to enforce time limits, leading to:
+
 - Hung requests (user waits forever)
 - Resource exhaustion (handlers never release)
 - Cascading failures (timeouts in dependent systems)
@@ -179,8 +183,8 @@ lifecycle:
   before:
     - validateFile:
         handler: checkFileSize
-        timeout: 5000            # 5 seconds max
-        onTimeout: "error"       # "error" | "warn" | "skip"
+        timeout: 5000 # 5 seconds max
+        onTimeout: 'error' # "error" | "warn" | "skip"
 ```
 
 - `timeout`: Milliseconds (integer)
@@ -197,19 +201,20 @@ Configuration file or manifest:
 # manifest or runtime config
 timeouts:
   phases:
-    before: 5000    # 5 seconds for before phase
-    main: 30000     # 30 seconds for main phase
-    after: 10000    # 10 seconds for after phase
-    error: 5000     # 5 seconds for error phase
-  
+    before: 5000 # 5 seconds for before phase
+    main: 30000 # 30 seconds for main phase
+    after: 10000 # 10 seconds for after phase
+    error: 5000 # 5 seconds for error phase
+
   handlers:
-    platform.auth: 3000           # Override for specific handlers
+    platform.auth: 3000 # Override for specific handlers
     platform.validation: 5000
     platform.caching: 1000
-    queryEHR: 10000               # Custom handler override
+    queryEHR: 10000 # Custom handler override
 ```
 
 **Precedence (most specific to least specific)**:
+
 1. Hook-level timeout (`timeout: 5000`)
 2. Handler-specific default (`handlers.platform.auth: 3000`)
 3. Phase-level default (`phases.before: 5000`)
@@ -218,6 +223,7 @@ timeouts:
 **REQ-LIFECYCLE-002.3**: Timeout Behavior
 
 When timeout occurs:
+
 - Handler execution terminated (best-effort cancellation)
 - Context marked: `context.timeouts[hookName] = { occurred: true, elapsed: 5123 }`
 - Telemetry event emitted: `lifecycle.timeout`
@@ -231,8 +237,8 @@ before:
   - slowOperation:
       handler: deepValidation
       timeout: 5000
-      onTimeout: "error"
-      contained: true    # Timeout treated as warning, execution continues
+      onTimeout: 'error'
+      contained: true # Timeout treated as warning, execution continues
 ```
 
 **REQ-LIFECYCLE-002.4**: Retry Integration
@@ -251,6 +257,7 @@ before:
 ```
 
 Behavior:
+
 - First attempt: Timeout after 3s → Retry
 - Second attempt: Timeout after 3s → Retry
 - Third attempt: Timeout after 3s → Error phase
@@ -268,11 +275,11 @@ telemetry.emit({
     timeout: 5000,
     elapsed: 5123,
     onTimeout: 'error',
-    mfe: 'patient-viewer'
+    mfe: 'patient-viewer',
   },
   severity: 'error',
-  timestamp: new Date()
-})
+  timestamp: new Date(),
+});
 ```
 
 #### Non-Functional Requirements
@@ -316,6 +323,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Timeo
 #### Problem Statement
 
 Hooks always execute unless they fail and are marked `contained`. No mechanism exists to conditionally skip hooks based on context state, leading to:
+
 - Unnecessary execution (auth check when no JWT present)
 - Wasted resources (cache lookup when caching disabled)
 - Complex handler logic (handlers check conditions internally)
@@ -337,14 +345,15 @@ lifecycle:
   before:
     - checkAuth:
         handler: platform.auth
-        when: "context.jwt != null"           # Simple expression
-        
+        when: 'context.jwt != null' # Simple expression
+
     - validateAdmin:
         handler: checkAdminRole
-        when: "context.user?.roles?.includes('admin')"  # Optional chaining
+        when: "context.user?.roles?.includes('admin')" # Optional chaining
 ```
 
 **Expression Language**: Safe JavaScript subset
+
 - **Operators**: `==`, `!=`, `>`, `<`, `>=`, `<=`, `&&`, `||`, `!`
 - **Functions**: `includes()`, `startsWith()`, `endsWith()`, `matches(regex)`
 - **Features**: Optional chaining (`?.`), ternary (`? :`)
@@ -362,11 +371,12 @@ lifecycle:
           or:
             - and:
                 - "context.user.role == 'admin'"
-                - "context.inputs.amount > 10000"
-            - "context.emergencyOverride == true"
+                - 'context.inputs.amount > 10000'
+            - 'context.emergencyOverride == true'
 ```
 
 **Supported Combinators**:
+
 - `and`: All conditions must be true
 - `or`: At least one condition must be true
 - `not`: Inverts condition
@@ -379,13 +389,14 @@ lifecycle:
     - featureFlagCheck:
         handler: validateNewFeature
         when: "env.FEATURE_NEW_VALIDATION == 'true'"
-        
+
     - versionCheck:
         handler: legacySupport
         when: "manifest.version < '2.0.0'"
 ```
 
 **Available Context**:
+
 - `context.*`: Full context object
 - `env.*`: Process environment variables
 - `manifest.*`: MFE manifest properties
@@ -393,6 +404,7 @@ lifecycle:
 **REQ-LIFECYCLE-003.4**: Condition Evaluation
 
 When condition evaluates to:
+
 - **true**: Execute handler normally
 - **false**: Skip handler silently
 - **error**: Log error, skip handler (treat as false)
@@ -408,9 +420,9 @@ telemetry.emit({
     condition: 'context.jwt != null',
     result: false,
     reason: 'context.jwt is undefined',
-    phase: 'before'
-  }
-})
+    phase: 'before',
+  },
+});
 ```
 
 **REQ-LIFECYCLE-003.6**: Debugging Support
@@ -423,10 +435,11 @@ lifecycle:
     - validateAdmin:
         handler: checkAdminRole
         when: "context.user?.roles?.includes('admin')"
-        debugCondition: true  # Logs evaluation details
+        debugCondition: true # Logs evaluation details
 ```
 
 Output:
+
 ```
 [DEBUG] Condition 'context.user?.roles?.includes('admin')' evaluated to false
   - context.user.roles = ['user', 'viewer']
@@ -475,6 +488,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Condi
 #### Problem Statement
 
 Hooks communicate via implicit context mutation. No contract exists for what data hooks produce/consume, leading to:
+
 - Runtime errors (missing expected context fields)
 - Type safety issues (data type mismatches)
 - Coupling (hooks assume context shape)
@@ -508,6 +522,7 @@ lifecycle:
 ```
 
 **Supported Types**:
+
 - Primitives: `string`, `number`, `boolean`, `null`
 - Structures: `array`, `object`
 - Generic arrays: `array<string>`, `array<number>`
@@ -522,7 +537,7 @@ lifecycle:
         handler: logResult
         inputs:
           - name: result
-            from: validationResult       # Links to previous output
+            from: validationResult # Links to previous output
             required: true
           - name: validationErrors
             from: errors
@@ -530,6 +545,7 @@ lifecycle:
 ```
 
 **Resolution**:
+
 - `from` references output name from previous hook in same capability
 - Runtime validates output exists and matches type
 - Missing required input = error
@@ -556,12 +572,13 @@ lifecycle:
         handler: logResults
         inputs:
           - name: schemaResult
-            from: hookA.result     # Explicit namespace
+            from: hookA.result # Explicit namespace
           - name: businessResult
             from: hookB.result
 ```
 
 **Namespace Rules**:
+
 - Default: Unqualified name refers to immediately previous hook
 - Explicit: `hookName.outputName` references specific hook
 - Conflict: Warn if two hooks produce same name without qualification
@@ -578,8 +595,8 @@ interface ValidateInputOutputs {
 }
 
 interface LogValidationInputs {
-  result: boolean;              // from: validationResult
-  validationErrors?: ValidationError[];  // from: errors
+  result: boolean; // from: validationResult
+  validationErrors?: ValidationError[]; // from: errors
 }
 
 // Handler implementation uses generated types
@@ -587,10 +604,10 @@ class MyMFE extends BaseMFE {
   async checkSchema(context: Context): Promise<ValidateInputOutputs> {
     return {
       validationResult: true,
-      errors: []
+      errors: [],
     };
   }
-  
+
   async logResult(context: Context, inputs: LogValidationInputs): Promise<void> {
     console.log('Valid:', inputs.result);
     if (inputs.validationErrors) {
@@ -631,7 +648,7 @@ capabilities:
         after:
           - logLoad:
               inputs:
-                - from: result  # ❌ ERROR: before output not visible in after
+                - from: result # ❌ ERROR: before output not visible in after
 ```
 
 **Cross-phase communication uses context.outputs** (implicit, untyped):
@@ -653,7 +670,7 @@ lifecycle:
         inputs: [{ from: hookB.result }]
         outputs: [{ name: result }]
     - hookB:
-        inputs: [{ from: hookA.result }]  # ❌ CIRCULAR DEPENDENCY
+        inputs: [{ from: hookA.result }] # ❌ CIRCULAR DEPENDENCY
         outputs: [{ name: result }]
 ```
 
@@ -669,14 +686,14 @@ telemetry.emit({
     hook: 'validateInput',
     outputs: {
       validationResult: true,
-      errors: []
+      errors: [],
     },
     schema: [
       { name: 'validationResult', type: 'boolean', required: true },
-      { name: 'errors', type: 'array', required: false }
-    ]
-  }
-})
+      { name: 'errors', type: 'array', required: false },
+    ],
+  },
+});
 ```
 
 #### Non-Functional Requirements
@@ -720,6 +737,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Inter
 #### Problem Statement
 
 All errors handled generically (log + continue/throw). No distinction between error types, leading to:
+
 - Inappropriate retry (retrying validation errors)
 - Poor UX (showing stack traces to users)
 - Missed optimization (not caching retryable failures)
@@ -744,7 +762,7 @@ class NetworkError extends Error {
   readonly type = 'network';
   readonly retryable = true;
   statusCode: number;
-  
+
   constructor(message: string, statusCode: number) {
     super(message);
     this.statusCode = statusCode;
@@ -769,12 +787,13 @@ class BusinessError extends Error {
 class SecurityError extends Error {
   readonly type = 'security';
   readonly retryable = false;
-  readonly auditLog = true;      // Log to audit trail
-  readonly userMessage = 'Access denied';  // Generic message for user
+  readonly auditLog = true; // Log to audit trail
+  readonly userMessage = 'Access denied'; // Generic message for user
 }
 ```
 
 **Error Types**:
+
 - `network`: Transient connectivity issues (retryable)
 - `validation`: User input errors (not retryable, user-facing)
 - `business`: Business logic violations (not retryable, custom handling)
@@ -800,23 +819,24 @@ lifecycle:
               backoff: exponential
               baseDelay: 1000
               maxDelay: 10000
-              
+
             - type: validation
               retryable: false
               userFacing: true
-              message: "Invalid product selection"
-              
+              message: 'Invalid product selection'
+
             # Pattern matching (fallback for third-party handlers)
-            - pattern: "ECONNREFUSED|ETIMEDOUT|ENOTFOUND"
+            - pattern: 'ECONNREFUSED|ETIMEDOUT|ENOTFOUND'
               type: network
               retryable: true
-              
-            - pattern: "Invalid|ValidationError"
+
+            - pattern: 'Invalid|ValidationError'
               type: validation
               retryable: false
 ```
 
 **Detection Logic**:
+
 1. Check if error has `type` property → use typed handling
 2. If not, match `error.message` against patterns
 3. If no match, treat as generic error (not retryable, log stack)
@@ -829,19 +849,20 @@ errorHandling:
     - type: network
       retryable: true
       maxRetries: 3
-      backoff: exponential    # "exponential" | "linear" | "constant"
-      baseDelay: 1000         # 1 second
-      maxDelay: 10000         # 10 seconds max
-      jitter: true            # Add random jitter to prevent thundering herd
-      onRetry: adjustContext  # Optional: Hook called before each retry
+      backoff: exponential # "exponential" | "linear" | "constant"
+      baseDelay: 1000 # 1 second
+      maxDelay: 10000 # 10 seconds max
+      jitter: true # Add random jitter to prevent thundering herd
+      onRetry: adjustContext # Optional: Hook called before each retry
 ```
 
 **Backoff Algorithms**:
-- **exponential**: delay = baseDelay * (2 ^ attempt) + jitter
+
+- **exponential**: delay = baseDelay \* (2 ^ attempt) + jitter
   - Attempt 1: 1000ms
   - Attempt 2: 2000ms
   - Attempt 3: 4000ms (capped at maxDelay)
-- **linear**: delay = baseDelay * attempt
+- **linear**: delay = baseDelay \* attempt
 - **constant**: delay = baseDelay
 
 **REQ-LIFECYCLE-005.4**: Retry State in Context
@@ -849,16 +870,18 @@ errorHandling:
 ```typescript
 // Context tracks retry state
 context.retry = {
-  attempt: 2,           // Current attempt (0-indexed)
+  attempt: 2, // Current attempt (0-indexed)
   maxRetries: 3,
-  isRetry: true,        // true if this is a retry
-  previousErrors: [     // History of failed attempts
-    { message: 'ETIMEDOUT', timestamp: '...' }
-  ]
+  isRetry: true, // true if this is a retry
+  previousErrors: [
+    // History of failed attempts
+    { message: 'ETIMEDOUT', timestamp: '...' },
+  ],
 };
 ```
 
 **Handlers can adapt behavior**:
+
 ```typescript
 async function fetchData(context: Context) {
   if (context.retry?.isRetry) {
@@ -877,10 +900,11 @@ errorHandling:
     - type: network
       retryable: true
       maxRetries: 3
-      onRetry: adjustTimeout  # Custom handler called before each retry
+      onRetry: adjustTimeout # Custom handler called before each retry
 ```
 
 **onRetry hook receives context and can**:
+
 - Modify context (e.g., increase timeout)
 - Switch endpoints (primary → backup)
 - Add headers (e.g., retry count)
@@ -894,10 +918,11 @@ errorHandling:
     - type: network
       retryable: true
       maxRetries: 3
-      fallbackHandler: useCachedAuth  # Called after all retries exhausted
+      fallbackHandler: useCachedAuth # Called after all retries exhausted
 ```
 
 **Fallback Execution**:
+
 - Called after all retries fail
 - Receives **modified context** marking fallback mode:
   ```typescript
@@ -919,10 +944,11 @@ errorHandling:
   types:
     - type: validation
       userFacing: true
-      message: "Invalid product selection. Please choose an available item."
+      message: 'Invalid product selection. Please choose an available item.'
 ```
 
 **Error Response**:
+
 ```typescript
 // User-facing error (sanitized)
 {
@@ -952,11 +978,12 @@ errorHandling:
   types:
     - type: security
       auditLog: true
-      userMessage: "Access denied"
+      userMessage: 'Access denied'
       alertOps: false
 ```
 
 **Behavior**:
+
 - User receives generic message: "Access denied"
 - Full error logged to audit trail
 - Sensitive details (JWT, permissions) not exposed
@@ -1037,6 +1064,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
 **Goal**: Operational safety features
 
 1. **REQ-LIFECYCLE-002**: Timeout Protection
+
    - Clear requirements, minimal dependencies
    - Prevents hung operations (immediate value)
    - Foundation for retry timeouts
@@ -1047,6 +1075,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
    - Security improvements (user-facing errors)
 
 **Deliverables**:
+
 - Typed error classes
 - Timeout wrapper for handlers
 - Retry logic with exponential backoff
@@ -1058,6 +1087,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
 **Goal**: Performance and flexibility
 
 3. **REQ-LIFECYCLE-003**: Conditional Execution
+
    - Requires expression engine (jexl integration)
    - Enables optimization patterns
    - Business rules visible in manifest
@@ -1068,6 +1098,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
    - High performance gain
 
 **Deliverables**:
+
 - Expression evaluator (jexl)
 - Parallel execution engine
 - Context isolation + merge
@@ -1084,6 +1115,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
    - High maintainability value
 
 **Deliverables**:
+
 - TypeScript code generation
 - Dependency graph builder
 - Runtime validation
@@ -1100,6 +1132,7 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
    - Validates expressions, types, dependencies
 
 **Deliverables**:
+
 - CLI command implementation
 - Validation rules engine
 - User documentation
@@ -1112,24 +1145,28 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
 ### Test Requirements
 
 **Unit Tests** (per enhancement):
+
 - [ ] 100% line coverage (strict)
 - [ ] All error paths tested
 - [ ] Edge cases documented
 - [ ] Mock external dependencies
 
 **Integration Tests** (cross-enhancement):
+
 - [ ] Timeout + Retry interaction
 - [ ] Conditional + Parallel execution
 - [ ] Inter-hook + Error handling
 - [ ] All 5 enhancements together
 
 **Performance Tests**:
+
 - [ ] Parallel execution 3x faster than sequential
 - [ ] Timeout overhead < 10ms
 - [ ] Condition evaluation < 1ms
 - [ ] Output validation < 1ms
 
 **Example Tests** (real scenarios):
+
 - [ ] Payment processor (timeout + retry + error classification)
 - [ ] EHR viewer (conditional + security errors)
 - [ ] E-commerce recommender (parallel + fallback)
@@ -1199,6 +1236,7 @@ capabilities:
 ## Related Issues
 
 **GitHub Issues** (to be created):
+
 - [ ] #TBD: REQ-LIFECYCLE-001 - Parallel Execution
 - [ ] #TBD: REQ-LIFECYCLE-002 - Timeout Protection
 - [ ] #TBD: REQ-LIFECYCLE-003 - Conditional Execution

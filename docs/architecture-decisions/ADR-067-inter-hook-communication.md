@@ -7,6 +7,7 @@
 ## Context
 
 Hooks communicate via implicit context mutation. No contract exists for what data hooks produce/consume, leading to:
+
 - Runtime errors (missing expected context fields)
 - Type safety issues (data type mismatches)
 - Coupling (hooks assume context shape)
@@ -50,12 +51,12 @@ lifecycle:
           - name: errors
             type: array<string>
             required: false
-            
+
     - logValidation:
         handler: logResult
         inputs:
           - name: result
-            from: validationResult       # Links to previous output
+            from: validationResult # Links to previous output
             required: true
           - name: validationErrors
             from: errors
@@ -63,6 +64,7 @@ lifecycle:
 ```
 
 **Resolution Rules**:
+
 - `from: outputName` → Immediately previous hook's output
 - `from: hookName.outputName` → Explicit hook reference (namespaced)
 
@@ -76,35 +78,38 @@ lifecycle:
         outputs:
           - name: result
             type: boolean
-    
+
     - hookB:
         handler: validateBusiness
         outputs:
           - name: result
             type: boolean
-    
+
     - hookC:
         handler: logResults
         inputs:
           - name: schemaResult
-            from: hookA.result     # Explicit namespace
+            from: hookA.result # Explicit namespace
           - name: businessResult
             from: hookB.result
 ```
 
 **Conflict Resolution**:
+
 - **Warn** if two hooks produce same output name without explicit qualification
 - Store outputs namespaced: `context.hookOutputs[hookName][outputName]`
 
 #### 4. Type System
 
 **Supported Types**:
+
 - Primitives: `string`, `number`, `boolean`, `null`
 - Structures: `array`, `object`
 - Generic arrays: `array<string>`, `array<number>`, `array<object>`
 - Union types: `string | null`, `boolean | undefined`
 
 **Type Mapping to TypeScript**:
+
 ```yaml
 # DSL type → TypeScript type
 string        → string
@@ -124,25 +129,20 @@ string | null → string | null
 ```typescript
 // From DSL: validateInput hook
 export interface ValidateInputOutputs {
-  validationResult: boolean;          // required: true
-  errors?: string[];                  // required: false, array<string>
+  validationResult: boolean; // required: true
+  errors?: string[]; // required: false, array<string>
 }
 
 // From DSL: logValidation hook
 export interface LogValidationInputs {
-  result: boolean;                    // from: validationResult
-  validationErrors?: string[];        // from: errors
+  result: boolean; // from: validationResult
+  validationErrors?: string[]; // from: errors
 }
 
 // Handler signature
-export type ValidateInputHandler = (
-  context: Context
-) => Promise<ValidateInputOutputs>;
+export type ValidateInputHandler = (context: Context) => Promise<ValidateInputOutputs>;
 
-export type LogValidationHandler = (
-  context: Context,
-  inputs: LogValidationInputs
-) => Promise<void>;
+export type LogValidationHandler = (context: Context, inputs: LogValidationInputs) => Promise<void>;
 ```
 
 **MFE Class Integration**:
@@ -161,21 +161,21 @@ export abstract class GeneratedMFEBase extends BaseMFE {
 export class MyMFE extends GeneratedMFEBase {
   async checkSchema(context: Context): Promise<ValidateInputOutputs> {
     const errors: string[] = [];
-    
+
     if (!context.inputs.email) {
       errors.push('Email required');
     }
-    
+
     return {
       validationResult: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined  // Optional, can omit
+      errors: errors.length > 0 ? errors : undefined, // Optional, can omit
     };
   }
-  
+
   async logResult(context: Context, inputs: LogValidationInputs): Promise<void> {
     // TypeScript ensures 'result' exists and is boolean
     console.log('Valid:', inputs.result);
-    
+
     // TypeScript allows optional access
     if (inputs.validationErrors) {
       console.log('Errors:', inputs.validationErrors);
@@ -198,24 +198,24 @@ protected async executeHook(
   const inputs = hookConfig.inputs
     ? this.resolveInputs(hookConfig.inputs, context)
     : undefined;
-  
+
   // Validate inputs match schema
   if (inputs && hookConfig.inputs) {
     this.validateInputSchema(inputs, hookConfig.inputs);
   }
-  
+
   // Invoke handler
   const outputs = await this.invokeHandler(
     hookConfig.handler,
     context,
     inputs
   );
-  
+
   // Validate outputs match schema
   if (outputs && hookConfig.outputs) {
     this.validateOutputSchema(outputs, hookConfig.outputs);
   }
-  
+
   // Store outputs namespaced by hook name
   context.hookOutputs = context.hookOutputs || {};
   context.hookOutputs[hookName] = outputs;
@@ -226,14 +226,14 @@ private resolveInputs(
   context: Context
 ): Record<string, unknown> {
   const inputs: Record<string, unknown> = {};
-  
+
   for (const inputConfig of inputConfigs) {
     // Parse 'from' reference
     const [hookName, outputName] = this.parseReference(inputConfig.from);
-    
+
     // Resolve from context.hookOutputs
     const value = context.hookOutputs?.[hookName]?.[outputName];
-    
+
     // Validate required inputs
     if (value === undefined && inputConfig.required) {
       throw new Error(
@@ -241,10 +241,10 @@ private resolveInputs(
         `(from: ${inputConfig.from})`
       );
     }
-    
+
     inputs[inputConfig.name] = value;
   }
-  
+
   return inputs;
 }
 
@@ -265,12 +265,12 @@ private validateOutputSchema(
 ): void {
   for (const outputConfig of schema) {
     const value = outputs[outputConfig.name];
-    
+
     // Check required
     if (value === undefined && outputConfig.required) {
       throw new Error(`Required output '${outputConfig.name}' missing`);
     }
-    
+
     // Check type
     if (value !== undefined) {
       const actualType = this.getType(value);
@@ -294,30 +294,30 @@ private validateOutputSchema(
 export class TypeGenerator {
   generateInterfaces(manifest: Manifest): string {
     let code = '// Auto-generated TypeScript interfaces\n\n';
-    
+
     for (const capability of manifest.capabilities) {
       for (const hook of this.getAllHooks(capability)) {
         // Generate output interface
         if (hook.outputs) {
           code += this.generateOutputInterface(hook);
         }
-        
+
         // Generate input interface
         if (hook.inputs) {
           code += this.generateInputInterface(hook);
         }
-        
+
         // Generate handler type
         code += this.generateHandlerType(hook);
       }
     }
-    
+
     return code;
   }
-  
+
   private generateOutputInterface(hook: Hook): string {
     const interfaceName = this.toInterfaceName(hook.name) + 'Outputs';
-    
+
     let code = `export interface ${interfaceName} {\n`;
     for (const output of hook.outputs) {
       const optional = output.required ? '' : '?';
@@ -325,31 +325,34 @@ export class TypeGenerator {
       code += `  ${output.name}${optional}: ${tsType};\n`;
     }
     code += '}\n\n';
-    
+
     return code;
   }
-  
+
   private mapType(dslType: string): string {
     const typeMap: Record<string, string> = {
-      'string': 'string',
-      'number': 'number',
-      'boolean': 'boolean',
-      'null': 'null',
-      'array': 'any[]',
-      'object': 'Record<string, unknown>'
+      string: 'string',
+      number: 'number',
+      boolean: 'boolean',
+      null: 'null',
+      array: 'any[]',
+      object: 'Record<string, unknown>',
     };
-    
+
     // Handle generic arrays: array<string> → string[]
     const genericMatch = dslType.match(/array<(.+)>/);
     if (genericMatch) {
       return `${this.mapType(genericMatch[1])}[]`;
     }
-    
+
     // Handle union types: string | null
     if (dslType.includes('|')) {
-      return dslType.split('|').map(t => this.mapType(t.trim())).join(' | ');
+      return dslType
+        .split('|')
+        .map((t) => this.mapType(t.trim()))
+        .join(' | ');
     }
-    
+
     return typeMap[dslType] || 'unknown';
   }
 }
@@ -366,22 +369,22 @@ export class DependencyGraphValidator {
     for (const capability of manifest.capabilities) {
       const graph = this.buildDependencyGraph(capability);
       const cycles = this.detectCycles(graph);
-      
+
       if (cycles.length > 0) {
         throw new ManifestValidationError(
           `Circular dependencies detected:\n` +
-          cycles.map(cycle => `  ${cycle.join(' → ')}`).join('\n')
+            cycles.map((cycle) => `  ${cycle.join(' → ')}`).join('\n')
         );
       }
     }
   }
-  
+
   private buildDependencyGraph(capability: Capability): Graph {
     const graph = new Map<string, Set<string>>();
-    
+
     for (const hook of this.getAllHooks(capability)) {
       graph.set(hook.name, new Set());
-      
+
       if (hook.inputs) {
         for (const input of hook.inputs) {
           const [dependencyHook] = this.parseReference(input.from);
@@ -389,20 +392,20 @@ export class DependencyGraphValidator {
         }
       }
     }
-    
+
     return graph;
   }
-  
+
   private detectCycles(graph: Map<string, Set<string>>): string[][] {
     const cycles: string[][] = [];
     const visited = new Set<string>();
     const recursionStack = new Set<string>();
-    
+
     const dfs = (node: string, path: string[]) => {
       visited.add(node);
       recursionStack.add(node);
       path.push(node);
-      
+
       for (const neighbor of graph.get(node) || []) {
         if (!visited.has(neighbor)) {
           dfs(neighbor, path);
@@ -412,17 +415,17 @@ export class DependencyGraphValidator {
           cycles.push([...path.slice(cycleStart), neighbor]);
         }
       }
-      
+
       recursionStack.delete(node);
       path.pop();
     };
-    
+
     for (const node of graph.keys()) {
       if (!visited.has(node)) {
         dfs(node, []);
       }
     }
-    
+
     return cycles;
   }
 }
@@ -442,7 +445,7 @@ capabilities:
         after:
           - logLoad:
               inputs:
-                - from: result  # ❌ ERROR: before output not visible in after
+                - from: result # ❌ ERROR: before output not visible in after
 ```
 
 **Cross-phase communication** uses `context.outputs` (implicit, untyped):
@@ -484,7 +487,7 @@ const data = context.outputs.processedData;
 
 ```yaml
 outputs:
-  - validationResult  # Type inferred at runtime
+  - validationResult # Type inferred at runtime
 ```
 
 **Rejected**: No compile-time safety, harder to maintain.
