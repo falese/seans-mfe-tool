@@ -8,11 +8,12 @@ describe('platform.logTelemetry', () => {
     } as any;
     const event = { foo: 'bar' };
     await logTelemetry(context, event);
-    expect(emitMock).toHaveBeenCalledWith({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.logTelemetry', foo: 'bar' },
-      severity: 'info',
-    });
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'telemetry.log',
+      status: 'success',
+      metadata: expect.objectContaining({ source: 'platform.logTelemetry', foo: 'bar', severity: 'info' }),
+      timestamp: expect.any(Date),
+    }));
   });
 
   it('should emit telemetry event with default event if none provided', async () => {
@@ -21,11 +22,12 @@ describe('platform.logTelemetry', () => {
       emit: emitMock,
     } as any;
     await logTelemetry(context);
-    expect(emitMock).toHaveBeenCalledWith({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.logTelemetry' },
-      severity: 'info',
-    });
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'telemetry.log',
+      status: 'success',
+      metadata: expect.objectContaining({ source: 'platform.logTelemetry', severity: 'info' }),
+      timestamp: expect.any(Date),
+    }));
   });
 
   it('should not throw if emit is not a function', async () => {

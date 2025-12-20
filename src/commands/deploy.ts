@@ -1,15 +1,31 @@
-const { execSync } = require('child_process');
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const os = require('os');
-const ejs = require('ejs');
+import { execSync } from 'child_process';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import chalk from 'chalk';
+import * as os from 'os';
+import * as ejs from 'ejs';
+
+interface DeployOptions {
+  name: string;
+  env: string;
+  port?: number;
+  type: string;
+  logs?: boolean;
+  registry?: string;
+  mode?: string;
+  replicas?: number;
+  memory?: string;
+  cpu?: string;
+  domain?: string;
+  namespace?: string;
+  tag?: string;
+}
 
 // Keep track of temp directories for cleanup
-const tempDirs = new Set();
+const tempDirs = new Set<string>();
 
 // Cleanup function
-async function cleanupTempDirs() {
+async function cleanupTempDirs(): Promise<void> {
   for (const dir of tempDirs) {
     try {
       if (await fs.pathExists(dir)) {
@@ -17,7 +33,7 @@ async function cleanupTempDirs() {
         await fs.remove(dir);
         console.log(chalk.green('✓ Cleanup complete'));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(chalk.yellow(`Warning: Failed to clean up directory: ${dir}`));
       console.error(chalk.gray(error.message));
     }
@@ -39,9 +55,9 @@ process.on('SIGTERM', async () => {
 });
 
 // Verify project structure
-async function verifyProjectStructure() {
+async function verifyProjectStructure(): Promise<void> {
   console.log(chalk.blue('Checking required files...'));
-  
+
   const requiredFiles = [
     'package.json',
     'rspack.config.js',
@@ -50,7 +66,7 @@ async function verifyProjectStructure() {
     'public/index.html'
   ];
 
-  const missingFiles = [];
+  const missingFiles: string[] = [];
   for (const file of requiredFiles) {
     const filePath = path.resolve(process.cwd(), file);
     if (!fs.existsSync(filePath)) {
@@ -73,35 +89,35 @@ async function verifyProjectStructure() {
 }
 
 // Copy Docker configuration files
-async function copyDockerFiles(tempDir, type) {
+async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   const templateDir = path.resolve(__dirname, '..', 'templates', 'docker');
   console.log(chalk.gray(`Template directory: ${templateDir}`));
-  
+
   // Copy Dockerfile
   const dockerfileSource = path.join(templateDir, `Dockerfile.${type}`);
   const dockerfileDest = path.join(tempDir, 'Dockerfile');
-  
+
   if (!fs.existsSync(dockerfileSource)) {
     throw new Error(`Docker template not found: ${dockerfileSource}`);
   }
-  
+
   await fs.copy(dockerfileSource, dockerfileDest);
   console.log(chalk.green('✓ Copied Dockerfile'));
 
   // Copy nginx configuration
   const nginxSource = path.join(templateDir, 'nginx.conf');
   const nginxDest = path.join(tempDir, 'nginx.conf');
-  
+
   if (!fs.existsSync(nginxSource)) {
     throw new Error(`Nginx configuration not found: ${nginxSource}`);
   }
-  
+
   await fs.copy(nginxSource, nginxDest);
   console.log(chalk.green('✓ Copied nginx configuration'));
 }
 
 // Development deployment function
-async function developmentDeploy(options) {
+async function developmentDeploy(options: DeployOptions): Promise<void> {
   const { name, port, type } = options;
   const containerName = `${name}-dev`;
   const imageTag = `${name}:development`;
@@ -130,13 +146,13 @@ async function developmentDeploy(options) {
     console.log(chalk.blue('\nBuilding Docker image...'));
     try {
       execSync(
-        `docker build -t ${imageTag} --target development ${tempDir}`, 
-        { 
+        `docker build -t ${imageTag} --target development ${tempDir}`,
+        {
           stdio: 'inherit',
           env: { ...process.env, DOCKER_BUILDKIT: '1' }
         }
       );
-    } catch (error) {
+    } catch (error: any) {
       if (String(error.message || '').includes('Build failed')) {
         throw error;
       }
@@ -167,21 +183,21 @@ async function developmentDeploy(options) {
 
     // Wait for container to be ready
     await waitForContainer(containerName);
-    
+
     // Show container info
     console.log(chalk.green(`\n✓ Development container ready at http://localhost:${port}`));
     console.log(chalk.blue('\nUseful commands:'));
     console.log(`  Logs: docker logs -f ${containerName}`);
     console.log(`  Shell: docker exec -it ${containerName} /bin/sh`);
     console.log(`  Stop: docker stop ${containerName}`);
-    
+
     // Stream logs if requested
     if (options.logs) {
       console.log(chalk.blue('\nStreaming container logs...'));
       execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error(chalk.red('\n✗ Development deployment failed:'));
     console.error(error.message);
     throw error;
@@ -191,7 +207,7 @@ async function developmentDeploy(options) {
 }
 
 // Helper function to wait for container readiness
-async function waitForContainer(containerName, timeout = 30000) {
+async function waitForContainer(containerName: string, timeout: number = 30000): Promise<boolean> {
   const startTime = Date.now();
   while (Date.now() - startTime < timeout) {
     try {
@@ -199,7 +215,7 @@ async function waitForContainer(containerName, timeout = 30000) {
         `docker inspect -f '{{.State.Status}}' ${containerName}`,
         { encoding: 'utf8' }
       ).trim();
-      
+
       if (status === 'running') {
         return true;
       }
@@ -212,7 +228,7 @@ async function waitForContainer(containerName, timeout = 30000) {
 }
 
 // Main deployment command
-async function deployCommand(options) {
+async function deployCommand(options: DeployOptions): Promise<void> {
   try {
     // Verify project structure
     await verifyProjectStructure();
@@ -225,7 +241,7 @@ async function deployCommand(options) {
     } else {
       throw new Error(`Unknown environment: ${options.env}`);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(chalk.red('\n✗ Deployment failed:'));
     console.error(chalk.red(error.message));
     if (error.stack && process.env.DEBUG) {
@@ -237,7 +253,7 @@ async function deployCommand(options) {
 }
 
 // Production deployment function
-async function productionDeploy(options) {
+async function productionDeploy(options: DeployOptions): Promise<void> {
   const { name, port, type, registry, mode = 'docker-compose' } = options;
   const projectDir = process.cwd();
 
@@ -252,7 +268,7 @@ async function productionDeploy(options) {
     } else {
       await dockerComposeProductionDeploy(options);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(chalk.red('\n✗ Production deployment failed:'));
     console.error(error.message);
     throw error;
@@ -260,7 +276,7 @@ async function productionDeploy(options) {
 }
 
 // Docker Compose production deployment
-async function dockerComposeProductionDeploy(options) {
+async function dockerComposeProductionDeploy(options: DeployOptions): Promise<void> {
   const { name, port, type, registry } = options;
   const projectDir = process.cwd();
   const deployDir = path.join(projectDir, 'deploy');
@@ -271,7 +287,7 @@ async function dockerComposeProductionDeploy(options) {
   await fs.ensureDir(deployDir);
 
   // Read package.json for project info
-  const packageJson = await fs.readJson(path.join(projectDir, 'package.json'));
+  const packageJson: any = await fs.readJson(path.join(projectDir, 'package.json'));
   const database = packageJson.database || 'sqlite';
 
   // Generate docker-compose.production.yml
@@ -427,7 +443,7 @@ POSTGRES_PASSWORD=CHANGE_THIS_PASSWORD` : ''}` : ''}
 }
 
 // Kubernetes production deployment
-async function kubernetesProductionDeploy(options) {
+async function kubernetesProductionDeploy(options: DeployOptions): Promise<void> {
   const { name, port, type, registry, replicas = 2, memory = '256Mi', cpu = '0.5' } = options;
   const projectDir = process.cwd();
   const deployDir = path.join(projectDir, 'k8s');
@@ -438,7 +454,7 @@ async function kubernetesProductionDeploy(options) {
   await fs.ensureDir(deployDir);
 
   // Read package.json for project info
-  const packageJson = await fs.readJson(path.join(projectDir, 'package.json'));
+  const packageJson: any = await fs.readJson(path.join(projectDir, 'package.json'));
   const database = packageJson.database || 'sqlite';
 
   const templateData = {
@@ -638,17 +654,17 @@ kubectl get events -n ${options.namespace || 'default'} --sort-by='.lastTimestam
 }
 
 // Helper functions
-function multiplyMemory(memory, multiplier) {
+function multiplyMemory(memory: string, multiplier: number): string {
   const value = parseInt(memory);
   const unit = memory.replace(/[0-9]/g, '');
   return `${value * multiplier}${unit}`;
 }
 
-function multiplyCPU(cpu, multiplier) {
+function multiplyCPU(cpu: string, multiplier: number): string {
   return (parseFloat(cpu) * multiplier).toFixed(1);
 }
 
-module.exports = {
+export {
   deployCommand,
   verifyProjectStructure,
   copyDockerFiles,

@@ -539,7 +539,8 @@ describe('Lifecycle Hook Execution (REQ-042)', () => {
       const [firstArg, secondArg] = calls[0];
       expect(firstArg).toBe('[Telemetry]');
       expect(typeof secondArg).toBe('string');
-      expect(secondArg).toContain('"eventType": "error"');
+      expect(secondArg).toContain('"status": "error"');
+      expect(secondArg).toContain('"metadata"');
       expect(secondArg).toContain('"severity": "warn"');
       expect(secondArg).toContain('"hook": "hook"');
       expect(secondArg).toContain('"handler": "handler"');

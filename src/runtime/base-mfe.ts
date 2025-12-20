@@ -494,23 +494,24 @@ export abstract class BaseMFE {
     severity: 'error' | 'warn'
   ): Promise<void> {
     const event: TelemetryEvent = {
-      eventType: 'error',
-      eventData: {
+      name: 'lifecycle-error',
+      capability: 'lifecycle',
+      phase: context.phase || 'unknown',
+      status: 'error',
+      metadata: {
         source: 'lifecycle-hook',
         hook: hookName,
         handler: handlerName,
-        phase: context.phase,
         capability: context.capability,
         mfe: this.manifest.name,
+        severity,
+        tags: ['lifecycle', 'hook-failure'],
         error: {
           message: error.message,
           stack: error.stack
         }
       },
-      severity,
-      tags: ['lifecycle', 'hook-failure'],
-      timestamp: new Date(),
-      mfe: this.manifest.name
+      timestamp: new Date()
     };
 
     if (this.deps?.telemetry) {

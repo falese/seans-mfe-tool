@@ -5,7 +5,7 @@ describe('platform.rateLimitCheck', () => {
     const emitMock = jest.fn();
     const context = { emit: emitMock } as any;
     await rateLimitCheck(context, { limit: 10 });
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'telemetry', eventData: expect.objectContaining({ limit: 10 }) }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'rate-limiting.check', status: 'success', metadata: expect.objectContaining({ limit: 10 }) }));
   });
 
   it('should not throw if emit is not a function', async () => {

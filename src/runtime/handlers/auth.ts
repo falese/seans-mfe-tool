@@ -15,9 +15,12 @@ export async function validateJWT(context: Context): Promise<void> {
   if (!token) {
     if (emit) {
       await emit({
-        eventType: 'error',
-        eventData: { source: 'platform.validateJWT', error: 'JWT token required' },
-        severity: 'error',
+        name: 'auth.jwt.validation',
+        capability: context.capability || 'unknown',
+        phase: context.phase || 'unknown',
+        status: 'error',
+        metadata: { source: 'platform.validateJWT', error: 'JWT token required', severity: 'error' },
+        timestamp: new Date(),
       });
     }
     throw new Error('JWT token required');
@@ -25,9 +28,12 @@ export async function validateJWT(context: Context): Promise<void> {
   if (!secret) {
     if (emit) {
       await emit({
-        eventType: 'error',
-        eventData: { source: 'platform.validateJWT', error: 'JWT secret missing' },
-        severity: 'error',
+        name: 'auth.jwt.validation',
+        capability: context.capability || 'unknown',
+        phase: context.phase || 'unknown',
+        status: 'error',
+        metadata: { source: 'platform.validateJWT', error: 'JWT secret missing', severity: 'error' },
+        timestamp: new Date(),
       });
     }
     throw new Error('JWT secret missing');
@@ -37,21 +43,28 @@ export async function validateJWT(context: Context): Promise<void> {
     context.user = decoded;
     if (emit) {
       await emit({
-        eventType: 'info',
-        eventData: { source: 'platform.validateJWT', user: decoded },
-        severity: 'info',
+        name: 'auth.jwt.validation',
+        capability: context.capability || 'unknown',
+        phase: context.phase || 'unknown',
+        status: 'success',
+        metadata: { source: 'platform.validateJWT', user: decoded, severity: 'info' },
+        timestamp: new Date(),
       });
     }
   } catch (error) {
     if (emit) {
       await emit({
-        eventType: 'error',
-        eventData: {
+        name: 'auth.jwt.validation',
+        capability: context.capability || 'unknown',
+        phase: context.phase || 'unknown',
+        status: 'error',
+        metadata: {
           source: 'platform.validateJWT',
           error: (error as Error).message,
           token,
+          severity: 'error',
         },
-        severity: 'error',
+        timestamp: new Date(),
       });
     }
     throw new Error('Invalid JWT token: ' + (error as Error).message);
@@ -73,28 +86,36 @@ export async function checkPermissions(context: Context, requiredRoles: string[]
   if (!hasPermission) {
     if (emit) {
       await emit({
-        eventType: 'warn',
-        eventData: {
+        name: 'auth.permissions.check',
+        capability: context.capability || 'unknown',
+        phase: context.phase || 'unknown',
+        status: 'failure',
+        metadata: {
           source: 'platform.checkPermissions',
           required: requiredRoles,
           actual: userRoles,
           user: context.user,
+          severity: 'warn',
         },
-        severity: 'warn',
+        timestamp: new Date(),
       });
     }
     throw new Error(`Insufficient permissions: required=${requiredRoles.join(',')}, actual=${userRoles.join(',')}`);
   }
   if (emit) {
     await emit({
-      eventType: 'info',
-      eventData: {
+      name: 'auth.permissions.check',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: {
         source: 'platform.checkPermissions',
         required: requiredRoles,
         actual: userRoles,
         user: context.user,
+        severity: 'info',
       },
-      severity: 'info',
+      timestamp: new Date(),
     });
   }
 }

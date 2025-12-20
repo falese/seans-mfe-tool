@@ -25,7 +25,7 @@ class ConsoleTelemetryService implements TelemetryService {
 
   emit(event: TelemetryEvent): void {
     this.events.push(event);
-    console.log(`[Telemetry] ${event.eventType} - ${event.eventData.phase} - ${event.eventData.capability}`);
+    console.log(`[Telemetry] ${event.name} - ${event.phase} - ${event.capability}`);
   }
 
   getEvents(): TelemetryEvent[] {
@@ -455,7 +455,7 @@ describe('RemoteMFE Integration Tests', () => {
       const loadEvents = telemetry.getEvents();
       console.log(`Captured ${loadEvents.length} load events`);
       
-      const phases = loadEvents.map(e => e.eventData.phase);
+      const phases = loadEvents.map(e => e.phase);
       expect(phases).toContain('entry');
       expect(phases).toContain('mount');
       expect(phases).toContain('enable_render');
@@ -474,7 +474,7 @@ describe('RemoteMFE Integration Tests', () => {
 
       const renderEvents = telemetry.getEvents();
       console.log(`Captured ${renderEvents.length} render events`);
-      expect(renderEvents.some(e => e.eventData.phase === 'render_start')).toBe(true);
+      expect(renderEvents.some(e => e.phase === 'render_start')).toBe(true);
     });
   });
 

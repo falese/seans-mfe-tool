@@ -130,11 +130,7 @@ export interface Context {
   handlers?: Record<string, (context: Context) => Promise<any>>;
   
   /** Telemetry emit function */
-  emit?: (event: {
-    eventType: string;
-    eventData: Record<string, unknown>;
-    severity?: 'info' | 'warn' | 'error';
-  }) => Promise<void>;
+  emit?: (event: TelemetryEvent) => Promise<void>;
   
   /** Custom handler data (extensible for MFE-specific needs) */
   [key: string]: unknown;

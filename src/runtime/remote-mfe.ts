@@ -49,16 +49,16 @@ export class RemoteMFE extends BaseMFE {
     try {
       // Phase 1: Entry - Fetch Module Federation remote entry
       const entryStart = Date.now();
-      telemetry.entry.start = new Date();
+      (telemetry as any).entry = { start: new Date() };
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'entry', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'entry', 'start'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          name: 'load-entry',
+          capability: 'load',
+          phase: 'entry',
+          status: 'start',
+          metadata: { mfe: this.manifest.name },
+          timestamp: new Date()
         });
       }
 
@@ -71,36 +71,35 @@ export class RemoteMFE extends BaseMFE {
       // Fetch container (in real implementation, this would use Module Federation runtime)
       this.container = await this.fetchContainer(remoteEntry);
       
-      telemetry.entry.duration = Date.now() - entryStart;
+      (telemetry as any).entry.duration = Date.now() - entryStart;
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'entry', 
-            capability: 'load', 
+          name: 'load-entry-metric',
+          capability: 'load',
+          phase: 'entry',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            duration: telemetry.entry.duration 
+            duration: (telemetry as any).entry.duration 
           },
-          severity: 'info',
-          tags: ['load', 'entry', 'duration'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: (telemetry as any).entry.duration
         });
       }
 
       // Phase 2: Mount - Initialize container and wire shared dependencies
       const mountStart = Date.now();
-      telemetry.mount.start = new Date();
+      (telemetry as any).mount = { start: new Date() };
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'mount', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'mount', 'start'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          name: 'load-mount',
+          capability: 'load',
+          phase: 'mount',
+          status: 'start',
+          metadata: { mfe: this.manifest.name },
+          timestamp: new Date()
         });
       }
 
@@ -111,58 +110,56 @@ export class RemoteMFE extends BaseMFE {
       // Extract available components from manifest
       this.availableComponents = this.extractAvailableComponents();
       
-      telemetry.mount.duration = Date.now() - mountStart;
+      (telemetry as any).mount.duration = Date.now() - mountStart;
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'mount', 
-            capability: 'load', 
+          name: 'load-mount-metric',
+          capability: 'load',
+          phase: 'mount',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            duration: telemetry.mount.duration,
+            duration: (telemetry as any).mount.duration,
             componentsCount: this.availableComponents.length
           },
-          severity: 'info',
-          tags: ['load', 'mount', 'duration'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: (telemetry as any).mount.duration
         });
       }
 
       // Phase 3: Enable-render - Prepare MFE state for render phase
       const enableRenderStart = Date.now();
-      telemetry.enableRender.start = new Date();
+      (telemetry as any).enableRender = { start: new Date() };
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'enable_render', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'enable_render', 'start'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          name: 'load-enable-render',
+          capability: 'load',
+          phase: 'enable_render',
+          status: 'start',
+          metadata: { mfe: this.manifest.name },
+          timestamp: new Date()
         });
       }
 
       // Prepare render state (validate components, prepare metadata)
       const capabilities = this.extractCapabilities();
       
-      telemetry.enableRender.duration = Date.now() - enableRenderStart;
+      (telemetry as any).enableRender.duration = Date.now() - enableRenderStart;
       
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'enable_render', 
-            capability: 'load', 
+          name: 'load-enable-render-metric',
+          capability: 'load',
+          phase: 'enable_render',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            duration: telemetry.enableRender.duration
+            duration: (telemetry as any).enableRender.duration
           },
-          severity: 'info',
-          tags: ['load', 'enable_render', 'duration'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: (telemetry as any).enableRender.duration
         });
       }
 
@@ -170,18 +167,16 @@ export class RemoteMFE extends BaseMFE {
       const totalDuration = Date.now() - startTime;
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'completed', 
-            capability: 'load', 
+          name: 'load-completed',
+          capability: 'load',
+          phase: 'completed',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            duration: totalDuration,
             success: true
           },
-          severity: 'info',
-          tags: ['load', 'completed'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: totalDuration
         });
       }
 
@@ -207,17 +202,15 @@ export class RemoteMFE extends BaseMFE {
       // Emit error telemetry
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'error',
-          eventData: { 
-            phase: 'error', 
-            capability: 'load', 
+          name: 'load-error',
+          capability: 'load',
+          phase: 'error',
+          status: 'error',
+          metadata: { 
             mfe: this.manifest.name,
             error: (error as Error).message
           },
-          severity: 'error',
-          tags: ['load', 'error'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          timestamp: new Date()
         });
       }
 
@@ -260,17 +253,15 @@ export class RemoteMFE extends BaseMFE {
       // Telemetry: Render start
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'info',
-          eventData: { 
-            phase: 'render_start', 
-            capability: 'render', 
+          name: 'render-start',
+          capability: 'render',
+          phase: 'render_start',
+          status: 'start',
+          metadata: { 
             mfe: this.manifest.name,
             component: componentName
           },
-          severity: 'info',
-          tags: ['render', 'start'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          timestamp: new Date()
         });
       }
 
@@ -296,18 +287,16 @@ export class RemoteMFE extends BaseMFE {
       // Telemetry: Component fetch duration
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'component_fetch', 
-            capability: 'render', 
+          name: 'render-component-fetch',
+          capability: 'render',
+          phase: 'component_fetch',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            component: componentName,
-            duration: renderDuration
+            component: componentName
           },
-          severity: 'info',
-          tags: ['render', 'component_fetch', 'duration'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: renderDuration
         });
       }
 
@@ -319,18 +308,16 @@ export class RemoteMFE extends BaseMFE {
       // Telemetry: Mount duration
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'mount', 
-            capability: 'render', 
+          name: 'render-mount',
+          capability: 'render',
+          phase: 'mount',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
-            component: componentName,
-            duration: mountDuration
+            component: componentName
           },
-          severity: 'info',
-          tags: ['render', 'mount', 'duration'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: mountDuration
         });
       }
 
@@ -339,19 +326,17 @@ export class RemoteMFE extends BaseMFE {
       // Telemetry: Render completed
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'metric',
-          eventData: { 
-            phase: 'completed', 
-            capability: 'render', 
+          name: 'render-completed',
+          capability: 'render',
+          phase: 'completed',
+          status: 'success',
+          metadata: { 
             mfe: this.manifest.name,
             component: componentName,
-            duration: totalDuration,
             success: true
           },
-          severity: 'info',
-          tags: ['render', 'completed'],
           timestamp: new Date(),
-          mfe: this.manifest.name
+          duration: totalDuration
         });
       }
 
@@ -380,17 +365,15 @@ export class RemoteMFE extends BaseMFE {
       // Emit error telemetry
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
-          eventType: 'error',
-          eventData: { 
-            phase: 'error', 
-            capability: 'render', 
+          name: 'render-error',
+          capability: 'render',
+          phase: 'error',
+          status: 'error',
+          metadata: { 
             mfe: this.manifest.name,
             error: (error as Error).message
           },
-          severity: 'error',
-          tags: ['render', 'error'],
-          timestamp: new Date(),
-          mfe: this.manifest.name
+          timestamp: new Date()
         });
       }
 
@@ -447,18 +430,19 @@ export class RemoteMFE extends BaseMFE {
    * Extract available components from manifest
    */
   private extractAvailableComponents(): string[] {
-    // Extract from manifest.exposes or manifest.capabilities
-    if (this.manifest.exposes) {
-      return Object.keys(this.manifest.exposes);
+    // Extract from manifest.capabilities
+    if (!this.manifest.capabilities) {
+      return [];
     }
     
-    // Fallback: extract from capabilities
-    const renderCapability = this.manifest.capabilities?.find(
-      (cap: any) => cap.name === 'render'
-    );
-    
-    if (renderCapability?.components) {
-      return renderCapability.components;
+    // Find render capability and extract components
+    for (const capEntry of this.manifest.capabilities) {
+      if (capEntry.render) {
+        const components = (capEntry.render as any).components;
+        if (Array.isArray(components)) {
+          return components;
+        }
+      }
     }
     
     return [];
@@ -467,23 +451,24 @@ export class RemoteMFE extends BaseMFE {
   /**
    * Extract capability metadata from manifest
    */
-  private extractCapabilities(): Array<{ name: string; available: boolean; requiresAuth?: boolean; requiresValidation?: boolean }> {
+  private extractCapabilities(): string[] {
     if (!this.manifest.capabilities) {
       return [];
     }
 
-    return this.manifest.capabilities.map((cap: any) => ({
-      name: cap.name,
-      available: true,
-      requiresAuth: cap.requiresAuth,
-      requiresValidation: cap.requiresValidation
-    }));
+    // Extract capability names from manifest entries
+    const capabilityNames: string[] = [];
+    for (const capEntry of this.manifest.capabilities) {
+      const keys = Object.keys(capEntry);
+      capabilityNames.push(...keys);
+    }
+    return capabilityNames;
   }
 
   /**
    * Mount React component to DOM using React 18 createRoot
    */
-  private async mountComponent(Component: any, props: Record<string, any>, containerId: string): Promise<HTMLElement> {
+  private async mountComponent(Component: any, props: Record<string, any>, containerId: string): Promise<any> {
     // In a real implementation, this would:
     // 1. Get DOM element by containerId
     // 2. Use React 18 createRoot API
@@ -520,10 +505,18 @@ export class RemoteMFE extends BaseMFE {
   protected async doHealth(context: Context): Promise<HealthResult> {
     return {
       status: 'healthy',
-      checks: {
-        container: this.container !== null,
-        componentsAvailable: this.availableComponents.length > 0
-      },
+      checks: [
+        {
+          name: 'container',
+          status: this.container !== null ? 'pass' : 'fail',
+          message: this.container !== null ? 'Container loaded' : 'Container not loaded'
+        },
+        {
+          name: 'components',
+          status: this.availableComponents.length > 0 ? 'pass' : 'fail',
+          message: `${this.availableComponents.length} components available`
+        }
+      ],
       timestamp: new Date()
     };
   }
@@ -534,14 +527,14 @@ export class RemoteMFE extends BaseMFE {
       version: this.manifest.version,
       type: this.manifest.type,
       capabilities: this.extractCapabilities(),
-      timestamp: new Date()
+      manifest: this.manifest
     };
   }
 
   protected async doSchema(context: Context): Promise<SchemaResult> {
     return {
-      schema: this.manifest,
-      timestamp: new Date()
+      schema: JSON.stringify(this.manifest, null, 2),
+      format: 'json'
     };
   }
 
@@ -554,11 +547,14 @@ export class RemoteMFE extends BaseMFE {
       const event = context.inputs?.event;
       if (event) {
         this.deps.telemetry.emit(event as any);
+        return {
+          emitted: true,
+          eventId: 'generated-event-id'
+        };
       }
     }
     return {
-      emitted: true,
-      timestamp: new Date()
+      emitted: false
     };
   }
 }

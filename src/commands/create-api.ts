@@ -1,14 +1,37 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const SwaggerParser = require('@apidevtools/swagger-parser');
-const { execSync } = require('child_process');
-const { DatabaseGenerator } = require('../codegen/APIGenerator/DatabaseGenerator');
-const { ControllerGenerator } = require('../codegen/APIGenerator/ControllerGenerator');
-const { generateRoutes } = require('../codegen/APIGenerator/RouteGenerator');
-const { generateJWTSecret } = require('../utils/securityUtils');
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import chalk from 'chalk';
+import SwaggerParser from '@apidevtools/swagger-parser';
+import { execSync } from 'child_process';
+import { DatabaseGenerator } from '../codegen/APIGenerator/DatabaseGenerator';
+import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator';
+import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
+import { generateJWTSecret } from '../utils/securityUtils';
 
-function validateDatabaseType(dbType) {
+interface ApiOptions {
+  spec: string;
+  database?: string;
+  port?: number | string;
+}
+
+interface TemplateVars {
+  name: string;
+  version: string;
+  database: string;
+  port: number;
+}
+
+interface OpenAPISpec {
+  info: {
+    version?: string;
+  };
+  paths: Record<string, any>;
+  components?: {
+    schemas?: Record<string, any>;
+  };
+}
+
+function validateDatabaseType(dbType: string): boolean {
   const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
   if (!validDatabases.includes(dbType.toLowerCase())) {
     throw new Error(`Unsupported database type: ${dbType}. Valid options are: ${validDatabases.join(', ')}`);
@@ -16,19 +39,19 @@ function validateDatabaseType(dbType) {
   return true;
 }
 
-async function loadOASSpec(specPath) {
+async function loadOASSpec(specPath: string): Promise<OpenAPISpec> {
   try {
     if (specPath.startsWith('http')) {
-      return await SwaggerParser.parse(specPath);
+      return await SwaggerParser.parse(specPath) as OpenAPISpec;
     }
     const localPath = path.resolve(process.cwd(), specPath);
-    return await SwaggerParser.parse(localPath);
-  } catch (error) {
+    return await SwaggerParser.parse(localPath) as OpenAPISpec;
+  } catch (error: any) {
     throw new Error(`Failed to parse OpenAPI spec: ${error.message}`);
   }
 }
 
-function validatePort(port) {
+function validatePort(port: number | string): number {
   const n = typeof port === 'string' ? Number(port) : port;
   if (!Number.isInteger(n) || n < 1 || n > 65535) {
     throw new Error('Invalid port');
@@ -36,8 +59,8 @@ function validatePort(port) {
   return n;
 }
 
-async function ensureMiddleware(middlewareDir) {
-  const middleware = {
+async function ensureMiddleware(middlewareDir: string): Promise<void> {
+  const middleware: Record<string, string> = {
     'auth.js': `const jwt = require('jsonwebtoken');
 const { UnauthorizedError } = require('../utils/errors');
 
@@ -47,7 +70,7 @@ function auth(req, res, next) {
     if (!token) {
       throw new UnauthorizedError('Authorization token required');
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
@@ -130,8 +153,8 @@ module.exports = requestId;`
   }
 }
 
-async function ensureUtils(utilsDir) {
-  const utils = {
+async function ensureUtils(utilsDir: string): Promise<void> {
+  const utils: Record<string, string> = {
     'logger.js': `const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -228,22 +251,22 @@ module.exports = {
   }
 }
 
-async function processTemplates(targetDir, vars) {
+async function processTemplates(targetDir: string, vars: TemplateVars): Promise<void> {
   try {
     await mergePackageJson(targetDir, vars.database, vars);
     await processConfigFiles(targetDir, vars);
     await generateEnvironmentFiles(targetDir, vars);
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Failed to process templates: ${error.message}`);
   }
 }
 
-async function mergePackageJson(targetDir, dbType, vars) {
+async function mergePackageJson(targetDir: string, dbType: string, vars: TemplateVars): Promise<void> {
   try {
     const basePkgPath = path.join(targetDir, 'package.json');
     const dbPkgPath = path.join(targetDir, `package.json.addon`);
-    
-    let basePkg = await fs.readJson(basePkgPath);
+
+    let basePkg: any = await fs.readJson(basePkgPath);
     basePkg.name = vars.name;
     basePkg.version = vars.version;
 
@@ -331,12 +354,12 @@ async function mergePackageJson(targetDir, dbType, vars) {
 
     await fs.writeFile(basePkgPath, JSON.stringify(basePkg, null, 2), 'utf8');
     console.log(chalk.green('✓ Generated package.json'));
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Failed to process package.json: ${error.message}`);
   }
 }
 
-async function processConfigFiles(targetDir, vars) {
+async function processConfigFiles(targetDir: string, vars: TemplateVars): Promise<void> {
   const configFiles = [
     'src/config.js',
     'src/config/database.js',
@@ -367,9 +390,9 @@ async function processConfigFiles(targetDir, vars) {
   }
 }
 
-async function generateEnvironmentFiles(targetDir, vars) {
+async function generateEnvironmentFiles(targetDir: string, vars: TemplateVars): Promise<void> {
   const jwtSecret = generateJWTSecret();
-  
+
   const envContent = `# Server Configuration
 NODE_ENV=development
 PORT=${vars.port}
@@ -382,7 +405,7 @@ JWT_SECRET=${jwtSecret}
 JWT_EXPIRES_IN=1d
 
 # Database Configuration
-${vars.database.includes('mongo') ? 
+${vars.database.includes('mongo') ?
   'MONGODB_URI=mongodb://localhost:27017/' + vars.name.toLowerCase() :
   'DB_PATH=./src/database/development.sqlite'}
 
@@ -405,7 +428,7 @@ JWT_SECRET=CHANGE_THIS_TO_A_SECURE_RANDOM_SECRET_IN_PRODUCTION
 JWT_EXPIRES_IN=1d
 
 # Database Configuration
-${vars.database.includes('mongo') ? 
+${vars.database.includes('mongo') ?
   'MONGODB_URI=mongodb://localhost:27017/' + vars.name.toLowerCase() :
   'DB_PATH=./src/database/development.sqlite'}
 
@@ -420,30 +443,30 @@ CORS_ORIGIN=*`;
 
   await fs.writeFile(envPath, envContent, 'utf8');
   await fs.writeFile(envExamplePath, envExampleContent, 'utf8');
-  
+
   console.log(chalk.green('✓ Generated environment files'));
   console.log(chalk.yellow('⚠️  SECURITY: .env file contains a randomly generated JWT secret'));
   console.log(chalk.yellow('   Keep this file secure and never commit it to version control!'));
 }
 
-async function generateDatabaseInit(targetDir, dbType) {
+async function generateDatabaseInit(targetDir: string, dbType: string): Promise<void> {
   const initPath = path.join(targetDir, 'src', 'database', 'init.js');
-  const content = dbType.toLowerCase().includes('mongo') ? 
-    generateMongoInitContent() : 
+  const content = dbType.toLowerCase().includes('mongo') ?
+    generateMongoInitContent() :
     generateSqliteInitContent();
 
   await fs.writeFile(initPath, content);
   console.log(chalk.green('✓ Generated database initialization script'));
 }
 
-function generateMongoInitContent() {
+function generateMongoInitContent(): string {
   return `const mongoose = require('mongoose');
 const { SchemaManager } = require('../utils/schemaManager');
 
 async function initializeDatabase() {
   try {
     const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/your_database';
-    
+
     await mongoose.connect(mongoUrl, {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -453,7 +476,7 @@ async function initializeDatabase() {
 
     // Initialize schema management
     await SchemaManager.initialize();
-    
+
     console.log('Database initialization complete');
   } catch (error) {
     console.error('Database initialization failed:', error);
@@ -464,7 +487,7 @@ async function initializeDatabase() {
 module.exports = initializeDatabase;`;
 }
 
-function generateSqliteInitContent() {
+function generateSqliteInitContent(): string {
   return `const { sequelize } = require('../models');
 const logger = require('../utils/logger');
 
@@ -492,31 +515,32 @@ module.exports = initializeDatabase;`;
 
 
 
-async function createApiCommand(name, options) {
-  let tmpSpec = null;
+async function createApiCommand(name: string, options: ApiOptions): Promise<void> {
+  let tmpSpec: OpenAPISpec | null = null;
   try {
     console.log(chalk.blue(`Creating API "${name}"...`));
-    
+
     const projectRoot = path.resolve(__dirname, '..');
-    const baseTemplateDir = path.join(projectRoot, 'templates/api/base');
+    const baseTemplateDir = path.join(projectRoot, 'codegen/templates/api/base');
     const targetDir = path.resolve(process.cwd(), name);
-    
+
     const dbType = options.database?.toLowerCase() || 'sqlite';
     validateDatabaseType(dbType);
     const port = validatePort(options.port || 3001);
-    
+
     console.log(chalk.blue('\nParsing OpenAPI specification...'));
     tmpSpec = await loadOASSpec(options.spec);
-    const spec = await SwaggerParser.dereference(tmpSpec);
-    
+    const dereferencedSpec = await SwaggerParser.dereference(tmpSpec as any);
+    const spec = dereferencedSpec as unknown as OpenAPISpec;
+
     await fs.ensureDir(targetDir);
     await fs.copy(baseTemplateDir, targetDir);
-    
-    const dbTemplateDir = path.join(projectRoot, `templates/api/${dbType}`);
+
+    const dbTemplateDir = path.join(projectRoot, `codegen/templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
       await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
     }
-    
+
     const dirs = {
       routes: path.join(targetDir, 'src', 'routes'),
       controllers: path.join(targetDir, 'src', 'controllers'),
@@ -550,7 +574,7 @@ async function createApiCommand(name, options) {
       console.error(error);
       throw error;
     }
-    
+
     // Process templates and configurations
     await processTemplates(targetDir, {
       name,
@@ -564,11 +588,11 @@ async function createApiCommand(name, options) {
 
     // Install dependencies
     console.log(chalk.blue('\nInstalling dependencies...'));
-    execSync('npm install', { 
-      cwd: targetDir, 
+    execSync('npm install', {
+      cwd: targetDir,
       stdio: 'inherit',
-      env: { 
-        ...process.env, 
+      env: {
+        ...process.env,
         ADBLOCK: '1',
         DISABLE_OPENCOLLECTIVE: '1',
         NO_UPDATE_NOTIFIER: '1'
@@ -581,7 +605,7 @@ async function createApiCommand(name, options) {
     // Align with test harness expecting process.exit to be invoked
     process.exit(1);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error(chalk.red('\nFailed to create API:'));
     console.error(error.message);
     if (error.stack && process.env.DEBUG) {
@@ -592,15 +616,15 @@ async function createApiCommand(name, options) {
   }
 }
 
-function logSuccessInfo(name, dbType, spec, options) {
+function logSuccessInfo(name: string, dbType: string, spec: OpenAPISpec, options: ApiOptions): void {
   console.log(chalk.green('\n✓ API created successfully!'));
-  
+
   console.log(chalk.blue(`\nAPI Structure generated from ${options.spec}:`));
   console.log(`Database: ${dbType}`);
   console.log(`Routes: ${Object.keys(spec.paths).length}`);
   console.log(`Models: ${Object.keys(spec.components?.schemas || {}).length}`);
   console.log(`Port: ${options.port || 3001}`);
-  
+
   console.log('\nProject Structure:');
   console.log('src/');
   console.log('  ├── config/         # Configuration files');
@@ -610,13 +634,13 @@ function logSuccessInfo(name, dbType, spec, options) {
   console.log('  ├── models/         # Database models');
   console.log('  ├── routes/         # API routes');
   console.log('  └── utils/          # Utility functions');
-  
+
   console.log('\nAvailable Scripts:');
   console.log('  npm start          # Start the production server');
   console.log('  npm run dev        # Start development server with hot reload');
   console.log('  npm test           # Run tests');
   console.log('  npm run lint       # Run linter');
-  
+
   if (dbType.includes('mongo')) {
     console.log('  npm run db:seed    # Seed the database with sample data');
     console.log('  npm run db:reset   # Reset database to initial state');
@@ -624,10 +648,10 @@ function logSuccessInfo(name, dbType, spec, options) {
     console.log('  npm run db:migrate # Run database migrations');
     console.log('  npm run db:seed    # Seed the database with sample data');
   }
-  
+
   console.log('\nNext steps:');
   console.log(chalk.blue(`1. cd ${name}`));
-  
+
   if (dbType.includes('mongo')) {
     console.log(chalk.blue('2. Configure MongoDB connection in .env file'));
     console.log(chalk.blue('3. Run npm run db:seed to initialize the database'));
@@ -635,14 +659,14 @@ function logSuccessInfo(name, dbType, spec, options) {
     console.log(chalk.blue('2. Run npm run db:migrate to create database tables'));
     console.log(chalk.blue('3. Run npm run db:seed to add sample data'));
   }
-  
+
   console.log(chalk.blue('4. npm run dev'));
-  
+
   console.log('\nAPI Documentation:');
   console.log(chalk.blue(`http://localhost:${options.port || 3001}/api-docs`));
 }
 
-module.exports = {
+export {
   createApiCommand,
   // Export other functions for testing
   validateDatabaseType,

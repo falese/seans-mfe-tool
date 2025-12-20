@@ -475,7 +475,7 @@ describe('BaseMFE Full Coverage', () => {
     const context: any = { timestamp: new Date(), requestId: 'test3' };
     await (mfe as any)["emitHookFailure"]('hook', 'handler', new Error('fail'), context, 'warn');
     expect(telemetryEvents.length).toBeGreaterThan(0);
-    expect(telemetryEvents[0].eventType).toBe('error');
+    expect(telemetryEvents[0].status).toBe('error');
   });
 
   it('findCapabilityConfig returns correct config and null', () => {
@@ -582,7 +582,7 @@ describe('BaseMFE Full Coverage', () => {
     const context: any = { timestamp: new Date(), requestId: 'test16' };
     await (mfe as any).emitHookFailure('hook', 'handler', new Error('fail'), context, 'warn');
     expect(telemetryEvents.length).toBeGreaterThan(0);
-    expect(telemetryEvents[0].eventType).toBe('error');
+    expect(telemetryEvents[0].status).toBe('error');
   });
 
   it('findCapabilityConfig returns correct config', () => {

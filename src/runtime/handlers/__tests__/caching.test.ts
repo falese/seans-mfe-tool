@@ -5,7 +5,7 @@ describe('platform.cacheResult', () => {
     const emitMock = jest.fn();
     const context = { emit: emitMock } as any;
     await cacheResult(context, { ttl: 123 });
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'info', eventData: expect.objectContaining({ ttl: 123 }) }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'caching.result.cache', status: 'success', metadata: expect.objectContaining({ ttl: 123 }) }));
   });
 
   it('should not throw if emit is not a function', async () => {
