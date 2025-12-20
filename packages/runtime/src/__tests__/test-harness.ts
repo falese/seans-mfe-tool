@@ -36,7 +36,7 @@ import type {
    
 } from '../base-mfe';
 
-import type { DSLManifest } from '../../dsl/schema.ts';
+import type { DSLManifest } from '@seans-mfe-tool/dsl';
 
 /**
  * Mock Module Federation Container

@@ -30,14 +30,14 @@ jest.mock('path', () => ({
 }));
 
 // Mock DSL modules
-jest.mock('../../dsl', () => ({
+jest.mock('@seans-mfe-tool/dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
   formatErrorsForCLI: jest.fn((errors) => errors.map((e: any) => e.message).join('\n'))
 }));
 
 
-jest.mock('../../codegen/UnifiedGenerator/unified-generator', () => {
-  const actual = jest.requireActual('../../codegen/UnifiedGenerator/unified-generator');
+jest.mock('@seans-mfe-tool/codegen', () => {
+  const actual = jest.requireActual('@seans-mfe-tool/codegen');
   return {
     ...actual,
     generateAllFiles: jest.fn(),
@@ -50,9 +50,9 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
 import { remoteGenerateCommand } from '../remote-generate';
-import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe-tool/dsl';
 
-import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe-tool/codegen';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;

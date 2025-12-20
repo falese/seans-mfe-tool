@@ -7,7 +7,7 @@
  */
 
 import { BaseMFE, type Context, type LoadResult, type RenderResult, type HealthResult, type DescribeResult, type SchemaResult, type QueryResult, type EmitResult } from '../base-mfe';
-import type { DSLManifest } from '../../dsl/schema';
+import type { DSLManifest } from '@seans-mfe-tool/dsl';
 
 // =============================================================================
 // Test MFE Implementation

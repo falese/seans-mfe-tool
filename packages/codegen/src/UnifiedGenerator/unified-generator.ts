@@ -7,7 +7,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
-import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '../../dsl/schema';
+import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '@seans-mfe-tool/dsl';
 
 export interface GeneratedFile {
   path: string;

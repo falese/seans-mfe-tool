@@ -1,19 +1,27 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
-  "main": "bin/seans-mfe-tool.js",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc && node scripts/copy-runtime-files.js",
+    "build": "npm run build --workspaces",
+    "build:cli": "npm run build --workspace=@seans-mfe-tool/cli",
+    "build:runtime": "npm run build --workspace=@seans-mfe-tool/runtime",
+    "build:dsl": "npm run build --workspace=@seans-mfe-tool/dsl",
+    "build:codegen": "npm run build --workspace=@seans-mfe-tool/codegen",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --reporters='default' --reporters='jest-junit'",
-    "lint": "eslint src/**/*.{js,ts}",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
-    "dev": "node bin/seans-mfe-tool.js",
+    "lint": "eslint packages/*/src/**/*.{js,ts}",
+    "format": "prettier --write \"packages/**/src/**/*.{js,jsx,ts,tsx,json}\"",
+    "dev": "node packages/cli/bin/seans-mfe-tool.js",
+    "clean": "rm -rf packages/*/dist",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --build --force"
   },
   "keywords": [
     "module-federation",
@@ -26,25 +34,6 @@
   "author": "Sean",
   "license": "MIT",
   "description": "CLI tool for scaffolding Module Federation applications with React and MUI",
-  "bin": {
-    "seans-mfe-tool": "./bin/seans-mfe-tool.js"
-  },
-  "dependencies": {
-    "@apidevtools/swagger-parser": "^10.1.0",
-    "@babel/generator": "^7.22.1",
-    "@babel/parser": "^7.23.0",
-    "@babel/traverse": "^7.23.0",
-    "@babel/types": "^7.22.1",
-    "chalk": "^4.1.2",
-    "commander": "^12.1.0",
-    "diff": "^5.1.0",
-    "ejs": "^3.1.10",
-    "fs-extra": "^11.2.0",
-    "inquirer": "^12.0.1",
-    "js-yaml": "^4.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "zod": "^4.1.13"
-  },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@babel/plugin-transform-runtime": "^7.25.9",
