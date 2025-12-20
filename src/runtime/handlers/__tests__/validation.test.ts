@@ -9,7 +9,7 @@ describe('platform.validateInputs', () => {
     const emitMock = jest.fn();
     const context = { inputs: { foo: 'bar' }, emit: emitMock } as any;
     await validateInputs(context);
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'telemetry' }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'validation.inputs.validate', status: 'success' }));
   });
 
   it('should not throw if emit is not a function', async () => {
@@ -24,6 +24,6 @@ describe('platform.sanitizeInputs', () => {
     const context = { inputs: { foo: '<bar>' }, emit: emitMock } as any;
     await sanitizeInputs(context);
     expect(context.inputs.foo).toBe('bar');
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'telemetry' }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'validation.inputs.sanitize', status: 'success' }));
   });
 });

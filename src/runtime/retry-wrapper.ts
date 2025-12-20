@@ -57,13 +57,17 @@ export async function withRetry<T>(
       // Emit retry telemetry
       if (attempt > 0 && context.emit) {
         await context.emit({
-          eventType: 'lifecycle.error.retry',
-          eventData: {
+          name: 'lifecycle.error.retry',
+          capability: context.capability || 'unknown',
+          phase: context.phase || 'unknown',
+          status: 'error',
+          metadata: {
             attempt,
             previousError: lastError?.message,
-            handler: hookName
+            handler: hookName,
+            severity: 'warn'
           },
-          severity: 'warn'
+          timestamp: new Date()
         });
       }
 
@@ -87,15 +91,19 @@ export async function withRetry<T>(
       // Emit classification telemetry
       if (context.emit) {
         await context.emit({
-          eventType: 'lifecycle.error.classified',
-          eventData: {
+          name: 'lifecycle.error.classified',
+          capability: context.capability || 'unknown',
+          phase: context.phase || 'unknown',
+          status: 'error',
+          metadata: {
             errorType: classification.type,
             retryable: classification.retryable,
             attempt,
             maxRetries: config.maxRetries,
-            handler: hookName
+            handler: hookName,
+            severity: 'error'
           },
-          severity: 'error'
+          timestamp: new Date()
         });
       }
 
@@ -122,14 +130,18 @@ export async function withRetry<T>(
       // Emit backoff telemetry
       if (context.emit) {
         await context.emit({
-          eventType: 'lifecycle.error.backoff',
-          eventData: {
+          name: 'lifecycle.error.backoff',
+          capability: context.capability || 'unknown',
+          phase: context.phase || 'unknown',
+          status: 'error',
+          metadata: {
             attempt,
             delay,
             backoff: config.backoff,
-            handler: hookName
+            handler: hookName,
+            severity: 'info'
           },
-          severity: 'info'
+          timestamp: new Date()
         });
       }
 
@@ -193,13 +205,17 @@ async function invokeFallbackHandler<T>(
   // Emit fallback telemetry
   if (context.emit) {
     await context.emit({
-      eventType: 'lifecycle.error.fallback',
-      eventData: {
+      name: 'lifecycle.error.fallback',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'error',
+      metadata: {
         retriesExhausted,
         fallbackHandler: fallbackHandlerName,
-        originalError: originalError.message
+        originalError: originalError.message,
+        severity: 'warn'
       },
-      severity: 'warn'
+      timestamp: new Date()
     });
   }
 

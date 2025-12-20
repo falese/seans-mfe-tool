@@ -102,19 +102,19 @@ export class TelemetryCapture implements TelemetryService {
   }
 
   getEventsByPhase(phase: string): TelemetryEvent[] {
-    return this.events.filter(e => e.eventData.phase === phase);
+    return this.events.filter(e => e.phase === phase);
   }
 
   getEventsByType(eventType: string): TelemetryEvent[] {
-    return this.events.filter(e => e.eventType === eventType);
+    return this.events.filter(e => e.name === eventType);
   }
 
   getMetrics(): TelemetryEvent[] {
-    return this.events.filter(e => e.eventType === 'metric');
+    return this.events.filter(e => e.name === 'metric');
   }
 
   getErrors(): TelemetryEvent[] {
-    return this.events.filter(e => e.eventType === 'error');
+    return this.events.filter(e => e.status === 'error');
   }
 
   clear() {
@@ -139,7 +139,7 @@ export class TelemetryCapture implements TelemetryService {
   assertDuration(phase: string, maxMs: number): void {
     const events = this.getEventsByPhase(phase);
     events.forEach(event => {
-      const duration = event.eventData.duration;
+      const duration = event.duration || event.eventData?.duration || event.metadata?.duration;
       if (typeof duration === 'number' && duration > maxMs) {
         throw new Error(`Phase "${phase}" took ${duration}ms, expected < ${maxMs}ms`);
       }
@@ -270,28 +270,28 @@ export class MFETestHarness {
       // Emit minimal telemetry events for assertions
       components.forEach(() => {
         this.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'entry', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'entry'],
+          name: 'load.entry',
+          capability: 'load',
+          phase: 'entry',
+          status: 'success',
           timestamp: new Date(),
-          mfe: this.manifest.name
+          metadata: { mfe: this.manifest.name }
         });
         this.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'mount', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'mount'],
+          name: 'load.mount',
+          capability: 'load',
+          phase: 'mount',
+          status: 'success',
           timestamp: new Date(),
-          mfe: this.manifest.name
+          metadata: { mfe: this.manifest.name }
         });
         this.telemetry.emit({
-          eventType: 'info',
-          eventData: { phase: 'enable_render', capability: 'load', mfe: this.manifest.name },
-          severity: 'info',
-          tags: ['load', 'enable_render'],
+          name: 'load.enable_render',
+          capability: 'load',
+          phase: 'enable_render',
+          status: 'success',
           timestamp: new Date(),
-          mfe: this.manifest.name
+          metadata: { mfe: this.manifest.name }
         });
       });
 

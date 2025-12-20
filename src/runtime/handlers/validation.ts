@@ -8,9 +8,12 @@ export async function validateInputs(context: Context): Promise<void> {
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {
     await emit({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.validateInputs', inputs: context.inputs },
-      severity: 'info',
+      name: 'validation.inputs.validate',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: { source: 'platform.validateInputs', inputs: context.inputs, severity: 'info' },
+      timestamp: new Date(),
     });
   }
 }
@@ -28,9 +31,12 @@ export async function sanitizeInputs(context: Context): Promise<void> {
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {
     await emit({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.sanitizeInputs', inputs: context.inputs },
-      severity: 'info',
+      name: 'validation.inputs.sanitize',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: { source: 'platform.sanitizeInputs', inputs: context.inputs, severity: 'info' },
+      timestamp: new Date(),
     });
   }
 }

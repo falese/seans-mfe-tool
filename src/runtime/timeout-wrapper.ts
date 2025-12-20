@@ -65,14 +65,18 @@ export async function withTimeout<T>(
       // Emit telemetry event
       if (context.emit) {
         await context.emit({
-          eventType: 'lifecycle.timeout',
-          eventData: {
+          name: 'lifecycle.timeout',
+          capability: context.capability || 'unknown',
+          phase: context.phase || 'before',
+          status: 'error',
+          metadata: {
             hook: options.hookName,
             timeout: options.timeoutMs,
             elapsed: options.timeoutMs,
-            onTimeout: options.onTimeout
+            onTimeout: options.onTimeout,
+            severity: options.onTimeout === 'error' ? 'error' : 'warn'
           },
-          severity: options.onTimeout === 'error' ? 'error' : 'warn'
+          timestamp: new Date()
         });
       }
 

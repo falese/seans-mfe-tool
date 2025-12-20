@@ -521,7 +521,7 @@ async function createApiCommand(name: string, options: ApiOptions): Promise<void
     console.log(chalk.blue(`Creating API "${name}"...`));
 
     const projectRoot = path.resolve(__dirname, '..');
-    const baseTemplateDir = path.join(projectRoot, 'templates/api/base');
+    const baseTemplateDir = path.join(projectRoot, 'codegen/templates/api/base');
     const targetDir = path.resolve(process.cwd(), name);
 
     const dbType = options.database?.toLowerCase() || 'sqlite';
@@ -530,12 +530,13 @@ async function createApiCommand(name: string, options: ApiOptions): Promise<void
 
     console.log(chalk.blue('\nParsing OpenAPI specification...'));
     tmpSpec = await loadOASSpec(options.spec);
-    const spec = await SwaggerParser.dereference(tmpSpec) as OpenAPISpec;
+    const dereferencedSpec = await SwaggerParser.dereference(tmpSpec as any);
+    const spec = dereferencedSpec as unknown as OpenAPISpec;
 
     await fs.ensureDir(targetDir);
     await fs.copy(baseTemplateDir, targetDir);
 
-    const dbTemplateDir = path.join(projectRoot, `templates/api/${dbType}`);
+    const dbTemplateDir = path.join(projectRoot, `codegen/templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
       await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
     }

@@ -6,9 +6,12 @@ export async function rateLimitCheck(context: Context, options?: { limit?: numbe
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {
     await emit({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.rateLimitCheck', limit: options?.limit },
-      severity: 'info',
+      name: 'rate-limiting.check',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: { source: 'platform.rateLimitCheck', limit: options?.limit, severity: 'info' },
+      timestamp: new Date(),
     });
   }
 }

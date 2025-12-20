@@ -6,7 +6,7 @@ describe('platform.handleError', () => {
     const context = { emit: emitMock } as any;
     const error = new Error('fail');
     await handleError(context, error);
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'error', eventData: expect.objectContaining({ error: 'fail' }) }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'error.handling.handle', status: 'error', metadata: expect.objectContaining({ error: 'fail' }) }));
   });
 
   it('should not throw if emit is not a function', async () => {

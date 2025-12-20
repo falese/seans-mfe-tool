@@ -97,15 +97,15 @@ describe('BaseMFE Coverage Edge Cases', () => {
 
   it('TelemetryEvent structure', () => {
     const event: any = {
-      eventType: 'info',
-      eventData: { foo: 'bar' },
-      severity: 'info',
-      tags: ['t'],
-      timestamp: new Date(),
-      mfe: 'cov-mfe'
+      name: 'test-info',
+      capability: 'test',
+      phase: 'test',
+      status: 'success',
+      metadata: { foo: 'bar', tags: ['t'] },
+      timestamp: new Date()
     };
-    expect(event.eventType).toBe('info');
-    expect(event.tags).toContain('t');
+    expect(event.name).toBe('test-info');
+    expect(event.metadata.tags).toContain('t');
   });
 
   it('VALID_TRANSITIONS covers all states', () => {

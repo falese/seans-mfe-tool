@@ -286,8 +286,8 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
     const args = consoleErrorSpy.mock.calls.find(call => String(call[0]).includes('[Telemetry]'));
     expect(args).toBeTruthy();
     const payload = args && args[1] ? JSON.parse(args[1] as string) : null;
-    expect(payload?.eventData?.phase).toBe('main');
-    expect(payload?.severity).toBe('error');
+    expect(payload?.phase).toBe('main');
+    expect(payload?.metadata?.severity).toBe('error');
     // After hook should not run
     expect(mfe.calls).not.toContain('logTelemetry');
   });
@@ -304,8 +304,8 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
     const args = consoleErrorSpy.mock.calls.find(call => String(call[0]).includes('[Telemetry]'));
     const payload = args && args[1] ? JSON.parse(args[1] as string) : null;
-    expect(payload?.eventData?.phase).toBe('before');
-    expect(payload?.severity).toBe('warn');
+    expect(payload?.phase).toBe('before');
+    expect(payload?.metadata?.severity).toBe('warn');
   });
 
   it('Mandatory hooks execute regardless of prior failures', async () => {
@@ -401,7 +401,7 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
     const args = consoleErrorSpy.mock.calls.find(call => String(call[0]).includes('[Telemetry]'));
     const payload = args && args[1] ? JSON.parse(args[1] as string) : null;
-    expect(payload?.severity).toBe('warn');
+    expect(payload?.metadata?.severity).toBe('warn');
   });
 
   it('Telemetry emitted on main failures (error)', async () => {
@@ -411,6 +411,6 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
     const args = consoleErrorSpy.mock.calls.find(call => String(call[0]).includes('[Telemetry]'));
     const payload = args && args[1] ? JSON.parse(args[1] as string) : null;
-    expect(payload?.severity).toBe('error');
+    expect(payload?.metadata?.severity).toBe('error');
   });
 // ...existing code...

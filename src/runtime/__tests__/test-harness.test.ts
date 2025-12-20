@@ -125,12 +125,12 @@ it('should throw error if telemetry phase not completed', () => {
 it('should throw error if telemetry errors exist', () => {
     const telemetry = new TelemetryCapture();
     telemetry.emit({
-        eventType: 'error',
-        eventData: { phase: 'entry', message: 'fail' },
-        severity: 'error',
-        tags: ['test'],
-        timestamp: new Date(),
-        mfe: 'test-mfe',
+        name: 'test-error',
+        capability: 'test',
+        phase: 'entry',
+        status: 'error',
+        metadata: { message: 'fail' },
+        timestamp: new Date()
     });
     expect(() => telemetry.assertNoErrors()).toThrow(/Expected no errors/);
 });
@@ -138,12 +138,13 @@ it('should throw error if telemetry errors exist', () => {
 it('should throw error if phase duration exceeds max', () => {
     const telemetry = new TelemetryCapture();
     telemetry.emit({
-        eventType: 'metric',
-        eventData: { phase: 'entry', duration: 100 },
-        severity: 'info',
-        tags: ['test'],
-        timestamp: new Date(),
-        mfe: 'test-mfe',
+        name: 'test-metric',
+        capability: 'test',
+        phase: 'entry',
+        status: 'success',
+        duration: 100,
+        metadata: { duration: 100 },
+        timestamp: new Date()
     });
     expect(() => telemetry.assertDuration('entry', 50)).toThrow(/took 100ms/);
 });

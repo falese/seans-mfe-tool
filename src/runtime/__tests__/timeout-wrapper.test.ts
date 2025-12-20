@@ -132,14 +132,18 @@ describe('withTimeout - quick tests', () => {
     }
 
     expect(context.emit).toHaveBeenCalledWith({
-      eventType: 'lifecycle.timeout',
-      eventData: {
+      name: 'lifecycle.timeout',
+      capability: 'load',
+      phase: 'before',
+      status: 'error',
+      timestamp: expect.any(Date),
+      metadata: {
         hook: 'slowHandler',
         timeout: 50,
         elapsed: 50,
-        onTimeout: 'error'
-      },
-      severity: 'error'
+        onTimeout: 'error',
+        severity: 'error'
+      }
     });
   });
 });

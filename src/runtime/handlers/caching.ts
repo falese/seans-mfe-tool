@@ -7,9 +7,12 @@ export async function cacheResult(context: Context, options?: { ttl?: number }):
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {
     await emit({
-      eventType: 'info',
-      eventData: { source: 'platform.cacheResult', ttl: options?.ttl },
-      severity: 'info',
+      name: 'caching.result.cache',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: { source: 'platform.cacheResult', ttl: options?.ttl, severity: 'info' },
+      timestamp: new Date(),
     });
   }
 }

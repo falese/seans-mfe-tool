@@ -4,9 +4,12 @@ export async function logTelemetry(context: Context, event?: object): Promise<vo
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {
     await emit({
-      eventType: 'telemetry',
-      eventData: { source: 'platform.logTelemetry', ...(event || {}) },
-      severity: 'info',
+      name: 'telemetry.log',
+      capability: context.capability || 'unknown',
+      phase: context.phase || 'unknown',
+      status: 'success',
+      metadata: { source: 'platform.logTelemetry', ...(event || {}), severity: 'info' },
+      timestamp: new Date(),
     });
   }
 }

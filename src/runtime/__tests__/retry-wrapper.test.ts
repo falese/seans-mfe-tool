@@ -124,8 +124,8 @@ describe('withRetry', () => {
       // Track delays through telemetry
       const delays: number[] = [];
       context.emit = jest.fn().mockImplementation((event: any) => {
-        if (event.eventType === 'lifecycle.error.backoff') {
-          delays.push(event.eventData.delay);
+        if (event.name === 'lifecycle.error.backoff') {
+          delays.push(event.metadata.delay);
         }
         return Promise.resolve();
       });
@@ -223,8 +223,8 @@ describe('withRetry', () => {
 
       expect(context.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          eventType: 'lifecycle.error.classified',
-          eventData: expect.objectContaining({
+          name: 'lifecycle.error.classified',
+          metadata: expect.objectContaining({
             errorType: 'network',
             retryable: true,
             attempt: 0
