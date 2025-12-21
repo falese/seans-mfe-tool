@@ -187,7 +187,8 @@ describe('DSL Validator', () => {
           {
             name: 'users-api',
             handler: {
-              openapi: { source: './specs/users.yaml' }
+              type: 'openapi',
+              source: './specs/users.yaml'
             }
           }
         ]
@@ -202,11 +203,14 @@ describe('DSL Validator', () => {
         sources: [
           {
             name: 'api',
-            handler: { openapi: { source: './api.yaml' } }
+            handler: {
+              type: 'openapi',
+              source: './api.yaml'
+            }
           }
         ],
         transforms: [
-          { name: 'filterSchema', options: { filters: ['Query.!*.internal'] } }
+          { filterSchema: { filters: ['Query.!*.internal'] } }
         ]
       };
 
@@ -229,7 +233,10 @@ describe('DSL Validator', () => {
         sources: [
           {
             // missing name
-            handler: { openapi: { source: './api.yaml' } }
+            handler: {
+              type: 'openapi',
+              source: './api.yaml'
+            }
           }
         ]
       };
@@ -290,8 +297,8 @@ describe('DSL Validator', () => {
         capabilities: [],
         data: {
           sources: [
-            { name: 'api', handler: { openapi: { source: './api.yaml' } } },
-            { name: 'api', handler: { openapi: { source: './api2.yaml' } } } // Duplicate
+            { name: 'api', handler: { type: 'openapi', source: './api.yaml' } },
+            { name: 'api', handler: { type: 'openapi', source: './api2.yaml' } } // Duplicate
           ]
         }
       };

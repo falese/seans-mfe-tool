@@ -408,8 +408,8 @@ export function extractManifestVars(manifest: DSLManifest) {
     inputTypeName,
     outputTypeName,
     manifest,
-    capabilities: [], // will be overwritten in generateAllFiles
-    lifecycleHooks: [], // will be overwritten in generateAllFiles
+    capabilities: [] as Array<{ method: string; config: any; returnTypeBase: string }>, // will be overwritten in generateAllFiles
+    lifecycleHooks: [] as Array<{ name: string }>, // will be overwritten in generateAllFiles
     
     // NEW: Dependency versions for templates (ADR-062)
     dependencyVersions: DEPENDENCY_VERSIONS,
@@ -455,7 +455,7 @@ export async function writeGeneratedFiles(
   files: GeneratedFile[],
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<{ files: GeneratedFile[]; skipped: string[]; errors: string[] }> {
-  const result = { files: [], skipped: [], errors: [] };
+  const result: { files: GeneratedFile[]; skipped: string[]; errors: string[] } = { files: [], skipped: [], errors: [] };
   for (const file of files) {
     try {
       const exists = await fs.pathExists(file.path);
@@ -497,7 +497,7 @@ export async function generateAllFiles(
   const files: GeneratedFile[] = [];
   const vars = extractManifestVars(manifest);
   // --- Platform contract-driven capability and lifecycle aggregation ---
-  const platformCapabilities = {
+  const platformCapabilities: Record<string, { method: string; returnTypeBase: string }> = {
     Load: { method: 'load', returnTypeBase: 'LoadResult' },
     Render: { method: 'render', returnTypeBase: 'RenderResult' },
     Refresh: { method: 'refresh', returnTypeBase: 'void' },
@@ -540,9 +540,10 @@ export async function generateAllFiles(
       // Filter out base capability names to prevent conflicts
       const baseCapabilityNames = Object.values(platformCapabilities).map(c => c.method);
       if (safeConfig.lifecycle) {
-        for (const phase of ['before', 'main', 'after', 'error']) {
-          if (safeConfig.lifecycle[phase]) {
-            for (const hookEntry of safeConfig.lifecycle[phase]) {
+        for (const phase of ['before', 'main', 'after', 'error'] as const) {
+          const phaseHooks = safeConfig.lifecycle[phase];
+          if (phaseHooks) {
+            for (const hookEntry of phaseHooks) {
               for (const hookName of Object.keys(hookEntry)) {
                 // Skip if it's a base capability name OR already added
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
