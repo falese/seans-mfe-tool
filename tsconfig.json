@@ -9,13 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["node", "jest"]
-  },
-  "files": [],
-  "references": [
-    { "path": "./packages/dsl" },
-    { "path": "./packages/runtime" },
-    { "path": "./packages/codegen" },
-    { "path": "./packages/cli" }
-  ]
+    "types": ["node", "jest"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  }
 }

@@ -21,7 +21,7 @@
     "dev": "node packages/cli/bin/seans-mfe-tool.js",
     "clean": "rm -rf packages/*/dist",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
-    "typecheck": "tsc --build --force"
+    "typecheck": "tsc --build --force tsconfig.build.json"
   },
   "keywords": [
     "module-federation",
