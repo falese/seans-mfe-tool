@@ -1,0 +1,60 @@
+/**
+ * ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
+ *
+ * Source: mfe-manifest.yaml
+ * Generated: <%= new Date().toISOString() %>
+ * Tool: seans-mfe-tool (ADR-063: TypeScript Mesh Configuration)
+ * Command: mfe bff:build
+ *
+ * This file is tracked in git to enable:
+ * - PR reviews of generated code
+ * - Debugging and git bisect
+ * - CI/CD without pre-build generation
+ *
+ * To modify: Update mfe-manifest.yaml data: section and regenerate
+ */
+import { MeshResolvedSource } from '@graphql-mesh/runtime';
+import { loadOpenAPISubgraph } from '@omnigraph/openapi';
+
+// Define sources
+const sources: MeshResolvedSource[] = [
+<%_ meshConfig.sources.forEach((source, idx) => { _%>
+  {
+    name: '<%= source.name %>',
+    handler: loadOpenAPISubgraph('<%= source.name %>', {
+      source: '<%= source.handler.openapi.source %>',
+      <%_ if (source.handler.openapi.operationHeaders) { _%>
+      operationHeaders: <%- JSON.stringify(source.handler.openapi.operationHeaders, null, 2).split('\n').join('\n      ') %>,
+      <%_ } _%>
+    }),
+    <%_ if (source.transforms && source.transforms.length > 0) { _%>
+    transforms: [
+      <%_ source.transforms.forEach((transform, tIdx) => { _%>
+      <%- JSON.stringify(transform, null, 2).split('\n').join('\n      ') %><%= tIdx < source.transforms.length - 1 ? ',' : '' %>
+      <%_ }); _%>
+    ],
+    <%_ } _%>
+  }<%= idx < meshConfig.sources.length - 1 ? ',' : '' %>
+<%_ }); _%>
+];
+
+// Mesh configuration
+export const meshConfig = {
+  sources,
+  <%_ if (meshConfig.transforms && meshConfig.transforms.length > 0) { _%>
+  transforms: [
+    <%_ meshConfig.transforms.forEach((transform, idx) => { _%>
+    <%- JSON.stringify(transform, null, 2).split('\n').join('\n    ') %><%= idx < meshConfig.transforms.length - 1 ? ',' : '' %>
+    <%_ }); _%>
+  ],
+  <%_ } _%>
+  <%_ if (meshConfig.plugins && meshConfig.plugins.length > 0) { _%>
+  plugins: [
+    <%_ meshConfig.plugins.forEach((plugin, idx) => { _%>
+    <%- JSON.stringify(plugin, null, 2).split('\n').join('\n    ') %><%= idx < meshConfig.plugins.length - 1 ? ',' : '' %>
+    <%_ }); _%>
+  ],
+  <%_ } _%>
+};
+
+export default meshConfig;
