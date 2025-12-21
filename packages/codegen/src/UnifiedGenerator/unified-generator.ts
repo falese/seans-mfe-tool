@@ -633,8 +633,7 @@ export async function generateAllFiles(
     
     const meshConfig: any = {
       sources: validSources,
-      transforms: manifest.data.transforms || [],
-      plugins: manifest.data.plugins || []
+      serve: manifest.data.serve || { endpoint: '/graphql', playground: true }
     };
     
     // Generate TypeScript mesh config instead of YAML

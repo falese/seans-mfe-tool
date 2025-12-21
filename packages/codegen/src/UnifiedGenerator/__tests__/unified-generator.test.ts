@@ -270,9 +270,10 @@ describe('unified-generator', () => {
     
     expect(serverTs).toBeDefined();
     
-    // Verify new programmatic Mesh imports
-    expect(serverTs?.content).toContain('import { createMesh } from \'@graphql-mesh/runtime\';');
-    expect(serverTs?.content).toContain('import meshConfig from \'./mesh.config\';');
+    // Verify correct Mesh imports (following examples/new-dsl/server.ts)
+    expect(serverTs?.content).toContain('import { getMesh } from \'@graphql-mesh/runtime\';');
+    expect(serverTs?.content).toContain('import { getMeshOptions } from \'./mesh.config\';');
+    expect(serverTs?.content).toContain('import { createYoga } from \'graphql-yoga\';');
     
     // Verify MeshContext interface
     expect(serverTs?.content).toContain('interface MeshContext {');
@@ -280,19 +281,23 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify programmatic mesh initialization
-    expect(serverTs?.content).toContain('function getMesh()');
-    expect(serverTs?.content).toContain('createMesh(meshConfig)');
+    // Verify async mesh initialization function
+    expect(serverTs?.content).toContain('async function initializeMesh()');
+    expect(serverTs?.content).toContain('const meshOptions = await getMeshOptions();');
+    expect(serverTs?.content).toContain('const mesh = await getMesh(meshOptions);');
+    expect(serverTs?.content).toContain('const yoga = createYoga({');
+    
+    // Verify Yoga server usage
+    expect(serverTs?.content).toContain('let yogaServer:');
+    expect(serverTs?.content).toContain('initializeMesh()');
+    expect(serverTs?.content).toContain('yogaServer = yoga;');
     
     // Verify async endpoint handler pattern
     expect(serverTs?.content).toContain('app.use(\'/graphql\', async (req: Request, res: Response) => {');
-    expect(serverTs?.content).toContain('const context: MeshContext = {');
-    expect(serverTs?.content).toContain('const mesh = await getMesh();');
-    expect(serverTs?.content).toContain('return mesh.httpHandler(req, res, context);');
+    expect(serverTs?.content).toContain('if (!yogaServer) {');
+    expect(serverTs?.content).toContain('const response = await yogaServer.handleNodeRequest(req, {});');
     
-    // Verify OLD broken pattern is NOT present
-    expect(serverTs?.content).not.toContain('next: NextFunction');
-    expect(serverTs?.content).not.toContain('(req as any).meshContext');
-    expect(serverTs?.content).not.toContain('next();');
+    // Verify helper function exists
+    expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
   });
 });
