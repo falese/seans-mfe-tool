@@ -15,6 +15,7 @@
 **Objective:** Verify clean environment and workspace structure.
 
 **Results:**
+
 - Clean install completed successfully
 - Workspace structure verified with 4 packages:
   - `@seans-mfe-tool/cli`
@@ -28,6 +29,7 @@
 **Objective:** Verify workspace dependencies and cleanup.
 
 **Results:**
+
 - Workspace symlinks functional: `ls node_modules/@seans-mfe-tool/` shows 4 packages
 - No unwanted `node_modules` in packages (verified with `find packages -name node_modules`)
 - Dependency graph validated:
@@ -61,6 +63,7 @@
    - **Solution:** Removed stray files, keeping only legitimate .js sources
 
 **Final Results:**
+
 - All 4 packages build successfully in correct order
 - Build command: `npm run build` (sequential: dsl → runtime → codegen → cli)
 - Artifact counts:
@@ -75,6 +78,7 @@
 **Objective:** Verify all test suites pass with workspace packages.
 
 **Results:**
+
 ```
 Test Suites: 55 passed, 55 total
 Tests:       1349 passed, 1349 total
@@ -83,6 +87,7 @@ Time:        1.924 s
 ```
 
 **Coverage:**
+
 - All packages tested with `@seans-mfe-tool/*` imports
 - Jest moduleNameMapper correctly resolves workspace packages
 - Test files use `require('@seans-mfe-tool/runtime')` (main export)
@@ -93,6 +98,7 @@ Time:        1.924 s
 **Objective:** Verify CLI loads and commands work.
 
 **Results:**
+
 - CLI loads: `node packages/cli/bin/seans-mfe-tool.js --version` → `1.0.0`
 - Help text displays all commands correctly
 - Available commands verified:
@@ -111,6 +117,7 @@ Time:        1.924 s
 **Objective:** Verify clean/rebuild cycle works.
 
 **Results:**
+
 - Clean script: `npm run clean` removes all `packages/*/dist/` ✅
 - Full rebuild: `npm run build` recreates all artifacts ✅
 - Build order enforced: dsl → runtime → codegen → cli ✅
@@ -122,26 +129,31 @@ Time:        1.924 s
 ### TypeScript Configurations
 
 #### packages/dsl/tsconfig.json
+
 - Inline compiler options (no extends)
 - `composite: true` for project references
 - `declaration: true` and `declarationMap: true`
 
 #### packages/runtime/tsconfig.json
+
 - References `packages/dsl`
 - Imports `@seans-mfe-tool/dsl` types
 
 #### packages/codegen/tsconfig.json
+
 - **Added `allowJs: true`** to compile .js source files
 - References `packages/dsl`
 - Post-build script copies templates
 
 #### packages/cli/tsconfig.json
+
 - **Added `allowJs: true`** to compile .js source files
 - References `packages/codegen` and `packages/dsl`
 
 ### Build Scripts
 
 **Root package.json:**
+
 ```json
 {
   "scripts": {
@@ -160,14 +172,17 @@ Time:        1.924 s
 ## Known Issues (Resolved)
 
 ### 1. Build Cache Persistence ✅ FIXED
+
 - **Issue:** `.tsbuildinfo` files prevented fresh builds
 - **Solution:** Clear before building: `find packages -name "*.tsbuildinfo" -delete && npm run build`
 
 ### 2. Mixed .ts/.js Sources ✅ FIXED
+
 - **Issue:** Packages have both TypeScript and JavaScript source files
 - **Solution:** Added `allowJs: true` to tsconfig for codegen and cli packages
 
 ### 3. Stray Compiled Files ✅ FIXED
+
 - **Issue:** .js/.d.ts files in src/ directories
 - **Solution:** Removed all stray files; legitimate .js sources restored from dist/
 
@@ -191,6 +206,7 @@ Time:        1.924 s
 ### Source File Locations
 
 **Before Migration:**
+
 ```
 src/
   codegen/
@@ -201,6 +217,7 @@ src/
 ```
 
 **After Migration:**
+
 ```
 packages/
   cli/src/
@@ -218,12 +235,14 @@ packages/
 ### Import Changes
 
 **Old (relative paths):**
+
 ```typescript
 import { DSLManifest } from '../dsl/schema';
 import { validateManifest } from '../../dsl/validator';
 ```
 
 **New (workspace packages):**
+
 ```typescript
 import { DSLManifest } from '@seans-mfe-tool/dsl';
 import { validateManifest } from '@seans-mfe-tool/dsl';
@@ -241,11 +260,13 @@ import { validateManifest } from '@seans-mfe-tool/dsl';
 ### For Development
 
 1. **Always clear build cache when debugging build issues:**
+
    ```bash
    find packages -name "*.tsbuildinfo" -delete
    ```
 
 2. **Use sequential build script:**
+
    ```bash
    npm run build  # Not npm run build --parallel
    ```
@@ -258,6 +279,7 @@ import { validateManifest } from '@seans-mfe-tool/dsl';
 ### For CI/CD
 
 1. **Build command:**
+
    ```bash
    npm ci
    npm run build
@@ -290,6 +312,7 @@ import { validateManifest } from '@seans-mfe-tool/dsl';
 ✅ **Monorepo migration successfully validated with zero test failures.**
 
 The workspace structure is functioning correctly with:
+
 - ✅ 4 packages with correct dependencies
 - ✅ TypeScript project references working
 - ✅ Sequential builds in dependency order
