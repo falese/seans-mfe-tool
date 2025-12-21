@@ -41,7 +41,7 @@ describe('unified-generator', () => {
     expect(filePaths).toContain(path.join(basePath, 'rspack.config.js'));
     expect(filePaths).toContain(path.join(basePath, 'src', 'features', 'DataAnalysis', 'DataAnalysis.tsx'));
     expect(filePaths).toContain(path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'));
-    expect(filePaths).toContain(path.join(basePath, '.meshrc.yaml'));
+    expect(filePaths).toContain(path.join(basePath, 'mesh.config.ts'));
   });
 
   it('generates src/index.tsx with React bootstrap', async () => {
@@ -254,14 +254,14 @@ describe('unified-generator', () => {
     };
     
     const files = await generateAllFiles(manifestWithEmptySources as any, basePath, { force: true });
-    const meshrc = files.find(f => f.path === path.join(basePath, '.meshrc.yaml'));
+    const meshConfig = files.find(f => f.path === path.join(basePath, 'mesh.config.ts'));
     
-    expect(meshrc).toBeDefined();
+    expect(meshConfig).toBeDefined();
     // Should only include ValidAPI
-    expect(meshrc?.content).toContain('ValidAPI');
-    expect(meshrc?.content).not.toContain('NoHandler');
+    expect(meshConfig?.content).toContain('ValidAPI');
+    expect(meshConfig?.content).not.toContain('NoHandler');
     // Verify sources array has exactly 1 valid entry
-    expect((meshrc?.content.match(/name:/g) || []).length).toBe(1);
+    expect((meshConfig?.content.match(/name: 'ValidAPI'/g) || []).length).toBe(1);
   });
 
   it('generates server.ts with correct Mesh handler integration', async () => {
@@ -270,8 +270,9 @@ describe('unified-generator', () => {
     
     expect(serverTs).toBeDefined();
     
-    // Verify Mesh imports
-    expect(serverTs?.content).toContain('import { createBuiltMeshHTTPHandler } from \'./.mesh\';');
+    // Verify new programmatic Mesh imports
+    expect(serverTs?.content).toContain('import { createMesh } from \'@graphql-mesh/runtime\';');
+    expect(serverTs?.content).toContain('import meshConfig from \'./mesh.config\';');
     
     // Verify MeshContext interface
     expect(serverTs?.content).toContain('interface MeshContext {');
@@ -279,22 +280,19 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify handler instantiation
-    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();');
+    // Verify programmatic mesh initialization
+    expect(serverTs?.content).toContain('function getMesh()');
+    expect(serverTs?.content).toContain('createMesh(meshConfig)');
     
-    // Verify context injection pattern (NOT the old middleware pattern)
-    expect(serverTs?.content).toContain('app.use(\'/graphql\', (req: Request, res: Response) => {');
+    // Verify async endpoint handler pattern
+    expect(serverTs?.content).toContain('app.use(\'/graphql\', async (req: Request, res: Response) => {');
     expect(serverTs?.content).toContain('const context: MeshContext = {');
-    expect(serverTs?.content).toContain('const requestWithContext = Object.assign(req, { context });');
-    expect(serverTs?.content).toContain('return meshHandler(requestWithContext as any, res as any, context);');
+    expect(serverTs?.content).toContain('const mesh = await getMesh();');
+    expect(serverTs?.content).toContain('return mesh.httpHandler(req, res, context);');
     
     // Verify OLD broken pattern is NOT present
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
     expect(serverTs?.content).not.toContain('next();');
-    
-    // Verify JWT extraction helper
-    expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
-    expect(serverTs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
   });
 });

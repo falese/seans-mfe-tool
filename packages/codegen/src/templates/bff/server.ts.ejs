@@ -125,15 +125,29 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Extract user ID from JWT token
-function extractUserIdFromToken(authHeader?: string): string | undefined {
-  if (!authHeader) return undefined;
+// Initialize server with async Mesh setup
+async function startServer() {
   try {
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.sub || payload.userId;
-  } catch {
-    return undefined;
+    // Pre-initialize Mesh to catch config errors early
+    await getMesh();
+    console.log('✓ GraphQL Mesh initialized successfully');
+    
+    app.listen(port, () => {
+      console.log(`🚀 <%= name %> BFF server running on port ${port}`);
+      console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
+<% if (includeStatic) { %>
+      console.log(`   Static assets: http://localhost:${port}/`);
+<% } %>
+      console.log(`   Health check: http://localhost:${port}/health`);
+      console.log(`   Config: mesh.config.ts (TypeScript, no build artifacts)`);
+    });
+  } catch (error) {
+    console.error('Failed to start BFF server:', error);
+    process.exit(1);
+  }
+}
+
+startServer(   return undefined;
   }
 }
 

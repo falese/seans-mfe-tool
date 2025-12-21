@@ -391,8 +391,7 @@ describe('RemoteMFE', () => {
       const errors = telemetry.getErrors();
       
       expect(errors.length).toBeGreaterThan(0);
-      const errorPhase = errors[0].phase || errors[0].eventData?.phase;
-      expect(errorPhase).toBeDefined();
+      expect(errors[0].phase).toBeDefined();
     });
 
     it('should include timestamps in all telemetry events', async () => {
