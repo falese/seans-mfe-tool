@@ -44,8 +44,8 @@ app.use(cors({
 app.get('/health', (req: express.Request, res: express.Response) => {
   res.json({ 
     status: 'healthy',
-    name: '<%= name %>',
-    version: '<%= version %>',
+    name: 'new-dsl',
+    version: '1.0.0',
     timestamp: new Date().toISOString()
   });
 });
@@ -105,7 +105,7 @@ app.use('/graphql', async (req: Request, res: Response) => {
   res.send(await response.text());
 });
 
-<% if (includeStatic) { %>
+
 // Static MFE assets
 // Following REQ-BFF-004: BFF + Static Assets Same Deployable
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -114,7 +114,7 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get('*', (req: express.Request, res: express.Response) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-<% } %>
+
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -125,42 +125,28 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Initialize server with async Mesh setup
-async function startServer() {
+// Extract user ID from JWT token
+function extractUserIdFromToken(authHeader?: string): string | undefined {
+  if (!authHeader) return undefined;
   try {
-    // Pre-initialize Mesh to catch config errors early
-    await getMesh();
-    console.log('✓ GraphQL Mesh initialized successfully');
-    
-    app.listen(port, () => {
-      console.log(`🚀 <%= name %> BFF server running on port ${port}`);
-      console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
-<% if (includeStatic) { %>
-      console.log(`   Static assets: http://localhost:${port}/`);
-<% } %>
-      console.log(`   Health check: http://localhost:${port}/health`);
-      console.log(`   Config: mesh.config.ts (TypeScript, no build artifacts)`);
-    });
-  } catch (error) {
-    console.error('Failed to start BFF server:', error);
-    process.exit(1);
+    const token = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return payload.sub || payload.userId;
+  } catch {
+    return undefined;
   }
 }
 
-startServer(   return undefined;
-  }
-}
-
-const port = process.env.PORT || <%= port %>;
+const port = process.env.PORT || 4002;
 
 app.listen(port, () => {
-  console.log(`🚀 <%= name %> BFF server running on port ${port}`);
+  console.log(`🚀 new-dsl BFF server running on port ${port}`);
   console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
-<% if (includeStatic) { %>
+
   console.log(`   Static assets: http://localhost:${port}/`);
-<% } %>
+
   console.log(`   Health check: http://localhost:${port}/health`);
-  console.log(`   Note: MFE assets served by rspack dev server on port <%= port - 1000 %>`);
+  console.log(`   Note: MFE assets served by rspack dev server on port 3002`);
 });
 
 export default app;

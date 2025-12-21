@@ -619,8 +619,9 @@ export async function generateAllFiles(
 
   // --- Platform/BFF generation ---
   // Generate BaseMFE, types, tests, BFF, mesh.config.ts
-  // mesh.config.ts from manifest.data (TypeScript-based configuration)
+  // mesh.config.ts from manifest.data (ADR-063: TypeScript Configuration)
   if (manifest.data) {
+    // Build mesh config object for TypeScript generation
     // Filter out empty/invalid sources from YAML parsing issues
     const validSources = (manifest.data.sources || []).filter(source => 
       source && 
@@ -630,14 +631,13 @@ export async function generateAllFiles(
       source.handler
     );
     
-    // Build mesh config object for TypeScript template
     const meshConfig: any = {
       sources: validSources,
       transforms: manifest.data.transforms || [],
       plugins: manifest.data.plugins || []
     };
     
-    // Generate mesh.config.ts (TypeScript programmatic config)
+    // Generate TypeScript mesh config instead of YAML
     files.push({
       path: path.join(basePath, 'mesh.config.ts'),
       content: await renderTemplate(path.join(bffTemplateDir, 'mesh.config.ts.ejs'), { ...vars, meshConfig }),
