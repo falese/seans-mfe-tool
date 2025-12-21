@@ -270,8 +270,9 @@ describe('unified-generator', () => {
     
     expect(serverTs).toBeDefined();
     
-    // Verify Mesh imports
-    expect(serverTs?.content).toContain('import { createBuiltMeshHTTPHandler } from \'./.mesh\';');
+    // Verify new programmatic Mesh imports
+    expect(serverTs?.content).toContain('import { createMesh } from \'@graphql-mesh/runtime\';');
+    expect(serverTs?.content).toContain('import meshConfig from \'./mesh.config\';');
     
     // Verify MeshContext interface
     expect(serverTs?.content).toContain('interface MeshContext {');
@@ -279,22 +280,19 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify handler instantiation
-    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();');
+    // Verify programmatic mesh initialization
+    expect(serverTs?.content).toContain('function getMesh()');
+    expect(serverTs?.content).toContain('createMesh(meshConfig)');
     
-    // Verify context injection pattern (NOT the old middleware pattern)
-    expect(serverTs?.content).toContain('app.use(\'/graphql\', (req: Request, res: Response) => {');
+    // Verify async endpoint handler pattern
+    expect(serverTs?.content).toContain('app.use(\'/graphql\', async (req: Request, res: Response) => {');
     expect(serverTs?.content).toContain('const context: MeshContext = {');
-    expect(serverTs?.content).toContain('const requestWithContext = Object.assign(req, { context });');
-    expect(serverTs?.content).toContain('return meshHandler(requestWithContext as any, res as any, context);');
+    expect(serverTs?.content).toContain('const mesh = await getMesh();');
+    expect(serverTs?.content).toContain('return mesh.httpHandler(req, res, context);');
     
     // Verify OLD broken pattern is NOT present
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
     expect(serverTs?.content).not.toContain('next();');
-    
-    // Verify JWT extraction helper
-    expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
-    expect(serverTs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
   });
 });
