@@ -11,5 +11,7 @@ export {
   extractManifestVars
 } from './UnifiedGenerator/unified-generator';
 
-// API Generator (if needed)
-// export * from './APIGenerator';
+// API Generator - export for create-api command
+export { DatabaseGenerator } from './APIGenerator/DatabaseGenerator/DatabaseGenerator';
+export { ControllerGenerator } from './APIGenerator/ControllerGenerator/ControllerGenerator';
+export { generateRoutes } from './APIGenerator/RouteGenerator';

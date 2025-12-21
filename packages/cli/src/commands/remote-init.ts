@@ -12,9 +12,9 @@ import {
   createMinimalManifest, 
   writeManifest, 
   generateEndpoints 
-} from '../dsl/parser';
+} from '@seans-mfe-tool/dsl';
 import { processTemplates } from '../utils/templateProcessor';
-import type { RemoteInitOptions, DSLManifest } from '../dsl/schema';
+import type { RemoteInitOptions, DSLManifest } from '@seans-mfe-tool/dsl';
 
 
 // =============================================================================

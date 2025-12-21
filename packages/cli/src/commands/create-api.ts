@@ -3,9 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { execSync } from 'child_process';
-import { DatabaseGenerator } from '../codegen/APIGenerator/DatabaseGenerator';
-import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator';
-import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
+import { DatabaseGenerator, ControllerGenerator, generateRoutes } from '@seans-mfe-tool/codegen';
 import { generateJWTSecret } from '../utils/securityUtils';
 
 interface ApiOptions {

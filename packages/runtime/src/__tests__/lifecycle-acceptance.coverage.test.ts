@@ -4,7 +4,7 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { BaseMFE: ImportedBaseMFE, VALID_TRANSITIONS } = require('../../runtime/base-mfe');
+const { BaseMFE: ImportedBaseMFE, VALID_TRANSITIONS } = require('@seans-mfe-tool/runtime');
 
 class CoverageTestMFE extends ImportedBaseMFE {
   constructor(manifest: any) { super(manifest); }

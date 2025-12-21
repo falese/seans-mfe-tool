@@ -39,7 +39,7 @@ import { jest } from '@jest/globals';
 
 // Lazy import to avoid type-only coupling; adapt path if needed
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { BaseMFE } = require('../../runtime/base-mfe');
+const { BaseMFE } = require('@seans-mfe-tool/runtime');
 
 class TestMFE extends BaseMFE {
   public calls: string[] = [];

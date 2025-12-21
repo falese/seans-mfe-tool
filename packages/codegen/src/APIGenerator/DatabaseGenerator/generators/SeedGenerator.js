@@ -2,125 +2,108 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { NameGenerator } = require('../../utils/NameGenerator');
-
 class SeedGenerator {
-  constructor(spec) {
-    this.spec = spec;
-  }
-
-  async generateSeedData(outputDir, dbType) {
-    if (!this.spec.components?.schemas) {
-      console.log(chalk.yellow('No schemas found to generate seed data'));
-      return;
+    constructor(spec) {
+        this.spec = spec;
     }
-
-    const seedDir = path.join(outputDir, 'src', 'database', 'seeds');
-    await fs.ensureDir(seedDir);
-
-    // Generate main seed file
-    await this.generateMainSeedFile(seedDir, dbType);
-
-    // Generate individual seed files for each model
-    for (const [schemaName, schema] of Object.entries(this.spec.components.schemas)) {
-      if (!schema || !schema.properties || Object.keys(schema.properties).length === 0) {
-        console.log(chalk.yellow(`Skipping seed generation for schema without properties: ${schemaName}`));
-        continue;
-      }
-      const modelName = NameGenerator.toModelName(schemaName);
-      const seedPath = path.join(seedDir, `${modelName}.seed.js`);
-      const seedData = this.generateSeedDataForSchema(schema);
-      await fs.writeFile(seedPath, seedData, 'utf8');
-      console.log(chalk.green(`✓ Generated seed data for: ${modelName}`));
+    async generateSeedData(outputDir, dbType) {
+        if (!this.spec.components?.schemas) {
+            console.log(chalk.yellow('No schemas found to generate seed data'));
+            return;
+        }
+        const seedDir = path.join(outputDir, 'src', 'database', 'seeds');
+        await fs.ensureDir(seedDir);
+        // Generate main seed file
+        await this.generateMainSeedFile(seedDir, dbType);
+        // Generate individual seed files for each model
+        for (const [schemaName, schema] of Object.entries(this.spec.components.schemas)) {
+            if (!schema || !schema.properties || Object.keys(schema.properties).length === 0) {
+                console.log(chalk.yellow(`Skipping seed generation for schema without properties: ${schemaName}`));
+                continue;
+            }
+            const modelName = NameGenerator.toModelName(schemaName);
+            const seedPath = path.join(seedDir, `${modelName}.seed.js`);
+            const seedData = this.generateSeedDataForSchema(schema);
+            await fs.writeFile(seedPath, seedData, 'utf8');
+            console.log(chalk.green(`✓ Generated seed data for: ${modelName}`));
+        }
     }
-  }
-
-  generateSeedDataForSchema(schema) {
-    const examples = this.extractExamples(schema);
-    const modelName = NameGenerator.toPascalCase(schema.title || 'Model');
-
-    return `const ${modelName}Seed = ${JSON.stringify(examples, null, 2)};
+    generateSeedDataForSchema(schema) {
+        const examples = this.extractExamples(schema);
+        const modelName = NameGenerator.toPascalCase(schema.title || 'Model');
+        return `const ${modelName}Seed = ${JSON.stringify(examples, null, 2)};
 
 module.exports = ${modelName}Seed;`;
-  }
-
-  extractExamples(schema) {
-    const examples = [];
-    const sampleSize = 5;
-
-    if (!schema.properties || typeof schema.properties !== 'object') {
-      return examples;
     }
-
-    for (let i = 0; i < sampleSize; i++) {
-      const example = {};
-      
-      for (const [prop, config] of Object.entries(schema.properties)) {
-        if (config.example !== undefined) {
-          example[prop] = this.generateVariation(config.example, i);
-        } else if (config.examples?.length > 0) {
-          example[prop] = config.examples[i % config.examples.length];
-        } else {
-          example[prop] = this.generateDefaultValue(config, i);
+    extractExamples(schema) {
+        const examples = [];
+        const sampleSize = 5;
+        if (!schema.properties || typeof schema.properties !== 'object') {
+            return examples;
         }
-      }
-      
-      examples.push(example);
+        for (let i = 0; i < sampleSize; i++) {
+            const example = {};
+            for (const [prop, config] of Object.entries(schema.properties)) {
+                if (config.example !== undefined) {
+                    example[prop] = this.generateVariation(config.example, i);
+                }
+                else if (config.examples?.length > 0) {
+                    example[prop] = config.examples[i % config.examples.length];
+                }
+                else {
+                    example[prop] = this.generateDefaultValue(config, i);
+                }
+            }
+            examples.push(example);
+        }
+        return examples;
     }
-
-    return examples;
-  }
-
-  generateVariation(baseValue, index) {
-    if (typeof baseValue === 'number') {
-      // Vary numbers by ±10%
-      const variation = baseValue * 0.1;
-      return baseValue + (variation * (index - 2));
-    } else if (typeof baseValue === 'string') {
-      // Append index to strings
-      return `${baseValue} ${index + 1}`;
+    generateVariation(baseValue, index) {
+        if (typeof baseValue === 'number') {
+            // Vary numbers by ±10%
+            const variation = baseValue * 0.1;
+            return baseValue + (variation * (index - 2));
+        }
+        else if (typeof baseValue === 'string') {
+            // Append index to strings
+            return `${baseValue} ${index + 1}`;
+        }
+        return baseValue;
     }
-    return baseValue;
-  }
-
-  generateDefaultValue(property, index) {
-    switch (property.type) {
-      case 'string':
-        return property.enum ? 
-          property.enum[index % property.enum.length] : 
-          `Sample ${property.type} ${index + 1}`;
-      case 'number':
-      case 'integer':
-        return (index + 1) * 10;
-      case 'boolean':
-        return index % 2 === 0;
-      case 'array':
-        return Array.from({ length: index + 1 }, (_, i) => 
-          this.generateDefaultValue(property.items, i));
-      default:
-        return null;
+    generateDefaultValue(property, index) {
+        switch (property.type) {
+            case 'string':
+                return property.enum ?
+                    property.enum[index % property.enum.length] :
+                    `Sample ${property.type} ${index + 1}`;
+            case 'number':
+            case 'integer':
+                return (index + 1) * 10;
+            case 'boolean':
+                return index % 2 === 0;
+            case 'array':
+                return Array.from({ length: index + 1 }, (_, i) => this.generateDefaultValue(property.items, i));
+            default:
+                return null;
+        }
     }
-  }
-
-  async generateMainSeedFile(seedDir, dbType) {
-    const content = this.generateMainSeedContent(dbType);
-    const mainSeedPath = path.join(seedDir, 'index.js');
-    await fs.writeFile(mainSeedPath, content, 'utf8');
-    console.log(chalk.green('✓ Generated main seed file'));
-  }
-
-  generateMainSeedContent(dbType) {
-    const validSchemas = Object.entries(this.spec.components.schemas)
-      .filter(([_, schema]) => schema && schema.properties && Object.keys(schema.properties).length > 0);
-
-    const importStatements = validSchemas
-      .map(([schema, _]) => {
-        const modelName = NameGenerator.toModelName(schema);
-        return `const ${modelName}Seed = require('./${modelName}.seed');`;
-      })
-      .join('\n');
-
-    if (dbType.toLowerCase().includes('mongo')) {
-      return `const mongoose = require('mongoose');
+    async generateMainSeedFile(seedDir, dbType) {
+        const content = this.generateMainSeedContent(dbType);
+        const mainSeedPath = path.join(seedDir, 'index.js');
+        await fs.writeFile(mainSeedPath, content, 'utf8');
+        console.log(chalk.green('✓ Generated main seed file'));
+    }
+    generateMainSeedContent(dbType) {
+        const validSchemas = Object.entries(this.spec.components.schemas)
+            .filter(([_, schema]) => schema && schema.properties && Object.keys(schema.properties).length > 0);
+        const importStatements = validSchemas
+            .map(([schema, _]) => {
+            const modelName = NameGenerator.toModelName(schema);
+            return `const ${modelName}Seed = require('./${modelName}.seed');`;
+        })
+            .join('\n');
+        if (dbType.toLowerCase().includes('mongo')) {
+            return `const mongoose = require('mongoose');
 const Models = require('../../models');
 ${importStatements}
 
@@ -136,11 +119,11 @@ async function seedDatabase() {
     
     // Seed all models
     ${validSchemas
-      .map(([schema, _]) => {
-        const modelName = NameGenerator.toPascalCase(schema);
-        return `await Models.${modelName}.insertMany(${NameGenerator.toModelName(schema)}Seed);`
-      })
-      .join('\n    ')}
+                .map(([schema, _]) => {
+                const modelName = NameGenerator.toPascalCase(schema);
+                return `await Models.${modelName}.insertMany(${NameGenerator.toModelName(schema)}Seed);`;
+            })
+                .join('\n    ')}
     
     console.log('✓ Database seeded successfully');
   } catch (error) {
@@ -150,8 +133,9 @@ async function seedDatabase() {
 }
 
 module.exports = seedDatabase;`;
-    } else {
-      return `const db = require('../../models');
+        }
+        else {
+            return `const db = require('../../models');
 ${importStatements}
 
 async function seedDatabase() {
@@ -163,11 +147,11 @@ async function seedDatabase() {
     
     // Seed all models
     ${validSchemas
-      .map(([schema, _]) => {
-        const modelName = NameGenerator.toPascalCase(schema);
-        return `await db.${modelName}.bulkCreate(${NameGenerator.toModelName(schema)}Seed);`
-      })
-      .join('\n    ')}
+                .map(([schema, _]) => {
+                const modelName = NameGenerator.toPascalCase(schema);
+                return `await db.${modelName}.bulkCreate(${NameGenerator.toModelName(schema)}Seed);`;
+            })
+                .join('\n    ')}
     
     console.log('✓ Database seeded successfully');
   } catch (error) {
@@ -177,8 +161,7 @@ async function seedDatabase() {
 }
 
 module.exports = seedDatabase;`;
+        }
     }
-  }
 }
-
 module.exports = { SeedGenerator };

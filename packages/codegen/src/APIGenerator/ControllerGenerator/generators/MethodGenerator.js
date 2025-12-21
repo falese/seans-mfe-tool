@@ -1,6 +1,6 @@
 class MethodGenerator {
     static generateControllerMethod(functionName, method, operationPath, operation, validations, implementation) {
-      return `
+        return `
   async function ${functionName}(req, res, next) {
     const { requestId } = req;
     
@@ -28,6 +28,5 @@ class MethodGenerator {
     }
   }`;
     }
-  }
-  
-  module.exports = { MethodGenerator };
+}
+module.exports = { MethodGenerator };

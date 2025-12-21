@@ -9,7 +9,7 @@
  * MFE type determines generated code CONTENT in doCapability() methods.
  */
 
-import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
+import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe-tool/dsl';
 import { Context, UserContext, TelemetryEvent } from './context';
 
 // Re-export for convenience

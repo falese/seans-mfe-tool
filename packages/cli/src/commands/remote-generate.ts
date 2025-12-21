@@ -9,10 +9,10 @@ import chalk = require('chalk');
 import { 
   parseAndValidateDirectory, 
   formatErrorsForCLI 
-} from '../dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../codegen/UnifiedGenerator/unified-generator';
+} from '@seans-mfe-tool/dsl';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe-tool/codegen';
 import * as fs from 'fs-extra';
-import type { RemoteGenerateOptions } from '../dsl/schema';
+import type { RemoteGenerateOptions } from '@seans-mfe-tool/dsl';
 
 // =============================================================================
 // Main Command

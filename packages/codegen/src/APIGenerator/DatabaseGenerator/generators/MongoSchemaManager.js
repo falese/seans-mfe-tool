@@ -2,36 +2,28 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { NameGenerator } = require('../../utils/NameGenerator');
-
 class MongoSchemaManager {
-  constructor(spec) {
-    this.spec = spec;
-  }
-
-  async generateSchemaManagement(outputDir) {
-    if (!this.spec.components?.schemas) {
-      console.log(chalk.yellow('No schemas found to generate schema management'));
-      return;
+    constructor(spec) {
+        this.spec = spec;
     }
-
-    const migrationsDir = path.join(outputDir, 'src', 'database', 'migrations');
-    await fs.ensureDir(migrationsDir);
-
-    // Generate schema version tracking model
-    await this.generateVersionModel(outputDir);
-
-    // Generate initial schema version
-    await this.generateInitialVersion(migrationsDir);
-
-    // Generate schema management utilities
-    await this.generateSchemaUtils(outputDir);
-
-    console.log(chalk.green('✓ Generated MongoDB schema management files'));
-  }
-
-  async generateVersionModel(outputDir) {
-    const modelPath = path.join(outputDir, 'src', 'models', 'schemaVersion.model.js');
-    const content = `const mongoose = require('mongoose');
+    async generateSchemaManagement(outputDir) {
+        if (!this.spec.components?.schemas) {
+            console.log(chalk.yellow('No schemas found to generate schema management'));
+            return;
+        }
+        const migrationsDir = path.join(outputDir, 'src', 'database', 'migrations');
+        await fs.ensureDir(migrationsDir);
+        // Generate schema version tracking model
+        await this.generateVersionModel(outputDir);
+        // Generate initial schema version
+        await this.generateInitialVersion(migrationsDir);
+        // Generate schema management utilities
+        await this.generateSchemaUtils(outputDir);
+        console.log(chalk.green('✓ Generated MongoDB schema management files'));
+    }
+    async generateVersionModel(outputDir) {
+        const modelPath = path.join(outputDir, 'src', 'models', 'schemaVersion.model.js');
+        const content = `const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const schemaVersionSchema = new Schema({
@@ -73,16 +65,13 @@ schemaVersionSchema.statics.recordVersion = async function(version, description,
 const SchemaVersion = mongoose.model('SchemaVersion', schemaVersionSchema);
 
 module.exports = SchemaVersion;`;
-
-    await fs.writeFile(modelPath, content, 'utf8');
-    console.log(chalk.green('✓ Generated schema version model'));
-  }
-
-  async generateInitialVersion(migrationsDir) {
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-    const migrationPath = path.join(migrationsDir, `${timestamp}-initial-schema.js`);
-
-    const content = `const mongoose = require('mongoose');
+        await fs.writeFile(modelPath, content, 'utf8');
+        console.log(chalk.green('✓ Generated schema version model'));
+    }
+    async generateInitialVersion(migrationsDir) {
+        const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+        const migrationPath = path.join(migrationsDir, `${timestamp}-initial-schema.js`);
+        const content = `const mongoose = require('mongoose');
 const Models = require('../../models');
 const SchemaVersion = require('../../models/schemaVersion.model');
 
@@ -124,14 +113,12 @@ module.exports = {
   up,
   down
 };`;
-
-    await fs.writeFile(migrationPath, content, 'utf8');
-    console.log(chalk.green('✓ Generated initial schema version'));
-  }
-
-  async generateSchemaUtils(outputDir) {
-    const utilsPath = path.join(outputDir, 'src', 'utils', 'schemaManager.js');
-    const content = `const fs = require('fs');
+        await fs.writeFile(migrationPath, content, 'utf8');
+        console.log(chalk.green('✓ Generated initial schema version'));
+    }
+    async generateSchemaUtils(outputDir) {
+        const utilsPath = path.join(outputDir, 'src', 'utils', 'schemaManager.js');
+        const content = `const fs = require('fs');
 const path = require('path');
 const SchemaVersion = require('../models/schemaVersion.model');
 
@@ -221,25 +208,20 @@ module.exports = {
 
 module.exports = SchemaManager;
 `;
-
-    await fs.writeFile(utilsPath, content, 'utf8');
-    console.log(chalk.green('✓ Generated schema management utilities'));
-  }
-
-  generateInitialSchemas() {
-    const schemas = {};
-    
-    for (const [schemaName, schema] of Object.entries(this.spec.components.schemas)) {
-      const modelName = NameGenerator.toModelName(schemaName);
-      const properties = schema && schema.properties ? Object.keys(schema.properties) : [];
-      schemas[modelName] = {
-        fields: properties,
-        version: 1
-      };
+        await fs.writeFile(utilsPath, content, 'utf8');
+        console.log(chalk.green('✓ Generated schema management utilities'));
     }
-
-    return schemas;
-  }
+    generateInitialSchemas() {
+        const schemas = {};
+        for (const [schemaName, schema] of Object.entries(this.spec.components.schemas)) {
+            const modelName = NameGenerator.toModelName(schemaName);
+            const properties = schema && schema.properties ? Object.keys(schema.properties) : [];
+            schemas[modelName] = {
+                fields: properties,
+                version: 1
+            };
+        }
+        return schemas;
+    }
 }
-
 module.exports = { MongoSchemaManager };

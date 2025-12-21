@@ -9,7 +9,7 @@
  */
 
 import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult } from './base-mfe';
-import type { DSLManifest } from '../dsl/schema';
+import type { DSLManifest } from '@seans-mfe-tool/dsl';
 
 /**
  * Module Federation container interface
