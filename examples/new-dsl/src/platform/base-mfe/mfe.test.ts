@@ -1,6 +1,6 @@
 
 import { newdslMFE } from './mfe';
-import { Context } from '@seans-mfe-tool/runtime';
+import { Context } from 'platform-runtime';
 
 describe('newdslMFE', () => {
   let mfe: newdslMFE;
@@ -212,27 +212,27 @@ describe('newdslMFE', () => {
 
   
   it('should call load and return stub', async () => {
-    const result = await (mfe as any).load(context);
+    const result = await mfe.load(context);
     expect(result).toBeDefined();
   });
   
   it('should call render and return stub', async () => {
-    const result = await (mfe as any).render(context);
+    const result = await mfe.render(context);
     expect(result).toBeDefined();
   });
   
   it('should call DataAnalysis and return stub', async () => {
-    const result = await (mfe as any).DataAnalysis(context);
+    const result = await mfe.DataAnalysis(context);
     expect(result).toBeDefined();
   });
   
   it('should call ReportViewer and return stub', async () => {
-    const result = await (mfe as any).ReportViewer(context);
+    const result = await mfe.ReportViewer(context);
     expect(result).toBeDefined();
   });
   
   it('should call ShareReports and return stub', async () => {
-    const result = await (mfe as any).ShareReports(context);
+    const result = await mfe.ShareReports(context);
     expect(result).toBeDefined();
   });
   

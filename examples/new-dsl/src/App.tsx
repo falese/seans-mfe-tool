@@ -1,11 +1,10 @@
 import React from 'react';
-import UsersDemo from './components/UsersDemo';
 
 const App: React.FC = () => {
   return (
     <main>
-      <h1>Type-Safe GraphQL Client POC</h1>
-      <UsersDemo />
+      <h1>Welcome to new-dsl!</h1>
+      {/* Add your feature components here */}
     </main>
   );
 };

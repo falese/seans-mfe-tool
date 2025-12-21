@@ -135,17 +135,48 @@ export type CapabilityEntry = z.infer<typeof CapabilityEntrySchema>;
 
 /** OpenAPI handler configuration */
 export const OpenAPIHandlerSchema = z.object({
+  type: z.literal('openapi'),
   source: z.string(),
   operationHeaders: z.record(z.string(), z.string()).optional()
 });
 export type OpenAPIHandler = z.infer<typeof OpenAPIHandlerSchema>;
 
+/** GraphQL handler configuration */
+export const GraphQLHandlerSchema = z.object({
+  type: z.literal('graphql'),
+  endpoint: z.string(),
+  operationHeaders: z.record(z.string(), z.string()).optional(),
+  schemaHeaders: z.record(z.string(), z.string()).optional()
+});
+export type GraphQLHandler = z.infer<typeof GraphQLHandlerSchema>;
+
+/** JSON Schema handler configuration */
+export const JSONSchemaHandlerSchema = z.object({
+  type: z.literal('jsonSchema'),
+  endpoint: z.string(),
+  operations: z.array(z.object({
+    field: z.string(),
+    path: z.string(),
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
+    type: z.enum(['query', 'mutation']),
+    responseSchema: z.record(z.string(), z.unknown()).optional()
+  })).optional(),
+  operationHeaders: z.record(z.string(), z.string()).optional()
+});
+export type JSONSchemaHandler = z.infer<typeof JSONSchemaHandlerSchema>;
+
+/** Mesh handler union - supports multiple handler types */
+export const HandlerSchema = z.discriminatedUnion('type', [
+  OpenAPIHandlerSchema,
+  GraphQLHandlerSchema,
+  JSONSchemaHandlerSchema
+]);
+export type Handler = z.infer<typeof HandlerSchema>;
+
 /** Mesh source configuration */
 export const DataSourceSchema = z.object({
   name: z.string(),
-  handler: z.object({
-    openapi: OpenAPIHandlerSchema
-  }),
+  handler: HandlerSchema,
   transforms: z.array(z.record(z.string(), z.unknown())).optional()
 });
 export type DataSource = z.infer<typeof DataSourceSchema>;

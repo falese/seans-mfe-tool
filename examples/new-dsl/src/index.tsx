@@ -1,7 +1,7 @@
 /**
  * Standalone App Entry Point
  * Bootstraps React for standalone development/testing
- *
+ * 
  * Following REQ-RUNTIME-002: Context integration
  * Following e2e2 dual entry pattern
  */
@@ -12,7 +12,6 @@ import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { DataAnalysis } from './features/DataAnalysis/DataAnalysis';
 import { ReportViewer } from './features/ReportViewer/ReportViewer';
 import { ShareReports } from './features/ShareReports/ShareReports';
-import UsersDemo from './components/UsersDemo';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -51,26 +50,22 @@ const StandaloneApp: React.FC = () => {
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
           Module Federation MFE - Standalone Mode
         </Typography>
-
+        
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="feature tabs">
-            <Tab label="🚀 GraphQL Demo" id="tab-0" aria-controls="tabpanel-0" />
-            <Tab label="📦 DataAnalysis" id="tab-1" aria-controls="tabpanel-1" />
-            <Tab label="📦 ReportViewer" id="tab-2" aria-controls="tabpanel-2" />
-            <Tab label="📦 ShareReports" id="tab-3" aria-controls="tabpanel-3" />
+            <Tab label="📦 DataAnalysis" id="tab-0" aria-controls="tabpanel-0" />
+            <Tab label="📦 ReportViewer" id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label="📦 ShareReports" id="tab-2" aria-controls="tabpanel-2" />
           </Tabs>
         </Box>
-
+        
         <TabPanel value={tabValue} index={0}>
-          <UsersDemo />
-        </TabPanel>
-        <TabPanel value={tabValue} index={1}>
           <DataAnalysis />
         </TabPanel>
-        <TabPanel value={tabValue} index={2}>
+        <TabPanel value={tabValue} index={1}>
           <ReportViewer />
         </TabPanel>
-        <TabPanel value={tabValue} index={3}>
+        <TabPanel value={tabValue} index={2}>
           <ShareReports />
         </TabPanel>
       </Box>
