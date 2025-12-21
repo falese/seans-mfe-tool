@@ -9,9 +9,21 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["node", "jest"],
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true
-  }
+    "types": ["node", "jest"]
+  },
+  "files": [],
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    "**/coverage",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "**/__tests__"
+  ],
+  "references": [
+    { "path": "./packages/dsl" },
+    { "path": "./packages/runtime" },
+    { "path": "./packages/codegen" },
+    { "path": "./packages/cli" }
+  ]
 }
