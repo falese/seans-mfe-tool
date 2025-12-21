@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && node ../../scripts/copy-codegen-templates.js",
-    "build:watch": "tsc --watch",
+    "build": "tsc --build && node ../../scripts/copy-codegen-templates.js",
+    "build:watch": "tsc --build --watch",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },

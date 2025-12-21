@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },

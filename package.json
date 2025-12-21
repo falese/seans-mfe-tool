@@ -19,7 +19,7 @@
     "lint": "eslint packages/*/src/**/*.{js,ts}",
     "format": "prettier --write \"packages/**/src/**/*.{js,jsx,ts,tsx,json}\"",
     "dev": "node packages/cli/bin/seans-mfe-tool.js",
-    "clean": "rm -rf packages/*/dist",
+    "clean": "rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc --build --force tsconfig.build.json"
   },

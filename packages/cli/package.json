@@ -8,7 +8,7 @@
     "seans-mfe-tool": "./bin/seans-mfe-tool.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "build:watch": "tsc --watch",
     "test": "jest",
     "typecheck": "tsc --noEmit",
