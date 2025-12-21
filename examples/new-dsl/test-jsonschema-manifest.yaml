@@ -1,0 +1,43 @@
+# Test manifest with JSON Schema handler
+name: test-jsonschema
+version: 1.0.0
+type: tool
+language: typescript
+description: Test MFE with JSON Schema handler
+
+endpoint: http://localhost:3002
+remoteEntry: http://localhost:3002/remoteEntry.js
+discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - Load:
+      type: platform
+      description: Load the MFE
+  - Render:
+      type: platform
+      description: Render the UI
+
+data:
+  sources:
+    - name: HTTPBinREST
+      handler:
+        type: jsonSchema
+        endpoint: https://httpbin.org
+        operations:
+          - field: getStatus
+            path: /status/200
+            method: GET
+            type: query
+          - field: postData
+            path: /post
+            method: POST
+            type: mutation
+
+  serve:
+    endpoint: /graphql
+    playground: true
+
+dependencies:
+  runtime:
+    react: ^18.2.0
+    react-dom: ^18.2.0
