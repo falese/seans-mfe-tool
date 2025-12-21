@@ -41,7 +41,7 @@ describe('unified-generator', () => {
     expect(filePaths).toContain(path.join(basePath, 'rspack.config.js'));
     expect(filePaths).toContain(path.join(basePath, 'src', 'features', 'DataAnalysis', 'DataAnalysis.tsx'));
     expect(filePaths).toContain(path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'));
-    expect(filePaths).toContain(path.join(basePath, '.meshrc.yaml'));
+    expect(filePaths).toContain(path.join(basePath, 'mesh.config.ts'));
   });
 
   it('generates src/index.tsx with React bootstrap', async () => {
@@ -254,14 +254,14 @@ describe('unified-generator', () => {
     };
     
     const files = await generateAllFiles(manifestWithEmptySources as any, basePath, { force: true });
-    const meshrc = files.find(f => f.path === path.join(basePath, '.meshrc.yaml'));
+    const meshConfig = files.find(f => f.path === path.join(basePath, 'mesh.config.ts'));
     
-    expect(meshrc).toBeDefined();
+    expect(meshConfig).toBeDefined();
     // Should only include ValidAPI
-    expect(meshrc?.content).toContain('ValidAPI');
-    expect(meshrc?.content).not.toContain('NoHandler');
+    expect(meshConfig?.content).toContain('ValidAPI');
+    expect(meshConfig?.content).not.toContain('NoHandler');
     // Verify sources array has exactly 1 valid entry
-    expect((meshrc?.content.match(/name:/g) || []).length).toBe(1);
+    expect((meshConfig?.content.match(/name: 'ValidAPI'/g) || []).length).toBe(1);
   });
 
   it('generates server.ts with correct Mesh handler integration', async () => {

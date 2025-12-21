@@ -618,12 +618,9 @@ export async function generateAllFiles(
   });
 
   // --- Platform/BFF generation ---
-  // Generate BaseMFE, types, tests, BFF, .meshrc.yaml
-  // .meshrc.yaml from manifest.data
+  // Generate BaseMFE, types, tests, BFF, mesh.config.ts
+  // mesh.config.ts from manifest.data (TypeScript-based configuration)
   if (manifest.data) {
-    const yaml = require('js-yaml');
-    
-    // Build base mesh config (sources, serve, etc.)
     // Filter out empty/invalid sources from YAML parsing issues
     const validSources = (manifest.data.sources || []).filter(source => 
       source && 
@@ -633,16 +630,17 @@ export async function generateAllFiles(
       source.handler
     );
     
-    const meshBaseConfig: any = {
+    // Build mesh config object for TypeScript template
+    const meshConfig: any = {
       sources: validSources,
-      serve: manifest.data.serve || { endpoint: '/graphql', playground: true }
+      transforms: manifest.data.transforms || [],
+      plugins: manifest.data.plugins || []
     };
     
-    const meshConfigYaml = yaml.dump(meshBaseConfig, { noRefs: true, lineWidth: -1 });
-    
+    // Generate mesh.config.ts (TypeScript programmatic config)
     files.push({
-      path: path.join(basePath, '.meshrc.yaml'),
-      content: await renderTemplate(path.join(bffTemplateDir, 'meshrc.yaml.ejs'), { ...vars, meshConfigYaml }),
+      path: path.join(basePath, 'mesh.config.ts'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'mesh.config.ts.ejs'), { ...vars, meshConfig }),
       overwrite: true
     });
   }
