@@ -1,0 +1,29 @@
+{
+  "name": "@seans-mfe-tool/codegen",
+  "version": "1.0.0",
+  "description": "Code generation engine and templates for MFE applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build && node ../../scripts/copy-codegen-templates.js",
+    "build:watch": "tsc --build --watch",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seans-mfe-tool/dsl": "^1.0.0",
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@babel/generator": "^7.22.1",
+    "@babel/parser": "^7.23.0",
+    "@babel/traverse": "^7.23.0",
+    "@babel/types": "^7.22.1",
+    "ejs": "^3.1.10"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "keywords": ["codegen", "generator", "templates", "mfe"],
+  "license": "MIT"
+}

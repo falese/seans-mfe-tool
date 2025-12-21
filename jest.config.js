@@ -8,8 +8,8 @@ module.exports = {
   
   // Test patterns - support both JS and TS
   testMatch: [
-    '**/src/**/__tests__/**/*.test.[jt]s',
-    '**/src/**/*.test.[jt]s'
+    '**/packages/*/src/**/__tests__/**/*.test.[jt]s',
+    '**/packages/*/src/**/*.test.[jt]s'
   ],
   
   // Transform configuration - ts-jest for TS, babel-jest for JS
@@ -37,27 +37,24 @@ module.exports = {
   ],
 
   // Module paths
-  moduleDirectories: ['node_modules', 'src'],
+  moduleDirectories: ['node_modules'],
 
   // Coverage configuration (only collect when explicitly requested)
   collectCoverage: false,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
-    'src/commands/*.{js,ts}',
-    '!src/commands/create-shell.js', // Skip - tests have template mocking issues (will fix in refactor)
-    'src/utils/**/*.{js,ts}',
-    'src/codegen/UnifiedGenerator/**/*.{js,ts}',
-    'src/codegen/APIGenerator/**/*.{js,ts}',
-    // Include DSL/runtime for TDD Guardian phase
-    'src/dsl/**/*.{js,ts}',
-    'src/runtime/**/*.{js,ts}',
-    'src/build/**/*.{js,ts}',
-    '!src/**/index.{js,ts}',
-    '!src/**/__tests__/**',
-    '!src/**/*.test.{js,ts}',
-    '!src/**/fixtures/**',
-    '!src/codegen/templates/**'
+    'packages/cli/src/commands/*.{js,ts}',
+    '!packages/cli/src/commands/create-shell.js', // Skip - tests have template mocking issues (will fix in refactor)
+    'packages/cli/src/utils/**/*.{js,ts}',
+    'packages/codegen/src/**/*.{js,ts}',
+    'packages/dsl/src/**/*.{js,ts}',
+    'packages/runtime/src/**/*.{js,ts}',
+    '!packages/**/index.{js,ts}',
+    '!packages/**/__tests__/**',
+    '!packages/**/*.test.{js,ts}',
+    '!packages/**/fixtures/**',
+    '!packages/codegen/src/templates/**'
   ],
   
   // Coverage thresholds (relaxed locally, strict in CI)
@@ -70,21 +67,21 @@ module.exports = {
           statements: 80
         },
         // Enforce strict coverage for DSL Type System (TDD Guardian scope)
-        'src/dsl/type-system.ts': {
+        'packages/dsl/src/type-system.ts': {
           branches: 90,
           functions: 95,
           lines: 90,
           statements: 90
         },
         // Enforce strict coverage for Runtime BaseMFE (TDD Guardian scope)
-        'src/runtime/base-mfe.ts': {
+        'packages/runtime/src/base-mfe.ts': {
           branches: 90,
           functions: 95,
           lines: 90,
           statements: 90
         },
         // Enforce 95%+ for Utils module (TDD mandate - Phase 1)
-        'src/utils/*.js': {
+        'packages/cli/src/utils/*.js': {
           branches: 88,
           functions: 95,
           lines: 95,
@@ -99,21 +96,21 @@ module.exports = {
           statements: 0
         },
         // Enforce strict coverage locally for DSL Type System
-        'src/dsl/type-system.ts': {
+        'packages/dsl/src/type-system.ts': {
           branches: 99,
           functions: 100,
           lines: 100,
           statements: 100
         },
         // Enforce strict coverage locally for Runtime BaseMFE
-        'src/runtime/base-mfe.ts': {
+        'packages/runtime/src/base-mfe.ts': {
           branches: 90,
           functions: 100,
           lines: 95,
           statements: 95
         },
         // Enforce 95%+ for Utils module even locally (TDD mandate - Phase 1)
-        'src/utils/*.js': {
+        'packages/cli/src/utils/*.js': {
           branches: 88,
           functions: 95,
           lines: 95,
@@ -130,7 +127,8 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
-    '/examples/'
+    '/examples/',
+    '/packages/.*/dist/'
   ],
 
   // Test environment configuration
@@ -142,8 +140,11 @@ module.exports = {
   bail: false,
   verbose: true,
 
-  // Handle module mocks
+  // Handle module mocks - map workspace packages
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@seans-mfe-tool/dsl$': '<rootDir>/packages/dsl/src/index.ts',
+    '^@seans-mfe-tool/runtime$': '<rootDir>/packages/runtime/src/index.ts',
+    '^@seans-mfe-tool/codegen$': '<rootDir>/packages/codegen/src/index.ts',
+    '^@seans-mfe-tool/cli$': '<rootDir>/packages/cli/src'
   }
 };

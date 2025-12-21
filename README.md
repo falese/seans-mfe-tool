@@ -1,6 +1,6 @@
 # MFE Development Tool
 
-A CLI tool for creating and managing Micro-Frontend applications using Module Federation.
+A whole bunch of good stuff.
 
 ## Commands
 

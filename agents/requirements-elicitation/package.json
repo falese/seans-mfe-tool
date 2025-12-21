@@ -1,0 +1,41 @@
+{
+  "name": "mfe-requirements-elicitation-agent",
+  "version": "1.0.0",
+  "description": "AI-powered requirements elicitation agent for MFE platform",
+  "type": "module",
+  "main": "dist/requirements-agent.js",
+  "types": "dist/requirements-agent.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/requirements-agent.js",
+    "start:interactive": "node dist/requirements-agent.js interactive",
+    "start:analyze": "node dist/requirements-agent.js analyze",
+    "start:generate": "node dist/requirements-agent.js generate",
+    "start:comprehensive": "node dist/requirements-agent.js comprehensive",
+    "dev": "ts-node requirements-agent.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "bin": {
+    "req-agent": "./dist/requirements-agent.js"
+  },
+  "keywords": [
+    "requirements",
+    "elicitation",
+    "mfe",
+    "micro-frontend",
+    "ai-agent",
+    "claude"
+  ],
+  "author": "Sean",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

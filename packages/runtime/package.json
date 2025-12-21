@@ -1,0 +1,22 @@
+{
+  "name": "@seans-mfe-tool/runtime",
+  "version": "1.0.0",
+  "description": "MFE runtime platform for Module Federation applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "keywords": ["runtime", "module-federation", "mfe", "microfrontend"],
+  "license": "MIT"
+}

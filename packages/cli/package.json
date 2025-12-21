@@ -1,0 +1,33 @@
+{
+  "name": "@seans-mfe-tool/cli",
+  "version": "1.0.0",
+  "description": "CLI tool for scaffolding Module Federation applications",
+  "main": "dist/commands/index.js",
+  "types": "dist/commands/index.d.ts",
+  "bin": {
+    "seans-mfe-tool": "./bin/seans-mfe-tool.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --watch",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "dev": "node bin/seans-mfe-tool.js"
+  },
+  "dependencies": {
+    "@seans-mfe-tool/codegen": "^1.0.0",
+    "@seans-mfe-tool/dsl": "^1.0.0",
+    "chalk": "^4.1.2",
+    "commander": "^12.1.0",
+    "diff": "^5.1.0",
+    "fs-extra": "^11.2.0",
+    "inquirer": "^12.0.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "keywords": ["cli", "mfe", "module-federation", "scaffolding"],
+  "license": "MIT"
+}

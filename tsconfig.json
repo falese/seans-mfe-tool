@@ -3,19 +3,33 @@
     "target": "ES2020",
     "module": "CommonJS",
     "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "allowJs": true,
     "moduleResolution": "node",
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/__tests__/**", "examples"]
+  "files": [],
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "**/__tests__/**",
+    "agents/**",
+    "examples/**",
+    "scripts/**",
+    "babel.config.js",
+    "jest.config.js",
+    "jest.setup.js"
+  ],
+  "references": [
+    { "path": "./packages/dsl" },
+    { "path": "./packages/runtime" },
+    { "path": "./packages/codegen" },
+    { "path": "./packages/cli" }
+  ]
 }
