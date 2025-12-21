@@ -1,8 +1,9 @@
-# ADR-063: Parallel Handler Execution with Context Isolation
+# ADR-068: Parallel Handler Execution with Context Isolation
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
+**Status**: Proposed
+**Date**: 2025-12-11
 **Related**: REQ-LIFECYCLE-001, ADR-022 (Re-entrancy Guard)
+**Note**: Originally numbered ADR-063, renumbered to ADR-068 to avoid collision with ADR-063 (Mesh TypeScript Config)
 
 ## Context
 
