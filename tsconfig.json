@@ -14,11 +14,17 @@
   "files": [],
   "exclude": [
     "node_modules",
-    "**/dist",
-    "**/coverage",
+    "**/dist/**",
+    "**/coverage/**",
     "**/*.test.ts",
     "**/*.test.js",
-    "**/__tests__"
+    "**/__tests__/**",
+    "agents/**",
+    "examples/**",
+    "scripts/**",
+    "babel.config.js",
+    "jest.config.js",
+    "jest.setup.js"
   ],
   "references": [
     { "path": "./packages/dsl" },
