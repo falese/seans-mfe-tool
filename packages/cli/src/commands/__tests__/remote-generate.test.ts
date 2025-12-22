@@ -45,6 +45,19 @@ jest.mock('@seans-mfe-tool/codegen', () => {
   };
 });
 
+// Mock logger
+const mockLogger = {
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  success: jest.fn()
+};
+
+jest.mock('@seans-mfe-tool/logger', () => ({
+  createLogger: jest.fn(() => mockLogger)
+}));
+
 // Console mock setup - will be configured in beforeEach
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
@@ -72,25 +85,32 @@ describe('remote:generate Command', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
+    // Clear logger mocks
+    mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
+    mockLogger.debug.mockClear();
+    mockLogger.success.mockClear();
+
     // Setup console spies AFTER clearAllMocks
     mockConsole = {
       log: jest.spyOn(console, 'log').mockImplementation(),
       error: jest.spyOn(console, 'error').mockImplementation()
     };
-    
+
     // Default mock implementations
     mockParseAndValidate.mockResolvedValue({
       valid: true,
       manifest: validManifest as any,
       errors: []
     });
-    
+
     mockGenerateAllFiles.mockResolvedValue([
       { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
       { path: '/test/src/remote.tsx', content: 'exports', overwrite: true }
     ]);
-    
+
     mockWriteFiles.mockResolvedValue({
       files: [{ path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }],
       skipped: [],
@@ -175,7 +195,7 @@ describe('remote:generate Command', () => {
     it('should log what would be generated', async () => {
       await remoteGenerateCommand({ dryRun: true });
 
-      expect(mockConsole.log).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('[DRY RUN]')
       );
     });
@@ -193,7 +213,7 @@ describe('remote:generate Command', () => {
 
       await remoteGenerateCommand();
 
-      expect(mockConsole.log).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Generated files')
       );
     });
@@ -207,7 +227,7 @@ describe('remote:generate Command', () => {
 
       await remoteGenerateCommand();
 
-      expect(mockConsole.log).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Skipped')
       );
     });
@@ -221,7 +241,7 @@ describe('remote:generate Command', () => {
 
       await remoteGenerateCommand();
 
-      expect(mockConsole.log).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Errors')
       );
     });
@@ -229,7 +249,7 @@ describe('remote:generate Command', () => {
     it('should show summary', async () => {
       await remoteGenerateCommand();
 
-      expect(mockConsole.log).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Summary')
       );
     });

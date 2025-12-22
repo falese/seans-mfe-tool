@@ -1,8 +1,13 @@
-const { BaseGenerator } = require('./BaseGenerator');
-const { NameGenerator } = require('../../utils/NameGenerator');
-const path = require('path');
-const fs = require('fs-extra');
-const chalk = require('chalk');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import { BaseGenerator  } from './BaseGenerator';
+import { NameGenerator  } from '../../utils/NameGenerator';
+import path from 'path';
+import fs from 'fs-extra';
+import chalk from 'chalk';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:mongodb', silent: process.env.NODE_ENV === 'test' });
+
 class MongoDBGenerator extends BaseGenerator {
     generateModelFile(schemaName, schema) {
         this.validateSchema(schema);
@@ -13,7 +18,7 @@ const { Schema } = mongoose;
 
 const ${modelName}Schema = new Schema(
   ${this.generateSchemaObject(schema)},
-  { 
+  {
     timestamps: true,
     versionKey: false,
     toJSON: {
@@ -50,7 +55,7 @@ ${modelName}Schema.statics = {
     if (!doc) throw new Error('Document not found');
     return doc;
   },
-  
+
   async findOneOrThrow(conditions) {
     const doc = await this.findOne(conditions);
     if (!doc) throw new Error('Document not found');
@@ -220,7 +225,7 @@ module.exports = {
             .join(',\n  ')}
 };`;
         await fs.writeFile(indexPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated models index file'));
+        logger.info('Generated models index file');
     }
 }
-module.exports = { MongoDBGenerator };
+export { MongoDBGenerator };

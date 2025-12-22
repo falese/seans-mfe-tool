@@ -1,8 +1,13 @@
-const { BaseGenerator } = require('./BaseGenerator');
-const { NameGenerator } = require('../../utils/NameGenerator');
-const path = require('path');
-const fs = require('fs-extra');
-const chalk = require('chalk');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import { BaseGenerator } from './BaseGenerator';
+import { NameGenerator } from '../../utils/NameGenerator';
+import path from 'path';
+import fs from 'fs-extra';
+import chalk from 'chalk';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:sqlite', silent: process.env.NODE_ENV === 'test' });
+
 class SQLiteGenerator extends BaseGenerator {
     generateModelFile(schemaName, schema) {
         this.validateSchema(schema);
@@ -20,7 +25,7 @@ class ${pascalModelName} extends Model {
         tableName: '${modelName}s',
         timestamps: true,
         underscored: true,
-        
+
         // Add hooks
         hooks: {
           beforeValidate: (instance) => {
@@ -30,7 +35,7 @@ class ${pascalModelName} extends Model {
             // Add any pre-create logic
           }
         },
-        
+
         // Add instance methods
         instanceMethods: {
           toDTO() {
@@ -182,7 +187,7 @@ module.exports = {
             .join(',\n  ')}
 };`;
         await fs.writeFile(indexPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated SQLite models index file'));
+        logger.info('Generated SQLite models index file');
     }
 }
-module.exports = { SQLiteGenerator };
+export { SQLiteGenerator };

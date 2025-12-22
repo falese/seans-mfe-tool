@@ -1,14 +1,19 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { NameGenerator } = require('../../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { NameGenerator  } from '../../utils/NameGenerator';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:seed', silent: process.env.NODE_ENV === 'test' });
+
 class SeedGenerator {
     constructor(spec) {
         this.spec = spec;
     }
     async generateSeedData(outputDir, dbType) {
         if (!this.spec.components?.schemas) {
-            console.log(chalk.yellow('No schemas found to generate seed data'));
+            logger.info('No schemas found to generate seed data');
             return;
         }
         const seedDir = path.join(outputDir, 'src', 'database', 'seeds');
@@ -18,20 +23,22 @@ class SeedGenerator {
         // Generate individual seed files for each model
         for (const [schemaName, schema] of Object.entries(this.spec.components.schemas)) {
             if (!schema || !schema.properties || Object.keys(schema.properties).length === 0) {
-                console.log(chalk.yellow(`Skipping seed generation for schema without properties: ${schemaName}`));
+                logger.info(`Skipping seed generation for schema without properties: ${schemaName}`);
                 continue;
             }
             const modelName = NameGenerator.toModelName(schemaName);
             const seedPath = path.join(seedDir, `${modelName}.seed.js`);
             const seedData = this.generateSeedDataForSchema(schema);
             await fs.writeFile(seedPath, seedData, 'utf8');
-            console.log(chalk.green(`✓ Generated seed data for: ${modelName}`));
+            logger.info(`Generated seed data for: ${modelName}`);
         }
     }
     generateSeedDataForSchema(schema) {
         const examples = this.extractExamples(schema);
         const modelName = NameGenerator.toPascalCase(schema.title || 'Model');
         return `const ${modelName}Seed = ${JSON.stringify(examples, null, 2)};
+
+const logger = createLogger({ context: 'codegen' });
 
 module.exports = ${modelName}Seed;`;
     }
@@ -91,7 +98,7 @@ module.exports = ${modelName}Seed;`;
         const content = this.generateMainSeedContent(dbType);
         const mainSeedPath = path.join(seedDir, 'index.js');
         await fs.writeFile(mainSeedPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated main seed file'));
+        logger.info('Generated main seed file');
     }
     generateMainSeedContent(dbType) {
         const validSchemas = Object.entries(this.spec.components.schemas)
@@ -105,18 +112,22 @@ module.exports = ${modelName}Seed;`;
         if (dbType.toLowerCase().includes('mongo')) {
             return `const mongoose = require('mongoose');
 const Models = require('../../models');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+const logger = createLogger({ context: 'seed' });
+
 ${importStatements}
 
 async function seedDatabase() {
-  console.log('Seeding database...');
-  
+  logger.info('Seeding database...');
+
   try {
     // Clear existing data
     const collections = Object.values(mongoose.connection.collections);
     for (const collection of collections) {
       await collection.deleteMany();
     }
-    
+
     // Seed all models
     ${validSchemas
                 .map(([schema, _]) => {
@@ -124,10 +135,10 @@ async function seedDatabase() {
                 return `await Models.${modelName}.insertMany(${NameGenerator.toModelName(schema)}Seed);`;
             })
                 .join('\n    ')}
-    
-    console.log('✓ Database seeded successfully');
+
+    logger.info('Database seeded successfully');
   } catch (error) {
-    console.error('Failed to seed database:', error);
+    logger.error('Failed to seed database:', error);
     throw error;
   }
 }
@@ -136,15 +147,19 @@ module.exports = seedDatabase;`;
         }
         else {
             return `const db = require('../../models');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+const logger = createLogger({ context: 'seed' });
+
 ${importStatements}
 
 async function seedDatabase() {
-  console.log('Seeding database...');
-  
+  logger.info('Seeding database...');
+
   try {
     // Clear existing data
     await db.sequelize.sync({ force: true });
-    
+
     // Seed all models
     ${validSchemas
                 .map(([schema, _]) => {
@@ -152,10 +167,11 @@ async function seedDatabase() {
                 return `await db.${modelName}.bulkCreate(${NameGenerator.toModelName(schema)}Seed);`;
             })
                 .join('\n    ')}
-    
-    console.log('✓ Database seeded successfully');
+
+
+    logger.info('Database seeded successfully');
   } catch (error) {
-    console.error('Failed to seed database:', error);
+    logger.error('Failed to seed database:', error);
     throw error;
   }
 }
@@ -164,4 +180,4 @@ module.exports = seedDatabase;`;
         }
     }
 }
-module.exports = { SeedGenerator };
+export { SeedGenerator };

@@ -188,22 +188,23 @@ describe('ControllerGenerator', () => {
 
     it('should generate logger import', () => {
       const result = ControllerGenerator.generateImports(mockDbAdapter);
-      
-      expect(result).toContain("const logger = require('../utils/logger');");
+
+      expect(result).toContain("const { createLogger } = require('@seans-mfe-tool/logger');");
+      expect(result).toContain("const logger = createLogger({ context: 'api:controller' });");
     });
 
     it('should include database adapter import', () => {
       const result = ControllerGenerator.generateImports(mockDbAdapter);
-      
+
       expect(mockDbAdapter.getImportStatement).toHaveBeenCalled();
       expect(result).toContain("const { Model } = require('../models');");
     });
 
     it('should join imports with newlines', () => {
       const result = ControllerGenerator.generateImports(mockDbAdapter);
-      
+
       const lines = result.split('\n');
-      expect(lines).toHaveLength(3);
+      expect(lines).toHaveLength(4); // Now 4 lines: ApiError, createLogger, logger, and db adapter
     });
   });
 

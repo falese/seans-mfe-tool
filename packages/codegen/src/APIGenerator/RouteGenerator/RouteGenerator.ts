@@ -1,14 +1,19 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { SchemaGenerator } = require('../utils/SchemaGenerator');
-const { PathGenerator } = require('../utils/PathGenerator');
-const { NameGenerator } = require('../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { SchemaGenerator } from '../utils/SchemaGenerator';
+import { PathGenerator } from '../utils/PathGenerator';
+import { NameGenerator } from '../utils/NameGenerator';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:routes', silent: process.env.NODE_ENV === 'test' });
+
 class RouteGenerator {
     static async generate(routesDir, spec) {
-        console.log(chalk.blue('\nGenerating routes...'));
+        logger.info(chalk.blue('\nGenerating routes...'));
         if (!spec.paths) {
-            console.log(chalk.yellow('No paths found in OpenAPI spec'));
+            logger.info(chalk.yellow('No paths found in OpenAPI spec'));
             return;
         }
         await fs.ensureDir(routesDir);
@@ -16,18 +21,18 @@ class RouteGenerator {
         try {
             // Group paths by resource
             const resourceGroups = this.groupPathsByResource(spec.paths);
-            console.log('Found resources:', Object.keys(resourceGroups));
+            logger.info('Found resources:', Object.keys(resourceGroups));
             // Generate route files for each resource
             for (const [resource, paths] of Object.entries(resourceGroups)) {
-                console.log(`\nProcessing resource: ${resource}`);
+                logger.info(`\nProcessing resource: ${resource}`);
                 // Convert resource names
                 const camelResource = NameGenerator.toCamelCase(resource); // for imports
                 const fileName = camelResource; // for file names
                 const routePath = NameGenerator.toKebabCase(resource); // for URL paths
-                console.log(`Resource name: ${resource}`);
-                console.log(`Camel case: ${camelResource}`);
-                console.log(`File name: ${fileName}`);
-                console.log(`Route path: ${routePath}`);
+                logger.info(`Resource name: ${resource}`);
+                logger.info(`Camel case: ${camelResource}`);
+                logger.info(`File name: ${fileName}`);
+                logger.info(`Route path: ${routePath}`);
                 // Generate route file
                 const routeFilePath = path.join(routesDir, `${fileName}.route.js`);
                 const routeContent = this.generateRouteFile(paths, camelResource, spec);
@@ -37,19 +42,19 @@ class RouteGenerator {
                     path: `/${routePath}`,
                     camelName: camelResource
                 });
-                console.log(chalk.green(`✓ Generated route: ${fileName}`));
+                logger.info(chalk.green(`✓ Generated route: ${fileName}`));
             }
             // Generate index file
             await this.generateIndexFile(path.join(routesDir, 'index.js'), routes);
-            console.log(chalk.green('✓ Generated routes index file'));
+            logger.info(chalk.green('✓ Generated routes index file'));
         }
         catch (error) {
-            console.error(chalk.red('Error generating routes:'), error);
+            logger.error(chalk.red('Error generating routes:'), error);
             throw error;
         }
     }
     static generateRouteFile(paths, resourceName, spec) {
-        console.log(`Generating route file for ${resourceName}`);
+        logger.info(`Generating route file for ${resourceName}`);
         const { operationMap, validationSchemas, routes } = PathGenerator.generatePathContent(paths, resourceName, spec);
         const imports = [
             `const express = require('express');`,
@@ -72,7 +77,9 @@ class RouteGenerator {
     static async generateIndexFile(indexPath, routes) {
         const content = `const express = require('express');
 const router = express.Router();
-const logger = require('../utils/logger');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+const logger = createLogger({ context: 'api:routes' });
 
 // Request logging middleware
 router.use((req, res, next) => {
@@ -107,4 +114,4 @@ module.exports = router;`;
         return groups;
     }
 }
-module.exports = { RouteGenerator };
+export { RouteGenerator };

@@ -1,5 +1,6 @@
-const { NameGenerator } = require('./NameGenerator');
-const { SchemaGenerator } = require('./SchemaGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import { NameGenerator  } from './NameGenerator';
+import { SchemaGenerator  } from './SchemaGenerator';
 class PathGenerator {
     static generatePathContent(paths, resourceName, controllerName, spec) {
         console.log(`Generating path content for ${resourceName}`);
@@ -87,4 +88,4 @@ class PathGenerator {
         return middleware;
     }
 }
-module.exports = { PathGenerator };
+export { PathGenerator };

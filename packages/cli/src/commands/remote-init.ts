@@ -15,6 +15,10 @@ import {
 } from '@seans-mfe-tool/dsl';
 import { processTemplates } from '../utils/templateProcessor';
 import type { RemoteInitOptions, DSLManifest } from '@seans-mfe-tool/dsl';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+// Logger for remote-init commands
+const logger = createLogger({ context: 'remote-init' });
 
 
 // =============================================================================
@@ -35,8 +39,8 @@ export async function remoteInitCommand(
   const targetDir = path.resolve(process.cwd(), name);
 
   try {
-    console.log(chalk.blue(`\nCreating DSL-based remote MFE: ${name}`));
-    console.log(chalk.gray(`Target directory: ${targetDir}`));
+    logger.info(`\nCreating DSL-based remote MFE: ${name}`);
+    logger.info(chalk.gray(`Target directory: ${targetDir}`));
 
     // Check if directory exists
     if (await fs.pathExists(targetDir)) {
@@ -45,17 +49,17 @@ export async function remoteInitCommand(
           `Directory "${name}" already exists. Use --force to overwrite.`
         );
       }
-      console.log(chalk.yellow(`⚠ Overwriting existing directory`));
+      logger.warn(`⚠ Overwriting existing directory`);
     }
 
     // Create directory structure
-    console.log(chalk.blue('\nCreating project structure...'));
+    logger.info('\nCreating project structure...');
     await fs.ensureDir(path.join(targetDir, 'src'));
     await fs.ensureDir(path.join(targetDir, 'src', 'features'));
     await fs.ensureDir(path.join(targetDir, 'public'));
 
     // Create manifest only
-    console.log(chalk.blue('Generating mfe-manifest.yaml...'));
+    logger.info('Generating mfe-manifest.yaml...');
     const manifest = createMinimalManifest(name, {
       type: 'remote',
       language: 'typescript'
@@ -66,20 +70,20 @@ export async function remoteInitCommand(
       ...endpoints
     };
     await writeManifest(fullManifest, path.join(targetDir, 'mfe-manifest.yaml'));
-    console.log(chalk.green('✓ mfe-manifest.yaml'));
+    logger.success('mfe-manifest.yaml');
 
     // Success message
-    console.log(chalk.green('\n✓ Remote MFE manifest created!'));
-    console.log(chalk.blue('\nNext steps:'));
-    console.log(`  1. ${chalk.cyan(`cd ${name}`)}`);
-    console.log(`  2. Edit ${chalk.cyan('mfe-manifest.yaml')} to add capabilities`);
-    console.log(`  3. Run ${chalk.cyan('mfe remote:generate')} to scaffold features and platform files`);
-    console.log(`  4. Run ${chalk.cyan('npm run dev')} to start development`);
-    console.log(`\nRemote will be available at: ${chalk.cyan(`http://localhost:${port}`)}`);
-    console.log(`remoteEntry.js: ${chalk.cyan(`http://localhost:${port}/remoteEntry.js`)}`);
+    logger.info(chalk.green('\n✓ Remote MFE manifest created!'));
+    logger.info('\nNext steps:');
+    logger.info(`  1. ${chalk.cyan(`cd ${name}`)}`);
+    logger.info(`  2. Edit ${chalk.cyan('mfe-manifest.yaml')} to add capabilities`);
+    logger.info(`  3. Run ${chalk.cyan('mfe remote:generate')} to scaffold features and platform files`);
+    logger.info(`  4. Run ${chalk.cyan('npm run dev')} to start development`);
+    logger.info(`\nRemote will be available at: ${chalk.cyan(`http://localhost:${port}`)}`);
+    logger.info(`remoteEntry.js: ${chalk.cyan(`http://localhost:${port}/remoteEntry.js`)}`);
 
   } catch (error) {
-    console.error(chalk.red('\n✗ Failed to create remote MFE:'));
+    logger.error('\n✗ Failed to create remote MFE:');
     console.error(chalk.red((error as Error).message));
     throw error;
   }

@@ -5,6 +5,10 @@ const { SeedGenerator } = require('../generators/SeedGenerator');
 const { MigrationGenerator } = require('../generators/MigrationGenerator');
 const { MongoSchemaManager } = require('../generators/MongoSchemaManager');
 const { simpleSchema } = require('./fixtures/openapi-schemas');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+// Get logger mock
+const logger = createLogger();
 
 // Mock all generator classes
 jest.mock('../generators/MongoDBGenerator');
@@ -26,17 +30,13 @@ describe('DatabaseGenerator', () => {
   });
 
   describe('generate', () => {
-    let consoleLogSpy;
-    let consoleErrorSpy;
-
     beforeEach(() => {
-      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    });
-
-    afterEach(() => {
-      consoleLogSpy.mockRestore();
-      consoleErrorSpy.mockRestore();
+      // Clear logger mocks
+      logger.info.mockClear();
+      logger.error.mockClear();
+      logger.warn.mockClear();
+      logger.debug.mockClear();
+      logger.success.mockClear();
     });
 
     it('should throw error when dbType is missing', async () => {
@@ -74,16 +74,16 @@ describe('DatabaseGenerator', () => {
 
     it('should log start message', async () => {
       await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+
+      expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Generating database components')
       );
     });
 
     it('should log success message', async () => {
       await DatabaseGenerator.generate('mongodb', '/output', simpleSchema);
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+
+      expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Generated database components successfully')
       );
     });
@@ -94,11 +94,11 @@ describe('DatabaseGenerator', () => {
 
       await expect(DatabaseGenerator.generate('mongodb', '/output', simpleSchema))
         .rejects.toThrow('Generation failed');
-      
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to generate database components')
       );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(testError);
+      expect(logger.error).toHaveBeenCalledWith(testError);
     });
 
     it('should generate components in parallel using Promise.all', async () => {

@@ -1,14 +1,19 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { NameGenerator } = require('../../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { NameGenerator  } from '../../utils/NameGenerator';
+import { createLogger  } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:mongo-schema', silent: process.env.NODE_ENV === 'test' });
+
 class MongoSchemaManager {
     constructor(spec) {
         this.spec = spec;
     }
     async generateSchemaManagement(outputDir) {
         if (!this.spec.components?.schemas) {
-            console.log(chalk.yellow('No schemas found to generate schema management'));
+            logger.info(chalk.yellow('No schemas found to generate schema management'));
             return;
         }
         const migrationsDir = path.join(outputDir, 'src', 'database', 'migrations');
@@ -19,7 +24,7 @@ class MongoSchemaManager {
         await this.generateInitialVersion(migrationsDir);
         // Generate schema management utilities
         await this.generateSchemaUtils(outputDir);
-        console.log(chalk.green('✓ Generated MongoDB schema management files'));
+        logger.info(chalk.green('✓ Generated MongoDB schema management files'));
     }
     async generateVersionModel(outputDir) {
         const modelPath = path.join(outputDir, 'src', 'models', 'schemaVersion.model.js');
@@ -66,7 +71,7 @@ const SchemaVersion = mongoose.model('SchemaVersion', schemaVersionSchema);
 
 module.exports = SchemaVersion;`;
         await fs.writeFile(modelPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated schema version model'));
+        logger.info('Generated schema version model');
     }
     async generateInitialVersion(migrationsDir) {
         const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
@@ -74,27 +79,30 @@ module.exports = SchemaVersion;`;
         const content = `const mongoose = require('mongoose');
 const Models = require('../../models');
 const SchemaVersion = require('../../models/schemaVersion.model');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+const logger = createLogger({ context: 'migration' });
 
 // Define the models and their initial versions
 const initialSchemas = ${JSON.stringify(this.generateInitialSchemas(), null, 2)};
 
 async function up() {
-  console.log('Applying initial schema version...');
+  logger.info('Applying initial schema version...');
 
   // Record the initial schema version
-  await SchemaVersion.recordVersion(1, 'Initial schema creation', 
+  await SchemaVersion.recordVersion(1, 'Initial schema creation',
     Object.keys(initialSchemas).map(model => ({
       name: model,
       version: 1
     }))
   );
 
-  console.log('✓ Initial schema version applied');
+  logger.info('Initial schema version applied');
 }
 
 async function down() {
-  console.log('Rolling back initial schema version...');
-  
+  logger.info('Rolling back initial schema version...');
+
   // Drop all collections except schema versions
   const collections = Object.keys(initialSchemas);
   for (const collection of collections) {
@@ -103,8 +111,8 @@ async function down() {
 
   // Remove version record
   await SchemaVersion.deleteOne({ version: 1 });
-  
-  console.log('✓ Initial schema version rolled back');
+
+  logger.info('Initial schema version rolled back');
 }
 
 module.exports = {
@@ -114,19 +122,22 @@ module.exports = {
   down
 };`;
         await fs.writeFile(migrationPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated initial schema version'));
+        logger.info(chalk.green('✓ Generated initial schema version'));
     }
     async generateSchemaUtils(outputDir) {
         const utilsPath = path.join(outputDir, 'src', 'utils', 'schemaManager.js');
         const content = `const fs = require('fs');
 const path = require('path');
 const SchemaVersion = require('../models/schemaVersion.model');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+const logger = createLogger({ context: 'schema-manager' });
 
 class SchemaManager {
   static async initialize() {
     try {
       const currentVersion = await SchemaVersion.getCurrentVersion();
-      console.log('Current schema version:', currentVersion);
+      logger.info('Current schema version:', currentVersion);
 
       const migrationsDir = path.join(__dirname, '../database/migrations');
       const migrations = this.getMigrationFiles(migrationsDir);
@@ -134,7 +145,7 @@ class SchemaManager {
       await this.applyPendingMigrations(currentVersion, migrations);
 
     } catch (error) {
-      console.error('Failed to initialize schema:', error);
+      logger.error('Failed to initialize schema:', error);
       throw error;
     }
   }
@@ -152,17 +163,17 @@ class SchemaManager {
   static async applyPendingMigrations(currentVersion, migrations) {
     for (const { migration } of migrations) {
       if (migration.version > currentVersion) {
-        console.log(\`Applying migration ${'${migration.version}'}: ${'${migration.description}'}\`);
+        logger.info(\`Applying migration ${'${migration.version}'}: ${'${migration.description}'}\`);
         try {
           await migration.up();
-          console.log(\`✓ Migration ${'${migration.version}'} applied successfully\`);
+          logger.info(\`✓ Migration ${'${migration.version}'} applied successfully\`);
         } catch (error) {
-          console.error(\`Failed to apply migration ${'${migration.version}'}:\`, error);
+          logger.error(\`Failed to apply migration ${'${migration.version}'}:\`, error);
           try {
             await migration.down();
-            console.log(\`✓ Rolled back migration ${'${migration.version}'}\`);
+            logger.info(\`✓ Rolled back migration ${'${migration.version}'}\`);
           } catch (rollbackError) {
-            console.error(\`Failed to rollback migration ${'${migration.version}'}:\`, rollbackError);
+            logger.error(\`Failed to rollback migration ${'${migration.version}'}:\`, rollbackError);
           }
           throw error;
         }
@@ -180,9 +191,10 @@ class SchemaManager {
     const migrationsDir = path.join(__dirname, '../database/migrations');
     const filePath = path.join(migrationsDir, fileName);
 
-    const template = \`const mongoose = require('mongoose');
-const Models = require('../../models');
-const SchemaVersion = require('../../models/schemaVersion.model');
+    const template = \`import mongoose from 'mongoose';
+import Models from '../../models';
+import SchemaVersion from '../../models/schemaVersion.model';
+import { createLogger  } from '@seans-mfe-tool/logger';
 
 async function up() {
   await SchemaVersion.recordVersion(${'${newVersion}'}, '${'${description}'}', [
@@ -194,7 +206,7 @@ async function down() {
   await SchemaVersion.deleteOne({ version: ${'${newVersion}'} });
 }
 
-module.exports = {
+export {
   version: ${'${newVersion}'},
   description: '${'${description}'}',
   up,
@@ -202,14 +214,14 @@ module.exports = {
 };\`;
 
     fs.writeFileSync(filePath, template);
-    console.log(\`✓ Created new migration: ${'${fileName}'}\`);
+    logger.info(\`✓ Created new migration: ${'${fileName}'}\`);
   }
 }
 
 module.exports = SchemaManager;
 `;
         await fs.writeFile(utilsPath, content, 'utf8');
-        console.log(chalk.green('✓ Generated schema management utilities'));
+        logger.info('Generated schema management utilities');
     }
     generateInitialSchemas() {
         const schemas = {};
@@ -224,4 +236,4 @@ module.exports = SchemaManager;
         return schemas;
     }
 }
-module.exports = { MongoSchemaManager };
+export { MongoSchemaManager };

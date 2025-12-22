@@ -1,3 +1,4 @@
+// @ts-nocheck - Migrated from JS, types need cleanup
 class MethodGenerator {
     static generateControllerMethod(functionName, method, operationPath, operation, validations, implementation) {
         return `
@@ -29,4 +30,4 @@ class MethodGenerator {
   }`;
     }
 }
-module.exports = { MethodGenerator };
+export { MethodGenerator };

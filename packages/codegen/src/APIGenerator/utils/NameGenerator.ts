@@ -1,3 +1,4 @@
+// @ts-nocheck - Migrated from JS, types need cleanup
 class NameGenerator {
     static toCamelCase(str) {
         if (!str)
@@ -97,4 +98,4 @@ class NameGenerator {
         return `${methodPrefix}${base}`;
     }
 }
-module.exports = { NameGenerator };
+export { NameGenerator };

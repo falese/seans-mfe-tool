@@ -31,6 +31,19 @@ jest.mock('path', () => ({
   join: jest.fn((...args: string[]) => args.filter(a => a).join('/'))
 }));
 
+// Mock logger
+const mockLogger = {
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  success: jest.fn()
+};
+
+jest.mock('@seans-mfe-tool/logger', () => ({
+  createLogger: jest.fn(() => mockLogger)
+}));
+
 // Console mock setup - will be configured in beforeEach
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
@@ -40,19 +53,26 @@ import { remoteInitCommand } from '../remote-init';
 describe('remote:init Command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
+    // Clear logger mocks
+    mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
+    mockLogger.debug.mockClear();
+    mockLogger.success.mockClear();
+
     // Setup console spies AFTER clearAllMocks
     mockConsole = {
       log: jest.spyOn(console, 'log').mockImplementation(),
       error: jest.spyOn(console, 'error').mockImplementation()
     };
-    
+
     // Default mock implementations (cast through unknown to avoid TypeScript strictness)
     (mockFs.pathExists as unknown as jest.Mock).mockResolvedValue(false);
     (mockFs.ensureDir as unknown as jest.Mock).mockResolvedValue(undefined);
     (mockFs.writeFile as unknown as jest.Mock).mockResolvedValue(undefined);
     mockExecSync.mockReturnValue(Buffer.from(''));
-    
+
     // Mock process.cwd
     jest.spyOn(process, 'cwd').mockReturnValue('/test/workspace');
   });
@@ -112,22 +132,22 @@ describe('remote:init Command', () => {
     it('should throw and log error on fs failure', async () => {
       (mockFs.ensureDir as unknown as jest.Mock).mockRejectedValue(new Error('fs error'));
       await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow('fs error');
-      expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create remote MFE'));
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create remote MFE'));
     });
   });
 
   describe('Console Output', () => {
     it('should log creation messages', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based remote MFE'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Remote MFE manifest created!'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based remote MFE'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Remote MFE manifest created!'));
     });
     it('should log next steps', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('cd my-feature'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Edit mfe-manifest.yaml'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('mfe remote:generate'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('cd my-feature'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Edit mfe-manifest.yaml'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('mfe remote:generate'));
     });
   });
 });
