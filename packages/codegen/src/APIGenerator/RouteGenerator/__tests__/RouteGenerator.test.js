@@ -227,7 +227,7 @@ describe('RouteGenerator', () => {
       /** @type {jest.Mock} */
       const writeFileMock = fs.writeFile;
       const content = writeFileMock.mock.calls[0][1];
-      expect(content).toContain("const logger = require('../utils/logger');");
+      expect(content).toContain("const { createLogger } = require('@seans-mfe-tool/logger');");
       expect(content).toContain('router.use((req, res, next)');
       expect(content).toContain('req.requestId');
       expect(content).toContain('logger.info');

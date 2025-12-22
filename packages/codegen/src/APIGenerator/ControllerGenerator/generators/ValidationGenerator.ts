@@ -1,3 +1,4 @@
+// @ts-nocheck - Migrated from JS, types need cleanup
 class ValidationGenerator {
     static generateValidations(operation) {
         const validations = [];
@@ -29,4 +30,4 @@ class ValidationGenerator {
         }
     }
 }
-module.exports = { ValidationGenerator };
+export { ValidationGenerator };

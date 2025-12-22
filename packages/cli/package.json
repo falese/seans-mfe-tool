@@ -17,6 +17,7 @@
   "dependencies": {
     "@seans-mfe-tool/codegen": "^1.0.0",
     "@seans-mfe-tool/dsl": "^1.0.0",
+    "@seans-mfe-tool/logger": "^1.0.0",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "diff": "^5.1.0",

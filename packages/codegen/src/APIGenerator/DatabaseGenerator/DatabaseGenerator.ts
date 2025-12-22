@@ -1,17 +1,22 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { MongoDBGenerator } = require('./generators/MongoDBGenerator');
-const { SQLiteGenerator } = require('./generators/SQLiteGenerator');
-const { SeedGenerator } = require('./generators/SeedGenerator');
-const { MigrationGenerator } = require('./generators/MigrationGenerator');
-const { MongoSchemaManager } = require('./generators/MongoSchemaManager');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { MongoDBGenerator  } from './generators/MongoDBGenerator';
+import { SQLiteGenerator  } from './generators/SQLiteGenerator';
+import { SeedGenerator  } from './generators/SeedGenerator';
+import { MigrationGenerator  } from './generators/MigrationGenerator';
+import { MongoSchemaManager  } from './generators/MongoSchemaManager';
+import { createLogger  } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:database', silent: process.env.NODE_ENV === 'test' });
+
 class DatabaseGenerator {
     static async generate(dbType, outputDir, spec) {
         if (!dbType) {
             throw new Error('Database type is required');
         }
-        console.log(chalk.blue('\nGenerating database components...'));
+        logger.info(chalk.blue('\nGenerating database components...'));
         // Get the appropriate generator
         const generator = this.getGenerator(dbType);
         const seedGenerator = new SeedGenerator(spec);
@@ -27,11 +32,11 @@ class DatabaseGenerator {
                     new MigrationGenerator(spec).generateMigrations(outputDir) :
                     new MongoSchemaManager(spec).generateSchemaManagement(outputDir)
             ]);
-            console.log(chalk.green('✓ Generated database components successfully'));
+            logger.info(chalk.green('✓ Generated database components successfully'));
         }
         catch (error) {
-            console.error(chalk.red('Failed to generate database components:'));
-            console.error(error);
+            logger.error(chalk.red('Failed to generate database components:'));
+            logger.error(error);
             throw error;
         }
     }
@@ -48,4 +53,4 @@ class DatabaseGenerator {
         }
     }
 }
-module.exports = { DatabaseGenerator };
+export { DatabaseGenerator };

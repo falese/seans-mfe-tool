@@ -1,3 +1,4 @@
+// @ts-nocheck - Migrated from JS, types need cleanup
 class SchemaGenerator {
     static generateValidationSchema(operation, components) {
         const schemas = {
@@ -130,4 +131,4 @@ class SchemaGenerator {
         return `${baseName}${type.charAt(0).toUpperCase() + type.slice(1)}Schema`;
     }
 }
-module.exports = { SchemaGenerator };
+export { SchemaGenerator };

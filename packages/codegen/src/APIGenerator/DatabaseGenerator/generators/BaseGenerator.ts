@@ -1,25 +1,30 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { NameGenerator } = require('../../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { NameGenerator  } from '../../utils/NameGenerator';
+import { createLogger  } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:base', silent: process.env.NODE_ENV === 'test' });
+
 class BaseGenerator {
     async generateModels(outputDir, spec) {
         if (!spec.components?.schemas) {
-            console.log(chalk.yellow('No schemas found in OpenAPI spec'));
+            logger.info(chalk.yellow('No schemas found in OpenAPI spec'));
             return;
         }
         const modelsDir = path.join(outputDir, 'src', 'models');
         await fs.ensureDir(modelsDir);
         for (const [schemaName, schema] of Object.entries(spec.components.schemas)) {
             if (!schema || !schema.properties || Object.keys(schema.properties).length === 0) {
-                console.log(chalk.yellow(`Skipping model for schema without properties: ${schemaName}`));
+                logger.info(chalk.yellow(`Skipping model for schema without properties: ${schemaName}`));
                 continue;
             }
             const modelName = NameGenerator.toModelName(schemaName);
             const modelPath = path.join(modelsDir, `${modelName}.model.js`);
             const modelContent = this.generateModelFile(schemaName, schema);
             await fs.writeFile(modelPath, modelContent, 'utf8');
-            console.log(chalk.green(`✓ Generated model: ${modelName}`));
+            logger.info(chalk.green(`✓ Generated model: ${modelName}`));
         }
         await this.generateModelIndex(modelsDir, spec.components.schemas);
     }
@@ -41,4 +46,4 @@ class BaseGenerator {
         return property.type;
     }
 }
-module.exports = { BaseGenerator };
+export { BaseGenerator };

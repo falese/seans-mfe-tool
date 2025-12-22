@@ -145,6 +145,7 @@ module.exports = {
     '^@seans-mfe-tool/dsl$': '<rootDir>/packages/dsl/src/index.ts',
     '^@seans-mfe-tool/runtime$': '<rootDir>/packages/runtime/src/index.ts',
     '^@seans-mfe-tool/codegen$': '<rootDir>/packages/codegen/src/index.ts',
-    '^@seans-mfe-tool/cli$': '<rootDir>/packages/cli/src'
+    '^@seans-mfe-tool/cli$': '<rootDir>/packages/cli/src',
+    '^@seans-mfe-tool/logger$': '<rootDir>/packages/logger/src/__mocks__/index.ts'
   }
 };

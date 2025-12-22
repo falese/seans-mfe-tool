@@ -1,11 +1,12 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { MethodGenerator } = require('./generators/MethodGenerator');
-const { ValidationGenerator } = require('./generators/ValidationGenerator');
-const { ImplementationGenerator } = require('./generators/ImplementationGenerator');
-const { DatabaseAdapter } = require('./adapters/DatabaseAdapter');
-const { NameGenerator } = require('../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { MethodGenerator  } from './generators/MethodGenerator';
+import { ValidationGenerator  } from './generators/ValidationGenerator';
+import { ImplementationGenerator  } from './generators/ImplementationGenerator';
+import { DatabaseAdapter  } from './adapters/DatabaseAdapter';
+import { NameGenerator  } from '../utils/NameGenerator';
 class ControllerGenerator {
     static async generate(dbType, controllersDir, spec) {
         console.log(chalk.blue('\nStarting controller generation...'));
@@ -66,7 +67,7 @@ class ControllerGenerator {
     static generateImports(dbAdapter) {
         return [
             `const { ApiError } = require('../middleware/errorHandler');`,
-            `const logger = require('../utils/logger');`,
+            `const { createLogger } = require('@seans-mfe-tool/logger');\nconst logger = createLogger({ context: 'api:controller' });`,
             dbAdapter.getImportStatement()
         ].join('\n');
     }
@@ -93,4 +94,4 @@ class ControllerGenerator {
         return `module.exports = {\n  ${methodNames.join(',\n  ')}\n};`;
     }
 }
-module.exports = { ControllerGenerator };
+export { ControllerGenerator };

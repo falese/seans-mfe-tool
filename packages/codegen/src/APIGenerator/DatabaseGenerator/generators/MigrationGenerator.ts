@@ -1,14 +1,19 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const { NameGenerator } = require('../../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { NameGenerator  } from '../../utils/NameGenerator';
+import { createLogger  } from '@seans-mfe-tool/logger';
+
+const logger = createLogger({ context: 'codegen:migration', silent: process.env.NODE_ENV === 'test' });
+
 class MigrationGenerator {
     constructor(spec) {
         this.spec = spec;
     }
     async generateMigrations(outputDir) {
         if (!this.spec.components?.schemas) {
-            console.log(chalk.yellow('No schemas found to generate migrations'));
+            logger.info(chalk.yellow('No schemas found to generate migrations'));
             return;
         }
         const migrationsDir = path.join(outputDir, 'src', 'database', 'migrations');
@@ -18,10 +23,10 @@ class MigrationGenerator {
         const migrationPath = path.join(migrationsDir, `${timestamp}-create-initial-tables.js`);
         const migrationContent = this.generateInitialMigration();
         await fs.writeFile(migrationPath, migrationContent, 'utf8');
-        console.log(chalk.green('✓ Generated initial migration file'));
+        logger.info(chalk.green('✓ Generated initial migration file'));
         // Generate config file for sequelize-cli
         await this.generateSequelizeConfig(outputDir);
-        console.log(chalk.green('✓ Generated sequelize configuration'));
+        logger.info(chalk.green('✓ Generated sequelize configuration'));
     }
     generateInitialMigration() {
         const schemas = Object.entries(this.spec.components.schemas);
@@ -39,7 +44,7 @@ class MigrationGenerator {
 module.exports = {
   async up(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
-    
+
     try {
       // Create tables
       ${tables.join('\n\n      ')}
@@ -56,7 +61,7 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
-    
+
     try {
       // Drop tables in reverse order
       const tables = [
@@ -175,7 +180,7 @@ module.exports = {
         const configDir = path.join(outputDir, 'src', 'config');
         await fs.ensureDir(configDir);
         const configPath = path.join(configDir, 'database.js');
-        const configContent = `module.exports = {
+        const configContent = `export {
   development: {
     dialect: 'sqlite',
     storage: './src/database/development.sqlite',
@@ -195,9 +200,9 @@ module.exports = {
         await fs.writeFile(configPath, configContent, 'utf8');
         // Generate sequelize CLI config file
         const cliConfigPath = path.join(outputDir, '.sequelizerc');
-        const cliConfigContent = `const path = require('path');
+        const cliConfigContent = `import path from 'path';
 
-module.exports = {
+export {
   'config': path.resolve('src', 'config', 'database.js'),
   'models-path': path.resolve('src', 'models'),
   'seeders-path': path.resolve('src', 'database', 'seeders'),
@@ -209,4 +214,4 @@ module.exports = {
         return str.replace(/([A-Z])/g, '_$1').toLowerCase();
     }
 }
-module.exports = { MigrationGenerator };
+export { MigrationGenerator };

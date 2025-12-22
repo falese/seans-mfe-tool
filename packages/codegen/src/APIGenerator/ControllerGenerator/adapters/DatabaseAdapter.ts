@@ -1,4 +1,5 @@
-const { NameGenerator } = require('../../utils/NameGenerator');
+// @ts-nocheck - Migrated from JS, types need cleanup
+import { NameGenerator  } from '../../utils/NameGenerator';
 class DatabaseAdapter {
     static create(dbType) {
         switch (dbType?.toLowerCase()) {
@@ -87,4 +88,4 @@ class SQLiteAdapter extends DatabaseAdapter {
     })`;
     }
 }
-module.exports = { DatabaseAdapter };
+export { DatabaseAdapter };

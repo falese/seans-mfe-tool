@@ -25,6 +25,10 @@ const {
 // Get references to mocked modules
 const yaml = require('js-yaml');
 const childProcess = require('child_process');
+const { createLogger } = require('@seans-mfe-tool/logger');
+
+// Get logger mock instance
+const logger = createLogger();
 
 // Create spawn mock directly
 const mockSpawnProcess = {
@@ -68,7 +72,14 @@ describe('BFF Commands', () => {
   beforeEach(() => {
     setupCommonMocks();
     jest.clearAllMocks();
-    
+
+    // Clear logger mocks
+    logger.info.mockClear();
+    logger.warn.mockClear();
+    logger.error.mockClear();
+    logger.debug.mockClear();
+    logger.success.mockClear();
+
     // Reset spawn mock process
     mockSpawnProcess._callbacks = {};
   });
@@ -497,17 +508,19 @@ describe('BFF Commands', () => {
     });
 
     it('should handle spawn error event', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      
       await bffDevCommand({});
 
       // Trigger the error callback
       if (mockSpawnProcess._callbacks.error) {
         mockSpawnProcess._callbacks.error(new Error('Spawn failed'));
+        // Logger error should be called with the failure message
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to start mesh dev'),
+          expect.any(Object)
+        );
+      } else {
+        throw new Error('Error callback was not registered');
       }
-
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
     });
 
     it('should handle spawn close event with non-zero code', async () => {

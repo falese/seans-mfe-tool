@@ -4,6 +4,10 @@ import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
 import * as ejs from 'ejs';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+// Logger for deploy commands
+const logger = createLogger({ context: 'deploy' });
 
 interface DeployOptions {
   name: string;
@@ -29,9 +33,9 @@ async function cleanupTempDirs(): Promise<void> {
   for (const dir of tempDirs) {
     try {
       if (await fs.pathExists(dir)) {
-        console.log(chalk.blue(`\nCleaning up temporary directory: ${dir}`));
+        logger.info(`\nCleaning up temporary directory: ${dir}`);
         await fs.remove(dir);
-        console.log(chalk.green('✓ Cleanup complete'));
+        logger.success('Cleanup complete');
       }
     } catch (error: any) {
       console.error(chalk.yellow(`Warning: Failed to clean up directory: ${dir}`));
@@ -43,20 +47,20 @@ async function cleanupTempDirs(): Promise<void> {
 
 // Register cleanup handlers
 process.on('SIGINT', async () => {
-  console.log(chalk.yellow('\nReceived SIGINT. Cleaning up...'));
+  logger.warn('\nReceived SIGINT. Cleaning up...');
   await cleanupTempDirs();
   process.exit(1);
 });
 
 process.on('SIGTERM', async () => {
-  console.log(chalk.yellow('\nReceived SIGTERM. Cleaning up...'));
+  logger.warn('\nReceived SIGTERM. Cleaning up...');
   await cleanupTempDirs();
   process.exit(1);
 });
 
 // Verify project structure
 async function verifyProjectStructure(): Promise<void> {
-  console.log(chalk.blue('Checking required files...'));
+  logger.info('Checking required files...');
 
   const requiredFiles = [
     'package.json',
@@ -71,9 +75,9 @@ async function verifyProjectStructure(): Promise<void> {
     const filePath = path.resolve(process.cwd(), file);
     if (!fs.existsSync(filePath)) {
       missingFiles.push(file);
-      console.log(chalk.red(`❌ Missing: ${file}`));
+      logger.info(chalk.red(`❌ Missing: ${file}`));
     } else {
-      console.log(chalk.green(`✓ Found: ${file}`));
+      logger.success(`Found: ${file}`);
     }
   }
 
@@ -85,13 +89,13 @@ async function verifyProjectStructure(): Promise<void> {
     );
   }
 
-  console.log(chalk.green('\n✓ Project structure verification complete'));
+  logger.info(chalk.green('\n✓ Project structure verification complete'));
 }
 
 // Copy Docker configuration files
 async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   const templateDir = path.resolve(__dirname, '..', 'templates', 'docker');
-  console.log(chalk.gray(`Template directory: ${templateDir}`));
+  logger.info(chalk.gray(`Template directory: ${templateDir}`));
 
   // Copy Dockerfile
   const dockerfileSource = path.join(templateDir, `Dockerfile.${type}`);
@@ -102,7 +106,7 @@ async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   }
 
   await fs.copy(dockerfileSource, dockerfileDest);
-  console.log(chalk.green('✓ Copied Dockerfile'));
+  logger.success('Copied Dockerfile');
 
   // Copy nginx configuration
   const nginxSource = path.join(templateDir, 'nginx.conf');
@@ -113,7 +117,7 @@ async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   }
 
   await fs.copy(nginxSource, nginxDest);
-  console.log(chalk.green('✓ Copied nginx configuration'));
+  logger.success('Copied nginx configuration');
 }
 
 // Development deployment function
@@ -130,7 +134,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     await fs.ensureDir(tempDir);
 
     // Copy project files
-    console.log(chalk.blue('\nPreparing deployment files...'));
+    logger.info('\nPreparing deployment files...');
     const projectFiles = ['src', 'public', 'package.json', 'package-lock.json', 'rspack.config.js'];
     for (const file of projectFiles) {
       const sourcePath = path.join(projectDir, file);
@@ -143,7 +147,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     await copyDockerFiles(tempDir, type);
 
     // Build image
-    console.log(chalk.blue('\nBuilding Docker image...'));
+    logger.info('\nBuilding Docker image...');
     try {
       execSync(
         `docker build -t ${imageTag} --target development ${tempDir}`,
@@ -163,13 +167,13 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     try {
       execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
       execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
-      console.log(chalk.blue(`Removed existing container: ${containerName}`));
+      logger.info(`Removed existing container: ${containerName}`);
     } catch (e) {
       // Container doesn't exist, continue
     }
 
     // Run container with development settings
-    console.log(chalk.blue('\nStarting development container...'));
+    logger.info('\nStarting development container...');
     execSync(
       `docker run -d \
         --name ${containerName} \
@@ -185,20 +189,20 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     await waitForContainer(containerName);
 
     // Show container info
-    console.log(chalk.green(`\n✓ Development container ready at http://localhost:${port}`));
-    console.log(chalk.blue('\nUseful commands:'));
-    console.log(`  Logs: docker logs -f ${containerName}`);
-    console.log(`  Shell: docker exec -it ${containerName} /bin/sh`);
-    console.log(`  Stop: docker stop ${containerName}`);
+    logger.info(chalk.green(`\n✓ Development container ready at http://localhost:${port}`));
+    logger.info('\nUseful commands:');
+    logger.info(`  Logs: docker logs -f ${containerName}`);
+    logger.info(`  Shell: docker exec -it ${containerName} /bin/sh`);
+    logger.info(`  Stop: docker stop ${containerName}`);
 
     // Stream logs if requested
     if (options.logs) {
-      console.log(chalk.blue('\nStreaming container logs...'));
+      logger.info('\nStreaming container logs...');
       execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
     }
 
   } catch (error: any) {
-    console.error(chalk.red('\n✗ Development deployment failed:'));
+    logger.error('\n✗ Development deployment failed:');
     console.error(error.message);
     throw error;
   } finally {
@@ -242,8 +246,8 @@ async function deployCommand(options: DeployOptions): Promise<void> {
       throw new Error(`Unknown environment: ${options.env}`);
     }
   } catch (error: any) {
-    console.error(chalk.red('\n✗ Deployment failed:'));
-    console.error(chalk.red(error.message));
+    logger.error('\n✗ Deployment failed:');
+    logger.error(error.message);
     if (error.stack && process.env.DEBUG) {
       console.error(chalk.gray('\nStack trace:'));
       console.error(error.stack);
@@ -257,10 +261,10 @@ async function productionDeploy(options: DeployOptions): Promise<void> {
   const { name, port, type, registry, mode = 'docker-compose' } = options;
   const projectDir = process.cwd();
 
-  console.log(chalk.blue('\n🚀 Starting production deployment...'));
-  console.log(chalk.gray(`Mode: ${mode}`));
-  console.log(chalk.gray(`Type: ${type}`));
-  console.log(chalk.gray(`Registry: ${registry || 'local'}\n`));
+  logger.info('\n🚀 Starting production deployment...');
+  logger.info(chalk.gray(`Mode: ${mode}`));
+  logger.info(chalk.gray(`Type: ${type}`));
+  logger.info(chalk.gray(`Registry: ${registry || 'local'}\n`));
 
   try {
     if (mode === 'kubernetes' || mode === 'k8s') {
@@ -269,7 +273,7 @@ async function productionDeploy(options: DeployOptions): Promise<void> {
       await dockerComposeProductionDeploy(options);
     }
   } catch (error: any) {
-    console.error(chalk.red('\n✗ Production deployment failed:'));
+    logger.error('\n✗ Production deployment failed:');
     console.error(error.message);
     throw error;
   }
@@ -281,7 +285,7 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   const projectDir = process.cwd();
   const deployDir = path.join(projectDir, 'deploy');
 
-  console.log(chalk.blue('📦 Generating Docker Compose configuration...'));
+  logger.info('📦 Generating Docker Compose configuration...');
 
   // Create deploy directory
   await fs.ensureDir(deployDir);
@@ -305,7 +309,7 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   });
 
   await fs.writeFile(path.join(deployDir, 'docker-compose.yml'), composeContent);
-  console.log(chalk.green('✓ Generated docker-compose.yml'));
+  logger.success('Generated docker-compose.yml');
 
   // Generate production Dockerfile
   const dockerfileTemplatePath = path.join(
@@ -314,7 +318,7 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   );
   const dockerfileContent = await fs.readFile(dockerfileTemplatePath, 'utf8');
   await fs.writeFile(path.join(deployDir, 'Dockerfile'), dockerfileContent);
-  console.log(chalk.green('✓ Generated Dockerfile'));
+  logger.success('Generated Dockerfile');
 
   // Generate nginx config for React apps
   if (type === 'shell' || type === 'remote') {
@@ -324,7 +328,7 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
     );
     const nginxContent = await fs.readFile(nginxTemplatePath, 'utf8');
     await fs.writeFile(path.join(deployDir, 'nginx.conf'), nginxContent);
-    console.log(chalk.green('✓ Generated nginx.conf'));
+    logger.success('Generated nginx.conf');
   }
 
   // Generate .env.production template
@@ -363,7 +367,7 @@ POSTGRES_PASSWORD=CHANGE_THIS_PASSWORD` : ''}` : ''}
 `;
 
   await fs.writeFile(path.join(deployDir, '.env.production'), envProductionContent);
-  console.log(chalk.green('✓ Generated .env.production'));
+  logger.success('Generated .env.production');
 
   // Generate deployment README
   const readmeContent = `# Production Deployment for ${name}
@@ -430,16 +434,16 @@ POSTGRES_PASSWORD=CHANGE_THIS_PASSWORD` : ''}` : ''}
 `;
 
   await fs.writeFile(path.join(deployDir, 'README.md'), readmeContent);
-  console.log(chalk.green('✓ Generated README.md'));
+  logger.success('Generated README.md');
 
-  console.log(chalk.green('\n✅ Production deployment configuration generated!'));
-  console.log(chalk.blue('\nNext steps:'));
-  console.log(chalk.gray(`  cd ${deployDir}`));
-  console.log(chalk.gray('  cp .env.production .env'));
-  console.log(chalk.gray('  # Edit .env with your actual values'));
-  console.log(chalk.gray('  docker-compose build'));
-  console.log(chalk.gray('  docker-compose up -d\n'));
-  console.log(chalk.yellow('⚠️  See README.md for security and deployment instructions'));
+  logger.info(chalk.green('\n✅ Production deployment configuration generated!'));
+  logger.info('\nNext steps:');
+  logger.info(chalk.gray(`  cd ${deployDir}`));
+  logger.info(chalk.gray('  cp .env.production .env'));
+  logger.info(chalk.gray('  # Edit .env with your actual values'));
+  logger.info(chalk.gray('  docker-compose build'));
+  logger.info(chalk.gray('  docker-compose up -d\n'));
+  logger.warn('⚠️  See README.md for security and deployment instructions');
 }
 
 // Kubernetes production deployment
@@ -448,7 +452,7 @@ async function kubernetesProductionDeploy(options: DeployOptions): Promise<void>
   const projectDir = process.cwd();
   const deployDir = path.join(projectDir, 'k8s');
 
-  console.log(chalk.blue('☸️  Generating Kubernetes manifests...'));
+  logger.info('☸️  Generating Kubernetes manifests...');
 
   // Create k8s directory
   await fs.ensureDir(deployDir);
@@ -478,7 +482,7 @@ async function kubernetesProductionDeploy(options: DeployOptions): Promise<void>
   const deploymentTemplate = await fs.readFile(deploymentTemplatePath, 'utf8');
   const deploymentContent = ejs.render(deploymentTemplate, templateData);
   await fs.writeFile(path.join(deployDir, 'deployment.yaml'), deploymentContent);
-  console.log(chalk.green('✓ Generated deployment.yaml'));
+  logger.success('Generated deployment.yaml');
 
   // Generate secrets.yaml
   const secretsTemplatePath = path.join(
@@ -488,7 +492,7 @@ async function kubernetesProductionDeploy(options: DeployOptions): Promise<void>
   const secretsTemplate = await fs.readFile(secretsTemplatePath, 'utf8');
   const secretsContent = ejs.render(secretsTemplate, templateData);
   await fs.writeFile(path.join(deployDir, 'secrets.yaml'), secretsContent);
-  console.log(chalk.green('✓ Generated secrets.yaml'));
+  logger.success('Generated secrets.yaml');
 
   // Generate configmap.yaml
   const configmapTemplatePath = path.join(
@@ -498,14 +502,14 @@ async function kubernetesProductionDeploy(options: DeployOptions): Promise<void>
   const configmapTemplate = await fs.readFile(configmapTemplatePath, 'utf8');
   const configmapContent = ejs.render(configmapTemplate, templateData);
   await fs.writeFile(path.join(deployDir, 'configmap.yaml'), configmapContent);
-  console.log(chalk.green('✓ Generated configmap.yaml'));
+  logger.success('Generated configmap.yaml');
 
   // Generate hpa.yaml
   const hpaTemplatePath = path.join(__dirname, '../templates/kubernetes/hpa.yaml');
   const hpaTemplate = await fs.readFile(hpaTemplatePath, 'utf8');
   const hpaContent = ejs.render(hpaTemplate, { ...templateData, minReplicas: replicas });
   await fs.writeFile(path.join(deployDir, 'hpa.yaml'), hpaContent);
-  console.log(chalk.green('✓ Generated hpa.yaml'));
+  logger.success('Generated hpa.yaml');
 
   // Generate kustomization.yaml
   const kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -529,7 +533,7 @@ images:
 `;
 
   await fs.writeFile(path.join(deployDir, 'kustomization.yaml'), kustomizationContent);
-  console.log(chalk.green('✓ Generated kustomization.yaml'));
+  logger.success('Generated kustomization.yaml');
 
   // Generate deployment README
   const readmeContent = `# Kubernetes Deployment for ${name}
@@ -643,14 +647,14 @@ kubectl get events -n ${options.namespace || 'default'} --sort-by='.lastTimestam
 `;
 
   await fs.writeFile(path.join(deployDir, 'README.md'), readmeContent);
-  console.log(chalk.green('✓ Generated README.md'));
+  logger.success('Generated README.md');
 
-  console.log(chalk.green('\n✅ Kubernetes manifests generated!'));
-  console.log(chalk.blue('\nNext steps:'));
-  console.log(chalk.gray(`  cd ${deployDir}`));
-  console.log(chalk.gray('  # Review and update secrets.yaml'));
-  console.log(chalk.gray('  kubectl apply -f .\n'));
-  console.log(chalk.yellow('⚠️  See README.md for complete deployment instructions'));
+  logger.info(chalk.green('\n✅ Kubernetes manifests generated!'));
+  logger.info('\nNext steps:');
+  logger.info(chalk.gray(`  cd ${deployDir}`));
+  logger.info(chalk.gray('  # Review and update secrets.yaml'));
+  logger.info(chalk.gray('  kubectl apply -f .\n'));
+  logger.warn('⚠️  See README.md for complete deployment instructions');
 }
 
 // Helper functions

@@ -10,6 +10,10 @@
 
 import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult } from './base-mfe';
 import type { DSLManifest } from '@seans-mfe-tool/dsl';
+import { createLogger } from '@seans-mfe-tool/logger';
+
+// Logger for remote MFE
+const logger = createLogger({ context: 'runtime:remote-mfe', level: 'debug' });
 
 /**
  * Module Federation container interface
@@ -403,11 +407,11 @@ export class RemoteMFE extends BaseMFE {
     return {
       init: async (shared: Record<string, any>) => {
         // Initialize with shared dependencies
-        console.log('[RemoteMFE] Container initialized with shared deps:', Object.keys(shared));
+        logger.debug('[RemoteMFE] Container initialized with shared deps', { deps: Object.keys(shared) });
       },
       get: async (module: string) => {
         // Return a factory function for the requested module
-        console.log('[RemoteMFE] Fetching module:', module);
+        logger.debug('[RemoteMFE] Fetching module', { module });
         return () => ({
           default: class MockComponent {}
         });
@@ -483,7 +487,7 @@ export class RemoteMFE extends BaseMFE {
       props
     } as any;
     
-    console.log('[RemoteMFE] Component mounted:', { Component, props, containerId });
+    logger.debug('[RemoteMFE] Component mounted:', { Component, props, containerId });
     
     return element;
   }
@@ -494,7 +498,7 @@ export class RemoteMFE extends BaseMFE {
 
   protected async doRefresh(context: Context): Promise<void> {
     // Refresh MFE data/state
-    console.log('[RemoteMFE] Refresh called');
+    logger.debug('[RemoteMFE] Refresh called');
   }
 
   protected async doAuthorizeAccess(context: Context): Promise<boolean> {

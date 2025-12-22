@@ -6,10 +6,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build:dsl && npm run build:runtime && npm run build:codegen && npm run build:cli",
+    "build": "npm run build:dsl && npm run build:logger && npm run build:runtime && npm run build:codegen && npm run build:cli",
     "build:cli": "npm run build --workspace=@seans-mfe-tool/cli",
     "build:runtime": "npm run build --workspace=@seans-mfe-tool/runtime",
     "build:dsl": "npm run build --workspace=@seans-mfe-tool/dsl",
+    "build:logger": "npm run build --workspace=@seans-mfe-tool/logger",
     "build:codegen": "npm run build --workspace=@seans-mfe-tool/codegen",
     "build:watch": "tsc --watch",
     "test": "jest",

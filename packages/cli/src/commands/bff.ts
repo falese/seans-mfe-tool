@@ -11,6 +11,7 @@ import chalk = require('chalk');
 import * as yaml from 'js-yaml';
 import { execSync, spawn, ChildProcess } from 'child_process';
 import { processTemplates } from '../utils/templateProcessor';
+import { createLogger } from '@seans-mfe-tool/logger';
 
 // ============================================================================
 // Type Definitions
@@ -126,6 +127,12 @@ interface TemplateVars {
 }
 
 // ============================================================================
+// Logger Configuration
+// ============================================================================
+
+const logger = createLogger({ context: 'bff' });
+
+// ============================================================================
 // Core Functions
 // ============================================================================
 
@@ -186,8 +193,8 @@ async function writeMeshConfig(meshConfig: MeshConfig, targetDir: string): Promi
   });
 
   await fs.writeFile(meshrcPath, meshrcContent, 'utf8');
-  console.log(chalk.green(`✓ Generated .meshrc.yaml`));
-  
+  logger.success('Generated .meshrc.yaml');
+
   return meshrcPath;
 }
 
@@ -200,13 +207,13 @@ async function writeMeshConfig(meshConfig: MeshConfig, targetDir: string): Promi
  */
 async function bffValidateCommand(options: BFFCommandOptions = {}): Promise<ValidationResult> {
   try {
-    console.log(chalk.blue('Validating BFF configuration...'));
+    logger.info('Validating BFF configuration...');
 
     const manifestPath = options.manifest || 'mfe-manifest.yaml';
     const { meshConfig, manifest } = await extractMeshConfig(manifestPath);
 
     // Validate sources
-    console.log(chalk.blue('\nValidating sources...'));
+    logger.info('\nValidating sources...');
     for (const source of meshConfig.sources) {
       if (!source.name) {
         throw new Error('Each source must have a "name" property');
@@ -219,50 +226,50 @@ async function bffValidateCommand(options: BFFCommandOptions = {}): Promise<Vali
       if (!specPath.startsWith('http')) {
         const absoluteSpecPath = path.resolve(process.cwd(), specPath);
         if (!await fs.pathExists(absoluteSpecPath)) {
-          console.log(chalk.yellow(`⚠ OpenAPI spec not found: ${specPath}`));
+          logger.warn(`OpenAPI spec not found: ${specPath}`);
         } else {
-          console.log(chalk.green(`✓ Source "${source.name}": ${specPath}`));
+          logger.success(`Source "${source.name}": ${specPath}`);
         }
       } else {
-        console.log(chalk.green(`✓ Source "${source.name}": ${specPath} (remote)`));
+        logger.success(`Source "${source.name}": ${specPath} (remote)`);
       }
     }
 
     // Validate transforms if present
     if (meshConfig.transforms) {
-      console.log(chalk.blue('\nValidating transforms...'));
+      logger.info('\nValidating transforms...');
       const validTransforms = ['prefix', 'rename', 'filterSchema', 'encapsulate', 'namingConvention'];
       for (const transform of meshConfig.transforms) {
         const transformType = Object.keys(transform)[0];
         if (!validTransforms.includes(transformType)) {
-          console.log(chalk.yellow(`⚠ Unknown transform type: ${transformType}`));
+          logger.warn(`Unknown transform type: ${transformType}`);
         } else {
-          console.log(chalk.green(`✓ Transform: ${transformType}`));
+          logger.success(`Transform: ${transformType}`);
         }
       }
     }
 
     // Validate plugins if present
     if (meshConfig.plugins) {
-      console.log(chalk.blue('\nValidating plugins...'));
+      logger.info('\nValidating plugins...');
       const knownPlugins = ['responseCache', 'rateLimit', 'prometheus', 'depthLimit', 'csrf'];
       for (const plugin of meshConfig.plugins) {
         const pluginName = Object.keys(plugin)[0];
         if (!knownPlugins.includes(pluginName)) {
-          console.log(chalk.yellow(`⚠ Unknown plugin: ${pluginName} (may require additional package)`));
+          logger.warn(`Unknown plugin: ${pluginName} (may require additional package)`);
         } else {
-          console.log(chalk.green(`✓ Plugin: ${pluginName}`));
+          logger.success(`Plugin: ${pluginName}`);
         }
       }
     }
 
-    console.log(chalk.green('\n✓ BFF configuration is valid'));
-    
+    logger.success('\nBFF configuration is valid');
+
     return { valid: true, meshConfig, manifest };
 
   } catch (error) {
-    console.error(chalk.red('\n✗ Validation failed:'));
-    console.error(chalk.red((error as Error).message));
+    logger.error('\nValidation failed:');
+    logger.error((error as Error).message);
     throw error;
   }
 }
@@ -275,7 +282,7 @@ async function bffValidateCommand(options: BFFCommandOptions = {}): Promise<Vali
  */
 async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
   try {
-    console.log(chalk.blue('Building BFF...'));
+    logger.info('Building BFF...');
 
     // First validate
     const { meshConfig } = await bffValidateCommand(options);
@@ -283,13 +290,13 @@ async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
     const targetDir = options.cwd || process.cwd();
 
     // Write .meshrc.yaml
-    console.log(chalk.blue('\nExtracting Mesh configuration...'));
+    logger.info('\nExtracting Mesh configuration...');
     await writeMeshConfig(meshConfig, targetDir);
 
     // Check if mesh CLI is available
     const meshrcPath = path.join(targetDir, '.meshrc.yaml');
     
-    console.log(chalk.blue('\nRunning mesh build...'));
+    logger.info('\nRunning mesh build...');
     
     try {
       execSync('npx mesh build', {
@@ -300,7 +307,7 @@ async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
     } catch (meshError) {
       // Check if it's a missing dependency issue
       if ((meshError as Error).message.includes('mesh') || (meshError as NodeJS.ErrnoException).code === 'ENOENT') {
-        console.log(chalk.yellow('\nGraphQL Mesh CLI not found. Installing...'));
+        logger.info(chalk.yellow('\nGraphQL Mesh CLI not found. Installing...'));
         execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', {
           cwd: targetDir,
           stdio: 'inherit'
@@ -315,14 +322,14 @@ async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
       }
     }
 
-    console.log(chalk.green('\n✓ BFF build complete'));
-    console.log(chalk.blue('\nGenerated artifacts:'));
-    console.log('  .meshrc.yaml    - Mesh configuration');
-    console.log('  .mesh/          - Generated Mesh runtime');
+    logger.info(chalk.green('\n✓ BFF build complete'));
+    logger.info('\nGenerated artifacts:');
+    logger.info('  .meshrc.yaml    - Mesh configuration');
+    logger.info('  .mesh/          - Generated Mesh runtime');
 
   } catch (error) {
-    console.error(chalk.red('\n✗ BFF build failed:'));
-    console.error(chalk.red((error as Error).message));
+    logger.error('\nBFF build failed:');
+    logger.error((error as Error).message);
     throw error;
   }
 }
@@ -335,7 +342,7 @@ async function bffBuildCommand(options: BFFCommandOptions = {}): Promise<void> {
  */
 async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
   try {
-    console.log(chalk.blue('Starting BFF development server...'));
+    logger.info('Starting BFF development server...');
 
     // Validate and extract config first
     const { meshConfig } = await bffValidateCommand(options);
@@ -344,7 +351,7 @@ async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
     // Write .meshrc.yaml
     await writeMeshConfig(meshConfig, targetDir);
 
-    console.log(chalk.blue('\nStarting mesh dev...'));
+    logger.info('\nStarting mesh dev...');
     
     // Use spawn for interactive process
     const meshDev: ChildProcess = spawn('npx', ['mesh', 'dev'], {
@@ -354,12 +361,12 @@ async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
     });
 
     meshDev.on('error', (error: Error) => {
-      console.error(chalk.red('Failed to start mesh dev:'), error.message);
+      logger.error('Failed to start mesh dev:', { error: error.message });
     });
 
     meshDev.on('close', (code: number | null) => {
       if (code !== 0) {
-        console.log(chalk.yellow(`mesh dev exited with code ${code}`));
+        logger.warn(`mesh dev exited with code ${code}`);
       }
     });
 
@@ -369,8 +376,8 @@ async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
     });
 
   } catch (error) {
-    console.error(chalk.red('\n✗ BFF dev failed:'));
-    console.error(chalk.red((error as Error).message));
+    logger.error('\nBFF dev failed:');
+    logger.error((error as Error).message);
     throw error;
   }
 }
@@ -390,7 +397,7 @@ async function bffInitCommand(name: string | undefined, options: BFFCommandOptio
       : path.resolve(process.cwd(), name);
 
     if (isAddToExisting) {
-      console.log(chalk.blue('Adding BFF to existing project...'));
+      logger.info('Adding BFF to existing project...');
       
       // Check if manifest exists
       const manifestPath = path.join(targetDir, 'mfe-manifest.yaml');
@@ -398,7 +405,7 @@ async function bffInitCommand(name: string | undefined, options: BFFCommandOptio
         throw new Error('No mfe-manifest.yaml found. Run this command in an MFE project directory or provide a name for a new project.');
       }
     } else {
-      console.log(chalk.blue(`Creating BFF project "${name}"...`));
+      logger.info(`Creating BFF project "${name}"...`);
     }
 
     const templateDir = path.resolve(__dirname, '..', 'templates', 'bff');
@@ -439,7 +446,7 @@ async function bffInitCommand(name: string | undefined, options: BFFCommandOptio
     };
 
     // Copy and process templates
-    console.log(chalk.blue('\nGenerating BFF files...'));
+    logger.info('\nGenerating BFF files...');
 
     // Files to copy based on context
     const filesToCopy = [
@@ -478,7 +485,7 @@ async function bffInitCommand(name: string | undefined, options: BFFCommandOptio
 
     // Install dependencies for new projects
     if (!isAddToExisting) {
-      console.log(chalk.blue('\nInstalling dependencies...'));
+      logger.info('\nInstalling dependencies...');
       execSync('npm install', {
         cwd: targetDir,
         stdio: 'inherit',
@@ -486,32 +493,32 @@ async function bffInitCommand(name: string | undefined, options: BFFCommandOptio
       });
     }
 
-    console.log(chalk.green('\n✓ BFF initialized successfully!'));
+    logger.info(chalk.green('\n✓ BFF initialized successfully!'));
     
-    console.log('\nGenerated files:');
-    console.log('  server.ts           - Express + Mesh server');
-    console.log('  Dockerfile          - Production container');
-    console.log('  docker-compose.yaml - Local development');
+    logger.info('\nGenerated files:');
+    logger.info('  server.ts           - Express + Mesh server');
+    logger.info('  Dockerfile          - Production container');
+    logger.info('  docker-compose.yaml - Local development');
     if (!isAddToExisting) {
-      console.log('  mfe-manifest.yaml   - DSL configuration');
-      console.log('  package.json        - Dependencies');
+      logger.info('  mfe-manifest.yaml   - DSL configuration');
+      logger.info('  package.json        - Dependencies');
     }
-    console.log('  specs/              - OpenAPI specifications');
+    logger.info('  specs/              - OpenAPI specifications');
 
-    console.log('\nNext steps:');
+    logger.info('\nNext steps:');
     if (!isAddToExisting) {
-      console.log(chalk.blue(`1. cd ${name}`));
-      console.log(chalk.blue('2. Add your OpenAPI spec(s) to specs/ directory'));
+      logger.info(`1. cd ${name}`);
+      logger.info(chalk.blue('2. Add your OpenAPI spec(s) to specs/ directory'));
     } else {
-      console.log(chalk.blue('1. Add your OpenAPI spec(s) to specs/ directory'));
+      logger.info(chalk.blue('1. Add your OpenAPI spec(s) to specs/ directory'));
     }
-    console.log(chalk.blue(`${isAddToExisting ? '2' : '3'}. Update data: section in mfe-manifest.yaml`));
-    console.log(chalk.blue(`${isAddToExisting ? '3' : '4'}. Run: npm run dev`));
-    console.log(`\nGraphQL endpoint will be at: http://localhost:${port}/graphql`);
+    logger.info(`${isAddToExisting ? '2' : '3'}. Update data: section in mfe-manifest.yaml`);
+    logger.info(`${isAddToExisting ? '3' : '4'}. Run: npm run dev`);
+    logger.info(`\nGraphQL endpoint will be at: http://localhost:${port}/graphql`);
 
   } catch (error) {
-    console.error(chalk.red('\n✗ BFF init failed:'));
-    console.error(chalk.red((error as Error).message));
+    logger.error('\nBFF init failed:');
+    logger.error((error as Error).message);
     throw error;
   }
 }
@@ -524,7 +531,7 @@ async function addMeshDependencies(targetDir: string): Promise<void> {
   const pkgPath = path.join(targetDir, 'package.json');
   
   if (!await fs.pathExists(pkgPath)) {
-    console.log(chalk.yellow('No package.json found, skipping dependency update'));
+    logger.info(chalk.yellow('No package.json found, skipping dependency update'));
     return;
   }
 
@@ -558,7 +565,7 @@ async function addMeshDependencies(targetDir: string): Promise<void> {
   pkg.devDependencies['tsx'] = '^4.6.2';
 
   await fs.writeJson(pkgPath, pkg, { spaces: 2 });
-  console.log(chalk.green('✓ Updated package.json with Mesh dependencies'));
+  logger.success('Updated package.json with Mesh dependencies');
 }
 
 // ============================================================================

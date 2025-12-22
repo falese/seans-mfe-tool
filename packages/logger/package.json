@@ -1,7 +1,7 @@
 {
-  "name": "@seans-mfe-tool/runtime",
+  "name": "@seans-mfe-tool/logger",
   "version": "1.0.0",
-  "description": "MFE runtime platform for Module Federation applications",
+  "description": "Logging utilities for MFE tool packages",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -11,13 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe-tool/logger": "^1.0.0",
-    "jsonwebtoken": "^9.0.2"
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   },
-  "keywords": ["runtime", "module-federation", "mfe", "microfrontend"],
+  "keywords": ["logger", "logging", "chalk", "cli"],
   "license": "MIT"
 }
