@@ -130,6 +130,37 @@ export const CapabilityEntrySchema = z.record(z.string(), CapabilityConfigSchema
 export type CapabilityEntry = z.infer<typeof CapabilityEntrySchema>;
 
 // =============================================================================
+// Load Capability Schemas (ADR-060)
+// =============================================================================
+
+/** Retry configuration for load capability */
+export const RetryConfigSchema = z.object({
+  maxRetries: z.number().min(0).max(10).default(3),
+  backoff: z.enum(['linear', 'exponential']).default('exponential'),
+  baseDelay: z.number().min(100).max(5000).default(1000),  // milliseconds
+  maxDelay: z.number().min(1000).max(30000).default(10000),  // milliseconds
+  jitter: z.boolean().default(true),
+  onRetry: z.string().optional(),  // Hook name to call on retry
+  fallbackHandler: z.string().optional()  // Handler to call if all retries fail
+});
+export type RetryConfig = z.infer<typeof RetryConfigSchema>;
+
+/** Timeout configuration for load phases */
+export const LoadTimeoutConfigSchema = z.object({
+  entry: z.number().min(1000).max(30000).default(5000),  // Entry phase timeout (ms)
+  mount: z.number().min(1000).max(30000).default(5000),  // Mount phase timeout (ms)
+  enableRender: z.number().min(1000).max(30000).default(5000)  // Enable-render phase timeout (ms)
+});
+export type LoadTimeoutConfig = z.infer<typeof LoadTimeoutConfigSchema>;
+
+/** Load capability configuration (extends base capability) */
+export const LoadCapabilityConfigSchema = CapabilityConfigSchema.extend({
+  retry: RetryConfigSchema.optional(),
+  timeout: LoadTimeoutConfigSchema.optional()
+});
+export type LoadCapabilityConfig = z.infer<typeof LoadCapabilityConfigSchema>;
+
+// =============================================================================
 // Data Layer Schemas (GraphQL BFF - ADR-046)
 // =============================================================================
 

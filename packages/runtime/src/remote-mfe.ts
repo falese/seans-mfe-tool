@@ -203,6 +203,10 @@ export class RemoteMFE extends BaseMFE {
         telemetry
       };
     } catch (error) {
+      const errorObj = error as Error;
+      const failedPhase = this.determineFailedPhase(telemetry);
+      const isRetryable = this.isRetryableError(errorObj);
+
       // Emit error telemetry
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
@@ -210,19 +214,30 @@ export class RemoteMFE extends BaseMFE {
           capability: 'load',
           phase: 'error',
           status: 'error',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            error: (error as Error).message
+            error: errorObj.message,
+            failedPhase,
+            retryable: isRetryable
           },
           timestamp: new Date()
         });
       }
 
+      // Construct PhaseError with phase context
+      const phaseError: import('./types').PhaseError = {
+        message: errorObj.message,
+        phase: failedPhase,
+        retryCount: 0,  // Will be incremented by retry wrapper
+        retryable: isRetryable,
+        cause: errorObj
+      };
+
       return {
         status: 'error',
         timestamp: new Date(),
         duration: Date.now() - startTime,
-        error: error as Error,
+        error: phaseError,
         telemetry
       };
     }
@@ -490,6 +505,61 @@ export class RemoteMFE extends BaseMFE {
     logger.debug('[RemoteMFE] Component mounted:', { Component, props, containerId });
     
     return element;
+  }
+
+  // =========================================================================
+  // Load Helper Methods (ADR-060)
+  // =========================================================================
+
+  /**
+   * Determine which phase failed based on telemetry data
+   */
+  private determineFailedPhase(telemetry?: LoadResult['telemetry']): 'entry' | 'mount' | 'enable-render' {
+    if (!telemetry) {
+      return 'entry';  // If no telemetry, assume failed at entry
+    }
+
+    // Check which phase has duration = 0 (didn't complete)
+    if (telemetry.entry.duration === 0) {
+      return 'entry';
+    }
+    if (telemetry.mount.duration === 0) {
+      return 'mount';
+    }
+    return 'enable-render';
+  }
+
+  /**
+   * Check if an error is retryable (network, timeout, etc.)
+   */
+  private isRetryableError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+
+    // Network-related errors are retryable
+    if (message.includes('network') ||
+        message.includes('fetch') ||
+        message.includes('timeout') ||
+        message.includes('connection') ||
+        message.includes('econnrefused') ||
+        message.includes('enotfound')) {
+      return true;
+    }
+
+    // 5xx server errors are retryable
+    if (message.includes('500') ||
+        message.includes('502') ||
+        message.includes('503') ||
+        message.includes('504')) {
+      return true;
+    }
+
+    // Rate limiting is retryable
+    if (message.includes('429') || message.includes('rate limit')) {
+      return true;
+    }
+
+    // Everything else is not retryable (4xx client errors, validation errors, etc.)
+    return false;
   }
 
   // =========================================================================

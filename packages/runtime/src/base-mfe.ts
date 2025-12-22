@@ -12,9 +12,11 @@
 import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe-tool/dsl';
 import { createLogger } from '@seans-mfe-tool/logger';
 import { Context, UserContext, TelemetryEvent } from './context';
+import type { CapabilityMetadata, PhaseError, PhaseTelemetry } from './types';
 
 // Re-export for convenience
 export { Context, UserContext, TelemetryEvent };
+export type { CapabilityMetadata, PhaseError, PhaseTelemetry };
 
 // Logger for runtime
 const logger = createLogger({ context: 'runtime', level: 'debug' });
@@ -67,14 +69,24 @@ export interface BaseMFEDependencies {
 
 type Worker = any;
 
-/** Result from load capability */
+/** Result from load capability (ADR-060 compliant) */
 export interface LoadResult {
   status: 'loaded' | 'error';
   container?: unknown;  // Module Federation container
+  manifest?: DSLManifest;  // Parsed DSL manifest
+  availableComponents?: string[];  // List of available components
+  capabilities?: CapabilityMetadata[];  // Structured capability metadata
+  timestamp: Date;
+  duration: number;  // Total load duration in milliseconds
+  telemetry?: {  // Structured telemetry for three-phase load
+    entry: PhaseTelemetry;
+    mount: PhaseTelemetry;
+    enableRender: PhaseTelemetry;
+  };
+  error?: PhaseError;  // Structured error with phase context
+  // Legacy fields (kept for backward compatibility)
   mesh?: unknown;       // GraphQL Mesh instance
   worker?: Worker;      // Web Worker instance
-  timestamp: Date;
-  [key: string]: unknown;
 }
 
 /** Result from render capability */
@@ -542,7 +554,29 @@ export abstract class BaseMFE {
     
     return null;
   }
-  
+
+  /**
+   * Get retry configuration for load capability from manifest
+   */
+  private getLoadRetryConfig(): import('@seans-mfe-tool/dsl').RetryConfig | null {
+    const loadConfig = this.findCapabilityConfig('load') as any;
+    return loadConfig?.retry || null;
+  }
+
+  /**
+   * Get error handling configuration for error classification
+   */
+  private getErrorHandlingConfig(): import('./error-classifier').ErrorHandlingConfig {
+    return {
+      types: [
+        { type: 'network', pattern: 'ECONNREFUSED|ENOTFOUND|NetworkError|fetch', retryable: true },
+        { type: 'timeout', pattern: 'TimeoutError|ETIMEDOUT|timeout', retryable: true },
+        { type: 'validation', pattern: 'ValidationError|ZodError', retryable: false },
+        { type: 'security', pattern: 'AuthenticationError|UnauthorizedError|401|403', retryable: false }
+      ]
+    };
+  }
+
   // ===========================================================================
   // Platform Capabilities (REQ-054)
   // Generated wrappers that orchestrate lifecycle
