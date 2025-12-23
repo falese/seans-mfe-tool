@@ -468,20 +468,38 @@ export class RemoteMFE extends BaseMFE {
   }
 
   /**
-   * Extract capability metadata from manifest
+   * Extract capability metadata from manifest (ADR-060 compliant)
    */
-  private extractCapabilities(): string[] {
+  private extractCapabilities(): import('./types').CapabilityMetadata[] {
     if (!this.manifest.capabilities) {
       return [];
     }
 
-    // Extract capability names from manifest entries
-    const capabilityNames: string[] = [];
+    const capabilities: import('./types').CapabilityMetadata[] = [];
+
+    // Platform capabilities (standard MFE capabilities)
+    const platformCapabilities = ['load', 'render', 'refresh', 'health', 'unmount'];
+
     for (const capEntry of this.manifest.capabilities) {
-      const keys = Object.keys(capEntry);
-      capabilityNames.push(...keys);
+      const entries = Object.entries(capEntry);
+      for (const [name, config] of entries) {
+        const capConfig = config as any;
+
+        const metadata: import('./types').CapabilityMetadata = {
+          name,
+          type: platformCapabilities.includes(name) ? 'platform' : 'domain',
+          available: true,  // If it's in the manifest, it's available
+          requiresAuth: capConfig.authorization ? true : false,
+          inputs: capConfig.inputs?.map((input: any) => input.name) || [],
+          outputs: capConfig.outputs?.map((output: any) => output.name) || [],
+          description: capConfig.description || undefined
+        };
+
+        capabilities.push(metadata);
+      }
     }
-    return capabilityNames;
+
+    return capabilities;
   }
 
   /**

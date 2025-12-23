@@ -145,6 +145,93 @@ describe('RemoteMFE', () => {
 
       expect(telemetry.getErrors()).toHaveLength(0);
     });
+
+    // ADR-060 Compliance Tests
+    describe('ADR-060 Compliance', () => {
+      it('should return ADR-060 compliant LoadResult structure', async () => {
+        const loadResult = await harness.testLoad();
+
+        // Validate all ADR-060 fields present
+        expect(loadResult.status).toBe('loaded');
+        expect(loadResult.container).toBeDefined();
+        expect(loadResult.manifest).toBeDefined();
+        expect(loadResult.availableComponents).toBeDefined();
+        expect(loadResult.capabilities).toBeDefined();
+        expect(loadResult.timestamp).toBeInstanceOf(Date);
+        expect(loadResult.duration).toBeGreaterThan(0);
+        expect(loadResult.telemetry).toBeDefined();
+        expect(loadResult.error).toBeUndefined();
+
+        // Validate telemetry structure (entry/mount/enableRender)
+        expect(loadResult.telemetry?.entry).toBeDefined();
+        expect(loadResult.telemetry?.entry.start).toBeInstanceOf(Date);
+        expect(loadResult.telemetry?.entry.duration).toBeGreaterThanOrEqual(0);
+
+        expect(loadResult.telemetry?.mount).toBeDefined();
+        expect(loadResult.telemetry?.mount.start).toBeInstanceOf(Date);
+        expect(loadResult.telemetry?.mount.duration).toBeGreaterThanOrEqual(0);
+
+        expect(loadResult.telemetry?.enableRender).toBeDefined();
+        expect(loadResult.telemetry?.enableRender.start).toBeInstanceOf(Date);
+        expect(loadResult.telemetry?.enableRender.duration).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should return capabilities as CapabilityMetadata[] type', async () => {
+        const loadResult = await harness.testLoad();
+
+        // Capabilities field should be defined and be an array
+        expect(loadResult.capabilities).toBeDefined();
+        expect(Array.isArray(loadResult.capabilities)).toBe(true);
+
+        // Type is correctly typed as CapabilityMetadata[] in LoadResult interface
+      });
+
+      it('should support CapabilityMetadata structure when populated', async () => {
+        const loadResult = await harness.testLoad();
+
+        // If capabilities are populated in a real scenario, they should have correct structure
+        // This validates the type definition is correct
+        if (loadResult.capabilities && loadResult.capabilities.length > 0) {
+          const firstCap = loadResult.capabilities[0];
+          expect(firstCap).toHaveProperty('name');
+          expect(firstCap).toHaveProperty('type');
+          expect(firstCap).toHaveProperty('available');
+          expect(['platform', 'domain']).toContain(firstCap.type);
+          expect(typeof firstCap.available).toBe('boolean');
+        }
+      });
+
+      it('should properly structure telemetry with start and duration for each phase', async () => {
+        const loadResult = await harness.testLoad();
+
+        // Entry phase
+        expect(loadResult.telemetry?.entry.start).toBeInstanceOf(Date);
+        expect(typeof loadResult.telemetry?.entry.duration).toBe('number');
+        expect(loadResult.telemetry?.entry.duration).toBeGreaterThanOrEqual(0);
+
+        // Mount phase
+        expect(loadResult.telemetry?.mount.start).toBeInstanceOf(Date);
+        expect(typeof loadResult.telemetry?.mount.duration).toBe('number');
+        expect(loadResult.telemetry?.mount.duration).toBeGreaterThanOrEqual(0);
+
+        // Enable-render phase
+        expect(loadResult.telemetry?.enableRender.start).toBeInstanceOf(Date);
+        expect(typeof loadResult.telemetry?.enableRender.duration).toBe('number');
+        expect(loadResult.telemetry?.enableRender.duration).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should track total duration separately from phase durations', async () => {
+        const loadResult = await harness.testLoad();
+
+        // Total duration should be positive
+        expect(loadResult.duration).toBeGreaterThanOrEqual(0);
+
+        // Phase durations should also be tracked
+        expect(loadResult.telemetry?.entry.duration).toBeGreaterThanOrEqual(0);
+        expect(loadResult.telemetry?.mount.duration).toBeGreaterThanOrEqual(0);
+        expect(loadResult.telemetry?.enableRender.duration).toBeGreaterThanOrEqual(0);
+      });
+    });
   });
 
   describe('Render Capability (REQ-RUNTIME-004)', () => {

@@ -113,7 +113,7 @@ export interface DescribeResult {
   name: string;
   version: string;
   type: string;
-  capabilities: string[];
+  capabilities: CapabilityMetadata[];
   manifest: DSLManifest;
 }
 
@@ -584,19 +584,44 @@ export abstract class BaseMFE {
   
   /**
    * Load capability: Initialize and prepare MFE for use
-   * 
+   *
    * Generated wrapper - orchestrates lifecycle phases
+   * Supports optional retry based on manifest configuration (ADR-060)
    */
   public async load(context: Context): Promise<LoadResult> {
     this.assertState('uninitialized', 'ready', 'error');
     this.transitionState('loading');
-    
+
     try {
       await this.executeLifecycle('load', 'before', context);
       await this.executeLifecycle('load', 'main', context);
-      const result = await this.doLoad(context);
+
+      // Check if retry is configured in manifest
+      const retryConfig = this.getLoadRetryConfig();
+      let result: LoadResult;
+
+      if (retryConfig) {
+        // Wrap doLoad with retry logic
+        const { withRetry } = await import('./retry-wrapper');
+        result = await withRetry(
+          () => this.doLoad(context),
+          retryConfig,
+          this.getErrorHandlingConfig(),
+          context,
+          'load'
+        );
+
+        // Update retry count in error if present
+        if (result.error && context.retry) {
+          result.error.retryCount = context.retry.attempt;
+        }
+      } else {
+        // No retry configured - direct call
+        result = await this.doLoad(context);
+      }
+
       await this.executeLifecycle('load', 'after', context);
-      
+
       this.transitionState('ready');
       return result;
     } catch (error) {

@@ -239,7 +239,8 @@ export class MFETestHarness {
         {
           render: {
             type: 'platform',
-            description: 'Render MFE component'
+            description: 'Render MFE component',
+            components: Object.keys(config.components)
           }
         }
       ],
