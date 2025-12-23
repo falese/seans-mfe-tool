@@ -2,7 +2,7 @@
  * ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
  *
  * Source: mfe-manifest.yaml
- * Generated: 2025-12-22T20:19:33.932Z
+ * Generated: 2025-12-23T01:01:57.915Z
  * Tool: seans-mfe-tool (ADR-063: TypeScript Mesh Configuration)
  * Command: seans-mfe-tool remote:generate
  *

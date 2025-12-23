@@ -1,9 +1,10 @@
 /**
  * Standalone App Entry Point
  * Bootstraps React for standalone development/testing
- * 
+ *
  * Following REQ-RUNTIME-002: Context integration
  * Following e2e2 dual entry pattern
+ * Following ADR-060: Load Capability with telemetry
  */
 
 import React, { useState } from 'react';
@@ -12,6 +13,77 @@ import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { HomePage } from './features/HomePage/HomePage';
 import { IconView } from './features/IconView/IconView';
 import { CatalogView } from './features/CatalogView/CatalogView';
+import { DevTelemetryLogger } from './platform/telemetry/dev-telemetry-logger';
+
+// Initialize telemetry logger in development mode
+if (process.env.NODE_ENV === 'development') {
+  const telemetryLogger = new DevTelemetryLogger();
+
+  // Mock load result for demonstration
+  // In a real scenario, this would come from the actual MFE load process
+  const mockLoadResult = {
+    status: 'loaded' as const,
+    timestamp: new Date(),
+    duration: 1000,
+    container: { init: () => Promise.resolve() }, // Mock container
+    manifest: { name: 'mfe1', version: '1.0.0', type: 'tool' }, // Mock manifest
+    availableComponents: ['HomePage', 'IconView', 'CatalogView'],
+    capabilities: [
+      { name: 'load', type: 'platform' as const, available: true },
+      { name: 'render', type: 'platform' as const, available: true },
+      { name: 'HomePage', type: 'domain' as const, available: true },
+      { name: 'IconView', type: 'domain' as const, available: true },
+      { name: 'CatalogView', type: 'domain' as const, available: true }
+    ],
+    telemetry: {
+      entry: { start: new Date(Date.now() - 1000), duration: 400 },
+      mount: { start: new Date(Date.now() - 600), duration: 300 },
+      enableRender: { start: new Date(Date.now() - 300), duration: 300 }
+    }
+  };
+
+  // Store in global context for dashboard
+  (window as any).__MFE_LOAD_RESULT__ = mockLoadResult;
+
+  // Simulate telemetry events in console
+  telemetryLogger.emit({
+    name: 'load-start',
+    capability: 'load',
+    phase: 'entry',
+    status: 'start',
+    timestamp: new Date()
+  });
+
+  telemetryLogger.emit({
+    name: 'entry-metric',
+    capability: 'load',
+    phase: 'entry',
+    status: 'end',
+    duration: 400,
+    timestamp: new Date()
+  });
+
+  telemetryLogger.emit({
+    name: 'mount-metric',
+    capability: 'load',
+    phase: 'mount',
+    status: 'end',
+    duration: 300,
+    timestamp: new Date()
+  });
+
+  telemetryLogger.emit({
+    name: 'enable_render-metric',
+    capability: 'load',
+    phase: 'enable_render',
+    status: 'end',
+    duration: 300,
+    timestamp: new Date()
+  });
+
+  console.log('%c✨ ADR-060 Load Capability Telemetry Active', 'color: #4CAF50; font-weight: bold; font-size: 16px');
+  console.log('%cCheck the HomePage tab to see the visual telemetry dashboard', 'color: #2196F3; font-style: italic');
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;

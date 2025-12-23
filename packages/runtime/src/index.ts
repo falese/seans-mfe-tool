@@ -29,6 +29,20 @@ export {
   VALID_TRANSITIONS,
 } from './base-mfe';
 
+// ADR-060 Load Capability types
+export {
+  CapabilityMetadata,
+  PhaseError,
+  PhaseTelemetry,
+} from './types';
+
+// ADR-060 LoadResult validator
+export {
+  LoadResultValidator,
+  ValidationResult,
+  PerformanceMetrics,
+} from './validators/load-result-validator';
+
 // RemoteMFE concrete implementation (REQ-RUNTIME-001, REQ-RUNTIME-004)
 export {
   RemoteMFE,

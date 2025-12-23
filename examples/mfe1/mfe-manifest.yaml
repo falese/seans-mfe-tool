@@ -23,6 +23,16 @@ capabilities:
   - Load:
       type: platform
       description: Initialize the analyzer module
+      retry:
+        maxRetries: 3
+        backoff: exponential
+        baseDelay: 1000
+        maxDelay: 10000
+        jitter: true
+      timeout:
+        entry: 5000      # 5 seconds for fetching remoteEntry.js
+        mount: 5000      # 5 seconds for container initialization
+        enableRender: 5000  # 5 seconds for manifest parsing
 
   - Render:
       type: platform
