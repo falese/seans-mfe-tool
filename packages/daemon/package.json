@@ -1,0 +1,22 @@
+{
+  "name": "@seans-mfe-tool/daemon",
+  "version": "1.0.0",
+  "description": "MFE Registry Daemon - Rust-based control plane for MFE orchestration",
+  "main": "target/release/mfe-daemon",
+  "scripts": {
+    "build": "cargo build --release",
+    "build:dev": "cargo build",
+    "dev": "cargo run",
+    "test": "cargo test",
+    "clean": "cargo clean",
+    "check": "cargo check"
+  },
+  "keywords": [
+    "mfe",
+    "registry",
+    "daemon",
+    "orchestration",
+    "rust"
+  ],
+  "license": "MIT"
+}

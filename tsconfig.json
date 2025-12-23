@@ -30,6 +30,7 @@
     { "path": "./packages/dsl" },
     { "path": "./packages/logger" },
     { "path": "./packages/runtime" },
+    { "path": "./packages/control" },
     { "path": "./packages/codegen" },
     { "path": "./packages/cli" }
   ]

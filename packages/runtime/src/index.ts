@@ -43,6 +43,31 @@ export {
   PerformanceMetrics,
 } from './validators/load-result-validator';
 
+// Alpha Orchestration System
+// Note: These are also exported from @seans-mfe-tool/control which extends them with daemon integration
+export {
+  OrchestrationContext,
+  MFERegistryEntry,
+  MFEDependency,
+  createOrchestrationContext,
+} from './orchestration-context';
+
+export {
+  OrchestrationTelemetry,
+  OrchestrationTelemetryEvent,
+} from './orchestration-telemetry';
+
+export {
+  OrchestrationRuntime,
+  MFEDescriptor,
+} from './orchestration-runtime';
+
+export {
+  OrchestrationValidator,
+  OrchestrationValidationResult,
+  AggregatedPerformanceMetrics,
+} from './validators/orchestration-validator';
+
 // RemoteMFE concrete implementation (REQ-RUNTIME-001, REQ-RUNTIME-004)
 export {
   RemoteMFE,

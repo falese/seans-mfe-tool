@@ -1,0 +1,22 @@
+[package]
+name = "mfe-registry-daemon"
+version = "1.0.0"
+edition = "2021"
+description = "MFE Registry Daemon - Control plane for MFE orchestration"
+
+[[bin]]
+name = "mfe-daemon"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+warp = "0.3"
+futures-util = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"
+dashmap = "5.5"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }

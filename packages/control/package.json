@@ -1,0 +1,43 @@
+{
+  "name": "@seans-mfe-tool/control",
+  "version": "1.0.0",
+  "description": "Orchestration control plane - hybrid library and remote MFE",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "concurrently \"npm run build:watch\" \"rspack serve\"",
+    "build": "tsc --build",
+    "build:mfe": "rspack build",
+    "build:watch": "tsc --build --watch",
+    "serve": "serve dist -p 3100",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seans-mfe-tool/runtime": "^1.0.0",
+    "@seans-mfe-tool/dsl": "^1.0.0",
+    "@seans-mfe-tool/logger": "^1.0.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "@mui/material": "^5.14.0",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/x-charts": "^6.0.0",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "recharts": "^2.10.0",
+    "cytoscape": "^3.28.0",
+    "react-cytoscapejs": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@rspack/cli": "^0.5.0",
+    "@rspack/core": "^0.5.0",
+    "@module-federation/enhanced-rspack": "^0.1.1",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "serve": "^14.2.1",
+    "concurrently": "^8.2.0"
+  }
+}
