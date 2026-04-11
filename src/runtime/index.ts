@@ -25,6 +25,7 @@ export {
   SchemaResult,
   QueryResult,
   EmitResult,
+  ControlPlaneStateResult,
   MFEState,
   VALID_TRANSITIONS,
 } from './base-mfe';
