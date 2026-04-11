@@ -11,9 +11,11 @@
 
 import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
 import { Context, UserContext, TelemetryEvent } from './context';
+import type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
+export type { DaemonWebSocketClient };
 
 // =============================================================================
 // Dependency Injection Interfaces
@@ -55,6 +57,8 @@ export interface BaseMFEDependencies {
   manifestParser?: ManifestParser;
   lifecycleExecutor?: LifecycleExecutor;
   errorHandler?: ErrorHandler;
+  /** graphql-transport-ws connection to the daemon, shared with the Renderer's messages subscription */
+  wsClient?: DaemonWebSocketClient;
 }
 
 // =============================================================================
@@ -125,6 +129,8 @@ export interface ControlPlaneStateResult {
   acknowledged: boolean;
   /** Correlation ID for tracing this update through the control plane */
   correlationId: string;
+  /** Non-null when the update could not be delivered (not connected, timeout, etc.) */
+  error?: string | null;
   /**
    * Populated when the registry immediately resolved a new component based
    * on the state update. In practice this may arrive asynchronously via the

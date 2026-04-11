@@ -10,6 +10,7 @@
 
 import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult } from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
+import type { Message, ActionRecord, MessageMetadata } from './contracts';
 
 /**
  * Module Federation container interface
@@ -29,6 +30,8 @@ export class RemoteMFE extends BaseMFE {
   private container: ModuleFederationContainer | null = null;
   private availableComponents: string[] = [];
   private mountedComponent: any = null;
+  /** ID of the currently mounted component; used as actionRecord.componentId */
+  private currentComponentId: string | null = null;
 
   /**
    * Implement load logic for Module Federation remote
@@ -342,6 +345,7 @@ export class RemoteMFE extends BaseMFE {
 
       // Store mounted component reference
       this.mountedComponent = { component: componentName, element, props };
+      this.currentComponentId = componentName;
 
       // Populate context outputs
       context.outputs = {
@@ -570,6 +574,9 @@ export class RemoteMFE extends BaseMFE {
    * Subscription.messages channel the Renderer is already subscribed to.
    */
   protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
+    // -------------------------------------------------------------------------
+    // 1. Extract and validate inputs
+    // -------------------------------------------------------------------------
     const rawStateKey = context.inputs?.stateKey;
     const rawStateData = context.inputs?.stateData;
     const rawCorrelationId = context.inputs?.correlationId;
@@ -594,28 +601,77 @@ export class RemoteMFE extends BaseMFE {
 
     const stateKey = rawStateKey.trim();
     const stateData = (rawStateData ?? {}) as Record<string, unknown>;
-    const correlationId = rawCorrelationId ? rawCorrelationId.trim() : context.requestId;
-    // TODO: send via the daemon WebSocket connection
-    // In a real Module Federation MFE this uses the shared WS client:
-    //
-    // await daemonWsClient.sendAction({
-    //   stateKey,
-    //   stateData,
-    //   correlationId,
-    //   mfe: this.manifest.name,
-    // });
+    const correlationId = (rawCorrelationId as string | undefined)?.trim() ?? context.requestId;
 
+    // -------------------------------------------------------------------------
+    // 2. Guard: daemon WebSocket must be connected
+    // -------------------------------------------------------------------------
+    const wsClient = this.deps?.wsClient;
+    if (!wsClient || !wsClient.connected) {
+      return { acknowledged: false, correlationId, error: 'Daemon WebSocket not connected' };
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. Build the Message envelope typed against @control-plane/contracts
+    // -------------------------------------------------------------------------
+    const metadata: MessageMetadata = {
+      correlationId,
+      acknowledged: false,
+      error: null,
+    };
+
+    const payload: ActionRecord = {
+      id: crypto.randomUUID(),
+      componentId: this.currentComponentId ?? this.manifest.name,
+      actionType: stateKey,
+      data: stateData,
+      timestamp: new Date().toISOString(),
+    };
+
+    const envelope: Message = {
+      direction: 'ACTION',
+      kind: 'ACTION',
+      payload,
+      metadata,
+    };
+
+    // -------------------------------------------------------------------------
+    // 4. Send via the daemon's sendMessage GraphQL mutation (WS subscribe/next)
+    // -------------------------------------------------------------------------
+    let success: boolean;
+    try {
+      success = await wsClient.mutation(
+        'mutation sendMessage($m: String!) { sendMessage(message: $m) }',
+        { m: JSON.stringify(envelope) },
+        4_000,
+      );
+    } catch (err) {
+      const message = (err as Error).message ?? 'sendMessage mutation failed';
+      const error = message.includes('timed out') ? 'sendMessage timed out' : message;
+      return { acknowledged: false, correlationId, error };
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. Telemetry
+    // -------------------------------------------------------------------------
     if (this.deps?.telemetry) {
       this.deps.telemetry.emit({
         name: 'control-plane-state-update',
         capability: 'updateControlPlaneState',
         phase: 'main',
-        status: 'success',
-        metadata: { mfe: this.manifest.name, stateKey, correlationId },
+        status: success ? 'success' : 'error',
+        metadata: { mfe: this.manifest.name, stateKey, correlationId, acknowledged: success },
         timestamp: new Date(),
       });
     }
 
-    return { acknowledged: true, correlationId };
+    // -------------------------------------------------------------------------
+    // 6. Return ControlPlaneStateResult
+    // -------------------------------------------------------------------------
+    return {
+      acknowledged: success,
+      correlationId,
+      error: success ? null : 'sendMessage mutation failed',
+    };
   }
 }
