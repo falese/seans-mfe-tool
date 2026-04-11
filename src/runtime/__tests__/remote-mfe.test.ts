@@ -17,6 +17,7 @@ import {
   MFETestHarness,
   TelemetryCapture,
   ContextBuilder,
+  MockDaemonWebSocketClient,
 } from './test-harness';
 import type { Context, LoadResult, RenderResult } from '../base-mfe';
 
@@ -508,9 +509,147 @@ describe('RemoteMFE', () => {
       await harness.testLoad();
 
       const renderResult = await harness.testRender('Header', { logo: 'test.png' }, 'header-container');
-      
+
       expect(renderResult.status).toBe('rendered');
       expect(renderResult.component).toBe('Header');
     });
+  });
+});
+
+// =============================================================================
+// doUpdateControlPlaneState — standalone tests (not using the load/render harness)
+// =============================================================================
+
+describe('RemoteMFE.doUpdateControlPlaneState', () => {
+  const manifest: any = {
+    name: 'test-mfe',
+    version: '1.0.0',
+    type: 'remote',
+    language: 'typescript',
+    capabilities: [],
+    remoteEntry: 'http://localhost:3001/remoteEntry.js',
+  };
+
+  function makeContext(inputs: Record<string, unknown>, requestId = 'req-001'): Context {
+    return new ContextBuilder().withRequestId(requestId).withInputs(inputs).build();
+  }
+
+  function makeMFE(wsClient?: MockDaemonWebSocketClient): RemoteMFE {
+    const mfe = new RemoteMFE(manifest, { wsClient });
+    // Bypass state guard — updateControlPlaneState requires 'ready' or 'rendering'
+    (mfe as any).state = 'ready';
+    return mfe;
+  }
+
+  it('happy path: connected client + daemon ack → acknowledged: true', async () => {
+    const ws = new MockDaemonWebSocketClient();
+    ws.mutationResult = true;
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'BUTTON_CLICK', stateData: { id: 42 } }),
+    );
+
+    expect(result.acknowledged).toBe(true);
+    expect(result.correlationId).toBe('req-001');
+    expect(result.error).toBeNull();
+
+    const call = ws.assertCalledOnce();
+    expect(call.query).toContain('sendMessage');
+    const envelope = JSON.parse(call.variables['m'] as string);
+    expect(envelope.direction).toBe('ACTION');
+    expect(envelope.kind).toBe('ACTION');
+    expect(envelope.payload.actionType).toBe('BUTTON_CLICK');
+    expect(envelope.payload.data).toEqual({ id: 42 });
+    expect(envelope.metadata.correlationId).toBe('req-001');
+  });
+
+  it('no wsClient in deps → not connected error, no throw', async () => {
+    const result = await makeMFE(undefined).updateControlPlaneState(
+      makeContext({ stateKey: 'SUBMIT' }),
+    );
+
+    expect(result.acknowledged).toBe(false);
+    expect(result.error).toBe('Daemon WebSocket not connected');
+  });
+
+  it('wsClient.connected = false → not connected error, no throw', async () => {
+    const ws = new MockDaemonWebSocketClient();
+    ws.connected = false;
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'SUBMIT' }),
+    );
+
+    expect(result.acknowledged).toBe(false);
+    expect(result.error).toBe('Daemon WebSocket not connected');
+    expect(ws.getCalls()).toHaveLength(0); // mutation never called
+  });
+
+  it('mutation times out → acknowledged: false, error contains timed out', async () => {
+    const ws = new MockDaemonWebSocketClient();
+    ws.mutationError = new Error('sendMessage timed out');
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'CLICK' }),
+    );
+
+    expect(result.acknowledged).toBe(false);
+    expect(result.error).toBe('sendMessage timed out');
+  });
+
+  it('daemon returns false → acknowledged: false', async () => {
+    const ws = new MockDaemonWebSocketClient();
+    ws.mutationResult = false;
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'CLICK' }),
+    );
+
+    expect(result.acknowledged).toBe(false);
+    expect(result.error).toBe('sendMessage mutation failed');
+  });
+
+  it('mutation rejects with non-timeout error → error is preserved', async () => {
+    const ws = new MockDaemonWebSocketClient();
+    ws.mutationError = new Error('GraphQL mutation error: field sendMessage not found');
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'CLICK' }),
+    );
+
+    expect(result.acknowledged).toBe(false);
+    expect(result.error).toContain('GraphQL mutation error');
+  });
+
+  it('missing stateKey → throws (programming error, not network error)', async () => {
+    const ws = new MockDaemonWebSocketClient();
+
+    await expect(
+      makeMFE(ws).updateControlPlaneState(makeContext({ stateData: {} })),
+    ).rejects.toThrow('stateKey');
+  });
+
+  it('correlationId falls back to context.requestId when not supplied', async () => {
+    const ws = new MockDaemonWebSocketClient();
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'CLICK' }, 'ctx-request-99'),
+    );
+
+    expect(result.correlationId).toBe('ctx-request-99');
+    const envelope = JSON.parse(ws.assertCalledOnce().variables['m'] as string);
+    expect(envelope.metadata.correlationId).toBe('ctx-request-99');
+  });
+
+  it('explicit correlationId in inputs takes precedence over requestId', async () => {
+    const ws = new MockDaemonWebSocketClient();
+
+    const result = await makeMFE(ws).updateControlPlaneState(
+      makeContext({ stateKey: 'CLICK', correlationId: 'explicit-corr-id' }, 'ctx-request-99'),
+    );
+
+    expect(result.correlationId).toBe('explicit-corr-id');
+    const envelope = JSON.parse(ws.assertCalledOnce().variables['m'] as string);
+    expect(envelope.metadata.correlationId).toBe('explicit-corr-id');
   });
 });

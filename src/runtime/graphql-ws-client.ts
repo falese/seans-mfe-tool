@@ -117,11 +117,13 @@ export class GraphQLWebSocketClient implements DaemonWebSocketClient {
           // Send client-side complete to acknowledge receipt
           this.socket.send(JSON.stringify({ type: 'complete', id }));
 
-          // Extract the Boolean result from payload.data.<firstField>
+          // Extract the Boolean result from payload.data.<firstField>.
+          // Default to false (safe) when the field is absent or not a boolean,
+          // so a malformed response doesn't silently count as acknowledged.
           const payload = msg['payload'] as Record<string, unknown> | undefined;
           const data = payload?.['data'] as Record<string, unknown> | undefined;
           const firstValue = data ? Object.values(data)[0] : undefined;
-          resolve(typeof firstValue === 'boolean' ? firstValue : true);
+          resolve(typeof firstValue === 'boolean' ? firstValue : false);
         } else if (msg['type'] === 'error') {
           if (settled) return;
           settled = true;
