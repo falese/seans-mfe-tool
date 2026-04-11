@@ -1,0 +1,56 @@
+# MFE DSL Manifest — Rust Implementation
+# Demonstrates language: rust — same contract, Tokio/async runtime.
+# The daemon's own Rust variant uses the same Tokio ecosystem.
+
+name: csv-analyzer
+version: 1.0.0
+type: tool
+language: rust
+description: CSV analysis MFE implemented in Rust (Tokio + axum)
+owner: analytics-team
+tags: [data-analysis, csv, rust, high-performance]
+
+endpoint: http://localhost:3004
+remoteEntry: http://localhost:3004/describe    # Rust: /describe returns the module descriptor
+discovery: http://localhost:3004/describe
+
+capabilities:
+  - load:
+      type: platform
+      description: Initialize Tokio runtime, connect to async data stores
+
+  - render:
+      type: platform
+      description: Execute analysis and return CARD component data for daemon to push
+
+  - refresh:
+      type: platform
+      description: Reload fresh analysis results using async I/O
+
+  - authorizeAccess:
+      type: platform
+      description: Validate JWT forwarded from daemon using jsonwebtoken crate
+
+  - health:
+      type: platform
+      description: Check liveness of dependencies
+
+  - describe:
+      type: platform
+      description: Return this manifest — stored by Registry as component metadata
+
+  - schema:
+      type: platform
+      description: Return GraphQL SDL derived from async-graphql schema
+
+  - query:
+      type: platform
+      description: Execute GraphQL query — surfaced via Daemon Query.state
+
+  - emit:
+      type: platform
+      description: Publish action via tokio-tungstenite WebSocket to daemon
+
+  - DataAnalysis:
+      type: domain
+      description: Analyze a CSV file and return statistical summary

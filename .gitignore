@@ -129,4 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-.vscode/
+# Python
+__pycache__/
+*.pyc

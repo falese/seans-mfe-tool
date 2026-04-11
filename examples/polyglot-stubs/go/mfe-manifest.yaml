@@ -1,0 +1,55 @@
+# MFE DSL Manifest — Go Implementation
+# Demonstrates language: go — same contract, different runtime.
+
+name: csv-analyzer
+version: 1.0.0
+type: tool
+language: go
+description: CSV analysis MFE implemented in Go (net/http)
+owner: analytics-team
+tags: [data-analysis, csv, go]
+
+endpoint: http://localhost:3003
+remoteEntry: http://localhost:3003/describe    # Go: /describe returns the module descriptor
+discovery: http://localhost:3003/describe
+
+capabilities:
+  - load:
+      type: platform
+      description: Initialize Go runtime, connect to data stores
+
+  - render:
+      type: platform
+      description: Execute analysis and return CARD component data for daemon to push
+
+  - refresh:
+      type: platform
+      description: Reload fresh analysis results
+
+  - authorizeAccess:
+      type: platform
+      description: Validate JWT forwarded from daemon
+
+  - health:
+      type: platform
+      description: Check liveness of dependencies
+
+  - describe:
+      type: platform
+      description: Return this manifest — stored by Registry as component metadata
+
+  - schema:
+      type: platform
+      description: Return GraphQL SDL for Registry introspection
+
+  - query:
+      type: platform
+      description: Execute GraphQL query — surfaced via Daemon Query.state
+
+  - emit:
+      type: platform
+      description: Publish action up through Daemon sendAction mutation to Registry
+
+  - DataAnalysis:
+      type: domain
+      description: Analyze a CSV file and return statistical summary

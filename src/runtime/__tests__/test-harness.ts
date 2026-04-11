@@ -36,7 +36,7 @@ import type {
    
 } from '../base-mfe';
 
-import type { DSLManifest } from '../../dsl/schema.ts';
+import type { DSLManifest, Language } from '../../dsl/schema.ts';
 
 /**
  * Mock Module Federation Container
@@ -228,7 +228,7 @@ export class MFETestHarness {
       name: config.name,
       version: config.version || '1.0.0',
       type: 'remote',
-      language: (config.manifest?.language as "javascript" | "typescript") || "typescript",
+      language: (config.manifest?.language as Language) || "typescript",
       capabilities: [
         {
           load: {

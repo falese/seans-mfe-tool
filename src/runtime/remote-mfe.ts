@@ -403,11 +403,11 @@ export class RemoteMFE extends BaseMFE {
     return {
       init: async (shared: Record<string, any>) => {
         // Initialize with shared dependencies
-        console.log('[RemoteMFE] Container initialized with shared deps:', Object.keys(shared));
+        void shared; // Module Federation shared scope
       },
       get: async (module: string) => {
         // Return a factory function for the requested module
-        console.log('[RemoteMFE] Fetching module:', module);
+        void module;
         return () => ({
           default: class MockComponent {}
         });
@@ -483,8 +483,6 @@ export class RemoteMFE extends BaseMFE {
       props
     } as any;
     
-    console.log('[RemoteMFE] Component mounted:', { Component, props, containerId });
-    
     return element;
   }
 
@@ -492,9 +490,8 @@ export class RemoteMFE extends BaseMFE {
   // Other Required Abstract Methods
   // =========================================================================
 
-  protected async doRefresh(context: Context): Promise<void> {
-    // Refresh MFE data/state
-    console.log('[RemoteMFE] Refresh called');
+  protected async doRefresh(_context: Context): Promise<void> {
+    // TODO: implement refresh — fetch updated data and re-render
   }
 
   protected async doAuthorizeAccess(context: Context): Promise<boolean> {

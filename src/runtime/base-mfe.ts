@@ -179,13 +179,8 @@ export abstract class BaseMFE {
   private _lifecycleStack: Array<{capability: string, phase: string}> = [];
 
   constructor(manifest: DSLManifest, deps: BaseMFEDependencies = {}) {
-    console.log('[BaseMFE] constructor called');
     this.manifest = manifest;
     this.deps = deps;
-    console.log('[BaseMFE] manifest keys:', Object.keys(manifest));
-    if (manifest.capabilities) {
-      console.log('[BaseMFE] manifest capabilities:', JSON.stringify(manifest.capabilities));
-    }
   }
   
   // ===========================================================================
@@ -268,24 +263,20 @@ export abstract class BaseMFE {
   ): Promise<void> {
     // Guard: Prevent re-entrant execution for same capability/phase
     if (this._lifecycleStack.some(e => e.capability === capability && e.phase === phase)) {
-      console.error(`[BaseMFE] Re-entrant lifecycle detected for capability=${capability}, phase=${phase}. Aborting to prevent infinite loop.`);
       return;
     }
     this._lifecycleStack.push({capability, phase});
-    console.log(`[BaseMFE] executeLifecycle: capability=${capability}, phase=${phase}`);
     // DI: allow manifest parsing override
     const capabilityConfig = this.deps?.manifestParser
       ? this.deps.manifestParser.parse(this.manifest)[capability]
       : this.findCapabilityConfig(capability);
     if (!capabilityConfig?.lifecycle) {
-      console.log(`[BaseMFE] No lifecycle hooks for capability=${capability}`);
       this._lifecycleStack.pop();
       return; // No lifecycle hooks defined
     }
 
     const hooks = capabilityConfig.lifecycle[phase];
     if (!hooks || hooks.length === 0) {
-      console.log(`[BaseMFE] No hooks for capability=${capability}, phase=${phase}`);
       this._lifecycleStack.pop();
       return; // No hooks for this phase
     }
@@ -305,7 +296,6 @@ export abstract class BaseMFE {
 
     // Default: Execute hooks sequentially
     for (const hookEntry of hooks) {
-      console.log(`[BaseMFE] Executing hookEntry for capability=${capability}, phase=${phase}`);
       await this.executeHookEntry(hookEntry, context, phase);
     }
     this._lifecycleStack.pop();
@@ -382,33 +372,27 @@ export abstract class BaseMFE {
    * REQ-057: Custom handlers resolved from developer class
    */
   protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
-    console.log(`[BaseMFE] invokeHandler called for handlerName=${handlerName}`);
     if (handlerName.startsWith('platform.')) {
       const platformHandlerName = handlerName.slice(9);
       if (this.deps?.platformHandlers && this.deps.platformHandlers[platformHandlerName]) {
-        console.log(`[BaseMFE] Found DI platform handler: ${platformHandlerName}`);
         await this.deps.platformHandlers[platformHandlerName](context);
       } else {
-        console.log(`[BaseMFE] Invoking platform handler: ${platformHandlerName}`);
         await this.invokePlatformHandler(platformHandlerName, context);
       }
     } else {
       // Try full custom handler name first, then fallback to last segment
       let customHandlerName = handlerName;
       if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
-        console.log(`[BaseMFE] Found DI custom handler: ${customHandlerName}`);
         await this.deps.customHandlers[customHandlerName](context);
         return;
       }
       // Fallback: strip prefix (e.g., 'custom.fail' -> 'fail')
       const lastSegment = customHandlerName.includes('.') ? customHandlerName.split('.').pop() : customHandlerName;
       if (lastSegment && this.deps?.customHandlers && this.deps.customHandlers[lastSegment]) {
-        console.log(`[BaseMFE] Found DI custom handler (fallback): ${lastSegment}`);
         await this.deps.customHandlers[lastSegment](context);
         return;
       }
-      // Fallback: invoke as method
-      console.log(`[BaseMFE] Invoking custom handler: ${lastSegment}`);
+      // Fallback: invoke as method on subclass
       await this.invokeCustomHandler(lastSegment, context);
     }
   }
@@ -430,7 +414,6 @@ export abstract class BaseMFE {
   * ---
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
-    console.log(`[BaseMFE] invokePlatformHandler called for name=${name}`);
     // Integration: resolve platform handler from src/runtime/handlers
     // Supports category.name (e.g., auth.validateJWT) and flat name (e.g., validateJWT)
     let handlerFn: ((context: Context, ...args: any[]) => Promise<any>) | undefined;
@@ -460,7 +443,6 @@ export abstract class BaseMFE {
     if (!handlerFn) {
       throw new Error(`Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`);
     }
-    console.log(`[BaseMFE] Executing platform handler function for ${name}`);
     await handlerFn(context);
   }
   
@@ -469,17 +451,14 @@ export abstract class BaseMFE {
    * @throws Error if custom handler not found
    */
   protected async invokeCustomHandler(name: string, context: Context): Promise<void> {
-    console.log(`[BaseMFE] invokeCustomHandler called for name=${name}`);
     const method = (this as any)[name];
     if (typeof method !== 'function') {
-      console.error(`[BaseMFE] Custom handler not found: ${name}`);
       throw new Error(
         `Custom handler not found: ${name}. ` +
         `Implement this method in your MFE class: ` +
         `private async ${name}(context: Context): Promise<void> { ... }`
       );
     }
-    console.log(`[BaseMFE] Executing custom handler method for ${name}`);
     await method.call(this, context);
   }
   
