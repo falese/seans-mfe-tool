@@ -8,7 +8,7 @@
  * - REQ-RUNTIME-012: Telemetry emission at all checkpoints
  */
 
-import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult } from './base-mfe';
+import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult } from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
 
 /**
@@ -553,5 +553,52 @@ export class RemoteMFE extends BaseMFE {
     return {
       emitted: false
     };
+  }
+
+  /**
+   * Push domain state to the daemon control plane for registry re-evaluation.
+   *
+   * Module Federation MFEs run in the browser, so this sends a GraphQL mutation
+   * over the existing WebSocket connection to the daemon:
+   *
+   *   mutation SendAction($input: ActionInput!) {
+   *     sendAction(input: $input) { correlationId acknowledged }
+   *   }
+   *
+   * The daemon forwards to Registry handleMessage → rules engine re-evaluation.
+   * The registry may resolve a new MFE + capability, which arrives via the
+   * Subscription.messages channel the Renderer is already subscribed to.
+   */
+  protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
+    const stateKey = context.inputs?.stateKey as string;
+    const stateData = (context.inputs?.stateData as Record<string, unknown>) || {};
+    const correlationId = (context.inputs?.correlationId as string) || context.requestId;
+
+    if (!stateKey) {
+      throw new Error('updateControlPlaneState requires context.inputs.stateKey');
+    }
+
+    // TODO: send via the daemon WebSocket connection
+    // In a real Module Federation MFE this uses the shared WS client:
+    //
+    // await daemonWsClient.sendAction({
+    //   stateKey,
+    //   stateData,
+    //   correlationId,
+    //   mfe: this.manifest.name,
+    // });
+
+    if (this.deps?.telemetry) {
+      this.deps.telemetry.emit({
+        name: 'control-plane-state-update',
+        capability: 'updateControlPlaneState',
+        phase: 'main',
+        status: 'success',
+        metadata: { mfe: this.manifest.name, stateKey, correlationId },
+        timestamp: new Date(),
+      });
+    }
+
+    return { acknowledged: true, correlationId };
   }
 }

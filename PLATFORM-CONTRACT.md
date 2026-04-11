@@ -82,7 +82,7 @@ output because it loaded (or can load) the MFE's own presentation layer.
 
 ---
 
-## The 9 Capabilities
+## The 10 Capabilities
 
 ### Full Reference Table
 
@@ -92,11 +92,12 @@ output because it loaded (or can load) the MFE's own presentation layer.
 | `load` | POST | `/load` | Daemon after registry resolution selects this MFE | `{status: "loaded"}` |
 | `render` | POST | `/render` | Daemon after registry resolves which MFE + capability to show | MFE's own experience (HTML / component / data) |
 | `refresh` | POST | `/refresh` | Daemon when state changes but same MFE stays selected | void |
-| `emit` | POST | `/emit` | MFE itself, or daemon forwarding an action from renderer | `{emitted, eventId}` |
+| `emit` | POST | `/emit` | MFE itself — telemetry/observability, no registry reaction | `{emitted, eventId}` |
 | `query` | POST | `/query` | Daemon or renderer requesting data from this MFE | `{data, errors}` |
 | `schema` | GET | `/schema` | Registry introspection | GraphQL SDL |
 | `authorizeAccess` | POST | `/authorize` | Daemon before calling `render()` | `{authorized: bool}` |
 | `health` | GET | `/health` | Registry liveness polling | `{status, checks}` |
+| `updateControlPlaneState` | POST | `/state` | MFE itself — pushes domain state for registry re-evaluation | `{acknowledged, correlationId, resolution?}` |
 
 ---
 
@@ -248,16 +249,64 @@ Body: { "inputs": { "query": "{ analysis(id: \"1\") { rowCount } }", "variables"
 → { "data": { "analysis": { "rowCount": 1000 } }, "errors": [] }
 ```
 
-### `emit()` — Event publication
+### `emit()` — Telemetry publication
 
-Publish a telemetry event, metric, or domain action. In the daemon flow this
-triggers `sendAction` → `handleMessage` → rules engine evaluation.
+Publish a telemetry event or metric to observability sinks (logging, APM, etc.).
+This does **not** trigger registry re-evaluation. Use `updateControlPlaneState()`
+when you want the rules engine to act.
 
 ```json
 POST /emit
 Body: { "inputs": { "eventType": "metric", "eventData": { ... }, "severity": "info" } }
 → { "emitted": true, "eventId": "uuid" }
 ```
+
+### `updateControlPlaneState()` — MFE-initiated registry re-evaluation
+
+Called by the MFE itself when internal domain state has changed in a way that
+should determine what experience is shown next. Not telemetry — this is a
+semantic state signal the Registry rules engine acts on.
+
+**When to use it:**
+- Analysis or computation complete → registry may transition to a visualization MFE
+- Form submitted successfully → registry may resolve a confirmation MFE
+- Wizard step finished → registry may resolve the next step's MFE
+- Error that requires escalation → registry may route to an escalation handler MFE
+
+**How it flows:**
+```
+MFE calls updateControlPlaneState()
+  → POST /state to daemon
+  → daemon routes through sendAction → Registry handleMessage
+  → Registry evaluates rules against the new state context
+  → if a new resolution is produced: daemon calls new MFE render()
+  → Renderer gets updated experience via Subscription.messages
+```
+
+```json
+POST /state
+Body: {
+  "inputs": {
+    "stateKey": "analysis.complete",
+    "stateData": { "resultId": "abc123", "rowCount": 5000, "quality": "high" },
+    "correlationId": "uuid-of-originating-render"
+  }
+}
+→ { "acknowledged": true, "correlationId": "uuid", "resolution": null }
+```
+
+The `resolution` field is populated if the daemon/registry can confirm a new
+component synchronously; in practice it usually arrives asynchronously via the
+Renderer's `Subscription.messages` subscription.
+
+**emit() vs updateControlPlaneState():**
+
+| | `emit()` | `updateControlPlaneState()` |
+|---|---|---|
+| Direction | MFE → observers | MFE → daemon → registry |
+| Purpose | Telemetry, metrics, APM | Drive registry resolution |
+| Registry reacts? | No | Yes — re-evaluates rules |
+| Use when | "I observed something" | "My state changed, decide what's next" |
 
 ---
 
@@ -330,17 +379,25 @@ capabilities:
 | Implementation | `doRender(ctx)` | `do_render(ctx)` | `DoRender(ctx, mfeCtx)` | `do_render(&self, ctx)` |
 | Orchestrator | `authorizeAccess(ctx)` | `authorize_access(ctx)` | `AuthorizeAccess(ctx, mfeCtx)` | `authorize_access(&self, ctx)` |
 | Implementation | `doAuthorizeAccess(ctx)` | `do_authorize_access(ctx)` | `DoAuthorizeAccess(ctx, mfeCtx)` | `do_authorize_access(&self, ctx)` |
+| Orchestrator | `updateControlPlaneState(ctx)` | `update_control_plane_state(ctx)` | `UpdateControlPlaneState(ctx, mfeCtx)` | `update_control_plane_state(&self, ctx)` |
+| Implementation | `doUpdateControlPlaneState(ctx)` | `do_update_control_plane_state(ctx)` | `DoUpdateControlPlaneState(ctx, mfeCtx)` | `do_update_control_plane_state(&self, ctx)` |
 
 _(same pattern for refresh, health, describe, schema, query, emit)_
 
 ### TypeScript (reference)
 
 ```typescript
-// Extend BaseMFE and implement the 9 abstract do*() methods:
+// Extend BaseMFE and implement the 10 abstract do*() methods:
 export class MyMFE extends BaseMFE {
   protected async doLoad(ctx: Context): Promise<LoadResult> {
     // connect, warm, validate
     return { status: 'loaded', timestamp: new Date() };
+  }
+  protected async doUpdateControlPlaneState(ctx: Context): Promise<ControlPlaneStateResult> {
+    // push domain state to the daemon when something meaningful changes
+    const { stateKey, stateData } = ctx.inputs as any;
+    // await daemonWsClient.sendAction({ stateKey, stateData, mfe: this.manifest.name });
+    return { acknowledged: true, correlationId: ctx.requestId };
   }
   // ... 8 more methods
 }

@@ -119,6 +119,24 @@ export interface EmitResult {
   eventId?: string;
 }
 
+/** Result from updateControlPlaneState capability */
+export interface ControlPlaneStateResult {
+  /** Whether the daemon acknowledged the state update */
+  acknowledged: boolean;
+  /** Correlation ID for tracing this update through the control plane */
+  correlationId: string;
+  /**
+   * Populated when the registry immediately resolved a new component based
+   * on the state update. In practice this may arrive asynchronously via the
+   * daemon's Subscription.messages channel instead.
+   */
+  resolution?: {
+    mfe: string;
+    capability: string;
+    props: Record<string, unknown>;
+  };
+}
+
 // =============================================================================
 // State Machine Types (REQ-056)
 // =============================================================================
@@ -698,6 +716,43 @@ export abstract class BaseMFE {
       throw error;
     }
   }
+
+  /**
+   * UpdateControlPlaneState capability: Push domain state to the daemon so the
+   * Registry can re-evaluate what should be shown.
+   *
+   * This is distinct from emit() (telemetry/observers). Use this when internal
+   * MFE state has changed in a way that should drive registry resolution:
+   *
+   *   - Analysis complete → registry may transition to a DataVisualization MFE
+   *   - Form submitted    → registry may resolve a Confirmation MFE
+   *   - Wizard step done  → registry may resolve the next step's MFE
+   *   - Error escalation  → registry may route to an EscalationHandler MFE
+   *
+   * context.inputs must carry:
+   *   stateKey: string             — semantic name ("analysis.complete", "form.submitted")
+   *   stateData: Record<…>         — domain context the registry rules engine evaluates
+   *   correlationId?: string       — links this update to the originating render/action
+   *
+   * The daemon routes this through sendAction → Registry handleMessage.
+   * The registry re-evaluates rules and may resolve a new MFE + capability.
+   * Available from 'ready' or 'rendering' — an MFE can push state mid-render.
+   */
+  public async updateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
+    // Available from ready OR rendering — MFE may push state mid-render
+    this.assertState('ready', 'rendering');
+
+    try {
+      await this.executeLifecycle('updateControlPlaneState', 'before', context);
+      await this.executeLifecycle('updateControlPlaneState', 'main', context);
+      const result = await this.doUpdateControlPlaneState(context);
+      await this.executeLifecycle('updateControlPlaneState', 'after', context);
+      return result;
+    } catch (error) {
+      await this.executeLifecycle('updateControlPlaneState', 'error', { ...context, error: error as Error });
+      throw error;
+    }
+  }
   
   // ===========================================================================
   // Abstract Methods (REQ-054, REQ-057)
@@ -749,4 +804,21 @@ export abstract class BaseMFE {
    * Implement telemetry emission logic for this MFE
    */
   protected abstract doEmit(context: Context): Promise<EmitResult>;
+
+  /**
+   * Push meaningful domain state to the daemon/registry control plane.
+   *
+   * Called when this MFE has produced state that should influence registry
+   * resolution — not telemetry, but semantic state the rules engine acts on.
+   *
+   * context.inputs:
+   *   stateKey: string            — e.g. "analysis.complete", "form.submitted"
+   *   stateData: Record<…>        — domain data the registry rules engine reads
+   *   correlationId?: string      — link to the originating render/action
+   *
+   * Implementations send this via the daemon's sendAction → handleMessage path.
+   * A WebSocket MFE sends a GraphQL mutation; a server-side MFE calls the
+   * daemon's REST or WS endpoint directly.
+   */
+  protected abstract doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult>;
 }

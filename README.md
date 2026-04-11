@@ -47,9 +47,9 @@ The Registry resolves **what to show**. The MFE decides **how it looks**. The da
 
 ---
 
-## The Platform Contract  (9 Capabilities)
+## The Platform Contract  (10 Capabilities)
 
-Every MFE — regardless of language — must implement these 9 capabilities:
+Every MFE — regardless of language — must implement these 10 capabilities:
 
 | Capability | What it does | Who calls it |
 |---|---|---|
@@ -57,11 +57,12 @@ Every MFE — regardless of language — must implement these 9 capabilities:
 | `load()` | Initialize runtime (DB, caches, config) | Daemon after registry resolves this MFE |
 | `render()` | **Produce the MFE's own experience** (HTML / component / data) | Daemon after registry resolves which MFE + capability |
 | `refresh()` | Reload data, same MFE stays selected | Daemon when state changes but MFE stays |
-| `emit()` | Publish action/event upstream | MFE itself, or daemon forwarding renderer action |
+| `emit()` | Publish telemetry/metrics to observers | MFE itself — no registry reaction |
 | `query()` | Execute a GraphQL query | Daemon or renderer requesting data |
 | `schema()` | Expose GraphQL SDL for introspection | Registry schema registry |
 | `authorizeAccess()` | Validate JWT, gate access | Daemon before calling `render()` |
 | `health()` | Report dependency liveness | Registry liveness polling |
+| `updateControlPlaneState()` | **Push domain state for registry re-evaluation** | MFE itself — after completing work that changes what should be shown |
 
 **State machine** (all implementations share this):
 ```

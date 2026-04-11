@@ -1,6 +1,6 @@
 //! MFE Platform Contract — Rust Stub
 //!
-//! This file demonstrates how the 9-capability platform contract is expressed
+//! This file demonstrates how the 10-capability platform contract is expressed
 //! in Rust. It is a *teaching stub* — the structure and method signatures are
 //! correct, but the bodies are left as TODOs for your implementation.
 //!
@@ -17,17 +17,18 @@
 //!
 //! Daemon ↔ MFE capability mapping:
 //!
-//! | MFE Capability   | Daemon Protocol                                           |
-//! |------------------|-----------------------------------------------------------|
-//! | describe()       | Registry stores manifest as component metadata            |
-//! | load()           | Registry renderComponent() initializes this MFE           |
-//! | render()         | Daemon Subscription.messages COMPONENT_UPDATE push        |
-//! | refresh()        | Registry componentUpdate subscription re-render trigger   |
-//! | emit()           | Renderer sendAction → Daemon → Registry handleMessage     |
-//! | query()          | Daemon Query.state returns component store                |
-//! | schema()         | MFE exposes GraphQL schema for Registry introspection     |
-//! | authorize_access()| Registry rules engine gates component creation           |
-//! | health()         | Registry monitors component liveness                      |
+//! | MFE Capability              | Daemon Protocol                                        |
+//! |-----------------------------|--------------------------------------------------------|
+//! | describe()                  | Registry stores manifest as component metadata         |
+//! | load()                      | Registry renderComponent() initializes this MFE        |
+//! | render()                    | Daemon relays MFE's own experience back to Renderer    |
+//! | refresh()                   | Registry componentUpdate subscription re-render trigger|
+//! | emit()                      | Telemetry / observability events (no registry reaction)|
+//! | query()                     | Daemon Query.state returns component store             |
+//! | schema()                    | MFE exposes GraphQL schema for Registry introspection  |
+//! | authorize_access()          | Registry rules engine gates component creation         |
+//! | health()                    | Registry monitors component liveness                   |
+//! | update_control_plane_state()| MFE pushes domain state → registry re-evaluates rules |
 //!
 //! See: PLATFORM-CONTRACT.md for the full reference.
 
@@ -154,6 +155,18 @@ pub struct EmitResult {
     pub event_id: Option<String>,
 }
 
+/// Result of pushing domain state to the daemon control plane.
+/// Distinct from EmitResult — this targets registry resolution, not observers.
+#[derive(Debug, serde::Serialize)]
+pub struct ControlPlaneStateResult {
+    pub acknowledged: bool,
+    pub correlation_id: String,
+    /// Populated if the registry immediately resolved a new component.
+    /// In practice this usually arrives asynchronously via the daemon's
+    /// Subscription.messages channel rather than synchronously here.
+    pub resolution: Option<serde_json::Value>, // {mfe, capability, props}
+}
+
 // ---------------------------------------------------------------------------
 // BaseMfe Trait  (the platform contract)
 // ---------------------------------------------------------------------------
@@ -174,6 +187,10 @@ pub trait BaseMfe: Send + Sync {
     async fn schema(&self, ctx: MfeContext) -> Result<SchemaResult, String>;
     async fn query(&self, ctx: MfeContext) -> Result<QueryResult, String>;
     async fn emit(&self, ctx: MfeContext) -> Result<EmitResult, String>;
+
+    /// Push domain state to the daemon so the Registry re-evaluates rules.
+    /// Available from Ready or Rendering states.
+    async fn update_control_plane_state(&self, ctx: MfeContext) -> Result<ControlPlaneStateResult, String>;
 
     // State access
     fn state(&self) -> MfeState;
@@ -286,6 +303,11 @@ impl BaseMfe for CsvAnalyzerMfe {
     async fn emit(&self, ctx: MfeContext) -> Result<EmitResult, String> {
         self.do_emit(ctx).await
     }
+
+    async fn update_control_plane_state(&self, ctx: MfeContext) -> Result<ControlPlaneStateResult, String> {
+        self.assert_state(&[MfeState::Ready, MfeState::Rendering])?;
+        self.do_update_control_plane_state(ctx).await
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -366,6 +388,7 @@ impl CsvAnalyzerMfe {
             capabilities: vec![
                 "load", "render", "refresh", "authorizeAccess",
                 "health", "describe", "schema", "query", "emit",
+                "updateControlPlaneState",
             ].into_iter().map(String::from).collect(),
             manifest: self.manifest.clone(),
         })
@@ -389,13 +412,58 @@ impl CsvAnalyzerMfe {
         })
     }
 
-    /// Publish an action up through Daemon sendAction → Registry handleMessage.
+    /// Publish a telemetry event to observability sinks.
+    /// This does NOT trigger registry re-evaluation — use do_update_control_plane_state() for that.
     async fn do_emit(&self, _ctx: MfeContext) -> Result<EmitResult, String> {
-        // TODO: connect to daemon WebSocket using tokio-tungstenite
-        // ws_stream.send(Message::Text(serde_json::to_string(&sendAction)?)).await?;
+        // TODO: forward event to telemetry/observability sink
         Ok(EmitResult {
             emitted: true,
             event_id: Some(Uuid::new_v4().to_string()),
+        })
+    }
+
+    /// Push meaningful domain state to the daemon so the Registry re-evaluates
+    /// its rules and potentially resolves a new MFE + capability.
+    ///
+    /// ctx.inputs must contain:
+    ///   "stateKey"      — e.g. "analysis.complete", "form.submitted"
+    ///   "stateData"     — domain data the registry rules engine reads
+    ///   "correlationId" — optional; links this update to the originating render
+    ///
+    /// Example — CSV analysis complete, signal registry to show a visualization:
+    /// ```rust
+    /// mfe.update_control_plane_state(MfeContext::new(None, {
+    ///     let mut m = HashMap::new();
+    ///     m.insert("stateKey".into(), json!("analysis.complete"));
+    ///     m.insert("stateData".into(), json!({"resultId": "abc", "rowCount": 5000}));
+    ///     m
+    /// })).await?;
+    /// ```
+    async fn do_update_control_plane_state(&self, ctx: MfeContext) -> Result<ControlPlaneStateResult, String> {
+        let state_key = ctx.inputs.get("stateKey")
+            .and_then(|v| v.as_str())
+            .ok_or("do_update_control_plane_state: inputs[\"stateKey\"] is required")?;
+
+        let correlation_id = ctx.inputs.get("correlationId")
+            .and_then(|v| v.as_str())
+            .map(String::from)
+            .unwrap_or_else(|| ctx.correlation_id.clone());
+
+        // TODO: POST to daemon /state endpoint using reqwest (or send via tokio-tungstenite)
+        // reqwest::Client::new()
+        //     .post("http://daemon:4000/state")
+        //     .json(&serde_json::json!({
+        //         "stateKey": state_key,
+        //         "stateData": ctx.inputs.get("stateData"),
+        //         "correlationId": &correlation_id,
+        //     }))
+        //     .send().await.map_err(|e| e.to_string())?;
+
+        let _ = state_key; // used in the TODO comment above
+        Ok(ControlPlaneStateResult {
+            acknowledged: true,
+            correlation_id,
+            resolution: None,
         })
     }
 }
