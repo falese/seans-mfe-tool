@@ -27,13 +27,13 @@
  */
 
 import { RemoteMFE } from '../remote-mfe';
-import type { 
-  Context, 
-  LoadResult, 
-  RenderResult, 
+import type {
+  Context,
+  LoadResult,
+  RenderResult,
   TelemetryEvent,
   TelemetryService,
-   
+  DaemonWebSocketClient,
 } from '../base-mfe';
 
 import type { DSLManifest, Language } from '../../dsl/schema.ts';
@@ -144,6 +144,52 @@ export class TelemetryCapture implements TelemetryService {
         throw new Error(`Phase "${phase}" took ${duration}ms, expected < ${maxMs}ms`);
       }
     });
+  }
+}
+
+/**
+ * Mock DaemonWebSocketClient
+ *
+ * Controllable test double for the graphql-transport-ws daemon connection.
+ * Set `connected` and `mutationResult` before each test, then call
+ * `assertMutationCalledWith()` to verify what was sent.
+ */
+export class MockDaemonWebSocketClient implements DaemonWebSocketClient {
+  connected: boolean = true;
+  /** Controls what mutation() resolves with (default: true = daemon ack'd) */
+  mutationResult: boolean = true;
+  /** When set, mutation() rejects with this error instead of resolving */
+  mutationError: Error | null = null;
+
+  private _calls: Array<{ query: string; variables: Record<string, unknown> }> = [];
+
+  async mutation(
+    query: string,
+    variables: Record<string, unknown>,
+  ): Promise<boolean> {
+    this._calls.push({ query, variables });
+    if (this.mutationError) throw this.mutationError;
+    return this.mutationResult;
+  }
+
+  /** Returns a copy of all recorded mutation calls */
+  getCalls() {
+    return [...this._calls];
+  }
+
+  /** Asserts mutation was called exactly once and returns the call */
+  assertCalledOnce(): { query: string; variables: Record<string, unknown> } {
+    if (this._calls.length !== 1) {
+      throw new Error(`Expected mutation to be called once, was called ${this._calls.length} times`);
+    }
+    return this._calls[0];
+  }
+
+  reset() {
+    this._calls = [];
+    this.mutationResult = true;
+    this.mutationError = null;
+    this.connected = true;
   }
 }
 
