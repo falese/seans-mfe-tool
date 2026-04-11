@@ -23,8 +23,9 @@ Each layer has a single, clear responsibility.
 `BaseMFE` defines **what every MFE must be able to do**, regardless of language
 or deployment model. It owns:
 
-- **The 9-capability platform contract** — `load`, `render`, `refresh`,
-  `authorizeAccess`, `health`, `describe`, `schema`, `query`, `emit`
+- **The 10-capability platform contract** — `load`, `render`, `refresh`,
+  `authorizeAccess`, `health`, `describe`, `schema`, `query`, `emit`,
+  `updateControlPlaneState`
 - **The state machine** — enforces valid transitions:
   `uninitialized → loading → ready → rendering → error → destroyed`
 - **Lifecycle orchestration** — drives the `before → main → after → error` hook
@@ -33,7 +34,7 @@ or deployment model. It owns:
   auth handlers, state validators, etc.)
 - **Re-entrancy guards** — prevents concurrent calls to the same capability
 
-`BaseMFE` implements **none** of the 9 capabilities itself. Every `doCapability()`
+`BaseMFE` implements **none** of the 10 capabilities itself. Every `doCapability()`
 method is `protected abstract`, meaning subclasses must provide the implementation.
 `BaseMFE` cannot be instantiated directly — it is a contract, not an implementation.
 
@@ -41,12 +42,13 @@ method is `protected abstract`, meaning subclasses must provide the implementati
 // BaseMFE declares what must exist…
 protected abstract doLoad(context: Context): Promise<LoadResult>;
 protected abstract doRender(context: Context): Promise<RenderResult>;
-// …and so on for all 9 capabilities
+protected abstract doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult>;
+// …and so on for all 10 capabilities
 ```
 
 This design means the same platform contract works for TypeScript, Python, Go,
 and Rust — each language provides its own concrete base, all satisfying the
-same 9-method surface.
+same 10-method surface.
 
 ---
 
@@ -68,6 +70,7 @@ It provides real implementations of every `do*` method:
 | `doAuthorizeAccess()` | Delegates to injected platform auth handler |
 | `doQuery()` | Throws — queries go through the BFF, not the remote directly |
 | `doEmit()` | Forward event to injected telemetry service |
+| `doUpdateControlPlaneState()` | Send domain state to daemon via WebSocket `sendAction` mutation — daemon routes to Registry `handleMessage`, registry re-evaluates rules |
 
 `RemoteMFE` also owns private Module Federation state:
 - `container` — the live MF container reference
@@ -106,6 +109,16 @@ export class csvanalyzerMFE extends RemoteMFE {
   // Domain capability — your business logic
   async DataAnalysis(context: Context): Promise<DataAnalysisOutputs> {
     // parse CSV, run statistics, return report
+
+    // When analysis is done, tell the control plane so the registry can
+    // decide what to show next (e.g. a DataVisualization MFE):
+    await this.updateControlPlaneState(context.clone({
+      inputs: {
+        stateKey: 'analysis.complete',
+        stateData: { resultId, rowCount, quality },
+        correlationId: context.requestId,
+      }
+    }));
   }
 
   // Lifecycle hook declared in mfe-manifest.yaml
@@ -116,7 +129,7 @@ export class csvanalyzerMFE extends RemoteMFE {
 ```
 
 You do **not** re-implement `load`, `render`, `health`, `describe`, or any of
-the other 8 platform capabilities. They are inherited and fully operational
+the other platform capabilities. They are inherited and fully operational
 the moment your class is instantiated.
 
 ---
@@ -143,7 +156,7 @@ hook existence — the infrastructure is already proven.
 `BaseMFE` expresses the contract in TypeScript. The same contract is described
 in `PLATFORM-CONTRACT.md` and implemented as stubs in
 `examples/polyglot-stubs/` for Python (`base_mfe.py`), Go (`base_mfe.go`),
-and Rust (`base_mfe.rs`). All four speak the same 9-capability API; only the
+and Rust (`base_mfe.rs`). All four speak the same 10-capability API; only the
 Module Federation machinery (Layer 2) is TypeScript-specific.
 
 ### Future flexibility
@@ -156,16 +169,20 @@ only `RemoteMFE` needs to change. Generated MFEs and `BaseMFE` are unaffected.
 ## Quick reference
 
 ```
-Question                                        Answer
-─────────────────────────────────────────────   ──────────────────────────────────────
-Where is the state machine?                     BaseMFE
-Where is the lifecycle hook engine?             BaseMFE
-Where does Module Federation loading happen?    RemoteMFE.doLoad()
-Where does React mounting happen?               RemoteMFE.doRender() → mountComponent()
-Where do I put my business logic?               YourMFE (generated class)
-Where do I put my lifecycle handlers?           YourMFE (generated class)
-Can I skip calling super() in doLoad()?         No — the MF machinery lives there
-Can I override health() directly?               No — override doHealth() instead
+Question                                              Answer
+────────────────────────────────────────────────────  ─────────────────────────────────────────
+Where is the state machine?                           BaseMFE
+Where is the lifecycle hook engine?                   BaseMFE
+Where does Module Federation loading happen?          RemoteMFE.doLoad()
+Where does React mounting happen?                     RemoteMFE.doRender() → mountComponent()
+Where do I put my business logic?                     YourMFE (generated class)
+Where do I put my lifecycle handlers?                 YourMFE (generated class)
+Can I skip calling super() in doLoad()?               No — the MF machinery lives there
+Can I override health() directly?                     No — override doHealth() instead
+When should I call updateControlPlaneState()?         When domain work completes and the
+                                                      registry should decide what shows next
+How is updateControlPlaneState() different from emit? emit() → observers (no registry reaction)
+                                                      updateControlPlaneState() → registry rules
 ```
 
 ---
