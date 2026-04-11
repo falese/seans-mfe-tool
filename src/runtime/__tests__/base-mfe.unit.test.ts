@@ -57,6 +57,10 @@ class TestMFE extends BaseMFE {
     console.log('doEmit called');
     return { emitted: true };
   }
+  async doUpdateControlPlaneState(context: any): Promise<any> {
+    console.log('doUpdateControlPlaneState called');
+    return { acknowledged: true, correlationId: context.requestId || 'test' };
+  }
   async resolveHandler(name: string) {
     console.log('resolveHandler called for', name);
     return this.handlers[name];
@@ -121,5 +125,47 @@ describe('BaseMFE error hooks and telemetry', () => {
     await expect(mfe.query(context)).rejects.toThrow('boom');
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
+  });
+});
+
+describe('BaseMFE updateControlPlaneState', () => {
+  let mfe: TestMFE;
+  beforeEach(() => {
+    const manifest = {
+      name: 't', version: '1.0.0', type: 'tool', language: 'typescript', capabilities: []
+    };
+    mfe = new TestMFE(manifest);
+    (mfe as any).state = 'ready';
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('calls doUpdateControlPlaneState and returns result', async () => {
+    const context = { timestamp: new Date(), requestId: 'upd-1', inputs: { stateKey: 'analysis.complete', stateData: {} } };
+    const res = await mfe.updateControlPlaneState(context as any);
+    expect(res.acknowledged).toBe(true);
+    expect(res.correlationId).toBe('upd-1');
+  });
+
+  it('is available from rendering state', async () => {
+    (mfe as any).state = 'rendering';
+    const context = { timestamp: new Date(), requestId: 'upd-2', inputs: { stateKey: 'form.submitted', stateData: {} } };
+    const res = await mfe.updateControlPlaneState(context as any);
+    expect(res.acknowledged).toBe(true);
+  });
+
+  it('throws when called from invalid state', async () => {
+    (mfe as any).state = 'loading';
+    const context = { timestamp: new Date(), requestId: 'upd-3', inputs: { stateKey: 'test', stateData: {} } };
+    await expect(mfe.updateControlPlaneState(context as any)).rejects.toThrow();
+  });
+
+  it('propagates error from doUpdateControlPlaneState', async () => {
+    jest.spyOn(mfe as any, 'doUpdateControlPlaneState').mockRejectedValue(new Error('control-plane error'));
+    const context = { timestamp: new Date(), requestId: 'upd-4', inputs: { stateKey: 'error.escalation', stateData: {} } };
+    await expect(mfe.updateControlPlaneState(context as any)).rejects.toThrow('control-plane error');
   });
 });

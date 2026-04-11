@@ -13,7 +13,7 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/sche
 import { Context, UserContext, TelemetryEvent } from './context';
 
 // Re-export for convenience
-export { Context, UserContext, TelemetryEvent };
+export type { Context, UserContext, TelemetryEvent };
 
 // =============================================================================
 // Dependency Injection Interfaces
@@ -281,6 +281,7 @@ export abstract class BaseMFE {
   ): Promise<void> {
     // Guard: Prevent re-entrant execution for same capability/phase
     if (this._lifecycleStack.some(e => e.capability === capability && e.phase === phase)) {
+      console.error(`Re-entrant lifecycle detected for capability="${capability}" phase="${phase}"; skipping`);
       return;
     }
     this._lifecycleStack.push({capability, phase});
