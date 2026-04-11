@@ -224,7 +224,7 @@ func (b *BaseMFEImpl) assertState(allowed ...MFEState) error {
 // ---------------------------------------------------------------------------
 
 // CsvAnalyzerMFE implements the platform contract for CSV analysis.
-// Component type in daemon: CARD (renders analysis results).
+// When the daemon calls Render(), this MFE produces its own HTML experience.
 // Matches mfe-manifest.yaml in this directory.
 type CsvAnalyzerMFE struct {
 	BaseMFEImpl
@@ -317,10 +317,26 @@ func (m *CsvAnalyzerMFE) DoLoad(ctx context.Context, mfeCtx MFEContext) (LoadRes
 	return LoadResult{Status: "loaded", Timestamp: time.Now().UTC()}, nil
 }
 
-// DoRender returns a CARD component payload the daemon broadcasts to renderers.
+// DoRender produces this MFE's own experience — an HTML fragment the daemon
+// relays back to the renderer. The renderer displays whatever the MFE returns;
+// there is no fixed component type library.
 func (m *CsvAnalyzerMFE) DoRender(ctx context.Context, mfeCtx MFEContext) (RenderResult, error) {
-	// TODO: run analysis on mfeCtx.Inputs["file"], return CARD data
-	element := map[string]any{"type": "CARD", "data": map[string]any{}}
+	// TODO: run real analysis on mfeCtx.Inputs["file"], then build the HTML
+	capability, _ := mfeCtx.Inputs["capability"].(string)
+	if capability == "" {
+		capability = "DataAnalysis"
+	}
+	html := fmt.Sprintf(`<section class="csv-analysis" data-capability="%s">
+  <h2>CSV Analysis</h2>
+  <table class="results">
+    <thead><tr><th>Column</th><th>Mean</th><th>Std Dev</th></tr></thead>
+    <tbody><!-- rows populated by real analysis --></tbody>
+  </table>
+</section>`, capability)
+	element := map[string]any{
+		"contentType": "text/html",
+		"output":      html,
+	}
 	return RenderResult{Status: "rendered", Timestamp: time.Now().UTC(), Element: element}, nil
 }
 

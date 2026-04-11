@@ -184,7 +184,7 @@ pub trait BaseMfe: Send + Sync {
 // ---------------------------------------------------------------------------
 
 /// Concrete MFE implementation — CSV analysis service.
-/// Component type in daemon: CARD (renders analysis results).
+/// When the daemon calls render(), this MFE produces its own HTML experience.
 /// Matches mfe-manifest.yaml in this directory.
 pub struct CsvAnalyzerMfe {
     state: Arc<Mutex<MfeState>>,
@@ -303,13 +303,29 @@ impl CsvAnalyzerMfe {
         })
     }
 
-    /// Return a CARD component payload that the daemon broadcasts to renderers.
-    async fn do_render(&self, _ctx: MfeContext) -> Result<RenderResult, String> {
-        // TODO: run analysis on _ctx.inputs["file"], return CARD data
-        // The daemon will push this as a COMPONENT_UPDATE message to all renderers
+    /// Produce this MFE's own experience — an HTML fragment the daemon relays
+    /// back to the renderer. The renderer displays whatever the MFE returns;
+    /// there is no fixed component type library.
+    async fn do_render(&self, ctx: MfeContext) -> Result<RenderResult, String> {
+        // TODO: run real analysis on ctx.inputs["file"], then build the HTML
+        let capability = ctx.inputs.get("capability")
+            .and_then(|v| v.as_str())
+            .unwrap_or("DataAnalysis");
+        let html = format!(
+            r#"<section class="csv-analysis" data-capability="{capability}">
+  <h2>CSV Analysis</h2>
+  <table class="results">
+    <thead><tr><th>Column</th><th>Mean</th><th>Std Dev</th></tr></thead>
+    <tbody><!-- rows populated by real analysis --></tbody>
+  </table>
+</section>"#
+        );
         Ok(RenderResult {
             status: "rendered".to_string(),
-            element: Some(serde_json::json!({"type": "CARD", "data": {}})),
+            element: Some(serde_json::json!({
+                "contentType": "text/html",
+                "output": html
+            })),
         })
     }
 

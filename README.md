@@ -11,33 +11,39 @@ The key insight: **Module Federation is one implementation strategy.** The platf
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    RENDERER  (React / HTML)                     │
-│  Subscribes to Daemon · Sends user actions · Mounts components  │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ GraphQL over WebSocket
-                              │ (graphql-transport-ws)
-┌─────────────────────────────▼───────────────────────────────────┐
-│                DAEMON  (Node.js or Rust)                        │
-│  Control plane · Routes actions · Broadcasts components         │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ GraphQL over WebSocket
-                              │
-┌─────────────────────────────▼───────────────────────────────────┐
-│                REGISTRY  (Node.js)                              │
-│  Rules engine · Component store · Evaluates action → component  │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ HTTP (9 capability endpoints)
-                              │
-┌─────────────────────────────▼───────────────────────────────────┐
-│              MFE IMPLEMENTATIONS  (any language)                │
-│                                                                  │
-│  TypeScript/JS  ← this repo (reference + code generator)        │
-│  Python         ← examples/polyglot-stubs/python/               │
-│  Go             ← examples/polyglot-stubs/go/                   │
-│  Rust           ← examples/polyglot-stubs/rust/                 │
-└─────────────────────────────────────────────────────────────────┘
+│  Displays MFE experiences · Sends user actions                  │
+└──────┬──────────────────────────────────────────────┬──────────┘
+       │ sendAction (state change)                     │ MFE's rendered output
+       │ GraphQL / WebSocket                           │ relayed by daemon
+       ▼                                               │
+┌──────────────────────────────────────────────────────┤
+│                DAEMON  (Node.js or Rust)             │
+│  Receives state changes · Asks registry what to show │
+│  Calls the resolved MFE · Relays output back up      │
+└──────┬───────────────────────────────────────────────┘
+       │ "which MFE should handle this state?"
+       │ GraphQL / WebSocket
+       ▼
+┌──────────────────────────────────────────────────────┐
+│                REGISTRY  (Node.js)                   │
+│  Rules engine · Resolves state → MFE + capability    │
+│  Returns: { mfe, capability, props }                 │
+└──────────────────────────────────────────────────────┘
+       ↑ daemon uses resolution to call the right MFE
+┌──────────────────────────────────────────────────────┐
+│              MFE IMPLEMENTATIONS  (any language)     │
+│                                                      │
+│  Owns its own experience — renders what it wants     │
+│  doRender() → HTML / React component / rich data     │
+│                                                      │
+│  TypeScript/JS  ← this repo (reference + codegen)   │
+│  Python         ← examples/polyglot-stubs/python/   │
+│  Go             ← examples/polyglot-stubs/go/        │
+│  Rust           ← examples/polyglot-stubs/rust/      │
+└──────────────────────────────────────────────────────┘
 ```
 
-The daemon exists in both Node.js and Rust variants — proof that the same protocol works across runtimes. This repo teaches the same lesson for MFE implementations.
+The Registry resolves **what to show**. The MFE decides **how it looks**. The daemon routes between them. The daemon itself exists in Node.js and Rust variants — proof that the same protocol works across runtimes. This repo teaches the same lesson for MFE implementations.
 
 ---
 
@@ -45,17 +51,17 @@ The daemon exists in both Node.js and Rust variants — proof that the same prot
 
 Every MFE — regardless of language — must implement these 9 capabilities:
 
-| Capability | What it does | Daemon maps to |
+| Capability | What it does | Who calls it |
 |---|---|---|
-| `describe()` | Return this MFE's manifest | Registry stores as component metadata |
-| `load()` | Initialize runtime (DB, caches, config) | Registry `renderComponent()` mutation |
-| `render()` | Return component payload (data or UI descriptor) | Daemon `COMPONENT_UPDATE` push to renderer |
-| `refresh()` | Reload fresh data without full re-init | Registry `componentUpdate` subscription |
-| `emit()` | Publish action/event upstream | Renderer `sendAction` → Daemon → Registry |
-| `query()` | Execute a GraphQL query | Daemon `Query.state` |
+| `describe()` | Return this MFE's manifest | Registry on registration |
+| `load()` | Initialize runtime (DB, caches, config) | Daemon after registry resolves this MFE |
+| `render()` | **Produce the MFE's own experience** (HTML / component / data) | Daemon after registry resolves which MFE + capability |
+| `refresh()` | Reload data, same MFE stays selected | Daemon when state changes but MFE stays |
+| `emit()` | Publish action/event upstream | MFE itself, or daemon forwarding renderer action |
+| `query()` | Execute a GraphQL query | Daemon or renderer requesting data |
 | `schema()` | Expose GraphQL SDL for introspection | Registry schema registry |
-| `authorizeAccess()` | Validate JWT, gate access | Registry rules engine |
-| `health()` | Report dependency liveness | Registry health monitor |
+| `authorizeAccess()` | Validate JWT, gate access | Daemon before calling `render()` |
+| `health()` | Report dependency liveness | Registry liveness polling |
 
 **State machine** (all implementations share this):
 ```

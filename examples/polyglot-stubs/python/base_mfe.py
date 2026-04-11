@@ -198,7 +198,12 @@ class BaseMFE(ABC):
             raise
 
     async def render(self, ctx: Context) -> RenderResult:
-        """Render UI or data. Triggered by Daemon COMPONENT_UPDATE push."""
+        """Produce the MFE's own experience, commanded by the daemon.
+
+        The daemon calls this after the Registry resolves that THIS MFE should
+        handle the current state change. The output travels: MFE → Daemon →
+        Renderer. The MFE owns the presentation — not the daemon, not a fixed
+        component library."""
         self._assert_state(MFEState.READY)
         self._transition(MFEState.RENDERING)
         try:
@@ -339,9 +344,19 @@ class BaseMFE(ABC):
     @abstractmethod
     async def do_render(self, ctx: Context) -> RenderResult:
         """
-        Return a data representation or trigger a UI update.
-        For data MFEs: execute query, return JSON payload.
-        For UI MFEs: return component descriptor the renderer can mount.
+        Produce this MFE's own experience when commanded by the daemon.
+
+        The daemon calls render() after the Registry resolves that this MFE
+        should handle the current state. ctx.inputs["capability"] tells you
+        which domain capability to render; ctx.inputs["props"] carries the
+        data the Registry resolved.
+
+        Return whatever your MFE produces:
+          - HTML string (server-rendered fragment the Renderer injects)
+          - Structured data (charts config, table data, etc.)
+          - For JS/TS MFEs: a Module Federation component reference
+
+        There is no fixed component type library — the MFE decides.
         """
         ...
 
@@ -420,9 +435,28 @@ class CsvAnalyzerMFE(BaseMFE):
         return LoadResult(status="loaded")
 
     async def do_render(self, ctx: Context) -> RenderResult:
-        # TODO: run analysis on ctx.inputs["file"], return structured data
-        # The daemon will push the result as a CARD component to all renderers
-        return RenderResult(status="rendered", element={"type": "CARD", "data": {}})
+        capability = ctx.inputs.get("capability", "DataAnalysis")
+        props = ctx.inputs.get("props", {})
+
+        # TODO: run the actual analysis using props (e.g. props["fileId"])
+        # and produce this MFE's own HTML experience.
+        # The daemon will relay this output directly to the Renderer.
+
+        html = f"""
+        <section class="csv-analysis" data-capability="{capability}">
+          <h2>CSV Analysis</h2>
+          <p>File: {props.get('fileId', 'unknown')}</p>
+          <!-- TODO: render real analysis results here -->
+          <table class="results">
+            <thead><tr><th>Column</th><th>Mean</th><th>Std Dev</th></tr></thead>
+            <tbody><!-- rows populated by real analysis --></tbody>
+          </table>
+        </section>
+        """
+        return RenderResult(
+            status="rendered",
+            element={"contentType": "text/html", "output": html}
+        )
 
     async def do_refresh(self, ctx: Context) -> None:
         # TODO: refetch latest analysis results

@@ -11,25 +11,42 @@ how the daemon calls it, and how that maps to each supported language.
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    RENDERER  (React / HTML)                     │
-│  Subscribes to Daemon · Sends user actions · Mounts components  │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ GraphQL over WebSocket
-                              │ (graphql-transport-ws protocol)
-┌─────────────────────────────▼───────────────────────────────────┐
-│                DAEMON  (Node.js or Rust)                        │
-│  Maintains component store · Routes actions · Broadcasts down   │
-└──────────────┬──────────────────────────────┬───────────────────┘
-               │ componentUpdate subscription  │ handleMessage mutation
-               │ (receive new components)      │ (forward actions)
-┌──────────────▼──────────────────────────────▼───────────────────┐
-│                REGISTRY  (Node.js)                              │
-│  Stores components · Evaluates rules · Publishes updates        │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ HTTP POST to each MFE capability
-┌─────────────────────────────▼───────────────────────────────────┐
-│              MFE  (any language)                                │
-│  Implements 9 capabilities · Maintains state machine            │
-└─────────────────────────────────────────────────────────────────┘
+│  Displays MFE experiences · Sends user actions to daemon        │
+└──────┬──────────────────────────────────────────────┬──────────┘
+       │ sendAction (user interacts)                   │ rendered experience
+       │ GraphQL / WebSocket                           │ returned by MFE
+       ▼                                               │
+┌──────────────────────────┐                           │
+│   DAEMON  (Node.js/Rust) │                           │
+│   Control plane          │                           │
+│   Routes state changes   │◄──────────────────────────┘
+└──────┬───────────────────┘
+       │ "what should render for this state change?"
+       │ GraphQL / WebSocket
+       ▼
+┌──────────────────────────┐
+│   REGISTRY  (Node.js)    │
+│   Rules engine           │
+│   Resolves state →       │
+│   { mfe, capability,     │
+│     props }              │
+└──────┬───────────────────┘
+       │ resolution JSON: which MFE, which capability, what props
+       ▼
+┌──────────────────────────┐
+│   DAEMON  (receives       │
+│   resolution, calls MFE) │
+└──────┬───────────────────┘
+       │ POST /render (with props from registry resolution)
+       ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              MFE  (any language)                                 │
+│  Owns its experience · Renders what it wants · Returns output   │
+│                                                                  │
+│  doRender() → HTML fragment / React component / rich data       │
+│               (the MFE decides — not the daemon, not the        │
+│                renderer, not a fixed component type library)    │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -42,21 +59,26 @@ All messages flowing over WebSocket subscriptions share this envelope:
 interface Message {
   direction: "COMPONENT" | "ACTION";
   kind: "COMPONENT_UPDATE" | "STATE_SNAPSHOT" | "ACTION_ECHO" | "ACTION_FORWARD";
-  payload: Component | ActionRecord;
+  payload: RenderedExperience | ActionRecord;
   metadata: {
     correlationId: string;   // UUID, carried end-to-end
     acknowledged: boolean;
     error: string | null;
   };
 }
+
+// What an MFE render() returns — the MFE decides the shape
+interface RenderedExperience {
+  mfe: string;               // which MFE produced this
+  capability: string;        // which domain capability was rendered
+  output: unknown;           // MFE-owned: HTML string, component ref, data payload
+  contentType: string;       // "text/html" | "application/json" | "module-federation"
+}
 ```
 
-**Component types** the daemon knows about:
-- `CARD` — displays a title, content, and action buttons
-- `NOTIFICATION` — status message (SUCCESS | ERROR | WARNING | INFO)
-- `FORM` — collectable input fields
-- `ACTION_ECHO` — daemon acknowledgement of a received action
-- `STATE_SNAPSHOT` — full state dump sent on connect or on request
+**The daemon does not define component types.** It relays whatever the MFE's
+`render()` returns to the Renderer. The Renderer knows how to display each MFE's
+output because it loaded (or can load) the MFE's own presentation layer.
 
 ---
 
@@ -64,38 +86,50 @@ interface Message {
 
 ### Full Reference Table
 
-| Capability | HTTP method | Endpoint | Daemon trigger | Returns |
+| Capability | HTTP method | Endpoint | Who calls it | Returns |
 |---|---|---|---|---|
-| `describe` | GET | `/describe` | Registry stores on registration | MFE manifest + capabilities |
-| `load` | POST | `/load` | Registry `renderComponent()` mutation | `{status: "loaded"}` |
-| `render` | POST | `/render` | Daemon `COMPONENT_UPDATE` subscription push | Component payload |
-| `refresh` | POST | `/refresh` | Registry `componentUpdate` subscription | void |
-| `emit` | POST | `/emit` | Renderer `sendAction` → Daemon → Registry `handleMessage` | `{emitted, eventId}` |
-| `query` | POST | `/query` | Daemon `Query.state` or Registry direct call | `{data, errors}` |
-| `schema` | GET | `/schema` | Registry introspection query | GraphQL SDL |
-| `authorizeAccess` | POST | `/authorize` | Registry rules engine gate | `{authorized: bool}` |
+| `describe` | GET | `/describe` | Registry on MFE registration | MFE manifest + capabilities |
+| `load` | POST | `/load` | Daemon after registry resolution selects this MFE | `{status: "loaded"}` |
+| `render` | POST | `/render` | Daemon after registry resolves which MFE + capability to show | MFE's own experience (HTML / component / data) |
+| `refresh` | POST | `/refresh` | Daemon when state changes but same MFE stays selected | void |
+| `emit` | POST | `/emit` | MFE itself, or daemon forwarding an action from renderer | `{emitted, eventId}` |
+| `query` | POST | `/query` | Daemon or renderer requesting data from this MFE | `{data, errors}` |
+| `schema` | GET | `/schema` | Registry introspection | GraphQL SDL |
+| `authorizeAccess` | POST | `/authorize` | Daemon before calling `render()` | `{authorized: bool}` |
 | `health` | GET | `/health` | Registry liveness polling | `{status, checks}` |
 
 ---
 
 ## Data Flows
 
-### Component Flow  (down: Registry → Daemon → Renderer)
+### Render Flow  (state change → registry resolution → MFE renders)
 
-1. A component is created via `renderComponent()` on the Registry (or via `POST /render` on the MFE directly)
-2. Registry stores the component, fires `componentUpdate` subscription event
-3. Daemon (subscribed to Registry) receives event, stores in shared state
-4. Daemon broadcasts `COMPONENT_UPDATE` message to all connected renderers
-5. Renderer receives message, mounts/updates the component in UI
+1. User interacts with the Renderer — an action (click, submit, etc.)
+2. Renderer sends `sendAction` to Daemon with a `correlationId`
+3. Daemon sends `ACTION_ECHO` back to Renderer (acknowledged)
+4. Daemon forwards the state change to Registry via `handleMessage`
+5. Registry evaluates rules: **which MFE should handle this state?**
+6. Registry returns a resolution JSON to Daemon:
+   ```json
+   { "mfe": "csv-analyzer", "capability": "DataAnalysis", "props": { ... } }
+   ```
+7. Daemon calls `authorizeAccess()` on the resolved MFE (gate check)
+8. Daemon calls `render()` on the resolved MFE with the props
+9. **MFE produces its own experience** — HTML fragment, React component tree, rich data
+10. Daemon relays the MFE's rendered output back to the Renderer
+11. Renderer displays the MFE's experience
 
-### Action Flow  (up: Renderer → Daemon → Registry → MFE)
+### Refresh Flow  (same MFE, new state)
 
-1. User interacts with a component in the renderer
-2. Renderer sends `sendAction` mutation to Daemon with `correlationId`
-3. Daemon stores action, sends `ACTION_ECHO` back to renderer
-4. Daemon forwards action to Registry via `handleMessage` mutation
-5. Registry evaluates rules (component + action → new component?)
-6. If a new component is produced, it travels down via the Component Flow
+When a state change arrives but the Registry resolves to the **same** MFE
+that is already loaded, the Daemon calls `refresh()` instead of `render()` —
+the MFE reloads its data and updates its presentation in place.
+
+### Query Flow  (data fetch without render)
+
+The Daemon or Renderer can call `query()` on an MFE directly to fetch data
+without triggering a full render cycle. The MFE executes the GraphQL query
+against its own schema and returns structured data.
 
 ---
 
@@ -129,16 +163,30 @@ Body: { "inputs": { "config": {} } }
 → { "status": "loaded", "timestamp": "..." }
 ```
 
-### `render()` — Component output
+### `render()` — MFE produces its own experience
 
-Return a component payload the daemon will broadcast to all renderers.
-The payload should be one of the daemon component types (CARD, FORM, etc.)
+The Daemon calls this after the Registry resolves that **this** MFE should
+handle the current state. The MFE owns what it renders — there is no fixed
+component type library. The output travels from the MFE back through the
+Daemon to the Renderer.
 
 ```json
 POST /render
-Body: { "inputs": { "container": "...", "props": {} } }
-→ { "status": "rendered", "element": { "type": "CARD", "data": { ... } } }
+Body: { "inputs": { "capability": "DataAnalysis", "props": { "fileId": "abc" } } }
+→ {
+    "status": "rendered",
+    "element": {
+      "contentType": "text/html",
+      "output": "<section class='csv-analysis'>...</section>"
+    }
+  }
 ```
+
+For TypeScript/Module Federation MFEs, `element` carries a component reference
+the Renderer mounts dynamically. For server-side MFEs (Python, Go, Rust),
+`element` carries an HTML fragment or structured data payload. The Renderer
+handles both — it fetches the MFE's presentation layer on first load, then
+renders subsequent `output` values using that layer.
 
 ### `refresh()` — Data reload
 
@@ -378,17 +426,18 @@ data:
 
 ## What the Daemon Does NOT Do
 
-The daemon is **not** a traditional MFE loader. It does **not**:
-- Call `load()` in a startup sequence
-- Call `render()` directly on your server
-- Manage MFE lifecycle itself
+The daemon is **not** a component store, not a template engine, and not a
+fixed-component-type system. It does **not**:
+- Define what components look like (no CARD/FORM/NOTIFICATION type library)
+- Pre-render or store rendered output
+- Own the presentation layer of any MFE
 
-Instead, the daemon is a **reactive message router**:
-1. It receives user actions from renderers (`sendAction` mutation)
-2. It forwards them to the Registry (`handleMessage` mutation)
-3. The Registry evaluates rules and produces components
-4. The daemon broadcasts those components to all renderers (`componentUpdate` subscription)
+Instead, the daemon is a **state-change router and render orchestrator**:
+1. Receives state changes from the Renderer (`sendAction`)
+2. Asks the Registry: *"which MFE should handle this?"*
+3. Gets back a resolution (which MFE, which capability, what props)
+4. Calls that MFE's `render()` — the MFE decides what the experience looks like
+5. Relays the MFE's output back to the Renderer
 
-Your MFE's `render()` capability returns the component *payload* that the daemon
-broadcasts — not a DOM element, but a JSON descriptor the renderer uses to mount
-the correct React/HTML component.
+**The Renderer displays whatever the MFE produces.** The MFE owns its
+presentation entirely.
