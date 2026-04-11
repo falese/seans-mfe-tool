@@ -22,6 +22,10 @@ export type MFEType = z.infer<typeof MFETypeSchema>;
 export declare const LanguageSchema: z.ZodEnum<{
     javascript: "javascript";
     typescript: "typescript";
+    python: "python";
+    go: "go";
+    rust: "rust";
+    java: "java";
 }>;
 export type Language = z.infer<typeof LanguageSchema>;
 /** Capability type discrimination */

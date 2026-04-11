@@ -72,7 +72,7 @@ authorization: AuthConfig # Access control rules
 | `name`        | `string`   | ✅       | Unique MFE identifier (kebab-case)                                        |
 | `version`     | `string`   | ✅       | Semantic version (e.g., `1.0.0`)                                          |
 | `type`        | `enum`     | ✅       | MFE type: `tool`, `agent`, `feature`, `service`, `remote`, `shell`, `bff` |
-| `language`    | `enum`     | ✅       | V1: `javascript`, `typescript` only                                       |
+| `language`    | `enum`     | ✅       | `javascript`, `typescript`, `python`, `go`, `rust`, `java`               |
 | `description` | `string`   | ❌       | Human-readable description                                                |
 | `owner`       | `string`   | ❌       | Team/owner identifier for attribution                                     |
 | `tags`        | `string[]` | ❌       | Custom tags for search/filtering                                          |
@@ -707,7 +707,7 @@ mfe-manifest.yaml (DSL)
 name: string # Must be kebab-case
 version: string # Must be semver
 type: enum # Must be valid type
-language: enum # Must be javascript|typescript (V1)
+language: enum # javascript | typescript | python | go | rust | java
 ```
 
 ### Capability Validation

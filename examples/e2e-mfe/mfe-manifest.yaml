@@ -9,7 +9,7 @@
 # - DEC-019: Handler names are language-neutral, mapped by code generators
 # - DEC-020: Unified type system (nullable by default, `!` for required)
 # - DEC-021: Type metadata (owner, tags) for tooling and future access control
-# - DEC-022: V1 supports JavaScript/TypeScript only
+# - DEC-022: Supported languages: javascript, typescript, python, go, rust, java
 # - DEC-023: Data lifecycle aligns with capability lifecycle (no `loading` phase)
 # - DEC-024: generatedFrom tracks data lineage for dependency analysis
 #

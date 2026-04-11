@@ -20,7 +20,13 @@ export const MFETypeSchema = z.enum([
 export type MFEType = z.infer<typeof MFETypeSchema>;
 
 /** Supported implementation languages */
-export const LanguageSchema = z.enum(['javascript', 'typescript']);
+export const LanguageSchema = z.enum([
+  'javascript', 'typescript',   // JS/TS ecosystem (Module Federation, Node.js)
+  'python',                      // Flask / FastAPI MFEs
+  'go',                          // net/http MFEs
+  'rust',                        // Tokio / axum MFEs
+  'java'                         // Spring Boot MFEs
+]);
 export type Language = z.infer<typeof LanguageSchema>;
 
 /** Capability type discrimination */
