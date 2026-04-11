@@ -570,14 +570,31 @@ export class RemoteMFE extends BaseMFE {
    * Subscription.messages channel the Renderer is already subscribed to.
    */
   protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
-    const stateKey = context.inputs?.stateKey as string;
-    const stateData = (context.inputs?.stateData as Record<string, unknown>) || {};
-    const correlationId = (context.inputs?.correlationId as string) || context.requestId;
+    const rawStateKey = context.inputs?.stateKey;
+    const rawStateData = context.inputs?.stateData;
+    const rawCorrelationId = context.inputs?.correlationId;
 
-    if (!stateKey) {
-      throw new Error('updateControlPlaneState requires context.inputs.stateKey');
+    if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
+      throw new Error('updateControlPlaneState requires context.inputs.stateKey to be a non-empty string');
     }
 
+    if (
+      rawStateData !== undefined &&
+      (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
+    ) {
+      throw new Error('updateControlPlaneState requires context.inputs.stateData to be an object when provided');
+    }
+
+    if (
+      rawCorrelationId !== undefined &&
+      (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
+    ) {
+      throw new Error('updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided');
+    }
+
+    const stateKey = rawStateKey.trim();
+    const stateData = (rawStateData ?? {}) as Record<string, unknown>;
+    const correlationId = rawCorrelationId ? rawCorrelationId.trim() : context.requestId;
     // TODO: send via the daemon WebSocket connection
     // In a real Module Federation MFE this uses the shared WS client:
     //
