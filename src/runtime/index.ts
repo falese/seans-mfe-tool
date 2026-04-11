@@ -36,5 +36,9 @@ export {
   ModuleFederationContainer,
 } from './remote-mfe';
 
+// Daemon WebSocket client (used to wire up the control-plane connection)
+export { GraphQLWebSocketClient } from './graphql-ws-client';
+export type { DaemonWebSocketClient } from './graphql-ws-client';
+
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)
 export * from './handlers';
