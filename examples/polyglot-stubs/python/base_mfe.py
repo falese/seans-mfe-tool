@@ -339,9 +339,9 @@ class BaseMFE(ABC):
           - Error escalation   → registry may route to an EscalationHandler MFE
 
         ctx.inputs must contain:
-          state_key: str           — semantic name ("analysis.complete", "form.submitted")
-          state_data: dict         — domain context the Registry rules engine evaluates
-          correlation_id?: str     — links this update to the originating render/action
+          stateKey: str           — semantic name ("analysis.complete", "form.submitted")
+          stateData: dict         — domain context the Registry rules engine evaluates
+          correlationId?: str     — links this update to the originating render/action
 
         The daemon routes this through sendAction → Registry handleMessage.
         Available from READY or RENDERING states.
