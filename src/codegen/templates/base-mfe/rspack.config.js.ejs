@@ -13,6 +13,11 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    alias: {
+      // Resolve the platform runtime from its source during development.
+      // In production, publish @seans-mfe-tool/runtime to npm and remove this alias.
+      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../src/runtime/index.ts'),
+    },
     fallback: {
       "path": require.resolve("path-browserify"),
       "stream": require.resolve("stream-browserify"),
