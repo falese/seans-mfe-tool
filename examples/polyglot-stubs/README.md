@@ -1,6 +1,6 @@
 # Polyglot MFE Stubs
 
-These stubs demonstrate that the **MFE platform contract** — 9 capabilities every MFE must implement — is independent of the programming language you choose.
+These stubs demonstrate that the **MFE platform contract** — 10 capabilities every MFE must implement — is independent of the programming language you choose.
 
 Each directory contains a complete stub for the same `csv-analyzer` MFE, expressed idiomatically in a different language. The structure, state machine, and capability semantics are identical across all of them.
 
@@ -20,7 +20,7 @@ The TypeScript reference implementation uses Module Federation for browser-side 
 
 ---
 
-## The 9 Capabilities
+## The 10 Capabilities
 
 Every MFE — regardless of language — must implement these:
 
@@ -30,11 +30,12 @@ Every MFE — regardless of language — must implement these:
 | `load()` | Initialize runtime (connect to DB, warm caches) | Registry `renderComponent()` mutation |
 | `render()` | Return a component payload (data or UI descriptor) | Daemon `COMPONENT_UPDATE` push to renderer |
 | `refresh()` | Reload fresh data without full re-init | Registry `componentUpdate` subscription |
-| `emit()` | Publish an action/event upstream | Renderer `sendAction` → Daemon → Registry `handleMessage` |
+| `emit()` | Publish telemetry/events (no registry reaction) | Renderer `sendAction` → Daemon → Registry `handleMessage` |
 | `query()` | Execute a GraphQL query | Daemon `Query.state` |
 | `schema()` | Expose GraphQL SDL for introspection | Registry schema registry |
 | `authorizeAccess()` | Validate JWT, gate access | Registry rules engine |
 | `health()` | Report dependency liveness | Registry component health monitor |
+| `updateControlPlaneState()` | Push domain state → registry re-evaluates rules | `POST /state` → daemon `sendAction` mutation |
 
 ---
 
@@ -51,6 +52,7 @@ Every MFE — regardless of language — must implement these:
 | `doSchema(ctx)` | `do_schema(ctx)` | `DoSchema(ctx, mfeCtx)` | `do_schema(&self, ctx)` |
 | `doQuery(ctx)` | `do_query(ctx)` | `DoQuery(ctx, mfeCtx)` | `do_query(&self, ctx)` |
 | `doEmit(ctx)` | `do_emit(ctx)` | `DoEmit(ctx, mfeCtx)` | `do_emit(&self, ctx)` |
+| `doUpdateControlPlaneState(ctx)` | `do_update_control_plane_state(ctx)` | `DoUpdateControlPlaneState(ctx, mfeCtx)` | `do_update_control_plane_state(&self, ctx)` |
 
 ---
 

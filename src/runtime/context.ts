@@ -61,7 +61,7 @@ export interface Context {
   phase?: 'before' | 'main' | 'after' | 'error';
   
   /** Current capability being executed */
-  capability?: 'load' | 'render' | 'query' | 'emit' | string;
+  capability?: 'load' | 'render' | 'refresh' | 'authorizeAccess' | 'health' | 'describe' | 'schema' | 'query' | 'emit' | 'updateControlPlaneState' | string;
   
   // === Error Context (populated in error phase) ===
   
