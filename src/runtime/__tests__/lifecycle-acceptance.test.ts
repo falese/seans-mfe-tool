@@ -61,6 +61,7 @@ class TestMFE extends BaseMFE {
   protected async doSchema(context: any) { this.calls.push('doSchema'); return { schema: {} }; }
   protected async doQuery(context: any) { this.calls.push('doQuery'); return { data: 'ok' }; }
   protected async doEmit(context: any) { this.calls.push('doEmit'); return { ok: true }; }
+  protected async doUpdateControlPlaneState(context: any) { this.calls.push('doUpdateControlPlaneState'); return { acknowledged: true, correlationId: context.requestId || 'test' }; }
 
   // Custom handlers referenced in tests
   async validateInputs(context: any) { this.calls.push('validateInputs'); }

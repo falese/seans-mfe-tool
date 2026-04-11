@@ -1,6 +1,6 @@
 // MFE Platform Contract — Go Stub
 //
-// This file demonstrates how the 9-capability platform contract is expressed
+// This file demonstrates how the 10-capability platform contract is expressed
 // in Go. It is a *teaching stub* — the structure and method signatures are
 // correct, but the bodies are left as TODOs for your implementation.
 //
@@ -10,15 +10,16 @@
 //
 // Daemon ↔ MFE capability mapping:
 //
-//	describe()        → Registry stores manifest as component metadata
-//	load()            → Registry renderComponent() initializes this MFE
-//	render()          → Daemon Subscription.messages COMPONENT_UPDATE push
-//	refresh()         → Registry componentUpdate subscription triggers re-render
-//	emit()            → Renderer sendAction → Daemon → Registry handleMessage
-//	query()           → Daemon Query.state returns component store
-//	schema()          → MFE exposes GraphQL schema for Registry introspection
-//	authorizeAccess() → Registry rules engine gates component creation
-//	health()          → Registry monitors component liveness
+//	describe()               → Registry stores manifest as component metadata
+//	load()                   → Registry renderComponent() initializes this MFE
+//	render()                 → Daemon relays MFE's own experience back to Renderer
+//	refresh()                → Registry componentUpdate subscription triggers re-render
+//	emit()                   → Telemetry / observability events (no registry reaction)
+//	query()                  → Daemon Query.state returns component store
+//	schema()                 → MFE exposes GraphQL schema for Registry introspection
+//	authorizeAccess()        → Registry rules engine gates component creation
+//	health()                 → Registry monitors component liveness
+//	UpdateControlPlaneState()→ MFE pushes domain state → registry re-evaluates rules
 //
 // See: PLATFORM-CONTRACT.md for the full reference.
 package mfe
@@ -141,6 +142,17 @@ type EmitResult struct {
 	EventID string `json:"eventId,omitempty"`
 }
 
+// ControlPlaneStateResult is returned by UpdateControlPlaneState.
+// Distinct from EmitResult — this targets registry resolution, not observers.
+type ControlPlaneStateResult struct {
+	Acknowledged  bool           `json:"acknowledged"`
+	CorrelationID string         `json:"correlationId"`
+	// Populated if the registry immediately resolved a new component.
+	// In practice this usually arrives asynchronously via the daemon's
+	// Subscription.messages channel rather than synchronously here.
+	Resolution    map[string]any `json:"resolution,omitempty"` // {mfe, capability, props}
+}
+
 // ---------------------------------------------------------------------------
 // BaseMFE Interface  (the platform contract)
 // ---------------------------------------------------------------------------
@@ -159,6 +171,9 @@ type BaseMFE interface {
 	Schema(ctx context.Context, mfeCtx MFEContext) (SchemaResult, error)
 	Query(ctx context.Context, mfeCtx MFEContext) (QueryResult, error)
 	Emit(ctx context.Context, mfeCtx MFEContext) (EmitResult, error)
+
+	// Push domain state to the daemon so the Registry re-evaluates rules.
+	UpdateControlPlaneState(ctx context.Context, mfeCtx MFEContext) (ControlPlaneStateResult, error)
 
 	// State access
 	State() MFEState
@@ -309,6 +324,15 @@ func (m *CsvAnalyzerMFE) Emit(ctx context.Context, mfeCtx MFEContext) (EmitResul
 	return m.DoEmit(ctx, mfeCtx)
 }
 
+// UpdateControlPlaneState pushes domain state to the daemon so the Registry
+// re-evaluates its rules. Available from Ready or Rendering states.
+func (m *CsvAnalyzerMFE) UpdateControlPlaneState(ctx context.Context, mfeCtx MFEContext) (ControlPlaneStateResult, error) {
+	if err := m.assertState(StateReady, StateRendering); err != nil {
+		return ControlPlaneStateResult{}, err
+	}
+	return m.DoUpdateControlPlaneState(ctx, mfeCtx)
+}
+
 // -- Do* methods — IMPLEMENT THESE in your MFE --
 
 // DoLoad initializes the Go runtime (DB connections, config, etc.)
@@ -373,6 +397,7 @@ func (m *CsvAnalyzerMFE) DoDescribe(ctx context.Context, mfeCtx MFEContext) (Des
 		Capabilities: []string{
 			"load", "render", "refresh", "authorizeAccess",
 			"health", "describe", "schema", "query", "emit",
+			"updateControlPlaneState",
 		},
 		Manifest: m.manifest,
 	}, nil
@@ -394,11 +419,45 @@ func (m *CsvAnalyzerMFE) DoQuery(ctx context.Context, mfeCtx MFEContext) (QueryR
 	return QueryResult{Data: map[string]any{"analysis": nil}}, nil
 }
 
-// DoEmit publishes an action up through Daemon sendAction → Registry handleMessage.
+// DoEmit publishes a telemetry event to observability sinks.
+// This does NOT trigger registry re-evaluation — use DoUpdateControlPlaneState for that.
 func (m *CsvAnalyzerMFE) DoEmit(ctx context.Context, mfeCtx MFEContext) (EmitResult, error) {
-	// TODO: connect to daemon WebSocket and send sendAction mutation
-	// ws.WriteJSON(map[string]any{"type": "sendAction", "payload": mfeCtx.Inputs})
+	// TODO: forward event to telemetry/observability sink
 	return EmitResult{Emitted: true, EventID: uuid.New().String()}, nil
+}
+
+// DoUpdateControlPlaneState pushes meaningful domain state to the daemon so the
+// Registry re-evaluates its rules and potentially resolves a new MFE + capability.
+//
+// mfeCtx.Inputs must contain:
+//
+//	"stateKey"      — semantic name ("analysis.complete", "form.submitted")
+//	"stateData"     — domain data map the registry rules engine reads
+//	"correlationId" — optional; links this update to the originating render/action
+//
+// Example — CSV analysis complete, signal registry to show a visualization MFE:
+//
+//	m.DoUpdateControlPlaneState(ctx, MFEContext{Inputs: map[string]any{
+//	    "stateKey":      "analysis.complete",
+//	    "stateData":     map[string]any{"resultId": "abc", "rowCount": 5000},
+//	    "correlationId": originalMFECtx.CorrelationID,
+//	}})
+func (m *CsvAnalyzerMFE) DoUpdateControlPlaneState(ctx context.Context, mfeCtx MFEContext) (ControlPlaneStateResult, error) {
+	stateKey, _ := mfeCtx.Inputs["stateKey"].(string)
+	if stateKey == "" {
+		return ControlPlaneStateResult{}, fmt.Errorf("DoUpdateControlPlaneState: mfeCtx.Inputs[\"stateKey\"] is required")
+	}
+	correlationID := mfeCtx.CorrelationID
+
+	// TODO: POST to daemon /state endpoint (or send via WebSocket)
+	// resp, err := http.PostJSON("http://daemon:4000/state", map[string]any{
+	//     "stateKey":      stateKey,
+	//     "stateData":     mfeCtx.Inputs["stateData"],
+	//     "correlationId": correlationID,
+	//     "mfe":           m.manifest["name"],
+	// })
+
+	return ControlPlaneStateResult{Acknowledged: true, CorrelationID: correlationID}, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -501,6 +560,15 @@ func StartHTTPServer(mfe *CsvAnalyzerMFE, port int) {
 
 	mux.HandleFunc("POST /emit", func(w http.ResponseWriter, r *http.Request) {
 		result, err := mfe.Emit(r.Context(), contextFromRequest(r))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, result)
+	})
+
+	mux.HandleFunc("POST /state", func(w http.ResponseWriter, r *http.Request) {
+		result, err := mfe.UpdateControlPlaneState(r.Context(), contextFromRequest(r))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -41,6 +41,9 @@ class TestMFE extends BaseMFE {
   protected async doEmit(context: any): Promise<{ emitted: boolean }> {
     return { emitted: true };
   }
+  protected async doUpdateControlPlaneState(context: any): Promise<{ acknowledged: boolean; correlationId: string }> {
+    return { acknowledged: true, correlationId: context.requestId || 'test' };
+  }
   async customA(context: any) { context.calledA = true; }
   async customB(context: any) { context.calledB = true; }
 

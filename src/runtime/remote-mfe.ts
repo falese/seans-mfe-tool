@@ -8,7 +8,7 @@
  * - REQ-RUNTIME-012: Telemetry emission at all checkpoints
  */
 
-import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult } from './base-mfe';
+import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult } from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
 
 /**
@@ -553,5 +553,69 @@ export class RemoteMFE extends BaseMFE {
     return {
       emitted: false
     };
+  }
+
+  /**
+   * Push domain state to the daemon control plane for registry re-evaluation.
+   *
+   * Module Federation MFEs run in the browser, so this sends a GraphQL mutation
+   * over the existing WebSocket connection to the daemon:
+   *
+   *   mutation SendAction($input: ActionInput!) {
+   *     sendAction(input: $input) { correlationId acknowledged }
+   *   }
+   *
+   * The daemon forwards to Registry handleMessage → rules engine re-evaluation.
+   * The registry may resolve a new MFE + capability, which arrives via the
+   * Subscription.messages channel the Renderer is already subscribed to.
+   */
+  protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
+    const rawStateKey = context.inputs?.stateKey;
+    const rawStateData = context.inputs?.stateData;
+    const rawCorrelationId = context.inputs?.correlationId;
+
+    if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
+      throw new Error('updateControlPlaneState requires context.inputs.stateKey to be a non-empty string');
+    }
+
+    if (
+      rawStateData !== undefined &&
+      (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
+    ) {
+      throw new Error('updateControlPlaneState requires context.inputs.stateData to be an object when provided');
+    }
+
+    if (
+      rawCorrelationId !== undefined &&
+      (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
+    ) {
+      throw new Error('updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided');
+    }
+
+    const stateKey = rawStateKey.trim();
+    const stateData = (rawStateData ?? {}) as Record<string, unknown>;
+    const correlationId = rawCorrelationId ? rawCorrelationId.trim() : context.requestId;
+    // TODO: send via the daemon WebSocket connection
+    // In a real Module Federation MFE this uses the shared WS client:
+    //
+    // await daemonWsClient.sendAction({
+    //   stateKey,
+    //   stateData,
+    //   correlationId,
+    //   mfe: this.manifest.name,
+    // });
+
+    if (this.deps?.telemetry) {
+      this.deps.telemetry.emit({
+        name: 'control-plane-state-update',
+        capability: 'updateControlPlaneState',
+        phase: 'main',
+        status: 'success',
+        metadata: { mfe: this.manifest.name, stateKey, correlationId },
+        timestamp: new Date(),
+      });
+    }
+
+    return { acknowledged: true, correlationId };
   }
 }

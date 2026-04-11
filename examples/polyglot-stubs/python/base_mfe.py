@@ -1,7 +1,7 @@
 """
 MFE Platform Contract — Python Stub
 =====================================
-This file demonstrates how the 9-capability platform contract is expressed
+This file demonstrates how the 10-capability platform contract is expressed
 in Python. It is a *teaching stub* — the structure and method signatures
 are correct, but the bodies are left as TODOs for your implementation.
 
@@ -17,15 +17,16 @@ using the graphql-transport-ws protocol. When a capability is invoked:
   HTTP endpoint on this MFE server  →  capability method  →  response
 
 Daemon ↔ MFE capability mapping:
-  describe()        → Registry stores returned manifest as component metadata
-  load()            → Registry renderComponent() initializes this MFE
-  render()          → Daemon Subscription.messages COMPONENT_UPDATE pushed down
-  refresh()         → Registry componentUpdate subscription triggers re-render
-  emit()            → Renderer sendAction → Daemon → Registry handleMessage
-  query()           → Daemon Query.state returns current component store
-  schema()          → MFE exposes GraphQL schema for Registry introspection
-  authorizeAccess() → Registry rules engine gates component creation
-  health()          → Registry monitors component liveness
+  describe()               → Registry stores returned manifest as component metadata
+  load()                   → Registry renderComponent() initializes this MFE
+  render()                 → Daemon relays MFE's own experience back to Renderer
+  refresh()                → Registry componentUpdate subscription triggers re-render
+  emit()                   → Telemetry / observability events (no registry reaction)
+  query()                  → Daemon Query.state returns component store
+  schema()                 → MFE exposes GraphQL schema for Registry introspection
+  authorizeAccess()        → Registry rules engine gates component creation
+  health()                 → Registry monitors component liveness
+  updateControlPlaneState()→ MFE pushes domain state → registry re-evaluates rules
 
 See: PLATFORM-CONTRACT.md for the full reference.
 """
@@ -125,6 +126,19 @@ class QueryResult:
 class EmitResult:
     emitted: bool
     event_id: Optional[str] = None
+
+@dataclass
+class ControlPlaneStateResult:
+    """
+    Result of pushing domain state to the daemon control plane.
+    Distinct from EmitResult — this targets registry resolution, not observers.
+    """
+    acknowledged: bool
+    correlation_id: str
+    # Populated if the registry immediately resolved a new component.
+    # In practice this usually arrives asynchronously via the daemon's
+    # Subscription.messages channel rather than synchronously here.
+    resolution: Optional[dict[str, Any]] = None  # {mfe, capability, props}
 
 # -----------------------------------------------------------------------------
 # BaseMFE Abstract Class
@@ -302,7 +316,7 @@ class BaseMFE(ABC):
             raise
 
     async def emit(self, ctx: Context) -> EmitResult:
-        """Publish event/action. Flows up via Daemon sendAction mutation."""
+        """Publish telemetry/observability events. Does NOT trigger registry rules."""
         try:
             await self._run_lifecycle("emit", "before", ctx)
             result = await self.do_emit(ctx)
@@ -311,6 +325,37 @@ class BaseMFE(ABC):
         except Exception as exc:
             ctx.error = exc
             await self._run_lifecycle("emit", "error", ctx)
+            raise
+
+    async def update_control_plane_state(self, ctx: Context) -> ControlPlaneStateResult:
+        """Push meaningful domain state to the daemon so the Registry re-evaluates rules.
+
+        Use this when internal MFE state has changed in a way that should drive
+        what experience is shown next — not telemetry, but semantic state:
+
+          - Analysis complete  → registry may resolve a DataVisualization MFE
+          - Form submitted     → registry may resolve a Confirmation MFE
+          - Wizard step done   → registry may resolve the next step's MFE
+          - Error escalation   → registry may route to an EscalationHandler MFE
+
+        ctx.inputs must contain:
+          stateKey: str           — semantic name ("analysis.complete", "form.submitted")
+          stateData: dict         — domain context the Registry rules engine evaluates
+          correlationId?: str     — links this update to the originating render/action
+
+        The daemon routes this through sendAction → Registry handleMessage.
+        Available from READY or RENDERING states.
+        """
+        self._assert_state(MFEState.READY, MFEState.RENDERING)
+        try:
+            await self._run_lifecycle("updateControlPlaneState", "before", ctx)
+            await self._run_lifecycle("updateControlPlaneState", "main", ctx)
+            result = await self.do_update_control_plane_state(ctx)
+            await self._run_lifecycle("updateControlPlaneState", "after", ctx)
+            return result
+        except Exception as exc:
+            ctx.error = exc
+            await self._run_lifecycle("updateControlPlaneState", "error", ctx)
             raise
 
     # -------------------------------------------------------------------------
@@ -412,9 +457,28 @@ class BaseMFE(ABC):
     @abstractmethod
     async def do_emit(self, ctx: Context) -> EmitResult:
         """
-        Publish a telemetry event, metric, or domain action.
-        In the daemon flow this maps to: renderer sendAction mutation →
-        Daemon → Registry handleMessage → rules engine evaluation.
+        Publish a telemetry event or metric to observers.
+        This does NOT trigger registry re-evaluation. Use
+        do_update_control_plane_state() when you want the registry to act.
+        """
+        ...
+
+    @abstractmethod
+    async def do_update_control_plane_state(self, ctx: Context) -> ControlPlaneStateResult:
+        """
+        Push meaningful domain state to the daemon/registry control plane.
+
+        Called when this MFE has produced state that should influence what
+        experience the Registry resolves next. Not telemetry — semantic state
+        the rules engine acts on.
+
+        ctx.inputs:
+          state_key: str       — e.g. "analysis.complete", "form.submitted"
+          state_data: dict     — domain data the registry rules engine reads
+          correlation_id?: str — link to the originating render/action
+
+        Implementations send this via POST to the daemon's /state endpoint,
+        which routes it through sendAction → Registry handleMessage.
         """
         ...
 
@@ -426,7 +490,7 @@ class BaseMFE(ABC):
 class CsvAnalyzerMFE(BaseMFE):
     """
     Concrete MFE implementation — CSV analysis service.
-    Component type in daemon: CARD (renders analysis results)
+    When the daemon calls render(), this MFE produces its own HTML experience.
     Matches mfe-manifest.yaml in this directory.
     """
 
@@ -480,7 +544,8 @@ class CsvAnalyzerMFE(BaseMFE):
             version=self._manifest.get("version", "1.0.0"),
             type=self._manifest.get("type", "tool"),
             capabilities=["load", "render", "refresh", "authorizeAccess",
-                          "health", "describe", "schema", "query", "emit"],
+                          "health", "describe", "schema", "query", "emit",
+                          "updateControlPlaneState"],
             manifest=self._manifest
         )
 
@@ -499,10 +564,37 @@ class CsvAnalyzerMFE(BaseMFE):
         return QueryResult(data={"analysis": None}, errors=[])
 
     async def do_emit(self, ctx: Context) -> EmitResult:
-        # TODO: forward event to daemon via sendAction mutation over WebSocket
-        # In production: ws_client.send({"type": "sendAction", "payload": ctx.inputs})
+        # TODO: forward telemetry event to observability sink
         event_id = str(uuid.uuid4())
         return EmitResult(emitted=True, event_id=event_id)
+
+    async def do_update_control_plane_state(self, ctx: Context) -> ControlPlaneStateResult:
+        state_key = ctx.inputs.get("state_key", "")
+        state_data = ctx.inputs.get("state_data", {})
+        correlation_id = ctx.inputs.get("correlation_id", ctx.correlation_id)
+
+        if not state_key:
+            raise ValueError("update_control_plane_state requires ctx.inputs['state_key']")
+
+        # TODO: POST to daemon /state endpoint (or send via WebSocket sendAction)
+        # import httpx
+        # await httpx.AsyncClient().post(
+        #     "http://daemon:4000/state",
+        #     json={"stateKey": state_key, "stateData": state_data,
+        #           "correlationId": correlation_id, "mfe": self._manifest["name"]}
+        # )
+        #
+        # Example — CSV analysis complete, signal registry to show visualization:
+        #   await mfe.update_control_plane_state(Context(inputs={
+        #       "state_key": "analysis.complete",
+        #       "state_data": {"result_id": "abc123", "row_count": 5000, "quality": "high"},
+        #       "correlation_id": original_render_ctx.correlation_id,
+        #   }))
+
+        return ControlPlaneStateResult(
+            acknowledged=True,
+            correlation_id=correlation_id
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -580,6 +672,15 @@ if __name__ == "__main__":
     def endpoint_emit():
         result = run_async(mfe.emit(make_context()))
         return jsonify({"emitted": result.emitted, "eventId": result.event_id})
+
+    @app.post("/state")
+    def endpoint_state():
+        result = run_async(mfe.update_control_plane_state(make_context()))
+        return jsonify({
+            "acknowledged": result.acknowledged,
+            "correlationId": result.correlation_id,
+            "resolution": result.resolution,
+        })
 
     print("CSV Analyzer MFE running on http://localhost:3002")
     app.run(port=3002)
