@@ -1,20 +1,63 @@
-<% /*
-  EJS template for type definitions from DSL manifest
-  For each capability, generate its own input/output types
+<%/*
+  EJS template for type definitions generated from the DSL manifest.
+  For each capability, produces typed Inputs and Outputs interfaces.
   capabilities: Array<{ method: string, config: CapabilityConfig }>
-*/ %>
+*/%>
+<%
+// ---------------------------------------------------------------------------
+// DSL → TypeScript type mapping
+// ---------------------------------------------------------------------------
+function mapType(dslType, values) {
+  if (!dslType) return 'unknown';
+
+  // Handle union types declared in DSL (e.g. "component | object")
+  if (dslType.includes('|')) {
+    return dslType.split('|').map(t => mapType(t.trim(), undefined)).join(' | ');
+  }
+
+  switch (dslType.trim()) {
+    case 'element':   return 'HTMLElement | null';
+    case 'component': return 'ComponentType';
+    case 'datetime':  return 'Date';
+    case 'jwt':       return 'string';
+    case 'file':      return 'File';
+    case 'array':     return 'any[]';
+    case 'object':    return 'Record<string, unknown>';
+    case 'string':    return 'string';
+    case 'number':    return 'number';
+    case 'boolean':   return 'boolean';
+    case 'enum':
+      // Produce a literal union when values are declared, otherwise fall back to string
+      if (values && Array.isArray(values) && values.length > 0) {
+        return values.map(v => `'${v}'`).join(' | ');
+      }
+      return 'string';
+    default:
+      return dslType;
+  }
+}
+%>
+/**
+ * Placeholder for a React (or other framework) component type.
+ * Replace with the specific `React.ComponentType<Props>` once react types are installed.
+ */
+type ComponentType = (...args: any[]) => any;
 <% capabilities.forEach(function(cap) { %>
+// ---------------------------------------------------------------------------
+// <%= cap.method %> — input / output types
+// ---------------------------------------------------------------------------
+
 export interface <%= cap.method %>Inputs {
 <% (cap.config.inputs || []).forEach(function(input) { %>
-  /** <%= input.description %> */
-  <%= input.name %>: <%= input.type %>;
+  /** <%= input.description || '' %> */
+  <%= input.name %><% if (!input.required) { %>?<% } %>: <%= mapType(input.type, input.values) %>;
 <% }); %>
 }
 
 export interface <%= cap.method %>Outputs {
 <% (cap.config.outputs || []).forEach(function(output) { %>
-  /** <%= output.description %> */
-  <%= output.name %>: <%= output.type %>;
+  /** <%= output.description || '' %> */
+  <%= output.name %>: <%= mapType(output.type, output.values) %>;
 <% }); %>
 }
 <% }); %>

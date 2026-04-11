@@ -4,13 +4,18 @@ const path = require('path');
 
 /** @type {import('@rspack/cli').Configuration} */
 module.exports = {
-  entry: './src/bootstrap.jsx',
+  entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'auto',
   },
   resolve: {
-    extensions: ['.jsx', '.js', '.json'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    alias: {
+      // Resolve the platform runtime from its source during development.
+      // In production, publish @seans-mfe-tool/runtime to npm and remove this alias.
+      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../src/runtime/index.ts'),
+    },
     fallback: {
       "path": require.resolve("path-browserify"),
       "stream": require.resolve("stream-browserify"),
@@ -32,6 +37,10 @@ module.exports = {
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/static',
+    },
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
@@ -41,14 +50,14 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
-        exclude: /node_modules\/(?!(@huggingface|other-problematic-packages)\/).*/,
+        test: /\.(jsx?|tsx?)$/,
+        exclude: /node_modules/,
         use: {
           loader: 'builtin:swc-loader',
           options: {
             jsc: {
               parser: {
-                syntax: 'ecmascript',
+                syntax: 'typescript',
                 jsx: true,
               },
               transform: {
@@ -60,6 +69,18 @@ module.exports = {
           },
         },
       },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'builtin:lightningcss-loader',
+            options: {
+              targets: 'defaults'
+            }
+          }
+        ],
+        type: 'css'
+      }
     ],
   },
   plugins: [
@@ -79,39 +100,39 @@ module.exports = {
       publicPath: '/'
     }),
     new ModuleFederationPlugin({
-      name: 'csv-analyzer',
+      name: 'csv_analyzer',
       filename: 'remoteEntry.js',
       exposes: {
         './App': './src/remote.tsx',
       },
       shared: {
-        react: { 
-          singleton: true, 
+        react: {
+          singleton: true,
           requiredVersion: '^18.2.0',
           eager: true
         },
-        'react-dom': { 
-          singleton: true, 
+        'react-dom': {
+          singleton: true,
           requiredVersion: '^18.2.0',
           eager: true
         },
-          '@mui/material': { 
-            singleton: false, 
-            requiredVersion: '^5.14.0',
-            eager: false
-          },
-          '@mui/system': { 
-            singleton: false, 
-            requiredVersion: '^5.14.0',
-            eager: false
-          },
-        '@emotion/react': { 
-          singleton: true, 
+        '@mui/material': {
+          singleton: true,
+          requiredVersion: '^5.14.0',
+          eager: false
+        },
+        '@mui/system': {
+          singleton: true,
+          requiredVersion: '^5.14.0',
+          eager: false
+        },
+        '@emotion/react': {
+          singleton: true,
           requiredVersion: '^11.11.1',
           eager: false
         },
-        '@emotion/styled': { 
-          singleton: true, 
+        '@emotion/styled': {
+          singleton: true,
           requiredVersion: '^11.11.0',
           eager: false
         }

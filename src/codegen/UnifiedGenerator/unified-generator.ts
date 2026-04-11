@@ -509,9 +509,9 @@ export async function generateAllFiles(
     Emit: { method: 'emit', returnTypeBase: 'EmitResult' }
   };
 
-  const capabilities: Array<{ method: string; config: any; returnTypeBase: string }> = [];
+  const capabilities: Array<{ method: string; config: any; returnTypeBase: string; stubBody: string }> = [];
   const lifecycleHookNames = new Set<string>();
-  const lifecycleHooks: Array<{ name: string }> = [];
+  const lifecycleHooks: Array<{ name: string; description: string; phase: string }> = [];
   let inputs: any[] = [];
   let outputs: any[] = [];
 
@@ -527,13 +527,15 @@ export async function generateAllFiles(
         capabilities.push({
           method: platformCapabilities[method].method,
           config: safeConfig,
-          returnTypeBase: platformCapabilities[method].returnTypeBase
+          returnTypeBase: platformCapabilities[method].returnTypeBase,
+          stubBody: '',
         });
       } else {
         capabilities.push({
           method,
           config: safeConfig,
-          returnTypeBase: method + 'Outputs'
+          returnTypeBase: method + 'Outputs',
+          stubBody: '',
         });
       }
       // Collect lifecycle hooks from capability config, deduplicated
@@ -543,11 +545,12 @@ export async function generateAllFiles(
         for (const phase of ['before', 'main', 'after', 'error']) {
           if (safeConfig.lifecycle[phase]) {
             for (const hookEntry of safeConfig.lifecycle[phase]) {
-              for (const hookName of Object.keys(hookEntry)) {
+              for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
                 // Skip if it's a base capability name OR already added
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
-                  lifecycleHooks.push({ name: hookName });
+                  const hookDescription = (hookConfig as any)?.description || '';
+                  lifecycleHooks.push({ name: hookName, description: hookDescription, phase });
                 }
               }
             }

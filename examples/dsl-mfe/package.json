@@ -21,7 +21,7 @@
     "ts-node": "^10.9.1",
     "concurrently": "^8.2.0",
     "@module-federation/enhanced-rspack": "^0.7.0"
-    },
+  },
   "devDependencies": {
     "@rspack/cli": "^0.5.0",
     "@rspack/core": "^0.5.0",
