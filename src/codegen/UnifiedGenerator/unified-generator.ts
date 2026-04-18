@@ -78,35 +78,14 @@ export const DEPENDENCY_VERSIONS = {
     emotionStyled: '^11.11.0',
   },
   
-  // Module Federation
-  moduleFederation: {
-    enhancedRspack: '^0.1.1',
-  },
-  
   // Build Tools
   buildTools: {
-    rspackCli: '^0.5.0',
-    rspackCore: '^0.5.0',
+    rspackCli: '^1.7.0',
+    rspackCore: '^1.7.0',
     typescript: '^5.3.3',
     tsNode: '^10.9.1',
     concurrently: '^8.2.0',
     serve: '^14.2.1',
-  },
-  
-  // Browser Polyfills (for rspack)
-  polyfills: {
-    buffer: '^6.0.3',
-    cryptoBrowserify: '^3.12.0',
-    streamBrowserify: '^3.0.0',
-    streamHttp: '^3.2.0',
-    httpsBrowserify: '^1.0.0',
-    pathBrowserify: '^1.0.1',
-    osBrowserify: '^0.3.0',
-    assert: '^2.1.0',
-    process: '^0.11.10',
-    events: '^3.3.0',
-    url: '^0.11.3',
-    util: '^0.12.5',
   },
 };
 

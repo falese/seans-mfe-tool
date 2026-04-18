@@ -42,7 +42,6 @@
 <%_ if (neededTransforms.includes('resolversComposition')) { _%>
     "@graphql-mesh/transform-resolvers-composition": "<%= dependencyVersions.meshTransforms.resolversComposition %>",
 <%_ } _%>
-    "@module-federation/enhanced-rspack": "<%= dependencyVersions.moduleFederation.enhancedRspack %>",
     "express": "<%= dependencyVersions.core.express %>",
     "graphql": "<%= dependencyVersions.core.graphql %>",
     "cors": "<%= dependencyVersions.core.cors %>",
@@ -69,19 +68,7 @@
     "serve": "<%= dependencyVersions.buildTools.serve %>",
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "path-browserify": "<%= dependencyVersions.polyfills.pathBrowserify %>",
-    "stream-browserify": "<%= dependencyVersions.polyfills.streamBrowserify %>",
-    "stream-http": "<%= dependencyVersions.polyfills.streamHttp %>",
-    "https-browserify": "<%= dependencyVersions.polyfills.httpsBrowserify %>",
-    "util": "<%= dependencyVersions.polyfills.util %>",
-    "url": "<%= dependencyVersions.polyfills.url %>",
-    "buffer": "<%= dependencyVersions.polyfills.buffer %>",
-    "crypto-browserify": "<%= dependencyVersions.polyfills.cryptoBrowserify %>",
-    "os-browserify": "<%= dependencyVersions.polyfills.osBrowserify %>",
-    "assert": "<%= dependencyVersions.polyfills.assert %>",
-    "process": "<%= dependencyVersions.polyfills.process %>",
-    "events": "<%= dependencyVersions.polyfills.events %>"
+    "supertest": "^6.3.3"
   },
   "engines": {
     "node": ">=18.0.0"
