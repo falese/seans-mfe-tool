@@ -34,11 +34,17 @@ describe('bin entries (issue #90)', () => {
     expect(pkg.oclif.plugins).toContain('@oclif/plugin-plugins')
   })
 
-  it('existing bin/seans-mfe-tool.js still runs', () => {
-    const result = spawnSync('node', ['bin/seans-mfe-tool.js', '--version'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-    })
-    expect(result.status).toBe(0)
+  it('bin/seans-mfe-tool.js is deleted (A7 cut-over complete)', () => {
+    expect(fs.existsSync(path.join(ROOT, 'bin/seans-mfe-tool.js'))).toBe(false)
+  })
+
+  it('package.json bin points to bin/run.js', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+    expect(pkg.bin['seans-mfe-tool']).toBe('./bin/run.js')
+  })
+
+  it('commander is absent from package.json dependencies', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+    expect(pkg.dependencies?.commander).toBeUndefined()
   })
 })

@@ -1,7 +1,7 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
-  "main": "bin/seans-mfe-tool.js",
+  "main": "bin/run.js",
   "scripts": {
     "build": "tsc && node scripts/copy-runtime-files.js",
     "build:watch": "tsc --watch",
@@ -11,7 +11,7 @@
     "test:ci": "jest --ci --coverage --reporters='default' --reporters='jest-junit'",
     "lint": "eslint src/**/*.{js,ts}",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
-    "dev": "node bin/seans-mfe-tool.js",
+    "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc --noEmit"
   },
@@ -27,13 +27,16 @@
   "license": "MIT",
   "description": "CLI tool for scaffolding Module Federation applications with React and MUI",
   "bin": {
-    "seans-mfe-tool": "./bin/seans-mfe-tool.js"
+    "seans-mfe-tool": "./bin/run.js"
   },
   "oclif": {
     "bin": "seans-mfe-tool",
     "dirname": "seans-mfe-tool",
     "commands": "./dist/commands",
-    "plugins": ["@oclif/plugin-help", "@oclif/plugin-plugins"]
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ]
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
@@ -45,7 +48,6 @@
     "@oclif/plugin-help": "^6.2.44",
     "@oclif/plugin-plugins": "^5.4.61",
     "chalk": "^4.1.2",
-    "commander": "^12.1.0",
     "diff": "^5.1.0",
     "ejs": "^3.1.10",
     "fs-extra": "^11.2.0",
