@@ -12,14 +12,15 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "allowJs": true,
+    "composite": true,
     "moduleResolution": "node",
-    "types": ["node", "jest"],
-    "paths": {
-      "@seans-mfe/contracts": ["./packages/contracts/src/index.ts"],
-      "@seans-mfe/contracts/*": ["./packages/contracts/src/*"]
-    }
+    "ignoreDeprecations": "6.0",
+    "typeRoots": [
+      "../../node_modules/@types",
+      "/opt/node22/lib/node_modules/ts-node/node_modules/@types"
+    ],
+    "types": ["node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/__tests__/**", "examples"]
+  "exclude": ["node_modules", "dist"]
 }

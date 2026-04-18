@@ -4,7 +4,7 @@ import * as path from 'path';
 import chalk = require('chalk');
 import { createMinimalManifest, writeManifest, generateEndpoints } from '../../dsl/parser';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { BusinessError, SystemError } from '../../runtime/errors';
+import { BusinessError, SystemError } from '@seans-mfe/contracts';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
 import type { RemoteInitOptions, DSLManifest } from '../../dsl/schema';
 

@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { execSync } from 'child_process';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { SystemError, NetworkError } from '../../runtime/errors';
+import { SystemError, NetworkError } from '@seans-mfe/contracts';
 import { writeMeshConfig } from './_shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from './_shared';

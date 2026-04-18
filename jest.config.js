@@ -144,6 +144,8 @@ module.exports = {
 
   // Handle module mocks
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
+    '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1'
   }
 };

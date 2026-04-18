@@ -3,7 +3,7 @@ import chalk = require('chalk');
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError } from '../../runtime/errors';
+import { ValidationError } from '@seans-mfe/contracts';
 import { extractMeshConfig } from './_shared';
 import type { BFFCommandOptions } from './_shared';
 import type { BffValidateResult, BffValidationIssue } from '../../oclif/results';

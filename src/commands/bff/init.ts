@@ -5,7 +5,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { processTemplates } from '../../utils/templateProcessor';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { SystemError, ValidationError } from '../../runtime/errors';
+import { SystemError, ValidationError } from '@seans-mfe/contracts';
 import { addMeshDependencies } from './_shared';
 import type { BFFCommandOptions, TemplateSource, TemplateVars } from './_shared';
 import type { BffInitResult, PlannedChange } from '../../oclif/results';

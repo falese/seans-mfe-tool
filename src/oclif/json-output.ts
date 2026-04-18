@@ -10,7 +10,7 @@
  */
 
 import chalk from 'chalk';
-import { SystemError } from '../runtime/errors';
+import { SystemError } from '@seans-mfe/contracts';
 
 // ---------------------------------------------------------------------------
 // Chalk / color suppression

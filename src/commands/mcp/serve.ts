@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { startMcpServer } from '../../mcp/server';
-import { SystemError } from '../../runtime/errors';
+import { SystemError } from '@seans-mfe/contracts';
 
 export default class McpServe extends BaseCommand<void> {
   static description = 'Start MCP server over stdio (child-process per tool call)'
