@@ -29,12 +29,21 @@
   "bin": {
     "seans-mfe-tool": "./bin/seans-mfe-tool.js"
   },
+  "oclif": {
+    "bin": "seans-mfe-tool",
+    "dirname": "seans-mfe-tool",
+    "commands": "./dist/commands",
+    "plugins": ["@oclif/plugin-help", "@oclif/plugin-plugins"]
+  },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "@babel/generator": "^7.22.1",
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
     "@babel/types": "^7.22.1",
+    "@oclif/core": "^4.10.5",
+    "@oclif/plugin-help": "^6.2.44",
+    "@oclif/plugin-plugins": "^5.4.61",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "diff": "^5.1.0",
