@@ -33,10 +33,15 @@
     "bin": "seans-mfe-tool",
     "dirname": "seans-mfe-tool",
     "commands": "./dist/commands",
+    "scope": "@seans-mfe",
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
+    "topics": {
+      "daemon": { "description": "Control-plane daemon commands (requires @falese/daemon-plugin)" },
+      "coder": { "description": "AI-assisted coding commands (requires @falese/coder-plugin)" }
+    },
     "hooks": {
       "init": "./dist/hooks/init",
       "prerun": "./dist/hooks/prerun",
