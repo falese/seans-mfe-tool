@@ -242,6 +242,8 @@ See [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md) for the full integration spec
 and [`examples/plugin-skeleton/`](./examples/plugin-skeleton/) for a working
 starter plugin you can clone and rename.
 
+For the long-term roadmap toward a unified monorepo, see [MERGE-PLAN.md](./MERGE-PLAN.md).
+
 ---
 
 ## MCP server
