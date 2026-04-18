@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/remote:generate.json",
+  "title": "remote:generate",
+  "description": "Input/output contract for seans-mfe-tool remote:generate",
+  "input": {
+    "type": "object",
+    "properties": {
+      "dry-run": {
+        "type": "boolean",
+        "default": false
+      },
+      "force": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "generated",
+      "skipped",
+      "errors",
+      "dryRun"
+    ],
+    "properties": {
+      "generated": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "skipped": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "plannedChanges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "op",
+            "target"
+          ],
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "create",
+                "overwrite",
+                "skip",
+                "spawn"
+              ]
+            },
+            "target": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
