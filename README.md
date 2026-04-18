@@ -236,6 +236,12 @@ Reserved topics (available once the plugin is installed):
 - `daemon:*` — control-plane daemon commands (`@falese/daemon-plugin`)
 - `coder:*` — AI-assisted coding commands (`@falese/coder-plugin`)
 
+### Building a plugin
+
+See [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md) for the full integration spec
+and [`examples/plugin-skeleton/`](./examples/plugin-skeleton/) for a working
+starter plugin you can clone and rename.
+
 ---
 
 ## Working Example
