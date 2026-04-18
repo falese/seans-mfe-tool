@@ -146,6 +146,8 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
-    '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1'
+    '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
+    '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
+    '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1'
   }
 };

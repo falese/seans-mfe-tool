@@ -1,0 +1,34 @@
+{
+  "name": "@seans-mfe/oclif-base",
+  "version": "0.1.0",
+  "description": "BaseCommand, JSON output helpers, and envelope glue for seans-mfe-tool and its plugins",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'No tests in @seans-mfe/oclif-base yet' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@oclif/core": "^4"
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@oclif/core": "^4.10.5",
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}
