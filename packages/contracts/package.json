@@ -31,6 +31,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "test": "echo 'No tests in @seans-mfe/contracts yet' && exit 0",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
