@@ -1,9 +1,11 @@
+import { Args, Flags } from '@oclif/core';
 import { execSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
 import * as ejs from 'ejs';
+import { BaseCommand } from '../oclif/BaseCommand';
 
 interface DeployOptions {
   name: string;
@@ -674,3 +676,71 @@ export {
   kubernetesProductionDeploy,
   waitForContainer
 };
+
+export default class Deploy extends BaseCommand<void> {
+  static description = 'Deploy an application'
+
+  static args = {
+    name: Args.string({ description: 'Application name', required: true }),
+  }
+
+  static flags = {
+    ...BaseCommand.baseFlags,
+    type: Flags.string({
+      char: 't',
+      description: 'Application type (shell, remote, or api)',
+      options: ['shell', 'remote', 'api'],
+      required: true,
+    }),
+    env: Flags.string({
+      char: 'e',
+      description: 'Deployment environment (development or production)',
+      default: 'development',
+    }),
+    port: Flags.string({
+      char: 'p',
+      description: 'Port number for development deployment',
+      default: '8080',
+    }),
+    registry: Flags.string({
+      char: 'r',
+      description: 'Docker registry URL for production deployment',
+    }),
+    mode: Flags.string({
+      description: 'Production deployment mode (docker-compose or kubernetes)',
+      default: 'docker-compose',
+    }),
+    namespace: Flags.string({
+      char: 'n',
+      description: 'Kubernetes namespace',
+      default: 'default',
+    }),
+    domain: Flags.string({
+      char: 'd',
+      description: 'Domain name for production deployment',
+    }),
+    tag: Flags.string({
+      description: 'Docker image tag',
+      default: 'latest',
+    }),
+    memory: Flags.string({
+      char: 'm',
+      description: 'Memory limit for API containers',
+      default: '256Mi',
+    }),
+    cpu: Flags.string({
+      char: 'c',
+      description: 'CPU limit for API containers',
+      default: '0.5',
+    }),
+    replicas: Flags.string({
+      description: 'Number of API replicas',
+      default: '2',
+    }),
+  }
+
+  protected async runCommand(): Promise<void> {
+    const { args, flags } = await this.parse(Deploy)
+    await deployCommand({ name: args.name, ...flags } as any)
+  }
+}
