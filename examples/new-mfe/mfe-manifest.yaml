@@ -1,0 +1,412 @@
+name: new-mfe
+version: 1.0.0
+type: remote
+language: typescript
+description: ""
+capabilities:
+  # ==========================================================================
+  # PLATFORM CAPABILITIES
+  # ==========================================================================
+  - Load:
+      type: platform
+      description: Initialize MFE runtime, load dependencies, and prepare for execution
+      handler: initialize
+      inputs:
+        - name: config
+          type: object
+          required: false
+          description: Optional configuration for initialization
+      outputs:
+        - name: ready
+          type: boolean
+          description: Whether MFE successfully initialized
+        - name: loadTime
+          type: number
+          description: Time taken to load in milliseconds
+      lifecycle:
+        before:
+          - validateConfig:
+              handler: checkConfig
+              description: Validate provided configuration
+          - checkDependencies:
+              handler: verifyDeps
+              description: Ensure all dependencies are available
+        main:
+          - initializeRuntime:
+              handler: setupRuntime
+              description: Initialize the MFE runtime environment
+        after:
+          - emitReadyEvent:
+              handler: notifyReady
+              description: Signal that MFE is ready for use
+        error:
+          - cleanup:
+              handler: rollbackInit
+              description: Clean up partial initialization on failure
+
+  - Render:
+      type: platform
+      description: Render UI component or return data representation
+      handler: renderComponent
+      inputs:
+        - name: container
+          type: element
+          required: false
+          description: DOM container for UI rendering
+        - name: props
+          type: object
+          required: false
+          description: Properties for rendering
+      outputs:
+        - name: rendered
+          type: component | object
+          description: React component or JSON data
+      lifecycle:
+        before:
+          - validateProps:
+              handler: checkProps
+              description: Validate rendering properties
+          - checkAuthorization:
+              handler: verifyAccess
+              description: Verify user has permission to render
+        main:
+          - performRender:
+              handler: executeRender
+              description: Execute the render
+        after:
+          - attachEventHandlers:
+              handler: bindEvents
+              description: Attach event handlers
+        error:
+          - renderErrorBoundary:
+              handler: showError
+              description: Display error state
+
+  - Refresh:
+      type: platform
+      description: Reload MFE data or re-render with fresh state
+      handler: refreshState
+      inputs:
+        - name: full
+          type: boolean
+          required: false
+          default: false
+          description: Whether to perform full reload or incremental update
+      outputs:
+        - name: refreshed
+          type: boolean
+          description: Whether refresh succeeded
+        - name: timestamp
+          type: datetime
+          description: When refresh completed
+      lifecycle:
+        before:
+          - checkIfDirty:
+              handler: isDirty
+              description: Check if refresh is needed
+        main:
+          - fetchFreshData:
+              handler: loadData
+              description: Fetch updated data from sources
+          - rerender:
+              handler: updateView
+              description: Update UI or data representation
+        after:
+          - notifyParent:
+              handler: emitRefresh
+              description: Notify orchestrator of refresh
+        error:
+          - useStaleData:
+              handler: fallbackToCache
+              description: Fall back to cached data on failure
+
+  - AuthorizeAccess:
+      type: platform
+      description: Validate JWT token and determine user permissions for MFE access
+      handler: checkAuthorization
+      inputs:
+        - name: token
+          type: jwt
+          required: true
+          description: JWT token to validate
+        - name: context
+          type: object
+          required: false
+          description: Additional context for authorization decision
+      outputs:
+        - name: authorized
+          type: boolean
+          description: Whether access is granted
+        - name: permissions
+          type: array
+          description: List of granted permissions
+      lifecycle:
+        before:
+          - validateTokenFormat:
+              handler: checkFormat
+              description: Validate JWT structure
+        main:
+          - verifySignature:
+              handler: verifyJWT
+              description: Verify JWT signature
+          - checkPermissions:
+              handler: evaluatePermissions
+              description: Check if token has required permissions
+        after:
+          - cacheResult:
+              handler: cacheAuthResult
+              description: Cache authorization result for performance
+        error:
+          - denyAccess:
+              handler: returnUnauthorized
+              description: Return 401/403 response
+
+  - Health:
+      type: platform
+      description: Report MFE health status and operational metrics
+      handler: checkHealth
+      outputs:
+        - name: status
+          type: enum
+          values: [healthy, degraded, unhealthy]
+          description: Overall health status
+        - name: details
+          type: object
+          description: Detailed health information
+        - name: timestamp
+          type: datetime
+          description: When health check was performed
+      lifecycle:
+        main:
+          - checkDependencies:
+              handler: verifyDependencies
+              description: Check if dependencies are available
+          - checkResources:
+              handler: verifyResources
+              description: Check resource availability
+        error:
+          - reportUnhealthy:
+              handler: returnUnhealthy
+              description: Report unhealthy status
+
+  - Describe:
+      type: platform
+      description: Return full DSL manifest and runtime information
+      handler: describeSelf
+      outputs:
+        - name: dsl
+          type: object
+          description: Complete DSL document
+        - name: runtime
+          type: object
+          description: Runtime metadata (uptime, version, etc)
+      lifecycle:
+        main:
+          - loadDSL:
+              handler: fetchDSL
+              description: Load DSL manifest
+          - gatherRuntimeInfo:
+              handler: collectRuntimeData
+              description: Gather runtime metrics and info
+
+  - Schema:
+      type: platform
+      description: Return GraphQL schema for data and capability introspection
+      handler: introspectSchema
+      outputs:
+        - name: schema
+          type: string
+          format: graphql-sdl
+          description: GraphQL schema in SDL format
+      lifecycle:
+        main:
+          - generateSchema:
+              handler: buildSchema
+              description: Generate or retrieve GraphQL schema
+
+  - Query:
+      type: platform
+      description: Execute GraphQL query against MFE data or capabilities
+      handler: executeQuery
+      inputs:
+        - name: token
+          type: jwt
+          required: true
+          description: JWT for authorization
+        - name: query
+          type: string
+          format: graphql-query
+          required: true
+          description: GraphQL query string
+        - name: variables
+          type: object
+          required: false
+          description: Query variables
+      outputs:
+        - name: data
+          type: object
+          description: Query results
+        - name: errors
+          type: array
+          description: Any errors encountered
+      lifecycle:
+        before:
+          - authorizeAccess:
+              handler: checkAuth
+              description: Verify authorization
+          - validateQuery:
+              handler: parseAndValidate
+              description: Validate GraphQL query syntax
+        main:
+          - executeGraphQL:
+              handler: runQuery
+              description: Execute query against schema
+        after:
+          - cacheIfApplicable:
+              handler: cacheResult
+              description: Cache results if appropriate
+        error:
+          - emitErrorEvent:
+              handler: emitError
+              description: Emit error event
+              mandatory: true
+              contained: true
+          - cleanup:
+              handler: formatGraphQLError
+              description: Format errors per GraphQL spec
+              mandatory: true
+              contained: true
+
+  - Emit:
+      type: platform
+      description: Generic event and telemetry emission
+      handler: emitEvent
+      inputs:
+        - name: eventType
+          type: enum
+          values: [error, metric, trace, log, custom]
+          required: true
+          description: Type of event being emitted
+        - name: eventData
+          type: object
+          required: true
+          description: Event payload
+        - name: severity
+          type: enum
+          values: [debug, info, warn, error, critical]
+          required: false
+          default: info
+          description: Event severity level
+      outputs:
+        - name: emitted
+          type: boolean
+          description: Whether event was successfully emitted
+        - name: eventId
+          type: string
+          description: Unique identifier for emitted event
+      lifecycle:
+        before:
+          - validateEvent:
+              handler: checkEventFormat
+              description: Validate event structure
+        main:
+          - sendToTelemetry:
+              handler: dispatchEvent
+              description: Send event to telemetry backend
+        error:
+          - cleanup:
+              handler: logLocallyAsBackup
+              description: Log event locally as backup
+              mandatory: true
+              contained: true
+
+  - UpdateControlPlaneState:
+      type: platform
+      description: Push domain state to the registry for re-evaluation of which MFE to show next
+      handler: pushControlPlaneState
+      inputs:
+        - name: state
+          type: object
+          required: true
+          description: Domain state to push to the registry
+        - name: token
+          type: jwt
+          required: true
+          description: JWT for authorization
+      outputs:
+        - name: accepted
+          type: boolean
+          description: Whether the registry accepted the state update
+        - name: nextMfe
+          type: object
+          description: The MFE the registry resolved to after re-evaluation
+      lifecycle:
+        before:
+          - authorizeAccess:
+              handler: checkAuth
+              description: Verify authorization before pushing state
+        main:
+          - pushState:
+              handler: sendStateToRegistry
+              description: Send state update to the registry via WebSocket or GraphQL
+        after:
+          - emitStateChange:
+              handler: notifyStateChanged
+              description: Emit telemetry event for the state change
+        error:
+          - emitError:
+              handler: emitStateError
+              description: Emit error event on failure
+              mandatory: true
+              contained: true
+
+  # ==========================================================================
+  # DOMAIN CAPABILITIES
+  # ==========================================================================
+  - UserProfile:
+      type: domain
+      description: View and edit the current user's profile information
+      handler: renderUserProfile
+      inputs:
+        - name: userId
+          type: string
+          required: true
+          description: ID of the user whose profile to display
+        - name: editable
+          type: boolean
+          required: false
+          default: false
+          description: Whether to render in edit mode
+      outputs:
+        - name: profile
+          type: object
+          description: Rendered profile component or profile data
+      lifecycle:
+        before:
+          - authorizeAccess:
+              handler: checkProfileAccess
+              description: Verify user can view this profile
+        main:
+          - fetchProfile:
+              handler: loadUserProfile
+              description: Load profile data from UserAPI
+          - renderProfile:
+              handler: doRenderProfile
+              description: Render profile view or edit form
+        after:
+          - emitViewEvent:
+              handler: trackProfileView
+              description: Emit profile-viewed telemetry
+        error:
+          - showProfileError:
+              handler: renderProfileError
+              description: Display error state
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  design-system:
+    "@mui/material": ^5.14.0
+endpoint: http://localhost:3001
+remoteEntry: http://localhost:3001/remoteEntry.js
+discovery: http://localhost:3001/.well-known/mfe-manifest.yaml
