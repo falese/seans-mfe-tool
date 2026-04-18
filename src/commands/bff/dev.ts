@@ -1,26 +1,28 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
-import { spawn, ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { writeMeshConfig } from './_shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from './_shared';
+import type { BffDevResult } from '../../oclif/results';
 
-export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<void> {
+export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<BffDevResult> {
   try {
     console.log(chalk.blue('Starting BFF development server...'));
 
     const { meshConfig } = await bffValidateCommand(options);
     const targetDir = options.cwd || process.cwd();
+    const meshConfigPath = `${targetDir}/.meshrc.yaml`;
 
     await writeMeshConfig(meshConfig, targetDir);
 
     console.log(chalk.blue('\nStarting mesh dev...'));
 
-    const meshDev: ChildProcess = spawn('npx', ['mesh', 'dev'], {
+    const meshDev = spawn('npx', ['mesh', 'dev'], {
       cwd: targetDir,
       stdio: 'inherit',
-      shell: true
+      shell: true,
     });
 
     meshDev.on('error', (error: Error) => {
@@ -35,6 +37,8 @@ export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<vo
 
     process.on('SIGINT', () => { meshDev.kill('SIGINT'); });
 
+    return { port: options.port || 4000, meshConfigPath };
+
   } catch (error) {
     console.error(chalk.red('\n✗ BFF dev failed:'));
     console.error(chalk.red((error as Error).message));
@@ -42,12 +46,8 @@ export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<vo
   }
 }
 
-export default class BffDev extends BaseCommand<void> {
+export default class BffDev extends BaseCommand<BffDevResult> {
   static description = 'Start BFF development server with hot reload'
-
-  static examples = [
-    'Starts GraphQL Mesh in development mode with hot reload.\nChanges to mfe-manifest.yaml data: section will be reflected immediately.',
-  ]
 
   static flags = {
     ...BaseCommand.baseFlags,
@@ -58,8 +58,8 @@ export default class BffDev extends BaseCommand<void> {
     }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<BffDevResult> {
     const { flags } = await this.parse(BffDev)
-    await bffDevCommand({ manifest: flags.manifest })
+    return bffDevCommand({ manifest: flags.manifest })
   }
 }
