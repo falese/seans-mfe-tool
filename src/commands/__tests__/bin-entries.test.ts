@@ -29,7 +29,10 @@ describe('bin entries (issue #90)', () => {
     expect(pkg.oclif).toBeDefined()
     expect(pkg.oclif.bin).toBe('seans-mfe-tool')
     expect(pkg.oclif.dirname).toBe('seans-mfe-tool')
-    expect(pkg.oclif.commands).toBe('./dist/commands')
+    // commands may be a string path or an object with strategy/target/globPatterns (A10)
+    const commands = pkg.oclif.commands
+    const target = typeof commands === 'string' ? commands : commands.target
+    expect(target).toBe('./dist/commands')
     expect(pkg.oclif.plugins).toContain('@oclif/plugin-help')
     expect(pkg.oclif.plugins).toContain('@oclif/plugin-plugins')
   })

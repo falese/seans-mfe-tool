@@ -150,6 +150,19 @@ The code generator reads this and produces language-appropriate scaffolding. In 
 
 ## CLI Commands
 
+### Local development
+
+```bash
+# Bun entry — no transpile, fastest feedback loop
+bun bin/dev.ts <cmd> [args]
+
+# Node entry (uses compiled dist/)
+npm run dev -- <cmd> [args]
+
+# Installed globally
+seans-mfe-tool <cmd> [args]
+```
+
 ### Initialize a new MFE project
 
 ```bash
@@ -157,28 +170,31 @@ seans-mfe-tool remote:init <name> [options]
 
 Options:
   --port <port>           Port number (default: 3001)
-  --template <template>   Project template
+  --template <template>   Path to DSL template file
   --skip-install          Skip npm install
+  --force                 Overwrite existing directory
 ```
 
 ### Generate code from a manifest
 
 ```bash
-seans-mfe-tool remote:generate <manifest-path> [options]
+seans-mfe-tool remote:generate [options]
 
 Options:
   --dry-run               Preview generated files without writing
   --force                 Overwrite existing files
-  --capability <name>     Generate a specific capability only
+
+# Generate a single capability
+seans-mfe-tool remote:generate:capability <name> [--dry-run] [--force]
 ```
 
 ### Create a REST API from an OpenAPI spec
 
 ```bash
-seans-mfe-tool create-api <name> [options]
+seans-mfe-tool api <name> [options]
 
 Options:
-  --spec <path>           OpenAPI specification file
+  --spec <path>           OpenAPI specification file (default: openapi.yaml)
   --database <type>       mongodb or sqlite (default: sqlite)
   --port <port>           Port number (default: 3001)
 ```
@@ -186,14 +202,39 @@ Options:
 ### Build a Backend-for-Frontend (GraphQL Mesh)
 
 ```bash
-seans-mfe-tool bff <name> [options]
+seans-mfe-tool bff:init [name] [--port <port>] [--specs <files...>]
+seans-mfe-tool bff:build [--manifest <path>]
+seans-mfe-tool bff:dev   [--manifest <path>]
+seans-mfe-tool bff:validate [--manifest <path>]
 ```
 
 ### Deploy / package
 
 ```bash
-seans-mfe-tool deploy <name> [options]
+seans-mfe-tool deploy <name> --type <shell|remote|api> [options]
 ```
+
+### Plugin install
+
+Extend the CLI with community and first-party plugins scoped to `@seans-mfe`:
+
+```bash
+# Install a plugin (shortname — resolves via @seans-mfe scope)
+seans-mfe-tool plugins install daemon
+
+# Install by full package name
+seans-mfe-tool plugins install @falese/daemon-plugin
+
+# List installed plugins
+seans-mfe-tool plugins
+
+# Uninstall
+seans-mfe-tool plugins uninstall daemon
+```
+
+Reserved topics (available once the plugin is installed):
+- `daemon:*` — control-plane daemon commands (`@falese/daemon-plugin`)
+- `coder:*` — AI-assisted coding commands (`@falese/coder-plugin`)
 
 ---
 

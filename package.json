@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "bin/run.js",
   "scripts": {
-    "build": "tsc && node scripts/copy-runtime-files.js",
+    "build": "tsc && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -29,18 +29,35 @@
   "bin": {
     "seans-mfe-tool": "./bin/run.js"
   },
+  "files": [
+    "bin/run.js",
+    "dist",
+    "oclif.manifest.json"
+  ],
   "oclif": {
     "bin": "seans-mfe-tool",
     "dirname": "seans-mfe-tool",
-    "commands": "./dist/commands",
+    "commands": {
+      "strategy": "pattern",
+      "target": "./dist/commands",
+      "globPatterns": [
+        "**/*.+(js|cjs|mjs)",
+        "!**/*.+(test.js|spec.js)",
+        "!**/_*.+(js|cjs|mjs)"
+      ]
+    },
     "scope": "@seans-mfe",
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
     "topics": {
-      "daemon": { "description": "Control-plane daemon commands (requires @falese/daemon-plugin)" },
-      "coder": { "description": "AI-assisted coding commands (requires @falese/coder-plugin)" }
+      "daemon": {
+        "description": "Control-plane daemon commands (requires @falese/daemon-plugin)"
+      },
+      "coder": {
+        "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
+      }
     },
     "hooks": {
       "init": "./dist/hooks/init",
@@ -83,6 +100,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "jest-environment-node": "^29.7.0",
     "nodemon": "^3.1.7",
+    "oclif": "^4.23.0",
     "prettier": "^3.3.3",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
