@@ -77,7 +77,13 @@ Closes #$ISSUE
 
 ## Safety rails — non-negotiable
 
-- Do not edit files listed under **Files that require coordination** in `CLAUDE.md` unless this issue explicitly owns them.
+- Do not edit the following files unless this issue explicitly owns them (these are touched by multiple in-flight issues — check for open PRs first):
+  - `package.json` `oclif` section — modified by A1, A7, A8, A9, A10.
+  - `src/oclif/BaseCommand.ts` — modified by A2, B2, then moved in C3.
+  - `src/oclif/envelope.ts` — created in B1, moved in C1.
+  - `src/commands/**/*.ts` — B3, B4, B8 touch all of them.
+  - `schemas/` — generated only; never hand-edit.
+  - `pnpm-workspace.yaml`, `turbo.json` — only C1, C3, C6 touch these.
 - Do not skip hooks (`--no-verify`, `--no-gpg-sign`).
 - Do not `git push --force` to `main`, ever.
 - Do not add dependencies beyond what the issue enumerates. If a dep is required and not listed, stop and ask the user.

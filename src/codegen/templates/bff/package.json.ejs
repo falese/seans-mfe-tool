@@ -5,7 +5,8 @@
   "main": "server.ts",
   "type": "commonjs",
   "scripts": {
-    "start": "concurrently \"rspack serve\" \"npm run bff:dev\"",
+    "dev": "concurrently \"rspack serve\" \"npm run bff:dev\"",
+    "start": "npm run dev",
     "build": "rspack build && npm run bff:build",
     "serve": "serve dist -p <%= port %>",
     "bff:dev": "ts-node server.ts",
@@ -38,7 +39,6 @@
     <% } %>
     "@graphql-mesh/transform-naming-convention": "<%= dependencyVersions.meshTransforms.namingConvention %>",
     "@graphql-mesh/transform-resolvers-composition": "<%= dependencyVersions.meshTransforms.resolversComposition %>",
-    "@module-federation/enhanced-rspack": "<%= dependencyVersions.moduleFederation.enhancedRspack %>",
     "cors": "<%= dependencyVersions.core.cors %>",
     "express": "<%= dependencyVersions.core.express %>",
     "graphql": "<%= dependencyVersions.core.graphql %>",
@@ -61,19 +61,7 @@
     "supertest": "^6.3.3",
     "ts-node": "<%= dependencyVersions.buildTools.tsNode %>",
     "typescript": "<%= dependencyVersions.buildTools.typescript %>",
-    "serve": "<%= dependencyVersions.buildTools.serve %>",
-    "buffer": "<%= dependencyVersions.polyfills.buffer %>",
-    "crypto-browserify": "<%= dependencyVersions.polyfills.cryptoBrowserify %>",
-    "stream-browserify": "<%= dependencyVersions.polyfills.streamBrowserify %>",
-    "stream-http": "<%= dependencyVersions.polyfills.streamHttp %>",
-    "https-browserify": "<%= dependencyVersions.polyfills.httpsBrowserify %>",
-    "path-browserify": "<%= dependencyVersions.polyfills.pathBrowserify %>",
-    "os-browserify": "<%= dependencyVersions.polyfills.osBrowserify %>",
-    "assert": "<%= dependencyVersions.polyfills.assert %>",
-    "process": "<%= dependencyVersions.polyfills.process %>",
-    "events": "<%= dependencyVersions.polyfills.events %>",
-    "url": "<%= dependencyVersions.polyfills.url %>",
-    "util": "<%= dependencyVersions.polyfills.util %>"
+    "serve": "<%= dependencyVersions.buildTools.serve %>"
   },
   "engines": {
     "node": ">=18.0.0"

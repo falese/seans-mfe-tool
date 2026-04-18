@@ -1,9 +1,9 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
-  "main": "bin/seans-mfe-tool.js",
+  "main": "bin/run.js",
   "scripts": {
-    "build": "tsc && node scripts/copy-runtime-files.js",
+    "build": "tsc && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -11,7 +11,7 @@
     "test:ci": "jest --ci --coverage --reporters='default' --reporters='jest-junit'",
     "lint": "eslint src/**/*.{js,ts}",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
-    "dev": "node bin/seans-mfe-tool.js",
+    "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc --noEmit"
   },
@@ -27,7 +27,44 @@
   "license": "MIT",
   "description": "CLI tool for scaffolding Module Federation applications with React and MUI",
   "bin": {
-    "seans-mfe-tool": "./bin/seans-mfe-tool.js"
+    "seans-mfe-tool": "./bin/run.js"
+  },
+  "files": [
+    "bin/run.js",
+    "dist",
+    "oclif.manifest.json"
+  ],
+  "oclif": {
+    "bin": "seans-mfe-tool",
+    "dirname": "seans-mfe-tool",
+    "commands": {
+      "strategy": "pattern",
+      "target": "./dist/commands",
+      "globPatterns": [
+        "**/*.+(js|cjs|mjs)",
+        "!**/*.+(test.js|spec.js)",
+        "!**/_*.+(js|cjs|mjs)"
+      ]
+    },
+    "scope": "@seans-mfe",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topics": {
+      "daemon": {
+        "description": "Control-plane daemon commands (requires @falese/daemon-plugin)"
+      },
+      "coder": {
+        "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
+      }
+    },
+    "hooks": {
+      "init": "./dist/hooks/init",
+      "prerun": "./dist/hooks/prerun",
+      "postrun": "./dist/hooks/postrun",
+      "command_not_found": "./dist/hooks/command-not-found"
+    }
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
@@ -35,8 +72,10 @@
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
     "@babel/types": "^7.22.1",
+    "@oclif/core": "^4.10.5",
+    "@oclif/plugin-help": "^6.2.44",
+    "@oclif/plugin-plugins": "^5.4.61",
     "chalk": "^4.1.2",
-    "commander": "^12.1.0",
     "diff": "^5.1.0",
     "ejs": "^3.1.10",
     "fs-extra": "^11.2.0",
@@ -61,6 +100,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "jest-environment-node": "^29.7.0",
     "nodemon": "^3.1.7",
+    "oclif": "^4.23.0",
     "prettier": "^3.3.3",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
