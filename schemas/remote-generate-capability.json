@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/remote:generate:capability.json",
+  "title": "remote:generate:capability",
+  "description": "Input/output contract for seans-mfe-tool remote:generate:capability",
+  "input": {
+    "type": "object",
+    "required": [
+      "name"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Capability name"
+      },
+      "dry-run": {
+        "type": "boolean",
+        "default": false
+      },
+      "force": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "capabilityName",
+      "generated",
+      "skipped",
+      "errors",
+      "dryRun"
+    ],
+    "properties": {
+      "capabilityName": {
+        "type": "string"
+      },
+      "generated": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "skipped": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "plannedChanges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "op",
+            "target"
+          ],
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "create",
+                "overwrite",
+                "skip",
+                "spawn"
+              ]
+            },
+            "target": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

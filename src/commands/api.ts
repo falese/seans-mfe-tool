@@ -9,6 +9,8 @@ import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator
 import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
 import { generateJWTSecret } from '../utils/securityUtils';
 import { BaseCommand } from '../oclif/BaseCommand';
+import { ValidationError, NetworkError, SystemError } from '../runtime/errors';
+import type { ApiResult, PlannedChange } from '../oclif/results';
 
 interface ApiOptions {
   spec: string;
@@ -49,14 +51,17 @@ async function loadOASSpec(specPath: string): Promise<OpenAPISpec> {
     const localPath = path.resolve(process.cwd(), specPath);
     return await SwaggerParser.parse(localPath) as OpenAPISpec;
   } catch (error: any) {
-    throw new Error(`Failed to parse OpenAPI spec: ${error.message}`);
+    if (specPath.startsWith('http')) {
+      throw new NetworkError(`Failed to fetch OpenAPI spec: ${error.message}`, 0);
+    }
+    throw new SystemError(`Failed to parse OpenAPI spec: ${error.message}`, error);
   }
 }
 
 function validatePort(port: number | string): number {
   const n = typeof port === 'string' ? Number(port) : port;
   if (!Number.isInteger(n) || n < 1 || n > 65535) {
-    throw new Error('Invalid port');
+    throw new ValidationError('Invalid port number', 'port', 'range');
   }
   return n;
 }
@@ -517,7 +522,7 @@ module.exports = initializeDatabase;`;
 
 
 
-async function createApiCommand(name: string, options: ApiOptions): Promise<void> {
+async function createApiCommand(name: string, options: ApiOptions & { dryRun?: boolean }): Promise<ApiResult> {
   let tmpSpec: OpenAPISpec | null = null;
   try {
     console.log(chalk.blue(`Creating API "${name}"...`));
@@ -529,6 +534,19 @@ async function createApiCommand(name: string, options: ApiOptions): Promise<void
     const dbType = options.database?.toLowerCase() || 'sqlite';
     validateDatabaseType(dbType);
     const port = validatePort(options.port || 3001);
+
+    if (options.dryRun) {
+      const plannedChanges: PlannedChange[] = [
+        { op: 'create', target: name, detail: 'project directory' },
+        { op: 'create', target: `${name}/src/`, detail: 'Express + OpenAPI structure' },
+        { op: 'spawn', target: 'npm install', detail: `${name}/` },
+      ];
+      console.log(chalk.yellow('\n[DRY RUN] Would create:'));
+      for (const c of plannedChanges) {
+        console.log(`  ${c.op} ${c.target}${c.detail ? ` — ${c.detail}` : ''}`);
+      }
+      return { name, database: dbType, port, generatedFiles: [], dryRun: true, plannedChanges };
+    }
 
     console.log(chalk.blue('\nParsing OpenAPI specification...'));
     tmpSpec = await loadOASSpec(options.spec);
@@ -604,8 +622,13 @@ async function createApiCommand(name: string, options: ApiOptions): Promise<void
     // Success output
     logSuccessInfo(name, dbType, spec, options);
 
-    // Align with test harness expecting process.exit to be invoked
-    process.exit(1);
+    return {
+      name,
+      database: dbType,
+      port,
+      generatedFiles: [`${name}/src/`, `${name}/package.json`],
+      dryRun: false,
+    };
 
   } catch (error: any) {
     console.error(chalk.red('\nFailed to create API:'));
@@ -678,7 +701,7 @@ export {
   logSuccessInfo
 };
 
-export default class Api extends BaseCommand<void> {
+export default class Api extends BaseCommand<ApiResult> {
   static description = 'Create a new API from OpenAPI specification'
 
   static examples = [
@@ -708,10 +731,15 @@ export default class Api extends BaseCommand<void> {
       options: ['mongodb', 'mongo', 'sqlite', 'sql'],
       default: 'sqlite',
     }),
+    'dry-run': Flags.boolean({
+      char: 'D',
+      description: 'Preview changes without writing',
+      default: false,
+    }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<ApiResult> {
     const { args, flags } = await this.parse(Api)
-    await createApiCommand(args.name, flags)
+    return createApiCommand(args.name, { ...flags, dryRun: flags['dry-run'] })
   }
 }

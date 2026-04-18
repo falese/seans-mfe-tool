@@ -5,10 +5,12 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { processTemplates } from '../../utils/templateProcessor';
 import { BaseCommand } from '../../oclif/BaseCommand';
+import { SystemError, ValidationError } from '../../runtime/errors';
 import { addMeshDependencies } from './_shared';
 import type { BFFCommandOptions, TemplateSource, TemplateVars } from './_shared';
+import type { BffInitResult, PlannedChange } from '../../oclif/results';
 
-export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions = {}): Promise<void> {
+export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffInitResult> {
   try {
     const isAddToExisting = !name;
     const targetDir = isAddToExisting
@@ -19,7 +21,11 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log(chalk.blue('Adding BFF to existing project...'));
       const manifestPath = path.join(targetDir, 'mfe-manifest.yaml');
       if (!await fs.pathExists(manifestPath)) {
-        throw new Error('No mfe-manifest.yaml found. Run this command in an MFE project directory or provide a name for a new project.');
+        throw new ValidationError(
+          'No mfe-manifest.yaml found. Run this command in an MFE project directory or provide a name for a new project.',
+          'mfe-manifest.yaml',
+          'exists',
+        );
       }
     } else {
       console.log(chalk.blue(`Creating BFF project "${name}"...`));
@@ -28,7 +34,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
     const templateDir = path.resolve(__dirname, '..', '..', 'templates', 'bff');
 
     if (!await fs.pathExists(templateDir)) {
-      throw new Error(`BFF template directory not found: ${templateDir}`);
+      throw new SystemError(`BFF template directory not found: ${templateDir}`);
     }
 
     if (!isAddToExisting) {
@@ -121,6 +127,14 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
     console.log(chalk.blue(`${isAddToExisting ? '3' : '4'}. Run: npm run dev`));
     console.log(`\nGraphQL endpoint will be at: http://localhost:${port}/graphql`);
 
+    return {
+      name: name || path.basename(targetDir),
+      port,
+      sources: sources.map((s) => s.spec),
+      generatedFiles: ['server.ts', 'Dockerfile', 'docker-compose.yaml', 'specs/'],
+      dryRun: false,
+    };
+
   } catch (error) {
     console.error(chalk.red('\n✗ BFF init failed:'));
     console.error(chalk.red((error as Error).message));
@@ -128,7 +142,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
   }
 }
 
-export default class BffInit extends BaseCommand<void> {
+export default class BffInit extends BaseCommand<BffInitResult> {
   static description = 'Initialize a new BFF project or add BFF to existing project'
 
   static examples = [
@@ -162,15 +176,21 @@ export default class BffInit extends BaseCommand<void> {
       description: 'Project version',
       default: '1.0.0',
     }),
+    'dry-run': Flags.boolean({
+      char: 'd',
+      description: 'Preview changes without writing',
+      default: false,
+    }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<BffInitResult> {
     const { args, flags } = await this.parse(BffInit)
-    await bffInitCommand(args.name, {
+    return bffInitCommand(args.name, {
       port: flags.port ? parseInt(flags.port, 10) : 3000,
       specs: flags.specs,
       static: !flags['no-static'],
       version: flags['project-version'],
+      dryRun: flags['dry-run'],
     })
   }
 }

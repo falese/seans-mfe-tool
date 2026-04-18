@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/deploy.json",
+  "title": "deploy",
+  "description": "Input/output contract for seans-mfe-tool deploy",
+  "input": {
+    "type": "object",
+    "required": [
+      "name",
+      "type"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Application name"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "shell",
+          "remote",
+          "api"
+        ]
+      },
+      "env": {
+        "type": "string",
+        "enum": [
+          "development",
+          "production"
+        ],
+        "default": "development"
+      },
+      "port": {
+        "type": "string",
+        "default": "8080"
+      },
+      "registry": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "docker-compose",
+          "kubernetes"
+        ],
+        "default": "docker-compose"
+      },
+      "namespace": {
+        "type": "string",
+        "default": "default"
+      },
+      "domain": {
+        "type": "string"
+      },
+      "tag": {
+        "type": "string",
+        "default": "latest"
+      },
+      "memory": {
+        "type": "string",
+        "default": "256Mi"
+      },
+      "cpu": {
+        "type": "string",
+        "default": "0.5"
+      },
+      "replicas": {
+        "type": "string",
+        "default": "2"
+      },
+      "dry-run": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "appName",
+      "environment",
+      "ports",
+      "generatedFiles",
+      "dryRun"
+    ],
+    "properties": {
+      "appName": {
+        "type": "string"
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "development",
+          "production"
+        ]
+      },
+      "containerId": {
+        "type": "string"
+      },
+      "ports": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "generatedFiles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "mode": {
+        "type": "string"
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "plannedChanges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "op",
+            "target"
+          ],
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "create",
+                "overwrite",
+                "skip",
+                "spawn"
+              ]
+            },
+            "target": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

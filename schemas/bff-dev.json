@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/bff:dev.json",
+  "title": "bff:dev",
+  "description": "Input/output contract for seans-mfe-tool bff:dev",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "default": "mfe-manifest.yaml"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "port",
+      "meshConfigPath"
+    ],
+    "properties": {
+      "port": {
+        "type": "number"
+      },
+      "meshConfigPath": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

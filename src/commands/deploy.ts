@@ -6,6 +6,8 @@ import chalk from 'chalk';
 import * as os from 'os';
 import * as ejs from 'ejs';
 import { BaseCommand } from '../oclif/BaseCommand';
+import { ValidationError, BusinessError, SystemError, TimeoutError } from '../runtime/errors';
+import type { DeployResult, PlannedChange } from '../oclif/results';
 
 interface DeployOptions {
   name: string;
@@ -80,10 +82,12 @@ async function verifyProjectStructure(): Promise<void> {
   }
 
   if (missingFiles.length > 0) {
-    throw new Error(
+    throw new ValidationError(
       'Missing required files:\n' +
-      missingFiles.map(file => `  - ${file}`).join('\n') +
-      '\n\nPlease ensure all required files are present before deployment.'
+        missingFiles.map(file => `  - ${file}`).join('\n') +
+        '\n\nPlease ensure all required files are present before deployment.',
+      'projectStructure',
+      'requiredFiles',
     );
   }
 
@@ -100,7 +104,7 @@ async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   const dockerfileDest = path.join(tempDir, 'Dockerfile');
 
   if (!fs.existsSync(dockerfileSource)) {
-    throw new Error(`Docker template not found: ${dockerfileSource}`);
+    throw new SystemError(`Docker template not found: ${dockerfileSource}`);
   }
 
   await fs.copy(dockerfileSource, dockerfileDest);
@@ -111,7 +115,7 @@ async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   const nginxDest = path.join(tempDir, 'nginx.conf');
 
   if (!fs.existsSync(nginxSource)) {
-    throw new Error(`Nginx configuration not found: ${nginxSource}`);
+    throw new SystemError(`Nginx configuration not found: ${nginxSource}`);
   }
 
   await fs.copy(nginxSource, nginxDest);
@@ -226,22 +230,54 @@ async function waitForContainer(containerName: string, timeout: number = 30000):
     }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  throw new Error('Container failed to start within timeout');
+  throw new TimeoutError('Container failed to start within timeout', timeout, Date.now() - startTime);
 }
 
 // Main deployment command
-async function deployCommand(options: DeployOptions): Promise<void> {
+async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Promise<DeployResult> {
   try {
-    // Verify project structure
+    if (options.dryRun) {
+      const containerName = `${options.name}-${options.env === 'development' ? 'dev' : 'prod'}`;
+      const generatedFiles =
+        options.env === 'production'
+          ? options.mode === 'kubernetes' || options.mode === 'k8s'
+            ? ['k8s/deployment.yaml', 'k8s/secrets.yaml', 'k8s/configmap.yaml', 'k8s/hpa.yaml', 'k8s/kustomization.yaml', 'k8s/README.md']
+            : ['deploy/docker-compose.yml', 'deploy/Dockerfile', 'deploy/.env.production', 'deploy/README.md']
+          : [];
+      const plannedChanges: PlannedChange[] = [
+        { op: 'spawn', target: containerName, detail: `docker run (${options.type}) on port ${options.port || 8080}` },
+        ...generatedFiles.map((f): PlannedChange => ({ op: 'create', target: f })),
+      ];
+      console.log(chalk.yellow('\n[DRY RUN] Would deploy:'));
+      for (const c of plannedChanges) {
+        console.log(`  ${c.op} ${c.target}${c.detail ? ` — ${c.detail}` : ''}`);
+      }
+      return {
+        appName: options.name,
+        environment: (options.env === 'production' ? 'production' : 'development'),
+        ports: [Number(options.port) || 8080],
+        generatedFiles,
+        mode: options.mode || options.env,
+        dryRun: true,
+        plannedChanges,
+      };
+    }
+
     await verifyProjectStructure();
 
     if (options.env === 'development') {
       await developmentDeploy(options);
+      return {
+        appName: options.name,
+        environment: 'development',
+        ports: [Number(options.port) || 8080],
+        generatedFiles: [],
+        dryRun: false,
+      };
     } else if (options.env === 'production') {
-      // Not implemented yet - match test expectation
-      throw new Error('Production deployment not yet implemented');
+      throw new BusinessError('Production deployment not yet implemented', 'NOT_IMPLEMENTED');
     } else {
-      throw new Error(`Unknown environment: ${options.env}`);
+      throw new ValidationError(`Unknown environment: ${options.env}`, 'env', 'enum');
     }
   } catch (error: any) {
     console.error(chalk.red('\n✗ Deployment failed:'));
@@ -677,7 +713,7 @@ export {
   waitForContainer
 };
 
-export default class Deploy extends BaseCommand<void> {
+export default class Deploy extends BaseCommand<DeployResult> {
   static description = 'Deploy an application'
 
   static args = {
@@ -737,10 +773,15 @@ export default class Deploy extends BaseCommand<void> {
       description: 'Number of API replicas',
       default: '2',
     }),
+    'dry-run': Flags.boolean({
+      char: 'D',
+      description: 'Preview deployment without executing',
+      default: false,
+    }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<DeployResult> {
     const { args, flags } = await this.parse(Deploy)
-    await deployCommand({ name: args.name, ...flags } as any)
+    return deployCommand({ name: args.name, ...flags, dryRun: flags['dry-run'] } as any)
   }
 }

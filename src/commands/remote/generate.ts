@@ -4,9 +4,13 @@ import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
 import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
 import { BaseCommand } from '../../oclif/BaseCommand';
+import { ValidationError } from '../../runtime/errors';
+import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '../../dsl/schema';
 
-export async function remoteGenerateCommand(options: RemoteGenerateOptions = {}): Promise<void> {
+export async function remoteGenerateCommand(
+  options: RemoteGenerateOptions & { dryRun?: boolean } = {}
+): Promise<RemoteGenerateResult> {
   const cwd = process.cwd();
 
   try {
@@ -17,7 +21,11 @@ export async function remoteGenerateCommand(options: RemoteGenerateOptions = {})
     if (!result.valid || !result.manifest) {
       console.error(chalk.red('\n✗ Invalid manifest:'));
       console.error(formatErrorsForCLI(result.errors));
-      throw new Error('Manifest validation failed');
+      throw new ValidationError(
+        'Manifest validation failed',
+        'mfe-manifest.yaml',
+        'schema',
+      );
     }
 
     const manifest = result.manifest;
@@ -27,13 +35,17 @@ export async function remoteGenerateCommand(options: RemoteGenerateOptions = {})
     const allFiles = await generateAllFiles(manifest, cwd, { force: true });
 
     if (options.dryRun) {
+      const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
+        op: file.overwrite ? 'overwrite' : 'create',
+        target: path.relative(cwd, file.path),
+      }));
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
       for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);
         const status = file.overwrite ? '(overwrite)' : '(new)';
         console.log(`  ${relativePath} ${chalk.gray(status)}`);
       }
-      return;
+      return { generated: [], skipped: [], errors: [], dryRun: true, plannedChanges };
     }
 
     const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
@@ -60,19 +72,22 @@ export async function remoteGenerateCommand(options: RemoteGenerateOptions = {})
       }
     }
 
-    const totalGenerated = genResult.files.length;
-    const totalSkipped = genResult.skipped.length;
-    const totalErrors = genResult.errors.length;
-
     console.log(chalk.blue('\nSummary:'));
-    console.log(`  Generated: ${totalGenerated}`);
-    console.log(`  Skipped: ${totalSkipped}`);
-    if (totalErrors > 0) console.log(chalk.red(`  Errors: ${totalErrors}`));
+    console.log(`  Generated: ${genResult.files.length}`);
+    console.log(`  Skipped: ${genResult.skipped.length}`);
+    if (genResult.errors.length > 0) console.log(chalk.red(`  Errors: ${genResult.errors.length}`));
 
-    if (totalGenerated > 0) {
+    if (genResult.files.length > 0) {
       console.log(chalk.green('\n✓ Generation complete!'));
       console.log(chalk.blue('Run npm run dev to see your changes.'));
     }
+
+    return {
+      generated: genResult.files.map((f) => path.relative(cwd, f.path)),
+      skipped:   genResult.skipped.map((f) => path.relative(cwd, f)),
+      errors:    genResult.errors,
+      dryRun:    false,
+    };
 
   } catch (error) {
     console.error(chalk.red('\n✗ Generation failed:'));
@@ -81,7 +96,7 @@ export async function remoteGenerateCommand(options: RemoteGenerateOptions = {})
   }
 }
 
-export default class RemoteGenerate extends BaseCommand<void> {
+export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
   static description = 'Generate files from mfe-manifest.yaml capabilities'
 
   static examples = [
@@ -104,8 +119,8 @@ export default class RemoteGenerate extends BaseCommand<void> {
     }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<RemoteGenerateResult> {
     const { flags } = await this.parse(RemoteGenerate)
-    await remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force })
+    return remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force })
   }
 }

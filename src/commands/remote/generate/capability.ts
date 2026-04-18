@@ -4,12 +4,14 @@ import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '../../../dsl';
 import { generateAllFiles, writeGeneratedFiles } from '../../../codegen/UnifiedGenerator/unified-generator';
 import { BaseCommand } from '../../../oclif/BaseCommand';
+import { ValidationError } from '../../../runtime/errors';
+import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
 import type { RemoteGenerateOptions } from '../../../dsl/schema';
 
 export async function remoteGenerateCapabilityCommand(
   capabilityName: string,
-  options: RemoteGenerateOptions = {}
-): Promise<void> {
+  options: RemoteGenerateOptions & { dryRun?: boolean } = {}
+): Promise<RemoteGenerateCapabilityResult> {
   const cwd = process.cwd();
 
   try {
@@ -20,13 +22,16 @@ export async function remoteGenerateCapabilityCommand(
     if (!result.valid || !result.manifest) {
       console.error(chalk.red('\n✗ Invalid manifest:'));
       console.error(formatErrorsForCLI(result.errors));
-      throw new Error('Manifest validation failed');
+      throw new ValidationError(
+        'Manifest validation failed',
+        'mfe-manifest.yaml',
+        'schema',
+      );
     }
 
     const manifest = result.manifest;
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
 
-    // Filter capabilities to the named one only
     const matchingCapabilities = (manifest.capabilities ?? []).filter(
       (entry) => Object.keys(entry).some(
         (key) => key.toLowerCase() === capabilityName.toLowerCase()
@@ -37,8 +42,10 @@ export async function remoteGenerateCapabilityCommand(
       const available = (manifest.capabilities ?? [])
         .flatMap((entry) => Object.keys(entry))
         .join(', ') || '(none)';
-      throw new Error(
-        `Capability "${capabilityName}" not found in manifest.\nAvailable: ${available}`
+      throw new ValidationError(
+        `Capability "${capabilityName}" not found in manifest.\nAvailable: ${available}`,
+        'capabilities',
+        'exists',
       );
     }
 
@@ -48,13 +55,17 @@ export async function remoteGenerateCapabilityCommand(
     const allFiles = await generateAllFiles(filteredManifest, cwd, { force: true });
 
     if (options.dryRun) {
+      const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
+        op: file.overwrite ? 'overwrite' : 'create',
+        target: path.relative(cwd, file.path),
+      }));
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
       for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);
         const status = file.overwrite ? '(overwrite)' : '(new)';
         console.log(`  ${relativePath} ${chalk.gray(status)}`);
       }
-      return;
+      return { capabilityName, generated: [], skipped: [], errors: [], dryRun: true, plannedChanges };
     }
 
     const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
@@ -81,11 +92,18 @@ export async function remoteGenerateCapabilityCommand(
       }
     }
 
-    const totalGenerated = genResult.files.length;
-    if (totalGenerated > 0) {
+    if (genResult.files.length > 0) {
       console.log(chalk.green(`\n✓ Capability "${capabilityName}" generation complete!`));
       console.log(chalk.blue('Run npm run dev to see your changes.'));
     }
+
+    return {
+      capabilityName,
+      generated: genResult.files.map((f) => path.relative(cwd, f.path)),
+      skipped:   genResult.skipped.map((f) => path.relative(cwd, f)),
+      errors:    genResult.errors,
+      dryRun:    false,
+    };
 
   } catch (error) {
     console.error(chalk.red('\n✗ Capability generation failed:'));
@@ -94,12 +112,13 @@ export async function remoteGenerateCapabilityCommand(
   }
 }
 
-export default class RemoteGenerateCapability extends BaseCommand<void> {
+export default class RemoteGenerateCapability extends BaseCommand<RemoteGenerateCapabilityResult> {
   static description = 'Generate a single capability from mfe-manifest.yaml'
 
   static examples = [
     '$ seans-mfe-tool remote:generate:capability UserProfile',
     '$ seans-mfe-tool remote:generate:capability Dashboard --force',
+    '$ seans-mfe-tool remote:generate:capability UserProfile --dry-run',
   ]
 
   static args = {
@@ -120,9 +139,9 @@ export default class RemoteGenerateCapability extends BaseCommand<void> {
     }),
   }
 
-  protected async runCommand(): Promise<void> {
+  protected async runCommand(): Promise<RemoteGenerateCapabilityResult> {
     const { args, flags } = await this.parse(RemoteGenerateCapability)
-    await remoteGenerateCapabilityCommand(args.name, {
+    return remoteGenerateCapabilityCommand(args.name, {
       dryRun: flags['dry-run'],
       force: flags.force,
     })

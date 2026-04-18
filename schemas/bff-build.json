@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/bff:build.json",
+  "title": "bff:build",
+  "description": "Input/output contract for seans-mfe-tool bff:build",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "default": "mfe-manifest.yaml"
+      },
+      "dry-run": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "meshConfigPath",
+      "generatedFiles",
+      "dryRun"
+    ],
+    "properties": {
+      "meshConfigPath": {
+        "type": "string"
+      },
+      "generatedFiles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "plannedChanges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "op",
+            "target"
+          ],
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "create",
+                "overwrite",
+                "skip",
+                "spawn"
+              ]
+            },
+            "target": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
