@@ -25,29 +25,40 @@ jobs:
 
       - name: Patch machine-local npm reference in lock file
         run: |
-          node -e "
+          node - << 'NODEJS'
           const https = require('https');
           const fs = require('fs');
           const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
           const npmPkg = lock.packages['node_modules/npm'];
-          if (npmPkg && npmPkg.resolved && npmPkg.resolved.startsWith('file:')) {
-            const ver = npmPkg.version;
-            console.log('Patching machine-local npm@' + ver + ' reference...');
-            https.get('https://registry.npmjs.org/npm/' + ver, {headers: {'Accept': 'application/json'}}, res => {
-              let data = '';
-              res.on('data', c => data += c);
-              res.on('end', () => {
-                const meta = JSON.parse(data);
-                npmPkg.resolved = meta.dist.tarball;
-                npmPkg.integrity = meta.dist.integrity;
-                fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2));
-                console.log('Patched: ' + npmPkg.resolved);
-              });
-            }).on('error', e => { console.error(e.message); process.exit(1); });
-          } else {
+          if (!npmPkg || !npmPkg.resolved || !npmPkg.resolved.startsWith('file:')) {
             console.log('No patch needed');
+            process.exit(0);
           }
-          "
+          const ver = npmPkg.version;
+          console.log('Patching npm@' + ver + ' file: reference...');
+          const req = https.request(
+            { hostname: 'registry.npmjs.org', path: '/npm/' + ver,
+              headers: { Accept: 'application/json', 'Accept-Encoding': 'identity' } },
+            res => {
+              const chunks = [];
+              res.on('data', c => chunks.push(c));
+              res.on('end', () => {
+                try {
+                  const meta = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+                  npmPkg.resolved = meta.dist.tarball;
+                  npmPkg.integrity = meta.dist.integrity;
+                  fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2));
+                  console.log('Patched:', npmPkg.resolved);
+                } catch (e) {
+                  console.error('Parse error:', e.message);
+                  process.exit(1);
+                }
+              });
+            }
+          );
+          req.on('error', e => { console.error(e.message); process.exit(1); });
+          req.end();
+          NODEJS
 
       - name: Install dependencies
         run: npm ci
