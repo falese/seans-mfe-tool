@@ -23,6 +23,32 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Patch machine-local npm reference in lock file
+        run: |
+          node -e "
+          const https = require('https');
+          const fs = require('fs');
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const npmPkg = lock.packages['node_modules/npm'];
+          if (npmPkg && npmPkg.resolved && npmPkg.resolved.startsWith('file:')) {
+            const ver = npmPkg.version;
+            console.log('Patching machine-local npm@' + ver + ' reference...');
+            https.get('https://registry.npmjs.org/npm/' + ver, {headers: {'Accept': 'application/json'}}, res => {
+              let data = '';
+              res.on('data', c => data += c);
+              res.on('end', () => {
+                const meta = JSON.parse(data);
+                npmPkg.resolved = meta.dist.tarball;
+                npmPkg.integrity = meta.dist.integrity;
+                fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2));
+                console.log('Patched: ' + npmPkg.resolved);
+              });
+            }).on('error', e => { console.error(e.message); process.exit(1); });
+          } else {
+            console.log('No patch needed');
+          }
+          "
+
       - name: Install dependencies
         run: npm ci
 

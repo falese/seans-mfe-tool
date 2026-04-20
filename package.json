@@ -1,7 +1,6 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
-  "workspaces": ["packages/*"],
   "main": "bin/run.js",
   "scripts": {
     "build": "tsc && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
