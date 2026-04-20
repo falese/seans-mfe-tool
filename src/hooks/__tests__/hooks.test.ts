@@ -62,13 +62,16 @@ describe('prerun hook', () => {
 });
 
 // ── postrun hook ──────────────────────────────────────────────────────────────
+// The C4 rewrite emits telemetry to the daemon; debug-duration logging was
+// removed. Without SEANS_MFE_DAEMON_URL set, the hook is a no-op.
+// Detailed telemetry behaviour is covered by postrun.test.ts.
 
 describe('postrun hook', () => {
-  it('calls debug with duration in milliseconds', async () => {
+  it('resolves without throwing when SEANS_MFE_DAEMON_URL is not set', async () => {
     process.env.SEANS_MFE_CMD_START = String(Date.now() - 42);
-    await postrunHook.call(ctx, { Command: makeCommand('deploy'), argv: [], result: undefined } as any, {} as any);
-    const call = (ctx.debug as jest.Mock).mock.calls[0][0] as string;
-    expect(call).toMatch(/\d+ms/);
+    await expect(
+      postrunHook.call(ctx, { Command: makeCommand('deploy'), argv: [], result: undefined } as any, {} as any)
+    ).resolves.not.toThrow();
   });
 
   it('handles missing start timestamp gracefully', async () => {
