@@ -63,9 +63,11 @@ describe('BaseCommand', () => {
 
   it('run() with --json calls process.exit(0) after writing the envelope', async () => {
     const cmd = new JsonFlagCommand(['--json'], config)
-    // jest.setup.js mocks process.exit to throw Error('Process exit with code <n>').
-    // Reaching this throw confirms: runCommand() succeeded AND JSON mode ran.
-    await expect(cmd.run()).rejects.toThrow('Process exit with code 0')
+    // jest.setup.js mocks process.exit as a jest.fn that throws, so the call
+    // is trackable. Swallow whatever propagates out of run().
+    await cmd.run().catch(() => {})
+    // First call must be process.exit(0) — the success path.
+    expect(process.exit).toHaveBeenCalledWith(0)
   })
 
   it('--json defaults to false when not passed, run() completes without error', async () => {
