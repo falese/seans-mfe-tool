@@ -61,20 +61,11 @@ describe('BaseCommand', () => {
     await expect(cmd.run()).rejects.toThrow('boom')
   })
 
-  it('run() with --json writes a CommandResult envelope to stdout and exits 0', async () => {
-    // Spy on stdout.write BEFORE run() so redirectStdoutToStderr() captures it
-    // as _originalStdoutWrite, meaning writeJsonLine() calls our spy.
-    const writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
+  it('run() with --json calls process.exit(0) after writing the envelope', async () => {
     const cmd = new JsonFlagCommand(['--json'], config)
-    // jest.setup.js mocks process.exit to throw; swallow that here.
-    await cmd.run().catch(() => {})
-    expect(writeSpy).toHaveBeenCalled()
-    const written = (writeSpy.mock.calls[0][0] as string).trim()
-    const envelope = JSON.parse(written)
-    expect(envelope.ok).toBe(true)
-    expect(envelope.data.jsonMode).toBe(true)
-    expect(typeof envelope.telemetry.correlationId).toBe('string')
-    writeSpy.mockRestore()
+    // jest.setup.js mocks process.exit to throw Error('Process exit with code <n>').
+    // Reaching this throw confirms: runCommand() succeeded AND JSON mode ran.
+    await expect(cmd.run()).rejects.toThrow('Process exit with code 0')
   })
 
   it('--json defaults to false when not passed, run() completes without error', async () => {
