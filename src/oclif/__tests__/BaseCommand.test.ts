@@ -1,77 +1,32 @@
-import { Config } from '@oclif/core'
 import { BaseCommand } from '../BaseCommand'
 
-// Config.load and spawn are I/O-based; real timers needed.
-jest.useRealTimers();
+// ---------------------------------------------------------------------------
+// Dummy subclass — no Config.load() needed to test static structure.
+// Dynamic behaviour (JSON envelope, exit codes, stdout split) is covered
+// by envelope.test.ts and json-contract.test.ts.
+// ---------------------------------------------------------------------------
 
-let config: Config
-
-beforeAll(async () => {
-  config = await Config.load({ root: process.cwd() })
-})
-
-// --- Dummy subclasses ---
-
-class SuccessCommand extends BaseCommand<{ value: number }> {
+class TestCommand extends BaseCommand<{ ok: boolean }> {
   static flags = { ...BaseCommand.baseFlags }
   protected async runCommand() {
-    return { value: 42 }
+    return { ok: true }
   }
 }
-
-class FailCommand extends BaseCommand<never> {
-  static flags = { ...BaseCommand.baseFlags }
-  protected async runCommand(): Promise<never> {
-    throw new Error('boom')
-  }
-}
-
-class JsonFlagCommand extends BaseCommand<{ jsonMode: boolean }> {
-  static flags = { ...BaseCommand.baseFlags }
-  protected async runCommand() {
-    const { flags } = await this.parse(JsonFlagCommand)
-    return { jsonMode: flags.json }
-  }
-}
-
-// --- Tests ---
 
 describe('BaseCommand', () => {
-  it('exports BaseCommand from src/oclif/BaseCommand.ts', () => {
+  it('re-exports BaseCommand from @seans-mfe/oclif-base via the shim', () => {
     expect(BaseCommand).toBeDefined()
+    expect(typeof BaseCommand).toBe('function')
   })
 
-  it('declares baseFlags with a json boolean flag', () => {
+  it('declares baseFlags with a boolean --json flag', () => {
     expect(BaseCommand.baseFlags).toBeDefined()
     expect(BaseCommand.baseFlags.json).toBeDefined()
     expect(BaseCommand.baseFlags.json.type).toBe('boolean')
   })
 
   it('subclass inherits --json flag via baseFlags spread', () => {
-    expect(SuccessCommand.flags.json).toBeDefined()
-  })
-
-  it('run() completes without error in human mode', async () => {
-    const cmd = new SuccessCommand([], config)
-    await expect(cmd.run()).resolves.toBeUndefined()
-  })
-
-  it('run() propagates errors thrown from runCommand', async () => {
-    const cmd = new FailCommand([], config)
-    await expect(cmd.run()).rejects.toThrow('boom')
-  })
-
-  it('run() with --json calls process.exit(0) after writing the envelope', async () => {
-    const cmd = new JsonFlagCommand(['--json'], config)
-    // jest.setup.js mocks process.exit as a jest.fn that throws, so the call
-    // is trackable. Swallow whatever propagates out of run().
-    await cmd.run().catch(() => {})
-    // First call must be process.exit(0) — the success path.
-    expect(process.exit).toHaveBeenCalledWith(0)
-  })
-
-  it('--json defaults to false when not passed, run() completes without error', async () => {
-    const cmd = new JsonFlagCommand([], config)
-    await expect(cmd.run()).resolves.toBeUndefined()
+    expect(TestCommand.flags.json).toBeDefined()
+    expect(TestCommand.flags.json.type).toBe('boolean')
   })
 })
