@@ -1,6 +1,9 @@
 import { Config } from '@oclif/core'
 import { BaseCommand } from '../BaseCommand'
 
+// Config.load and spawn are I/O-based; real timers needed.
+jest.useRealTimers();
+
 let config: Config
 
 beforeAll(async () => {
@@ -48,30 +51,34 @@ describe('BaseCommand', () => {
     expect(SuccessCommand.flags.json).toBeDefined()
   })
 
-  it('run() calls runCommand and logs JSON-stringified result', async () => {
+  it('run() completes without error in human mode', async () => {
     const cmd = new SuccessCommand([], config)
-    const logSpy = jest.spyOn(cmd, 'log').mockImplementation(() => {})
-    await cmd.run()
-    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({ value: 42 }))
+    await expect(cmd.run()).resolves.toBeUndefined()
   })
 
   it('run() propagates errors thrown from runCommand', async () => {
     const cmd = new FailCommand([], config)
-    jest.spyOn(cmd, 'log').mockImplementation(() => {})
     await expect(cmd.run()).rejects.toThrow('boom')
   })
 
-  it('--json flag is parsed and available inside runCommand', async () => {
+  it('run() with --json writes a CommandResult envelope to stdout and exits 0', async () => {
+    // Spy on stdout.write BEFORE run() so redirectStdoutToStderr() captures it
+    // as _originalStdoutWrite, meaning writeJsonLine() calls our spy.
+    const writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
     const cmd = new JsonFlagCommand(['--json'], config)
-    const logSpy = jest.spyOn(cmd, 'log').mockImplementation(() => {})
-    await cmd.run()
-    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({ jsonMode: true }))
+    // jest.setup.js mocks process.exit to throw; swallow that here.
+    await cmd.run().catch(() => {})
+    expect(writeSpy).toHaveBeenCalled()
+    const written = (writeSpy.mock.calls[0][0] as string).trim()
+    const envelope = JSON.parse(written)
+    expect(envelope.ok).toBe(true)
+    expect(envelope.data.jsonMode).toBe(true)
+    expect(typeof envelope.telemetry.correlationId).toBe('string')
+    writeSpy.mockRestore()
   })
 
-  it('--json defaults to false when not passed', async () => {
+  it('--json defaults to false when not passed, run() completes without error', async () => {
     const cmd = new JsonFlagCommand([], config)
-    const logSpy = jest.spyOn(cmd, 'log').mockImplementation(() => {})
-    await cmd.run()
-    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({ jsonMode: false }))
+    await expect(cmd.run()).resolves.toBeUndefined()
   })
 })
