@@ -31,6 +31,11 @@ jobs:
           ./node_modules/.bin/tsc -p packages/contracts/tsconfig.json
           ./node_modules/.bin/tsc -p packages/oclif-base/tsconfig.json
 
+      - name: Run all tests (no coverage)
+        run: npm test -- --ci --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js" --testPathIgnorePatterns="json-contract.test.ts" --testPathIgnorePatterns="remote-mfe.integration.test.ts"
+        env:
+          CI: true
+
       - name: Run all tests with coverage
         run: npm test -- --ci --coverage --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js" --testPathIgnorePatterns="json-contract.test.ts" --testPathIgnorePatterns="remote-mfe.integration.test.ts"
         env:
