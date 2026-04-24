@@ -41,6 +41,23 @@ jobs:
         env:
           CI: true
 
+      - name: Print coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "=== Coverage Summary ==="
+            node -e "
+              const s = require('./coverage/coverage-summary.json').total;
+              ['statements','branches','functions','lines'].forEach(k => {
+                const p = s[k].pct;
+                const flag = p < 70 ? ' <<<' : '';
+                console.log(k + ': ' + p + '%' + flag);
+              });
+            "
+          else
+            echo "No coverage-summary.json found"
+          fi
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         continue-on-error: true
