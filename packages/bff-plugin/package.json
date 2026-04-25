@@ -1,0 +1,54 @@
+{
+  "name": "@falese/bff-plugin",
+  "version": "0.1.0",
+  "description": "BFF commands plugin for seans-mfe-tool (bff:init, bff:validate, bff:build, bff:dev)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "tsc && npx oclif manifest",
+    "clean": "rm -rf dist oclif.manifest.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "oclif": {
+    "commands": "./dist/commands",
+    "bin": "seans-mfe-tool",
+    "topics": {
+      "bff": {
+        "description": "BFF (Backend-for-Frontend) scaffold and lifecycle commands"
+      }
+    }
+  },
+  "peerDependencies": {
+    "@oclif/core": "^4",
+    "seans-mfe-tool": "^1"
+  },
+  "peerDependenciesMeta": {
+    "seans-mfe-tool": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/oclif-base": "file:../oclif-base",
+    "chalk": "^4.1.2",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@oclif/core": "^4.10.5",
+    "typescript": "^5.0.0",
+    "oclif": "^4.0.0"
+  },
+  "license": "MIT"
+}
