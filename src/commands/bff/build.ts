@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { execSync } from 'child_process';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { SystemError, NetworkError } from '@seans-mfe/contracts';
+import { NetworkError } from '@seans-mfe/contracts';
 import { writeMeshConfig } from './_shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from './_shared';
@@ -45,7 +45,7 @@ export async function bffBuildCommand(options: BFFCommandOptions & { dryRun?: bo
           throw new NetworkError('Failed to install or run @graphql-mesh/cli', 1);
         }
       } else {
-        throw new SystemError('mesh build failed', meshError);
+        throw meshError;
       }
     }
 

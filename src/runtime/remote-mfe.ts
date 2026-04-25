@@ -8,6 +8,7 @@
  * - REQ-RUNTIME-012: Telemetry emission at all checkpoints
  */
 
+import { randomUUID } from 'crypto';
 import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult } from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
 import type { Message, ActionRecord, MessageMetadata } from './contracts';
@@ -621,7 +622,7 @@ export class RemoteMFE extends BaseMFE {
     };
 
     const payload: ActionRecord = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       componentId: this.currentComponentId ?? this.manifest.name,
       actionType: stateKey,
       data: stateData,

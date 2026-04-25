@@ -15,7 +15,7 @@ export async function bffValidateCommand(options: BFFCommandOptions = {}): Promi
     console.log(chalk.blue('Validating BFF configuration...'));
 
     const manifestPath = options.manifest || 'mfe-manifest.yaml';
-    const { meshConfig } = await extractMeshConfig(manifestPath);
+    const { meshConfig, manifest } = await extractMeshConfig(manifestPath);
 
     console.log(chalk.blue('\nValidating sources...'));
     for (const source of meshConfig.sources) {
@@ -75,7 +75,7 @@ export async function bffValidateCommand(options: BFFCommandOptions = {}): Promi
     if (!hasErrors) {
       console.log(chalk.green('\n✓ BFF configuration is valid'));
     }
-    return { valid: !hasErrors, issues };
+    return { valid: !hasErrors, issues, meshConfig, manifest };
 
   } catch (error) {
     console.error(chalk.red('\n✗ Validation failed:'));

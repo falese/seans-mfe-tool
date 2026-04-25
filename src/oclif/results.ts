@@ -82,6 +82,8 @@ export interface BffDevResult {
 export interface BffValidateResult {
   valid: boolean;
   issues: BffValidationIssue[];
+  meshConfig?: import('../commands/bff/_shared').MeshConfig;
+  manifest?: import('../commands/bff/_shared').MFEManifest;
 }
 
 export interface BffValidationIssue {
