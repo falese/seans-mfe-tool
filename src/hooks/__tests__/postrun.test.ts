@@ -44,8 +44,12 @@ function createMockWsClass() {
       lastMockWs = this as unknown as MockWsInstance;
     }
 
-    send(data: string) { this.sentFrames.push(data); }
-    close() { this._emit('close'); }
+    send(data: string) {
+      this.sentFrames.push(data);
+    }
+    close() {
+      this._emit('close');
+    }
 
     addEventListener(type: string, fn: (event?: unknown) => void) {
       this.listeners[type] = this.listeners[type] ?? [];
@@ -56,10 +60,18 @@ function createMockWsClass() {
       (this.listeners[type] ?? []).forEach((fn) => fn(event));
     }
 
-    triggerOpen() { this._emit('open'); }
-    triggerMessage(data: string) { this._emit('message', { data }); }
-    triggerError() { this._emit('error'); }
-    triggerClose() { this._emit('close'); }
+    triggerOpen() {
+      this._emit('open');
+    }
+    triggerMessage(data: string) {
+      this._emit('message', { data });
+    }
+    triggerError() {
+      this._emit('error');
+    }
+    triggerClose() {
+      this._emit('close');
+    }
   }
   return MockWebSocket as unknown as new (url: string, protocols?: string | string[]) => unknown;
 }
@@ -73,7 +85,11 @@ const OFFLINE_CACHE = path.join(os.homedir(), '.cache', 'seans-mfe', 'daemon-off
 const OFFLINE_TTL_MS = 60_000;
 
 function clearOfflineCache() {
-  try { fs.unlinkSync(OFFLINE_CACHE); } catch { /* ignore */ }
+  try {
+    fs.unlinkSync(OFFLINE_CACHE);
+  } catch {
+    /* ignore */
+  }
 }
 
 function writeOfflineCache(offsetMs = OFFLINE_TTL_MS + 1_000) {

@@ -1492,7 +1492,6 @@ Since orchestration service is generated in shell, clarify the relationship:
 **Shell Contains TWO orchestration components:**
 
 1. **Orchestration Service** (Node.js backend)
-
    - Registry storage
    - REST API
    - WebSocket server

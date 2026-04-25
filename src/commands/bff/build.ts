@@ -8,7 +8,9 @@ import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from './_shared';
 import type { BffBuildResult, PlannedChange } from '../../oclif/results';
 
-export async function bffBuildCommand(options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffBuildResult> {
+export async function bffBuildCommand(
+  options: BFFCommandOptions & { dryRun?: boolean } = {}
+): Promise<BffBuildResult> {
   try {
     console.log(chalk.blue('Building BFF...'));
 
@@ -39,7 +41,10 @@ export async function bffBuildCommand(options: BFFCommandOptions & { dryRun?: bo
       if (meshError.message?.includes('mesh') || meshError.code === 'ENOENT') {
         console.log(chalk.yellow('\nGraphQL Mesh CLI not found. Installing...'));
         try {
-          execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', { cwd: targetDir, stdio: 'inherit' });
+          execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', {
+            cwd: targetDir,
+            stdio: 'inherit',
+          });
           execSync('npx mesh build', { cwd: targetDir, stdio: 'inherit' });
         } catch (installErr) {
           throw new NetworkError('Failed to install or run @graphql-mesh/cli', 1);
@@ -55,7 +60,6 @@ export async function bffBuildCommand(options: BFFCommandOptions & { dryRun?: bo
     console.log('  .mesh/          - Generated Mesh runtime');
 
     return { meshConfigPath, generatedFiles: ['.meshrc.yaml', '.mesh/'], dryRun: false };
-
   } catch (error) {
     console.error(chalk.red('\n✗ BFF build failed:'));
     console.error(chalk.red((error as Error).message));
@@ -64,7 +68,7 @@ export async function bffBuildCommand(options: BFFCommandOptions & { dryRun?: bo
 }
 
 export default class BffBuild extends BaseCommand<BffBuildResult> {
-  static description = 'Build BFF artifacts from mfe-manifest.yaml'
+  static description = 'Build BFF artifacts from mfe-manifest.yaml';
 
   static flags = {
     ...BaseCommand.baseFlags,
@@ -78,10 +82,10 @@ export default class BffBuild extends BaseCommand<BffBuildResult> {
       description: 'Preview what would be built without executing',
       default: false,
     }),
-  }
+  };
 
   protected async runCommand(): Promise<BffBuildResult> {
-    const { flags } = await this.parse(BffBuild)
-    return bffBuildCommand({ manifest: flags.manifest, dryRun: flags['dry-run'] })
+    const { flags } = await this.parse(BffBuild);
+    return bffBuildCommand({ manifest: flags.manifest, dryRun: flags['dry-run'] });
   }
 }

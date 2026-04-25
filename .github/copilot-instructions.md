@@ -29,13 +29,11 @@ mfe deploy <name>     # Docker/K8s deployment
 ### Code Generation Flow
 
 1. **Template Resolution** (`src/templates/`)
-
    - `react/shell/` - Host application with orchestration
    - `react/remote/` - Federated module with auto-registration
    - `api/base/` - Express + OpenAPI + DB layers
 
 2. **Template Processing** (`src/utils/templateProcessor.js`)
-
    - Recursively processes `.ejs` files
    - Variable substitution: `<%= name %>`, `<%= port %>`, etc.
    - Preserves directory structure
@@ -166,7 +164,6 @@ remoteEntry: http://localhost:3002/remoteEntry.js
 **Two-layer system:**
 
 1. **Orchestration Service** (Node.js, Docker-only)
-
    - Registry storage (Redis/memory)
    - REST API: `/api/register`, `/api/discover`
    - WebSocket: Real-time registry updates
@@ -370,7 +367,6 @@ CI=1 npm test
 ### Debugging Generated Projects
 
 1. **Check template variables:**
-
    - Add `console.log(vars)` before `processTemplates()`
    - Inspect generated `package.json` for correct substitution
 
@@ -670,7 +666,7 @@ Implementation priority order (see [runtime-requirements.md](docs/requirements/)
 4. #51 — REQ-RUNTIME-004: Render Capability (React 18 createRoot)
 5. #53 — REQ-RUNTIME-006: Auth Handler
 6. #56 — REQ-RUNTIME-009: Error Handling Handler
-7–12. Remaining handlers (#54, #55, #57, #50, #58, #59) — parallelizable
+   7–12. Remaining handlers (#54, #55, #57, #50, #58, #59) — parallelizable
 
 ### 2. BaseMFE Boilerplate Codegen from DSL (Issue #39)
 

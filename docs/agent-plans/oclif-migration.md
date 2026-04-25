@@ -24,18 +24,18 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 
 ### Work breakdown
 
-| Issue | Title | Primary output |
-|---|---|---|
-| #90 | [A1] Add @oclif/core scaffold with Bun dev entry and Node published entry | base oclif scaffold, dual bin entries |
-| #91 | [A2] Create BaseCommand abstract class with runCommand hook and global --json flag | shared oclif command base |
-| #92 | [A3] Port deploy command to oclif Command class | deploy command migrated |
-| #93 | [A4] Port api command to oclif (rename create-api.ts to api.ts with shim) | api command migrated + shim |
-| #94 | [A5] Port BFF colon-topic commands to nested oclif directory (bff/{init,build,dev,validate}.ts) | bff nested command layout |
-| #95 | [A6] Port remote:* commands to nested oclif dirs and implement remote:generate:capability | remote command migration + new capability |
-| #96 | [A7] Swap bin entry to oclif, remove commander, delete legacy bin file | Commander removal and oclif as default entry |
-| #97 | [A8] Add oclif hooks: init, prerun, postrun, command_not_found | lifecycle hooks wired |
-| #98 | [A9] Enable @oclif/plugin-plugins for runtime plugin install; reserve daemon and coder topics | plugin install path and reserved topics |
-| #99 | [A10] Add Bun dev script, oclif manifest generation to build, README updates | build/docs integration |
+| Issue | Title                                                                                           | Primary output                               |
+| ----- | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| #90   | [A1] Add @oclif/core scaffold with Bun dev entry and Node published entry                       | base oclif scaffold, dual bin entries        |
+| #91   | [A2] Create BaseCommand abstract class with runCommand hook and global --json flag              | shared oclif command base                    |
+| #92   | [A3] Port deploy command to oclif Command class                                                 | deploy command migrated                      |
+| #93   | [A4] Port api command to oclif (rename create-api.ts to api.ts with shim)                       | api command migrated + shim                  |
+| #94   | [A5] Port BFF colon-topic commands to nested oclif directory (bff/{init,build,dev,validate}.ts) | bff nested command layout                    |
+| #95   | [A6] Port remote:\* commands to nested oclif dirs and implement remote:generate:capability      | remote command migration + new capability    |
+| #96   | [A7] Swap bin entry to oclif, remove commander, delete legacy bin file                          | Commander removal and oclif as default entry |
+| #97   | [A8] Add oclif hooks: init, prerun, postrun, command_not_found                                  | lifecycle hooks wired                        |
+| #98   | [A9] Enable @oclif/plugin-plugins for runtime plugin install; reserve daemon and coder topics   | plugin install path and reserved topics      |
+| #99   | [A10] Add Bun dev script, oclif manifest generation to build, README updates                    | build/docs integration                       |
 
 ### Epic A verification gate ✅
 
@@ -56,17 +56,17 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 
 ### Work breakdown
 
-| Issue | Title | Primary output |
-|---|---|---|
-| #100 | [B1] Define CommandResult envelope, CommandError, and sysexits-style exit code table | envelope and exit code contract |
-| #101 | [B2] Wire JSON envelope into BaseCommand with stdout/stderr split and prompt rejection | BaseCommand JSON behavior |
-| #102 | [B3] Convert command functions from Promise<void> to typed result interfaces | typed command returns |
-| #103 | [B4] Replace raw throw new Error in commands with typed errors from src/runtime/errors | typed error migration |
-| #104 | [B5] Auto-generate JSON Schemas for every command (inputs + outputs) to schemas/ | schema generation pipeline |
-| #105 | [B6] Add `seans-mfe-tool schemas` command for live tool catalog discovery | schema discovery command |
-| #106 | [B7] Implement `seans-mfe-tool mcp serve` MCP server (child-process per tool call) | MCP server + tool execution bridge |
-| #107 | [B8] Normalize --dry-run across all mutating commands and surface plannedChanges in JSON | dry-run normalization |
-| #108 | [B9] Integration test: JSON contract round-trip with ajv schema validation | end-to-end JSON validation tests |
+| Issue | Title                                                                                    | Primary output                     |
+| ----- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| #100  | [B1] Define CommandResult envelope, CommandError, and sysexits-style exit code table     | envelope and exit code contract    |
+| #101  | [B2] Wire JSON envelope into BaseCommand with stdout/stderr split and prompt rejection   | BaseCommand JSON behavior          |
+| #102  | [B3] Convert command functions from Promise<void> to typed result interfaces             | typed command returns              |
+| #103  | [B4] Replace raw throw new Error in commands with typed errors from src/runtime/errors   | typed error migration              |
+| #104  | [B5] Auto-generate JSON Schemas for every command (inputs + outputs) to schemas/         | schema generation pipeline         |
+| #105  | [B6] Add `seans-mfe-tool schemas` command for live tool catalog discovery                | schema discovery command           |
+| #106  | [B7] Implement `seans-mfe-tool mcp serve` MCP server (child-process per tool call)       | MCP server + tool execution bridge |
+| #107  | [B8] Normalize --dry-run across all mutating commands and surface plannedChanges in JSON | dry-run normalization              |
+| #108  | [B9] Integration test: JSON contract round-trip with ajv schema validation               | end-to-end JSON validation tests   |
 
 ### Epic B verification gate ✅
 
@@ -86,15 +86,15 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 
 ### Work breakdown
 
-| Issue | Title | Primary output |
-|---|---|---|
-| #109 | [C1] Extract @seans-mfe/contracts workspace package (runtime contracts, typed errors, classifier, envelope) | contracts package |
-| #110 | [C2] Write PLUGIN-CONTRACT.md and publish examples/plugin-skeleton | plugin contract docs + skeleton |
-| #111 | [C3] Extract @seans-mfe/oclif-base package (BaseCommand, json-output, envelope glue) | oclif base package |
-| #112 | [C4] Wire postrun hook to emit telemetry to daemon over graphql-ws | telemetry emission integration |
-| #113 | [C5] MCP federation: tool registry loads from local, oclif plugins, and remote MCP sources | federated tool registry |
-| #114 | [C6] pnpm workspaces + Turborepo scaffolding for the two extracted packages | workspace/turbo scaffolding |
-| #115 | [C7] Write MERGE-PLAN.md: phased path to absorb Falese/daemon and Falese/coder | merge plan document |
+| Issue | Title                                                                                                       | Primary output                  |
+| ----- | ----------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| #109  | [C1] Extract @seans-mfe/contracts workspace package (runtime contracts, typed errors, classifier, envelope) | contracts package               |
+| #110  | [C2] Write PLUGIN-CONTRACT.md and publish examples/plugin-skeleton                                          | plugin contract docs + skeleton |
+| #111  | [C3] Extract @seans-mfe/oclif-base package (BaseCommand, json-output, envelope glue)                        | oclif base package              |
+| #112  | [C4] Wire postrun hook to emit telemetry to daemon over graphql-ws                                          | telemetry emission integration  |
+| #113  | [C5] MCP federation: tool registry loads from local, oclif plugins, and remote MCP sources                  | federated tool registry         |
+| #114  | [C6] pnpm workspaces + Turborepo scaffolding for the two extracted packages                                 | workspace/turbo scaffolding     |
+| #115  | [C7] Write MERGE-PLAN.md: phased path to absorb Falese/daemon and Falese/coder                              | merge plan document             |
 
 ### Epic C verification gate ✅
 
