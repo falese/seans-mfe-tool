@@ -72,8 +72,8 @@ jobs:
                 const rel = filePath.replace(process.cwd() + '/', '');
                 body += `**${rel}**\n\n`;
                 if (t.message) {
-                  const firstLine = t.message.split('\n').find(l => l.trim()) || '';
-                  body += `> ${firstLine.trim()}\n\n`;
+                  const lines = t.message.split('\n').filter(l => l.trim()).slice(0, 8);
+                  body += `\`\`\`\n${lines.join('\n')}\n\`\`\`\n\n`;
                 }
                 const assertions = t.assertionResults || t.testResults || [];
                 assertions.filter(tr => tr.status === 'failed').slice(0, 5).forEach(tr => {
