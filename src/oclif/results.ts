@@ -6,7 +6,14 @@
  * Refs #102 (B3), #107 (B8 adds MutatingResult mixin)
  */
 
-import type { MeshConfig, MFEManifest } from '../commands/bff/_shared';
+// BFF result types live in @falese/bff-plugin (migrated in plugin extraction epic)
+export type {
+  BffInitResult,
+  BffBuildResult,
+  BffDevResult,
+  BffValidateResult,
+  BffValidationIssue,
+} from '@falese/bff-plugin';
 
 // ---------------------------------------------------------------------------
 // Shared mixin
@@ -46,52 +53,6 @@ export interface ApiResult extends MutatingResult {
   database: string;
   port: number;
   generatedFiles: string[];
-}
-
-// ---------------------------------------------------------------------------
-// bff:init
-// ---------------------------------------------------------------------------
-
-export interface BffInitResult extends MutatingResult {
-  name: string;
-  port: number;
-  sources: string[];
-  generatedFiles: string[];
-}
-
-// ---------------------------------------------------------------------------
-// bff:build
-// ---------------------------------------------------------------------------
-
-export interface BffBuildResult extends MutatingResult {
-  meshConfigPath: string;
-  generatedFiles: string[];
-}
-
-// ---------------------------------------------------------------------------
-// bff:dev
-// ---------------------------------------------------------------------------
-
-export interface BffDevResult {
-  port: number;
-  meshConfigPath: string;
-}
-
-// ---------------------------------------------------------------------------
-// bff:validate
-// ---------------------------------------------------------------------------
-
-export interface BffValidateResult {
-  valid: boolean;
-  issues: BffValidationIssue[];
-  meshConfig: MeshConfig;
-  manifest: MFEManifest;
-}
-
-export interface BffValidationIssue {
-  severity: 'error' | 'warning';
-  message: string;
-  path?: string;
 }
 
 // ---------------------------------------------------------------------------

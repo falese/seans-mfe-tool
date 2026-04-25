@@ -31,7 +31,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log(chalk.blue(`Creating BFF project "${name}"...`));
     }
 
-    const templateDir = path.resolve(__dirname, '..', '..', 'templates', 'bff');
+    const templateDir = path.resolve(__dirname, '..', '..', '..', '..', 'packages', 'bff-plugin', 'templates');
 
     if (!await fs.pathExists(templateDir)) {
       throw new SystemError(`BFF template directory not found: ${templateDir}`);
