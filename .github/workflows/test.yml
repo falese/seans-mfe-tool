@@ -32,7 +32,40 @@ jobs:
           ./node_modules/.bin/tsc -p packages/oclif-base/tsconfig.json
 
       - name: Run all tests with coverage
-        run: npm test -- --ci --coverage --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js" --testPathIgnorePatterns="json-contract.test.ts" --testPathIgnorePatterns="remote-mfe.integration.test.ts"
+        run: |
+          set +e
+          npm test -- --ci --coverage \
+            --testPathIgnorePatterns="/examples/" \
+            --testPathIgnorePatterns="NodemonServer.test.js" \
+            --testPathIgnorePatterns="create-shell.test.js" \
+            --testPathIgnorePatterns="json-contract.test.ts" \
+            --testPathIgnorePatterns="remote-mfe.integration.test.ts" \
+            --json --outputFile=/tmp/jest-results.json
+          EXIT_CODE=$?
+          echo "--- Jest exit code: $EXIT_CODE ---"
+          if [ -f /tmp/jest-results.json ]; then
+            node -e "
+              const r = require('/tmp/jest-results.json');
+              const failed = r.testResults.filter(t => t.status === 'failed');
+              if (failed.length === 0) {
+                console.log('All test suites passed (exit code may be from coverage threshold)');
+              } else {
+                console.log('FAILED SUITES:');
+                failed.forEach(t => {
+                  console.log('  ' + t.testFilePath.replace(process.cwd(), ''));
+                  (t.testResults || []).filter(tr => tr.status === 'failed').forEach(tr => {
+                    console.log('    FAIL: ' + tr.fullName);
+                    if (tr.failureMessages && tr.failureMessages[0]) {
+                      console.log('    ' + tr.failureMessages[0].split('\n')[0]);
+                    }
+                  });
+                });
+              }
+              console.log('numPassedTestSuites:', r.numPassedTestSuites, '/ numFailedTestSuites:', r.numFailedTestSuites);
+              console.log('numPassedTests:', r.numPassedTests, '/ numFailedTests:', r.numFailedTests);
+            "
+          fi
+          exit $EXIT_CODE
         env:
           CI: true
 
