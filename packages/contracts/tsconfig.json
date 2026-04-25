@@ -14,10 +14,9 @@
     "declarationMap": true,
     "composite": true,
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "typeRoots": [
-      "../../node_modules/@types",
-      "/opt/node22/lib/node_modules/ts-node/node_modules/@types"
+      "../../node_modules/@types"
     ],
     "types": ["node"]
   },
