@@ -14,6 +14,9 @@ jobs:
       matrix:
         node-version: [18.x, 20.x]
 
+    permissions:
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v3
 
@@ -41,33 +44,51 @@ jobs:
             --testPathIgnorePatterns="json-contract.test.ts" \
             --testPathIgnorePatterns="remote-mfe.integration.test.ts" \
             --json --outputFile=/tmp/jest-results.json
-          EXIT_CODE=$?
-          echo "--- Jest exit code: $EXIT_CODE ---"
-          if [ -f /tmp/jest-results.json ]; then
-            node -e "
-              const r = require('/tmp/jest-results.json');
-              const failed = r.testResults.filter(t => t.status === 'failed');
-              if (failed.length === 0) {
-                console.log('All test suites passed (exit code may be from coverage threshold)');
-              } else {
-                console.log('FAILED SUITES:');
-                failed.forEach(t => {
-                  console.log('  ' + t.testFilePath.replace(process.cwd(), ''));
-                  (t.testResults || []).filter(tr => tr.status === 'failed').forEach(tr => {
-                    console.log('    FAIL: ' + tr.fullName);
-                    if (tr.failureMessages && tr.failureMessages[0]) {
-                      console.log('    ' + tr.failureMessages[0].split('\n')[0]);
-                    }
-                  });
-                });
-              }
-              console.log('numPassedTestSuites:', r.numPassedTestSuites, '/ numFailedTestSuites:', r.numFailedTestSuites);
-              console.log('numPassedTests:', r.numPassedTests, '/ numFailedTests:', r.numFailedTests);
-            "
-          fi
-          exit $EXIT_CODE
+          JEST_EXIT=$?
+          exit $JEST_EXIT
         env:
           CI: true
+
+      - name: Post test results as PR comment
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node << 'SCRIPT'
+          const fs = require('fs');
+          const { execSync } = require('child_process');
+          try {
+            const r = JSON.parse(fs.readFileSync('/tmp/jest-results.json', 'utf8'));
+            const node = '${{ matrix.node-version }}';
+            const failed = r.testResults.filter(t => t.status === 'failed');
+            let body = `## CI Test Results — Node ${node}\n\n`;
+            body += `**Suites**: ${r.numPassedTestSuites} passed, ${r.numFailedTestSuites} failed\n`;
+            body += `**Tests**: ${r.numPassedTests} passed, ${r.numFailedTests} failed\n\n`;
+            if (failed.length > 0) {
+              body += `### Failed suites\n\n`;
+              failed.slice(0, 10).forEach(t => {
+                const rel = t.testFilePath.replace(process.cwd() + '/', '');
+                body += `**${rel}**\n\n`;
+                (t.testResults || []).filter(tr => tr.status === 'failed').slice(0, 5).forEach(tr => {
+                  body += `- \`${tr.fullName}\`\n`;
+                  if (tr.failureMessages && tr.failureMessages[0]) {
+                    const line = tr.failureMessages[0].split('\n').find(l => l.trim()) || '';
+                    body += `  > ${line.trim()}\n`;
+                  }
+                });
+                body += '\n';
+              });
+            } else {
+              body += `All test suites passed. Exit may be from coverage threshold.\n`;
+            }
+            fs.writeFileSync('/tmp/pr-comment.md', body);
+          } catch (e) {
+            fs.writeFileSync('/tmp/pr-comment.md', `No jest results file: ${e.message}`);
+          }
+          SCRIPT
+          PR_NUM="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          gh pr comment "$PR_NUM" --body-file /tmp/pr-comment.md --repo "$REPO"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
