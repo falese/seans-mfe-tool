@@ -1,0 +1,5 @@
+# Compiled output accidentally generated in src/ (outDir should be dist/)
+*.js
+*.d.ts
+*.d.ts.map
+!*.test.js
