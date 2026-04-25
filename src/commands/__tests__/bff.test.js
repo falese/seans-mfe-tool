@@ -631,7 +631,7 @@ describe('BFF Commands', () => {
 
       it('should throw error if template directory not found', async () => {
         mockFs.pathExists.mockImplementation(async (p) => {
-          if (p.includes('templates/bff')) return false;
+          if (p.includes('bff-plugin/templates')) return false;
           return true;
         });
 
@@ -965,7 +965,7 @@ describe('BFF Commands', () => {
     it('should skip template file if it does not exist in template directory', async () => {
       mockFs.pathExists.mockImplementation(async (p) => {
         // Template dir exists
-        if (p.includes('templates/bff') && !p.includes('.ejs')) return true;
+        if (p.includes('bff-plugin/templates') && !p.includes('.ejs')) return true;
         // Dockerfile.ejs doesn't exist
         if (p.includes('Dockerfile.ejs')) return false;
         // All other template files exist

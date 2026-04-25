@@ -552,7 +552,7 @@ export async function generateAllFiles(
   // Platform/BFF directories and template paths
   const platformDir = path.join(basePath, 'src', 'platform', 'base-mfe');
   const bffDir = path.join(basePath, 'src', 'platform', 'bff');
-  const bffTemplateDir = path.resolve(__dirname, '../templates/bff');
+  const bffTemplateDir = path.resolve(__dirname, '../../../packages/bff-plugin/templates');
 
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test

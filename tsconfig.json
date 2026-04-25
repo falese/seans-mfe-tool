@@ -19,7 +19,9 @@
       "@seans-mfe/contracts": ["./packages/contracts/src/index.ts"],
       "@seans-mfe/contracts/*": ["./packages/contracts/src/*"],
       "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],
-      "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"]
+      "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"],
+      "@falese/bff-plugin": ["./packages/bff-plugin/src/index.ts"],
+      "@falese/bff-plugin/*": ["./packages/bff-plugin/src/*"]
     }
   },
   "include": ["src/**/*"],

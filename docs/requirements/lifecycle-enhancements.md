@@ -1064,7 +1064,6 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
 **Goal**: Operational safety features
 
 1. **REQ-LIFECYCLE-002**: Timeout Protection
-
    - Clear requirements, minimal dependencies
    - Prevents hung operations (immediate value)
    - Foundation for retry timeouts
@@ -1087,7 +1086,6 @@ See: `docs/acceptance-criteria/lifecycle-enhancements.feature` - Scenario: Error
 **Goal**: Performance and flexibility
 
 3. **REQ-LIFECYCLE-003**: Conditional Execution
-
    - Requires expression engine (jexl integration)
    - Enables optimization patterns
    - Business rules visible in manifest
