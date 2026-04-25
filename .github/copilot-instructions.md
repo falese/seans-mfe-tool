@@ -427,6 +427,11 @@ CI=1 npm test
 
 ## ADR Quick Reference
 
+### CLI Platform (oclif + JSON + Unification) — ✅ Complete
+
+- **ADR-090–115 work area**: oclif migration, JSON envelope, contracts package, MCP server — all shipped via PR #123.
+  See `docs/agent-plans/oclif-migration.md` for full details.
+
 ### Runtime & Platform Handlers (Active Implementation)
 
 - **ADR-059**: Platform Handler Interface & Execution Model ← **Issues #47-59**
@@ -648,56 +653,47 @@ GWT (Given-When-Then) scenarios in `docs/acceptance-criteria/`:
 3. Implement feature to satisfy scenarios
 4. Run manual or automated tests against scenarios
 
-## Active Implementation: Runtime Platform Handlers
+## Active Work Streams
 
-**Current Focus:** Issues #47-59 (REQ-RUNTIME-001 through 012)
+### 1. Runtime Platform Handlers (Issues #47–59)
 
-### Implementation Priority Order
+**Requirement set**: REQ-RUNTIME-001 through REQ-RUNTIME-012  
+**Docs**: `docs/requirements/` (runtime-requirements.md), `docs/architecture-runtime-platform.md`  
+**Code**: `src/runtime/`, `packages/runtime/`  
+**Status**: 🟡 In Progress
 
-Follow this sequence for runtime platform handler implementation:
+Implementation priority order (see [runtime-requirements.md](docs/requirements/) for full details):
 
-1. **#49 - REQ-RUNTIME-002**: Shared Context (foundation for all capabilities)
+1. #49 — REQ-RUNTIME-002: Shared Context (`src/runtime/base-mfe.ts`)
+2. #52 — REQ-RUNTIME-005: Platform Handler Registry
+3. #47 — REQ-RUNTIME-001: Load Capability (atomic) — ADR-060
+4. #51 — REQ-RUNTIME-004: Render Capability (React 18 createRoot)
+5. #53 — REQ-RUNTIME-006: Auth Handler
+6. #56 — REQ-RUNTIME-009: Error Handling Handler
+7–12. Remaining handlers (#54, #55, #57, #50, #58, #59) — parallelizable
 
-   - File: `src/runtime/base-mfe.ts` - Context class with TypeScript interfaces
-   - No dependencies, must be implemented first
+### 2. BaseMFE Boilerplate Codegen from DSL (Issue #39)
 
-2. **#52 - REQ-RUNTIME-005**: Platform Handler Registry
+**Requirement**: REQ-057  
+**Docs**: `docs/requirements/REQ-057-base-mfe-boilerplate.md`  
+**Status**: 🟡 In Progress
 
-   - File: `src/runtime/handlers/PlatformHandlerRegistry.ts`
-   - Depends on: #49 (Context)
-   - Enables all handler implementations
+Generates `src/platform/base-mfe/mfe.ts` from `mfe-manifest.yaml` with all lifecycle stubs,
+capability methods, and handler wiring.
 
-3. **#47 - REQ-RUNTIME-001**: Load Capability (atomic operation)
+### 3. Lifecycle Engine Enhancements (ADR-063–067)
 
-   - File: `src/runtime/base-mfe.ts` - BaseMFE.load() method
-   - Depends on: #49, #52
-   - See: ADR-060 for atomic operation design
+**Requirement set**: REQ-LIFECYCLE-001 through REQ-LIFECYCLE-005  
+**Docs**: `docs/requirements/lifecycle-enhancements.md`, `docs/requirements/lifecycle-enhancements-implementation-plan.md`  
+**Status**: 📊 Planned (GitHub issues not yet created)
 
-4. **#51 - REQ-RUNTIME-004**: Render Capability
+5 enhancements: parallel execution, timeout protection, conditional execution,
+inter-hook communication, error classification.
 
-   - File: `src/runtime/base-mfe.ts` - BaseMFE.render() method
-   - Depends on: #47, #49
-   - React 18 createRoot() integration
+### 4. npm Publish: @seans-mfe/contracts + @seans-mfe/oclif-base
 
-5. **#53 - REQ-RUNTIME-006**: Auth Handler (JWT validation)
-
-   - File: `src/runtime/handlers/auth.ts`
-   - Depends on: #52
-   - Use `jsonwebtoken` library
-
-6. **#56 - REQ-RUNTIME-009**: Error Handling Handler
-   - File: `src/runtime/handlers/error-handling.ts`
-   - Depends on: #52
-   - Exponential backoff retry logic
-
-7-12. **Remaining Handlers** (can be implemented in parallel):
-
-- #54: Validation Handler (`src/runtime/handlers/validation.ts`)
-- #55: Telemetry Handler (`src/runtime/handlers/telemetry.ts`)
-- #57: Caching Handler (`src/runtime/handlers/caching.ts`)
-- #50: Load Result Validation (refinement)
-- #58: Error Boundaries & Fallback UI
-- #59: Telemetry Emission Points
+**Docs**: `MERGE-PLAN.md` Phase 1  
+**Status**: ⏳ Pending — blocker for Phase 1 success criteria
 
 ### Runtime Implementation Patterns
 

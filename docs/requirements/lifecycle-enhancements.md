@@ -1,8 +1,8 @@
 # Lifecycle Engine Enhancement Requirements
 
 **Document Version**: 1.0.0  
-**Last Updated**: December 11, 2025  
-**Status**: 📋 Planned  
+**Last Updated**: April 2026  
+**Status**: 📋 Planned — GitHub issues not yet created (ADR-063 through ADR-067 exist; use `docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md` as the `gh issue create` template source)  
 **Related Documents**:
 
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)

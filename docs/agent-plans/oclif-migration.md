@@ -1,6 +1,6 @@
 # oclif Migration + Agent-Callable JSON CLI + Unification Foundation
 
-> Status: active. Tracked by issues #90–#115.
+> **Status: ✅ Complete.** All 26 issues (#90–#115) closed via PR #123 (merged April 2026).
 > Owner: @falese.
 
 ## Objective
@@ -37,12 +37,12 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 | #98 | [A9] Enable @oclif/plugin-plugins for runtime plugin install; reserve daemon and coder topics | plugin install path and reserved topics |
 | #99 | [A10] Add Bun dev script, oclif manifest generation to build, README updates | build/docs integration |
 
-### Epic A verification gate
+### Epic A verification gate ✅
 
-- `bun bin/dev.ts --help` works.
-- `node bin/run.js --help` works.
-- All migrated commands execute via oclif namespace layout.
-- Build emits oclif manifest successfully.
+- ✅ `bun bin/dev.ts --help` works.
+- ✅ `node bin/run.js --help` works.
+- ✅ All migrated commands execute via oclif namespace layout.
+- ✅ Build emits oclif manifest successfully.
 
 ## Epic B — JSON Agent Interface (#100–#108)
 
@@ -68,12 +68,12 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 | #107 | [B8] Normalize --dry-run across all mutating commands and surface plannedChanges in JSON | dry-run normalization |
 | #108 | [B9] Integration test: JSON contract round-trip with ajv schema validation | end-to-end JSON validation tests |
 
-### Epic B verification gate
+### Epic B verification gate ✅
 
-- Every migrated command supports `--json` envelope semantics.
-- Error classification/exit mapping aligns with contract.
-- Generated schemas are up to date and validated in integration tests.
-- MCP tool execution path is concurrency-safe and process-isolated.
+- ✅ Every migrated command supports `--json` envelope semantics.
+- ✅ Error classification/exit mapping aligns with contract.
+- ✅ Generated schemas are up to date and validated in integration tests.
+- ✅ MCP tool execution path is concurrency-safe and process-isolated.
 
 ## Epic C — Unification Foundation (#109–#115)
 
@@ -96,12 +96,13 @@ Migrate `seans-mfe-tool` from Commander to oclif, establish a strict JSON comman
 | #114 | [C6] pnpm workspaces + Turborepo scaffolding for the two extracted packages | workspace/turbo scaffolding |
 | #115 | [C7] Write MERGE-PLAN.md: phased path to absorb Falese/daemon and Falese/coder | merge plan document |
 
-### Epic C verification gate
+### Epic C verification gate ✅
 
-- `@seans-mfe/contracts` and `@seans-mfe/oclif-base` are consumed by CLI and plugin path.
-- Plugin contract and skeleton are usable as external starter.
-- MCP federation resolves local, plugin, and remote sources.
-- Workspace tooling (`pnpm`, Turborepo) builds and tests package graph.
+- ✅ `@seans-mfe/contracts` and `@seans-mfe/oclif-base` are consumed by CLI and plugin path.
+- ✅ Plugin contract and skeleton are usable as external starter.
+- ✅ MCP federation resolves local, plugin, and remote sources.
+- ✅ Workspace tooling (`pnpm`, Turborepo) builds and tests package graph.
+- ⏳ `@seans-mfe/contracts` and `@seans-mfe/oclif-base` published to npm (pending — see MERGE-PLAN.md Phase 1).
 
 ## Sequencing and dependencies
 

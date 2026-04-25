@@ -2,7 +2,8 @@
 
 **Status:** 🟡 In Progress
 **GitHub Issue:** #39
-**Last Updated:** 2025-11-28
+**Last Updated:** April 2026
+**Dependency:** Requires runtime platform (REQ-RUNTIME-001–012, issues #47–59) to be sufficiently stable before generated boilerplate can be wired to live handlers.
 
 ## Core Requirement & Architectural Principle
 

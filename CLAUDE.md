@@ -6,17 +6,28 @@ Guidance for Claude Code sessions working on `seans-mfe-tool`.
 
 For deep background, read `docs/agent-plans/oclif-migration.md`.
 
-## Migration state
+## Migration state ✅ Complete
 
-Three epics are in flight across 26 issues. Every code change should trace back to exactly one issue.
+All three epics shipped via PR #123 (merged April 2026). Issues #90–#115 are closed.
 
-| Epic | Issues | Theme |
+| Epic | Issues | Theme | Status |
+|---|---|---|---|
+| A — oclif Migration | falese/seans-mfe-tool#90–#99 | Replace Commander with oclif; Bun dev entry; plugin system | ✅ Done |
+| B — JSON Agent Interface | falese/seans-mfe-tool#100–#108 | `CommandResult` envelope, `--json` mode, JSON Schemas, MCP server | ✅ Done |
+| C — Unification Foundation | falese/seans-mfe-tool#109–#115 | `@seans-mfe/contracts` + `@seans-mfe/oclif-base` packages, plugin contract, MCP federation, merge plan | ✅ Done |
+
+See `docs/agent-plans/oclif-migration.md` for verification gates and completion notes.
+
+### What's active now
+
+| Work stream | Location | Status |
 |---|---|---|
-| A — oclif Migration | falese/seans-mfe-tool#90–#99 | Replace Commander with oclif; Bun dev entry; plugin system |
-| B — JSON Agent Interface | falese/seans-mfe-tool#100–#108 | `CommandResult` envelope, `--json` mode, JSON Schemas, MCP server |
-| C — Unification Foundation | falese/seans-mfe-tool#109–#115 | `@seans-mfe/contracts` + `@seans-mfe/oclif-base` packages, plugin contract, MCP federation, merge plan |
+| Runtime platform (REQ-RUNTIME-001–012) | `src/runtime/`, `packages/runtime/` | 🟡 In Progress (issues #47–59) |
+| BaseMFE boilerplate codegen from DSL | `docs/requirements/REQ-057-base-mfe-boilerplate.md` | 🟡 In Progress (issue #39) |
+| Lifecycle engine enhancements (5 features) | `docs/requirements/lifecycle-enhancements.md`, ADR-063–067 | 📋 Planned (issues not yet created) |
+| npm publish of `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | `packages/contracts/`, `packages/oclif-base/` | ⏳ Pending (MERGE-PLAN.md Phase 1) |
 
-See `docs/agent-plans/oclif-migration.md` for full tables, sequencing, and per-epic verification gates.
+See `docs/PROJECT-STATUS.md` for the full current-state overview.
 
 ## Locked decisions — do not relitigate
 

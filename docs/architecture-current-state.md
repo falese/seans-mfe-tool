@@ -1,4 +1,4 @@
-# seans-mfe-tool - Current Architecture (December 2025)
+# seans-mfe-tool - Current Architecture (Updated April 2026)
 
 ## Table of Contents
 
@@ -13,6 +13,25 @@
 ## Subsystem Architectures
 
 This document provides the high-level system architecture. For detailed subsystem designs, see:
+
+### 🖥️ **CLI Platform** (oclif + JSON Agent Interface + Unification)
+
+**[→ oclif Migration Plan](./agent-plans/oclif-migration.md)**
+
+The CLI runtime, command dispatch, and agent-callable interface. Includes:
+
+- `bin/dev.ts` (Bun, development) and `bin/run.js` (Node, published)
+- `packages/oclif-base/` — `BaseCommand` with `--json` envelope, flush-safe `process.exit`
+- `packages/contracts/` — `CommandResult<T>`, typed error taxonomy, sysexits exit codes
+- `src/commands/` — all commands under oclif namespace layout (`bff/*`, `remote/*`, `mcp/*`, `schemas`)
+- `src/hooks/` — init, prerun, postrun (graphql-ws telemetry), command_not_found
+- `src/mcp/` — MCP server with federated tool registry (local + oclif plugins + remote sources)
+- `schemas/*.json` — auto-generated command schemas (inputs + outputs)
+- `PLUGIN-CONTRACT.md` + `examples/plugin-skeleton/` — third-party plugin integration
+- `pnpm-workspace.yaml` + `turbo.json` — workspace build graph
+- `MERGE-PLAN.md` — phased path to monorepo with Falese/daemon and Falese/coder
+
+**Status**: ✅ Complete (Epic A #90–99, Epic B #100–108, Epic C #109–115, closed April 2026)
 
 ### 📐 **Runtime Platform**
 
@@ -92,16 +111,16 @@ OpenAPI-driven REST API scaffolding. Will include:
 
 ```mermaid
 graph TB
-    subgraph "CLI Entry Point"
-        CLI["bin/seans-mfe-tool.js<br/>Commander.js CLI"]
+    subgraph "CLI Entry Point (oclif)"
+        CLI["bin/run.js (Node publish)<br/>bin/dev.ts (Bun dev)"]
     end
 
-    subgraph "Command Layer"
-        RemoteGen["remote-generate.ts<br/>Generate MFE Projects"]
-        RemoteInit["remote-init.ts<br/>Initialize Workspace"]
-        BFF["bff.ts<br/>BFF Management"]
-        API["create-api.js<br/>API Generation"]
-        Deploy["deploy.js<br/>Docker/K8s Deploy"]
+    subgraph "Command Layer (src/commands)"
+        RemoteGen["remote/generate.ts<br/>Generate MFE Projects"]
+        RemoteInit["remote/init.ts<br/>Initialize Workspace"]
+        BFF["bff/{init,build,dev,validate}.ts<br/>BFF Management"]
+        API["api.ts<br/>API Generation"]
+        Deploy["deploy.ts<br/>Docker/K8s Deploy"]
     end
 
     subgraph "Code Generation Engine"
@@ -211,19 +230,22 @@ graph TB
 
 ### 1. CLI Entry Point
 
-**Location**: `bin/seans-mfe-tool.js`
+**Dev entry**: `bin/dev.ts` (Bun, no transpile)  
+**Published entry**: `bin/run.js` (Node.js, loads `dist/commands/`)
 
-- Commander.js-based CLI
-- Route commands to handlers
-- Parse arguments and options
+- oclif-based CLI (Commander fully removed)
+- BaseCommand (`packages/oclif-base/`) owns `--json` envelope and exit codes
+- All commands typed — return `CommandResult<T>` via `src/oclif/results.ts`
 
 **Commands Available**:
 
-- `mfe remote:generate` - Generate complete MFE project
-- `mfe remote:init` - Initialize workspace structure
-- `mfe bff:*` - BFF management (validate, build, dev)
-- `mfe api` - Generate API from OpenAPI spec
-- `mfe deploy` - Docker/K8s deployment
+- `mfe remote:generate` — Generate complete MFE project
+- `mfe remote:init` — Initialize workspace structure
+- `mfe bff:init / bff:validate / bff:build / bff:dev` — BFF management
+- `mfe api` — Generate API from OpenAPI spec
+- `mfe deploy` — Docker/K8s deployment
+- `mfe schemas` — Live tool catalog
+- `mfe mcp:serve` — MCP server (child-process isolation)
 
 ### 2. Command Layer
 
@@ -595,7 +617,7 @@ graph TB
 
 ### CLI & Build Tools
 
-- **Commander.js** - CLI framework
+- **oclif** - CLI framework (Commander.js removed April 2026)
 - **TypeScript** - Type safety for runtime
 - **JavaScript (Node.js)** - CLI commands and generators
 - **Jest** - Testing framework
