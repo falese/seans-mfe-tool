@@ -1,0 +1,34 @@
+name: abc-kids-flappy
+version: 1.0.0
+type: remote
+language: typescript
+description: Flappy Bird — tap to flap, avoid pipes, keep score!
+owner: abc-kids-team
+tags: [kids, game, flappy-bird, arcade]
+category: games
+
+endpoint: http://localhost:3001
+remoteEntry: http://localhost:3001/remoteEntry.js
+discovery: http://localhost:3001/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - PlayGame:
+      type: domain
+      description: Play the Flappy Bird game on an HTML5 Canvas
+
+  - ShowCover:
+      type: domain
+      description: Show the Flappy Bird game cover card with title and art
+
+  - GetGameInfo:
+      type: domain
+      description: Return game metadata including title, age range, and description
+
+dependencies:
+  runtime:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  design-system:
+    '@mui/material': ^5.14.0
+    '@emotion/react': ^11.11.1
+    '@emotion/styled': ^11.11.0
