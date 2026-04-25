@@ -162,7 +162,7 @@ describe('JSON contract: typed error exit codes', () => {
     // triggers ValidationError('No mfe-manifest.yaml found…')
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
     try {
-      const { stdout, code } = await runCli(['bff', 'init', '--json'], { cwd: tmpDir });
+      const { stdout, code } = await runCli(['bff:init', '--json'], { cwd: tmpDir });
       expect(code).toBe(64);
       const env = parseEnvelope(stdout);
       expect(env.ok).toBe(false);
@@ -183,7 +183,7 @@ describe('JSON contract: typed error exit codes', () => {
     await fs.ensureDir(appDir);
     try {
       const { stdout, code } = await runCli(
-        ['remote', 'init', 'existing-app', '--json'],
+        ['remote:init', 'existing-app', '--json'],
         { cwd: tmpDir },
       );
       expect(code).toBe(65);
@@ -202,7 +202,7 @@ describe('JSON contract: typed error exit codes', () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
     try {
       const { stdout, code } = await runCli(
-        ['bff', 'init', 'test-bff', '--json'],
+        ['bff:init', 'test-bff', '--json'],
         { cwd: tmpDir },
       );
       expect(code).toBe(69);
@@ -220,7 +220,7 @@ describe('JSON contract: typed error exit codes', () => {
     // Reuse the ValidationError case to verify the error envelope shape
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
     try {
-      const { stdout } = await runCli(['bff', 'init', '--json'], { cwd: tmpDir });
+      const { stdout } = await runCli(['bff:init', '--json'], { cwd: tmpDir });
       // parseEnvelope already runs ajv — success here means the schema passed
       expect(() => parseEnvelope(stdout)).not.toThrow();
     } finally {
@@ -238,7 +238,7 @@ describe('JSON contract: --dry-run', () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
     try {
       const { stdout, code } = await runCli(
-        ['remote', 'init', 'dry-app', '--json', '--dry-run'],
+        ['remote:init', 'dry-app', '--json', '--dry-run'],
         { cwd: tmpDir },
       );
       expect(code).toBe(0);

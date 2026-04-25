@@ -1,0 +1,42 @@
+{
+  "name": "@seans-mfe/contracts",
+  "version": "0.1.0",
+  "description": "Shared runtime contracts, typed errors, error classifier, and CommandResult envelope for the seans-mfe platform",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./errors": {
+      "require": "./dist/errors/index.js",
+      "types": "./dist/errors/index.d.ts"
+    },
+    "./error-classifier": {
+      "require": "./dist/error-classifier.js",
+      "types": "./dist/error-classifier.d.ts"
+    },
+    "./envelope": {
+      "require": "./dist/envelope.js",
+      "types": "./dist/envelope.d.ts"
+    },
+    "./messages": {
+      "require": "./dist/messages.js",
+      "types": "./dist/messages.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'No tests in @seans-mfe/contracts yet' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

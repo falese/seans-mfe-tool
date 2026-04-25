@@ -1,14 +1,21 @@
 /**
- * MCP tool registry.
+ * MCP tool registry with federation.
  *
- * Reads schemas/ and converts each command schema into an MCP tool definition.
- * For now the source is local CLI only; C5 will add plugin + remote sources.
+ * Aggregates tools from three sources:
+ *   1. Local  — CLI's own schemas/; tools prefixed "mfe:"
+ *   2. Plugin — installed oclif plugins with schemas/; prefixed by topic
+ *   3. Remote — servers listed in ~/.config/seans-mfe/mcp.json; prefixed by name
  *
- * Refs #106 (B7)
+ * Tool name collisions across sources abort startup with a SystemError so
+ * conflicts are never silently hidden.
+ *
+ * Refs #106 (B7), #113 (C5)
  */
 
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { SystemError } from '@seans-mfe/contracts';
+import { loadLocalTools } from './sources/local';
+import { loadPluginTools } from './sources/plugin';
+import { loadRemoteTools } from './sources/remote';
 
 export interface McpToolDefinition {
   name:        string;
@@ -16,39 +23,58 @@ export interface McpToolDefinition {
   inputSchema: object;
 }
 
-export async function loadToolRegistry(schemasDir: string): Promise<McpToolDefinition[]> {
-  const files = await fs.readdir(schemasDir);
-  const tools: McpToolDefinition[] = [];
+export interface RegistryOptions {
+  schemasDir: string;
+  cliName?: string;
+  remoteMcpConfigPath?: string;
+}
 
-  for (const file of files.sort()) {
-    if (!file.endsWith('.json')) continue;
+export async function loadToolRegistry(
+  schemasDir: string,
+  options: Partial<RegistryOptions> = {},
+): Promise<McpToolDefinition[]> {
+  const cliName = options.cliName ?? 'seans-mfe-tool';
+  const remoteMcpConfigPath = options.remoteMcpConfigPath; // undefined = default path
 
-    const schema = await fs.readJson(path.join(schemasDir, file));
+  const [localTools, pluginTools, remoteTools] = await Promise.all([
+    loadLocalTools(schemasDir),
+    loadPluginTools(cliName),
+    loadRemoteTools(remoteMcpConfigPath),
+  ]);
 
-    // Convert colon-topic command name for MCP: bff-init → bff:init
-    const commandName: string = schema.title ?? file.replace('.json', '').replace(/-/g, ':');
+  const all = [...localTools, ...pluginTools, ...remoteTools];
 
-    tools.push({
-      name:        commandName,
-      description: schema.description ?? `Run seans-mfe-tool ${commandName}`,
-      inputSchema: schema.input ?? { type: 'object', properties: {} },
-    });
+  // Collision detection — fail loudly at startup
+  const seen = new Map<string, string>();
+  for (const tool of all) {
+    const existing = seen.get(tool.name);
+    if (existing) {
+      throw new SystemError(
+        `MCP tool name collision: "${tool.name}" is registered by multiple sources. ` +
+        `Rename the conflicting tool or remove one of the sources.`,
+      );
+    }
+    seen.set(tool.name, tool.name);
   }
 
-  return tools;
+  return all;
 }
 
 /**
  * Map an MCP tool name and its input arguments to CLI argv.
  *
- * Example: toolName="remote:init", input={ name:"my-app", port:"3005" }
- *   →  ["remote:init", "my-app", "--port", "3005", "--json"]
+ * Examples:
+ *   mfe:deploy  → ["deploy", "--json"]
+ *   mfe:bff:init → ["bff:init", "--json"]
+ *   daemon:start → ["daemon:start", "--json"]
  */
 export function buildArgv(toolName: string, input: Record<string, unknown>): string[] {
+  // Strip the source prefix (mfe:, daemon:, coder:, etc.)
   const parts = toolName.split(':');
-  const argv: string[] = [...parts];
+  const commandParts = parts.slice(1); // drop source prefix
+  const commandId = commandParts.join(':');
+  const argv: string[] = [commandId];
 
-  // Positional args first (heuristic: keys that match known positional names)
   const positionalKeys = new Set(['name', 'spec']);
   const flags: string[] = [];
 
@@ -59,9 +85,7 @@ export function buildArgv(toolName: string, input: Record<string, unknown>): str
       if (value) flags.push(`--${key}`);
     } else if (value !== undefined && value !== null) {
       if (Array.isArray(value)) {
-        for (const v of value) {
-          flags.push(`--${key}`, String(v));
-        }
+        for (const v of value) flags.push(`--${key}`, String(v));
       } else {
         flags.push(`--${key}`, String(value));
       }

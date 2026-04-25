@@ -14,7 +14,13 @@
     "declarationMap": true,
     "allowJs": true,
     "moduleResolution": "node",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "paths": {
+      "@seans-mfe/contracts": ["./packages/contracts/src/index.ts"],
+      "@seans-mfe/contracts/*": ["./packages/contracts/src/*"],
+      "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],
+      "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/__tests__/**", "examples"]

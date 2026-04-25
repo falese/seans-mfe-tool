@@ -236,6 +236,53 @@ Reserved topics (available once the plugin is installed):
 - `daemon:*` — control-plane daemon commands (`@falese/daemon-plugin`)
 - `coder:*` — AI-assisted coding commands (`@falese/coder-plugin`)
 
+### Building a plugin
+
+See [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md) for the full integration spec
+and [`examples/plugin-skeleton/`](./examples/plugin-skeleton/) for a working
+starter plugin you can clone and rename.
+
+For the long-term roadmap toward a unified monorepo, see [MERGE-PLAN.md](./MERGE-PLAN.md).
+
+---
+
+## MCP server
+
+`seans-mfe-tool mcp serve` exposes all CLI commands as Model Context Protocol
+tools so AI agents (Claude, Copilot, etc.) can invoke them directly.
+
+Tools are discovered from three federated sources:
+
+| Source | Prefix | How it works |
+|--------|--------|--------------|
+| Local | `mfe:` | Reads `schemas/*.json` bundled with the CLI |
+| Plugins | topic (e.g. `daemon:`) | Reads installed oclif plugins that ship `schemas/` |
+| Remote | server name | Spawns or connects to entries in `~/.config/seans-mfe/mcp.json` |
+
+### Remote MCP federation config
+
+Create `~/.config/seans-mfe/mcp.json` to proxy tools from external MCP servers:
+
+```json
+{
+  "servers": [
+    {
+      "name": "coder",
+      "command": "bunx",
+      "args": ["@falese/coder-mcp"]
+    },
+    {
+      "name": "daemon",
+      "url": "http://daemon.local:8080/mcp"
+    }
+  ]
+}
+```
+
+Each entry's `name` becomes the tool prefix (`coder:refactor`, `daemon:start`, …).
+Tool name collisions across sources cause a startup error — rename the conflicting
+tool or remove the source.
+
 ---
 
 ## Working Example

@@ -1,0 +1,200 @@
+# seans-mfe-tool Plugin Contract
+
+Version: **1.0** — Effective after C2 (issue #110).
+
+This document is the authoritative integration spec for plugins that extend
+`seans-mfe-tool`.  Read it before writing a plugin.  If you believe a rule
+is wrong, open an issue rather than violating it.
+
+---
+
+## 1. Package shape
+
+A plugin is an npm package that satisfies the oclif plugin interface.
+
+### Required fields in `package.json`
+
+```jsonc
+{
+  "name": "@falese/my-plugin",          // vendor-scoped
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "oclif": {
+    "commands": "./dist/commands",
+    "topics": { "my-topic": { "description": "..." } }
+  },
+  "peerDependencies": {
+    "@oclif/core": "^4",
+    "seans-mfe-tool": "^1"              // declare compatible CLI major
+  },
+  "dependencies": {
+    "@seans-mfe/oclif-base": "*",       // BaseCommand with JSON envelope
+    "@seans-mfe/contracts": "*"         // typed errors, CommandResult
+  }
+}
+```
+
+`@seans-mfe/oclif-base` and `@seans-mfe/contracts` are **regular dependencies**,
+not peer dependencies — the plugin must own its own copy.
+
+---
+
+## 2. Command requirements
+
+Every command **must** extend `BaseCommand` from `@seans-mfe/oclif-base`:
+
+```ts
+import { BaseCommand } from '@seans-mfe/oclif-base';
+
+export default class MyCommand extends BaseCommand<MyResult> {
+  static description = 'Does a thing.';
+
+  async runCommand(): Promise<MyResult> {
+    // ... your logic
+    return { status: 'ok' };
+  }
+}
+```
+
+`BaseCommand.run()` owns:
+- JSON envelope emission (`--json` flag)
+- stdout/stderr split (chalk goes to stderr under `--json`)
+- Interactive-prompt rejection under `--json`
+- Correlation ID propagation
+- Sysexits-style exit codes
+
+**Never override `run()`.**  Implement `runCommand()` only.
+
+### Return types
+
+Define a typed result interface for `T` so callers can rely on it.
+Export it from your package's public surface so MCP schema generators can
+introspect it.
+
+### JSON envelope
+
+Under `--json`, stdout emits exactly **one line**: a `CommandResult<T>` object.
+All other output (chalk, progress spinners, human-readable logs) goes to
+`process.stderr`.
+
+---
+
+## 3. Reserved topics
+
+| Topic | Owner | Plugin package |
+|-------|-------|----------------|
+| `daemon` | Falese | `@falese/daemon-plugin` |
+| `coder` | Falese | `@falese/coder-plugin` |
+| `mfe` | core | built-in |
+| `bff` | core | built-in |
+| `remote` | core | built-in |
+
+Third-party plugins **must** use a vendor prefix:
+
+```
+acme:build    ✅
+build         ❌  (reserved for core or will conflict)
+```
+
+---
+
+## 4. Error conventions
+
+Only throw typed errors from `@seans-mfe/contracts`:
+
+| Error class | Situation | Exit code |
+|-------------|-----------|-----------|
+| `ValidationError` | Bad user input, missing flag, Zod parse failure | 64 |
+| `BusinessError` | Rule violation (directory exists, quota exceeded) | 65 |
+| `NetworkError` | HTTP, WebSocket, registry failure | 66 |
+| `SystemError` | FS read failure, missing binary, interactive prompt under `--json` | 69 |
+| `SecurityError` | Auth/authz failure | 77 |
+| `TimeoutError` | Exceeded configured timeout | 124 |
+
+Unknown errors (any `Error` not in the above list) classify as `unknown` and
+exit 70.  **Never** throw a plain `new Error(...)` from command code.
+
+```ts
+import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+
+if (!name) {
+  throw new ValidationError('Name is required', 'name', 'required');
+}
+if (existsSync(targetDir)) {
+  throw new BusinessError('Directory already exists', 'DIR_EXISTS', { path: targetDir });
+}
+```
+
+---
+
+## 5. Telemetry event names
+
+Plugins emit ACTION messages to the daemon via the `postrun` hook.  Event
+names **must** be vendor-prefixed:
+
+```
+daemon.start.completed   ✅
+coder.refactor.started   ✅
+start.completed          ❌  (missing vendor prefix)
+```
+
+The `postrun` hook populates the `actionType` field automatically from the
+command ID.  Plugins only need to emit custom events if they want sub-step
+telemetry.
+
+---
+
+## 6. Versioning
+
+Plugins declare their compatible CLI major version in `peerDependencies`:
+
+```json
+"peerDependencies": {
+  "seans-mfe-tool": "^1"
+}
+```
+
+A plugin compatible with CLI `1.x` may break on `2.x`.  oclif's plugin
+loader will warn when the peer version is incompatible.
+
+### Stability guarantees
+
+- `@seans-mfe/contracts` follows semver strictly — no breaking changes within
+  a major.
+- `@seans-mfe/oclif-base` follows semver strictly.
+- The core CLI's internal modules (`src/`) are **not** part of the public API
+  and may change without notice.
+
+---
+
+## 7. MCP schema exposure
+
+If your plugin ships JSON schemas alongside its commands, the MCP federation
+layer (`seans-mfe-tool mcp serve`) will automatically discover and proxy your
+tools.  Place your schemas at `schemas/<topic>/<command>.json` inside your
+plugin package (generated by your own `build:schemas` script, same pattern as
+the core CLI).
+
+---
+
+## 8. Local development workflow
+
+```bash
+# Clone / create your plugin
+cd my-plugin
+npm install
+
+# Link into the CLI for local testing
+seans-mfe-tool plugins link ../my-plugin
+
+# Verify your topic appears
+seans-mfe-tool --help
+
+# Test JSON envelope
+seans-mfe-tool my-topic:my-cmd --json
+
+# Unlink when done
+seans-mfe-tool plugins unlink my-plugin
+```
+
+See `examples/plugin-skeleton/` for a working starter plugin.

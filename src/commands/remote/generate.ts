@@ -4,7 +4,7 @@ import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
 import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError } from '../../runtime/errors';
+import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '../../dsl/schema';
 

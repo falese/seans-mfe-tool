@@ -3,7 +3,7 @@ import chalk = require('chalk');
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError } from '../../runtime/errors';
+import { ValidationError } from '@seans-mfe/contracts';
 import { extractMeshConfig } from './_shared';
 import type { BFFCommandOptions } from './_shared';
 import type { BffValidateResult, BffValidationIssue } from '../../oclif/results';
@@ -15,7 +15,7 @@ export async function bffValidateCommand(options: BFFCommandOptions = {}): Promi
     console.log(chalk.blue('Validating BFF configuration...'));
 
     const manifestPath = options.manifest || 'mfe-manifest.yaml';
-    const { meshConfig } = await extractMeshConfig(manifestPath);
+    const { meshConfig, manifest } = await extractMeshConfig(manifestPath);
 
     console.log(chalk.blue('\nValidating sources...'));
     for (const source of meshConfig.sources) {
@@ -75,7 +75,7 @@ export async function bffValidateCommand(options: BFFCommandOptions = {}): Promi
     if (!hasErrors) {
       console.log(chalk.green('\n✓ BFF configuration is valid'));
     }
-    return { valid: !hasErrors, issues };
+    return { valid: !hasErrors, issues, meshConfig, manifest };
 
   } catch (error) {
     console.error(chalk.red('\n✗ Validation failed:'));

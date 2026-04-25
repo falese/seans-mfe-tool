@@ -6,6 +6,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 const ROOT = path.resolve(__dirname, '../../..')
+// bin/run.js falls back to ts-node when dist/ is absent; ts-node 10.x is
+// incompatible with Node 20 CJS hooks. Skip spawn-based tests when not built.
+const distExists = fs.existsSync(path.join(ROOT, 'dist'))
+const itWithDist = distExists ? it : it.skip
 
 describe('oclif plugin config (issue #98)', () => {
   it('package.json oclif.plugins includes @oclif/plugin-plugins', () => {
@@ -30,7 +34,7 @@ describe('oclif plugin config (issue #98)', () => {
     expect(pkg.oclif.topics.coder.description).toContain('coder')
   })
 
-  it('node bin/run.js plugins --help shows install/uninstall/link/update subcommands', () => {
+  itWithDist('node bin/run.js plugins --help shows install/uninstall/link/update subcommands', () => {
     const result = spawnSync('node', ['bin/run.js', 'plugins', '--help'], {
       cwd: ROOT,
       encoding: 'utf8',

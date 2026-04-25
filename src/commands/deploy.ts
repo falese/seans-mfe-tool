@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import * as os from 'os';
 import * as ejs from 'ejs';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { ValidationError, BusinessError, SystemError, TimeoutError } from '../runtime/errors';
+import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
 
 interface DeployOptions {

@@ -17,7 +17,7 @@ import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { loadToolRegistry, buildArgv, McpToolDefinition } from './tool-registry';
-import type { CommandResult } from '../oclif/envelope';
+import type { CommandResult } from '@seans-mfe/contracts';
 
 export interface McpServerOptions {
   schemasDir:  string;
@@ -117,7 +117,7 @@ export async function executeToolCall(
  * runtime dependency before the C-epic contracts package ships.
  */
 export async function startMcpServer(options: McpServerOptions): Promise<void> {
-  const tools = await loadToolRegistry(options.schemasDir);
+  const tools = await loadToolRegistry(options.schemasDir, { cliName: 'seans-mfe-tool' });
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
   process.stdin.setEncoding('utf8');
