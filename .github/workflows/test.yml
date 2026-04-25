@@ -60,6 +60,7 @@ jobs:
           try {
             const r = JSON.parse(fs.readFileSync('/tmp/jest-results.json', 'utf8'));
             const node = '${{ matrix.node-version }}';
+            // jest 29 JSON reporter uses `name` for file path and `assertionResults` for tests
             const failed = r.testResults.filter(t => t.status === 'failed');
             let body = `## CI Test Results — Node ${node}\n\n`;
             body += `**Suites**: ${r.numPassedTestSuites} passed, ${r.numFailedTestSuites} failed\n`;
@@ -67,10 +68,16 @@ jobs:
             if (failed.length > 0) {
               body += `### Failed suites\n\n`;
               failed.slice(0, 10).forEach(t => {
-                const rel = t.testFilePath.replace(process.cwd() + '/', '');
+                const filePath = t.name || t.testFilePath || 'unknown';
+                const rel = filePath.replace(process.cwd() + '/', '');
                 body += `**${rel}**\n\n`;
-                (t.testResults || []).filter(tr => tr.status === 'failed').slice(0, 5).forEach(tr => {
-                  body += `- \`${tr.fullName}\`\n`;
+                if (t.message) {
+                  const firstLine = t.message.split('\n').find(l => l.trim()) || '';
+                  body += `> ${firstLine.trim()}\n\n`;
+                }
+                const assertions = t.assertionResults || t.testResults || [];
+                assertions.filter(tr => tr.status === 'failed').slice(0, 5).forEach(tr => {
+                  body += `- \`${tr.fullName || tr.title || '(unnamed)'}\`\n`;
                   if (tr.failureMessages && tr.failureMessages[0]) {
                     const line = tr.failureMessages[0].split('\n').find(l => l.trim()) || '';
                     body += `  > ${line.trim()}\n`;
@@ -83,7 +90,7 @@ jobs:
             }
             fs.writeFileSync('/tmp/pr-comment.md', body);
           } catch (e) {
-            fs.writeFileSync('/tmp/pr-comment.md', `No jest results file: ${e.message}`);
+            fs.writeFileSync('/tmp/pr-comment.md', `Script error: ${e.message}\n${e.stack}`);
           }
           SCRIPT
           PR_NUM="${{ github.event.pull_request.number }}"
