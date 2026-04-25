@@ -31,7 +31,7 @@ const hook: Hook<'postrun'> = async function(opts) {
     return;
   }
 
-  const commandId = (opts.Command as { id?: string }).id ?? '(unknown)';
+  const commandId = (opts.Command as { id?: string } | undefined)?.id ?? '(unknown)';
   const correlationId = process.env.SEANS_MFE_CORRELATION_ID ?? randomUUID();
 
   const message: Message = {
@@ -87,10 +87,10 @@ function markDaemonOffline(): void {
 // WebSocket emission
 // ---------------------------------------------------------------------------
 
-async function emitTelemetry(url: string, message: Message, timeoutMs: number): Promise<void> {
+function emitTelemetry(url: string, message: Message, timeoutMs: number): Promise<void> {
   // Use native WebSocket (Node 22+) or fall back to the 'ws' package
   const WS = getWebSocketClass();
-  if (!WS) return; // neither available — skip silently
+  if (!WS) return Promise.resolve(); // neither available — skip silently
 
   return new Promise<void>((resolve, reject) => {
     let settled = false;

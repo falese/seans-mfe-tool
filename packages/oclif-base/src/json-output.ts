@@ -59,9 +59,13 @@ export function redirectStdoutToStderr(): void {
  * Write the final JSON envelope line to the REAL stdout, bypassing any
  * redirect that may be active.
  */
-export function writeJsonLine(json: string): void {
+export function writeJsonLine(json: string, callback?: () => void): void {
   const write = _originalStdoutWrite ?? process.stdout.write.bind(process.stdout);
-  write(json + '\n');
+  if (callback) {
+    write(json + '\n', callback as (err?: Error | null) => void);
+  } else {
+    write(json + '\n');
+  }
 }
 
 // ---------------------------------------------------------------------------

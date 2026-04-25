@@ -59,13 +59,13 @@ export abstract class BaseCommand<T = unknown> extends Command {
           durationMs: Date.now() - startTime,
           correlationId,
         });
-        writeJsonLine(JSON.stringify(envelope));
+        await new Promise<void>((resolve) => writeJsonLine(JSON.stringify(envelope), resolve));
         process.exit(EXIT_CODES.ok);
       }
     } catch (err) {
       if (jsonMode) {
         const envelope = formatError(err, correlationId, startTime);
-        writeJsonLine(JSON.stringify(envelope));
+        await new Promise<void>((resolve) => writeJsonLine(JSON.stringify(envelope), resolve));
         process.exit(exitCodeFor(envelope.error?.type ?? 'unknown'));
       }
       throw err;

@@ -6,6 +6,8 @@
  * Refs #102 (B3), #107 (B8 adds MutatingResult mixin)
  */
 
+import type { MeshConfig, MFEManifest } from '../commands/bff/_shared';
+
 // ---------------------------------------------------------------------------
 // Shared mixin
 // ---------------------------------------------------------------------------
@@ -82,8 +84,8 @@ export interface BffDevResult {
 export interface BffValidateResult {
   valid: boolean;
   issues: BffValidationIssue[];
-  meshConfig?: import('../commands/bff/_shared').MeshConfig;
-  manifest?: import('../commands/bff/_shared').MFEManifest;
+  meshConfig: MeshConfig;
+  manifest: MFEManifest;
 }
 
 export interface BffValidationIssue {
