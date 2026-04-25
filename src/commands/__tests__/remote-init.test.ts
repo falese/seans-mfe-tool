@@ -111,7 +111,7 @@ describe('remote:init Command', () => {
   describe('Error Handling', () => {
     it('should throw and log error on fs failure', async () => {
       (mockFs.ensureDir as unknown as jest.Mock).mockRejectedValue(new Error('fs error'));
-      await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow('fs error');
+      await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow(/Failed to create directory:/);
       expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create remote MFE'));
     });
   });

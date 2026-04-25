@@ -100,11 +100,9 @@ beforeEach(() => {
   delete process.env.SEANS_MFE_DAEMON_URL;
   delete process.env.SEANS_MFE_CMD_START;
   delete process.env.SEANS_MFE_CORRELATION_ID;
-  jest.useFakeTimers();
 });
 
 afterEach(() => {
-  jest.useRealTimers();
   clearOfflineCache();
 });
 
@@ -117,6 +115,7 @@ describe('postrun hook', () => {
   });
 
   test('sends cli.command.completed ACTION with correct correlation ID', async () => {
+    jest.useFakeTimers();
     process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
     process.env.SEANS_MFE_CMD_START = String(Date.now() - 100);
     process.env.SEANS_MFE_CORRELATION_ID = 'test-corr-id';
@@ -153,9 +152,11 @@ describe('postrun hook', () => {
     expect(msg.payload.data.command).toBe('bff:init');
 
     delete (globalThis as any).WebSocket;
+    jest.useRealTimers();
   });
 
   test('marks daemon offline after connection error and skips next attempt', async () => {
+    jest.useFakeTimers();
     process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
     (globalThis as any).WebSocket = createMockWsClass();
 
@@ -178,6 +179,7 @@ describe('postrun hook', () => {
     expect(lastMockWs).toBeNull(); // no new socket created
 
     delete (globalThis as any).WebSocket;
+    jest.useRealTimers();
   });
 
   test('no latency added when SEANS_MFE_DAEMON_URL is unset (<10ms)', async () => {

@@ -51,42 +51,38 @@ describe('Create API Command', () => {
 
   describe('Basic Functionality', () => {
     it('should create API with SQLite database', async () => {
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'sqlite',
-          spec: 'api.yaml'
-        });
-
-        // Verify directory structure
-        expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('test-api'));
-        expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/controllers'));
-        expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/routes'));
-        expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/models'));
-
-        // Verify file creation
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('database.js'),
-          expect.stringContaining('sqlite'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'sqlite',
+        spec: 'api.yaml'
       });
+
+      // Verify directory structure
+      expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('test-api'));
+      expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/controllers'));
+      expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/routes'));
+      expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('src/models'));
+
+      // Verify file creation
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('database.js'),
+        expect.stringContaining('sqlite'),
+        expect.any(String)
+      );
     });
 
     it('should create API with MongoDB database', async () => {
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'mongodb',
-          spec: 'api.yaml'
-        });
-
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('package.json'),
-          expect.stringContaining('mongoose'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'mongodb',
+        spec: 'api.yaml'
       });
+
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('package.json'),
+        expect.stringContaining('mongoose'),
+        expect.any(String)
+      );
     });
   });
 
@@ -119,19 +115,17 @@ describe('Create API Command', () => {
       SwaggerParser.parse.mockResolvedValue(mockSpec);
       SwaggerParser.dereference.mockResolvedValue(mockSpec);
 
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'sqlite',
-          spec: 'api.yaml'
-        });
-
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('users.controller.js'),
-          expect.stringContaining('getUsers'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'sqlite',
+        spec: 'api.yaml'
       });
+
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('users.controller.js'),
+        expect.stringContaining('getAllUsers'),
+        expect.any(String)
+      );
     });
 
     it('should generate database models from OpenAPI spec', async () => {
@@ -155,19 +149,17 @@ describe('Create API Command', () => {
       SwaggerParser.parse.mockResolvedValue(mockSpec);
       SwaggerParser.dereference.mockResolvedValue(mockSpec);
 
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'mongodb',
-          spec: 'api.yaml'
-        });
-
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('User.model.js'),
-          expect.stringContaining('mongoose'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'mongodb',
+        spec: 'api.yaml'
       });
+
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('User.model.js'),
+        expect.stringContaining('mongoose'),
+        expect.any(String)
+      );
     });
   });
 
@@ -211,35 +203,31 @@ describe('Create API Command', () => {
 
   describe('Template Processing', () => {
     it('should process environment variables', async () => {
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'sqlite',
-          spec: 'api.yaml'
-        });
-
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('.env'),
-          expect.stringContaining('PORT=3001'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'sqlite',
+        spec: 'api.yaml'
       });
+
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('.env'),
+        expect.stringContaining('PORT=3001'),
+        expect.any(String)
+      );
     });
 
     it('should process package.json', async () => {
-      await expectProcessExit(async () => {
-        await createApiCommand('test-api', {
-          port: '3001',
-          database: 'mongodb',
-          spec: 'api.yaml'
-        });
-
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining('package.json'),
-          expect.stringContaining('"name": "test-api"'),
-          expect.any(String)
-        );
+      await createApiCommand('test-api', {
+        port: '3001',
+        database: 'mongodb',
+        spec: 'api.yaml'
       });
+
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('package.json'),
+        expect.stringContaining('"name": "test-api"'),
+        expect.any(String)
+      );
     });
   });
 });
