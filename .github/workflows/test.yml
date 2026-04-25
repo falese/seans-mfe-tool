@@ -31,32 +31,10 @@ jobs:
           ./node_modules/.bin/tsc -p packages/contracts/tsconfig.json
           ./node_modules/.bin/tsc -p packages/oclif-base/tsconfig.json
 
-      - name: Run all tests (no coverage)
-        run: npm test -- --ci --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js" --testPathIgnorePatterns="json-contract.test.ts" --testPathIgnorePatterns="remote-mfe.integration.test.ts"
-        env:
-          CI: true
-
       - name: Run all tests with coverage
         run: npm test -- --ci --coverage --testPathIgnorePatterns="/examples/" --testPathIgnorePatterns="NodemonServer.test.js" --testPathIgnorePatterns="create-shell.test.js" --testPathIgnorePatterns="json-contract.test.ts" --testPathIgnorePatterns="remote-mfe.integration.test.ts"
         env:
           CI: true
-
-      - name: Print coverage summary
-        if: always()
-        run: |
-          if [ -f coverage/coverage-summary.json ]; then
-            echo "=== Coverage Summary ==="
-            node -e "
-              const s = require('./coverage/coverage-summary.json').total;
-              ['statements','branches','functions','lines'].forEach(k => {
-                const p = s[k].pct;
-                const flag = p < 70 ? ' <<<' : '';
-                console.log(k + ': ' + p + '%' + flag);
-              });
-            "
-          else
-            echo "No coverage-summary.json found"
-          fi
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

@@ -42,7 +42,7 @@ module.exports = {
   // Coverage configuration (only collect when explicitly requested)
   collectCoverage: false,
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'json-summary'],
+  coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
     'src/commands/*.{js,ts}',
     '!src/commands/create-shell.js', // Skip - tests have template mocking issues (will fix in refactor)
