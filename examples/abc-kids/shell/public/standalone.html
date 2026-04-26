@@ -415,56 +415,116 @@ function initLandscape() {
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // ── sky gradient (static)
-  const sky = ctx.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, '#87CEEB');
-  sky.addColorStop(1, '#c9e8f5');
-
-  // ── clouds
-  const clouds = [
-    { x: W * 0.1, y: H * 0.18, r: 28, speed: 0.18 },
-    { x: W * 0.4, y: H * 0.12, r: 22, speed: 0.12 },
-    { x: W * 0.7, y: H * 0.22, r: 34, speed: 0.15 },
-    { x: W * 0.9, y: H * 0.1,  r: 20, speed: 0.10 },
-  ];
-
-  // ── hills (3 layers for parallax)
   const hills = [
-    { color: '#6bc46b', yBase: 0.72, amp: 0.14, freq: 0.9,  offset: 0, speed: 0.25 },
-    { color: '#5cb85c', yBase: 0.78, amp: 0.11, freq: 1.4,  offset: 2, speed: 0.4  },
-    { color: '#4cae4c', yBase: 0.85, amp: 0.08, freq: 2.0,  offset: 5, speed: 0.6  },
+    { color: '#8fbc5a', yBase: 0.62, amp: 0.16, freq: 0.7,  ph: 0,    speed: 0.08 },
+    { color: '#6bc46b', yBase: 0.72, amp: 0.12, freq: 1.0,  ph: 400,  speed: 0.18 },
+    { color: '#5cb85c', yBase: 0.80, amp: 0.09, freq: 1.5,  ph: 900,  speed: 0.32 },
+    { color: '#4aaa48', yBase: 0.88, amp: 0.06, freq: 2.2,  ph: 1400, speed: 0.55 },
   ];
 
-  // ── animals
+  const clouds = [
+    { x: W*0.08, y: H*0.14, r: 26, speed: 0.14 },
+    { x: W*0.35, y: H*0.09, r: 20, speed: 0.10 },
+    { x: W*0.62, y: H*0.18, r: 32, speed: 0.13 },
+    { x: W*0.85, y: H*0.08, r: 18, speed: 0.09 },
+    { x: W*1.1,  y: H*0.16, r: 24, speed: 0.12 },
+  ];
+
+  // Ground animals — each has a type that controls which draw fn is used
   const animals = [
-    { type: 'cat', x: W * 0.2, groundFrac: 0.87, speed: 0.8,  label: 'Cat',  color: '#f5a623', w: 38, h: 30 },
-    { type: 'dog', x: W * 0.6, groundFrac: 0.88, speed: 1.2,  label: 'Dog',  color: '#a0522d', w: 44, h: 32 },
+    { type:'cat',     x: W*0.08, speed: 0.70, color:'#f5a623', label:'Cat',     w:34, h:26 },
+    { type:'cat',     x: W*0.30, speed: 0.55, color:'#e8e8e8', label:'Kitty',   w:28, h:22 },
+    { type:'dog',     x: W*0.50, speed: 1.10, color:'#a0522d', label:'Dog',     w:42, h:30 },
+    { type:'raccoon', x: W*0.68, speed: 0.85, color:'#7a7a7a', label:'Raccoon', w:36, h:26 },
+    { type:'rabbit',  x: W*0.82, speed: 0.60, color:'#dab98a', label:'Bunny',   w:26, h:28 },
+    { type:'cat',     x: W*1.10, speed: 0.95, color:'#cc7722', label:'Cat',     w:32, h:24 },
   ];
 
-  // ── bird (flying)
-  const bird = { x: W * 0.8, y: H * 0.25, speed: 1.5, flapT: 0 };
+  // Flying birds — right-to-left
+  const birds = [
+    { x: W*0.75, y: H*0.20, speed: 1.6, size: 10 },
+    { x: W*0.45, y: H*0.14, speed: 1.2, size:  8 },
+    { x: W*0.90, y: H*0.28, speed: 1.9, size:  9 },
+    { x: W*0.20, y: H*0.22, speed: 1.4, size:  7 },
+  ];
 
   let t = 0;
 
-  function drawCloud(cx, cy, r) {
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    const blobs = [
-      [0, 0, r], [-r * 0.6, r * 0.2, r * 0.7], [r * 0.6, r * 0.2, r * 0.7],
-      [-r * 1.1, r * 0.5, r * 0.55], [r * 1.1, r * 0.5, r * 0.55],
+  function hillY(xPos) {
+    const h = hills[3];
+    return H * h.yBase
+      + Math.sin((xPos + h.ph) * h.freq * 0.006) * H * h.amp
+      + Math.sin((xPos + h.ph * 0.5) * h.freq * 0.012) * H * h.amp * 0.4;
+  }
+
+  function drawMountains() {
+    // Far mountains — purple-grey
+    ctx.fillStyle = '#b0a8c8';
+    for (let i = 0; i < 8; i++) {
+      const mx = (W / 7) * i - 20;
+      const mh = H * (0.28 + (i % 3) * 0.06);
+      ctx.beginPath(); ctx.moveTo(mx, H * 0.62); ctx.lineTo(mx + W/14, H * 0.62 - mh); ctx.lineTo(mx + W/7, H * 0.62); ctx.fill();
+    }
+    // Closer mountains — darker
+    ctx.fillStyle = '#8a8a6a';
+    for (let i = 0; i < 6; i++) {
+      const mx = (W / 5) * i + W * 0.08;
+      const mh = H * (0.20 + (i % 2) * 0.07);
+      ctx.beginPath(); ctx.moveTo(mx, H * 0.66); ctx.lineTo(mx + W/10, H * 0.66 - mh); ctx.lineTo(mx + W/5, H * 0.66); ctx.fill();
+    }
+  }
+
+  function drawForest() {
+    // Pine tree silhouette row
+    ctx.fillStyle = '#2d5a27';
+    const treeW = 22, treeH = H * 0.28;
+    for (let i = 0; i < Math.ceil(W / 18) + 2; i++) {
+      const tx = i * 18 - 9;
+      const ty = H * 0.62 - treeH * (0.7 + 0.3 * Math.sin(i * 1.7));
+      ctx.beginPath();
+      ctx.moveTo(tx, H * 0.62);
+      ctx.lineTo(tx + treeW/2, ty);
+      ctx.lineTo(tx + treeW, H * 0.62);
+      ctx.fill();
+    }
+  }
+
+  function drawBareTree() {
+    // Single bare tree, center-left (like the sketch)
+    const tx = W * 0.28, ty = H * 0.60;
+    const trunkH = H * 0.30;
+    ctx.strokeStyle = '#5c3a1a'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx, ty - trunkH); ctx.stroke();
+    ctx.lineWidth = 3;
+    // branches
+    const branches = [
+      [tx, ty - trunkH * 0.4, tx - 22, ty - trunkH * 0.55],
+      [tx, ty - trunkH * 0.4, tx + 16, ty - trunkH * 0.52],
+      [tx, ty - trunkH * 0.65, tx - 16, ty - trunkH * 0.80],
+      [tx, ty - trunkH * 0.65, tx + 20, ty - trunkH * 0.78],
+      [tx, ty - trunkH * 0.85, tx - 12, ty - trunkH * 0.97],
+      [tx, ty - trunkH * 0.85, tx + 14, ty - trunkH * 0.95],
     ];
-    blobs.forEach(([dx, dy, br]) => {
-      ctx.beginPath(); ctx.arc(cx + dx, cy + dy, br, 0, Math.PI * 2); ctx.fill();
+    branches.forEach(([x1,y1,x2,y2]) => {
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+  }
+
+  function drawCloud(cx, cy, r) {
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    [[0,0,r],[-r*.6,r*.2,r*.7],[r*.6,r*.2,r*.7],[-r*1.1,r*.5,r*.55],[r*1.1,r*.5,r*.55]].forEach(([dx,dy,br]) => {
+      ctx.beginPath(); ctx.arc(cx+dx, cy+dy, br, 0, Math.PI*2); ctx.fill();
     });
   }
 
   function drawHills() {
     hills.forEach(hill => {
       const scroll = (t * hill.speed) % (W * 2);
-      ctx.beginPath();
-      ctx.moveTo(-scroll, H);
+      ctx.beginPath(); ctx.moveTo(-scroll, H);
       for (let x = -scroll; x <= W + scroll + 60; x += 4) {
-        const y = H * hill.yBase + Math.sin((x + hill.offset * 100) * hill.freq * 0.006) * H * hill.amp
-                + Math.sin((x + hill.offset * 50) * hill.freq * 0.012) * H * hill.amp * 0.4;
+        const y = H * hill.yBase
+          + Math.sin((x + hill.ph) * hill.freq * 0.006) * H * hill.amp
+          + Math.sin((x + hill.ph * .5) * hill.freq * 0.012) * H * hill.amp * .4;
         ctx.lineTo(x, y);
       }
       ctx.lineTo(W + scroll + 60, H); ctx.lineTo(-scroll, H); ctx.closePath();
@@ -472,110 +532,180 @@ function initLandscape() {
     });
   }
 
-  function hillY(xPos) {
-    // ground height at xPos (bottom hill)
-    const hill = hills[2];
-    return H * hill.yBase + Math.sin(xPos * hill.freq * 0.006 + hill.offset * 50 * 0.012) * H * hill.amp * 0.4
-         + Math.sin(xPos * hill.freq * 0.012) * H * hill.amp;
-  }
-
-  function drawAnimal(a, bodyY) {
-    const x = a.x, y = bodyY;
-    const leg = Math.sin(t * 0.08 * a.speed * 4) * 5;
-
-    ctx.save();
+  function drawCat(x, y, w, h, color, label) {
+    ctx.save(); ctx.fillStyle = color;
     // body
-    ctx.fillStyle = a.color;
-    ctx.beginPath(); ctx.roundRect(x - a.w/2, y - a.h, a.w, a.h * 0.65, 8); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x - w/2, y - h*.65, w, h*.65, 7); ctx.fill();
     // head
-    ctx.beginPath(); ctx.arc(x + a.w * 0.27, y - a.h * 0.8, a.h * 0.33, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + w*.28, y - h*.77, h*.30, 0, Math.PI*2); ctx.fill();
+    // ears
+    ctx.beginPath(); ctx.moveTo(x+w*.10, y-h*.92); ctx.lineTo(x+w*.18, y-h*1.08); ctx.lineTo(x+w*.27, y-h*.92); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x+w*.32, y-h*.92); ctx.lineTo(x+w*.40, y-h*1.10); ctx.lineTo(x+w*.49, y-h*.92); ctx.fill();
     // eye
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(x + a.w * 0.38, y - a.h * 0.88, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#222';
-    ctx.beginPath(); ctx.arc(x + a.w * 0.39, y - a.h * 0.88, 2, 0, Math.PI * 2); ctx.fill();
-    // ears (different per type)
-    ctx.fillStyle = a.color;
-    if (a.type === 'cat') {
-      ctx.beginPath(); ctx.moveTo(x+a.w*0.12, y-a.h*1.02); ctx.lineTo(x+a.w*0.21, y-a.h*1.2); ctx.lineTo(x+a.w*0.3, y-a.h*1.02); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(x+a.w*0.35, y-a.h*1.02); ctx.lineTo(x+a.w*0.44, y-a.h*1.22); ctx.lineTo(x+a.w*0.53, y-a.h*1.02); ctx.fill();
-    } else {
-      ctx.fillStyle = '#c07040';
-      ctx.beginPath(); ctx.ellipse(x+a.w*0.17, y-a.h*1.02, 7, 9, -0.3, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = a.color;
-      ctx.beginPath(); ctx.ellipse(x+a.w*0.44, y-a.h*1.0, 7, 9, 0.3, 0, Math.PI*2); ctx.fill();
-    }
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x+w*.36, y-h*.84, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x+w*.37, y-h*.84, 1.8, 0, Math.PI*2); ctx.fill();
     // legs
-    ctx.strokeStyle = a.color; ctx.lineWidth = 6; ctx.lineCap = 'round';
-    const legPairs = a.type === 'cat' ? [[-14, 4], [-6, -4], [6, 4], [14, -4]] : [[-16, 4], [-6, -4], [6, 4], [16, -4]];
-    legPairs.forEach(([ox, phase], i) => {
-      const legAnim = Math.sin(t * 0.08 * a.speed * 4 + phase) * 6;
-      ctx.beginPath(); ctx.moveTo(x + ox, y - a.h * 0.3); ctx.lineTo(x + ox, y + legAnim); ctx.stroke();
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    [[-w*.32, 0],[- w*.12, Math.PI/2],[w*.08, 0],[w*.28, Math.PI/2]].forEach(([ox, ph]) => {
+      const swing = Math.sin(t * .09 * 4 + ph) * 5;
+      ctx.beginPath(); ctx.moveTo(x+ox, y-h*.22); ctx.lineTo(x+ox, y+swing); ctx.stroke();
     });
     // tail
-    if (a.type === 'cat') {
-      const tailY = Math.sin(t * 0.06) * 10;
-      ctx.beginPath(); ctx.moveTo(x - a.w/2 + 4, y - a.h * 0.4);
-      ctx.bezierCurveTo(x - a.w, y - a.h * 0.4, x - a.w * 1.1, y - a.h + tailY, x - a.w * 0.95, y - a.h * 0.7 + tailY);
-      ctx.strokeStyle = a.color; ctx.lineWidth = 5; ctx.stroke();
-    }
-    // sign
-    ctx.fillStyle = '#fff8dc';
-    ctx.beginPath(); ctx.roundRect(x - 16, y - a.h * 1.5, 32, 18, 4); ctx.fill();
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 11px Fredoka One, cursive';
-    ctx.textAlign = 'center';
-    ctx.fillText(a.label, x, y - a.h * 1.38);
+    const tw = Math.sin(t*.055) * 11;
+    ctx.beginPath(); ctx.moveTo(x-w/2+3, y-h*.35);
+    ctx.bezierCurveTo(x-w*.9, y-h*.35, x-w, y-h*0.1+tw, x-w*.85, y-h*.5+tw);
+    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.stroke();
+    _sign(x, y, h, label);
     ctx.restore();
   }
 
-  function drawBird(bx, by, flapT) {
-    ctx.save();
-    const flap = Math.sin(flapT * 0.18) * 12;
-    ctx.fillStyle = '#FF6B6B';
-    // body
-    ctx.beginPath(); ctx.ellipse(bx, by, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
-    // wing
-    ctx.fillStyle = '#ff4444';
-    ctx.beginPath(); ctx.ellipse(bx - 4, by - flap, 10, 5, -0.5, 0, Math.PI * 2); ctx.fill();
-    // eye
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(bx + 8, by - 3, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#222';
-    ctx.beginPath(); ctx.arc(bx + 9, by - 3, 2, 0, Math.PI * 2); ctx.fill();
-    // beak
-    ctx.fillStyle = '#FFA500';
-    ctx.beginPath(); ctx.moveTo(bx + 14, by); ctx.lineTo(bx + 22, by + 2); ctx.lineTo(bx + 14, by + 5); ctx.fill();
+  function drawDog(x, y, w, h, color, label) {
+    ctx.save(); ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(x-w/2, y-h*.62, w, h*.62, 8); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*.30, y-h*.75, h*.28, 0, Math.PI*2); ctx.fill();
+    // floppy ears
+    ctx.fillStyle = '#c07040';
+    ctx.beginPath(); ctx.ellipse(x+w*.12, y-h*.75, 6, 10, -.35, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(x+w*.45, y-h*.73, 6, 10, .35, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x+w*.38, y-h*.82, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x+w*.39, y-h*.82, 2, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    [[-w*.30, 0],[- w*.12, Math.PI/2],[w*.08, 0],[w*.26, Math.PI/2]].forEach(([ox, ph]) => {
+      const swing = Math.sin(t * .09 * 5 + ph) * 6;
+      ctx.beginPath(); ctx.moveTo(x+ox, y-h*.25); ctx.lineTo(x+ox, y+swing); ctx.stroke();
+    });
+    // wagging tail
+    const tw = Math.sin(t*.12) * 14;
+    ctx.beginPath(); ctx.moveTo(x-w/2+4, y-h*.45);
+    ctx.quadraticCurveTo(x-w*.8, y-h*.3+tw, x-w*.75, y-h*.65+tw);
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.stroke();
+    _sign(x, y, h, label);
     ctx.restore();
+  }
+
+  function drawRaccoon(x, y, w, h, color, label) {
+    ctx.save(); ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(x-w/2, y-h*.62, w, h*.62, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*.27, y-h*.76, h*.28, 0, Math.PI*2); ctx.fill();
+    // mask
+    ctx.fillStyle = '#333';
+    ctx.beginPath(); ctx.ellipse(x+w*.2, y-h*.82, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+w*.38, y-h*.82, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x+w*.21, y-h*.83, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*.37, y-h*.83, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(x+w*.22, y-h*.84, 1.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*.37, y-h*.84, 1.2, 0, Math.PI*2); ctx.fill();
+    // round ears
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x+w*.14, y-h*.96, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*.41, y-h*.96, 5, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    [[-w*.28, 0],[- w*.10, Math.PI/2],[w*.08, 0],[w*.26, Math.PI/2]].forEach(([ox, ph]) => {
+      const swing = Math.sin(t * .09 * 4.5 + ph) * 5;
+      ctx.beginPath(); ctx.moveTo(x+ox, y-h*.22); ctx.lineTo(x+ox, y+swing); ctx.stroke();
+    });
+    // ringed tail
+    const segments = 5;
+    let tx0 = x-w/2+3, ty0 = y-h*.40;
+    for (let i = 0; i < segments; i++) {
+      const ang = (-0.4 + Math.sin(t*.055 + i*.5) * .2);
+      tx0 -= 8; ty0 += ang * 6;
+      ctx.strokeStyle = i%2===0 ? color : '#333'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(tx0, ty0, 4, 0, Math.PI*2); ctx.fill();
+    }
+    _sign(x, y, h, label);
+    ctx.restore();
+  }
+
+  function drawRabbit(x, y, w, h, color, label) {
+    ctx.save(); ctx.fillStyle = color;
+    // round body
+    ctx.beginPath(); ctx.ellipse(x, y-h*.40, w*.45, h*.40, 0, 0, Math.PI*2); ctx.fill();
+    // round head
+    ctx.beginPath(); ctx.arc(x+w*.22, y-h*.75, h*.26, 0, Math.PI*2); ctx.fill();
+    // long ears
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(x+w*.14, y-h*1.1, 5, 14, -.15+Math.sin(t*.04)*.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+w*.32, y-h*1.1, 5, 14, .15+Math.sin(t*.04+.5)*.1, 0, Math.PI*2); ctx.fill();
+    // inner ear
+    ctx.fillStyle = '#ffb0b0';
+    ctx.beginPath(); ctx.ellipse(x+w*.14, y-h*1.1, 2.5, 9, -.15, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+w*.32, y-h*1.1, 2.5, 9, .15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x+w*.29, y-h*.80, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x+w*.30, y-h*.81, 1.8, 0, Math.PI*2); ctx.fill();
+    // hop legs
+    const hop = Math.abs(Math.sin(t*.09*3)) * 7;
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    [[-8, 0],[8, Math.PI/3]].forEach(([ox, ph]) => {
+      ctx.beginPath(); ctx.moveTo(x+ox, y-h*.2); ctx.lineTo(x+ox-3, y+hop); ctx.stroke();
+    });
+    // fluffy tail
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(x-w*.35, y-h*.42, 6, 0, Math.PI*2); ctx.fill();
+    _sign(x, y, h, label);
+    ctx.restore();
+  }
+
+  function _sign(x, y, h, label) {
+    ctx.fillStyle = '#fff8dc';
+    ctx.beginPath(); ctx.roundRect(x - 18, y - h * 1.52, 36, 18, 4); ctx.fill();
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 10px "Fredoka One", cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y - h * 1.39);
+  }
+
+  function drawSmallBird(bx, by, size) {
+    const flap = Math.sin(t * .22) * size * .8;
+    ctx.save(); ctx.fillStyle = '#FF6B6B';
+    ctx.beginPath(); ctx.ellipse(bx, by, size, size*.7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath(); ctx.ellipse(bx-size*.3, by-flap, size*.7, size*.35, -.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#FFA500';
+    ctx.beginPath(); ctx.moveTo(bx+size, by); ctx.lineTo(bx+size*1.8, by+1); ctx.lineTo(bx+size, by+size*.4); ctx.fill();
+    ctx.restore();
+  }
+
+  function dispatchAnimal(a, gY) {
+    switch(a.type) {
+      case 'cat':     drawCat(a.x, gY, a.w, a.h, a.color, a.label); break;
+      case 'dog':     drawDog(a.x, gY, a.w, a.h, a.color, a.label); break;
+      case 'raccoon': drawRaccoon(a.x, gY, a.w, a.h, a.color, a.label); break;
+      case 'rabbit':  drawRabbit(a.x, gY, a.w, a.h, a.color, a.label); break;
+    }
   }
 
   function loop() {
     t++;
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#7ec8e3'); sky.addColorStop(1, '#d4eef9');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
 
-    // clouds
+    drawMountains();
+    drawForest();
+    drawBareTree();
+
     clouds.forEach(c => {
       c.x -= c.speed;
-      if (c.x + c.r * 2 < 0) c.x = W + c.r * 2;
+      if (c.x + c.r*2 < 0) c.x = W + c.r*2;
       drawCloud(c.x, c.y, c.r);
     });
 
     drawHills();
 
-    // animals walk left→right (wrap)
     animals.forEach(a => {
       a.x += a.speed;
       if (a.x - a.w > W) a.x = -a.w;
-      const gY = hillY(a.x);
-      drawAnimal(a, gY);
+      dispatchAnimal(a, hillY(a.x));
     });
 
-    // bird flies right→left (wrap)
-    bird.x -= bird.speed;
-    bird.y += Math.sin(t * 0.025) * 0.6;
-    bird.flapT = t;
-    if (bird.x < -30) bird.x = W + 30;
-    drawBird(bird.x, bird.y, bird.flapT);
+    birds.forEach(b => {
+      b.x -= b.speed;
+      b.y += Math.sin(t * .022 + b.size) * .5;
+      if (b.x < -30) b.x = W + 30;
+      drawSmallBird(b.x, b.y, b.size);
+    });
 
     requestAnimationFrame(loop);
   }
