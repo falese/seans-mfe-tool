@@ -45,7 +45,10 @@ export async function shellInitCommand(
       console.log(chalk.yellow(`⚠ Overwriting existing directory`));
     }
 
-    const templateDir = path.resolve(__dirname, '..', '..', '..', 'src', 'codegen', 'templates', 'shell');
+    // When compiled, __dirname is dist/commands/shell.
+    // copy-runtime-files.js copies src/codegen/templates → dist/codegen/templates during build,
+    // and dist/ is the only directory shipped in the npm package (see package.json#files).
+    const templateDir = path.resolve(__dirname, '..', '..', 'codegen', 'templates', 'shell');
 
     if (!await fs.pathExists(templateDir)) {
       throw new SystemError(`Shell template directory not found: ${templateDir}`);
