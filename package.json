@@ -15,7 +15,8 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:mesh-deps": "node scripts/test-mesh-dependencies.js"
   },
   "keywords": [
     "module-federation",
