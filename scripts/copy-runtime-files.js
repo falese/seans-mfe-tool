@@ -29,8 +29,13 @@ async function cleanupRuntimeFiles() {
       console.log('  ✓ Removed redundant dist/platform-runtime');
     }
 
-    // Copy EJS templates to dist/ (tsc doesn't copy non-TS files)
-    await fs.copy(srcTemplates, distTemplates, { overwrite: true });
+    // Remove stale dist templates before copying so renamed or deleted template
+    // files never persist alongside their replacements (e.g. MFEOrchestrator.ts.ejs
+    // lingering after being renamed to MFEOrchestrator.tsx.ejs).
+    if (await fs.pathExists(distTemplates)) {
+      await fs.remove(distTemplates);
+    }
+    await fs.copy(srcTemplates, distTemplates);
     console.log('  ✓ Copied codegen templates to dist/codegen/templates');
 
     console.log('✅ Runtime cleanup completed');
