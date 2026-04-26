@@ -6,7 +6,7 @@ services:
     ports:
       - '3001:3001'
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/remoteEntry.js']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/remoteEntry.js']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,7 +19,7 @@ services:
     ports:
       - '3002:3002'
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3002/remoteEntry.js']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3002/remoteEntry.js']
       interval: 10s
       timeout: 5s
       retries: 5

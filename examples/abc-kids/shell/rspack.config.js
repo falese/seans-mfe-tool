@@ -1,5 +1,6 @@
 const path = require('path');
-const { ModuleFederationPlugin } = require('@module-federation/enhanced-rspack');
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = rspack.container;
 
 module.exports = {
   entry: './src/index.tsx',
@@ -19,6 +20,13 @@ module.exports = {
     headers: { 'Access-Control-Allow-Origin': '*' },
   },
   plugins: [
+    new rspack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+    new rspack.HtmlRspackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+    }),
     new ModuleFederationPlugin({
       name: 'abc_kids_shell',
       remotes: {
