@@ -60,6 +60,7 @@ export async function shellInitCommand(
     const daemonDir   = path.join(targetDir, 'orchestration', 'daemon');
     const registryDir = path.join(targetDir, 'orchestration', 'registry');
     const shellSrcDir = path.join(targetDir, 'src', 'shell');
+    const publicDir   = path.join(targetDir, 'public');
 
     const dirs = [
       targetDir,
@@ -68,6 +69,7 @@ export async function shellInitCommand(
       path.join(targetDir, 'orchestration'),
       daemonDir,
       registryDir,
+      publicDir,
     ];
 
     if (options.dryRun) {
@@ -79,6 +81,12 @@ export async function shellInitCommand(
         });
       }
       const filesToGenerate = [
+        'Dockerfile',
+        'nginx.conf',
+        'package.json',
+        'rspack.config.js',
+        'tsconfig.json',
+        'public/index.html',
         'docker-compose.yml',
         'orchestration/daemon/shell-daemon.ts',
         'orchestration/daemon/package.json',
@@ -153,18 +161,48 @@ export async function shellInitCommand(
     const shellFiles = await listRelativeFiles(shellSrcDir, targetDir);
     generatedFiles.push(...shellFiles);
 
+    // ── Copy root-level shell app files ──────────────────────────────
+    console.log(chalk.blue('Generating shell app scaffold (Dockerfile, package.json, rspack.config.js)...'));
+    const rootTemplateFiles = [
+      'Dockerfile.ejs',
+      'nginx.conf.ejs',
+      'package.json.ejs',
+      'rspack.config.js.ejs',
+      'tsconfig.json',
+    ];
+    for (const f of rootTemplateFiles) {
+      await fs.copy(path.join(templateDir, f), path.join(targetDir, f));
+    }
+    await fs.copy(path.join(templateDir, 'public'), publicDir);
+
     // ── Generate docker-compose.yml ───────────────────────────────────
     console.log(chalk.blue('Generating docker-compose.yml...'));
     const composeSrc  = path.join(templateDir, 'docker-compose.yml.ejs');
     const composeDest = path.join(targetDir, 'docker-compose.yml.ejs');
     await fs.copy(composeSrc, composeDest);
+    // Process all root-level .ejs files (Dockerfile, nginx.conf, package.json,
+    // rspack.config.js, public/index.html, docker-compose.yml) in one pass.
     await processTemplates(targetDir, templateVars);
-    generatedFiles.push('docker-compose.yml');
+    generatedFiles.push(
+      'Dockerfile',
+      'nginx.conf',
+      'package.json',
+      'rspack.config.js',
+      'tsconfig.json',
+      'public/index.html',
+      'docker-compose.yml',
+    );
 
     // ── Summary ───────────────────────────────────────────────────────
     console.log(chalk.green('\n✓ Shell + daemon-native control plane generated!'));
     console.log('\nGenerated structure:');
     console.log(`  ${name}/`);
+    console.log(`  ├── Dockerfile          # multi-stage: rspack build → nginx`);
+    console.log(`  ├── nginx.conf          # SPA routing config`);
+    console.log(`  ├── package.json        # React + rspack dependencies`);
+    console.log(`  ├── rspack.config.js    # Module Federation (host)`);
+    console.log(`  ├── tsconfig.json`);
+    console.log(`  ├── public/index.html`);
     console.log(`  ├── orchestration/`);
     console.log(`  │   ├── daemon/          # ShellDaemon (DaemonService protocol)`);
     console.log(`  │   └── registry/        # MFERegistry (rules engine)`);
