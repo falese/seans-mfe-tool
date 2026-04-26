@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<!--
+  ABC Kids — Shell (standalone demo)
+  Runs without npm install. Open in a browser or:
+    npx serve examples/abc-kids/shell/public
+
+  Full MFE shell (React + Module Federation) is in src/.
+  Run `npm install && npm run dev` once registry access is available.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ABC Kids</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple-deep: #1a0050;
+      --purple-mid: #2d0080;
+      --gold: #FFD700;
+      --coral: #FF6B6B;
+      --sky-top: #87CEEB;
+      --sky-bot: #c9e8f5;
+      --green-hill: #5cb85c;
+      --green-dark: #3d8b3d;
+    }
+
+    body {
+      font-family: 'Fredoka One', 'Comic Sans MS', cursive;
+      background: var(--purple-deep);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SPLASH ── */
+    #splash {
+      position: fixed; inset: 0;
+      background: linear-gradient(160deg, #1a0050 0%, #2d0080 50%, #0a0030 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    #splash.hidden { opacity: 0; pointer-events: none; transform: scale(1.06); }
+
+    .splash-logo {
+      font-size: clamp(3rem, 12vw, 6rem);
+      background: linear-gradient(135deg, #FFD700, #FF6B6B, #00CFFF, #FFD700);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 3s ease infinite;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    @keyframes gradientShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    .splash-tagline {
+      color: #aad4ff;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+    }
+    .btn-play {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      border: none; border-radius: 50px;
+      padding: 18px 52px;
+      font-family: inherit; font-size: 1.5rem; font-weight: 700;
+      color: #1a0050; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(255,215,0,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-play:hover  { transform: scale(1.06) translateY(-2px); box-shadow: 0 12px 40px rgba(255,215,0,0.55); }
+    .btn-play:active { transform: scale(0.97); }
+
+    /* ── HOME ── */
+    #home { display: none; min-height: 100vh; flex-direction: column; }
+    #home.visible { display: flex; }
+
+    /* landscape canvas strip */
+    #landscape-strip {
+      width: 100%; height: 180px;
+      background: linear-gradient(to bottom, var(--sky-top), var(--sky-bot));
+      position: relative; overflow: hidden; flex-shrink: 0;
+    }
+    #land-canvas { display: block; width: 100%; height: 100%; }
+
+    /* top bar */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--purple-deep);
+    }
+    .top-bar-title { font-size: 1.6rem; color: var(--gold); }
+    .context-label { font-size: 1rem; color: #aad4ff; }
+
+    /* grade selector */
+    .grade-section { padding: 14px 20px 8px; }
+    .grade-section h2 { font-size: 0.85rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .grade-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .grade-chip {
+      background: var(--purple-mid); border: 2px solid transparent;
+      border-radius: 30px; padding: 7px 16px;
+      font-family: inherit; font-size: 0.95rem; color: #ddd;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .grade-chip:hover { border-color: var(--gold); color: var(--gold); }
+    .grade-chip.active { background: var(--gold); color: #1a0050; border-color: var(--gold); }
+
+    /* category chips */
+    .cat-section { padding: 4px 20px 12px; }
+    .cat-section h2 { font-size: 0.85rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .cat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cat-chip {
+      background: rgba(255,255,255,0.08); border: 2px solid transparent;
+      border-radius: 30px; padding: 7px 18px;
+      font-family: inherit; font-size: 0.9rem; color: #ccc;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .cat-chip:hover { border-color: #00CFFF; color: #00CFFF; }
+    .cat-chip.active { background: rgba(0,207,255,0.2); border-color: #00CFFF; color: #00CFFF; }
+
+    /* search */
+    .search-row { padding: 0 20px 14px; }
+    .search-row input {
+      width: 100%; max-width: 400px;
+      background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 10px 16px;
+      font-family: inherit; font-size: 1rem; color: #fff;
+      outline: none; transition: border-color 0.2s;
+    }
+    .search-row input:focus { border-color: var(--gold); }
+    .search-row input::placeholder { color: #888; }
+
+    /* game grid */
+    .game-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px; padding: 0 20px 40px; flex: 1;
+    }
+    .game-card {
+      background: var(--purple-mid); border-radius: 20px;
+      overflow: hidden; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .game-card:hover {
+      transform: scale(1.04) translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .game-cover {
+      height: 150px; display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+    }
+    .game-info { padding: 14px 16px 16px; }
+    .game-title { font-size: 1.2rem; margin-bottom: 4px; }
+    .game-desc { font-size: 0.85rem; color: #ccc; margin-bottom: 10px; line-height: 1.4; }
+    .game-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .age-badge {
+      background: rgba(255,215,0,0.2); border: 1px solid #FFD700;
+      color: #FFD700; border-radius: 20px; padding: 3px 10px; font-size: 0.78rem;
+    }
+    .no-results {
+      grid-column: 1/-1; text-align: center;
+      color: #888; font-size: 1.1rem; padding: 60px 0;
+    }
+
+    /* ── LAUNCHER OVERLAY ── */
+    #launcher {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.85);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    #launcher.visible { display: flex; }
+    #launcher-inner {
+      background: var(--purple-deep); border-radius: 24px;
+      width: 95vw; max-width: 680px; max-height: 90vh;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    }
+    .launcher-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .launcher-title { font-size: 1.3rem; color: var(--gold); }
+    .btn-close {
+      background: none; border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%; width: 36px; height: 36px;
+      color: #fff; font-size: 1.1rem; cursor: pointer; line-height: 1;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-close:hover { border-color: var(--coral); color: var(--coral); }
+    .launcher-body { flex: 1; overflow: auto; }
+    .launcher-body iframe {
+      width: 100%; height: 500px; border: none; display: block;
+    }
+    .launcher-fallback {
+      padding: 30px; text-align: center; color: #aaa;
+    }
+    .launcher-fallback .emoji { font-size: 4rem; display: block; margin-bottom: 12px; }
+    .launcher-fallback p { margin-bottom: 6px; line-height: 1.5; }
+    .launcher-fallback small { font-size: 0.8rem; color: #666; }
+  </style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">ABC Kids</div>
+  <div class="splash-tagline">✨ Mistakes are OK here! ✨</div>
+  <button class="btn-play" onclick="enterHome()">Let's Play! 🎮</button>
+</div>
+
+<!-- HOME -->
+<div id="home">
+  <div id="landscape-strip">
+    <canvas id="land-canvas"></canvas>
+  </div>
+
+  <div class="top-bar">
+    <span class="top-bar-title">🎮 ABC Kids</span>
+    <span class="context-label" id="context-label">All games</span>
+  </div>
+
+  <div class="grade-section">
+    <h2>Grade</h2>
+    <div class="grade-row" id="grade-row"></div>
+  </div>
+
+  <div class="cat-section">
+    <h2>Kind of game</h2>
+    <div class="cat-row" id="cat-row"></div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" id="search" placeholder="🔍  Search games..." oninput="renderCards()" />
+  </div>
+
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<!-- LAUNCHER OVERLAY -->
+<div id="launcher">
+  <div id="launcher-inner">
+    <div class="launcher-header">
+      <span class="launcher-title" id="launcher-title"></span>
+      <button class="btn-close" onclick="closeLauncher()">✕</button>
+    </div>
+    <div class="launcher-body" id="launcher-body"></div>
+  </div>
+</div>
+
+<script>
+/* ── DATA ── */
+const GRADES = ['All Ages','PreK','K','1','2','3','4','5','6','7','8','9','10'];
+const CATEGORIES = ['All','Holiday','Fun','Spelling','Art','Math'];
+
+const GAMES = [
+  {
+    id: 'flappy',
+    title: 'Flappy Bird',
+    emoji: '🐦',
+    coverBg: 'linear-gradient(135deg, #87CEEB 0%, #228B22 100%)',
+    desc: 'Tap to flap — avoid the pipes and keep going!',
+    ageMin: 4, ageMax: 10,
+    categories: ['Fun'],
+    color: '#FFD700',
+    standalone: '../flappy/public/standalone.html',
+  },
+  {
+    id: 'hockey',
+    title: 'Ice Hockey',
+    emoji: '🏒',
+    coverBg: 'linear-gradient(135deg, #4169E1 0%, #87CEEB 100%)',
+    desc: 'Move your paddle with arrow keys — score in the right goal!',
+    ageMin: 5, ageMax: 12,
+    categories: ['Fun'],
+    color: '#00CFFF',
+    standalone: '../hockey/public/standalone.html',
+  },
+];
+
+/* ── STATE ── */
+let activeGrade = 'All Ages';
+let activeCat = 'All';
+
+/* ── GRADES ── */
+const gradeRow = document.getElementById('grade-row');
+GRADES.forEach(g => {
+  const chip = document.createElement('button');
+  chip.className = 'grade-chip' + (g === activeGrade ? ' active' : '');
+  chip.textContent = g;
+  chip.onclick = () => { activeGrade = g; updateGradeChips(); updateContextLabel(); renderCards(); };
+  gradeRow.appendChild(chip);
+});
+function updateGradeChips() {
+  gradeRow.querySelectorAll('.grade-chip').forEach(c => {
+    c.classList.toggle('active', c.textContent === activeGrade);
+  });
+}
+
+/* ── CATEGORIES ── */
+const catRow = document.getElementById('cat-row');
+CATEGORIES.forEach(c => {
+  const chip = document.createElement('button');
+  chip.className = 'cat-chip' + (c === activeCat ? ' active' : '');
+  chip.textContent = c;
+  chip.onclick = () => { activeCat = c; updateCatChips(); renderCards(); };
+  catRow.appendChild(chip);
+});
+function updateCatChips() {
+  catRow.querySelectorAll('.cat-chip').forEach(c => {
+    c.classList.toggle('active', c.textContent === activeCat);
+  });
+}
+
+/* ── CONTEXT LABEL ── */
+function updateContextLabel() {
+  const lbl = document.getElementById('context-label');
+  if (activeGrade === 'All Ages') lbl.textContent = 'All games';
+  else if (activeGrade === 'PreK')   lbl.textContent = 'Pre-K games';
+  else if (activeGrade === 'K')      lbl.textContent = 'Kindergarten games';
+  else                               lbl.textContent = 'Grade ' + activeGrade + ' games';
+}
+
+/* ── GRADE MATCH ── */
+function gradeInRange(game) {
+  if (activeGrade === 'All Ages') return true;
+  if (activeGrade === 'PreK') return game.ageMin <= 5;
+  if (activeGrade === 'K')    return game.ageMin <= 6 && game.ageMax >= 5;
+  const n = parseInt(activeGrade, 10);
+  const minAge = n + 5, maxAge = n + 6;
+  return game.ageMin <= maxAge && game.ageMax >= minAge;
+}
+
+/* ── RENDER CARDS ── */
+function renderCards() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const grid = document.getElementById('game-grid');
+  const visible = GAMES.filter(g =>
+    gradeInRange(g) &&
+    (activeCat === 'All' || g.categories.includes(activeCat)) &&
+    (g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q))
+  );
+  if (visible.length === 0) {
+    grid.innerHTML = '<div class="no-results">No games found — try a different filter!</div>';
+    return;
+  }
+  grid.innerHTML = visible.map(g => `
+    <div class="game-card" onclick="openLauncher('${g.id}')">
+      <div class="game-cover" style="background:${g.coverBg}">${g.emoji}</div>
+      <div class="game-info">
+        <div class="game-title" style="color:${g.color}">${g.title}</div>
+        <div class="game-desc">${g.desc}</div>
+        <div class="game-meta">
+          <span class="age-badge">Ages ${g.ageMin}–${g.ageMax}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── LAUNCHER ── */
+function openLauncher(id) {
+  const game = GAMES.find(g => g.id === id);
+  if (!game) return;
+  document.getElementById('launcher-title').textContent = game.emoji + '  ' + game.title;
+  const body = document.getElementById('launcher-body');
+  // Try loading the standalone HTML in an iframe
+  body.innerHTML = `
+    <div class="launcher-fallback">
+      <span class="emoji">${game.emoji}</span>
+      <p><strong style="color:#FFD700">${game.title}</strong></p>
+      <p>${game.desc}</p>
+      <p style="margin-top:16px;color:#aad4ff">
+        Open <code style="color:#FFD700">${game.standalone}</code><br>directly in your browser to play!
+      </p>
+      <p style="margin-top:12px">
+        <small>In the full MFE app this loads via Module Federation from<br>
+        the game remote at its respective port.</small>
+      </p>
+    </div>`;
+  // Attempt iframe (may be blocked by same-origin if opened as file://)
+  const iframe = document.createElement('iframe');
+  iframe.src = game.standalone;
+  iframe.onload = () => { body.innerHTML = ''; body.appendChild(iframe); };
+  iframe.onerror = () => { /* fallback already shown */ };
+  document.getElementById('launcher').classList.add('visible');
+}
+function closeLauncher() {
+  document.getElementById('launcher').classList.remove('visible');
+  document.getElementById('launcher-body').innerHTML = '';
+}
+
+/* ── SPLASH → HOME ── */
+function enterHome() {
+  document.getElementById('splash').classList.add('hidden');
+  const home = document.getElementById('home');
+  home.classList.add('visible');
+  initLandscape();
+  renderCards();
+}
+
+/* ── ANIMATED LANDSCAPE ── */
+function initLandscape() {
+  const canvas = document.getElementById('land-canvas');
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // ── sky gradient (static)
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#87CEEB');
+  sky.addColorStop(1, '#c9e8f5');
+
+  // ── clouds
+  const clouds = [
+    { x: W * 0.1, y: H * 0.18, r: 28, speed: 0.18 },
+    { x: W * 0.4, y: H * 0.12, r: 22, speed: 0.12 },
+    { x: W * 0.7, y: H * 0.22, r: 34, speed: 0.15 },
+    { x: W * 0.9, y: H * 0.1,  r: 20, speed: 0.10 },
+  ];
+
+  // ── hills (3 layers for parallax)
+  const hills = [
+    { color: '#6bc46b', yBase: 0.72, amp: 0.14, freq: 0.9,  offset: 0, speed: 0.25 },
+    { color: '#5cb85c', yBase: 0.78, amp: 0.11, freq: 1.4,  offset: 2, speed: 0.4  },
+    { color: '#4cae4c', yBase: 0.85, amp: 0.08, freq: 2.0,  offset: 5, speed: 0.6  },
+  ];
+
+  // ── animals
+  const animals = [
+    { type: 'cat', x: W * 0.2, groundFrac: 0.87, speed: 0.8,  label: 'Cat',  color: '#f5a623', w: 38, h: 30 },
+    { type: 'dog', x: W * 0.6, groundFrac: 0.88, speed: 1.2,  label: 'Dog',  color: '#a0522d', w: 44, h: 32 },
+  ];
+
+  // ── bird (flying)
+  const bird = { x: W * 0.8, y: H * 0.25, speed: 1.5, flapT: 0 };
+
+  let t = 0;
+
+  function drawCloud(cx, cy, r) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    const blobs = [
+      [0, 0, r], [-r * 0.6, r * 0.2, r * 0.7], [r * 0.6, r * 0.2, r * 0.7],
+      [-r * 1.1, r * 0.5, r * 0.55], [r * 1.1, r * 0.5, r * 0.55],
+    ];
+    blobs.forEach(([dx, dy, br]) => {
+      ctx.beginPath(); ctx.arc(cx + dx, cy + dy, br, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+
+  function drawHills() {
+    hills.forEach(hill => {
+      const scroll = (t * hill.speed) % (W * 2);
+      ctx.beginPath();
+      ctx.moveTo(-scroll, H);
+      for (let x = -scroll; x <= W + scroll + 60; x += 4) {
+        const y = H * hill.yBase + Math.sin((x + hill.offset * 100) * hill.freq * 0.006) * H * hill.amp
+                + Math.sin((x + hill.offset * 50) * hill.freq * 0.012) * H * hill.amp * 0.4;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W + scroll + 60, H); ctx.lineTo(-scroll, H); ctx.closePath();
+      ctx.fillStyle = hill.color; ctx.fill();
+    });
+  }
+
+  function hillY(xPos) {
+    // ground height at xPos (bottom hill)
+    const hill = hills[2];
+    return H * hill.yBase + Math.sin(xPos * hill.freq * 0.006 + hill.offset * 50 * 0.012) * H * hill.amp * 0.4
+         + Math.sin(xPos * hill.freq * 0.012) * H * hill.amp;
+  }
+
+  function drawAnimal(a, bodyY) {
+    const x = a.x, y = bodyY;
+    const leg = Math.sin(t * 0.08 * a.speed * 4) * 5;
+
+    ctx.save();
+    // body
+    ctx.fillStyle = a.color;
+    ctx.beginPath(); ctx.roundRect(x - a.w/2, y - a.h, a.w, a.h * 0.65, 8); ctx.fill();
+    // head
+    ctx.beginPath(); ctx.arc(x + a.w * 0.27, y - a.h * 0.8, a.h * 0.33, 0, Math.PI * 2); ctx.fill();
+    // eye
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(x + a.w * 0.38, y - a.h * 0.88, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(x + a.w * 0.39, y - a.h * 0.88, 2, 0, Math.PI * 2); ctx.fill();
+    // ears (different per type)
+    ctx.fillStyle = a.color;
+    if (a.type === 'cat') {
+      ctx.beginPath(); ctx.moveTo(x+a.w*0.12, y-a.h*1.02); ctx.lineTo(x+a.w*0.21, y-a.h*1.2); ctx.lineTo(x+a.w*0.3, y-a.h*1.02); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x+a.w*0.35, y-a.h*1.02); ctx.lineTo(x+a.w*0.44, y-a.h*1.22); ctx.lineTo(x+a.w*0.53, y-a.h*1.02); ctx.fill();
+    } else {
+      ctx.fillStyle = '#c07040';
+      ctx.beginPath(); ctx.ellipse(x+a.w*0.17, y-a.h*1.02, 7, 9, -0.3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = a.color;
+      ctx.beginPath(); ctx.ellipse(x+a.w*0.44, y-a.h*1.0, 7, 9, 0.3, 0, Math.PI*2); ctx.fill();
+    }
+    // legs
+    ctx.strokeStyle = a.color; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    const legPairs = a.type === 'cat' ? [[-14, 4], [-6, -4], [6, 4], [14, -4]] : [[-16, 4], [-6, -4], [6, 4], [16, -4]];
+    legPairs.forEach(([ox, phase], i) => {
+      const legAnim = Math.sin(t * 0.08 * a.speed * 4 + phase) * 6;
+      ctx.beginPath(); ctx.moveTo(x + ox, y - a.h * 0.3); ctx.lineTo(x + ox, y + legAnim); ctx.stroke();
+    });
+    // tail
+    if (a.type === 'cat') {
+      const tailY = Math.sin(t * 0.06) * 10;
+      ctx.beginPath(); ctx.moveTo(x - a.w/2 + 4, y - a.h * 0.4);
+      ctx.bezierCurveTo(x - a.w, y - a.h * 0.4, x - a.w * 1.1, y - a.h + tailY, x - a.w * 0.95, y - a.h * 0.7 + tailY);
+      ctx.strokeStyle = a.color; ctx.lineWidth = 5; ctx.stroke();
+    }
+    // sign
+    ctx.fillStyle = '#fff8dc';
+    ctx.beginPath(); ctx.roundRect(x - 16, y - a.h * 1.5, 32, 18, 4); ctx.fill();
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 11px Fredoka One, cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText(a.label, x, y - a.h * 1.38);
+    ctx.restore();
+  }
+
+  function drawBird(bx, by, flapT) {
+    ctx.save();
+    const flap = Math.sin(flapT * 0.18) * 12;
+    ctx.fillStyle = '#FF6B6B';
+    // body
+    ctx.beginPath(); ctx.ellipse(bx, by, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
+    // wing
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath(); ctx.ellipse(bx - 4, by - flap, 10, 5, -0.5, 0, Math.PI * 2); ctx.fill();
+    // eye
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(bx + 8, by - 3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(bx + 9, by - 3, 2, 0, Math.PI * 2); ctx.fill();
+    // beak
+    ctx.fillStyle = '#FFA500';
+    ctx.beginPath(); ctx.moveTo(bx + 14, by); ctx.lineTo(bx + 22, by + 2); ctx.lineTo(bx + 14, by + 5); ctx.fill();
+    ctx.restore();
+  }
+
+  function loop() {
+    t++;
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+    // clouds
+    clouds.forEach(c => {
+      c.x -= c.speed;
+      if (c.x + c.r * 2 < 0) c.x = W + c.r * 2;
+      drawCloud(c.x, c.y, c.r);
+    });
+
+    drawHills();
+
+    // animals walk left→right (wrap)
+    animals.forEach(a => {
+      a.x += a.speed;
+      if (a.x - a.w > W) a.x = -a.w;
+      const gY = hillY(a.x);
+      drawAnimal(a, gY);
+    });
+
+    // bird flies right→left (wrap)
+    bird.x -= bird.speed;
+    bird.y += Math.sin(t * 0.025) * 0.6;
+    bird.flapT = t;
+    if (bird.x < -30) bird.x = W + 30;
+    drawBird(bird.x, bird.y, bird.flapT);
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+/* ── KEY: close launcher with Escape ── */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLauncher(); });
+</script>
+</body>
+</html>
