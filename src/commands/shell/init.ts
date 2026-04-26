@@ -95,7 +95,7 @@ export async function shellInitCommand(
         'orchestration/registry/package.json',
         'orchestration/registry/Dockerfile',
         'src/shell/DaemonBridge.ts',
-        'src/shell/MFEOrchestrator.ts',
+        'src/shell/MFEOrchestrator.tsx',
         'src/shell/MFERenderer.tsx',
         'src/shell/index.tsx',
       ];

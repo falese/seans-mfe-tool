@@ -26,7 +26,25 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.(ts|tsx)$/, use: 'builtin:swc-loader' },
+      {
+        test: /\.(ts|tsx)$/,
+        use: {
+          loader: 'builtin:swc-loader',
+          options: {
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                tsx: true,
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic',
+                },
+              },
+            },
+          },
+        },
+      },
     ],
   },
   devServer: {
