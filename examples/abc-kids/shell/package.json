@@ -17,7 +17,6 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@module-federation/enhanced-rspack": "^0.7.0",
     "@rspack/cli": "^0.5.0",
     "@rspack/core": "^0.5.0",
     "@types/react": "^18.2.0",
