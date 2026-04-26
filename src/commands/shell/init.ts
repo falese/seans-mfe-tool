@@ -7,11 +7,13 @@ import { BusinessError, SystemError } from '@seans-mfe/contracts';
 import { processTemplates } from '../../utils/templateProcessor';
 import type { ShellInitResult, PlannedChange } from '../../oclif/results';
 
-const ORCH_PORT_DEFAULT = 3100;
+const DAEMON_PORT_DEFAULT   = 3001;
+const REGISTRY_PORT_DEFAULT = 4000;
 
 export interface ShellInitOptions {
   port?: number;
-  orchPort?: number;
+  daemonPort?: number;
+  registryPort?: number;
   skipInstall?: boolean;
   force?: boolean;
   dryRun?: boolean;
@@ -21,9 +23,10 @@ export async function shellInitCommand(
   name: string,
   options: ShellInitOptions = {},
 ): Promise<ShellInitResult> {
-  const port = options.port ?? 3000;
-  const orchPort = options.orchPort ?? ORCH_PORT_DEFAULT;
-  const targetDir = path.resolve(process.cwd(), name);
+  const port         = options.port         ?? 3000;
+  const daemonPort   = options.daemonPort   ?? DAEMON_PORT_DEFAULT;
+  const registryPort = options.registryPort ?? REGISTRY_PORT_DEFAULT;
+  const targetDir    = path.resolve(process.cwd(), name);
   const generatedFiles: string[] = [];
   const plannedChanges: PlannedChange[] = [];
 
@@ -49,20 +52,19 @@ export async function shellInitCommand(
     }
 
     // Sanitize name for use as module/npm package identifier
-    // The processTemplates function requires no hyphens for the `name` variable
     const moduleName = name.replace(/-/g, '_');
 
-    const orchDir = path.join(targetDir, 'orchestration-service');
-    const runtimeDir = path.join(targetDir, 'src', 'orchestration-runtime');
+    const daemonDir   = path.join(targetDir, 'orchestration', 'daemon');
+    const registryDir = path.join(targetDir, 'orchestration', 'registry');
+    const shellSrcDir = path.join(targetDir, 'src', 'shell');
 
     const dirs = [
       targetDir,
       path.join(targetDir, 'src'),
-      runtimeDir,
-      orchDir,
-      path.join(orchDir, 'registry'),
-      path.join(orchDir, 'api'),
-      path.join(orchDir, 'websocket'),
+      shellSrcDir,
+      path.join(targetDir, 'orchestration'),
+      daemonDir,
+      registryDir,
     ];
 
     if (options.dryRun) {
@@ -75,16 +77,16 @@ export async function shellInitCommand(
       }
       const filesToGenerate = [
         'docker-compose.yml',
-        'orchestration-service/server.ts',
-        'orchestration-service/registry/storage.ts',
-        'orchestration-service/api/register.ts',
-        'orchestration-service/api/discover.ts',
-        'orchestration-service/websocket/broadcast.ts',
-        'orchestration-service/package.json',
-        'orchestration-service/Dockerfile',
-        'orchestration-service/tsconfig.json',
-        'src/orchestration-runtime/registry-cache.ts',
-        'src/orchestration-runtime/websocket-client.ts',
+        'orchestration/daemon/shell-daemon.ts',
+        'orchestration/daemon/package.json',
+        'orchestration/daemon/Dockerfile',
+        'orchestration/registry/mfe-registry.ts',
+        'orchestration/registry/package.json',
+        'orchestration/registry/Dockerfile',
+        'src/shell/DaemonBridge.ts',
+        'src/shell/MFEOrchestrator.ts',
+        'src/shell/MFERenderer.tsx',
+        'src/shell/index.tsx',
       ];
       for (const f of filesToGenerate) {
         plannedChanges.push({ op: 'create', target: path.join(name, f) });
@@ -96,7 +98,8 @@ export async function shellInitCommand(
       return {
         name,
         port,
-        orchPort,
+        daemonPort,
+        registryPort,
         targetDir,
         generatedFiles: [],
         dryRun: true,
@@ -114,55 +117,68 @@ export async function shellInitCommand(
       }
     }
 
-    const templateVars = { name: moduleName, projectName: name, port, orchPort, version: '1.0.0' };
+    const templateVars = {
+      name: moduleName,
+      projectName: name,
+      port,
+      daemonPort,
+      registryPort,
+      version: '1.0.0',
+    };
 
-    // ── Copy orchestration-service templates ─────────────────────────
-    console.log(chalk.blue('\nGenerating orchestration-service/...'));
-    const orchTemplateSrc = path.join(templateDir, 'orchestration-service');
-    await fs.copy(orchTemplateSrc, orchDir);
-    await processTemplates(orchDir, templateVars);
-    const orchFiles = await listRelativeFiles(orchDir, targetDir);
-    generatedFiles.push(...orchFiles);
+    // ── Copy daemon templates ─────────────────────────────────────────
+    console.log(chalk.blue('\nGenerating orchestration/daemon/...'));
+    const daemonTemplateSrc = path.join(templateDir, 'orchestration', 'daemon');
+    await fs.copy(daemonTemplateSrc, daemonDir);
+    await processTemplates(daemonDir, templateVars);
+    const daemonFiles = await listRelativeFiles(daemonDir, targetDir);
+    generatedFiles.push(...daemonFiles);
 
-    // ── Copy shell runtime templates ─────────────────────────────────
-    console.log(chalk.blue('Generating src/orchestration-runtime/...'));
-    const runtimeTemplateSrc = path.join(templateDir, 'src', 'orchestration-runtime');
-    await fs.copy(runtimeTemplateSrc, runtimeDir);
-    await processTemplates(runtimeDir, templateVars);
-    const runtimeFiles = await listRelativeFiles(runtimeDir, targetDir);
-    generatedFiles.push(...runtimeFiles);
+    // ── Copy registry templates ───────────────────────────────────────
+    console.log(chalk.blue('Generating orchestration/registry/...'));
+    const registryTemplateSrc = path.join(templateDir, 'orchestration', 'registry');
+    await fs.copy(registryTemplateSrc, registryDir);
+    await processTemplates(registryDir, templateVars);
+    const registryFiles = await listRelativeFiles(registryDir, targetDir);
+    generatedFiles.push(...registryFiles);
 
-    // ── Generate docker-compose.yml ──────────────────────────────────
+    // ── Copy shell src templates ──────────────────────────────────────
+    console.log(chalk.blue('Generating src/shell/...'));
+    const shellSrcTemplateSrc = path.join(templateDir, 'src', 'shell');
+    await fs.copy(shellSrcTemplateSrc, shellSrcDir);
+    await processTemplates(shellSrcDir, templateVars);
+    const shellFiles = await listRelativeFiles(shellSrcDir, targetDir);
+    generatedFiles.push(...shellFiles);
+
+    // ── Generate docker-compose.yml ───────────────────────────────────
     console.log(chalk.blue('Generating docker-compose.yml...'));
-    const composeSrc = path.join(templateDir, 'docker-compose.yml.ejs');
+    const composeSrc  = path.join(templateDir, 'docker-compose.yml.ejs');
     const composeDest = path.join(targetDir, 'docker-compose.yml.ejs');
     await fs.copy(composeSrc, composeDest);
     await processTemplates(targetDir, templateVars);
     generatedFiles.push('docker-compose.yml');
 
-    // ── Summary ──────────────────────────────────────────────────────
-    console.log(chalk.green('\n✓ Shell + orchestration service generated!'));
+    // ── Summary ───────────────────────────────────────────────────────
+    console.log(chalk.green('\n✓ Shell + daemon-native control plane generated!'));
     console.log('\nGenerated structure:');
     console.log(`  ${name}/`);
-    console.log(`  ├── src/orchestration-runtime/   # Browser runtime (WebSocket client + cache)`);
-    console.log(`  ├── orchestration-service/        # Node.js registry service (REST + WS)`);
-    console.log(`  │   ├── server.ts`);
-    console.log(`  │   ├── registry/storage.ts`);
-    console.log(`  │   ├── api/register.ts`);
-    console.log(`  │   ├── api/discover.ts`);
-    console.log(`  │   └── websocket/broadcast.ts`);
-    console.log(`  └── docker-compose.yml            # shell + orchestration + Redis`);
+    console.log(`  ├── orchestration/`);
+    console.log(`  │   ├── daemon/          # ShellDaemon (DaemonService protocol)`);
+    console.log(`  │   └── registry/        # MFERegistry (rules engine)`);
+    console.log(`  ├── src/shell/           # Browser: MFEOrchestrator + MFERenderer`);
+    console.log(`  └── docker-compose.yml   # registry + daemon + shell + redis`);
 
     console.log(chalk.blue('\nNext steps:'));
     console.log(`  1. ${chalk.cyan(`cd ${name}`)}`);
-    console.log(`  2. ${chalk.cyan('docker-compose up -d')} — start orchestration + Redis`);
-    console.log(`  3. ${chalk.cyan('npm run dev')} — start shell dev server`);
-    console.log(`\nOrchestration service: ${chalk.cyan(`http://localhost:${orchPort}`)}`);
-    console.log(`  POST /api/register  — remotes call this on startup`);
-    console.log(`  GET  /api/discover  — shell polls for registry snapshot`);
-    console.log(`  GET  /health        — liveness probe`);
+    console.log(`  2. ${chalk.cyan('docker-compose up -d')} — start registry, daemon, shell, redis`);
+    console.log(`  3. Add remote MFEs and call ${chalk.cyan('updateControlPlaneState()')} to trigger rendering`);
 
-    return { name, port, orchPort, targetDir, generatedFiles, dryRun: false };
+    console.log(chalk.blue('\nControl plane endpoints:'));
+    console.log(`  Registry: ${chalk.cyan(`http://localhost:${registryPort}`)}   (rules engine)`);
+    console.log(`  Daemon:   ${chalk.cyan(`ws://localhost:${daemonPort}/graphql`)} (message broker)`);
+    console.log(`  Shell:    ${chalk.cyan(`http://localhost:${port}`)}   (MFE renderer)`);
+
+    return { name, port, daemonPort, registryPort, targetDir, generatedFiles, dryRun: false };
 
   } catch (error) {
     console.error(chalk.red('\n✗ Shell init failed:'));
@@ -187,11 +203,11 @@ async function listRelativeFiles(dir: string, baseDir: string): Promise<string[]
 }
 
 export default class ShellInit extends BaseCommand<ShellInitResult> {
-  static description = 'Generate a shell (host) app with embedded orchestration service'
+  static description = 'Generate a shell (host) app with daemon-native control plane (registry + daemon + MFE renderer)'
 
   static examples = [
     '$ seans-mfe-tool shell:init my-app',
-    '$ seans-mfe-tool shell:init my-app --port 3000 --orch-port 3100',
+    '$ seans-mfe-tool shell:init my-app --port 3000 --daemon-port 3001 --registry-port 4000',
     '$ seans-mfe-tool shell:init my-app --dry-run',
   ]
 
@@ -206,9 +222,13 @@ export default class ShellInit extends BaseCommand<ShellInitResult> {
       description: 'Port for the shell app',
       default: '3000',
     }),
-    'orch-port': Flags.string({
-      description: 'Port for the orchestration service',
-      default: String(ORCH_PORT_DEFAULT),
+    'daemon-port': Flags.string({
+      description: 'Port for the ShellDaemon (GraphQL-WS message broker)',
+      default: String(DAEMON_PORT_DEFAULT),
+    }),
+    'registry-port': Flags.string({
+      description: 'Port for the MFERegistry (rules engine)',
+      default: String(REGISTRY_PORT_DEFAULT),
     }),
     'skip-install': Flags.boolean({
       description: 'Skip npm install',
@@ -229,11 +249,12 @@ export default class ShellInit extends BaseCommand<ShellInitResult> {
   protected async runCommand(): Promise<ShellInitResult> {
     const { args, flags } = await this.parse(ShellInit)
     return shellInitCommand(args.name, {
-      port: flags.port ? parseInt(flags.port, 10) : 3000,
-      orchPort: flags['orch-port'] ? parseInt(flags['orch-port'], 10) : ORCH_PORT_DEFAULT,
-      skipInstall: flags['skip-install'],
-      force: flags.force,
-      dryRun: flags['dry-run'],
+      port:         flags.port         ? parseInt(flags.port, 10)          : 3000,
+      daemonPort:   flags['daemon-port']   ? parseInt(flags['daemon-port'], 10)   : DAEMON_PORT_DEFAULT,
+      registryPort: flags['registry-port'] ? parseInt(flags['registry-port'], 10) : REGISTRY_PORT_DEFAULT,
+      skipInstall:  flags['skip-install'],
+      force:        flags.force,
+      dryRun:       flags['dry-run'],
     })
   }
 }

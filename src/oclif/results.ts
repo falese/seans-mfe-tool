@@ -62,7 +62,8 @@ export interface ApiResult extends MutatingResult {
 export interface ShellInitResult extends MutatingResult {
   name: string;
   port: number;
-  orchPort: number;
+  daemonPort: number;
+  registryPort: number;
   targetDir: string;
   generatedFiles: string[];
 }

@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --production
+
+COPY . .
+
+EXPOSE <%= daemonPort %>
+
+ENV NODE_ENV=production
+ENV LOG_JSON=1
+
+CMD ["node", "shell-daemon.ts"]

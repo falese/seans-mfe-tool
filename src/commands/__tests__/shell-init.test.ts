@@ -1,7 +1,12 @@
 /**
  * shell:init Command Tests
- * Following TDD principles — testing issue #15 (orchestration service generation)
- * and issue #144 (shell:init command).
+ * TDD for daemon-native shell generation (ADR-016, ADR-017).
+ *
+ * The shell:init command generates a four-tier control plane:
+ *   orchestration/registry — MFERegistry rules engine
+ *   orchestration/daemon   — ShellDaemon (DaemonService protocol)
+ *   src/shell              — Browser: MFEOrchestrator + MFERenderer
+ *   docker-compose.yml     — All four services
  */
 
 import * as fs from 'fs-extra';
@@ -53,7 +58,6 @@ describe('shell:init Command', () => {
 
     // Default: target dir does not exist, template dir exists
     (mockFs.pathExists as unknown as jest.Mock).mockImplementation(async (p: string) => {
-      // Template dir always exists; target dir does not by default
       return String(p).includes('templates');
     });
     (mockFs.ensureDir as unknown as jest.Mock).mockResolvedValue(undefined);
@@ -71,15 +75,15 @@ describe('shell:init Command', () => {
   // ── Project Creation ──────────────────────────────────────────────────────
 
   describe('Project Creation', () => {
-    it('should create orchestration-service directory', async () => {
+    it('should create orchestration/daemon directory', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockFs.ensureDir).toHaveBeenCalledWith(
-        expect.stringContaining('orchestration-service'),
+        expect.stringContaining('daemon'),
       );
     });
 
-    it('should create orchestration-service/registry directory', async () => {
+    it('should create orchestration/registry directory', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockFs.ensureDir).toHaveBeenCalledWith(
@@ -87,54 +91,48 @@ describe('shell:init Command', () => {
       );
     });
 
-    it('should create orchestration-service/api directory', async () => {
+    it('should create src/shell directory', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockFs.ensureDir).toHaveBeenCalledWith(
-        expect.stringContaining('api'),
-      );
-    });
-
-    it('should create orchestration-service/websocket directory', async () => {
-      await shellInitCommand('myapp', { skipInstall: true });
-
-      expect(mockFs.ensureDir).toHaveBeenCalledWith(
-        expect.stringContaining('websocket'),
-      );
-    });
-
-    it('should create src/orchestration-runtime directory', async () => {
-      await shellInitCommand('myapp', { skipInstall: true });
-
-      expect(mockFs.ensureDir).toHaveBeenCalledWith(
-        expect.stringContaining('orchestration-runtime'),
+        expect.stringContaining('shell'),
       );
     });
 
     it('should return correct name and ports', async () => {
-      const result = await shellInitCommand('myapp', { port: 3000, orchPort: 3100, skipInstall: true });
+      const result = await shellInitCommand('myapp', { port: 3000, daemonPort: 3001, registryPort: 4000, skipInstall: true });
 
       expect(result.name).toBe('myapp');
       expect(result.port).toBe(3000);
-      expect(result.orchPort).toBe(3100);
+      expect(result.daemonPort).toBe(3001);
+      expect(result.registryPort).toBe(4000);
       expect(result.dryRun).toBe(false);
     });
 
-    it('should copy orchestration-service templates', async () => {
+    it('should copy daemon templates', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockFs.copy).toHaveBeenCalledWith(
-        expect.stringContaining('orchestration-service'),
-        expect.stringContaining('orchestration-service'),
+        expect.stringContaining('daemon'),
+        expect.stringContaining('daemon'),
       );
     });
 
-    it('should copy shell runtime templates', async () => {
+    it('should copy registry templates', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockFs.copy).toHaveBeenCalledWith(
-        expect.stringContaining('orchestration-runtime'),
-        expect.stringContaining('orchestration-runtime'),
+        expect.stringContaining('registry'),
+        expect.stringContaining('registry'),
+      );
+    });
+
+    it('should copy shell src templates', async () => {
+      await shellInitCommand('myapp', { skipInstall: true });
+
+      expect(mockFs.copy).toHaveBeenCalledWith(
+        expect.stringContaining('shell'),
+        expect.stringContaining('shell'),
       );
     });
 
@@ -156,9 +154,14 @@ describe('shell:init Command', () => {
       expect(result.port).toBe(3000);
     });
 
-    it('should default orchPort to 3100', async () => {
+    it('should default daemonPort to 3001', async () => {
       const result = await shellInitCommand('myapp', { skipInstall: true });
-      expect(result.orchPort).toBe(3100);
+      expect(result.daemonPort).toBe(3001);
+    });
+
+    it('should default registryPort to 4000', async () => {
+      const result = await shellInitCommand('myapp', { skipInstall: true });
+      expect(result.registryPort).toBe(4000);
     });
   });
 
@@ -200,11 +203,18 @@ describe('shell:init Command', () => {
       expect(result.plannedChanges!.length).toBeGreaterThan(0);
     });
 
-    it('should list orchestration-service in planned changes', async () => {
+    it('should list orchestration/daemon in planned changes', async () => {
       const result = await shellInitCommand('myapp', { dryRun: true });
 
       const targets = result.plannedChanges!.map((c) => c.target);
-      expect(targets.some((t) => t.includes('orchestration-service'))).toBe(true);
+      expect(targets.some((t) => t.includes('daemon'))).toBe(true);
+    });
+
+    it('should list orchestration/registry in planned changes', async () => {
+      const result = await shellInitCommand('myapp', { dryRun: true });
+
+      const targets = result.plannedChanges!.map((c) => c.target);
+      expect(targets.some((t) => t.includes('registry'))).toBe(true);
     });
 
     it('should list docker-compose in planned changes', async () => {
@@ -212,6 +222,13 @@ describe('shell:init Command', () => {
 
       const targets = result.plannedChanges!.map((c) => c.target);
       expect(targets.some((t) => t.includes('docker-compose'))).toBe(true);
+    });
+
+    it('should include daemonPort and registryPort in dry run result', async () => {
+      const result = await shellInitCommand('myapp', { dryRun: true, daemonPort: 3001, registryPort: 4000 });
+
+      expect(result.daemonPort).toBe(3001);
+      expect(result.registryPort).toBe(4000);
     });
   });
 
@@ -255,26 +272,31 @@ describe('shell:init Command', () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('Shell + orchestration service generated!'),
+        expect.stringContaining('Shell + daemon-native control plane generated!'),
       );
     });
 
-    it('should log orchestration service URL', async () => {
-      await shellInitCommand('myapp', { orchPort: 3100, skipInstall: true });
+    it('should log daemon endpoint URL', async () => {
+      await shellInitCommand('myapp', { daemonPort: 3001, skipInstall: true });
 
       expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('http://localhost:3100'),
+        expect.stringContaining('ws://localhost:3001'),
       );
     });
 
-    it('should log REST API endpoints', async () => {
+    it('should log registry endpoint URL', async () => {
+      await shellInitCommand('myapp', { registryPort: 4000, skipInstall: true });
+
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('http://localhost:4000'),
+      );
+    });
+
+    it('should mention docker-compose up next step', async () => {
       await shellInitCommand('myapp', { skipInstall: true });
 
       expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('/api/register'),
-      );
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('/api/discover'),
+        expect.stringContaining('docker-compose up -d'),
       );
     });
   });
