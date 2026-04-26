@@ -25,9 +25,9 @@ const { createServer }  = require('http');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { PubSub }        = require('graphql-subscriptions');
 const { useServer }     = require('graphql-ws/lib/use/ws');
-const { WebSocketServer } = require('ws');
+const wsLib             = require('ws');
+const { WebSocketServer } = wsLib;
 const { v4: uuidv4 }    = require('uuid');
-const WebSocket         = require('ws');
 const GraphQLJSON       = require('graphql-type-json');
 const { execute, subscribe } = require('graphql');
 
@@ -81,6 +81,12 @@ const logger = {
 //   - handleAction()            — 5-step action pipeline (protocol-invariant)
 
 class ShellDaemon {
+  componentState: Map<string, { component: any; actions: any[]; lastUpdated: string }>;
+  pubsub: any;
+  registrySocket: any;
+  registryReconnectAttempt: number;
+  stopping: boolean;
+
   constructor() {
     this.componentState          = new Map();  // id → { component, actions, lastUpdated }
     this.pubsub                  = new PubSub();
@@ -117,7 +123,7 @@ class ShellDaemon {
     logger.info({ event: 'WS_REGISTRY_CONNECT', url, attempt: this.registryReconnectAttempt },
       'Connecting to registry');
 
-    const ws = new WebSocket(url, WS_SUBPROTOCOL);
+    const ws = new wsLib(url, WS_SUBPROTOCOL);
     this.registrySocket = ws;
 
     ws.onopen = () => {
@@ -301,7 +307,7 @@ class ShellDaemon {
     const url  = process.env.REGISTRY_WS_URL ||
       `ws://${process.env.REGISTRY_HOST || 'registry'}:${process.env.REGISTRY_PORT || '<%= registryPort %>'}/graphql`;
     const opId = `fwd-${uuidv4()}`;
-    const ws   = new WebSocket(url, WS_SUBPROTOCOL);
+    const ws   = new wsLib(url, WS_SUBPROTOCOL);
 
     const timer = setTimeout(() => {
       logger.warn({ event: 'ACTION_FORWARD_TIMEOUT', opId }, 'Forward timed out — closing WS');
@@ -348,7 +354,7 @@ class ShellDaemon {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  buildMessage({ direction, kind, payload, metadata }) {
+  buildMessage({ direction, kind, payload, metadata = null }: { direction: any; kind: any; payload: any; metadata?: any }) {
     return {
       direction,
       kind,
