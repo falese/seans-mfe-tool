@@ -24,7 +24,7 @@
 
 import { ApolloServer } from 'apollo-server-express';
 import { createServer } from 'http';
-import { useServer } from 'graphql-ws/use/ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { PubSub } from 'graphql-subscriptions';
 import express from 'express';
@@ -279,7 +279,7 @@ function createResolvers(registry: MFERegistry) {
 
     Subscription: {
       componentUpdate: {
-        subscribe: () => registry.pubsub.asyncIterableIterator('COMPONENT_UPDATE'),
+        subscribe: () => registry.pubsub.asyncIterator('COMPONENT_UPDATE'),
       },
     },
   };
@@ -345,7 +345,7 @@ async function startRegistry(port = <%= registryPort %>) {
   return registry;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
   startRegistry().catch(err => {
     console.error('❌ Registry start failed:', err);
     process.exit(1);
