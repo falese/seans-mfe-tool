@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+  ABC Kids — Ice Hockey (standalone demo)
+  Runs without npm install. Open in a browser or:
+    npx serve examples/abc-kids/hockey/public
+
+  Full MFE (React + Module Federation) is in src/.
+  Run `npm install && npm run dev` once registry access is available.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ice Hockey — ABC Kids</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Fredoka One', 'Comic Sans MS', cursive;
+      user-select: none;
+      color: #fff;
+    }
+    h1 { color: #00CFFF; font-size: 2rem; margin-bottom: 8px; }
+    #scoreboard {
+      display: flex;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 1.8rem;
+    }
+    .you { color: #FFD700; }
+    .ai  { color: #FF6B6B; }
+    .vs  { color: #aaa; font-size: 1.1rem; }
+    canvas {
+      border-radius: 16px;
+      border: 3px solid #4169E1;
+      box-shadow: 0 0 40px rgba(65,105,225,0.4);
+      max-width: 100%;
+    }
+    #hint { color: #aaa; font-size: 0.9rem; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🏒 Ice Hockey — ABC Kids</h1>
+  <div id="scoreboard">
+    <span class="you">YOU: <span id="ps">0</span></span>
+    <span class="vs">vs</span>
+    <span class="ai">AI: <span id="as">0</span></span>
+  </div>
+  <canvas id="game" width="600" height="400"></canvas>
+  <div id="hint">Arrow keys or WASD to move your paddle (gold) — score in the right goal!</div>
+
+  <script>
+    const W = 600, H = 400;
+    const PW = 14, PH = 80, PR = 12;
+    const PLX = 28, AIX = W - 28 - PW;
+    const PS = 5, AIS = 3.5;
+    const GW = 14, GH = 110, GY = H/2 - GH/2;
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const psEl = document.getElementById('ps');
+    const asEl = document.getElementById('as');
+
+    const state = {
+      playerY: H/2 - PH/2, aiY: H/2 - PH/2,
+      px: W/2, py: H/2, pvx: 4, pvy: 1.5,
+      playerScore: 0, aiScore: 0,
+      keys: new Set()
+    };
+
+    function resetPuck(dir) {
+      state.px = W/2; state.py = H/2;
+      state.pvx = dir * 4; state.pvy = (Math.random()-0.5)*3;
+    }
+
+    function drawRink() {
+      ctx.fillStyle = '#E8F4FD'; ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle = '#4169E1'; ctx.lineWidth = 4; ctx.strokeRect(2,2,W-4,H-4);
+      ctx.strokeStyle = '#B0C4DE'; ctx.lineWidth = 2;
+      ctx.setLineDash([8,8]);
+      ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(W/2,H/2,50,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 3;
+      ctx.strokeRect(0,GY,GW,GH); ctx.strokeRect(W-GW,GY,GW,GH);
+      ctx.fillStyle = 'rgba(255,68,68,0.1)';
+      ctx.fillRect(0,GY,GW,GH); ctx.fillRect(W-GW,GY,GW,GH);
+    }
+
+    function drawPaddle(x, y, color) {
+      const r = 6;
+      ctx.beginPath();
+      ctx.moveTo(x+r,y); ctx.lineTo(x+PW-r,y);
+      ctx.arcTo(x+PW,y,x+PW,y+r,r); ctx.lineTo(x+PW,y+PH-r);
+      ctx.arcTo(x+PW,y+PH,x+PW-r,y+PH,r); ctx.lineTo(x+r,y+PH);
+      ctx.arcTo(x,y+PH,x,y+PH-r,r); ctx.lineTo(x,y+r);
+      ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+      ctx.fillStyle = color; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    function drawPuck(x, y) {
+      ctx.beginPath(); ctx.arc(x,y,PR,0,Math.PI*2);
+      ctx.fillStyle = '#1a1a2e'; ctx.fill();
+      ctx.strokeStyle = '#444'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x-3,y-3,3,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+    }
+
+    function loop() {
+      const s = state;
+      if (s.keys.has('ArrowUp') || s.keys.has('KeyW'))   s.playerY = Math.max(0, s.playerY - PS);
+      if (s.keys.has('ArrowDown') || s.keys.has('KeyS'))  s.playerY = Math.min(H-PH, s.playerY + PS);
+
+      const aiC = s.aiY + PH/2;
+      if (aiC < s.py - 4) s.aiY = Math.min(H-PH, s.aiY + AIS);
+      else if (aiC > s.py + 4) s.aiY = Math.max(0, s.aiY - AIS);
+
+      s.px += s.pvx; s.py += s.pvy;
+
+      if (s.py - PR <= 0) { s.pvy = Math.abs(s.pvy); s.py = PR; }
+      if (s.py + PR >= H) { s.pvy = -Math.abs(s.pvy); s.py = H - PR; }
+
+      // player paddle collision
+      if (s.px-PR <= PLX+PW && s.px+PR >= PLX && s.py >= s.playerY && s.py <= s.playerY+PH) {
+        s.pvx = Math.abs(s.pvx)*1.05;
+        s.pvy += (s.py-(s.playerY+PH/2))*0.12;
+        s.px = PLX+PW+PR+1;
+      }
+      // AI paddle collision
+      if (s.px+PR >= AIX && s.px-PR <= AIX+PW && s.py >= s.aiY && s.py <= s.aiY+PH) {
+        s.pvx = -Math.abs(s.pvx)*1.05;
+        s.pvy += (s.py-(s.aiY+PH/2))*0.12;
+        s.px = AIX-PR-1;
+      }
+
+      s.pvy = Math.max(-8, Math.min(8, s.pvy));
+
+      const inGoal = s.py >= GY && s.py <= GY+GH;
+      if (s.px - PR <= GW && inGoal) {
+        s.aiScore++; asEl.textContent = s.aiScore; resetPuck(1);
+      } else if (s.px + PR >= W-GW && inGoal) {
+        s.playerScore++; psEl.textContent = s.playerScore; resetPuck(-1);
+      } else if (s.px < -30 || s.px > W+30) {
+        resetPuck(s.px > W/2 ? -1 : 1);
+      }
+
+      drawRink();
+      drawPaddle(PLX, s.playerY, '#FFD700');
+      drawPaddle(AIX, s.aiY, '#FF6B6B');
+      drawPuck(s.px, s.py);
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', e => {
+      state.keys.add(e.code);
+      if (['ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault();
+    });
+    document.addEventListener('keyup', e => state.keys.delete(e.code));
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

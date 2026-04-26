@@ -1,0 +1,34 @@
+name: abc-kids-hockey
+version: 1.0.0
+type: remote
+language: typescript
+description: Ice Hockey — move your paddle, score goals against the AI!
+owner: abc-kids-team
+tags: [kids, game, hockey, arcade]
+category: games
+
+endpoint: http://localhost:3002
+remoteEntry: http://localhost:3002/remoteEntry.js
+discovery: http://localhost:3002/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - PlayGame:
+      type: domain
+      description: Play the Ice Hockey game on an HTML5 Canvas
+
+  - ShowCover:
+      type: domain
+      description: Show the Ice Hockey game cover card with title and art
+
+  - GetGameInfo:
+      type: domain
+      description: Return game metadata including title, age range, and description
+
+dependencies:
+  runtime:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  design-system:
+    '@mui/material': ^5.14.0
+    '@emotion/react': ^11.11.1
+    '@emotion/styled': ^11.11.0
