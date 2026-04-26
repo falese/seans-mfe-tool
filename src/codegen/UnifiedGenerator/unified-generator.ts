@@ -485,7 +485,8 @@ export async function generateAllFiles(
     Describe: { method: 'describe', returnTypeBase: 'DescribeResult' },
     Schema: { method: 'schema', returnTypeBase: 'SchemaResult' },
     Query: { method: 'query', returnTypeBase: 'QueryResult' },
-    Emit: { method: 'emit', returnTypeBase: 'EmitResult' }
+    Emit: { method: 'emit', returnTypeBase: 'EmitResult' },
+    UpdateControlPlaneState: { method: 'updateControlPlaneState', returnTypeBase: 'ControlPlaneStateResult' }
   };
 
   const capabilities: Array<{ method: string; config: any; returnTypeBase: string; stubBody: string }> = [];
