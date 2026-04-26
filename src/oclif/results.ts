@@ -56,6 +56,19 @@ export interface ApiResult extends MutatingResult {
 }
 
 // ---------------------------------------------------------------------------
+// shell:init
+// ---------------------------------------------------------------------------
+
+export interface ShellInitResult extends MutatingResult {
+  name: string;
+  port: number;
+  daemonPort: number;
+  registryPort: number;
+  targetDir: string;
+  generatedFiles: string[];
+}
+
+// ---------------------------------------------------------------------------
 // remote:init
 // ---------------------------------------------------------------------------
 
