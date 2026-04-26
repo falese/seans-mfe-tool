@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+  ABC Kids — Flappy Bird (standalone demo)
+  Runs without npm install. Open this file in a browser or serve with:
+    npx serve examples/abc-kids/flappy/public
+
+  The full MFE (React + Module Federation) lives in src/.
+  Run `npm install && npm run dev` once registry access is available.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird — ABC Kids</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a0050;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Fredoka One', 'Comic Sans MS', cursive;
+      user-select: none;
+    }
+    h1 { color: #FFD700; font-size: 2rem; margin-bottom: 12px; }
+    canvas {
+      border-radius: 16px;
+      cursor: pointer;
+      max-width: 100%;
+      max-height: 80vh;
+    }
+    #msg {
+      color: #FFD700;
+      font-size: 1.1rem;
+      margin-top: 12px;
+      min-height: 1.5em;
+      text-align: center;
+    }
+    #msg.dead { color: #FF6B6B; font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+  <h1>🐦 Flappy Bird — ABC Kids</h1>
+  <canvas id="game" width="480" height="640"></canvas>
+  <div id="msg">Tap or press Space to flap!</div>
+
+  <script>
+    const W = 480, H = 640;
+    const BIRD_X = 100, BIRD_R = 22;
+    const GRAVITY = 0.45, JUMP_VEL = -9;
+    const PIPE_W = 60, GAP = 170, PIPE_SPEED = 3, PIPE_MS = 1400;
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const msg = document.getElementById('msg');
+
+    let birdY, birdVY, pipes, score, alive, lastPipeMs, frameId;
+
+    function reset() {
+      birdY = H / 2; birdVY = 0; pipes = []; score = 0; alive = true;
+      lastPipeMs = performance.now();
+      msg.textContent = 'Tap or press Space to flap!';
+      msg.className = '';
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(loop);
+    }
+
+    function jump() {
+      if (!alive) { reset(); return; }
+      birdVY = JUMP_VEL;
+    }
+
+    function drawBg() {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#87CEEB'); g.addColorStop(1, '#E0F7FA');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#8BC34A'; ctx.fillRect(0, H - 40, W, 40);
+      ctx.fillStyle = '#6D4C41'; ctx.fillRect(0, H - 48, W, 8);
+    }
+
+    function drawPipe(p) {
+      const topH = p.gapY - GAP / 2, botY = p.gapY + GAP / 2;
+      ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, 0, PIPE_W, topH);
+      ctx.fillStyle = '#388E3C'; ctx.fillRect(p.x - 5, topH - 28, PIPE_W + 10, 28);
+      ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, botY, PIPE_W, H - botY);
+      ctx.fillStyle = '#388E3C'; ctx.fillRect(p.x - 5, botY, PIPE_W + 10, 28);
+    }
+
+    function drawBird() {
+      ctx.beginPath(); ctx.arc(BIRD_X, birdY, BIRD_R, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFD700'; ctx.fill();
+      ctx.strokeStyle = '#FF8C00'; ctx.lineWidth = 3; ctx.stroke();
+      // eye
+      ctx.beginPath(); ctx.arc(BIRD_X + 8, birdY - 7, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(BIRD_X + 10, birdY - 7, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#222'; ctx.fill();
+      // beak
+      ctx.beginPath();
+      ctx.moveTo(BIRD_X + BIRD_R, birdY);
+      ctx.lineTo(BIRD_X + BIRD_R + 12, birdY - 4);
+      ctx.lineTo(BIRD_X + BIRD_R + 12, birdY + 4);
+      ctx.closePath(); ctx.fillStyle = '#FF8C00'; ctx.fill();
+    }
+
+    function hits() {
+      if (birdY + BIRD_R >= H - 40 || birdY - BIRD_R <= 0) return true;
+      for (const p of pipes) {
+        if (BIRD_X + BIRD_R > p.x && BIRD_X - BIRD_R < p.x + PIPE_W &&
+            (birdY - BIRD_R < p.gapY - GAP / 2 || birdY + BIRD_R > p.gapY + GAP / 2))
+          return true;
+      }
+      return false;
+    }
+
+    function loop(now) {
+      if (!alive) return;
+      if (now - lastPipeMs > PIPE_MS) {
+        pipes.push({ x: W, gapY: 160 + Math.random() * (H - 40 - 320), passed: false });
+        lastPipeMs = now;
+      }
+      birdVY += GRAVITY; birdY += birdVY;
+      for (const p of pipes) {
+        p.x -= PIPE_SPEED;
+        if (!p.passed && p.x + PIPE_W < BIRD_X) { p.passed = true; score++; }
+      }
+      pipes = pipes.filter(p => p.x + PIPE_W > 0);
+
+      if (hits()) {
+        alive = false;
+        msg.textContent = `Oops! Score: ${score} — tap or Space to try again. Mistakes are OK! 🐦`;
+        msg.className = 'dead';
+        return;
+      }
+
+      drawBg();
+      pipes.forEach(drawPipe);
+      drawBird();
+      // score HUD
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(W / 2 - 52, 10, 104, 48);
+      ctx.fillStyle = '#FFD700'; ctx.font = 'bold 34px sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText(score, W / 2, 47);
+
+      frameId = requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener('click', jump);
+    document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); jump(); } });
+
+    reset();
+  </script>
+</body>
+</html>

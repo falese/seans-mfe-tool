@@ -1,0 +1,38 @@
+services:
+  abc-kids-flappy:
+    build:
+      context: ./flappy
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/remoteEntry.js']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  abc-kids-hockey:
+    build:
+      context: ./hockey
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3002'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3002/remoteEntry.js']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  abc-kids-shell:
+    build:
+      context: ./shell
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      abc-kids-flappy:
+        condition: service_healthy
+      abc-kids-hockey:
+        condition: service_healthy
