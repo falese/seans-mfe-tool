@@ -141,8 +141,8 @@ the moment your class is instantiated.
 | Layer | Owns | Does not own |
 |---|---|---|
 | `BaseMFE` | Platform contract, state machine, lifecycle engine | How load/render works |
-| `RemoteMFE` | Module Federation mechanics, React mounting | Domain features |
-| `YourMFE` | Domain capabilities, lifecycle hooks | Infrastructure |
+| `RemoteMFE` | Module Federation mechanics, React mounting | Infrastructure |
+| `YourMFE` | Domain capabilities, lifecycle hooks | Domain |
 
 ### Testability
 
