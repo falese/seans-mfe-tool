@@ -62,10 +62,10 @@ Two boundaries to keep straight:
 classDiagram
     class BaseMFE {
         <<abstract>>
-        #manifest: DSLManifest
-        #deps: BaseMFEDependencies
-        #state: MFEState
-        -_lifecycleStack
+        #manifest DSLManifest
+        #deps BaseMFEDependencies
+        #state MFEState
+        -lifecycleStack
         +load(ctx) LoadResult
         +render(ctx) RenderResult
         +refresh(ctx) void
@@ -80,61 +80,69 @@ classDiagram
         #invokeHandler(name, ctx)
         #invokePlatformHandler(name, ctx)
         #invokeCustomHandler(name, ctx)
-        #assertState(...states)
+        #assertState(states)
         #transitionState(next)
-        *doLoad(ctx)*
-        *doRender(ctx)*
-        *doRefresh(ctx)*
-        *doAuthorizeAccess(ctx)*
-        *doHealth(ctx)*
-        *doDescribe(ctx)*
-        *doSchema(ctx)*
-        *doQuery(ctx)*
-        *doEmit(ctx)*
-        *doUpdateControlPlaneState(ctx)*
+        #doLoad(ctx)*
+        #doRender(ctx)*
+        #doRefresh(ctx)*
+        #doAuthorizeAccess(ctx)*
+        #doHealth(ctx)*
+        #doDescribe(ctx)*
+        #doSchema(ctx)*
+        #doQuery(ctx)*
+        #doEmit(ctx)*
+        #doUpdateControlPlaneState(ctx)*
     }
 
     class RemoteMFE {
-        +doLoad(ctx)  : Module Federation 3-phase
-        +doRender(ctx): React 18 createRoot mount
-        +doRefresh / doHealth / doDescribe ...
+        #doLoad(ctx) LoadResult
+        #doRender(ctx) RenderResult
+        #doRefresh(ctx) void
+        #doHealth(ctx) HealthResult
+        #doDescribe(ctx) DescribeResult
     }
 
     class GeneratedMFE {
-        <<generated from DSL>>
-        +doLoad(ctx) : super() + domain init
-        +doRender(ctx): super() + domain post-render
-        +<<domainCapability>>(ctx)  // stubs
-        #<<lifecycleHook>>(ctx)     // stubs matching DSL handler names
+        +constructor(manifest)
+        #doLoad(ctx) LoadResult
+        #doRender(ctx) RenderResult
+        +domainCapability(ctx) DomainOutputs
+        #lifecycleHook(ctx) void
     }
 
     class BaseMFEDependencies {
-        platformHandlers?: PlatformHandlerMap
-        customHandlers?: CustomHandlerMap
-        telemetry?: TelemetryService
-        manifestParser?: ManifestParser
-        lifecycleExecutor?: LifecycleExecutor
-        wsClient?: DaemonWebSocketClient
+        +platformHandlers PlatformHandlerMap
+        +customHandlers CustomHandlerMap
+        +telemetry TelemetryService
+        +manifestParser ManifestParser
+        +lifecycleExecutor LifecycleExecutor
+        +wsClient DaemonWebSocketClient
     }
 
     class Context {
-        requestId · timestamp
-        user? · jwt?
-        inputs? · outputs?
-        phase? · capability?
-        error? · retry? · timeouts?
-        hookOutputs?
+        +requestId string
+        +timestamp Date
+        +user UserContext
+        +jwt string
+        +inputs Record
+        +outputs Record
+        +phase string
+        +capability string
+        +error Error
+        +retry RetryState
+        +timeouts TimeoutState
+        +hookOutputs Record
     }
 
     class PlatformHandlers {
         <<library>>
-        auth.validateJWT
-        auth.checkPermissions
-        validation.*
-        telemetry.*
-        caching.*
-        rateLimit.*
-        errorHandling.*
+        +auth_validateJWT()
+        +auth_checkPermissions()
+        +validation_run()
+        +telemetry_emit()
+        +caching_lookupOrWrite()
+        +rateLimit_check()
+        +errorHandling_retry()
     }
 
     BaseMFE <|-- RemoteMFE
@@ -143,6 +151,8 @@ classDiagram
     BaseMFE ..> Context : flows through
     BaseMFE ..> PlatformHandlers : dynamic import
 ```
+
+> In the diagram, `domainCapability` and `lifecycleHook` on `GeneratedMFE` are placeholders — codegen emits one method per domain capability and one per unique lifecycle hook name in the DSL. The `*` suffix on `BaseMFE`'s `do…(ctx)*` methods marks them abstract.
 
 **Why three layers?** `BaseMFE` owns the *contract* (state machine, phase ordering, error semantics). `RemoteMFE` owns the *type-specific defaults* (Module Federation, React mounting). The generated subclass owns the *DSL-specific surface* (domain capabilities, lifecycle hook stubs, JSDoc from descriptions). Authors only edit the third layer — and only inside `// TODO` markers.
 
@@ -384,27 +394,27 @@ flowchart TD
     Start([handler entry from DSL])
     StartArr{Array of handlers?}
     Start --> StartArr
-    StartArr -- yes --> Loop[Iterate sequentially<br/>REQ-045]
+    StartArr -- yes --> Loop["Iterate sequentially<br/>REQ-045"]
     StartArr -- no --> Single[Single handler]
     Loop --> NameCheck
     Single --> NameCheck
 
-    NameCheck{name starts<br/>with platform.* ?}
-    NameCheck -- yes --> InjMap{deps.platformHandlers<br/>has entry?}
-    InjMap -- yes --> InjFn[Call DI'd handler fn]
-    InjMap -- no  --> Dyn[invokePlatformHandler:<br/>dynamic import './handlers'<br/>resolve category.fn or flat]
+    NameCheck{"name starts<br/>with platform. ?"}
+    NameCheck -- yes --> InjMap{"deps.platformHandlers<br/>has entry?"}
+    InjMap -- yes --> InjFn["Call DI-mapped handler fn"]
+    InjMap -- no  --> Dyn["invokePlatformHandler:<br/>dynamic import ./handlers<br/>resolve category.fn or flat"]
     Dyn --> Found{found?}
-    Found -- yes --> Call1[await handlerFn ctx]
-    Found -- no  --> Throw1[throw 'platform handler not implemented']
+    Found -- yes --> Call1["await handlerFn(ctx)"]
+    Found -- no  --> Throw1["throw: platform handler not implemented"]
 
-    NameCheck -- no --> Cust1{deps.customHandlers<br/>has full name?}
-    Cust1 -- yes --> CallC1[await customHandler ctx]
-    Cust1 -- no  --> Cust2{deps.customHandlers<br/>has last segment?}
-    Cust2 -- yes --> CallC2[await customHandler ctx]
-    Cust2 -- no  --> Refl[invokeCustomHandler:<br/>this[name] as method]
+    NameCheck -- no --> Cust1{"deps.customHandlers<br/>has full name?"}
+    Cust1 -- yes --> CallC1["await customHandler(ctx)"]
+    Cust1 -- no  --> Cust2{"deps.customHandlers<br/>has last segment?"}
+    Cust2 -- yes --> CallC2["await customHandler(ctx)"]
+    Cust2 -- no  --> Refl["invokeCustomHandler:<br/>this#91;name#93; as method"]
     Refl --> ReflFound{method exists?}
-    ReflFound -- yes --> CallM[await method.call this, ctx]
-    ReflFound -- no  --> Throw2[throw 'custom handler not found:<br/>implement private async name']
+    ReflFound -- yes --> CallM["await method.call(this, ctx)"]
+    ReflFound -- no  --> Throw2["throw: custom handler not found —<br/>implement protected async &lt;name&gt;()"]
 
     InjFn --> Done([handler completed])
     Call1 --> Done
