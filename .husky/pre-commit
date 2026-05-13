@@ -1,7 +1,19 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run generator tests with 100% coverage requirement
+# Only enforce the 100%-coverage generator gate when a generator file is
+# actually being committed. Running the gate unconditionally pulls in
+# unrelated per-file coverage thresholds from jest.config.js (Jest reports
+# "Coverage data ... was not found" and exits non-zero for every threshold
+# entry outside the narrowed --collectCoverageFrom scope), which blocks all
+# commits even when no generator files changed.
+STAGED_GENERATORS="$(git diff --cached --name-only --diff-filter=ACMR | grep '^src/codegen/generators/' || true)"
+
+if [ -z "$STAGED_GENERATORS" ]; then
+  echo "No generator changes staged — skipping generator coverage gate."
+  exit 0
+fi
+
 echo "Running generator tests with 100% coverage requirement..."
 npm test -- src/codegen/generators --coverage --collectCoverageFrom='src/codegen/generators/**/*.js' --passWithNoTests
 
