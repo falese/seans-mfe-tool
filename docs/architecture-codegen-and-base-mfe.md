@@ -205,7 +205,7 @@ erDiagram
         any errorHandling "(ADR-065)"
     }
     HANDLER_REF {
-        string ref "platform.auth | validateConfig"
+        string ref "platform.authz.checkPermissions | validateConfig"
     }
 ```
 
@@ -280,7 +280,7 @@ This split is REQ-057 acceptance criterion #6/#7 ("Platform files are protected 
 
 ## 5. What the generated subclass actually looks like
 
-Reduced excerpt of `templates/base-mfe/mfe.ts.ejs` after rendering for a hypothetical `csv-analyzer` MFE that declares an `analyze` domain capability and a `validateConfig` hook:
+Reduced excerpt of `templates/base-mfe/mfe.ts.ejs` after rendering for a hypothetical `csv-analyzer` MFE that declares an `analyze` domain capability and a `validateConfig` hook. (The real template also emits a `loadDomainComponent` switch and `console.log` debug breadcrumbs in `doLoad` / `doRender` / each hook — trimmed here for clarity.)
 
 ```ts
 import { RemoteMFE, type Context, type LoadResult, type RenderResult }
@@ -392,7 +392,9 @@ Transitions are guarded by `transitionState` against the `VALID_TRANSITIONS` map
 
 ## 7. Handler resolution — where platform handlers actually plug in
 
-This is the most-asked question. The DSL writes a string (`platform.auth` or `validateConfig`); at runtime that string becomes one of three things.
+This is the most-asked question. The DSL writes a string (`platform.authz.checkPermissions` or `validateConfig`); at runtime that string becomes one of three things.
+
+> **Authentication note (ADR-069):** the `platform.auth` family no longer exists. Authentication (turning a JWT into `ctx.user`) is a runtime boundary — `validateJWT` from `@seans-mfe-tool/runtime` (or your host shell's equivalent) is called once before any capability runs. The platform handler library is authorization-only.
 
 ```mermaid
 flowchart TD
@@ -437,14 +439,15 @@ The mapping in plain English:
 
 The standard library handlers (`src/runtime/handlers/{auth,validation,telemetry,caching,rate-limiting,error-handling}.ts`) can be dropped into any phase, but they have natural homes:
 
-| Handler family    | `before`           | `main`             | `after`            | `error`           |
-| ----------------- | ------------------ | ------------------ | ------------------ | ----------------- |
-| `platform.auth`   | ✅ Common — verify JWT, gate access | ⚠️ Rare       | —                  | ⚠️ Audit failures  |
-| `platform.validation` | ✅ Validate inputs, schema | ⚠️ Rare    | ✅ Validate outputs | —                 |
-| `platform.caching` | ✅ Lookup / short-circuit | —             | ✅ Write back      | —                 |
-| `platform.rateLimit` | ✅ Throttle      | —                  | —                  | —                 |
-| `platform.telemetry` | ✅ Emit start    | —                  | ✅ Emit complete   | ✅ Emit failure    |
-| `platform.errorHandling` | —          | —                  | —                  | ✅ Retry / fallback (ADR-065) |
+| Handler family               | `before`                                | `main`     | `after`             | `error`                       |
+| ---------------------------- | --------------------------------------- | ---------- | ------------------- | ----------------------------- |
+| `platform.authz.*`           | ✅ Common — gate access by role/scope    | ⚠️ Rare    | —                   | ⚠️ Audit failures              |
+| `platform.validation`        | ✅ Validate inputs, schema               | ⚠️ Rare    | ✅ Validate outputs  | —                             |
+| `platform.caching`           | ✅ Lookup / short-circuit                | —          | ✅ Write back        | —                             |
+| `platform.rateLimit`         | ✅ Throttle                              | —          | —                   | —                             |
+| `platform.telemetry`         | ✅ Emit start                            | —          | ✅ Emit complete     | ✅ Emit failure                |
+| `platform.errorHandling`     | —                                       | —          | —                   | ✅ Retry / fallback (ADR-065)  |
+| *(`validateJWT`)*            | *Runs once at runtime boundary — not a handler. See ADR-069.* | | | |
 
 Custom (developer-supplied) handlers can sit anywhere, but follow the same phase semantics:
 - Put preconditions in `before` (cheap to fail).
@@ -540,14 +543,14 @@ capabilities:
       type: platform
       lifecycle:
         before:
-          - authenticate:
-              handler: platform.auth        # platform handler
+          - gateAccess:
+              handler: platform.authz.checkPermissions   # platform handler (authz only)
           - validateConfig:
-              handler: checkConfig          # custom — must exist on subclass
-              contained: true               # don't fail load if config check fails
+              handler: checkConfig                       # custom — must exist on subclass
+              contained: true                            # don't fail load if config check fails
         main:
           - initRuntime:
-              handler: setupRuntime         # custom — required for load
+              handler: setupRuntime                      # custom — required for load
         after:
           - notifyReady:
               handler: platform.telemetry
@@ -559,29 +562,31 @@ After codegen, the subclass contains:
 export class MyMFE extends RemoteMFE {
   protected async checkConfig(context: Context): Promise<void> { /* TODO */ }
   protected async setupRuntime(context: Context): Promise<void> { /* TODO */ }
-  // notifyReady is platform.* → not generated
+  // gateAccess / notifyReady are platform.* → not generated
 }
 ```
 
-At runtime, `await mfe.load(ctx)` produces this call graph:
+At runtime, the host shell has *already* called `validateJWT(ctx)` (ADR-069), so `ctx.user` is populated before `mfe.load(ctx)` runs. The call graph:
 
 ```
-load()
-├── assertState(uninitialized|ready|error)
-├── transitionState('loading')
-├── executeLifecycle('load','before',ctx)
-│    ├── authenticate → platform.auth → handlers.auth.validateJWT(ctx)
-│    │     (sets ctx.user; throws → falls through to error phase)
-│    └── validateConfig → this.checkConfig(ctx)
-│          (contained=true → errors emit warn telemetry, do not propagate)
-├── executeLifecycle('load','main',ctx)
-│    └── initRuntime → this.setupRuntime(ctx)
-│          (main + contained=false ⇒ ANY throw propagates immediately)
-├── doLoad(ctx)  // RemoteMFE: fetch remoteEntry.js, init container, enable render
-├── executeLifecycle('load','after',ctx)
-│    └── notifyReady → platform.telemetry
-├── transitionState('ready')
-└── return LoadResult
+host shell:  validateJWT(ctx)              // runtime boundary — sets ctx.user, then:
+await mfe.load(ctx)
+└── load()
+    ├── assertState(uninitialized|ready|error)
+    ├── transitionState('loading')
+    ├── executeLifecycle('load','before',ctx)
+    │    ├── gateAccess → platform.authz.checkPermissions(ctx)
+    │    │     (consumes ctx.user; throws → falls through to error phase)
+    │    └── validateConfig → this.checkConfig(ctx)
+    │          (contained=true → errors emit warn telemetry, do not propagate)
+    ├── executeLifecycle('load','main',ctx)
+    │    └── initRuntime → this.setupRuntime(ctx)
+    │          (main + contained=false ⇒ ANY throw propagates immediately)
+    ├── doLoad(ctx)  // RemoteMFE: fetch remoteEntry.js, init container, enable render
+    ├── executeLifecycle('load','after',ctx)
+    │    └── notifyReady → platform.telemetry
+    ├── transitionState('ready')
+    └── return LoadResult
 ```
 
 If `setupRuntime` throws, the `try/catch` in `load()` catches, fires `executeLifecycle('load','error',{...ctx,error})`, transitions to `error`, and rethrows. The caller sees the original error; ops sees `lifecycle-error` telemetry for both the failed `setupRuntime` (severity `error`) and any handler that fails inside the `error` phase (severity `warn`).
@@ -609,6 +614,7 @@ Two implications for codegen:
 
 ## 11. Boundaries & rules of thumb
 
+- **Authentication runs once, at the boundary.** The host shell (or your runtime interceptor) calls `validateJWT(ctx)` from `@seans-mfe-tool/runtime` before invoking any capability. Don't try to do JWT validation inside a `before` hook — the `platform.auth` family no longer exists (ADR-069). Capabilities consume `ctx.user`.
 - **Edit only the `// TODO` regions of generated files.** Anything else gets clobbered next `remote generate`.
 - **Stub method names = DSL handler names, exactly.** Reflection is name-based; rename in lockstep or add an alias in `deps.customHandlers`.
 - **`platform.*` is reserved** — never name a custom handler `platform.foo`; the resolver short-circuits to the library and your stub will never run.
@@ -626,7 +632,8 @@ Two implications for codegen:
 | BaseMFE class              | `src/runtime/base-mfe.ts`                                       |
 | RemoteMFE defaults         | `src/runtime/remote-mfe.ts`                                     |
 | Context                    | `src/runtime/context.ts`                                        |
-| Platform handler library   | `src/runtime/handlers/index.ts` and siblings                    |
+| Authentication boundary    | `src/runtime/auth-context.ts` (ADR-069)                         |
+| Platform handler library   | `src/runtime/handlers/index.ts` and siblings (`authz.ts`, `validation.ts`, …) |
 | Codegen entry              | `src/codegen/UnifiedGenerator/unified-generator.ts`             |
 | Generated class template   | `src/codegen/templates/base-mfe/mfe.ts.ejs`                     |
 | DSL parser/schema          | `src/dsl/{parser.ts,schema.ts}`                                 |
@@ -638,3 +645,4 @@ Two implications for codegen:
 | Platform handler interface | `docs/architecture-decisions/ADR-059-platform-handler-interface.md` |
 | Atomic load                | `docs/architecture-decisions/ADR-060-load-capability-atomic.md` |
 | Parallel / timeout / errors / when / IO | `ADR-063` … `ADR-067`                              |
+| Authn / authz separation   | `docs/architecture-decisions/ADR-069-authn-authz-separation.md` |

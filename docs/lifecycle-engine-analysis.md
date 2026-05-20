@@ -4,6 +4,8 @@
 **Last Updated**: December 11, 2025  
 **Status**: Analysis Complete
 
+> **Naming note (ADR-069, May 2026):** the `platform.auth` family referenced throughout this document has been split. Authentication (`validateJWT`) moved out of the platform handler library to `src/runtime/auth-context.ts` and runs once at the runtime boundary, not as a hook. The handler library now exposes authorization-only primitives under `platform.authz.*` (e.g., `platform.authz.checkPermissions`). Treat every `platform.auth` mention below as historical context; current usage is in ADR-069 and `docs/architecture-codegen-and-base-mfe.md`.
+
 ---
 
 ## Executive Summary
@@ -106,12 +108,15 @@ The engine supports **two handler namespaces**:
 #### Platform Handlers (`platform.*`)
 
 ```typescript
-// Auto-imported from src/runtime/handlers/
-'platform.auth'          → handlers/auth.ts::validateJWT()
-'platform.telemetry'     → handlers/telemetry.ts::trackEvent()
-'platform.validation'    → handlers/validation.ts::validateInputs()
-'platform.errorHandling' → handlers/error-handling.ts::retryWithBackoff()
-'platform.caching'       → handlers/caching.ts::checkCache()
+// Auto-imported from src/runtime/handlers/   (post ADR-069)
+'platform.authz.checkPermissions' → handlers/authz.ts::checkPermissions()
+'platform.telemetry'              → handlers/telemetry.ts::trackEvent()
+'platform.validation'             → handlers/validation.ts::validateInputs()
+'platform.errorHandling'          → handlers/error-handling.ts::retryWithBackoff()
+'platform.caching'                → handlers/caching.ts::checkCache()
+
+// Authentication is NOT in the handler library — it's a runtime boundary:
+// import { validateJWT } from '@seans-mfe-tool/runtime'   → src/runtime/auth-context.ts
 'platform.rateLimit'     → handlers/rate-limiting.ts::checkRateLimit()
 ```
 
@@ -943,11 +948,15 @@ Create marketplace of reusable handlers:
 
 ```
 Platform Handlers (Maintained by Core Team):
-- platform.auth.jwt          → JWT validation
-- platform.auth.oauth        → OAuth 2.0 flow
-- platform.auth.mfa          → Multi-factor authentication
-- platform.telemetry.datadog → Datadog integration
-- platform.telemetry.splunk  → Splunk integration
+- platform.authz.checkPermissions   → Role/scope authorization (ADR-069)
+- platform.authz.checkScopes        → OAuth scope authorization (planned)
+- platform.telemetry.datadog        → Datadog integration
+- platform.telemetry.splunk         → Splunk integration
+
+Runtime Boundary (not a platform handler — see ADR-069):
+- auth-context.validateJWT          → JWT validation
+- auth-context.validateOAuth        → OAuth 2.0 flow (planned)
+- auth-context.validateMFA          → Multi-factor authentication (planned)
 - platform.validation.ajv    → JSON Schema validation
 - platform.caching.redis     → Redis caching
 

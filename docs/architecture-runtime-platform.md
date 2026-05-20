@@ -678,6 +678,8 @@ graph TB
 
 **Logic**:
 
+> **Note (ADR-069):** `validateJWT` is no longer a platform handler. It lives in `src/runtime/auth-context.ts` and is called once by the host shell (or a runtime interceptor) before any capability runs. The function shape below is otherwise current; the `source` field in emitted telemetry is now `'runtime.auth-context'`.
+
 ```typescript
 async function validateJWT(context: Context): Promise<void> {
   const token = context.jwt;
@@ -692,13 +694,13 @@ async function validateJWT(context: Context): Promise<void> {
 
     await context.emit?.({
       eventType: 'info',
-      eventData: { source: 'platform.validateJWT', user: decoded },
+      eventData: { source: 'runtime.auth-context', user: decoded },
       severity: 'info',
     });
   } catch (error) {
     await context.emit?.({
       eventType: 'error',
-      eventData: { source: 'platform.validateJWT', error: error.message },
+      eventData: { source: 'runtime.auth-context', error: error.message },
       severity: 'error',
     });
     throw new Error('Invalid JWT token: ' + error.message);
@@ -973,9 +975,12 @@ graph TB
 ### Example: Dependency Injection Usage
 
 ```typescript
-// Create platform handlers
+// Authenticate once at the boundary (ADR-069) — NOT a platform handler.
+await validateJWT(context);
+
+// Create platform handlers (authorization + cross-cutting only)
 const platformHandlers: PlatformHandlerMap = {
-  auth: async (context) => validateJWT(context),
+  'authz.checkPermissions': async (context) => checkPermissions(context, ['admin']),
   telemetry: async (context) => trackEvent(context),
   validation: async (context) => validateInputs(context),
 };
@@ -1139,16 +1144,16 @@ dist/runtime/
 ### Usage in Generated MFE
 
 ```typescript
-// Import runtime classes
-import { RemoteMFE } from '@seans-mfe-tool/runtime';
+// Import runtime classes + auth boundary (ADR-069)
+import { RemoteMFE, validateJWT } from '@seans-mfe-tool/runtime';
 
-// Import handlers separately (Node.js only)
-import { validateJWT } from '@seans-mfe-tool/runtime/handlers';
+// Authenticate once before any capability runs.
+await validateJWT(context);
 
-// Create MFE instance
+// Create MFE instance — pass authorization handlers, not authentication.
 const mfe = new RemoteMFE(manifest, {
   platformHandlers: {
-    auth: validateJWT,
+    // 'authz.checkPermissions': (ctx) => checkPermissions(ctx, ['admin']),
   },
 });
 ```

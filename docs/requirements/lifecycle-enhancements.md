@@ -9,6 +9,8 @@
 - [Runtime Requirements](../runtime-requirements.md)
 - [DSL Contract Requirements](../dsl-contract-requirements.md)
 
+> **Naming note (ADR-069, May 2026):** examples below use `platform.auth` for brevity, predating the split. Current code uses `platform.authz.checkPermissions` for authorization checks; authentication is no longer a handler (it's a runtime boundary — `validateJWT` from `@seans-mfe-tool/runtime`). The lifecycle mechanics (parallel, timeout, conditional, error classification, inter-hook IO) work the same either way — read `platform.auth` in these examples as a stand-in for any platform handler.
+
 ---
 
 ## Executive Summary
