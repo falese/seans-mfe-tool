@@ -10,4 +10,5 @@ import React from 'react';
 <% }); %>
 <% capabilities.forEach(function(name) { %>export { <%= name %> };
 <% }); %>
+export { mfe, mfeReady } from './platform/base-mfe/bootstrap';
 export { default } from './App.tsx';

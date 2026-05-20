@@ -14,4 +14,5 @@ export { PlayGame };
 export { ShowCover };
 export { GetGameInfo };
 
+export { mfe, mfeReady } from './platform/base-mfe/bootstrap';
 export { default } from './App.tsx';

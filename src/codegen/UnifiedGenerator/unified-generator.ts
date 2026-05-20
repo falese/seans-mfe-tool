@@ -655,6 +655,12 @@ export async function generateAllFiles(
     content: await renderTemplate(path.join(templateDir, 'mfe.ts.ejs'), vars),
     overwrite: true,
   });
+  // Bootstrap — exports mfe instance + mfeReady for imperative shell rendering
+  files.push({
+    path: path.join(platformDir, 'bootstrap.ts'),
+    content: await renderTemplate(path.join(templateDir, 'bootstrap.ts.ejs'), vars),
+    overwrite: false, // user-owned: first-init only, not regenerated
+  });
   // BaseMFE test
   files.push({
     path: path.join(platformDir, 'mfe.test.ts'),

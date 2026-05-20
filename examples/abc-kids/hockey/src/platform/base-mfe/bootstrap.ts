@@ -89,7 +89,7 @@ const manifest = {
   ],
 };
 
-const mfe = new abckidshockeyMFE(manifest);
+export const mfe = new abckidshockeyMFE(manifest);
 
 export const mfeReady: Promise<void> = mfe
   .load({

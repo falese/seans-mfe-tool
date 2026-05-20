@@ -89,7 +89,7 @@ const manifest = {
   ],
 };
 
-const mfe = new abckidsflappyMFE(manifest);
+export const mfe = new abckidsflappyMFE(manifest);
 
 export const mfeReady: Promise<void> = mfe
   .load({

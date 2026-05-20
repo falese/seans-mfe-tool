@@ -118,6 +118,25 @@ export class <%= className %> extends RemoteMFE {
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below
   // ---------------------------------------------------------------------------
+
+  /**
+   * loadDomainComponent
+   * @description Resolves a domain capability name to its React component.
+   * Called by RemoteMFE.doRender() — do not call directly.
+   * @generated Direct imports bypass the Module Federation container API.
+   */
+  protected async loadDomainComponent(name: string): Promise<any> {
+    switch (name) {
+<% domainCapabilities.forEach(function(cap) { %>
+      case '<%= cap.method %>':
+        return import('../../features/<%= cap.method %>/<%= cap.method %>').then(
+          (m: any) => m['<%= cap.method %>'] ?? m.default
+        );
+<% }); %>
+      default:
+        throw new Error(`[<%= className %>] loadDomainComponent: unknown component "${name}"`);
+    }
+  }
 <% domainCapabilities.forEach(function(cap) { %>
   /**
    * <%= cap.method %>

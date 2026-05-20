@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 /**
  * RemoteMFE Implementation
  * Concrete implementation of BaseMFE for Module Federation remotes
@@ -44,6 +45,8 @@ export class RemoteMFE extends BaseMFE {
   private mountedComponent: any = null;
   /** ID of the currently mounted component; used as actionRecord.componentId */
   private currentComponentId: string | null = null;
+  /** React roots keyed by containerId — reused on re-render, unmounted on cleanup */
+  private reactRoots: Map<string, any> = new Map();
 
   /**
    * Implement load logic for Module Federation remote
@@ -292,10 +295,9 @@ export class RemoteMFE extends BaseMFE {
         throw new Error('Container not loaded. Call load() before render()');
       }
 
-      // Fetch component from container
+      // Load component directly via loadDomainComponent (implemented by subclass)
       const renderStart = Date.now();
-      const componentFactory = await this.container.get(`./${componentName}`);
-      const Component = componentFactory();
+      const Component = await this.loadDomainComponent(componentName);
 
       const renderDuration = Date.now() - renderStart;
 
@@ -518,28 +520,60 @@ export class RemoteMFE extends BaseMFE {
   }
 
   /**
-   * Mount React component to DOM using React 18 createRoot
+   * Mount React component to DOM using React 18 createRoot.
+   * Reuses an existing root for the containerId when re-rendering.
    */
-  private async mountComponent(
+  protected async mountComponent(
     Component: any,
     props: Record<string, any>,
     containerId: string
   ): Promise<any> {
-    // In a real implementation, this would:
-    // 1. Get DOM element by containerId
-    // 2. Use React 18 createRoot API
-    // 3. Wrap with error boundary
-    // 4. Apply theme provider if configured
-    // 5. Render component with props
+    if (typeof document === 'undefined') {
+      throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
+    }
 
-    // For now, return a mock element
-    const element = {
-      id: containerId,
-      component: Component,
-      props,
-    } as any;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const element = (document as Document).getElementById(containerId);
+    if (!element) {
+      throw new Error(`[RemoteMFE] DOM container #${containerId} not found`);
+    }
+
+    // Reuse root if one already exists for this container
+    let root = this.reactRoots.get(containerId);
+    if (!root) {
+      // @ts-ignore — react-dom/client types not in root tsconfig; browser-only code
+      const { createRoot } = await import('react-dom/client');
+      root = createRoot(element);
+      this.reactRoots.set(containerId, root);
+    }
+
+    // @ts-ignore — react types not in root tsconfig; browser-only code
+    const { createElement } = await import('react');
+    root.render(createElement(Component, props));
 
     return element;
+  }
+
+  /**
+   * Override in subclass to load the named domain component.
+   * Called by doRender() instead of going through the Module Federation container API.
+   */
+  protected async loadDomainComponent(_name: string): Promise<any> {
+    throw new Error(
+      '[RemoteMFE] loadDomainComponent() not implemented — subclass must override this method'
+    );
+  }
+
+  /**
+   * Unmount a previously rendered component and release the React root.
+   * Call from the shell's useEffect cleanup to avoid memory leaks.
+   */
+  public unmount(containerId: string): void {
+    const root = this.reactRoots.get(containerId);
+    if (root) {
+      root.unmount();
+      this.reactRoots.delete(containerId);
+    }
   }
 
   // =========================================================================
