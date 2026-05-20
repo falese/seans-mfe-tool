@@ -1,6 +1,6 @@
-const path = require('path');
 const rspack = require('@rspack/core');
 const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
 
 module.exports = {
   entry: './src/index.tsx',
