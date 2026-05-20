@@ -405,6 +405,62 @@ capabilities:
               mandatory: true
               contained: true
 
+  # 10. UPDATECONTROLPLANESTATE - Push semantic domain state to the daemon registry
+  - UpdateControlPlaneState:
+      type: platform
+      description: Push semantic domain state to the daemon registry, triggering rules re-evaluation and potentially resolving a new MFE + capability. Called when the MFE has produced state that should influence orchestration — not telemetry, but domain state the rules engine acts on.
+      handler: sendControlPlaneState
+      inputs:
+        - name: stateKey
+          type: string
+          required: true
+          description: Semantic name of the state event (e.g. "analysis.complete", "form.submitted")
+        - name: stateData
+          type: object
+          required: false
+          description: Domain context the registry rules engine evaluates
+        - name: correlationId
+          type: string
+          required: false
+          description: Links this update to the originating render or action
+      outputs:
+        - name: acknowledged
+          type: boolean
+          description: Whether the daemon acknowledged the state update
+        - name: correlationId
+          type: string
+          description: Correlation ID echoed back from the daemon
+        - name: error
+          type: string
+          description: Error message if the update failed, null on success
+      lifecycle:
+        before:
+          - validateStateKey:
+              handler: checkStateKey
+              description: Validate stateKey is a non-empty string
+          - checkDaemonConnection:
+              handler: verifyWsConnected
+              description: Ensure the daemon WebSocket is connected before sending
+        main:
+          - sendToDaemon:
+              handler: dispatchControlPlaneMessage
+              description: Send ACTION envelope via daemon GraphQL mutation (sendMessage)
+        after:
+          - confirmAcknowledgement:
+              handler: verifyAck
+              description: Confirm the daemon acknowledged the state update
+        error:
+          - emitErrorEvent:
+              handler: emitError
+              description: Emit error event via Emit capability (mandatory, contained)
+              mandatory: true
+              contained: true
+          - cleanup:
+              handler: logFailure
+              description: Log failure locally as backup (mandatory, contained)
+              mandatory: true
+              contained: true
+
   # =============================================================================
   # DOMAIN-SPECIFIC CAPABILITIES (Custom to this MFE)
   # =============================================================================
