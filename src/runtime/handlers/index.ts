@@ -1,5 +1,5 @@
 // Platform Handler Library Exports
-export * from './auth';
+export * as authz from './authz';
 export * from './validation';
 export * from './telemetry';
 export * from './caching';

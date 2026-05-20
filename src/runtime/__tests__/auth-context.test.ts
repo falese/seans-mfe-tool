@@ -1,10 +1,14 @@
-import { validateJWT, checkPermissions } from '../auth';
+import { validateJWT } from '../auth-context';
 
-describe('platform.validateJWT', () => {
+describe('runtime.auth-context.validateJWT', () => {
   it('should throw if no JWT token is present', async () => {
     const context = { emit: jest.fn() } as any;
     await expect(validateJWT(context)).rejects.toThrow('JWT token required');
-    expect(context.emit).toHaveBeenCalledWith(expect.objectContaining({ name: 'auth.jwt.validation', status: 'error' }));
+    expect(context.emit).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'auth.jwt.validation',
+      status: 'error',
+      metadata: expect.objectContaining({ source: 'runtime.auth-context' }),
+    }));
   });
 
   it('should throw if JWT secret is missing', async () => {
@@ -34,7 +38,11 @@ describe('platform.validateJWT', () => {
     jest.spyOn(require('jsonwebtoken'), 'verify').mockReturnValue(decoded);
     await validateJWT(context);
     expect(context.user).toEqual(decoded);
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'auth.jwt.validation', status: 'success' }));
+    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'auth.jwt.validation',
+      status: 'success',
+      metadata: expect.objectContaining({ source: 'runtime.auth-context' }),
+    }));
   });
 
   it('should work if emit is missing', async () => {
@@ -53,41 +61,5 @@ describe('platform.validateJWT', () => {
     jest.spyOn(require('jsonwebtoken'), 'verify').mockReturnValue(decoded);
     await expect(validateJWT(context)).resolves.toBeUndefined();
     expect(context.user).toEqual(decoded);
-  });
-});
-
-describe('platform.checkPermissions', () => {
-  it('should throw and emit warn if user lacks required roles', async () => {
-    const emitMock = jest.fn();
-    const context = { user: { roles: ['user'] }, emit: emitMock } as any;
-    await expect(checkPermissions(context, ['admin'])).rejects.toThrow(/Insufficient permissions/);
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'auth.permissions.check', status: 'failure' }));
-  });
-
-  it('should emit info if user has required roles', async () => {
-    const emitMock = jest.fn();
-    const context = { user: { roles: ['admin'] }, emit: emitMock } as any;
-    await checkPermissions(context, ['admin']);
-    expect(emitMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'auth.permissions.check', status: 'success' }));
-  });
-
-  it('should work if emit is missing', async () => {
-    const context = { user: { roles: ['admin'] } } as any;
-    await expect(checkPermissions(context, ['admin'])).resolves.toBeUndefined();
-  });
-
-  it('should work if emit is not a function', async () => {
-    const context = { user: { roles: ['admin'] }, emit: 42 } as any;
-    await expect(checkPermissions(context, ['admin'])).resolves.toBeUndefined();
-  });
-
-  it('should default userRoles to empty array if not present', async () => {
-    const context = { user: {}, emit: jest.fn() } as any;
-    await expect(checkPermissions(context, ['admin'])).rejects.toThrow(/Insufficient permissions/);
-  });
-
-  it('should throw if requiredRoles is empty', async () => {
-    const context = { user: { roles: ['admin'] }, emit: jest.fn() } as any;
-    await expect(checkPermissions(context, [])).rejects.toThrow(/Insufficient permissions/);
   });
 });

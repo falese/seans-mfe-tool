@@ -136,8 +136,7 @@ classDiagram
 
     class PlatformHandlers {
         <<library>>
-        +auth_validateJWT()
-        +auth_checkPermissions()
+        +authz_checkPermissions()
         +validation_run()
         +telemetry_emit()
         +caching_lookupOrWrite()
@@ -145,11 +144,17 @@ classDiagram
         +errorHandling_retry()
     }
 
+    class AuthContext {
+        <<runtime boundary>>
+        +validateJWT()
+    }
+
     BaseMFE <|-- RemoteMFE
     RemoteMFE <|-- GeneratedMFE
     BaseMFE *-- BaseMFEDependencies
     BaseMFE ..> Context : flows through
     BaseMFE ..> PlatformHandlers : dynamic import
+    AuthContext ..> Context : populates ctx.user before load()
 ```
 
 > In the diagram, `domainCapability` and `lifecycleHook` on `GeneratedMFE` are placeholders — codegen emits one method per domain capability and one per unique lifecycle hook name in the DSL. The `*` suffix on `BaseMFE`'s `do…(ctx)*` methods marks them abstract.

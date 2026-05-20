@@ -440,17 +440,17 @@ export abstract class BaseMFE {
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
     // Integration: resolve platform handler from src/runtime/handlers
-    // Supports category.name (e.g., auth.validateJWT) and flat name (e.g., validateJWT)
+    // Supports category.name (e.g., authz.checkPermissions) and flat name (e.g., checkPermissions)
     let handlerFn: ((context: Context, ...args: any[]) => Promise<any>) | undefined;
     try {
       // Dynamically import all platform handlers
       const handlers = await import('./handlers');
-      // Support category.name (e.g., auth.validateJWT)
+      // Support category.name (e.g., authz.checkPermissions)
       if (name.includes('.')) {
         const [category, fn] = name.split('.');
         handlerFn = handlers[category]?.[fn];
       } else {
-        // Flat namespace (e.g., validateJWT)
+        // Flat namespace (e.g., checkPermissions)
         handlerFn = handlers[name];
         // Try each category if not found
         if (!handlerFn) {

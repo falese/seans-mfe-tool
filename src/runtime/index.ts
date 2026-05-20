@@ -40,5 +40,9 @@ export {
 export { GraphQLWebSocketClient } from './graphql-ws-client';
 export type { DaemonWebSocketClient } from './graphql-ws-client';
 
+// Authentication boundary (ADR-069) — host shell calls this once before
+// invoking capabilities; not a platform handler.
+export { validateJWT } from './auth-context';
+
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)
 export * from './handlers';
