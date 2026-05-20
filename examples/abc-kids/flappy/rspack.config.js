@@ -13,6 +13,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    // Ensure react/react-dom resolve from the app's node_modules when rspack
+    // processes files in /src/runtime/ (which has no node_modules of its own).
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
     alias: {
       // Resolve the platform runtime from its source during development.
       // In production, publish @seans-mfe-tool/runtime to npm and remove this alias.
