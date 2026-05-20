@@ -432,25 +432,45 @@ export class RemoteMFE extends BaseMFE {
   }
 
   /**
-   * Extract available components from manifest
+   * Extract available components from manifest.
+   *
+   * Primary:  render.components array when explicitly declared.
+   * Fallback: all non-platform capability names (domain capabilities).
+   *           This allows MFEs to work without a render capability block
+   *           while still exposing their domain features as mountable components.
    */
   private extractAvailableComponents(): string[] {
-    // Extract from manifest.capabilities
     if (!this.manifest.capabilities) {
       return [];
     }
-    
-    // Find render capability and extract components
+
+    // Primary: explicit render.components list
     for (const capEntry of this.manifest.capabilities) {
       if (capEntry.render) {
         const components = (capEntry.render as any).components;
-        if (Array.isArray(components)) {
+        if (Array.isArray(components) && components.length > 0) {
           return components;
         }
       }
     }
-    
-    return [];
+
+    // Fallback: collect domain capability names (everything that is not a platform capability)
+    const PLATFORM_CAPABILITY_NAMES = new Set([
+      'load', 'render', 'refresh', 'authorizeAccess', 'health',
+      'describe', 'schema', 'query', 'emit', 'updateControlPlaneState',
+      // Also handle the PascalCase variants used as capability entry keys in YAML
+      'Load', 'Render', 'Refresh', 'AuthorizeAccess', 'Health',
+      'Describe', 'Schema', 'Query', 'Emit', 'UpdateControlPlaneState',
+    ]);
+    const domainComponents: string[] = [];
+    for (const capEntry of this.manifest.capabilities) {
+      for (const name of Object.keys(capEntry)) {
+        if (!PLATFORM_CAPABILITY_NAMES.has(name)) {
+          domainComponents.push(name);
+        }
+      }
+    }
+    return domainComponents;
   }
 
   /**

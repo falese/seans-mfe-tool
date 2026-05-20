@@ -87,8 +87,13 @@ export class <%= className %> extends RemoteMFE {
    * Add domain logic AFTER calling super (e.g. validate domain config, seed state).
    */
   protected async doLoad(context: Context): Promise<LoadResult> {
+    console.log('[<%= className %>][doLoad] loading remoteEntry=%s', context.inputs?.remoteEntry ?? '<from manifest>');
     const result = await super.doLoad(context);
-    // TODO: Add domain-specific initialisation here (validate config, seed state, etc.)
+    if (result.status === 'loaded') {
+      console.log('[<%= className %>][doLoad] ready — components=%o duration=%dms', result.availableComponents, result.duration);
+    } else {
+      console.error('[<%= className %>][doLoad] failed — status=%s error=%s', result.status, result.error?.message);
+    }
     return result;
   }
 
@@ -104,8 +109,9 @@ export class <%= className %> extends RemoteMFE {
    * Add domain logic AFTER calling super (e.g. analytics, event listeners).
    */
   protected async doRender(context: Context): Promise<RenderResult> {
+    console.log('[<%= className %>][doRender] rendering component=%s containerId=%s', context.inputs?.component ?? '<auto>', context.inputs?.containerId ?? '<auto>');
     const result = await super.doRender(context);
-    // TODO: Add domain-specific post-render logic here (analytics, event listeners, etc.)
+    console.log('[<%= className %>][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
 
@@ -134,7 +140,11 @@ export class <%= className %> extends RemoteMFE {
    * @generated Stub — replace with your implementation.
    */
   protected async <%= hook.name %>(context: Context): Promise<void> {
-    // TODO: Implement <%= hook.name %> lifecycle logic
+    console.log('[<%= className %>][<%= hook.phase %>][<%= hook.name %>]', {
+      requestId: context.requestId,
+      capability: context.capability,
+      phase: context.phase,
+    });
   }
 <% }); %>
 }

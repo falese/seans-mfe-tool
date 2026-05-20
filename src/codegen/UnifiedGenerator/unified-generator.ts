@@ -698,7 +698,7 @@ export async function generateAllFiles(
       files.push({
         path: path.join(basePath, tpl.name),
         content: renderedContent,
-        overwrite: true
+        overwrite: false  // user-owned: only generate on first init, not on regenerate
       });
     } else {
       // Diagnostic: warn if template missing
@@ -716,7 +716,7 @@ export async function generateAllFiles(
     files.push({
       path: appOutPath,
       content: appContent,
-      overwrite: true
+      overwrite: false  // user-owned: App.tsx is the game entry point, not regenerated
     });
   } else {
     // Diagnostic: warn if App.tsx template missing
@@ -744,7 +744,7 @@ export async function generateAllFiles(
     files.push({
       path: indexOutPath,
       content: indexContent,
-      overwrite: true
+      overwrite: false  // user-owned: standalone dev entry, not regenerated
     });
   } else {
     // Diagnostic: warn if index.tsx template missing

@@ -4,7 +4,9 @@ const path = require('path');
 
 /** @type {import('@rspack/cli').Configuration} */
 module.exports = {
-  entry: './src/index.tsx',
+  entry: {
+    main: './src/index.tsx',
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'auto',
@@ -12,8 +14,13 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
-      // 3 levels deep: examples/abc-kids/flappy/ → repo root
-      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../../src/runtime/index.ts'),
+      // Resolve the platform runtime from its source during development.
+      // In production, publish @seans-mfe-tool/runtime to npm and remove this alias.
+      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../src/runtime/index.ts'),
+      // Stub Node-only packages that the runtime imports at the top level
+      // but are never actually executed in the browser code path.
+      'jsonwebtoken': path.resolve(__dirname, 'src/platform/stubs/empty.js'),
+      'crypto': path.resolve(__dirname, 'src/platform/stubs/crypto.js'),
     },
   },
   devServer: {
@@ -21,11 +28,15 @@ module.exports = {
     host: '0.0.0.0',
     hot: true,
     historyApiFallback: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/static',
     },
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    }
   },
   module: {
     rules: [
@@ -36,12 +47,31 @@ module.exports = {
           loader: 'builtin:swc-loader',
           options: {
             jsc: {
-              parser: { syntax: 'typescript', jsx: true },
-              transform: { react: { runtime: 'automatic' } },
+              parser: {
+                syntax: 'typescript',
+                jsx: true,
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic',
+                },
+              },
             },
           },
         },
       },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'builtin:lightningcss-loader',
+            options: {
+              targets: 'defaults'
+            }
+          }
+        ],
+        type: 'css'
+      }
     ],
   },
   plugins: [
@@ -51,6 +81,7 @@ module.exports = {
     new rspack.HtmlRspackPlugin({
       template: path.join(__dirname, 'public/index.html'),
       inject: true,
+      publicPath: '/'
     }),
     new ModuleFederationPlugin({
       name: 'abc_kids_flappy',
@@ -59,13 +90,37 @@ module.exports = {
         './App': './src/remote.tsx',
       },
       shared: {
-        react: { singleton: true, requiredVersion: '^18.2.0', eager: true },
-        'react-dom': { singleton: true, requiredVersion: '^18.2.0', eager: true },
-        '@mui/material': { singleton: true, requiredVersion: '^5.14.0', eager: false },
-        '@mui/system': { singleton: true, requiredVersion: '^5.14.0', eager: false },
-        '@emotion/react': { singleton: true, requiredVersion: '^11.11.1', eager: false },
-        '@emotion/styled': { singleton: true, requiredVersion: '^11.11.0', eager: false },
+        react: { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        'react-dom': { 
+          singleton: true, 
+          requiredVersion: '^18.2.0',
+          eager: true
+        },
+        '@mui/material': { 
+          singleton: true, 
+          requiredVersion: '^5.14.0',
+          eager: true
+        },
+        '@mui/system': { 
+          singleton: true, 
+          requiredVersion: '^5.14.0',
+          eager: true
+        },
+        '@emotion/react': { 
+          singleton: true, 
+          requiredVersion: '^11.11.1',
+          eager: true
+        },
+        '@emotion/styled': { 
+          singleton: true, 
+          requiredVersion: '^11.11.0',
+          eager: true
+        }
       },
     }),
-  ],
+  ]
 };
