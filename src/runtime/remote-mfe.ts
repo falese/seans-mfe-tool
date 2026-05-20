@@ -1,7 +1,7 @@
 /**
  * RemoteMFE Implementation
  * Concrete implementation of BaseMFE for Module Federation remotes
- * 
+ *
  * Implements:
  * - REQ-RUNTIME-001: Load capability with atomic entry/mount/enable-render
  * - REQ-RUNTIME-004: Render capability with component awareness
@@ -9,7 +9,18 @@
  */
 
 import { randomUUID } from 'crypto';
-import { BaseMFE, LoadResult, RenderResult, Context, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult } from './base-mfe';
+import {
+  BaseMFE,
+  LoadResult,
+  RenderResult,
+  Context,
+  HealthResult,
+  DescribeResult,
+  SchemaResult,
+  QueryResult,
+  EmitResult,
+  ControlPlaneStateResult,
+} from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
 import type { Message, ActionRecord, MessageMetadata } from './contracts';
 
@@ -23,7 +34,7 @@ export interface ModuleFederationContainer {
 
 /**
  * RemoteMFE class for Module Federation remotes
- * 
+ *
  * This class implements the load/render lifecycle for federated modules,
  * following the atomic operation model with telemetry at each checkpoint.
  */
@@ -36,7 +47,7 @@ export class RemoteMFE extends BaseMFE {
 
   /**
    * Implement load logic for Module Federation remote
-   * 
+   *
    * REQ-RUNTIME-001: Atomic operation with three phases:
    * 1. Entry: Fetch remote entry + container
    * 2. Mount: Initialize container, wire shared deps
@@ -47,14 +58,14 @@ export class RemoteMFE extends BaseMFE {
     const telemetry: LoadResult['telemetry'] = {
       entry: { start: new Date(), duration: 0 },
       mount: { start: new Date(), duration: 0 },
-      enableRender: { start: new Date(), duration: 0 }
+      enableRender: { start: new Date(), duration: 0 },
     };
 
     try {
       // Phase 1: Entry - Fetch Module Federation remote entry
       const entryStart = Date.now();
       (telemetry as any).entry = { start: new Date() };
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-entry',
@@ -62,40 +73,40 @@ export class RemoteMFE extends BaseMFE {
           phase: 'entry',
           status: 'start',
           metadata: { mfe: this.manifest.name },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
       // Get remote entry URL from context or manifest
-      const remoteEntry = context.inputs?.remoteEntry as string || this.manifest.remoteEntry;
+      const remoteEntry = (context.inputs?.remoteEntry as string) || this.manifest.remoteEntry;
       if (!remoteEntry) {
         throw new Error('Remote entry URL not provided in context.inputs or manifest');
       }
 
       // Fetch container (in real implementation, this would use Module Federation runtime)
       this.container = await this.fetchContainer(remoteEntry);
-      
+
       (telemetry as any).entry.duration = Date.now() - entryStart;
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-entry-metric',
           capability: 'load',
           phase: 'entry',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            duration: (telemetry as any).entry.duration 
+            duration: (telemetry as any).entry.duration,
           },
           timestamp: new Date(),
-          duration: (telemetry as any).entry.duration
+          duration: (telemetry as any).entry.duration,
         });
       }
 
       // Phase 2: Mount - Initialize container and wire shared dependencies
       const mountStart = Date.now();
       (telemetry as any).mount = { start: new Date() };
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-mount',
@@ -103,39 +114,39 @@ export class RemoteMFE extends BaseMFE {
           phase: 'mount',
           status: 'start',
           metadata: { mfe: this.manifest.name },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
       // Initialize container with shared dependencies
       const sharedDeps = this.getSharedDependencies();
       await this.container.init(sharedDeps);
-      
+
       // Extract available components from manifest
       this.availableComponents = this.extractAvailableComponents();
-      
+
       (telemetry as any).mount.duration = Date.now() - mountStart;
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-mount-metric',
           capability: 'load',
           phase: 'mount',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
             duration: (telemetry as any).mount.duration,
-            componentsCount: this.availableComponents.length
+            componentsCount: this.availableComponents.length,
           },
           timestamp: new Date(),
-          duration: (telemetry as any).mount.duration
+          duration: (telemetry as any).mount.duration,
         });
       }
 
       // Phase 3: Enable-render - Prepare MFE state for render phase
       const enableRenderStart = Date.now();
       (telemetry as any).enableRender = { start: new Date() };
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-enable-render',
@@ -143,27 +154,27 @@ export class RemoteMFE extends BaseMFE {
           phase: 'enable_render',
           status: 'start',
           metadata: { mfe: this.manifest.name },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
       // Prepare render state (validate components, prepare metadata)
       const capabilities = this.extractCapabilities();
-      
+
       (telemetry as any).enableRender.duration = Date.now() - enableRenderStart;
-      
+
       if (this.deps?.telemetry) {
         this.deps.telemetry.emit({
           name: 'load-enable-render-metric',
           capability: 'load',
           phase: 'enable_render',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            duration: (telemetry as any).enableRender.duration
+            duration: (telemetry as any).enableRender.duration,
           },
           timestamp: new Date(),
-          duration: (telemetry as any).enableRender.duration
+          duration: (telemetry as any).enableRender.duration,
         });
       }
 
@@ -175,12 +186,12 @@ export class RemoteMFE extends BaseMFE {
           capability: 'load',
           phase: 'completed',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            success: true
+            success: true,
           },
           timestamp: new Date(),
-          duration: totalDuration
+          duration: totalDuration,
         });
       }
 
@@ -189,7 +200,7 @@ export class RemoteMFE extends BaseMFE {
         container: this.container,
         manifest: this.manifest,
         availableComponents: this.availableComponents,
-        capabilities
+        capabilities,
       };
 
       return {
@@ -200,7 +211,7 @@ export class RemoteMFE extends BaseMFE {
         capabilities,
         timestamp: new Date(),
         duration: totalDuration,
-        telemetry
+        telemetry,
       };
     } catch (error) {
       // Emit error telemetry
@@ -210,11 +221,11 @@ export class RemoteMFE extends BaseMFE {
           capability: 'load',
           phase: 'error',
           status: 'error',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            error: (error as Error).message
+            error: (error as Error).message,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -223,14 +234,14 @@ export class RemoteMFE extends BaseMFE {
         timestamp: new Date(),
         duration: Date.now() - startTime,
         error: error as Error,
-        telemetry
+        telemetry,
       };
     }
   }
 
   /**
    * Implement render logic for Module Federation remote
-   * 
+   *
    * REQ-RUNTIME-004: Component-aware rendering with:
    * - Component selection from available components
    * - Props validation and passing
@@ -239,7 +250,7 @@ export class RemoteMFE extends BaseMFE {
    */
   protected async doRender(context: Context): Promise<RenderResult> {
     const startTime = Date.now();
-    
+
     try {
       // Extract render parameters from context
       const componentName = context.inputs?.component as string;
@@ -261,11 +272,11 @@ export class RemoteMFE extends BaseMFE {
           capability: 'render',
           phase: 'render_start',
           status: 'start',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            component: componentName
+            component: componentName,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -285,7 +296,7 @@ export class RemoteMFE extends BaseMFE {
       const renderStart = Date.now();
       const componentFactory = await this.container.get(`./${componentName}`);
       const Component = componentFactory();
-      
+
       const renderDuration = Date.now() - renderStart;
 
       // Telemetry: Component fetch duration
@@ -295,12 +306,12 @@ export class RemoteMFE extends BaseMFE {
           capability: 'render',
           phase: 'component_fetch',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            component: componentName
+            component: componentName,
           },
           timestamp: new Date(),
-          duration: renderDuration
+          duration: renderDuration,
         });
       }
 
@@ -316,12 +327,12 @@ export class RemoteMFE extends BaseMFE {
           capability: 'render',
           phase: 'mount',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            component: componentName
+            component: componentName,
           },
           timestamp: new Date(),
-          duration: mountDuration
+          duration: mountDuration,
         });
       }
 
@@ -334,13 +345,13 @@ export class RemoteMFE extends BaseMFE {
           capability: 'render',
           phase: 'completed',
           status: 'success',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
             component: componentName,
-            success: true
+            success: true,
           },
           timestamp: new Date(),
-          duration: totalDuration
+          duration: totalDuration,
         });
       }
 
@@ -354,7 +365,7 @@ export class RemoteMFE extends BaseMFE {
         component: componentName,
         element,
         renderDuration,
-        mountDuration
+        mountDuration,
       };
 
       return {
@@ -364,7 +375,7 @@ export class RemoteMFE extends BaseMFE {
         timestamp: new Date(),
         duration: totalDuration,
         renderDuration,
-        mountDuration
+        mountDuration,
       };
     } catch (error) {
       // Emit error telemetry
@@ -374,11 +385,11 @@ export class RemoteMFE extends BaseMFE {
           capability: 'render',
           phase: 'error',
           status: 'error',
-          metadata: { 
+          metadata: {
             mfe: this.manifest.name,
-            error: (error as Error).message
+            error: (error as Error).message,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -386,7 +397,7 @@ export class RemoteMFE extends BaseMFE {
         status: 'error',
         timestamp: new Date(),
         duration: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -403,7 +414,7 @@ export class RemoteMFE extends BaseMFE {
     // 1. Load the remoteEntry.js script
     // 2. Access the global container variable
     // 3. Return the container interface
-    
+
     // For now, return a mock container for testing
     return {
       init: async (shared: Record<string, any>) => {
@@ -414,9 +425,9 @@ export class RemoteMFE extends BaseMFE {
         // Return a factory function for the requested module
         void module;
         return () => ({
-          default: class MockComponent {}
+          default: class MockComponent {},
         });
-      }
+      },
     };
   }
 
@@ -427,7 +438,7 @@ export class RemoteMFE extends BaseMFE {
     // Return shared dependencies (React, ReactDOM, etc.)
     return {
       react: { version: '18.2.0', singleton: true },
-      'react-dom': { version: '18.2.0', singleton: true }
+      'react-dom': { version: '18.2.0', singleton: true },
     };
   }
 
@@ -456,11 +467,27 @@ export class RemoteMFE extends BaseMFE {
 
     // Fallback: collect domain capability names (everything that is not a platform capability)
     const PLATFORM_CAPABILITY_NAMES = new Set([
-      'load', 'render', 'refresh', 'authorizeAccess', 'health',
-      'describe', 'schema', 'query', 'emit', 'updateControlPlaneState',
+      'load',
+      'render',
+      'refresh',
+      'authorizeAccess',
+      'health',
+      'describe',
+      'schema',
+      'query',
+      'emit',
+      'updateControlPlaneState',
       // Also handle the PascalCase variants used as capability entry keys in YAML
-      'Load', 'Render', 'Refresh', 'AuthorizeAccess', 'Health',
-      'Describe', 'Schema', 'Query', 'Emit', 'UpdateControlPlaneState',
+      'Load',
+      'Render',
+      'Refresh',
+      'AuthorizeAccess',
+      'Health',
+      'Describe',
+      'Schema',
+      'Query',
+      'Emit',
+      'UpdateControlPlaneState',
     ]);
     const domainComponents: string[] = [];
     for (const capEntry of this.manifest.capabilities) {
@@ -493,21 +520,25 @@ export class RemoteMFE extends BaseMFE {
   /**
    * Mount React component to DOM using React 18 createRoot
    */
-  private async mountComponent(Component: any, props: Record<string, any>, containerId: string): Promise<any> {
+  private async mountComponent(
+    Component: any,
+    props: Record<string, any>,
+    containerId: string
+  ): Promise<any> {
     // In a real implementation, this would:
     // 1. Get DOM element by containerId
     // 2. Use React 18 createRoot API
     // 3. Wrap with error boundary
     // 4. Apply theme provider if configured
     // 5. Render component with props
-    
+
     // For now, return a mock element
     const element = {
       id: containerId,
       component: Component,
-      props
+      props,
     } as any;
-    
+
     return element;
   }
 
@@ -531,15 +562,15 @@ export class RemoteMFE extends BaseMFE {
         {
           name: 'container',
           status: this.container !== null ? 'pass' : 'fail',
-          message: this.container !== null ? 'Container loaded' : 'Container not loaded'
+          message: this.container !== null ? 'Container loaded' : 'Container not loaded',
         },
         {
           name: 'components',
           status: this.availableComponents.length > 0 ? 'pass' : 'fail',
-          message: `${this.availableComponents.length} components available`
-        }
+          message: `${this.availableComponents.length} components available`,
+        },
       ],
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -549,14 +580,14 @@ export class RemoteMFE extends BaseMFE {
       version: this.manifest.version,
       type: this.manifest.type,
       capabilities: this.extractCapabilities(),
-      manifest: this.manifest
+      manifest: this.manifest,
     };
   }
 
   protected async doSchema(context: Context): Promise<SchemaResult> {
     return {
       schema: JSON.stringify(this.manifest, null, 2),
-      format: 'json'
+      format: 'json',
     };
   }
 
@@ -571,12 +602,12 @@ export class RemoteMFE extends BaseMFE {
         this.deps.telemetry.emit(event as any);
         return {
           emitted: true,
-          eventId: 'generated-event-id'
+          eventId: 'generated-event-id',
         };
       }
     }
     return {
-      emitted: false
+      emitted: false,
     };
   }
 
@@ -603,21 +634,27 @@ export class RemoteMFE extends BaseMFE {
     const rawCorrelationId = context.inputs?.correlationId;
 
     if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
-      throw new Error('updateControlPlaneState requires context.inputs.stateKey to be a non-empty string');
+      throw new Error(
+        'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
+      );
     }
 
     if (
       rawStateData !== undefined &&
       (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
     ) {
-      throw new Error('updateControlPlaneState requires context.inputs.stateData to be an object when provided');
+      throw new Error(
+        'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
+      );
     }
 
     if (
       rawCorrelationId !== undefined &&
       (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
     ) {
-      throw new Error('updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided');
+      throw new Error(
+        'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
+      );
     }
 
     const stateKey = rawStateKey.trim();
@@ -664,7 +701,7 @@ export class RemoteMFE extends BaseMFE {
       success = await wsClient.mutation(
         'mutation sendMessage($m: String!) { sendMessage(message: $m) }',
         { m: JSON.stringify(envelope) },
-        4_000,
+        4_000
       );
     } catch (err) {
       const message = (err as Error).message ?? 'sendMessage mutation failed';

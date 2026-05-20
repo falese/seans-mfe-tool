@@ -1,5 +1,3 @@
-
-
 import {
   RemoteMFE,
   type Context,
@@ -8,7 +6,6 @@ import {
 } from '@seans-mfe-tool/runtime';
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
-
 
 /**
  * abckidsflappyMFE
@@ -79,12 +76,23 @@ export class abckidsflappyMFE extends RemoteMFE {
    * Add domain logic AFTER calling super (e.g. validate domain config, seed state).
    */
   protected async doLoad(context: Context): Promise<LoadResult> {
-    console.log('[abckidsflappyMFE][doLoad] loading remoteEntry=%s', context.inputs?.remoteEntry ?? '<from manifest>');
+    console.log(
+      '[abckidsflappyMFE][doLoad] loading remoteEntry=%s',
+      context.inputs?.remoteEntry ?? '<from manifest>'
+    );
     const result = await super.doLoad(context);
     if (result.status === 'loaded') {
-      console.log('[abckidsflappyMFE][doLoad] ready — components=%o duration=%dms', result.availableComponents, result.duration);
+      console.log(
+        '[abckidsflappyMFE][doLoad] ready — components=%o duration=%dms',
+        result.availableComponents,
+        result.duration
+      );
     } else {
-      console.error('[abckidsflappyMFE][doLoad] failed — status=%s error=%s', result.status, result.error?.message);
+      console.error(
+        '[abckidsflappyMFE][doLoad] failed — status=%s error=%s',
+        result.status,
+        result.error?.message
+      );
     }
     return result;
   }
@@ -101,9 +109,17 @@ export class abckidsflappyMFE extends RemoteMFE {
    * Add domain logic AFTER calling super (e.g. analytics, event listeners).
    */
   protected async doRender(context: Context): Promise<RenderResult> {
-    console.log('[abckidsflappyMFE][doRender] rendering component=%s containerId=%s', context.inputs?.component ?? '<auto>', context.inputs?.containerId ?? '<auto>');
+    console.log(
+      '[abckidsflappyMFE][doRender] rendering component=%s containerId=%s',
+      context.inputs?.component ?? '<auto>',
+      context.inputs?.containerId ?? '<auto>'
+    );
     const result = await super.doRender(context);
-    console.log('[abckidsflappyMFE][doRender] result=%s duration=%dms', result.status, result.duration);
+    console.log(
+      '[abckidsflappyMFE][doRender] result=%s duration=%dms',
+      result.status,
+      result.duration
+    );
     return result;
   }
 
@@ -228,5 +244,4 @@ export class abckidsflappyMFE extends RemoteMFE {
       phase: context.phase,
     });
   }
-
 }

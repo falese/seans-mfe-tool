@@ -17,19 +17,75 @@ const manifest = {
   endpoint: 'http://localhost:3001',
   remoteEntry: 'http://localhost:3001/remoteEntry.js',
   capabilities: [
-    { PlayGame:    { type: 'domain', description: 'Play the Flappy Bird game on an HTML5 Canvas' } },
-    { ShowCover:   { type: 'domain', description: 'Show the Flappy Bird game cover card with title and art' } },
-    { GetGameInfo: { type: 'domain', description: 'Return game metadata including title, age range, and description' } },
-    { Load: { type: 'platform', lifecycle: {
-      before: [{ onLoadBegin:    { handler: 'onLoadBegin',    description: 'Log load lifecycle entry' } }],
-      after:  [{ onLoadComplete: { handler: 'onLoadComplete', description: 'Log load success and available components' } }],
-      error:  [{ onLoadError:   { handler: 'onLoadError',   contained: true, description: 'Log load failure' } }],
-    } } },
-    { Render: { type: 'platform', lifecycle: {
-      before: [{ onRenderBegin:    { handler: 'onRenderBegin',    description: 'Log render lifecycle entry' } }],
-      after:  [{ onRenderComplete: { handler: 'onRenderComplete', description: 'Log render success' } }],
-      error:  [{ onRenderError:   { handler: 'onRenderError',   contained: true, description: 'Log render failure' } }],
-    } } },
+    { PlayGame: { type: 'domain', description: 'Play the Flappy Bird game on an HTML5 Canvas' } },
+    {
+      ShowCover: {
+        type: 'domain',
+        description: 'Show the Flappy Bird game cover card with title and art',
+      },
+    },
+    {
+      GetGameInfo: {
+        type: 'domain',
+        description: 'Return game metadata including title, age range, and description',
+      },
+    },
+    {
+      Load: {
+        type: 'platform',
+        lifecycle: {
+          before: [
+            { onLoadBegin: { handler: 'onLoadBegin', description: 'Log load lifecycle entry' } },
+          ],
+          after: [
+            {
+              onLoadComplete: {
+                handler: 'onLoadComplete',
+                description: 'Log load success and available components',
+              },
+            },
+          ],
+          error: [
+            {
+              onLoadError: {
+                handler: 'onLoadError',
+                contained: true,
+                description: 'Log load failure',
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
+      Render: {
+        type: 'platform',
+        lifecycle: {
+          before: [
+            {
+              onRenderBegin: {
+                handler: 'onRenderBegin',
+                description: 'Log render lifecycle entry',
+              },
+            },
+          ],
+          after: [
+            {
+              onRenderComplete: { handler: 'onRenderComplete', description: 'Log render success' },
+            },
+          ],
+          error: [
+            {
+              onRenderError: {
+                handler: 'onRenderError',
+                contained: true,
+                description: 'Log render failure',
+              },
+            },
+          ],
+        },
+      },
+    },
   ],
 };
 
@@ -43,8 +99,10 @@ export const mfeReady: Promise<void> = mfe
   })
   .then((result) => {
     console.log(
-      '[abckidsflappyMFE] bootstrap load() complete — status:', result.status,
-      '— components:', result.availableComponents,
+      '[abckidsflappyMFE] bootstrap load() complete — status:',
+      result.status,
+      '— components:',
+      result.availableComponents
     );
   })
   .catch((err) => {
