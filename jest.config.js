@@ -1,6 +1,5 @@
 // jest.config.js
 /** @type {import('@jest/types').Config.InitialOptions} */
-const isCI = !!process.env.CI;
 
 module.exports = {
   // Test environment
@@ -45,10 +44,6 @@ module.exports = {
   coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
     'src/commands/*.{js,ts}',
-    '!src/commands/create-shell.js', // Skip - tests have template mocking issues (will fix in refactor)
-    '!src/commands/api.ts',          // Skip - no tests yet; full oclif port tracked in migration plan
-    '!src/commands/deploy.ts',       // Skip - no tests yet; full oclif port tracked in migration plan
-    '!src/commands/schemas.ts',      // Skip - no tests yet; CLI scaffolding only
     'src/utils/**/*.{js,ts}',
     'src/codegen/UnifiedGenerator/**/*.{js,ts}',
     'src/codegen/APIGenerator/**/*.{js,ts}',
@@ -61,53 +56,74 @@ module.exports = {
     '!src/**/*.test.{js,ts}',
     '!src/**/*.d.ts',          // Skip - TypeScript declaration files have no executable code
     '!src/dsl/schema.js',      // Skip - compiled Peggy parser artifact (not a source file)
-    '!src/runtime/graphql-ws-client.ts', // Skip - no tests yet; tracked for future coverage
     '!src/**/fixtures/**',
     '!src/codegen/templates/**'
   ],
   
-  // Coverage thresholds (relaxed locally, strict in CI)
-  // DIAGNOSTIC: all CI thresholds set to 0 to capture actual numbers via
-  // the "Print coverage summary" workflow step. Will be tuned once the
-  // coverage-summary.json values are known.
-  coverageThreshold: isCI
-    ? {
-        global: {
-          branches: 0,
-          functions: 0,
-          lines: 0,
-          statements: 0
-        }
-      }
-    : {
-        global: {
-          branches: 0,
-          functions: 0,
-          lines: 0,
-          statements: 0
-        },
-        // Enforce strict coverage locally for DSL Type System
-        'src/dsl/type-system.ts': {
-          branches: 99,
-          functions: 100,
-          lines: 100,
-          statements: 100
-        },
-        // Enforce strict coverage locally for Runtime BaseMFE
-        'src/runtime/base-mfe.ts': {
-          branches: 90,
-          functions: 100,
-          lines: 95,
-          statements: 95
-        },
-        // Enforce 95%+ for Utils module even locally (TDD mandate - Phase 1)
-        'src/utils/*.js': {
-          branches: 88,
-          functions: 95,
-          lines: 95,
-          statements: 95
-        }
-      },
+  // Coverage thresholds. Phase 1.1 adds per-file thresholds for the four
+  // newly-covered files (api.ts, deploy.ts, schemas.ts, graphql-ws-client.ts)
+  // and tightens the global floor.
+  //
+  // Targets (from the production-readiness roadmap):
+  //   Commands: 90% statements / 85% branches / 90% functions / 90% lines
+  //   Runtime:  95% statements / 90% branches / 100% functions / 95% lines
+  //
+  // Local thresholds match CI so contributors hit the same gate before push.
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    },
+    // Enforce strict coverage locally for DSL Type System
+    'src/dsl/type-system.ts': {
+      branches: 99,
+      functions: 100,
+      lines: 100,
+      statements: 100
+    },
+    // Enforce strict coverage locally for Runtime BaseMFE
+    'src/runtime/base-mfe.ts': {
+      branches: 90,
+      functions: 100,
+      lines: 95,
+      statements: 95
+    },
+    // Enforce 95%+ for Utils module even locally (TDD mandate - Phase 1)
+    'src/utils/*.js': {
+      branches: 88,
+      functions: 95,
+      lines: 95,
+      statements: 95
+    },
+    // Phase 1.1: command-layer coverage targets
+    'src/commands/api.ts': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    'src/commands/deploy.ts': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    'src/commands/schemas.ts': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    // Phase 1.1: runtime-layer coverage target
+    'src/runtime/graphql-ws-client.ts': {
+      branches: 90,
+      functions: 100,
+      lines: 95,
+      statements: 95
+    }
+  },
 
   // Handle timers
   fakeTimers: {

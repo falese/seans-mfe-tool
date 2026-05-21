@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--
+  E2E fixture page for seans-mfe-tool.
+
+  This page is a *reference implementation* of the public DOM contract that
+  scaffolded MFEs are expected to expose. It is deliberately framework-free
+  (no React, no Module Federation) so that Playwright can exercise the
+  contract deterministically without a build pipeline or running BFF.
+
+  Contract (mirrors src/runtime/base-mfe.ts lifecycle):
+    [data-mfe="<name>"]                — MFE root (rendered once load() resolves)
+    [data-state]                       — current lifecycle state: idle | loading | ready | error | denied
+    [data-capability="<name>"]         — invokable capability button
+    .result                            — capability invocation output
+    .error-fallback                    — error boundary fallback UI
+    [data-auth="required"]             — auth gate (shown when no token in localStorage)
+    button.login                       — login control on the auth gate
+    button.invoke-error                — error-injection control
+    button.logout                      — logout control
+
+  Query-string controls (let tests force specific code paths):
+    ?delay=<ms>          Slow capability invocation
+    ?fail=<true>         Capability invocation throws on next click
+    ?auth=required       Force auth gate even if token is present
+    ?init=loading        Pause in loading state until #force-ready clicked
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>seans-mfe-tool E2E fixture — data-analysis</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 2rem; }
+    [data-state="loading"] .ready-content { display: none; }
+    [data-state="ready"]   .loading-content { display: none; }
+    [data-state="ready"]   .ready-content { display: block; }
+    .error-fallback { color: #b00; border: 1px solid #b00; padding: 1rem; }
+    .result { margin-top: 1rem; padding: 0.5rem; border: 1px solid #0a0; color: #0a0; }
+    button { margin-right: 0.5rem; padding: 0.4rem 0.8rem; }
+    [data-auth="required"] { padding: 1rem; background: #f5f5f5; }
+  </style>
+</head>
+<body>
+  <h1>data-analysis MFE</h1>
+  <main id="root" data-mfe="data-analysis" data-state="idle">
+    <p class="loading-content">Loading MFE…</p>
+  </main>
+
+  <script>
+    (function () {
+      const root = document.getElementById('root');
+      const params = new URLSearchParams(location.search);
+      const forcedDelay = parseInt(params.get('delay') || '0', 10);
+      let forceFail = params.get('fail') === 'true';
+      const forceAuth = params.get('auth') === 'required';
+      const initState = params.get('init') || 'ready';
+
+      function setState(state) {
+        root.setAttribute('data-state', state);
+      }
+
+      function renderAuthGate() {
+        setState('denied');
+        root.innerHTML = `
+          <section data-auth="required">
+            <p>Authentication required to access this MFE.</p>
+            <button class="login" type="button">Sign in</button>
+          </section>
+        `;
+        root.querySelector('.login').addEventListener('click', () => {
+          localStorage.setItem('token', 'fake-jwt-' + Date.now());
+          render();
+        });
+      }
+
+      function renderError(message) {
+        setState('error');
+        root.innerHTML = `
+          <section class="error-fallback" data-error="true">
+            <h2>Something went wrong</h2>
+            <p>${message}</p>
+            <button class="retry" type="button">Retry</button>
+          </section>
+        `;
+        root.querySelector('.retry').addEventListener('click', () => {
+          // Clear the forced-fail flag so retry succeeds.
+          forceFail = false;
+          const u = new URL(location.href);
+          u.searchParams.delete('fail');
+          history.replaceState({}, '', u.toString());
+          render();
+        });
+      }
+
+      function renderReady() {
+        setState('ready');
+        root.innerHTML = `
+          <section class="ready-content">
+            <p>Welcome — token present.</p>
+            <button data-capability="query"  type="button">Run query</button>
+            <button data-capability="report" type="button">Generate report</button>
+            <button class="invoke-error" type="button">Throw inside capability</button>
+            <button class="logout" type="button">Sign out</button>
+            <div class="result-container" aria-live="polite"></div>
+          </section>
+        `;
+
+        async function invokeCapability(name) {
+          const container = root.querySelector('.result-container');
+          container.innerHTML = '<p class="invoking">Running ' + name + '…</p>';
+          try {
+            if (forcedDelay > 0) await new Promise((r) => setTimeout(r, forcedDelay));
+            if (forceFail) throw new Error('Forced failure in capability "' + name + '"');
+            // "Real" capability work — deterministic for the test.
+            const value = name === 'query'
+              ? '42 rows'
+              : 'report.csv';
+            container.innerHTML = '<div class="result" data-result-for="' + name + '">' +
+              'Success: ' + value + '</div>';
+          } catch (err) {
+            renderError(err && err.message ? err.message : String(err));
+          }
+        }
+
+        root.querySelectorAll('[data-capability]').forEach((btn) => {
+          btn.addEventListener('click', () => invokeCapability(btn.getAttribute('data-capability')));
+        });
+        root.querySelector('.invoke-error').addEventListener('click', () => {
+          renderError('Capability handler threw');
+        });
+        root.querySelector('.logout').addEventListener('click', () => {
+          localStorage.removeItem('token');
+          render();
+        });
+      }
+
+      function render() {
+        if (forceAuth || !localStorage.getItem('token')) {
+          renderAuthGate();
+          return;
+        }
+        renderReady();
+      }
+
+      if (initState === 'loading') {
+        setState('loading');
+        // Expose a hook so tests can transition out of loading deterministically.
+        window.__forceReady = render;
+      } else {
+        render();
+      }
+    })();
+  </script>
+</body>
+</html>
