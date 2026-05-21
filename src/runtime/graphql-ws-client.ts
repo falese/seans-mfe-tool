@@ -9,6 +9,8 @@
  * BaseMFEDependencies.wsClient.
  */
 
+import { uuidv4 } from './util/uuid';
+
 /**
  * Minimal interface for the socket so tests can inject fakes without depending
  * on the browser WebSocket class.
@@ -86,7 +88,7 @@ export class GraphQLWebSocketClient implements DaemonWebSocketClient {
       throw new Error('Daemon WebSocket not connected');
     }
 
-    const id = crypto.randomUUID();
+    const id = uuidv4();
 
     return new Promise<boolean>((resolve, reject) => {
       let settled = false;

@@ -1,8 +1,8 @@
 services:
   abc-kids-flappy:
     build:
-      context: ./flappy
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/abc-kids/flappy/Dockerfile
     ports:
       - '3001:3001'
     healthcheck:
@@ -14,8 +14,8 @@ services:
 
   abc-kids-hockey:
     build:
-      context: ./hockey
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/abc-kids/hockey/Dockerfile
     ports:
       - '3002:3002'
     healthcheck:

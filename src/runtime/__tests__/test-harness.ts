@@ -358,6 +358,20 @@ export class MFETestHarness {
         telemetry
       };
     };
+
+    // Mock loadDomainComponent to return the component from config (no real module resolution in tests)
+    mfeAny.loadDomainComponent = async (name: string) => {
+      const component = config.components[name];
+      if (!component) {
+        throw new Error(`[TestHarness] Unknown component: "${name}"`);
+      }
+      return component;
+    };
+
+    // Mock mountComponent to avoid DOM/React dependencies in tests
+    mfeAny.mountComponent = async (_Component: any, _props: any, containerId: string) => {
+      return { id: containerId, tagName: 'DIV' };
+    };
   }
 
   /**
