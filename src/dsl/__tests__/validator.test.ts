@@ -123,6 +123,53 @@ describe('DSL Validator', () => {
       const result = validateManifest(manifest);
       expect(result.valid).toBe(true);
     });
+
+    it('should accept optional framework=angular + bundler=webpack', () => {
+      const manifest = {
+        name: 'ng-remote',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        framework: 'angular',
+        bundler: 'webpack',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(true);
+      expect(result.manifest?.framework).toBe('angular');
+      expect(result.manifest?.bundler).toBe('webpack');
+    });
+
+    it('should reject unknown framework', () => {
+      const manifest = {
+        name: 'oddball',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        framework: 'svelte',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.path.includes('framework'))).toBe(true);
+    });
+
+    it('should reject unknown bundler', () => {
+      const manifest = {
+        name: 'oddball',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        bundler: 'vite',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.path.includes('bundler'))).toBe(true);
+    });
   });
 
   describe('validatePartialManifest', () => {

@@ -267,26 +267,43 @@ export function createMinimalManifest(
   options: {
     type?: DSLManifest['type'];
     language?: DSLManifest['language'];
+    framework?: DSLManifest['framework'];
+    bundler?: DSLManifest['bundler'];
     description?: string;
   } = {}
 ): DSLManifest {
-  return {
+  const framework = options.framework;
+  const isAngular = framework === 'angular';
+  const manifest: DSLManifest = {
     name,
     version: '1.0.0',
     type: options.type || 'remote',
     language: options.language || 'typescript',
     description: options.description || '',
     capabilities: [],
-    dependencies: {
-      runtime: {
-        'react': '^18.0.0',
-        'react-dom': '^18.0.0'
-      },
-      'design-system': {
-        '@mui/material': '^5.14.0'
-      }
-    }
+    dependencies: isAngular
+      ? {
+          runtime: {
+            '@angular/core': '^17.0.0',
+            '@angular/common': '^17.0.0',
+            '@angular/platform-browser': '^17.0.0',
+            'rxjs': '^7.8.0',
+            'zone.js': '~0.14.0'
+          }
+        }
+      : {
+          runtime: {
+            'react': '^18.0.0',
+            'react-dom': '^18.0.0'
+          },
+          'design-system': {
+            '@mui/material': '^5.14.0'
+          }
+        }
   };
+  if (options.framework) manifest.framework = options.framework;
+  if (options.bundler) manifest.bundler = options.bundler;
+  return manifest;
 }
 
 /**
