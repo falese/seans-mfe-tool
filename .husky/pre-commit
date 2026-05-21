@@ -1,16 +1,14 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Only enforce the 100%-coverage generator gate when a generator file is
-# actually being committed. Running the gate unconditionally pulls in
-# unrelated per-file coverage thresholds from jest.config.js (Jest reports
-# "Coverage data ... was not found" and exits non-zero for every threshold
-# entry outside the narrowed --collectCoverageFrom scope), which blocks all
-# commits even when no generator files changed.
-STAGED_GENERATORS="$(git diff --cached --name-only --diff-filter=ACMR | grep '^src/codegen/generators/' || true)"
+# Run generator tests with 100% coverage requirement, but only when at least
+# one staged file lives under src/codegen/generators (TDD mandate is scoped to
+# generator changes per ADR-022; other commits should not be blocked by a
+# 0/0 coverage no-op).
+STAGED_GENERATOR_FILES="$(git diff --cached --name-only --diff-filter=ACMRT | grep -E '^src/codegen/generators/' || true)"
 
-if [ -z "$STAGED_GENERATORS" ]; then
-  echo "No generator changes staged — skipping generator coverage gate."
+if [ -z "$STAGED_GENERATOR_FILES" ]; then
+  echo "(skipping generator 100% coverage gate — no staged files under src/codegen/generators)"
   exit 0
 fi
 
@@ -18,9 +16,9 @@ echo "Running generator tests with 100% coverage requirement..."
 npm test -- src/codegen/generators --coverage --collectCoverageFrom='src/codegen/generators/**/*.js' --passWithNoTests
 
 if [ $? -ne 0 ]; then
-  echo "❌ Generator tests failed or coverage is below 100%"
+  echo "Generator tests failed or coverage is below 100%"
   echo "TDD mandate (ADR-022): All generators must have 100% test coverage"
   exit 1
 fi
 
-echo "✅ Generator tests passed with 100% coverage"
+echo "Generator tests passed with 100% coverage"

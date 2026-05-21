@@ -182,6 +182,21 @@ function createTestMFE(components: Record<string, any>, overrides?: Partial<DSLM
   // Mock extractAvailableComponents
   (mfe as any).extractAvailableComponents = () => Object.keys(components);
 
+  // Mock loadDomainComponent to return component from map (no real module resolution in tests)
+  (mfe as any).loadDomainComponent = async (name: string) => {
+    const component = components[name];
+    if (!component) {
+      throw new Error(`[IntegrationTest] Unknown component: "${name}"`);
+    }
+    return component;
+  };
+
+  // Mock mountComponent to avoid real DOM/React 18 createRoot in JSDOM
+  (mfe as any).mountComponent = async (_Component: any, _props: any, containerId: string) => {
+    const el = document.getElementById(containerId);
+    return el || { id: containerId, tagName: 'DIV' };
+  };
+
   return mfe;
 }
 
