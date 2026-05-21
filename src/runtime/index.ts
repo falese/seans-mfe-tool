@@ -36,6 +36,12 @@ export {
   ModuleFederationContainer,
 } from './remote-mfe';
 
+// AngularRemoteMFE concrete implementation — Angular + webpack sibling of RemoteMFE
+export {
+  AngularRemoteMFE,
+  AngularApplicationRef,
+} from './angular-remote-mfe';
+
 // Daemon WebSocket client (used to wire up the control-plane connection)
 export { GraphQLWebSocketClient } from './graphql-ws-client';
 export type { DaemonWebSocketClient } from './graphql-ws-client';
