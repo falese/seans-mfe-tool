@@ -9,7 +9,7 @@
  * - REQ-RUNTIME-012: Telemetry emission at all checkpoints
  */
 
-import { randomUUID } from 'crypto';
+import { uuidv4 } from './util/uuid';
 import {
   BaseMFE,
   LoadResult,
@@ -713,7 +713,7 @@ export class RemoteMFE extends BaseMFE {
     };
 
     const payload: ActionRecord = {
-      id: randomUUID(),
+      id: uuidv4(),
       componentId: this.currentComponentId ?? this.manifest.name,
       actionType: stateKey,
       data: stateData,
