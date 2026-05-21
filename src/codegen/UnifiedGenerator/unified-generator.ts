@@ -87,6 +87,27 @@ export const DEPENDENCY_VERSIONS = {
     concurrently: '^8.2.0',
     serve: '^14.2.1',
   },
+
+  // Angular 17+ (Module Federation - Singleton + strictVersion)
+  angular: {
+    core: '^17.0.0',
+    common: '^17.0.0',
+    compiler: '^17.0.0',
+    compilerCli: '^17.0.0',
+    platformBrowser: '^17.0.0',
+    rxjs: '^7.8.0',
+    zoneJs: '~0.14.0',
+  },
+
+  // Webpack 5 toolchain (angular-webpack variant)
+  webpackTools: {
+    webpack: '^5.89.0',
+    webpackCli: '^5.1.0',
+    webpackDevServer: '^4.15.0',
+    htmlWebpackPlugin: '^5.5.0',
+    ngtoolsWebpack: '^17.0.0',
+    jestPresetAngular: '^14.0.0',
+  },
 };
 
 /**
@@ -560,8 +581,25 @@ export async function generateAllFiles(
   vars.capabilities = capabilities;
   vars.lifecycleHooks = lifecycleHooks;
 
+  // Codegen template variant selection.
+  // Manifest.framework + manifest.bundler pick the directory and per-file
+  // extensions. Omitted ⇒ React + rspack (back-compat with all existing MFEs).
+  const isAngularWebpack =
+    manifest.framework === 'angular' || manifest.bundler === 'webpack';
+  const templateVariant: 'react-rspack' | 'angular-webpack' = isAngularWebpack
+    ? 'angular-webpack'
+    : 'react-rspack';
+  vars.framework = manifest.framework ?? 'react';
+  vars.bundler = manifest.bundler ?? 'rspack';
+  vars.templateVariant = templateVariant;
+
   // Standardized template directory
-  const templateDir = path.resolve(__dirname, '../templates/base-mfe');
+  const templateDir = path.resolve(
+    __dirname,
+    templateVariant === 'angular-webpack'
+      ? '../templates/base-mfe-angular'
+      : '../templates/base-mfe'
+  );
   const featureTplDir = path.join(templateDir, 'features');
   const featuresDir = path.join(basePath, 'src', 'features');
   // Platform/BFF directories and template paths
@@ -587,10 +625,25 @@ export async function generateAllFiles(
 
       domainCapabilities.push(name);
       const featurePath = path.join(featuresDir, name);
+      const featureSpec =
+        templateVariant === 'angular-webpack'
+          ? {
+              componentFile: `${name}.component.ts`,
+              componentTpl: 'feature.component.ts.ejs',
+              specFile: `${name}.component.spec.ts`,
+              specTpl: 'feature.component.spec.ts.ejs',
+            }
+          : {
+              componentFile: `${name}.tsx`,
+              componentTpl: 'feature.tsx.ejs',
+              specFile: `${name}.test.tsx`,
+              specTpl: 'feature.test.tsx.ejs',
+            };
+
       // Feature component
       files.push({
-        path: path.join(featurePath, `${name}.tsx`),
-        content: await renderTemplate(path.join(featureTplDir, 'feature.tsx.ejs'), {
+        path: path.join(featurePath, featureSpec.componentFile),
+        content: await renderTemplate(path.join(featureTplDir, featureSpec.componentTpl), {
           name,
           description: config.description || `${name} feature component`,
         }),
@@ -604,16 +657,20 @@ export async function generateAllFiles(
       });
       // Feature test
       files.push({
-        path: path.join(featurePath, `${name}.test.tsx`),
-        content: await renderTemplate(path.join(featureTplDir, 'feature.test.tsx.ejs'), { name }),
+        path: path.join(featurePath, featureSpec.specFile),
+        content: await renderTemplate(path.join(featureTplDir, featureSpec.specTpl), { name }),
         overwrite: false,
       });
     }
   }
   // Remote entrypoint exports all domain capabilities
+  const remoteEntry =
+    templateVariant === 'angular-webpack'
+      ? { file: 'remote.ts', tpl: 'remote.ts.ejs' }
+      : { file: 'remote.tsx', tpl: 'remote.tsx.ejs' };
   files.push({
-    path: path.join(basePath, 'src', 'remote.tsx'),
-    content: await renderTemplate(path.join(featureTplDir, 'remote.tsx.ejs'), {
+    path: path.join(basePath, 'src', remoteEntry.file),
+    content: await renderTemplate(path.join(featureTplDir, remoteEntry.tpl), {
       capabilities: domainCapabilities,
     }),
     overwrite: true,
@@ -731,11 +788,20 @@ export async function generateAllFiles(
   }
 
   // --- Root/config files ---
-  // Always use EJS templates for package.json, rspack.config.js, etc.
-  const rootTemplates = [
-    { name: 'package.json', ejs: 'package.json.ejs' },
-    { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
-  ];
+  // Variant-aware: angular-webpack emits webpack.config.js + tsconfig pair;
+  // react-rspack keeps the existing package.json + rspack.config.js shape.
+  const rootTemplates =
+    templateVariant === 'angular-webpack'
+      ? [
+          { name: 'package.json', ejs: 'package.json.ejs' },
+          { name: 'webpack.config.js', ejs: 'webpack.config.js.ejs' },
+          { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
+          { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
+        ]
+      : [
+          { name: 'package.json', ejs: 'package.json.ejs' },
+          { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
+        ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);
     if (await fs.pathExists(templatePath)) {
@@ -755,53 +821,78 @@ export async function generateAllFiles(
   }
 
   // --- Entry files ---
-  // Generate src/App.tsx from EJS template
-  const appTemplatePath = path.join(templateDir, 'App.tsx.ejs');
-  const appOutPath = path.join(basePath, 'src', 'App.tsx');
-  if (await fs.pathExists(appTemplatePath)) {
-    const appContent = await renderTemplate(appTemplatePath, vars);
-    files.push({
-      path: appOutPath,
-      content: appContent,
-      overwrite: false, // user-owned: App.tsx is the game entry point, not regenerated
-    });
+  // Variant-aware. React: src/App.tsx + src/index.tsx (standalone dev shell).
+  // Angular: src/main.ts + src/bootstrap.ts + src/polyfills.ts + src/app/app.component.ts.
+  if (templateVariant === 'angular-webpack') {
+    const angularEntries: Array<{ tpl: string; out: string; overwrite: boolean }> = [
+      { tpl: 'src/main.ts.ejs', out: 'src/main.ts', overwrite: false },
+      { tpl: 'src/bootstrap.ts.ejs', out: 'src/bootstrap.ts', overwrite: false },
+      { tpl: 'src/polyfills.ts.ejs', out: 'src/polyfills.ts', overwrite: false },
+      { tpl: 'src/app/app.component.ts.ejs', out: 'src/app/app.component.ts', overwrite: false },
+    ];
+    for (const { tpl, out, overwrite } of angularEntries) {
+      const templatePath = path.join(templateDir, tpl);
+      if (await fs.pathExists(templatePath)) {
+        const content = await renderTemplate(templatePath, vars);
+        files.push({
+          path: path.join(basePath, out),
+          content,
+          overwrite,
+        });
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`[unified-generator] WARNING: Missing template for ${out}: ${templatePath}`);
+      }
+    }
   } else {
-    // Diagnostic: warn if App.tsx template missing
-    // eslint-disable-next-line no-console
-    console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
-  }
+    // Generate src/App.tsx from EJS template
+    const appTemplatePath = path.join(templateDir, 'App.tsx.ejs');
+    const appOutPath = path.join(basePath, 'src', 'App.tsx');
+    if (await fs.pathExists(appTemplatePath)) {
+      const appContent = await renderTemplate(appTemplatePath, vars);
+      files.push({
+        path: appOutPath,
+        content: appContent,
+        overwrite: false, // user-owned: App.tsx is the game entry point, not regenerated
+      });
+    } else {
+      // Diagnostic: warn if App.tsx template missing
+      // eslint-disable-next-line no-console
+      console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
+    }
 
-  // Generate src/index.tsx (standalone entry point with React bootstrap)
-  const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
-  const indexOutPath = path.join(basePath, 'src', 'index.tsx');
-  if (await fs.pathExists(indexTemplatePath)) {
-    // Build capability metadata for template
-    const capabilityMetadata = domainCapabilities.map((name) => {
-      // Find the capability config to get icon/displayName
-      const capEntry = manifest.capabilities.find((c) => Object.keys(c).includes(name));
-      const capConfig = capEntry?.[name];
-      return {
-        className: name,
-        displayName: (capConfig as any)?.displayName || name,
-        icon: (capConfig as any)?.icon || '📦',
-      };
-    });
+    // Generate src/index.tsx (standalone entry point with React bootstrap)
+    const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
+    const indexOutPath = path.join(basePath, 'src', 'index.tsx');
+    if (await fs.pathExists(indexTemplatePath)) {
+      // Build capability metadata for template
+      const capabilityMetadata = domainCapabilities.map((name) => {
+        // Find the capability config to get icon/displayName
+        const capEntry = manifest.capabilities.find((c) => Object.keys(c).includes(name));
+        const capConfig = capEntry?.[name];
+        return {
+          className: name,
+          displayName: (capConfig as any)?.displayName || name,
+          icon: (capConfig as any)?.icon || '📦',
+        };
+      });
 
-    const indexContent = await renderTemplate(indexTemplatePath, {
-      ...vars,
-      capabilities: capabilityMetadata,
-    });
-    files.push({
-      path: indexOutPath,
-      content: indexContent,
-      overwrite: false, // user-owned: standalone dev entry, not regenerated
-    });
-  } else {
-    // Diagnostic: warn if index.tsx template missing
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
-    );
+      const indexContent = await renderTemplate(indexTemplatePath, {
+        ...vars,
+        capabilities: capabilityMetadata,
+      });
+      files.push({
+        path: indexOutPath,
+        content: indexContent,
+        overwrite: false, // user-owned: standalone dev entry, not regenerated
+      });
+    } else {
+      // Diagnostic: warn if index.tsx template missing
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
+      );
+    }
   }
 
   // --- Public assets ---

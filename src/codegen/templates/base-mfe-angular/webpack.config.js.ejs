@@ -1,0 +1,98 @@
+const path = require('path');
+const webpack = require('webpack');
+const { ModuleFederationPlugin } = require('webpack').container;
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { AngularWebpackPlugin } = require('@ngtools/webpack');
+
+/** @type {import('webpack').Configuration} */
+module.exports = {
+  entry: {
+    main: './src/bootstrap.ts',
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'auto',
+  },
+  resolve: {
+    extensions: ['.ts', '.js', '.json'],
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
+  },
+  devServer: {
+    port: <%= port %>,
+    host: '0.0.0.0',
+    hot: true,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/static',
+    },
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        loader: '@ngtools/webpack',
+      },
+      {
+        test: /\.html$/,
+        type: 'asset/source',
+      },
+      {
+        test: /\.css$/,
+        type: 'asset/source',
+      },
+    ],
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+    new AngularWebpackPlugin({
+      tsconfig: path.resolve(__dirname, 'tsconfig.app.json'),
+      directTemplateLoading: false,
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, 'public/index.html'),
+      inject: true,
+      publicPath: '/',
+    }),
+    new ModuleFederationPlugin({
+      name: '<%= name.replace(/-/g, "_") %>',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './Component': './src/remote.ts',
+      },
+      shared: {
+        '@angular/core': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '^17.0.0',
+        },
+        '@angular/common': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '^17.0.0',
+        },
+        '@angular/platform-browser': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '^17.0.0',
+        },
+        rxjs: {
+          singleton: true,
+          requiredVersion: '^7.8.0',
+        },
+        'zone.js': {
+          singleton: true,
+          eager: true,
+          requiredVersion: '~0.14.0',
+        },
+      },
+    }),
+  ],
+};

@@ -1,0 +1,3 @@
+// Module Federation async-bootstrap: deferring the import lets webpack
+// negotiate shared deps (Angular singletons, zone.js) before main.ts runs.
+import('./main');
