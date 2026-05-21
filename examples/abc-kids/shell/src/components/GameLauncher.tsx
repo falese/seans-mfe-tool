@@ -1,28 +1,77 @@
-import React, { Suspense } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { GameMeta } from '../App';
-
-const FlappyApp = React.lazy(() => import('abcKidsFlappy/App'));
-const HockeyApp = React.lazy(() => import('abcKidsHockey/App'));
 
 interface GameLauncherProps {
   game: GameMeta;
   onClose: () => void;
 }
 
-function RemoteGame({ id }: { id: string }) {
-  if (id === 'flappy') return <FlappyApp capability="PlayGame" />;
-  if (id === 'hockey') return <HockeyApp capability="PlayGame" />;
-  return null;
-}
-
 const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
-  React.useEffect(() => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const containerId = `mfe-game-${game.id}`;
+
+  // Escape key handler
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  // MFE render lifecycle
+  useEffect(() => {
+    let cancelled = false;
+    let mfeInstance: { unmount?: (id: string) => void } | null = null;
+
+    (async () => {
+      try {
+        setIsLoading(true);
+        setRenderError(null);
+
+        const remote = game.id === 'flappy'
+          ? await import('abcKidsFlappy/App')
+          : await import('abcKidsHockey/App');
+
+        const { mfe, mfeReady } = remote;
+        mfeInstance = mfe;
+
+        // Wait for mfe.load() (started in bootstrap) to complete
+        await mfeReady;
+
+        if (cancelled) return;
+
+        // Re-entry guard: if load failed or another render is in progress, bail
+        if (mfe.getState() !== 'ready') {
+          throw new Error(`MFE not ready — state: ${mfe.getState()}`);
+        }
+
+        await mfe.render({
+          requestId: `render-${game.id}-${Date.now()}`,
+          timestamp: new Date(),
+          inputs: {
+            component: 'PlayGame',
+            containerId,
+          },
+        });
+
+        if (!cancelled) setIsLoading(false);
+      } catch (err) {
+        if (!cancelled) {
+          console.error(`[GameLauncher] Failed to render ${game.id}:`, err);
+          setRenderError((err as Error).message);
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      mfeInstance?.unmount?.(containerId);
+    };
+  }, [game.id, containerId]);
 
   return (
     <Box
@@ -69,17 +118,25 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
         </Box>
 
         {/* Game body */}
-        <Box sx={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
-          <Suspense
-            fallback={
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
-                <CircularProgress sx={{ color: '#FFD700' }} size={56} />
-                <Typography sx={{ color: '#aaa' }}>Loading {game.title}…</Typography>
-              </Box>
-            }
-          >
-            <RemoteGame id={game.id} />
-          </Suspense>
+        <Box sx={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1, position: 'relative' }}>
+          {isLoading && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
+              <CircularProgress sx={{ color: '#FFD700' }} size={56} />
+              <Typography sx={{ color: '#aaa' }}>Loading {game.title}…</Typography>
+            </Box>
+          )}
+          {renderError && !isLoading && (
+            <Box sx={{ p: 3 }}>
+              <Typography sx={{ color: '#FF6B6B' }}>Failed to load {game.title}</Typography>
+              <Typography sx={{ color: '#aaa', fontSize: 12, mt: 1 }}>{renderError}</Typography>
+            </Box>
+          )}
+          {/* MFE mounts React into this div via mfe.render() */}
+          <div
+            id={containerId}
+            ref={containerRef}
+            style={{ width: '100%', height: '100%', display: isLoading || renderError ? 'none' : 'block' }}
+          />
         </Box>
       </Box>
     </Box>
