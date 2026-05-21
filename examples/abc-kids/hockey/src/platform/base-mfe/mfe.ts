@@ -112,6 +112,35 @@ export class abckidshockeyMFE extends RemoteMFE {
   // ---------------------------------------------------------------------------
 
   /**
+   * loadDomainComponent
+   * @description Resolves a domain capability name to its React component.
+   * Called by RemoteMFE.doRender() — do not call directly.
+   * @generated Direct imports bypass the Module Federation container API.
+   */
+  protected async loadDomainComponent(name: string): Promise<any> {
+    switch (name) {
+
+      case 'PlayGame':
+        return import('../../features/PlayGame/PlayGame').then(
+          (m: any) => m['PlayGame'] ?? m.default
+        );
+
+      case 'ShowCover':
+        return import('../../features/ShowCover/ShowCover').then(
+          (m: any) => m['ShowCover'] ?? m.default
+        );
+
+      case 'GetGameInfo':
+        return import('../../features/GetGameInfo/GetGameInfo').then(
+          (m: any) => m['GetGameInfo'] ?? m.default
+        );
+
+      default:
+        throw new Error(`[abckidshockeyMFE] loadDomainComponent: unknown component "${name}"`);
+    }
+  }
+
+  /**
    * PlayGame
    * @description Play the Ice Hockey game on an HTML5 Canvas
    * @generated Stub — replace with your domain implementation.

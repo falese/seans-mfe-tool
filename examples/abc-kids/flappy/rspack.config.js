@@ -13,18 +13,11 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    // Ensure react/react-dom resolve from the app's node_modules when rspack
-    // processes files in /src/runtime/ (which has no node_modules of its own).
+    // @seans-mfe-tool/runtime is resolved as a workspace dependency via the
+    // monorepo's npm workspaces (declared at the repo root). rspack walks up
+    // node_modules and picks it up via the symlink created on `npm install`.
+    // node_modules order: app-local first, then upward (workspace root).
     modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
-    alias: {
-      // Resolve the platform runtime from its source during development.
-      // In production, publish @seans-mfe-tool/runtime to npm and remove this alias.
-      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../src/runtime/index.ts'),
-      // Stub Node-only packages that the runtime imports at the top level
-      // but are never actually executed in the browser code path.
-      'jsonwebtoken': path.resolve(__dirname, 'src/platform/stubs/empty.js'),
-      'crypto': path.resolve(__dirname, 'src/platform/stubs/crypto.js'),
-    },
   },
   devServer: {
     port: 3001,
