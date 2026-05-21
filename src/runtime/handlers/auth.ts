@@ -1,10 +1,14 @@
 
 import { Context } from '../base-mfe';
-import jwt from 'jsonwebtoken';
 
 /**
  * Validates JWT in context and sets context.user
  * Emits telemetry events for success/failure
+ *
+ * `jsonwebtoken` is loaded dynamically so it stays out of any browser bundle
+ * that imports the runtime package — validation only ever runs server-side
+ * (BFF handler) where the dynamic require is satisfied by Node.
+ *
  * @param context - request context
  * @throws Error if JWT is missing, invalid, or secret is not set
  */
@@ -39,6 +43,18 @@ export async function validateJWT(context: Context): Promise<void> {
     throw new Error('JWT secret missing');
   }
   try {
+    // Lazy require — keeps `jsonwebtoken` (and its `jws`/`crypto`/`stream`
+    // transitive deps) out of the browser bundle. validateJWT only runs
+    // server-side; the require is satisfied by Node (and by Jest, which is
+    // CommonJS-based) at runtime.
+    //
+    // Direct `eval` (not indirect `(0, eval)`) preserves the CommonJS
+    // closure so `require` is in scope under both Node and Jest. The eval
+    // string defeats rspack/webpack static analysis, so the bundler never
+    // walks the jsonwebtoken module graph (which would pull in stream/util/
+    // buffer/crypto and require browser stubs to compile).
+    // eslint-disable-next-line no-eval
+    const jwt = eval('require')('jsonwebtoken');
     const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
     context.user = decoded;
     if (emit) {

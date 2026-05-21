@@ -1,15 +1,16 @@
-const path = require('path');
 const rspack = require('@rspack/core');
 const { ModuleFederationPlugin } = rspack.container;
+const path = require('path');
 
 module.exports = {
   entry: './src/index.tsx',
   output: { path: path.resolve(__dirname, 'dist'), publicPath: 'http://localhost:3000/' },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    alias: {
-      '@seans-mfe-tool/runtime': path.resolve(__dirname, '../../../src/runtime/index.ts'),
-    },
+    // @seans-mfe-tool/runtime resolves via npm workspaces (declared in repo-root
+    // package.json). rspack walks up node_modules and picks up the workspace
+    // symlink.
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
   },
   module: {
     rules: [{ test: /\.(ts|tsx)$/, use: 'builtin:swc-loader' }],
