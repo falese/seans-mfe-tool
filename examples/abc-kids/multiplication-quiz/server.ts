@@ -8,7 +8,6 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-import { createBuiltMeshHTTPHandler } from './.mesh';
 import type { Request, Response, NextFunction, Express } from 'express';
 import crypto from 'crypto';
 
@@ -48,33 +47,7 @@ app.get('/health', (req: express.Request, res: express.Response) => {
   });
 });
 
-// GraphQL BFF endpoint (Mesh v0.100.x)
-// Following REQ-BFF-003: JWT Authentication Forwarding
-// Following ADR-062: createBuiltMeshHTTPHandler pattern
-interface MeshContext {
-  jwt?: string;
-  requestId: string;
-  userId?: string;
-}
-
-const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
-
-// GraphQL endpoint with context injection
-// Mesh handler expects context in a specific format for @whatwg-node/server
-app.use('/graphql', (req: Request, res: Response) => {
-  // Create context object for Mesh
-  const context: MeshContext = {
-    jwt: req.headers.authorization?.replace('Bearer ', ''),
-    requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
-    userId: extractUserIdFromToken(req.headers.authorization as string),
-  };
-  
-  // Mesh handler from @whatwg-node/server expects Request/Response objects
-  // We need to pass context via the request object
-  const requestWithContext = Object.assign(req, { context });
-  
-  return meshHandler(requestWithContext as any, res as any, context);
-});
+// GraphQL BFF endpoint disabled — no data: section in mfe-manifest.yaml
 
 
 // Static MFE assets

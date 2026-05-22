@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"rspack serve\" \"npm run bff:dev\"",
     "start": "npm run dev",
-    "build": "seans-mfe-tool remote:generate && rspack build && mesh build",
+    "build": "seans-mfe-tool remote:generate && rspack build && (grep -q '^data:' mfe-manifest.yaml && mesh build || true)",
     "serve": "serve dist -p 3001",
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",
