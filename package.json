@@ -4,8 +4,7 @@
   "main": "bin/run.js",
   "workspaces": [
     "packages/*",
-    "src/runtime",
-    "examples/abc-kids/*"
+    "src/runtime"
   ],
   "scripts": {
     "build:packages": "tsc -b packages/contracts packages/oclif-base packages/bff-plugin",

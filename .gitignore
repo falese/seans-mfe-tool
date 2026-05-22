@@ -142,3 +142,9 @@ oclif.manifest.json
 /test-results/
 /blob-report/
 /playwright/.cache/
+
+# Angular build cache (per-project, not committed)
+.angular/
+
+# Example app dependencies — each example is a standalone project
+examples/**/node_modules/

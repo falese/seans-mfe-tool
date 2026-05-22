@@ -7,9 +7,9 @@ module.exports = {
   output: { path: path.resolve(__dirname, 'dist'), publicPath: 'http://localhost:3000/' },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    // @seans-mfe-tool/runtime resolves via npm workspaces (declared in repo-root
-    // package.json). rspack walks up node_modules and picks up the workspace
-    // symlink.
+    // @seans-mfe-tool/runtime is not imported by the shell directly.
+    // Each remote (flappy, hockey, multiplication-quiz) resolves it via a
+    // file: dep in their own node_modules.
     modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
   },
   module: {
@@ -33,6 +33,7 @@ module.exports = {
       remotes: {
         abcKidsFlappy: 'abc_kids_flappy@http://localhost:3001/remoteEntry.js',
         abcKidsHockey: 'abc_kids_hockey@http://localhost:3002/remoteEntry.js',
+        abcKidsMultiplicationQuiz: 'abc_kids_multiplication_quiz@http://localhost:3003/remoteEntry.js',
       },
       shared: {
         react:              { singleton: true, requiredVersion: '^18.2.0', eager: true },
@@ -40,6 +41,12 @@ module.exports = {
         '@mui/material':    { singleton: true, requiredVersion: '^5.14.0', eager: true },
         '@emotion/react':   { singleton: true, requiredVersion: '^11.11.1', eager: true },
         '@emotion/styled':  { singleton: true, requiredVersion: '^11.11.0', eager: true },
+        // Angular singletons — lazy (no eager:true) so shell bundle isn't
+        // bloated for React-only sessions; Angular only loads when an
+        // Angular remote is actually mounted.
+        '@angular/core':              { singleton: true, requiredVersion: '^17.0.0' },
+        '@angular/common':            { singleton: true, requiredVersion: '^17.0.0' },
+        '@angular/platform-browser':  { singleton: true, requiredVersion: '^17.0.0' },
       },
     }),
   ],

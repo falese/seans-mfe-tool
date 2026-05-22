@@ -163,3 +163,34 @@ jobs:
           name: perf-output
           path: /tmp/perf-output.log
           retention-days: 7
+
+  examples:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # broken examples must not block the tool's CI
+
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - { dir: examples/abc-kids/flappy,              install_flags: '' }
+          - { dir: examples/abc-kids/hockey,              install_flags: '' }
+          - { dir: examples/abc-kids/multiplication-quiz, install_flags: '--legacy-peer-deps' }
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Install tool workspace (for file: runtime dep)
+        run: npm ci
+
+      - name: Install example dependencies
+        run: npm install ${{ matrix.example.install_flags }}
+        working-directory: ${{ matrix.example.dir }}
+
+      - name: Build example
+        run: npm run build
+        working-directory: ${{ matrix.example.dir }}
