@@ -8,6 +8,7 @@
     "start": "npm run dev",
     "build": "seans-mfe-tool remote:generate && rspack build && mesh build",
     "serve": "serve dist -p <%= port %>",
+    "prebff:dev": "mesh build",
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",
     "test": "jest",

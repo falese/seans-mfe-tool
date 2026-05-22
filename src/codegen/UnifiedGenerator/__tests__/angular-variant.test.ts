@@ -120,6 +120,9 @@ describe('unified-generator angular-webpack variant', () => {
     expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
     expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
     expect(pkg!.content).toContain('"webpack"');
+    // prebff:dev builds the GraphQL Mesh artifacts so `npm run dev` works cold
+    // (server.ts imports ./.mesh, which only exists after `mesh build`).
+    expect(pkg!.content).toContain('"prebff:dev"');
     expect(pkg!.content).not.toContain('"@ngtools/webpack"');
     expect(pkg!.content).not.toContain('"react":');
     expect(pkg!.content).not.toContain('"@rspack/core"');
