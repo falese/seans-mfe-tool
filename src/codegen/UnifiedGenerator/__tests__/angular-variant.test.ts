@@ -115,6 +115,8 @@ describe('unified-generator angular-webpack variant', () => {
 
     expect(pkg).toBeDefined();
     expect(pkg!.content).toContain('"@angular/core"');
+    // Pinned so jest-preset-angular's peer resolves to Angular 17 (not 19+) — avoids ERESOLVE.
+    expect(pkg!.content).toContain('"@angular/platform-browser-dynamic"');
     expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
     expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
     expect(pkg!.content).toContain('"webpack"');
