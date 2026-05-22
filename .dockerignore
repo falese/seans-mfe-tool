@@ -1,0 +1,10 @@
+# Exclude lock files — they contain "link":true symlink entries for file: deps
+# that break npm 10 inside isolated containers.
+package-lock.json
+examples/**/package-lock.json
+
+# General exclusions
+node_modules
+coverage
+.git
+*.log
