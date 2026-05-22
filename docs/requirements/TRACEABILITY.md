@@ -10,6 +10,8 @@
 This project maintains complete traceability from requirements through implementation to verification. Every feature, enhancement, and bug fix can be traced through the following chain:
 
 ```
+Product Decision (PDR-NNN)
+    ↓
 Requirements Doc (REQ-XXX)
     ↓
 Architecture Decision (ADR-NNN)
@@ -28,6 +30,15 @@ Requirements Update (Implemented)
 ---
 
 ## Document Hierarchy
+
+### Product Decision Records (PDRs)
+
+Location: `docs/product-decisions/`
+
+PDRs record the *product-level* bet — what we build and why — that sits above the
+architecture. A single PDR is implemented by several ADRs/REQs. See
+[`docs/product-decisions/README.md`](../product-decisions/README.md) for the register and
+the PDR ↔ ADR mapping.
 
 ### Requirements Documents
 

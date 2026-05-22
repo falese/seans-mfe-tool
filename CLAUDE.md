@@ -78,6 +78,8 @@ Under `--json`, stdout emits exactly ONE line: a `CommandResult<T>` object. Ever
 | MCP server       | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts`                         |
 | Hooks            | `src/hooks/{init,prerun,postrun,command-not-found}.ts`                                   |
 | Plugin skeleton  | `examples/plugin-skeleton/`                                                              |
+| Product decisions (why) | `docs/product-decisions/` (PDRs + register)                                       |
+| ADR register (canonical numbering) | `docs/architecture-decisions/README.md`                                |
 
 ## Dev commands
 

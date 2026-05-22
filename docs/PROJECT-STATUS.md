@@ -140,6 +140,8 @@ See [`docs/requirements/deferred-backlog.md`](./requirements/deferred-backlog.md
 
 | I want to...                                         | Go to                                                                                                   |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Understand *why* the platform is built this way      | [`docs/product-decisions/`](./product-decisions/README.md) (PDRs)                                       |
+| Find an architecture decision (ADR-NNN)              | [`docs/architecture-decisions/README.md`](./architecture-decisions/README.md) (register)                |
 | Understand the CLI/oclif migration that just shipped | [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)                               |
 | Work on the runtime platform                         | [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md) + `packages/runtime/`     |
 | Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-063–067 |
