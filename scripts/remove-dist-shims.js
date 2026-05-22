@@ -20,7 +20,7 @@ const path = require('path')
 const DIST_COMMANDS = path.join(__dirname, '..', 'dist', 'commands')
 
 /** Shim base names (without extension) — files that have a matching subdirectory */
-const SHIMS = ['bff', 'create-api', 'remote-generate', 'remote-init']
+const SHIMS = ['bff', 'create-api', 'remote-generate', 'remote-init', 'remote-init-angular']
 
 for (const name of SHIMS) {
   for (const ext of ['.js', '.d.ts', '.d.ts.map', '.js.map']) {
