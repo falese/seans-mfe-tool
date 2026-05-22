@@ -54,7 +54,7 @@ export class <%= className %> extends AngularRemoteMFE {
     if (result.status === 'loaded') {
       console.log('[<%= className %>][doLoad] ready — components=%o duration=%dms', result.availableComponents, result.duration);
     } else {
-      console.error('[<%= className %>][doLoad] failed — status=%s error=%s', result.status, result.error?.message);
+      console.error('[<%= className %>][doLoad] failed — status=%s error=%s', result.status, (result.error as Error | undefined)?.message);
     }
     return result;
   }
