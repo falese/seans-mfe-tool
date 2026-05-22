@@ -2,24 +2,15 @@
 # Angular/webpack MFE + BFF
 # Build context: repo root (needed to include src/runtime/ source)
 
-# ── Stage 1: Install seans-mfe-tool CLI ──────────────────────────────────────
-# scripts/generate-mfe.js uses ts-node --transpileOnly, so we only need
-# npm install here — no tsc, no workspace packages required.
-FROM node:20-slim AS cli-builder
-
-WORKDIR /seans-mfe-tool
-COPY package*.json ./
-COPY tsconfig.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
-COPY src/ ./src/
-COPY packages/ ./packages/
-COPY scripts/ ./scripts/
+# ── Stage 1: CLI image (pre-built separately via Dockerfile.cli) ──────────────
+FROM seans-mfe-tool-cli:latest AS cli-builder
 
 # ── Stage 2: Build the MFE ───────────────────────────────────────────────────
 FROM node:20-slim AS builder
 
 COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
-ENV SEANS_MFE_SCRIPT=/seans-mfe-tool/scripts/generate-mfe.js
+RUN chmod +x /seans-mfe-tool/bin/run.js && \
+    ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 WORKDIR /app
 
@@ -27,14 +18,16 @@ WORKDIR /app
 COPY src/runtime/ /src/runtime/
 
 # Angular 17 peer deps require --legacy-peer-deps
-COPY examples/abc-kids/multiplication-quiz/package*.json ./
-RUN npm install --legacy-peer-deps --prefer-offline --no-audit --no-fund
+# Copy only package.json — the lock file contains a "link":true symlink entry
+# for @seans-mfe-tool/runtime that triggers an npm 10 bug with --legacy-peer-deps.
+COPY examples/abc-kids/multiplication-quiz/package.json ./
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # Copy source
 COPY examples/abc-kids/multiplication-quiz/ .
 
-# Regenerate platform code from mfe-manifest.yaml, build Angular bundle + Mesh
-RUN node $SEANS_MFE_SCRIPT
+# Regenerate platform code from mfe-manifest.yaml, then build Angular bundle + Mesh
+RUN seans-mfe-tool remote:generate
 RUN npm run build
 
 # Compile server.ts → server.js for production runtime
@@ -48,7 +41,7 @@ WORKDIR /app
 # Runtime source needed for file:../../../src/runtime dep in production install
 COPY src/runtime/ /src/runtime/
 COPY --from=builder /app/package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev --prefer-offline --no-audit --no-fund
+RUN npm install --legacy-peer-deps --omit=dev --no-audit --no-fund
 
 COPY --from=builder /app/.mesh ./.mesh
 COPY --from=builder /app/dist ./dist

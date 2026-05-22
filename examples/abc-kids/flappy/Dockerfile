@@ -2,25 +2,16 @@
 # Static MFE — build with rspack, serve with nginx
 # Build context: repo root (needed to include src/runtime/ source)
 
-# ── Stage 1: Install seans-mfe-tool CLI ──────────────────────────────────────
-# scripts/generate-mfe.js uses ts-node --transpileOnly, so we only need
-# npm install here — no tsc, no workspace packages required.
-FROM node:20-alpine AS cli-builder
-
-WORKDIR /seans-mfe-tool
-COPY package*.json ./
-COPY tsconfig.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
-COPY src/ ./src/
-COPY packages/ ./packages/
-COPY scripts/ ./scripts/
+# ── Stage 1: CLI image (pre-built separately via Dockerfile.cli) ──────────────
+FROM seans-mfe-tool-cli:latest AS cli-builder
 
 # ── Stage 2: Build the MFE ───────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
-# Bring the CLI source across; set env so npm run generate finds the script
+# Bring the CLI source across and wire the binary into PATH directly
 COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
-ENV SEANS_MFE_SCRIPT=/seans-mfe-tool/scripts/generate-mfe.js
+RUN chmod +x /seans-mfe-tool/bin/run.js && \
+    ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 WORKDIR /app
 
@@ -28,8 +19,10 @@ WORKDIR /app
 COPY src/runtime/ /src/runtime/
 
 # Install MFE dependencies
-COPY examples/abc-kids/flappy/package*.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
+# Copy only package.json — lock file has "link":true for @seans-mfe-tool/runtime
+# which triggers an npm 10 bug ("extraneous" read on undefined).
+COPY examples/abc-kids/flappy/package.json ./
+RUN npm install --no-audit --no-fund
 
 # Copy flappy source
 COPY examples/abc-kids/flappy/ .
