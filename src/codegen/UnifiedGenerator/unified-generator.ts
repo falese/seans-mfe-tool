@@ -778,9 +778,14 @@ export async function generateAllFiles(
   // `Dockerfile`, `docker-compose.yaml`, `README.md`) flip to `overwrite: false`
   // so user customization survives regeneration, matching the same convention
   // used by other root templates further down (`package.json`, `rspack.config.js`).
+  // Angular-webpack emits its own tsconfig.json (with experimentalDecorators,
+  // angularCompilerOptions, etc.) in the root templates block below. Skip the
+  // BFF tsconfig for that variant so the Angular-specific one wins.
   const bffTemplates: Array<{ tpl: string; out: string; overwrite: boolean }> = [
     { tpl: 'server.ts.ejs', out: 'server.ts', overwrite: true },
-    { tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false },
+    ...(templateVariant !== 'angular-webpack'
+      ? [{ tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false }]
+      : []),
     { tpl: 'Dockerfile.ejs', out: 'Dockerfile', overwrite: false },
     { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml', overwrite: false },
     { tpl: 'README.md.ejs', out: 'README.md', overwrite: false },

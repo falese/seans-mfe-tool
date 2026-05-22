@@ -47,6 +47,15 @@ describe('unified-generator angular-webpack variant', () => {
     expect(paths).not.toContain(path.join(basePath, 'rspack.config.js'));
   });
 
+  it('emits an Angular-aware tsconfig.json (not the BFF/React one)', async () => {
+    const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
+    const tsconfig = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
+    expect(tsconfig).toBeDefined();
+    expect(tsconfig!.content).toContain('experimentalDecorators');
+    expect(tsconfig!.content).toContain('angularCompilerOptions');
+    expect(tsconfig!.content).not.toContain('react-jsx');
+  });
+
   it('emits Angular entry files instead of App.tsx / index.tsx', async () => {
     const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const paths = files.map((f) => f.path);
