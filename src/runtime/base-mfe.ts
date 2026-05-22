@@ -418,7 +418,7 @@ export abstract class BaseMFE {
         return;
       }
       // Fallback: invoke as method on subclass
-      await this.invokeCustomHandler(lastSegment, context);
+      await this.invokeCustomHandler(lastSegment!, context);
     }
   }
   
