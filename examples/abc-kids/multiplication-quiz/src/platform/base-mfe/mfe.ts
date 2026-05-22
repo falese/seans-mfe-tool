@@ -41,7 +41,7 @@ export class abckidsmultiplicationquizMFE extends AngularRemoteMFE {
   // Platform Capability Overrides (optional — call super() to preserve base behaviour)
   // ---------------------------------------------------------------------------
 
-  protected async doLoad(context: Context): Promise<LoadResult> {
+  protected override async doLoad(context: Context): Promise<LoadResult> {
     console.log('[abckidsmultiplicationquizMFE][doLoad] loading remoteEntry=%s', context.inputs?.remoteEntry ?? '<from manifest>');
     const result = await super.doLoad(context);
     if (result.status === 'loaded') {
@@ -52,7 +52,7 @@ export class abckidsmultiplicationquizMFE extends AngularRemoteMFE {
     return result;
   }
 
-  protected async doRender(context: Context): Promise<RenderResult> {
+  protected override async doRender(context: Context): Promise<RenderResult> {
     console.log('[abckidsmultiplicationquizMFE][doRender] rendering component=%s containerId=%s', context.inputs?.component ?? '<auto>', context.inputs?.containerId ?? '<auto>');
     const result = await super.doRender(context);
     console.log('[abckidsmultiplicationquizMFE][doRender] result=%s duration=%dms', result.status, result.duration);
@@ -68,7 +68,7 @@ export class abckidsmultiplicationquizMFE extends AngularRemoteMFE {
    * @description Resolves a domain capability name to its Angular standalone component.
    * Called by AngularRemoteMFE.doRender() — do not call directly.
    */
-  protected async loadDomainComponent(name: string): Promise<any> {
+  protected override async loadDomainComponent(name: string): Promise<any> {
     switch (name) {
 
       case 'PlayGame':
