@@ -11,6 +11,7 @@
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",
     "test": "jest",
+    "build:server": "tsc server.ts --module commonjs --target ES2020 --esModuleInterop true --skipLibCheck true --moduleResolution node --outDir .",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {

@@ -25,6 +25,19 @@ services:
       retries: 5
       start_period: 15s
 
+  abc-kids-multiplication-quiz:
+    build:
+      context: ../.. 
+      dockerfile: examples/abc-kids/multiplication-quiz/Dockerfile
+    ports:
+      - '3003:3003'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3003/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   abc-kids-shell:
     build:
       context: ./shell
@@ -35,4 +48,6 @@ services:
       abc-kids-flappy:
         condition: service_healthy
       abc-kids-hockey:
+        condition: service_healthy
+      abc-kids-multiplication-quiz:
         condition: service_healthy

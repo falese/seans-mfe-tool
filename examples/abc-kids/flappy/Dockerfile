@@ -24,17 +24,15 @@ ENV SEANS_MFE_SCRIPT=/seans-mfe-tool/scripts/generate-mfe.js
 
 WORKDIR /app
 
+# Copy runtime source BEFORE npm install so file:../../../src/runtime resolves
+COPY src/runtime/ /src/runtime/
+
 # Install MFE dependencies
 COPY examples/abc-kids/flappy/package*.json ./
-# Copy dist/runtime before npm install so the file:../../dist/runtime dep resolves
-COPY dist/runtime/ /dist/runtime/
 RUN npm install --prefer-offline --no-audit --no-fund
 
 # Copy flappy source
 COPY examples/abc-kids/flappy/ .
-
-# Copy runtime source (resolved via @seans-mfe-tool/runtime alias in rspack.config.js)
-COPY src/runtime/ /src/runtime/
 
 # remote:generate regenerates src/platform/base-mfe/mfe.ts from mfe-manifest.yaml,
 # then rspack bundles the result
