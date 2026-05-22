@@ -26,11 +26,3 @@ declare module 'abcKidsHockey/App' {
   export const mfe: RemoteMFEInstance;
   export const mfeReady: Promise<void>;
 }
-
-declare module 'abcKidsMultiplicationQuiz/Component' {
-  export const PlayGameComponent: any;
-  export const ShowCoverComponent: any;
-  export const GetGameInfoComponent: any;
-  export const mfe: RemoteMFEInstance;
-  export const mfeReady: Promise<void>;
-}

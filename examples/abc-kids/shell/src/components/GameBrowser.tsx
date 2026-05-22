@@ -27,16 +27,6 @@ const GAMES: GameMeta[] = [
     categories: ['Fun'],
     color: '#00CFFF',
   },
-  {
-    id: 'multiplication-quiz',
-    title: 'Multiplication Quiz',
-    emoji: '🐱✖️🐶',
-    coverBg: 'linear-gradient(135deg, #FF6B6B 0%, #FFD700 100%)',
-    desc: 'Whiskers the Cat and Barkley the Dog quiz you on multiplication!',
-    ageMin: 5, ageMax: 10,
-    categories: ['Math'],
-    color: '#FF6B6B',
-  },
 ];
 
 const GRADES = ['All Ages', 'PreK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
