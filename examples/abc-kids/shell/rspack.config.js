@@ -33,6 +33,7 @@ module.exports = {
       remotes: {
         abcKidsFlappy: 'abc_kids_flappy@http://localhost:3001/remoteEntry.js',
         abcKidsHockey: 'abc_kids_hockey@http://localhost:3002/remoteEntry.js',
+        abcKidsMultiplicationQuiz: 'abc_kids_multiplication_quiz@http://localhost:3003/remoteEntry.js',
       },
       shared: {
         react:              { singleton: true, requiredVersion: '^18.2.0', eager: true },
