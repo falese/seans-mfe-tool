@@ -29,6 +29,14 @@ export const LanguageSchema = z.enum([
 ]);
 export type Language = z.infer<typeof LanguageSchema>;
 
+/** Supported UI frameworks (omit ⇒ react). */
+export const FrameworkSchema = z.enum(['react', 'angular']);
+export type Framework = z.infer<typeof FrameworkSchema>;
+
+/** Supported bundlers (omit ⇒ rspack). */
+export const BundlerSchema = z.enum(['rspack', 'webpack']);
+export type Bundler = z.infer<typeof BundlerSchema>;
+
 /** Capability type discrimination */
 export const CapabilityTypeSchema = z.enum(['platform', 'domain']);
 export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
@@ -359,7 +367,12 @@ export const DSLManifestSchema = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+/, 'Version must be semver (e.g., 1.0.0)'),
   type: MFETypeSchema,
   language: LanguageSchema,
-  
+
+  // UI framework + bundler (omit ⇒ react + rspack for back-compat).
+  // Drives codegen template variant selection in UnifiedGenerator.
+  framework: FrameworkSchema.optional(),
+  bundler: BundlerSchema.optional(),
+
   // Optional identity
   description: z.string().optional(),
   owner: z.string().optional(),

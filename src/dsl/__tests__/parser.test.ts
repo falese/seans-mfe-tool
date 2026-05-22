@@ -416,6 +416,35 @@ capabilities: []
       expect(manifest.type).toBe('shell');
       expect(manifest.language).toBe('javascript');
     });
+
+    it('should default to react/rspack (omitted framework + bundler)', () => {
+      const manifest = createMinimalManifest('my-remote');
+      expect(manifest.framework).toBeUndefined();
+      expect(manifest.bundler).toBeUndefined();
+      expect(manifest.dependencies?.runtime?.react).toBeDefined();
+    });
+
+    it('should produce an angular/webpack manifest when framework=angular', () => {
+      const manifest = createMinimalManifest('my-ng', {
+        framework: 'angular',
+        bundler: 'webpack'
+      });
+
+      expect(manifest.framework).toBe('angular');
+      expect(manifest.bundler).toBe('webpack');
+      expect(manifest.dependencies?.runtime?.['@angular/core']).toBeDefined();
+      expect(manifest.dependencies?.runtime?.react).toBeUndefined();
+    });
+
+    it('should normalize the trio when only bundler=webpack is given', () => {
+      const manifest = createMinimalManifest('my-ng', { bundler: 'webpack' });
+
+      // bundler:webpack implies the angular variant — both fields normalized.
+      expect(manifest.framework).toBe('angular');
+      expect(manifest.bundler).toBe('webpack');
+      expect(manifest.dependencies?.runtime?.['@angular/core']).toBeDefined();
+      expect(manifest.dependencies?.runtime?.react).toBeUndefined();
+    });
   });
 
   describe('addCapability', () => {

@@ -267,26 +267,51 @@ export function createMinimalManifest(
   options: {
     type?: DSLManifest['type'];
     language?: DSLManifest['language'];
+    framework?: DSLManifest['framework'];
+    bundler?: DSLManifest['bundler'];
     description?: string;
   } = {}
 ): DSLManifest {
-  return {
+  // Treat bundler:'webpack' as selecting Angular too, matching UnifiedGenerator's
+  // variant logic so the seeded deps never disagree with the generated output.
+  const isAngular = options.framework === 'angular' || options.bundler === 'webpack';
+  const manifest: DSLManifest = {
     name,
     version: '1.0.0',
     type: options.type || 'remote',
     language: options.language || 'typescript',
     description: options.description || '',
     capabilities: [],
-    dependencies: {
-      runtime: {
-        'react': '^18.0.0',
-        'react-dom': '^18.0.0'
-      },
-      'design-system': {
-        '@mui/material': '^5.14.0'
-      }
-    }
+    dependencies: isAngular
+      ? {
+          runtime: {
+            '@angular/core': '^17.0.0',
+            '@angular/common': '^17.0.0',
+            '@angular/platform-browser': '^17.0.0',
+            'rxjs': '^7.8.0',
+            'zone.js': '~0.14.0'
+          }
+        }
+      : {
+          runtime: {
+            'react': '^18.0.0',
+            'react-dom': '^18.0.0'
+          },
+          'design-system': {
+            '@mui/material': '^5.14.0'
+          }
+        }
   };
+  // Normalize the trio: if either field opts into Angular, write both so the
+  // manifest is internally consistent with the seeded deps and codegen variant.
+  if (isAngular) {
+    manifest.framework = 'angular';
+    manifest.bundler = 'webpack';
+  } else {
+    if (options.framework) manifest.framework = options.framework;
+    if (options.bundler) manifest.bundler = options.bundler;
+  }
+  return manifest;
 }
 
 /**

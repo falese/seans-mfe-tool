@@ -8,7 +8,8 @@
     "examples/abc-kids/*"
   ],
   "scripts": {
-    "build": "tsc && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
+    "build:packages": "tsc -b packages/contracts packages/oclif-base packages/bff-plugin",
+    "build": "npm run build:packages && tsc -p tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
     "build:watch": "tsc --watch",

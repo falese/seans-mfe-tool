@@ -22,9 +22,10 @@ export async function sanitizeInputs(context: Context): Promise<void> {
   // Example: sanitize string inputs
   if (context.inputs) {
     for (const key of Object.keys(context.inputs)) {
-      if (typeof context.inputs[key] === 'string') {
+      const val = context.inputs[key];
+      if (typeof val === 'string') {
         // Simple XSS prevention
-        context.inputs[key] = context.inputs[key].replace(/[<>]/g, '');
+        context.inputs[key] = val.replace(/[<>]/g, '');
       }
     }
   }
