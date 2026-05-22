@@ -103,15 +103,18 @@ export const DEPENDENCY_VERSIONS = {
   // Angular CLI builder toolchain (angular-webpack variant).
   // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
   // merges the Module Federation partial (webpack.config.js).
+  // @angular-architects/module-federation provides withModuleFederationPlugin,
+  // which resolves ModuleFederationPlugin from Angular's bundled webpack —
+  // avoiding the "tap" crash caused by two separate webpack instances.
   angularBuild: {
     cli: '^17.0.0',
     buildAngular: '^17.0.0',
     customWebpack: '^17.0.0',
+    moduleFederation: '^17.0.0',
   },
 
-  // Direct webpack (for the Module Federation plugin import) + jest preset.
+  // Jest preset (standalone webpack removed — use Angular's bundled copy).
   webpackTools: {
-    webpack: '^5.89.0',
     jestPresetAngular: '^14.0.0',
   },
 };
