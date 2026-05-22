@@ -412,6 +412,14 @@ export function extractManifestVars(manifest: DSLManifest) {
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
 
+    // Codegen variant selection (react-rspack default; angular-webpack opt-in).
+    // Exposed to templates and read back by generateAllFiles for dir/extension switching.
+    framework: (manifest.framework ?? 'react') as 'react' | 'angular',
+    bundler: (manifest.bundler ?? 'rspack') as 'rspack' | 'webpack',
+    templateVariant: (manifest.framework === 'angular' || manifest.bundler === 'webpack'
+      ? 'angular-webpack'
+      : 'react-rspack') as 'react-rspack' | 'angular-webpack',
+
     // NEW: Dependency versions for templates (ADR-062)
     dependencyVersions: DEPENDENCY_VERSIONS,
 
@@ -581,17 +589,10 @@ export async function generateAllFiles(
   vars.capabilities = capabilities;
   vars.lifecycleHooks = lifecycleHooks;
 
-  // Codegen template variant selection.
+  // Codegen template variant selection (computed in extractManifestVars).
   // Manifest.framework + manifest.bundler pick the directory and per-file
   // extensions. Omitted ⇒ React + rspack (back-compat with all existing MFEs).
-  const isAngularWebpack =
-    manifest.framework === 'angular' || manifest.bundler === 'webpack';
-  const templateVariant: 'react-rspack' | 'angular-webpack' = isAngularWebpack
-    ? 'angular-webpack'
-    : 'react-rspack';
-  vars.framework = manifest.framework ?? 'react';
-  vars.bundler = manifest.bundler ?? 'rspack';
-  vars.templateVariant = templateVariant;
+  const templateVariant = vars.templateVariant;
 
   // Standardized template directory
   const templateDir = path.resolve(
