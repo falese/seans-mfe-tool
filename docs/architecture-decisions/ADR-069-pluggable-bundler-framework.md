@@ -28,7 +28,7 @@ A new requirement landed: scaffold an Angular 17+ standalone-component remote MF
 2. **`UnifiedGenerator` selects a `templateVariant`** from the manifest. The variant chooses:
    - the **template directory** (`src/codegen/templates/base-mfe` for react-rspack; `src/codegen/templates/base-mfe-angular` for angular-webpack),
    - the **root template list** (`rspack.config.js` vs `webpack.config.js` + `tsconfig.json` + `tsconfig.app.json`),
-   - the **entry-file block** (`App.tsx` + `index.tsx` vs `src/main.ts` + `src/bootstrap.ts` + `src/polyfills.ts` + `src/app/app.component.ts`),
+   - the **entry-file block** (`App.tsx` + `index.tsx` vs `src/main.ts` + `src/bootstrap.ts` + `src/app/app.component.ts`),
    - the **feature file extensions** (`.tsx`/`.test.tsx` vs `.component.ts`/`.component.spec.ts`),
    - and the **MF expose target** (`src/remote.tsx` vs `src/remote.ts`).
 
@@ -46,9 +46,13 @@ A new requirement landed: scaffold an Angular 17+ standalone-component remote MF
 
 Extracting a shared `FederatedRemoteMFE` base from `RemoteMFE` would reduce duplication of `extractAvailableComponents`/`extractCapabilities`/`fetchContainer` (~80 lines). The trade-off is dragging Module Federation lifecycle assumptions across both subclasses and making future framework variants (Vue, Svelte) have to fit a contract derived from today's two implementations. The duplicated helpers are small, stable, and framework-agnostic — easier to evolve them in place if a third framework arrives than to refactor an over-fitted base.
 
+## Why the Angular CLI builder owns the build (`@angular-builders/custom-webpack`)
+
+The first cut hand-rolled the entire webpack config and drove AOT through `@ngtools/webpack`'s `AngularWebpackPlugin`. That's production-correct but extremely fiddly to boot outside the Angular CLI — version-matched `@angular/compiler-cli`, exact tsconfig shape, AOT template handling, polyfills wiring — and a generated scaffold that won't `npm run dev` on the first try is worse than useless. We switched to letting the Angular CLI builder own AOT, the dev server, HMR, and asset handling via `@angular-builders/custom-webpack:browser` / `:dev-server`, configured through a generated `angular.json`.
+
 ## Why native webpack `ModuleFederationPlugin` (not `@angular-architects/module-federation`)
 
-`@angular-architects/module-federation` wraps webpack with Angular-aware defaults (zone.js singleton, `@angular/*` singletons). Convenient, but it adds a fourth-party dep that has its own release cadence and opinions, and the wrapper has historically lagged Angular major versions by weeks. Native `ModuleFederationPlugin` from `webpack.container` gives us full control over the `shared` block (we declare the Angular singletons explicitly in `webpack.config.js.ejs`), and matches the structure of our existing rspack config 1:1. ADR-069 explicitly leaves the wrapper out so future maintainers don't have to think about both paths.
+We still avoid the `@angular-architects/module-federation` wrapper. `@angular-builders/custom-webpack` merges a small `webpack.config.js` **partial** into the CLI's webpack config, and that partial declares the native `ModuleFederationPlugin` from `webpack.container` directly — with the `shared` block (Angular singletons, `strictVersion`) and `optimization.runtimeChunk: false` (mandatory for MF) under our control. This keeps the "no fourth-party MF wrapper" decision while still getting a batteries-included Angular toolchain. zone.js loads via the CLI's `polyfills` array in `angular.json` rather than a hand-written `src/polyfills.ts`.
 
 ## Why no NgModules
 

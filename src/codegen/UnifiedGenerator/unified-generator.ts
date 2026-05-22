@@ -95,17 +95,23 @@ export const DEPENDENCY_VERSIONS = {
     compiler: '^17.0.0',
     compilerCli: '^17.0.0',
     platformBrowser: '^17.0.0',
+    forms: '^17.0.0',
     rxjs: '^7.8.0',
     zoneJs: '~0.14.0',
   },
 
-  // Webpack 5 toolchain (angular-webpack variant)
+  // Angular CLI builder toolchain (angular-webpack variant).
+  // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
+  // merges the Module Federation partial (webpack.config.js).
+  angularBuild: {
+    cli: '^17.0.0',
+    buildAngular: '^17.0.0',
+    customWebpack: '^17.0.0',
+  },
+
+  // Direct webpack (for the Module Federation plugin import) + jest preset.
   webpackTools: {
     webpack: '^5.89.0',
-    webpackCli: '^5.1.0',
-    webpackDevServer: '^4.15.0',
-    htmlWebpackPlugin: '^5.5.0',
-    ngtoolsWebpack: '^17.0.0',
     jestPresetAngular: '^14.0.0',
   },
 };
@@ -795,6 +801,7 @@ export async function generateAllFiles(
     templateVariant === 'angular-webpack'
       ? [
           { name: 'package.json', ejs: 'package.json.ejs' },
+          { name: 'angular.json', ejs: 'angular.json.ejs' },
           { name: 'webpack.config.js', ejs: 'webpack.config.js.ejs' },
           { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
           { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
@@ -828,7 +835,6 @@ export async function generateAllFiles(
     const angularEntries: Array<{ tpl: string; out: string; overwrite: boolean }> = [
       { tpl: 'src/main.ts.ejs', out: 'src/main.ts', overwrite: false },
       { tpl: 'src/bootstrap.ts.ejs', out: 'src/bootstrap.ts', overwrite: false },
-      { tpl: 'src/polyfills.ts.ejs', out: 'src/polyfills.ts', overwrite: false },
       { tpl: 'src/app/app.component.ts.ejs', out: 'src/app/app.component.ts', overwrite: false },
     ];
     for (const { tpl, out, overwrite } of angularEntries) {

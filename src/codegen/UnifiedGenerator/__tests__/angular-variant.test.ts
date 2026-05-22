@@ -36,10 +36,11 @@ describe('unified-generator angular-webpack variant', () => {
     await fs.remove(basePath);
   });
 
-  it('emits webpack.config.js + tsconfig pair (not rspack.config.js)', async () => {
+  it('emits angular.json + webpack partial + tsconfig pair (not rspack.config.js)', async () => {
     const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const paths = files.map((f) => f.path);
 
+    expect(paths).toContain(path.join(basePath, 'angular.json'));
     expect(paths).toContain(path.join(basePath, 'webpack.config.js'));
     expect(paths).toContain(path.join(basePath, 'tsconfig.json'));
     expect(paths).toContain(path.join(basePath, 'tsconfig.app.json'));
@@ -52,10 +53,20 @@ describe('unified-generator angular-webpack variant', () => {
 
     expect(paths).toContain(path.join(basePath, 'src', 'main.ts'));
     expect(paths).toContain(path.join(basePath, 'src', 'bootstrap.ts'));
-    expect(paths).toContain(path.join(basePath, 'src', 'polyfills.ts'));
     expect(paths).toContain(path.join(basePath, 'src', 'app', 'app.component.ts'));
     expect(paths).not.toContain(path.join(basePath, 'src', 'App.tsx'));
     expect(paths).not.toContain(path.join(basePath, 'src', 'index.tsx'));
+  });
+
+  it('configures angular.json with the custom-webpack builder pointing at the MF partial', async () => {
+    const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
+    const angularJson = files.find((f) => f.path === path.join(basePath, 'angular.json'));
+
+    expect(angularJson).toBeDefined();
+    expect(angularJson!.content).toContain('@angular-builders/custom-webpack:browser');
+    expect(angularJson!.content).toContain('@angular-builders/custom-webpack:dev-server');
+    expect(angularJson!.content).toContain('./webpack.config.js');
+    expect(angularJson!.content).toContain('"zone.js"');
   });
 
   it('emits feature components as .component.ts (Angular convention)', async () => {
@@ -81,7 +92,7 @@ describe('unified-generator angular-webpack variant', () => {
     expect(paths).not.toContain(path.join(basePath, 'src', 'remote.tsx'));
   });
 
-  it('renders webpack.config.js with Angular singletons in Module Federation shared scope', async () => {
+  it('renders webpack.config.js as an MF partial with Angular singletons in shared scope', async () => {
     const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const webpackConfig = files.find((f) => f.path.endsWith('webpack.config.js'));
 
@@ -90,22 +101,24 @@ describe('unified-generator angular-webpack variant', () => {
     expect(webpackConfig!.content).toContain('ModuleFederationPlugin');
     expect(webpackConfig!.content).toContain("'@angular/core':");
     expect(webpackConfig!.content).toContain('strictVersion: true');
-    expect(webpackConfig!.content).toContain("'zone.js':");
-    expect(webpackConfig!.content).toContain('eager: true');
-    // Same CORS headers as the rspack template — host parity
+    // runtimeChunk:false is mandatory for Module Federation
+    expect(webpackConfig!.content).toContain('runtimeChunk: false');
+    // CORS headers so a cross-origin shell can fetch remoteEntry.js
     expect(webpackConfig!.content).toContain('Access-Control-Allow-Origin');
     // No react in shared scope
     expect(webpackConfig!.content).not.toContain("'react':");
   });
 
-  it('renders package.json with Angular + webpack deps (and no react/rspack)', async () => {
+  it('renders package.json with Angular CLI builder deps (and no react/rspack/ngtools)', async () => {
     const files = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
 
     expect(pkg).toBeDefined();
     expect(pkg!.content).toContain('"@angular/core"');
+    expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
+    expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
     expect(pkg!.content).toContain('"webpack"');
-    expect(pkg!.content).toContain('"@ngtools/webpack"');
+    expect(pkg!.content).not.toContain('"@ngtools/webpack"');
     expect(pkg!.content).not.toContain('"react":');
     expect(pkg!.content).not.toContain('"@rspack/core"');
   });

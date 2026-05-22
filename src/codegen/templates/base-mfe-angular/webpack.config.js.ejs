@@ -1,66 +1,29 @@
-const path = require('path');
-const webpack = require('webpack');
+// Module Federation partial — merged into the Angular CLI's webpack config by
+// @angular-builders/custom-webpack. The Angular toolchain owns AOT, the dev
+// server, and asset handling; this file only layers native Module Federation
+// (no @angular-architects wrapper).
 const { ModuleFederationPlugin } = require('webpack').container;
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { AngularWebpackPlugin } = require('@ngtools/webpack');
 
-/** @type {import('webpack').Configuration} */
 module.exports = {
-  entry: {
-    main: './src/bootstrap.ts',
-  },
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    uniqueName: '<%= name.replace(/-/g, "_") %>',
     publicPath: 'auto',
   },
-  resolve: {
-    extensions: ['.ts', '.js', '.json'],
-    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
+  // Module Federation cannot run with a separate runtime chunk.
+  optimization: {
+    runtimeChunk: false,
+  },
+  experiments: {
+    topLevelAwait: true,
   },
   devServer: {
-    port: <%= port %>,
-    host: '0.0.0.0',
-    hot: true,
-    historyApiFallback: true,
-    static: {
-      directory: path.join(__dirname, 'public'),
-      publicPath: '/static',
-    },
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
-    }
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        loader: '@ngtools/webpack',
-      },
-      {
-        test: /\.html$/,
-        type: 'asset/source',
-      },
-      {
-        test: /\.css$/,
-        type: 'asset/source',
-      },
-    ],
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    },
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    }),
-    new AngularWebpackPlugin({
-      tsconfig: path.resolve(__dirname, 'tsconfig.app.json'),
-      directTemplateLoading: false,
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'public/index.html'),
-      inject: true,
-      publicPath: '/',
-    }),
     new ModuleFederationPlugin({
       name: '<%= name.replace(/-/g, "_") %>',
       filename: 'remoteEntry.js',
@@ -86,11 +49,6 @@ module.exports = {
         rxjs: {
           singleton: true,
           requiredVersion: '^7.8.0',
-        },
-        'zone.js': {
-          singleton: true,
-          eager: true,
-          requiredVersion: '~0.14.0',
         },
       },
     }),
