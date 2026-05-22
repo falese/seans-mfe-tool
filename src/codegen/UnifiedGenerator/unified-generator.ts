@@ -116,6 +116,7 @@ export const DEPENDENCY_VERSIONS = {
   // Jest preset (standalone webpack removed — use Angular's bundled copy).
   webpackTools: {
     jestPresetAngular: '^14.0.0',
+    typesJest: '^29.5.0',
   },
 };
 
@@ -800,7 +801,7 @@ export async function generateAllFiles(
   for (const { tpl, out, overwrite } of bffTemplates) {
     const templatePath = path.join(bffTemplateDir, tpl);
     if (await fs.pathExists(templatePath)) {
-      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
+      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic, hasData: !!manifest.data });
       files.push({
         path: path.join(basePath, out),
         content,
@@ -820,6 +821,7 @@ export async function generateAllFiles(
           { name: 'webpack.config.js', ejs: 'webpack.config.js.ejs' },
           { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
           { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
+          { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },

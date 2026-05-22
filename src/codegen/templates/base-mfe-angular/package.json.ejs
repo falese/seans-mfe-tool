@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"ng serve\" \"npm run bff:dev\"",
     "start": "ng serve",
-    "build": "ng build && mesh build",
+    "build": "ng build && (grep -q '^data:' mfe-manifest.yaml && mesh build || true)",
     "ng": "ng",
     "prebff:dev": "mesh build",
     "bff:dev": "ts-node server.ts",
@@ -69,6 +69,7 @@
     "ts-node": "<%= dependencyVersions.buildTools.tsNode %>",
     "concurrently": "<%= dependencyVersions.buildTools.concurrently %>",
     "eslint": "^8.55.0",
+    "@types/jest": "<%= dependencyVersions.webpackTools.typesJest %>",
     "jest": "^29.7.0",
     "jest-preset-angular": "<%= dependencyVersions.webpackTools.jestPresetAngular %>",
     "supertest": "^6.3.3"
