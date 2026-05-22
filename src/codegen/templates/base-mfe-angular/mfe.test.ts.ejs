@@ -22,11 +22,11 @@ describe('<%= className %>', () => {
 
   // ---------------------------------------------------------------------------
   // Platform capability smoke tests
-  // (Platform capabilities are inherited from RemoteMFE — these verify the
-  //  class correctly extends the base without overriding core behaviour)
+  // (Platform capabilities are inherited from AngularRemoteMFE → BaseMFE —
+  //  these verify the class extends the base without overriding core behaviour)
   // ---------------------------------------------------------------------------
 
-  it('should expose all 9 platform capabilities from RemoteMFE', () => {
+  it('should expose all 10 platform capabilities from AngularRemoteMFE', () => {
     expect(typeof mfe.load).toBe('function');
     expect(typeof mfe.render).toBe('function');
     expect(typeof mfe.refresh).toBe('function');
@@ -36,6 +36,7 @@ describe('<%= className %>', () => {
     expect(typeof mfe.schema).toBe('function');
     expect(typeof mfe.query).toBe('function');
     expect(typeof mfe.emit).toBe('function');
+    expect(typeof mfe.updateControlPlaneState).toBe('function');
   });
 
   // ---------------------------------------------------------------------------

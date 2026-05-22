@@ -404,6 +404,10 @@ export function extractManifestVars(manifest: DSLManifest) {
     neededTransforms.add('resolversComposition');
   }
 
+  // angular-webpack variant is selected when either field opts in; both
+  // derived fields below are normalized from this single source of truth.
+  const isAngularWebpack = manifest.framework === 'angular' || manifest.bundler === 'webpack';
+
   return {
     name: manifest.name,
     version: manifest.version,
@@ -419,12 +423,15 @@ export function extractManifestVars(manifest: DSLManifest) {
     lifecycleHooks: [], // will be overwritten in generateAllFiles
 
     // Codegen variant selection (react-rspack default; angular-webpack opt-in).
-    // Exposed to templates and read back by generateAllFiles for dir/extension switching.
-    framework: (manifest.framework ?? 'react') as 'react' | 'angular',
-    bundler: (manifest.bundler ?? 'rspack') as 'rspack' | 'webpack',
-    templateVariant: (manifest.framework === 'angular' || manifest.bundler === 'webpack'
-      ? 'angular-webpack'
-      : 'react-rspack') as 'react-rspack' | 'angular-webpack',
+    // framework/bundler are derived FROM the chosen variant so the trio is
+    // always internally consistent — e.g. bundler:'webpack' alone still yields
+    // framework:'angular', avoiding templateVariant=angular-webpack with
+    // bundler='rspack'. Exposed to templates and read back by generateAllFiles.
+    framework: (isAngularWebpack ? 'angular' : 'react') as 'react' | 'angular',
+    bundler: (isAngularWebpack ? 'webpack' : 'rspack') as 'rspack' | 'webpack',
+    templateVariant: (isAngularWebpack ? 'angular-webpack' : 'react-rspack') as
+      | 'react-rspack'
+      | 'angular-webpack',
 
     // NEW: Dependency versions for templates (ADR-062)
     dependencyVersions: DEPENDENCY_VERSIONS,

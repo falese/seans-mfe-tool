@@ -435,6 +435,16 @@ capabilities: []
       expect(manifest.dependencies?.runtime?.['@angular/core']).toBeDefined();
       expect(manifest.dependencies?.runtime?.react).toBeUndefined();
     });
+
+    it('should normalize the trio when only bundler=webpack is given', () => {
+      const manifest = createMinimalManifest('my-ng', { bundler: 'webpack' });
+
+      // bundler:webpack implies the angular variant — both fields normalized.
+      expect(manifest.framework).toBe('angular');
+      expect(manifest.bundler).toBe('webpack');
+      expect(manifest.dependencies?.runtime?.['@angular/core']).toBeDefined();
+      expect(manifest.dependencies?.runtime?.react).toBeUndefined();
+    });
   });
 
   describe('addCapability', () => {

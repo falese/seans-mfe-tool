@@ -272,8 +272,9 @@ export function createMinimalManifest(
     description?: string;
   } = {}
 ): DSLManifest {
-  const framework = options.framework;
-  const isAngular = framework === 'angular';
+  // Treat bundler:'webpack' as selecting Angular too, matching UnifiedGenerator's
+  // variant logic so the seeded deps never disagree with the generated output.
+  const isAngular = options.framework === 'angular' || options.bundler === 'webpack';
   const manifest: DSLManifest = {
     name,
     version: '1.0.0',
@@ -301,8 +302,15 @@ export function createMinimalManifest(
           }
         }
   };
-  if (options.framework) manifest.framework = options.framework;
-  if (options.bundler) manifest.bundler = options.bundler;
+  // Normalize the trio: if either field opts into Angular, write both so the
+  // manifest is internally consistent with the seeded deps and codegen variant.
+  if (isAngular) {
+    manifest.framework = 'angular';
+    manifest.bundler = 'webpack';
+  } else {
+    if (options.framework) manifest.framework = options.framework;
+    if (options.bundler) manifest.bundler = options.bundler;
+  }
   return manifest;
 }
 

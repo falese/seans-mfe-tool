@@ -6,6 +6,9 @@
  * - REQ-RUNTIME-004: Render capability (component awareness)
  * - REQ-RUNTIME-012: Telemetry emission with identical event names to RemoteMFE
  * - Control plane state update via daemon WebSocket
+ *
+ * The suite runs under testEnvironment: 'node' (no DOM), so a minimal
+ * `document` stub is installed for the mount/render/unmount paths.
  */
 
 import { AngularRemoteMFE } from '../angular-remote-mfe';
@@ -42,8 +45,9 @@ jest.mock(
 );
 
 /**
- * Concrete test subclass that overrides loadDomainComponent to return mock
- * components synchronously, parallel to how the test harness wires RemoteMFE.
+ * Concrete test subclass that overrides ONLY loadDomainComponent so the real
+ * fetchContainer / extractAvailableComponents / extractCapabilities run and
+ * are covered. Returns mock components for the named domain capabilities.
  */
 class TestAngularRemoteMFE extends AngularRemoteMFE {
   constructor(
@@ -52,13 +56,6 @@ class TestAngularRemoteMFE extends AngularRemoteMFE {
     private components: Record<string, any>
   ) {
     super(manifest, deps);
-    // Bypass the fetchContainer mock-by-default; we'll let it run and inject
-    // available components below.
-    (this as any).fetchContainer = async () => ({
-      init: async () => undefined,
-      get: async () => () => ({ default: class {} }),
-    });
-    (this as any).extractAvailableComponents = () => Object.keys(this.components);
   }
 
   protected async loadDomainComponent(name: string): Promise<any> {
@@ -81,6 +78,8 @@ function buildManifest(overrides: Partial<DSLManifest> = {}): DSLManifest {
     capabilities: [
       { load: { type: 'platform' } },
       { render: { type: 'platform' } },
+      // Domain capability so the real extractAvailableComponents returns it.
+      { Greeter: { type: 'domain', description: 'Greets the user' } },
     ],
     ...overrides,
   } as DSLManifest;
@@ -90,42 +89,52 @@ function makeContext(inputs: Record<string, unknown> = {}): Context {
   return new ContextBuilder().withInputs(inputs).build();
 }
 
+/** Minimal DOM element stub with a settable innerHTML. */
+function installDocumentStub(): { id: string; innerHTML: string } {
+  const el = { id: 'host', innerHTML: '' };
+  (global as any).document = {
+    getElementById: (id: string) => (id === 'host' ? el : null),
+  };
+  return el;
+}
+
+function removeDocumentStub(): void {
+  delete (global as any).document;
+}
+
 describe('AngularRemoteMFE', () => {
   let telemetry: TelemetryCapture;
 
   beforeEach(() => {
     telemetry = new TelemetryCapture();
     jest.clearAllMocks();
-    // jsdom provides document in the default jest env, but be defensive.
-    if (typeof document !== 'undefined') {
-      document.body.innerHTML = '';
-    }
+  });
+
+  afterEach(() => {
+    removeDocumentStub();
   });
 
   describe('Load Capability', () => {
-    it('completes atomic load with all three phases', async () => {
-      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
-        Greeter: class {},
-      });
+    it('completes atomic load with all three phases (real fetchContainer + helpers)', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, { Greeter: class {} });
 
       const result = await (mfe as any).doLoad(makeContext());
 
       expect(result.status).toBe('loaded');
       expect(result.container).toBeDefined();
+      // Real extractAvailableComponents picks up the domain capability.
       expect(result.availableComponents).toEqual(['Greeter']);
+      expect(result.capabilities).toEqual(expect.arrayContaining(['load', 'render', 'Greeter']));
       expect((result.telemetry as any).entry).toBeDefined();
       expect((result.telemetry as any).mount).toBeDefined();
       expect((result.telemetry as any).enableRender).toBeDefined();
     });
 
     it('emits the same telemetry checkpoint names as RemoteMFE', async () => {
-      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
-        Greeter: class {},
-      });
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, { Greeter: class {} });
       await (mfe as any).doLoad(makeContext());
 
       const names = telemetry.getEvents().map((e) => e.name);
-      // Parity guarantee with RemoteMFE — platform consumers filter on these.
       expect(names).toEqual(
         expect.arrayContaining([
           'load-entry',
@@ -139,6 +148,17 @@ describe('AngularRemoteMFE', () => {
       );
     });
 
+    it('reads remoteEntry from context.inputs when provided', async () => {
+      const manifest = buildManifest();
+      delete (manifest as any).remoteEntry;
+      const mfe = new TestAngularRemoteMFE(manifest, { telemetry }, { Greeter: class {} });
+
+      const result = await (mfe as any).doLoad(
+        makeContext({ remoteEntry: 'http://localhost:9999/remoteEntry.js' })
+      );
+      expect(result.status).toBe('loaded');
+    });
+
     it('returns status=error and emits load-error when remoteEntry missing', async () => {
       const manifest = buildManifest();
       delete (manifest as any).remoteEntry;
@@ -148,8 +168,13 @@ describe('AngularRemoteMFE', () => {
 
       expect(result.status).toBe('error');
       expect((result.error as Error).message).toMatch(/Remote entry URL/);
-      const names = telemetry.getEvents().map((e) => e.name);
-      expect(names).toContain('load-error');
+      expect(telemetry.getEvents().map((e) => e.name)).toContain('load-error');
+    });
+
+    it('works without a telemetry sink (deps.telemetry undefined)', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), {}, { Greeter: class {} });
+      const result = await (mfe as any).doLoad(makeContext());
+      expect(result.status).toBe('loaded');
     });
   });
 
@@ -159,9 +184,17 @@ describe('AngularRemoteMFE', () => {
       await (mfe as any).doLoad(makeContext());
 
       const result = await (mfe as any).doRender(makeContext({ containerId: 'host' }));
-
       expect(result.status).toBe('error');
       expect((result.error as Error).message).toMatch(/Component name not provided/);
+    });
+
+    it('throws when containerId missing from inputs', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, { Greeter: class {} });
+      await (mfe as any).doLoad(makeContext());
+
+      const result = await (mfe as any).doRender(makeContext({ component: 'Greeter' }));
+      expect(result.status).toBe('error');
+      expect((result.error as Error).message).toMatch(/Container ID not provided/);
     });
 
     it('throws when component is not in availableComponents', async () => {
@@ -171,22 +204,26 @@ describe('AngularRemoteMFE', () => {
       const result = await (mfe as any).doRender(
         makeContext({ component: 'Unknown', containerId: 'host' })
       );
-
       expect(result.status).toBe('error');
       expect((result.error as Error).message).toMatch(/not found in availableComponents/);
     });
 
-    it('bootstraps the Angular standalone component and applies props as inputs', async () => {
+    it('throws when render called before load (no container)', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, { Greeter: class {} });
+      // Force availableComponents without a container by stubbing.
+      (mfe as any).availableComponents = ['Greeter'];
+      const result = await (mfe as any).doRender(
+        makeContext({ component: 'Greeter', containerId: 'host' })
+      );
+      expect(result.status).toBe('error');
+      expect((result.error as Error).message).toMatch(/Container not loaded/);
+    });
+
+    it('bootstraps the component, sets the selector host, and applies props as inputs', async () => {
       class GreeterComponent {}
-      // Attach ɵcmp metadata so selector resolution finds a tag.
       (GreeterComponent as any).ɵcmp = { selectors: [['app-greeter']] };
 
-      // jsdom global document needed
-      if (typeof document === 'undefined') return;
-      const host = document.createElement('div');
-      host.id = 'host';
-      document.body.appendChild(host);
-
+      const el = installDocumentStub();
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
         Greeter: GreeterComponent,
       });
@@ -197,49 +234,114 @@ describe('AngularRemoteMFE', () => {
       );
 
       expect(result.status).toBe('rendered');
-      expect(host.innerHTML).toContain('<app-greeter>');
+      expect(el.innerHTML).toBe('<app-greeter></app-greeter>');
 
-      // bootstrapApplication mock was called with the component
       const { bootstrapApplication } = await import('@angular/platform-browser');
       expect(bootstrapApplication).toHaveBeenCalledWith(GreeterComponent, expect.any(Object));
 
-      // Telemetry parity with RemoteMFE
+      // appRef instance got the prop applied
+      const appRef = (mfe as any).applicationRefs.get('host');
+      expect(appRef.components[0].instance.title).toBe('hi');
+      expect(appRef.tick).toHaveBeenCalled();
+
       const names = telemetry.getEvents().map((e) => e.name);
       expect(names).toEqual(
-        expect.arrayContaining(['render-start', 'render-component-fetch', 'render-mount', 'render-completed'])
+        expect.arrayContaining([
+          'render-start',
+          'render-component-fetch',
+          'render-mount',
+          'render-completed',
+        ])
       );
     });
 
-    it('unmount() destroys the prior ApplicationRef', async () => {
-      class GreeterComponent {}
-      (GreeterComponent as any).ɵcmp = { selectors: [['app-greeter']] };
-
-      if (typeof document === 'undefined') return;
-      const host = document.createElement('div');
-      host.id = 'host';
-      document.body.appendChild(host);
-
+    it('falls back to app-mfe-root selector when component has no ɵcmp', async () => {
+      const el = installDocumentStub();
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
-        Greeter: GreeterComponent,
+        Greeter: class {},
       });
       await (mfe as any).doLoad(makeContext());
-      await (mfe as any).doRender(
+
+      await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
+      expect(el.innerHTML).toBe('<app-mfe-root></app-mfe-root>');
+    });
+
+    it('destroys the prior ApplicationRef when re-rendering the same container', async () => {
+      const el = installDocumentStub();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+        Greeter: class {},
+      });
+      await (mfe as any).doLoad(makeContext());
+
+      await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
+      const firstRef = (mfe as any).applicationRefs.get('host');
+
+      await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
+      expect(firstRef.destroy).toHaveBeenCalledTimes(1);
+      void el;
+    });
+
+    it('errors when the DOM container is not found', async () => {
+      installDocumentStub();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+        Greeter: class {},
+      });
+      await (mfe as any).doLoad(makeContext());
+
+      const result = await (mfe as any).doRender(
+        makeContext({ component: 'Greeter', containerId: 'missing' })
+      );
+      expect(result.status).toBe('error');
+      expect((result.error as Error).message).toMatch(/DOM container #missing not found/);
+    });
+
+    it('errors when mountComponent runs outside a browser (no document)', async () => {
+      removeDocumentStub();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+        Greeter: class {},
+      });
+      await (mfe as any).doLoad(makeContext());
+
+      const result = await (mfe as any).doRender(
         makeContext({ component: 'Greeter', containerId: 'host' })
       );
+      expect(result.status).toBe('error');
+      expect((result.error as Error).message).toMatch(/outside a browser environment/);
+    });
+  });
 
-      const appRefs: Map<string, any> = (mfe as any).applicationRefs;
-      const appRef = appRefs.get('host');
-      expect(appRef).toBeDefined();
+  describe('unmount', () => {
+    it('destroys and removes the ApplicationRef for a container', async () => {
+      installDocumentStub();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+        Greeter: class {},
+      });
+      await (mfe as any).doLoad(makeContext());
+      await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
 
+      const appRef = (mfe as any).applicationRefs.get('host');
       mfe.unmount('host');
-
       expect(appRef.destroy).toHaveBeenCalledTimes(1);
-      expect(appRefs.has('host')).toBe(false);
+      expect((mfe as any).applicationRefs.has('host')).toBe(false);
+    });
+
+    it('is a no-op for an unknown container', () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
+      expect(() => mfe.unmount('nope')).not.toThrow();
+    });
+  });
+
+  describe('loadDomainComponent default', () => {
+    it('throws when not overridden', async () => {
+      const mfe = new AngularRemoteMFE(buildManifest(), { telemetry });
+      await expect((mfe as any).loadDomainComponent('Greeter')).rejects.toThrow(
+        /not implemented/
+      );
     });
   });
 
   describe('Shared dependencies', () => {
-    it('returns Angular singletons with strictVersion: true', () => {
+    it('returns Angular singletons with strictVersion and eager zone.js', () => {
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
       const shared = (mfe as any).getSharedDependencies();
 
@@ -255,14 +357,13 @@ describe('AngularRemoteMFE', () => {
       expect(shared['zone.js']).toEqual(
         expect.objectContaining({ singleton: true, eager: true })
       );
-      // React deps must NOT appear in an Angular MFE's shared scope
       expect(shared['react']).toBeUndefined();
       expect(shared['react-dom']).toBeUndefined();
     });
   });
 
   describe('Control plane state', () => {
-    it('sends a sendMessage mutation over the daemon WebSocket and returns ack=true', async () => {
+    it('sends a sendMessage mutation and returns ack=true', async () => {
       const wsClient = new MockDaemonWebSocketClient();
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry, wsClient }, {});
       const result = await (mfe as any).doUpdateControlPlaneState(
@@ -281,12 +382,26 @@ describe('AngularRemoteMFE', () => {
       const wsClient = new MockDaemonWebSocketClient();
       wsClient.connected = false;
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry, wsClient }, {});
-      const result = await (mfe as any).doUpdateControlPlaneState(
-        makeContext({ stateKey: 'foo' })
-      );
-
+      const result = await (mfe as any).doUpdateControlPlaneState(makeContext({ stateKey: 'foo' }));
       expect(result.acknowledged).toBe(false);
       expect(result.error).toMatch(/not connected/);
+    });
+
+    it('returns ack=false when the mutation throws', async () => {
+      const wsClient = new MockDaemonWebSocketClient();
+      wsClient.mutationError = new Error('socket timed out');
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry, wsClient }, {});
+      const result = await (mfe as any).doUpdateControlPlaneState(makeContext({ stateKey: 'foo' }));
+      expect(result.acknowledged).toBe(false);
+      expect(result.error).toMatch(/timed out/);
+    });
+
+    it('rejects a missing/empty stateKey', async () => {
+      const wsClient = new MockDaemonWebSocketClient();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry, wsClient }, {});
+      await expect(
+        (mfe as any).doUpdateControlPlaneState(makeContext({}))
+      ).rejects.toThrow(/stateKey/);
     });
   });
 
@@ -308,9 +423,36 @@ describe('AngularRemoteMFE', () => {
       expect(result.type).toBe('remote');
     });
 
+    it('doSchema returns the manifest as JSON', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
+      const result = await (mfe as any).doSchema(makeContext());
+      expect(result.format).toBe('json');
+      expect(JSON.parse(result.schema).name).toBe('test-angular-remote');
+    });
+
     it('doQuery throws (not supported on remote MFE)', async () => {
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
       await expect((mfe as any).doQuery(makeContext())).rejects.toThrow(/not supported/);
+    });
+
+    it('doEmit forwards an event to telemetry and reports emitted=true', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
+      const result = await (mfe as any).doEmit(
+        makeContext({ event: { name: 'x', capability: 'emit', status: 'success', timestamp: new Date() } })
+      );
+      expect(result.emitted).toBe(true);
+    });
+
+    it('doEmit reports emitted=false when no event provided', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
+      const result = await (mfe as any).doEmit(makeContext({}));
+      expect(result.emitted).toBe(false);
+    });
+
+    it('doRefresh and doAuthorizeAccess are safe no-ops', async () => {
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
+      await expect((mfe as any).doRefresh(makeContext())).resolves.toBeUndefined();
+      await expect((mfe as any).doAuthorizeAccess(makeContext())).resolves.toBe(true);
     });
   });
 });
