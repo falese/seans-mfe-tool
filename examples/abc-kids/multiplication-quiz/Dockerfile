@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Copy runtime source BEFORE npm install so file:../../../src/runtime resolves
 COPY src/runtime/ /src/runtime/
+COPY src/dsl/ /src/dsl/
 
 # Angular 17 peer deps require --legacy-peer-deps
 # Copy only package.json — the lock file contains a "link":true symlink entry

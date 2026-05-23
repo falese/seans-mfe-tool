@@ -17,6 +17,7 @@ WORKDIR /app
 
 # Copy runtime source BEFORE npm install so file:../../../src/runtime resolves
 COPY src/runtime/ /src/runtime/
+COPY src/dsl/ /src/dsl/
 
 # Install MFE dependencies
 # Copy only package.json — lock file has "link":true for @seans-mfe-tool/runtime
