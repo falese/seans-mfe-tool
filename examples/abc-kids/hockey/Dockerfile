@@ -18,8 +18,11 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 
 # Install dependencies.
 # Override @seans-mfe-tool/runtime to the compiled dist package.
+# Delete from dependencies first (old generated package.json puts it there),
+# then set in devDependencies so production --omit=dev install skips it.
 COPY package.json ./
-RUN npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
+RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
+    npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
 RUN npm install --no-audit --no-fund
 
 # Copy source
