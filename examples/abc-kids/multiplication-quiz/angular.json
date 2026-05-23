@@ -10,7 +10,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-architects/module-federation:build",
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
             "customWebpackConfig": {
               "path": "./webpack.config.js"
@@ -41,7 +41,7 @@
           "defaultConfiguration": "development"
         },
         "serve": {
-          "builder": "@angular-architects/module-federation:dev-server",
+          "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
             "port": 3003,
             "host": "0.0.0.0"
@@ -58,5 +58,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
