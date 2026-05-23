@@ -445,18 +445,20 @@ export abstract class BaseMFE {
     try {
       // Dynamically import all platform handlers
       const handlers = await import('./handlers');
+      type H = (context: Context, ...args: any[]) => Promise<any>;
+      const h = handlers as unknown as Record<string, Record<string, H>>;
       // Support category.name (e.g., auth.validateJWT)
       if (name.includes('.')) {
         const [category, fn] = name.split('.');
-        handlerFn = handlers[category]?.[fn];
+        handlerFn = h[category]?.[fn];
       } else {
         // Flat namespace (e.g., validateJWT)
-        handlerFn = handlers[name];
+        handlerFn = (handlers as unknown as Record<string, H>)[name];
         // Try each category if not found
         if (!handlerFn) {
           for (const cat of Object.keys(handlers)) {
-            if (handlers[cat]?.[name]) {
-              handlerFn = handlers[cat][name];
+            if (h[cat]?.[name]) {
+              handlerFn = h[cat][name];
               break;
             }
           }

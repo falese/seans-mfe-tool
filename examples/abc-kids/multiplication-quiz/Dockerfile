@@ -43,7 +43,6 @@ COPY src/runtime/ /src/runtime/
 COPY --from=builder /app/package*.json ./
 RUN npm install --legacy-peer-deps --omit=dev --no-audit --no-fund
 
-COPY --from=builder /app/.mesh ./.mesh
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./
 
