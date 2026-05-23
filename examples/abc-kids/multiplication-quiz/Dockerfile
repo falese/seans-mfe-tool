@@ -1,48 +1,48 @@
 # abc-kids-multiplication-quiz
 # Angular/webpack MFE + BFF
-# Build context: repo root (needed to include src/runtime/ source)
+# Build context: examples/abc-kids/multiplication-quiz/
 
-# ── Stage 1: CLI image (pre-built separately via Dockerfile.cli) ──────────────
+# Build tools stage — provides seans-mfe-tool CLI and pre-compiled runtime
 FROM seans-mfe-tool-cli:latest AS cli-builder
 
-# ── Stage 2: Build the MFE ───────────────────────────────────────────────────
+# ── Build stage ───────────────────────────────────────────────────────────────
 FROM node:20-slim AS builder
 
+WORKDIR /app
+
+# Make pre-compiled runtime available via file: reference.
+# dist/runtime has compiled .js + .d.ts — no source traversal, no transitive deps.
 COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
 RUN chmod +x /seans-mfe-tool/bin/run.js && \
     ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
-WORKDIR /app
-
-# Copy runtime source BEFORE npm install so file:../../../src/runtime resolves
-COPY src/runtime/ /src/runtime/
-COPY src/dsl/ /src/dsl/
-
-# Angular 17 peer deps require --legacy-peer-deps
-# Copy only package.json — the lock file contains a "link":true symlink entry
-# for @seans-mfe-tool/runtime that triggers an npm 10 bug with --legacy-peer-deps.
-COPY examples/abc-kids/multiplication-quiz/package.json ./
+# Install dependencies.
+# Override @seans-mfe-tool/runtime to the compiled dist package so ng build
+# resolves .d.ts files only (no zod/dsl/schema traversal).
+COPY package.json ./
+RUN npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
 RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # Copy source
-COPY examples/abc-kids/multiplication-quiz/ .
+COPY . .
 
-# Regenerate platform code from mfe-manifest.yaml, then build Angular bundle + Mesh
+# Regenerate platform code from mfe-manifest.yaml, then build Angular bundle
+# (mesh build is included via shell conditional when data: section is present)
 RUN seans-mfe-tool remote:generate
 RUN npm run build
 
 # Compile server.ts → server.js for production runtime
 RUN npm run build:server
 
-# ── Stage 3: Production ───────────────────────────────────────────────────────
+# ── Production stage ──────────────────────────────────────────────────────────
 FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Runtime source needed for file:../../../src/runtime dep in production install
-COPY src/runtime/ /src/runtime/
-COPY --from=builder /app/package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev --no-audit --no-fund
+# Use builder's package.json (npm pkg set moved runtime to devDep)
+# so --omit=dev skips @seans-mfe-tool/runtime entirely
+COPY --from=builder /app/package.json ./
+RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./
@@ -58,4 +58,3 @@ ENV PORT=3003
 EXPOSE 3003
 
 CMD ["node", "server.js"]
-
