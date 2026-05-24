@@ -5,7 +5,7 @@
 // when a separately-installed webpack creates a second compiler instance.
 const { withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack');
 
-module.exports = withModuleFederationPlugin({
+const mfConfig = withModuleFederationPlugin({
   name: 'abc_kids_multiplication_quiz',
   filename: 'remoteEntry.js',
   exposes: {
@@ -33,3 +33,15 @@ module.exports = withModuleFederationPlugin({
     },
   },
 });
+
+// Force classic-script output so webpack does not emit `import.meta.url`
+// detection code. The MF runtime in the host shell loads remoteEntry.js via
+// a classic <script> tag; `import.meta` is a SyntaxError in that context and
+// causes RUNTIME-008 ("Failed to load script resources") in the shell.
+module.exports = {
+  ...mfConfig,
+  output: {
+    ...mfConfig.output,
+    scriptType: 'text/javascript',
+  },
+};

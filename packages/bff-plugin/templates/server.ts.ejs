@@ -15,7 +15,11 @@ import crypto from 'crypto';
 const app: Express = express();
 
 // Security middleware
+// crossOriginResourcePolicy must be 'cross-origin' so shells on other origins
+// can load remoteEntry.js via <script> injection (CORP blocks no-cors subresource
+// loads from cross-origin pages; CORS alone is not sufficient for script tags).
 app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
