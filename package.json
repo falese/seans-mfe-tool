@@ -24,7 +24,9 @@
     "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc --noEmit",
-    "test:mesh-deps": "node scripts/test-mesh-dependencies.js"
+    "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
+    "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",
+    "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build"
   },
   "keywords": [
     "module-federation",

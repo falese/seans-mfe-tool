@@ -32,6 +32,8 @@ Full spec: `@docs/spec.md`
 | `npm run build:schemas` | After any change to command flags, args, or return types |
 | `npm run format` | Before PR |
 | `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
+| `turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged) |
+| `turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
 
 ## Development rules
 

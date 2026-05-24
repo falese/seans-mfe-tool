@@ -241,6 +241,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-067 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine |
 | ADR-068 | Two-headed giant — AI-native + human-legible developer experience | Developer model |
 | ADR-069 | Pluggable bundler + framework via codegen variants | Codegen / polyglot |
+| ADR-070 | Docker build orchestration via Turborepo task graph | Docker / CI |
 
 `docs/architecture-decisions/architecture-decisions.md` is the narrative index with rationale.
 

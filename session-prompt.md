@@ -21,42 +21,51 @@
 
 ### Active issue(s)
 
-**[#164](https://github.com/falese/seans-mfe-tool/issues/164) — fix: seans-mfe-tool-cli image not rebuilt by docker compose build**
+**[#165](https://github.com/falese/seans-mfe-tool/issues/165) — enhancement: integrate Docker builds into Turborepo task graph**
 
 ### Scope
 
-The docker-compose.yaml service ordering fix was already landed in #163 (commit 93cb6ea). This session completes #164 by:
+Add `docker:build:cli` and `docker:build:examples` tasks to the Turborepo task graph so that `turbo run docker:build:examples` handles the full chain: TypeScript compilation → CLI Docker image → MFE Docker images. Write ADR-070 covering the Turborepo approach and the tradeoffs considered (docker-compose-only, docker buildx bake, Makefile).
 
-1. Expanding the root `.dockerignore` to exclude `src/`, `examples/`, `tests/`, `docs/`, `schemas/`, and `packages/*/node_modules/` from the CLI image build context. Without this, `docker compose build seans-mfe-tool-cli` ships ~300 MB of irrelevant files as build context before Dockerfile.cli even runs its first COPY.
-2. Updating issue #164 body: replace placeholder `#<C>` with `#165`.
+NOT changing: any MFE source files, Dockerfiles, the `seans-mfe-tool-cli` service added in #164, the existing Turbo tasks (`build`, `test`, `lint`, `typecheck`).
 
-NOT changing: `Dockerfile.cli`, `docker-compose.yaml`, any MFE Dockerfiles, or any source/test files.
-
-**Acceptance criteria (from issue):**
-- `docker compose -f examples/abc-kids/docker-compose.yaml build` rebuilds `seans-mfe-tool-cli:latest` automatically ✅ (landed in #163)
-- After changing a codegen template, no manual CLI image rebuild step is required ✅ (landed in #163)
-- MFE builds fail fast with a clear error if CLI build fails, rather than silently using a stale image ✅ (landed in #163)
+**Acceptance criteria:**
+- `turbo run docker:build:examples` builds CLI image then MFE images in correct dependency order
+- CLI image rebuild is skipped when `dist/` inputs haven't changed (Turbo cache hit)
+- ADR-070 written
+- `CLAUDE.md` dev commands table updated
 
 ### ADR check
 
-No existing ADR governs Docker build context optimization. This is an operational infrastructure fix. Waived — no new ADR required.
+No existing ADR (022, 058–069) covers Docker build orchestration. Writing ADR-070 as part of this session.
+
+| ADR | Title | Governs |
+|-----|-------|---------|
+| ADR-070 (new) | Docker+Turborepo integration for CLI and MFE image builds | Docker build orchestration |
 
 ### Spec context
 
-From `@docs/spec.md` — Docker note:
+From `@docs/spec.md` — Hardware and runtime:
 
-> `Dockerfile.cli` copies pre-compiled `dist/` into the image. Build context is the repo root; only `package.json`, `oclif.manifest.json`, `packages/`, `bin/`, `dist/` are consumed.
+> Dev entry: `bun bin/dev.ts` (no transpile)  
+> Published entry: `bin/run.js` (pure Node, loads `dist/commands/`)  
+> Build output: `dist/` (TypeScript → CJS)
+
+The `seans-mfe-tool-cli:latest` Docker image copies pre-compiled `dist/` from the repo root. All MFE Dockerfiles reference it via `FROM seans-mfe-tool-cli:latest AS cli-builder`.
 
 ### Current file tree
 
 ```
-.dockerignore     ← MODIFY (expand exclusions for CLI image build context)
+docs/architecture-decisions/ADR-070-docker-turborepo-integration.md   ← CREATE
+turbo.json                                                              ← MODIFY
+package.json                                                            ← MODIFY (scripts only)
+CLAUDE.md                                                               ← MODIFY (dev commands table)
 ```
 
 ### TDD order
 
-No unit tests apply. Verification: `docker compose -f examples/abc-kids/docker-compose.yaml build seans-mfe-tool-cli` and confirm it completes in reasonable time with a small transferred context.
+No unit tests apply. Verification: `turbo run docker:build:examples` completes successfully; run again with no changes and confirm Turbo reports cache hits.
 
 ### Existing tests (summary)
 
-No test coverage for Docker config. Verification gates: `npm run lint`, `npm run typecheck` (pre-existing failures unrelated to this change), `npm run build`.
+No test coverage for build tooling config. Verification gate: `npm run build` still passes (no turbo.json change should break it).
