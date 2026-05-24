@@ -17,48 +17,50 @@
 
 ---
 
-## Session: YYYY-MM-DD
+## Session: 2026-05-24
 
 ### Active issue(s)
 
-**[#N](https://github.com/falese/seans-mfe-tool/issues/N) — verb: short description**
+**[#163](https://github.com/falese/seans-mfe-tool/issues/163) — fix: Angular Docker build fails "Missing script: build:server"**
 
 ### Scope
 
-One paragraph: what is changing, what is NOT changing, acceptance criteria.
+Add `seans-mfe-tool-cli` as a buildable service in `examples/abc-kids/docker-compose.yaml` so that `docker compose build` always rebuilds the CLI image before the MFE images that depend on it. Add `depends_on` for the CLI service to the four MFE services so Docker Compose enforces build order.
+
+NOT changing: `Dockerfile.cli`, any MFE Dockerfiles, the generator code, or the `build` script content. This is a Docker Compose config change only.
+
+**Acceptance criteria (from issue):**
+- `docker compose -f examples/abc-kids/docker-compose.yaml up --build` completes without error
+- Angular MFE container starts and `/health` returns 200
 
 ### ADR check
 
-<!-- List every ADR whose domain overlaps this session's work.
-     If a new architectural decision is needed and no ADR covers it:
-     STOP — ask the human to write/waive a new ADR before proceeding. -->
+No existing ADR governs Docker Compose service-level build ordering. This change is an operational infrastructure fix (not a platform contract, bundler integration, lifecycle, or BFF decision). Waived — no new ADR required for this change.
 
-| ADR | Title | Governs |
-|-----|-------|---------|
-| ADR-NNN | title | area |
+Issue #165 (Turborepo task graph integration) is the architectural enhancement; that one will need an ADR before implementation.
 
 ### Spec context
 
-<!-- Paste the relevant sections from @docs/spec.md here.
-     Do not paste the whole spec — only sections directly relevant to the active issue. -->
+From `@docs/spec.md` — Docker note:
+
+> `dist/runtime/package.json` exports conditions must include `require`, `import`, and `default` so both webpack (Angular) and rspack (React) can resolve the package. See `scripts/copy-runtime-files.js`.
+
+Runtime is published as `@seans-mfe-tool/runtime` from `dist/runtime/`. The CLI image (`seans-mfe-tool-cli:latest`) is built from `Dockerfile.cli` which copies the pre-compiled `dist/` directory. MFE Dockerfiles reference it via `FROM seans-mfe-tool-cli:latest AS cli-builder`.
 
 ### Current file tree
 
 ```
-src/...         ← MODIFY
-packages/...    ← MODIFY
-tests/...       ← MODIFY
+examples/abc-kids/docker-compose.yaml   ← MODIFY (add CLI service + depends_on)
 ```
 
 ### TDD order
 
-Write failing tests first, then implementation. List in priority order:
+No unit tests apply to Docker Compose config changes. Verification is by running the Docker build.
 
-1. Test: _describe what it asserts_
-2. Implement: _describe what it does_
+1. Implement: add `seans-mfe-tool-cli` service with `build: context: ../../..`
+2. Implement: add `depends_on: - seans-mfe-tool-cli` to all four MFE services
+3. Verify: `npm run build && docker compose -f examples/abc-kids/docker-compose.yaml build --no-cache` succeeds
 
 ### Existing tests (summary)
 
-N tests passing across M files. Do not duplicate existing coverage.
-
-Key constraint: _note any mocking patterns or test isolation requirements._
+Docker config changes are not covered by the Jest test suite. Verification gates: `npm run lint`, `npm run typecheck`, `npm run build` (no schema changes; no source changes).

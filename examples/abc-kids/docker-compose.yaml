@@ -1,8 +1,21 @@
 services:
+  # Build seans-mfe-tool CLI image first. All MFE services depend on this so
+  # docker compose build always rebuilds the CLI from the current dist/ before
+  # building any MFE image. Prevents stale template versions from causing
+  # remote:generate to overwrite package.json with outdated content.
+  # Pre-requisite: npm run build must be run before docker compose build.
+  seans-mfe-tool-cli:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.cli
+    image: seans-mfe-tool-cli:latest
+
   abc-kids-flappy:
     build:
       context: ./flappy
       dockerfile: Dockerfile
+    depends_on:
+      - seans-mfe-tool-cli
     ports:
       - '3001:3001'
     healthcheck:
@@ -16,6 +29,8 @@ services:
     build:
       context: ./hockey
       dockerfile: Dockerfile
+    depends_on:
+      - seans-mfe-tool-cli
     ports:
       - '3002:3002'
     healthcheck:
@@ -29,6 +44,8 @@ services:
     build:
       context: ./multiplication-quiz
       dockerfile: Dockerfile
+    depends_on:
+      - seans-mfe-tool-cli
     ports:
       - '3003:3003'
     healthcheck:
@@ -42,12 +59,14 @@ services:
     build:
       context: ./shell
       dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
     depends_on:
+      seans-mfe-tool-cli:
+        condition: service_started
       abc-kids-flappy:
         condition: service_healthy
       abc-kids-hockey:
         condition: service_healthy
       abc-kids-multiplication-quiz:
         condition: service_healthy
+    ports:
+      - '3000:3000'
