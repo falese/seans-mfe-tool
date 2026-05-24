@@ -1,8 +1,8 @@
-// Module Federation config for Angular 17 MFE.
-// Uses @angular-architects/module-federation so withModuleFederationPlugin
-// resolves ModuleFederationPlugin from Angular's bundled webpack — avoiding
-// the "Cannot read properties of undefined (reading 'tap')" crash that occurs
-// when a separate webpack devDependency creates a second webpack instance.
+// Module Federation partial — merged into the Angular CLI's webpack config by
+// @angular-builders/custom-webpack. withModuleFederationPlugin resolves
+// ModuleFederationPlugin from Angular's own bundled webpack, preventing the
+// "Cannot read properties of undefined (reading 'tap')" crash that occurs
+// when a separately-installed webpack creates a second compiler instance.
 const { withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack');
 
 module.exports = withModuleFederationPlugin({
@@ -33,4 +33,3 @@ module.exports = withModuleFederationPlugin({
     },
   },
 });
-

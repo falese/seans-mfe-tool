@@ -47,7 +47,10 @@ app.get('/health', (req: express.Request, res: express.Response) => {
   });
 });
 
-// GraphQL BFF endpoint disabled — no data: section in mfe-manifest.yaml
+// GraphQL BFF endpoint (Mesh v0.100.x)
+// Following REQ-BFF-003: JWT Authentication Forwarding
+// Following ADR-062: createBuiltMeshHTTPHandler pattern
+
 
 
 // Static MFE assets

@@ -34,8 +34,8 @@ async function cleanupRuntimeFiles() {
       main: './index.js',
       types: './index.d.ts',
       exports: {
-        '.':         { require: './index.js',  types: './index.d.ts'   },
-        './angular': { require: './angular.js', types: './angular.d.ts' },
+        '.':         { require: './index.js',  import: './index.js',  default: './index.js',  types: './index.d.ts'   },
+        './angular': { require: './angular.js', import: './angular.js', default: './angular.js', types: './angular.d.ts' },
         './package.json': './package.json'
       }
     }, { spaces: 2 });
