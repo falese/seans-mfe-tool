@@ -84,7 +84,7 @@ function extractUserIdFromToken(authHeader?: string): string | undefined {
   }
 }
 
-const port = process.env.PORT || 4003;
+const port = process.env.PORT || 3003;
 
 app.listen(port, () => {
   console.log(`🚀 abc-kids-multiplication-quiz BFF server running on port ${port}`);

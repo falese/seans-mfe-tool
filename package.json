@@ -1,6 +1,7 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
+  "packageManager": "npm@10.8.1",
   "main": "bin/run.js",
   "workspaces": [
     "packages/*",

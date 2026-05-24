@@ -32,14 +32,14 @@
       "inputs": ["src/**/*", "tsconfig.json"],
       "cache": true
     },
-    "docker:build:cli": {
+    "//#docker:build:cli": {
       "dependsOn": ["build"],
       "inputs": ["dist/**", "Dockerfile.cli", "package.json", "oclif.manifest.json"],
       "outputs": [],
       "cache": true
     },
-    "docker:build:examples": {
-      "dependsOn": ["docker:build:cli"],
+    "//#docker:build:examples": {
+      "dependsOn": ["//#docker:build:cli"],
       "inputs": [
         "examples/abc-kids/**/*",
         "examples/abc-kids/**/Dockerfile",

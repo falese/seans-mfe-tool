@@ -60,14 +60,14 @@ COPY --from=builder /app/server.js ./
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:4003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+    CMD node -e "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 # Non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 meshuser
 USER meshuser
 
-ENV PORT=4003
-EXPOSE 4003
+ENV PORT=3003
+EXPOSE 3003
 
 CMD ["node", "server.js"]

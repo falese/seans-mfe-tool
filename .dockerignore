@@ -19,5 +19,4 @@ schemas/
 .github/
 .claude/
 packages/*/node_modules/
-packages/*/dist/
 packages/*/coverage/
