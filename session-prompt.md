@@ -21,46 +21,42 @@
 
 ### Active issue(s)
 
-**[#163](https://github.com/falese/seans-mfe-tool/issues/163) — fix: Angular Docker build fails "Missing script: build:server"**
+**[#164](https://github.com/falese/seans-mfe-tool/issues/164) — fix: seans-mfe-tool-cli image not rebuilt by docker compose build**
 
 ### Scope
 
-Add `seans-mfe-tool-cli` as a buildable service in `examples/abc-kids/docker-compose.yaml` so that `docker compose build` always rebuilds the CLI image before the MFE images that depend on it. Add `depends_on` for the CLI service to the four MFE services so Docker Compose enforces build order.
+The docker-compose.yaml service ordering fix was already landed in #163 (commit 93cb6ea). This session completes #164 by:
 
-NOT changing: `Dockerfile.cli`, any MFE Dockerfiles, the generator code, or the `build` script content. This is a Docker Compose config change only.
+1. Expanding the root `.dockerignore` to exclude `src/`, `examples/`, `tests/`, `docs/`, `schemas/`, and `packages/*/node_modules/` from the CLI image build context. Without this, `docker compose build seans-mfe-tool-cli` ships ~300 MB of irrelevant files as build context before Dockerfile.cli even runs its first COPY.
+2. Updating issue #164 body: replace placeholder `#<C>` with `#165`.
+
+NOT changing: `Dockerfile.cli`, `docker-compose.yaml`, any MFE Dockerfiles, or any source/test files.
 
 **Acceptance criteria (from issue):**
-- `docker compose -f examples/abc-kids/docker-compose.yaml up --build` completes without error
-- Angular MFE container starts and `/health` returns 200
+- `docker compose -f examples/abc-kids/docker-compose.yaml build` rebuilds `seans-mfe-tool-cli:latest` automatically ✅ (landed in #163)
+- After changing a codegen template, no manual CLI image rebuild step is required ✅ (landed in #163)
+- MFE builds fail fast with a clear error if CLI build fails, rather than silently using a stale image ✅ (landed in #163)
 
 ### ADR check
 
-No existing ADR governs Docker Compose service-level build ordering. This change is an operational infrastructure fix (not a platform contract, bundler integration, lifecycle, or BFF decision). Waived — no new ADR required for this change.
-
-Issue #165 (Turborepo task graph integration) is the architectural enhancement; that one will need an ADR before implementation.
+No existing ADR governs Docker build context optimization. This is an operational infrastructure fix. Waived — no new ADR required.
 
 ### Spec context
 
 From `@docs/spec.md` — Docker note:
 
-> `dist/runtime/package.json` exports conditions must include `require`, `import`, and `default` so both webpack (Angular) and rspack (React) can resolve the package. See `scripts/copy-runtime-files.js`.
-
-Runtime is published as `@seans-mfe-tool/runtime` from `dist/runtime/`. The CLI image (`seans-mfe-tool-cli:latest`) is built from `Dockerfile.cli` which copies the pre-compiled `dist/` directory. MFE Dockerfiles reference it via `FROM seans-mfe-tool-cli:latest AS cli-builder`.
+> `Dockerfile.cli` copies pre-compiled `dist/` into the image. Build context is the repo root; only `package.json`, `oclif.manifest.json`, `packages/`, `bin/`, `dist/` are consumed.
 
 ### Current file tree
 
 ```
-examples/abc-kids/docker-compose.yaml   ← MODIFY (add CLI service + depends_on)
+.dockerignore     ← MODIFY (expand exclusions for CLI image build context)
 ```
 
 ### TDD order
 
-No unit tests apply to Docker Compose config changes. Verification is by running the Docker build.
-
-1. Implement: add `seans-mfe-tool-cli` service with `build: context: ../../..`
-2. Implement: add `depends_on: - seans-mfe-tool-cli` to all four MFE services
-3. Verify: `npm run build && docker compose -f examples/abc-kids/docker-compose.yaml build --no-cache` succeeds
+No unit tests apply. Verification: `docker compose -f examples/abc-kids/docker-compose.yaml build seans-mfe-tool-cli` and confirm it completes in reasonable time with a small transferred context.
 
 ### Existing tests (summary)
 
-Docker config changes are not covered by the Jest test suite. Verification gates: `npm run lint`, `npm run typecheck`, `npm run build` (no schema changes; no source changes).
+No test coverage for Docker config. Verification gates: `npm run lint`, `npm run typecheck` (pre-existing failures unrelated to this change), `npm run build`.

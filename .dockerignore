@@ -8,3 +8,16 @@ node_modules
 coverage
 .git
 *.log
+
+# Dockerfile.cli only needs: package.json, oclif.manifest.json, packages/, bin/, dist/
+# Exclude everything else so the CLI image build context is small.
+src/
+examples/
+tests/
+docs/
+schemas/
+.github/
+.claude/
+packages/*/node_modules/
+packages/*/dist/
+packages/*/coverage/
