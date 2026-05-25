@@ -67,14 +67,30 @@ export interface BaseMFEDependencies {
 
 type Worker = any;
 
+/** Metadata for a single capability declared in the manifest */
+export interface CapabilityMetadata {
+  name: string;
+  type: 'platform' | 'domain';
+  description?: string;
+}
+
 /** Result from load capability */
 export interface LoadResult {
   status: 'loaded' | 'error';
-  container?: unknown;  // Module Federation container
-  mesh?: unknown;       // GraphQL Mesh instance
-  worker?: Worker;      // Web Worker instance
+  container?: unknown;
+  mesh?: unknown;
+  worker?: Worker;
+  manifest?: import('../dsl/schema').DSLManifest;
+  availableComponents?: string[];
+  capabilities?: CapabilityMetadata[];
   timestamp: Date;
-  [key: string]: unknown;
+  duration?: number;
+  telemetry?: {
+    entry: { start: Date; duration: number };
+    mount: { start: Date; duration: number };
+    enableRender: { start: Date; duration: number };
+  };
+  error?: { message: string; phase: string; retryCount: number; retryable: boolean };
 }
 
 /** Result from render capability */
