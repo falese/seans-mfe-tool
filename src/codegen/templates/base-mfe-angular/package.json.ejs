@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"ng serve\" \"npm run bff:dev\"",
     "start": "ng serve",
-    "build": "seans-mfe-tool remote:generate && ng build && (grep -q '^data:' mfe-manifest.yaml && mesh build || true)",
+    "build": "seans-mfe-tool remote:generate && ng build --configuration production && (grep -q '^data:' mfe-manifest.yaml && mesh build || true)",
     "build:server": "tsc server.ts --module commonjs --target ES2020 --esModuleInterop true --skipLibCheck true --moduleResolution node --outDir .",
     "ng": "ng",
     "prebff:dev": "mesh build",
