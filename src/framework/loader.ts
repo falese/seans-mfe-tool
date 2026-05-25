@@ -18,6 +18,26 @@ const BUILTIN_FRAMEWORKS: Record<string, string> = {
 };
 
 /**
+ * Check if an object is a BaseFrameworkPlugin.
+ *
+ * Uses the brand tag first (survives cross-module class identity
+ * differences from npm link / global installs), falls back to
+ * native instanceof for third-party plugins compiled against the
+ * same contracts package.
+ */
+function isFrameworkPlugin(obj: unknown): obj is BaseFrameworkPlugin {
+  if (obj instanceof BaseFrameworkPlugin) return true;
+  if (
+    typeof obj === 'object' &&
+    obj !== null &&
+    (obj as Record<string, unknown>).__frameworkPluginBrand === '__BaseFrameworkPlugin__'
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Resolve a framework name to its concrete BaseFrameworkPlugin instance.
  *
  * Resolution order:
@@ -42,7 +62,7 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const mod = require(builtinPath);
       const plugin: unknown = mod.frameworkPlugin ?? mod.default;
-      if (plugin instanceof BaseFrameworkPlugin) {
+      if (isFrameworkPlugin(plugin)) {
         return plugin;
       }
     } catch {
@@ -56,7 +76,7 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
     const mod = require(packageName);
     const plugin: unknown = mod.frameworkPlugin ?? mod.default;
 
-    if (!(plugin instanceof BaseFrameworkPlugin)) {
+    if (!isFrameworkPlugin(plugin)) {
       throw new ValidationError(
         `${packageName} does not export a valid BaseFrameworkPlugin instance`,
         'framework',

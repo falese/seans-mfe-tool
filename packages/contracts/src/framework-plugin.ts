@@ -77,6 +77,14 @@ export interface DevServerHandle {
  * orchestrating this.doLoad().
  */
 export abstract class BaseFrameworkPlugin {
+  /**
+   * Brand tag for cross-module instanceof checks.
+   * When the same class is loaded from different physical paths
+   * (e.g. npm link), `instanceof` fails because they are different
+   * class objects.  This string brand lets us duck-type safely.
+   */
+  readonly __frameworkPluginBrand = '__BaseFrameworkPlugin__' as const;
+
   // ── Identity ────────────────────────────────────────────────────────
 
   /** Unique id, e.g. `'react-rspack'`, `'angular-webpack'`. */
