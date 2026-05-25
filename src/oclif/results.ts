@@ -86,3 +86,15 @@ export interface RemoteGenerateCapabilityResult extends MutatingResult {
   skipped: string[];
   errors: string[];
 }
+
+// ---------------------------------------------------------------------------
+// build:dev (ADR-071, #174)
+// ---------------------------------------------------------------------------
+
+export interface BuildDevResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  url: string;
+  port: number;
+}

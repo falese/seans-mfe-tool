@@ -21,51 +21,71 @@
 
 ### Active issue(s)
 
-**[#165](https://github.com/falese/seans-mfe-tool/issues/165) — enhancement: integrate Docker builds into Turborepo task graph**
+**[#174](https://github.com/falese/seans-mfe-tool/issues/174) — `build:dev` command (Phase 2, ADR-071)**
 
 ### Scope
 
-Add `docker:build:cli` and `docker:build:examples` tasks to the Turborepo task graph so that `turbo run docker:build:examples` handles the full chain: TypeScript compilation → CLI Docker image → MFE Docker images. Write ADR-070 covering the Turborepo approach and the tradeoffs considered (docker-compose-only, docker buildx bake, Makefile).
+Implement the `build:dev` oclif command. Core orchestrates; plugin implements `startDevServer()`.
 
-NOT changing: any MFE source files, Dockerfiles, the `seans-mfe-tool-cli` service added in #164, the existing Turbo tasks (`build`, `test`, `lint`, `typecheck`).
+The command:
+1. Resolves framework from `--framework` flag or auto-detected `mfe-manifest.yaml`
+2. Loads the concrete plugin via `loadFrameworkPlugin()`
+3. Calls `plugin.startDevServer(manifest, { port, cwd })` → `DevServerHandle`
+4. Prints the server URL, blocks until SIGINT/SIGTERM, then calls `handle.stop()`
+5. Returns `BuildDevResult` under `--json`
+
+NOT changing: plugin implementations (`framework-react`, `framework-angular`), `BaseFrameworkPlugin` contract, `loadFrameworkPlugin()` loader, any other commands.
 
 **Acceptance criteria:**
-- `turbo run docker:build:examples` builds CLI image then MFE images in correct dependency order
-- CLI image rebuild is skipped when `dist/` inputs haven't changed (Turbo cache hit)
-- ADR-070 written
-- `CLAUDE.md` dev commands table updated
+- `build:dev --framework react` starts the React dev server
+- `build:dev --framework angular` starts the Angular dev server
+- `build:dev` with no flags auto-detects framework from `mfe-manifest.yaml` in cwd
+- `--port` overrides the plugin default
+- SIGINT causes graceful `handle.stop()` then exit
+- `--json` returns `BuildDevResult` envelope
+- Tests pass (TDD: tests written first)
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` all green
 
 ### ADR check
 
-No existing ADR (022, 058–069) covers Docker build orchestration. Writing ADR-070 as part of this session.
-
 | ADR | Title | Governs |
 |-----|-------|---------|
-| ADR-070 (new) | Docker+Turborepo integration for CLI and MFE image builds | Docker build orchestration |
+| ADR-071 | Framework plugins — abstract BaseFrameworkPlugin | This entire issue; `build:dev` is one of the core commands that calls plugin methods polymorphically |
 
 ### Spec context
 
-From `@docs/spec.md` — Hardware and runtime:
+Phase 2 of the framework-plugins roadmap (issues #174, #175, #176). Phase 1 (issues #168–#172, #185) merged in PR #186.
 
-> Dev entry: `bun bin/dev.ts` (no transpile)  
-> Published entry: `bin/run.js` (pure Node, loads `dist/commands/`)  
-> Build output: `dist/` (TypeScript → CJS)
+`DevServerHandle` interface (`packages/contracts/src/framework-plugin.ts:64`):
+```ts
+interface DevServerHandle {
+  stop: () => Promise<void>;
+  url: string;
+}
+```
 
-The `seans-mfe-tool-cli:latest` Docker image copies pre-compiled `dist/` from the repo root. All MFE Dockerfiles reference it via `FROM seans-mfe-tool-cli:latest AS cli-builder`.
+Plugin `startDevServer` signature:
+```ts
+abstract startDevServer(manifest: unknown, opts: { port: number; cwd: string }): Promise<DevServerHandle>;
+```
 
 ### Current file tree
 
 ```
-docs/architecture-decisions/ADR-070-docker-turborepo-integration.md   ← CREATE
-turbo.json                                                              ← MODIFY
-package.json                                                            ← MODIFY (scripts only)
-CLAUDE.md                                                               ← MODIFY (dev commands table)
+src/commands/build/dev.ts                     ← CREATE
+src/commands/build/__tests__/dev.test.ts      ← CREATE
+src/oclif/results.ts                          ← MODIFY (add BuildDevResult)
+session-prompt.md                             ← UPDATED (this file)
 ```
 
 ### TDD order
 
-No unit tests apply. Verification: `turbo run docker:build:examples` completes successfully; run again with no changes and confirm Turbo reports cache hits.
+1. Write `dev.test.ts` — all tests fail (no implementation)
+2. Add `BuildDevResult` to `src/oclif/results.ts`
+3. Implement `src/commands/build/dev.ts`
+4. All tests pass
 
 ### Existing tests (summary)
 
-No test coverage for build tooling config. Verification gate: `npm run build` still passes (no turbo.json change should break it).
+- `src/commands/build/__tests__/check.test.ts` — pattern to follow for `dev.test.ts`
+- `src/framework/__tests__/loader.test.ts` — verifies `loadFrameworkPlugin()` (reused by `build:dev`)
