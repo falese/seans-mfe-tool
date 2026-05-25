@@ -100,6 +100,19 @@ export interface BuildDevResult {
 }
 
 // ---------------------------------------------------------------------------
+// build:docker (ADR-071, #177)
+// ---------------------------------------------------------------------------
+
+export interface BuildDockerResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  dockerfilePath: string;
+  imageTag?: string;
+  built: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // build:prod (ADR-071, #175)
 // ---------------------------------------------------------------------------
 
