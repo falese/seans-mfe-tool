@@ -348,4 +348,40 @@ describe('unified-generator', () => {
       expect(serverTs!.overwrite).toBe(true);
     });
   });
+
+  describe('BFF files omitted when manifest has no data: section (#149)', () => {
+    const noDataManifest = {
+      name: 'NoDataMFE',
+      version: '1.0.0',
+      description: 'Manifest with no data section',
+      endpoint: 'http://localhost:3001',
+      capabilities: [{ Health: { type: 'platform', description: 'Health check' } }],
+      dependencies: { 'design-system': { '@mui/material': '^5.15.0' }, mfes: {} },
+      // no data: key
+    };
+
+    it('does not emit bff.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const bffTs = files.find((f) => f.path.includes('bff.ts') && !f.path.includes('bff.test'));
+      expect(bffTs).toBeUndefined();
+    });
+
+    it('does not emit bff.test.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const bffTest = files.find((f) => f.path.includes('bff.test.ts'));
+      expect(bffTest).toBeUndefined();
+    });
+
+    it('does not emit server.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
+      expect(serverTs).toBeUndefined();
+    });
+
+    it('does not emit .meshrc.yaml when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const meshrc = files.find((f) => f.path.includes('.meshrc.yaml'));
+      expect(meshrc).toBeUndefined();
+    });
+  });
 });
