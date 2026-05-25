@@ -86,7 +86,7 @@ describe('ReactRspackPlugin', () => {
     it('returns nginx-based strategy', () => {
       const strategy = plugin.getDockerStrategy({});
       expect(strategy.runtimeImage).toBe('nginx:alpine');
-      expect(strategy.needsCliBuilder).toBe(false);
+      expect(strategy.needsCliBuilder).toBe(true);
       expect(strategy.buildCommands).toContain('npm ci');
     });
   });

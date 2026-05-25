@@ -93,8 +93,10 @@ describe('cross-runtime MF compatibility (React rspack ↔ Angular webpack)', ()
     expect(angularStrategy.artifactPaths).toContain('dist/');
   });
 
-  it('angular plugin requires needsCliBuilder; react does not', () => {
-    expect(react.getDockerStrategy(null).needsCliBuilder).toBe(false);
+  it('both plugins require needsCliBuilder (runtime is distributed via CLI image)', () => {
+    // Both React and Angular MFEs use @seans-mfe-tool/runtime, which is
+    // distributed via the seans-mfe-tool-cli Docker image rather than npm.
+    expect(react.getDockerStrategy(null).needsCliBuilder).toBe(true);
     expect(angular.getDockerStrategy(null).needsCliBuilder).toBe(true);
   });
 

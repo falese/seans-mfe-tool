@@ -28,7 +28,7 @@ const reactStrategy: DockerStrategy = {
   buildCommands: ['npm ci', 'npm run build'],
   artifactPaths: ['dist/'],
   cmd: ['nginx', '-g', 'daemon off;'],
-  needsCliBuilder: false,
+  needsCliBuilder: true,
   healthcheck: 'wget -qO- http://127.0.0.1:80/ || exit 1',
 };
 
@@ -44,15 +44,15 @@ function makeMockPlugin(id: string, framework: string, bundler: string, strategy
 }
 
 describe('generateDockerfile', () => {
-  it('emits builder + runtime stages for react (no cli-builder)', () => {
+  it('emits cli-builder + builder + runtime stages for react', () => {
     const df = generateDockerfile(reactStrategy, 'my-mfe');
+    expect(df).toContain('FROM seans-mfe-tool-cli:latest AS cli-builder');
     expect(df).toContain('FROM node:20-slim AS builder');
     expect(df).toContain('FROM nginx:alpine');
     expect(df).toContain('RUN npm ci');
     expect(df).toContain('RUN npm run build');
     expect(df).toContain('COPY --from=builder /app/dist/');
     expect(df).toContain('CMD ["nginx", "-g", "daemon off;"]');
-    expect(df).not.toContain('cli-builder');
   });
 
   it('emits cli-builder stage when needsCliBuilder is true', () => {
