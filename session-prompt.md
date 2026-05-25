@@ -4,11 +4,14 @@
 
 ### Active issue(s)
 
-**[#178](https://github.com/falese/seans-mfe-tool/issues/178) + [#179](https://github.com/falese/seans-mfe-tool/issues/179) — Phase 3 close-out (ADR-071)**
+**ADR-071 Phase 4 close-out — #181, #185, #182**
 
-#178: Migrate deploy Docker templates → plugin (`dockerComposeProductionDeploy`, lines 348–354)
-#179: Cross-runtime MF compatibility smoke test (React rspack ↔ Angular webpack)
+Validated state: #180 (contracts exports) and #172 (build:check) were already done and closed.
+
+#181: Extend DSL schema — `FrameworkSchema`/`BundlerSchema` from `z.enum` to `z.string().min(1)` with stderr warning on unknown values
+#185: Remove hardcoded `options: ['react', 'angular']` from `remote:init --framework` flag
+#182: Write `docs/framework-plugin-authoring.md` (vue-vite skeleton, all abstract methods, publishing guide)
 
 ### ADR check
 
-ADR-071 governs both issues.
+ADR-071 governs all three issues.

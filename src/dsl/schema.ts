@@ -29,12 +29,18 @@ export const LanguageSchema = z.enum([
 ]);
 export type Language = z.infer<typeof LanguageSchema>;
 
-/** Supported UI frameworks (omit ⇒ react). */
-export const FrameworkSchema = z.enum(['react', 'angular']);
+/** Known built-in frameworks — used for validation warnings, not hard errors (ADR-071, #181). */
+export const KNOWN_FRAMEWORKS = ['react', 'angular'] as const;
+
+/** Known built-in bundlers — used for validation warnings, not hard errors (ADR-071, #181). */
+export const KNOWN_BUNDLERS = ['rspack', 'webpack'] as const;
+
+/** UI framework — open string so third-party plugins can register new values (ADR-071, #181). */
+export const FrameworkSchema = z.string().min(1);
 export type Framework = z.infer<typeof FrameworkSchema>;
 
-/** Supported bundlers (omit ⇒ rspack). */
-export const BundlerSchema = z.enum(['rspack', 'webpack']);
+/** Bundler — open string so third-party plugins can register new values (ADR-071, #181). */
+export const BundlerSchema = z.string().min(1);
 export type Bundler = z.infer<typeof BundlerSchema>;
 
 /** Capability type discrimination */
