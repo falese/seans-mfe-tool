@@ -177,14 +177,24 @@ describe('unified-generator', () => {
       ...manifest,
       endpoint: 'http://localhost:3002'
     };
-    
+
     const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const dockerfile = files.find(f => f.path === path.join(basePath, 'Dockerfile'));
-    
+
     expect(dockerfile).toBeDefined();
     // BFF port should be 4002 (3002 + 1000)
     expect(dockerfile?.content).toContain('EXPOSE 4002');
     expect(dockerfile?.content).toContain('http://localhost:4002/health');
+  });
+
+  it('Dockerfile always includes .mesh artifact copy — no hasData conditional (#189)', async () => {
+    // Dockerfile is only emitted when manifest.data exists (fixed in #149).
+    // Within that block hasData is always true, so the template must not
+    // use a conditional — the .mesh COPY step should always be present.
+    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const dockerfile = files.find((f) => f.path === path.join(basePath, 'Dockerfile'));
+    expect(dockerfile).toBeDefined();
+    expect(dockerfile!.content).toContain('COPY --from=builder /app/.mesh ./.mesh');
   });
 
   it('generates docker-compose.yaml with correct BFF port', async () => {

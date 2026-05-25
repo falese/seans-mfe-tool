@@ -8,8 +8,8 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-<% if (hasData) { %>import { createBuiltMeshHTTPHandler } from './.mesh';
-<% } %>import type { Request, Response, NextFunction, Express } from 'express';
+import { createBuiltMeshHTTPHandler } from './.mesh';
+import type { Request, Response, NextFunction, Express } from 'express';
 import crypto from 'crypto';
 
 const app: Express = express();
@@ -55,7 +55,7 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
 // Following ADR-062: createBuiltMeshHTTPHandler pattern
-<% if (hasData) { %>interface MeshContext {
+interface MeshContext {
   jwt?: string;
   requestId: string;
   userId?: string;
@@ -72,14 +72,13 @@ app.use('/graphql', (req: Request, res: Response) => {
     requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     userId: extractUserIdFromToken(req.headers.authorization as string),
   };
-  
+
   // Mesh handler from @whatwg-node/server expects Request/Response objects
   // We need to pass context via the request object
   const requestWithContext = Object.assign(req, { context });
-  
+
   return meshHandler(requestWithContext as any, res as any, context);
 });
-<% } %>
 
 <% if (includeStatic) { %>
 // Static MFE assets

@@ -799,7 +799,7 @@ export async function generateAllFiles(
     for (const { tpl, out, overwrite } of bffTemplates) {
       const templatePath = path.join(bffTemplateDir, tpl);
       if (await fs.pathExists(templatePath)) {
-        const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic, hasData: true });
+        const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
         files.push({
           path: path.join(basePath, out),
           content,
