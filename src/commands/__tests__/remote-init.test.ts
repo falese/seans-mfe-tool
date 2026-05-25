@@ -114,6 +114,15 @@ describe('remote:init Command', () => {
       await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow(/Failed to create directory:/);
       expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create'));
     });
+
+    it('unknown framework reaches loadFrameworkPlugin and throws ValidationError (ADR-071, #185)', async () => {
+      // The --framework flag no longer has a hardcoded options list; any string is accepted by oclif.
+      // loadFrameworkPlugin throws ValidationError when the plugin is not installed.
+      const { ValidationError } = await import('@seans-mfe/contracts');
+      await expect(
+        remoteInitCommand('test-vue', { skipInstall: true, framework: 'vue' }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
   });
 
   describe('Console Output', () => {

@@ -66,8 +66,8 @@ export async function remoteInitCommand(
     const manifest = createMinimalManifest(name, {
       type: 'remote',
       language: 'typescript',
-      framework: plugin.framework as 'react' | 'angular',
-      bundler: plugin.bundler as 'rspack' | 'webpack',
+      framework: plugin.framework,
+      bundler: plugin.bundler,
     });
     const endpoints = generateEndpoints(name, port);
     const fullManifest: DSLManifest = { ...manifest, ...endpoints };
@@ -110,9 +110,8 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
   static flags = {
     ...BaseCommand.baseFlags,
     framework: Flags.string({
-      description: 'Framework to use (default: react)',
+      description: 'Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.',
       default: 'react',
-      options: ['react', 'angular'],
     }),
     port: Flags.string({
       char: 'p',

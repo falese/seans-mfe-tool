@@ -141,7 +141,8 @@ describe('DSL Validator', () => {
       expect(result.manifest?.bundler).toBe('webpack');
     });
 
-    it('should reject unknown framework', () => {
+    it('accepts unknown framework (open enum — ADR-071, #181)', () => {
+      // Third-party plugins register new frameworks; schema must not reject them.
       const manifest = {
         name: 'oddball',
         version: '1.0.0',
@@ -152,11 +153,10 @@ describe('DSL Validator', () => {
       };
 
       const result = validateManifest(manifest);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.path.includes('framework'))).toBe(true);
+      expect(result.valid).toBe(true);
     });
 
-    it('should reject unknown bundler', () => {
+    it('accepts unknown bundler (open enum — ADR-071, #181)', () => {
       const manifest = {
         name: 'oddball',
         version: '1.0.0',
@@ -167,8 +167,7 @@ describe('DSL Validator', () => {
       };
 
       const result = validateManifest(manifest);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.path.includes('bundler'))).toBe(true);
+      expect(result.valid).toBe(true);
     });
   });
 

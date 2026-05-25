@@ -242,6 +242,11 @@ See [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md) for the full integration spec
 and [`examples/plugin-skeleton/`](./examples/plugin-skeleton/) for a working
 starter plugin you can clone and rename.
 
+To add support for a new UI framework (Vue, Svelte, Solid, etc.), see the
+[Framework Plugin Authoring Guide](./docs/framework-plugin-authoring.md) — it
+covers extending `BaseFrameworkPlugin`, publishing `@seans-mfe/framework-<name>`,
+and a complete `vue-vite` skeleton.
+
 For the long-term roadmap toward a unified monorepo, see [MERGE-PLAN.md](./MERGE-PLAN.md).
 
 ---

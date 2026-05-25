@@ -75,6 +75,7 @@ ADR quick index: `@docs/spec.md#adr-index`
 | oclif migration (Epics A + B + C, PR #123) | ✅ Done |
 | Codegen + DSL pipeline | ✅ Done |
 | GraphQL BFF layer | ✅ Done |
+| Framework plugin system (ADR-071, #167–#185, PRs #187–#188) | ✅ Done |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
 | Lifecycle engine enhancements (ADR-063–067) | 📋 Planned (issues not yet created) |
@@ -97,6 +98,11 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Codegen templates | `src/codegen/templates/` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
+| Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
+| Framework plugin loader | `src/framework/loader.ts` |
+| React plugin | `packages/framework-react/src/plugin.ts` |
+| Angular plugin | `packages/framework-angular/src/plugin.ts` |
+| Plugin authoring guide | `docs/framework-plugin-authoring.md` |
 
 ## Resolved decisions — do not relitigate
 
@@ -105,6 +111,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
 - **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-069).
+- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-071). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
+- **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-071, #181).
 
 ## Backlog priority
 

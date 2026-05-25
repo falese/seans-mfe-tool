@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
+import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
 import { validateManifest, validateFull } from './validator';
 
 // =============================================================================
@@ -62,13 +63,29 @@ export function parseYAML(content: string): DSLManifest {
  */
 export async function parseManifestFile(manifestPath: string): Promise<DSLManifest> {
   const absolutePath = path.resolve(process.cwd(), manifestPath);
-  
+
   if (!await fs.pathExists(absolutePath)) {
     throw new Error(`Manifest not found: ${absolutePath}`);
   }
-  
+
   const content = await fs.readFile(absolutePath, 'utf8');
-  return parseYAML(content);
+  const manifest = parseYAML(content);
+  warnUnknownPluginValues(manifest);
+  return manifest;
+}
+
+function warnUnknownPluginValues(manifest: DSLManifest): void {
+  if (manifest.framework && !(KNOWN_FRAMEWORKS as readonly string[]).includes(manifest.framework)) {
+    process.stderr.write(
+      `[seans-mfe-tool] Warning: unknown framework "${manifest.framework}". ` +
+      `Install the plugin: npm install @seans-mfe/framework-${manifest.framework}\n`,
+    );
+  }
+  if (manifest.bundler && !(KNOWN_BUNDLERS as readonly string[]).includes(manifest.bundler)) {
+    process.stderr.write(
+      `[seans-mfe-tool] Warning: unknown bundler "${manifest.bundler}".\n`,
+    );
+  }
 }
 
 /**
