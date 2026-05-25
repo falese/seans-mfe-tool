@@ -124,7 +124,11 @@ describe('AngularRemoteMFE', () => {
       expect(result.container).toBeDefined();
       // Real extractAvailableComponents picks up the domain capability.
       expect(result.availableComponents).toEqual(['Greeter']);
-      expect(result.capabilities).toEqual(expect.arrayContaining(['load', 'render', 'Greeter']));
+      expect(result.capabilities).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'load', type: 'platform' }),
+        expect.objectContaining({ name: 'render', type: 'platform' }),
+        expect.objectContaining({ name: 'Greeter', type: 'domain' }),
+      ]));
       expect((result.telemetry as any).entry).toBeDefined();
       expect((result.telemetry as any).mount).toBeDefined();
       expect((result.telemetry as any).enableRender).toBeDefined();
