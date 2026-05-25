@@ -155,7 +155,7 @@ export class ReactRspackPlugin extends BaseFrameworkPlugin {
       buildCommands: ['npm ci', 'npm run build'],
       artifactPaths: ['dist/'],
       cmd: ['nginx', '-g', 'daemon off;'],
-      needsCliBuilder: false,
+      needsCliBuilder: true,
       healthcheck: 'wget -qO- http://127.0.0.1:80/ || exit 1',
     };
   }

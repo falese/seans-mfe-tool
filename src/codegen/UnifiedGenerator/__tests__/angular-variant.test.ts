@@ -1,4 +1,4 @@
-import { generateAllFiles } from '../unified-generator';
+import { generateAllFiles, extractManifestVars } from '../unified-generator';
 import * as fs from 'fs-extra';
 import path from 'path';
 
@@ -146,6 +146,41 @@ describe('unified-generator angular-webpack variant', () => {
     expect(mfeFile!.content).toContain('extends AngularRemoteMFE');
     expect(mfeFile!.content).toContain('AngularRemoteMFE');
     expect(mfeFile!.content).not.toContain('extends RemoteMFE {');
+  });
+});
+
+describe('extractManifestVars — plugin-driven variant selection (ADR-071, #176)', () => {
+  it('react manifest → react-rspack plugin fields', () => {
+    const manifest = {
+      name: 'ReactMFE', version: '1.0.0', description: '', endpoint: 'http://localhost:3001',
+      framework: 'react' as const, bundler: 'rspack' as const, capabilities: [],
+    };
+    const vars = extractManifestVars(manifest as any);
+    expect(vars.framework).toBe('react');
+    expect(vars.bundler).toBe('rspack');
+    expect(vars.templateVariant).toBe('react-rspack');
+  });
+
+  it('angular manifest → angular-webpack plugin fields', () => {
+    const manifest = {
+      name: 'NgMFE', version: '1.0.0', description: '', endpoint: 'http://localhost:3101',
+      framework: 'angular' as const, bundler: 'webpack' as const, capabilities: [],
+    };
+    const vars = extractManifestVars(manifest as any);
+    expect(vars.framework).toBe('angular');
+    expect(vars.bundler).toBe('webpack');
+    expect(vars.templateVariant).toBe('angular-webpack');
+  });
+
+  it('bundler:webpack alone (no framework field) → angular-webpack (backward compat)', () => {
+    const manifest = {
+      name: 'BundlerOnly', version: '1.0.0', description: '', endpoint: 'http://localhost:3101',
+      bundler: 'webpack' as const, capabilities: [],
+    };
+    const vars = extractManifestVars(manifest as any);
+    expect(vars.framework).toBe('angular');
+    expect(vars.bundler).toBe('webpack');
+    expect(vars.templateVariant).toBe('angular-webpack');
   });
 });
 

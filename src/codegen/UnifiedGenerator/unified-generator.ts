@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '../../dsl/schema';
+import { loadFrameworkPlugin } from '../../framework/loader';
 
 export interface GeneratedFile {
   path: string;
@@ -408,9 +409,10 @@ export function extractManifestVars(manifest: DSLManifest) {
     neededTransforms.add('resolversComposition');
   }
 
-  // angular-webpack variant is selected when either field opts in; both
-  // derived fields below are normalized from this single source of truth.
-  const isAngularWebpack = manifest.framework === 'angular' || manifest.bundler === 'webpack';
+  // Variant selection via plugin (ADR-071, #176).
+  // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
+  const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  const fwPlugin = loadFrameworkPlugin(frameworkName);
 
   return {
     name: manifest.name,
@@ -426,16 +428,11 @@ export function extractManifestVars(manifest: DSLManifest) {
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
 
-    // Codegen variant selection (react-rspack default; angular-webpack opt-in).
-    // framework/bundler are derived FROM the chosen variant so the trio is
-    // always internally consistent — e.g. bundler:'webpack' alone still yields
-    // framework:'angular', avoiding templateVariant=angular-webpack with
-    // bundler='rspack'. Exposed to templates and read back by generateAllFiles.
-    framework: (isAngularWebpack ? 'angular' : 'react') as 'react' | 'angular',
-    bundler: (isAngularWebpack ? 'webpack' : 'rspack') as 'rspack' | 'webpack',
-    templateVariant: (isAngularWebpack ? 'angular-webpack' : 'react-rspack') as
-      | 'react-rspack'
-      | 'angular-webpack',
+    // Codegen variant selection — driven by plugin (ADR-071).
+    // Exposed to templates and read back by generateAllFiles.
+    framework: fwPlugin.framework as 'react' | 'angular',
+    bundler: fwPlugin.bundler as 'rspack' | 'webpack',
+    templateVariant: fwPlugin.id as 'react-rspack' | 'angular-webpack',
 
     // NEW: Dependency versions for templates (ADR-062)
     dependencyVersions: DEPENDENCY_VERSIONS,
