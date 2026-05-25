@@ -1,11 +1,11 @@
 {
   "name": "seans-mfe-tool",
   "version": "1.0.0",
+  "packageManager": "npm@10.8.1",
   "main": "bin/run.js",
   "workspaces": [
     "packages/*",
-    "src/runtime",
-    "examples/abc-kids/*"
+    "src/runtime"
   ],
   "scripts": {
     "build:packages": "tsc -b packages/contracts packages/oclif-base packages/bff-plugin",
@@ -25,7 +25,9 @@
     "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc --noEmit",
-    "test:mesh-deps": "node scripts/test-mesh-dependencies.js"
+    "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
+    "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",
+    "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build"
   },
   "keywords": [
     "module-federation",

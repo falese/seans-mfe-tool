@@ -8,14 +8,18 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-import { createBuiltMeshHTTPHandler } from './.mesh';
-import type { Request, Response, NextFunction, Express } from 'express';
+<% if (hasData) { %>import { createBuiltMeshHTTPHandler } from './.mesh';
+<% } %>import type { Request, Response, NextFunction, Express } from 'express';
 import crypto from 'crypto';
 
 const app: Express = express();
 
 // Security middleware
+// crossOriginResourcePolicy must be 'cross-origin' so shells on other origins
+// can load remoteEntry.js via <script> injection (CORP blocks no-cors subresource
+// loads from cross-origin pages; CORS alone is not sufficient for script tags).
 app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -51,7 +55,7 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
 // Following ADR-062: createBuiltMeshHTTPHandler pattern
-interface MeshContext {
+<% if (hasData) { %>interface MeshContext {
   jwt?: string;
   requestId: string;
   userId?: string;
@@ -75,6 +79,7 @@ app.use('/graphql', (req: Request, res: Response) => {
   
   return meshHandler(requestWithContext as any, res as any, context);
 });
+<% } %>
 
 <% if (includeStatic) { %>
 // Static MFE assets

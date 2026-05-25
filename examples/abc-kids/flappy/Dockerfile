@@ -1,47 +1,43 @@
 # abc-kids-flappy
-# Static MFE — build with rspack, serve with nginx
-# Build context: repo root (needed to include src/runtime/ source)
+# Static MFE - build with rspack, serve with nginx
+# Build context: examples/abc-kids/flappy/
 
-# ── Stage 1: Install seans-mfe-tool CLI ──────────────────────────────────────
-# scripts/generate-mfe.js uses ts-node --transpileOnly, so we only need
-# npm install here — no tsc, no workspace packages required.
-FROM node:20-alpine AS cli-builder
+# Build tools stage - provides seans-mfe-tool CLI and pre-compiled runtime
+FROM seans-mfe-tool-cli:latest AS cli-builder
 
-WORKDIR /seans-mfe-tool
-COPY package*.json ./
-COPY tsconfig.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
-COPY src/ ./src/
-COPY packages/ ./packages/
-COPY scripts/ ./scripts/
-
-# ── Stage 2: Build the MFE ───────────────────────────────────────────────────
+# -- Build stage ---------------------------------------------------------------
 FROM node:20-alpine AS builder
-
-# Bring the CLI source across; set env so npm run generate finds the script
-COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
-ENV SEANS_MFE_SCRIPT=/seans-mfe-tool/scripts/generate-mfe.js
 
 WORKDIR /app
 
-# Install MFE dependencies
-COPY examples/abc-kids/flappy/package*.json ./
-# Copy dist/runtime before npm install so the file:../../dist/runtime dep resolves
-COPY dist/runtime/ /dist/runtime/
-RUN npm install --prefer-offline --no-audit --no-fund
+# Make pre-compiled runtime available via file: reference.
+# dist/runtime has compiled .js + .d.ts - no source traversal, no transitive deps.
+COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
+RUN chmod +x /seans-mfe-tool/bin/run.js && \
+    ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
-# Copy flappy source
-COPY examples/abc-kids/flappy/ .
+# Install dependencies.
+# @seans-mfe-tool/runtime is removed from package.json before npm install;
+# we then copy it as a real directory (not a symlink) into node_modules so
+# that rspack/webpack module resolution stays within /app/node_modules.
+COPY package.json ./
+RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm install --no-audit --no-fund
 
-# Copy runtime source (resolved via @seans-mfe-tool/runtime alias in rspack.config.js)
-COPY src/runtime/ /src/runtime/
+# Copy runtime as a real directory so module resolution stays within /app.
+RUN mkdir -p node_modules/@seans-mfe-tool && \
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 
-# remote:generate regenerates src/platform/base-mfe/mfe.ts from mfe-manifest.yaml,
-# then rspack bundles the result
+# Copy source
+COPY . .
+
+# remote:generate is included in the rspack build script; also builds the bundle
 RUN npm run build
 
+# -- Production stage ----------------------------------------------------------
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY examples/abc-kids/flappy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3001
 CMD ["nginx", "-g", "daemon off;"]

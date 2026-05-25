@@ -1,0 +1,22 @@
+# Exclude lock files — they contain "link":true symlink entries for file: deps
+# that break npm 10 inside isolated containers.
+package-lock.json
+examples/**/package-lock.json
+
+# General exclusions
+node_modules
+coverage
+.git
+*.log
+
+# Dockerfile.cli only needs: package.json, oclif.manifest.json, packages/, bin/, dist/
+# Exclude everything else so the CLI image build context is small.
+src/
+examples/
+tests/
+docs/
+schemas/
+.github/
+.claude/
+packages/*/node_modules/
+packages/*/coverage/

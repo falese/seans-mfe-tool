@@ -103,16 +103,20 @@ export const DEPENDENCY_VERSIONS = {
   // Angular CLI builder toolchain (angular-webpack variant).
   // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
   // merges the Module Federation partial (webpack.config.js).
+  // @angular-architects/module-federation provides withModuleFederationPlugin,
+  // which resolves ModuleFederationPlugin from Angular's bundled webpack —
+  // avoiding the "tap" crash caused by two separate webpack instances.
   angularBuild: {
     cli: '^17.0.0',
     buildAngular: '^17.0.0',
     customWebpack: '^17.0.0',
+    moduleFederation: '^17.0.0',
   },
 
-  // Direct webpack (for the Module Federation plugin import) + jest preset.
+  // Jest preset (standalone webpack removed — use Angular's bundled copy).
   webpackTools: {
-    webpack: '^5.89.0',
     jestPresetAngular: '^14.0.0',
+    typesJest: '^29.5.0',
   },
 };
 
@@ -797,7 +801,7 @@ export async function generateAllFiles(
   for (const { tpl, out, overwrite } of bffTemplates) {
     const templatePath = path.join(bffTemplateDir, tpl);
     if (await fs.pathExists(templatePath)) {
-      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
+      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic, hasData: !!manifest.data });
       files.push({
         path: path.join(basePath, out),
         content,
@@ -817,6 +821,7 @@ export async function generateAllFiles(
           { name: 'webpack.config.js', ejs: 'webpack.config.js.ejs' },
           { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
           { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
+          { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },

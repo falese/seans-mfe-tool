@@ -106,16 +106,14 @@ describe('unified-generator angular-webpack variant', () => {
     const webpackConfig = files.find((f) => f.path.endsWith('webpack.config.js'));
 
     expect(webpackConfig).toBeDefined();
-    expect(webpackConfig!.content).toContain("require('webpack').container");
-    expect(webpackConfig!.content).toContain('ModuleFederationPlugin');
+    expect(webpackConfig!.content).toContain("require('@angular-architects/module-federation/webpack')");
+    expect(webpackConfig!.content).toContain('withModuleFederationPlugin');
     expect(webpackConfig!.content).toContain("'@angular/core':");
     expect(webpackConfig!.content).toContain('strictVersion: true');
-    // runtimeChunk:false is mandatory for Module Federation
-    expect(webpackConfig!.content).toContain('runtimeChunk: false');
-    // CORS headers so a cross-origin shell can fetch remoteEntry.js
-    expect(webpackConfig!.content).toContain('Access-Control-Allow-Origin');
     // No react in shared scope
     expect(webpackConfig!.content).not.toContain("'react':");
+    // No raw webpack instance (avoids two-instance 'tap' crash)
+    expect(webpackConfig!.content).not.toContain("require('webpack')");
   });
 
   it('renders package.json with Angular CLI builder deps (and no react/rspack/ngtools)', async () => {
@@ -128,7 +126,8 @@ describe('unified-generator angular-webpack variant', () => {
     expect(pkg!.content).toContain('"@angular/platform-browser-dynamic"');
     expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
     expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
-    expect(pkg!.content).toContain('"webpack"');
+    expect(pkg!.content).toContain('"@angular-architects/module-federation"');
+    expect(pkg!.content).not.toContain('"webpack"');
     // prebff:dev builds the GraphQL Mesh artifacts so `npm run dev` works cold
     // (server.ts imports ./.mesh, which only exists after `mesh build`).
     expect(pkg!.content).toContain('"prebff:dev"');

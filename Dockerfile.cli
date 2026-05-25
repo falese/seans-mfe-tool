@@ -1,0 +1,23 @@
+# seans-mfe-tool CLI image
+# Build once, reuse across all MFE Docker builds.
+#
+# Pre-requisite: npm run build must be run before this docker build.
+#
+# Usage:
+#   npm run build                                               # compile first
+#   docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .
+#
+# Then MFE Dockerfiles consume it as:
+#   FROM seans-mfe-tool-cli:latest AS cli-builder
+
+FROM node:20-alpine
+
+WORKDIR /seans-mfe-tool
+# Install prod deps — workspace packages (packages/*) must be present so npm
+# links @seans-mfe/oclif-base, @seans-mfe/contracts, etc. into node_modules.
+COPY package.json oclif.manifest.json ./
+COPY packages/ ./packages/
+RUN npm install --omit=dev --no-audit --no-fund
+# Copy pre-built CLI output (requires npm run build locally first)
+COPY bin/ ./bin/
+COPY dist/ ./dist/

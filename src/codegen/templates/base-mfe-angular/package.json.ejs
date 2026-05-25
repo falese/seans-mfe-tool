@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "concurrently \"ng serve\" \"npm run bff:dev\"",
     "start": "ng serve",
-    "build": "ng build && mesh build",
+    "build": "seans-mfe-tool remote:generate && ng build --configuration production && (grep -q '^data:' mfe-manifest.yaml && mesh build || true)",
+    "build:server": "tsc server.ts --module commonjs --target ES2020 --esModuleInterop true --skipLibCheck true --moduleResolution node --outDir .",
     "ng": "ng",
     "prebff:dev": "mesh build",
     "bff:dev": "ts-node server.ts",
@@ -14,7 +15,6 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@seans-mfe-tool/runtime": "*",
     "@graphql-mesh/cli": "<%= dependencyVersions.graphqlMesh.cli %>",
     "@graphql-mesh/openapi": "<%= dependencyVersions.graphqlMesh.openapi %>",
     "@graphql-mesh/serve-runtime": "<%= dependencyVersions.graphqlMesh.serveRuntime %>",
@@ -57,6 +57,7 @@
     "zone.js": "<%= dependencyVersions.angular.zoneJs %>"
   },
   "devDependencies": {
+    "@seans-mfe-tool/runtime": "^0.1.0",
     "@angular-builders/custom-webpack": "<%= dependencyVersions.angularBuild.customWebpack %>",
     "@angular-devkit/build-angular": "<%= dependencyVersions.angularBuild.buildAngular %>",
     "@angular/cli": "<%= dependencyVersions.angularBuild.cli %>",
@@ -64,11 +65,13 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.0",
-    "webpack": "<%= dependencyVersions.webpackTools.webpack %>",
+    "@angular-architects/module-federation": "<%= dependencyVersions.angularBuild.moduleFederation %>",
     "typescript": "~5.2.0",
     "ts-node": "<%= dependencyVersions.buildTools.tsNode %>",
     "concurrently": "<%= dependencyVersions.buildTools.concurrently %>",
+    "zod": "^4.0.0",
     "eslint": "^8.55.0",
+    "@types/jest": "<%= dependencyVersions.webpackTools.typesJest %>",
     "jest": "^29.7.0",
     "jest-preset-angular": "<%= dependencyVersions.webpackTools.jestPresetAngular %>",
     "supertest": "^6.3.3"

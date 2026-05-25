@@ -23,6 +23,24 @@ async function cleanupRuntimeFiles() {
       console.warn('  ⚠ Warning: dist/runtime not found - TypeScript build may have failed');
     }
 
+    // Write package.json to dist/runtime/ so it can be installed via file: reference.
+    // This allows Dockerfiles to do:
+    //   npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
+    // and get compiled .js + .d.ts without traversing TypeScript source (and its
+    // transitive deps like zod/dsl/schema).
+    await fs.writeJson(path.join(distRuntime, 'package.json'), {
+      name: '@seans-mfe-tool/runtime',
+      version: '0.1.0',
+      main: './index.js',
+      types: './index.d.ts',
+      exports: {
+        '.':         { require: './index.js',  import: './index.js',  default: './index.js',  types: './index.d.ts'   },
+        './angular': { require: './angular.js', import: './angular.js', default: './angular.js', types: './angular.d.ts' },
+        './package.json': './package.json'
+      }
+    }, { spaces: 2 });
+    console.log('  ✓ Wrote dist/runtime/package.json (installable via file: reference)');
+
     // Remove redundant platform-runtime directory
     if (await fs.pathExists(distPlatformRuntime)) {
       await fs.remove(distPlatformRuntime);

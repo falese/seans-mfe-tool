@@ -1,140 +1,147 @@
-# CLAUDE.md
+# seans-mfe-tool — Project Memory
 
-Guidance for Claude Code sessions working on `seans-mfe-tool`.
+## What this project is
 
-**Read `.github/copilot-instructions.md` first.** It is the 754-line baseline covering CLI structure, codegen flow, module federation, templates, runtime patterns, and ADR references. This file is a thin overlay with context the copilot doc predates — the in-flight migration, locked architectural decisions, and new code patterns.
+A platform for delivering **domain features as independently deployable units**, in any framework, language, or federation pattern. The CLI generates and manages domain-capability MFEs; the runtime platform provides the lifecycle contract that makes them composable in a shell — regardless of how they were built.
 
-For deep background, read `docs/agent-plans/oclif-migration.md`.
+Federation (Module Federation, ESM, iframe, web components) is a delivery mechanism, not the purpose of the platform.
 
-## Migration state ✅ Complete
+Long-term goal: a community marketplace of domain-capability packages — teams publish adaptor packs; any shell operator installs and composes them.
 
-All three epics shipped via PR #123 (merged April 2026). Issues #90–#115 are closed.
+Full spec: `@docs/spec.md`
 
-| Epic                       | Issues                         | Theme                                                                                                  | Status  |
-| -------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ | ------- |
-| A — oclif Migration        | falese/seans-mfe-tool#90–#99   | Replace Commander with oclif; Bun dev entry; plugin system                                             | ✅ Done |
-| B — JSON Agent Interface   | falese/seans-mfe-tool#100–#108 | `CommandResult` envelope, `--json` mode, JSON Schemas, MCP server                                      | ✅ Done |
-| C — Unification Foundation | falese/seans-mfe-tool#109–#115 | `@seans-mfe/contracts` + `@seans-mfe/oclif-base` packages, plugin contract, MCP federation, merge plan | ✅ Done |
+## Stack
 
-See `docs/agent-plans/oclif-migration.md` for verification gates and completion notes.
+- **Runtime:** Node ≥18 (published), Bun (dev entry — no transpile)
+- **Language:** TypeScript (strict, no `any`)
+- **CLI framework:** oclif (colon topics, plugin architecture)
+- **Packages:** `packages/contracts/`, `packages/oclif-base/`, `packages/runtime/`
+- **Bundler support generated:** rspack (React), webpack/@angular-builders (Angular)
+- **Test runner:** Jest
+- **Validation:** Zod
 
-### What's active now
+## Commands
 
-| Work stream                                                     | Location                                                   | Status                              |
-| --------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------- |
-| Runtime platform (REQ-RUNTIME-001–012)                          | `src/runtime/`, `packages/runtime/`                        | 🟡 In Progress (issues #47–59)      |
-| BaseMFE boilerplate codegen from DSL                            | `docs/requirements/REQ-057-base-mfe-boilerplate.md`        | 🟡 In Progress (issue #39)          |
-| Lifecycle engine enhancements (5 features)                      | `docs/requirements/lifecycle-enhancements.md`, ADR-063–067 | 📋 Planned (issues not yet created) |
-| npm publish of `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | `packages/contracts/`, `packages/oclif-base/`              | ⏳ Pending (MERGE-PLAN.md Phase 1)  |
+| Command | When to run |
+|---|---|
+| `npm run lint` | Before every commit |
+| `npm run typecheck` | Before every commit |
+| `npm test` | After any `src/**/*` change |
+| `npm run test:ci` | If you touched `src/runtime/` (enforces 80% coverage) |
+| `npm run build` | Before pushing — catches broken oclif manifest |
+| `npm run build:schemas` | After any change to command flags, args, or return types |
+| `npm run format` | Before PR |
+| `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
+| `turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged) |
+| `turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
 
-See `docs/PROJECT-STATUS.md` for the full current-state overview.
+## Development rules
 
-## Locked decisions — do not relitigate
+- **TDD always** — write a failing test first, then the code to pass it
+- Never write code without a corresponding test
+- `npm run typecheck` must be clean before any commit
+- `npm run lint` must be clean before any commit
+- No `any` types — use `unknown` and narrow
+- No `console.log` in production code — use the structured logger
+- Conventional Commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+- Every commit body includes `Refs #N` (or `Closes #N` on the final commit of a PR)
+- No `--no-verify`, no `--no-gpg-sign`, no force-push to `main`
 
-These were decided during planning. Do not open them back up inside an implementation PR; propose a new ADR if new evidence warrants revisiting.
+## ADR governance
 
-- **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase (`MERGE-PLAN.md`).
+**Before making any architectural decision, check `docs/architecture-decisions/`.**
+
+- If a relevant ADR exists → reference it in code comments, commit messages, and PR body (`ADR-NNN`)
+- If no ADR covers the decision → **stop and ask the human** before implementing; do not invent architecture
+- Never edit existing ADRs mid-implementation — add a new ADR file instead
+- New ADRs go in `docs/architecture-decisions/ADR-NNN-short-slug.md`
+- Reference the new ADR in the PR body
+
+ADR quick index: `@docs/spec.md#adr-index`
+
+## Architecture constraints
+
+- **BaseCommand pattern:** every oclif command extends `BaseCommand` from `@seans-mfe/oclif-base`; implement `runCommand()` not `run()`
+- **Typed errors:** never `throw new Error()` — use `ValidationError` / `BusinessError` / `NetworkError` / `SystemError` / `TimeoutError` / `SecurityError` from `@seans-mfe/contracts`
+- **JSON envelope:** under `--json`, stdout emits exactly ONE `CommandResult<T>` line; everything else goes to stderr
+- **MCP child-process per tool call:** spawn `seans-mfe-tool <cmd> --json`, parse stdout — isolates `process.exit` and cwd mutations
+- **Bun for dev, Node for publish:** `bin/dev.ts` runs under Bun; `bin/run.js` is the pure-Node published entry
+- **Framework-agnostic runtime contract:** `BaseMFE` lifecycle is delivery-mechanism-independent; adding a new framework means a new codegen template variant, not a new lifecycle
+
+## Current state (2026-05-24)
+
+| Work stream | Status |
+|---|---|
+| oclif migration (Epics A + B + C, PR #123) | ✅ Done |
+| Codegen + DSL pipeline | ✅ Done |
+| GraphQL BFF layer | ✅ Done |
+| Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
+| BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
+| Lifecycle engine enhancements (ADR-063–067) | 📋 Planned (issues not yet created) |
+| npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (MERGE-PLAN.md Phase 1) |
+
+See `docs/PROJECT-STATUS.md` for priority order and blockers.
+
+## Where things live
+
+| Concept | Path |
+|---|---|
+| `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |
+| Envelope types | `packages/contracts/src/envelope.ts` |
+| Typed errors | `packages/contracts/src/errors/` |
+| Error classifier | `packages/contracts/src/error-classifier.ts` |
+| Runtime lifecycle | `packages/runtime/src/` |
+| JSON schemas | `schemas/<topic>/<cmd>.json` (generated — never hand-edit) |
+| MCP server | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts` |
+| Hooks | `src/hooks/{init,prerun,postrun,command-not-found}.ts` |
+| Codegen templates | `src/codegen/templates/` |
+| Plugin skeleton | `examples/plugin-skeleton/` |
+| ADRs | `docs/architecture-decisions/` |
+
+## Resolved decisions — do not relitigate
+
+- **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship as oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase.
 - **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
-- **MCP uses child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`, parse stdout envelope. Isolates `process.exit` and cwd mutations; concurrency-safe.
-- **Bun for dev, Node for the published npm package.** `bin/dev.ts` runs under Bun (no transpile). `bin/run.js` is the pure-Node published entry loading `dist/commands/`.
+- **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
+- **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
+- **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-069).
 
-## New patterns introduced by the migration
+## Backlog priority
 
-### BaseCommand
-
-Every oclif command extends `BaseCommand` (pre-C3: `src/oclif/BaseCommand.ts`; post-C3: `@seans-mfe/oclif-base`). Subclasses implement `async runCommand(): Promise<T>`, NOT `run()`. `BaseCommand.run()` owns the JSON envelope, exit codes, stdout/stderr split, and prompt rejection under `--json`.
-
-### Typed errors
-
-Do NOT `throw new Error(...)` in command code. Use typed errors from `@seans-mfe/contracts` (pre-C1: `src/runtime/errors/`):
-
-- `ValidationError` — bad user input, missing required flag, Zod failure. Exit 64.
-- `BusinessError` — rule violation (e.g., directory exists without `--force`). Exit 65.
-- `NetworkError` — registry, WS, HTTP failure. Exit 66.
-- `SystemError` — FS read, missing binary, interactive-prompt-under-json. Exit 69.
-- `TimeoutError` — exit 124. `SecurityError` — exit 77.
-
-The classifier (`error-classifier.ts`) turns these into `CommandResult.error` under `--json`.
-
-### JSON envelope contract
-
-Under `--json`, stdout emits exactly ONE line: a `CommandResult<T>` object. Everything else (chalk, logs, progress) goes to stderr. Exit codes: 0, 2, 64, 65, 66, 69, 70, 77, 124. Source of truth: `packages/contracts/src/envelope.ts` post-C1, `src/oclif/envelope.ts` pre-C1.
-
-### File layout for oclif
-
-- Colon topics → nested dirs. `bff:init` lives at `src/commands/bff/init.ts`, not `bff.ts`.
-- Files prefixed with `_` (e.g. `_shared.ts`) are skipped by oclif discovery — use for helpers.
-- Legacy top-level files (`bff.ts`, `remote-init.ts`, `create-api.ts`) stay as re-export shims during migration so existing tests keep working.
-
-## Where things live (post-migration)
-
-| Concept          | Path                                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| `BaseCommand`    | `packages/oclif-base/src/BaseCommand.ts` (post-C3) / `src/oclif/BaseCommand.ts` (pre-C3) |
-| Envelope types   | `@seans-mfe/contracts/envelope` (post-C1) / `src/oclif/envelope.ts` (pre-C1)             |
-| Typed errors     | `@seans-mfe/contracts/errors` (post-C1) / `src/runtime/errors/` (pre-C1)                 |
-| Error classifier | `@seans-mfe/contracts/error-classifier` (post-C1) / `src/runtime/error-classifier.ts`    |
-| JSON schemas     | `schemas/<topic>/<cmd>.json` (generated by B5)                                           |
-| MCP server       | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts`                         |
-| Hooks            | `src/hooks/{init,prerun,postrun,command-not-found}.ts`                                   |
-| Plugin skeleton  | `examples/plugin-skeleton/`                                                              |
-
-## Dev commands
-
-| Command                 | When to run                                                        |
-| ----------------------- | ------------------------------------------------------------------ |
-| `npm run lint`          | Before every commit                                                |
-| `npm run typecheck`     | Before every commit (TS work especially)                           |
-| `npm test`              | After any `src/**/*` change                                        |
-| `npm run test:ci`       | If you changed anything in `src/runtime/` (enforces 80% coverage)  |
-| `npm run build`         | Before pushing; catches broken oclif manifest                      |
-| `npm run build:schemas` | After any change to command flags, args, or return types (post-B5) |
-| `npm run dev`           | Legacy Node entry; will switch to `bun bin/dev.ts` after A1        |
-| `bun bin/dev.ts <cmd>`  | Post-A1 dev entry; no transpile                                    |
-| `npm run format`        | Before PR                                                          |
-
-## Files that require coordination
-
-These are touched by multiple in-flight issues. Before editing, check if another open PR already has them:
-
-- `package.json` `oclif` section — modified by A1, A7, A8, A9, A10.
-- `src/oclif/BaseCommand.ts` — modified by A2, B2, then moved in C3.
-- `src/oclif/envelope.ts` — created in B1, moved in C1.
-- `src/commands/**/*.ts` — B3, B4, B8 touch all of them.
-- `schemas/` — generated only; never hand-edit.
-- `pnpm-workspace.yaml`, `turbo.json` — only C1, C3, C6 touch these.
+1. ~~oclif Migration (A + B + C)~~ ✅
+2. ~~Codegen + DSL pipeline~~ ✅
+3. ~~GraphQL BFF layer~~ ✅
+4. Runtime platform — REQ-RUNTIME-002 → 005 → 001 → 004 → … (issues #47–59) 🟡
+5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
+6. Lifecycle engine enhancements — ADR-063–067 (issues not yet created) 📋
+7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
+8. Monorepo consolidation (MERGE-PLAN.md Phase 2) ⏳
 
 ## Verification gates before push
 
-Run these in order. Push only after all pass:
+Run in order — push only after all pass:
 
 1. `npm run lint`
 2. `npm run typecheck`
 3. `npm test` (or `npm run test:ci` if you touched runtime code)
 4. `npm run build`
-5. Post-B5: `npm run build:schemas && git diff --exit-code schemas/`
+5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command flags/types)
 
 ## Branch and commit discipline
 
-- Branch: `claude/issue-<num>-<short-slug>` (e.g., `claude/issue-92-port-deploy-oclif`). Matches existing `claude/*` pattern in git log.
-- Commits: Conventional Commits — `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`.
-- Every commit body includes `Refs #<num>` (or `Closes #<num>` on the final commit of a PR).
-- No `--no-verify`, no `--no-gpg-sign`, no `--amend` on pushed commits.
-- No force-push to `main`, ever.
-
-## ADR interaction
-
-ADRs in `docs/architecture-decisions/` are stable decisions. If your issue contradicts or extends an ADR:
-
-- Add a NEW ADR file in the same PR (e.g., `ADR-068-...`).
-- Do NOT edit existing ADRs mid-implementation.
-- Reference the new ADR in the PR body.
+- Branch: `claude/issue-<num>-<short-slug>` (e.g. `claude/issue-49-shared-context`)
+- Commits: Conventional Commits with `Refs #N` or `Closes #N` in body
+- No `--no-verify`, no `--no-gpg-sign`, no `--amend` on pushed commits
+- No force-push to `main`
 
 ## Session-end checklist
 
 Before opening the PR:
 
-- [ ] Every acceptance criterion from the issue is checked off in the PR body with evidence (test name or command).
-- [ ] All verification gates green.
-- [ ] PR body links the issue (`Closes #<num>`).
-- [ ] No files from "Files that require coordination" touched unless the issue explicitly owns them.
+- [ ] Every acceptance criterion checked off in PR body with evidence (test name or command output)
+- [ ] All verification gates green
+- [ ] PR body links the issue (`Closes #N`) and references governing ADRs
+- [ ] New architectural decisions either cite an existing ADR or include a new ADR file in the PR
+- [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `pnpm-workspace.yaml`, `turbo.json`, `schemas/`)
+
+For the current session's active issue and spec context: `@session-prompt.md`
