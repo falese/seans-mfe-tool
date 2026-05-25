@@ -152,6 +152,10 @@ module.exports = {
     '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
     '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
     '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
-    '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1'
+    '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
+    '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',
+    '^@seans-mfe/framework-react/(.*)$': '<rootDir>/packages/framework-react/src/$1',
+    '^@seans-mfe/framework-angular$': '<rootDir>/packages/framework-angular/src/index.ts',
+    '^@seans-mfe/framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1'
   }
 };

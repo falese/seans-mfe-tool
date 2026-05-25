@@ -1,5 +1,4 @@
-// Migration shim — actual logic lives in src/commands/remote/init-angular.ts
-// Matches the pattern of remote-init.ts. Remove when the Commander entry path
-// retires.
-export { remoteInitAngularCommand } from './remote/init-angular';
-export { remoteInitAngularCommand as default } from './remote/init-angular';
+// Migration shim — init-angular now delegates to the unified remoteInitCommand.
+// The standalone remoteInitAngularCommand is retired; use
+// remoteInitCommand(name, { framework: 'angular' }) instead.
+export { remoteInitCommand } from './remote/init';
