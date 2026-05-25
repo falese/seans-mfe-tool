@@ -112,22 +112,22 @@ describe('remote:init Command', () => {
     it('should throw and log error on fs failure', async () => {
       (mockFs.ensureDir as unknown as jest.Mock).mockRejectedValue(new Error('fs error'));
       await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow(/Failed to create directory:/);
-      expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create remote MFE'));
+      expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create'));
     });
   });
 
   describe('Console Output', () => {
     it('should log creation messages', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based remote MFE'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Remote MFE manifest created!'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('remote MFE manifest created!'));
     });
     it('should log next steps', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('cd my-feature'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Edit mfe-manifest.yaml'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('mfe remote:generate'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('remote:generate'));
     });
   });
 });

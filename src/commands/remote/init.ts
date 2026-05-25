@@ -5,20 +5,23 @@ import chalk = require('chalk');
 import { createMinimalManifest, writeManifest, generateEndpoints } from '../../dsl/parser';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { BusinessError, SystemError } from '@seans-mfe/contracts';
+import { loadFrameworkPlugin } from '../../framework/loader';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
 import type { RemoteInitOptions, DSLManifest } from '../../dsl/schema';
 
 export async function remoteInitCommand(
   name: string,
-  options: RemoteInitOptions & { dryRun?: boolean } = {}
+  options: RemoteInitOptions & { dryRun?: boolean; framework?: string } = {}
 ): Promise<RemoteInitResult> {
-  const port = options.port || 3001;
+  const frameworkName = options.framework ?? 'react';
+  const plugin = loadFrameworkPlugin(frameworkName);
+  const port = options.port || plugin.defaultPort;
   const targetDir = path.resolve(process.cwd(), name);
   const generatedFiles: string[] = [];
   const plannedChanges: PlannedChange[] = [];
 
   try {
-    console.log(chalk.blue(`\nCreating DSL-based remote MFE: ${name}`));
+    console.log(chalk.blue(`\nCreating DSL-based ${plugin.displayName} remote MFE: ${name}`));
     console.log(chalk.gray(`Target directory: ${targetDir}`));
 
     if (await fs.pathExists(targetDir)) {
@@ -35,9 +38,7 @@ export async function remoteInitCommand(
     const manifestFile = path.join(targetDir, 'mfe-manifest.yaml');
     const dirs = [
       targetDir,
-      path.join(targetDir, 'src'),
-      path.join(targetDir, 'src', 'features'),
-      path.join(targetDir, 'public'),
+      ...plugin.directoryStructure.map(d => path.join(targetDir, d)),
     ];
 
     if (options.dryRun) {
@@ -62,26 +63,31 @@ export async function remoteInitCommand(
     }
 
     console.log(chalk.blue('Generating mfe-manifest.yaml...'));
-    const manifest = createMinimalManifest(name, { type: 'remote', language: 'typescript' });
+    const manifest = createMinimalManifest(name, {
+      type: 'remote',
+      language: 'typescript',
+      framework: plugin.framework as 'react' | 'angular',
+      bundler: plugin.bundler as 'rspack' | 'webpack',
+    });
     const endpoints = generateEndpoints(name, port);
     const fullManifest: DSLManifest = { ...manifest, ...endpoints };
     await writeManifest(fullManifest, manifestFile);
     generatedFiles.push(path.relative(process.cwd(), manifestFile));
     console.log(chalk.green('✓ mfe-manifest.yaml'));
 
-    console.log(chalk.green('\n✓ Remote MFE manifest created!'));
+    console.log(chalk.green(`\n✓ ${plugin.displayName} remote MFE manifest created!`));
     console.log(chalk.blue('\nNext steps:'));
     console.log(`  1. ${chalk.cyan(`cd ${name}`)}`);
     console.log(`  2. Edit ${chalk.cyan('mfe-manifest.yaml')} to add capabilities`);
-    console.log(`  3. Run ${chalk.cyan('mfe remote:generate')} to scaffold features and platform files`);
-    console.log(`  4. Run ${chalk.cyan('npm run dev')} to start development`);
+    console.log(`  3. Run ${chalk.cyan('seans-mfe-tool remote:generate')} to scaffold features and platform files`);
+    console.log(`  4. Run ${chalk.cyan('npm install && npm run dev')} to start development`);
     console.log(`\nRemote will be available at: ${chalk.cyan(`http://localhost:${port}`)}`);
     console.log(`remoteEntry.js: ${chalk.cyan(`http://localhost:${port}/remoteEntry.js`)}`);
 
     return { name, port, targetDir, generatedFiles, dryRun: false };
 
   } catch (error) {
-    console.error(chalk.red('\n✗ Failed to create remote MFE:'));
+    console.error(chalk.red(`\n✗ Failed to create ${plugin.displayName} remote MFE:`));
     console.error(chalk.red((error as Error).message));
     throw error;
   }
@@ -92,6 +98,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
 
   static examples = [
     '$ seans-mfe-tool remote:init my-feature',
+    '$ seans-mfe-tool remote:init my-feature --framework angular',
     '$ seans-mfe-tool remote:init my-feature --port 3005',
     '$ seans-mfe-tool remote:init my-feature --dry-run',
   ]
@@ -102,10 +109,14 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    framework: Flags.string({
+      description: 'Framework to use (default: react)',
+      default: 'react',
+      options: ['react', 'angular'],
+    }),
     port: Flags.string({
       char: 'p',
-      description: 'Port number for the remote MFE',
-      default: '3001',
+      description: 'Port number for the remote MFE (default: per-framework)',
     }),
     template: Flags.string({
       char: 't',
@@ -130,11 +141,12 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
   protected async runCommand(): Promise<RemoteInitResult> {
     const { args, flags } = await this.parse(RemoteInit)
     return remoteInitCommand(args.name, {
-      port: flags.port ? parseInt(flags.port, 10) : 3001,
+      port: flags.port ? parseInt(flags.port, 10) : undefined,
       template: flags.template,
       skipInstall: flags['skip-install'],
       force: flags.force,
       dryRun: flags['dry-run'],
+      framework: flags.framework,
     })
   }
 }

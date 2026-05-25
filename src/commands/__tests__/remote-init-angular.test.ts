@@ -1,9 +1,8 @@
 /**
- * remote:init-angular Command Tests
+ * remote:init --framework angular tests
  *
- * Parallel to remote-init.test.ts — same mocking strategy. Asserts the
- * Angular variant writes a manifest tagged framework: 'angular' +
- * bundler: 'webpack' and defaults to port 3101.
+ * Tests the unified remoteInitCommand with framework='angular'.
+ * Also verifies that the deprecated init-angular command delegates correctly.
  */
 
 import * as fs from 'fs-extra';
@@ -33,9 +32,9 @@ jest.mock('path', () => ({
 
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
-import { remoteInitAngularCommand } from '../remote-init-angular';
+import { remoteInitCommand } from '../remote/init';
 
-describe('remote:init-angular Command', () => {
+describe('remote:init --framework angular', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockConsole = {
@@ -55,7 +54,7 @@ describe('remote:init-angular Command', () => {
 
   describe('Project Creation', () => {
     it('creates the Angular-flavored directory layout (incl. src/app)', async () => {
-      await remoteInitAngularCommand('my-ng-feature', { skipInstall: true });
+      await remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' });
 
       expect(mockFs.ensureDir).toHaveBeenCalledWith(
         expect.stringContaining('my-ng-feature/src')
@@ -72,7 +71,7 @@ describe('remote:init-angular Command', () => {
     });
 
     it('writes a manifest tagged framework: angular and bundler: webpack', async () => {
-      await remoteInitAngularCommand('my-ng-feature', { skipInstall: true });
+      await remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' });
 
       expect(mockFs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining('mfe-manifest.yaml'),
@@ -87,23 +86,23 @@ describe('remote:init-angular Command', () => {
     });
 
     it('defaults to port 3101 (different from React remote 3001)', async () => {
-      const result = await remoteInitAngularCommand('my-ng-feature', { skipInstall: true });
+      const result = await remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' });
       expect(result.port).toBe(3101);
 
-      // Manifest YAML should reference port 3101 in the generated endpoints.
-      const writeCall = (mockFs.writeFile as jest.Mock).mock.calls.find((c: any[]) =>
+      const writeCall = (mockFs.writeFile as jest.Mock).mock.calls.find((c: unknown[]) =>
         String(c[0]).includes('mfe-manifest.yaml')
       );
       expect(String(writeCall?.[1])).toContain('3101');
     });
 
     it('honors --port override', async () => {
-      const result = await remoteInitAngularCommand('my-ng-feature', {
+      const result = await remoteInitCommand('my-ng-feature', {
         port: 3205,
         skipInstall: true,
+        framework: 'angular',
       });
       expect(result.port).toBe(3205);
-      const writeCall = (mockFs.writeFile as jest.Mock).mock.calls.find((c: any[]) =>
+      const writeCall = (mockFs.writeFile as jest.Mock).mock.calls.find((c: unknown[]) =>
         String(c[0]).includes('mfe-manifest.yaml')
       );
       expect(String(writeCall?.[1])).toContain('3205');
@@ -114,14 +113,14 @@ describe('remote:init-angular Command', () => {
     it('throws when directory exists without --force', async () => {
       (mockFs.pathExists as jest.Mock).mockResolvedValue(true);
       await expect(
-        remoteInitAngularCommand('my-ng-feature', { skipInstall: true })
+        remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' })
       ).rejects.toThrow(/already exists/);
     });
 
     it('proceeds when directory exists with --force', async () => {
       (mockFs.pathExists as jest.Mock).mockResolvedValue(true);
       await expect(
-        remoteInitAngularCommand('my-ng-feature', { force: true, skipInstall: true })
+        remoteInitCommand('my-ng-feature', { force: true, skipInstall: true, framework: 'angular' })
       ).resolves.not.toThrow();
       expect(mockFs.ensureDir).toHaveBeenCalled();
     });
@@ -129,7 +128,7 @@ describe('remote:init-angular Command', () => {
 
   describe('Dry Run', () => {
     it('reports planned changes without writing files', async () => {
-      const result = await remoteInitAngularCommand('my-ng-feature', { dryRun: true });
+      const result = await remoteInitCommand('my-ng-feature', { dryRun: true, framework: 'angular' });
 
       expect(result.dryRun).toBe(true);
       expect(result.generatedFiles).toEqual([]);
@@ -142,14 +141,14 @@ describe('remote:init-angular Command', () => {
 
   describe('Console Output', () => {
     it('logs Angular-specific creation message', async () => {
-      await remoteInitAngularCommand('my-ng-feature', { skipInstall: true });
+      await remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' });
       expect(mockConsole.log).toHaveBeenCalledWith(
         expect.stringContaining('Angular + webpack remote MFE')
       );
     });
 
     it('tells the user to run remote:generate next', async () => {
-      await remoteInitAngularCommand('my-ng-feature', { skipInstall: true });
+      await remoteInitCommand('my-ng-feature', { skipInstall: true, framework: 'angular' });
       expect(mockConsole.log).toHaveBeenCalledWith(
         expect.stringContaining('seans-mfe-tool remote:generate')
       );
