@@ -184,7 +184,7 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Install tool workspace (for file: runtime dep)
+      - name: "Install tool workspace (for file: runtime dep)"
         run: npm ci
 
       - name: Install example dependencies
