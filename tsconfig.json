@@ -21,7 +21,11 @@
       "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],
       "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"],
       "@falese/bff-plugin": ["./packages/bff-plugin/src/index.ts"],
-      "@falese/bff-plugin/*": ["./packages/bff-plugin/src/*"]
+      "@falese/bff-plugin/*": ["./packages/bff-plugin/src/*"],
+      "@seans-mfe/framework-react": ["./packages/framework-react/src/index.ts"],
+      "@seans-mfe/framework-react/*": ["./packages/framework-react/src/*"],
+      "@seans-mfe/framework-angular": ["./packages/framework-angular/src/index.ts"],
+      "@seans-mfe/framework-angular/*": ["./packages/framework-angular/src/*"]
     }
   },
   "include": ["src/**/*"],
