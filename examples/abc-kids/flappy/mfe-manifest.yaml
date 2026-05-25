@@ -2,6 +2,8 @@ name: abc-kids-flappy
 version: 1.0.0
 type: remote
 language: typescript
+framework: react
+bundler: rspack
 description: Flappy Bird — tap to flap, avoid pipes, keep score!
 owner: abc-kids-team
 tags: [kids, game, flappy-bird, arcade]
