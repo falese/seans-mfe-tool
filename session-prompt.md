@@ -6,43 +6,32 @@
 
 ---
 
-## How to use this template
-
-1. Fill in **Active issue** and **Scope** below
-2. Run the ADR check — confirm which existing ADRs govern this work; if none exist for a decision, stop and create one (or waive explicitly)
-3. Copy the relevant spec sections from `@docs/spec.md` into **Spec context**
-4. Update **Current file tree** to reflect actual state
-5. Hand `CLAUDE.md` + this file to the coding agent
-6. After the session, update **Current state** in `CLAUDE.md` and any resolved decisions in `docs/spec.md`
-
----
-
 ## Session: 2026-05-24
 
 ### Active issue(s)
 
-**[#174](https://github.com/falese/seans-mfe-tool/issues/174) — `build:dev` command (Phase 2, ADR-071)**
+**[#175](https://github.com/falese/seans-mfe-tool/issues/175) — `build:prod` command (Phase 2, ADR-071)**
 
 ### Scope
 
-Implement the `build:dev` oclif command. Core orchestrates; plugin implements `startDevServer()`.
+Implement the `build:prod` oclif command. Core orchestrates; plugin implements `buildProduction()`.
 
 The command:
 1. Resolves framework from `--framework` flag or auto-detected `mfe-manifest.yaml`
 2. Loads the concrete plugin via `loadFrameworkPlugin()`
-3. Calls `plugin.startDevServer(manifest, { port, cwd })` → `DevServerHandle`
-4. Prints the server URL, blocks until SIGINT/SIGTERM, then calls `handle.stop()`
-5. Returns `BuildDevResult` under `--json`
+3. Calls `plugin.buildProduction(manifest, { cwd, outputDir })` → `BuildResult`
+4. Prints structured output (artifacts, warnings, errors)
+5. Returns `BuildProdResult` under `--json`; exits non-zero if `BuildResult.success === false`
 
-NOT changing: plugin implementations (`framework-react`, `framework-angular`), `BaseFrameworkPlugin` contract, `loadFrameworkPlugin()` loader, any other commands.
+NOT changing: plugin implementations, `BaseFrameworkPlugin` contract, `loadFrameworkPlugin()`, `build:dev` or `build:check`.
 
 **Acceptance criteria:**
-- `build:dev --framework react` starts the React dev server
-- `build:dev --framework angular` starts the Angular dev server
-- `build:dev` with no flags auto-detects framework from `mfe-manifest.yaml` in cwd
-- `--port` overrides the plugin default
-- SIGINT causes graceful `handle.stop()` then exit
-- `--json` returns `BuildDevResult` envelope
+- `build:prod --framework react` runs the React production build
+- `build:prod --framework angular` runs the Angular production build
+- `build:prod` auto-detects framework from `mfe-manifest.yaml` in cwd
+- `--output-dir` overrides the default output directory
+- Non-zero exit on build failure (via `BusinessError` or process exit code)
+- `--json` returns `BuildProdResult` envelope
 - Tests pass (TDD: tests written first)
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` all green
 
@@ -50,42 +39,50 @@ NOT changing: plugin implementations (`framework-react`, `framework-angular`), `
 
 | ADR | Title | Governs |
 |-----|-------|---------|
-| ADR-071 | Framework plugins — abstract BaseFrameworkPlugin | This entire issue; `build:dev` is one of the core commands that calls plugin methods polymorphically |
+| ADR-071 | Framework plugins — abstract BaseFrameworkPlugin | This entire issue; `build:prod` calls `plugin.buildProduction()` polymorphically |
 
 ### Spec context
 
-Phase 2 of the framework-plugins roadmap (issues #174, #175, #176). Phase 1 (issues #168–#172, #185) merged in PR #186.
-
-`DevServerHandle` interface (`packages/contracts/src/framework-plugin.ts:64`):
+`BuildResult` interface (`packages/contracts/src/framework-plugin.ts:45`):
 ```ts
-interface DevServerHandle {
-  stop: () => Promise<void>;
-  url: string;
+interface BuildResult {
+  success: boolean;
+  artifacts: string[];
+  duration_ms: number;
+  warnings: string[];
+  errors: BuildError[];
+}
+interface BuildError {
+  file?: string; line?: number; column?: number;
+  message: string;
+  category: 'syntax' | 'type' | 'dependency' | 'config' | 'runtime' | 'unknown';
+  suggestion?: string;
 }
 ```
 
-Plugin `startDevServer` signature:
+Plugin `buildProduction` signature:
 ```ts
-abstract startDevServer(manifest: unknown, opts: { port: number; cwd: string }): Promise<DevServerHandle>;
+abstract buildProduction(manifest: unknown, opts: { cwd: string; outputDir: string }): Promise<BuildResult>;
 ```
 
 ### Current file tree
 
 ```
-src/commands/build/dev.ts                     ← CREATE
-src/commands/build/__tests__/dev.test.ts      ← CREATE
-src/oclif/results.ts                          ← MODIFY (add BuildDevResult)
-session-prompt.md                             ← UPDATED (this file)
+src/commands/build/prod.ts                     ← CREATE
+src/commands/build/__tests__/prod.test.ts      ← CREATE
+src/oclif/results.ts                           ← MODIFY (add BuildProdResult)
+session-prompt.md                              ← UPDATED (this file)
 ```
 
 ### TDD order
 
-1. Write `dev.test.ts` — all tests fail (no implementation)
-2. Add `BuildDevResult` to `src/oclif/results.ts`
-3. Implement `src/commands/build/dev.ts`
+1. Write `prod.test.ts` — all tests fail (no implementation)
+2. Add `BuildProdResult` to `src/oclif/results.ts`
+3. Implement `src/commands/build/prod.ts`
 4. All tests pass
 
-### Existing tests (summary)
+### Existing patterns to follow
 
-- `src/commands/build/__tests__/check.test.ts` — pattern to follow for `dev.test.ts`
-- `src/framework/__tests__/loader.test.ts` — verifies `loadFrameworkPlugin()` (reused by `build:dev`)
+- `src/commands/build/dev.ts` — manifest resolution + plugin loading pattern
+- `src/commands/build/check.ts` — non-blocking command returning structured result
+- `src/commands/build/__tests__/dev.test.ts` — pre-aborted signal / mock plugin pattern

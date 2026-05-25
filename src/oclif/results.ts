@@ -98,3 +98,25 @@ export interface BuildDevResult {
   url: string;
   port: number;
 }
+
+// ---------------------------------------------------------------------------
+// build:prod (ADR-071, #175)
+// ---------------------------------------------------------------------------
+
+export interface BuildProdResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  success: boolean;
+  artifacts: string[];
+  duration_ms: number;
+  warnings: string[];
+  errors: Array<{
+    file?: string;
+    line?: number;
+    column?: number;
+    message: string;
+    category: string;
+    suggestion?: string;
+  }>;
+}
