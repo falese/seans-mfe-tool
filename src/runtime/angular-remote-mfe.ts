@@ -26,6 +26,7 @@ import {
   QueryResult,
   EmitResult,
   ControlPlaneStateResult,
+  type CapabilityMetadata,
 } from './base-mfe';
 import type { Message, ActionRecord, MessageMetadata } from './contracts';
 import type { ModuleFederationContainer } from './remote-mfe';
@@ -237,11 +238,17 @@ export class AngularRemoteMFE extends BaseMFE {
         });
       }
 
+      const err = error as Error;
       return {
         status: 'error',
         timestamp: new Date(),
         duration: Date.now() - startTime,
-        error: error as Error,
+        error: {
+          message: err.message ?? String(err),
+          phase: 'entry',
+          retryCount: 0,
+          retryable: true,
+        },
         telemetry,
       };
     }
@@ -498,19 +505,25 @@ export class AngularRemoteMFE extends BaseMFE {
   }
 
   /**
-   * Extract capability metadata from manifest
+   * Extract capability metadata from manifest (REQ-RUNTIME-003)
    */
-  private extractCapabilities(): string[] {
+  private extractCapabilities(): CapabilityMetadata[] {
     if (!this.manifest.capabilities) {
       return [];
     }
 
-    const capabilityNames: string[] = [];
+    const result: CapabilityMetadata[] = [];
     for (const capEntry of this.manifest.capabilities) {
-      const keys = Object.keys(capEntry);
-      capabilityNames.push(...keys);
+      for (const [name, def] of Object.entries(capEntry)) {
+        const d = def as { type?: string; description?: string } | undefined;
+        result.push({
+          name,
+          type: d?.type === 'domain' ? 'domain' : 'platform',
+          description: d?.description,
+        });
+      }
     }
-    return capabilityNames;
+    return result;
   }
 
   /**
@@ -648,7 +661,7 @@ export class AngularRemoteMFE extends BaseMFE {
       name: this.manifest.name,
       version: this.manifest.version,
       type: this.manifest.type,
-      capabilities: this.extractCapabilities(),
+      capabilities: this.extractCapabilities().map((c) => c.name),
       manifest: this.manifest,
     };
   }

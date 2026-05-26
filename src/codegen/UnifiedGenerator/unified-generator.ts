@@ -746,64 +746,66 @@ export async function generateAllFiles(
     overwrite: true,
   });
 
-  // BFF stub files
-  files.push({
-    path: path.join(bffDir, 'bff.ts'),
-    content: await renderTemplate(path.join(bffTemplateDir, 'bff.ts.ejs'), {
-      ...vars,
-      bffClassName: vars.className + 'BFF',
-    }),
-    overwrite: true,
-  });
-  files.push({
-    path: path.join(bffDir, 'bff.test.ts'),
-    content: await renderTemplate(path.join(bffTemplateDir, 'bff.test.ts.ejs'), {
-      ...vars,
-      bffClassName: vars.className + 'BFF',
-    }),
-    overwrite: true,
-  });
+  if (manifest.data) {
+    // BFF stub files — only when manifest declares a data: section
+    files.push({
+      path: path.join(bffDir, 'bff.ts'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'bff.ts.ejs'), {
+        ...vars,
+        bffClassName: vars.className + 'BFF',
+      }),
+      overwrite: true,
+    });
+    files.push({
+      path: path.join(bffDir, 'bff.test.ts'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'bff.test.ts.ejs'), {
+        ...vars,
+        bffClassName: vars.className + 'BFF',
+      }),
+      overwrite: true,
+    });
 
-  // BFF main server and root files.
-  //
-  // Important: `package.json` is intentionally NOT in this list. The MFE root
-  // template at `src/codegen/templates/base-mfe/package.json.ejs` is already a
-  // hybrid that owns BOTH MFE deps (rspack, react, MUI, etc.) AND BFF deps
-  // (mesh, express, helmet, etc.). The BFF template's `package.json.ejs` is a
-  // strict subset (no MUI, no MFE-specific scripts) and previously clobbered
-  // the hybrid one because it ran first with `overwrite: true`, leaving the
-  // generated MFE without MUI deps even though `src/App.tsx` imports them.
-  //
-  // `server.ts` stays `overwrite: true` because it's pure BFF runtime that the
-  // user does not customize. The remaining root files (`tsconfig.json`,
-  // `Dockerfile`, `docker-compose.yaml`, `README.md`) flip to `overwrite: false`
-  // so user customization survives regeneration, matching the same convention
-  // used by other root templates further down (`package.json`, `rspack.config.js`).
-  // Angular-webpack emits its own tsconfig.json (with experimentalDecorators,
-  // angularCompilerOptions, etc.) in the root templates block below. Skip the
-  // BFF tsconfig for that variant so the Angular-specific one wins.
-  const bffTemplates: Array<{ tpl: string; out: string; overwrite: boolean }> = [
-    { tpl: 'server.ts.ejs', out: 'server.ts', overwrite: true },
-    ...(templateVariant !== 'angular-webpack'
-      ? [{ tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false }]
-      : []),
-    { tpl: 'Dockerfile.ejs', out: 'Dockerfile', overwrite: false },
-    { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml', overwrite: false },
-    { tpl: 'README.md.ejs', out: 'README.md', overwrite: false },
-  ];
-  // BFF port = MFE port + 1000 (e.g., 3002 → 4002, following e2e2 pattern)
-  const mfePort = vars.port || 3000;
-  const bffPort = mfePort + 1000;
-  const includeStatic = true;
-  for (const { tpl, out, overwrite } of bffTemplates) {
-    const templatePath = path.join(bffTemplateDir, tpl);
-    if (await fs.pathExists(templatePath)) {
-      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic, hasData: !!manifest.data });
-      files.push({
-        path: path.join(basePath, out),
-        content,
-        overwrite,
-      });
+    // BFF main server and root files.
+    //
+    // Important: `package.json` is intentionally NOT in this list. The MFE root
+    // template at `src/codegen/templates/base-mfe/package.json.ejs` is already a
+    // hybrid that owns BOTH MFE deps (rspack, react, MUI, etc.) AND BFF deps
+    // (mesh, express, helmet, etc.). The BFF template's `package.json.ejs` is a
+    // strict subset (no MUI, no MFE-specific scripts) and previously clobbered
+    // the hybrid one because it ran first with `overwrite: true`, leaving the
+    // generated MFE without MUI deps even though `src/App.tsx` imports them.
+    //
+    // `server.ts` stays `overwrite: true` because it's pure BFF runtime that the
+    // user does not customize. The remaining root files (`tsconfig.json`,
+    // `Dockerfile`, `docker-compose.yaml`, `README.md`) flip to `overwrite: false`
+    // so user customization survives regeneration, matching the same convention
+    // used by other root templates further down (`package.json`, `rspack.config.js`).
+    // Angular-webpack emits its own tsconfig.json (with experimentalDecorators,
+    // angularCompilerOptions, etc.) in the root templates block below. Skip the
+    // BFF tsconfig for that variant so the Angular-specific one wins.
+    const bffTemplates: Array<{ tpl: string; out: string; overwrite: boolean }> = [
+      { tpl: 'server.ts.ejs', out: 'server.ts', overwrite: true },
+      ...(templateVariant !== 'angular-webpack'
+        ? [{ tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false }]
+        : []),
+      { tpl: 'Dockerfile.ejs', out: 'Dockerfile', overwrite: false },
+      { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml', overwrite: false },
+      { tpl: 'README.md.ejs', out: 'README.md', overwrite: false },
+    ];
+    // BFF port = MFE port + 1000 (e.g., 3002 → 4002, following e2e2 pattern)
+    const mfePort = vars.port || 3000;
+    const bffPort = mfePort + 1000;
+    const includeStatic = true;
+    for (const { tpl, out, overwrite } of bffTemplates) {
+      const templatePath = path.join(bffTemplateDir, tpl);
+      if (await fs.pathExists(templatePath)) {
+        const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
+        files.push({
+          path: path.join(basePath, out),
+          content,
+          overwrite,
+        });
+      }
     }
   }
 
