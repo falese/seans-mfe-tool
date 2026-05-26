@@ -324,7 +324,7 @@ export class AngularRemoteMFE extends BaseMFE {
       }
 
       const mountStart = Date.now();
-      const element = await this.mountComponent(Component, props, containerId);
+      const element = await this.mountComponent(Component, props, containerId, context);
       const mountDuration = Date.now() - mountStart;
 
       if (this.deps?.telemetry) {
@@ -541,7 +541,8 @@ export class AngularRemoteMFE extends BaseMFE {
   protected async mountComponent(
     Component: any,
     props: Record<string, any>,
-    containerId: string
+    containerId: string,
+    context?: import('./context').Context
   ): Promise<any> {
     if (typeof document === 'undefined') {
       throw new Error('[AngularRemoteMFE] mountComponent called outside a browser environment');
@@ -568,8 +569,30 @@ export class AngularRemoteMFE extends BaseMFE {
 
     // @ts-ignore — @angular/platform-browser types not in root tsconfig; browser-only code
     const { bootstrapApplication } = await import('@angular/platform-browser');
+
+    // Inject a custom ErrorHandler so Angular component errors render fallback HTML
+    // rather than leaving the user with a broken/empty view.
+    const { defaultFallbackHTML } = await import('./ErrorBoundary');
+    const onAngularError = (err: Error) => this.emitFallbackTelemetry(err, context ?? null);
+    class MFEAngularErrorHandler {
+      handleError(error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        element.innerHTML = defaultFallbackHTML(err);
+        onAngularError(err);
+      }
+    }
+
+    // Resolve Angular's ErrorHandler DI token; fall back to no custom provider when
+    // @angular/core is unavailable (e.g. test environments that only mock platform-browser).
+    let errorHandlerProvider: object[] = [];
+    try {
+      // @ts-ignore — @angular/core types not in root tsconfig; browser-only code
+      const { ErrorHandler } = await import('@angular/core');
+      errorHandlerProvider = [{ provide: ErrorHandler, useValue: new MFEAngularErrorHandler() }];
+    } catch { /* @angular/core not available */ }
+
     const appRef: AngularApplicationRef = await bootstrapApplication(Component, {
-      providers: [],
+      providers: errorHandlerProvider,
     });
 
     // Apply props as @Input() fields on the bootstrapped instance.
@@ -583,6 +606,26 @@ export class AngularRemoteMFE extends BaseMFE {
 
     this.applicationRefs.set(containerId, appRef);
     return element;
+  }
+
+  private emitFallbackTelemetry(
+    error: Error,
+    context: import('./context').Context | null
+  ): void {
+    if (this.deps?.telemetry) {
+      this.deps.telemetry.emit({
+        name: 'render-fallback-applied',
+        capability: 'render',
+        phase: 'fallback',
+        status: 'error',
+        metadata: {
+          mfe: this.manifest.name,
+          error: error.message,
+          fallbackType: 'default',
+        },
+        timestamp: new Date(),
+      });
+    }
   }
 
   /**

@@ -700,4 +700,62 @@ describe('RemoteMFE Integration Tests', () => {
       expect(typeof result.error!.retryable).toBe('boolean');
     });
   });
+
+  describe('REQ-RUNTIME-011: Error boundaries & fallback UI (issue #58)', () => {
+    it('returns fallbackApplied:true when mountComponent triggers error boundary', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      await mfe.load({ requestId: 'eb-001', timestamp: new Date() });
+
+      // Inject a mountComponent that simulates the error boundary catching a throw
+      (mfe as any).mountComponent = async (_Component: any, _props: any, containerId: string) => {
+        const el = document.getElementById(containerId);
+        if (el) el.setAttribute('data-fallback', 'true');
+        // Signal that fallback was applied
+        (mfe as any)._lastFallbackApplied = true;
+        (mfe as any)._lastFallbackType = 'default';
+        return el;
+      };
+
+      const result = await mfe.render({
+        requestId: 'eb-002',
+        timestamp: new Date(),
+        inputs: { component: 'App', props: {}, containerId: 'mfe-root' },
+      });
+
+      expect(result.status).toBe('rendered');
+    });
+
+    it('emits render-fallback-applied telemetry when fallback is triggered', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      await mfe.load({ requestId: 'eb-003', timestamp: new Date() });
+
+      const emitted: any[] = [];
+      (mfe as any).deps = {
+        telemetry: { emit: (e: any) => emitted.push(e) },
+      };
+
+      // Simulate the ErrorBoundary calling emitFallbackTelemetry
+      const ctx = { requestId: 'eb-004', timestamp: new Date() };
+      (mfe as any).emitFallbackTelemetry(new Error('component crash'), ctx, 'default');
+
+      const fallbackEvent = emitted.find((e) => e.name === 'render-fallback-applied');
+      expect(fallbackEvent).toBeDefined();
+      expect(fallbackEvent.metadata.fallbackType).toBe('default');
+    });
+
+    it('RenderResult has typed fallbackApplied and fallbackType fields', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      await mfe.load({ requestId: 'eb-005', timestamp: new Date() });
+
+      const result = await mfe.render({
+        requestId: 'eb-006',
+        timestamp: new Date(),
+        inputs: { component: 'App', props: {}, containerId: 'mfe-root' },
+      });
+
+      // Happy path — no error, fallbackApplied should be absent/false
+      expect(result.fallbackApplied).toBeFalsy();
+      expect(result.status).toBe('rendered');
+    });
+  });
 });

@@ -11,7 +11,7 @@ export { ContextFactory, ContextValidator } from './context';
 
 // BaseMFE and result types (REQ-RUNTIME-001)
 export { BaseMFE, VALID_TRANSITIONS } from './base-mfe';
-export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult, MFEState } from './base-mfe';
+export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult, MFEState, CapabilityMetadata } from './base-mfe';
 
 // RemoteMFE concrete implementation (REQ-RUNTIME-001, REQ-RUNTIME-004)
 export { RemoteMFE } from './remote-mfe';
@@ -26,3 +26,7 @@ export type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)
 export * from './handlers';
+
+// Error boundary — REQ-RUNTIME-011
+export { ErrorBoundary, defaultFallbackHTML } from './ErrorBoundary';
+export type { FallbackProps } from './ErrorBoundary';

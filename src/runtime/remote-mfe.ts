@@ -326,7 +326,7 @@ export class RemoteMFE extends BaseMFE {
 
       // Mount component to DOM
       const mountStart = Date.now();
-      const element = await this.mountComponent(Component, props, containerId);
+      const element = await this.mountComponent(Component, props, containerId, context);
       const mountDuration = Date.now() - mountStart;
 
       // Telemetry: Mount duration
@@ -538,7 +538,8 @@ export class RemoteMFE extends BaseMFE {
   protected async mountComponent(
     Component: any,
     props: Record<string, any>,
-    containerId: string
+    containerId: string,
+    context?: import('./context').Context
   ): Promise<any> {
     if (typeof document === 'undefined') {
       throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
@@ -561,9 +562,51 @@ export class RemoteMFE extends BaseMFE {
 
     // @ts-ignore — react types not in root tsconfig; browser-only code
     const { createElement } = await import('react');
-    root.render(createElement(Component, props));
+    const { ErrorBoundary } = await import('./ErrorBoundary');
+
+    // Try to resolve MFE-provided fallback (exported as ./ErrorBoundary from the MF container)
+    let FallbackComponent: any;
+    if (this.container) {
+      try {
+        const mod = await (this.container as any).get('./ErrorBoundary');
+        FallbackComponent = mod?.()?.default;
+      } catch { /* use built-in default */ }
+    }
+    const fallbackType: 'mfe-provided' | 'default' = FallbackComponent ? 'mfe-provided' : 'default';
+
+    root.render(
+      createElement(
+        ErrorBoundary,
+        {
+          fallbackComponent: FallbackComponent,
+          onError: (error: Error) => this.emitFallbackTelemetry(error, context ?? null, fallbackType),
+        },
+        createElement(Component, props)
+      )
+    );
 
     return element;
+  }
+
+  private emitFallbackTelemetry(
+    error: Error,
+    context: import('./context').Context | null,
+    fallbackType: 'mfe-provided' | 'default'
+  ): void {
+    if (this.deps?.telemetry) {
+      this.deps.telemetry.emit({
+        name: 'render-fallback-applied',
+        capability: 'render',
+        phase: 'fallback',
+        status: 'error',
+        metadata: {
+          mfe: this.manifest.name,
+          error: error.message,
+          fallbackType,
+        },
+        timestamp: new Date(),
+      });
+    }
   }
 
   /**

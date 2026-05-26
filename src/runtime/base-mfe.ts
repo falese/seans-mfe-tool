@@ -96,9 +96,15 @@ export interface LoadResult {
 /** Result from render capability */
 export interface RenderResult {
   status: 'rendered' | 'error';
-  element?: unknown;    // DOM element or React component
+  element?: unknown;
+  component?: string;
   timestamp: Date;
-  [key: string]: unknown;
+  duration?: number;
+  renderDuration?: number;
+  mountDuration?: number;
+  fallbackApplied?: boolean;
+  fallbackType?: 'mfe-provided' | 'default';
+  error?: Error;
 }
 
 /** Result from health capability */

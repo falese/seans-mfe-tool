@@ -5,10 +5,10 @@ module.exports = {
   // Test environment
   testEnvironment: 'node',
   
-  // Test patterns - support both JS and TS
+  // Test patterns - support both JS/TS and JSX/TSX
   testMatch: [
-    '**/src/**/__tests__/**/*.test.[jt]s',
-    '**/src/**/*.test.[jt]s'
+    '**/src/**/__tests__/**/*.test.[jt]s?(x)',
+    '**/src/**/*.test.[jt]s?(x)'
   ],
   
   // Transform configuration - ts-jest for TS, babel-jest for JS
