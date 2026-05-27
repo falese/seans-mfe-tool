@@ -498,8 +498,10 @@ export abstract class BaseMFE {
     if (typeof method !== 'function') {
       throw new Error(
         `Custom handler not found: ${name}. ` +
-        `Implement this method in your MFE class: ` +
-        `private async ${name}(context: Context): Promise<void> { ... }`
+        `Either implement a method on your MFE class — ` +
+        `\`private async ${name}(context: Context): Promise<void> { ... }\` — ` +
+        `or declare a source module in the DSL manifest (ADR-072), e.g. ` +
+        `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`
       );
     }
     await method.call(this, context);

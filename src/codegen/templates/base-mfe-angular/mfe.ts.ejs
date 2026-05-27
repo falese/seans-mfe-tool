@@ -16,6 +16,9 @@ import type { Context, LoadResult, RenderResult } from '@seans-mfe-tool/runtime'
 <% if (domainTypeImports.length > 0) { %>
 import type { <%= domainTypeImports.join(', ') %> } from './types';
 <% } %>
+<% if (handlerSources && handlerSources.length > 0) { %>
+import { handlerRegistry } from './handler-registry';
+<% } %>
 
 /**
  * <%= className %>
@@ -37,7 +40,11 @@ import type { <%= domainTypeImports.join(', ') %> } from './types';
  */
 export class <%= className %> extends AngularRemoteMFE {
   constructor(manifest: any) {
+<% if (handlerSources && handlerSources.length > 0) { -%>
+    super(manifest, { customHandlers: handlerRegistry });
+<% } else { -%>
     super(manifest);
+<% } -%>
   }
 
   // ---------------------------------------------------------------------------
