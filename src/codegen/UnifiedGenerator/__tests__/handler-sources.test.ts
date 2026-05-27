@@ -112,7 +112,12 @@ describe('codegen: manifest-declared handler sources (ADR-072)', () => {
       expect(registry!.content).toContain(
         `import { validateInput } from './handlers/validation';`,
       );
-      expect(registry!.content).toMatch(/handlerRegistry[^=]*=\s*\{[\s\S]*validateInput[\s\S]*\}/);
+      // `validateInput` must appear as a key inside the registry map. The
+      // map signature contains `=>` in the type, so this assertion only
+      // looks for the key after the `= {` opening brace.
+      expect(registry!.content).toMatch(
+        /export const handlerRegistry[\s\S]*?=\s*\{[\s\S]*?validateInput\s*:/,
+      );
     });
 
     it('static-imports a module#export source as an aliased named import', async () => {
