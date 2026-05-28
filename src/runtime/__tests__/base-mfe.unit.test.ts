@@ -169,3 +169,28 @@ describe('BaseMFE updateControlPlaneState', () => {
     await expect(mfe.updateControlPlaneState(context as any)).rejects.toThrow('control-plane error');
   });
 });
+
+describe('BaseMFE findCapabilityConfig case-insensitive lookup', () => {
+  it('resolves lifecycle hooks when manifest capability names are capitalised (Load, Render)', async () => {
+    const fired: string[] = [];
+    const manifest = {
+      name: 't', version: '1.0.0', type: 'tool' as const, language: 'typescript' as const,
+      capabilities: [
+        {
+          Load: {
+            type: 'platform',
+            lifecycle: {
+              before: [{ beforeHook: { handler: 'beforeHook' } }],
+            },
+          },
+        },
+      ],
+    };
+    const mfe = new TestMFE(manifest);
+    jest.spyOn(mfe as any, 'invokeCustomHandler').mockImplementation(async (...args: unknown[]) => {
+      fired.push(args[0] as string);
+    });
+    await mfe.load({ requestId: 'r1', timestamp: new Date() } as any);
+    expect(fired).toContain('beforeHook');
+  });
+});

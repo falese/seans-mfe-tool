@@ -95,6 +95,12 @@ export const PLATFORM_WRAPPER_METHODS = [
 
 export const LifecycleHookSchema = z.object({
   handler: z.union([z.string(), z.array(z.string())]),
+  // ADR-072: declarative module specifier for the handler implementation.
+  // Accepts a relative path ("./handlers/foo.ts"), a module ("@org/pkg"), or
+  // module+named-export ("@org/pkg#exportName"). Codegen emits a static import
+  // and wires the function into deps.customHandlers; BaseMFE.invokeHandler
+  // already picks it up via its existing DI branch.
+  source: z.string().min(1).optional(),
   description: z.string().optional(),
   mandatory: z.boolean().optional(),
   contained: z.boolean().optional()

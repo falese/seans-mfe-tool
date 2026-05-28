@@ -21,6 +21,9 @@ import {
 <% if (domainTypeImports.length > 0) { %>
 import type { <%= domainTypeImports.join(', ') %> } from './types';
 <% } %>
+<% if (handlerSources && handlerSources.length > 0) { %>
+import { handlerRegistry } from './handler-registry';
+<% } %>
 
 /**
  * <%= className %>
@@ -69,7 +72,11 @@ import type { <%= domainTypeImports.join(', ') %> } from './types';
  */
 export class <%= className %> extends RemoteMFE {
   constructor(manifest: any) {
+<% if (handlerSources && handlerSources.length > 0) { -%>
+    super(manifest, { customHandlers: handlerRegistry });
+<% } else { -%>
     super(manifest);
+<% } -%>
   }
 
   // ---------------------------------------------------------------------------

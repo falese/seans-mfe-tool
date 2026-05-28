@@ -427,6 +427,7 @@ export function extractManifestVars(manifest: DSLManifest) {
     manifest,
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
+    handlerSources: [], // ADR-072 — overwritten in generateAllFiles
 
     // Codegen variant selection — driven by plugin (ADR-071).
     // Exposed to templates and read back by generateAllFiles.
@@ -510,6 +511,45 @@ export async function writeGeneratedFiles(
 }
 
 // =============================
+// Handler source parsing (ADR-072)
+// =============================
+
+/**
+ * Parse a DSL `source:` specifier into a static import descriptor.
+ *
+ * Grammar:
+ *   "./rel/path"               → named import `{ <hookName> } from './rel/path'`
+ *   "@org/pkg"                 → default import `<hookName> from '@org/pkg'`
+ *   "@org/pkg#namedExport"     → named import `{ namedExport as <hookName> } from '@org/pkg'`
+ *
+ * Returning `null` means the source is malformed (empty / only whitespace);
+ * the caller logs and falls back to stub generation so codegen never crashes
+ * on a typo.
+ */
+export function parseHandlerSource(
+  source: string,
+  hookName: string,
+): { module: string; exportName: string } | null {
+  const trimmed = source.trim();
+  if (!trimmed) return null;
+  const hashIdx = trimmed.indexOf('#');
+  if (hashIdx >= 0) {
+    const module = trimmed.slice(0, hashIdx).trim();
+    const exportName = trimmed.slice(hashIdx + 1).trim();
+    if (!module || !exportName) return null;
+    return { module, exportName };
+  }
+  // No '#': relative paths use a named import matching the hook name (the
+  // common case for project-local handler files); bare module specifiers use
+  // the default export.
+  const isRelative = trimmed.startsWith('./') || trimmed.startsWith('../');
+  return {
+    module: trimmed,
+    exportName: isRelative ? hookName : 'default',
+  };
+}
+
+// =============================
 // Unified Generator Entrypoint
 // =============================
 
@@ -549,6 +589,11 @@ export async function generateAllFiles(
   }> = [];
   const lifecycleHookNames = new Set<string>();
   const lifecycleHooks: Array<{ name: string; description: string; phase: string }> = [];
+  // ADR-072: handlers that declare a `source` in the DSL manifest are sourced
+  // from external modules. They appear in handlerSources (drives the generated
+  // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
+  // (no stub method is emitted because the implementation lives elsewhere).
+  const handlerSources: Array<{ localName: string; module: string; exportName: string }> = [];
   let inputs: any[] = [];
   let outputs: any[] = [];
 
@@ -587,6 +632,16 @@ export async function generateAllFiles(
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
                   const hookDescription = (hookConfig as any)?.description || '';
+                  // ADR-072: hooks with a `source` are wired through the
+                  // generated handler-registry, not emitted as stubs.
+                  const source = (hookConfig as any)?.source as string | undefined;
+                  if (typeof source === 'string' && source.length > 0) {
+                    const parsed = parseHandlerSource(source, hookName);
+                    if (parsed) {
+                      handlerSources.push({ localName: hookName, ...parsed });
+                      continue;
+                    }
+                  }
                   lifecycleHooks.push({ name: hookName, description: hookDescription, phase });
                 }
               }
@@ -602,6 +657,7 @@ export async function generateAllFiles(
 
   vars.capabilities = capabilities;
   vars.lifecycleHooks = lifecycleHooks;
+  vars.handlerSources = handlerSources;
 
   // Codegen template variant selection (computed in extractManifestVars).
   // Manifest.framework + manifest.bundler pick the directory and per-file
@@ -727,11 +783,28 @@ export async function generateAllFiles(
     content: await renderTemplate(path.join(templateDir, 'mfe.ts.ejs'), vars),
     overwrite: true,
   });
+  // ADR-072: emit the handler registry only when at least one lifecycle hook
+  // declared a `source`. Without sources, the registry file is absent and the
+  // generated mfe.ts looks identical to today (back-compat).
+  if (handlerSources.length > 0) {
+    files.push({
+      path: path.join(platformDir, 'handler-registry.ts'),
+      content: await renderTemplate(
+        path.join(templateDir, 'handler-registry.ts.ejs'),
+        vars,
+      ),
+      overwrite: true,
+    });
+  }
   // Bootstrap — exports mfe instance + mfeReady for imperative shell rendering
   files.push({
     path: path.join(platformDir, 'bootstrap.ts'),
     content: await renderTemplate(path.join(templateDir, 'bootstrap.ts.ejs'), vars),
-    overwrite: false, // user-owned: first-init only, not regenerated
+    // Regenerated on every codegen run so the inline manifest stays in sync
+    // with mfe-manifest.yaml. Bootstrap is glue code (instantiate, call load,
+    // log result); customization belongs in mfe.ts overrides, lifecycle
+    // hooks, or `deps.*` DI — not in this file.
+    overwrite: true,
   });
   // BaseMFE test
   files.push({

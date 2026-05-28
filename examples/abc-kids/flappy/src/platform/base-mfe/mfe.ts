@@ -10,6 +10,9 @@ import {
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
 
+import { handlerRegistry } from './handler-registry';
+
+
 /**
  * abckidsflappyMFE
  * @description Flappy Bird — tap to flap, avoid pipes, keep score!
@@ -61,7 +64,7 @@ import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './ty
  */
 export class abckidsflappyMFE extends RemoteMFE {
   constructor(manifest: any) {
-    super(manifest);
+    super(manifest, { customHandlers: handlerRegistry });
   }
 
   // ---------------------------------------------------------------------------
