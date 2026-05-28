@@ -630,4 +630,74 @@ describe('RemoteMFE Integration Tests', () => {
       expect(duration).toBeLessThan(50);
     });
   });
+
+  describe('REQ-RUNTIME-003: LoadResult validation & metadata (issue #50)', () => {
+    it('returns manifest in LoadResult so shell can validate before render', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      const result = await mfe.load({ requestId: 'req-rt003-a', timestamp: new Date() });
+
+      expect(result.status).toBe('loaded');
+      expect(result.manifest).toBeDefined();
+      expect(result.manifest!.name).toBe('test-dashboard-mfe');
+      expect(result.manifest!.version).toBe('1.0.0');
+    });
+
+    it('returns availableComponents so shell can validate component exists before render', async () => {
+      const mfe = createTestMFE({
+        Widget: createReactComponent('Widget'),
+        Chart: createReactComponent('Chart'),
+      });
+      const result = await mfe.load({ requestId: 'req-rt003-b', timestamp: new Date() });
+
+      expect(result.availableComponents).toEqual(expect.arrayContaining(['Widget', 'Chart']));
+    });
+
+    it('returns capabilities metadata so shell can check supported operations', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      const result = await mfe.load({ requestId: 'req-rt003-c', timestamp: new Date() });
+
+      expect(Array.isArray(result.capabilities)).toBe(true);
+      expect(result.capabilities!.length).toBeGreaterThan(0);
+
+      const cap = result.capabilities![0];
+      expect(typeof cap.name).toBe('string');
+      expect(cap.type === 'platform' || cap.type === 'domain').toBe(true);
+    });
+
+    it('returns telemetry with timing for all 3 subphases', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      const result = await mfe.load({ requestId: 'req-rt003-d', timestamp: new Date() });
+
+      expect(result.telemetry).toBeDefined();
+      expect(result.telemetry!.entry.start).toBeInstanceOf(Date);
+      expect(typeof result.telemetry!.entry.duration).toBe('number');
+      expect(result.telemetry!.mount.start).toBeInstanceOf(Date);
+      expect(typeof result.telemetry!.mount.duration).toBe('number');
+      expect(result.telemetry!.enableRender.start).toBeInstanceOf(Date);
+      expect(typeof result.telemetry!.enableRender.duration).toBe('number');
+    });
+
+    it('returns duration in LoadResult', async () => {
+      const mfe = createTestMFE({ App: createReactComponent('App') });
+      const result = await mfe.load({ requestId: 'req-rt003-e', timestamp: new Date() });
+
+      expect(typeof result.duration).toBe('number');
+      expect(result.duration).toBeGreaterThanOrEqual(0);
+    });
+
+    it('returns structured error shape on load failure', async () => {
+      const mfe = createTestMFE({});
+      // Force fetchContainer to fail
+      (mfe as any).fetchContainer = async () => { throw new Error('network timeout'); };
+
+      const result = await mfe.load({ requestId: 'req-rt003-f', timestamp: new Date() });
+
+      expect(result.status).toBe('error');
+      expect(result.error).toBeDefined();
+      expect(typeof result.error!.message).toBe('string');
+      expect(typeof result.error!.phase).toBe('string');
+      expect(typeof result.error!.retryCount).toBe('number');
+      expect(typeof result.error!.retryable).toBe('boolean');
+    });
+  });
 });

@@ -1,6 +1,6 @@
 /**
  * DSL Parser
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Implements REQ-REMOTE-001: DSL as single source of truth
  */
 
@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
+import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
 import { validateManifest, validateFull } from './validator';
 
 // =============================================================================
@@ -62,13 +63,29 @@ export function parseYAML(content: string): DSLManifest {
  */
 export async function parseManifestFile(manifestPath: string): Promise<DSLManifest> {
   const absolutePath = path.resolve(process.cwd(), manifestPath);
-  
+
   if (!await fs.pathExists(absolutePath)) {
     throw new Error(`Manifest not found: ${absolutePath}`);
   }
-  
+
   const content = await fs.readFile(absolutePath, 'utf8');
-  return parseYAML(content);
+  const manifest = parseYAML(content);
+  warnUnknownPluginValues(manifest);
+  return manifest;
+}
+
+function warnUnknownPluginValues(manifest: DSLManifest): void {
+  if (manifest.framework && !(KNOWN_FRAMEWORKS as readonly string[]).includes(manifest.framework)) {
+    process.stderr.write(
+      `[seans-mfe-tool] Warning: unknown framework "${manifest.framework}". ` +
+      `Install the plugin: npm install @seans-mfe/framework-${manifest.framework}\n`,
+    );
+  }
+  if (manifest.bundler && !(KNOWN_BUNDLERS as readonly string[]).includes(manifest.bundler)) {
+    process.stderr.write(
+      `[seans-mfe-tool] Warning: unknown bundler "${manifest.bundler}".\n`,
+    );
+  }
 }
 
 /**
@@ -267,26 +284,51 @@ export function createMinimalManifest(
   options: {
     type?: DSLManifest['type'];
     language?: DSLManifest['language'];
+    framework?: DSLManifest['framework'];
+    bundler?: DSLManifest['bundler'];
     description?: string;
   } = {}
 ): DSLManifest {
-  return {
+  // Treat bundler:'webpack' as selecting Angular too, matching UnifiedGenerator's
+  // variant logic so the seeded deps never disagree with the generated output.
+  const isAngular = options.framework === 'angular' || options.bundler === 'webpack';
+  const manifest: DSLManifest = {
     name,
     version: '1.0.0',
     type: options.type || 'remote',
     language: options.language || 'typescript',
     description: options.description || '',
     capabilities: [],
-    dependencies: {
-      runtime: {
-        'react': '^18.0.0',
-        'react-dom': '^18.0.0'
-      },
-      'design-system': {
-        '@mui/material': '^5.14.0'
-      }
-    }
+    dependencies: isAngular
+      ? {
+          runtime: {
+            '@angular/core': '^17.0.0',
+            '@angular/common': '^17.0.0',
+            '@angular/platform-browser': '^17.0.0',
+            'rxjs': '^7.8.0',
+            'zone.js': '~0.14.0'
+          }
+        }
+      : {
+          runtime: {
+            'react': '^18.0.0',
+            'react-dom': '^18.0.0'
+          },
+          'design-system': {
+            '@mui/material': '^5.14.0'
+          }
+        }
   };
+  // Normalize the trio: if either field opts into Angular, write both so the
+  // manifest is internally consistent with the seeded deps and codegen variant.
+  if (isAngular) {
+    manifest.framework = 'angular';
+    manifest.bundler = 'webpack';
+  } else {
+    if (options.framework) manifest.framework = options.framework;
+    if (options.bundler) manifest.bundler = options.bundler;
+  }
+  return manifest;
 }
 
 /**

@@ -1,0 +1,28 @@
+/**
+ * <%= name %> Feature Tests (Angular)
+ */
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { <%= name %>Component } from './<%= name %>.component';
+
+describe('<%= name %>Component', () => {
+  let fixture: ComponentFixture<<%= name %>Component>;
+  let component: <%= name %>Component;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [<%= name %>Component],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(<%= name %>Component);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('renders without crashing', () => {
+    expect(component).toBeTruthy();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h2')?.textContent).toContain('<%= name %>');
+  });
+
+  // TODO: Add more tests based on capability inputs/outputs
+});

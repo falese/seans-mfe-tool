@@ -2,7 +2,7 @@
  * TimeoutError
  * Thrown when a handler exceeds its configured timeout duration.
  * Following REQ-LIFECYCLE-002: Timeout Protection
- * Following ADR-064: Timeout Protection with AbortSignal
+ * Following ADR-029: Timeout Protection with AbortSignal
  */
 
 export class TimeoutError extends Error {

@@ -32,8 +32,12 @@ each curve, what is already proven, and where the remaining investment goes.
 
 ## Decision
 
-Treat the platform as an **ecosystem substrate**, and let the four supporting decisions
-each neutralize one decay curve:
+Treat the platform as an **ecosystem substrate** — `CLAUDE.md`'s framing captures the
+intent precisely: *"a platform for delivering domain features as independently
+deployable units, in any framework, language, or federation pattern… federation is a
+delivery mechanism, not the purpose of the platform; long-term goal: a community
+marketplace of domain-capability packages."* Let the four supporting decisions each
+neutralize one decay curve:
 
 | Decay curve as MFEs scale | Neutralized by | Mechanism |
 | ------------------------- | -------------- | --------- |
@@ -60,8 +64,11 @@ flat instead of rising with *N*.
 Already demonstrated:
 
 - React and Angular MFEs run in the **same shell** through one contract with identical
-  telemetry (PDR-002 / PR #161) — the strongest evidence the contract is genuinely
+  telemetry (PDR-002, ADR-034 merged) — the strongest evidence the contract is genuinely
   stack-neutral.
+- The framework-plugin pattern (ADR-036) generalizes ADR-034: new frameworks ship as
+  `@seans-mfe/framework-<name>` packages resolved at runtime, not codegen branches —
+  so the *N*th framework costs roughly the same as the second.
 - MFEs are generated, not hand-written, with contract compliance by construction
   (PDR-001).
 - The tooling is driven by agents in sandboxes and remains auditable by humans (PDR-003).

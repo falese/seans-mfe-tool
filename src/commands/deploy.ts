@@ -8,6 +8,8 @@ import * as ejs from 'ejs';
 import { BaseCommand } from '../oclif/BaseCommand';
 import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
+import { loadFrameworkPlugin } from '../framework/loader';
+import { generateDockerfile } from './build/docker';
 
 interface DeployOptions {
   name: string;
@@ -23,6 +25,7 @@ interface DeployOptions {
   domain?: string;
   namespace?: string;
   tag?: string;
+  framework?: string;
 }
 
 // Keep track of temp directories for cleanup
@@ -345,12 +348,20 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   await fs.writeFile(path.join(deployDir, 'docker-compose.yml'), composeContent);
   console.log(chalk.green('✓ Generated docker-compose.yml'));
 
-  // Generate production Dockerfile
-  const dockerfileTemplatePath = path.join(
-    __dirname,
-    `../templates/docker/Dockerfile.production.${type === 'api' ? 'api' : 'react'}`
-  );
-  const dockerfileContent = await fs.readFile(dockerfileTemplatePath, 'utf8');
+  // Generate production Dockerfile — use the plugin for MFE types (ADR-036, #178).
+  let dockerfileContent: string;
+  if (type === 'api') {
+    const dockerfileTemplatePath = path.join(
+      __dirname,
+      `../templates/docker/Dockerfile.production.api`,
+    );
+    dockerfileContent = await fs.readFile(dockerfileTemplatePath, 'utf8');
+  } else {
+    const frameworkName = options.framework ?? 'react';
+    const plugin = loadFrameworkPlugin(frameworkName);
+    const strategy = plugin.getDockerStrategy(null);
+    dockerfileContent = generateDockerfile(strategy, name);
+  }
   await fs.writeFile(path.join(deployDir, 'Dockerfile'), dockerfileContent);
   console.log(chalk.green('✓ Generated Dockerfile'));
 
@@ -777,6 +788,11 @@ export default class Deploy extends BaseCommand<DeployResult> {
       char: 'D',
       description: 'Preview deployment without executing',
       default: false,
+    }),
+    framework: Flags.string({
+      char: 'f',
+      description: 'Framework for MFE Dockerfile generation (react or angular; default: react)',
+      options: ['react', 'angular'],
     }),
   }
 

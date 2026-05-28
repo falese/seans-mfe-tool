@@ -1,0 +1,31 @@
+<%/*
+  Generated handler registry — ADR-040.
+
+  Emitted only when at least one lifecycle hook in the manifest declares a
+  `source` field. Each entry maps the hook's handler name to a function
+  resolved from a static import, so the runtime's existing
+  deps.customHandlers DI branch (BaseMFE.invokeHandler) can dispatch to it
+  without any runtime resolution code.
+
+  This file is regenerated on every codegen run — do not edit by hand.
+*/%>
+<% handlerSources.forEach(function(src) { -%>
+<% if (src.exportName === 'default') { -%>
+import <%= src.localName %> from '<%= src.module %>';
+<% } else if (src.exportName === src.localName) { -%>
+import { <%= src.exportName %> } from '<%= src.module %>';
+<% } else { -%>
+import { <%= src.exportName %> as <%= src.localName %> } from '<%= src.module %>';
+<% } -%>
+<% }); -%>
+import type { Context } from '@seans-mfe-tool/runtime';
+
+/**
+ * Handler functions sourced from external modules per the DSL manifest.
+ * Injected into the MFE via `super(manifest, { customHandlers: handlerRegistry })`.
+ */
+export const handlerRegistry: Record<string, (context: Context) => Promise<unknown>> = {
+<% handlerSources.forEach(function(src) { -%>
+  <%= src.localName %>: <%= src.localName %> as (context: Context) => Promise<unknown>,
+<% }); -%>
+};

@@ -72,9 +72,15 @@ through published contracts, not shared source.
 
 ## Implemented by
 
-- Docs: `MERGE-PLAN.md` (the phased, reversible path and Phase 1 success criteria).
-- Code: `packages/contracts/`, `packages/oclif-base/`, `PLUGIN-CONTRACT.md`,
-  `examples/plugin-skeleton/`, `src/mcp/` (federated tool registry), `pnpm-workspace.yaml`,
-  `turbo.json`.
-- Related: PDR-003 (MCP federation is how agents consume the ecosystem), PDR-006
-  (this is the packaging substrate the ecosystem scales on).
+- ADRs: **ADR-022** (plugin-first architecture — `falese/daemon` and `falese/coder` as
+  oclif plugins depending on `@seans-mfe/contracts`, monorepo merge deferred), ADR-021
+  (package namespace strategy — `@seans-mfe/*` shared, `@falese/*` plugins), ADR-015
+  (oclif as the CLI framework that makes the plugin model work), ADR-019 (MCP
+  child-process isolation — how a federated tool surface stays concurrency-safe).
+- Docs: `MERGE-PLAN.md` (the phased, reversible path and Phase 1 success criteria),
+  `PLUGIN-CONTRACT.md`.
+- Code: `packages/contracts/`, `packages/oclif-base/`, `examples/plugin-skeleton/`,
+  `src/mcp/` (federated tool registry), `pnpm-workspace.yaml`, `turbo.json`.
+- Related: PDR-002 (framework plugins ride on this same substrate via ADR-036),
+  PDR-003 (MCP federation is how agents consume the ecosystem), PDR-006 (the packaging
+  substrate the ecosystem scales on).

@@ -40,3 +40,38 @@ describe('LifecycleHookSchema handler reference validation', () => {
     expect(() => LifecycleHookSchema.parse(hook)).not.toThrow();
   });
 });
+
+describe('LifecycleHookSchema handler source resolution (ADR-040)', () => {
+  it('accepts a relative-path source', () => {
+    const hook = { handler: 'validateInput', source: './handlers/validation.ts' };
+    expect(() => LifecycleHookSchema.parse(hook)).not.toThrow();
+  });
+
+  it('accepts a module+export source', () => {
+    const hook = { handler: 'validateEmail', source: '@my-org/shared-handlers#validateEmail' };
+    expect(() => LifecycleHookSchema.parse(hook)).not.toThrow();
+  });
+
+  it('accepts a bare module source (resolves to default export)', () => {
+    const hook = { handler: 'logBegin', source: '@my-org/shared-handlers' };
+    expect(() => LifecycleHookSchema.parse(hook)).not.toThrow();
+  });
+
+  it('rejects empty source string', () => {
+    const hook = { handler: 'validateInput', source: '' };
+    expect(() => LifecycleHookSchema.parse(hook)).toThrow(/source/i);
+  });
+
+  it('rejects source on a hook whose handler references a platform wrapper method', () => {
+    const hook = { handler: 'doLoad', source: './handlers/x.ts' };
+    expect(() => LifecycleHookSchema.parse(hook)).toThrow(
+      /Handler must not reference platform wrapper methods/
+    );
+  });
+
+  it('treats source as optional — omitting it is unchanged behaviour', () => {
+    const hook = { handler: 'customHandler' };
+    const parsed = LifecycleHookSchema.parse(hook);
+    expect((parsed as any).source).toBeUndefined();
+  });
+});

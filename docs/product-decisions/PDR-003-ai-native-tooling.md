@@ -73,10 +73,13 @@ without changing the agent profile.
 
 ## Implemented by
 
-- ADRs: ADR-068 (two-headed giant — AI-native + human-legible DX), ADR-065 (error
-  classification → the exit codes the agent profile branches on).
+- ADRs: ADR-033 (two-headed giant — AI-native + human-legible DX), ADR-016 (`BaseCommand`
+  pattern), ADR-017 (typed error hierarchy), ADR-018 (`CommandResult<T>` JSON envelope),
+  ADR-019 (MCP child-process isolation), ADR-030 (error classification → the exit codes
+  the agent profile branches on).
 - Code: `packages/oclif-base/src/BaseCommand.ts` (envelope, exit codes, stdout/stderr
-  split), `packages/contracts/` (`CommandResult<T>`, typed error taxonomy),
-  `src/commands/mcp/serve.ts` + `src/mcp/` (federated MCP tool registry), `schemas/*.json`.
+  split), `packages/contracts/src/envelope.ts` + `packages/contracts/src/errors/`
+  (`CommandResult<T>`, typed error taxonomy), `src/commands/mcp/serve.ts` + `src/mcp/`
+  (federated MCP tool registry), `schemas/*.json`.
 - Related: PDR-001 (manifest as the agent's primary interface), PDR-004 (MCP federation
   across the plugin ecosystem).

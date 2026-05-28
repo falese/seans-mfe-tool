@@ -1,6 +1,6 @@
 /**
  * DSL Schema Definitions using Zod
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Reference: docs/dsl-schema-reference.md v3.2
  * 
  * This file defines both validation schemas AND TypeScript types.
@@ -28,6 +28,20 @@ export const LanguageSchema = z.enum([
   'java'                         // Spring Boot MFEs
 ]);
 export type Language = z.infer<typeof LanguageSchema>;
+
+/** Known built-in frameworks — used for validation warnings, not hard errors (ADR-036, #181). */
+export const KNOWN_FRAMEWORKS = ['react', 'angular'] as const;
+
+/** Known built-in bundlers — used for validation warnings, not hard errors (ADR-036, #181). */
+export const KNOWN_BUNDLERS = ['rspack', 'webpack'] as const;
+
+/** UI framework — open string so third-party plugins can register new values (ADR-036, #181). */
+export const FrameworkSchema = z.string().min(1);
+export type Framework = z.infer<typeof FrameworkSchema>;
+
+/** Bundler — open string so third-party plugins can register new values (ADR-036, #181). */
+export const BundlerSchema = z.string().min(1);
+export type Bundler = z.infer<typeof BundlerSchema>;
 
 /** Capability type discrimination */
 export const CapabilityTypeSchema = z.enum(['platform', 'domain']);
@@ -81,6 +95,12 @@ export const PLATFORM_WRAPPER_METHODS = [
 
 export const LifecycleHookSchema = z.object({
   handler: z.union([z.string(), z.array(z.string())]),
+  // ADR-040: declarative module specifier for the handler implementation.
+  // Accepts a relative path ("./handlers/foo.ts"), a module ("@org/pkg"), or
+  // module+named-export ("@org/pkg#exportName"). Codegen emits a static import
+  // and wires the function into deps.customHandlers; BaseMFE.invokeHandler
+  // already picks it up via its existing DI branch.
+  source: z.string().min(1).optional(),
   description: z.string().optional(),
   mandatory: z.boolean().optional(),
   contained: z.boolean().optional()
@@ -127,7 +147,7 @@ export const CapabilityConfigSchema = z.object({
   inputs: z.array(DSLInputSchema).optional(),
   outputs: z.array(DSLOutputSchema).optional(),
   lifecycle: LifecycleSchema.optional(),
-  authorization: z.string().optional()  // Deferred - ADR-041
+  authorization: z.string().optional()  // Deferred - ADR-007
 });
 export type CapabilityConfig = z.infer<typeof CapabilityConfigSchema>;
 
@@ -136,7 +156,7 @@ export const CapabilityEntrySchema = z.record(z.string(), CapabilityConfigSchema
 export type CapabilityEntry = z.infer<typeof CapabilityEntrySchema>;
 
 // =============================================================================
-// Data Layer Schemas (GraphQL BFF - ADR-046)
+// Data Layer Schemas (GraphQL BFF - ADR-012)
 // =============================================================================
 
 /** OpenAPI handler configuration */
@@ -245,7 +265,7 @@ export const DataConfigSchema = z.object({
 export type DataConfig = z.infer<typeof DataConfigSchema>;
 
 // =============================================================================
-// Performance & Observability Schemas (ADR-062)
+// Performance & Observability Schemas (ADR-027)
 // =============================================================================
 
 /** Caching configuration */
@@ -359,7 +379,12 @@ export const DSLManifestSchema = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+/, 'Version must be semver (e.g., 1.0.0)'),
   type: MFETypeSchema,
   language: LanguageSchema,
-  
+
+  // UI framework + bundler (omit ⇒ react + rspack for back-compat).
+  // Drives codegen template variant selection in UnifiedGenerator.
+  framework: FrameworkSchema.optional(),
+  bundler: BundlerSchema.optional(),
+
   // Optional identity
   description: z.string().optional(),
   owner: z.string().optional(),
@@ -376,12 +401,12 @@ export const DSLManifestSchema = z.object({
   dependencies: DependenciesSchema.optional(),
   data: DataConfigSchema.optional(),
   
-  // Performance & observability config (ADR-062)
+  // Performance & observability config (ADR-027)
   performance: PerformanceConfigSchema.optional(),
   transforms: z.array(CustomTransformSchema).optional(),
   
   // Future sections (deferred)
-  authorization: z.unknown().optional()  // ADR-041
+  authorization: z.unknown().optional()  // ADR-007
 });
 export type DSLManifest = z.infer<typeof DSLManifestSchema>;
 

@@ -1,86 +1,33 @@
-# Architecture Decision Records — Register
+# Architecture Decision Records
 
-This is the **canonical, navigable index** of ADRs. It is the source of truth for *which
-ADRs exist, their status, and their number*. The long-form historical narrative lives in
-[`architecture-decisions.md`](./architecture-decisions.md); this register supersedes it
-**for navigation and numbering**.
+The **canonical ADR index** for this repo is [`docs/spec.md#adr-index`](../spec.md#adr-index).
+It lists every ADR with title, area, and status, and `CLAUDE.md` points contributors there
+before making any architectural decision.
 
-> An ADR records *how* we build something. For *why we build it at all* (the product
-> bet), see [`docs/product-decisions/`](../product-decisions/). A PDR is typically
-> implemented by several ADRs.
-
-## ⚠️ Numbering reconciliation (action required in open PRs)
-
-Two open PRs independently claimed overlapping ADR numbers. Resolved numbering:
-
-| Decision | Claimed in PR | Canonical number |
-| -------- | ------------- | ---------------- |
-| Two-headed giant developer model | (merged) | **ADR-068** — keep |
-| Pluggable bundler / framework | PR #161 | **ADR-069** — keep |
-| `shell:init` command | PR #153 (as 068) | **ADR-070** |
-| Four-tier daemon-native control plane | PR #153 (as 069) | **ADR-071** |
-| GraphQL/WS daemon transport protocol | PR #153 (as 070) | **ADR-072** |
-| Component-type / MFE remote naming | PR #153 (as 071) | **ADR-073** |
-
-**ADR-068 and ADR-069 are already taken** (merged ADR-068; PR #161 owns ADR-069). PR
-#153 must renumber its four ADR files to **070–073** before merge, and update internal
-cross-references (its PR title references "ADR-068–071"). This register reflects the
-resolved numbers; the files in PR #153 do not yet. *(This is the PR owner's edit — not
-made on the PDR/ADR-register branch.)*
-
-## Active ADRs (file exists on `main`)
-
-| ADR | Title | Status | File |
-| --- | ----- | ------ | ---- |
-| ADR-022 | Lifecycle re-entrancy guard in BaseMFE | Accepted | [ADR-022](./ADR-022-lifecycle-reentrancy-guard.md) |
-| ADR-058 | Platform handler library | Accepted | [ADR-058](./ADR-058-platform-handler-library.md) |
-| ADR-059 | Platform handler interface | Accepted | [ADR-059](./ADR-059-platform-handler-interface.md) |
-| ADR-060 | Load capability (atomic) | Accepted | [ADR-060](./ADR-060-load-capability-atomic.md) |
-| ADR-062 | Mesh v0.100 plugins | Accepted | [ADR-062](./ADR-062-mesh-v0100-plugins.md) |
-| ADR-063 | Parallel handler execution | Proposed | [ADR-063](./ADR-063-parallel-execution.md) |
-| ADR-064 | Timeout protection | Proposed | [ADR-064](./ADR-064-timeout-protection.md) |
-| ADR-065 | Error classification | Proposed | [ADR-065](./ADR-065-error-classification.md) |
-| ADR-066 | Conditional execution | Proposed | [ADR-066](./ADR-066-conditional-execution.md) |
-| ADR-067 | Inter-hook communication | Proposed | [ADR-067](./ADR-067-inter-hook-communication.md) |
-| ADR-068 | Two-headed giant — AI-native + human-legible DX | Accepted | [ADR-068](./ADR-068-two-headed-giant-developer-model.md) |
-
-## In-flight ADRs (in open PRs, not yet on `main`)
-
-| ADR | Title | PR | Branch |
-| --- | ----- | -- | ------ |
-| ADR-069 | Pluggable bundler / framework | [#161](https://github.com/falese/seans-mfe-tool/pull/161) | `claude/webpack-federated-module-class-dDMzf` |
-| ADR-070 | `shell:init` command | [#153](https://github.com/falese/seans-mfe-tool/pull/153) | `copilot/orchestration-service-generation-shell` |
-| ADR-071 | Four-tier daemon-native control plane | [#153](https://github.com/falese/seans-mfe-tool/pull/153) | `copilot/orchestration-service-generation-shell` |
-| ADR-072 | GraphQL/WS daemon transport protocol | [#153](https://github.com/falese/seans-mfe-tool/pull/153) | `copilot/orchestration-service-generation-shell` |
-| ADR-073 | Component-type / MFE remote naming | [#153](https://github.com/falese/seans-mfe-tool/pull/153) | `copilot/orchestration-service-generation-shell` |
-
-## Historical / referenced-only (no standalone file)
-
-ADRs **001–021, 023–057, and 061** are referenced in the narrative
-[`architecture-decisions.md`](./architecture-decisions.md) and in
-[`docs/requirements/TRACEABILITY.md`](../requirements/TRACEABILITY.md) (e.g. ADR-016/017
-orchestration, ADR-036/037 lifecycle semantics, ADR-046 Mesh-from-DSL, ADR-047/048
-DSL-first remote) but were never written as standalone files. They are **design-phase /
-historical** decisions, considered superseded-or-absorbed by the active set above. They
-are intentionally **not** backfilled in this pass; candidates worth promoting to
-standalone files are tracked in
-[`../product-decisions/BACKLOG.md`](../product-decisions/BACKLOG.md).
+This file exists only to add what the spec doesn't: the **PDR ↔ ADR mapping**, so a
+product decision can be traced to the architecture decisions that implement it.
 
 ## PDR ↔ ADR mapping
 
 | PDR | ADRs that implement it |
 | --- | ---------------------- |
-| PDR-001 — Generate, don't hand-write | ADR-022, ADR-060 |
-| PDR-002 — Language-/framework-neutral contract | ADR-069 |
-| PDR-003 — AI-native tooling | ADR-068, ADR-065 |
-| PDR-004 — Plugin-first ecosystem | (packaging decisions; see `MERGE-PLAN.md`) |
-| PDR-005 — Runtime composition | ADR-070, ADR-071, ADR-072, ADR-073 |
-| PDR-006 — Ecosystem scaling thesis | composes PDR-001–005 |
+| [PDR-001](../product-decisions/PDR-001-generate-dont-handwrite.md) — Generate, don't hand-write | ADR-001 lifecycle re-entrancy guard; ADR-002 lifecycle hook execution; ADR-003 no custom phases; ADR-004 handler array support; ADR-005 handler discovery; ADR-009 language → template selection; ADR-013 generated MFE test templates; ADR-026 load capability (atomic); ADR-040 manifest-declared handler sources |
+| [PDR-002](../product-decisions/PDR-002-language-neutral-platform-contract.md) — Language-/framework-neutral contract | ADR-034 pluggable bundler + framework via codegen variants; ADR-036 framework plugins (`BaseFrameworkPlugin`); ADR-021 package namespace strategy |
+| [PDR-003](../product-decisions/PDR-003-ai-native-tooling.md) — AI-native tooling | ADR-033 two-headed giant; ADR-016 BaseCommand pattern; ADR-017 typed error hierarchy; ADR-018 CommandResult\<T\> envelope; ADR-019 MCP child-process isolation; ADR-030 error classification |
+| [PDR-004](../product-decisions/PDR-004-plugin-first-ecosystem.md) — Plugin-first ecosystem | ADR-022 plugin-first architecture; ADR-021 package namespace strategy; ADR-015 oclif migration |
+| [PDR-005](../product-decisions/PDR-005-runtime-composition.md) — Runtime composition | **Pending** — landing through PR #153 (still draft); will add ADRs for `shell:init`, daemon control plane, daemon transport protocol, and MFE remote naming when merged. Numbers will be assigned from the next free ADR slot at merge time. |
+| [PDR-006](../product-decisions/PDR-006-ecosystem-scaling-thesis.md) — Ecosystem scaling thesis | Composes PDR-001–005. See `CLAUDE.md` ("What this project is") for the canonical product framing. |
 
-## Conventions
+## Numbering hygiene
 
-- File name: `ADR-NNN-slug.md`. Numbers are unique and never reused.
-- New ADRs take the next free number in this register — **check here before claiming a
-  number** to avoid the 068/069 collision repeating.
-- New ADR front matter follows [`ADR-068`](./ADR-068-two-headed-giant-developer-model.md)
-  (id, title, status, date, deciders, tags, supersedes, superseded-by).
+ADR numbers come from the next free slot in [`docs/spec.md#adr-index`](../spec.md#adr-index). 
+Check there before claiming a number — the 068/069 collision from PRs #161 and #153 was
+resolved by the library remediation (PR #194) when the whole set was reflowed sequentially
+into 001–040, and the index is now the single source of truth.
+
+## Historical narrative
+
+The long-form historical narrative remains in
+[`architecture-decisions.md`](./architecture-decisions.md). It predates the per-ADR file
+split. Use it for context; use [`spec.md`](../spec.md#adr-index) for current state.
+</content>

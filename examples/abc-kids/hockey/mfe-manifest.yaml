@@ -2,6 +2,8 @@ name: abc-kids-hockey
 version: 1.0.0
 type: remote
 language: typescript
+framework: react
+bundler: rspack
 description: Ice Hockey — move your paddle, score goals against the AI!
 owner: abc-kids-team
 tags: [kids, game, hockey, arcade]

@@ -22,12 +22,12 @@ A single PDR is typically implemented by several ADRs, which are in turn detaile
 
 | PDR | Title | Status | Implemented by |
 | --- | ----- | ------ | -------------- |
-| [PDR-001](./PDR-001-generate-dont-handwrite.md) | Generate MFEs from a manifest; don't hand-write them | Accepted | REQ-057, codegen, `BaseMFE` |
-| [PDR-002](./PDR-002-language-neutral-platform-contract.md) | One language- and framework-neutral platform contract | Accepted | ADR-069, PR #161, polyglot stubs |
-| [PDR-003](./PDR-003-ai-native-tooling.md) | AI-native, agent-operable tooling | Accepted | ADR-068, `BaseCommand`, MCP serve |
-| [PDR-004](./PDR-004-plugin-first-ecosystem.md) | Plugin-first federated ecosystem (not monorepo-first) | Accepted | MERGE-PLAN.md, `@seans-mfe/contracts` |
-| [PDR-005](./PDR-005-runtime-composition.md) | Runtime composition via shell + daemon control plane + registry | Proposed | ADR-070–073, PR #153 |
-| [PDR-006](./PDR-006-ecosystem-scaling-thesis.md) | Ecosystem scaling thesis | Proposed | PDR-001–005 (composition) |
+| [PDR-001](./PDR-001-generate-dont-handwrite.md) | Generate MFEs from a manifest; don't hand-write them | Accepted | REQ-057, codegen, `BaseMFE`; ADR-001/002/003/004/005, ADR-013, ADR-026, ADR-040 |
+| [PDR-002](./PDR-002-language-neutral-platform-contract.md) | One language- and framework-neutral platform contract | Accepted | ADR-034, ADR-036, polyglot stubs |
+| [PDR-003](./PDR-003-ai-native-tooling.md) | AI-native, agent-operable tooling | Accepted | ADR-033, ADR-016/017/018, ADR-019, ADR-030 |
+| [PDR-004](./PDR-004-plugin-first-ecosystem.md) | Plugin-first federated ecosystem (not monorepo-first) | Accepted | ADR-022, ADR-021, ADR-015, `MERGE-PLAN.md` |
+| [PDR-005](./PDR-005-runtime-composition.md) | Runtime composition via shell + daemon control plane + registry | Proposed | PR #153 (draft); ADRs pending merge |
+| [PDR-006](./PDR-006-ecosystem-scaling-thesis.md) | Ecosystem scaling thesis | Proposed | Composes PDR-001–005; see `CLAUDE.md` "What this project is" |
 
 ## Conventions
 

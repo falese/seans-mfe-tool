@@ -2,7 +2,7 @@
  * Retry Wrapper
  * Implements smart retry with exponential backoff, onRetry hooks, and fallback handlers.
  * Following REQ-LIFECYCLE-005: Error Classification
- * Following ADR-065: Error Classification with Hybrid Detection
+ * Following ADR-030: Error Classification with Hybrid Detection
  */
 
 import { Context } from './context';

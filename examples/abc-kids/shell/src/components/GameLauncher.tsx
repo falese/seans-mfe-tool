@@ -31,9 +31,16 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
         setIsLoading(true);
         setRenderError(null);
 
-        const remote = game.id === 'flappy'
-          ? await import('abcKidsFlappy/App')
-          : await import('abcKidsHockey/App');
+        let remote: { mfe: any; mfeReady: Promise<void> };
+        if (game.id === 'flappy') {
+          remote = await import('abcKidsFlappy/App');
+        } else if (game.id === 'hockey') {
+          remote = await import('abcKidsHockey/App');
+        } else if (game.id === 'multiplication-quiz') {
+          remote = await import('abcKidsMultiplicationQuiz/Component');
+        } else {
+          throw new Error(`Unknown game: ${game.id}`);
+        }
 
         const { mfe, mfeReady } = remote;
         mfeInstance = mfe;
@@ -131,7 +138,7 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
               <Typography sx={{ color: '#aaa', fontSize: 12, mt: 1 }}>{renderError}</Typography>
             </Box>
           )}
-          {/* MFE mounts React into this div via mfe.render() */}
+          {/* MFE mounts React/Angular into this div via mfe.render() */}
           <div
             id={containerId}
             ref={containerRef}

@@ -86,3 +86,50 @@ export interface RemoteGenerateCapabilityResult extends MutatingResult {
   skipped: string[];
   errors: string[];
 }
+
+// ---------------------------------------------------------------------------
+// build:dev (ADR-036, #174)
+// ---------------------------------------------------------------------------
+
+export interface BuildDevResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  url: string;
+  port: number;
+}
+
+// ---------------------------------------------------------------------------
+// build:docker (ADR-036, #177)
+// ---------------------------------------------------------------------------
+
+export interface BuildDockerResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  dockerfilePath: string;
+  imageTag?: string;
+  built: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// build:prod (ADR-036, #175)
+// ---------------------------------------------------------------------------
+
+export interface BuildProdResult {
+  plugin: string;
+  framework: string;
+  bundler: string;
+  success: boolean;
+  artifacts: string[];
+  duration_ms: number;
+  warnings: string[];
+  errors: Array<{
+    file?: string;
+    line?: number;
+    column?: number;
+    message: string;
+    category: string;
+    suggestion?: string;
+  }>;
+}

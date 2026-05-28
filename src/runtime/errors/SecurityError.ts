@@ -2,7 +2,7 @@
  * SecurityError
  * Thrown for authentication/authorization failures (not retryable, audit logged).
  * Following REQ-LIFECYCLE-005: Error Classification
- * Following ADR-065: Error Classification with Hybrid Detection
+ * Following ADR-030: Error Classification with Hybrid Detection
  */
 
 export class SecurityError extends Error {

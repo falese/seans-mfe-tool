@@ -123,6 +123,52 @@ describe('DSL Validator', () => {
       const result = validateManifest(manifest);
       expect(result.valid).toBe(true);
     });
+
+    it('should accept optional framework=angular + bundler=webpack', () => {
+      const manifest = {
+        name: 'ng-remote',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        framework: 'angular',
+        bundler: 'webpack',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(true);
+      expect(result.manifest?.framework).toBe('angular');
+      expect(result.manifest?.bundler).toBe('webpack');
+    });
+
+    it('accepts unknown framework (open enum — ADR-036, #181)', () => {
+      // Third-party plugins register new frameworks; schema must not reject them.
+      const manifest = {
+        name: 'oddball',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        framework: 'svelte',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(true);
+    });
+
+    it('accepts unknown bundler (open enum — ADR-036, #181)', () => {
+      const manifest = {
+        name: 'oddball',
+        version: '1.0.0',
+        type: 'remote',
+        language: 'typescript',
+        bundler: 'vite',
+        capabilities: []
+      };
+
+      const result = validateManifest(manifest);
+      expect(result.valid).toBe(true);
+    });
   });
 
   describe('validatePartialManifest', () => {

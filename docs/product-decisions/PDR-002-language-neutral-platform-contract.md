@@ -55,9 +55,10 @@ contract and never with framework specifics.
 
 - An Angular MFE and a React MFE mount in the **same shell**, through the same
   `mfe.render()` lifecycle, with **identical telemetry checkpoint names**, so consumers
-  stay framework-agnostic. (Demonstrated by PR #161.)
-- Adding a new framework or bundler is a new sibling runtime + a template variant — not
-  an edit to existing MFEs and not a fork of the tool.
+  stay framework-agnostic. (Demonstrated — ADR-034, merged.)
+- Adding a new framework is a new framework-plugin package (e.g.
+  `@seans-mfe/framework-vue`) consumed by the same `loadFrameworkPlugin()` — *not* an
+  edit to existing MFEs and *not* a fork of the tool. (Pattern established — ADR-036.)
 - The same manifest capability (e.g. a BFF) produces the same `server.ts` + Mesh config
   regardless of the MFE's framework.
 
@@ -78,10 +79,17 @@ contract and never with framework specifics.
 
 ## Implemented by
 
-- ADRs: ADR-069 (pluggable bundler/framework — optional `framework` / `bundler` manifest
-  fields, React+rspack default preserved).
-- Code / PRs: PR #161 (`src/runtime/angular-remote-mfe.ts`, `src/codegen/templates/base-mfe-angular/`,
-  `remote:init-angular`); `src/runtime/base-mfe.ts` (the abstract contract); `PLATFORM-CONTRACT.md`
-  (the 10 capabilities); `examples/polyglot-stubs/{python,go,rust}/`.
+- ADRs: **ADR-034** (pluggable bundler + framework via codegen variants — optional
+  `framework`/`bundler` manifest fields, React+rspack default preserved, `AngularRemoteMFE`
+  as a *sibling* of `RemoteMFE`); **ADR-036** (framework plugins — abstract
+  `BaseFrameworkPlugin` with concrete `ReactRspackPlugin` / `AngularWebpackPlugin`
+  packages, resolved by `loadFrameworkPlugin()` instead of an
+  `if (isAngularWebpack)` branch in codegen); ADR-021 (package namespace strategy —
+  `@seans-mfe/*` for shared, `@falese/*` for plugins).
+- Code: `packages/runtime/src/` (`BaseMFE` — the abstract contract),
+  `src/runtime/angular-remote-mfe.ts`, `packages/contracts/src/framework-plugin.ts`,
+  `src/framework/loader.ts`, `packages/framework-react/`, `packages/framework-angular/`,
+  `PLATFORM-CONTRACT.md`, `examples/polyglot-stubs/{python,go,rust}/`.
 - Related: PDR-001 (codegen enforces the contract), PDR-005 (the runtime that composes
-  framework-neutral MFEs).
+  framework-neutral MFEs), PDR-004 (frameworks ship as plugins on the same plugin
+  substrate).

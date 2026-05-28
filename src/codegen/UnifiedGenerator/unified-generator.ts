@@ -1,13 +1,14 @@
 /**
  * Unified MFE Codegen Generator
  * Consolidates feature/component and platform/BFF codegen
- * Implements ADR-048, REQ-REMOTE-003, ADR-062
+ * Implements ADR-014, REQ-REMOTE-003, ADR-027
  */
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '../../dsl/schema';
+import { loadFrameworkPlugin } from '../../framework/loader';
 
 export interface GeneratedFile {
   path: string;
@@ -16,7 +17,7 @@ export interface GeneratedFile {
 }
 
 // =============================================================================
-// Dependency Version Constants (ADR-062)
+// Dependency Version Constants (ADR-027)
 // =============================================================================
 
 /**
@@ -87,6 +88,37 @@ export const DEPENDENCY_VERSIONS = {
     concurrently: '^8.2.0',
     serve: '^14.2.1',
   },
+
+  // Angular 17+ (Module Federation - Singleton + strictVersion)
+  angular: {
+    core: '^17.0.0',
+    common: '^17.0.0',
+    compiler: '^17.0.0',
+    compilerCli: '^17.0.0',
+    platformBrowser: '^17.0.0',
+    forms: '^17.0.0',
+    rxjs: '^7.8.0',
+    zoneJs: '~0.14.0',
+  },
+
+  // Angular CLI builder toolchain (angular-webpack variant).
+  // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
+  // merges the Module Federation partial (webpack.config.js).
+  // @angular-architects/module-federation provides withModuleFederationPlugin,
+  // which resolves ModuleFederationPlugin from Angular's bundled webpack —
+  // avoiding the "tap" crash caused by two separate webpack instances.
+  angularBuild: {
+    cli: '^17.0.0',
+    buildAngular: '^17.0.0',
+    customWebpack: '^17.0.0',
+    moduleFederation: '^17.0.0',
+  },
+
+  // Jest preset (standalone webpack removed — use Angular's bundled copy).
+  webpackTools: {
+    jestPresetAngular: '^14.0.0',
+    typesJest: '^29.5.0',
+  },
 };
 
 /**
@@ -129,13 +161,13 @@ export const DEFAULT_MESH_TRANSFORMS = {
 };
 
 // =============================================================================
-// Validation Layer (ADR-062)
+// Validation Layer (ADR-027)
 // =============================================================================
 
 /**
  * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
  * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
- * See ADR-048 for migration strategy.
+ * See ADR-014 for migration strategy.
  */
 
 /**
@@ -348,7 +380,7 @@ export function extractManifestVars(manifest: DSLManifest) {
     }
   }
 
-  // Extract performance/observability config from manifest (ADR-062)
+  // Extract performance/observability config from manifest (ADR-027)
   const performanceConfig = (manifest as any).performance || {};
   const observabilityConfig = performanceConfig.observability || {};
 
@@ -377,6 +409,11 @@ export function extractManifestVars(manifest: DSLManifest) {
     neededTransforms.add('resolversComposition');
   }
 
+  // Variant selection via plugin (ADR-036, #176).
+  // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
+  const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  const fwPlugin = loadFrameworkPlugin(frameworkName);
+
   return {
     name: manifest.name,
     version: manifest.version,
@@ -390,15 +427,22 @@ export function extractManifestVars(manifest: DSLManifest) {
     manifest,
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
+    handlerSources: [], // ADR-040 — overwritten in generateAllFiles
 
-    // NEW: Dependency versions for templates (ADR-062)
+    // Codegen variant selection — driven by plugin (ADR-036).
+    // Exposed to templates and read back by generateAllFiles.
+    framework: fwPlugin.framework as 'react' | 'angular',
+    bundler: fwPlugin.bundler as 'rspack' | 'webpack',
+    templateVariant: fwPlugin.id as 'react-rspack' | 'angular-webpack',
+
+    // NEW: Dependency versions for templates (ADR-027)
     dependencyVersions: DEPENDENCY_VERSIONS,
 
-    // NEW: Track which plugins/transforms are needed (ADR-062)
+    // NEW: Track which plugins/transforms are needed (ADR-027)
     neededPlugins: Array.from(neededPlugins),
     neededTransforms: Array.from(neededTransforms),
 
-    // NEW: Plugin/transform configs (ADR-062)
+    // NEW: Plugin/transform configs (ADR-027)
     meshPlugins: {
       responseCache:
         performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
@@ -467,6 +511,45 @@ export async function writeGeneratedFiles(
 }
 
 // =============================
+// Handler source parsing (ADR-040)
+// =============================
+
+/**
+ * Parse a DSL `source:` specifier into a static import descriptor.
+ *
+ * Grammar:
+ *   "./rel/path"               → named import `{ <hookName> } from './rel/path'`
+ *   "@org/pkg"                 → default import `<hookName> from '@org/pkg'`
+ *   "@org/pkg#namedExport"     → named import `{ namedExport as <hookName> } from '@org/pkg'`
+ *
+ * Returning `null` means the source is malformed (empty / only whitespace);
+ * the caller logs and falls back to stub generation so codegen never crashes
+ * on a typo.
+ */
+export function parseHandlerSource(
+  source: string,
+  hookName: string,
+): { module: string; exportName: string } | null {
+  const trimmed = source.trim();
+  if (!trimmed) return null;
+  const hashIdx = trimmed.indexOf('#');
+  if (hashIdx >= 0) {
+    const module = trimmed.slice(0, hashIdx).trim();
+    const exportName = trimmed.slice(hashIdx + 1).trim();
+    if (!module || !exportName) return null;
+    return { module, exportName };
+  }
+  // No '#': relative paths use a named import matching the hook name (the
+  // common case for project-local handler files); bare module specifiers use
+  // the default export.
+  const isRelative = trimmed.startsWith('./') || trimmed.startsWith('../');
+  return {
+    module: trimmed,
+    exportName: isRelative ? hookName : 'default',
+  };
+}
+
+// =============================
 // Unified Generator Entrypoint
 // =============================
 
@@ -478,7 +561,7 @@ export async function generateAllFiles(
   basePath: string,
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<GeneratedFile[]> {
-  // === Validation Layer (ADR-062) ===
+  // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
   validateManifestConfiguration(manifest);
@@ -506,6 +589,11 @@ export async function generateAllFiles(
   }> = [];
   const lifecycleHookNames = new Set<string>();
   const lifecycleHooks: Array<{ name: string; description: string; phase: string }> = [];
+  // ADR-040: handlers that declare a `source` in the DSL manifest are sourced
+  // from external modules. They appear in handlerSources (drives the generated
+  // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
+  // (no stub method is emitted because the implementation lives elsewhere).
+  const handlerSources: Array<{ localName: string; module: string; exportName: string }> = [];
   let inputs: any[] = [];
   let outputs: any[] = [];
 
@@ -544,6 +632,16 @@ export async function generateAllFiles(
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
                   const hookDescription = (hookConfig as any)?.description || '';
+                  // ADR-040: hooks with a `source` are wired through the
+                  // generated handler-registry, not emitted as stubs.
+                  const source = (hookConfig as any)?.source as string | undefined;
+                  if (typeof source === 'string' && source.length > 0) {
+                    const parsed = parseHandlerSource(source, hookName);
+                    if (parsed) {
+                      handlerSources.push({ localName: hookName, ...parsed });
+                      continue;
+                    }
+                  }
                   lifecycleHooks.push({ name: hookName, description: hookDescription, phase });
                 }
               }
@@ -559,9 +657,20 @@ export async function generateAllFiles(
 
   vars.capabilities = capabilities;
   vars.lifecycleHooks = lifecycleHooks;
+  vars.handlerSources = handlerSources;
+
+  // Codegen template variant selection (computed in extractManifestVars).
+  // Manifest.framework + manifest.bundler pick the directory and per-file
+  // extensions. Omitted ⇒ React + rspack (back-compat with all existing MFEs).
+  const templateVariant = vars.templateVariant;
 
   // Standardized template directory
-  const templateDir = path.resolve(__dirname, '../templates/base-mfe');
+  const templateDir = path.resolve(
+    __dirname,
+    templateVariant === 'angular-webpack'
+      ? '../templates/base-mfe-angular'
+      : '../templates/base-mfe'
+  );
   const featureTplDir = path.join(templateDir, 'features');
   const featuresDir = path.join(basePath, 'src', 'features');
   // Platform/BFF directories and template paths
@@ -587,10 +696,25 @@ export async function generateAllFiles(
 
       domainCapabilities.push(name);
       const featurePath = path.join(featuresDir, name);
+      const featureSpec =
+        templateVariant === 'angular-webpack'
+          ? {
+              componentFile: `${name}.component.ts`,
+              componentTpl: 'feature.component.ts.ejs',
+              specFile: `${name}.component.spec.ts`,
+              specTpl: 'feature.component.spec.ts.ejs',
+            }
+          : {
+              componentFile: `${name}.tsx`,
+              componentTpl: 'feature.tsx.ejs',
+              specFile: `${name}.test.tsx`,
+              specTpl: 'feature.test.tsx.ejs',
+            };
+
       // Feature component
       files.push({
-        path: path.join(featurePath, `${name}.tsx`),
-        content: await renderTemplate(path.join(featureTplDir, 'feature.tsx.ejs'), {
+        path: path.join(featurePath, featureSpec.componentFile),
+        content: await renderTemplate(path.join(featureTplDir, featureSpec.componentTpl), {
           name,
           description: config.description || `${name} feature component`,
         }),
@@ -604,16 +728,20 @@ export async function generateAllFiles(
       });
       // Feature test
       files.push({
-        path: path.join(featurePath, `${name}.test.tsx`),
-        content: await renderTemplate(path.join(featureTplDir, 'feature.test.tsx.ejs'), { name }),
+        path: path.join(featurePath, featureSpec.specFile),
+        content: await renderTemplate(path.join(featureTplDir, featureSpec.specTpl), { name }),
         overwrite: false,
       });
     }
   }
   // Remote entrypoint exports all domain capabilities
+  const remoteEntry =
+    templateVariant === 'angular-webpack'
+      ? { file: 'remote.ts', tpl: 'remote.ts.ejs' }
+      : { file: 'remote.tsx', tpl: 'remote.tsx.ejs' };
   files.push({
-    path: path.join(basePath, 'src', 'remote.tsx'),
-    content: await renderTemplate(path.join(featureTplDir, 'remote.tsx.ejs'), {
+    path: path.join(basePath, 'src', remoteEntry.file),
+    content: await renderTemplate(path.join(featureTplDir, remoteEntry.tpl), {
       capabilities: domainCapabilities,
     }),
     overwrite: true,
@@ -655,11 +783,28 @@ export async function generateAllFiles(
     content: await renderTemplate(path.join(templateDir, 'mfe.ts.ejs'), vars),
     overwrite: true,
   });
+  // ADR-040: emit the handler registry only when at least one lifecycle hook
+  // declared a `source`. Without sources, the registry file is absent and the
+  // generated mfe.ts looks identical to today (back-compat).
+  if (handlerSources.length > 0) {
+    files.push({
+      path: path.join(platformDir, 'handler-registry.ts'),
+      content: await renderTemplate(
+        path.join(templateDir, 'handler-registry.ts.ejs'),
+        vars,
+      ),
+      overwrite: true,
+    });
+  }
   // Bootstrap — exports mfe instance + mfeReady for imperative shell rendering
   files.push({
     path: path.join(platformDir, 'bootstrap.ts'),
     content: await renderTemplate(path.join(templateDir, 'bootstrap.ts.ejs'), vars),
-    overwrite: false, // user-owned: first-init only, not regenerated
+    // Regenerated on every codegen run so the inline manifest stays in sync
+    // with mfe-manifest.yaml. Bootstrap is glue code (instantiate, call load,
+    // log result); customization belongs in mfe.ts overrides, lifecycle
+    // hooks, or `deps.*` DI — not in this file.
+    overwrite: true,
   });
   // BaseMFE test
   files.push({
@@ -674,68 +819,86 @@ export async function generateAllFiles(
     overwrite: true,
   });
 
-  // BFF stub files
-  files.push({
-    path: path.join(bffDir, 'bff.ts'),
-    content: await renderTemplate(path.join(bffTemplateDir, 'bff.ts.ejs'), {
-      ...vars,
-      bffClassName: vars.className + 'BFF',
-    }),
-    overwrite: true,
-  });
-  files.push({
-    path: path.join(bffDir, 'bff.test.ts'),
-    content: await renderTemplate(path.join(bffTemplateDir, 'bff.test.ts.ejs'), {
-      ...vars,
-      bffClassName: vars.className + 'BFF',
-    }),
-    overwrite: true,
-  });
+  if (manifest.data) {
+    // BFF stub files — only when manifest declares a data: section
+    files.push({
+      path: path.join(bffDir, 'bff.ts'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'bff.ts.ejs'), {
+        ...vars,
+        bffClassName: vars.className + 'BFF',
+      }),
+      overwrite: true,
+    });
+    files.push({
+      path: path.join(bffDir, 'bff.test.ts'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'bff.test.ts.ejs'), {
+        ...vars,
+        bffClassName: vars.className + 'BFF',
+      }),
+      overwrite: true,
+    });
 
-  // BFF main server and root files.
-  //
-  // Important: `package.json` is intentionally NOT in this list. The MFE root
-  // template at `src/codegen/templates/base-mfe/package.json.ejs` is already a
-  // hybrid that owns BOTH MFE deps (rspack, react, MUI, etc.) AND BFF deps
-  // (mesh, express, helmet, etc.). The BFF template's `package.json.ejs` is a
-  // strict subset (no MUI, no MFE-specific scripts) and previously clobbered
-  // the hybrid one because it ran first with `overwrite: true`, leaving the
-  // generated MFE without MUI deps even though `src/App.tsx` imports them.
-  //
-  // `server.ts` stays `overwrite: true` because it's pure BFF runtime that the
-  // user does not customize. The remaining root files (`tsconfig.json`,
-  // `Dockerfile`, `docker-compose.yaml`, `README.md`) flip to `overwrite: false`
-  // so user customization survives regeneration, matching the same convention
-  // used by other root templates further down (`package.json`, `rspack.config.js`).
-  const bffTemplates: Array<{ tpl: string; out: string; overwrite: boolean }> = [
-    { tpl: 'server.ts.ejs', out: 'server.ts', overwrite: true },
-    { tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false },
-    { tpl: 'Dockerfile.ejs', out: 'Dockerfile', overwrite: false },
-    { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml', overwrite: false },
-    { tpl: 'README.md.ejs', out: 'README.md', overwrite: false },
-  ];
-  // BFF port = MFE port + 1000 (e.g., 3002 → 4002, following e2e2 pattern)
-  const mfePort = vars.port || 3000;
-  const bffPort = mfePort + 1000;
-  const includeStatic = true;
-  for (const { tpl, out, overwrite } of bffTemplates) {
-    const templatePath = path.join(bffTemplateDir, tpl);
-    if (await fs.pathExists(templatePath)) {
-      const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
-      files.push({
-        path: path.join(basePath, out),
-        content,
-        overwrite,
-      });
+    // BFF main server and root files.
+    //
+    // Important: `package.json` is intentionally NOT in this list. The MFE root
+    // template at `src/codegen/templates/base-mfe/package.json.ejs` is already a
+    // hybrid that owns BOTH MFE deps (rspack, react, MUI, etc.) AND BFF deps
+    // (mesh, express, helmet, etc.). The BFF template's `package.json.ejs` is a
+    // strict subset (no MUI, no MFE-specific scripts) and previously clobbered
+    // the hybrid one because it ran first with `overwrite: true`, leaving the
+    // generated MFE without MUI deps even though `src/App.tsx` imports them.
+    //
+    // `server.ts` stays `overwrite: true` because it's pure BFF runtime that the
+    // user does not customize. The remaining root files (`tsconfig.json`,
+    // `Dockerfile`, `docker-compose.yaml`, `README.md`) flip to `overwrite: false`
+    // so user customization survives regeneration, matching the same convention
+    // used by other root templates further down (`package.json`, `rspack.config.js`).
+    // Angular-webpack emits its own tsconfig.json (with experimentalDecorators,
+    // angularCompilerOptions, etc.) in the root templates block below. Skip the
+    // BFF tsconfig for that variant so the Angular-specific one wins.
+    const bffTemplates: Array<{ tpl: string; out: string; overwrite: boolean }> = [
+      { tpl: 'server.ts.ejs', out: 'server.ts', overwrite: true },
+      ...(templateVariant !== 'angular-webpack'
+        ? [{ tpl: 'tsconfig.json', out: 'tsconfig.json', overwrite: false }]
+        : []),
+      { tpl: 'Dockerfile.ejs', out: 'Dockerfile', overwrite: false },
+      { tpl: 'docker-compose.yaml.ejs', out: 'docker-compose.yaml', overwrite: false },
+      { tpl: 'README.md.ejs', out: 'README.md', overwrite: false },
+    ];
+    // BFF port = MFE port + 1000 (e.g., 3002 → 4002, following e2e2 pattern)
+    const mfePort = vars.port || 3000;
+    const bffPort = mfePort + 1000;
+    const includeStatic = true;
+    for (const { tpl, out, overwrite } of bffTemplates) {
+      const templatePath = path.join(bffTemplateDir, tpl);
+      if (await fs.pathExists(templatePath)) {
+        const content = await renderTemplate(templatePath, { ...vars, port: bffPort, includeStatic });
+        files.push({
+          path: path.join(basePath, out),
+          content,
+          overwrite,
+        });
+      }
     }
   }
 
   // --- Root/config files ---
-  // Always use EJS templates for package.json, rspack.config.js, etc.
-  const rootTemplates = [
-    { name: 'package.json', ejs: 'package.json.ejs' },
-    { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
-  ];
+  // Variant-aware: angular-webpack emits webpack.config.js + tsconfig pair;
+  // react-rspack keeps the existing package.json + rspack.config.js shape.
+  const rootTemplates =
+    templateVariant === 'angular-webpack'
+      ? [
+          { name: 'package.json', ejs: 'package.json.ejs' },
+          { name: 'angular.json', ejs: 'angular.json.ejs' },
+          { name: 'webpack.config.js', ejs: 'webpack.config.js.ejs' },
+          { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
+          { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
+          { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
+        ]
+      : [
+          { name: 'package.json', ejs: 'package.json.ejs' },
+          { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
+        ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);
     if (await fs.pathExists(templatePath)) {
@@ -755,53 +918,77 @@ export async function generateAllFiles(
   }
 
   // --- Entry files ---
-  // Generate src/App.tsx from EJS template
-  const appTemplatePath = path.join(templateDir, 'App.tsx.ejs');
-  const appOutPath = path.join(basePath, 'src', 'App.tsx');
-  if (await fs.pathExists(appTemplatePath)) {
-    const appContent = await renderTemplate(appTemplatePath, vars);
-    files.push({
-      path: appOutPath,
-      content: appContent,
-      overwrite: false, // user-owned: App.tsx is the game entry point, not regenerated
-    });
+  // Variant-aware. React: src/App.tsx + src/index.tsx (standalone dev shell).
+  // Angular: src/main.ts + src/bootstrap.ts + src/polyfills.ts + src/app/app.component.ts.
+  if (templateVariant === 'angular-webpack') {
+    const angularEntries: Array<{ tpl: string; out: string; overwrite: boolean }> = [
+      { tpl: 'src/main.ts.ejs', out: 'src/main.ts', overwrite: false },
+      { tpl: 'src/bootstrap.ts.ejs', out: 'src/bootstrap.ts', overwrite: false },
+      { tpl: 'src/app/app.component.ts.ejs', out: 'src/app/app.component.ts', overwrite: false },
+    ];
+    for (const { tpl, out, overwrite } of angularEntries) {
+      const templatePath = path.join(templateDir, tpl);
+      if (await fs.pathExists(templatePath)) {
+        const content = await renderTemplate(templatePath, vars);
+        files.push({
+          path: path.join(basePath, out),
+          content,
+          overwrite,
+        });
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`[unified-generator] WARNING: Missing template for ${out}: ${templatePath}`);
+      }
+    }
   } else {
-    // Diagnostic: warn if App.tsx template missing
-    // eslint-disable-next-line no-console
-    console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
-  }
+    // Generate src/App.tsx from EJS template
+    const appTemplatePath = path.join(templateDir, 'App.tsx.ejs');
+    const appOutPath = path.join(basePath, 'src', 'App.tsx');
+    if (await fs.pathExists(appTemplatePath)) {
+      const appContent = await renderTemplate(appTemplatePath, vars);
+      files.push({
+        path: appOutPath,
+        content: appContent,
+        overwrite: false, // user-owned: App.tsx is the game entry point, not regenerated
+      });
+    } else {
+      // Diagnostic: warn if App.tsx template missing
+      // eslint-disable-next-line no-console
+      console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
+    }
 
-  // Generate src/index.tsx (standalone entry point with React bootstrap)
-  const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
-  const indexOutPath = path.join(basePath, 'src', 'index.tsx');
-  if (await fs.pathExists(indexTemplatePath)) {
-    // Build capability metadata for template
-    const capabilityMetadata = domainCapabilities.map((name) => {
-      // Find the capability config to get icon/displayName
-      const capEntry = manifest.capabilities.find((c) => Object.keys(c).includes(name));
-      const capConfig = capEntry?.[name];
-      return {
-        className: name,
-        displayName: (capConfig as any)?.displayName || name,
-        icon: (capConfig as any)?.icon || '📦',
-      };
-    });
+    // Generate src/index.tsx (standalone entry point with React bootstrap)
+    const indexTemplatePath = path.join(templateDir, 'index.tsx.ejs');
+    const indexOutPath = path.join(basePath, 'src', 'index.tsx');
+    if (await fs.pathExists(indexTemplatePath)) {
+      // Build capability metadata for template
+      const capabilityMetadata = domainCapabilities.map((name) => {
+        // Find the capability config to get icon/displayName
+        const capEntry = manifest.capabilities.find((c) => Object.keys(c).includes(name));
+        const capConfig = capEntry?.[name];
+        return {
+          className: name,
+          displayName: (capConfig as any)?.displayName || name,
+          icon: (capConfig as any)?.icon || '📦',
+        };
+      });
 
-    const indexContent = await renderTemplate(indexTemplatePath, {
-      ...vars,
-      capabilities: capabilityMetadata,
-    });
-    files.push({
-      path: indexOutPath,
-      content: indexContent,
-      overwrite: false, // user-owned: standalone dev entry, not regenerated
-    });
-  } else {
-    // Diagnostic: warn if index.tsx template missing
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
-    );
+      const indexContent = await renderTemplate(indexTemplatePath, {
+        ...vars,
+        capabilities: capabilityMetadata,
+      });
+      files.push({
+        path: indexOutPath,
+        content: indexContent,
+        overwrite: false, // user-owned: standalone dev entry, not regenerated
+      });
+    } else {
+      // Diagnostic: warn if index.tsx template missing
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
+      );
+    }
   }
 
   // --- Public assets ---

@@ -15,7 +15,7 @@ import { Context } from '../base-mfe';
 export async function validateJWT(context: Context): Promise<void> {
   const token = context.jwt;
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
-  const secret = process.env.JWT_SECRET;
+  const secret = (globalThis as any).process?.env?.JWT_SECRET as string | undefined;
   if (!token) {
     if (emit) {
       await emit({
@@ -96,7 +96,7 @@ export async function validateJWT(context: Context): Promise<void> {
  */
 export async function checkPermissions(context: Context, requiredRoles: string[]): Promise<void> {
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
-  const userRoles = Array.isArray(context.user?.roles) ? context.user.roles : [];
+  const userRoles = Array.isArray(context.user?.roles) ? context.user!.roles : [];
   // Any required role suffices (documented)
   const hasPermission = requiredRoles.some(role => userRoles.includes(role));
   if (!hasPermission) {

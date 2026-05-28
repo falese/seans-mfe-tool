@@ -75,17 +75,21 @@ changes.
   the daemon ships as an independently deployable plugin (PDR-004).
 - **Negative:** Generating orchestration services widens the generator's blast radius
   and introduces new architectural decisions (control-plane tiers, transport protocol,
-  how a resolution names a component) — recorded as ADR-070–073.
-- **Status:** Proposed — landing through PR #153; promote to Accepted on merge.
+  how a resolution names a component) — to be recorded as ADRs when PR #153 lands.
+- **Status:** Proposed — landing through PR #153 (still draft). PR #153's original ADR
+  numbers (068–071) were invalidated by the ADR library remediation (PR #194), which
+  reflowed the whole set into sequential 001–040; fresh numbers will be assigned from
+  the next free slot at merge time. Promote this PDR to Accepted then.
 
 ## Implemented by
 
-- ADRs: ADR-070 (`shell:init` command), ADR-071 (four-tier daemon-native control plane),
-  ADR-072 (GraphQL/WS daemon transport protocol), ADR-073 (component-type / MFE remote
-  naming). *(Numbering reconciled — see the ADR register.)*
-- Code / PRs: PR #153 (`src/commands/shell/init.ts`,
+- Pending PR: PR #153 (`src/commands/shell/init.ts`,
   `src/codegen/templates/shell/orchestration/{daemon,registry}/`,
-  `src/codegen/templates/shell/src/shell/{MFEOrchestrator,MFERenderer,DaemonBridge}`).
+  `src/codegen/templates/shell/src/shell/{MFEOrchestrator,MFERenderer,DaemonBridge}`),
+  draft as of 2026-05-28.
+- ADRs: to be added on PR #153 merge — `shell:init` command, daemon control plane
+  tiers, daemon transport protocol, component / MFE remote naming. See the ADR register
+  for the renumbering note.
 - Contract: `PLATFORM-CONTRACT.md` (daemon ↔ registry ↔ MFE flow, message protocol).
 - Related: PDR-002 (the contract the control plane speaks), PDR-006 (the ecosystem this
   composes).

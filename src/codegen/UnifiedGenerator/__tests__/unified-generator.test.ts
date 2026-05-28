@@ -177,14 +177,24 @@ describe('unified-generator', () => {
       ...manifest,
       endpoint: 'http://localhost:3002'
     };
-    
+
     const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const dockerfile = files.find(f => f.path === path.join(basePath, 'Dockerfile'));
-    
+
     expect(dockerfile).toBeDefined();
     // BFF port should be 4002 (3002 + 1000)
     expect(dockerfile?.content).toContain('EXPOSE 4002');
     expect(dockerfile?.content).toContain('http://localhost:4002/health');
+  });
+
+  it('Dockerfile always includes .mesh artifact copy — no hasData conditional (#189)', async () => {
+    // Dockerfile is only emitted when manifest.data exists (fixed in #149).
+    // Within that block hasData is always true, so the template must not
+    // use a conditional — the .mesh COPY step should always be present.
+    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const dockerfile = files.find((f) => f.path === path.join(basePath, 'Dockerfile'));
+    expect(dockerfile).toBeDefined();
+    expect(dockerfile!.content).toContain('COPY --from=builder /app/.mesh ./.mesh');
   });
 
   it('generates docker-compose.yaml with correct BFF port', async () => {
@@ -346,6 +356,42 @@ describe('unified-generator', () => {
       const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
       expect(serverTs).toBeDefined();
       expect(serverTs!.overwrite).toBe(true);
+    });
+  });
+
+  describe('BFF files omitted when manifest has no data: section (#149)', () => {
+    const noDataManifest = {
+      name: 'NoDataMFE',
+      version: '1.0.0',
+      description: 'Manifest with no data section',
+      endpoint: 'http://localhost:3001',
+      capabilities: [{ Health: { type: 'platform', description: 'Health check' } }],
+      dependencies: { 'design-system': { '@mui/material': '^5.15.0' }, mfes: {} },
+      // no data: key
+    };
+
+    it('does not emit bff.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const bffTs = files.find((f) => f.path.includes('bff.ts') && !f.path.includes('bff.test'));
+      expect(bffTs).toBeUndefined();
+    });
+
+    it('does not emit bff.test.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const bffTest = files.find((f) => f.path.includes('bff.test.ts'));
+      expect(bffTest).toBeUndefined();
+    });
+
+    it('does not emit server.ts when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
+      expect(serverTs).toBeUndefined();
+    });
+
+    it('does not emit .meshrc.yaml when manifest has no data section', async () => {
+      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const meshrc = files.find((f) => f.path.includes('.meshrc.yaml'));
+      expect(meshrc).toBeUndefined();
     });
   });
 });

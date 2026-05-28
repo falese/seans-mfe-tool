@@ -1,0 +1,28 @@
+{
+  "name": "@seans-mfe/framework-angular",
+  "version": "0.1.0",
+  "description": "Angular + webpack framework plugin for seans-mfe-tool (ADR-071)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}

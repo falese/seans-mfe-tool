@@ -2,7 +2,7 @@
  * BaseMFE Abstract Class
  * Following REQ-054: BaseMFE Abstract Class Contract
  * Following REQ-042: Lifecycle Hook Execution Semantics
- * Following ADR-047: BaseMFE Abstract Base (Not Type Hierarchy)
+ * Following ADR-013: BaseMFE Abstract Base (Not Type Hierarchy)
  * Following REQ-RUNTIME-002: Shared Context Across All Phases
  * 
  * Universal base class for all MFE types (remote, bff, tool, agent).
@@ -67,14 +67,30 @@ export interface BaseMFEDependencies {
 
 type Worker = any;
 
+/** Metadata for a single capability declared in the manifest */
+export interface CapabilityMetadata {
+  name: string;
+  type: 'platform' | 'domain';
+  description?: string;
+}
+
 /** Result from load capability */
 export interface LoadResult {
   status: 'loaded' | 'error';
-  container?: unknown;  // Module Federation container
-  mesh?: unknown;       // GraphQL Mesh instance
-  worker?: Worker;      // Web Worker instance
+  container?: unknown;
+  mesh?: unknown;
+  worker?: Worker;
+  manifest?: import('../dsl/schema').DSLManifest;
+  availableComponents?: string[];
+  capabilities?: CapabilityMetadata[];
   timestamp: Date;
-  [key: string]: unknown;
+  duration?: number;
+  telemetry?: {
+    entry: { start: Date; duration: number };
+    mount: { start: Date; duration: number };
+    enableRender: { start: Date; duration: number };
+  };
+  error?: { message: string; phase: string; retryCount: number; retryable: boolean };
 }
 
 /** Result from render capability */
@@ -418,7 +434,7 @@ export abstract class BaseMFE {
         return;
       }
       // Fallback: invoke as method on subclass
-      await this.invokeCustomHandler(lastSegment, context);
+      await this.invokeCustomHandler(lastSegment!, context);
     }
   }
   
@@ -445,18 +461,20 @@ export abstract class BaseMFE {
     try {
       // Dynamically import all platform handlers
       const handlers = await import('./handlers');
+      type H = (context: Context, ...args: any[]) => Promise<any>;
+      const h = handlers as unknown as Record<string, Record<string, H>>;
       // Support category.name (e.g., auth.validateJWT)
       if (name.includes('.')) {
         const [category, fn] = name.split('.');
-        handlerFn = handlers[category]?.[fn];
+        handlerFn = h[category]?.[fn];
       } else {
         // Flat namespace (e.g., validateJWT)
-        handlerFn = handlers[name];
+        handlerFn = (handlers as unknown as Record<string, H>)[name];
         // Try each category if not found
         if (!handlerFn) {
           for (const cat of Object.keys(handlers)) {
-            if (handlers[cat]?.[name]) {
-              handlerFn = handlers[cat][name];
+            if (h[cat]?.[name]) {
+              handlerFn = h[cat][name];
               break;
             }
           }
@@ -480,8 +498,10 @@ export abstract class BaseMFE {
     if (typeof method !== 'function') {
       throw new Error(
         `Custom handler not found: ${name}. ` +
-        `Implement this method in your MFE class: ` +
-        `private async ${name}(context: Context): Promise<void> { ... }`
+        `Either implement a method on your MFE class — ` +
+        `\`private async ${name}(context: Context): Promise<void> { ... }\` — ` +
+        `or declare a source module in the DSL manifest (ADR-040), e.g. ` +
+        `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`
       );
     }
     await method.call(this, context);
@@ -533,13 +553,15 @@ export abstract class BaseMFE {
     if (!this.manifest.capabilities) {
       return null;
     }
-    
+
+    const lc = capability.toLowerCase();
     for (const entry of this.manifest.capabilities) {
-      if (entry[capability]) {
-        return entry[capability];
+      const key = Object.keys(entry).find(k => k.toLowerCase() === lc);
+      if (key) {
+        return entry[key];
       }
     }
-    
+
     return null;
   }
   

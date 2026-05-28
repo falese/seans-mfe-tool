@@ -31,6 +31,22 @@
       "dependsOn": ["^build"],
       "inputs": ["src/**/*", "tsconfig.json"],
       "cache": true
+    },
+    "//#docker:build:cli": {
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", "Dockerfile.cli", "package.json", "oclif.manifest.json"],
+      "outputs": [],
+      "cache": true
+    },
+    "//#docker:build:examples": {
+      "dependsOn": ["//#docker:build:cli"],
+      "inputs": [
+        "examples/abc-kids/**/*",
+        "examples/abc-kids/**/Dockerfile",
+        "examples/abc-kids/docker-compose.yaml"
+      ],
+      "outputs": [],
+      "cache": true
     }
   }
 }

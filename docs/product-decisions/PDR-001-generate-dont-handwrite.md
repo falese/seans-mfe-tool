@@ -75,7 +75,7 @@ non-compliance the *exception*, rather than the reverse.
   which is exactly what makes PDR-003 (AI-native tooling) possible.
 - **Negative:** The generator becomes a critical dependency: a generator bug ships to
   every MFE. This is mitigated by treating generated vs. developer-owned files
-  explicitly (`// GENERATED` / `// DEVELOPER-OWNED` markers per ADR-068) and by test
+  explicitly (`// GENERATED` / `// DEVELOPER-OWNED` markers per ADR-033) and by test
   coverage on the generator itself.
 - **Neutral:** Anything the manifest cannot yet express must either extend the manifest
   schema or live in developer-owned files. The schema is the negotiation surface for new
@@ -85,8 +85,13 @@ non-compliance the *exception*, rather than the reverse.
 
 - Requirements: REQ-057 (BaseMFE boilerplate codegen from DSL), REQ-042–058 (DSL schema,
   parser, validator, type system).
-- Code: `src/dsl/schema.ts` (Zod manifest schema), `src/codegen/UnifiedGenerator/unified-generator.ts`
-  (`generateAllFiles`), `src/codegen/templates/` (EJS templates), `src/runtime/base-mfe.ts`
-  (`BaseMFE` contract enforcement).
-- ADRs: ADR-022 (lifecycle re-entrancy guard in BaseMFE), ADR-060 (atomic load capability).
-- Related: PDR-002 (the contract being enforced), PDR-003 (the manifest as the AI's interface).
+- Code: `src/dsl/schema.ts` (Zod manifest schema),
+  `src/codegen/UnifiedGenerator/unified-generator.ts` (`generateAllFiles`),
+  `src/codegen/templates/` (EJS templates), `packages/runtime/src/` (`BaseMFE`).
+- ADRs: ADR-001 (lifecycle re-entrancy guard in `BaseMFE`), ADR-002 (lifecycle hook
+  execution model), ADR-003 (no custom lifecycle phases), ADR-004 (handler array
+  support), ADR-005 (handler discovery convention), ADR-009 (`language` field →
+  template selection), ADR-013 (generated MFE test templates), ADR-026 (load capability
+  — atomic operation), ADR-040 (manifest-declared handler sources).
+- Related: PDR-002 (the contract being enforced), PDR-003 (the manifest as the AI's
+  interface).

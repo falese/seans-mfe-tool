@@ -1,0 +1,62 @@
+<%/*
+  EJS template for BaseMFE test file generation
+  All template variables are substituted by CLI codegen from DSL manifest
+*/%>
+import { <%= className %> } from './mfe';
+import type { Context } from '@seans-mfe-tool/runtime';
+
+describe('<%= className %>', () => {
+  let mfe: <%= className %>;
+  let manifest: any;
+  let context: Context;
+
+  beforeEach(() => {
+    manifest = { name: '<%= name %>', version: '<%= version %>', remoteEntry: 'http://localhost:<%= port %>/remoteEntry.js' };
+    mfe = new <%= className %>(manifest);
+    context = { timestamp: new Date(), requestId: 'test-request-id' } as Context;
+  });
+
+  it('should instantiate without error', () => {
+    expect(mfe).toBeInstanceOf(<%= className %>);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Platform capability smoke tests
+  // (Platform capabilities are inherited from AngularRemoteMFE → BaseMFE —
+  //  these verify the class extends the base without overriding core behaviour)
+  // ---------------------------------------------------------------------------
+
+  it('should expose all 10 platform capabilities from AngularRemoteMFE', () => {
+    expect(typeof mfe.load).toBe('function');
+    expect(typeof mfe.render).toBe('function');
+    expect(typeof mfe.refresh).toBe('function');
+    expect(typeof mfe.authorizeAccess).toBe('function');
+    expect(typeof mfe.health).toBe('function');
+    expect(typeof mfe.describe).toBe('function');
+    expect(typeof mfe.schema).toBe('function');
+    expect(typeof mfe.query).toBe('function');
+    expect(typeof mfe.emit).toBe('function');
+    expect(typeof mfe.updateControlPlaneState).toBe('function');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Domain capability smoke tests
+  // ---------------------------------------------------------------------------
+<% const domainCaps = capabilities.filter(c => !['load','render','refresh','authorizeAccess','health','describe','schema','query','emit'].includes(c.method)); %>
+<% domainCaps.forEach(function(cap) { %>
+  it('should call <%= cap.method %>() and return an object', async () => {
+    const result = await mfe.<%= cap.method %>(context);
+    expect(result).toBeDefined();
+  });
+<% }); %>
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle hook smoke tests
+  // (Hooks are protected — accessed via cast to verify they exist)
+  // ---------------------------------------------------------------------------
+<% lifecycleHooks.forEach(function(hook) { %>
+  it('should have lifecycle hook <%= hook.name %>', () => {
+    expect(typeof (mfe as any).<%= hook.name %>).toBe('function');
+  });
+<% }); %>
+});

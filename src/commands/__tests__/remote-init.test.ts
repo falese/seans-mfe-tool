@@ -112,22 +112,31 @@ describe('remote:init Command', () => {
     it('should throw and log error on fs failure', async () => {
       (mockFs.ensureDir as unknown as jest.Mock).mockRejectedValue(new Error('fs error'));
       await expect(remoteInitCommand('my-feature', { skipInstall: true })).rejects.toThrow(/Failed to create directory:/);
-      expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create remote MFE'));
+      expect(mockConsole.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create'));
+    });
+
+    it('unknown framework reaches loadFrameworkPlugin and throws ValidationError (ADR-036, #185)', async () => {
+      // The --framework flag no longer has a hardcoded options list; any string is accepted by oclif.
+      // loadFrameworkPlugin throws ValidationError when the plugin is not installed.
+      const { ValidationError } = await import('@seans-mfe/contracts');
+      await expect(
+        remoteInitCommand('test-vue', { skipInstall: true, framework: 'vue' }),
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 
   describe('Console Output', () => {
     it('should log creation messages', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based remote MFE'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Remote MFE manifest created!'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Creating DSL-based'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('remote MFE manifest created!'));
     });
     it('should log next steps', async () => {
       await remoteInitCommand('my-feature', { skipInstall: true });
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('cd my-feature'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Edit mfe-manifest.yaml'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('mfe remote:generate'));
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('remote:generate'));
     });
   });
 });

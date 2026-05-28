@@ -29,7 +29,7 @@ export interface ErrorHandlingConfig {
  * 2. Pattern match error message against config
  * 3. Default to 'unknown' (not retryable)
  *
- * ADR-065: Error Classification with Hybrid Detection
+ * ADR-030: Error Classification with Hybrid Detection
  */
 export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassification {
   if ('type' in error && typeof (error as any).type === 'string') {
