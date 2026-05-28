@@ -269,6 +269,9 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-038 | Conventional Commits and branch naming | Process | Accepted |
 | ADR-039 | Structured logger — no console.log in production code | CLI / logging | Accepted |
 | ADR-040 | Manifest-Declared Handler Sources | DSL / handlers / codegen | Accepted |
+| ADR-041 | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Accepted |
+| ADR-042 | MFE Lifecycle State Machine | Runtime lifecycle | Accepted |
+| ADR-043 | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Accepted |
 
 ---
 

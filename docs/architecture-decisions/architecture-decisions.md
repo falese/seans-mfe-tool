@@ -73,3 +73,13 @@ For ADR governance rules see [CLAUDE.md](../../CLAUDE.md#adr-governance).
 | [ADR-038](ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch naming | Process | Accepted |
 | [ADR-039](ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted |
 | [ADR-040](ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Accepted |
+
+---
+
+## Runtime contract & codegen spine (ADR-041 – ADR-043)
+
+| ADR | Title | Area | Status |
+|-----|-------|------|--------|
+| [ADR-041](ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Accepted |
+| [ADR-042](ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Accepted |
+| [ADR-043](ADR-043-manifest-driven-codegen.md) | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Accepted |
