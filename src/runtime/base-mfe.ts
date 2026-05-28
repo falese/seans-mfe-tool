@@ -2,7 +2,7 @@
  * BaseMFE Abstract Class
  * Following REQ-054: BaseMFE Abstract Class Contract
  * Following REQ-042: Lifecycle Hook Execution Semantics
- * Following ADR-013: BaseMFE Abstract Base (Not Type Hierarchy)
+ * Following ADR-041: BaseMFE Abstract Base (Not Type Hierarchy)
  * Following REQ-RUNTIME-002: Shared Context Across All Phases
  * 
  * Universal base class for all MFE types (remote, bff, tool, agent).
