@@ -427,6 +427,7 @@ export function extractManifestVars(manifest: DSLManifest) {
     manifest,
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
+    handlerSources: [], // ADR-072 — overwritten in generateAllFiles
 
     // Codegen variant selection — driven by plugin (ADR-071).
     // Exposed to templates and read back by generateAllFiles.
