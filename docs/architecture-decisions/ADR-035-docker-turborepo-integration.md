@@ -1,9 +1,19 @@
-# ADR-070: Docker Build Orchestration via Turborepo Task Graph
-
-**Date:** 2026-05-24  
-**Status:** Accepted
-
 ---
+id: 0035
+title: Docker Build Orchestration via Turborepo Task Graph
+status: Accepted
+date: 2026-05-24
+deciders: [sean]
+enforcement: tooling
+supersedes: []
+superseded-by: []
+tags: [docker, turborepo, build, ci, infra]
+summary: Bring Docker builds into the Turborepo task graph so that `turbo run docker:build:examples` handles TypeScript compilation, CLI image build, and MFE image builds in dependency order with input-hash caching.
+rationale-summary: Manual multi-step Docker build sequences caused stale-template failures (#163, #164); Turborepo already owned the build graph and its content-hash caching is more reliable than make's mtime tracking.
+long-form: true
+---
+
+# ADR-035: Docker Build Orchestration via Turborepo Task Graph
 
 ## Context
 
@@ -115,4 +125,4 @@ Rejected because: each MFE Docker build would compile the full TypeScript projec
 - #163 — Bug: multiplication-quiz Docker build fails "Missing script: build:server"
 - #164 — Bug: CLI image not rebuilt by docker compose build
 - #165 — Enhancement: integrate Docker builds into Turborepo task graph
-- ADR-069 — Pluggable bundler + framework via codegen variants (related: the CLI image embeds EJS templates that select the bundler/framework variant)
+- ADR-034 — Pluggable bundler + framework via codegen variants (related: the CLI image embeds EJS templates that select the bundler/framework variant)

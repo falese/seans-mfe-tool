@@ -1,5 +1,5 @@
 /**
- * Framework plugin resolution (ADR-071, #169).
+ * Framework plugin resolution (ADR-036, #169).
  *
  * Loads a concrete BaseFrameworkPlugin by framework name.
  * Built-in plugins (react, angular) are resolved from the known

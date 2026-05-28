@@ -1,5 +1,5 @@
 /**
- * BaseFrameworkPlugin — type-level contract tests (ADR-071)
+ * BaseFrameworkPlugin — type-level contract tests (ADR-036)
  *
  * Verify the abstract class shape compiles correctly and that
  * concrete implementations satisfy the contract.

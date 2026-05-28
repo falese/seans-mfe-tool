@@ -1,8 +1,21 @@
-# ADR-065: Error Classification with Hybrid Detection
+---
+id: 0030
+title: Error Classification with Hybrid Detection
+status: Proposed
+date: 2025-12-11
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, errors, retry, classification, security]
+summary: Implement typed error classes (NetworkError, ValidationError, SecurityError, etc.) with a hybrid detection algorithm — typed error properties first, regex pattern matching fallback — and exponential-backoff retry with onRetry hooks.
+rationale-summary: All errors were handled generically regardless of type, causing inappropriate retry of validation errors, stack traces leaked to users, and security errors reaching client output without sanitisation.
+long-form: true
+---
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
-**Related**: REQ-LIFECYCLE-005, ADR-064 (Timeout Protection)
+# ADR-030: Error Classification with Hybrid Detection
+
+**Related**: REQ-LIFECYCLE-005, ADR-029 (Timeout Protection)
 
 ## Context
 
@@ -81,7 +94,7 @@ export class SecurityError extends Error {
 - `business`: Business logic violations (not retryable, custom handling)
 - `security`: Auth/authz (not retryable, audit log)
 - `system`: Infrastructure failures (retryable, alert ops)
-- `timeout`: Operation timeout (retryable, see ADR-064)
+- `timeout`: Operation timeout (retryable, see ADR-029)
 
 #### 2. Hybrid Error Detection
 
@@ -408,7 +421,7 @@ Map HTTP status codes to error types (500 = retryable, 400 = validation).
 - Implement classification logic in `src/runtime/handlers/error-handling.ts`
 - Use regex for pattern matching (compiled and cached)
 - Store error config in manifest schema
-- Integrate with timeout protection (ADR-064)
+- Integrate with timeout protection (ADR-029)
 
 ## Testing Strategy
 
@@ -435,7 +448,7 @@ Map HTTP status codes to error types (500 = retryable, 400 = validation).
 
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)
 - [REQ-LIFECYCLE-005](../requirements/lifecycle-enhancements.md#req-lifecycle-005)
-- ADR-064: Timeout Protection
+- ADR-029: Timeout Protection
 
 ---
 

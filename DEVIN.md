@@ -66,18 +66,18 @@ ADR index:
 
 | ADR | Title | Area |
 |-----|-------|------|
-| ADR-022 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle |
-| ADR-058 | Platform Handler Library Standardization | Runtime handlers |
-| ADR-059 | Platform Handler Interface & Execution Model | Runtime handlers |
-| ADR-060 | Load Capability — Atomic Operation Design | Runtime lifecycle |
-| ADR-062 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer |
-| ADR-063 | Parallel Handler Execution with Context Isolation | Lifecycle engine |
-| ADR-064 | Timeout Protection with AbortSignal | Lifecycle engine |
-| ADR-065 | Error Classification with Hybrid Detection | Lifecycle engine |
-| ADR-066 | Conditional Execution with Jexl Expression Engine | Lifecycle engine |
-| ADR-067 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine |
-| ADR-068 | Two-headed giant — AI-native + human-legible developer experience | Developer model |
-| ADR-069 | Pluggable bundler + framework via codegen variants | Codegen / polyglot |
+| ADR-001 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle |
+| ADR-024 | Platform Handler Library Standardization | Runtime handlers |
+| ADR-025 | Platform Handler Interface & Execution Model | Runtime handlers |
+| ADR-026 | Load Capability — Atomic Operation Design | Runtime lifecycle |
+| ADR-027 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer |
+| ADR-028 | Parallel Handler Execution with Context Isolation | Lifecycle engine |
+| ADR-029 | Timeout Protection with AbortSignal | Lifecycle engine |
+| ADR-030 | Error Classification with Hybrid Detection | Lifecycle engine |
+| ADR-031 | Conditional Execution with Jexl Expression Engine | Lifecycle engine |
+| ADR-032 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine |
+| ADR-033 | Two-headed giant — AI-native + human-legible developer experience | Developer model |
+| ADR-034 | Pluggable bundler + framework via codegen variants | Codegen / polyglot |
 
 ---
 
@@ -105,7 +105,7 @@ Files prefixed with `_` (e.g., `_shared.ts`) are skipped by oclif discovery — 
 | oclif migration (epics A/B/C) | ✅ Complete |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In progress |
 | BaseMFE boilerplate codegen from DSL | 🟡 In progress |
-| Lifecycle engine enhancements (ADR-063–067) | 📋 Planned |
+| Lifecycle engine enhancements (ADR-028–067) | 📋 Planned |
 | npm publish of `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending |
 
 ---

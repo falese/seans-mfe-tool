@@ -1,5 +1,5 @@
 /**
- * ReactRspackPlugin — concrete BaseFrameworkPlugin for React + rspack (ADR-071).
+ * ReactRspackPlugin — concrete BaseFrameworkPlugin for React + rspack (ADR-036).
  */
 
 import * as path from 'path';

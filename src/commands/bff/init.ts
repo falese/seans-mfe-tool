@@ -148,7 +148,7 @@ export default class BffInit extends BaseCommand<BffInitResult> {
   static examples = [
     '# Create new standalone BFF project\n$ seans-mfe-tool bff:init my-bff --specs ./specs/users.yaml ./specs/orders.yaml',
     '# Add BFF to existing MFE project\n$ cd my-existing-remote && seans-mfe-tool bff:init',
-    '# Create BFF without static asset serving (pure API gateway)\n$ seans-mfe-tool bff:init api-gateway --specs ./api.yaml --no-static\n\nFollowing ADR-046: GraphQL Mesh with DSL-embedded configuration',
+    '# Create BFF without static asset serving (pure API gateway)\n$ seans-mfe-tool bff:init api-gateway --specs ./api.yaml --no-static\n\nFollowing ADR-012: GraphQL Mesh with DSL-embedded configuration',
   ]
 
   static args = {

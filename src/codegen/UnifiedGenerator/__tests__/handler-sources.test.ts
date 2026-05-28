@@ -1,5 +1,5 @@
 /**
- * Codegen tests for ADR-072 — manifest-declared handler sources.
+ * Codegen tests for ADR-040 — manifest-declared handler sources.
  *
  * When a lifecycle hook entry declares `source`, codegen must:
  *   1. Emit `src/platform/base-mfe/handler-registry.ts` with a static import.
@@ -16,7 +16,7 @@ import { generateAllFiles } from '../unified-generator';
 import * as fs from 'fs-extra';
 import path from 'path';
 
-describe('codegen: manifest-declared handler sources (ADR-072)', () => {
+describe('codegen: manifest-declared handler sources (ADR-040)', () => {
   const basePath = path.join(__dirname, 'output-handler-sources');
 
   const manifestWithSources = {

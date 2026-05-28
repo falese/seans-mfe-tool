@@ -149,7 +149,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 });
 
-describe('extractManifestVars — plugin-driven variant selection (ADR-071, #176)', () => {
+describe('extractManifestVars — plugin-driven variant selection (ADR-036, #176)', () => {
   it('react manifest → react-rspack plugin fields', () => {
     const manifest = {
       name: 'ReactMFE', version: '1.0.0', description: '', endpoint: 'http://localhost:3001',

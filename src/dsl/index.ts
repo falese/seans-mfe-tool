@@ -1,6 +1,6 @@
 /**
  * DSL Module - Public API
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * 
  * This module provides parsing, validation, and generation for MFE DSL manifests.
  */

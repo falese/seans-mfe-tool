@@ -1,5 +1,5 @@
 ---
-id: 0068
+id: 0033
 title: Two-headed giant — AI-native + human-legible developer experience
 status: Accepted
 date: 2026-04-26
@@ -18,7 +18,7 @@ enforcer-config:
   exit-codes: [0, 2, 64, 65, 66, 69, 70, 77, 124]
 ---
 
-# ADR-068: Two-headed giant — AI-native + human-legible developer experience
+# ADR-033: Two-headed giant — AI-native + human-legible developer experience
 
 ## Context and problem statement
 
@@ -133,6 +133,6 @@ Issues implementing this ADR:
 
 ## Related
 
-- ADR-065 (error classification — exit codes 64–124 that make the agent profile work)
+- ADR-030 (error classification — exit codes 64–124 that make the agent profile work)
 - Epic #139 (two-headed giant DX epic — parent of issues above)
 - `examples/abc-kids/` — the ABC Kids build that motivated this ADR

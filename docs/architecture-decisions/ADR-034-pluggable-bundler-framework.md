@@ -1,5 +1,5 @@
 ---
-id: 0069
+id: 0034
 title: Pluggable bundler + framework via codegen variants
 status: Accepted
 date: 2026-05-21
@@ -13,13 +13,13 @@ rationale-summary: The codegen path was hardcoded to React + rspack. Adding Angu
 long-form: true
 ---
 
-# ADR-069: Pluggable bundler + framework via codegen variants
+# ADR-034: Pluggable bundler + framework via codegen variants
 
 ## Context and problem statement
 
 `seans-mfe-tool` scaffolded remote MFEs as React 18 + rspack Module Federation containers exclusively. The runtime side was `RemoteMFE extends BaseMFE` at `src/runtime/remote-mfe.ts`; the codegen side was `UnifiedGenerator.generateAllFiles()` rendering EJS templates from `src/codegen/templates/base-mfe/`. The template directory, the root config filenames (`rspack.config.js`), the entry filenames (`App.tsx`, `index.tsx`, `remote.tsx`), and the feature file extensions (`.tsx`, `.test.tsx`) were all hardcoded.
 
-A new requirement landed: scaffold an Angular 17+ standalone-component remote MFE built with webpack 5 + native `ModuleFederationPlugin`, as a true peer of the existing React/rspack path. ADR-068 records the rspack-only choice for that prior epoch but does not restrict future bundlers.
+A new requirement landed: scaffold an Angular 17+ standalone-component remote MFE built with webpack 5 + native `ModuleFederationPlugin`, as a true peer of the existing React/rspack path. ADR-033 records the rspack-only choice for that prior epoch but does not restrict future bundlers.
 
 ## Decision
 

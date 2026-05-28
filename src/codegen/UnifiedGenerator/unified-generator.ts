@@ -1,7 +1,7 @@
 /**
  * Unified MFE Codegen Generator
  * Consolidates feature/component and platform/BFF codegen
- * Implements ADR-048, REQ-REMOTE-003, ADR-062
+ * Implements ADR-014, REQ-REMOTE-003, ADR-027
  */
 
 import * as path from 'path';
@@ -17,7 +17,7 @@ export interface GeneratedFile {
 }
 
 // =============================================================================
-// Dependency Version Constants (ADR-062)
+// Dependency Version Constants (ADR-027)
 // =============================================================================
 
 /**
@@ -161,13 +161,13 @@ export const DEFAULT_MESH_TRANSFORMS = {
 };
 
 // =============================================================================
-// Validation Layer (ADR-062)
+// Validation Layer (ADR-027)
 // =============================================================================
 
 /**
  * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
  * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
- * See ADR-048 for migration strategy.
+ * See ADR-014 for migration strategy.
  */
 
 /**
@@ -380,7 +380,7 @@ export function extractManifestVars(manifest: DSLManifest) {
     }
   }
 
-  // Extract performance/observability config from manifest (ADR-062)
+  // Extract performance/observability config from manifest (ADR-027)
   const performanceConfig = (manifest as any).performance || {};
   const observabilityConfig = performanceConfig.observability || {};
 
@@ -409,7 +409,7 @@ export function extractManifestVars(manifest: DSLManifest) {
     neededTransforms.add('resolversComposition');
   }
 
-  // Variant selection via plugin (ADR-071, #176).
+  // Variant selection via plugin (ADR-036, #176).
   // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
   const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
   const fwPlugin = loadFrameworkPlugin(frameworkName);
@@ -427,22 +427,22 @@ export function extractManifestVars(manifest: DSLManifest) {
     manifest,
     capabilities: [], // will be overwritten in generateAllFiles
     lifecycleHooks: [], // will be overwritten in generateAllFiles
-    handlerSources: [], // ADR-072 — overwritten in generateAllFiles
+    handlerSources: [], // ADR-040 — overwritten in generateAllFiles
 
-    // Codegen variant selection — driven by plugin (ADR-071).
+    // Codegen variant selection — driven by plugin (ADR-036).
     // Exposed to templates and read back by generateAllFiles.
     framework: fwPlugin.framework as 'react' | 'angular',
     bundler: fwPlugin.bundler as 'rspack' | 'webpack',
     templateVariant: fwPlugin.id as 'react-rspack' | 'angular-webpack',
 
-    // NEW: Dependency versions for templates (ADR-062)
+    // NEW: Dependency versions for templates (ADR-027)
     dependencyVersions: DEPENDENCY_VERSIONS,
 
-    // NEW: Track which plugins/transforms are needed (ADR-062)
+    // NEW: Track which plugins/transforms are needed (ADR-027)
     neededPlugins: Array.from(neededPlugins),
     neededTransforms: Array.from(neededTransforms),
 
-    // NEW: Plugin/transform configs (ADR-062)
+    // NEW: Plugin/transform configs (ADR-027)
     meshPlugins: {
       responseCache:
         performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
@@ -511,7 +511,7 @@ export async function writeGeneratedFiles(
 }
 
 // =============================
-// Handler source parsing (ADR-072)
+// Handler source parsing (ADR-040)
 // =============================
 
 /**
@@ -561,7 +561,7 @@ export async function generateAllFiles(
   basePath: string,
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<GeneratedFile[]> {
-  // === Validation Layer (ADR-062) ===
+  // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
   validateManifestConfiguration(manifest);
@@ -589,7 +589,7 @@ export async function generateAllFiles(
   }> = [];
   const lifecycleHookNames = new Set<string>();
   const lifecycleHooks: Array<{ name: string; description: string; phase: string }> = [];
-  // ADR-072: handlers that declare a `source` in the DSL manifest are sourced
+  // ADR-040: handlers that declare a `source` in the DSL manifest are sourced
   // from external modules. They appear in handlerSources (drives the generated
   // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
   // (no stub method is emitted because the implementation lives elsewhere).
@@ -632,7 +632,7 @@ export async function generateAllFiles(
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
                   const hookDescription = (hookConfig as any)?.description || '';
-                  // ADR-072: hooks with a `source` are wired through the
+                  // ADR-040: hooks with a `source` are wired through the
                   // generated handler-registry, not emitted as stubs.
                   const source = (hookConfig as any)?.source as string | undefined;
                   if (typeof source === 'string' && source.length > 0) {
@@ -783,7 +783,7 @@ export async function generateAllFiles(
     content: await renderTemplate(path.join(templateDir, 'mfe.ts.ejs'), vars),
     overwrite: true,
   });
-  // ADR-072: emit the handler registry only when at least one lifecycle hook
+  // ADR-040: emit the handler registry only when at least one lifecycle hook
   // declared a `source`. Without sources, the registry file is absent and the
   // generated mfe.ts looks identical to today (back-compat).
   if (handlerSources.length > 0) {

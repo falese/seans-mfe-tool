@@ -1,12 +1,23 @@
-# ADR-072: Manifest-Declared Handler Sources
+---
+id: 0040
+title: Manifest-Declared Handler Sources
+status: Accepted
+date: 2026-05-27
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [dsl, lifecycle, handlers, codegen, source, di, traceability]
+summary: Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare where its handler implementation lives; codegen emits a static `handler-registry.ts` that wires the import into the existing customHandlers DI map.
+rationale-summary: Editing generated mfe.ts stubs couples handler logic to codegen; DI-injected maps in bootstrap are imperative and drift from the manifest — a declarative `source:` field makes the manifest the single source of truth.
+long-form: true
+---
 
-## Status
-
-Accepted
+# ADR-040: Manifest-Declared Handler Sources
 
 ## Context
 
-The platform already supports custom lifecycle handlers (ADR-058, ADR-059). A
+The platform already supports custom lifecycle handlers (ADR-024, ADR-025). A
 DSL manifest declares lifecycle hooks per capability/phase, the codegen stamps
 a stub method into the generated `mfe.ts`, and `BaseMFE.invokeHandler`
 (`src/runtime/base-mfe.ts:415-438`) resolves a hook name in three ways:
@@ -119,8 +130,8 @@ existing method-reflection fallback.
 
 ## Traceability
 
-- ADR-058: Platform Handler Library Standardization (prior art for `platform.*`)
-- ADR-059: Platform Handler Interface
+- ADR-024: Platform Handler Library Standardization (prior art for `platform.*`)
+- ADR-025: Platform Handler Interface
 - REQ-057: Custom handlers
 - Files touched:
   - `src/dsl/schema.ts` — `source` field on `LifecycleHookSchema`

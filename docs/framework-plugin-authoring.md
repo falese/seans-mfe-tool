@@ -2,7 +2,7 @@
 
 This guide explains how to create a custom framework plugin for `seans-mfe-tool` by extending `BaseFrameworkPlugin`. Once published, your plugin is automatically discovered by `loadFrameworkPlugin()` and wired into `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy`.
 
-**Governing ADR:** ADR-071  
+**Governing ADR:** ADR-036  
 **Type definitions:** `packages/contracts/src/framework-plugin.ts`  
 **Reference implementation:** `packages/framework-react/src/plugin.ts`
 
@@ -290,7 +290,7 @@ Available template variables (always present):
 
 ## Reference
 
-- **ADR-071** — `docs/architecture-decisions/ADR-071-*.md`
+- **ADR-036** — `docs/architecture-decisions/ADR-036-*.md`
 - **Type definitions** — `packages/contracts/src/framework-plugin.ts`
 - **React reference impl** — `packages/framework-react/src/plugin.ts`
 - **Angular reference impl** — `packages/framework-angular/src/plugin.ts`

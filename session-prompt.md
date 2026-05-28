@@ -21,7 +21,7 @@
 
 ### Active issue(s)
 
-**ADR-071 Phase 4 close-out — [#181](https://github.com/falese/seans-mfe-tool/issues/181), [#185](https://github.com/falese/seans-mfe-tool/issues/185), [#182](https://github.com/falese/seans-mfe-tool/issues/182)**
+**ADR-036 Phase 4 close-out — [#181](https://github.com/falese/seans-mfe-tool/issues/181), [#185](https://github.com/falese/seans-mfe-tool/issues/185), [#182](https://github.com/falese/seans-mfe-tool/issues/182)**
 
 Validated at session start: #180 (contracts exports) and #172 (build:check) were already done and closed.
 
@@ -46,11 +46,11 @@ NOT changing: existing plugin implementations, build commands, deploy logic, abc
 
 | ADR | Title | Governs |
 |-----|-------|---------|
-| ADR-071 | Framework plugin pattern (`BaseFrameworkPlugin`) | All Phase 4 issues |
+| ADR-036 | Framework plugin pattern (`BaseFrameworkPlugin`) | All Phase 4 issues |
 
 ### Spec context
 
-From ADR-071:
+From ADR-036:
 > Third-party plugins live at `@seans-mfe/framework-<name>` and are resolved by `loadFrameworkPlugin()`.
 > The schema must accept arbitrary framework/bundler strings so plugin authors don't need to fork the core.
 

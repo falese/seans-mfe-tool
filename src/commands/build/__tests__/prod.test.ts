@@ -1,5 +1,5 @@
 /**
- * build:prod command tests (ADR-071, #175).
+ * build:prod command tests (ADR-036, #175).
  */
 
 import { buildProdCommand } from '../prod';

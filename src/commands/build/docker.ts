@@ -1,5 +1,5 @@
 /**
- * build:docker — generate a Dockerfile from the framework plugin's Docker strategy (ADR-071, #177).
+ * build:docker — generate a Dockerfile from the framework plugin's Docker strategy (ADR-036, #177).
  *
  * Core orchestrates; plugin implements getDockerStrategy().
  * Optionally runs `docker build` when --build is passed.

@@ -1,6 +1,6 @@
 /**
  * DSL Validator using Zod
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Implements REQ-REMOTE-001: DSL validation
  */
 
@@ -131,7 +131,7 @@ export function validateDataConfig(data: unknown): ValidationResult {
 // =============================================================================
 
 // =============================================================================
-// Known Plugin/Transform Classification (ADR-062)
+// Known Plugin/Transform Classification (ADR-027)
 // =============================================================================
 
 /** Known GraphQL Mesh plugins (go in performance section) */
@@ -315,10 +315,10 @@ export function validateSemantics(manifest: DSLManifest): ValidationError[] {
     });
   }
   
-  // ADR-062: Validate performance configuration (plugins vs transforms)
+  // ADR-027: Validate performance configuration (plugins vs transforms)
   errors.push(...validatePerformanceConfig(manifest));
   
-  // ADR-062: Validate transforms array (ensure no plugins are misclassified)
+  // ADR-027: Validate transforms array (ensure no plugins are misclassified)
   errors.push(...validateTransformsConfig(manifest));
   
   return errors;

@@ -1,6 +1,6 @@
 /**
  * DSL Parser
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Implements REQ-REMOTE-001: DSL as single source of truth
  */
 

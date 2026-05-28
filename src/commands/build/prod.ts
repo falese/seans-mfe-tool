@@ -1,5 +1,5 @@
 /**
- * build:prod — run a production build for the current MFE (ADR-071, #175).
+ * build:prod — run a production build for the current MFE (ADR-036, #175).
  *
  * Core orchestrates; plugin implements buildProduction().
  * Exits non-zero and throws BusinessError when the build fails,

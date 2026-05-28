@@ -1,5 +1,5 @@
 /**
- * build:dev command tests (ADR-071, #174).
+ * build:dev command tests (ADR-036, #174).
  *
  * Uses pre-aborted AbortSignals so tests don't block waiting for signal events.
  */

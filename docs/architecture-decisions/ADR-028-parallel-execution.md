@@ -1,8 +1,21 @@
-# ADR-063: Parallel Handler Execution with Context Isolation
+---
+id: 0028
+title: Parallel Handler Execution with Context Isolation
+status: Proposed
+date: 2025-12-11
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, platform-handlers, performance, parallelism, lifecycle]
+summary: Implement opt-in parallel handler execution with isolated read-only context copies per handler, namespaced outputs, and three failure strategies (fail-fast, complete-all, partial-success).
+rationale-summary: Sequential-only handler execution causes unnecessary latency for independent operations like multi-validation checks or fan-out API calls; shared mutable context under concurrency causes race conditions.
+long-form: true
+---
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
-**Related**: REQ-LIFECYCLE-001, ADR-022 (Re-entrancy Guard)
+# ADR-028: Parallel Handler Execution with Context Isolation
+
+**Related**: REQ-LIFECYCLE-001, ADR-001 (Re-entrancy Guard)
 
 ## Context
 
@@ -195,7 +208,7 @@ Use Proxy to detect writes, only copy when needed.
 
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)
 - [REQ-LIFECYCLE-001](../requirements/lifecycle-enhancements.md#req-lifecycle-001)
-- ADR-022: Re-entrancy Guard
+- ADR-001: Re-entrancy Guard
 
 ---
 

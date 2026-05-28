@@ -1,5 +1,5 @@
 /**
- * BaseFrameworkPlugin — abstract base for framework/bundler plugins (ADR-071).
+ * BaseFrameworkPlugin — abstract base for framework/bundler plugins (ADR-036).
  *
  * Mirrors the BaseMFE pattern: core owns the shape (abstract methods),
  * concrete plugins implement framework-specific behaviour.

@@ -88,7 +88,7 @@ export interface RemoteGenerateCapabilityResult extends MutatingResult {
 }
 
 // ---------------------------------------------------------------------------
-// build:dev (ADR-071, #174)
+// build:dev (ADR-036, #174)
 // ---------------------------------------------------------------------------
 
 export interface BuildDevResult {
@@ -100,7 +100,7 @@ export interface BuildDevResult {
 }
 
 // ---------------------------------------------------------------------------
-// build:docker (ADR-071, #177)
+// build:docker (ADR-036, #177)
 // ---------------------------------------------------------------------------
 
 export interface BuildDockerResult {
@@ -113,7 +113,7 @@ export interface BuildDockerResult {
 }
 
 // ---------------------------------------------------------------------------
-// build:prod (ADR-071, #175)
+// build:prod (ADR-036, #175)
 // ---------------------------------------------------------------------------
 
 export interface BuildProdResult {

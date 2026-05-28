@@ -1,5 +1,5 @@
 /**
- * build:check command tests (ADR-071, #172).
+ * build:check command tests (ADR-036, #172).
  */
 
 import { loadFrameworkPlugin } from '../../../framework/loader';

@@ -41,7 +41,7 @@ describe('LifecycleHookSchema handler reference validation', () => {
   });
 });
 
-describe('LifecycleHookSchema handler source resolution (ADR-072)', () => {
+describe('LifecycleHookSchema handler source resolution (ADR-040)', () => {
   it('accepts a relative-path source', () => {
     const hook = { handler: 'validateInput', source: './handlers/validation.ts' };
     expect(() => LifecycleHookSchema.parse(hook)).not.toThrow();

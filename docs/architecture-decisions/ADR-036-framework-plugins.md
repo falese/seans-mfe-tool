@@ -1,5 +1,5 @@
 ---
-id: 0071
+id: 0036
 title: Framework plugins — abstract BaseFrameworkPlugin with concrete implementations
 status: Accepted
 date: 2026-05-25
@@ -9,15 +9,15 @@ supersedes: []
 superseded-by: []
 tags: [build, codegen, framework, bundler, plugin, oclif]
 summary: Introduce an abstract `BaseFrameworkPlugin` class in core that defines the shape of framework-specific build, scaffold, and Docker concerns. Each framework is a concrete implementation (`ReactRspackPlugin`, `AngularWebpackPlugin`) in its own oclif plugin package. `remote:init` gains a `--framework` flag. UnifiedGenerator delegates to the resolved plugin. Follows the same abstract-base → concrete-implementation pattern as `BaseMFE → RemoteMFE / AngularRemoteMFE`.
-rationale-summary: ADR-069's "branch in UnifiedGenerator" approach required 15+ fix commits for Angular. A custom `BuildAdapter` registry was rejected as over-engineering on top of oclif. A data-only config object was rejected because the core must own the build *logic* (dev server, Docker, env check) the same way `BaseMFE` owns lifecycle orchestration — concrete plugins implement the framework-specific parts. This mirrors the proven `BaseMFE` pattern already in the codebase.
+rationale-summary: ADR-034's "branch in UnifiedGenerator" approach required 15+ fix commits for Angular. A custom `BuildAdapter` registry was rejected as over-engineering on top of oclif. A data-only config object was rejected because the core must own the build *logic* (dev server, Docker, env check) the same way `BaseMFE` owns lifecycle orchestration — concrete plugins implement the framework-specific parts. This mirrors the proven `BaseMFE` pattern already in the codebase.
 long-form: true
 ---
 
-# ADR-071: Framework plugins — abstract BaseFrameworkPlugin with concrete implementations
+# ADR-036: Framework plugins — abstract BaseFrameworkPlugin with concrete implementations
 
 ## Context and problem statement
 
-ADR-069 added Angular support by forking template directories and branching in `UnifiedGenerator` with `if (isAngularWebpack)`. This required 15+ fix commits to stabilize. The branch-per-framework approach does not scale.
+ADR-034 added Angular support by forking template directories and branching in `UnifiedGenerator` with `if (isAngularWebpack)`. This required 15+ fix commits to stabilize. The branch-per-framework approach does not scale.
 
 Two alternatives were considered and rejected:
 
@@ -361,7 +361,7 @@ Templates are still core-owned (in the monorepo), but co-located with the plugin
 
 ## Alternatives considered
 
-### A. Keep branching in UnifiedGenerator (ADR-069 status quo)
+### A. Keep branching in UnifiedGenerator (ADR-034 status quo)
 
 Add `if (isVueVite)` branches for each new framework. No new abstractions.
 
@@ -412,7 +412,7 @@ Each plugin is a fully independent oclif plugin with its own commands (`react:bu
 
 ## References
 
-- ADR-069 — Pluggable bundler + framework via codegen variants (predecessor)
-- ADR-070 — Docker + Turborepo integration
+- ADR-034 — Pluggable bundler + framework via codegen variants (predecessor)
+- ADR-035 — Docker + Turborepo integration
 - `BaseMFE` at `src/runtime/base-mfe.ts` — the abstract base pattern this ADR mirrors
 - #167 — Build Adapter System epic
