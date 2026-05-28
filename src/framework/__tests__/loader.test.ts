@@ -1,5 +1,5 @@
 /**
- * loadFrameworkPlugin() — resolution utility tests (ADR-071, #169).
+ * loadFrameworkPlugin() — resolution utility tests (ADR-036, #169).
  */
 
 import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';

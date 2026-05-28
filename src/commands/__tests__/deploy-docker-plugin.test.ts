@@ -1,5 +1,5 @@
 /**
- * Tests for the plugin-driven Dockerfile generation in deploy (ADR-071, #178).
+ * Tests for the plugin-driven Dockerfile generation in deploy (ADR-036, #178).
  *
  * Verifies that dockerComposeProductionDeploy uses loadFrameworkPlugin() for
  * MFE types (shell/remote) and falls back to the static template for api.
@@ -42,7 +42,7 @@ beforeEach(() => {
   (mockFs.writeFile as unknown as jest.Mock).mockResolvedValue(undefined);
 });
 
-describe('dockerComposeProductionDeploy — plugin Dockerfile (ADR-071, #178)', () => {
+describe('dockerComposeProductionDeploy — plugin Dockerfile (ADR-036, #178)', () => {
   it('uses loadFrameworkPlugin for type=shell (default react)', async () => {
     const plugin = makeMockPlugin('react');
     mockLoadPlugin.mockReturnValue(plugin);

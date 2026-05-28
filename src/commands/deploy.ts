@@ -348,7 +348,7 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   await fs.writeFile(path.join(deployDir, 'docker-compose.yml'), composeContent);
   console.log(chalk.green('✓ Generated docker-compose.yml'));
 
-  // Generate production Dockerfile — use the plugin for MFE types (ADR-071, #178).
+  // Generate production Dockerfile — use the plugin for MFE types (ADR-036, #178).
   let dockerfileContent: string;
   if (type === 'api') {
     const dockerfileTemplatePath = path.join(

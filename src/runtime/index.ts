@@ -17,7 +17,7 @@ export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResu
 export { RemoteMFE } from './remote-mfe';
 export type { ModuleFederationContainer } from './remote-mfe';
 
-// AngularRemoteMFE is available via the ./angular subpath (ADR-070).
+// AngularRemoteMFE is available via the ./angular subpath (ADR-035).
 // Import as: import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular'
 
 // Daemon WebSocket client (used to wire up the control-plane connection)

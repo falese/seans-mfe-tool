@@ -2,7 +2,7 @@
  * ValidationError
  * Thrown for user input validation failures (not retryable, user-facing).
  * Following REQ-LIFECYCLE-005: Error Classification
- * Following ADR-065: Error Classification with Hybrid Detection
+ * Following ADR-030: Error Classification with Hybrid Detection
  */
 
 export class ValidationError extends Error {

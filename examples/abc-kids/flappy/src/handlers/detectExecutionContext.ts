@@ -1,6 +1,6 @@
 /**
  * Lifecycle handler — detect whether this MFE is running inside the shell
- * or standalone. Demonstrates ADR-072: declarative `source:` in the DSL
+ * or standalone. Demonstrates ADR-040: declarative `source:` in the DSL
  * manifest pulls this implementation in via the generated handler registry.
  *
  * Decision rule: compare `window.location.origin` to the MFE's published

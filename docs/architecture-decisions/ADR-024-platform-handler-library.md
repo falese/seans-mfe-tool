@@ -1,4 +1,19 @@
-# ADR-058: Platform Handler Library Standardization
+---
+id: 0024
+title: Platform Handler Library Standardization
+status: Planned
+date: 2025-12-13
+deciders: [sean]
+enforcement: convention
+supersedes: []
+superseded-by: []
+tags: [runtime, platform-handlers, lifecycle, standardization]
+summary: Standardize all platform handlers under the platform.* prefix, require async support and telemetry emission, and mandate 100% test coverage for every handler in the library.
+rationale-summary: Platform handlers were ad-hoc and lacked consistent error propagation, telemetry, and retry semantics, making cross-MFE behavior unpredictable.
+long-form: false
+---
+
+# ADR-024: Platform Handler Library Standardization
 
 ## Status
 
@@ -30,8 +45,8 @@ Platform handlers (`platform.*`) are lifecycle functions for authentication, aut
 ## Traceability
 
 - REQ-058 (Platform Handler Library)
-- ADR-036 (Handler Resolution)
-- ADR-041 (Platform Handler API)
+- ADR-002 (Handler Resolution)
+- ADR-007 (Platform Handler API)
 
 ## Next Steps
 

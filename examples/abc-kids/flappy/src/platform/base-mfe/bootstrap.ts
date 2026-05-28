@@ -60,7 +60,7 @@ const manifest = {
               "detectExecutionContext": {
                 "handler": "detectExecutionContext",
                 "source": "../../handlers/detectExecutionContext",
-                "description": "Detect shell vs standalone via URL origin (ADR-072)"
+                "description": "Detect shell vs standalone via URL origin (ADR-040)"
               }
             },
             {

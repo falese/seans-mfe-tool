@@ -1,7 +1,20 @@
-# ADR-064: Timeout Protection with AbortSignal
+---
+id: 0029
+title: Timeout Protection with AbortSignal
+status: Proposed
+date: 2025-12-11
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, platform-handlers, timeout, reliability, abort-signal]
+summary: Implement hierarchical timeout configuration (hook > handler > phase > global default) using Promise.race and AbortSignal, with configurable onTimeout behaviour (error | warn | skip).
+rationale-summary: Handlers that hang indefinitely block MFE lifecycle execution and exhaust resources; no cancellation mechanism existed; AbortSignal is the standard Node.js pattern and integrates cleanly with fetch.
+long-form: true
+---
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
+# ADR-029: Timeout Protection with AbortSignal
+
 **Related**: REQ-LIFECYCLE-002, REQ-LIFECYCLE-005 (Error Classification)
 
 ## Context
@@ -125,7 +138,7 @@ async function processFile(context: Context, options?: { signal?: AbortSignal })
 
 ### Retry Integration
 
-Timeouts respect retry configuration (see ADR-065):
+Timeouts respect retry configuration (see ADR-030):
 
 ```yaml
 lifecycle:
@@ -227,7 +240,7 @@ Invent custom cancellation mechanism instead of AbortSignal.
 
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)
 - [REQ-LIFECYCLE-002](../requirements/lifecycle-enhancements.md#req-lifecycle-002)
-- ADR-065: Error Classification
+- ADR-030: Error Classification
 
 ---
 

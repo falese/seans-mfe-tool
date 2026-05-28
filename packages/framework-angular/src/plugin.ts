@@ -1,7 +1,7 @@
 /**
- * AngularWebpackPlugin — concrete BaseFrameworkPlugin for Angular + webpack (ADR-071).
+ * AngularWebpackPlugin — concrete BaseFrameworkPlugin for Angular + webpack (ADR-036).
  *
- * Angular-specific workarounds documented per ADR-069:
+ * Angular-specific workarounds documented per ADR-034:
  * - `library: { type: 'var' }` prevents ES module exports in classic script context
  * - `output.scriptType: 'text/javascript'` prevents import.meta.url SyntaxError
  * - Angular CLI builder owns AOT via @angular-builders/custom-webpack

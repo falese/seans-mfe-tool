@@ -54,7 +54,7 @@ Priority order:
 
 1. #49 — REQ-RUNTIME-002: Shared Context
 2. #52 — REQ-RUNTIME-005: Platform Handler Registry
-3. #47 — REQ-RUNTIME-001: Load Capability (atomic — ADR-060)
+3. #47 — REQ-RUNTIME-001: Load Capability (atomic — ADR-026)
 4. #51 — REQ-RUNTIME-004: Render Capability
 5. #53 — REQ-RUNTIME-006: Auth Handler
 6. #56 — REQ-RUNTIME-009: Error Handling Handler
@@ -76,11 +76,11 @@ Priority order:
 
 | Enhancement                | ADR     | Status     |
 | -------------------------- | ------- | ---------- |
-| Parallel handler execution | ADR-063 | 📋 Planned |
-| Timeout protection         | ADR-064 | 📋 Planned |
-| Error classification       | ADR-065 | 📋 Planned |
-| Conditional execution      | ADR-066 | 📋 Planned |
-| Inter-hook communication   | ADR-067 | 📋 Planned |
+| Parallel handler execution | ADR-028 | 📋 Planned |
+| Timeout protection         | ADR-029 | 📋 Planned |
+| Error classification       | ADR-030 | 📋 Planned |
+| Conditional execution      | ADR-031 | 📋 Planned |
+| Inter-hook communication   | ADR-032 | 📋 Planned |
 
 **Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)  
 **Issue templates ready:** [`docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md`](./archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md)
@@ -142,7 +142,7 @@ See [`docs/requirements/deferred-backlog.md`](./requirements/deferred-backlog.md
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Understand the CLI/oclif migration that just shipped | [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)                               |
 | Work on the runtime platform                         | [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md) + `packages/runtime/`     |
-| Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-063–067 |
+| Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-028–032 |
 | Understand the merge/monorepo plan                   | [`MERGE-PLAN.md`](../MERGE-PLAN.md)                                                                     |
 | Find a specific requirement (REQ-XXX)                | [`docs/requirements/TRACEABILITY.md`](./requirements/TRACEABILITY.md)                                   |
 | Understand the full architecture                     | [`docs/architecture-current-state.md`](./architecture-current-state.md)                                 |

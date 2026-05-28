@@ -3,7 +3,7 @@
 **Document Status:** ✅ Complete  
 **Last Updated:** April 2026  
 **Requirement:** REQ-MESH-DEPS-005  
-**Related ADR:** ADR-062  
+**Related ADR:** ADR-027  
 
 ---
 
@@ -15,7 +15,7 @@ rationale, and current implementation status.
 
 ---
 
-## Baseline State (Before ADR-062)
+## Baseline State (Before ADR-027)
 
 ### Problems Found
 
@@ -67,7 +67,7 @@ fragile — a single Mesh release could pull in incompatible transitive versions
 
 ---
 
-### Option B: Lock to v0.100.x CLI (ADR-062 — CHOSEN)
+### Option B: Lock to v0.100.x CLI (ADR-027 — CHOSEN)
 
 **Target stack:**
 ```json
@@ -94,7 +94,7 @@ modern handler API without requiring a full platform migration.
 
 ---
 
-## Changes Made (ADR-062, December 2025)
+## Changes Made (ADR-027, December 2025)
 
 ### 1. Centralized Version Constants
 
@@ -184,7 +184,7 @@ These may be revisited when `@graphql-mesh` v1 reaches LTS status.
 
 ## References
 
-- [ADR-062](./architecture-decisions/ADR-062-mesh-v0100-plugins.md)
+- [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md)
 - [docs/mesh-dependency-matrix.md](./mesh-dependency-matrix.md)
 - [docs/archive/planning/DEPENDENCY-PLAN.md](./archive/planning/DEPENDENCY-PLAN.md)
 - [docs/archive/planning/TEMPLATE-UPDATE-PLAN.md](./archive/planning/TEMPLATE-UPDATE-PLAN.md)

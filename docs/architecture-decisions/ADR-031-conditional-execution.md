@@ -1,7 +1,20 @@
-# ADR-066: Conditional Execution with Jexl Expression Engine
+---
+id: 0031
+title: Conditional Execution with Jexl Expression Engine
+status: Proposed
+date: 2025-12-11
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, lifecycle, conditional, dsl, jexl]
+summary: Add a when field to lifecycle hook DSL entries evaluated via Jexl at runtime; expressions support simple strings and complex and/or/not objects; all expressions are validated at manifest parse time.
+rationale-summary: Hooks always executed unconditionally, causing unnecessary work (auth checks with no JWT, cache lookups when disabled) and forcing condition logic into handler implementations rather than the manifest.
+long-form: true
+---
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
+# ADR-031: Conditional Execution with Jexl Expression Engine
+
 **Related**: REQ-LIFECYCLE-003
 
 ## Context

@@ -135,10 +135,10 @@ The Runtime Platform provides the execution environment for all MFE types (remot
 
 **Related ADRs:**
 
-- ADR-036: Lifecycle hook execution semantics
-- ADR-047: BaseMFE abstract base (not type hierarchy)
-- ADR-059: Platform handler interface & execution model
-- ADR-060: Load capability atomic operation design
+- ADR-002: Lifecycle hook execution semantics
+- ADR-013: BaseMFE abstract base (not type hierarchy)
+- ADR-025: Platform handler interface & execution model
+- ADR-026: Load capability atomic operation design
 
 ---
 
@@ -814,7 +814,7 @@ const backoffMs = Math.min(
 
 ## Load Capability: Atomic Operation Design
 
-**REQ-RUNTIME-001 & ADR-060**: Load is an atomic operation with three phases
+**REQ-RUNTIME-001 & ADR-026**: Load is an atomic operation with three phases
 
 ```mermaid
 graph TB
@@ -1286,10 +1286,10 @@ Keep context lean:
 
 ### Architecture Decision Records
 
-- **ADR-036**: Lifecycle hook execution semantics
-- **ADR-047**: BaseMFE abstract base (not type hierarchy)
-- **ADR-059**: Platform handler interface & execution model
-- **ADR-060**: Load capability atomic operation design
+- **ADR-002**: Lifecycle hook execution semantics
+- **ADR-013**: BaseMFE abstract base (not type hierarchy)
+- **ADR-025**: Platform handler interface & execution model
+- **ADR-026**: Load capability atomic operation design
 - **ADR-061**: Error boundary & fallback UI strategy
 
 ### Implementation Status

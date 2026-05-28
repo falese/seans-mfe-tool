@@ -1,5 +1,5 @@
 /**
- * build:dev — start the framework dev server (ADR-071, #174).
+ * build:dev — start the framework dev server (ADR-036, #174).
  *
  * Core orchestrates; plugin implements startDevServer().
  * Blocks until SIGINT/SIGTERM (or an AbortSignal in tests), then

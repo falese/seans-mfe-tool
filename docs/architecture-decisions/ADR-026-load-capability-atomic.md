@@ -1,8 +1,21 @@
-# ADR-060: Load Capability - Atomic Operation Design
+---
+id: 0026
+title: Load Capability — Atomic Operation Design
+status: In Progress
+date: 2025-12-06
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, load, atomic, telemetry, module-federation]
+summary: Implement load as three sequential atomic subphases (entry → mount → enable-render) with per-subphase telemetry checkpoints and a LoadResult that carries metadata for shell validation before render.
+rationale-summary: The load capability needed to be atomic (fully succeeds or fully fails) and observable (subphase timing), while surfacing enough metadata for the shell to validate component availability before calling render.
+long-form: true
+---
 
-**Status:** 🟡 In Progress  
-**Date:** 2025-12-06  
-**Relates To:** ADR-036, ADR-047, ADR-059, REQ-RUNTIME-001, REQ-RUNTIME-002, REQ-RUNTIME-003
+# ADR-026: Load Capability — Atomic Operation Design
+
+**Relates To:** ADR-002, ADR-013, ADR-025, REQ-RUNTIME-001, REQ-RUNTIME-002, REQ-RUNTIME-003
 
 ## Context
 
@@ -14,7 +27,7 @@ The load capability is the entry point for loading remote MFEs at runtime. It mu
 4. Be **resilient**: Support retries for transient failures
 5. Support **handler execution**: Auth, validation, telemetry, error handling handlers
 
-Previous designs (ADR-036, ADR-047) specified lifecycle model and BaseMFE interface. This ADR specifies the concrete load implementation: the three sequential subphases (entry, mount, enable-render), telemetry checkpoints, and how handlers integrate.
+Previous designs (ADR-002, ADR-013) specified lifecycle model and BaseMFE interface. This ADR specifies the concrete load implementation: the three sequential subphases (entry, mount, enable-render), telemetry checkpoints, and how handlers integrate.
 
 ## Decision
 
@@ -338,10 +351,10 @@ context.retryCount = 3;
 
 ## Related ADRs
 
-- ADR-036: Lifecycle execution model (before/main/after/error)
-- ADR-047: BaseMFE abstract base (load method signature)
-- ADR-058: Platform handler standardization (handler types)
-- ADR-059: Platform handler interface (handler registry, execution)
+- ADR-002: Lifecycle execution model (before/main/after/error)
+- ADR-013: BaseMFE abstract base (load method signature)
+- ADR-024: Platform handler standardization (handler types)
+- ADR-025: Platform handler interface (handler registry, execution)
 
 ## References
 

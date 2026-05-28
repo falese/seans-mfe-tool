@@ -1,14 +1,27 @@
-# ADR-059: Platform Handler Interface & Execution Model
+---
+id: 0025
+title: Platform Handler Interface & Execution Model
+status: In Progress
+date: 2025-12-06
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, platform-handlers, lifecycle, interfaces, registry]
+summary: Define a PlatformHandler interface with name/phases/errorConfig/execute contract, a PlatformHandlerRegistry for DSL-driven resolution, and a sequential before→main→after→error execution model.
+rationale-summary: ADR-024 established principles; this ADR specifies the concrete interface, registry API, and execution semantics that enable handler composability and DSL-driven configuration.
+long-form: true
+---
 
-**Status:** 🟡 In Progress  
-**Date:** 2025-12-06  
-**Relates To:** ADR-036, ADR-047, ADR-058, REQ-RUNTIME-005 through REQ-RUNTIME-012
+# ADR-025: Platform Handler Interface & Execution Model
+
+**Relates To:** ADR-002, ADR-013, ADR-024, REQ-RUNTIME-005 through REQ-RUNTIME-012
 
 ## Context
 
 Platform handlers are standardized lifecycle functions that execute around MFE capabilities (load, render, query, emit, etc.) in `before`, `main`, `after`, and `error` phases. The goal is to provide a unified, predictable interface for cross-cutting concerns like authentication, validation, telemetry, error handling, caching, and rate limiting.
 
-Previous design (ADR-058) outlined handler standardization principles. This ADR specifies the concrete interface, registry pattern, and execution semantics that enable:
+Previous design (ADR-024) outlined handler standardization principles. This ADR specifies the concrete interface, registry pattern, and execution semantics that enable:
 
 - **Consistency**: All handlers follow identical lifecycle interface
 - **Composability**: Multiple handlers execute sequentially without interference
@@ -351,10 +364,10 @@ Telemetry handler never blocks (continueOnError: true) but emits events for all 
 
 ## Related ADRs
 
-- ADR-036: Lifecycle execution model (phases, hooks)
-- ADR-047: BaseMFE abstract base (context, state machine)
-- ADR-058: Platform handler standardization (principles)
-- ADR-060: Load capability atomic operation (uses handler registry)
+- ADR-002: Lifecycle execution model (phases, hooks)
+- ADR-013: BaseMFE abstract base (context, state machine)
+- ADR-024: Platform handler standardization (principles)
+- ADR-026: Load capability atomic operation (uses handler registry)
 
 ## References
 

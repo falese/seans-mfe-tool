@@ -1,5 +1,5 @@
 /**
- * ReactRspackPlugin — concrete plugin tests (ADR-071, #170).
+ * ReactRspackPlugin — concrete plugin tests (ADR-036, #170).
  */
 
 import { BaseFrameworkPlugin } from '@seans-mfe/contracts';

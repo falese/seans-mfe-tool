@@ -385,7 +385,7 @@ The runtime platform provides the execution environment for all MFE types (remot
 🟡 **In Progress** - Core classes complete, handlers implementation ongoing (Issues #47-59)
 
 **Related Requirements**: REQ-RUNTIME-001 through REQ-RUNTIME-012  
-**Related ADRs**: ADR-036, ADR-047, ADR-059, ADR-060
+**Related ADRs**: ADR-002, ADR-013, ADR-025, ADR-026
 
 ### 6. Templates
 
@@ -783,11 +783,11 @@ Key ADRs shaping the architecture:
 
 - **ADR-009**: Hybrid orchestration (service + runtime)
 - **ADR-013**: Language-agnostic DSL
-- **ADR-046**: GraphQL Mesh with DSL-embedded config
-- **ADR-048**: Unified generator consolidation
-- **ADR-059**: Platform handler interface
-- **ADR-060**: Load capability atomic operation design
-- **ADR-062**: Mesh v0.100.x with createBuiltMeshHTTPHandler
+- **ADR-012**: GraphQL Mesh with DSL-embedded config
+- **ADR-014**: Unified generator consolidation
+- **ADR-025**: Platform handler interface
+- **ADR-026**: Load capability atomic operation design
+- **ADR-027**: Mesh v0.100.x with createBuiltMeshHTTPHandler
 
 ---
 
@@ -811,8 +811,8 @@ Key ADRs shaping the architecture:
 
 ### Architecture Decision Records
 
-- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-062+
-- Key ADRs: ADR-009 (Hybrid Orchestration), ADR-059 (Platform Handlers), ADR-060 (Atomic Load)
+- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-027+
+- Key ADRs: ADR-009 (Hybrid Orchestration), ADR-025 (Platform Handlers), ADR-026 (Atomic Load)
 
 ### Acceptance Criteria
 

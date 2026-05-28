@@ -75,10 +75,10 @@ ADR quick index: `@docs/spec.md#adr-index`
 | oclif migration (Epics A + B + C, PR #123) | ✅ Done |
 | Codegen + DSL pipeline | ✅ Done |
 | GraphQL BFF layer | ✅ Done |
-| Framework plugin system (ADR-071, #167–#185, PRs #187–#188) | ✅ Done |
+| Framework plugin system (ADR-036, #167–#185, PRs #187–#188) | ✅ Done |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
-| Lifecycle engine enhancements (ADR-063–067) | 📋 Planned (issues not yet created) |
+| Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
 | npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (MERGE-PLAN.md Phase 1) |
 
 See `docs/PROJECT-STATUS.md` for priority order and blockers.
@@ -110,9 +110,9 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 - **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
-- **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-069).
-- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-071). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
-- **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-071, #181).
+- **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-034).
+- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
+- **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-036, #181).
 
 ## Backlog priority
 
@@ -121,7 +121,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 3. ~~GraphQL BFF layer~~ ✅
 4. Runtime platform — REQ-RUNTIME-002 → 005 → 001 → 004 → … (issues #47–59) 🟡
 5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
-6. Lifecycle engine enhancements — ADR-063–067 (issues not yet created) 📋
+6. Lifecycle engine enhancements — ADR-028–032 (issues not yet created) 📋
 7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
 8. Monorepo consolidation (MERGE-PLAN.md Phase 2) ⏳
 

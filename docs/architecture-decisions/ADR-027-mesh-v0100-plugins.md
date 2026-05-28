@@ -1,4 +1,19 @@
-# ADR-062: GraphQL Mesh v0.100.x with Production Plugins & Transforms
+---
+id: 0027
+title: GraphQL Mesh v0.100.x with Production Plugins & Transforms
+status: Implemented
+date: 2025-12-06
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [bff, graphql-mesh, production, codegen, performance, observability]
+summary: Lock BFF templates to GraphQL Mesh v0.100.x, adopt the createBuiltMeshHTTPHandler() runtime API, and wire response-cache/prometheus/opentelemetry plugins plus naming-convention transforms via DSL-driven configuration.
+rationale-summary: The e2e2 example project revealed version conflicts and missing production features (caching, metrics, tracing, rate limiting) when templates used floating latest versions with no DSL-driven plugin control.
+long-form: true
+---
+
+# ADR-027: GraphQL Mesh v0.100.x with Production Plugins & Transforms
 
 ## Status
 
@@ -72,7 +87,7 @@ const mesh = await getMesh(meshConfig);
 app.use('/graphql', graphqlHTTP({ schema: mesh.schema }));
 ```
 
-**New Pattern (ADR-062)**:
+**New Pattern (ADR-027)**:
 
 ```typescript
 import { createBuiltMeshHTTPHandler } from './.mesh';
@@ -348,16 +363,16 @@ npm run build
 - ✅ Create `examples/e2e2/mfe-manifest-full.yaml`
 - ✅ Test schema validation (1153 tests passing)
 - ✅ Test build process (TypeScript compiles)
-- ✅ Document ADR-062
+- ✅ Document ADR-027
 - ✅ Update architecture index
 
 ## Traceability
 
 ### Related ADRs
 
-- **ADR-046**: GraphQL Mesh with DSL (foundation)
-- **ADR-048**: Incremental TypeScript migration
-- **ADR-058**: Platform Handler Library (observability patterns)
+- **ADR-012**: GraphQL Mesh with DSL (foundation)
+- **ADR-014**: Incremental TypeScript migration
+- **ADR-024**: Platform Handler Library (observability patterns)
 
 ### Related Requirements
 

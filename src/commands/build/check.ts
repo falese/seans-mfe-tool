@@ -1,5 +1,5 @@
 /**
- * build:check — validate local environment for the project's framework (ADR-071, #172).
+ * build:check — validate local environment for the project's framework (ADR-036, #172).
  *
  * Reads the MFE manifest, loads the framework plugin, and runs
  * plugin.checkEnvironment() to verify required tools are installed.

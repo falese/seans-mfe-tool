@@ -1,6 +1,6 @@
 /**
  * Shared BFF helpers — underscore prefix makes oclif skip this file.
- * Following ADR-046: GraphQL Mesh with DSL-embedded configuration.
+ * Following ADR-012: GraphQL Mesh with DSL-embedded configuration.
  */
 
 import * as fs from 'fs-extra';

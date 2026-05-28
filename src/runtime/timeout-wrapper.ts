@@ -2,7 +2,7 @@
  * Timeout Wrapper
  * Wraps handler execution with timeout protection using Promise.race and AbortSignal.
  * Following REQ-LIFECYCLE-002: Timeout Protection
- * Following ADR-064: Timeout Protection with AbortSignal
+ * Following ADR-029: Timeout Protection with AbortSignal
  */
 
 import { TimeoutError } from './errors/TimeoutError';

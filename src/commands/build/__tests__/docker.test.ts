@@ -1,5 +1,5 @@
 /**
- * build:docker command tests (ADR-071, #177).
+ * build:docker command tests (ADR-036, #177).
  */
 
 import { buildDockerCommand, generateDockerfile } from '../docker';

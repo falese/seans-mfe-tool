@@ -1,6 +1,6 @@
 /**
  * DSL Type Definitions
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Reference: docs/dsl-schema-reference.md v3.2
  * 
  * Re-exports types from schema.ts (Zod-derived) for backward compatibility.

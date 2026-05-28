@@ -1,5 +1,5 @@
 /**
- * Cross-runtime MF compatibility smoke test (ADR-071, #179).
+ * Cross-runtime MF compatibility smoke test (ADR-036, #179).
  *
  * Verifies that React+rspack and Angular+webpack plugins produce
  * configurations that are mutually compatible when a React shell
@@ -100,7 +100,7 @@ describe('cross-runtime MF compatibility (React rspack ↔ Angular webpack)', ()
     expect(angular.getDockerStrategy(null).needsCliBuilder).toBe(true);
   });
 
-  // ── Classic-script cross-runtime contract (ADR-069) ──────────────────────
+  // ── Classic-script cross-runtime contract (ADR-034) ──────────────────────
 
   it('angular plugin bundler is webpack (classic-script MF, loadable by rspack shell)', () => {
     // AngularWebpackPlugin uses library:{type:'var'} + scriptType:'text/javascript'

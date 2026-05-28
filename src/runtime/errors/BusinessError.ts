@@ -2,7 +2,7 @@
  * BusinessError
  * Thrown for business logic violations (not retryable).
  * Following REQ-LIFECYCLE-005: Error Classification
- * Following ADR-065: Error Classification with Hybrid Detection
+ * Following ADR-030: Error Classification with Hybrid Detection
  */
 
 export class BusinessError extends Error {

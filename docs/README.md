@@ -200,7 +200,7 @@ User: "I want to add TypeScript template support"
 1. Requirements Agent:
    - Gathers requirements through questions
    - Creates REQ-SCAFFOLD-007
-   - Writes ADR-047 (TypeScript vs Babel)
+   - Writes ADR-013 (TypeScript vs Babel)
    - Queries GitHub for related issues
    - Drafts issue description
 

@@ -1,6 +1,6 @@
 /**
  * DSL Schema Definitions using Zod
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Reference: docs/dsl-schema-reference.md v3.2
  *
  * This file defines both validation schemas AND TypeScript types.

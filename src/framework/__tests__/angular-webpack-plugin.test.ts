@@ -1,5 +1,5 @@
 /**
- * AngularWebpackPlugin — concrete plugin tests (ADR-071, #171).
+ * AngularWebpackPlugin — concrete plugin tests (ADR-036, #171).
  */
 
 import { BaseFrameworkPlugin } from '@seans-mfe/contracts';

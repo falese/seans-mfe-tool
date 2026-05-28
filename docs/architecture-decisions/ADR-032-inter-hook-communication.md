@@ -1,7 +1,20 @@
-# ADR-067: Inter-Hook Communication with TypeScript Code Generation
+---
+id: 0032
+title: Inter-Hook Communication with TypeScript Code Generation
+status: Proposed
+date: 2025-12-11
+deciders: [sean]
+enforcement: code
+supersedes: []
+superseded-by: []
+tags: [runtime, lifecycle, codegen, type-safety, inter-hook]
+summary: Add typed inputs/outputs to lifecycle hook DSL entries with namespaced context storage; generate TypeScript interfaces for all hook contracts from the manifest; validate circular dependencies at build time.
+rationale-summary: Hook data flow via implicit context mutation had no compile-time contract, causing runtime type mismatches and making data flow invisible to both developers and AI agents.
+long-form: true
+---
 
-**Status**: Proposed  
-**Date**: 2025-12-11  
+# ADR-032: Inter-Hook Communication with TypeScript Code Generation
+
 **Related**: REQ-LIFECYCLE-004
 
 ## Context

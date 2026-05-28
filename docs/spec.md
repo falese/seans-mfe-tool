@@ -227,24 +227,48 @@ All generation and training workflows emit structured JSON to stderr (or log fil
 
 All architecture decisions live in `docs/architecture-decisions/`. **Before implementing anything that touches the platform contract, bundler integration, lifecycle, or BFF layer — look here first.**
 
-| ADR | Title | Area |
-|-----|-------|------|
-| ADR-022 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle |
-| ADR-058 | Platform Handler Library Standardization | Runtime handlers |
-| ADR-059 | Platform Handler Interface & Execution Model | Runtime handlers |
-| ADR-060 | Load Capability — Atomic Operation Design | Runtime lifecycle |
-| ADR-062 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer |
-| ADR-063 | Parallel Handler Execution with Context Isolation | Lifecycle engine |
-| ADR-064 | Timeout Protection with AbortSignal | Lifecycle engine |
-| ADR-065 | Error Classification with Hybrid Detection | Lifecycle engine |
-| ADR-066 | Conditional Execution with Jexl Expression Engine | Lifecycle engine |
-| ADR-067 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine |
-| ADR-068 | Two-headed giant — AI-native + human-legible developer experience | Developer model |
-| ADR-069 | Pluggable bundler + framework via codegen variants | Codegen / polyglot |
-| ADR-070 | Docker build orchestration via Turborepo task graph | Docker / CI |
-| ADR-071 | Framework plugin system — `BaseFrameworkPlugin` + `loadFrameworkPlugin()` | Build commands, codegen, deploy |
-
-`docs/architecture-decisions/architecture-decisions.md` is the narrative index with rationale.
+| ADR | Title | Area | Status |
+|-----|-------|------|--------|
+| ADR-001 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Accepted |
+| ADR-002 | Lifecycle Hook Execution Model | Runtime lifecycle | Implemented |
+| ADR-003 | No Custom Lifecycle Phases | Runtime lifecycle | Implemented |
+| ADR-004 | Handler Array Support | Runtime lifecycle | Implemented |
+| ADR-005 | Handler Discovery Convention | Runtime lifecycle | Implemented |
+| ADR-006 | Unified Type System | DSL / types | Implemented |
+| ADR-007 | Authorization Expression Grammar | DSL / security | Deferred |
+| ADR-008 | Data Type Metadata | DSL | Implemented |
+| ADR-009 | Language Field and Template Selection | Codegen | Implemented |
+| ADR-010 | Data Lifecycle Alignment | DSL | Implemented |
+| ADR-011 | GeneratedFrom Traceability | DSL | Implemented |
+| ADR-012 | GraphQL Mesh BFF Layer | BFF | Implemented |
+| ADR-013 | Generated MFE Test Templates | Codegen / testing | Implemented |
+| ADR-014 | Incremental TypeScript Migration | Codebase | Implemented |
+| ADR-015 | oclif as CLI framework — replace Commander | CLI | Accepted |
+| ADR-016 | BaseCommand pattern | CLI / contracts | Accepted |
+| ADR-017 | Typed error hierarchy | CLI / contracts | Accepted |
+| ADR-018 | CommandResult\<T\> JSON envelope | CLI / contracts | Accepted |
+| ADR-019 | MCP child-process isolation | MCP | Accepted |
+| ADR-020 | Bun for dev, Node for publish | CLI dev workflow | Accepted |
+| ADR-021 | Package namespace strategy (@seans-mfe/* vs @falese/*) | Packages | Accepted |
+| ADR-022 | Plugin-first architecture | Architecture | Accepted |
+| ADR-023 | No-any TypeScript discipline | TypeScript | Accepted |
+| ADR-024 | Platform Handler Library Standardization | Runtime handlers | Planned |
+| ADR-025 | Platform Handler Interface & Execution Model | Runtime handlers | In Progress |
+| ADR-026 | Load Capability — Atomic Operation Design | Runtime lifecycle | In Progress |
+| ADR-027 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
+| ADR-028 | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
+| ADR-029 | Timeout Protection with AbortSignal | Lifecycle engine | Proposed |
+| ADR-030 | Error Classification with Hybrid Detection | Lifecycle engine | Proposed |
+| ADR-031 | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
+| ADR-032 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
+| ADR-033 | Two-headed giant — AI-native + human-legible DX | Developer model | Accepted |
+| ADR-034 | Pluggable bundler + framework via codegen variants | Codegen / polyglot | Accepted |
+| ADR-035 | Docker build orchestration via Turborepo task graph | Docker / CI | Accepted |
+| ADR-036 | Framework plugin system — `BaseFrameworkPlugin` + `loadFrameworkPlugin()` | Build / codegen / deploy | Accepted |
+| ADR-037 | TDD-always development discipline | Process | Accepted |
+| ADR-038 | Conventional Commits and branch naming | Process | Accepted |
+| ADR-039 | Structured logger — no console.log in production code | CLI / logging | Accepted |
+| ADR-040 | Manifest-Declared Handler Sources | DSL / handlers / codegen | Accepted |
 
 ---
 
