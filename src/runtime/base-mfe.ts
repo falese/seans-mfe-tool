@@ -553,13 +553,15 @@ export abstract class BaseMFE {
     if (!this.manifest.capabilities) {
       return null;
     }
-    
+
+    const lc = capability.toLowerCase();
     for (const entry of this.manifest.capabilities) {
-      if (entry[capability]) {
-        return entry[capability];
+      const key = Object.keys(entry).find(k => k.toLowerCase() === lc);
+      if (key) {
+        return entry[key];
       }
     }
-    
+
     return null;
   }
   
