@@ -61,9 +61,16 @@ capabilities:
 
 | Form | Example | Resolution |
 |---|---|---|
-| Relative path | `./handlers/validation` | `import { <hookName> } from './handlers/validation'` |
+| Relative path | `../../handlers/validation` | `import { <hookName> } from '../../handlers/validation'` |
 | Bare module | `@my-org/handlers` | `import <hookName> from '@my-org/handlers'` (default export) |
 | Module + export | `@my-org/handlers#validateEmail` | `import { validateEmail as <hookName> } from '@my-org/handlers'` |
+
+Relative paths are resolved from the **generated `mfe.ts`** (which lives at
+`src/platform/base-mfe/mfe.ts`), not from the manifest's location. User-
+authored handler files should live **outside** the generated `platform/`
+folder — `src/handlers/` is the recommended convention, so the manifest
+spells the source as `../../handlers/<name>`. This keeps user code clear
+of any folder owned by codegen.
 
 The runtime resolution path is unchanged. The generated `handler-registry.ts`
 satisfies the existing DI branch (lines 426-429 of `base-mfe.ts`), so
