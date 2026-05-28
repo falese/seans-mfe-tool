@@ -4,7 +4,7 @@
  *
  * Automated dependency compatibility validation for GraphQL Mesh BFF templates.
  * Requirement: REQ-MESH-DEPS-005
- * ADR Reference: ADR-062 (GraphQL Mesh v0.100.x)
+ * ADR Reference: ADR-027 (GraphQL Mesh v0.100.x)
  *
  * Usage:
  *   node scripts/test-mesh-dependencies.js
@@ -293,7 +293,7 @@ if (!bffServer) {
 
   // Must use new API
   if (serverSrc.includes('createBuiltMeshHTTPHandler')) {
-    pass('Server template uses createBuiltMeshHTTPHandler (ADR-062)');
+    pass('Server template uses createBuiltMeshHTTPHandler (ADR-027)');
   } else {
     fail('Server template uses createBuiltMeshHTTPHandler', 'Old getMesh()/findAndParseConfig() API detected or handler missing');
   }
@@ -361,7 +361,7 @@ section('Check 5: Documentation Deliverables');
 const requiredDocs = [
   { file: 'docs/mesh-dependency-matrix.md', label: 'Dependency Matrix' },
   { file: 'docs/bff-refactor-analysis.md', label: 'BFF Refactor Analysis' },
-  { file: 'docs/architecture-decisions/ADR-062-mesh-v0100-plugins.md', label: 'ADR-062' },
+  { file: 'docs/architecture-decisions/ADR-027-mesh-v0100-plugins.md', label: 'ADR-027' },
 ];
 
 for (const doc of requiredDocs) {

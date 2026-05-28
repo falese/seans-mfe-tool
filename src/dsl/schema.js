@@ -1,7 +1,7 @@
 "use strict";
 /**
  * DSL Schema Definitions using Zod
- * Following ADR-048: Incremental TypeScript migration
+ * Following ADR-014: Incremental TypeScript migration
  * Reference: docs/dsl-schema-reference.md v3.2
  *
  * This file defines both validation schemas AND TypeScript types.
@@ -102,7 +102,7 @@ exports.CapabilityConfigSchema = zod_1.z.object({
 /** Capability entry (name → config) */
 exports.CapabilityEntrySchema = zod_1.z.record(zod_1.z.string(), exports.CapabilityConfigSchema);
 // =============================================================================
-// Data Layer Schemas (GraphQL BFF - ADR-046)
+// Data Layer Schemas (GraphQL BFF - ADR-012)
 // =============================================================================
 /** OpenAPI handler configuration */
 exports.OpenAPIHandlerSchema = zod_1.z.object({
@@ -192,7 +192,7 @@ exports.DataConfigSchema = zod_1.z.object({
     generatedFrom: zod_1.z.array(exports.DataLineageSchema).optional()
 });
 // =============================================================================
-// Performance & Observability Schemas (ADR-062)
+// Performance & Observability Schemas (ADR-027)
 // =============================================================================
 /** Caching configuration */
 exports.CachingConfigSchema = zod_1.z.object({
@@ -292,7 +292,7 @@ exports.DSLManifestSchema = zod_1.z.object({
     capabilities: zod_1.z.array(exports.CapabilityEntrySchema),
     dependencies: exports.DependenciesSchema.optional(),
     data: exports.DataConfigSchema.optional(),
-    // Performance & observability config (ADR-062)
+    // Performance & observability config (ADR-027)
     performance: exports.PerformanceConfigSchema.optional(),
     transforms: zod_1.z.array(exports.CustomTransformSchema).optional(),
     // Future sections (deferred)

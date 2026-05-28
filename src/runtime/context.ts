@@ -6,7 +6,7 @@
  * (load → render). The context carries user state, authentication, request
  * metadata, and capability-specific inputs/outputs.
  * 
- * Related ADRs: ADR-002, ADR-013
+ * Related ADRs: ADR-002, ADR-041
  */
 
 /**

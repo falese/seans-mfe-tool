@@ -1,7 +1,7 @@
 {
   "name": "@seans-mfe/framework-react",
   "version": "0.1.0",
-  "description": "React + rspack framework plugin for seans-mfe-tool (ADR-071)",
+  "description": "React + rspack framework plugin for seans-mfe-tool (ADR-036)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
