@@ -15,7 +15,7 @@ long-form: true
 
 # ADR-026: Load Capability — Atomic Operation Design
 
-**Relates To:** ADR-002, ADR-013, ADR-025, REQ-RUNTIME-001, REQ-RUNTIME-002, REQ-RUNTIME-003
+**Relates To:** ADR-002, ADR-041, ADR-025, REQ-RUNTIME-001, REQ-RUNTIME-002, REQ-RUNTIME-003
 
 ## Context
 
@@ -27,7 +27,7 @@ The load capability is the entry point for loading remote MFEs at runtime. It mu
 4. Be **resilient**: Support retries for transient failures
 5. Support **handler execution**: Auth, validation, telemetry, error handling handlers
 
-Previous designs (ADR-002, ADR-013) specified lifecycle model and BaseMFE interface. This ADR specifies the concrete load implementation: the three sequential subphases (entry, mount, enable-render), telemetry checkpoints, and how handlers integrate.
+Previous designs (ADR-002, ADR-041) specified lifecycle model and BaseMFE interface. This ADR specifies the concrete load implementation: the three sequential subphases (entry, mount, enable-render), telemetry checkpoints, and how handlers integrate.
 
 ## Decision
 
@@ -352,7 +352,7 @@ context.retryCount = 3;
 ## Related ADRs
 
 - ADR-002: Lifecycle execution model (before/main/after/error)
-- ADR-013: BaseMFE abstract base (load method signature)
+- ADR-041: BaseMFE abstract base (load method signature)
 - ADR-024: Platform handler standardization (handler types)
 - ADR-025: Platform handler interface (handler registry, execution)
 

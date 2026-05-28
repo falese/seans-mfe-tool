@@ -15,7 +15,7 @@ long-form: true
 
 # ADR-025: Platform Handler Interface & Execution Model
 
-**Relates To:** ADR-002, ADR-013, ADR-024, REQ-RUNTIME-005 through REQ-RUNTIME-012
+**Relates To:** ADR-002, ADR-041, ADR-024, REQ-RUNTIME-005 through REQ-RUNTIME-012
 
 ## Context
 
@@ -365,7 +365,7 @@ Telemetry handler never blocks (continueOnError: true) but emits events for all 
 ## Related ADRs
 
 - ADR-002: Lifecycle execution model (phases, hooks)
-- ADR-013: BaseMFE abstract base (context, state machine)
+- ADR-041: BaseMFE abstract base (context, state machine)
 - ADR-024: Platform handler standardization (principles)
 - ADR-026: Load capability atomic operation (uses handler registry)
 
