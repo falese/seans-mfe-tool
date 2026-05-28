@@ -35,6 +35,12 @@ const manifest = {
         type: 'platform',
         lifecycle: {
           before: [
+            {
+              detectExecutionContext: {
+                handler: 'detectExecutionContext',
+                description: 'Detect shell vs standalone via URL origin (ADR-072)',
+              },
+            },
             { onLoadBegin: { handler: 'onLoadBegin', description: 'Log load lifecycle entry' } },
           ],
           after: [
