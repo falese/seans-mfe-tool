@@ -94,6 +94,15 @@ existing method-reflection fallback.
   for both template variants.
 - The existing "Custom handler not found" error from `BaseMFE.invokeCustomHandler`
   is extended to point users at `source:` as an alternative discovery path.
+- The generated `bootstrap.ts` is flipped from `overwrite: false` to
+  `overwrite: true`. Bootstrap inlines the manifest and was previously
+  marked "user-owned, first-init only", but in practice it contains no
+  customization across any existing example MFE — just glue
+  (instantiate, call `load()`, log result). Keeping it `overwrite: false`
+  meant every hook added to `mfe-manifest.yaml` (including `source:` hooks
+  this ADR introduces) silently failed to fire at runtime because the
+  inline manifest drifted. Customization belongs in `mfe.ts` overrides,
+  DSL lifecycle hooks, or `deps.*` DI — not in `bootstrap.ts`.
 
 ## Alternatives Considered
 

@@ -800,7 +800,11 @@ export async function generateAllFiles(
   files.push({
     path: path.join(platformDir, 'bootstrap.ts'),
     content: await renderTemplate(path.join(templateDir, 'bootstrap.ts.ejs'), vars),
-    overwrite: false, // user-owned: first-init only, not regenerated
+    // Regenerated on every codegen run so the inline manifest stays in sync
+    // with mfe-manifest.yaml. Bootstrap is glue code (instantiate, call load,
+    // log result); customization belongs in mfe.ts overrides, lifecycle
+    // hooks, or `deps.*` DI — not in this file.
+    overwrite: true,
   });
   // BaseMFE test
   files.push({
