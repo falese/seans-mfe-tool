@@ -98,6 +98,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Codegen templates | `src/codegen/templates/` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
+| ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |
+| Product decisions (why) | `docs/product-decisions/` (PDRs + register) |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
 | Framework plugin loader | `src/framework/loader.ts` |
 | React plugin | `packages/framework-react/src/plugin.ts` |
