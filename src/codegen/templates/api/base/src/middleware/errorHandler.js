@@ -14,17 +14,25 @@ const errorHandler = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   const isProduction = process.env.NODE_ENV === 'production';
+  const isServerError = err.statusCode >= 500;
+
+  // In production, never leak internal 5xx details to the client; 4xx messages
+  // are intentional and safe to return.
+  const clientMessage = isProduction && isServerError ? 'Internal server error' : err.message;
 
   const errorResponse = {
     status: err.status,
-    message: err.message,
+    message: clientMessage,
     ...(err.errors && { errors: err.errors }),
     ...(isProduction ? {} : { stack: err.stack })
   };
 
-  // Log the error
+  // Always log the full detail server-side, regardless of what the client sees.
   logger.error('Error occurred', {
-    ...errorResponse,
+    status: err.status,
+    statusCode: err.statusCode,
+    message: err.message,
+    stack: err.stack,
     path: req.path,
     method: req.method
   });
