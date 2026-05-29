@@ -329,6 +329,9 @@ describe('MongoDBGenerator', () => {
       expect(result).toContain('UserSchema.path(\'email\').validate(function(value)');
       expect(result).toContain('.test(value)');
       expect(result).toContain('email must be a valid email address');
+      // The generated regex must preserve the \s/\. escapes so it actually
+      // validates email addresses (rather than the stripped [^s@] form).
+      expect(result).toContain('/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/');
     });
 
     it('should generate URI validation', () => {
