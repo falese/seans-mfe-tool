@@ -355,7 +355,7 @@ function getBaseZodSchema(type: string, fieldName: string, constraints?: TypeCon
     case 'email':
     case 'url':
     case 'id':
-    case 'datetime':
+    case 'datetime': {
       let stringSchema = 'z.string()';
       
       if (constraints?.minLength !== undefined) {
@@ -386,8 +386,9 @@ function getBaseZodSchema(type: string, fieldName: string, constraints?: TypeCon
       }
       
       return stringSchema;
-    
-    case 'number':
+    }
+
+    case 'number': {
       let numberSchema = 'z.number()';
       
       if (constraints?.integer) {
@@ -401,14 +402,15 @@ function getBaseZodSchema(type: string, fieldName: string, constraints?: TypeCon
       }
       
       return numberSchema;
-    
+    }
+
     case 'boolean':
       return 'z.boolean()';
     
     case 'object':
       return 'z.record(z.unknown())';
     
-    case 'file':
+    case 'file': {
       // File validation
       let fileSchema = 'z.instanceof(File)';
       if (constraints?.maxSize) {
@@ -419,7 +421,8 @@ function getBaseZodSchema(type: string, fieldName: string, constraints?: TypeCon
         fileSchema += `.refine(f => [${formatsStr}].some(fmt => f.type.includes(fmt)), '${fieldName} must be one of: ${constraints.formats.join(', ')}')`;
       }
       return fileSchema;
-    
+    }
+
     case 'element':
       return 'z.unknown()';  // Runtime element validation is complex
     

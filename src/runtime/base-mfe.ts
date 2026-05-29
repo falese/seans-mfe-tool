@@ -422,7 +422,7 @@ export abstract class BaseMFE {
       }
     } else {
       // Try full custom handler name first, then fallback to last segment
-      let customHandlerName = handlerName;
+      const customHandlerName = handlerName;
       if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
         await this.deps.customHandlers[customHandlerName](context);
         return;
