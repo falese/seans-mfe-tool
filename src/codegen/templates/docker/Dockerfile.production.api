@@ -1,6 +1,6 @@
 # Multi-stage production Dockerfile for Node.js API
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
 COPY . .
 
 # Production dependencies stage
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ RUN if [ -f pnpm-lock.yaml ]; then pnpm install --prod --frozen-lockfile; \
     else npm ci --only=production; fi
 
 # Production stage
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install dumb-init to handle signals properly
 RUN apk add --no-cache dumb-init

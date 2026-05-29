@@ -61,12 +61,34 @@ export function generateDockerfile(strategy: DockerStrategy, _name: string): str
   lines.push('# Production stage');
   lines.push(`FROM ${strategy.runtimeImage}`);
 
+  // Config files (e.g. the hardened nginx server block) are copied before the
+  // build artifacts. Sourcing from the cli-builder image keeps every generated
+  // MFE in sync with the CLI's templates without needing a file in the context.
+  for (const file of strategy.configFiles ?? []) {
+    const prefix = file.from === 'cli-builder' ? 'COPY --from=cli-builder' : 'COPY';
+    lines.push(`${prefix} ${file.src} ${file.dest}`);
+  }
+
   for (const artifact of strategy.artifactPaths) {
     lines.push(`COPY --from=builder /app/${artifact} /usr/share/nginx/html/`);
   }
 
+  // Runtime setup (e.g. non-root user creation / chown) runs after files exist.
+  for (const cmd of strategy.runtimeSetup ?? []) {
+    lines.push(`RUN ${cmd}`);
+  }
+
   if (strategy.healthcheck) {
     lines.push(`HEALTHCHECK CMD ${strategy.healthcheck}`);
+  }
+
+  if (strategy.expose !== undefined) {
+    lines.push(`EXPOSE ${strategy.expose}`);
+  }
+
+  // Drop privileges last so preceding setup steps can still write as root.
+  if (strategy.user) {
+    lines.push(`USER ${strategy.user}`);
   }
 
   const cmdJson = strategy.cmd.map((s) => `"${s}"`).join(', ');

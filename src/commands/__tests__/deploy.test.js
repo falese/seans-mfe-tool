@@ -57,7 +57,7 @@ describe('Deploy Command', () => {
       await copyDockerFiles('/temp', 'shell');
       expect(fs.copy).toHaveBeenCalledTimes(2);
       expect(fs.copy).toHaveBeenCalledWith(
-        expect.stringContaining('Dockerfile.shell'),
+        expect.stringContaining('dockerfile.shell'),
         expect.stringContaining('Dockerfile')
       );
     });
@@ -414,7 +414,7 @@ describe('Deploy Command', () => {
 
       await expect(dockerComposeProductionDeploy(options)).resolves.not.toThrow();
       expect(fs.readFile).toHaveBeenCalledWith(
-        expect.stringContaining('nginx.production.conf'),
+        expect.stringContaining('nginx.mfe.conf'),
         'utf8'
       );
     });
@@ -428,7 +428,7 @@ describe('Deploy Command', () => {
 
       await expect(dockerComposeProductionDeploy(options)).resolves.not.toThrow();
       expect(fs.readFile).toHaveBeenCalledWith(
-        expect.stringContaining('nginx.production.conf'),
+        expect.stringContaining('nginx.mfe.conf'),
         'utf8'
       );
     });

@@ -80,6 +80,48 @@ describe('generateDockerfile', () => {
     expect(df).toContain('COPY --from=builder /app/dist/');
     expect(df).toContain('COPY --from=builder /app/public/');
   });
+
+  it('copies config files from the cli-builder image', () => {
+    const strategy: DockerStrategy = {
+      ...reactStrategy,
+      configFiles: [
+        {
+          from: 'cli-builder',
+          src: '/seans-mfe-tool/dist/codegen/templates/docker/nginx.mfe.conf',
+          dest: '/etc/nginx/conf.d/default.conf',
+        },
+      ],
+    };
+    const df = generateDockerfile(strategy, 'my-mfe');
+    expect(df).toContain(
+      'COPY --from=cli-builder /seans-mfe-tool/dist/codegen/templates/docker/nginx.mfe.conf /etc/nginx/conf.d/default.conf',
+    );
+  });
+
+  it('copies config files from the build context', () => {
+    const strategy: DockerStrategy = {
+      ...reactStrategy,
+      configFiles: [{ from: 'context', src: 'nginx.conf', dest: '/etc/nginx/conf.d/default.conf' }],
+    };
+    const df = generateDockerfile(strategy, 'my-mfe');
+    expect(df).toContain('COPY nginx.conf /etc/nginx/conf.d/default.conf');
+  });
+
+  it('emits runtime setup RUN commands, USER, and EXPOSE', () => {
+    const strategy: DockerStrategy = {
+      ...reactStrategy,
+      runtimeSetup: ['chown -R nginx:nginx /usr/share/nginx/html'],
+      user: 'nginx',
+      expose: 8080,
+    };
+    const df = generateDockerfile(strategy, 'my-mfe');
+    expect(df).toContain('RUN chown -R nginx:nginx /usr/share/nginx/html');
+    expect(df).toContain('EXPOSE 8080');
+    expect(df).toContain('USER nginx');
+    // USER must come after setup and before CMD.
+    expect(df.indexOf('USER nginx')).toBeLessThan(df.indexOf('CMD ['));
+    expect(df.indexOf('RUN chown')).toBeLessThan(df.indexOf('USER nginx'));
+  });
 });
 
 describe('buildDockerCommand', () => {

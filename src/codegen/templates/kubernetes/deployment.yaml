@@ -16,11 +16,23 @@ spec:
         app: <%= name %>
         type: <%= type %>
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: <%= name %>
         image: <%= registry %>/<%= name %>:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          # readOnlyRootFilesystem can be enabled by mounting emptyDir volumes
+          # at the container's writable temp paths (/tmp, /var/cache/nginx).
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
         ports:
-        - containerPort: <%= port || 3000 %>
+        - containerPort: <%= containerPort %>
           name: http
         env:
         - name: NODE_ENV
@@ -55,8 +67,10 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
+          # MFEs expose only /health via nginx; an API may override this with a
+          # dedicated /ready endpoint that also checks downstream dependencies.
           httpGet:
-            path: /ready
+            path: <%= type === 'api' ? '/ready' : '/health' %>
             port: http
           initialDelaySeconds: 10
           periodSeconds: 5
@@ -75,7 +89,7 @@ spec:
   type: ClusterIP
   ports:
   - port: 80
-    targetPort: <%= port || 3000 %>
+    targetPort: <%= containerPort %>
     protocol: TCP
     name: http
   selector:
