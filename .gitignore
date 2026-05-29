@@ -151,3 +151,4 @@ oclif.manifest.json
 
 # Example app dependencies — each example is a standalone project
 examples/**/node_modules/
+docs/.DS_Store
