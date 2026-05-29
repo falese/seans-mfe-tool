@@ -272,6 +272,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-041 | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Accepted |
 | ADR-042 | MFE Lifecycle State Machine | Runtime lifecycle | Accepted |
 | ADR-043 | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Accepted |
+| ADR-044 | Production Container Hardening for Generated MFEs | Docker / deploy / security | Accepted |
 
 ---
 
