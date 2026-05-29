@@ -482,6 +482,43 @@ export async function renderTemplate(
 }
 
 /**
+ * Detect whether a domain capability is already realized in code.
+ *
+ * `remote:generate` should scaffold a capability's feature stub only when it
+ * has not been implemented yet, and otherwise leave the file untouched. The
+ * signal is the presence of an exported symbol matching the capability name in
+ * its own feature file:
+ *   - React:   `export const <Name>` / `function` / `class` / `default <Name>`
+ *   - Angular: `export class <Name>Component`
+ *
+ * Note: the generated stub already exports `<Name>`, so a capability counts as
+ * "implemented" from the moment its file exists — which is the intended
+ * hands-off behavior (features are user-owned once created). A missing file
+ * means the capability has not been generated yet → returns false.
+ */
+export async function capabilityImplemented(
+  componentFilePath: string,
+  name: string,
+  variant: 'react-rspack' | 'angular-webpack',
+): Promise<boolean> {
+  if (!(await fs.pathExists(componentFilePath))) return false;
+  const content = await fs.readFile(componentFilePath, 'utf8');
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns =
+    variant === 'angular-webpack'
+      ? [new RegExp(`export\\s+(?:default\\s+)?class\\s+${esc}(?:Component)?\\b`)]
+      : [
+          // export const/let/var/function/class/default <Name>
+          new RegExp(`export\\s+(?:default\\s+)?(?:const|let|var|function|class)\\s+${esc}\\b`),
+          // export default <Name>
+          new RegExp(`export\\s+default\\s+${esc}\\b`),
+          // export { ... <Name> ... }
+          new RegExp(`export\\s*\\{[^}]*\\b${esc}\\b[^}]*\\}`),
+        ];
+  return patterns.some((re) => re.test(content));
+}
+
+/**
  * Write generated files to disk
  */
 export async function writeGeneratedFiles(
@@ -556,11 +593,16 @@ export function parseHandlerSource(
 /**
  * Generate all files (features, platform, BFF, configs) for a manifest
  */
+export interface GenerateAllFilesResult {
+  files: GeneratedFile[];
+  preservedCapabilities: string[];
+}
+
 export async function generateAllFiles(
   manifest: DSLManifest,
   basePath: string,
   options: { force?: boolean; dryRun?: boolean } = {}
-): Promise<GeneratedFile[]> {
+): Promise<GenerateAllFilesResult> {
   // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
@@ -681,6 +723,9 @@ export async function generateAllFiles(
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test
   const domainCapabilities: string[] = [];
+  // Capabilities already realized in code — their stubs are not re-emitted so
+  // user implementations survive a re-run (no --force footgun for features).
+  const preservedCapabilities: string[] = [];
   // Ensure capabilities array exists and is iterable
   const capabilitiesArray = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
 
@@ -711,6 +756,14 @@ export async function generateAllFiles(
               specTpl: 'feature.test.tsx.ejs',
             };
 
+      // If the capability is already implemented in its feature file, leave it
+      // (and its index/test) untouched — even under --force, since this is user
+      // code, not regenerable scaffolding.
+      if (await capabilityImplemented(path.join(featurePath, featureSpec.componentFile), name, templateVariant)) {
+        preservedCapabilities.push(name);
+        continue;
+      }
+
       // Feature component
       files.push({
         path: path.join(featurePath, featureSpec.componentFile),
@@ -734,6 +787,13 @@ export async function generateAllFiles(
       });
     }
   }
+  if (preservedCapabilities.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Preserved (already implemented): ${preservedCapabilities.join(', ')}`,
+    );
+  }
+
   // Remote entrypoint exports all domain capabilities
   const remoteEntry =
     templateVariant === 'angular-webpack'
@@ -1043,5 +1103,5 @@ export async function generateAllFiles(
     );
   }
 
-  return files;
+  return { files, preservedCapabilities };
 }

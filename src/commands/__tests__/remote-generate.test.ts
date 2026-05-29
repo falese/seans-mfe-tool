@@ -86,10 +86,13 @@ describe('remote:generate Command', () => {
       errors: []
     });
     
-    mockGenerateAllFiles.mockResolvedValue([
-      { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
-      { path: '/test/src/remote.tsx', content: 'exports', overwrite: true }
-    ]);
+    mockGenerateAllFiles.mockResolvedValue({
+      files: [
+        { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
+        { path: '/test/src/remote.tsx', content: 'exports', overwrite: true },
+      ],
+      preservedCapabilities: [],
+    });
     
     mockWriteFiles.mockResolvedValue({
       files: [{ path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }],
