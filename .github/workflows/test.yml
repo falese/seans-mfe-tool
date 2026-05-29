@@ -12,7 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        # Node 18 is EOL; test on supported LTS lines.
+        node-version: [20.x, 22.x]
 
     permissions:
       pull-requests: write
@@ -194,3 +195,32 @@ jobs:
       - name: Build example
         run: npm run build
         working-directory: ${{ matrix.example.dir }}
+
+  quality:
+    # Enforce the same gates required before commit (CLAUDE.md): lint,
+    # typecheck, full build, and schema drift.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Check generated schemas are committed
+        run: git diff --exit-code schemas/
