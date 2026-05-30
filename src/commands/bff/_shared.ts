@@ -190,8 +190,6 @@ export async function addMeshDependencies(targetDir: string): Promise<void> {
   const pkg: PackageJson = await fs.readJson(pkgPath);
 
   pkg.dependencies = pkg.dependencies || {};
-  pkg.dependencies['@graphql-mesh/cli'] = '^0.100.21';
-  pkg.dependencies['@graphql-mesh/openapi'] = '^0.109.26';
   pkg.dependencies['@graphql-mesh/serve-runtime'] = '^1.2.4';
   pkg.dependencies['@graphql-tools/delegate'] = '^10.2.4';
   pkg.dependencies['@graphql-tools/utils'] = '^9.2.1';
@@ -201,6 +199,10 @@ export async function addMeshDependencies(targetDir: string): Promise<void> {
   pkg.dependencies['tslib'] = '^2.6.0';
   pkg.dependencies['cors'] = pkg.dependencies['cors'] || '^2.8.5';
   pkg.dependencies['helmet'] = pkg.dependencies['helmet'] || '^8.1.0';
+
+  pkg.devDependencies = pkg.devDependencies || {};
+  pkg.devDependencies['@graphql-mesh/cli'] = '^0.100.21';
+  pkg.devDependencies['@graphql-mesh/openapi'] = '^0.109.26';
 
   pkg.scripts = pkg.scripts || {};
   pkg.scripts['mesh:build'] = 'mesh build';

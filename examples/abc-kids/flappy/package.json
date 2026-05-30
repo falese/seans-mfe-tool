@@ -15,8 +15,6 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "@graphql-mesh/cli": "^0.100.21",
-    "@graphql-mesh/openapi": "^0.109.26",
     "@graphql-mesh/serve-runtime": "^1.2.4",
     "@graphql-tools/delegate": "^10.2.4",
     "@graphql-tools/utils": "^9.2.1",
@@ -37,6 +35,8 @@
     "@emotion/styled": "^11.11.0"
   },
   "devDependencies": {
+    "@graphql-mesh/cli": "^0.100.21",
+    "@graphql-mesh/openapi": "^0.109.26",
     "@seans-mfe-tool/runtime": "^0.1.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

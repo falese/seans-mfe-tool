@@ -30,14 +30,16 @@ RUN npm install --legacy-peer-deps --no-audit --no-fund
 # Copy source files
 COPY . .
 
-# Build MFE static assets (rspack + seans-mfe-tool remote:generate).
+# Build MFE static assets (rspack/webpack + seans-mfe-tool remote:generate).
 RUN npm run build
 
 # Build GraphQL Mesh artifacts (.mesh/ directory).
 # createBuiltMeshHTTPHandler reads from .mesh/ at server startup — this step
 # must run after COPY so specs/ and .meshrc.yaml are present in the build context.
+# Runs unconditionally: for standalone BFF this is the only mesh build step;
+# for combined MFE+BFF the npm run build above may already run it, but an
+# explicit layer here makes the Mesh build visible and guarantees .mesh/ exists.
 RUN npx mesh build
-
 # Compile TypeScript server entry point.
 RUN npm run build:server
 
