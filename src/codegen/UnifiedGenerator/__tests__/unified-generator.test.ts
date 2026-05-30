@@ -294,19 +294,19 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify handler instantiation
-    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();');
-    
-    // Verify context injection pattern (NOT the old middleware pattern)
-    expect(serverTs?.content).toContain('app.use(\'/graphql\', (req: Request, res: Response) => {');
-    expect(serverTs?.content).toContain('const context: MeshContext = {');
-    expect(serverTs?.content).toContain('const requestWithContext = Object.assign(req, { context });');
-    expect(serverTs?.content).toContain('return meshHandler(requestWithContext as any, res as any, context);');
-    
-    // Verify OLD broken pattern is NOT present
+    // Verify handler instantiation — ADR-027: context factory pattern, not 3-arg call
+    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({');
+    expect(serverTs?.content).toContain('context: (req: Request) => ({');
+
+    // Verify direct middleware registration (no wrapper function needed)
+    expect(serverTs?.content).toContain('app.use(\'/graphql\', meshHandler);');
+
+    // Verify OLD broken patterns are NOT present (replaced in ADR-027 fix)
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
     expect(serverTs?.content).not.toContain('next();');
+    expect(serverTs?.content).not.toContain('requestWithContext as any, res as any, context');
+    expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>();');
     
     // Verify JWT extraction helper
     expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');

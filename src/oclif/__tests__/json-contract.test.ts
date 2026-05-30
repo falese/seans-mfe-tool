@@ -198,11 +198,12 @@ describe('JSON contract: typed error exit codes', () => {
   });
 
   it('SystemError → exit 69, error.type=system', async () => {
-    // bff:init with a name from a dir where templates/bff is absent → SystemError
+    // bff:validate with a non-existent manifest path → SystemError("Manifest not found")
+    // Fast, no npm side effects, reliably triggers the SystemError code path.
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
     try {
       const { stdout, code } = await runCli(
-        ['bff:init', 'test-bff', '--json'],
+        ['bff:validate', '--manifest', 'no-such-manifest.yaml', '--json'],
         { cwd: tmpDir },
       );
       expect(code).toBe(69);
