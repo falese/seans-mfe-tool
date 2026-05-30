@@ -133,6 +133,26 @@ const manifest = {
       "@emotion/react": "^11.11.1",
       "@emotion/styled": "^11.11.0"
     }
+  },
+  "data": {
+    "sources": [
+      {
+        "name": "PetStoreAPI",
+        "handler": {
+          "openapi": {
+            "source": "./specs/petstore.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
+          }
+        }
+      }
+    ],
+    "serve": {
+      "endpoint": "/graphql",
+      "playground": true
+    }
   }
 };
 

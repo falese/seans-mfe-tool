@@ -158,7 +158,26 @@ describe('BaseMFE.doQuery() — default BFF dispatch', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://env-bff/graphql', expect.anything());
   });
 
-  it('falls back to manifest data.serve.endpoint when no env var', async () => {
+  it('derives absolute URL from manifest.endpoint + data.serve.endpoint', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: {} }),
+    });
+
+    const manifestWithEndpoint = {
+      ...BASE_MANIFEST,
+      endpoint: 'http://localhost:3001',
+      data: { sources: [], serve: { endpoint: '/graphql', playground: true } },
+    };
+
+    const mfe = new TestMFE(manifestWithEndpoint as unknown as typeof BASE_MANIFEST);
+    const ctx = makeContext({ document: '{ hello }' });
+    await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/graphql', expect.anything());
+  });
+
+  it('falls back to manifest data.serve.endpoint (relative) when no endpoint field', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ data: {} }),
@@ -174,6 +193,22 @@ describe('BaseMFE.doQuery() — default BFF dispatch', () => {
     await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
 
     expect(fetchMock).toHaveBeenCalledWith('/api/graphql', expect.anything());
+  });
+
+  it('context.inputs.bffUrl takes priority over everything else', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { pets: [] } }),
+    });
+
+    const mfe = new TestMFE(BASE_MANIFEST, { bffUrl: 'http://wrong-url/graphql' });
+    const ctx = makeContext({
+      document: '{ listPets { id } }',
+      bffUrl: 'http://localhost:3001/graphql',
+    });
+    await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/graphql', expect.anything());
   });
 
   it('falls back to /graphql when nothing else is configured', async () => {

@@ -846,7 +846,7 @@ export abstract class BaseMFE {
    *   }
    */
   protected async doQuery(context: Context): Promise<QueryResult> {
-    const inputs = (context.inputs ?? {}) as Partial<QueryInput>;
+    const inputs = (context.inputs ?? {}) as Partial<QueryInput> & { bffUrl?: string };
 
     if (!inputs.document) {
       throw new RuntimeValidationError(
@@ -856,10 +856,22 @@ export abstract class BaseMFE {
       );
     }
 
+    // URL resolution order:
+    //   1. context.inputs.bffUrl  — caller override (e.g. shell passing the remote's absolute URL)
+    //   2. deps.bffUrl            — constructor injection
+    //   3. BFF_URL env var        — runtime configuration
+    //   4. manifest.endpoint + manifest.data.serve.endpoint — self-describing manifest
+    //   5. manifest.data.serve.endpoint alone (relative path)
+    //   6. '/graphql' fallback
+    const m = this.manifest as { endpoint?: string; data?: { serve?: { endpoint?: string } } };
+    const servePath = m.data?.serve?.endpoint ?? '/graphql';
+    const derivedUrl = m.endpoint ? `${m.endpoint}${servePath}` : servePath;
+
     const bffUrl =
+      inputs.bffUrl ??
       this.deps.bffUrl ??
       (typeof process !== 'undefined' ? process.env['BFF_URL'] : undefined) ??
-      ((this.manifest as { data?: { serve?: { endpoint?: string } } }).data?.serve?.endpoint ?? '/graphql');
+      derivedUrl;
 
     const authHeaders: Record<string, string> = context.jwt
       ? { Authorization: `Bearer ${context.jwt}` }

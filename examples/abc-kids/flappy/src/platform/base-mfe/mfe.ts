@@ -4,8 +4,10 @@ import {
   RemoteMFE,
   type Context,
   type LoadResult,
+  type QueryResult,
   type RenderResult,
 } from '@seans-mfe-tool/runtime';
+import { query as bffQuery } from '../bff/bff';
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
@@ -108,6 +110,32 @@ export class abckidsflappyMFE extends RemoteMFE {
     const result = await super.doRender(context);
     console.log('[abckidsflappyMFE][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
+  }
+
+  /**
+   * doQuery — typed override using the generated BFF connector.
+   *
+   * The shell calls mfe.query({ inputs: { document, variables } }) and this
+   * dispatches to the PetStore GraphQL BFF at http://localhost:3001/graphql.
+   * The base class resolves the URL from manifest.endpoint + data.serve.endpoint
+   * automatically, so no bffUrl injection is needed.
+   *
+   * For callers on a different origin, pass inputs.bffUrl to override.
+   */
+  protected override async doQuery(context: Context): Promise<QueryResult> {
+    const { document, variables } = (context.inputs ?? {}) as {
+      document: string;
+      variables?: Record<string, unknown>;
+    };
+    try {
+      const data = await bffQuery(document, variables, {
+        ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
+        ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
+      });
+      return { data };
+    } catch (err) {
+      return { data: null, errors: [{ message: (err as Error).message }] };
+    }
   }
 
   // ---------------------------------------------------------------------------

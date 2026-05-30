@@ -160,6 +160,14 @@ export interface QueryInput {
   document: string;
   /** GraphQL variables */
   variables?: Record<string, unknown>;
+  /**
+   * Caller-supplied BFF URL override — takes priority over all manifest/env defaults.
+   * Use this when the shell knows the remote's absolute BFF endpoint
+   * (e.g. 'http://localhost:3001/graphql') but the MFE's manifest has only a
+   * relative serve.endpoint path. Omit when the manifest's `endpoint` field provides
+   * the full origin already.
+   */
+  bffUrl?: string;
 }
 
 /**

@@ -1,7 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import PetsIcon from '@mui/icons-material/Pets';
 import { GameMeta } from '../App';
+
+// Minimal type for a pet returned by the PetStore BFF
+interface Pet { id: string; name: string; status?: string; }
 
 interface GameLauncherProps {
   game: GameMeta;
@@ -12,6 +16,7 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
   const containerId = `mfe-game-${game.id}`;
 
   // Escape key handler
@@ -65,6 +70,27 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
         });
 
         if (!cancelled) setIsLoading(false);
+
+        // Exercise BaseMFE.query() from the shell — only for flappy, which
+        // has a PetStore BFF. The shell passes the full BFF URL as
+        // context.inputs.bffUrl so the base class doesn't need to derive it
+        // from a relative serve.endpoint.
+        if (game.id === 'flappy' && !cancelled) {
+          try {
+            const queryResult = await mfe.query({
+              requestId: `query-pets-${Date.now()}`,
+              timestamp: new Date(),
+              inputs: {
+                document: `query ListPets { listPets { id name status } }`,
+                bffUrl: 'http://localhost:3001/graphql',
+              },
+            });
+            const fetched = (queryResult.data as { listPets?: Pet[] })?.listPets ?? [];
+            if (!cancelled) setPets(fetched);
+          } catch {
+            // BFF not running in dev — pet panel stays empty, game still works
+          }
+        }
       } catch (err) {
         if (!cancelled) {
           console.error(`[GameLauncher] Failed to render ${game.id}:`, err);
@@ -107,9 +133,27 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
             borderBottom: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <Typography variant="h6" sx={{ color: '#FFD700' }}>
-            {game.emoji}&nbsp;&nbsp;{game.title}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h6" sx={{ color: '#FFD700' }}>
+              {game.emoji}&nbsp;&nbsp;{game.title}
+            </Typography>
+            {/* Pet count badge — populated by mfe.query() via PetStore BFF */}
+            {pets.length > 0 && (
+              <Chip
+                icon={<PetsIcon sx={{ fontSize: 14 }} />}
+                label={`${pets.length} pet${pets.length !== 1 ? 's' : ''}`}
+                size="small"
+                title={pets.map(p => p.name).join(', ')}
+                sx={{
+                  bgcolor: 'rgba(255, 215, 0, 0.15)',
+                  color: '#FFD700',
+                  border: '1px solid rgba(255, 215, 0, 0.4)',
+                  fontSize: 11,
+                  cursor: 'default',
+                }}
+              />
+            )}
+          </Box>
           <IconButton
             onClick={onClose}
             size="small"
