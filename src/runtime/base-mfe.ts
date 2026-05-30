@@ -11,7 +11,9 @@
 
 import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
 import { Context, UserContext, TelemetryEvent } from './context';
+import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
+import { ValidationError as RuntimeValidationError } from './errors/ValidationError';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -59,6 +61,8 @@ export interface BaseMFEDependencies {
   errorHandler?: ErrorHandler;
   /** graphql-transport-ws connection to the daemon, shared with the Renderer's messages subscription */
   wsClient?: DaemonWebSocketClient;
+  /** BFF GraphQL endpoint URL used by the default doQuery() implementation */
+  bffUrl?: string;
 }
 
 // =============================================================================
@@ -825,9 +829,62 @@ export abstract class BaseMFE {
   protected abstract doSchema(context: Context): Promise<SchemaResult>;
   
   /**
-   * Implement query execution logic for this MFE
+   * Execute a GraphQL query against this MFE's BFF endpoint.
+   *
+   * Default implementation dispatches `context.inputs.document` + `context.inputs.variables`
+   * to the BFF URL resolved in order: deps.bffUrl → BFF_URL env var →
+   * manifest.data.serve.endpoint → '/graphql'.
+   *
+   * Override in concrete subclasses for typed, operation-specific queries:
+   *
+   *   protected async doQuery(context: Context): Promise<QueryResult> {
+   *     const { document, variables } = context.inputs as QueryInput;
+   *     const data = await bffQuery(document, variables, {
+   *       ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
+   *     });
+   *     return { data };
+   *   }
    */
-  protected abstract doQuery(context: Context): Promise<QueryResult>;
+  protected async doQuery(context: Context): Promise<QueryResult> {
+    const inputs = (context.inputs ?? {}) as Partial<QueryInput>;
+
+    if (!inputs.document) {
+      throw new RuntimeValidationError(
+        'context.inputs.document is required for the query capability',
+        'context.inputs.document',
+        'required',
+      );
+    }
+
+    const bffUrl =
+      this.deps.bffUrl ??
+      (typeof process !== 'undefined' ? process.env['BFF_URL'] : undefined) ??
+      ((this.manifest as { data?: { serve?: { endpoint?: string } } }).data?.serve?.endpoint ?? '/graphql');
+
+    const authHeaders: Record<string, string> = context.jwt
+      ? { Authorization: `Bearer ${context.jwt}` }
+      : {};
+
+    const response = await fetch(bffUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(context.headers ?? {}),
+        ...authHeaders,
+      },
+      body: JSON.stringify({ query: inputs.document, variables: inputs.variables }),
+    });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        errors: [{ message: `BFF request failed: ${response.status} ${response.statusText}` }],
+      };
+    }
+
+    const json = (await response.json()) as { data?: unknown; errors?: Array<{ message: string; path?: string[] }> };
+    return { data: json.data ?? null, errors: json.errors };
+  }
   
   /**
    * Implement telemetry emission logic for this MFE

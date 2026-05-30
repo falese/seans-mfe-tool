@@ -95,15 +95,6 @@ describe('integration: BFF workflow', () => {
   });
 
   describe('bff:init', () => {
-    // The standalone-init code path resolves its template directory relative to
-    // __dirname assuming a `dist/commands/bff/` layout that doesn't match either
-    // ts-jest's `src/` resolution OR the npm-published tarball's `files` list —
-    // see bff/init.ts. Until that path resolution is straightened out and the
-    // package.json.ejs template is reconciled with the TemplateVars actually
-    // supplied by bffInitCommand (it currently references `dependencyVersions`,
-    // `meshPlugins`, and `meshTransforms` which are never set), the standalone
-    // path can't run end-to-end. We still exercise the failure paths that don't
-    // depend on the template tree.
     it('rejects "add to existing" mode when there is no manifest in cwd', async () => {
       // workspace is empty — no mfe-manifest.yaml present.
       await expect(bffInitCommand(undefined, { port: 4400 })).rejects.toThrow(
@@ -114,12 +105,28 @@ describe('integration: BFF workflow', () => {
       expect(execSyncMock).not.toHaveBeenCalled();
     });
 
-    it('surfaces a SystemError when the BFF template directory cannot be located', async () => {
-      await expect(bffInitCommand('any_name', { port: 4401 })).rejects.toThrow(
-        /BFF template directory not found/i,
-      );
+    it('scaffolds a standalone BFF project and invokes npm install', async () => {
+      const result = await bffInitCommand('my_bff', { port: 4401 });
 
-      // The command must fail BEFORE shelling out to npm install.
+      expect(result.name).toBe('my_bff');
+      expect(result.port).toBe(4401);
+      expect(result.dryRun).toBe(false);
+      expect(result.generatedFiles.length).toBeGreaterThan(0);
+
+      // npm install must be invoked exactly once after scaffolding.
+      const installCalls = execSyncMock.mock.calls.filter(([cmd]) =>
+        String(cmd).includes('npm install'),
+      );
+      expect(installCalls).toHaveLength(1);
+    });
+
+    it('dry-run returns planned changes without writing files or invoking npm', async () => {
+      const result = await bffInitCommand('dry_bff', { port: 4402, dryRun: true });
+
+      expect(result.dryRun).toBe(true);
+      expect(result.generatedFiles).toEqual([]);
+      expect(result.plannedChanges).toBeDefined();
+      expect(result.plannedChanges!.length).toBeGreaterThan(0);
       expect(execSyncMock).not.toHaveBeenCalled();
     });
   });
