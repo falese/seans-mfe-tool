@@ -6,6 +6,7 @@ import type { Context, LoadResult, RenderResult } from '@seans-mfe-tool/runtime'
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
 
+
 /**
  * abckidsmultiplicationquizMFE
  * @description Multiplication Quiz — a cat and a dog take turns asking multiplication questions!

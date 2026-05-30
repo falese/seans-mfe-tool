@@ -58,11 +58,17 @@
     "@seans-mfe-tool/runtime": "^0.1.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "<%= dependencyVersions.buildTools.typesJest %>",
     "@types/node": "^20.10.0",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@rspack/cli": "<%= dependencyVersions.buildTools.rspackCli %>",
     "@rspack/core": "<%= dependencyVersions.buildTools.rspackCore %>",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "jest-environment-jsdom": "<%= dependencyVersions.buildTools.jestEnvJsdom %>",
+    "ts-jest": "<%= dependencyVersions.buildTools.tsJest %>",
     "typescript": "<%= dependencyVersions.buildTools.typescript %>",
     "ts-node": "<%= dependencyVersions.buildTools.tsNode %>",
     "concurrently": "<%= dependencyVersions.buildTools.concurrently %>",
@@ -70,6 +76,17 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["@testing-library/jest-dom"],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js"
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+    }
   },
   "engines": {
     "node": ">=18.0.0"

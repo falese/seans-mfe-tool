@@ -674,7 +674,7 @@ export class AngularRemoteMFE extends BaseMFE {
     };
   }
 
-  protected async doQuery(context: Context): Promise<QueryResult> {
+  protected override async doQuery(context: Context): Promise<QueryResult> {
     void context;
     throw new Error('Query not supported for remote MFE type');
   }

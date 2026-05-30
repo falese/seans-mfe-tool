@@ -645,7 +645,7 @@ export class RemoteMFE extends BaseMFE {
     };
   }
 
-  protected async doQuery(context: Context): Promise<QueryResult> {
+  protected override async doQuery(context: Context): Promise<QueryResult> {
     throw new Error('Query not supported for remote MFE type');
   }
 

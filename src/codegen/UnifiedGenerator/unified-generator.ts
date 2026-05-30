@@ -87,6 +87,9 @@ export const DEPENDENCY_VERSIONS = {
     tsNode: '^10.9.1',
     concurrently: '^8.2.0',
     serve: '^14.2.1',
+    tsJest: '^29.2.0',
+    jestEnvJsdom: '^29.7.0',
+    typesJest: '^29.5.0',
   },
 
   // Angular 17+ (Module Federation - Singleton + strictVersion)
@@ -467,6 +470,9 @@ export function extractManifestVars(manifest: DSLManifest) {
       filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
       customTransforms: (manifest as any).transforms || [],
     },
+
+    // BFF endpoint for the client-side connector template (bff.ts.ejs)
+    bffEndpoint: (manifest as any).data?.serve?.endpoint ?? '/graphql',
   };
 }
 
@@ -1102,6 +1108,13 @@ export async function generateAllFiles(
       `[unified-generator] WARNING: Missing template for public/favicon.ico: ${faviconTemplatePath}`
     );
   }
+
+  // Jest static-asset mock — required by the moduleNameMapper in the generated jest config
+  files.push({
+    path: path.join(basePath, '__mocks__', 'fileMock.js'),
+    content: 'module.exports = "test-file-stub";\n',
+    overwrite: false,
+  });
 
   return { files, preservedCapabilities };
 }

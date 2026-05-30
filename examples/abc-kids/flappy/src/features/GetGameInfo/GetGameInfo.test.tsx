@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 /**
  * GetGameInfo Feature Tests
  */
@@ -18,10 +19,13 @@ const renderWithTheme = (component: React.ReactElement) => {
 };
 
 describe('GetGameInfo', () => {
-  it('renders without crashing', () => {
+  it('renders the game title', () => {
     renderWithTheme(<GetGameInfo />);
-    expect(screen.getByText('GetGameInfo')).toBeInTheDocument();
+    expect(screen.getByText('Flappy Bird')).toBeInTheDocument();
   });
 
-  // TODO: Add more tests based on capability inputs/outputs
+  it('renders age rating', () => {
+    renderWithTheme(<GetGameInfo />);
+    expect(screen.getByText(/Ages 4/)).toBeInTheDocument();
+  });
 });

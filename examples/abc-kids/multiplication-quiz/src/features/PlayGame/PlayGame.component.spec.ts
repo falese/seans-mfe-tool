@@ -18,10 +18,10 @@ describe('PlayGameComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders without crashing', () => {
+  it('renders the quiz layout', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h2')?.textContent).toContain('PlayGame');
+    expect(compiled.querySelector('.quiz-wrap')).not.toBeNull();
   });
 
   // TODO: Add more tests based on capability inputs/outputs
