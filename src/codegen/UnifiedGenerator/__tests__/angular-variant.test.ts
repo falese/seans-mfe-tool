@@ -122,8 +122,13 @@ describe('unified-generator angular-webpack variant', () => {
 
     expect(pkg).toBeDefined();
     expect(pkg!.content).toContain('"@angular/core"');
-    // Pinned so jest-preset-angular's peer resolves to Angular 17 (not 19+) — avoids ERESOLVE.
-    expect(pkg!.content).toContain('"@angular/platform-browser-dynamic"');
+    expect(pkg!.content).toContain('"@angular/platform-browser"');
+    // platform-browser-dynamic is the old JIT bootstrap API — not used; bootstrapApplication
+    // (from platform-browser) is used instead via AngularRemoteMFE.
+    expect(pkg!.content).not.toContain('"@angular/platform-browser-dynamic"');
+    // mesh CLI is a build tool — must be in devDependencies
+    expect(pkg!.content).toContain('"@graphql-mesh/cli"');
+    expect(pkg!.content).not.toContain('"dependencies":\n    "@graphql-mesh/cli"');
     expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
     expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
     expect(pkg!.content).toContain('"@angular-architects/module-federation"');
