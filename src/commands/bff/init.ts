@@ -31,14 +31,10 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log(chalk.blue(`Creating BFF project "${name}"...`));
     }
 
-    const templateDir = path.resolve(__dirname, '..', '..', '..', '..', 'packages', 'bff-plugin', 'templates');
+    const templateDir = path.resolve(__dirname, '..', '..', '..', 'packages', 'bff-plugin', 'templates');
 
     if (!await fs.pathExists(templateDir)) {
       throw new SystemError(`BFF template directory not found: ${templateDir}`);
-    }
-
-    if (!isAddToExisting) {
-      await fs.ensureDir(targetDir);
     }
 
     const port = options.port || 3000;
@@ -61,8 +57,40 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       sources,
       transforms: [],
       plugins: [],
-      playground: true
+      playground: true,
+      bffEndpoint: '/graphql',
     };
+
+    if (options.dryRun) {
+      const plannedChanges: PlannedChange[] = [
+        { op: 'create', target: 'server.ts', detail: 'Express + Mesh server' },
+        { op: 'create', target: 'Dockerfile', detail: 'Production container' },
+        { op: 'create', target: 'docker-compose.yaml', detail: 'Local dev setup' },
+        { op: 'create', target: 'specs/', detail: 'OpenAPI specs directory' },
+        ...(isAddToExisting
+          ? [{ op: 'overwrite' as const, target: 'package.json', detail: 'Add Mesh dependencies' }]
+          : [
+              { op: 'create' as const, target: 'mfe-manifest.yaml', detail: 'DSL config' },
+              { op: 'create' as const, target: 'package.json', detail: 'Mesh dependencies' },
+            ]),
+      ];
+      console.log(chalk.yellow('\n[DRY RUN] Would create:'));
+      for (const c of plannedChanges) {
+        console.log(`  ${c.op} ${c.target}${c.detail ? ` — ${c.detail}` : ''}`);
+      }
+      return {
+        name: name || path.basename(targetDir),
+        port,
+        sources: sources.map((s) => s.spec),
+        generatedFiles: [],
+        dryRun: true,
+        plannedChanges,
+      };
+    }
+
+    if (!isAddToExisting) {
+      await fs.ensureDir(targetDir);
+    }
 
     console.log(chalk.blue('\nGenerating BFF files...'));
 
