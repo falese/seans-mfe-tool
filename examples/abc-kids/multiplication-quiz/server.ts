@@ -8,7 +8,8 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-import type { Request, Response, NextFunction, Express } from 'express';
+import { createBuiltMeshHTTPHandler } from './.mesh';
+import type { Request, Response, Express } from 'express';
 import crypto from 'crypto';
 
 const app: Express = express();
@@ -53,8 +54,22 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-// Following ADR-062: createBuiltMeshHTTPHandler pattern
+// Following ADR-027: createBuiltMeshHTTPHandler with context factory pattern
+interface MeshContext {
+  jwt?: string;
+  requestId: string;
+  userId?: string;
+}
 
+const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({
+  context: (req: Request) => ({
+    jwt: req.headers.authorization?.replace('Bearer ', ''),
+    requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
+    userId: extractUserIdFromToken(req.headers.authorization as string),
+  }),
+});
+
+app.use('/graphql', meshHandler);
 
 
 // Static MFE assets
@@ -88,7 +103,7 @@ function extractUserIdFromToken(authHeader?: string): string | undefined {
   }
 }
 
-const port = process.env.PORT || 3003;
+const port = process.env.PORT || 4003;
 
 app.listen(port, () => {
   console.log(`🚀 abc-kids-multiplication-quiz BFF server running on port ${port}`);

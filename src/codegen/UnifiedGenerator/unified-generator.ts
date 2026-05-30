@@ -473,6 +473,10 @@ export function extractManifestVars(manifest: DSLManifest) {
 
     // BFF endpoint for the client-side connector template (bff.ts.ejs)
     bffEndpoint: (manifest as any).data?.serve?.endpoint ?? '/graphql',
+
+    // True when the manifest declares a data: section — gates doQuery() generation
+    // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
+    hasBff: !!((manifest as any).data),
   };
 }
 

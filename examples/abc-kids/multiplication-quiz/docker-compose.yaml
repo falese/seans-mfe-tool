@@ -7,8 +7,8 @@ version: '3.8'
 services:
   abc-kids-multiplication-quiz:
     build:
-      context: ../../..
-      dockerfile: examples/abc-kids/multiplication-quiz/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "4003:4003"
     environment:
