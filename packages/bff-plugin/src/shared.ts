@@ -104,6 +104,13 @@ export interface TemplateVars {
   transforms: MeshTransform[];
   plugins: MeshPlugin[];
   playground: boolean;
+  bffEndpoint: string;
+  /** Passed to package.json.ejs for versioned dependency strings (from DEPENDENCY_VERSIONS) */
+  dependencyVersions: Record<string, unknown>;
+  /** Passed to package.json.ejs / meshrc.yaml.ejs for plugin config */
+  meshPlugins: Record<string, unknown>;
+  /** Passed to package.json.ejs / meshrc.yaml.ejs for transform config */
+  meshTransforms: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -174,12 +181,17 @@ export async function addMeshDependencies(targetDir: string): Promise<void> {
   const pkg: PackageJson = await fs.readJson(pkgPath);
 
   pkg.dependencies = pkg.dependencies || {};
-  pkg.dependencies['@graphql-mesh/cli'] = '^0.100.0';
-  pkg.dependencies['@graphql-mesh/openapi'] = '^1.0.0';
-  pkg.dependencies['@graphql-mesh/plugin-response-cache'] = '^0.104.0';
+  pkg.dependencies['@graphql-mesh/cli'] = '^0.100.21';
+  pkg.dependencies['@graphql-mesh/openapi'] = '^0.109.26';
+  pkg.dependencies['@graphql-mesh/serve-runtime'] = '^1.2.4';
+  pkg.dependencies['@graphql-tools/delegate'] = '^10.2.4';
+  pkg.dependencies['@graphql-tools/utils'] = '^9.2.1';
+  pkg.dependencies['@graphql-tools/wrap'] = '^10.0.5';
+  pkg.dependencies['@graphql-mesh/plugin-response-cache'] = '^0.104.20';
   pkg.dependencies['graphql'] = '^16.8.1';
+  pkg.dependencies['tslib'] = '^2.6.0';
   pkg.dependencies['cors'] = pkg.dependencies['cors'] || '^2.8.5';
-  pkg.dependencies['helmet'] = pkg.dependencies['helmet'] || '^7.1.0';
+  pkg.dependencies['helmet'] = pkg.dependencies['helmet'] || '^8.1.0';
 
   pkg.scripts = pkg.scripts || {};
   pkg.scripts['mesh:build'] = 'mesh build';

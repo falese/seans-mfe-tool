@@ -745,12 +745,17 @@ describe('BFF Commands', () => {
         '/target/dir/package.json',
         expect.objectContaining({
           dependencies: expect.objectContaining({
-            '@graphql-mesh/cli': '^0.100.0',
-            '@graphql-mesh/openapi': '^1.0.0',
-            '@graphql-mesh/plugin-response-cache': '^0.104.0',
+            '@graphql-mesh/cli': '^0.100.21',
+            '@graphql-mesh/openapi': '^0.109.26',
+            '@graphql-mesh/serve-runtime': '^1.2.4',
+            '@graphql-tools/delegate': '^10.2.4',
+            '@graphql-tools/utils': '^9.2.1',
+            '@graphql-tools/wrap': '^10.0.5',
+            '@graphql-mesh/plugin-response-cache': '^0.104.20',
             'graphql': '^16.8.1',
+            'tslib': '^2.6.0',
             'cors': '^2.8.5',
-            'helmet': '^7.1.0'
+            'helmet': '^8.1.0',
           })
         }),
         { spaces: 2 }

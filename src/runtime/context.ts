@@ -151,6 +151,18 @@ export interface TelemetryEvent {
 }
 
 /**
+ * Shape of context.inputs expected by the query capability.
+ * Pass via ContextFactory.create({ inputs: { document, variables } })
+ * or ContextFactory.cloneForCapability(ctx, 'query', { document, variables }).
+ */
+export interface QueryInput {
+  /** GraphQL document string */
+  document: string;
+  /** GraphQL variables */
+  variables?: Record<string, unknown>;
+}
+
+/**
  * Validation error structure
  */
 export interface ValidationError {

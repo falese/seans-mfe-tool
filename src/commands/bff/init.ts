@@ -9,6 +9,7 @@ import { SystemError, ValidationError } from '@seans-mfe/contracts';
 import { addMeshDependencies } from './_shared';
 import type { BFFCommandOptions, TemplateSource, TemplateVars } from './_shared';
 import type { BffInitResult, PlannedChange } from '../../oclif/results';
+import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '../../codegen/UnifiedGenerator/unified-generator';
 
 export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffInitResult> {
   try {
@@ -31,14 +32,11 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log(chalk.blue(`Creating BFF project "${name}"...`));
     }
 
-    const templateDir = path.resolve(__dirname, '..', '..', '..', '..', 'packages', 'bff-plugin', 'templates');
+    // 3 levels up from src/commands/bff/ (or dist/commands/bff/) reaches the project root
+    const templateDir = path.resolve(__dirname, '..', '..', '..', 'packages', 'bff-plugin', 'templates');
 
     if (!await fs.pathExists(templateDir)) {
       throw new SystemError(`BFF template directory not found: ${templateDir}`);
-    }
-
-    if (!isAddToExisting) {
-      await fs.ensureDir(targetDir);
     }
 
     const port = options.port || 3000;
@@ -61,8 +59,52 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       sources,
       transforms: [],
       plugins: [],
-      playground: true
+      playground: true,
+      bffEndpoint: '/graphql',
+      dependencyVersions: DEPENDENCY_VERSIONS,
+      meshPlugins: {
+        responseCache: DEFAULT_MESH_PLUGINS.responseCache,
+        prometheus: null,
+        opentelemetry: null,
+      },
+      meshTransforms: {
+        namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
+        rateLimit: null,
+        filterSchema: null,
+        customTransforms: [],
+      },
     };
+
+    if (options.dryRun) {
+      const plannedChanges: PlannedChange[] = [
+        { op: 'create', target: 'server.ts', detail: 'Express + Mesh server' },
+        { op: 'create', target: 'Dockerfile', detail: 'Production container' },
+        { op: 'create', target: 'docker-compose.yaml', detail: 'Local dev setup' },
+        { op: 'create', target: 'specs/', detail: 'OpenAPI specs directory' },
+        ...(isAddToExisting
+          ? [{ op: 'overwrite' as const, target: 'package.json', detail: 'Add Mesh dependencies' }]
+          : [
+              { op: 'create' as const, target: 'mfe-manifest.yaml', detail: 'DSL config' },
+              { op: 'create' as const, target: 'package.json', detail: 'Mesh dependencies' },
+            ]),
+      ];
+      console.log(chalk.yellow('\n[DRY RUN] Would create:'));
+      for (const c of plannedChanges) {
+        console.log(`  ${c.op} ${c.target}${c.detail ? ` — ${c.detail}` : ''}`);
+      }
+      return {
+        name: name || path.basename(targetDir),
+        port,
+        sources: sources.map((s) => s.spec),
+        generatedFiles: [],
+        dryRun: true,
+        plannedChanges,
+      };
+    }
+
+    if (!isAddToExisting) {
+      await fs.ensureDir(targetDir);
+    }
 
     console.log(chalk.blue('\nGenerating BFF files...'));
 

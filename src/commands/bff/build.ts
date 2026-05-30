@@ -37,8 +37,9 @@ export async function bffBuildCommand(
 
     try {
       execSync('npx mesh build', { cwd: targetDir, stdio: 'inherit', env: { ...process.env } });
-    } catch (meshError: any) {
-      if (meshError.message?.includes('mesh') || meshError.code === 'ENOENT') {
+    } catch (meshError: unknown) {
+      const err = meshError as { message?: string; code?: string };
+      if (err.message?.includes('mesh') || err.code === 'ENOENT') {
         console.log(chalk.yellow('\nGraphQL Mesh CLI not found. Installing...'));
         try {
           execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', {
