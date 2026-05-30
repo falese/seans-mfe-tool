@@ -49,7 +49,7 @@ export const DEPENDENCY_VERSIONS = {
 
   // Mesh Transforms (Schema Manipulation)
   meshTransforms: {
-    namingConvention: '0.105.19',
+    namingConvention: '^0.105.19',
     rateLimit: '^1.0.0',
     filterSchema: '^1.0.0',
     resolversComposition: '^1.0.0',
@@ -90,6 +90,25 @@ export const DEPENDENCY_VERSIONS = {
     tsJest: '^29.2.0',
     jestEnvJsdom: '^29.7.0',
     typesJest: '^29.5.0',
+    jest: '^29.7.0',
+    eslint: '^8.55.0',
+    supertest: '^6.3.3',
+  },
+
+  // Type definitions (shared across React and Angular templates)
+  types: {
+    cors: '^2.8.17',
+    express: '^4.17.21',
+    node: '^20.10.0',
+    react: '^18.0.28',
+    reactDom: '^18.0.11',
+  },
+
+  // React Testing Library
+  testingLibrary: {
+    react: '^14.0.0',
+    jestDom: '^6.4.0',
+    userEvent: '^14.5.0',
   },
 
   // Angular 17+ (Module Federation - Singleton + strictVersion)
@@ -115,6 +134,9 @@ export const DEPENDENCY_VERSIONS = {
     buildAngular: '^17.0.0',
     customWebpack: '^17.0.0',
     moduleFederation: '^17.0.0',
+    // Angular 17 CLI peer-requires TypeScript ~5.2 (incompatible with ^5.3).
+    // Declared separately from buildTools.typescript so the constraint is explicit.
+    typescript: '~5.2.0',
   },
 
   // Jest preset (standalone webpack removed — use Angular's bundled copy).
