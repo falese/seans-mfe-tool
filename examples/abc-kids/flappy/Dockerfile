@@ -30,12 +30,15 @@ RUN npm install --legacy-peer-deps --no-audit --no-fund
 # Copy source files
 COPY . .
 
-# Build MFE static assets.
-# Angular: seans-mfe-tool remote:generate is included in the build script.
-# Mesh build is also included (via shell conditional) when data: is present.
+# Build MFE static assets (rspack + seans-mfe-tool remote:generate).
 RUN npm run build
 
-# Compile TypeScript server
+# Build GraphQL Mesh artifacts (.mesh/ directory).
+# createBuiltMeshHTTPHandler reads from .mesh/ at server startup — this step
+# must run after COPY so specs/ and .meshrc.yaml are present in the build context.
+RUN npx mesh build
+
+# Compile TypeScript server entry point.
 RUN npm run build:server
 
 # Production image
