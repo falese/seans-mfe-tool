@@ -144,6 +144,18 @@ export const DEPENDENCY_VERSIONS = {
     jestPresetAngular: '^14.0.0',
     typesJest: '^29.5.0',
   },
+
+  // npm overrides — force safe versions of packages with known vulnerabilities
+  // in the @graphql-mesh transitive dependency chain.
+  //
+  // fast-uri: GHSA-q3j6-qgpj-74h6 (path traversal) + GHSA-v39h-62p7-jpjc (host confusion)
+  // Affected range: <=3.1.1. Pulled by graphql-jit → fast-json-stringify → fast-uri@^2.
+  // fast-json-stringify@5.x and @6.x both pin ^2, so the only resolution is a forced
+  // override. Tested: npm install succeeds and serves runtime functions correctly with
+  // fast-uri@3.1.2 (the ^3 API is backward-compatible for the subset used by fjs@5).
+  overrides: {
+    fastUri: '^3.1.2',
+  },
 };
 
 /**

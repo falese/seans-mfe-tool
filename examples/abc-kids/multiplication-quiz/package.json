@@ -56,6 +56,9 @@
     "jest-preset-angular": "^14.0.0",
     "supertest": "^6.3.3"
   },
+  "overrides": {
+    "fast-uri": "^3.1.2"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
