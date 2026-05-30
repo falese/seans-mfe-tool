@@ -964,6 +964,8 @@ export async function generateAllFiles(
           { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
           { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
+          { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
+          { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
