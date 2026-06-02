@@ -129,6 +129,7 @@ export class abckidsflappyMFE extends RemoteMFE {
     };
     try {
       const data = await bffQuery(document, variables, {
+        ...(context.headers ?? {}),
         ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
         ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
       });
