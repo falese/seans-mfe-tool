@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Box, Typography, IconButton, CircularProgress, Chip } from '@mui/material';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Box, Typography, IconButton, CircularProgress, Chip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PetsIcon from '@mui/icons-material/Pets';
 import { GameMeta } from '../App';
@@ -17,6 +17,8 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
+  const [bffMode, setBffMode] = useState<'live' | 'mock'>('live');
+  const mfeRef = useRef<any>(null);
   const containerId = `mfe-game-${game.id}`;
 
   // Escape key handler
@@ -25,6 +27,28 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  // Re-usable pet fetch — passes x-bff-mode header so the BFF mock switch (ADR-052)
+  // can return live upstream data or deterministic fixtures from mocks.json.
+  const fetchPets = useCallback(async (mode: 'live' | 'mock') => {
+    const mfe = mfeRef.current;
+    if (!mfe || game.id !== 'flappy') return;
+    try {
+      const queryResult = await mfe.query({
+        requestId: `query-pets-${Date.now()}`,
+        timestamp: new Date(),
+        headers: { 'x-bff-mode': mode },
+        inputs: {
+          document: `query ListPets { listPets { id name status } }`,
+          bffUrl: 'http://localhost:3001/graphql',
+        },
+      });
+      const fetched = (queryResult.data as { listPets?: Pet[] })?.listPets ?? [];
+      setPets(fetched);
+    } catch {
+      // BFF not running in dev — pet panel stays empty, game still works
+    }
+  }, [game.id]);
 
   // MFE render lifecycle
   useEffect(() => {
@@ -49,6 +73,7 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
 
         const { mfe, mfeReady } = remote;
         mfeInstance = mfe;
+        mfeRef.current = mfe;
 
         // Wait for mfe.load() (started in bootstrap) to complete
         await mfeReady;
@@ -69,27 +94,10 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
           },
         });
 
-        if (!cancelled) setIsLoading(false);
-
-        // Exercise BaseMFE.query() from the shell — only for flappy, which
-        // has a PetStore BFF. The shell passes the full BFF URL as
-        // context.inputs.bffUrl so the base class doesn't need to derive it
-        // from a relative serve.endpoint.
-        if (game.id === 'flappy' && !cancelled) {
-          try {
-            const queryResult = await mfe.query({
-              requestId: `query-pets-${Date.now()}`,
-              timestamp: new Date(),
-              inputs: {
-                document: `query ListPets { listPets { id name status } }`,
-                bffUrl: 'http://localhost:3001/graphql',
-              },
-            });
-            const fetched = (queryResult.data as { listPets?: Pet[] })?.listPets ?? [];
-            if (!cancelled) setPets(fetched);
-          } catch {
-            // BFF not running in dev — pet panel stays empty, game still works
-          }
+        if (!cancelled) {
+          setIsLoading(false);
+          // Initial pet fetch uses the current mode (live by default)
+          await fetchPets('live');
         }
       } catch (err) {
         if (!cancelled) {
@@ -102,9 +110,17 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
 
     return () => {
       cancelled = true;
+      mfeRef.current = null;
       mfeInstance?.unmount?.(containerId);
     };
-  }, [game.id, containerId]);
+  }, [game.id, containerId, fetchPets]);
+
+  // Re-fetch pets whenever the Live/Mock toggle changes (only if MFE is ready)
+  useEffect(() => {
+    if (mfeRef.current) {
+      void fetchPets(bffMode);
+    }
+  }, [bffMode, fetchPets]);
 
   return (
     <Box
@@ -152,6 +168,39 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
                   cursor: 'default',
                 }}
               />
+            )}
+            {/* Live/Mock toggle — only for games with a PetStore BFF (ADR-052) */}
+            {game.id === 'flappy' && (
+              <ToggleButtonGroup
+                value={bffMode}
+                exclusive
+                onChange={(_e, val: 'live' | 'mock' | null) => { if (val) setBffMode(val); }}
+                size="small"
+                sx={{ height: 24 }}
+              >
+                <ToggleButton
+                  value="live"
+                  sx={{
+                    color: 'rgba(255,255,255,0.5)',
+                    fontSize: 10, px: 1, py: 0,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    '&.Mui-selected': { color: '#4caf50', borderColor: '#4caf50', bgcolor: 'rgba(76,175,80,0.1)' },
+                  }}
+                >
+                  Live
+                </ToggleButton>
+                <ToggleButton
+                  value="mock"
+                  sx={{
+                    color: 'rgba(255,255,255,0.5)',
+                    fontSize: 10, px: 1, py: 0,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    '&.Mui-selected': { color: '#ff9800', borderColor: '#ff9800', bgcolor: 'rgba(255,152,0,0.1)' },
+                  }}
+                >
+                  Mock
+                </ToggleButton>
+              </ToggleButtonGroup>
             )}
           </Box>
           <IconButton

@@ -4,6 +4,10 @@ info:
   version: 1.0.0
   description: A sample pet store API
 
+servers:
+  - url: https://petstore3.swagger.io/api/v3
+    description: Live Petstore API
+
 paths:
   /pets:
     get:

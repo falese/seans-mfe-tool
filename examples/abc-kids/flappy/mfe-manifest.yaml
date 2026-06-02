@@ -73,6 +73,8 @@ data:
           operationHeaders:
             Authorization: 'Bearer {context.jwt}'
             X-Request-ID: '{context.requestId}'
+  mockSwitch:
+    enabled: true
   serve:
     endpoint: /graphql
     playground: true
