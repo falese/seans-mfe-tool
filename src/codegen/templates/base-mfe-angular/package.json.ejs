@@ -61,6 +61,7 @@
     "@angular-devkit/build-angular": "<%= dependencyVersions.angularBuild.buildAngular %>",
     "@angular/cli": "<%= dependencyVersions.angularBuild.cli %>",
     "@angular/compiler-cli": "<%= dependencyVersions.angular.compilerCli %>",
+    "@angular/platform-browser-dynamic": "<%= dependencyVersions.angular.platformBrowser %>",
     "@types/cors": "<%= dependencyVersions.types.cors %>",
     "@types/express": "<%= dependencyVersions.types.express %>",
     "@types/node": "<%= dependencyVersions.types.node %>",
@@ -75,7 +76,12 @@
     "supertest": "<%= dependencyVersions.buildTools.supertest %>"
   },
   "overrides": {
-    "fast-uri": "<%= dependencyVersions.overrides.fastUri %>"
+    "fast-uri": "<%= dependencyVersions.overrides.fastUri %>",
+    "@angular/common": "<%= dependencyVersions.angular.common %>",
+    "tar": "<%= dependencyVersions.overrides.tar %>",
+    "serialize-javascript": "<%= dependencyVersions.overrides.serializeJavascript %>",
+    "webpack-dev-server": "<%= dependencyVersions.overrides.webpackDevServer %>",
+    "uuid": "<%= dependencyVersions.overrides.uuid %>"
   },
   "engines": {
     "node": ">=18.0.0"

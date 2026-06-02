@@ -123,9 +123,10 @@ describe('unified-generator angular-webpack variant', () => {
     expect(pkg).toBeDefined();
     expect(pkg!.content).toContain('"@angular/core"');
     expect(pkg!.content).toContain('"@angular/platform-browser"');
-    // platform-browser-dynamic is the old JIT bootstrap API — not used; bootstrapApplication
-    // (from platform-browser) is used instead via AngularRemoteMFE.
-    expect(pkg!.content).not.toContain('"@angular/platform-browser-dynamic"');
+    // platform-browser-dynamic is not used at runtime (bootstrapApplication from
+    // platform-browser is), but jest-preset-angular's TestBed requires
+    // @angular/platform-browser-dynamic/testing — so it lives in devDependencies.
+    expect(pkg!.content).toContain('"@angular/platform-browser-dynamic"');
     // mesh CLI is a build tool — must be in devDependencies
     expect(pkg!.content).toContain('"@graphql-mesh/cli"');
     expect(pkg!.content).not.toContain('"dependencies":\n    "@graphql-mesh/cli"');

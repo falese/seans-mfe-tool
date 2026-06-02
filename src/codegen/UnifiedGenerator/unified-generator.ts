@@ -111,32 +111,33 @@ export const DEPENDENCY_VERSIONS = {
     userEvent: '^14.5.0',
   },
 
-  // Angular 17+ (Module Federation - Singleton + strictVersion)
+  // Angular 19+ (Module Federation - Singleton + strictVersion)
+  // Upgraded from ^17.0.0 to ^19.2.16 to resolve five HIGH severity XSS CVEs:
+  //   GHSA-58c5-g7wp-6w37, GHSA-v4hv-rgfq-gp49, GHSA-g93w-mfhg-p222,
+  //   GHSA-prjf-86w9-mfqv (all @angular/common, fixed in 19.2.16+)
+  //   GHSA-jrmj-c5cx-3cw6 (@angular/core + @angular/compiler, fixed in 18.2.15+)
+  // See ADR-051.
   angular: {
-    core: '^17.0.0',
-    common: '^17.0.0',
-    compiler: '^17.0.0',
-    compilerCli: '^17.0.0',
-    platformBrowser: '^17.0.0',
-    forms: '^17.0.0',
+    core: '^19.2.16',
+    common: '^19.2.16',
+    compiler: '^19.2.16',
+    compilerCli: '^19.2.16',
+    platformBrowser: '^19.2.16',
+    forms: '^19.2.16',
     rxjs: '^7.8.0',
     zoneJs: '~0.14.0',
   },
 
   // Angular CLI builder toolchain (angular-webpack variant).
-  // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
-  // merges the Module Federation partial (webpack.config.js).
-  // @angular-architects/module-federation provides withModuleFederationPlugin,
-  // which resolves ModuleFederationPlugin from Angular's bundled webpack —
-  // avoiding the "tap" crash caused by two separate webpack instances.
+  // Versions track Angular major: @angular-builders/custom-webpack@19.0.1 and
+  // @angular-architects/module-federation@19.0.3 for Angular 19 compatibility.
+  // TypeScript bumped from ~5.2.0 to ~5.7.0 — Angular 19 requires >=5.5 <5.9.
   angularBuild: {
-    cli: '^17.0.0',
-    buildAngular: '^17.0.0',
-    customWebpack: '^17.0.0',
-    moduleFederation: '^17.0.0',
-    // Angular 17 CLI peer-requires TypeScript ~5.2 (incompatible with ^5.3).
-    // Declared separately from buildTools.typescript so the constraint is explicit.
-    typescript: '~5.2.0',
+    cli: '^19.2.16',
+    buildAngular: '^19.2.16',
+    customWebpack: '^19.0.1',
+    moduleFederation: '^19.0.3',
+    typescript: '~5.7.0',
   },
 
   // Jest preset (standalone webpack removed — use Angular's bundled copy).
@@ -145,16 +146,31 @@ export const DEPENDENCY_VERSIONS = {
     typesJest: '^29.5.0',
   },
 
-  // npm overrides — force safe versions of packages with known vulnerabilities
-  // in the @graphql-mesh transitive dependency chain.
+  // npm overrides — force safe versions of packages with known vulnerabilities.
+  // Applied selectively: BFF projects get fast-uri; non-BFF projects get uuid.
   //
-  // fast-uri: GHSA-q3j6-qgpj-74h6 (path traversal) + GHSA-v39h-62p7-jpjc (host confusion)
-  // Affected range: <=3.1.1. Pulled by graphql-jit → fast-json-stringify → fast-uri@^2.
-  // fast-json-stringify@5.x and @6.x both pin ^2, so the only resolution is a forced
-  // override. Tested: npm install succeeds and serves runtime functions correctly with
-  // fast-uri@3.1.2 (the ^3 API is backward-compatible for the subset used by fjs@5).
+  // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high, BFF chain)
+  //   graphql-jit → fast-json-stringify → fast-uri@^2; both fjs@5 and @6 pin ^2.
+  //
+  // uuid: GHSA-w5hq-g745-h8pq (moderate, dev-only React chain)
+  //   @rspack/cli → @rspack/dev-server → webpack-dev-server → sockjs → uuid@<11.1.1
+  // npm overrides — force safe versions of transitively-pulled packages with
+  // known CVEs. These are deliberate and minimal; `npm audit fix --force` is
+  // prohibited (it downgrades and introduces its own regression surface).
   overrides: {
+    // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high) — BFF Mesh chain.
     fastUri: '^3.1.2',
+    // uuid: GHSA-w5hq-g745-h8pq (moderate) — rspack/webpack-dev-server → sockjs → uuid.
+    uuid: '^11.1.1',
+    // tar: node-tar CVEs (GHSA-34x7-hfp2-rc4v, GHSA-8qq5-rm4j-mr97, GHSA-qj8w-gfj5-8c6v)
+    // — @angular/cli → node-gyp → tar in the Angular build toolchain.
+    tar: '^7.5.11',
+    // serialize-javascript: GHSA-5c6j-r48x-rmvq (high RCE) + GHSA-qj8w-gfj5-8c6v (DoS)
+    // — terser-webpack-plugin → serialize-javascript in the Angular build toolchain.
+    serializeJavascript: '^7.0.5',
+    // webpack-dev-server: GHSA-79cf-xcqc-c78w (moderate, cross-origin source exposure)
+    // — Angular dev-server uses wds 5.x; 5.2.4 is the patched release.
+    webpackDevServer: '^5.2.4',
   },
 };
 

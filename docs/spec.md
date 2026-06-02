@@ -278,6 +278,8 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-047 | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
 | ADR-048 | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | ADR-049 | Release, Versioning, and Publish Automation | Release / packages | Proposed |
+| ADR-050 | Dependency Governance — Pinning, hasBff Gate, DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
+| ADR-051 | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
 
 ---
 
