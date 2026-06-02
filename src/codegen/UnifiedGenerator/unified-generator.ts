@@ -48,12 +48,15 @@ export const DEPENDENCY_VERSIONS = {
   },
 
   // Mesh Transforms (Schema Manipulation)
+  // NOTE: these track the Mesh v0.10x line — NOT ^1.0.0. A legacy 1.0.0 is
+  // published for several of these but predates and is incompatible with
+  // @graphql-mesh/cli@0.100.x (verified in the demo-mode trial, ADR-052).
   meshTransforms: {
     namingConvention: '^0.105.19',
-    rateLimit: '^1.0.0',
-    filterSchema: '^1.0.0',
-    resolversComposition: '^1.0.0',
-    cache: '^1.0.0',
+    rateLimit: '^0.105.38',
+    filterSchema: '^0.104.37',
+    resolversComposition: '^0.104.36',
+    cache: '^0.105.37',
   },
 
   // Core Dependencies
