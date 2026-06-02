@@ -464,6 +464,11 @@ export function extractManifestVars(manifest: DSLManifest) {
   if ((manifest as any).transforms && (manifest as any).transforms.length > 0) {
     neededTransforms.add('resolversComposition');
   }
+  // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
+  const mockSwitchEnabled = !!(manifest as any).data?.mockSwitch?.enabled;
+  if (mockSwitchEnabled) {
+    neededTransforms.add('resolversComposition');
+  }
 
   // Variant selection via plugin (ADR-036, #176).
   // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
@@ -521,6 +526,8 @@ export function extractManifestVars(manifest: DSLManifest) {
       namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
       rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
       filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
+      // Demo-mode mock switch (ADR-052) — emits a resolversComposition over Query.*
+      mockSwitch: mockSwitchEnabled,
       customTransforms: (manifest as any).transforms || [],
     },
 
@@ -898,6 +905,22 @@ export async function generateAllFiles(
       }),
       overwrite: true,
     });
+
+    // Demo-mode mock switch (ADR-052): emit the composer (generated, overwrite:true)
+    // and a developer-owned fixtures stub (overwrite:false) next to .meshrc.yaml so
+    // the `./mock-switch#mockSwitch` composer path resolves from the project root.
+    if ((manifest.data as any).mockSwitch?.enabled) {
+      files.push({
+        path: path.join(basePath, 'mock-switch.js'),
+        content: await renderTemplate(path.join(bffTemplateDir, 'mock-switch.js.ejs'), vars),
+        overwrite: true,
+      });
+      files.push({
+        path: path.join(basePath, 'mocks.json'),
+        content: await renderTemplate(path.join(bffTemplateDir, 'mocks.json.ejs'), vars),
+        overwrite: false,
+      });
+    }
   }
 
   // BaseMFE class

@@ -59,6 +59,9 @@ interface MeshContext {
   jwt?: string;
   requestId: string;
   userId?: string;
+  // Raw request headers — exposed so resolver-level logic (e.g. the demo-mode
+  // mock switch, ADR-052) can read request headers like `x-bff-mode`.
+  headers: Record<string, string | string[] | undefined>;
 }
 
 const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({
@@ -66,6 +69,7 @@ const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({
     jwt: req.headers.authorization?.replace('Bearer ', ''),
     requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     userId: extractUserIdFromToken(req.headers.authorization as string),
+    headers: req.headers,
   }),
 });
 

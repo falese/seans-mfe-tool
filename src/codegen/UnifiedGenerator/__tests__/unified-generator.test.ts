@@ -399,4 +399,49 @@ describe('unified-generator', () => {
       expect(meshrc).toBeUndefined();
     });
   });
+
+  describe('demo-mode mock switch — ADR-052', () => {
+    const withMock = {
+      ...manifest,
+      data: {
+        sources: [{ name: 'TestAPI', handler: { openapi: { source: './test.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+        mockSwitch: { enabled: true },
+      },
+    };
+
+    it('emits mock-switch.js (overwrite) and mocks.json (developer-owned) when enabled', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const composer = files.find((f) => f.path === path.join(basePath, 'mock-switch.js'));
+      const fixtures = files.find((f) => f.path === path.join(basePath, 'mocks.json'));
+      expect(composer).toBeDefined();
+      expect(composer!.overwrite).toBe(true);
+      expect(composer!.content).toContain('x-bff-mode');
+      expect(composer!.content).toContain("process.env.DEMO_MODE === 'true'");
+      expect(fixtures).toBeDefined();
+      expect(fixtures!.overwrite).toBe(false); // never clobber developer fixtures
+    });
+
+    it('emits the resolversComposition transform over Query.* in .meshrc.yaml', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const meshrc = files.find((f) => f.path === path.join(basePath, '.meshrc.yaml'));
+      expect(meshrc!.content).toContain('resolversComposition');
+      expect(meshrc!.content).toContain("resolver: 'Query.*'");
+      expect(meshrc!.content).toContain('./mock-switch#mockSwitch');
+    });
+
+    it('adds the resolvers-composition dependency to package.json', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
+      expect(pkg!.content).toContain('@graphql-mesh/transform-resolvers-composition');
+    });
+
+    it('emits nothing mock-related when mockSwitch is absent', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      expect(files.find((f) => f.path.endsWith('mock-switch.js'))).toBeUndefined();
+      expect(files.find((f) => f.path.endsWith('mocks.json'))).toBeUndefined();
+      const meshrc = files.find((f) => f.path.endsWith('.meshrc.yaml'));
+      expect(meshrc!.content).not.toContain('mock-switch');
+    });
+  });
 });

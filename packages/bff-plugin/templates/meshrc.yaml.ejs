@@ -26,9 +26,18 @@ plugins:
 <%_ } _%>
 <%_ } _%>
 
-<%_ if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { _%>
+<%_ if (meshTransforms.namingConvention || meshTransforms.rateLimit || meshTransforms.filterSchema || meshTransforms.mockSwitch || (meshTransforms.customTransforms && meshTransforms.customTransforms.length > 0)) { _%>
 # Transforms (Schema Manipulation)
 transforms:
+<%_ if (meshTransforms.mockSwitch) { _%>
+  # Demo-mode mock switch (ADR-052): wraps Query.* so a request with
+  # `x-bff-mode: mock` (or DEMO_MODE=true) returns fixtures from mocks.json.
+  - resolversComposition:
+      mode: bare
+      compositions:
+        - resolver: 'Query.*'
+          composer: ./mock-switch#mockSwitch
+<%_ } _%>
 <%_ if (meshTransforms.namingConvention) { _%>
   - namingConvention:
       typeNames: <%= meshTransforms.namingConvention.typeNames %>

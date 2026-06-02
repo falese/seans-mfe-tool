@@ -255,11 +255,17 @@ export const DataLineageSchema = z.object({
 export type DataLineage = z.infer<typeof DataLineageSchema>;
 
 /** Data section configuration (maps to GraphQL Mesh) */
+/** Demo-mode mock switch (ADR-052): opt-in per-request live/mock switching. */
+export const MockSwitchSchema = z.object({
+  enabled: z.boolean().default(false)
+});
+
 export const DataConfigSchema = z.object({
   sources: z.array(DataSourceSchema),
   transforms: z.array(DataTransformSchema).optional(),
   plugins: z.array(DataPluginSchema).optional(),
   serve: DataServeSchema.optional(),
+  mockSwitch: MockSwitchSchema.optional(),
   generatedFrom: z.array(DataLineageSchema).optional()
 });
 export type DataConfig = z.infer<typeof DataConfigSchema>;
