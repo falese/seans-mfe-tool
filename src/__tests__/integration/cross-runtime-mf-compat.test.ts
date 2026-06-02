@@ -81,8 +81,8 @@ describe('cross-runtime MF compatibility (React rspack ↔ Angular webpack)', ()
     expect(reactStrategy.builderImage).toBe('node:20-slim');
     expect(angularStrategy.builderImage).toBe('node:20-slim');
 
-    expect(reactStrategy.runtimeImage).toBe('nginx:alpine');
-    expect(angularStrategy.runtimeImage).toBe('nginx:alpine');
+    expect(reactStrategy.runtimeImage).toBe('nginxinc/nginx-unprivileged:alpine');
+    expect(angularStrategy.runtimeImage).toBe('nginxinc/nginx-unprivileged:alpine');
   });
 
   it('both plugins expose artifacts under dist/ so nginx serving is uniform', () => {

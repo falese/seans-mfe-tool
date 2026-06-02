@@ -17,6 +17,9 @@ import {
   type Context,
   type LoadResult,
   type RenderResult,
+<%_ if (hasBff) { _%>
+  type QueryResult,
+<%_ } _%>
 } from '@seans-mfe-tool/runtime';
 <% if (domainTypeImports.length > 0) { %>
 import type { <%= domainTypeImports.join(', ') %> } from './types';
@@ -24,6 +27,9 @@ import type { <%= domainTypeImports.join(', ') %> } from './types';
 <% if (handlerSources && handlerSources.length > 0) { %>
 import { handlerRegistry } from './handler-registry';
 <% } %>
+<%_ if (hasBff) { _%>
+import { query as bffQuery } from '../bff/bff';
+<%_ } _%>
 
 /**
  * <%= className %>
@@ -121,6 +127,34 @@ export class <%= className %> extends RemoteMFE {
     console.log('[<%= className %>][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
+
+<%_ if (hasBff) { _%>
+  /**
+   * doQuery — routes mfe.query() calls to the PetStore BFF connector.
+   *
+   * Reads context.inputs.document + variables and dispatches via the generated
+   * bff.ts connector. The BFF URL is resolved automatically from
+   * manifest.endpoint + data.serve.endpoint (e.g. http://localhost:<%= port %>/graphql).
+   * Pass context.inputs.bffUrl to override when the shell is on a different origin.
+   *
+   * Re-generated on every `remote:generate` run — do not edit by hand.
+   */
+  protected override async doQuery(context: Context): Promise<QueryResult> {
+    const { document, variables } = (context.inputs ?? {}) as {
+      document: string;
+      variables?: Record<string, unknown>;
+    };
+    try {
+      const data = await bffQuery(document, variables, {
+        ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
+        ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
+      });
+      return { data };
+    } catch (err) {
+      return { data: null, errors: [{ message: (err as Error).message }] };
+    }
+  }
+<%_ } _%>
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

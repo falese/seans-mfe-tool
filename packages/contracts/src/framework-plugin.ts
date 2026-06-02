@@ -31,6 +31,17 @@ export interface SharedDep {
   strictVersion?: boolean;
 }
 
+/**
+ * A file copied into the runtime stage of a generated Dockerfile.
+ * `from` selects the COPY source: the build context, or the
+ * `seans-mfe-tool-cli` builder image (which bundles the codegen templates).
+ */
+export interface DockerConfigFile {
+  from: 'context' | 'cli-builder';
+  src: string;
+  dest: string;
+}
+
 /** Docker multi-stage build strategy. */
 export interface DockerStrategy {
   builderImage: string;
@@ -40,6 +51,14 @@ export interface DockerStrategy {
   cmd: string[];
   needsCliBuilder: boolean;
   healthcheck?: string;
+  /** Config files copied into the runtime stage (e.g. the nginx server block). */
+  configFiles?: DockerConfigFile[];
+  /** RUN commands executed in the runtime stage (e.g. non-root user setup). */
+  runtimeSetup?: string[];
+  /** Non-root user the runtime stage drops to via the USER directive. */
+  user?: string;
+  /** Port the runtime stage advertises via EXPOSE. */
+  expose?: number;
 }
 
 /** Structured production build result. */

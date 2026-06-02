@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 /**
  * PlayGame Feature Tests
  */
@@ -18,10 +19,8 @@ const renderWithTheme = (component: React.ReactElement) => {
 };
 
 describe('PlayGame', () => {
-  it('renders without crashing', () => {
-    renderWithTheme(<PlayGame />);
-    expect(screen.getByText('PlayGame')).toBeInTheDocument();
+  it('renders the canvas game area', () => {
+    const { container } = renderWithTheme(<PlayGame />);
+    expect(container.querySelector('canvas')).toBeInTheDocument();
   });
-
-  // TODO: Add more tests based on capability inputs/outputs
 });

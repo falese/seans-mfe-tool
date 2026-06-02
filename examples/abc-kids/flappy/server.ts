@@ -9,13 +9,17 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createBuiltMeshHTTPHandler } from './.mesh';
-import type { Request, Response, NextFunction, Express } from 'express';
+import type { Request, Response, Express } from 'express';
 import crypto from 'crypto';
 
 const app: Express = express();
 
 // Security middleware
+// crossOriginResourcePolicy must be 'cross-origin' so shells on other origins
+// can load remoteEntry.js via <script> injection (CORP blocks no-cors subresource
+// loads from cross-origin pages; CORS alone is not sufficient for script tags).
 app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -50,31 +54,26 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-// Following ADR-062: createBuiltMeshHTTPHandler pattern
+// Following ADR-027: createBuiltMeshHTTPHandler with context factory pattern
 interface MeshContext {
   jwt?: string;
   requestId: string;
   userId?: string;
+  // Raw request headers — exposed so resolver-level logic (e.g. the demo-mode
+  // mock switch, ADR-052) can read request headers like `x-bff-mode`.
+  headers: Record<string, string | string[] | undefined>;
 }
 
-const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();
-
-// GraphQL endpoint with context injection
-// Mesh handler expects context in a specific format for @whatwg-node/server
-app.use('/graphql', (req: Request, res: Response) => {
-  // Create context object for Mesh
-  const context: MeshContext = {
+const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({
+  context: (req: Request) => ({
     jwt: req.headers.authorization?.replace('Bearer ', ''),
     requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     userId: extractUserIdFromToken(req.headers.authorization as string),
-  };
-  
-  // Mesh handler from @whatwg-node/server expects Request/Response objects
-  // We need to pass context via the request object
-  const requestWithContext = Object.assign(req, { context });
-  
-  return meshHandler(requestWithContext as any, res as any, context);
+    headers: req.headers,
+  }),
 });
+
+app.use('/graphql', meshHandler);
 
 
 // Static MFE assets

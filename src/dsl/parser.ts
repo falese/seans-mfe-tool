@@ -302,9 +302,9 @@ export function createMinimalManifest(
     dependencies: isAngular
       ? {
           runtime: {
-            '@angular/core': '^17.0.0',
-            '@angular/common': '^17.0.0',
-            '@angular/platform-browser': '^17.0.0',
+            '@angular/core': '^19.2.16',
+            '@angular/common': '^19.2.16',
+            '@angular/platform-browser': '^19.2.16',
             'rxjs': '^7.8.0',
             'zone.js': '~0.14.0'
           }

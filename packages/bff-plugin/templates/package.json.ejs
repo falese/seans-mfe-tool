@@ -17,8 +17,6 @@
   },
   "dependencies": {
     "@seans-mfe-tool/runtime": "*",
-    "@graphql-mesh/cli": "<%= dependencyVersions.graphqlMesh.cli %>",
-    "@graphql-mesh/openapi": "<%= dependencyVersions.graphqlMesh.openapi %>",
     "@graphql-mesh/serve-runtime": "<%= dependencyVersions.graphqlMesh.serveRuntime %>",
     "@graphql-tools/delegate": "<%= dependencyVersions.graphqlTools.delegate %>",
     "@graphql-tools/utils": "<%= dependencyVersions.graphqlTools.utils %>",
@@ -49,6 +47,8 @@
     "react-dom": "<%= dependencyVersions.react.reactDom %>"
   },
   "devDependencies": {
+    "@graphql-mesh/cli": "<%= dependencyVersions.graphqlMesh.cli %>",
+    "@graphql-mesh/openapi": "<%= dependencyVersions.graphqlMesh.openapi %>",
     "@rspack/cli": "<%= dependencyVersions.buildTools.rspackCli %>",
     "@rspack/core": "<%= dependencyVersions.buildTools.rspackCore %>",
     "@types/cors": "^2.8.17",
@@ -63,6 +63,9 @@
     "ts-node": "<%= dependencyVersions.buildTools.tsNode %>",
     "typescript": "<%= dependencyVersions.buildTools.typescript %>",
     "serve": "<%= dependencyVersions.buildTools.serve %>"
+  },
+  "overrides": {
+    "fast-uri": "<%= dependencyVersions.overrides.fastUri %>"
   },
   "engines": {
     "node": ">=18.0.0"

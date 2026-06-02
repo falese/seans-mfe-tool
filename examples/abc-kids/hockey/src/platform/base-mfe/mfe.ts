@@ -10,6 +10,7 @@ import {
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
 
+
 /**
  * abckidshockeyMFE
  * @description Ice Hockey — move your paddle, score goals against the AI!
@@ -106,6 +107,7 @@ export class abckidshockeyMFE extends RemoteMFE {
     console.log('[abckidshockeyMFE][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
+
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

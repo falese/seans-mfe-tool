@@ -107,6 +107,9 @@ describe('integration: codegen workflow', () => {
       `mfe-codegen-integration-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     await fs.ensureDir(workspace);
+    // Canonicalize so comparisons match paths the command derives from
+    // process.cwd() (e.g. /tmp -> /private/tmp symlink resolution on macOS).
+    workspace = await fs.realpath(workspace);
     process.chdir(workspace);
     execSyncMock.mockReset();
     execSyncMock.mockReturnValue(Buffer.from(''));

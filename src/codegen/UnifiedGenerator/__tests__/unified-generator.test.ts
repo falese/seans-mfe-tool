@@ -33,7 +33,7 @@ describe('unified-generator', () => {
   });
 
   it('generates all expected files', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     expect(files.length).toBeGreaterThan(0);
     // Check for key files
     const filePaths = files.map(f => f.path);
@@ -45,7 +45,7 @@ describe('unified-generator', () => {
   });
 
   it('generates src/index.tsx with React bootstrap', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const indexTsx = files.find(f => f.path === path.join(basePath, 'src', 'index.tsx'));
     
     expect(indexTsx).toBeDefined();
@@ -57,7 +57,7 @@ describe('unified-generator', () => {
   });
 
   it('generates src/index.tsx with capability imports', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const indexTsx = files.find(f => f.path === path.join(basePath, 'src', 'index.tsx'));
     
     expect(indexTsx).toBeDefined();
@@ -68,7 +68,7 @@ describe('unified-generator', () => {
   });
 
   it('generates src/index.tsx with Material-UI tabbed interface', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const indexTsx = files.find(f => f.path === path.join(basePath, 'src', 'index.tsx'));
     
     expect(indexTsx).toBeDefined();
@@ -79,7 +79,7 @@ describe('unified-generator', () => {
   });
 
   it('generates public/demo.html for runtime demonstration', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const demoHtml = files.find(f => f.path === path.join(basePath, 'public', 'demo.html'));
     
     expect(demoHtml).toBeDefined();
@@ -92,7 +92,7 @@ describe('unified-generator', () => {
   });
 
   it('generates public/demo.html with MFE name in title', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const demoHtml = files.find(f => f.path === path.join(basePath, 'public', 'demo.html'));
     
     expect(demoHtml).toBeDefined();
@@ -106,7 +106,7 @@ describe('unified-generator', () => {
       endpoint: 'http://localhost:3002'
     };
     
-    const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const serverTs = files.find(f => f.path === path.join(basePath, 'server.ts'));
     
     expect(serverTs).toBeDefined();
@@ -121,7 +121,7 @@ describe('unified-generator', () => {
       endpoint: 'http://localhost:3005'
     };
     
-    const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const serverTs = files.find(f => f.path === path.join(basePath, 'server.ts'));
     
     expect(serverTs).toBeDefined();
@@ -131,7 +131,7 @@ describe('unified-generator', () => {
   });
 
   it('generates rspack.config.js with named entry point', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const rspackConfig = files.find(f => f.path === path.join(basePath, 'rspack.config.js'));
     
     expect(rspackConfig).toBeDefined();
@@ -141,7 +141,7 @@ describe('unified-generator', () => {
   });
 
   it('generates rspack.config.js with eager MUI dependencies', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const rspackConfig = files.find(f => f.path === path.join(basePath, 'rspack.config.js'));
     
     expect(rspackConfig).toBeDefined();
@@ -153,7 +153,7 @@ describe('unified-generator', () => {
   });
 
   it('generates rspack.config.js with static demo configuration', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const rspackConfig = files.find(f => f.path === path.join(basePath, 'rspack.config.js'));
     
     expect(rspackConfig).toBeDefined();
@@ -163,7 +163,7 @@ describe('unified-generator', () => {
   });
 
   it('generates public/index.html without manual script tags', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const indexHtml = files.find(f => f.path === path.join(basePath, 'public', 'index.html'));
     
     expect(indexHtml).toBeDefined();
@@ -178,7 +178,7 @@ describe('unified-generator', () => {
       endpoint: 'http://localhost:3002'
     };
 
-    const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const dockerfile = files.find(f => f.path === path.join(basePath, 'Dockerfile'));
 
     expect(dockerfile).toBeDefined();
@@ -191,7 +191,7 @@ describe('unified-generator', () => {
     // Dockerfile is only emitted when manifest.data exists (fixed in #149).
     // Within that block hasData is always true, so the template must not
     // use a conditional — the .mesh COPY step should always be present.
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const dockerfile = files.find((f) => f.path === path.join(basePath, 'Dockerfile'));
     expect(dockerfile).toBeDefined();
     expect(dockerfile!.content).toContain('COPY --from=builder /app/.mesh ./.mesh');
@@ -203,7 +203,7 @@ describe('unified-generator', () => {
       endpoint: 'http://localhost:3002'
     };
     
-    const files = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithPort as any, basePath, { force: true });
     const dockerCompose = files.find(f => f.path === path.join(basePath, 'docker-compose.yaml'));
     
     expect(dockerCompose).toBeDefined();
@@ -214,7 +214,7 @@ describe('unified-generator', () => {
   });
 
   it('writes files to disk', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const result = await writeGeneratedFiles(files, { force: true });
     expect(result.files.length).toBe(files.length);
     // Check that files exist
@@ -234,7 +234,7 @@ describe('unified-generator', () => {
       ]
     };
     
-    const files = await generateAllFiles(manifestWithEmptyEntries as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithEmptyEntries as any, basePath, { force: true });
     const indexTsx = files.find(f => f.path === path.join(basePath, 'src', 'index.tsx'));
     
     expect(indexTsx).toBeDefined();
@@ -243,11 +243,16 @@ describe('unified-generator', () => {
     expect(indexTsx?.content).not.toContain('import {  }'); // No empty imports
     expect(indexTsx?.content).not.toContain('from \'./features//\''); // No empty paths
     
-    // Verify only one domain capability was processed
-    const dataAnalysisFeature = files.find(f => f.path.includes('features/DataAnalysis/DataAnalysis.tsx'));
+    // Verify only one domain capability was processed and platform was filtered.
+    // DataAnalysis already exists (from the previous test run against the same
+    // basePath), so capabilityImplemented returns true and preserves it — it
+    // won't appear in `files` but IS represented in the remote entrypoint and
+    // index imports (domainCapabilities drove those).
     const healthFeature = files.find(f => f.path.includes('features/Health'));
-    expect(dataAnalysisFeature).toBeDefined();
-    expect(healthFeature).toBeUndefined(); // Platform capability should not generate feature
+    expect(healthFeature).toBeUndefined(); // Platform capability must not generate feature
+    // DataAnalysis is either preserved (file exists) or newly emitted — either
+    // way it must appear in the generated index.tsx import list.
+    expect(indexTsx?.content).toContain('DataAnalysis');
   });
 
   it('filters out empty data sources from manifest', async () => {
@@ -263,7 +268,7 @@ describe('unified-generator', () => {
       }
     };
     
-    const files = await generateAllFiles(manifestWithEmptySources as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifestWithEmptySources as any, basePath, { force: true });
     const meshrc = files.find(f => f.path === path.join(basePath, '.meshrc.yaml'));
     
     expect(meshrc).toBeDefined();
@@ -275,7 +280,7 @@ describe('unified-generator', () => {
   });
 
   it('generates server.ts with correct Mesh handler integration', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const serverTs = files.find(f => f.path === path.join(basePath, 'server.ts'));
     
     expect(serverTs).toBeDefined();
@@ -289,19 +294,19 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify handler instantiation
-    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>();');
-    
-    // Verify context injection pattern (NOT the old middleware pattern)
-    expect(serverTs?.content).toContain('app.use(\'/graphql\', (req: Request, res: Response) => {');
-    expect(serverTs?.content).toContain('const context: MeshContext = {');
-    expect(serverTs?.content).toContain('const requestWithContext = Object.assign(req, { context });');
-    expect(serverTs?.content).toContain('return meshHandler(requestWithContext as any, res as any, context);');
-    
-    // Verify OLD broken pattern is NOT present
+    // Verify handler instantiation — ADR-027: context factory pattern, not 3-arg call
+    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({');
+    expect(serverTs?.content).toContain('context: (req: Request) => ({');
+
+    // Verify direct middleware registration (no wrapper function needed)
+    expect(serverTs?.content).toContain('app.use(\'/graphql\', meshHandler);');
+
+    // Verify OLD broken patterns are NOT present (replaced in ADR-027 fix)
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
     expect(serverTs?.content).not.toContain('next();');
+    expect(serverTs?.content).not.toContain('requestWithContext as any, res as any, context');
+    expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>();');
     
     // Verify JWT extraction helper
     expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
@@ -310,7 +315,7 @@ describe('unified-generator', () => {
 
   describe('BFF root files do not clobber MFE root templates', () => {
     it('emits exactly one package.json entry, from the MFE hybrid template (with MUI deps)', async () => {
-      const files = await generateAllFiles(manifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
 
       const pkgEntries = files.filter(
         (f) => f.path === path.join(basePath, 'package.json'),
@@ -340,7 +345,7 @@ describe('unified-generator', () => {
       // These files do not have an MFE-template equivalent, so the BFF template
       // is the source of truth — but they must NOT clobber prior generations
       // (matching the convention used by package.json + rspack.config.js).
-      const files = await generateAllFiles(manifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
 
       for (const name of ['tsconfig.json', 'Dockerfile', 'docker-compose.yaml', 'README.md']) {
         const entry = files.find((f) => f.path === path.join(basePath, name));
@@ -352,7 +357,7 @@ describe('unified-generator', () => {
     it('keeps server.ts as overwrite:true so BFF runtime refresh stays automatic', async () => {
       // server.ts is generated BFF runtime, not user-customised — regeneration
       // must keep delivering the latest version.
-      const files = await generateAllFiles(manifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
       const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
       expect(serverTs).toBeDefined();
       expect(serverTs!.overwrite).toBe(true);
@@ -371,27 +376,72 @@ describe('unified-generator', () => {
     };
 
     it('does not emit bff.ts when manifest has no data section', async () => {
-      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
       const bffTs = files.find((f) => f.path.includes('bff.ts') && !f.path.includes('bff.test'));
       expect(bffTs).toBeUndefined();
     });
 
     it('does not emit bff.test.ts when manifest has no data section', async () => {
-      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
       const bffTest = files.find((f) => f.path.includes('bff.test.ts'));
       expect(bffTest).toBeUndefined();
     });
 
     it('does not emit server.ts when manifest has no data section', async () => {
-      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
       const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
       expect(serverTs).toBeUndefined();
     });
 
     it('does not emit .meshrc.yaml when manifest has no data section', async () => {
-      const files = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
       const meshrc = files.find((f) => f.path.includes('.meshrc.yaml'));
       expect(meshrc).toBeUndefined();
+    });
+  });
+
+  describe('demo-mode mock switch — ADR-052', () => {
+    const withMock = {
+      ...manifest,
+      data: {
+        sources: [{ name: 'TestAPI', handler: { openapi: { source: './test.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+        mockSwitch: { enabled: true },
+      },
+    };
+
+    it('emits mock-switch.js (overwrite) and mocks.json (developer-owned) when enabled', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const composer = files.find((f) => f.path === path.join(basePath, 'mock-switch.js'));
+      const fixtures = files.find((f) => f.path === path.join(basePath, 'mocks.json'));
+      expect(composer).toBeDefined();
+      expect(composer!.overwrite).toBe(true);
+      expect(composer!.content).toContain('x-bff-mode');
+      expect(composer!.content).toContain("process.env.DEMO_MODE === 'true'");
+      expect(fixtures).toBeDefined();
+      expect(fixtures!.overwrite).toBe(false); // never clobber developer fixtures
+    });
+
+    it('emits the resolversComposition transform over Query.* in .meshrc.yaml', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const meshrc = files.find((f) => f.path === path.join(basePath, '.meshrc.yaml'));
+      expect(meshrc!.content).toContain('resolversComposition');
+      expect(meshrc!.content).toContain("resolver: 'Query.*'");
+      expect(meshrc!.content).toContain('./mock-switch#mockSwitch');
+    });
+
+    it('adds the resolvers-composition dependency to package.json', async () => {
+      const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
+      const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
+      expect(pkg!.content).toContain('@graphql-mesh/transform-resolvers-composition');
+    });
+
+    it('emits nothing mock-related when mockSwitch is absent', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      expect(files.find((f) => f.path.endsWith('mock-switch.js'))).toBeUndefined();
+      expect(files.find((f) => f.path.endsWith('mocks.json'))).toBeUndefined();
+      const meshrc = files.find((f) => f.path.endsWith('.meshrc.yaml'));
+      expect(meshrc!.content).not.toContain('mock-switch');
     });
   });
 });

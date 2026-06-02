@@ -162,7 +162,9 @@ export class AngularWebpackPlugin extends BaseFrameworkPlugin {
   getDockerStrategy(_manifest: unknown): DockerStrategy {
     return {
       builderImage: 'node:20-slim',
-      runtimeImage: 'nginx:alpine',
+      // Unprivileged nginx runs as a non-root user (uid 101), listens on 8080,
+      // and keeps its pid/temp files in writable paths (ADR-044).
+      runtimeImage: 'nginxinc/nginx-unprivileged:alpine',
       buildCommands: [
         'npm ci',
         'npm run build',
@@ -170,7 +172,17 @@ export class AngularWebpackPlugin extends BaseFrameworkPlugin {
       artifactPaths: ['dist/'],
       cmd: ['nginx', '-g', 'daemon off;'],
       needsCliBuilder: true,
-      healthcheck: 'wget -qO- http://127.0.0.1:80/ || exit 1',
+      // Federation-aware hardened server block, copied from the CLI image so it
+      // tracks the installed CLI version rather than a stale per-project file.
+      configFiles: [
+        {
+          from: 'cli-builder',
+          src: '/seans-mfe-tool/dist/codegen/templates/docker/nginx.mfe.conf',
+          dest: '/etc/nginx/conf.d/default.conf',
+        },
+      ],
+      expose: 8080,
+      healthcheck: 'wget -qO- http://127.0.0.1:8080/health || exit 1',
     };
   }
 }

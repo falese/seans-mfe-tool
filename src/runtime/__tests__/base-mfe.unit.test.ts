@@ -88,7 +88,7 @@ describe('BaseMFE state and platform wrappers', () => {
   });
 
   it('query wrapper calls lifecycle', async () => {
-    const context = { timestamp: new Date(), requestId: 'test-query', phase: 'main' as 'main', capability: 'query' };
+    const context = { timestamp: new Date(), requestId: 'test-query', phase: 'main' as const, capability: 'query' };
     const res = await mfe.query(context);
     expect(res.data).toBe(123);
     expect(Array.isArray(res.errors)).toBe(true);
@@ -96,7 +96,7 @@ describe('BaseMFE state and platform wrappers', () => {
   });
 
   it('emit wrapper calls lifecycle', async () => {
-    const context = { timestamp: new Date(), requestId: 'test-emit', phase: 'main' as 'main', capability: 'emit' };
+    const context = { timestamp: new Date(), requestId: 'test-emit', phase: 'main' as const, capability: 'emit' };
     const res = await mfe.emit(context);
     expect(res.emitted).toBe(true);
   });
@@ -121,7 +121,7 @@ describe('BaseMFE error hooks and telemetry', () => {
 
   it('main failure propagates and telemetry logs error', async () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const context = { timestamp: new Date(), requestId: 'fail-query', phase: 'main' as 'main', capability: 'query' };
+    const context = { timestamp: new Date(), requestId: 'fail-query', phase: 'main' as const, capability: 'query' };
     await expect(mfe.query(context)).rejects.toThrow('boom');
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();

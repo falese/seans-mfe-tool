@@ -74,6 +74,8 @@ export interface RemoteGenerateResult extends MutatingResult {
   generated: string[];
   skipped: string[];
   errors: string[];
+  /** Capability names whose feature files were preserved (already implemented). */
+  preserved: string[];
 }
 
 // ---------------------------------------------------------------------------

@@ -10,6 +10,12 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'auto',
+    // Content-hashed filenames let the immutable-cache headers in the nginx
+    // config be safe: a new build emits new filenames, so clients never serve
+    // a stale bundle. remoteEntry.js is exempt (fixed name, served no-cache).
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
+    clean: true,
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
@@ -85,9 +91,14 @@ module.exports = {
       exposes: {
         './App': './src/remote.tsx',
       },
+      // NOTE on `eager: true`: shared singletons are bundled eagerly so this MFE
+      // also runs standalone (its own index.tsx entry) without a host providing
+      // them. The tradeoff is a larger remote bundle. In a shell-only deployment
+      // where the host owns these singletons, set `eager: false` here and ensure
+      // the shell provides them eagerly. See ADR-044.
       shared: {
-        react: { 
-          singleton: true, 
+        react: {
+          singleton: true,
           requiredVersion: '^18.2.0',
           eager: true
         },

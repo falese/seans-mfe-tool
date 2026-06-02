@@ -142,7 +142,7 @@ module.exports.${modelName} = ${modelName};`;
         if (config.format === 'email') {
           validations.push(`
 ${modelName}Schema.path('${prop}').validate(function(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
 }, '${prop} must be a valid email address');`);
         }
 

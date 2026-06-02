@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 /**
  * ShowCover Feature Tests
  */
@@ -20,7 +21,7 @@ const renderWithTheme = (component: React.ReactElement) => {
 describe('ShowCover', () => {
   it('renders without crashing', () => {
     renderWithTheme(<ShowCover />);
-    expect(screen.getByText('ShowCover')).toBeInTheDocument();
+    expect(screen.getByText(/Ice Hockey/)).toBeInTheDocument();
   });
 
   // TODO: Add more tests based on capability inputs/outputs

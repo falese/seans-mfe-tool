@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk = require('chalk');
 import * as yaml from 'js-yaml';
+import { ValidationError, SystemError } from '@seans-mfe/contracts';
 
 // ============================================================================
 // Type Definitions
@@ -104,6 +105,13 @@ export interface TemplateVars {
   transforms: MeshTransform[];
   plugins: MeshPlugin[];
   playground: boolean;
+  bffEndpoint: string;
+  /** Passed to package.json.ejs for versioned dependency strings (from DEPENDENCY_VERSIONS) */
+  dependencyVersions: Record<string, unknown>;
+  /** Passed to package.json.ejs / meshrc.yaml.ejs for plugin config */
+  meshPlugins: Record<string, unknown>;
+  /** Passed to package.json.ejs / meshrc.yaml.ejs for transform config */
+  meshTransforms: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -118,18 +126,26 @@ export async function extractMeshConfig(manifestPath: string): Promise<ExtractMe
   const absolutePath = path.resolve(process.cwd(), manifestPath);
 
   if (!await fs.pathExists(absolutePath)) {
-    throw new Error(`Manifest not found: ${absolutePath}`);
+    throw new SystemError(`Manifest not found: ${absolutePath}`);
   }
 
   const manifestContent = await fs.readFile(absolutePath, 'utf8');
   const manifest = yaml.load(manifestContent) as MFEManifest;
 
   if (!manifest.data) {
-    throw new Error('No "data:" section found in manifest. BFF requires data configuration.');
+    throw new ValidationError(
+      'No "data:" section found in manifest. BFF requires data configuration.',
+      'data',
+      'required',
+    );
   }
 
   if (!manifest.data.sources || manifest.data.sources.length === 0) {
-    throw new Error('No sources defined in data: section. At least one OpenAPI source is required.');
+    throw new ValidationError(
+      'No sources defined in data: section. At least one OpenAPI source is required.',
+      'data.sources',
+      'required',
+    );
   }
 
   const meshConfig: MeshConfig = {
@@ -174,12 +190,19 @@ export async function addMeshDependencies(targetDir: string): Promise<void> {
   const pkg: PackageJson = await fs.readJson(pkgPath);
 
   pkg.dependencies = pkg.dependencies || {};
-  pkg.dependencies['@graphql-mesh/cli'] = '^0.100.0';
-  pkg.dependencies['@graphql-mesh/openapi'] = '^1.0.0';
-  pkg.dependencies['@graphql-mesh/plugin-response-cache'] = '^0.104.0';
+  pkg.dependencies['@graphql-mesh/serve-runtime'] = '^1.2.4';
+  pkg.dependencies['@graphql-tools/delegate'] = '^10.2.4';
+  pkg.dependencies['@graphql-tools/utils'] = '^9.2.1';
+  pkg.dependencies['@graphql-tools/wrap'] = '^10.0.5';
+  pkg.dependencies['@graphql-mesh/plugin-response-cache'] = '^0.104.20';
   pkg.dependencies['graphql'] = '^16.8.1';
+  pkg.dependencies['tslib'] = '^2.6.0';
   pkg.dependencies['cors'] = pkg.dependencies['cors'] || '^2.8.5';
-  pkg.dependencies['helmet'] = pkg.dependencies['helmet'] || '^7.1.0';
+  pkg.dependencies['helmet'] = pkg.dependencies['helmet'] || '^8.1.0';
+
+  pkg.devDependencies = pkg.devDependencies || {};
+  pkg.devDependencies['@graphql-mesh/cli'] = '^0.100.21';
+  pkg.devDependencies['@graphql-mesh/openapi'] = '^0.109.26';
 
   pkg.scripts = pkg.scripts || {};
   pkg.scripts['mesh:build'] = 'mesh build';

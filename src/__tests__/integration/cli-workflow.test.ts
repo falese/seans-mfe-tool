@@ -56,6 +56,9 @@ describe('integration: CLI workflow', () => {
       `mfe-cli-integration-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     await fs.ensureDir(workspace);
+    // Canonicalize so comparisons match paths the commands derive from
+    // process.cwd() (e.g. /tmp -> /private/tmp symlink resolution on macOS).
+    workspace = await fs.realpath(workspace);
     process.chdir(workspace);
   });
 
@@ -246,7 +249,7 @@ describe('integration: CLI workflow', () => {
       expect(await fs.pathExists(path.join(projectDir, 'rspack.config.js'))).toBe(false);
     });
 
-    it('without --force, a second remote:generate run reports feature files as skipped', async () => {
+    it('without --force, a second remote:generate run preserves implemented capabilities', async () => {
       const name = 'idempotent';
       await remoteInitCommand(name, { skipInstall: true });
       const projectDir = path.join(workspace, name);
@@ -273,12 +276,10 @@ describe('integration: CLI workflow', () => {
       expect(first.generated.length).toBeGreaterThan(0);
 
       const second = await remoteGenerateCommand({ force: false });
-      // The capability's hand-editable feature files must not be clobbered
-      // on subsequent runs — they should land in `skipped`.
-      expect(second.skipped.length).toBeGreaterThan(0);
-      expect(
-        second.skipped.some((p) => p.includes(path.join('features', 'ProductCatalog'))),
-      ).toBe(true);
+      // The capability's feature files are recognized as implemented via
+      // symbol-presence check and reported as preserved — not skipped or
+      // clobbered — on subsequent runs.
+      expect(second.preserved).toContain('ProductCatalog');
     });
 
     it('fails fast with a validation error when the manifest is malformed', async () => {

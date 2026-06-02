@@ -1,29 +1,86 @@
+/**
+ * Standalone App Entry Point
+ * Bootstraps React for standalone development/testing
+ * 
+ * Following REQ-RUNTIME-002: Context integration
+ * Following e2e2 dual entry pattern
+ */
+
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Box, Tabs, Tab, Typography } from '@mui/material';
+import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { PlayGame } from './features/PlayGame/PlayGame';
 import { ShowCover } from './features/ShowCover/ShowCover';
 import { GetGameInfo } from './features/GetGameInfo/GetGameInfo';
 
-const StandaloneApp: React.FC = () => {
-  const [tab, setTab] = useState(0);
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#1a0050', color: '#fff', p: 2 }}>
-      <Typography variant="h4" sx={{ mb: 2, color: '#FFD700' }}>
-        🐦 Flappy Bird — ABC Kids
-      </Typography>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="Play" sx={{ color: '#FFD700' }} />
-        <Tab label="Cover" sx={{ color: '#FFD700' }} />
-        <Tab label="Info" sx={{ color: '#FFD700' }} />
-      </Tabs>
-      {tab === 0 && <PlayGame />}
-      {tab === 1 && <ShowCover />}
-      {tab === 2 && <GetGameInfo />}
-    </Box>
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+const StandaloneApp: React.FC = () => {
+  const [tabValue, setTabValue] = useState(0);
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  return (
+    <Container maxWidth="lg">
+      <Box sx={{ my: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom>
+          Abc Kids Flappy
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+          Module Federation MFE - Standalone Mode
+        </Typography>
+        
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
+          <Tabs value={tabValue} onChange={handleTabChange} aria-label="feature tabs">
+            <Tab label="📦 PlayGame" id="tab-0" aria-controls="tabpanel-0" />
+            <Tab label="📦 ShowCover" id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label="📦 GetGameInfo" id="tab-2" aria-controls="tabpanel-2" />
+          </Tabs>
+        </Box>
+        
+        <TabPanel value={tabValue} index={0}>
+          <PlayGame />
+        </TabPanel>
+        <TabPanel value={tabValue} index={1}>
+          <ShowCover />
+        </TabPanel>
+        <TabPanel value={tabValue} index={2}>
+          <GetGameInfo />
+        </TabPanel>
+      </Box>
+    </Container>
   );
 };
 
 const container = document.getElementById('root');
-if (!container) throw new Error('Root element not found');
-createRoot(container).render(<React.StrictMode><StandaloneApp /></React.StrictMode>);
+if (!container) {
+  throw new Error('Root element not found');
+}
+
+const root = createRoot(container);
+root.render(
+  <React.StrictMode>
+    <StandaloneApp />
+  </React.StrictMode>
+);

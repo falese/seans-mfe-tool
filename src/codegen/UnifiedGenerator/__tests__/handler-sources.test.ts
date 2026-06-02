@@ -97,7 +97,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
 
   describe('React (rspack) variant', () => {
     it('emits handler-registry.ts when at least one hook declares a source', async () => {
-      const files = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
       const registry = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'handler-registry.ts'),
       );
@@ -105,7 +105,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('static-imports a relative-path source as a named export matching the handler name', async () => {
-      const files = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
       const registry = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'handler-registry.ts'),
       );
@@ -121,7 +121,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('static-imports a module#export source as an aliased named import', async () => {
-      const files = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
       const registry = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'handler-registry.ts'),
       );
@@ -132,7 +132,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('wires the registry into the generated MFE constructor', async () => {
-      const files = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
       const mfe = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'),
       );
@@ -141,7 +141,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('suppresses the stub method for hooks with a source', async () => {
-      const files = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestWithSources as any, basePath, { force: true });
       const mfe = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'),
       );
@@ -153,7 +153,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('does NOT emit handler-registry.ts when no hook declares a source (back-compat)', async () => {
-      const files = await generateAllFiles(manifestNoSources as any, basePath, { force: true });
+      const { files } = await generateAllFiles(manifestNoSources as any, basePath, { force: true });
       const registry = files.find(
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'handler-registry.ts'),
       );
@@ -183,7 +183,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     };
 
     it('emits handler-registry.ts for Angular MFEs that declare sources', async () => {
-      const files = await generateAllFiles(angularManifestWithSources as any, basePath, {
+      const { files } = await generateAllFiles(angularManifestWithSources as any, basePath, {
         force: true,
       });
       const registry = files.find(
@@ -194,7 +194,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('wires the registry into the generated Angular MFE constructor', async () => {
-      const files = await generateAllFiles(angularManifestWithSources as any, basePath, {
+      const { files } = await generateAllFiles(angularManifestWithSources as any, basePath, {
         force: true,
       });
       const mfe = files.find(
@@ -205,7 +205,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
     });
 
     it('suppresses the stub method for Angular hooks with a source', async () => {
-      const files = await generateAllFiles(angularManifestWithSources as any, basePath, {
+      const { files } = await generateAllFiles(angularManifestWithSources as any, basePath, {
         force: true,
       });
       const mfe = files.find(

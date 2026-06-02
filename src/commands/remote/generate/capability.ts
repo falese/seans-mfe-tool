@@ -52,13 +52,16 @@ export async function remoteGenerateCapabilityCommand(
     const filteredManifest = { ...manifest, capabilities: matchingCapabilities };
 
     console.log(chalk.blue(`\nGenerating capability: ${capabilityName}`));
-    const allFiles = await generateAllFiles(filteredManifest, cwd, { force: true });
+    const { files: allFiles, preservedCapabilities } = await generateAllFiles(filteredManifest, cwd, { force: true });
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
         op: file.overwrite ? 'overwrite' : 'create',
         target: path.relative(cwd, file.path),
       }));
+      if (preservedCapabilities.length > 0) {
+        console.log(chalk.cyan(`\n[DRY RUN] Preserved (already implemented): ${preservedCapabilities.join(', ')}`));
+      }
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
       for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);

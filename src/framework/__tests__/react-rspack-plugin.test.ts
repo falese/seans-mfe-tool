@@ -83,11 +83,17 @@ describe('ReactRspackPlugin', () => {
   });
 
   describe('docker', () => {
-    it('returns nginx-based strategy', () => {
+    it('returns a hardened, non-root nginx strategy', () => {
       const strategy = plugin.getDockerStrategy({});
-      expect(strategy.runtimeImage).toBe('nginx:alpine');
+      expect(strategy.runtimeImage).toBe('nginxinc/nginx-unprivileged:alpine');
       expect(strategy.needsCliBuilder).toBe(true);
       expect(strategy.buildCommands).toContain('npm ci');
+      expect(strategy.expose).toBe(8080);
+      expect(strategy.healthcheck).toContain('/health');
+      expect(strategy.configFiles?.[0]).toMatchObject({
+        from: 'cli-builder',
+        dest: '/etc/nginx/conf.d/default.conf',
+      });
     });
   });
 });

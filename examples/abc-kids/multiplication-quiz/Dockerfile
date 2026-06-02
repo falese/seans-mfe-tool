@@ -18,18 +18,14 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
     ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 # Install dependencies.
-# @seans-mfe-tool/runtime is removed from package.json before npm install;
-# we then copy it as a real directory (not a symlink) into node_modules.
-# A symlink pointing to /seans-mfe-tool/dist/runtime would cause Angular's
-# webpack to resolve @angular/* from /seans-mfe-tool instead of /app/node_modules.
+# Override @seans-mfe-tool/runtime to the pre-compiled dist package so
+# TypeScript sees resolved .d.ts files only — no source traversal.
+# Delete from dependencies first (old generated package.json puts it there),
+# then set in devDependencies so production --omit=dev install skips it.
 COPY package.json ./
 RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+    npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
 RUN npm install --legacy-peer-deps --no-audit --no-fund
-
-# Copy runtime as a real directory so webpack module resolution stays within /app.
-RUN mkdir -p node_modules/@seans-mfe-tool && \
-    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 
 # Copy source files
 COPY . .
@@ -47,10 +43,12 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
+# Use the builder's package.json (npm pkg set moved runtime to devDep path)
+# so --omit=dev correctly skips @seans-mfe-tool/runtime resolution entirely.
 COPY --from=builder /app/package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
 RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
+# Copy Mesh artifacts
+COPY --from=builder /app/.mesh ./.mesh
 
 # Copy built static assets
 COPY --from=builder /app/dist ./dist
@@ -60,14 +58,14 @@ COPY --from=builder /app/server.js ./
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+    CMD node -e "require('http').get('http://localhost:4003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 # Non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 meshuser
 USER meshuser
 
-ENV PORT=3003
-EXPOSE 3003
+ENV PORT=4003
+EXPOSE 4003
 
 CMD ["node", "server.js"]

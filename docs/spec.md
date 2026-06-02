@@ -272,6 +272,15 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-041 | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Accepted |
 | ADR-042 | MFE Lifecycle State Machine | Runtime lifecycle | Accepted |
 | ADR-043 | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Accepted |
+| ADR-044 | Production Container Hardening for Generated MFEs | Docker / deploy / security | Accepted |
+| ADR-045 | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Proposed |
+| ADR-046 | Environment Configuration and Secret Validation | Configuration / security | Proposed |
+| ADR-047 | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
+| ADR-048 | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
+| ADR-049 | Release, Versioning, and Publish Automation | Release / packages | Proposed |
+| ADR-050 | Dependency Governance — Pinning, hasBff Gate, DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
+| ADR-051 | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
+| ADR-052 | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
 
 ---
 

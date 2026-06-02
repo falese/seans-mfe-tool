@@ -59,9 +59,10 @@ const baseManifest = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockParseAndValidate.mockResolvedValue({ valid: true, manifest: baseManifest as any, errors: [] });
-  mockGenerateAllFiles.mockResolvedValue([
-    { path: '/cwd/src/features/UserProfile/index.ts', content: '', overwrite: false }
-  ]);
+  mockGenerateAllFiles.mockResolvedValue({
+    files: [{ path: '/cwd/src/features/UserProfile/index.ts', content: '', overwrite: false }],
+    preservedCapabilities: [],
+  });
   mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], errors: [] } as any);
 });
 

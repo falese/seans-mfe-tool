@@ -1,9 +1,10 @@
 
 
 import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
-import type { Context, LoadResult, RenderResult } from '@seans-mfe-tool/runtime';
+import type { Context, LoadResult, RenderResult} from '@seans-mfe-tool/runtime';
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
+
 
 
 /**
@@ -54,6 +55,7 @@ export class abckidsmultiplicationquizMFE extends AngularRemoteMFE {
     console.log('[abckidsmultiplicationquizMFE][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
+
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

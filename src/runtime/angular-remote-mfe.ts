@@ -439,12 +439,12 @@ export class AngularRemoteMFE extends BaseMFE {
    */
   private getSharedDependencies(): Record<string, any> {
     return {
-      '@angular/core': { singleton: true, strictVersion: true, requiredVersion: '^17.0.0' },
-      '@angular/common': { singleton: true, strictVersion: true, requiredVersion: '^17.0.0' },
+      '@angular/core': { singleton: true, strictVersion: true, requiredVersion: '^19.2.16' },
+      '@angular/common': { singleton: true, strictVersion: true, requiredVersion: '^19.2.16' },
       '@angular/platform-browser': {
         singleton: true,
         strictVersion: true,
-        requiredVersion: '^17.0.0',
+        requiredVersion: '^19.2.16',
       },
       rxjs: { singleton: true, requiredVersion: '^7.8.0' },
       'zone.js': { singleton: true, eager: true, requiredVersion: '~0.14.0' },
@@ -674,7 +674,7 @@ export class AngularRemoteMFE extends BaseMFE {
     };
   }
 
-  protected async doQuery(context: Context): Promise<QueryResult> {
+  protected override async doQuery(context: Context): Promise<QueryResult> {
     void context;
     throw new Error('Query not supported for remote MFE type');
   }

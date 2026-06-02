@@ -79,7 +79,7 @@ class SchemaGenerator {
     }
 
     switch (schema.type) {
-      case 'string':
+      case 'string': {
         let validator = 'Joi.string()';
         if (schema.enum) {
           validator += `.valid(${schema.enum.map(e => `'${e}'`).join(', ')})`;
@@ -97,9 +97,10 @@ class SchemaGenerator {
           validator += `.pattern(/${schema.pattern}/)`;
         }
         return validator;
+      }
 
       case 'number':
-      case 'integer':
+      case 'integer': {
         let numValidator = schema.type === 'integer' ? 'Joi.number().integer()' : 'Joi.number()';
         if (schema.minimum !== undefined) {
           numValidator += `.min(${schema.minimum})`;
@@ -108,11 +109,12 @@ class SchemaGenerator {
           numValidator += `.max(${schema.maximum})`;
         }
         return numValidator;
+      }
 
       case 'boolean':
         return 'Joi.boolean()';
 
-      case 'array':
+      case 'array': {
         let arrayValidator = 'Joi.array()';
         if (schema.items) {
           arrayValidator += `.items(${this.transformSchema(schema.items)})`;
@@ -124,8 +126,9 @@ class SchemaGenerator {
           arrayValidator += `.max(${schema.maxItems})`;
         }
         return arrayValidator;
+      }
 
-      case 'object':
+      case 'object': {
         let objectValidator = 'Joi.object()';
         if (schema.properties) {
           const props = {};
@@ -137,6 +140,7 @@ class SchemaGenerator {
             .replace(/\\/g, '')})`;
         }
         return objectValidator;
+      }
 
       default:
         return 'Joi.any()';

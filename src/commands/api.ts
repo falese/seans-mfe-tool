@@ -69,19 +69,29 @@ function validatePort(port: number | string): number {
 async function ensureMiddleware(middlewareDir: string): Promise<void> {
   const middleware: Record<string, string> = {
     'auth.js': `const jwt = require('jsonwebtoken');
-const { UnauthorizedError } = require('../utils/errors');
+const { UnauthorizedError, BaseError } = require('../utils/errors');
 
 function auth(req, res, next) {
   try {
+    if (!process.env.JWT_SECRET) {
+      // Misconfiguration, not a client error.
+      throw new BaseError('Server auth is not configured', 500);
+    }
+
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
       throw new UnauthorizedError('Authorization token required');
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Pin the algorithm to prevent algorithm-confusion / "alg: none" attacks.
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     req.user = decoded;
     next();
   } catch (error) {
+    if (error instanceof BaseError) {
+      next(error);
+      return;
+    }
     next(new UnauthorizedError('Invalid authorization token'));
   }
 }

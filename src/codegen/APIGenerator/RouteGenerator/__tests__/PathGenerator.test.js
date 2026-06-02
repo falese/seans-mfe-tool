@@ -90,6 +90,7 @@ describe('PathGenerator', () => {
         ['/users/{id}', {
           parameters: [{ name: 'id', in: 'path' }],
           get: { operationId: 'getUser', responses: {} },
+          // eslint-disable-next-line no-dupe-keys -- intentional: exercises last-one-wins duplicate-key behavior
           parameters: [{ name: 'id2', in: 'path' }] // Duplicate key (last one wins in JS objects)
         }]
       ];

@@ -1,11 +1,17 @@
 require('dotenv').config();
 
+const env = process.env.NODE_ENV || 'development';
+
+// In production, CORS must be explicitly configured — never default to '*'.
+// Outside production, '*' is convenient for local development.
+const corsOrigin = process.env.CORS_ORIGIN || (env === 'production' ? '' : '*');
+
 const config = {
-  env: process.env.NODE_ENV || 'development',
+  env,
   port: process.env.PORT || 3000,
   logDir: process.env.LOG_DIR || '/app/logs',
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
   },
   // Base configuration that will be extended by database-specific configs

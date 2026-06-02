@@ -102,8 +102,18 @@ async function copyDockerFiles(tempDir: string, type: string): Promise<void> {
   const templateDir = path.resolve(__dirname, '..', 'templates', 'docker');
   console.log(chalk.gray(`Template directory: ${templateDir}`));
 
+  // Map the deploy type to its template filename explicitly. The files are
+  // lowercase `dockerfile.*`, so interpolating `Dockerfile.${type}` resolves
+  // only on case-insensitive filesystems (macOS) and breaks on Linux/CI; the
+  // `api` type also maps to `dockerfile.nodeAPI`, not `dockerfile.api`.
+  const templateByType: Record<string, string> = {
+    remote: 'dockerfile.remote',
+    shell: 'dockerfile.shell',
+    api: 'dockerfile.nodeAPI',
+  };
+
   // Copy Dockerfile
-  const dockerfileSource = path.join(templateDir, `Dockerfile.${type}`);
+  const dockerfileSource = path.join(templateDir, templateByType[type] ?? `dockerfile.${type}`);
   const dockerfileDest = path.join(tempDir, 'Dockerfile');
 
   if (!fs.existsSync(dockerfileSource)) {
@@ -337,9 +347,13 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
     '../templates/docker/docker-compose.production.yml'
   );
   const composeTemplate = await fs.readFile(composeTemplatePath, 'utf8');
+  // MFEs are served by the unprivileged nginx image on 8080; API services
+  // listen on their own app port (ADR-044).
+  const containerPort = type === 'api' ? port || 3000 : 8080;
   const composeContent = ejs.render(composeTemplate, {
     name,
     port: port || 3000,
+    containerPort,
     type,
     database,
     registry: registry || 'myregistry',
@@ -365,15 +379,17 @@ async function dockerComposeProductionDeploy(options: DeployOptions): Promise<vo
   await fs.writeFile(path.join(deployDir, 'Dockerfile'), dockerfileContent);
   console.log(chalk.green('✓ Generated Dockerfile'));
 
-  // Generate nginx config for React apps
+  // Emit the hardened nginx server block as a reference/override. The generated
+  // Dockerfile bakes this same config from the CLI image, so editing this file
+  // only takes effect if the Dockerfile COPY is repointed at it (ADR-044).
   if (type === 'shell' || type === 'remote') {
     const nginxTemplatePath = path.join(
       __dirname,
-      '../templates/docker/nginx.production.conf'
+      '../templates/docker/nginx.mfe.conf'
     );
     const nginxContent = await fs.readFile(nginxTemplatePath, 'utf8');
     await fs.writeFile(path.join(deployDir, 'nginx.conf'), nginxContent);
-    console.log(chalk.green('✓ Generated nginx.conf'));
+    console.log(chalk.green('✓ Generated nginx.conf (reference/override)'));
   }
 
   // Generate .env.production template
@@ -506,10 +522,13 @@ async function kubernetesProductionDeploy(options: DeployOptions): Promise<void>
   const packageJson: any = await fs.readJson(path.join(projectDir, 'package.json'));
   const database = packageJson.database || 'sqlite';
 
+  // MFEs are served by the unprivileged nginx image on 8080 (ADR-044).
+  const containerPort = type === 'api' ? port || 3000 : 8080;
   const templateData = {
     name,
     type,
     port: port || 3000,
+    containerPort,
     registry: registry || 'myregistry',
     replicas,
     memory,

@@ -6,7 +6,7 @@
  */
 
 // Context (REQ-RUNTIME-002)
-export type { Context, UserContext, TelemetryEvent, ValidationError } from './context';
+export type { Context, UserContext, TelemetryEvent, ValidationError, QueryInput } from './context';
 export { ContextFactory, ContextValidator } from './context';
 
 // BaseMFE and result types (REQ-RUNTIME-001)

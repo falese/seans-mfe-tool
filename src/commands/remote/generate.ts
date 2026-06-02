@@ -32,20 +32,26 @@ export async function remoteGenerateCommand(
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
 
     console.log(chalk.blue('\nGenerating files...'));
-    const allFiles = await generateAllFiles(manifest, cwd, { force: true });
+    const { files: allFiles, preservedCapabilities } = await generateAllFiles(manifest, cwd, { force: true });
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
         op: file.overwrite ? 'overwrite' : 'create',
         target: path.relative(cwd, file.path),
       }));
+      if (preservedCapabilities.length > 0) {
+        console.log(chalk.cyan('\n[DRY RUN] Preserved (already implemented):'));
+        for (const cap of preservedCapabilities) {
+          console.log(chalk.cyan(`  ${cap}`));
+        }
+      }
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
       for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);
         const status = file.overwrite ? '(overwrite)' : '(new)';
         console.log(`  ${relativePath} ${chalk.gray(status)}`);
       }
-      return { generated: [], skipped: [], errors: [], dryRun: true, plannedChanges };
+      return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, dryRun: true, plannedChanges };
     }
 
     const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
@@ -54,6 +60,13 @@ export async function remoteGenerateCommand(
       console.log(chalk.green('\n✓ Generated files:'));
       for (const file of genResult.files) {
         console.log(chalk.green(`  ${path.relative(cwd, file.path)}`));
+      }
+    }
+
+    if (preservedCapabilities.length > 0) {
+      console.log(chalk.cyan('\nPreserved (already implemented):'));
+      for (const cap of preservedCapabilities) {
+        console.log(chalk.cyan(`  ${cap}`));
       }
     }
 
@@ -74,19 +87,21 @@ export async function remoteGenerateCommand(
 
     console.log(chalk.blue('\nSummary:'));
     console.log(`  Generated: ${genResult.files.length}`);
+    if (preservedCapabilities.length > 0) console.log(chalk.cyan(`  Preserved: ${preservedCapabilities.length}`));
     console.log(`  Skipped: ${genResult.skipped.length}`);
     if (genResult.errors.length > 0) console.log(chalk.red(`  Errors: ${genResult.errors.length}`));
 
-    if (genResult.files.length > 0) {
+    if (genResult.files.length > 0 || preservedCapabilities.length > 0) {
       console.log(chalk.green('\n✓ Generation complete!'));
       console.log(chalk.blue('Run npm run dev to see your changes.'));
     }
 
     return {
-      generated: genResult.files.map((f) => path.relative(cwd, f.path)),
-      skipped:   genResult.skipped.map((f) => path.relative(cwd, f)),
-      errors:    genResult.errors,
-      dryRun:    false,
+      generated:  genResult.files.map((f) => path.relative(cwd, f.path)),
+      skipped:    genResult.skipped.map((f) => path.relative(cwd, f)),
+      errors:     genResult.errors,
+      preserved:  preservedCapabilities,
+      dryRun:     false,
     };
 
   } catch (error) {

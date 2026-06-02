@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 /**
  * GetGameInfo Feature Tests
  */
@@ -20,7 +21,7 @@ const renderWithTheme = (component: React.ReactElement) => {
 describe('GetGameInfo', () => {
   it('renders without crashing', () => {
     renderWithTheme(<GetGameInfo />);
-    expect(screen.getByText('GetGameInfo')).toBeInTheDocument();
+    expect(screen.getByText(/Ice Hockey/)).toBeInTheDocument();
   });
 
   // TODO: Add more tests based on capability inputs/outputs

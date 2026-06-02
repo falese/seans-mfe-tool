@@ -48,12 +48,15 @@ export const DEPENDENCY_VERSIONS = {
   },
 
   // Mesh Transforms (Schema Manipulation)
+  // NOTE: these track the Mesh v0.10x line — NOT ^1.0.0. A legacy 1.0.0 is
+  // published for several of these but predates and is incompatible with
+  // @graphql-mesh/cli@0.100.x (verified in the demo-mode trial, ADR-052).
   meshTransforms: {
-    namingConvention: '0.105.19',
-    rateLimit: '^1.0.0',
-    filterSchema: '^1.0.0',
-    resolversComposition: '^1.0.0',
-    cache: '^1.0.0',
+    namingConvention: '^0.105.19',
+    rateLimit: '^0.105.38',
+    filterSchema: '^0.104.37',
+    resolversComposition: '^0.104.36',
+    cache: '^0.105.37',
   },
 
   // Core Dependencies
@@ -87,37 +90,90 @@ export const DEPENDENCY_VERSIONS = {
     tsNode: '^10.9.1',
     concurrently: '^8.2.0',
     serve: '^14.2.1',
+    tsJest: '^29.2.0',
+    jestEnvJsdom: '^29.7.0',
+    typesJest: '^29.5.0',
+    jest: '^29.7.0',
+    eslint: '^8.55.0',
+    supertest: '^6.3.3',
   },
 
-  // Angular 17+ (Module Federation - Singleton + strictVersion)
+  // Type definitions (shared across React and Angular templates)
+  types: {
+    cors: '^2.8.17',
+    express: '^4.17.21',
+    node: '^20.10.0',
+    react: '^18.0.28',
+    reactDom: '^18.0.11',
+  },
+
+  // React Testing Library
+  testingLibrary: {
+    react: '^14.0.0',
+    jestDom: '^6.4.0',
+    userEvent: '^14.5.0',
+  },
+
+  // Angular 19+ (Module Federation - Singleton + strictVersion)
+  // Upgraded from ^17.0.0 to ^19.2.16 to resolve five HIGH severity XSS CVEs:
+  //   GHSA-58c5-g7wp-6w37, GHSA-v4hv-rgfq-gp49, GHSA-g93w-mfhg-p222,
+  //   GHSA-prjf-86w9-mfqv (all @angular/common, fixed in 19.2.16+)
+  //   GHSA-jrmj-c5cx-3cw6 (@angular/core + @angular/compiler, fixed in 18.2.15+)
+  // See ADR-051.
   angular: {
-    core: '^17.0.0',
-    common: '^17.0.0',
-    compiler: '^17.0.0',
-    compilerCli: '^17.0.0',
-    platformBrowser: '^17.0.0',
-    forms: '^17.0.0',
+    core: '^19.2.16',
+    common: '^19.2.16',
+    compiler: '^19.2.16',
+    compilerCli: '^19.2.16',
+    platformBrowser: '^19.2.16',
+    forms: '^19.2.16',
     rxjs: '^7.8.0',
     zoneJs: '~0.14.0',
   },
 
   // Angular CLI builder toolchain (angular-webpack variant).
-  // The Angular CLI owns AOT/dev-server; @angular-builders/custom-webpack
-  // merges the Module Federation partial (webpack.config.js).
-  // @angular-architects/module-federation provides withModuleFederationPlugin,
-  // which resolves ModuleFederationPlugin from Angular's bundled webpack —
-  // avoiding the "tap" crash caused by two separate webpack instances.
+  // Versions track Angular major: @angular-builders/custom-webpack@19.0.1 and
+  // @angular-architects/module-federation@19.0.3 for Angular 19 compatibility.
+  // TypeScript bumped from ~5.2.0 to ~5.7.0 — Angular 19 requires >=5.5 <5.9.
   angularBuild: {
-    cli: '^17.0.0',
-    buildAngular: '^17.0.0',
-    customWebpack: '^17.0.0',
-    moduleFederation: '^17.0.0',
+    cli: '^19.2.16',
+    buildAngular: '^19.2.16',
+    customWebpack: '^19.0.1',
+    moduleFederation: '^19.0.3',
+    typescript: '~5.7.0',
   },
 
   // Jest preset (standalone webpack removed — use Angular's bundled copy).
   webpackTools: {
     jestPresetAngular: '^14.0.0',
     typesJest: '^29.5.0',
+  },
+
+  // npm overrides — force safe versions of packages with known vulnerabilities.
+  // Applied selectively: BFF projects get fast-uri; non-BFF projects get uuid.
+  //
+  // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high, BFF chain)
+  //   graphql-jit → fast-json-stringify → fast-uri@^2; both fjs@5 and @6 pin ^2.
+  //
+  // uuid: GHSA-w5hq-g745-h8pq (moderate, dev-only React chain)
+  //   @rspack/cli → @rspack/dev-server → webpack-dev-server → sockjs → uuid@<11.1.1
+  // npm overrides — force safe versions of transitively-pulled packages with
+  // known CVEs. These are deliberate and minimal; `npm audit fix --force` is
+  // prohibited (it downgrades and introduces its own regression surface).
+  overrides: {
+    // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high) — BFF Mesh chain.
+    fastUri: '^3.1.2',
+    // uuid: GHSA-w5hq-g745-h8pq (moderate) — rspack/webpack-dev-server → sockjs → uuid.
+    uuid: '^11.1.1',
+    // tar: node-tar CVEs (GHSA-34x7-hfp2-rc4v, GHSA-8qq5-rm4j-mr97, GHSA-qj8w-gfj5-8c6v)
+    // — @angular/cli → node-gyp → tar in the Angular build toolchain.
+    tar: '^7.5.11',
+    // serialize-javascript: GHSA-5c6j-r48x-rmvq (high RCE) + GHSA-qj8w-gfj5-8c6v (DoS)
+    // — terser-webpack-plugin → serialize-javascript in the Angular build toolchain.
+    serializeJavascript: '^7.0.5',
+    // webpack-dev-server: GHSA-79cf-xcqc-c78w (moderate, cross-origin source exposure)
+    // — Angular dev-server uses wds 5.x; 5.2.4 is the patched release.
+    webpackDevServer: '^5.2.4',
   },
 };
 
@@ -408,6 +464,11 @@ export function extractManifestVars(manifest: DSLManifest) {
   if ((manifest as any).transforms && (manifest as any).transforms.length > 0) {
     neededTransforms.add('resolversComposition');
   }
+  // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
+  const mockSwitchEnabled = !!(manifest as any).data?.mockSwitch?.enabled;
+  if (mockSwitchEnabled) {
+    neededTransforms.add('resolversComposition');
+  }
 
   // Variant selection via plugin (ADR-036, #176).
   // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
@@ -465,8 +526,17 @@ export function extractManifestVars(manifest: DSLManifest) {
       namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
       rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
       filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
+      // Demo-mode mock switch (ADR-052) — emits a resolversComposition over Query.*
+      mockSwitch: mockSwitchEnabled,
       customTransforms: (manifest as any).transforms || [],
     },
+
+    // BFF endpoint for the client-side connector template (bff.ts.ejs)
+    bffEndpoint: (manifest as any).data?.serve?.endpoint ?? '/graphql',
+
+    // True when the manifest declares a data: section — gates doQuery() generation
+    // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
+    hasBff: !!((manifest as any).data),
   };
 }
 
@@ -479,6 +549,43 @@ export async function renderTemplate(
 ): Promise<string> {
   const template = await fs.readFile(templatePath, 'utf8');
   return ejs.render(template, vars);
+}
+
+/**
+ * Detect whether a domain capability is already realized in code.
+ *
+ * `remote:generate` should scaffold a capability's feature stub only when it
+ * has not been implemented yet, and otherwise leave the file untouched. The
+ * signal is the presence of an exported symbol matching the capability name in
+ * its own feature file:
+ *   - React:   `export const <Name>` / `function` / `class` / `default <Name>`
+ *   - Angular: `export class <Name>Component`
+ *
+ * Note: the generated stub already exports `<Name>`, so a capability counts as
+ * "implemented" from the moment its file exists — which is the intended
+ * hands-off behavior (features are user-owned once created). A missing file
+ * means the capability has not been generated yet → returns false.
+ */
+export async function capabilityImplemented(
+  componentFilePath: string,
+  name: string,
+  variant: 'react-rspack' | 'angular-webpack',
+): Promise<boolean> {
+  if (!(await fs.pathExists(componentFilePath))) return false;
+  const content = await fs.readFile(componentFilePath, 'utf8');
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns =
+    variant === 'angular-webpack'
+      ? [new RegExp(`export\\s+(?:default\\s+)?class\\s+${esc}(?:Component)?\\b`)]
+      : [
+          // export const/let/var/function/class/default <Name>
+          new RegExp(`export\\s+(?:default\\s+)?(?:const|let|var|function|class)\\s+${esc}\\b`),
+          // export default <Name>
+          new RegExp(`export\\s+default\\s+${esc}\\b`),
+          // export { ... <Name> ... }
+          new RegExp(`export\\s*\\{[^}]*\\b${esc}\\b[^}]*\\}`),
+        ];
+  return patterns.some((re) => re.test(content));
 }
 
 /**
@@ -556,11 +663,16 @@ export function parseHandlerSource(
 /**
  * Generate all files (features, platform, BFF, configs) for a manifest
  */
+export interface GenerateAllFilesResult {
+  files: GeneratedFile[];
+  preservedCapabilities: string[];
+}
+
 export async function generateAllFiles(
   manifest: DSLManifest,
   basePath: string,
   options: { force?: boolean; dryRun?: boolean } = {}
-): Promise<GeneratedFile[]> {
+): Promise<GenerateAllFilesResult> {
   // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
@@ -681,6 +793,9 @@ export async function generateAllFiles(
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test
   const domainCapabilities: string[] = [];
+  // Capabilities already realized in code — their stubs are not re-emitted so
+  // user implementations survive a re-run (no --force footgun for features).
+  const preservedCapabilities: string[] = [];
   // Ensure capabilities array exists and is iterable
   const capabilitiesArray = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
 
@@ -711,6 +826,14 @@ export async function generateAllFiles(
               specTpl: 'feature.test.tsx.ejs',
             };
 
+      // If the capability is already implemented in its feature file, leave it
+      // (and its index/test) untouched — even under --force, since this is user
+      // code, not regenerable scaffolding.
+      if (await capabilityImplemented(path.join(featurePath, featureSpec.componentFile), name, templateVariant)) {
+        preservedCapabilities.push(name);
+        continue;
+      }
+
       // Feature component
       files.push({
         path: path.join(featurePath, featureSpec.componentFile),
@@ -734,6 +857,13 @@ export async function generateAllFiles(
       });
     }
   }
+  if (preservedCapabilities.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Preserved (already implemented): ${preservedCapabilities.join(', ')}`,
+    );
+  }
+
   // Remote entrypoint exports all domain capabilities
   const remoteEntry =
     templateVariant === 'angular-webpack'
@@ -775,6 +905,22 @@ export async function generateAllFiles(
       }),
       overwrite: true,
     });
+
+    // Demo-mode mock switch (ADR-052): emit the composer (generated, overwrite:true)
+    // and a developer-owned fixtures stub (overwrite:false) next to .meshrc.yaml so
+    // the `./mock-switch#mockSwitch` composer path resolves from the project root.
+    if ((manifest.data as any).mockSwitch?.enabled) {
+      files.push({
+        path: path.join(basePath, 'mock-switch.js'),
+        content: await renderTemplate(path.join(bffTemplateDir, 'mock-switch.js.ejs'), vars),
+        overwrite: true,
+      });
+      files.push({
+        path: path.join(basePath, 'mocks.json'),
+        content: await renderTemplate(path.join(bffTemplateDir, 'mocks.json.ejs'), vars),
+        overwrite: false,
+      });
+    }
   }
 
   // BaseMFE class
@@ -894,6 +1040,8 @@ export async function generateAllFiles(
           { name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' },
           { name: 'tsconfig.app.json', ejs: 'tsconfig.app.json.ejs' },
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
+          { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
+          { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
@@ -1043,5 +1191,12 @@ export async function generateAllFiles(
     );
   }
 
-  return files;
+  // Jest static-asset mock — required by the moduleNameMapper in the generated jest config
+  files.push({
+    path: path.join(basePath, '__mocks__', 'fileMock.js'),
+    content: 'module.exports = "test-file-stub";\n',
+    overwrite: false,
+  });
+
+  return { files, preservedCapabilities };
 }

@@ -24,7 +24,7 @@ describe('unified-generator public/index.html', () => {
   });
 
   it('generates public/index.html with correct title and root div', async () => {
-    const files = await generateAllFiles(manifest as any, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const indexFile = files.find(f => f.path.endsWith('public/index.html'));
     expect(indexFile).toBeDefined();
     expect(indexFile!.content).toContain('<title>TestMFE MFE</title>');

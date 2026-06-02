@@ -4,12 +4,12 @@ services:
   <%= name %>:
     build:
       context: .
-      dockerfile: Dockerfile.production
+      dockerfile: Dockerfile
     image: <%= registry || 'myregistry' %>/<%= name %>:${VERSION:-latest}
     container_name: <%= name %>
     restart: unless-stopped
     ports:
-      - "${PORT:-<%= port || 3000 %>}:<%= port || 3000 %>"
+      - "${PORT:-<%= port || 3000 %>}:<%= containerPort %>"
     environment:
       - NODE_ENV=production
       - PORT=<%= port || 3000 %>
@@ -27,7 +27,7 @@ services:
       - postgres
     <% } %>
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:<%= port || 3000 %>/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:<%= containerPort %>/health"]
       interval: 30s
       timeout: 10s
       retries: 3

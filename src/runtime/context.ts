@@ -151,6 +151,26 @@ export interface TelemetryEvent {
 }
 
 /**
+ * Shape of context.inputs expected by the query capability.
+ * Pass via ContextFactory.create({ inputs: { document, variables } })
+ * or ContextFactory.cloneForCapability(ctx, 'query', { document, variables }).
+ */
+export interface QueryInput {
+  /** GraphQL document string */
+  document: string;
+  /** GraphQL variables */
+  variables?: Record<string, unknown>;
+  /**
+   * Caller-supplied BFF URL override — takes priority over all manifest/env defaults.
+   * Use this when the shell knows the remote's absolute BFF endpoint
+   * (e.g. 'http://localhost:3001/graphql') but the MFE's manifest has only a
+   * relative serve.endpoint path. Omit when the manifest's `endpoint` field provides
+   * the full origin already.
+   */
+  bffUrl?: string;
+}
+
+/**
  * Validation error structure
  */
 export interface ValidationError {

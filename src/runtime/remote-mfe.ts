@@ -10,6 +10,7 @@
  */
 
 import { uuidv4 } from './util/uuid';
+import { createErrorBoundary } from './error-boundary';
 import {
   BaseMFE,
   LoadResult,
@@ -560,8 +561,15 @@ export class RemoteMFE extends BaseMFE {
     }
 
     // @ts-ignore — react types not in root tsconfig; browser-only code
-    const { createElement } = await import('react');
-    root.render(createElement(Component, props));
+    const React = await import('react');
+    const { createElement } = React;
+
+    // Contain render-time failures within the remote's own root so a crashing
+    // remote shows a fallback instead of tearing down the mount (ADR-044).
+    const ErrorBoundary = createErrorBoundary(React, (error, info) => {
+      console.error('[RemoteMFE] render error in remote component', error, info);
+    });
+    root.render(createElement(ErrorBoundary, null, createElement(Component, props)));
 
     return element;
   }
@@ -637,7 +645,7 @@ export class RemoteMFE extends BaseMFE {
     };
   }
 
-  protected async doQuery(context: Context): Promise<QueryResult> {
+  protected override async doQuery(context: Context): Promise<QueryResult> {
     throw new Error('Query not supported for remote MFE type');
   }
 

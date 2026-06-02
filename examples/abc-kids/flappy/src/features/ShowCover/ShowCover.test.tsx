@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 /**
  * ShowCover Feature Tests
  */
@@ -18,10 +19,13 @@ const renderWithTheme = (component: React.ReactElement) => {
 };
 
 describe('ShowCover', () => {
-  it('renders without crashing', () => {
+  it('renders the game title', () => {
     renderWithTheme(<ShowCover />);
-    expect(screen.getByText('ShowCover')).toBeInTheDocument();
+    expect(screen.getByText('Flappy Bird')).toBeInTheDocument();
   });
 
-  // TODO: Add more tests based on capability inputs/outputs
+  it('renders the age chip', () => {
+    renderWithTheme(<ShowCover />);
+    expect(screen.getByText('Ages 4–10')).toBeInTheDocument();
+  });
 });
