@@ -599,7 +599,9 @@ export async function writeGeneratedFiles(
   for (const file of files) {
     try {
       const exists = await fs.pathExists(file.path);
-      if (exists && !file.overwrite && !options.force) {
+      // overwrite:false = developer-owned; never touch it, even with --force.
+      // overwrite:true  = generated; skip if exists unless --force re-stamps it.
+      if (exists && !file.overwrite) {
         result.skipped.push(file.path);
         continue;
       }

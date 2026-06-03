@@ -11,6 +11,7 @@
 <%_ if (hasBff) { _%>
     "prebff:dev": "mesh build",
     "bff:dev": "ts-node server.ts",
+    "build:server": "tsc server.ts --module commonjs --esModuleInterop --skipLibCheck --target ES2022 --moduleResolution node --outDir .",
     "mesh:validate": "mesh validate",
 <%_ } _%>
     "test": "jest",

@@ -16,7 +16,12 @@ plugins:
 <%_ if (meshPlugins.responseCache) { _%>
   - responseCache:
       ttl: <%= meshPlugins.responseCache.ttl %>
-  
+<%_ if (meshTransforms.mockSwitch) { _%>
+      # Skip cache when x-bff-mode header is present so live/mock overrides
+      # are never served stale data from a prior request (ADR-052).
+      if: "context.headers?.get?.('x-bff-mode') == null"
+<%_ } _%>
+
 <%_ } _%>
 <%_ if (meshPlugins.prometheus) { _%>
   - prometheus: {}

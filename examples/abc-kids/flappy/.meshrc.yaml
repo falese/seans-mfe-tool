@@ -27,7 +27,6 @@ plugins:
       ttl: 300000
       # Skip cache when x-bff-mode header is present so live/mock overrides
       # are never served stale data from a prior request (ADR-052).
-      # context here is the WHATWG Request (Yoga passes request as first arg).
       if: "context.headers?.get?.('x-bff-mode') == null"
 
   - prometheus: {}

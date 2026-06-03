@@ -11,6 +11,7 @@
     "serve": "serve dist -p <%= port %>",
     "bff:dev": "ts-node server.ts",
     "bff:build": "mesh build",
+    "build:server": "tsc server.ts --module commonjs --esModuleInterop --skipLibCheck --target ES2022 --moduleResolution node --outDir .",
     "mesh:validate": "mesh validate",
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx"

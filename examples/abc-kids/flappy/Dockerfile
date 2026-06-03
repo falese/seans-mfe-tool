@@ -55,6 +55,12 @@ RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 # Copy Mesh artifacts
 COPY --from=builder /app/.mesh ./.mesh
 
+# Copy JS plugins dynamically imported by the built Mesh artifacts at runtime.
+# .mesh/index.ts references these via import("../mesh-context.js") etc.
+COPY --from=builder /app/mesh-context.js ./
+COPY --from=builder /app/mock-switch.js ./
+COPY --from=builder /app/mocks.json ./
+
 # Copy built static assets
 COPY --from=builder /app/dist ./dist
 
