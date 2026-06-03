@@ -34,6 +34,7 @@ Full spec: `@docs/spec.md`
 | `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
 | `turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged) |
 | `turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
+| `npm run build && npm run docker:build:cli` | After any `src/runtime/**` change: recompile dist/ THEN rebuild CLI image (dist/ is gitignored but baked into the CLI Docker image) |
 
 ## Development rules
 
