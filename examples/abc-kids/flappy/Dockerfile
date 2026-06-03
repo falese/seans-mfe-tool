@@ -63,11 +63,11 @@ COPY --from=builder /app/package.json ./
 # Copy Mesh artifacts
 COPY --from=builder /app/.mesh ./.mesh
 
-# Copy JS plugins dynamically imported by the built Mesh artifacts at runtime.
-# .mesh/index.ts references these via import("../mesh-context.js") etc.
-COPY --from=builder /app/mesh-context.js ./
-COPY --from=builder /app/mock-switch.js ./
-COPY --from=builder /app/mocks.json ./
+# Copy BFF platform files dynamically imported by the built Mesh artifacts at runtime.
+# .mesh/index.js resolves these relative to the project root via the paths in .meshrc.yaml.
+COPY --from=builder /app/src/platform/bff/mesh-context.js ./src/platform/bff/
+COPY --from=builder /app/src/platform/bff/mock-switch.js ./src/platform/bff/
+COPY --from=builder /app/src/platform/bff/mocks.json ./src/platform/bff/
 
 # Copy built static assets
 COPY --from=builder /app/dist ./dist

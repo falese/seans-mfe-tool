@@ -315,7 +315,7 @@ describe('unified-generator', () => {
 
   it('generates mesh-context.js with Envelop plugin for context injection', async () => {
     const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
-    const meshContextJs = files.find(f => f.path === path.join(basePath, 'mesh-context.js'));
+    const meshContextJs = files.find(f => f.path === path.join(basePath, 'src', 'platform', 'bff', 'mesh-context.js'));
 
     expect(meshContextJs).toBeDefined();
     expect(meshContextJs!.overwrite).toBe(true);
@@ -341,7 +341,7 @@ describe('unified-generator', () => {
     const meshrc = files.find(f => f.path === path.join(basePath, '.meshrc.yaml'));
 
     expect(meshrc).toBeDefined();
-    expect(meshrc?.content).toContain('additionalEnvelopPlugins: ./mesh-context.js');
+    expect(meshrc?.content).toContain('additionalEnvelopPlugins: ./src/platform/bff/mesh-context.js');
   });
 
   describe('BFF root files do not clobber MFE root templates', () => {
@@ -443,8 +443,8 @@ describe('unified-generator', () => {
 
     it('emits mock-switch.js (overwrite) and mocks.json (developer-owned) when enabled', async () => {
       const { files } = await generateAllFiles(withMock as any, basePath, { force: true });
-      const composer = files.find((f) => f.path === path.join(basePath, 'mock-switch.js'));
-      const fixtures = files.find((f) => f.path === path.join(basePath, 'mocks.json'));
+      const composer = files.find((f) => f.path === path.join(basePath, 'src', 'platform', 'bff', 'mock-switch.js'));
+      const fixtures = files.find((f) => f.path === path.join(basePath, 'src', 'platform', 'bff', 'mocks.json'));
       expect(composer).toBeDefined();
       expect(composer!.overwrite).toBe(true);
       expect(composer!.content).toContain('x-bff-mode');
@@ -458,7 +458,7 @@ describe('unified-generator', () => {
       const meshrc = files.find((f) => f.path === path.join(basePath, '.meshrc.yaml'));
       expect(meshrc!.content).toContain('resolversComposition');
       expect(meshrc!.content).toContain("resolver: 'Query.*'");
-      expect(meshrc!.content).toContain('./mock-switch#mockSwitch');
+      expect(meshrc!.content).toContain('./src/platform/bff/mock-switch#mockSwitch');
     });
 
     it('adds the resolvers-composition dependency to package.json', async () => {

@@ -8,7 +8,7 @@
 
 # Context injection plugin (ADR-027): injects jwt, requestId, userId, headers
 # into every GraphQL execution context from the incoming HTTP request.
-additionalEnvelopPlugins: ./mesh-context.js
+additionalEnvelopPlugins: ./src/platform/bff/mesh-context.js
 
 <%_ if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { _%>
 # Plugins (Performance & Observability)
@@ -45,7 +45,7 @@ transforms:
       mode: bare
       compositions:
         - resolver: 'Query.*'
-          composer: ./mock-switch#mockSwitch
+          composer: ./src/platform/bff/mock-switch#mockSwitch
 <%_ } _%>
 <%_ if (meshTransforms.namingConvention) { _%>
   - namingConvention:

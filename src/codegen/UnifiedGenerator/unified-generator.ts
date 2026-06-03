@@ -908,26 +908,24 @@ export async function generateAllFiles(
       overwrite: true,
     });
 
-    // Context-injection Envelop plugin (ADR-027): always emitted alongside
-    // .meshrc.yaml so the `additionalEnvelopPlugins: ./mesh-context.js` entry
-    // in .meshrc.yaml resolves correctly at mesh build time.
+    // Context-injection Envelop plugin (ADR-027): emitted to src/platform/bff/
+    // alongside bff.ts. .meshrc.yaml references it as ./src/platform/bff/mesh-context.js.
     files.push({
-      path: path.join(basePath, 'mesh-context.js'),
+      path: path.join(bffDir, 'mesh-context.js'),
       content: await renderTemplate(path.join(bffTemplateDir, 'mesh-context.js.ejs'), vars),
       overwrite: true,
     });
 
-    // Demo-mode mock switch (ADR-052): emit the composer (generated, overwrite:true)
-    // and a developer-owned fixtures stub (overwrite:false) next to .meshrc.yaml so
-    // the `./mock-switch#mockSwitch` composer path resolves from the project root.
+    // Demo-mode mock switch (ADR-052): composer and developer-owned fixtures
+    // live in src/platform/bff/ alongside the BFF connector.
     if ((manifest.data as any).mockSwitch?.enabled) {
       files.push({
-        path: path.join(basePath, 'mock-switch.js'),
+        path: path.join(bffDir, 'mock-switch.js'),
         content: await renderTemplate(path.join(bffTemplateDir, 'mock-switch.js.ejs'), vars),
         overwrite: true,
       });
       files.push({
-        path: path.join(basePath, 'mocks.json'),
+        path: path.join(bffDir, 'mocks.json'),
         content: await renderTemplate(path.join(bffTemplateDir, 'mocks.json.ejs'), vars),
         overwrite: false,
       });
