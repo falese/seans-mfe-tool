@@ -17,9 +17,6 @@ import {
   type Context,
   type LoadResult,
   type RenderResult,
-<%_ if (hasBff) { _%>
-  type QueryResult,
-<%_ } _%>
 } from '@seans-mfe-tool/runtime';
 <% if (domainTypeImports.length > 0) { %>
 import type { <%= domainTypeImports.join(', ') %> } from './types';
@@ -27,26 +24,6 @@ import type { <%= domainTypeImports.join(', ') %> } from './types';
 <% if (handlerSources && handlerSources.length > 0) { %>
 import { handlerRegistry } from './handler-registry';
 <% } %>
-<%_ if (hasBff) { _%>
-import { query as bffQuery } from '../bff/bff';
-
-async function fetchBff(
-  url: string,
-  document: string,
-  variables: Record<string, unknown> | undefined,
-  headers: Record<string, string>,
-): Promise<unknown> {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify({ query: document, variables }),
-  });
-  if (!res.ok) throw new Error(`BFF request failed: ${res.status} ${res.statusText}`);
-  const json = (await res.json()) as { data?: unknown; errors?: Array<{ message: string }> };
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data;
-}
-<%_ } _%>
 
 /**
  * <%= className %>
@@ -144,49 +121,6 @@ export class <%= className %> extends RemoteMFE {
     console.log('[<%= className %>][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
-
-<%_ if (hasBff) { _%>
-  /**
-   * doQuery — routes mfe.query() calls to the PetStore BFF connector.
-   *
-   * Reads context.inputs.document + variables and dispatches via the generated
-   * bff.ts connector. The BFF URL is resolved automatically from
-   * manifest.endpoint + data.serve.endpoint (e.g. http://localhost:<%= port %>/graphql).
-   * Pass context.inputs.bffUrl to override when the shell is on a different origin.
-   *
-   * Re-generated on every `remote:generate` run — do not edit by hand.
-   */
-  protected override async doQuery(context: Context): Promise<QueryResult> {
-    const inputs = (context.inputs ?? {}) as {
-      document: string;
-      variables?: Record<string, unknown>;
-      bffUrl?: string;
-    };
-    const headers: Record<string, string> = {
-      ...(context.headers as Record<string, string> ?? {}),
-      ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
-      ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
-    };
-    // Use explicit bffUrl when provided (e.g. shell passing cross-origin URL).
-    // bff.ts's BFF_ENDPOINT is relative ('/graphql') and would resolve to the
-    // shell's origin. RemoteMFE.doQuery throws, so we fetch directly here.
-    const url = inputs.bffUrl ?? undefined;
-    if (url) {
-      try {
-        const data = await fetchBff(url, inputs.document, inputs.variables, headers);
-        return { data };
-      } catch (err) {
-        return { data: null, errors: [{ message: (err as Error).message }] };
-      }
-    }
-    try {
-      const data = await bffQuery(inputs.document, inputs.variables, headers);
-      return { data };
-    } catch (err) {
-      return { data: null, errors: [{ message: (err as Error).message }] };
-    }
-  }
-<%_ } _%>
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

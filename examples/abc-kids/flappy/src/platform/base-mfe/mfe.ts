@@ -5,32 +5,11 @@ import {
   type Context,
   type LoadResult,
   type RenderResult,
-  type QueryResult,
 } from '@seans-mfe-tool/runtime';
-
-async function fetchBff(
-  url: string,
-  document: string,
-  variables: Record<string, unknown> | undefined,
-  headers: Record<string, string>,
-): Promise<unknown> {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify({ query: document, variables }),
-  });
-  if (!res.ok) throw new Error(`BFF request failed: ${res.status} ${res.statusText}`);
-  const json = (await res.json()) as { data?: unknown; errors?: Array<{ message: string }> };
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data;
-}
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
-
 import { handlerRegistry } from './handler-registry';
-
-import { query as bffQuery } from '../bff/bff';
 
 /**
  * abckidsflappyMFE
@@ -136,39 +115,8 @@ export class abckidsflappyMFE extends RemoteMFE {
    * bff.ts connector. The BFF URL is resolved automatically from
    * manifest.endpoint + data.serve.endpoint (e.g. http://localhost:3001/graphql).
    * Pass context.inputs.bffUrl to override when the shell is on a different origin.
-   *
-   * Re-generated on every `remote:generate` run — do not edit by hand.
+   * BaseMFE.doQuery handles this via inheritance (ADR-053).
    */
-  protected override async doQuery(context: Context): Promise<QueryResult> {
-    const inputs = (context.inputs ?? {}) as {
-      document: string;
-      variables?: Record<string, unknown>;
-      bffUrl?: string;
-    };
-    const headers: Record<string, string> = {
-      ...(context.headers as Record<string, string> ?? {}),
-      ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
-      ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
-    };
-    // Use explicit bffUrl when provided (e.g. shell passing cross-origin URL).
-    // bff.ts's BFF_ENDPOINT is relative ('/graphql') and would resolve to the
-    // shell's origin. RemoteMFE.doQuery throws, so we fetch directly here.
-    const url = inputs.bffUrl ?? undefined;
-    if (url) {
-      try {
-        const data = await fetchBff(url, inputs.document, inputs.variables, headers);
-        return { data };
-      } catch (err) {
-        return { data: null, errors: [{ message: (err as Error).message }] };
-      }
-    }
-    try {
-      const data = await bffQuery(inputs.document, inputs.variables, headers);
-      return { data };
-    } catch (err) {
-      return { data: null, errors: [{ message: (err as Error).message }] };
-    }
-  }
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

@@ -645,10 +645,6 @@ export class RemoteMFE extends BaseMFE {
     };
   }
 
-  protected override async doQuery(context: Context): Promise<QueryResult> {
-    throw new Error('Query not supported for remote MFE type');
-  }
-
   protected async doEmit(context: Context): Promise<EmitResult> {
     if (this.deps?.telemetry) {
       const event = context.inputs?.event;

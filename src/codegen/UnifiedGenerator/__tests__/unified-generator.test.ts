@@ -184,7 +184,7 @@ describe('unified-generator', () => {
     expect(dockerfile).toBeDefined();
     // BFF port should be 4002 (3002 + 1000)
     expect(dockerfile?.content).toContain('EXPOSE 4002');
-    expect(dockerfile?.content).toContain('http://localhost:4002/health');
+    expect(dockerfile?.content).toContain("process.env.PORT || 4002");
   });
 
   it('Dockerfile always includes .mesh artifact copy — no hasData conditional (#189)', async () => {
