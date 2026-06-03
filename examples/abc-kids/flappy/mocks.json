@@ -1,9 +1,0 @@
-{
-  "listPets": [
-    { "id": "mock-001", "name": "Buddy",    "status": "available", "tag": "dog" },
-    { "id": "mock-002", "name": "Whiskers", "status": "available", "tag": "cat" },
-    { "id": "mock-003", "name": "Tweety",   "status": "pending",   "tag": "bird" },
-    { "id": "mock-004", "name": "Goldie",   "status": "sold",      "tag": "fish" }
-  ],
-  "getPet": { "id": "mock-001", "name": "Buddy", "status": "available", "tag": "dog" }
-}
