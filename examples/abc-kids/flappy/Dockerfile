@@ -43,13 +43,18 @@ RUN npx mesh build
 # Compile TypeScript server entry point.
 RUN npm run build:server
 
+# Strip @seans-mfe-tool/runtime from package.json before the production stage.
+# remote:generate (called inside npm run build) rewrites package.json and may
+# put the runtime back as a file: reference pointing to /seans-mfe-tool which
+# doesn't exist in the production image — causing npm install to 404.
+RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+
 # Production image
 FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Use the builder's package.json (npm pkg set moved runtime to devDep path)
-# so --omit=dev correctly skips @seans-mfe-tool/runtime resolution entirely.
 COPY --from=builder /app/package.json ./
 RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 # Copy Mesh artifacts
