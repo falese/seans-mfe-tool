@@ -29,6 +29,23 @@ import { handlerRegistry } from './handler-registry';
 <% } %>
 <%_ if (hasBff) { _%>
 import { query as bffQuery } from '../bff/bff';
+
+async function fetchBff(
+  url: string,
+  document: string,
+  variables: Record<string, unknown> | undefined,
+  headers: Record<string, string>,
+): Promise<unknown> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify({ query: document, variables }),
+  });
+  if (!res.ok) throw new Error(`BFF request failed: ${res.status} ${res.statusText}`);
+  const json = (await res.json()) as { data?: unknown; errors?: Array<{ message: string }> };
+  if (json.errors?.length) throw new Error(json.errors[0].message);
+  return json.data;
+}
 <%_ } _%>
 
 /**
@@ -145,19 +162,25 @@ export class <%= className %> extends RemoteMFE {
       variables?: Record<string, unknown>;
       bffUrl?: string;
     };
-    // When the caller provides an explicit bffUrl (e.g. the shell passing
-    // http://localhost:<%= port %>/graphql), delegate to the base class which resolves
-    // the URL correctly. bff.ts's BFF_ENDPOINT is a relative '/graphql' that
-    // would resolve to the shell's origin, not the MFE's BFF.
-    if (inputs.bffUrl) {
-      return super.doQuery(context);
+    const headers: Record<string, string> = {
+      ...(context.headers as Record<string, string> ?? {}),
+      ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
+      ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
+    };
+    // Use explicit bffUrl when provided (e.g. shell passing cross-origin URL).
+    // bff.ts's BFF_ENDPOINT is relative ('/graphql') and would resolve to the
+    // shell's origin. RemoteMFE.doQuery throws, so we fetch directly here.
+    const url = inputs.bffUrl ?? undefined;
+    if (url) {
+      try {
+        const data = await fetchBff(url, inputs.document, inputs.variables, headers);
+        return { data };
+      } catch (err) {
+        return { data: null, errors: [{ message: (err as Error).message }] };
+      }
     }
     try {
-      const data = await bffQuery(inputs.document, inputs.variables, {
-        ...(context.headers ?? {}),
-        ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
-        ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
-      });
+      const data = await bffQuery(inputs.document, inputs.variables, headers);
       return { data };
     } catch (err) {
       return { data: null, errors: [{ message: (err as Error).message }] };
