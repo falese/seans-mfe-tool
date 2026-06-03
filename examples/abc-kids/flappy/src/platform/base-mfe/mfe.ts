@@ -123,12 +123,20 @@ export class abckidsflappyMFE extends RemoteMFE {
    * Re-generated on every `remote:generate` run — do not edit by hand.
    */
   protected override async doQuery(context: Context): Promise<QueryResult> {
-    const { document, variables } = (context.inputs ?? {}) as {
+    const inputs = (context.inputs ?? {}) as {
       document: string;
       variables?: Record<string, unknown>;
+      bffUrl?: string;
     };
+    // When the caller provides an explicit bffUrl (e.g. the shell passing
+    // http://localhost:3001/graphql), delegate to the base class which resolves
+    // the URL correctly. bff.ts's BFF_ENDPOINT is a relative '/graphql' that
+    // would resolve to the shell's origin, not the MFE's BFF.
+    if (inputs.bffUrl) {
+      return super.doQuery(context);
+    }
     try {
-      const data = await bffQuery(document, variables, {
+      const data = await bffQuery(inputs.document, inputs.variables, {
         ...(context.headers ?? {}),
         ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
         ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
