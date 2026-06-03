@@ -9,8 +9,7 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createBuiltMeshHTTPHandler } from './.mesh';
-import type { Request, Response, Express } from 'express';
-import crypto from 'crypto';
+import type { Response, Express } from 'express';
 
 const app: Express = express();
 
@@ -54,7 +53,10 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-// Following ADR-027: createBuiltMeshHTTPHandler with context factory pattern
+// Context fields (jwt, requestId, userId, headers) are injected per-request
+// by mesh-context.js via Mesh additionalEnvelopPlugins (ADR-027).
+//
+// MeshContext documents the shape available to resolvers and operationHeaders.
 interface MeshContext {
   jwt?: string;
   requestId: string;
@@ -64,14 +66,7 @@ interface MeshContext {
   headers: Record<string, string | string[] | undefined>;
 }
 
-const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({
-  context: (req: Request) => ({
-    jwt: req.headers.authorization?.replace('Bearer ', ''),
-    requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
-    userId: extractUserIdFromToken(req.headers.authorization as string),
-    headers: req.headers,
-  }),
-});
+const meshHandler = createBuiltMeshHTTPHandler();
 
 app.use('/graphql', meshHandler);
 
@@ -94,18 +89,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
-
-// Extract user ID from JWT token
-function extractUserIdFromToken(authHeader?: string): string | undefined {
-  if (!authHeader) return undefined;
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.sub || payload.userId;
-  } catch {
-    return undefined;
-  }
-}
 
 const port = process.env.PORT || 4001;
 

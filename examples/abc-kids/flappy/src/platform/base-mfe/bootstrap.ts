@@ -152,6 +152,9 @@ const manifest = {
     "serve": {
       "endpoint": "/graphql",
       "playground": true
+    },
+    "mockSwitch": {
+      "enabled": true
     }
   }
 };

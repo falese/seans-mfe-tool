@@ -288,29 +288,60 @@ describe('unified-generator', () => {
     // Verify Mesh imports
     expect(serverTs?.content).toContain('import { createBuiltMeshHTTPHandler } from \'./.mesh\';');
     
-    // Verify MeshContext interface
+    // Verify MeshContext interface (documents injected fields for resolvers/operationHeaders)
     expect(serverTs?.content).toContain('interface MeshContext {');
     expect(serverTs?.content).toContain('jwt?: string;');
     expect(serverTs?.content).toContain('requestId: string;');
     expect(serverTs?.content).toContain('userId?: string;');
     
-    // Verify handler instantiation — ADR-027: context factory pattern, not 3-arg call
-    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler<MeshContext>({');
-    expect(serverTs?.content).toContain('context: (req: Request) => ({');
+    // Verify handler instantiation — ADR-027: zero-arg call; context injected via
+    // mesh-context.js Envelop plugin (additionalEnvelopPlugins in .meshrc.yaml)
+    expect(serverTs?.content).toContain('const meshHandler = createBuiltMeshHTTPHandler();');
 
     // Verify direct middleware registration (no wrapper function needed)
     expect(serverTs?.content).toContain('app.use(\'/graphql\', meshHandler);');
 
-    // Verify OLD broken patterns are NOT present (replaced in ADR-027 fix)
+    // Verify OLD broken patterns are NOT present
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
     expect(serverTs?.content).not.toContain('next();');
     expect(serverTs?.content).not.toContain('requestWithContext as any, res as any, context');
-    expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>();');
+    expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>({');
+    expect(serverTs?.content).not.toContain('context: (req: Request) => ({');
     
-    // Verify JWT extraction helper
-    expect(serverTs?.content).toContain('function extractUserIdFromToken(authHeader?: string): string | undefined');
-    expect(serverTs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
+    // extractUserIdFromToken lives in mesh-context.js, not server.ts
+    expect(serverTs?.content).not.toContain('function extractUserIdFromToken(');
+  });
+
+  it('generates mesh-context.js with Envelop plugin for context injection', async () => {
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+    const meshContextJs = files.find(f => f.path === path.join(basePath, 'mesh-context.js'));
+
+    expect(meshContextJs).toBeDefined();
+    expect(meshContextJs!.overwrite).toBe(true);
+
+    // Verify plugin shape
+    expect(meshContextJs?.content).toContain('onContextBuilding');
+    expect(meshContextJs?.content).toContain('extendContext');
+    expect(meshContextJs?.content).toContain('context.request');
+
+    // Verify all four fields are injected
+    expect(meshContextJs?.content).toContain('jwt:');
+    expect(meshContextJs?.content).toContain('requestId:');
+    expect(meshContextJs?.content).toContain('userId:');
+    expect(meshContextJs?.content).toContain('headers,');
+
+    // Verify helper function lives here
+    expect(meshContextJs?.content).toContain('function extractUserIdFromToken(');
+    expect(meshContextJs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
+  });
+
+  it('wires additionalEnvelopPlugins in generated .meshrc.yaml', async () => {
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+    const meshrc = files.find(f => f.path === path.join(basePath, '.meshrc.yaml'));
+
+    expect(meshrc).toBeDefined();
+    expect(meshrc?.content).toContain('additionalEnvelopPlugins: ./mesh-context.js');
   });
 
   describe('BFF root files do not clobber MFE root templates', () => {

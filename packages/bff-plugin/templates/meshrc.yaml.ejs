@@ -6,6 +6,10 @@
 # GraphQL Mesh Configuration
 <%- meshConfigYaml %>
 
+# Context injection plugin (ADR-027): injects jwt, requestId, userId, headers
+# into every GraphQL execution context from the incoming HTTP request.
+additionalEnvelopPlugins: ./mesh-context.js
+
 <%_ if (meshPlugins.responseCache || meshPlugins.prometheus || meshPlugins.opentelemetry) { _%>
 # Plugins (Performance & Observability)
 plugins:

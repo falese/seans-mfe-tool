@@ -906,6 +906,15 @@ export async function generateAllFiles(
       overwrite: true,
     });
 
+    // Context-injection Envelop plugin (ADR-027): always emitted alongside
+    // .meshrc.yaml so the `additionalEnvelopPlugins: ./mesh-context.js` entry
+    // in .meshrc.yaml resolves correctly at mesh build time.
+    files.push({
+      path: path.join(basePath, 'mesh-context.js'),
+      content: await renderTemplate(path.join(bffTemplateDir, 'mesh-context.js.ejs'), vars),
+      overwrite: true,
+    });
+
     // Demo-mode mock switch (ADR-052): emit the composer (generated, overwrite:true)
     // and a developer-owned fixtures stub (overwrite:false) next to .meshrc.yaml so
     // the `./mock-switch#mockSwitch` composer path resolves from the project root.

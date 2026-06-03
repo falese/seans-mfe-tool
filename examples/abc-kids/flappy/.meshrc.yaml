@@ -17,11 +17,19 @@ serve:
   playground: true
 
 
+# Context injection plugin (ADR-027): injects jwt, requestId, userId, headers
+# into every GraphQL execution context from the incoming HTTP request.
+additionalEnvelopPlugins: ./mesh-context.js
+
 # Plugins (Performance & Observability)
 plugins:
   - responseCache:
       ttl: 300000
-  
+      # Skip cache when x-bff-mode header is present so live/mock overrides
+      # are never served stale data from a prior request (ADR-052).
+      # context here is the WHATWG Request (Yoga passes request as first arg).
+      if: "context.headers?.get?.('x-bff-mode') == null"
+
   - prometheus: {}
 
 
