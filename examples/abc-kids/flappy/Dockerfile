@@ -55,8 +55,11 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
+# Copy node_modules from builder — the .mesh/index.js requires @graphql-mesh/http,
+# @graphql-mesh/runtime, etc., which are transitive deps of @graphql-mesh/cli
+# (devDep) and not installed by a production --omit=dev install.
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 # Copy Mesh artifacts
 COPY --from=builder /app/.mesh ./.mesh
 
