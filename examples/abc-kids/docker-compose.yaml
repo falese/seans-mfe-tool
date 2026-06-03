@@ -20,7 +20,7 @@ services:
       # both remoteEntry.js and /graphql at the same origin (localhost:3001).
       - PORT=3001
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/remoteEntry.js']
+      test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 10s
       timeout: 5s
       retries: 5
