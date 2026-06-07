@@ -8,6 +8,8 @@ export interface ThoughtPanelProps {
   /** Restarts the countdown bar animation on each keystroke. */
   restartKey: number;
   pauseMs: number;
+  /** Shown while the thought is below the firing threshold, e.g. "4 / 12". Null otherwise. */
+  minHint: string | null;
 }
 
 /** Left panel: the borderless thought field plus the silence countdown bar. */
@@ -18,6 +20,7 @@ export const ThoughtPanel: React.FC<ThoughtPanelProps> = ({
   countdownActive,
   restartKey,
   pauseMs,
+  minHint,
 }) => {
   const wrap: React.CSSProperties = {
     display: "flex",
@@ -50,6 +53,13 @@ export const ThoughtPanel: React.FC<ThoughtPanelProps> = ({
     lineHeight: 1.8,
     padding: "8px 4px",
   };
+  const hint: React.CSSProperties = {
+    flex: "0 0 auto",
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 10,
+    color: "var(--muted)",
+    padding: "0 4px 4px",
+  };
   return (
     <div style={wrap}>
       <div style={track}>
@@ -69,6 +79,7 @@ export const ThoughtPanel: React.FC<ThoughtPanelProps> = ({
           }
         }}
       />
+      {minHint ? <div style={hint}>keep typing… {minHint}</div> : null}
     </div>
   );
 };

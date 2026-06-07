@@ -124,13 +124,28 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
 
   const glow = pause.active || stream.isStreaming;
 
+  // Below the firing threshold: surface "n / minChars" so the silent gate reads
+  // as "keep typing", not "broken".
+  const trimmedLen = thought.trim().length;
+  const minHint =
+    !stream.isStreaming && trimmedLen > 0 && trimmedLen < cfg.minChars
+      ? `${String(trimmedLen)} / ${String(cfg.minChars)}`
+      : null;
+  const status = stream.isStreaming
+    ? "streaming…"
+    : pause.active
+      ? "listening…"
+      : minHint
+        ? `keep typing… ${minHint}`
+        : "idle";
+
   return (
     <div className="iv-root">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <header style={headerStyle}>
         <span>inner-voice</span>
-        <span>{stream.isStreaming ? "streaming…" : pause.active ? "listening…" : "idle"}</span>
+        <span>{status}</span>
       </header>
 
       <main style={gridStyle}>
@@ -142,6 +157,7 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
             countdownActive={pause.active}
             restartKey={pause.restartKey}
             pauseMs={cfg.pauseMs}
+            minHint={minHint}
           />
         </section>
 
