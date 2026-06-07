@@ -7,6 +7,7 @@ export interface RunStreamOptions extends StreamHandlers {
   prompt: string;
   coderServeUrl: string;
   maxTokens?: number;
+  system?: string;
   signal?: AbortSignal;
 }
 
@@ -29,6 +30,7 @@ export function runStream(opts: RunStreamOptions): Promise<void> {
       model: anthropicModel(),
       prompt: opts.prompt,
       maxTokens: opts.maxTokens,
+      system: opts.system,
       signal: opts.signal,
     });
   }
@@ -38,6 +40,7 @@ export function runStream(opts: RunStreamOptions): Promise<void> {
     url: opts.coderServeUrl,
     prompt: opts.prompt,
     maxTokens: opts.maxTokens,
+    system: opts.system,
     signal: opts.signal,
   });
 }

@@ -10,6 +10,7 @@ export interface StreamMetrics {
 export interface UseCoderStreamArgs {
   coderServeUrl: string;
   maxTokens: number;
+  systemPrompt: string;
   /** Called with the full RAW final + thought text (threads tags intact) when a stream ends. */
   onComplete?: (final: string, thought: string, metrics: StreamMetrics) => void;
 }
@@ -32,7 +33,7 @@ export interface UseCoderStreamResult {
  * streaming state, timing metrics, and any error. Aborts in-flight requests on
  * a new start, on reset, and on unmount.
  */
-export function useCoderStream({ coderServeUrl, maxTokens, onComplete }: UseCoderStreamArgs): UseCoderStreamResult {
+export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, onComplete }: UseCoderStreamArgs): UseCoderStreamResult {
   const [display, setDisplay] = useState("");
   const [thinking, setThinking] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -57,6 +58,7 @@ export function useCoderStream({ coderServeUrl, maxTokens, onComplete }: UseCode
         prompt,
         coderServeUrl,
         maxTokens,
+        system: systemPrompt,
         signal: ac.signal,
         onChunk: (final, thought) => {
           setDisplay(stripThreads(final));
@@ -75,7 +77,7 @@ export function useCoderStream({ coderServeUrl, maxTokens, onComplete }: UseCode
         },
       });
     },
-    [coderServeUrl, maxTokens],
+    [coderServeUrl, maxTokens, systemPrompt],
   );
 
   const reset = useCallback(() => {

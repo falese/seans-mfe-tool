@@ -90,7 +90,12 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
     [cfg.maxHistoryTurns, threads],
   );
 
-  const stream = useCoderStream({ coderServeUrl: cfg.coderServeUrl, maxTokens: cfg.maxTokens, onComplete });
+  const stream = useCoderStream({
+    coderServeUrl: cfg.coderServeUrl,
+    maxTokens: cfg.maxTokens,
+    systemPrompt: cfg.systemPrompt,
+    onComplete,
+  });
 
   const pause = usePauseTimer({
     text: thought,

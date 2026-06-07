@@ -6,6 +6,8 @@
  * describe()/doDescribe(); `resolveConfig` merges any partial source over the
  * defaults, ignoring values of the wrong type.
  */
+import { SYSTEM_PROMPT } from "./systemPrompt";
+
 export interface InnerVoiceConfig {
   coderServeUrl: string;
   pauseMs: number;
@@ -14,6 +16,8 @@ export interface InnerVoiceConfig {
   maxThreads: number;
   /** Token budget per generation. Reasoning models need headroom for thought + answer. */
   maxTokens: number;
+  /** The persona/instructions sent with every request. Override to retune behavior. */
+  systemPrompt: string;
 }
 
 export const DEFAULT_CONFIG: InnerVoiceConfig = {
@@ -23,6 +27,7 @@ export const DEFAULT_CONFIG: InnerVoiceConfig = {
   maxHistoryTurns: 6,
   maxThreads: 12,
   maxTokens: 1024,
+  systemPrompt: SYSTEM_PROMPT,
 };
 
 function num(value: unknown, fallback: number): number {
@@ -51,5 +56,6 @@ export function resolveConfig(source?: Partial<Record<keyof InnerVoiceConfig, un
     maxHistoryTurns: num(s.maxHistoryTurns, DEFAULT_CONFIG.maxHistoryTurns),
     maxThreads: num(s.maxThreads, DEFAULT_CONFIG.maxThreads),
     maxTokens: num(s.maxTokens, DEFAULT_CONFIG.maxTokens),
+    systemPrompt: str(s.systemPrompt, DEFAULT_CONFIG.systemPrompt),
   };
 }

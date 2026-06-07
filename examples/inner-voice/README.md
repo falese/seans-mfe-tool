@@ -122,6 +122,13 @@ in `src/lib/config.ts`, so the MFE runs with no manifest:
 | `maxHistoryTurns` | `6` | prior responses retained (faded) |
 | `maxThreads` | `12` | unique session threads retained |
 | `maxTokens` | `1024` | token budget per generation (headroom for reasoning models) |
+| `systemPrompt` | built-in | the persona/instructions sent every request — override to retune behavior |
+
+The persona lives in `src/lib/systemPrompt.ts` (`SYSTEM_PROMPT`) and is the single
+source of every behavioral constraint (length, "thinking partner" framing, the
+`<threads>` block). Override it per-deployment via the manifest `systemPrompt`
+config — but **keep the `<threads>{...}</threads>` instruction**, or the center
+thread web stops populating.
 
 ### Dual-voice (reasoning models)
 

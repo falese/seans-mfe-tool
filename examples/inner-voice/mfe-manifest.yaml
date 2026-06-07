@@ -40,6 +40,11 @@ config:
   maxHistoryTurns: 6
   maxThreads: 12
   maxTokens: 1024
+  # systemPrompt overrides the built-in persona. Keep the <threads>{...}</threads>
+  # instruction or the center thread web stops populating. Example:
+  # systemPrompt: |
+  #   You are a terse research assistant. Answer with facts, no hedging.
+  #   Always end with <threads>{"threads":["..."]}</threads> (max 4).
 
 dependencies:
   runtime:
