@@ -1,0 +1,52 @@
+name: inner-voice
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: >
+  No-send-button thinking interface. Streams tokens from the local MLX
+  inference server (coder serve) as the user thinks out loud, extracts concept
+  threads in real time, and feeds them back as the input layer for the agentic
+  delivery loop.
+
+endpoint: http://localhost:3009
+remoteEntry: http://localhost:3009/remoteEntry.js
+discovery: http://localhost:3009/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - InnerVoice:
+      type: domain
+      description: >
+        No-send-button thinking interface. Streams tokens from the local
+        MLX inference server as the user types. Extracts concept threads
+        in real time. Input layer for the agentic delivery loop.
+
+  - Load:
+      type: platform
+      lifecycle:
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+
+# Domain configuration. Every value also has a hardcoded fallback in the
+# component, so the MFE runs standalone without a manifest. The platform
+# exposes this block at runtime via describe()/doDescribe().
+config:
+  coderServeUrl: http://localhost:3991
+  pauseMs: 2200
+  minChars: 12
+  maxHistoryTurns: 6
+  maxThreads: 12
+  maxTokens: 1024
+  # systemPrompt overrides the built-in persona. Keep the <threads>{...}</threads>
+  # instruction or the center thread web stops populating. Example:
+  # systemPrompt: |
+  #   You are a terse research assistant. Answer with facts, no hedging.
+  #   Always end with <threads>{"threads":["..."]}</threads> (max 4).
+
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
