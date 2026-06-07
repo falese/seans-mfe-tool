@@ -39,6 +39,7 @@ config:
   minChars: 12
   maxHistoryTurns: 6
   maxThreads: 12
+  maxTokens: 1024
 
 dependencies:
   runtime:

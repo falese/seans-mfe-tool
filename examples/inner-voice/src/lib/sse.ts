@@ -11,8 +11,10 @@
  * returns whatever complete events it could parse. It never throws; malformed
  * payloads are dropped.
  */
+export type Channel = "thought" | "final";
+
 export type CoderEvent =
-  | { type: "token"; text: string }
+  | { type: "token"; channel: Channel; text: string }
   | { type: "done"; ttft: number; tokensPerSec: number; totalTokens: number }
   | { type: "error"; message: string }
   | { type: "sentinel" };
@@ -24,7 +26,8 @@ export function parseSseData(payload: string): CoderEvent | null {
   try {
     const obj = JSON.parse(data) as Record<string, unknown>;
     if (obj.type === "token" && typeof obj.text === "string") {
-      return { type: "token", text: obj.text };
+      // Older servers omit `channel`; default to "final" for back-compat.
+      return { type: "token", channel: obj.channel === "thought" ? "thought" : "final", text: obj.text };
     }
     if (obj.type === "done") {
       return {

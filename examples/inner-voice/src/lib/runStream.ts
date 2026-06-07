@@ -6,6 +6,7 @@ import { isDemoMode, anthropicApiKey, anthropicModel } from "./env";
 export interface RunStreamOptions extends StreamHandlers {
   prompt: string;
   coderServeUrl: string;
+  maxTokens?: number;
   signal?: AbortSignal;
 }
 
@@ -27,6 +28,7 @@ export function runStream(opts: RunStreamOptions): Promise<void> {
       apiKey: anthropicApiKey(),
       model: anthropicModel(),
       prompt: opts.prompt,
+      maxTokens: opts.maxTokens,
       signal: opts.signal,
     });
   }
@@ -35,6 +37,7 @@ export function runStream(opts: RunStreamOptions): Promise<void> {
     ...handlers,
     url: opts.coderServeUrl,
     prompt: opts.prompt,
+    maxTokens: opts.maxTokens,
     signal: opts.signal,
   });
 }

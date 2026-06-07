@@ -121,6 +121,18 @@ in `src/lib/config.ts`, so the MFE runs with no manifest:
 | `minChars` | `12` | minimum thought length to trigger |
 | `maxHistoryTurns` | `6` | prior responses retained (faded) |
 | `maxThreads` | `12` | unique session threads retained |
+| `maxTokens` | `1024` | token budget per generation (headroom for reasoning models) |
+
+### Dual-voice (reasoning models)
+
+`coder serve` is channel-aware: it splits a model's reasoning from its answer and
+tags each streamed token `thought` or `final`. The UI renders the **thought**
+channel as a second inner voice (italic, accent-tinted, indented) braided above
+the crystallized **final** answer — so a reasoning model's thinking becomes part
+of the experience rather than noise. Threads are pulled from the final answer,
+falling back to the reasoning. Instruct models (no reasoning) are unaffected —
+everything is `final`. Supported reasoning formats: DeepSeek `<think>…</think>`
+and Harmony `<|channel|>analysis/final`.
 
 ---
 

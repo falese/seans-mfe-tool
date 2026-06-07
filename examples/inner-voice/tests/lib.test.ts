@@ -75,7 +75,10 @@ describe("threadPosition", () => {
 
 describe("SSE parsing", () => {
   test("parseSseData maps token / done / sentinel / error", () => {
-    expect(parseSseData('{"type":"token","text":"hi"}')).toEqual({ type: "token", text: "hi" });
+    expect(parseSseData('{"type":"token","text":"hi"}')).toEqual({ type: "token", channel: "final", text: "hi" });
+    expect(parseSseData('{"type":"token","channel":"thought","text":"hmm"}')).toEqual({
+      type: "token", channel: "thought", text: "hmm",
+    });
     expect(parseSseData('{"type":"done","ttft":1,"tokensPerSec":2,"totalTokens":3}')).toEqual({
       type: "done", ttft: 1, tokensPerSec: 2, totalTokens: 3,
     });
@@ -88,7 +91,7 @@ describe("SSE parsing", () => {
     const p = new SseParser();
     expect(p.push('data: {"type":"to')).toEqual([]);
     const events = p.push('ken","text":"abc"}\n\ndata: [DONE]\n');
-    expect(events[0]).toEqual({ type: "token", text: "abc" });
+    expect(events[0]).toEqual({ type: "token", channel: "final", text: "abc" });
     expect(events[1]).toEqual({ type: "sentinel" });
   });
 

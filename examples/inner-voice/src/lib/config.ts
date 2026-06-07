@@ -12,6 +12,8 @@ export interface InnerVoiceConfig {
   minChars: number;
   maxHistoryTurns: number;
   maxThreads: number;
+  /** Token budget per generation. Reasoning models need headroom for thought + answer. */
+  maxTokens: number;
 }
 
 export const DEFAULT_CONFIG: InnerVoiceConfig = {
@@ -20,6 +22,7 @@ export const DEFAULT_CONFIG: InnerVoiceConfig = {
   minChars: 12,
   maxHistoryTurns: 6,
   maxThreads: 12,
+  maxTokens: 1024,
 };
 
 function num(value: unknown, fallback: number): number {
@@ -47,5 +50,6 @@ export function resolveConfig(source?: Partial<Record<keyof InnerVoiceConfig, un
     minChars: num(s.minChars, DEFAULT_CONFIG.minChars),
     maxHistoryTurns: num(s.maxHistoryTurns, DEFAULT_CONFIG.maxHistoryTurns),
     maxThreads: num(s.maxThreads, DEFAULT_CONFIG.maxThreads),
+    maxTokens: num(s.maxTokens, DEFAULT_CONFIG.maxTokens),
   };
 }

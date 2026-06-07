@@ -4,8 +4,10 @@ import type { StreamMetrics } from "../../hooks/useCoderStream";
 export interface ResponsePanelProps {
   /** Completed responses, oldest first. */
   turns: string[];
-  /** Live streaming text, or null when idle. */
+  /** Live streaming final answer, or null when idle. */
   liveText: string | null;
+  /** The model's reasoning ("inner voice") for the current/last turn — empty for non-reasoning models. */
+  thinking: string;
   isStreaming: boolean;
   error: string | null;
   metrics: StreamMetrics | null;
@@ -18,6 +20,7 @@ export interface ResponsePanelProps {
 export const ResponsePanel: React.FC<ResponsePanelProps> = ({
   turns,
   liveText,
+  thinking,
   isStreaming,
   error,
   metrics,
@@ -26,6 +29,8 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
 }) => {
   const priors = isStreaming ? turns : turns.slice(0, -1);
   const active = isStreaming ? liveText ?? "" : turns.length > 0 ? turns[turns.length - 1] : null;
+  // Cursor lives on the thinking voice until the final answer starts forming.
+  const cursorOnThinking = isStreaming && thinking.length > 0 && (active === null || active === "");
 
   const wrap: React.CSSProperties = {
     display: "flex",
@@ -70,6 +75,33 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
     padding: "2px 6px",
     cursor: "pointer",
   };
+  // The model's reasoning rendered as a second inner voice — italic, accent-tinted,
+  // indented behind a thin rule, dimmer than the crystallized answer.
+  const innerVoice: React.CSSProperties = {
+    fontFamily: "'EB Garamond', serif",
+    fontStyle: "italic",
+    fontSize: 15,
+    lineHeight: 1.7,
+    color: "var(--accent)",
+    opacity: 0.55,
+    borderLeft: "2px solid var(--accent)",
+    paddingLeft: 12,
+    margin: "0 0 12px",
+    whiteSpace: "pre-wrap",
+  };
+  const cursor = (
+    <span
+      style={{
+        display: "inline-block",
+        width: 7,
+        marginLeft: 1,
+        color: "var(--accent)",
+        animation: "blink 0.6s step-end infinite",
+      }}
+    >
+      ▋
+    </span>
+  );
 
   return (
     <div style={wrap}>
@@ -87,22 +119,17 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
           <p style={{ ...meta, color: "var(--accent)" }}>⚠ {error}</p>
         ) : null}
 
-        {active !== null ? (
+        {thinking.length > 0 ? (
+          <div style={innerVoice} aria-label="model inner voice">
+            {thinking}
+            {cursorOnThinking ? cursor : null}
+          </div>
+        ) : null}
+
+        {active !== null && active !== "" ? (
           <p key={`active-${String(turns.length)}`} style={{ margin: "0 0 8px", animation: "fadeUp 0.3s ease" }}>
             {active}
-            {isStreaming ? (
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 7,
-                  marginLeft: 1,
-                  color: "var(--accent)",
-                  animation: "blink 0.6s step-end infinite",
-                }}
-              >
-                ▋
-              </span>
-            ) : null}
+            {isStreaming && !cursorOnThinking ? cursor : null}
           </p>
         ) : null}
 

@@ -87,7 +87,8 @@ export async function streamClaude(opts: StreamClaudeOptions): Promise<void> {
     if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
       if (ttft === 0) ttft = Date.now() - start;
       accumulated += event.delta.text ?? "";
-      opts.onChunk(accumulated);
+      // Demo path has no reasoning channel — everything is the "final" voice.
+      opts.onChunk(accumulated, "");
     } else if (event.type === "message_delta" && typeof event.usage?.output_tokens === "number") {
       outputTokens = event.usage.output_tokens;
     } else if (event.type === "error") {
@@ -119,7 +120,7 @@ export async function streamClaude(opts: StreamClaudeOptions): Promise<void> {
     }
     const elapsedSec = (Date.now() - start) / 1000;
     const tokensPerSec = elapsedSec > 0 ? outputTokens / elapsedSec : 0;
-    opts.onDone(accumulated, ttft, tokensPerSec);
+    opts.onDone(accumulated, "", ttft, tokensPerSec);
   } catch (err) {
     if (signal?.aborted) return;
     opts.onError(err instanceof Error ? err.message : "stream error");

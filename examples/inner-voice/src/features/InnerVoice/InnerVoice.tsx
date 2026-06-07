@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ThoughtPanel } from "./ThoughtPanel";
 import { ThreadWeb } from "./ThreadWeb";
 import { ResponsePanel } from "./ResponsePanel";
@@ -71,21 +71,26 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
   const cfg = resolveConfig(config);
   const [thought, setThought] = useState("");
   const [turns, setTurns] = useState<string[]>([]);
+  // The thought last sent to the model — guards against re-sending identical text
+  // (the whole evolving thought IS the prompt; we just never repeat it verbatim).
+  const lastSent = useRef("");
 
   const threads = useThreads(cfg.maxThreads);
 
   const onComplete = useCallback(
-    (full: string, _metrics: StreamMetrics) => {
-      const display = stripThreads(full);
+    (final: string, thought_: string, _metrics: StreamMetrics) => {
+      const display = stripThreads(final);
       if (display.length > 0) {
         setTurns((t) => [...t, display].slice(-cfg.maxHistoryTurns));
       }
-      threads.setFromResponse(parseThreads(full));
+      // Prefer threads from the final answer; fall back to the reasoning voice.
+      const found = parseThreads(final);
+      threads.setFromResponse(found.length > 0 ? found : parseThreads(thought_));
     },
     [cfg.maxHistoryTurns, threads],
   );
 
-  const stream = useCoderStream({ coderServeUrl: cfg.coderServeUrl, onComplete });
+  const stream = useCoderStream({ coderServeUrl: cfg.coderServeUrl, maxTokens: cfg.maxTokens, onComplete });
 
   const pause = usePauseTimer({
     text: thought,
@@ -93,7 +98,10 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
     minChars: cfg.minChars,
     enabled: !stream.isStreaming,
     onFire: () => {
-      if (thought.trim().length >= cfg.minChars) stream.start(thought);
+      if (thought.trim().length >= cfg.minChars && thought !== lastSent.current) {
+        lastSent.current = thought;
+        stream.start(thought);
+      }
     },
   });
 
@@ -103,6 +111,7 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
 
   const handleEscape = useCallback(() => {
     setThought("");
+    lastSent.current = "";
     stream.reset();
     threads.clearCurrent();
     // session thread history persists by design
@@ -144,6 +153,7 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
           <ResponsePanel
             turns={turns}
             liveText={stream.isStreaming ? stream.display : null}
+            thinking={stream.thinking}
             isStreaming={stream.isStreaming}
             error={stream.error}
             metrics={stream.metrics}

@@ -2,10 +2,10 @@ import { SseParser } from "./sse";
 import { SYSTEM_PROMPT } from "./systemPrompt";
 
 export interface StreamHandlers {
-  /** Accumulated raw text so far (still includes any <threads> tag). */
-  onChunk: (text: string) => void;
-  /** Final raw text plus timing metrics. */
-  onDone: (full: string, ttft: number, tokensPerSec: number) => void;
+  /** Accumulated final + thought text so far (each still includes any <threads> tag). */
+  onChunk: (final: string, thought: string) => void;
+  /** Final + thought text plus timing metrics. */
+  onDone: (final: string, thought: string, ttft: number, tokensPerSec: number) => void;
   /** Human-readable failure message. */
   onError: (message: string) => void;
 }
@@ -59,7 +59,8 @@ export async function streamCoder(opts: StreamCoderOptions): Promise<void> {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   const parser = new SseParser();
-  let accumulated = "";
+  let final = "";
+  let thought = "";
   let ttft = 0;
   let tokensPerSec = 0;
 
@@ -69,8 +70,9 @@ export async function streamCoder(opts: StreamCoderOptions): Promise<void> {
       if (done) break;
       for (const event of parser.push(decoder.decode(value, { stream: true }))) {
         if (event.type === "token") {
-          accumulated += event.text;
-          opts.onChunk(accumulated);
+          if (event.channel === "thought") thought += event.text;
+          else final += event.text;
+          opts.onChunk(final, thought);
         } else if (event.type === "done") {
           ttft = event.ttft;
           tokensPerSec = event.tokensPerSec;
@@ -80,7 +82,7 @@ export async function streamCoder(opts: StreamCoderOptions): Promise<void> {
         }
       }
     }
-    opts.onDone(accumulated, ttft, tokensPerSec);
+    opts.onDone(final, thought, ttft, tokensPerSec);
   } catch (err) {
     if (signal?.aborted) return;
     opts.onError(err instanceof Error ? err.message : "stream error");
