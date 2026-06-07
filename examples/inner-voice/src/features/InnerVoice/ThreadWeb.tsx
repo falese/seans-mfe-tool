@@ -10,6 +10,12 @@ export interface ThreadWebProps {
   onThreadClick: (thread: string) => void;
 }
 
+// threadPosition gives the radial *direction*; these spread the nodes out for
+// legibility — mostly vertically, so same-side concepts land on distinct rows
+// instead of stacking on top of each other in the narrow centre column.
+const SPREAD_X = 1.1;
+const SPREAD_Y = 3.6;
+
 /** Center panel: a fixed pulse with concept nodes radiating around it. */
 export const ThreadWeb: React.FC<ThreadWebProps> = ({ threads, active, streaming, onThreadClick }) => {
   const container: React.CSSProperties = {
@@ -27,8 +33,8 @@ export const ThreadWeb: React.FC<ThreadWebProps> = ({ threads, active, streaming
           <ThreadNode
             key={`${thread}-${String(i)}`}
             label={thread}
-            x={x}
-            y={y}
+            x={x * SPREAD_X}
+            y={y * SPREAD_Y}
             index={i}
             onClick={() => onThreadClick(thread)}
           />

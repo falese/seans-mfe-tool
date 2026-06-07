@@ -56,7 +56,7 @@ const gridStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
   display: "grid",
-  gridTemplateColumns: "1fr 200px 1fr",
+  gridTemplateColumns: "1fr 340px 1fr",
   gap: 0,
 };
 const colStyle: React.CSSProperties = {

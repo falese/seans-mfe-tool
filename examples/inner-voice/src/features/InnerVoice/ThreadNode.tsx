@@ -28,12 +28,11 @@ export const ThreadNode: React.FC<ThreadNodeProps> = ({ label, x, y, index, onCl
     background: "var(--surface)",
     border: "1px solid var(--border)",
     borderRadius: 3,
-    padding: "3px 7px",
+    padding: "4px 8px",
     cursor: "pointer",
-    whiteSpace: "nowrap",
-    maxWidth: 130,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    whiteSpace: "normal",
+    textAlign: "center",
+    maxWidth: 104,
     animation: `threadIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${String(index * 0.08)}s both`,
   };
   return (
