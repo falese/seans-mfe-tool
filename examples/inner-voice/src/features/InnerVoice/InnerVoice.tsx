@@ -16,8 +16,8 @@ export interface InnerVoiceProps {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital@0;1&family=JetBrains+Mono&display=swap');
 .iv-root {
-  --bg:#040404; --surface:#0d0d0d; --border:#141414;
-  --text:#c8c8c8; --muted:#2a2a2a; --accent:#00ff9f;
+  --bg:#0b0d10; --surface:#14171c; --border:#262b33;
+  --text:#e8eaed; --text-soft:#c6cad0; --muted:#9aa0a8; --accent:#00ff9f;
   background:var(--bg); color:var(--text);
   height:100vh; display:flex; flex-direction:column; overflow:hidden;
 }

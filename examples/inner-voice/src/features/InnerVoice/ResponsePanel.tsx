@@ -43,14 +43,14 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
     minHeight: 0,
     overflowY: "auto",
     fontFamily: "'EB Garamond', serif",
-    fontSize: 17,
-    lineHeight: 1.8,
+    fontSize: 18,
+    lineHeight: 1.7,
     color: "var(--text)",
-    padding: "8px 4px",
+    padding: "12px 6px",
   };
   const meta: React.CSSProperties = {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "var(--muted)",
     marginTop: 6,
   };
@@ -67,7 +67,7 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
   };
   const chip: React.CSSProperties = {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "var(--text)",
     background: "var(--surface)",
     border: "1px solid var(--border)",
@@ -75,18 +75,17 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
     padding: "2px 6px",
     cursor: "pointer",
   };
-  // The model's reasoning rendered as a second inner voice — italic, accent-tinted,
-  // indented behind a thin rule, dimmer than the crystallized answer.
+  // The model's reasoning rendered as a second inner voice — italic, set off by a
+  // thin accent rule, softer than the crystallized answer but still legible.
   const innerVoice: React.CSSProperties = {
     fontFamily: "'EB Garamond', serif",
     fontStyle: "italic",
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 1.7,
-    color: "var(--accent)",
-    opacity: 0.55,
+    color: "var(--text-soft)",
     borderLeft: "2px solid var(--accent)",
     paddingLeft: 12,
-    margin: "0 0 12px",
+    margin: "0 0 14px",
     whiteSpace: "pre-wrap",
   };
   const cursor = (
@@ -109,7 +108,7 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({
         {priors.map((text, i) => (
           <p
             key={`prior-${String(i)}`}
-            style={{ opacity: 0.15 + (i / Math.max(priors.length, 1)) * 0.2, margin: "0 0 14px" }}
+            style={{ opacity: 0.35 + (i / Math.max(priors.length, 1)) * 0.35, margin: "0 0 14px" }}
           >
             {text}
           </p>
