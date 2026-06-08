@@ -1040,6 +1040,8 @@ export async function generateAllFiles(
   // --- Root/config files ---
   // Variant-aware: angular-webpack emits webpack.config.js + tsconfig pair;
   // react-rspack keeps the existing package.json + rspack.config.js shape.
+  // tsconfig.json is only emitted here for non-BFF React MFEs — when a BFF
+  // is present the BFF plugin already owns it (packages/bff-plugin/templates/tsconfig.json).
   const rootTemplates =
     templateVariant === 'angular-webpack'
       ? [
@@ -1055,6 +1057,7 @@ export async function generateAllFiles(
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
+          ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
         ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);

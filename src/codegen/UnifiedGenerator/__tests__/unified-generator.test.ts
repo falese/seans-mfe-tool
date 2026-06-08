@@ -429,6 +429,16 @@ describe('unified-generator', () => {
       const meshrc = files.find((f) => f.path.includes('.meshrc.yaml'));
       expect(meshrc).toBeUndefined();
     });
+
+    it('emits tsconfig.json for a non-BFF React MFE', async () => {
+      const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
+      const tsconfig = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
+      expect(tsconfig).toBeDefined();
+      expect(tsconfig!.content).toContain('"jsx": "react-jsx"');
+      expect(tsconfig!.content).toContain('"DOM"');
+      expect(tsconfig!.content).toContain('tsx');
+      expect(tsconfig!.overwrite).toBe(false);
+    });
   });
 
   describe('demo-mode mock switch — ADR-052', () => {
