@@ -1,4 +1,4 @@
-import type { StreamHandlers } from "./streamCoder";
+import type { StreamHandlers, Traits } from "./streamCoder";
 import { streamCoder } from "./streamCoder";
 import { streamClaude } from "./streamClaude";
 import { isDemoMode, anthropicApiKey, anthropicModel } from "./env";
@@ -8,6 +8,10 @@ export interface RunStreamOptions extends StreamHandlers {
   coderServeUrl: string;
   maxTokens?: number;
   system?: string;
+  /** Episode grouping (coder serve only; ignored in demo/Claude mode). */
+  sessionId?: string;
+  /** Persona dial (coder serve only; ignored in demo/Claude mode). */
+  traits?: Traits;
   signal?: AbortSignal;
 }
 
@@ -41,6 +45,8 @@ export function runStream(opts: RunStreamOptions): Promise<void> {
     prompt: opts.prompt,
     maxTokens: opts.maxTokens,
     system: opts.system,
+    sessionId: opts.sessionId,
+    traits: opts.traits,
     signal: opts.signal,
   });
 }
