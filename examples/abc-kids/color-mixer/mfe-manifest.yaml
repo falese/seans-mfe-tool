@@ -1,0 +1,70 @@
+name: abc-kids-color-mixer
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: Color Mixer — mix two paints to make the target color!
+owner: abc-kids-team
+tags: [kids, game, colors, art]
+category: games
+
+endpoint: http://localhost:3008
+remoteEntry: http://localhost:3008/remoteEntry.js
+discovery: http://localhost:3008/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - PlayGame:
+      type: domain
+      description: Play the Color Mixer game
+
+  - ShowCover:
+      type: domain
+      description: Show the Color Mixer game cover card with title and art
+
+  - GetGameInfo:
+      type: domain
+      description: Return game metadata including title, age range, and description
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+dependencies:
+  runtime:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  design-system:
+    '@mui/material': ^5.14.0
+    '@emotion/react': ^11.11.1
+    '@emotion/styled': ^11.11.0
