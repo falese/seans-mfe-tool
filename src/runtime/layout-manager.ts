@@ -311,6 +311,7 @@ export class LayoutManager {
 
 // ── Built-in adaptors ────────────────────────────────────────
 
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 function defaultCreateSlotElement(slotId: string): SlotElementLike {
   const element = document.createElement('section');
   element.className = `layout-slot layout-slot--${slotId}`;
@@ -318,6 +319,7 @@ function defaultCreateSlotElement(slotId: string): SlotElementLike {
 }
 
 /** text/html — MFE-owned markup. Elements with data-action send actions. */
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const htmlAdaptor: ExperienceAdaptor = {
   async mount(experience, slot, helpers) {
     slot.innerHTML = String(experience.output ?? '');
@@ -333,6 +335,7 @@ export const htmlAdaptor: ExperienceAdaptor = {
 };
 
 /** application/json — generic data view for data-only experiences. */
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const jsonAdaptor: ExperienceAdaptor = {
   async mount(experience, slot) {
     const pre = document.createElement('pre');
@@ -362,6 +365,7 @@ interface MfContainer {
   get(module: string): Promise<() => MfBootstrapModule | { default: MfBootstrapModule }>;
 }
 
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promise<MfContainer> {
   const globalScope = globalThis as unknown as Record<string, MfContainer | undefined>;
   if (!globalScope[scope]) {
@@ -392,6 +396,7 @@ async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promi
  * Framework-independent: RemoteMFE (React) and AngularRemoteMFE share the
  * same contract (ADR-041), so the same adaptor mounts both.
  */
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const moduleFederationAdaptor: ExperienceAdaptor = {
   async mount(experience, slot, helpers) {
     const output = experience.output as {

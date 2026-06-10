@@ -204,6 +204,85 @@ describe('LayoutManager', () => {
     expect(transport.stopped).toBe(true);
     expect(unmounts).toEqual(['e-1']);
   });
+
+  it('ignores non-COMPONENT_UPDATE envelopes and EXPERIENCE payloads without data', async () => {
+    const { adaptor, mounts } = makeAdaptor();
+    const { manager, transport, errors } = makeManager(adaptor);
+    manager.start();
+
+    transport.onMessage?.({ kind: 'ACTION_ECHO', payload: { id: 'a', type: 'EXPERIENCE' } });
+    transport.onMessage?.({ kind: 'COMPONENT_UPDATE' });
+    transport.onMessage?.({ kind: 'COMPONENT_UPDATE', payload: { id: 'x', type: 'EXPERIENCE' } });
+    transport.onMessage?.({ kind: 'COMPONENT_UPDATE', payload: { id: 'c', type: 'CARD', data: {} } });
+    await flush();
+
+    expect(mounts).toHaveLength(0);
+    expect(errors).toHaveLength(0);
+    expect(manager.activeSlots).toEqual([]);
+  });
+
+  it('falls back to "?" identifiers for RESOLUTION_ERROR with missing fields', async () => {
+    const { adaptor } = makeAdaptor();
+    const { manager, transport, errors } = makeManager(adaptor);
+    manager.start();
+
+    transport.onMessage?.({ kind: 'COMPONENT_UPDATE', payload: { id: 'x', type: 'RESOLUTION_ERROR' } });
+    await flush();
+
+    expect(errors[0]).toBe('MFE resolution failed: ?.?: unknown');
+  });
+
+  it('defaults to the main slot when props are absent entirely', async () => {
+    const { adaptor } = makeAdaptor();
+    const { manager, transport } = makeManager(adaptor);
+    manager.start();
+
+    const bare = experience('e-1');
+    delete (bare as { props?: unknown }).props;
+    transport.emitExperience(bare);
+    await flush();
+
+    expect(manager.activeSlots).toEqual(['main']);
+  });
+
+  it('reuses the slot element when replacing an experience (one child per slot)', async () => {
+    const { adaptor } = makeAdaptor();
+    const { manager, transport, host } = makeManager(adaptor);
+    manager.start();
+
+    transport.emitExperience(experience('e-1'));
+    await flush();
+    transport.emitExperience(experience('e-2'));
+    await flush();
+
+    expect(host.children).toHaveLength(1);
+    expect(manager.activeSlots).toEqual(['main']);
+  });
+
+  it('tolerates adaptors that return no unmount function', async () => {
+    const noUnmount: ExperienceAdaptor = { async mount() { /* mounts nothing to clean up */ } };
+    const { manager, transport, errors } = makeManager(noUnmount);
+    manager.start();
+
+    transport.emitExperience(experience('e-1'));
+    await flush();
+    transport.emitExperience(experience('e-2'));
+    await flush();
+
+    expect(errors).toHaveLength(0);
+    expect(manager.activeSlots).toEqual(['main']);
+  });
+
+  it('sendAction omits context when the shell has no session', async () => {
+    const { adaptor } = makeAdaptor();
+    const { manager, transport } = makeManager(adaptor);
+    manager.start();
+
+    await manager.sendAction('e-1', 'CLICK', {});
+
+    const envelope = transport.sent[0] as { payload: Record<string, unknown> };
+    expect('context' in envelope.payload).toBe(false);
+  });
 });
 
 describe('GraphQLTransportWsDaemonTransport', () => {
