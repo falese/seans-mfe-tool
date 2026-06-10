@@ -171,6 +171,31 @@ describe('control-plane message protocol', () => {
     });
   });
 
+  describe('isModuleFederationOutput', () => {
+    const mfOutput = {
+      remoteEntryUrl: 'http://localhost:3001/remoteEntry.js',
+      scope: 'abc_kids_flappy',
+      module: './App',
+      component: 'PlayGame',
+    };
+
+    it('accepts a module-federation experience output (ADR-055)', () => {
+      const { isModuleFederationOutput } = require('../messages');
+      expect(isModuleFederationOutput(mfOutput)).toBe(true);
+    });
+
+    it.each([
+      ['missing remoteEntryUrl', { scope: 's', module: './App' }],
+      ['missing scope', { remoteEntryUrl: 'u', module: './App' }],
+      ['missing module', { remoteEntryUrl: 'u', scope: 's' }],
+      ['an html string', '<p>hi</p>'],
+      ['null', null],
+    ])('rejects %s', (_label, value) => {
+      const { isModuleFederationOutput } = require('../messages');
+      expect(isModuleFederationOutput(value)).toBe(false);
+    });
+  });
+
   describe('EXPERIENCE_CONTENT_TYPES', () => {
     it('names the three canonical delivery mechanisms', () => {
       expect(EXPERIENCE_CONTENT_TYPES).toEqual({

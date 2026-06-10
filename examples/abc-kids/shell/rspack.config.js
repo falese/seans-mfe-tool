@@ -23,6 +23,9 @@ module.exports = {
   plugins: [
     new rspack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      // Daemon control-plane endpoint for the LayoutManager (ADR-055).
+      // Default 3004: flappy/hockey/quiz own 3001-3003 on localhost.
+      'process.env.DAEMON_WS_URL': JSON.stringify(process.env.DAEMON_WS_URL || 'ws://localhost:3004/graphql'),
     }),
     new rspack.HtmlRspackPlugin({
       template: path.join(__dirname, 'public/index.html'),

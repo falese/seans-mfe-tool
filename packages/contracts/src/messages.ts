@@ -130,6 +130,38 @@ export interface RenderedExperience {
 }
 
 /**
+ * The `output` shape for `contentType: 'module-federation'` experiences
+ * (ADR-055). Gives a layout manager everything needed to load the remote and
+ * drive its BaseMFE lifecycle — framework-independent: React and Angular
+ * remotes share the same bootstrap contract (`{ mfe, mfeReady }`).
+ */
+export interface ModuleFederationExperienceOutput {
+  /** Where the renderer fetches the remote container, e.g. http://host:3001/remoteEntry.js */
+  remoteEntryUrl: string;
+  /** Global container name, e.g. 'abc_kids_flappy'. */
+  scope: string;
+  /** Exposed module to import, e.g. './App' (must export `{ mfe, mfeReady }`). */
+  module: string;
+  /** Component name passed to mfe.render() inputs. */
+  component?: string;
+  /** Extra props merged into the render inputs. */
+  props?: Record<string, unknown>;
+}
+
+/** True when `value` is a module-federation experience output. */
+export function isModuleFederationOutput(
+  value: unknown
+): value is ModuleFederationExperienceOutput {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).remoteEntryUrl === 'string' &&
+    typeof (value as Record<string, unknown>).scope === 'string' &&
+    typeof (value as Record<string, unknown>).module === 'string'
+  );
+}
+
+/**
  * The daemon's per-experience state entry: the experience plus every action
  * submitted against it. Payload of a STATE_SNAPSHOT message.
  */
