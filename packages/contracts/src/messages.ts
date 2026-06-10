@@ -97,6 +97,15 @@ export interface MfeRegistration {
   contentType?: string;
   /** For module-federation MFEs: where the renderer fetches remoteEntry. */
   remoteEntryUrl?: string;
+  /**
+   * For client-side MFEs delivered via module federation: how a layout
+   * manager loads and mounts the remote (ADR-055). When present together
+   * with `remoteEntryUrl` and `contentType: 'module-federation'`, the daemon
+   * synthesizes the RenderedExperience from the registration instead of
+   * calling HTTP capability endpoints — the BaseMFE lifecycle runs in the
+   * host shell, not server-side.
+   */
+  moduleFederation?: { scope: string; module: string; component?: string };
   manifest?: Record<string, unknown>;
 }
 

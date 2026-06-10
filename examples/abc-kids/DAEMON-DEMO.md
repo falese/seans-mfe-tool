@@ -1,0 +1,101 @@
+# ABC Kids — Daemon-Driven Composition Demo (ADR-054 / ADR-055)
+
+The shell in this example is a **100% generic layout host**: it knows nothing
+about flappy, hockey, or any other MFE. Composition arrives entirely from the
+daemon control plane (falese/daemon). This runbook drives the full loop:
+
+```
+shell (3000, empty) ──action──► daemon (3004) ──forward──► registry (4000)
+        ▲                                                       │ route fires
+        │                                                       ▼
+        └─── EXPERIENCE (module-federation payload) ◄── RESOLUTION component
+```
+
+## 1. Start the MFEs and the shell
+
+```bash
+# from examples/abc-kids/
+docker compose up -d          # flappy :3001, hockey :3002, quiz :3003, shell :3000
+```
+
+## 2. Start the control plane (falese/daemon repo)
+
+```bash
+# registry on :4000
+node component-system/registry/simple-registry.js &
+
+# Node daemon on :3004 (3001-3003 belong to the MFEs above)
+REGISTRY_HOST=localhost DAEMON_PORT=3004 \
+  node component-system/daemon/simple-daemon.js &
+```
+
+The shell connects to `ws://localhost:3004/graphql` (override at build time
+with `DAEMON_WS_URL`). It shows *"Waiting for the control plane to compose
+this application…"* — and nothing else. That's the point.
+
+## 3. Register the MFEs and their resolution routes
+
+Client-side MFEs declare `contentType: module-federation` plus the
+`moduleFederation` block — the daemon then synthesizes the experience from
+the registration instead of calling HTTP capability endpoints (the BaseMFE
+lifecycle runs in the shell's LayoutManager).
+
+```bash
+curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -d '{
+  "registration": {
+    "name": "abc-kids-flappy",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:3001",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:3001/remoteEntry.js",
+    "moduleFederation": { "scope": "abc_kids_flappy", "module": "./App", "component": "PlayGame" }
+  },
+  "routes": [
+    { "when": { "stateKey": "abc.play.flappy" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+  ]
+}'
+
+curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -d '{
+  "registration": {
+    "name": "abc-kids-hockey",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:3002",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:3002/remoteEntry.js",
+    "moduleFederation": { "scope": "abc_kids_hockey", "module": "./App", "component": "PlayGame" }
+  },
+  "routes": [
+    { "when": { "stateKey": "abc.play.hockey" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+  ]
+}'
+```
+
+## 4. Tell the control plane what state the user is in
+
+Send a state-change action (any renderer, MFE `updateControlPlaneState()`,
+or curl). The registry resolves it, the daemon relays the experience, and
+the shell's LayoutManager mounts flappy into the `main` slot:
+
+```bash
+curl -s -X POST http://localhost:3004/graphql -H 'Content-Type: application/json' -d '{
+  "query": "mutation($m:String!){sendMessage(message:$m)}",
+  "variables": { "m": "{\"direction\":\"ACTION\",\"kind\":\"ACTION\",\"payload\":{\"id\":\"kickoff-1\",\"componentId\":\"app\",\"actionType\":\"STATE_UPDATE\",\"stateKey\":\"abc.play.flappy\",\"data\":{},\"timestamp\":\"2026-01-01T00:00:00Z\",\"context\":{\"sessionId\":\"demo\",\"application\":\"web\"}},\"metadata\":{\"correlationId\":\"kickoff-1\",\"acknowledged\":false,\"error\":null}}" }
+}'
+```
+
+Repeat with `abc.play.hockey` and the LayoutManager unmounts flappy and
+mounts hockey in its place — same slot, different MFE, zero shell changes.
+The same state key can resolve different MFEs per user: routes evaluate
+against `action.context` (user, roles, application, locale).
+
+## Server-side MFEs
+
+MFEs that expose the HTTP capability endpoints (`/authorize` `/load`
+`/render` `/refresh` — e.g. Python/Go/Rust MFEs returning `text/html` or
+`application/json` experiences) register the same way minus the
+`moduleFederation` block; the daemon then drives their lifecycle over HTTP
+and relays whatever their `render()` produced.
