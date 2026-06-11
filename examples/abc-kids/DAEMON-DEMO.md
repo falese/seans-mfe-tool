@@ -13,9 +13,16 @@ shell (3000, empty) ──action──► daemon (3004) ──forward──► r
 
 ## 1. Start the MFEs and the shell
 
+The shell (and every MFE) builds against the pre-compiled runtime from the
+`seans-mfe-tool-cli:latest` image — rebuild it first whenever `src/runtime/**`
+changes (the LayoutManager lives there):
+
 ```bash
-# from examples/abc-kids/
-docker compose up -d          # flappy :3001, hockey :3002, quiz :3003, shell :3000
+# repo root — one time, and after any src/runtime change
+npm install && npm run build && npm run docker:build:cli
+
+# from examples/abc-kids/ — force-rebuild so the new shell replaces old images
+docker compose up -d --build  # flappy :3001, hockey :3002, quiz :3003, shell :3000
 ```
 
 ## 2. Start the control plane (falese/daemon repo)
@@ -110,7 +117,7 @@ directories are overwritten).
 
 ```bash
 # build + start all 12 game MFEs and the shell
-docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d
+docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d --build
 
 # register every game with the control plane (12 registrations + routes)
 ./scripts/register-games.sh
