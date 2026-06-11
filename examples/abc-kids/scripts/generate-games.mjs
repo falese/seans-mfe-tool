@@ -685,7 +685,7 @@ fi
 echo "==> 2/3 abc-kids-game-base:latest (shared dependency pack)"
 docker build -t abc-kids-game-base:latest ./game-base
 
-echo "==> 3/3 service images (sequential)"
+echo "==> 3/3 service images (sequential; one failure does not block the fleet)"
 SERVICES=(
   abc-kids-shell
   abc-kids-flappy
@@ -693,13 +693,28 @@ SERVICES=(
   abc-kids-multiplication-quiz
 ${GAMES.map((g) => '  abc-kids-' + g.id).join('\n')}
 )
+FAILED=()
+BUILT=()
 for svc in "\${SERVICES[@]}"; do
   echo "--- \$svc"
-  COMPOSE_BAKE=false docker compose -f docker-compose.yaml -f docker-compose.games.yaml build "\$svc"
+  if COMPOSE_BAKE=false docker compose -f docker-compose.yaml -f docker-compose.games.yaml build "\$svc"; then
+    BUILT+=("\$svc")
+  else
+    echo "!!! \$svc build failed — continuing with the rest of the fleet"
+    FAILED+=("\$svc")
+  fi
 done
 
-echo "==> starting the stack"
-docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d
+echo "==> starting everything that built"
+docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d --no-build "\${BUILT[@]}"
+
+if [[ \${#FAILED[@]} -gt 0 ]]; then
+  echo ""
+  echo "==> done WITH FAILURES — these services did not build/start:"
+  printf '    %s\\n' "\${FAILED[@]}"
+  exit 1
+fi
+echo "==> done — full fleet built and started"
 `;
 writeFileSync(join(ROOT, 'scripts', 'build-games.sh'), buildScript, { mode: 0o755 });
 
