@@ -115,9 +115,16 @@ animal-sounds, memory-match, rocket-math, word-builder, rhythm-tap,
 maze-runner — re-run the script after editing the game table; generated
 directories are overwritten).
 
+The ten games share **one dependency pack**: `game-base/` builds
+`abc-kids-game-base:latest` (a single `npm install` + the pre-compiled SMT
+runtime), and every game image builds FROM it — twelve independently
+deployable features, one shared install. `scripts/build-games.sh` builds the
+fleet in order (CLI image → dependency pack → services, sequentially, so 13
+parallel installs can't exhaust the Docker VM disk):
+
 ```bash
-# build + start all 12 game MFEs and the shell
-docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d --build
+# build + start all 12 game MFEs and the shell (SKIP_CLI=1 if the CLI image is fresh)
+./scripts/build-games.sh
 
 # register every game with the control plane (12 registrations + routes)
 ./scripts/register-games.sh
