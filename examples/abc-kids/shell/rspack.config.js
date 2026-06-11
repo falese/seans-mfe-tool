@@ -4,7 +4,16 @@ const path = require('path');
 
 module.exports = {
   entry: './src/index.tsx',
-  output: { path: path.resolve(__dirname, 'dist'), publicPath: 'http://localhost:3000/' },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'http://localhost:3000/',
+    // Content-hashed filenames make nginx's immutable-cache headers safe:
+    // every build emits new names, so browsers can never serve a stale shell.
+    // index.html (expires -1) picks up the new names via HtmlRspackPlugin.
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
+    clean: true,
+  },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     // @seans-mfe-tool/runtime is not imported by the shell directly.
