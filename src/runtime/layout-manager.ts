@@ -22,7 +22,13 @@
  * logic is unit-testable without a browser.
  */
 
-import type { RenderedExperience, SessionContext } from '@seans-mfe/contracts';
+import type {
+  ImperativeMountHandle,
+  PresentationHandles,
+  RenderedExperience,
+  SessionContext,
+} from '@seans-mfe/contracts';
+import { isImperativeMountHandle } from '@seans-mfe/contracts';
 
 // ── Structural element types (testable without a DOM) ────────
 
@@ -47,6 +53,12 @@ export interface AdaptorHelpers {
   sendAction(actionType: string, data: Record<string, unknown>): Promise<void>;
   /** The session this experience was rendered for, when known. */
   session?: SessionContext;
+  /**
+   * The host's framework (e.g. 'react'), when known. Used by handle
+   * negotiation (ADR-056): a module-federation provider picks the MFE's
+   * native handle when the host framework matches, else the imperative floor.
+   */
+  hostFramework?: string;
 }
 
 export interface ExperienceAdaptor {
@@ -182,7 +194,14 @@ export interface LayoutManagerConfig {
   transport: DaemonTransport;
   /** Threaded onto every action so the registry resolves per user/app. */
   session?: SessionContext;
-  /** contentType → adaptor. Merged over the built-in defaults. */
+  /**
+   * The host's framework (e.g. 'react'). Passed to adaptors for handle
+   * negotiation (ADR-056). Absent for a framework-free host — every MFE then
+   * composes via its guaranteed imperative handle (isolation).
+   */
+  hostFramework?: string;
+  /** contentType → adaptor (the provider registry, keyed by handle kind).
+   *  Merged over the built-in defaults. */
   adaptors?: Record<string, ExperienceAdaptor>;
   /** Slot element factory — defaults to document.createElement('section'). */
   createSlotElement?: (slotId: string) => SlotElementLike;
@@ -253,6 +272,7 @@ export class LayoutManager {
 
     const helpers: AdaptorHelpers = {
       session: this.config.session,
+      hostFramework: this.config.hostFramework,
       sendAction: (actionType, data) => this.sendAction(experience.id, actionType, data),
     };
 
@@ -360,9 +380,19 @@ interface MfBootstrapModule {
   mfeReady?: Promise<unknown>;
 }
 
+/** What a remote module may export (ADR-056). Preferred: a presentation
+ *  handle bundle or an imperative mount handle. Legacy: the bootstrap pair. */
+interface RemoteModuleExports {
+  handles?: PresentationHandles;
+  mount?: ImperativeMountHandle;
+  mfe?: MfBootstrapModule['mfe'];
+  mfeReady?: Promise<unknown>;
+  default?: RemoteModuleExports;
+}
+
 interface MfContainer {
   init(shareScope: unknown): Promise<void>;
-  get(module: string): Promise<() => MfBootstrapModule | { default: MfBootstrapModule }>;
+  get(module: string): Promise<() => RemoteModuleExports>;
 }
 
 /* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
@@ -391,10 +421,20 @@ async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promi
 }
 
 /**
- * module-federation — loads the remote container and drives the BaseMFE
- * lifecycle through the remote's bootstrap export `{ mfe, mfeReady }`.
- * Framework-independent: RemoteMFE (React) and AngularRemoteMFE share the
- * same contract (ADR-041), so the same adaptor mounts both.
+ * module-federation — the imperative-island provider (ADR-056). Loads the
+ * remote container, then composes via the MFE's **presentation handle**: it
+ * consumes the sealed port (`handle.mount(element, props) → unmount`) and
+ * owns the slot element and teardown. The MFE no longer decides where it
+ * renders. Framework-independent: any remote (React, Angular) that exposes
+ * the imperative handle mounts here as an isolated island.
+ *
+ * Resolution order for what the remote exposes:
+ *   1. `handles` (PresentationHandles) — consume `handles.imperative`
+ *   2. `mount` (ImperativeMountHandle) — consume it directly
+ *   3. legacy `{ mfe, mfeReady }` bootstrap — adapted in place (migration)
+ *
+ * (The optional native-component handle is consumed by the React in-tree
+ * provider, a deferred follow-up — not by this island provider.)
  */
 /* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const moduleFederationAdaptor: ExperienceAdaptor = {
@@ -407,37 +447,43 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
       throw new Error('module-federation experience output requires remoteEntryUrl, scope, and module');
     }
 
-    const containerId = `layout-mfe-${experience.id}`;
     const mountPoint = document.createElement('div');
-    mountPoint.id = containerId;
+    mountPoint.id = `layout-mfe-${experience.id}`;
     slot.appendChild(mountPoint);
 
     const container = await loadRemoteContainer(output.remoteEntryUrl, output.scope);
     const factory = await container.get(output.module);
-    const moduleExports = factory();
-    const bootstrap = ('mfe' in moduleExports ? moduleExports : (moduleExports as { default: MfBootstrapModule }).default) as MfBootstrapModule;
-    if (!bootstrap?.mfe) {
-      throw new Error(`Remote module "${output.module}" does not export the BaseMFE bootstrap ({ mfe, mfeReady })`);
+    const raw = factory();
+    const exports: RemoteModuleExports =
+      raw.handles || raw.mount || raw.mfe ? raw : raw.default ?? raw;
+    const props = { ...(output.props ?? {}), ...(experience.props ?? {}) };
+
+    // 1 & 2: the MFE exposes a presentation handle — consume the sealed port.
+    const handle = exports.handles?.imperative ?? exports.mount;
+    if (isImperativeMountHandle(handle)) {
+      return handle.mount(mountPoint, props);
     }
 
-    // load() is kicked off by the remote's own bootstrap; wait for it.
-    await bootstrap.mfeReady;
-    await bootstrap.mfe.render({
-      requestId: `layout-render-${experience.id}`,
-      timestamp: new Date(),
-      user: helpers.session?.user,
-      jwt: helpers.session?.jwt,
-      inputs: {
-        component: output.component ?? experience.capability,
-        containerId,
-        props: { ...(output.props ?? {}), ...(experience.props ?? {}) },
-      },
-    });
+    // 3: legacy bootstrap — adapt the lifecycle in place during migration.
+    if (exports.mfe) {
+      await exports.mfeReady;
+      await exports.mfe.render({
+        requestId: `layout-render-${experience.id}`,
+        timestamp: new Date(),
+        user: helpers.session?.user,
+        jwt: helpers.session?.jwt,
+        inputs: { component: output.component ?? experience.capability, containerId: mountPoint.id, props },
+      });
+      return async () => {
+        await exports.mfe?.destroy?.();
+        slot.innerHTML = '';
+      };
+    }
 
-    return async () => {
-      await bootstrap.mfe.destroy?.();
-      slot.innerHTML = '';
-    };
+    throw new Error(
+      `Remote module "${output.module}" exposes neither a presentation handle ` +
+        `(handles/mount, ADR-056) nor a legacy bootstrap ({ mfe, mfeReady })`
+    );
   },
 };
 

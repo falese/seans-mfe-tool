@@ -273,6 +273,20 @@ describe('LayoutManager', () => {
     expect(manager.activeSlots).toEqual(['main']);
   });
 
+  it('threads hostFramework into adaptor helpers for handle negotiation (ADR-056)', async () => {
+    const seen: { hostFramework?: string }[] = [];
+    const probe: ExperienceAdaptor = {
+      async mount(_experience, _slot, helpers) {
+        seen.push({ hostFramework: helpers.hostFramework });
+      },
+    };
+    const { manager, transport } = makeManager(probe, { hostFramework: 'react' });
+    manager.start();
+    transport.emitExperience(experience('e-1'));
+    await flush();
+    expect(seen).toEqual([{ hostFramework: 'react' }]);
+  });
+
   it('sendAction omits context when the shell has no session', async () => {
     const { adaptor } = makeAdaptor();
     const { manager, transport } = makeManager(adaptor);

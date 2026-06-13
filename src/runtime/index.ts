@@ -47,3 +47,8 @@ export type {
   UnmountFn,
   WebSocketLike,
 } from './layout-manager';
+
+// Presentation boundary (ADR-056) — the MFE side exposes its lifecycle as the
+// guaranteed imperative handle; host-side providers consume the sealed port.
+export { createImperativeHandle } from './imperative-handle';
+export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-handle';
