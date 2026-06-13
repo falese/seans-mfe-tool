@@ -34,9 +34,15 @@ export interface ImperativeHandleOptions {
    */
   mfeReady?: Promise<unknown>;
   /**
-   * Base render inputs the remote binds at creation, merged beneath the
-   * per-mount props — typically `{ component: 'PlayGame' }` so doRender knows
-   * which capability to render. The host's `mount(el, props)` props win.
+   * The capability rendered when `mount` is called without an explicit one.
+   * Multi-capability MFEs expose several (PlayGame, ShowCover, …); this is the
+   * fallback when the host does not select one. A per-mount `options.capability`
+   * always wins.
+   */
+  defaultCapability?: string;
+  /**
+   * Extra base render inputs merged beneath the resolved capability and the
+   * per-mount props. Rarely needed; `defaultCapability` covers the common case.
    */
   inputs?: Record<string, unknown>;
 }
@@ -50,7 +56,7 @@ export function createImperativeHandle(
   return {
     kind: 'imperative-dom',
     framework: options.framework,
-    mount: async (element: MountElement, props?: Record<string, unknown>) => {
+    mount: async (element: MountElement, mountOptions = {}) => {
       // The host owns the element; ensure it is addressable for doRender,
       // which still resolves by containerId today (ADR-055 lineage).
       const el = element as { id?: string };
@@ -62,10 +68,19 @@ export function createImperativeHandle(
         await mfe.load({ requestId: `handle-load-${el.id}`, timestamp: new Date(), inputs: {} });
       }
 
+      // Per-mount capability wins; fall back to the handle's bound default.
+      // `component` is the render-input key doRender reads (== capability name).
+      const capability = mountOptions.capability ?? options.defaultCapability;
+
       await mfe.render({
         requestId: `handle-render-${el.id}`,
         timestamp: new Date(),
-        inputs: { containerId: el.id, ...(options.inputs ?? {}), props: props ?? {} },
+        inputs: {
+          containerId: el.id,
+          ...(options.inputs ?? {}),
+          ...(capability !== undefined ? { component: capability, capability } : {}),
+          props: mountOptions.props ?? {},
+        },
       });
 
       return async () => {

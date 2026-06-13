@@ -32,6 +32,9 @@ function resolveImperative(input: MfeHandleInput): ImperativeMountHandle | null 
 }
 
 export interface UseMfeOptions {
+  /** Which named domain capability to render (multi-capability MFEs). Omit to
+   *  use the handle's bound default. */
+  capability?: string;
   props?: Record<string, unknown>;
   onError?: (error: unknown) => void;
 }
@@ -46,7 +49,7 @@ export function useMfe<E extends HTMLElement = HTMLDivElement>(
   options: UseMfeOptions = {}
 ): React.RefObject<E> {
   const ref = React.useRef<E>(null);
-  const { props, onError } = options;
+  const { capability, props, onError } = options;
 
   React.useEffect(() => {
     const element = ref.current;
@@ -61,7 +64,7 @@ export function useMfe<E extends HTMLElement = HTMLDivElement>(
     let cancelled = false;
     let unmount: ImperativeUnmount | undefined;
 
-    Promise.resolve(handle.mount(element, props))
+    Promise.resolve(handle.mount(element, { capability, props }))
       .then((teardown) => {
         if (cancelled) {
           void teardown?.();
@@ -75,7 +78,7 @@ export function useMfe<E extends HTMLElement = HTMLDivElement>(
       cancelled = true;
       void unmount?.();
     };
-  }, [handles, props, onError]);
+  }, [handles, capability, props, onError]);
 
   return ref;
 }
@@ -87,10 +90,11 @@ export interface MfeHostProps extends UseMfeOptions {
 }
 
 /**
- * Declarative wrapper: drop `<MfeHost handles={…} />` into a React shell and
- * the MFE mounts into the rendered element, torn down on unmount.
+ * Declarative wrapper: drop `<MfeHost handles={…} capability="PlayGame" />`
+ * into a React shell and the MFE mounts into the rendered element, torn down
+ * on unmount.
  */
-export const MfeHost: React.FC<MfeHostProps> = ({ handles, props, onError, className, style }) => {
-  const ref = useMfe<HTMLDivElement>(handles, { props, onError });
+export const MfeHost: React.FC<MfeHostProps> = ({ handles, capability, props, onError, className, style }) => {
+  const ref = useMfe<HTMLDivElement>(handles, { capability, props, onError });
   return <div ref={ref} className={className} style={style} data-mfe-host="" />;
 };

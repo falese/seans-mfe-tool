@@ -29,7 +29,9 @@ describe('createImperativeHandle', () => {
   it('assigns an id to an element without one, renders into it, unmounts via destroy', async () => {
     const mfe = fakeMfe();
     const el: { id?: string; appendChild: () => void } = { appendChild: () => undefined };
-    const unmount = await createImperativeHandle(mfe, { mfeReady: Promise.resolve() }).mount(el, { level: 2 });
+    const unmount = await createImperativeHandle(mfe, { mfeReady: Promise.resolve() }).mount(el, {
+      props: { level: 2 },
+    });
 
     expect(el.id).toMatch(/^mfe-mount-/);
     expect(mfe.calls).toContainEqual(['render', el.id, { level: 2 }]);
@@ -41,9 +43,10 @@ describe('createImperativeHandle', () => {
 
   it('preserves an existing element id', async () => {
     const mfe = fakeMfe();
-    await createImperativeHandle(mfe, { mfeReady: Promise.resolve() }).mount(
-      { id: 'slot-7', appendChild: () => undefined }
-    );
+    await createImperativeHandle(mfe, { mfeReady: Promise.resolve() }).mount({
+      id: 'slot-7',
+      appendChild: () => undefined,
+    });
     expect(mfe.calls).toContainEqual(['render', 'slot-7', {}]);
   });
 
@@ -58,17 +61,49 @@ describe('createImperativeHandle', () => {
     expect(order).toEqual(['ready', 'render']);
   });
 
-  it('merges bound base inputs (e.g. component) beneath per-mount props', async () => {
+  it('renders the default capability when the host selects none', async () => {
     const seen: Record<string, unknown>[] = [];
     const mfe: MountableLifecycle = {
       async render(ctx) { seen.push((ctx as { inputs: Record<string, unknown> }).inputs); },
     };
     await createImperativeHandle(mfe, {
       mfeReady: Promise.resolve(),
-      inputs: { component: 'PlayGame' },
-    }).mount({ id: 'slot', appendChild: () => undefined }, { difficulty: 3 });
+      defaultCapability: 'PlayGame',
+    }).mount({ id: 'slot', appendChild: () => undefined }, { props: { difficulty: 3 } });
 
-    expect(seen[0]).toEqual({ containerId: 'slot', component: 'PlayGame', props: { difficulty: 3 } });
+    // doRender reads inputs.component (== capability name); capability also passed forward.
+    expect(seen[0]).toEqual({
+      containerId: 'slot',
+      component: 'PlayGame',
+      capability: 'PlayGame',
+      props: { difficulty: 3 },
+    });
+  });
+
+  it('renders the host-selected capability, overriding the default (multi-capability MFE)', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const mfe: MountableLifecycle = {
+      async render(ctx) { seen.push((ctx as { inputs: Record<string, unknown> }).inputs); },
+    };
+    const handle = createImperativeHandle(mfe, {
+      mfeReady: Promise.resolve(),
+      defaultCapability: 'PlayGame',
+    });
+    await handle.mount({ id: 's1', appendChild: () => undefined }, { capability: 'ShowCover' });
+
+    expect(seen[0]).toMatchObject({ component: 'ShowCover', capability: 'ShowCover' });
+  });
+
+  it('omits capability inputs entirely when neither default nor selection is given', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const mfe: MountableLifecycle = {
+      async render(ctx) { seen.push((ctx as { inputs: Record<string, unknown> }).inputs); },
+    };
+    await createImperativeHandle(mfe, { mfeReady: Promise.resolve() }).mount({
+      id: 'bare',
+      appendChild: () => undefined,
+    });
+    expect(seen[0]).toEqual({ containerId: 'bare', props: {} });
   });
 
   it('loads on demand when no mfeReady is given', async () => {

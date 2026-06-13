@@ -12,14 +12,15 @@ export { mfe, mfeReady };
 
 /**
  * Presentation handle (ADR-056): a host-side Framework Provider composes this
- * MFE through the sealed port — handles.imperative.mount(element, props) →
- * unmount. Bound to <%= capabilities[0] %> as the default rendered capability.
+ * MFE through the sealed port — handles.imperative.mount(element, { capability,
+ * props }) → unmount. This MFE is multi-capability (<%= capabilities.join(', ') %>);
+ * the host selects one per mount, defaulting to <%= capabilities[0] %>.
  */
 export const handles = {
   imperative: createImperativeHandle(mfe, {
     framework: 'react',
     mfeReady,
-    inputs: { component: '<%= capabilities[0] %>' },
+    defaultCapability: '<%= capabilities[0] %>',
   }),
 };
 

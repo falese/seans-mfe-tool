@@ -11,13 +11,14 @@ import { GetGameInfo } from './features/GetGameInfo/GetGameInfo.tsx';
 export { PlayGame, ShowCover, GetGameInfo };
 export { mfe, mfeReady };
 
-/** The host-side provider consumes handles.imperative; bound to PlayGame as
- *  the default rendered capability. */
+/** Multi-capability MFE (PlayGame, ShowCover, GetGameInfo): the host-side
+ *  provider selects one per mount via handles.imperative.mount(el,
+ *  { capability, props }); PlayGame is the default. */
 export const handles = {
   imperative: createImperativeHandle(mfe, {
     framework: 'react',
     mfeReady,
-    inputs: { component: 'PlayGame' },
+    defaultCapability: 'PlayGame',
   }),
 };
 

@@ -457,11 +457,14 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
     const exports: RemoteModuleExports =
       raw.handles || raw.mount || raw.mfe ? raw : raw.default ?? raw;
     const props = { ...(output.props ?? {}), ...(experience.props ?? {}) };
+    // The registry resolved which capability this experience renders.
+    const capability = output.component ?? experience.capability;
 
-    // 1 & 2: the MFE exposes a presentation handle — consume the sealed port.
+    // 1 & 2: the MFE exposes a presentation handle — consume the sealed port,
+    // selecting the resolved capability (multi-capability MFEs).
     const handle = exports.handles?.imperative ?? exports.mount;
     if (isImperativeMountHandle(handle)) {
-      return handle.mount(mountPoint, props);
+      return handle.mount(mountPoint, { capability, props });
     }
 
     // 3: legacy bootstrap — adapt the lifecycle in place during migration.

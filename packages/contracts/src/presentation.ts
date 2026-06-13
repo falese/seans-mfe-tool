@@ -32,10 +32,21 @@ export interface MountElement {
   appendChild(child: unknown): unknown;
 }
 
-/** Imperative mount: element + props in, teardown out. */
+/**
+ * Per-mount options. `capability` selects WHICH named domain capability to
+ * render — MFEs are multi-capability by design (e.g. PlayGame, ShowCover,
+ * GetGameInfo), so the host/registry picks one per mount. Omit it to use the
+ * handle's bound default capability.
+ */
+export interface MountOptions {
+  capability?: string;
+  props?: Record<string, unknown>;
+}
+
+/** Imperative mount: element + options (capability + props) in, teardown out. */
 export type ImperativeMount = (
   element: MountElement,
-  props?: Record<string, unknown>
+  options?: MountOptions
 ) => ImperativeUnmount | Promise<ImperativeUnmount>;
 
 /**
