@@ -1,7 +1,7 @@
 ---
 id: 0056
 title: MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model)
-status: Proposed
+status: Accepted
 date: 2026-06-13
 deciders: [sean]
 enforcement: code
