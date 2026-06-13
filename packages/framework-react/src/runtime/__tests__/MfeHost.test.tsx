@@ -13,7 +13,13 @@ import type { ImperativeMountHandle, PresentationHandles } from '@seans-mfe/cont
 
 afterEach(() => cleanup());
 
-function handle(spy: { mounted: number; unmounted: number; el?: unknown }): ImperativeMountHandle {
+interface Spy {
+  mounted: number;
+  unmounted: number;
+  el?: unknown;
+}
+
+function handle(spy: Spy): ImperativeMountHandle {
   return {
     kind: 'imperative-dom',
     framework: 'react',
@@ -29,7 +35,7 @@ function handle(spy: { mounted: number; unmounted: number; el?: unknown }): Impe
 
 describe('MfeHost (React composition provider)', () => {
   it('mounts the imperative handle into the React-managed element', async () => {
-    const spy = { mounted: 0, unmounted: 0 };
+    const spy: Spy = { mounted: 0, unmounted: 0 };
     await act(async () => {
       render(<MfeHost handles={handle(spy)} props={{ level: 1 }} />);
     });
@@ -38,7 +44,7 @@ describe('MfeHost (React composition provider)', () => {
   });
 
   it('tears the MFE down when React unmounts the host', async () => {
-    const spy = { mounted: 0, unmounted: 0 };
+    const spy: Spy = { mounted: 0, unmounted: 0 };
     let unmountTree: () => void = () => undefined;
     await act(async () => {
       const r = render(<MfeHost handles={handle(spy)} />);
@@ -49,7 +55,7 @@ describe('MfeHost (React composition provider)', () => {
   });
 
   it('accepts a full handle bundle and mounts its imperative floor', async () => {
-    const spy = { mounted: 0, unmounted: 0 };
+    const spy: Spy = { mounted: 0, unmounted: 0 };
     const bundle: PresentationHandles = { imperative: handle(spy) };
     await act(async () => {
       render(<MfeHost handles={bundle} />);
