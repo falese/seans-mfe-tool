@@ -43,22 +43,27 @@ export const ThoughtPanel: React.FC<ThoughtPanelProps> = ({
     flex: 1,
     minHeight: 0,
     width: "100%",
+    maxWidth: 680,
+    marginInline: "auto",
     resize: "none",
     border: "none",
     outline: "none",
     background: "transparent",
     color: "var(--text)",
+    caretColor: "var(--accent)",
     fontFamily: "'EB Garamond', serif",
-    fontSize: 17,
-    lineHeight: 1.8,
-    padding: "8px 4px",
+    fontSize: 20,
+    lineHeight: 1.7,
+    letterSpacing: "0.01em",
+    padding: "16px 8px",
   };
   const hint: React.CSSProperties = {
     flex: "0 0 auto",
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "var(--muted)",
-    padding: "0 4px 4px",
+    padding: "0 8px 6px",
+    textAlign: "center",
   };
   return (
     <div style={wrap}>

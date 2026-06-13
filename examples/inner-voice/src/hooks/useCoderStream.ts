@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { runStream } from "../lib/runStream";
+import { saveEpisode, type Traits } from "../lib/streamCoder";
 import { stripThreads } from "../lib/parseThreads";
 
 export interface StreamMetrics {
@@ -11,6 +12,10 @@ export interface UseCoderStreamArgs {
   coderServeUrl: string;
   maxTokens: number;
   systemPrompt: string;
+  /** Episode grouping; when set, exchanges are recorded server-side under this id. */
+  sessionId?: string;
+  /** Persona dial sent with every generation. */
+  traits?: Traits;
   /** Called with the full RAW final + thought text (threads tags intact) when a stream ends. */
   onComplete?: (final: string, thought: string, metrics: StreamMetrics) => void;
 }
@@ -25,6 +30,8 @@ export interface UseCoderStreamResult {
   metrics: StreamMetrics | null;
   start: (prompt: string) => void;
   reset: () => void;
+  /** Persist the current session as an episode (coder serve). Resolves to success. */
+  saveSession: () => Promise<boolean>;
 }
 
 /**
@@ -33,7 +40,7 @@ export interface UseCoderStreamResult {
  * streaming state, timing metrics, and any error. Aborts in-flight requests on
  * a new start, on reset, and on unmount.
  */
-export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, onComplete }: UseCoderStreamArgs): UseCoderStreamResult {
+export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, sessionId, traits, onComplete }: UseCoderStreamArgs): UseCoderStreamResult {
   const [display, setDisplay] = useState("");
   const [thinking, setThinking] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -42,6 +49,12 @@ export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, onCompl
   const abortRef = useRef<AbortController | null>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  // Read session/traits from refs so `start` stays stable across renders (traits
+  // is a fresh object each render; the pause-timer closure must not go stale).
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+  const traitsRef = useRef(traits);
+  traitsRef.current = traits;
 
   const start = useCallback(
     (prompt: string) => {
@@ -59,6 +72,8 @@ export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, onCompl
         coderServeUrl,
         maxTokens,
         system: systemPrompt,
+        sessionId: sessionIdRef.current,
+        traits: traitsRef.current,
         signal: ac.signal,
         onChunk: (final, thought) => {
           setDisplay(stripThreads(final));
@@ -89,7 +104,13 @@ export function useCoderStream({ coderServeUrl, maxTokens, systemPrompt, onCompl
     setIsStreaming(false);
   }, []);
 
+  const saveSession = useCallback(async (): Promise<boolean> => {
+    const id = sessionIdRef.current;
+    if (!id) return false;
+    return saveEpisode(coderServeUrl, id);
+  }, [coderServeUrl]);
+
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  return { display, thinking, isStreaming, error, metrics, start, reset };
+  return { display, thinking, isStreaming, error, metrics, start, reset, saveSession };
 }
