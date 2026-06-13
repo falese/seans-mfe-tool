@@ -58,6 +58,19 @@ describe('createImperativeHandle', () => {
     expect(order).toEqual(['ready', 'render']);
   });
 
+  it('merges bound base inputs (e.g. component) beneath per-mount props', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const mfe: MountableLifecycle = {
+      async render(ctx) { seen.push((ctx as { inputs: Record<string, unknown> }).inputs); },
+    };
+    await createImperativeHandle(mfe, {
+      mfeReady: Promise.resolve(),
+      inputs: { component: 'PlayGame' },
+    }).mount({ id: 'slot', appendChild: () => undefined }, { difficulty: 3 });
+
+    expect(seen[0]).toEqual({ containerId: 'slot', component: 'PlayGame', props: { difficulty: 3 } });
+  });
+
   it('loads on demand when no mfeReady is given', async () => {
     const mfe = fakeMfe();
     await createImperativeHandle(mfe).mount({ id: 'y', appendChild: () => undefined });

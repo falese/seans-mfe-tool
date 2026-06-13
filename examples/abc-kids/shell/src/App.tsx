@@ -55,6 +55,10 @@ const App: React.FC = () => {
       container: host,
       transport,
       session: createSession(),
+      // This shell is React; declare it so the provider can negotiate the
+      // MFE's native handle when frameworks match (ADR-056). Today every game
+      // composes via its guaranteed imperative handle (isolated island).
+      hostFramework: 'react',
       onStatus: setStatus,
       onError: setLastError,
     });

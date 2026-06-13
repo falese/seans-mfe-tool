@@ -33,6 +33,12 @@ export interface ImperativeHandleOptions {
    * churn. When absent, the handle calls load() on demand if available.
    */
   mfeReady?: Promise<unknown>;
+  /**
+   * Base render inputs the remote binds at creation, merged beneath the
+   * per-mount props — typically `{ component: 'PlayGame' }` so doRender knows
+   * which capability to render. The host's `mount(el, props)` props win.
+   */
+  inputs?: Record<string, unknown>;
 }
 
 let autoId = 0;
@@ -59,7 +65,7 @@ export function createImperativeHandle(
       await mfe.render({
         requestId: `handle-render-${el.id}`,
         timestamp: new Date(),
-        inputs: { containerId: el.id, props: props ?? {} },
+        inputs: { containerId: el.id, ...(options.inputs ?? {}), props: props ?? {} },
       });
 
       return async () => {
