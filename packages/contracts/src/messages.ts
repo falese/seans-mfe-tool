@@ -17,6 +17,8 @@
  * • ISO-8601 strings for all timestamps so every shape is JSON-serialisable.
  */
 
+import type { HandleKind } from './presentation';
+
 // ── Session / user context ───────────────────────────────────
 
 /** The authenticated principal a session acts as. */
@@ -106,6 +108,17 @@ export interface MfeRegistration {
    * host shell, not server-side.
    */
   moduleFederation?: { scope: string; module: string; component?: string };
+  /**
+   * Framework the MFE is built with (e.g. 'react', 'angular'). Observability
+   * plus native-handle negotiation (ADR-056). Open string (ADR-036).
+   */
+  framework?: string;
+  /**
+   * Presentation handle kinds this MFE exposes (ADR-056). Lets a host-side
+   * provider negotiate the composition strategy before loading the remote —
+   * `imperative-dom` is the guaranteed floor; native kinds are opt-in.
+   */
+  handleKinds?: HandleKind[];
   manifest?: Record<string, unknown>;
 }
 
