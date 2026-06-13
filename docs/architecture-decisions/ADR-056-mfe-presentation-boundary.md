@@ -54,34 +54,36 @@ waist — never woven into the unit every MFE inherits.
 ### The boundary (the artifact this ADR exists to fix in stone)
 
 ```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 45, 'rankSpacing': 55}}}%%
 flowchart TB
-    subgraph HOST["HOST SIDE — the cluster · owns composition · framework-clever · never sealed"]
+    subgraph HOST["HOST SIDE · owns composition · framework-clever · never sealed"]
         direction TB
-        CP["1 · Platform Control Plane (daemon + registry)<br/><i>decides which MFE / capability / props, for whom</i>"]
-        SHELL["2 · Host / Shell<br/><i>owns page, slots, context-provider VALUES</i>"]
-        FP["3 · Framework Provider — the controller (host-side adaptor)<br/><i>composes a handle into THIS host's framework · owns slot DOM + mount/unmount · wraps host context providers</i><br/><b>ALL framework cleverness quarantined here</b>"]
+        CP["1 · Platform Control Plane<br/>(daemon + registry)<br/><i>which MFE / capability / props, for whom</i>"]
+        SHELL["2 · Host / Shell<br/><i>owns page, slots, context-provider values</i>"]
+        FP["3 · Framework Provider · the controller<br/><i>composes the handle into this host's framework</i><br/><i>owns slot DOM · mount / unmount · wraps providers</i><br/><b>all framework cleverness quarantined here</b>"]
         CP --> SHELL --> FP
     end
 
-    subgraph WAIST["◇ THE BOUNDARY · thin waist — the only thing that crosses ◇"]
+    subgraph WAIST["THE BOUNDARY · thin waist · the only thing that crosses"]
         direction TB
-        CAP["neutral capability contract<br/>load · authorize · health · query · state · …"]
-        HANDLE["presentation handle<br/>guaranteed: mount(el, props) → unmount<br/>optional: native component (framework-tagged)"]
+        CAP["neutral capability contract<br/><i>load · authorize · health · query · state</i>"]
+        HANDLE["presentation handle<br/><i>guaranteed: mount(el, props) → unmount</i><br/><i>optional: native component (framework-tagged)</i>"]
     end
 
-    subgraph MFE["MFE SIDE — the sealed VM / container image · opaque · framework is internal"]
+    subgraph MFE["MFE SIDE · sealed VM · opaque · framework is internal"]
         direction TB
-        BASE["4 · BaseMFE — neutral lifecycle orchestrator + capability contract<br/><b>EXPOSES the handle · does NOT mount</b>"]
-        ABS["5 · Framework-specialized abstract (RemoteMFE / AngularRemoteMFE)<br/><i>produces the native handle</i>"]
+        BASE["4 · BaseMFE · neutral lifecycle + capability contract<br/><b>exposes the handle · does NOT mount</b>"]
+        ABS["5 · Framework-specialized abstract<br/>(RemoteMFE / AngularRemoteMFE)<br/><i>produces the native handle</i>"]
         IMPL["6 · Implemented MFE (generated)<br/><i>domain capabilities — PlayGame, …</i>"]
         BASE --> ABS --> IMPL
     end
 
-    %% Across the waist: both sides point INTO the boundary, never at each other.
-    CP -. "speaks" .-> CAP
-    CAP -. "served by" .-> BASE
+    %% Every cross-waist edge flows downward: HOST → waist → MFE.
+    %% The provider only ever touches the handle (the sealed port), never BaseMFE.
+    CP -. speaks .-> CAP
     FP == "consumes (sealed port)" ==> HANDLE
-    BASE == "exposes" ==> HANDLE
+    CAP -. served by .-> BASE
+    HANDLE == "exposed by" ==> BASE
 
     classDef host fill:#e8f0fe,stroke:#1a73e8,color:#111827;
     classDef waist fill:#fff4e5,stroke:#e8710a,color:#111827;
