@@ -53,24 +53,42 @@ waist — never woven into the unit every MFE inherits.
 
 ### The boundary (the artifact this ADR exists to fix in stone)
 
-```
-HOST SIDE  (the cluster — owns composition, may be framework-clever, never sealed)
-  1. Platform Control Plane (daemon + registry)  — decides which MFE/capability/props, for whom
-  2. Host / Shell                                 — owns page, slots, context-provider VALUES
-  3. Framework Provider (host-side adaptor)       — the controller: composes a handle into THIS
-                                                     host's framework; owns slot DOM + mount/unmount;
-                                                     wraps host context providers. ALL framework
-                                                     cleverness quarantined here.
- ═══════════════ THE BOUNDARY (thin waist — the only thing that crosses) ═══════════════
-   • neutral capability contract (load/authorize/health/query/state…)  ← control plane speaks this
-   • presentation handle: guaranteed imperative mount(el,props)→unmount;  ← provider consumes this
-                          optional native component (framework-tagged)
- ════════════════════════════════════════════════════════════════════════════════════
-MFE SIDE  (the sealed VM / container image — opaque; framework is an internal detail)
-  4. BaseMFE                       — neutral lifecycle orchestrator + capability contract;
-                                     EXPOSES the handle, does NOT mount
-  5. Framework-specialized abstract (RemoteMFE / AngularRemoteMFE) — produces the native handle
-  6. Implemented MFE (generated)   — the domain capabilities (PlayGame, …)
+```mermaid
+flowchart TB
+    subgraph HOST["HOST SIDE — the cluster · owns composition · framework-clever · never sealed"]
+        direction TB
+        CP["1 · Platform Control Plane (daemon + registry)<br/><i>decides which MFE / capability / props, for whom</i>"]
+        SHELL["2 · Host / Shell<br/><i>owns page, slots, context-provider VALUES</i>"]
+        FP["3 · Framework Provider — the controller (host-side adaptor)<br/><i>composes a handle into THIS host's framework · owns slot DOM + mount/unmount · wraps host context providers</i><br/><b>ALL framework cleverness quarantined here</b>"]
+        CP --> SHELL --> FP
+    end
+
+    subgraph WAIST["◇ THE BOUNDARY · thin waist — the only thing that crosses ◇"]
+        direction TB
+        CAP["neutral capability contract<br/>load · authorize · health · query · state · …"]
+        HANDLE["presentation handle<br/>guaranteed: mount(el, props) → unmount<br/>optional: native component (framework-tagged)"]
+    end
+
+    subgraph MFE["MFE SIDE — the sealed VM / container image · opaque · framework is internal"]
+        direction TB
+        BASE["4 · BaseMFE — neutral lifecycle orchestrator + capability contract<br/><b>EXPOSES the handle · does NOT mount</b>"]
+        ABS["5 · Framework-specialized abstract (RemoteMFE / AngularRemoteMFE)<br/><i>produces the native handle</i>"]
+        IMPL["6 · Implemented MFE (generated)<br/><i>domain capabilities — PlayGame, …</i>"]
+        BASE --> ABS --> IMPL
+    end
+
+    %% Across the waist: both sides point INTO the boundary, never at each other.
+    CP -. "speaks" .-> CAP
+    CAP -. "served by" .-> BASE
+    FP == "consumes (sealed port)" ==> HANDLE
+    BASE == "exposes" ==> HANDLE
+
+    classDef host fill:#e8f0fe,stroke:#1a73e8,color:#111827;
+    classDef waist fill:#fff4e5,stroke:#e8710a,color:#111827;
+    classDef mfe fill:#e6f4ea,stroke:#137333,color:#111827;
+    class CP,SHELL,FP host;
+    class CAP,HANDLE waist;
+    class BASE,ABS,IMPL mfe;
 ```
 
 **The relationship across the waist is "consumes a sealed port," not
