@@ -73,7 +73,7 @@ generator. The core owns the shape of build/scaffold/Docker operations
 
 ### 🔧 **Code Generation Engine**
 
-**[→ Code Generation Architecture](./architecture-codegen.md)** _(Coming Soon)_
+**→ Code Generation Architecture** _(Coming Soon — planned; tracked as G01 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
 
 The DSL-driven code generation system. Will include:
 
@@ -88,7 +88,7 @@ The DSL-driven code generation system. Will include:
 
 ### 🎨 **DSL & Type System**
 
-**[→ DSL Architecture](./architecture-dsl.md)** _(Coming Soon)_
+**→ DSL Architecture** _(Coming Soon — planned; tracked as G02 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
 
 The manifest schema and validation system. Will include:
 
@@ -102,7 +102,7 @@ The manifest schema and validation system. Will include:
 
 ### 🌐 **BFF Layer**
 
-**[→ BFF Architecture](./architecture-bff.md)** _(Coming Soon)_
+**→ BFF Architecture** _(Coming Soon — planned; tracked as G03 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
 
 GraphQL Mesh integration and BFF generation. Will include:
 
@@ -116,7 +116,7 @@ GraphQL Mesh integration and BFF generation. Will include:
 
 ### 📦 **API Generator**
 
-**[→ API Generator Architecture](./architecture-api-generator.md)** _(Coming Soon)_
+**→ API Generator Architecture** _(Coming Soon — planned; tracked as G04 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
 
 OpenAPI-driven REST API scaffolding. Will include:
 
@@ -819,18 +819,18 @@ Key ADRs shaping the architecture:
 ### Architecture Documents
 
 - **[Runtime Platform Architecture](./architecture-runtime-platform.md)** - Detailed runtime subsystem design
-- [Code Generation Architecture](./architecture-codegen.md) _(Coming Soon)_
-- [DSL Architecture](./architecture-dsl.md) _(Coming Soon)_
-- [BFF Architecture](./architecture-bff.md) _(Coming Soon)_
-- [API Generator Architecture](./architecture-api-generator.md) _(Coming Soon)_
+- Code Generation Architecture _(Coming Soon — G01)_
+- DSL Architecture _(Coming Soon — G02)_
+- BFF Architecture _(Coming Soon — G03)_
+- API Generator Architecture _(Coming Soon — G04)_
 
 ### Requirements Documents
 
-- [Runtime Requirements](./runtime-requirements.md) - REQ-RUNTIME-001 through 012
-- [Orchestration Requirements](./orchestration-requirements.md) - REQ-001 through 041
-- [BFF Requirements](./graphql-bff-requirements.md) - REQ-BFF-001 through 008
-- [DSL Contract Requirements](./dsl-contract-requirements.md) - REQ-042 through 053
-- [Remote Generation Requirements](./dsl-remote-requirements.md) - REQ-REMOTE-001 through 010
+- [Runtime Requirements](./architecture-runtime-platform.md) - REQ-RUNTIME-001 through 012 (documented in the runtime architecture)
+- [Orchestration Requirements](./requirements/orchestration-requirements.md) - REQ-001 through 041
+- [BFF Requirements](./requirements/graphql-bff-requirements.md) - REQ-BFF-001 through 008
+- [DSL Contract Requirements](./requirements/dsl-contract-requirements.md) - REQ-042 through 053
+- [Remote Generation Requirements](./requirements/dsl-remote-requirements.md) - REQ-REMOTE-001 through 010
 
 ### Architecture Decision Records
 
@@ -846,7 +846,7 @@ Key ADRs shaping the architecture:
 
 ### Agent Documentation
 
-- [Architecture Governance Agent](./.github/agents/architecture-governance-agent.md) - Design for governance tooling
+- Architecture Governance Agent - design archived at `docs/archive/agent-system-design/agents/architecture-governance-agent.md`
 
 ---
 

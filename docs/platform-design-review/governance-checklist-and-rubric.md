@@ -78,7 +78,7 @@ Review target: **no canonical doc below 3**; pillar docs trend to 4–5.
 
 <a id="documentation-kpis"></a>
 
-The metrics the program (and ongoing governance) reports against. Baselines are Day-0 of epic #211; targets align with the [roadmap](./execution-roadmap-90-day.md).
+The metrics the program (and ongoing governance) reports against. Baselines are Day-0 of epic #211; targets align with the [roadmap](./execution-roadmap-90-day.md). Full KPI definitions, baseline-collection method, and reporting cadence are in the dedicated [Documentation KPI Framework](./documentation-kpi-framework.md) (#226).
 
 | KPI | Definition | Baseline | Target | Cadence |
 |---|---|---|---|---|

@@ -12,6 +12,7 @@ Contents:
 5. FAQ
 6. Objection handling
 7. Messaging do's and don'ts
+8. What this proves / what remains to prove
 
 ---
 
@@ -125,3 +126,33 @@ Author a framework plugin (`@seans-mfe/framework-<name>`) extending `BaseFramewo
 - Describe SMT primarily as a "micro-frontend / Module Federation tool."
 - Quote an AI-readiness number without linking the scorecard and its date.
 - Reference internal issue numbers in external-facing material without context.
+
+---
+
+## 8. What this proves / what remains to prove
+
+The honest evidence ledger behind the messaging. "Proves" = shipped and demonstrable today; "Remains to prove" = designed/in-progress with a tracked path. Pair any external claim with the matching row.
+
+### Proves (shipped, demonstrable)
+
+| Claim | Evidence |
+|---|---|
+| One contract, any framework | `BaseFrameworkPlugin` (`packages/contracts/src/framework-plugin.ts`); React + Angular plugins shipped (ADR-036, PRs #187–188) |
+| Generation over glue | UnifiedGenerator + DSL pipeline; `seans-mfe-tool remote:generate` produces complete projects |
+| AI-native CLI | One-line JSON envelope + typed exit codes (`packages/contracts/src/envelope.ts:158–190`); `--json` behavior (`BaseCommand.ts:43–73`) |
+| MCP federation | 3-source registry with collision-fails-loud (`src/mcp/tool-registry.ts:32–61`) |
+| Auditable decisions | 58+ ADRs + PDRs in `docs/architecture-decisions/` and `docs/product-decisions/` |
+| GraphQL BFF | BFF layer shipped (✅ in `PROJECT-STATUS.md`) |
+
+### Remains to prove (in-progress / designed)
+
+| Claim | Status & tracking |
+|---|---|
+| Runtime platform production-hardening | 🟡 In progress, issues #47–59 (`PROJECT-STATUS.md`) |
+| Third-framework plugin (beyond React/Angular) | Path designed; worked example on the [roadmap](./execution-roadmap-90-day.md) (G10) |
+| BaseMFE boilerplate codegen from DSL | 🟡 REQ-057 (#39) |
+| Agent operability at the high end (audit log, `explain`, `system:map`) | Open #145–147 (Scorecard D6) |
+| Subsystem reference docs (codegen/DSL/BFF) | "Coming Soon" → authored in [roadmap](./execution-roadmap-90-day.md) Phase 2 (G01–G04) |
+| Marketplace of domain-capability packages | North-star, not yet built (CLAUDE.md) |
+
+**Rule of thumb for spokespeople:** if a capability is in the right-hand table, say "designed / in progress" — never "done." The [`PROJECT-STATUS.md`](../PROJECT-STATUS.md) date is the arbiter.
