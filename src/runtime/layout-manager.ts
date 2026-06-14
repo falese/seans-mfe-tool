@@ -63,6 +63,12 @@ export interface AdaptorHelpers {
    * `updateControlPlaneState` platform capability rides the shared connection.
    */
   channel?: DaemonWebSocketClient;
+  /**
+   * Contribute a named slot to the host layout (ADR-058): the MFE renders a
+   * region and registers its element so the host routes later experiences
+   * (`props.slot === slotId`) into it. The layout itself becomes an MFE.
+   */
+  provideSlot?(slotId: string, element: SlotElementLike): void;
   /** The session this experience was rendered for, when known. */
   session?: SessionContext;
   /**
@@ -227,6 +233,10 @@ interface ActiveSlot {
   element: SlotElementLike;
   experienceId?: string;
   unmount?: UnmountFn;
+  /** This slot's element was contributed by an MFE via provideSlot (ADR-058). */
+  provided?: boolean;
+  /** Slot ids this slot's MFE provided — released when this slot clears (ADR-058). */
+  providedSlotIds?: string[];
 }
 
 export class LayoutManager {
@@ -297,6 +307,12 @@ export class LayoutManager {
         slotId,
         () => this.currentStatus === 'connected'
       ),
+      // The MFE may contribute named slots to the host layout (ADR-058); track
+      // them on this slot so they are released when this experience clears.
+      provideSlot: (childId, element) => {
+        this.registerProvidedSlot(childId, element);
+        (slot.providedSlotIds ??= []).push(childId);
+      },
     };
 
     try {
@@ -339,14 +355,44 @@ export class LayoutManager {
     return slot;
   }
 
+  /**
+   * Register an MFE-contributed element as a host slot (ADR-058). The element
+   * already lives in the providing MFE's DOM, so — unlike ensureSlot — we do
+   * not create or append one; we just route into it. Last writer wins.
+   */
+  private registerProvidedSlot(slotId: string, element: SlotElementLike): void {
+    void this.clearSlot(slotId);
+    this.slots.set(slotId, { element, provided: true });
+  }
+
   private async clearSlot(slotId: string): Promise<void> {
     const slot = this.slots.get(slotId);
     if (!slot) return;
+
+    // Release any slots this experience contributed (ADR-058) before tearing it
+    // down, so the host stops routing into elements that are about to vanish.
+    if (slot.providedSlotIds) {
+      for (const childId of slot.providedSlotIds) {
+        const child = this.slots.get(childId);
+        if (child) {
+          try {
+            await child.unmount?.();
+          } catch {
+            /* best-effort release */
+          }
+          this.slots.delete(childId);
+        }
+      }
+      slot.providedSlotIds = undefined;
+    }
+
     try {
       await slot.unmount?.();
     } finally {
       slot.unmount = undefined;
       slot.experienceId = undefined;
+      // A provided element belongs to its MFE's DOM; clearing its contents is
+      // enough (and the entry is deleted by the provider's release above).
       slot.element.innerHTML = '';
     }
   }
@@ -489,7 +535,13 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
       exports.mfe.attachControlPlane(helpers.channel);
     }
 
-    const props = { ...(output.props ?? {}), ...(experience.props ?? {}) };
+    // provideSlot rides the render props (ADR-058): a layout MFE calls it to
+    // contribute its regions as host slots. Offered to every MFE; games ignore it.
+    const props = {
+      ...(output.props ?? {}),
+      ...(experience.props ?? {}),
+      ...(helpers.provideSlot ? { provideSlot: helpers.provideSlot } : {}),
+    };
     // The registry resolved which capability this experience renders.
     const capability = output.component ?? experience.capability;
 
