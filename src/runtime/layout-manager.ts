@@ -27,8 +27,12 @@ import type {
   PresentationHandles,
   RenderedExperience,
   SessionContext,
-} from '@seans-mfe/contracts';
-import { isImperativeMountHandle } from '@seans-mfe/contracts';
+} from './contracts';
+// Sourced from the inlined ./contracts (not @seans-mfe/contracts): the guard is
+// a *value*, so importing it from the external package would emit a
+// require("@seans-mfe/contracts") the MFE bundler can't resolve once the
+// runtime is staged without that package (see ./contracts header).
+import { isImperativeMountHandle } from './contracts';
 
 // ── Structural element types (testable without a DOM) ────────
 

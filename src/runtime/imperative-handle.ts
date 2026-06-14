@@ -11,7 +11,10 @@
  * test stays green. The actual framework mount (createRoot, etc.) happens
  * inside the MFE's doRender, behind this port.
  */
-import type { ImperativeMountHandle, MountElement } from '@seans-mfe/contracts';
+// Sourced from the inlined ./contracts (not @seans-mfe/contracts) so the
+// barrel-reachable runtime stays self-contained when staged into an MFE's
+// node_modules without the contracts package (see ./contracts header).
+import type { ImperativeMountHandle, MountElement } from './contracts';
 
 /**
  * The neutral subset of BaseMFE that an imperative handle drives. Structural,
