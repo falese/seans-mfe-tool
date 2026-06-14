@@ -18,14 +18,19 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
     ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 # Install dependencies.
-# Override @seans-mfe-tool/runtime to the pre-compiled dist package so
-# TypeScript sees resolved .d.ts files only — no source traversal.
-# Delete from dependencies first (old generated package.json puts it there),
-# then set in devDependencies so production --omit=dev install skips it.
+# @seans-mfe-tool/runtime is removed from package.json before npm install;
+# we then copy it as a REAL directory (not a file: symlink) into node_modules.
+# A symlink breaks ng build: webpack resolves through it to the realpath
+# /seans-mfe-tool/dist/runtime, and from there the walk-up for the runtime's
+# Angular peer imports (@angular/platform-browser) never reaches
+# /app/node_modules. Real-directory copy keeps resolution inside /app —
+# same pattern as the hockey Dockerfile.
 COPY package.json ./
 RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
+    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
 RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN mkdir -p node_modules/@seans-mfe-tool && \
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 
 # Copy source files
 COPY . .
@@ -43,8 +48,9 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Use the builder's package.json (npm pkg set moved runtime to devDep path)
-# so --omit=dev correctly skips @seans-mfe-tool/runtime resolution entirely.
+# Use the builder's package.json (@seans-mfe-tool/runtime was deleted from it
+# before install) so the server install never tries to resolve the runtime —
+# the browser bundle is already built; the server doesn't need it.
 COPY --from=builder /app/package.json ./
 RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 # Copy Mesh artifacts

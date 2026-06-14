@@ -12,7 +12,9 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@seans-mfe-tool/runtime": ["../../../src/runtime/index.ts"]
+      "@seans-mfe-tool/runtime": ["../../../src/runtime/index.ts"],
+      "@seans-mfe/contracts": ["../../../packages/contracts/src/index.ts"],
+      "@seans-mfe/contracts/*": ["../../../packages/contracts/src/*"]
     }
   },
   "include": ["src/**/*"],

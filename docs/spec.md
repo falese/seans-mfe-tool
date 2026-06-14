@@ -281,6 +281,10 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-050 | Dependency Governance — Pinning, hasBff Gate, DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
 | ADR-051 | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
 | ADR-052 | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
+| ADR-053 | RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient | Runtime / query / BFF | Implemented |
+| ADR-054 | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
+| ADR-055 | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
+| ADR-056 | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Accepted |
 
 ---
 

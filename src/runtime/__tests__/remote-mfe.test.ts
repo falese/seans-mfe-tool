@@ -558,7 +558,10 @@ describe('RemoteMFE.doUpdateControlPlaneState', () => {
     const envelope = JSON.parse(call.variables['m'] as string);
     expect(envelope.direction).toBe('ACTION');
     expect(envelope.kind).toBe('ACTION');
-    expect(envelope.payload.actionType).toBe('BUTTON_CLICK');
+    // ADR-057: canonical STATE_UPDATE actionType; the stateKey value rides the
+    // stateKey field (which the registry routes match on), not actionType.
+    expect(envelope.payload.actionType).toBe('STATE_UPDATE');
+    expect(envelope.payload.stateKey).toBe('BUTTON_CLICK');
     expect(envelope.payload.data).toEqual({ id: 42 });
     expect(envelope.metadata.correlationId).toBe('req-001');
   });

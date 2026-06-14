@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": false,
@@ -15,9 +18,23 @@
     "composite": true,
     "moduleResolution": "node",
     "ignoreDeprecations": "5.0",
-    "typeRoots": ["../../node_modules/@types"],
-    "types": ["node"]
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "types": [
+      "node",
+      "react"
+    ],
+    "jsx": "react-jsx"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/__tests__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
 }

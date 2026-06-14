@@ -4,7 +4,16 @@ const path = require('path');
 
 module.exports = {
   entry: './src/index.tsx',
-  output: { path: path.resolve(__dirname, 'dist'), publicPath: 'http://localhost:3000/' },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'http://localhost:3000/',
+    // Content-hashed filenames make nginx's immutable-cache headers safe:
+    // every build emits new names, so browsers can never serve a stale shell.
+    // index.html (expires -1) picks up the new names via HtmlRspackPlugin.
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
+    clean: true,
+  },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     // @seans-mfe-tool/runtime is not imported by the shell directly.
@@ -23,6 +32,9 @@ module.exports = {
   plugins: [
     new rspack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      // Daemon control-plane endpoint for the LayoutManager (ADR-055).
+      // Default 3004: flappy/hockey/quiz own 3001-3003 on localhost.
+      'process.env.DAEMON_WS_URL': JSON.stringify(process.env.DAEMON_WS_URL || 'ws://localhost:3004/graphql'),
     }),
     new rspack.HtmlRspackPlugin({
       template: path.join(__dirname, 'public/index.html'),

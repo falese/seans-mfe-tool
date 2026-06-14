@@ -60,6 +60,9 @@ services:
     build:
       context: ./shell
       dockerfile: Dockerfile
+      args:
+        # Daemon control-plane endpoint baked into the shell bundle (ADR-055)
+        - DAEMON_WS_URL=${DAEMON_WS_URL:-ws://localhost:3004/graphql}
     depends_on:
       seans-mfe-tool-cli:
         condition: service_started

@@ -16,8 +16,8 @@ export interface InnerVoiceProps {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital@0;1&family=JetBrains+Mono&display=swap');
 .iv-root {
-  --bg:#040404; --surface:#0d0d0d; --border:#141414;
-  --text:#c8c8c8; --muted:#2a2a2a; --accent:#00ff9f;
+  --bg:#0b0d10; --surface:#14171c; --border:#262b33;
+  --text:#e8eaed; --text-soft:#c6cad0; --muted:#9aa0a8; --accent:#00ff9f;
   background:var(--bg); color:var(--text);
   height:100vh; display:flex; flex-direction:column; overflow:hidden;
 }
@@ -67,9 +67,53 @@ const colStyle: React.CSSProperties = {
   display: "flex",
 };
 
+// Persona traits (1–7), mirrors coder's src/persona/traits.ts defaults.
+const TRAIT_NAMES = ["formality", "sarcasm", "verbosity"] as const;
+type TraitName = (typeof TRAIT_NAMES)[number];
+const DEFAULT_TRAITS: Record<TraitName, number> = { formality: 4, sarcasm: 1, verbosity: 4 };
+
+function newSessionId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  return c?.randomUUID ? c.randomUUID() : `s-${String(Date.now())}-${String(Math.random()).slice(2, 8)}`;
+}
+
+const controlsStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 14,
+  alignItems: "center",
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 10,
+  color: "var(--muted)",
+};
+
+const TraitControls: React.FC<{
+  traits: Record<string, number>;
+  onChange: (name: TraitName, level: number) => void;
+}> = ({ traits, onChange }) => (
+  <div style={controlsStyle}>
+    {TRAIT_NAMES.map((name) => (
+      <label key={name} style={{ display: "flex", alignItems: "center", gap: 5 }} title={`${name} (1–7)`}>
+        <span>{name.slice(0, 4)}</span>
+        <input
+          type="range"
+          min={1}
+          max={7}
+          step={1}
+          value={traits[name] ?? DEFAULT_TRAITS[name]}
+          onChange={(e) => { onChange(name, Number(e.target.value)); }}
+          style={{ width: 56, accentColor: "var(--accent)" }}
+        />
+        <span style={{ color: "var(--text)" }}>{String(traits[name] ?? DEFAULT_TRAITS[name])}</span>
+      </label>
+    ))}
+  </div>
+);
+
 export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
   const cfg = resolveConfig(config);
   const [thought, setThought] = useState("");
+  const [sessionId, setSessionId] = useState(newSessionId);
+  const [traits, setTraits] = useState<Record<string, number>>(DEFAULT_TRAITS);
   const [turns, setTurns] = useState<string[]>([]);
   // The thought last sent to the model — guards against re-sending identical text
   // (the whole evolving thought IS the prompt; we just never repeat it verbatim).
@@ -94,6 +138,8 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
     coderServeUrl: cfg.coderServeUrl,
     maxTokens: cfg.maxTokens,
     systemPrompt: cfg.systemPrompt,
+    sessionId,
+    traits,
     onComplete,
   });
 
@@ -115,6 +161,10 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
   }, []);
 
   const handleEscape = useCallback(() => {
+    // Esc is the episode boundary: persist the accumulated session, then start
+    // a fresh one. saveSession is a no-op server-side if nothing was recorded.
+    void stream.saveSession();
+    setSessionId(newSessionId());
     setThought("");
     lastSent.current = "";
     stream.reset();
@@ -145,6 +195,10 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
 
       <header style={headerStyle}>
         <span>inner-voice</span>
+        <TraitControls
+          traits={traits}
+          onChange={(name, level) => { setTraits((t) => ({ ...t, [name]: level })); }}
+        />
         <span>{status}</span>
       </header>
 
@@ -185,7 +239,7 @@ export const InnerVoice: React.FC<InnerVoiceProps> = ({ config }) => {
       </main>
 
       <footer style={footerStyle}>
-        no send button — responds after {String(cfg.pauseMs)}ms of silence · esc to clear
+        no send button — responds after {String(cfg.pauseMs)}ms of silence · esc to save session + clear
       </footer>
     </div>
   );

@@ -163,6 +163,12 @@ describe('BaseMFE updateControlPlaneState', () => {
     await expect(mfe.updateControlPlaneState(context as any)).rejects.toThrow();
   });
 
+  it('attachControlPlane injects the daemon socket post-construction (ADR-057)', () => {
+    const wsClient = { connected: true, mutation: jest.fn() };
+    mfe.attachControlPlane(wsClient as any);
+    expect((mfe as any).deps.wsClient).toBe(wsClient);
+  });
+
   it('propagates error from doUpdateControlPlaneState', async () => {
     jest.spyOn(mfe as any, 'doUpdateControlPlaneState').mockRejectedValue(new Error('control-plane error'));
     const context = { timestamp: new Date(), requestId: 'upd-4', inputs: { stateKey: 'error.escalation', stateData: {} } };

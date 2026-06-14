@@ -378,7 +378,9 @@ describe('AngularRemoteMFE', () => {
       const call = wsClient.assertCalledOnce();
       expect(call.query).toMatch(/sendMessage/);
       const envelope = JSON.parse(String(call.variables.m));
-      expect(envelope.payload.actionType).toBe('analysis.complete');
+      // ADR-057: canonical STATE_UPDATE actionType; stateKey carries the value.
+      expect(envelope.payload.actionType).toBe('STATE_UPDATE');
+      expect(envelope.payload.stateKey).toBe('analysis.complete');
       expect(envelope.payload.data).toEqual({ score: 42 });
     });
 

@@ -1,7 +1,7 @@
 {
   "name": "abc-kids-shell",
   "version": "1.0.0",
-  "description": "ABC Kids — MFE Shell (host)",
+  "description": "ABC Kids \u2014 MFE Shell (host)",
   "scripts": {
     "dev": "rspack serve",
     "build": "rspack build",
@@ -20,13 +20,20 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["@testing-library/jest-dom"],
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-dom"
+    ],
     "moduleNameMapper": {
       "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js",
       "^@mui/icons-material/(.*)$": "<rootDir>/__mocks__/iconMock.js"
     },
     "transform": {
-      "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     }
   },
   "devDependencies": {
@@ -41,6 +48,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "serve": "^14.2.1",
     "ts-jest": "^29.4.11",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@seans-mfe-tool/runtime": "file:../../../src/runtime"
   }
 }

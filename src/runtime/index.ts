@@ -26,3 +26,34 @@ export type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)
 export * from './handlers';
+
+// Daemon-driven slot composition (ADR-055) — generic shells host a
+// LayoutManager and stay empty until the daemon publishes experiences
+export {
+  LayoutManager,
+  GraphQLTransportWsDaemonTransport,
+  htmlAdaptor,
+  jsonAdaptor,
+  moduleFederationAdaptor,
+} from './layout-manager';
+export type {
+  ExperienceAdaptor,
+  AdaptorHelpers,
+  DaemonTransport,
+  DaemonEnvelope,
+  LayoutManagerConfig,
+  SlotElementLike,
+  TransportStatus,
+  UnmountFn,
+  WebSocketLike,
+} from './layout-manager';
+
+// Presentation boundary (ADR-056) — the MFE side exposes its lifecycle as the
+// guaranteed imperative handle; host-side providers consume the sealed port.
+export { createImperativeHandle } from './imperative-handle';
+export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-handle';
+
+// Virtualized daemon socket (ADR-057) — per-slot control-plane channels over
+// the host's single connection, injected into composed MFEs as deps.wsClient.
+export { DaemonChannel } from './daemon-channel';
+export type { ChannelTransport } from './daemon-channel';
