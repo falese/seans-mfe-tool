@@ -1,6 +1,6 @@
 # ADR-058 — Slot-provider MFEs: MFEs contribute named slots to the host layout
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-06-14
 - **Relates to:** ADR-055 (LayoutManager / daemon-driven shells), ADR-056 (MFE presentation boundary), ADR-057 (virtualized daemon socket)
 
