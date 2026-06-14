@@ -100,12 +100,15 @@ describe('BaseControlPlane (ADR-059)', () => {
   describe('start()', () => {
     it('transitions idle → starting → running', async () => {
       const cp = new ConcreteControlPlane(BASE_CONFIG);
-      const statuses: string[] = [];
-      jest.spyOn(cp as unknown as { _status: string }, '_status', 'set').mockImplementation(
-        function(this: { _status: string }, v: string) { this._status = v; statuses.push(v); }
-      );
+      let statusDuringDoStart: string | undefined;
+      const origDoStart = cp['doStart'].bind(cp);
+      cp['doStart'] = async () => {
+        statusDuringDoStart = cp.status;
+        return origDoStart();
+      };
       await cp.start();
-      expect(statuses).toContain('starting');
+      // status is 'starting' when doStart() is invoked
+      expect(statusDuringDoStart).toBe('starting');
       expect(cp.status).toBe('running');
     });
 
