@@ -745,10 +745,13 @@ export class AngularRemoteMFE extends BaseMFE {
       error: null,
     };
 
+    // ADR-057: canonical STATE_UPDATE actionType + stateKey, so the registry's
+    // `when.stateKey` routes fire (was actionType: stateKey, no stateKey field).
     const payload: ActionRecord = {
       id: uuidv4(),
       componentId: this.currentComponentId ?? this.manifest.name,
-      actionType: stateKey,
+      actionType: 'STATE_UPDATE',
+      stateKey,
       data: stateData,
       timestamp: new Date().toISOString(),
     };

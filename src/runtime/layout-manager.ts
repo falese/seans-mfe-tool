@@ -33,6 +33,8 @@ import type {
 // require("@seans-mfe/contracts") the MFE bundler can't resolve once the
 // runtime is staged without that package (see ./contracts header).
 import { isImperativeMountHandle } from './contracts';
+import { DaemonChannel } from './daemon-channel';
+import type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // ── Structural element types (testable without a DOM) ────────
 
@@ -55,6 +57,12 @@ export type UnmountFn = () => void | Promise<void>;
 export interface AdaptorHelpers {
   /** Send an action back up the control plane for this experience. */
   sendAction(actionType: string, data: Record<string, unknown>): Promise<void>;
+  /**
+   * A virtual daemon channel for this slot (ADR-057): the host's single socket,
+   * scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
+   * `updateControlPlaneState` platform capability rides the shared connection.
+   */
+  channel?: DaemonWebSocketClient;
   /** The session this experience was rendered for, when known. */
   session?: SessionContext;
   /**
@@ -224,6 +232,8 @@ interface ActiveSlot {
 export class LayoutManager {
   private readonly slots = new Map<string, ActiveSlot>();
   private readonly adaptors: Record<string, ExperienceAdaptor>;
+  /** Latest transport status — backs the per-slot channels' `connected` (ADR-057). */
+  private currentStatus: TransportStatus = 'connecting';
 
   constructor(private readonly config: LayoutManagerConfig) {
     this.adaptors = { ...defaultAdaptors(), ...(config.adaptors ?? {}) };
@@ -233,7 +243,10 @@ export class LayoutManager {
   start(): void {
     this.config.transport.start(
       (envelope) => void this.handleEnvelope(envelope),
-      this.config.onStatus
+      (status) => {
+        this.currentStatus = status;
+        this.config.onStatus?.(status);
+      }
     );
   }
 
@@ -278,6 +291,12 @@ export class LayoutManager {
       session: this.config.session,
       hostFramework: this.config.hostFramework,
       sendAction: (actionType, data) => this.sendAction(experience.id, actionType, data),
+      // One virtual channel per slot over the host's single socket (ADR-057).
+      channel: new DaemonChannel(
+        this.config.transport,
+        slotId,
+        () => this.currentStatus === 'connected'
+      ),
     };
 
     try {
@@ -380,6 +399,8 @@ interface MfBootstrapModule {
     load(context: Record<string, unknown>): Promise<unknown>;
     render(context: Record<string, unknown>): Promise<unknown>;
     destroy?(): Promise<void> | void;
+    /** ADR-057: host injects a per-slot daemon channel for updateControlPlaneState. */
+    attachControlPlane?(wsClient: DaemonWebSocketClient): void;
   };
   mfeReady?: Promise<unknown>;
 }
@@ -460,6 +481,14 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
     const raw = factory();
     const exports: RemoteModuleExports =
       raw.handles || raw.mount || raw.mfe ? raw : raw.default ?? raw;
+
+    // ADR-057: give the composed MFE the host's socket (scoped to this slot) so
+    // its updateControlPlaneState platform capability can drive the control
+    // plane without opening its own connection.
+    if (helpers.channel && typeof exports.mfe?.attachControlPlane === 'function') {
+      exports.mfe.attachControlPlane(helpers.channel);
+    }
+
     const props = { ...(output.props ?? {}), ...(experience.props ?? {}) };
     // The registry resolved which capability this experience renders.
     const capability = output.component ?? experience.capability;

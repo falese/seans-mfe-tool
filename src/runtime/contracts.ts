@@ -25,6 +25,8 @@ export interface ActionRecord {
   actionType: string;
   data: Record<string, unknown>;
   timestamp: string;
+  /** Set for updateControlPlaneState signals; registry routes match on it (ADR-057). */
+  stateKey?: string;
 }
 
 export interface Message {

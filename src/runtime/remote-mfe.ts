@@ -728,10 +728,15 @@ export class RemoteMFE extends BaseMFE {
       error: null,
     };
 
+    // Emit what the registry actually routes on (ADR-057): a canonical
+    // STATE_UPDATE actionType plus the stateKey. The registry matches rules on
+    // `when.stateKey`; setting actionType: stateKey (and no stateKey field)
+    // meant those routes never fired.
     const payload: ActionRecord = {
       id: uuidv4(),
       componentId: this.currentComponentId ?? this.manifest.name,
-      actionType: stateKey,
+      actionType: 'STATE_UPDATE',
+      stateKey,
       data: stateData,
       timestamp: new Date().toISOString(),
     };

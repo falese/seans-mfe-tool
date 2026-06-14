@@ -52,3 +52,8 @@ export type {
 // guaranteed imperative handle; host-side providers consume the sealed port.
 export { createImperativeHandle } from './imperative-handle';
 export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-handle';
+
+// Virtualized daemon socket (ADR-057) — per-slot control-plane channels over
+// the host's single connection, injected into composed MFEs as deps.wsClient.
+export { DaemonChannel } from './daemon-channel';
+export type { ChannelTransport } from './daemon-channel';

@@ -226,7 +226,20 @@ export abstract class BaseMFE {
     this.manifest = manifest;
     this.deps = deps;
   }
-  
+
+  /**
+   * Attach a daemon control-plane socket after construction (ADR-057).
+   *
+   * Generated MFEs are built without deps; when a host composes one
+   * (LayoutManager, ADR-055) it injects a per-slot virtual channel here so the
+   * platform capability `updateControlPlaneState` rides the host's single
+   * physical socket. `deps` is readonly, but `wsClient` is a mutable member of
+   * it. Idempotent: re-attaching replaces the channel.
+   */
+  public attachControlPlane(wsClient: DaemonWebSocketClient): void {
+    this.deps.wsClient = wsClient;
+  }
+
   // ===========================================================================
   // State Management (REQ-056)
   // ===========================================================================
