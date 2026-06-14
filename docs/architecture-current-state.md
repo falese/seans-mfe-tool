@@ -1,4 +1,11 @@
-# seans-mfe-tool - Current Architecture (Updated April 2026)
+# seans-mfe-tool - Current Architecture (Updated June 2026)
+
+> **Currency note (June 2026, DOCS-P1 #216).** Reconciled as part of the
+> [Platform Design Review](./platform-design-review/README.md). Resolved a
+> contradictory "Last Updated" footer (previously December 2025 vs. an April
+> 2026 title) and added the now-shipped Framework Plugin System (ADR-036)
+> subsystem. The `_(Coming Soon)_` subsystem docs remain unwritten and are
+> tracked in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md).
 
 ## Table of Contents
 
@@ -47,6 +54,22 @@ The execution environment for all MFE types. Includes:
 - Dependency injection architecture
 
 **Status**: 🟡 In Progress (Issues #47-59)
+
+### 🧩 **Framework Plugin System** (ADR-036)
+
+**[→ Framework Plugin Authoring Guide](./framework-plugin-authoring.md)**
+
+Makes UI framework + bundler a *plugin* concern rather than a fork in the
+generator. The core owns the shape of build/scaffold/Docker operations
+(`BaseFrameworkPlugin`); each framework implements the how. Includes:
+
+- Abstract `BaseFrameworkPlugin` in `packages/contracts/`
+- Concrete `ReactRspackPlugin` / `AngularWebpackPlugin` (`packages/framework-react/`, `packages/framework-angular/`)
+- `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`
+- `build:dev/prod/docker/check`, `remote:init`, and `deploy` delegate to the resolved plugin
+- Open `framework`/`bundler` manifest fields (`src/dsl/schema.ts`) — unknown values warn on stderr, fail only at resolution
+
+**Status**: ✅ Complete (Issues #167–185, PRs #187–188, May 2026)
 
 ### 🔧 **Code Generation Engine**
 
@@ -811,8 +834,8 @@ Key ADRs shaping the architecture:
 
 ### Architecture Decision Records
 
-- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-027+
-- Key ADRs: ADR-009 (Hybrid Orchestration), ADR-025 (Platform Handlers), ADR-026 (Atomic Load)
+- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-058 (see the [register](./architecture-decisions/README.md))
+- Key ADRs: ADR-036 (Framework Plugins), ADR-041 (BaseMFE contract), ADR-042 (Lifecycle state machine), ADR-043 (Manifest-driven codegen), ADR-025/026 (Platform Handlers / Atomic Load)
 
 ### Acceptance Criteria
 
@@ -834,6 +857,6 @@ Key ADRs shaping the architecture:
 
 ---
 
-**Document Version**: 1.1.0  
-**Last Updated**: December 11, 2025  
+**Document Version**: 1.2.0  
+**Last Updated**: June 2026  
 **Status**: Current State Documentation - Linked to Subsystems

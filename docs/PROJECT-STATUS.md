@@ -1,10 +1,16 @@
 # Project Status
 
-**Last Updated:** April 2026  
+**Last Updated:** June 2026  
 **Branch:** `main`
 
 This is the single authoritative overview of what's done, what's active, and what's deferred.
 Read this before starting any new work. Then read `CLAUDE.md` for coding conventions and `.github/copilot-instructions.md` for the full context.
+
+> **Currency note (June 2026, DOCS-P1 #216).** This file was reconciled against
+> `CLAUDE.md` and `docs/architecture-current-state.md` as part of the
+> [Platform Design Review](./platform-design-review/README.md). The Framework
+> Plugin System (ADR-036) is now reflected as shipped; the Runtime Platform
+> remains the primary active work stream.
 
 ---
 
@@ -38,6 +44,17 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/agent-plans/oclif-migrati
 | DSL-first remote generation                                 | REQ-REMOTE-001–010 ✅ | `src/commands/remote/`          |
 | Orchestration system (shell + registry + auto-registration) | REQ-001–041 ✅        | `src/commands/`, `src/codegen/` |
 | OpenAPI → REST API generator (Express + MongoDB/SQLite)     | — ✅                  | `src/codegen/`                  |
+
+### Framework Plugin System — ADR-036 (Issues #167–185, PRs #187–188, May 2026)
+
+| What                                                                              | Where                                             |
+| --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Abstract `BaseFrameworkPlugin` (core owns build/scaffold/Docker shape)            | `packages/contracts/src/framework-plugin.ts`      |
+| Concrete `ReactRspackPlugin` / `AngularWebpackPlugin`                              | `packages/framework-react/`, `packages/framework-angular/` |
+| `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`           | `src/framework/loader.ts`                         |
+| `build:dev/prod/docker/check`, `remote:init`, `deploy` delegate to the plugin     | `src/commands/build/`, `src/commands/remote/`     |
+| Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `src/dsl/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
+| Authoring guide                                                                   | [`docs/framework-plugin-authoring.md`](./framework-plugin-authoring.md) |
 
 ---
 
