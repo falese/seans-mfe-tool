@@ -936,6 +936,35 @@ describe('GameMenu (ABC Kids home)', () => {
 });
 `;
 
+// Standalone entry — overwrites the copied hockey index.tsx, which
+// `remote:generate` skips (it only owns the platform/remote files). Without
+// this the home would still import the three game features and fail to build.
+const homeIndex = () => `/**
+ * Standalone entry — renders the GameMenu home with a sample catalog so the MFE
+ * can run in isolation (npm run dev). In the shell, the daemon supplies the
+ * catalog and the host provides the slots. Generated — do not edit by hand.
+ */
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { GameMenu } from './features/GameMenu/GameMenu';
+
+const sample = [
+  { id: 'flappy', title: 'Flappy', emoji: '🐤', color: '#0277bd' },
+  { id: 'hockey', title: 'Hockey', emoji: '🏒', color: '#37474f' },
+  { id: 'rocket-math', title: 'Rocket Math', emoji: '🚀', color: '#0d47a1' },
+];
+
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root element not found');
+}
+createRoot(container).render(
+  <React.StrictMode>
+    <GameMenu games={sample} />
+  </React.StrictMode>
+);
+`;
+
 // ── Generate the games ───────────────────────────────────────
 
 for (const game of GAMES) {
@@ -992,6 +1021,7 @@ for (const game of GAMES) {
 
   writeFileSync(join(dest, 'mfe-manifest.yaml'), homeManifest());
   writeFileSync(join(dest, 'src', 'remote.tsx'), homeRemoteEntry());
+  writeFileSync(join(dest, 'src', 'index.tsx'), homeIndex());
   writeFileSync(join(dest, 'Dockerfile'), gameDockerfile(HOME));
   writeFileSync(join(dest, 'README.md'),
     '# abc-kids-home ' + HOME.emoji + '\n\n' + HOME.desc + '\n\n' +

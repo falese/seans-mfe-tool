@@ -44,7 +44,10 @@ class FakeTransport {
   }
 }
 
-const flush = () => new Promise((r) => void Promise.resolve().then(r));
+// Drain the full async mount chain. The replace→re-provide path awaits an
+// unmount in the release step, so a single microtask is not enough — a macrotask
+// turn lets all pending microtasks settle before we read activeSlots.
+const flush = () => new Promise((r) => setTimeout(r, 0));
 
 const experience = (id: string, contentType: string, props: Record<string, unknown>) => ({
   id,
