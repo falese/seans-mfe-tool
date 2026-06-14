@@ -1,6 +1,6 @@
 # ADR-057 — Virtualized daemon socket: per-slot control-plane channels over one host connection
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-06-14
 - **Relates to:** ADR-054 (control-plane message protocol), ADR-055 (LayoutManager / daemon-driven shells), ADR-056 (MFE presentation boundary), ADR-041 (BaseMFE capability contract)
 
