@@ -74,11 +74,12 @@ Concrete implementations extend this with their daemon-connection fields.
 
 ```typescript
 interface ControlPlaneConfig {
-  container:  LayoutHostLike;
-  session?:   SessionContext;
-  adaptors?:  Record<string, ExperienceAdaptor>;
-  onStatus?:  (status: TransportStatus) => void;
-  onError?:   (message: string) => void;
+  container:      LayoutHostLike;
+  session?:       SessionContext;
+  hostFramework?: string;
+  adaptors?:      Record<string, ExperienceAdaptor>;
+  onStatus?:      (status: TransportStatus) => void;
+  onError?:       (message: string) => void;
 }
 ```
 
@@ -86,6 +87,7 @@ interface ControlPlaneConfig {
 |---|---|---|
 | `container` | **yes** | Host element (or structural equivalent) LayoutManager mounts into. Must expose `appendChild`. |
 | `session` | no | Session context threaded into every action (user, jwt, locale). |
+| `hostFramework` | no | The host shell's framework (e.g. `'react'`). When set, activates ADR-056 native handle negotiation — MFEs that expose a matching native handle compose in-tree with shared context (providers, router, store). Omit for a framework-free host; every MFE then composes via its guaranteed imperative handle (isolation). |
 | `adaptors` | no | Custom content-type adaptors merged with the built-in set. Use sparingly — prefer the built-in adaptors (`module-federation`, `text/html`, `application/json`). |
 | `onStatus` | no | Called when the daemon transport status changes. |
 | `onError` | no | Called when LayoutManager encounters a mounting error. |

@@ -63,6 +63,14 @@ export interface ControlPlaneConfig {
   /** Session context threaded into every action (user, jwt, locale). */
   session?: SessionContext;
   /**
+   * The host shell's framework (e.g. `'react'`).
+   * When set, LayoutManager uses ADR-056 handle negotiation: MFEs that expose a
+   * matching native handle (e.g. a React component) are composed in-tree with
+   * shared context (providers, router, store). Omit for a framework-free host —
+   * every MFE then composes via its guaranteed imperative handle (isolation).
+   */
+  hostFramework?: string;
+  /**
    * Custom content-type adaptors merged with the built-in set.
    * Use sparingly — prefer the built-in adaptors (module-federation,
    * text/html, application/json).
@@ -128,12 +136,13 @@ export abstract class BaseControlPlane {
       await this.doStart();
 
       this._layoutManager = new LayoutManager({
-        container: this.config.container,
-        transport:  this.createTransport(),
-        session:    this.config.session,
-        adaptors:   this.config.adaptors,
-        onStatus:   this.config.onStatus,
-        onError:    this.config.onError,
+        container:     this.config.container,
+        transport:     this.createTransport(),
+        session:       this.config.session,
+        hostFramework: this.config.hostFramework,
+        adaptors:      this.config.adaptors,
+        onStatus:      this.config.onStatus,
+        onError:       this.config.onError,
       });
       this._layoutManager.start();
 

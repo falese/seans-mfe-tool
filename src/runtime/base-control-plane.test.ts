@@ -138,6 +138,20 @@ describe('BaseControlPlane (ADR-059)', () => {
       expect(cfg.session).toBe(session);
     });
 
+    it('passes hostFramework to LayoutManager (ADR-056 native handle negotiation)', async () => {
+      const cp = new ConcreteControlPlane({ ...BASE_CONFIG, hostFramework: 'react' });
+      await cp.start();
+      const [cfg] = MockLayoutManager.mock.calls[0];
+      expect(cfg.hostFramework).toBe('react');
+    });
+
+    it('omits hostFramework when not configured (imperative isolation default)', async () => {
+      const cp = new ConcreteControlPlane(BASE_CONFIG);
+      await cp.start();
+      const [cfg] = MockLayoutManager.mock.calls[0];
+      expect(cfg.hostFramework).toBeUndefined();
+    });
+
     it('calls layoutManager.start()', async () => {
       const cp = new ConcreteControlPlane(BASE_CONFIG);
       await cp.start();
