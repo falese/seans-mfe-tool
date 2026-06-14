@@ -22,6 +22,7 @@ SERVICES=(
   abc-kids-flappy
   abc-kids-hockey
   abc-kids-multiplication-quiz
+  abc-kids-home
   abc-kids-counting-stars
   abc-kids-letter-pop
   abc-kids-shape-sorter
@@ -46,7 +47,9 @@ for svc in "${SERVICES[@]}"; do
 done
 
 echo "==> starting everything that built"
-docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d --no-build "${BUILT[@]}"
+if [[ ${#BUILT[@]} -gt 0 ]]; then
+  docker compose -f docker-compose.yaml -f docker-compose.games.yaml up -d --no-build "${BUILT[@]}"
+fi
 
 if [[ ${#FAILED[@]} -gt 0 ]]; then
   echo ""

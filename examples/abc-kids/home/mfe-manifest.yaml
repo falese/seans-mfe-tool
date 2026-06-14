@@ -1,0 +1,62 @@
+name: abc-kids-home
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: ABC Kids — the home launcher; pick a game to play!
+owner: abc-kids-team
+tags: [kids, launcher, home, shell]
+category: launcher
+
+endpoint: http://localhost:3015
+remoteEntry: http://localhost:3015/remoteEntry.js
+discovery: http://localhost:3015/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - GameMenu:
+      type: domain
+      description: Render the ABC Kids home — a tile per registered game; selecting one drives the control plane
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+dependencies:
+  runtime:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  design-system:
+    '@mui/material': ^5.14.0
+    '@emotion/react': ^11.11.1
+    '@emotion/styled': ^11.11.0

@@ -150,3 +150,30 @@ The shell is never rebuilt, never redeployed, and never told which games
 exist — every swap is the registry resolving `abc.<verb>.<game>` to a
 module-federation registration and the daemon relaying the experience to
 whatever sessions are connected.
+
+## The home / launcher — the layout is an MFE too (ADR-057 / ADR-058)
+
+The shell does not even render the menu. `abc-kids-home` is a generated MFE
+(port 3015, one `GameMenu` capability) that **is** the layout: it renders a tile
+per registered game in its own menu region and *contributes* the `main` and
+`info` regions to the host as slots (`provideSlot`, ADR-058). Selecting a tile
+drives the control plane through the inherited BaseMFE platform capability
+`updateControlPlaneState` (ADR-057) — the home knows no game by name.
+
+The catalog comes from a **rule, not code**: `register-games.sh` registers the
+home with a `root` route whose `resolve.props` embeds the full game list, so the
+registry "returns all MFEs" on the `abc.root` action with zero daemon/registry
+changes.
+
+```bash
+./scripts/register-games.sh   # registers 12 games + the home (root rule + catalog)
+./scripts/home.sh             # composes the home into the empty shell (abc.root)
+# now click a tile in the UI — or drive it directly:
+./scripts/play.sh flappy      # PlayGame → the home-provided 'main' slot
+./scripts/play.sh flappy show # ShowCover → the home-provided 'info' slot
+```
+
+The daemon holds **one** socket; the LayoutManager virtualizes it into a channel
+per slot (ADR-057), injected into each composed MFE so `updateControlPlaneState`
+works without any MFE opening its own connection. Everything on screen — menu,
+games, info — is an independently deployed MFE; the shell only hosts.
