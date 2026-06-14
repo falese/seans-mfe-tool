@@ -51,18 +51,22 @@ Legend — **Status:** ✅ complete · 🟡 complete w/ follow-up · ⛔ incompl
 
 These are tracked work items that extend beyond the documentation program itself — they are about *authoring net-new subsystem docs and wiring automation*, which the roadmap already sequences.
 
-| ID | Action | Source | Owner | Target | Tracking |
-|---|---|---|---|---|---|
-| R1 | Author `cli-contract.md` (envelope/`--json`/exit codes) | CA-1/2/3, G05/G06 | CLI owner | Phase 1 | roadmap P1 |
-| R2 | Fix stale `query()` summary comment `base-mfe.ts:848–849` | CA-4 | Runtime owner | Phase 1 | roadmap P1 |
-| R3 | Update README lifecycle diagram (`ready→loading`, `error→loading`) | CA-6 | Runtime owner | Phase 1 | roadmap P1 |
-| R4 | Author 4 "Coming Soon" subsystem docs | G01–G04 | Pillar owners | Phase 2 | roadmap P2 |
-| R5 | Promote link-hygiene Tier-1 check to CI (non-blocking → gate) | #222 Tier-3 | Docs owner | Phase 2→3 | roadmap P2/P3 |
-| R6 | Reconcile ADR statuses (e.g. ADR-007 deferred) | G14, G26 | Docs owner | Phase 2 | roadmap P2 |
-| R7 | Add `--json` envelope-conformance test (one stdout line) | CA-2, KPI-4 | CLI owner | Phase 2 | roadmap P2 |
-| R8 | Establish onboarding time-to-first-MFE baseline | KPI-5 | Docs owner | Phase 3 | roadmap P3 |
+| ID | Action | Source | Type | Status |
+|---|---|---|---|---|
+| R1 | Author `cli-contract.md` (envelope/`--json`/exit codes) | CA-1/2/3, G05/G06 | Docs | ✅ Done — `docs/cli-contract.md` (this PR) |
+| R2 | Fix stale `query()` summary comment `base-mfe.ts:847–849` | CA-4 | Code | 📋 Tracked — [#229](https://github.com/falese/seans-mfe-tool/issues/229), separate code PR |
+| R3 | Fix lifecycle state-machine diagram (`ready→loading`, `error→loading`) | CA-6 | Docs | ✅ Done — `docs/runtime-class-hierarchy.md` (this PR) |
+| R4 | Author 4 "Coming Soon" subsystem docs | G01–G04 | Docs | ✅ Done — codegen/dsl/bff/api-generator (this PR) |
+| R5 | Promote link-hygiene check to CI (non-blocking → gate) | #222 Tier-3 | CI | 📋 Tracked — [#231](https://github.com/falese/seans-mfe-tool/issues/231), separate tooling PR |
+| R6 | Reconcile ADR statuses (e.g. ADR-007 deferred) | G14, G26 | Docs | ✅ Done — ADR register erratum (this PR) |
+| R7 | Add `--json` envelope-conformance test (one stdout line) | CA-2, KPI-4 | Code | 📋 Tracked — [#230](https://github.com/falese/seans-mfe-tool/issues/230), separate code PR |
+| R8 | Author getting-started + onboarding baseline | KPI-5, G27/G29 | Docs | ✅ Done — `docs/getting-started.md` (this PR) |
 
-None of these block epic closure: the program's charter was to **assess, plan, and govern** the documentation — all assessment/plan/governance deliverables are complete. R1–R8 are the *execution* the program hands off, already sequenced and owned.
+The **documentation** remediations (R1, R3, R4, R6, R8) are completed in this PR. The
+**code/CI** remediations (R2, R5, R7) are deliberately split into their own issues and PRs
+(per maintainer policy: code changes never ride in a docs PR). None of these block epic
+closure: the program's charter was to **assess, plan, and govern** the documentation — all
+assessment/plan/governance deliverables are complete.
 
 ---
 

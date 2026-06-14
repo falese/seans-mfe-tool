@@ -37,6 +37,24 @@ A structured architecture + documentation review of **seans-mfe-tool**, delivere
 | [Documentation KPI Framework](./documentation-kpi-framework.md) | #226 | 5 KPI families, baseline, collection method, reporting cadence |
 | [Enterprise Readiness Review](./enterprise-readiness-review.md) | #227 | Deliverable review, remediation actions (R1–R8), epic-closure recommendation |
 
+### Execution — remediation deliverables (R1, R3, R4, R6, R8)
+
+These are the net-new reference docs authored to close the gaps the review identified. They
+live under `docs/` (next to the architecture docs they extend), not in this folder:
+
+| Doc | Remediation | What it gives you |
+|---|---|---|
+| [CLI Contract](../cli-contract.md) | R1 | Canonical envelope, `--json` stdout/stderr rules, exit-code table |
+| [Code Generation Architecture](../architecture-codegen.md) | R4 (G01) | UnifiedGenerator pipeline, template variants, ownership-marker contract |
+| [DSL & Type System](../architecture-dsl.md) | R4 (G02) | Manifest field reference, open vs closed fields, capabilities/hooks |
+| [BFF Layer Architecture](../architecture-bff.md) | R4 (G03) | Mesh composition, demo mode, `query()` URL resolution |
+| [API Generator Architecture](../architecture-api-generator.md) | R4 (G04) | OpenAPI → routes/controllers/db, SQLite + MongoDB paths |
+| [Getting Started](../getting-started.md) | R8 | Zero-to-running-MFE path + onboarding baseline |
+
+R3 (lifecycle diagram fix) lands in [`runtime-class-hierarchy.md`](../runtime-class-hierarchy.md);
+R6 (ADR status reconciliation) lands in the [ADR register erratum](../architecture-decisions/README.md#status-reconciliation-erratum).
+The code/CI remediations R2/R5/R7 are tracked as separate issues+PRs ([#229](https://github.com/falese/seans-mfe-tool/issues/229), [#231](https://github.com/falese/seans-mfe-tool/issues/231), [#230](https://github.com/falese/seans-mfe-tool/issues/230)).
+
 ## How the pieces fit
 
 ```

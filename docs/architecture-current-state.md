@@ -4,8 +4,11 @@
 > [Platform Design Review](./platform-design-review/README.md). Resolved a
 > contradictory "Last Updated" footer (previously December 2025 vs. an April
 > 2026 title) and added the now-shipped Framework Plugin System (ADR-036)
-> subsystem. The `_(Coming Soon)_` subsystem docs remain unwritten and are
-> tracked in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md).
+> subsystem. The previously `_(Coming Soon)_` subsystem docs are now authored —
+> [Code Generation](./architecture-codegen.md), [DSL](./architecture-dsl.md),
+> [BFF](./architecture-bff.md), and [API Generator](./architecture-api-generator.md)
+> (gaps G01–G04 closed; see the
+> [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md)).
 
 ## Table of Contents
 
@@ -73,9 +76,9 @@ generator. The core owns the shape of build/scaffold/Docker operations
 
 ### 🔧 **Code Generation Engine**
 
-**→ Code Generation Architecture** _(Coming Soon — planned; tracked as G01 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
+**→ [Code Generation Architecture](./architecture-codegen.md)**
 
-The DSL-driven code generation system. Will include:
+The DSL-driven code generation system. Covers:
 
 - UnifiedGenerator orchestration flow
 - Template processing system
@@ -84,13 +87,13 @@ The DSL-driven code generation system. Will include:
 - BFF server generation
 - Configuration file generation
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 🎨 **DSL & Type System**
 
-**→ DSL Architecture** _(Coming Soon — planned; tracked as G02 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
+**→ [DSL Architecture](./architecture-dsl.md)**
 
-The manifest schema and validation system. Will include:
+The manifest schema and validation system. Covers:
 
 - DSL schema design (capabilities, lifecycle hooks, data sources)
 - Type system implementation
@@ -98,13 +101,13 @@ The manifest schema and validation system. Will include:
 - Parser implementation
 - Manifest transformation pipeline
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 🌐 **BFF Layer**
 
-**→ BFF Architecture** _(Coming Soon — planned; tracked as G03 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
+**→ [BFF Architecture](./architecture-bff.md)**
 
-GraphQL Mesh integration and BFF generation. Will include:
+GraphQL Mesh integration and BFF generation. Covers:
 
 - Mesh configuration extraction from DSL
 - Server generation (Express + Mesh)
@@ -112,11 +115,11 @@ GraphQL Mesh integration and BFF generation. Will include:
 - Health checks and error handling
 - Static asset serving
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 📦 **API Generator**
 
-**→ API Generator Architecture** _(Coming Soon — planned; tracked as G04 in the [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md))_
+**→ [API Generator Architecture](./architecture-api-generator.md)**
 
 OpenAPI-driven REST API scaffolding. Will include:
 

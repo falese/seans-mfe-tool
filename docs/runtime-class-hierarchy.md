@@ -26,8 +26,22 @@ or deployment model. It owns:
 - **The 10-capability platform contract** — `load`, `render`, `refresh`,
   `authorizeAccess`, `health`, `describe`, `schema`, `query`, `emit`,
   `updateControlPlaneState`
-- **The state machine** — enforces valid transitions:
-  `uninitialized → loading → ready → rendering → error → destroyed`
+- **The state machine** — six states
+  (`uninitialized`, `loading`, `ready`, `rendering`, `error`, `destroyed`) with a
+  static transition table. The states are **not** a single linear pipeline: `ready` and
+  `error` both have a back-edge to `loading` (reload / retry). The full edge set
+  (`base-mfe.ts:180–186`, canonical in ADR-042) is:
+
+  ```
+  uninitialized → loading
+  loading       → ready | error
+  ready         → loading | rendering | destroyed
+  rendering     → ready | error
+  error         → loading | destroyed
+  destroyed     → (terminal — no outgoing edges)
+  ```
+
+  Illegal transitions throw `Invalid state transition: <from> → <to>`.
 - **Lifecycle orchestration** — drives the `before → main → after → error` hook
   phases for every capability invocation
 - **Dependency injection** — accepts `BaseMFEDependencies` (custom telemetry,
