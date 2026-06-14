@@ -11,8 +11,13 @@ import { classifyError } from './error-classifier';
 // RFC-4122 v4 fallback for runtimes where it is absent.
 // ---------------------------------------------------------------------------
 
+interface WebCryptoLike {
+  randomUUID?: () => string;
+  getRandomValues?: (array: Uint8Array) => Uint8Array;
+}
+
 function randomUUID(): string {
-  const webCrypto = (globalThis as { crypto?: Crypto }).crypto;
+  const webCrypto = (globalThis as { crypto?: WebCryptoLike }).crypto;
   if (webCrypto && typeof webCrypto.randomUUID === 'function') {
     return webCrypto.randomUUID();
   }
