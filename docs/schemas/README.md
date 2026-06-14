@@ -44,6 +44,7 @@ renderer. These types describe what the platform **does** and what flows over th
 | [Control-plane messages](control-plane-messages.md) | Daemon ↔ registry ↔ renderer wire protocol |
 | [Presentation contracts](presentation.md) | `PresentationHandle` thin waist — imperative floor + native upgrade |
 | [Framework plugin interface](framework-plugin.md) | `BaseFrameworkPlugin` abstract — the contract every framework plugin implements |
+| [Control plane interface](control-plane.md) | `BaseControlPlane` abstract — daemon + registry + LayoutManager bundled under a three-line host API |
 
 ## Governing ADRs
 
@@ -62,6 +63,9 @@ renderer. These types describe what the platform **does** and what flows over th
 | ADR-054 | Isomorphic correlation ID (no Node `crypto` import) |
 | ADR-055 | Module Federation experience output shape |
 | ADR-056 | Presentation handle thin waist |
+| ADR-057 | Virtualized daemon socket (DaemonChannel) |
+| ADR-058 | Slot-provider MFEs |
+| ADR-059 | BaseControlPlane abstract base |
 
 ## Authoritative source locations
 
@@ -75,4 +79,5 @@ renderer. These types describe what the platform **does** and what flows over th
 | Control-plane messages | `packages/contracts/src/messages.ts` |
 | Presentation handles | `packages/contracts/src/presentation.ts` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
+| Control plane base | `src/runtime/base-control-plane.ts` |
 | Generated command schemas | `schemas/*.json` (machine-generated — never hand-edit) |
