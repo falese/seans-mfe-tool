@@ -45,9 +45,11 @@ class FakeTransport {
 }
 
 // Drain the full async mount chain. The replace→re-provide path awaits an
-// unmount in the release step, so a single microtask is not enough — a macrotask
-// turn lets all pending microtasks settle before we read activeSlots.
-const flush = () => new Promise((r) => setTimeout(r, 0));
+// unmount in the release step, so a single microtask is not enough. Drain many
+// microtask turns (not setTimeout — jest fake timers would never fire it).
+const flush = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
 
 const experience = (id: string, contentType: string, props: Record<string, unknown>) => ({
   id,
