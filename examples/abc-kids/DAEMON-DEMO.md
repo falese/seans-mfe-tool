@@ -126,7 +126,7 @@ parallel installs can't exhaust the Docker VM disk):
 # build + start all 12 game MFEs and the shell (SKIP_CLI=1 if the CLI image is fresh)
 ./scripts/build-games.sh
 
-# register every game with the control plane (12 registrations + routes)
+# register every game with the control plane (12 registrations, 3 routes each)
 ./scripts/register-games.sh
 
 # compose any game into the empty shell with one state change:
@@ -135,7 +135,18 @@ parallel installs can't exhaust the Docker VM disk):
 ./scripts/play.sh letter-pop      # ...and again
 ```
 
+Each game is **multi-capability** (ADR-056): one MFE exposes PlayGame,
+ShowCover, and GetGameInfo, and the registration pins no component — the
+resolved capability per route selects what mounts. `play.sh` takes an optional
+verb to exercise all three in the same slot:
+
+```bash
+./scripts/play.sh rocket-math        # PlayGame  (abc.play.rocket-math)
+./scripts/play.sh rocket-math show   # ShowCover (abc.show.rocket-math)
+./scripts/play.sh rocket-math info   # GetGameInfo (abc.info.rocket-math)
+```
+
 The shell is never rebuilt, never redeployed, and never told which games
-exist — every swap is the registry resolving `abc.play.<game>` to a
+exist — every swap is the registry resolving `abc.<verb>.<game>` to a
 module-federation registration and the daemon relaying the experience to
 whatever sessions are connected.
