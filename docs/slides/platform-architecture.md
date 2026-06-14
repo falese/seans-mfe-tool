@@ -3,6 +3,8 @@ marp: true
 theme: default
 class: invert
 paginate: true
+# To preview: install "Marp for VS Code" → Ctrl+Shift+P → "Marp: Open Preview"
+# To export: Ctrl+Shift+P → "Marp: Export Slide Deck" → PDF or PPTX
 style: |
   section {
     font-family: 'Segoe UI', system-ui, sans-serif;
