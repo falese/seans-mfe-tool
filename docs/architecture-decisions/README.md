@@ -25,6 +25,24 @@ Check there before claiming a number — the 068/069 collision from PRs #161 and
 resolved by the library remediation (PR #194) when the whole set was reflowed sequentially
 into 001–040, and the index is now the single source of truth.
 
+## Status reconciliation (erratum)
+
+The **single source of truth for ADR status** is the status column of
+[`docs/spec.md#adr-index`](../spec.md#adr-index). Where an individual ADR file's frontmatter
+or a generated code comment disagrees with the index, **the index wins**; do not edit ADR
+bodies to reconcile (per `CLAUDE.md`, ADRs are not edited mid-implementation — add a new ADR
+or record the correction here).
+
+Known reconciliations from the platform design review (see the
+[Contract Alignment Pass](../platform-design-review/contract-alignment-pass.md)):
+
+| Item | What the index says | Note |
+| --- | --- | --- |
+| Status vocabulary | `Accepted` vs `Implemented` | `Accepted` = decision ratified; `Implemented` = code in place. The CLI contract ADRs (016–019) are `Accepted` and also shipped — read them as implemented. |
+| ADR-007 Authorization grammar | `Deferred` | Correct — `authorization` is an `unknown` optional field in the manifest (`src/dsl/schema.ts:415`); the grammar is not yet designed. |
+| ADR-018 envelope shape | `Accepted` | The **implemented** envelope (`{ok, error.code: number, warnings[], telemetry}`) is documented in the canonical [CLI Contract](../cli-contract.md), which supersedes ADR-018's older prose (finding CA-1). |
+| BFF template ADR numbers | n/a | Generated BFF templates (`packages/bff-plugin/templates/meshrc.yaml.ejs`) still cite pre-reflow numbers `ADR-046`/`ADR-062`; the canonical numbers are `ADR-012`/`ADR-027`. Tracked for a code follow-up, not an ADR edit. |
+
 ## Historical narrative
 
 The long-form historical narrative remains in

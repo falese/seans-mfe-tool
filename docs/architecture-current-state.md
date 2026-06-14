@@ -1,4 +1,14 @@
-# seans-mfe-tool - Current Architecture (Updated April 2026)
+# seans-mfe-tool - Current Architecture (Updated June 2026)
+
+> **Currency note (June 2026, DOCS-P1 #216).** Reconciled as part of the
+> [Platform Design Review](./platform-design-review/README.md). Resolved a
+> contradictory "Last Updated" footer (previously December 2025 vs. an April
+> 2026 title) and added the now-shipped Framework Plugin System (ADR-036)
+> subsystem. The previously `_(Coming Soon)_` subsystem docs are now authored —
+> [Code Generation](./architecture-codegen.md), [DSL](./architecture-dsl.md),
+> [BFF](./architecture-bff.md), and [API Generator](./architecture-api-generator.md)
+> (gaps G01–G04 closed; see the
+> [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md)).
 
 ## Table of Contents
 
@@ -48,11 +58,27 @@ The execution environment for all MFE types. Includes:
 
 **Status**: 🟡 In Progress (Issues #47-59)
 
+### 🧩 **Framework Plugin System** (ADR-036)
+
+**[→ Framework Plugin Authoring Guide](./framework-plugin-authoring.md)**
+
+Makes UI framework + bundler a *plugin* concern rather than a fork in the
+generator. The core owns the shape of build/scaffold/Docker operations
+(`BaseFrameworkPlugin`); each framework implements the how. Includes:
+
+- Abstract `BaseFrameworkPlugin` in `packages/contracts/`
+- Concrete `ReactRspackPlugin` / `AngularWebpackPlugin` (`packages/framework-react/`, `packages/framework-angular/`)
+- `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`
+- `build:dev/prod/docker/check`, `remote:init`, and `deploy` delegate to the resolved plugin
+- Open `framework`/`bundler` manifest fields (`src/dsl/schema.ts`) — unknown values warn on stderr, fail only at resolution
+
+**Status**: ✅ Complete (Issues #167–185, PRs #187–188, May 2026)
+
 ### 🔧 **Code Generation Engine**
 
-**[→ Code Generation Architecture](./architecture-codegen.md)** _(Coming Soon)_
+**→ [Code Generation Architecture](./architecture-codegen.md)**
 
-The DSL-driven code generation system. Will include:
+The DSL-driven code generation system. Covers:
 
 - UnifiedGenerator orchestration flow
 - Template processing system
@@ -61,13 +87,13 @@ The DSL-driven code generation system. Will include:
 - BFF server generation
 - Configuration file generation
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 🎨 **DSL & Type System**
 
-**[→ DSL Architecture](./architecture-dsl.md)** _(Coming Soon)_
+**→ [DSL Architecture](./architecture-dsl.md)**
 
-The manifest schema and validation system. Will include:
+The manifest schema and validation system. Covers:
 
 - DSL schema design (capabilities, lifecycle hooks, data sources)
 - Type system implementation
@@ -75,13 +101,13 @@ The manifest schema and validation system. Will include:
 - Parser implementation
 - Manifest transformation pipeline
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 🌐 **BFF Layer**
 
-**[→ BFF Architecture](./architecture-bff.md)** _(Coming Soon)_
+**→ [BFF Architecture](./architecture-bff.md)**
 
-GraphQL Mesh integration and BFF generation. Will include:
+GraphQL Mesh integration and BFF generation. Covers:
 
 - Mesh configuration extraction from DSL
 - Server generation (Express + Mesh)
@@ -89,11 +115,11 @@ GraphQL Mesh integration and BFF generation. Will include:
 - Health checks and error handling
 - Static asset serving
 
-**Status**: ✅ Complete (documentation pending)
+**Status**: ✅ Complete
 
 ### 📦 **API Generator**
 
-**[→ API Generator Architecture](./architecture-api-generator.md)** _(Coming Soon)_
+**→ [API Generator Architecture](./architecture-api-generator.md)**
 
 OpenAPI-driven REST API scaffolding. Will include:
 
@@ -796,23 +822,23 @@ Key ADRs shaping the architecture:
 ### Architecture Documents
 
 - **[Runtime Platform Architecture](./architecture-runtime-platform.md)** - Detailed runtime subsystem design
-- [Code Generation Architecture](./architecture-codegen.md) _(Coming Soon)_
-- [DSL Architecture](./architecture-dsl.md) _(Coming Soon)_
-- [BFF Architecture](./architecture-bff.md) _(Coming Soon)_
-- [API Generator Architecture](./architecture-api-generator.md) _(Coming Soon)_
+- Code Generation Architecture _(Coming Soon — G01)_
+- DSL Architecture _(Coming Soon — G02)_
+- BFF Architecture _(Coming Soon — G03)_
+- API Generator Architecture _(Coming Soon — G04)_
 
 ### Requirements Documents
 
-- [Runtime Requirements](./runtime-requirements.md) - REQ-RUNTIME-001 through 012
-- [Orchestration Requirements](./orchestration-requirements.md) - REQ-001 through 041
-- [BFF Requirements](./graphql-bff-requirements.md) - REQ-BFF-001 through 008
-- [DSL Contract Requirements](./dsl-contract-requirements.md) - REQ-042 through 053
-- [Remote Generation Requirements](./dsl-remote-requirements.md) - REQ-REMOTE-001 through 010
+- [Runtime Requirements](./architecture-runtime-platform.md) - REQ-RUNTIME-001 through 012 (documented in the runtime architecture)
+- [Orchestration Requirements](./requirements/orchestration-requirements.md) - REQ-001 through 041
+- [BFF Requirements](./requirements/graphql-bff-requirements.md) - REQ-BFF-001 through 008
+- [DSL Contract Requirements](./requirements/dsl-contract-requirements.md) - REQ-042 through 053
+- [Remote Generation Requirements](./requirements/dsl-remote-requirements.md) - REQ-REMOTE-001 through 010
 
 ### Architecture Decision Records
 
-- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-027+
-- Key ADRs: ADR-009 (Hybrid Orchestration), ADR-025 (Platform Handlers), ADR-026 (Atomic Load)
+- [Architecture Decisions](./architecture-decisions/) - ADR-001 through ADR-058 (see the [register](./architecture-decisions/README.md))
+- Key ADRs: ADR-036 (Framework Plugins), ADR-041 (BaseMFE contract), ADR-042 (Lifecycle state machine), ADR-043 (Manifest-driven codegen), ADR-025/026 (Platform Handlers / Atomic Load)
 
 ### Acceptance Criteria
 
@@ -823,7 +849,7 @@ Key ADRs shaping the architecture:
 
 ### Agent Documentation
 
-- [Architecture Governance Agent](./.github/agents/architecture-governance-agent.md) - Design for governance tooling
+- Architecture Governance Agent - design archived at `docs/archive/agent-system-design/agents/architecture-governance-agent.md`
 
 ---
 
@@ -834,6 +860,6 @@ Key ADRs shaping the architecture:
 
 ---
 
-**Document Version**: 1.1.0  
-**Last Updated**: December 11, 2025  
+**Document Version**: 1.2.0  
+**Last Updated**: June 2026  
 **Status**: Current State Documentation - Linked to Subsystems
