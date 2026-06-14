@@ -145,12 +145,27 @@ Run in order — push only after all pass:
 - No `--no-verify`, no `--no-gpg-sign`, no `--amend` on pushed commits
 - No force-push to `main`
 
+## Local-test runbook on the PR (standing practice for big changes)
+
+When landing a significant or user-facing change, post a comment on the PR with a
+copy-pasteable **local-test runbook** — as a matter of course, not only when asked:
+
+- exact build commands, including any image/artifact rebuilds the change forces
+  (e.g. `npm run build && npm run docker:build:cli` whenever `src/runtime/**`
+  changed — `dist/runtime` is baked into the CLI image and staged into MFEs);
+- how to run it end to end and drive the new behavior;
+- what a correct result looks like, and the first place to look if it isn't.
+
+Keep it accurate to the pushed SHA. This is the manual end-to-end check that
+complements CI (the arbiter for the automated suites).
+
 ## Session-end checklist
 
 Before opening the PR:
 
 - [ ] Every acceptance criterion checked off in PR body with evidence (test name or command output)
 - [ ] All verification gates green
+- [ ] For significant/user-facing changes, a **local-test runbook comment** is posted on the PR (see above)
 - [ ] PR body links the issue (`Closes #N`) and references governing ADRs
 - [ ] New architectural decisions either cite an existing ADR or include a new ADR file in the PR
 - [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `pnpm-workspace.yaml`, `turbo.json`, `schemas/`)
