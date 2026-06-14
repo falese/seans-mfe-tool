@@ -96,7 +96,7 @@ async function runJsonMode(
   expect(json).not.toMatch(/\n/);
 
   const envelope = JSON.parse(json) as CommandResult<unknown>;
-  const exitCode = (process.exit as jest.Mock).mock.calls[0]?.[0] as number;
+  const exitCode = (process.exit as unknown as jest.Mock).mock.calls[0]?.[0] as number;
 
   return { envelope, exitCode };
 }
