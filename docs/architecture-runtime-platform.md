@@ -1,1312 +1,439 @@
 # Runtime Platform Architecture
 
-## Subsystem Overview
+> How a domain feature, built in any framework, becomes an independently
+> deployable unit that a generic shell can compose at runtime.
+
+## The whole system in one picture
+
+The runtime has **two halves joined by a thin waist**:
+
+- **The MFE side** is a *sealed unit*. It is built in some framework (React,
+  Angular, …), but from the outside that framework is invisible. It exposes a
+  neutral **lifecycle** (load, render, health, …) and a **presentation handle**
+  (`mount(element) → unmount`). Nothing else leaks out.
+- **The host side** is the *control plane*: a **daemon** (router), a **registry**
+  (resolver), and a **LayoutManager** (placement). It decides *which* MFE,
+  *which* capability, and *what* props to render for *which* user — then places
+  the result into a slot. It never reaches inside the MFE.
 
 ```mermaid
-graph TB
-    subgraph "Runtime Platform Subsystem"
-        subgraph "Public API Layer"
-            BaseMFE["BaseMFE<br/>(Abstract Class)"]
-            RemoteMFE["RemoteMFE<br/>(Concrete Impl)"]
-            ContextAPI["Context API<br/>(Interface & Factory)"]
-            Exports["Package Exports<br/>index.ts"]
-        end
-
-        subgraph "Core Execution Engine"
-            StateMachine["State Machine<br/>(FSM Validator)"]
-            LifecycleEngine["Lifecycle Engine<br/>(Phase Orchestrator)"]
-            HookExecutor["Hook Executor<br/>(Handler Chain)"]
-            ContextManager["Context Manager<br/>(State Flow)"]
-        end
-
-        subgraph "Platform Handlers (6)"
-            AuthH["auth.ts<br/>JWT Validation"]
-            TelemetryH["telemetry.ts<br/>Event Tracking"]
-            ValidationH["validation.ts<br/>Input Validation"]
-            ErrorH["error-handling.ts<br/>Retry Logic"]
-            CacheH["caching.ts<br/>Response Cache"]
-            RateLimitH["rate-limiting.ts<br/>Throttling"]
-        end
-
-        subgraph "Type System"
-            Interfaces["Interfaces<br/>(LoadResult, RenderResult, etc.)"]
-            ContextTypes["Context Types<br/>(UserContext, TelemetryEvent)"]
-            DependencyTypes["Dependency Injection<br/>(BaseMFEDependencies)"]
-        end
-
-        subgraph "External Dependencies"
-            DSL["DSL Manifest<br/>(../dsl/schema)"]
-            JWT["jsonwebtoken<br/>(Node.js only)"]
-            ModFed["Module Federation<br/>(Runtime API)"]
-        end
+flowchart LR
+    subgraph HOST["HOST SIDE — the control plane (framework-clever)"]
+        direction TB
+        REG["Registry<br/><i>resolve: state → which MFE/capability/props</i>"]
+        DAEMON["Daemon<br/><i>route actions ↑ / experiences ↓</i>"]
+        LM["LayoutManager<br/><i>place experience into a slot, mount it</i>"]
+        REG --- DAEMON --- LM
     end
 
-    subgraph "Generated MFE"
-        AppCode["Application Code"]
-        FeatureComponents["Feature Components"]
-        CustomHandlers["Custom Handlers"]
+    subgraph WAIST["THIN WAIST — the only things that cross"]
+        direction TB
+        CAP["capability contract<br/><i>load · authorize · render · health · query · state</i>"]
+        HANDLE["presentation handle<br/><i>mount(el, props) → unmount</i>"]
     end
 
-    %% Public API relationships
-    Exports --> BaseMFE
-    Exports --> RemoteMFE
-    Exports --> ContextAPI
-    BaseMFE --> RemoteMFE
-
-    %% Core Engine relationships
-    BaseMFE --> StateMachine
-    BaseMFE --> LifecycleEngine
-    BaseMFE --> ContextManager
-    LifecycleEngine --> HookExecutor
-    ContextManager --> ContextAPI
-
-    %% Handler relationships
-    HookExecutor --> AuthH
-    HookExecutor --> TelemetryH
-    HookExecutor --> ValidationH
-    HookExecutor --> ErrorH
-    HookExecutor --> CacheH
-    HookExecutor --> RateLimitH
-
-    %% Type system relationships
-    BaseMFE --> Interfaces
-    ContextAPI --> ContextTypes
-    BaseMFE --> DependencyTypes
-
-    %% External dependencies
-    BaseMFE --> DSL
-    AuthH --> JWT
-    RemoteMFE --> ModFed
-
-    %% Generated MFE usage
-    AppCode --> RemoteMFE
-    AppCode --> ContextAPI
-    FeatureComponents --> RemoteMFE
-    CustomHandlers --> HookExecutor
-
-    style BaseMFE fill:#BD10E0,color:#fff
-    style RemoteMFE fill:#9013FE,color:#fff
-    style ContextAPI fill:#F5A623,color:#000
-    style StateMachine fill:#7ED321,color:#000
-    style LifecycleEngine fill:#7ED321,color:#000
-    style HookExecutor fill:#7ED321,color:#000
-    style AuthH fill:#50E3C2,color:#000
-    style TelemetryH fill:#50E3C2,color:#000
-    style ValidationH fill:#50E3C2,color:#000
-    style ErrorH fill:#50E3C2,color:#000
-    style CacheH fill:#50E3C2,color:#000
-    style RateLimitH fill:#50E3C2,color:#000
-    style DSL fill:#4A90E2,color:#fff
-    style AppCode fill:#F8E71C,color:#000
-```
-
-**Legend:**
-
-- 🟣 **Purple**: Core abstract/concrete classes
-- 🟠 **Orange**: Context & state management
-- 🟢 **Green**: Execution engines
-- 🔵 **Cyan**: Platform handlers
-- 🔷 **Blue**: External dependencies
-- 🟡 **Yellow**: Generated application code
-
----
-
-## Overview
-
-The Runtime Platform provides the execution environment for all MFE types (remote, bff, tool, agent). It implements the core lifecycle, context management, and platform handler system that enables consistent, observable, and secure MFE operation.
-
-**Core Principles:**
-
-- **Universal Base Class**: `BaseMFE` works for all MFE types
-- **Shared Context**: Context flows through all phases and capabilities
-- **Platform Handlers**: Reusable cross-cutting concerns (auth, telemetry, validation)
-- **State Machine**: Enforced lifecycle state transitions
-- **Dependency Injection**: All dependencies injectable for testing
-- **Type Safety**: Full TypeScript strict mode compliance
-
-**Key Requirements:**
-
-- REQ-RUNTIME-001: Load capability (atomic operation)
-- REQ-RUNTIME-002: Shared context across all phases
-- REQ-RUNTIME-004: Render capability
-- REQ-RUNTIME-005: Platform handler registry
-- REQ-RUNTIME-006: Authentication handler
-- REQ-RUNTIME-012: Telemetry emission at all checkpoints
-
-**Related ADRs:**
-
-- ADR-002: Lifecycle hook execution semantics
-- ADR-013: BaseMFE abstract base (not type hierarchy)
-- ADR-025: Platform handler interface & execution model
-- ADR-026: Load capability atomic operation design
-
----
-
-## System Architecture
-
-```mermaid
-graph TB
-    subgraph "Runtime Package (@seans-mfe-tool/runtime)"
-        BaseMFE["BaseMFE<br/>(Abstract Base Class)"]
-        RemoteMFE["RemoteMFE<br/>(Module Federation)"]
-        Context["Context<br/>(Shared State)"]
-
-        subgraph "Platform Handlers"
-            Auth["Auth Handler<br/>(JWT Validation)"]
-            Telemetry["Telemetry Handler<br/>(Event Tracking)"]
-            Validation["Validation Handler<br/>(Input Validation)"]
-            ErrorHandler["Error Handler<br/>(Retry Logic)"]
-            Caching["Caching Handler<br/>(Response Cache)"]
-            RateLimit["Rate Limiting Handler<br/>(Throttling)"]
-        end
-
-        subgraph "Lifecycle System"
-            LifecycleExec["Lifecycle Executor<br/>(Hook Orchestration)"]
-            StateValidator["State Validator<br/>(FSM Enforcement)"]
-        end
-
-        subgraph "Support Services"
-            TelemetryService["Telemetry Service<br/>(Event Emission)"]
-            ManifestParser["Manifest Parser<br/>(DSL Parsing)"]
-        end
+    subgraph MFE["MFE SIDE — a sealed VM (framework is internal)"]
+        direction TB
+        BASE["BaseMFE<br/><i>neutral lifecycle + capability contract</i>"]
+        ABS["RemoteMFE / AngularRemoteMFE<br/><i>produces the native handle</i>"]
+        IMPL["Generated MFE<br/><i>PlayGame, ShowCover, …</i>"]
+        BASE --> ABS --> IMPL
     end
 
-    subgraph "DSL System"
-        DSLManifest["DSL Manifest<br/>(mfe-manifest.yaml)"]
-        Schema["Schema Types<br/>(Capabilities, Hooks)"]
-    end
-
-    subgraph "Generated MFE"
-        ConcreteImpl["Concrete MFE<br/>(extends RemoteMFE)"]
-        Features["Feature Components<br/>(React/UI)"]
-        CustomHandlers["Custom Handlers<br/>(Domain Logic)"]
-    end
-
-    %% Relationships
-    BaseMFE --> Context
-    BaseMFE --> LifecycleExec
-    BaseMFE --> StateValidator
-    BaseMFE --> TelemetryService
-    BaseMFE --> ManifestParser
-
-    RemoteMFE --|extends| BaseMFE
-    ConcreteImpl --|extends| RemoteMFE
-
-    LifecycleExec --> Auth
-    LifecycleExec --> Telemetry
-    LifecycleExec --> Validation
-    LifecycleExec --> ErrorHandler
-    LifecycleExec --> Caching
-    LifecycleExec --> RateLimit
-    LifecycleExec --> CustomHandlers
-
-    Context -.->|flows through| Auth
-    Context -.->|flows through| Validation
-    Context -.->|flows through| ErrorHandler
-
-    DSLManifest --> ManifestParser
-    Schema --> BaseMFE
-
-    ConcreteImpl --> Features
-    ConcreteImpl --> CustomHandlers
-
-    style BaseMFE fill:#BD10E0,color:#fff
-    style RemoteMFE fill:#9013FE,color:#fff
-    style Context fill:#F5A623,color:#000
-    style Auth fill:#50E3C2,color:#000
-    style Telemetry fill:#50E3C2,color:#000
-    style LifecycleExec fill:#7ED321,color:#000
-    style DSLManifest fill:#4A90E2,color:#fff
+    LM == "consumes (sealed port)" ==> HANDLE
+    DAEMON -. "speaks" .-> CAP
+    CAP -. "served by" .-> BASE
+    HANDLE == "exposed by" ==> BASE
 ```
+
+The design test (ADR-056): *would Kubernetes reach into a container to do this?*
+If no, neither does the control plane. An MFE is a pod; the capability contract
+is its readiness/liveness probe; the presentation handle is its exposed port; the
+control plane is the scheduler. Framework cleverness is allowed — but only on the
+host side, behind the waist.
+
+The rest of this document walks the two halves and the waist between them:
+
+1. **The MFE side** — the `BaseMFE` lifecycle every unit inherits.
+2. **The control plane** — daemon, registry, LayoutManager, and the end-to-end
+   composition flow (with ABC Kids).
+3. **The thin waist** — the presentation handle, the imperative floor, and how
+   framework handling stays quarantined.
 
 ---
 
-## Class Hierarchy & Type System
-
-```mermaid
-classDiagram
-    class DSLManifest {
-        <<interface>>
-        +name: string
-        +version: string
-        +type: string
-        +capabilities: Capability[]
-        +data?: DataSection
-        +remoteEntry?: string
-    }
-
-    class Context {
-        <<interface>>
-        +user?: UserContext
-        +jwt?: string
-        +requestId: string
-        +timestamp: Date
-        +inputs?: Record~string, unknown~
-        +outputs?: Record~string, unknown~
-        +headers?: Record~string, string~
-        +phase?: LifecyclePhase
-        +capability?: string
-        +error?: Error
-        +retryCount?: number
-        +telemetry?: TelemetryData
-        +validationErrors?: ValidationError[]
-        +cache?: CacheData
-        +emit?(event: TelemetryEvent): Promise~void~
-    }
-
-    class UserContext {
-        <<interface>>
-        +id: string
-        +username: string
-        +roles: string[]
-        +permissions?: string[]
-    }
-
-    class LoadResult {
-        <<interface>>
-        +status: 'loaded' | 'error'
-        +container?: unknown
-        +mesh?: unknown
-        +worker?: Worker
-        +timestamp: Date
-        +telemetry?: LoadTelemetry
-    }
-
-    class RenderResult {
-        <<interface>>
-        +status: 'rendered' | 'error'
-        +element?: unknown
-        +timestamp: Date
-    }
-
-    class HealthResult {
-        <<interface>>
-        +status: 'healthy' | 'degraded' | 'unhealthy'
-        +checks: HealthCheck[]
-        +timestamp: Date
-    }
-
-    class BaseMFE {
-        <<abstract>>
-        #manifest: DSLManifest
-        #context: Context
-        #state: MFEState
-        #deps: BaseMFEDependencies
-        +load() LoadResult
-        +render() RenderResult
-        +health() HealthResult
-        +describe() DescribeResult
-        +schema() SchemaResult
-        +query() QueryResult
-        +emit() EmitResult
-        #doLoad()* LoadResult
-        #doRender()* RenderResult
-        #doHealth() HealthResult
-        #doDescribe() DescribeResult
-        #doSchema() SchemaResult
-        #doQuery() QueryResult
-        #doEmit() EmitResult
-        #executeLifecycleHooks() void
-        #transitionState() void
-        #createContext() Context
-    }
-
-    class RemoteMFE {
-        -container: ModuleFederationContainer
-        -availableComponents: string[]
-        -mountedComponent: any
-        #doLoad() LoadResult
-        #doRender() RenderResult
-        -fetchContainer() ModuleFederationContainer
-        -wireSharedDependencies() void
-        -discoverComponents() string[]
-    }
-
-    class BaseMFEDependencies {
-        <<interface>>
-        +platformHandlers?: PlatformHandlerMap
-        +customHandlers?: CustomHandlerMap
-        +telemetry?: TelemetryService
-        +stateValidator?: StateValidator
-        +manifestParser?: ManifestParser
-        +lifecycleExecutor?: LifecycleExecutor
-        +errorHandler?: ErrorHandler
-    }
-
-    class PlatformHandler {
-        <<interface>>
-        +name: string
-        +phases: string[]
-        +errorConfig: ErrorConfig
-        +execute(context: Context, phase: string) Promise~void~
-    }
-
-    class LifecycleExecutor {
-        <<interface>>
-        +execute(hook: LifecycleHook, context: Context, phase: string) Promise~void~
-    }
-
-    Context --> UserContext
-    BaseMFE --> Context
-    BaseMFE --> DSLManifest
-    BaseMFE --> BaseMFEDependencies
-    BaseMFE --> LoadResult
-    BaseMFE --> RenderResult
-    BaseMFE --> HealthResult
-    RemoteMFE --|> BaseMFE
-    BaseMFEDependencies --> PlatformHandler
-    BaseMFEDependencies --> LifecycleExecutor
-```
-
----
-
-## State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> Uninitialized: new RemoteMFE()
-
-    Uninitialized --> Loading: load()
-
-    Loading --> Ready: doLoad() success
-    Loading --> Error: doLoad() failure
-
-    Ready --> Rendering: render()
-    Ready --> Loading: load() again
-    Ready --> Destroyed: destroy()
-
-    Rendering --> Ready: doRender() success
-    Rendering --> Error: doRender() failure
-
-    Error --> Loading: load() retry
-    Error --> Destroyed: destroy()
-
-    Destroyed --> [*]
-
-    note right of Loading
-        REQ-RUNTIME-001:
-        Atomic load operation
-        - Entry: Fetch container
-        - Mount: Wire dependencies
-        - Enable-render: Prepare state
-    end note
-
-    note right of Ready
-        Can execute:
-        - render()
-        - health()
-        - query()
-        - emit()
-    end note
-
-    note right of Error
-        Can retry with:
-        - Exponential backoff
-        - Max retry limit
-        - Error handler
-    end note
-```
-
-### Valid State Transitions
-
-```typescript
-const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
-  uninitialized: ['loading'],
-  loading: ['ready', 'error'],
-  ready: ['loading', 'rendering', 'destroyed'],
-  rendering: ['ready', 'error'],
-  error: ['loading', 'destroyed'],
-  destroyed: [],
-};
-```
-
----
-
-## Lifecycle & Context Flow
-
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant MFE as RemoteMFE
-    participant Lifecycle as Lifecycle Executor
-    participant Context as Context Object
-    participant Auth as Auth Handler
-    participant Telemetry as Telemetry Handler
-    participant Custom as Custom Handler
-
-    App->>MFE: load(inputs)
-    MFE->>MFE: transitionState(loading)
-    MFE->>Context: createContext(inputs)
-    Context-->>MFE: context
-
-    Note over MFE,Lifecycle: Before Phase
-    MFE->>Lifecycle: executeHooks('before', 'load')
-    Lifecycle->>Context: phase = 'before'
-    Lifecycle->>Auth: execute(context, 'before')
-    Auth->>Context: validate JWT, set user
-    Lifecycle->>Telemetry: execute(context, 'before')
-    Telemetry->>Context: emit load.before event
-    Lifecycle->>Custom: execute(context, 'before')
-    Custom->>Context: custom validation
-
-    Note over MFE,Lifecycle: Main Phase
-    MFE->>Lifecycle: executeHooks('main', 'load')
-    Lifecycle->>Context: phase = 'main'
-    MFE->>MFE: doLoad(context)
-    Note over MFE: Entry: Fetch container<br/>Mount: Wire deps<br/>Enable-render: Prepare
-    MFE->>Context: outputs.container = container
-
-    Note over MFE,Lifecycle: After Phase
-    MFE->>Lifecycle: executeHooks('after', 'load')
-    Lifecycle->>Context: phase = 'after'
-    Lifecycle->>Telemetry: execute(context, 'after')
-    Telemetry->>Context: emit load.after event
-
-    MFE->>MFE: transitionState(ready)
-    MFE-->>App: LoadResult { status: 'loaded' }
-
-    App->>MFE: render(targetElement)
-    MFE->>MFE: transitionState(rendering)
-
-    Note over MFE,Lifecycle: Before Phase
-    MFE->>Lifecycle: executeHooks('before', 'render')
-    Lifecycle->>Context: phase = 'before', capability = 'render'
-    Lifecycle->>Auth: execute(context, 'before')
-    Lifecycle->>Telemetry: execute(context, 'before')
-
-    Note over MFE,Lifecycle: Main Phase
-    MFE->>Lifecycle: executeHooks('main', 'render')
-    Lifecycle->>Context: phase = 'main'
-    MFE->>MFE: doRender(context)
-    Note over MFE: Mount React component<br/>to target element
-    MFE->>Context: outputs.element = element
-
-    Note over MFE,Lifecycle: After Phase
-    MFE->>Lifecycle: executeHooks('after', 'render')
-    Lifecycle->>Telemetry: execute(context, 'after')
-    Telemetry->>Context: emit render.after event
-
-    MFE->>MFE: transitionState(ready)
-    MFE-->>App: RenderResult { status: 'rendered' }
-```
-
----
-
-## Context Schema & Data Flow
-
-### Context Structure
-
-```typescript
-interface Context {
-  // === User & Authentication ===
-  user?: UserContext; // Populated by auth handler
-  jwt?: string; // JWT token from request
-  requestId: string; // Unique trace ID
-  timestamp: Date; // Request timestamp
-
-  // === Capability I/O ===
-  inputs?: Record<string, unknown>; // Capability inputs
-  outputs?: Record<string, unknown>; // Capability outputs
-
-  // === HTTP/Request Metadata ===
-  headers?: Record<string, string>; // HTTP headers
-  query?: Record<string, string>; // Query parameters
-
-  // === Lifecycle Tracking ===
-  phase?: 'before' | 'main' | 'after' | 'error';
-  capability?: 'load' | 'render' | 'query' | 'emit' | string;
-
-  // === Error Context ===
-  error?: Error; // Error that triggered error phase
-  retryCount?: number; // Retry attempt number
-
-  // === Handler Data ===
-  telemetry?: {
-    startTime?: number;
-    endTime?: number;
-    duration?: number;
-    events: TelemetryEvent[];
-  };
-
-  validationErrors?: Array<{
-    field: string;
-    message: string;
-    code: string;
-  }>;
-
-  cache?: {
-    key: string;
-    hit: boolean;
-    ttl?: number;
-  };
-
-  rateLimit?: {
-    limit: number;
-    remaining: number;
-    reset: Date;
-  };
-
-  // === Emit Method ===
-  emit?(event: TelemetryEvent): Promise<void>;
-}
-```
-
-### Context Flow Diagram
-
-```mermaid
-graph LR
-    subgraph "Context Creation"
-        Input[Capability Inputs] --> Factory[Context Factory]
-        Request[HTTP Request] --> Factory
-        Factory --> Context[Context Object]
-    end
-
-    subgraph "Before Phase"
-        Context --> Auth[Auth Handler]
-        Auth --> |set user| Context2[Context + user]
-        Context2 --> Telemetry1[Telemetry Handler]
-        Telemetry1 --> |emit event| Context3[Context + telemetry]
-        Context3 --> Validation[Validation Handler]
-        Validation --> |add errors| Context4[Context + validation]
-    end
-
-    subgraph "Main Phase"
-        Context4 --> DoCapability[doLoad/doRender/etc]
-        DoCapability --> |set outputs| Context5[Context + outputs]
-    end
-
-    subgraph "After Phase"
-        Context5 --> Telemetry2[Telemetry Handler]
-        Telemetry2 --> |emit metrics| Context6[Context + metrics]
-        Context6 --> Cache[Caching Handler]
-        Cache --> |cache result| Context7[Context + cache]
-    end
-
-    subgraph "Result"
-        Context7 --> Result[LoadResult/RenderResult]
-    end
-
-    style Context fill:#F5A623,color:#000
-    style Context2 fill:#F5A623,color:#000
-    style Context3 fill:#F5A623,color:#000
-    style Context4 fill:#F5A623,color:#000
-    style Context5 fill:#F5A623,color:#000
-    style Context6 fill:#F5A623,color:#000
-    style Context7 fill:#F5A623,color:#000
-    style Auth fill:#50E3C2,color:#000
-    style Validation fill:#50E3C2,color:#000
-```
-
----
-
-## Platform Handlers Architecture
-
-### Handler Interface
-
-```typescript
-interface PlatformHandler {
-  name: string; // Handler identifier
-  phases: string[]; // Which phases to run in
-  errorConfig: {
-    continueOnError: boolean; // Continue if handler fails
-    retryable: boolean; // Can retry on error
-    maxRetries?: number; // Max retry attempts
-  };
-  execute(context: Context, phase: string): Promise<void>;
-}
-```
-
-### Handler Execution Flow
-
-```mermaid
-graph TB
-    Start[Start Lifecycle Phase]
-    GetHandlers[Get Handlers for Phase]
-
-    Start --> GetHandlers
-
-    GetHandlers --> Loop{For Each Handler}
-
-    Loop --> Execute[Execute Handler]
-    Execute --> Success{Success?}
-
-    Success -->|Yes| NextHandler[Next Handler]
-    Success -->|No| Retryable{Retryable?}
-
-    Retryable -->|Yes| CheckRetries{Max Retries?}
-    Retryable -->|No| ContinueError{Continue on Error?}
-
-    CheckRetries -->|Not Exceeded| Backoff[Exponential Backoff]
-    CheckRetries -->|Exceeded| ContinueError
-
-    Backoff --> Execute
-
-    ContinueError -->|Yes| LogError[Log Error]
-    ContinueError -->|No| ThrowError[Throw Error]
-
-    LogError --> NextHandler
-    NextHandler --> Loop
-
-    Loop -->|Done| PhaseComplete[Phase Complete]
-
-    ThrowError --> ErrorPhase[Trigger Error Phase]
-
-    style Execute fill:#7ED321,color:#000
-    style Success fill:#50E3C2,color:#000
-    style ThrowError fill:#D0021B,color:#fff
-    style PhaseComplete fill:#4A90E2,color:#fff
-```
-
-### Built-in Platform Handlers
-
-#### 1. Auth Handler (`auth.ts`)
-
-**Purpose**: JWT validation and user context population
-
-**Configuration**:
-
-```typescript
-{
-  name: 'auth',
-  phases: ['before'],
-  errorConfig: {
-    continueOnError: false,  // Auth failure = hard stop
-    retryable: false
-  }
-}
-```
-
-**Logic**:
-
-```typescript
-async function validateJWT(context: Context): Promise<void> {
-  const token = context.jwt;
-  const secret = process.env.JWT_SECRET;
-
-  if (!token) throw new Error('JWT token required');
-  if (!secret) throw new Error('JWT secret missing');
-
-  try {
-    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
-    context.user = decoded; // Populate user context
-
-    await context.emit?.({
-      eventType: 'info',
-      eventData: { source: 'platform.validateJWT', user: decoded },
-      severity: 'info',
-    });
-  } catch (error) {
-    await context.emit?.({
-      eventType: 'error',
-      eventData: { source: 'platform.validateJWT', error: error.message },
-      severity: 'error',
-    });
-    throw new Error('Invalid JWT token: ' + error.message);
-  }
-}
-```
-
-#### 2. Telemetry Handler (`telemetry.ts`)
-
-**Purpose**: Event tracking at all checkpoints
-
-**Configuration**:
-
-```typescript
-{
-  name: 'telemetry',
-  phases: ['before', 'main', 'after', 'error'],
-  errorConfig: {
-    continueOnError: true,   // Telemetry failure shouldn't block
-    retryable: false
-  }
-}
-```
-
-**Emission Points** (REQ-RUNTIME-012):
-
-- Capability start (before phase)
-- Handler execution (each handler)
-- Capability checkpoints (entry, mount, enable-render)
-- Capability completion (after phase)
-- Errors (error phase)
-
-#### 3. Validation Handler (`validation.ts`)
-
-**Purpose**: Input validation against schemas
-
-**Configuration**:
-
-```typescript
-{
-  name: 'validation',
-  phases: ['before'],
-  errorConfig: {
-    continueOnError: false,  // Invalid input = hard stop
-    retryable: false
-  }
-}
-```
-
-#### 4. Error Handling Handler (`error-handling.ts`)
-
-**Purpose**: Retry logic with exponential backoff
-
-**Configuration**:
-
-```typescript
-{
-  name: 'error-handling',
-  phases: ['error'],
-  errorConfig: {
-    continueOnError: false,
-    retryable: true,
-    maxRetries: 3
-  }
-}
-```
-
-**Retry Strategy**:
-
-```typescript
-const backoffMs = Math.min(
-  1000 * Math.pow(2, context.retryCount || 0),
-  30000 // Max 30 seconds
-);
-```
-
-#### 5. Caching Handler (`caching.ts`)
-
-**Purpose**: Response caching
-
-**Configuration**:
-
-```typescript
-{
-  name: 'caching',
-  phases: ['before', 'after'],
-  errorConfig: {
-    continueOnError: true,   // Cache miss/failure shouldn't block
-    retryable: false
-  }
-}
-```
-
-#### 6. Rate Limiting Handler (`rate-limiting.ts`)
-
-**Purpose**: Request throttling
-
-**Configuration**:
-
-```typescript
-{
-  name: 'rate-limiting',
-  phases: ['before'],
-  errorConfig: {
-    continueOnError: false,  // Rate limit = hard stop
-    retryable: true,         // Can retry after reset
-    maxRetries: 3
-  }
-}
-```
-
----
-
-## Load Capability: Atomic Operation Design
-
-**REQ-RUNTIME-001 & ADR-026**: Load is an atomic operation with three phases
-
-```mermaid
-graph TB
-    Start[load inputs] --> CreateContext[Create Context]
-    CreateContext --> BeforeHooks[Before Phase Hooks]
-
-    BeforeHooks --> Entry[Phase 1: Entry]
-
-    Entry --> FetchContainer[Fetch remoteEntry.js]
-    FetchContainer --> EmitEntry[Emit entry telemetry]
-    EmitEntry --> EntryComplete{Success?}
-
-    EntryComplete -->|No| LoadError[Error State]
-    EntryComplete -->|Yes| Mount[Phase 2: Mount]
-
-    Mount --> InitContainer[container.init shared]
-    InitContainer --> WireShared[Wire shared dependencies]
-    WireShared --> EmitMount[Emit mount telemetry]
-    EmitMount --> MountComplete{Success?}
-
-    MountComplete -->|No| LoadError
-    MountComplete -->|Yes| EnableRender[Phase 3: Enable-Render]
-
-    EnableRender --> DiscoverComponents[Discover exposed components]
-    DiscoverComponents --> PrepareState[Prepare MFE state]
-    PrepareState --> EmitEnable[Emit enable-render telemetry]
-    EmitEnable --> EnableComplete{Success?}
-
-    EnableComplete -->|No| LoadError
-    EnableComplete -->|Yes| AfterHooks[After Phase Hooks]
-
-    AfterHooks --> TransitionReady[Transition to Ready]
-    TransitionReady --> ReturnResult[Return LoadResult]
-
-    LoadError --> ErrorHooks[Error Phase Hooks]
-    ErrorHooks --> TransitionError[Transition to Error]
-    TransitionError --> ReturnError[Return LoadResult error]
-
-    style Entry fill:#7ED321,color:#000
-    style Mount fill:#7ED321,color:#000
-    style EnableRender fill:#7ED321,color:#000
-    style LoadError fill:#D0021B,color:#fff
-    style TransitionReady fill:#4A90E2,color:#fff
-```
-
-### LoadResult Schema
-
-```typescript
-interface LoadResult {
-  status: 'loaded' | 'error';
-  container?: ModuleFederationContainer;
-  mesh?: GraphQLMesh;
-  worker?: Worker;
-  timestamp: Date;
-  telemetry?: {
-    entry: {
-      start: Date;
-      duration: number;
-    };
-    mount: {
-      start: Date;
-      duration: number;
-    };
-    enableRender: {
-      start: Date;
-      duration: number;
-    };
-  };
-  error?: {
-    message: string;
-    phase: 'entry' | 'mount' | 'enable-render';
-    stack?: string;
-  };
-}
-```
-
----
-
-## Render Capability
-
-```mermaid
-graph TB
-    Start[render targetElement] --> CheckState{State = Ready?}
-
-    CheckState -->|No| StateError[Error: Invalid State]
-    CheckState -->|Yes| BeforeHooks[Before Phase Hooks]
-
-    BeforeHooks --> ValidateContainer{Container Loaded?}
-    ValidateContainer -->|No| RenderError[Error: Not Loaded]
-    ValidateContainer -->|Yes| DoRender[doRender context]
-
-    DoRender --> GetComponent[container.get './App' ]
-    GetComponent --> LoadModule[Load module factory]
-    LoadModule --> Mount[Mount React component]
-    Mount --> EmitRender[Emit render telemetry]
-    EmitRender --> RenderComplete{Success?}
-
-    RenderComplete -->|Yes| AfterHooks[After Phase Hooks]
-    RenderComplete -->|No| RenderError
-
-    AfterHooks --> TransitionReady[Transition to Ready]
-    TransitionReady --> ReturnResult[Return RenderResult]
-
-    RenderError --> ErrorHooks[Error Phase Hooks]
-    ErrorHooks --> TransitionError[Transition to Error]
-    TransitionError --> ReturnError[Return RenderResult error]
-
-    style DoRender fill:#7ED321,color:#000
-    style Mount fill:#7ED321,color:#000
-    style RenderError fill:#D0021B,color:#fff
-    style TransitionReady fill:#4A90E2,color:#fff
-```
-
----
-
-## Dependency Injection
-
-```mermaid
-graph TB
-    subgraph "Application Code"
-        App[Application]
-        Config[Dependency Config]
-    end
-
-    subgraph "Runtime Package"
-        BaseMFE[BaseMFE]
-        RemoteMFE[RemoteMFE]
-    end
-
-    subgraph "Injected Dependencies"
-        PlatformHandlers[Platform Handlers<br/>auth, telemetry, etc.]
-        CustomHandlers[Custom Handlers<br/>domain logic]
-        TelemetryService[Telemetry Service<br/>event emission]
-        StateValidator[State Validator<br/>FSM enforcement]
-        LifecycleExec[Lifecycle Executor<br/>hook orchestration]
-        ErrorHandler[Error Handler<br/>retry logic]
-    end
-
-    App --> Config
-    Config --> |inject| RemoteMFE
-
-    RemoteMFE --|uses| PlatformHandlers
-    RemoteMFE --|uses| CustomHandlers
-    RemoteMFE --|uses| TelemetryService
-    RemoteMFE --|uses| StateValidator
-    RemoteMFE --|uses| LifecycleExec
-    RemoteMFE --|uses| ErrorHandler
-
-    BaseMFE -.->|defines interface| RemoteMFE
-
-    style Config fill:#F5A623,color:#000
-    style RemoteMFE fill:#BD10E0,color:#fff
-    style PlatformHandlers fill:#50E3C2,color:#000
-```
-
-### Example: Dependency Injection Usage
-
-```typescript
-// Create platform handlers
-const platformHandlers: PlatformHandlerMap = {
-  auth: async (context) => validateJWT(context),
-  telemetry: async (context) => trackEvent(context),
-  validation: async (context) => validateInputs(context),
-};
-
-// Create custom handlers
-const customHandlers: CustomHandlerMap = {
-  'DataAnalysis.validate': async (context) => {
-    // Custom validation for DataAnalysis capability
-    if (!context.inputs?.file) {
-      throw new Error('File input required');
-    }
-  },
-};
-
-// Create telemetry service
-const telemetry: TelemetryService = {
-  emit: (event) => {
-    console.log('[Telemetry]', event);
-    // Send to observability platform
-  },
-};
-
-// Inject dependencies
-const mfe = new RemoteMFE(manifest, {
-  platformHandlers,
-  customHandlers,
-  telemetry,
-  stateValidator: new FSMValidator(),
-  lifecycleExecutor: new LifecycleExecutorImpl(),
-  errorHandler: new RetryErrorHandler(),
-});
-
-// Use MFE
-const loadResult = await mfe.load({ remoteEntry: 'http://localhost:3001/remoteEntry.js' });
-const renderResult = await mfe.render(document.getElementById('root'));
-```
-
----
-
-## Testing Strategy
-
-### Unit Testing BaseMFE
-
-```typescript
-describe('BaseMFE', () => {
-  it('should enforce state transitions', async () => {
-    const mfe = new RemoteMFE(manifest, deps);
-
-    expect(mfe.getState()).toBe('uninitialized');
-
-    await mfe.load(inputs);
-    expect(mfe.getState()).toBe('ready');
-
-    // Invalid transition
-    expect(() => mfe.transitionState('destroyed')).toThrow();
-  });
-
-  it('should execute lifecycle hooks in order', async () => {
-    const executionOrder: string[] = [];
-
-    const deps = {
-      platformHandlers: {
-        auth: async () => executionOrder.push('auth'),
-        telemetry: async () => executionOrder.push('telemetry'),
-      },
-    };
-
-    const mfe = new RemoteMFE(manifest, deps);
-    await mfe.load(inputs);
-
-    expect(executionOrder).toEqual(['auth', 'telemetry']);
-  });
-});
-```
-
-### Integration Testing RemoteMFE
-
-```typescript
-describe('RemoteMFE Load', () => {
-  it('should complete atomic load operation', async () => {
-    const mfe = new RemoteMFE(manifest, deps);
-    const result = await mfe.load({ remoteEntry: 'http://localhost:3001/remoteEntry.js' });
-
-    expect(result.status).toBe('loaded');
-    expect(result.container).toBeDefined();
-    expect(result.telemetry?.entry.duration).toBeGreaterThan(0);
-    expect(result.telemetry?.mount.duration).toBeGreaterThan(0);
-    expect(result.telemetry?.enableRender.duration).toBeGreaterThan(0);
-  });
-});
-```
-
-### Mocking Dependencies
-
-```typescript
-const mockTelemetry: TelemetryService = {
-  emit: jest.fn(),
-};
-
-const mockLifecycleExecutor: LifecycleExecutor = {
-  execute: jest.fn().mockResolvedValue(undefined),
-};
-
-const deps: BaseMFEDependencies = {
-  telemetry: mockTelemetry,
-  lifecycleExecutor: mockLifecycleExecutor,
-};
-```
-
----
-
-## File Structure
-
-```
-src/runtime/
-├── base-mfe.ts              # Abstract base class
-├── remote-mfe.ts            # Module Federation implementation
-├── context.ts               # Context interface & factory
-├── index.ts                 # Public exports
-├── handlers/
-│   ├── auth.ts             # JWT validation
-│   ├── telemetry.ts        # Event tracking
-│   ├── validation.ts       # Input validation
-│   ├── error-handling.ts   # Retry logic
-│   ├── caching.ts          # Response caching
-│   ├── rate-limiting.ts    # Request throttling
-│   └── index.ts            # Handler exports
-└── __tests__/
-    ├── base-mfe.test.ts
-    ├── remote-mfe.test.ts
-    ├── context.test.ts
-    └── handlers/
-        ├── auth.test.ts
-        ├── telemetry.test.ts
-        └── ...
-```
-
----
-
-## Package Distribution
-
-```
-dist/runtime/
-├── index.js                 # Main entry (BaseMFE, RemoteMFE, Context)
-├── index.d.ts               # TypeScript definitions
-├── base-mfe.js
-├── base-mfe.d.ts
-├── remote-mfe.js
-├── remote-mfe.d.ts
-├── context.js
-├── context.d.ts
-└── handlers/
-    ├── index.js            # Handler entry (NOT in main export)
-    ├── auth.js
-    ├── telemetry.js
-    └── ...
-```
-
-**Important**: Handlers are in separate entry point to avoid bundling `jsonwebtoken` in browser bundles.
-
-### Usage in Generated MFE
-
-```typescript
-// Import runtime classes
-import { RemoteMFE } from '@seans-mfe-tool/runtime';
-
-// Import handlers separately (Node.js only)
-import { validateJWT } from '@seans-mfe-tool/runtime/handlers';
-
-// Create MFE instance
-const mfe = new RemoteMFE(manifest, {
-  platformHandlers: {
-    auth: validateJWT,
-  },
-});
-```
-
----
-
-## Key Design Principles
-
-### 1. Template Method Pattern
-
-Abstract `BaseMFE` defines skeleton, concrete implementations override `do*` methods:
+## Part 1 — The MFE side: a sealed unit with a lifecycle
+
+Every MFE — regardless of type (`remote`, `bff`, `tool`, `agent`) or framework —
+extends the same abstract base, `BaseMFE`. The base owns the *shape*; a concrete
+class owns the *how*.
+
+| Layer | Abstract base | Concrete |
+|---|---|---|
+| MFE runtime | `BaseMFE` | `RemoteMFE` (React/MF), `AngularRemoteMFE` |
+
+### The capability contract (the 10 neutral capabilities)
+
+`BaseMFE` exposes exactly ten capabilities. The control plane speaks *only* these;
+none of them mention a UI framework.
+
+| Capability | Purpose |
+|---|---|
+| `load` | Atomic 3-phase load (fetch → mount → enable-render) — ADR-026 |
+| `authorizeAccess` | Can this session use this capability? |
+| `render` | Produce/declare the presentation handle (NOT "create a React root") |
+| `refresh` | Re-render with new inputs |
+| `health` | Liveness/readiness |
+| `describe` | What the registry stores on registration (`MfeRegistration`) |
+| `schema` | Capability input/output schema |
+| `query` | Read domain data (often via the BFF) |
+| `emit` | Emit a domain/telemetry event |
+| `updateControlPlaneState` | Signal a state change up the control plane (ADR-057) |
+
+Each capability runs through the same **template method**: `before` hooks →
+`do*()` main → `after` hooks, with state-machine enforcement around it.
 
 ```typescript
 abstract class BaseMFE {
-  async load(inputs: Record<string, unknown>): Promise<LoadResult> {
+  async load(context: Context): Promise<LoadResult> {
     this.transitionState('loading');
     await this.executeLifecycleHooks('before', 'load');
-    const result = await this.doLoad(this.context); // Template method
+    const result = await this.doLoad(context);   // ← concrete class fills this in
     await this.executeLifecycleHooks('after', 'load');
     this.transitionState('ready');
     return result;
   }
-
   protected abstract doLoad(context: Context): Promise<LoadResult>;
 }
 
 class RemoteMFE extends BaseMFE {
   protected async doLoad(context: Context): Promise<LoadResult> {
-    // Module Federation specific implementation
+    /* Module Federation: fetch remoteEntry, init shared scope, discover modules */
   }
 }
 ```
 
-### 2. Context as Single Source of Truth
+### The lifecycle state machine
 
-All state flows through context object:
+```mermaid
+stateDiagram-v2
+    [*] --> uninitialized: new RemoteMFE()
+    uninitialized --> loading: load()
+    loading --> ready: doLoad ok
+    loading --> error: doLoad fails
+    ready --> rendering: render()
+    ready --> loading: load() again
+    ready --> destroyed: destroy()
+    rendering --> ready: doRender ok
+    rendering --> error: doRender fails
+    error --> loading: retry
+    error --> destroyed: destroy()
+    destroyed --> [*]
+```
 
-- Handlers read from and write to context
-- No side effects outside context
-- Enables testing with mock context
-- Enables tracing across phases
+```typescript
+const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
+  uninitialized: ['loading'],
+  loading:       ['ready', 'error'],
+  ready:         ['loading', 'rendering', 'destroyed'],
+  rendering:     ['ready', 'error'],
+  error:         ['loading', 'destroyed'],
+  destroyed:     [],
+};
+```
 
-### 3. Fail-Fast with Explicit Error Handling
+### Context: the single source of truth
 
-- Invalid state transitions throw immediately
-- Auth failures stop execution
-- Validation errors prevent main phase
-- Error phase triggered for recoverable errors
+One `Context` object flows through every phase of every capability. Handlers read
+from and write to it; nothing mutates state outside it. This is what makes the
+lifecycle observable and unit-testable.
 
-### 4. Observable by Default
+```typescript
+interface Context {
+  user?: UserContext;          // populated by the auth handler
+  jwt?: string;
+  requestId: string;           // trace id
+  timestamp: Date;
+  inputs?: Record<string, unknown>;
+  outputs?: Record<string, unknown>;
+  phase?: 'before' | 'main' | 'after' | 'error';
+  capability?: string;
+  error?: Error;
+  emit?(event: TelemetryEvent): Promise<void>;
+  // … telemetry / validation / cache / rateLimit handler data
+}
+```
 
-- Telemetry at every checkpoint
-- Context tracks all mutations
-- State machine transitions logged
-- Handler execution tracked
+### Platform handlers (cross-cutting concerns)
 
-### 5. Type-Safe Throughout
+Reusable concerns plug into the `before`/`main`/`after`/`error` phases via
+dependency injection. They are configured by the manifest (ADR-040) and run in a
+retry-aware chain.
 
-- Full TypeScript strict mode
-- No `any` types
-- Explicit interfaces for all contracts
-- Discriminated unions for results
+| Handler | Phases | On failure |
+|---|---|---|
+| `auth` | before | hard stop (no retry) |
+| `validation` | before | hard stop |
+| `rate-limiting` | before | hard stop, retry after reset |
+| `telemetry` | all | continue (never blocks) |
+| `caching` | before, after | continue |
+| `error-handling` | error | retry w/ exponential backoff (max 3) |
 
----
+```typescript
+const mfe = new RemoteMFE(manifest, {
+  platformHandlers: { auth: validateJWT, telemetry: trackEvent },
+  customHandlers:   { 'PlayGame.validate': async (ctx) => { /* domain rule */ } },
+  telemetry, stateValidator, lifecycleExecutor, errorHandler,
+});
+```
 
-## Performance Considerations
-
-### Load Operation Timing
-
-Target metrics (REQ-RUNTIME-001):
-
-- **Entry phase**: < 500ms (network dependent)
-- **Mount phase**: < 200ms (container init + shared deps)
-- **Enable-render phase**: < 100ms (component discovery)
-- **Total load**: < 1000ms
-
-### Handler Execution Budget
-
-Each handler should complete in < 50ms:
-
-- Auth validation: < 10ms (in-memory JWT verification)
-- Telemetry emission: < 5ms (async fire-and-forget)
-- Validation: < 20ms (schema validation)
-- Caching: < 10ms (in-memory lookup)
-
-### Context Size
-
-Keep context lean:
-
-- Avoid storing large objects in context
-- Use references/IDs instead of full objects
-- Clear outputs after consumption
-- Limit telemetry event history
-
----
-
-## Security Considerations
-
-### JWT Validation
-
-- **Algorithm whitelist**: Only HS256/RS256
-- **Secret management**: Environment variables only
-- **Token expiration**: Always validate `exp` claim
-- **Signature verification**: Required, never skip
-
-### Input Validation
-
-- **Schema validation**: All inputs validated before main phase
-- **Type checking**: Runtime type validation via JSON Schema
-- **Sanitization**: User inputs sanitized before processing
-
-### Error Messages
-
-- **No secret leakage**: Never expose secrets in error messages
-- **Sanitized stack traces**: Remove sensitive paths in production
-- **Generic errors**: User-facing errors should be generic
+That is the whole MFE side: a sealed unit, a neutral contract, an enforced
+lifecycle. **It does not know it is being composed.**
 
 ---
 
-## Related Documentation
+## Part 2 — The control plane: daemon, registry, LayoutManager
 
-### Architecture Documents
+A generic shell owns *where* (slots) and *how* (adaptors). The control plane owns
+*what renders for whom*. Three roles:
 
-- **[← Back to System Architecture Overview](./architecture-current-state.md)**
-- [Code Generation Architecture](./architecture-codegen.md) _(Coming Soon)_
-- [DSL Architecture](./architecture-dsl.md) _(Coming Soon)_
-- [BFF Architecture](./architecture-bff.md) _(Coming Soon)_
-- [API Generator Architecture](./architecture-api-generator.md) _(Coming Soon)_
+- **Registry** — resolves a state change to a `Resolution { mfe, capability, props }`.
+  It can answer differently per user / per application, because every action
+  carries a `SessionContext`. (Lives in a daemon implementation repo.)
+- **Daemon** — the router. Receives actions going up, asks the registry, invokes
+  the resolved MFE, relays the `RenderedExperience` going down. Defines no
+  component types (ADR-054).
+- **LayoutManager** (`src/runtime/layout-manager.ts`) — the host-side placement
+  engine. Subscribes to the daemon, routes each experience to a slot
+  (`props.slot`, default `main`), and mounts it via the adaptor for its
+  `contentType`.
 
-### Requirements & Specifications
+`BaseControlPlane` (ADR-059) is the abstract base that bundles daemon + registry +
+LayoutManager into one swappable unit (Node daemon, Rust daemon, in-process mock).
+The host writes three lines:
 
-- **[Runtime Requirements](./runtime-requirements.md)** - REQ-RUNTIME-001 through 012 (all requirements this subsystem implements)
-- [Acceptance Criteria - Runtime Load/Render](./acceptance-criteria/runtime-load-render.feature) - Gherkin scenarios
-- [Acceptance Criteria - Platform Handlers](./acceptance-criteria/platform-handlers.feature) - Handler execution scenarios
+```typescript
+const cp = new NodeControlPlane({
+  container: document.getElementById('app'),
+  session:   { sessionId, user, jwt },
+  daemonUrl: 'ws://localhost:3004/graphql',   // 3001-3003 belong to MFEs (ADR-055)
+});
+await cp.start();   // creates + wires the LayoutManager internally
+await cp.stop();
+```
 
-### Architecture Decision Records
+### The message protocol (ADR-054)
 
-- **ADR-002**: Lifecycle hook execution semantics
-- **ADR-013**: BaseMFE abstract base (not type hierarchy)
-- **ADR-025**: Platform handler interface & execution model
-- **ADR-026**: Load capability atomic operation design
-- **ADR-061**: Error boundary & fallback UI strategy
+One typed wire contract, codified in `@seans-mfe/contracts/messages`:
 
-### Implementation Status
+- **Up (`ACTION`)** — `ActionRecord { componentId, actionType, data, stateKey?,
+  context: SessionContext }`.
+- **Down (`COMPONENT`)** — `RenderedExperience { mfe, capability, output,
+  contentType, props }`. `contentType` is an **open string**; `module-federation`,
+  `text/html`, and `application/json` are the built-ins.
 
-- 🟡 **In Progress** - Core implementation in GitHub Issues #47-59
-- Track progress: [GitHub Project - Runtime Platform](https://github.com/falese/seans-mfe-tool/issues?q=is%3Aissue+label%3Aruntime-platform+is%3Aopen)
+> Wire note: on the daemon's `messages` subscription the downward payload is
+> wrapped one level — `COMPONENT_UPDATE` carries `{ type: 'EXPERIENCE' |
+> 'RESOLUTION_ERROR', data: RenderedExperience }` (`DaemonEnvelope`). The `type`
+> is an envelope tag, not a revived component type (ADR-054 "Wire envelope vs
+> logical message").
+
+### End-to-end: composing ABC Kids
+
+The ABC Kids shell (`examples/abc-kids/shell/src/App.tsx`) is the reference host.
+It imports a `LayoutManager`, declares `hostFramework: 'react'`, and renders an
+empty `layout-host` div. **It imports zero games.** It stays empty until the
+control plane signals.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant Shell as Shell + LayoutManager
+    participant D as Daemon
+    participant R as Registry
+    participant Flappy as flappy MFE (:3001)
+
+    Note over Shell: empty host; one WS to the daemon
+    R-->>D: resolve(root, session) → home experience
+    D-->>Shell: COMPONENT_UPDATE (EXPERIENCE, slot 'main')
+    Shell->>Shell: mount launcher into slot 'main'
+
+    U->>Shell: tap "Flappy" tile
+    Shell->>D: ACTION updateControlPlaneState (stateKey 'abc.play.flappy')
+    D->>R: forward action + session
+    R-->>D: Resolution { mfe: 'abc-kids-flappy', capability: 'PlayGame', props }
+    D-->>Shell: COMPONENT_UPDATE (module-federation experience, slot 'main')
+    Shell->>Flappy: load remoteEntry.js, mount(slotEl, {capability:'PlayGame'})
+    Flappy-->>U: the game renders in the slot
+```
+
+The registry chose the game; the shell only provided the slot and the mount.
+Swapping `main` from the launcher to Flappy is a control-plane decision, not shell
+code. A different user, or a different `application`, could resolve a different MFE
+for the same tap.
+
+### One socket, many slots (ADR-057)
+
+Composed MFEs still need to drive the control plane (e.g. the launcher emitting
+`abc.play.flappy`). The host owns **one** physical daemon socket and virtualizes
+it: each slot gets a `DaemonChannel` (implements `DaemonWebSocketClient`),
+injected as the MFE's `deps.wsClient` via `attachControlPlane()`. Outbound
+envelopes are stamped with the slot id; nested hosts compose ids into a path
+(`main` → `main/quiz`). So `updateControlPlaneState` works for any composed MFE
+with no extra connection and no daemon URL in the MFE.
+
+### MFE-provided layout (ADR-058)
+
+The layout itself can be an MFE. When the host mounts an MFE it passes a
+`provideSlot(slotId, element)` callback alongside the channel. A "home" MFE renders
+its regions (menu, main, info) and registers each as a host slot; the host keeps
+its single subscription and routes later experiences into those elements. Slot
+provision is a capability offered to *every* MFE — the layout MFE is just the
+first to use it.
+
+---
+
+## Part 3 — The thin waist: presentation, framework handling, the imperative floor
+
+`render` as a capability means **"produce/declare the presentation handle,"** never
+"create a React root." Exactly two things cross the waist (ADR-056):
+
+1. the **neutral capability contract** (Part 1), and
+2. the **presentation handle**.
+
+### The imperative floor (guaranteed)
+
+Every client MFE MUST expose the imperative handle — the universal port:
+
+```typescript
+interface ImperativeMountHandle {
+  kind: 'imperative-dom';
+  framework?: string;                 // metadata only; the host never needs it
+  mount: (element, options?) => unmount;
+}
+```
+
+The host hands it an element; the MFE mounts an **isolated island** (its own React
+root, its own Angular bootstrap) and returns its teardown. This path is *always*
+available and *always* polyglot — any host can mount any MFE. It is the default,
+and it is what the ABC Kids games use today. `createImperativeHandle()`
+(`src/runtime/imperative-handle.ts`) wraps an MFE's neutral lifecycle as this
+handle without importing any framework; the actual `createRoot` happens inside
+`RemoteMFE.doRender`, behind the port.
+
+### The native handle (optional, deferred)
+
+An MFE MAY *also* expose a framework-native component handle. When the host
+framework matches, a provider could compose it **in-tree** (single root, shared
+context — intl, theme, router, auth — error boundaries spanning the boundary).
+This is the integration path; it accepts framework-singleton coupling and is a
+**declared per-MFE choice** (isolation vs integration), exactly like a container
+choosing whether to share a namespace.
+
+The in-tree React provider is **deferred** (ADR-056) until a concrete shared-context
+need justifies the coupling. It slots in behind the same waist with no change to
+the contract, the core, or the daemon.
+
+### Framework handling: negotiation, quarantined
+
+```mermaid
+flowchart LR
+    EXP["experience<br/>contentType"] --> REG{"adaptor for<br/>contentType"}
+    REG --> MF["module-federation adaptor"]
+    MF --> SEL{"host fw == MFE fw<br/>AND native handle?"}
+    SEL -- "yes (deferred)" --> NATIVE["native handle<br/>in-tree, shared context"]
+    SEL -- "no (today, always)" --> FLOOR["imperative floor<br/>isolated island"]
+```
+
+The LayoutManager's adaptor registry is keyed on `contentType`. `hostFramework`
+(e.g. `'react'` from the ABC Kids shell) is **threaded** to the adaptor for
+ADR-056 negotiation, but because the native path is deferred, every experience
+composes via the imperative floor regardless — `hostFramework` is carried, not yet
+acted on. When the native provider lands, the registry re-keys onto
+`hostFramework × handleKind` additively.
+
+The bright line is **machine-checked**: `src/runtime/__tests__/boundary.test.ts`
+asserts that `packages/contracts` and the neutral runtime core (`base-mfe`,
+`layout-manager`, `base-control-plane`, `daemon-channel`, `imperative-handle`,
+`contracts`) import **zero** UI-framework packages. Only the framework-specialized
+abstracts (`RemoteMFE`, `AngularRemoteMFE`, layer 5) may import React/Angular —
+because they are the ones producing the native handle. *New framework = new
+provider/abstract package, zero core change.*
+
+---
+
+## Where things live
+
+```
+src/runtime/
+├── base-mfe.ts            # abstract base — the 10 capabilities + lifecycle
+├── remote-mfe.ts          # React / Module Federation concrete (layer 5)
+├── angular-remote-mfe.ts  # Angular concrete (layer 5)
+├── context.ts             # Context interface & factory
+├── layout-manager.ts      # daemon-driven slot composition (ADR-055)
+├── base-control-plane.ts  # abstract control plane (ADR-059)
+├── daemon-channel.ts      # virtualized per-slot socket (ADR-057)
+├── imperative-handle.ts   # the MFE side of the presentation boundary (ADR-056)
+├── contracts.ts           # inlined mirror of @seans-mfe/contracts (self-contained)
+├── handlers/              # auth, telemetry, validation, error-handling, caching, rate-limiting
+└── __tests__/             # incl. boundary.test.ts (the machine-checked bright line)
+
+packages/contracts/src/
+├── messages.ts            # control-plane wire protocol (ADR-054)
+└── presentation.ts        # presentation handle types + selectHandle (ADR-056)
+
+examples/abc-kids/
+├── shell/                 # generic LayoutManager host (imports no games)
+└── flappy, hockey, …      # remote MFEs (type: remote, framework: react)
+```
+
+---
+
+## Key design principles
+
+1. **Sealed unit, neutral contract.** An MFE is a framework-opaque VM. The control
+   plane speaks only the 10 capabilities + the presentation handle.
+2. **Composition is the control plane's job.** The shell owns slots and adaptors;
+   the registry owns what renders for whom.
+3. **The imperative floor is universal.** Every MFE mounts as an isolated island
+   anywhere; native in-tree composition is an optional, declared upgrade.
+4. **Framework cleverness is quarantined.** Allowed, but only behind the waist, in
+   providers/abstracts — enforced by the boundary test, not by convention.
+5. **One socket, uniform identity.** Slots and nested hosts share one connection
+   via `DaemonChannel`; identity is the host's, never spoofable by an MFE.
+6. **Abstract base owns the shape, concrete owns the how** — `BaseMFE`,
+   `BaseCommand`, `BaseFrameworkPlugin`, and now `BaseControlPlane`.
+
+---
+
+## Related ADRs
+
+**The MFE side**
+- ADR-041 — BaseMFE capability contract (abstract base)
+- ADR-042 — MFE lifecycle state machine
+- ADR-025 — Platform handler interface & execution model
+- ADR-026 — Load capability atomic operation
+- ADR-040 — Manifest-declared handler sources
+
+**Runtime composition (the control plane + waist)**
+- ADR-054 — Control-plane message protocol (`@seans-mfe/contracts/messages`)
+- ADR-055 — LayoutManager — daemon-driven slot composition
+- ADR-056 — MFE presentation boundary (polyglot VM; imperative floor + native handle)
+- ADR-057 — Virtualized daemon socket (`DaemonChannel`)
+- ADR-058 — Slot-provider MFEs
+- ADR-059 — `BaseControlPlane` abstract base
+
+**Product framing**
+- PDR-002 — Language-/framework-neutral platform contract
+- PDR-005 — Runtime composition · PDR-006 — Ecosystem scaling thesis
 
 ---
 
 ## Navigation
 
-**← [Back to System Architecture](./architecture-current-state.md)**  
-**→ [Next: Code Generation Architecture](./architecture-codegen.md)** _(Coming Soon)_  
+**← [System Architecture](./architecture-current-state.md)** ·
+**[ADR index](./spec.md#adr-index)** ·
 **↑ [Documentation Index](./README.md)**
 
----
-
-**Document Version**: 1.0.0  
-**Last Updated**: December 11, 2025  
-**Status**: Implementation in Progress (Issues #47-59)
+**Status:** Runtime composition — 054/055/057/058 implemented; 056/059 accepted
+(see [`spec.md#adr-index`](./spec.md#adr-index) for canonical status).
