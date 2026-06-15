@@ -285,6 +285,9 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-054 | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
 | ADR-055 | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
 | ADR-056 | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Accepted |
+| ADR-057 | Virtualized Daemon Socket — Per-Slot Control-Plane Channels (DaemonChannel) | Runtime / control-plane / channels | Implemented |
+| ADR-058 | Slot-Provider MFEs — MFEs that Provide Slots for Other MFEs | Runtime / slots / composition | Implemented |
+| ADR-059 | BaseControlPlane — Abstract Base for All Control-Plane Implementations | Runtime / control-plane / abstract-base | Accepted |
 
 ---
 

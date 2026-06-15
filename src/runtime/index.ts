@@ -57,3 +57,13 @@ export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-h
 // the host's single connection, injected into composed MFEs as deps.wsClient.
 export { DaemonChannel } from './daemon-channel';
 export type { ChannelTransport } from './daemon-channel';
+
+// BaseControlPlane (ADR-059) — abstract base that packages daemon + registry +
+// LayoutManager into a single unit. Concrete implementations (NodeControlPlane,
+// RustControlPlane) live in their respective repos and extend this class.
+export { BaseControlPlane, isBaseControlPlane } from './base-control-plane';
+export type {
+  ControlPlaneConfig,
+  ControlPlaneStatus,
+  ControlPlaneHealth,
+} from './base-control-plane';
