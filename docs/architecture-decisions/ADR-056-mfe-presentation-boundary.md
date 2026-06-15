@@ -1,15 +1,36 @@
 ---
-id: 0056
+id: "0056"
 title: MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model)
 status: Accepted
 date: 2026-06-13
-deciders: [sean]
+deciders:
+  - sean
 enforcement: code
 supersedes: []
 superseded-by: []
-tags: [runtime, boundary, providers, polyglot, module-federation, react, angular, basemfe, control-plane, layout]
-summary: An MFE is a sealed, framework-opaque virtual machine composed like a Helm chart — never optimized through from the outside. The platform is split at a thin waist with exactly two things crossing it: the neutral capability contract (what the control plane speaks) and a presentation handle (what a host composes). Framework knowledge is banned from the core and daemon and quarantined inside host-side Framework Providers (controllers), which own slot DOM, mount/unmount, and context-provider wrapping. Every client MFE guarantees an imperative `mount(el, props) → unmount` (the isolation floor, separate root, always polyglot); a framework-native component handle is an opt-in integration that enables single-root composition but accepts framework-singleton coupling. This ADR authorizes the STRUCTURAL fix only — relocate composition ownership out of BaseMFE into a host-side provider behind the boundary — and explicitly defers the React in-tree (single-root, shared-context) optimization to a follow-up, to be built only when a concrete shared-context requirement lands.
-rationale-summary: BaseMFE.doRender currently calls createRoot, making every MFE its own React root and conflating lifecycle orchestration with DOM rendering. That breaks host→MFE React context (intl/theme/router/auth), cross-boundary error boundaries and Suspense, and risks two reconcilers writing the same DOM. The naive fix — give BaseMFE the React API — re-couples the neutral core to React and slides the platform back toward a single-framework, "super-optimized React module federation" monolith, destroying the polyglot-at-build-and-run thesis (PDR-002) that is a core differentiator. Adapting at the provider level instead of the BaseMFE level keeps the MFE an opaque VM, puts host-integration where it belongs (a swappable controller on the host side), and lets framework optimization be unbounded but contained. With ADR-054 (protocol) and ADR-055 (composition), this boundary ADR is the third member of the platform's core trinity: how MFEs talk, how they are placed, how they plug in.
+tags:
+  - runtime
+  - boundary
+  - providers
+  - polyglot
+  - module-federation
+  - react
+  - angular
+  - basemfe
+  - control-plane
+  - layout
+summary: >-
+  An MFE is a sealed, framework-opaque virtual machine composed like a Helm
+  chart — never optimized through from the outside. The platform is split at a
+  thin waist with exactly two things crossing it: the neutral capability
+  contract and a presentation handle. All framework-specific composition lives
+  in host-side providers, not in BaseMFE.
+rationale-summary: >-
+  BaseMFE.doRender currently calls createRoot, making every MFE its own React
+  root and conflating lifecycle orchestration with DOM rendering. That breaks
+  host→MFE React context, host error boundaries, and single-root composition.
+  The fix is to move framework-aware composition into host-side providers while
+  keeping the core runtime and daemon framework-neutral.
 long-form: true
 ---
 
@@ -60,7 +81,7 @@ flowchart TB
         direction TB
         CP["1 · Platform Control Plane<br/>(daemon + registry)<br/><i>which MFE / capability / props, for whom</i>"]
         SHELL["2 · Host / Shell<br/><i>owns page, slots, context-provider values</i>"]
-        FP["3 · Framework Provider · the controller<br/><i>composes the handle into this host's framework</i><br/><i>owns slot DOM · mount / unmount · wraps providers</i><br/><b>all framework cleverness quarantined here</b>"]
+        FP["3 · Framework Provider · the controller<br/><i>composes the handle into this host's framework</i><br/><i>owns slot DOM · mount / unmount · wraps providers</i><br/><b>all framework cleverness lives here</b>"]
         CP --> SHELL --> FP
     end
 
