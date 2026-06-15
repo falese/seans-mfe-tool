@@ -141,6 +141,7 @@ the ABC Kids migration are a **tracked follow-up**, not in this change.
 
 ## References
 
+- [Contextualized VM Composition primer](../architecture-composition-primer.md) (the diagram-led explainer)
 - ADR-056 (presentation boundary — this resolves its deferred follow-up),
   ADR-041/042 (lifecycle), ADR-030 (error classification), ADR-044 (island error
   boundary), ADR-054 (protocol / `RESOLUTION_ERROR`), ADR-057 (per-slot channel)

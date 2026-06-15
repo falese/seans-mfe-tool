@@ -2,6 +2,9 @@
 
 > How a domain feature, built in any framework, becomes an independently
 > deployable unit that a generic shell can compose at runtime.
+>
+> **New here?** Start with the [Contextualized VM Composition primer](./architecture-composition-primer.md)
+> for the big idea and the diagrams; this document is the wire-level reference.
 
 ## The whole system in one picture
 
