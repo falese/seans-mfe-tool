@@ -10,7 +10,7 @@
  *   const cp = new NodeControlPlane({
  *     container: document.getElementById('app'),
  *     session:   { sessionId, user, jwt },
- *     daemonUrl: 'ws://localhost:3001/graphql',
+ *     daemonUrl: 'ws://localhost:3004/graphql', // 3001-3003 belong to MFEs (ADR-055)
  *   });
  *   await cp.start();
  *   await cp.stop();

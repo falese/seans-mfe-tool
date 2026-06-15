@@ -24,13 +24,20 @@ const FRAMEWORK_IMPORT =
 // Directories that must stay framework-neutral (scanned recursively).
 const NEUTRAL_DIRS = ['packages/contracts/src'];
 
-// Individual neutral runtime files (boundary layer 4 + the framework-free
-// LayoutManager). RemoteMFE / AngularRemoteMFE are intentionally excluded.
+// Individual neutral runtime files: boundary layer 4 (BaseMFE) plus the
+// framework-free control-plane core — LayoutManager, BaseControlPlane,
+// DaemonChannel, the imperative-handle port, and the inlined contract mirror.
+// RemoteMFE / AngularRemoteMFE (layer 5) are intentionally excluded: they
+// produce the native handle and are allowed to import React / Angular.
 const NEUTRAL_FILES = [
   'src/runtime/base-mfe.ts',
   'src/runtime/context.ts',
   'src/runtime/graphql-ws-client.ts',
   'src/runtime/layout-manager.ts',
+  'src/runtime/base-control-plane.ts',
+  'src/runtime/daemon-channel.ts',
+  'src/runtime/imperative-handle.ts',
+  'src/runtime/contracts.ts',
 ];
 
 function tsFiles(dir: string): string[] {

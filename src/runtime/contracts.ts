@@ -27,12 +27,52 @@ export interface ActionRecord {
   timestamp: string;
   /** Set for updateControlPlaneState signals; registry routes match on it (ADR-057). */
   stateKey?: string;
+  /** Which MFE emitted the action, when known. */
+  mfe?: string;
+  /** Who/where this action came from — drives per-user registry resolution. */
+  context?: SessionContext;
 }
 
+/**
+ * Direction of flow (ADR-054):
+ *   COMPONENT = down (Registry → Daemon → Renderer)
+ *   ACTION    = up   (Renderer/MFE → Daemon → Registry)
+ */
+export type MessageDirection = 'COMPONENT' | 'ACTION';
+
+/**
+ * Purpose of a message (ADR-054). The drifted `ECHO|SNAPSHOT|RESOLVE` union
+ * this mirror once carried was the sketch ADR-054 retired — keep this in lockstep
+ * with `@seans-mfe/contracts/messages`.
+ */
+export type MessageKind =
+  | 'COMPONENT_UPDATE'
+  | 'STATE_SNAPSHOT'
+  | 'ACTION_ECHO'
+  | 'ACTION'
+  | 'ACTION_FORWARD';
+
+/** Daemon per-experience state; payload of a STATE_SNAPSHOT message (ADR-054). */
+export interface ExperienceState {
+  experience: RenderedExperience;
+  actions: ActionRecord[];
+  lastUpdated: string; // ISO-8601
+}
+
+/**
+ * The canonical logical message envelope (ADR-054). `payload` by `kind`:
+ *   COMPONENT_UPDATE → RenderedExperience
+ *   STATE_SNAPSHOT   → ExperienceState
+ *   ACTION_ECHO / ACTION / ACTION_FORWARD → ActionRecord
+ *
+ * NB: the daemon's `messages` GraphQL subscription wraps the downward payload in
+ * a transport envelope (`{ id, type, data }`, type ∈ EXPERIENCE|RESOLUTION_ERROR)
+ * — see `DaemonEnvelope` in layout-manager.ts and ADR-054 "Wire envelope".
+ */
 export interface Message {
-  direction: 'ACTION' | 'ECHO' | 'SNAPSHOT' | 'RESOLVE';
-  kind: 'ACTION' | 'ACTION_ECHO' | 'STATE_SNAPSHOT' | 'RESOLVE';
-  payload: ActionRecord;
+  direction: MessageDirection;
+  kind: MessageKind;
+  payload: RenderedExperience | ActionRecord | ExperienceState;
   metadata: MessageMetadata;
 }
 

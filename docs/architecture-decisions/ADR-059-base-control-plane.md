@@ -48,7 +48,7 @@ rather than a separate construction concern for the host.
 const cp = new NodeControlPlane({
   container: document.getElementById('app'),
   session: { sessionId, user, jwt },
-  daemonUrl: 'ws://localhost:3001/graphql',
+  daemonUrl: 'ws://localhost:3004/graphql', // 3001-3003 belong to the MFEs (ADR-055)
 });
 
 await cp.start();
@@ -108,9 +108,12 @@ abstract class BaseControlPlane {
 ```
 
 `ControlPlaneConfig` carries only what the base class needs: `container`, `session?`,
-`adaptors?`, `onStatus?`, `onError?`. Concrete implementations extend it with their
-own daemon-connection settings (e.g. `daemonUrl` for a Node implementation, or
-`binaryPath` + `port` for a spawned Rust binary).
+`hostFramework?`, `adaptors?`, `onStatus?`, `onError?`. `hostFramework` is forwarded
+to the internal LayoutManager for ADR-056 handle negotiation (omit it for a
+framework-free host — every MFE then composes via its guaranteed imperative handle).
+Concrete implementations extend the config with their own daemon-connection settings
+(e.g. `daemonUrl` for a Node implementation, or `binaryPath` + `port` for a spawned
+Rust binary).
 
 ## Consequences
 

@@ -212,9 +212,14 @@ Authorized now (behavior-preserving relocation, no optimization):
    into a host-side Framework Provider. `doRender` stops being a DOM-mounting
    side effect; the MFE exposes the imperative handle, and the provider owns
    the element, the mount call, unmount, and cleanup.
-3. **Generalize the LayoutManager adaptor registry** into the provider
-   registry keyed on `hostFramework × handleKind`, with the **imperative-island
-   provider as the universal default** (this preserves today's behavior).
+3. **Keep the LayoutManager adaptor registry keyed on `contentType`** with the
+   **imperative-island provider as the universal default** (this preserves
+   today's behavior), and **thread `hostFramework`** through the registry into
+   adaptor helpers so a provider *can* negotiate. The full re-key onto
+   `hostFramework × handleKind` lands together with the native in-tree provider
+   (deferred below) — until then `hostFramework` is carried, not acted on, and
+   every experience composes via the imperative floor. Pulling the re-key
+   forward would add a second registry axis with no consumer.
 4. Provide the **hook + wrapper** surfaces on the host provider
    (`useMfe(experienceId)`, `<MfeHost experienceId=… />`) — both thin shells
    over the same provider; neither touches the core.
@@ -232,6 +237,10 @@ Explicitly DEFERRED (non-goals here; a follow-up ADR when a concrete need lands)
   the optional native-component handle — **no contract, core, or daemon change
   required.** Deferring it honors the directive not to invest in React depth
   before a real shared-context requirement justifies the singleton coupling.
+- The **`hostFramework × handleKind` re-key** of the provider registry (Decision
+  item 3). It lands with the native provider above, because that is the first
+  consumer that needs the second axis; the `hostFramework` value is already
+  threaded to the adaptor layer so the re-key is additive when it arrives.
 
 ### Invariants (the bright line)
 
