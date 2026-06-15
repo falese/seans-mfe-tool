@@ -72,9 +72,11 @@ export interface AdaptorHelpers {
   /** The session this experience was rendered for, when known. */
   session?: SessionContext;
   /**
-   * The host's framework (e.g. 'react'), when known. Used by handle
-   * negotiation (ADR-056): a module-federation provider picks the MFE's
-   * native handle when the host framework matches, else the imperative floor.
+   * The host's framework (e.g. 'react'), when known. Threaded for ADR-056
+   * handle negotiation: a provider will pick the MFE's native handle when the
+   * host framework matches. The in-tree native path is DEFERRED (ADR-056), so
+   * today every adaptor composes via the guaranteed imperative floor regardless
+   * of this value — it is carried, not yet acted on.
    */
   hostFramework?: string;
 }
@@ -99,6 +101,16 @@ export interface DaemonTransport {
 
 export type TransportStatus = 'connecting' | 'connected' | 'disconnected';
 
+/**
+ * The transport envelope delivered on the daemon's `messages` subscription.
+ *
+ * This is NOT the logical `Message` (ADR-054). The downward payload is wrapped
+ * in a component envelope: `kind: 'COMPONENT_UPDATE'` with `payload.type`
+ * (`'EXPERIENCE' | 'RESOLUTION_ERROR'`) discriminating the envelope and
+ * `payload.data` carrying the ADR-054 `RenderedExperience`. The `type`
+ * discriminator is an envelope tag, not a revived CARD/FORM/NOTIFICATION
+ * component type (ADR-054 "Wire envelope vs logical message").
+ */
 export interface DaemonEnvelope {
   direction?: string;
   kind?: string;
@@ -108,7 +120,7 @@ export interface DaemonEnvelope {
     data?: Record<string, unknown>;
     [key: string]: unknown;
   };
-  metadata?: { correlationId?: string; error?: string | null };
+  metadata?: { correlationId?: string; acknowledged?: boolean; error?: string | null };
 }
 
 /** Minimal WebSocket surface so tests can inject a fake socket factory. */

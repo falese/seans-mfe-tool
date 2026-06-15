@@ -75,6 +75,24 @@ see *who* acted and *where* — none of the three variants carried that.
    remains (it names the targeted experience) for wire compatibility with deployed
    renderers.
 
+### Wire envelope vs logical message
+
+`Message` above is the **logical** protocol: for `COMPONENT_UPDATE`, `payload`
+*is* a `RenderedExperience`. On the **transport** — the daemon's `messages`
+GraphQL subscription — the downward payload is wrapped one level: a component
+envelope `{ id, type, data }` where `type ∈ { EXPERIENCE, RESOLUTION_ERROR }`
+discriminates the envelope and `data` carries the `RenderedExperience`. The
+LayoutManager consumes this transport shape (`DaemonEnvelope`,
+`src/runtime/layout-manager.ts`).
+
+This is not a re-introduction of component typing: `EXPERIENCE` /
+`RESOLUTION_ERROR` are **envelope tags** (rendered experience vs resolution
+failure), not the retired CARD/FORM/NOTIFICATION *payload* types. `DaemonEnvelope`
+is documented as the transport projection of this logical `Message`; the two are
+kept in lockstep, and the inlined runtime mirror (`src/runtime/contracts.ts`)
+tracks the logical `Message` exactly (same `direction`/`kind` unions, same
+`payload` union).
+
 ## Consequences
 
 - The daemon, registry, renderers, and `BaseMFE` runtime can all validate against one
