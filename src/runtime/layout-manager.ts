@@ -79,6 +79,29 @@ export interface AdaptorHelpers {
    * of this value — it is carried, not yet acted on.
    */
   hostFramework?: string;
+  /**
+   * Host-injected provider values (theme, locale, auth claims, router state, …)
+   * that cross the waist as DATA (ADR-060 value-injection). The MFE island
+   * re-provides its own context from these — context reaches the MFE without a
+   * shared reconciler, so isolation, polyglot, and multi-version React all hold.
+   */
+  providerValues?: Record<string, unknown>;
+  /**
+   * Report an unrecovered error from inside the mounted island (ADR-060). The
+   * MFE's framework error boundary / lifecycle `error` phase routes here via its
+   * `emit` capability. The host renders a slot-scoped fallback and escalates to
+   * the control plane; it is slot-isolated and never cascades to siblings.
+   */
+  reportError(error: unknown, info?: { phase?: string }): void;
+}
+
+/** Describes a slot-scoped failure (ADR-060) for fallback + escalation. */
+export interface SlotErrorInfo {
+  slot: string;
+  mfe: string;
+  capability: string;
+  reason: string;
+  phase?: string;
 }
 
 export interface ExperienceAdaptor {
@@ -235,9 +258,20 @@ export interface LayoutManagerConfig {
   adaptors?: Record<string, ExperienceAdaptor>;
   /** Slot element factory — defaults to document.createElement('section'). */
   createSlotElement?: (slotId: string) => SlotElementLike;
+  /**
+   * Host-injected provider values delivered to every mounted MFE as
+   * `props.hostContext` (ADR-060 value-injection). The island re-provides its
+   * own framework context from these.
+   */
+  providerValues?: Record<string, unknown>;
+  /**
+   * Render the slot-scoped fallback shown when an experience fails (ADR-060).
+   * Defaults to neutral inline markup; override for branded fallbacks.
+   */
+  renderSlotFallback?: (slot: SlotElementLike, info: SlotErrorInfo) => void;
   /** Status callback for shell chrome (connection indicator etc.). */
   onStatus?: (status: TransportStatus) => void;
-  /** Error callback (adaptor mount failures, resolution errors). */
+  /** Error callback (adaptor mount failures, resolution errors, slot errors). */
   onError?: (message: string) => void;
 }
 
@@ -249,7 +283,13 @@ interface ActiveSlot {
   provided?: boolean;
   /** Slot ids this slot's MFE provided — released when this slot clears (ADR-058). */
   providedSlotIds?: string[];
+  /** Consecutive unrecovered failures escalated to the control plane (ADR-060).
+   *  Reset to 0 on a successful mount; capped to avoid re-resolution storms. */
+  escalations?: number;
 }
+
+/** Cap on consecutive control-plane re-resolution signals per slot (ADR-060). */
+const MAX_SLOT_ESCALATIONS = 3;
 
 export class LayoutManager {
   private readonly slots = new Map<string, ActiveSlot>();
@@ -308,11 +348,20 @@ export class LayoutManager {
     await this.clearSlot(slotId);
     const slot = this.ensureSlot(slotId);
     slot.experienceId = experience.id;
+    // Generic Suspense floor: mark the slot pending until the lifecycle settles
+    // (ADR-060). Host chrome can render a skeleton on [data-slot-state=pending].
+    slot.element.setAttribute('data-slot-state', 'pending');
 
     const helpers: AdaptorHelpers = {
       session: this.config.session,
       hostFramework: this.config.hostFramework,
+      // Host context crosses the waist as DATA (ADR-060 value-injection); the
+      // island re-provides its own framework context from these values.
+      providerValues: this.config.providerValues,
       sendAction: (actionType, data) => this.sendAction(experience.id, actionType, data),
+      // Neutral sink for post-mount island errors (ADR-060); the MFE routes here
+      // via its emit/error phase. Slot-isolated: fallback here, never cascade.
+      reportError: (error, info) => void this.handleSlotError(slotId, experience, error, info?.phase),
       // One virtual channel per slot over the host's single socket (ADR-057).
       channel: new DaemonChannel(
         this.config.transport,
@@ -330,12 +379,71 @@ export class LayoutManager {
     try {
       const unmount = await adaptor.mount(experience, slot.element, helpers);
       if (unmount) slot.unmount = unmount;
+      slot.element.setAttribute('data-slot-state', 'ready');
+      slot.escalations = 0; // a healthy mount re-arms escalation for this slot
     } catch (error) {
-      this.config.onError?.(
-        `Failed to mount ${experience.mfe}.${experience.capability} in slot "${slotId}": ` +
-        (error instanceof Error ? error.message : String(error))
-      );
+      await this.handleSlotError(slotId, experience, error, 'mount');
     }
+  }
+
+  /**
+   * Slot-scoped failure handling (ADR-060). Tears down only this slot's mount,
+   * renders a neutral fallback into it (no cascade — siblings untouched), and
+   * escalates to the control plane (the "bigger door") so the registry can
+   * re-resolve the slot to an alternate MFE. Escalation is capped per slot.
+   */
+  private async handleSlotError(
+    slotId: string,
+    experience: RenderedExperience,
+    error: unknown,
+    phase?: string
+  ): Promise<void> {
+    const reason = error instanceof Error ? error.message : String(error);
+    const info: SlotErrorInfo = { slot: slotId, mfe: experience.mfe, capability: experience.capability, reason, phase };
+
+    const slot = this.slots.get(slotId);
+    if (slot) {
+      try {
+        await slot.unmount?.();
+      } catch {
+        /* best-effort teardown of the failed island */
+      }
+      slot.unmount = undefined;
+      slot.element.innerHTML = '';
+      (this.config.renderSlotFallback ?? defaultRenderSlotFallback)(slot.element, info);
+      slot.element.setAttribute('data-slot-state', 'error');
+      slot.escalations = (slot.escalations ?? 0) + 1;
+    }
+
+    this.config.onError?.(
+      `Slot "${slotId}" failed: ${info.mfe}.${info.capability}` +
+      (phase ? ` (${phase})` : '') + `: ${reason}`
+    );
+
+    // Bigger door: let the registry re-resolve this slot, bounded so a slot that
+    // keeps failing settles on its fallback instead of storming the daemon.
+    if (!slot || (slot.escalations ?? 0) <= MAX_SLOT_ESCALATIONS) {
+      await this.signalSlotError(experience.id, info);
+    }
+  }
+
+  /** Emit a SLOT_ERROR action up the control plane for re-resolution (ADR-060). */
+  private async signalSlotError(componentId: string, info: SlotErrorInfo): Promise<void> {
+    const action: Record<string, unknown> = {
+      id: `slot-err-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      componentId,
+      actionType: 'SLOT_ERROR',
+      stateKey: 'slot.error',
+      data: { slot: info.slot, mfe: info.mfe, capability: info.capability, reason: info.reason, phase: info.phase },
+      timestamp: new Date().toISOString(),
+    };
+    if (this.config.session) action.context = this.config.session;
+    await this.config.transport.send({
+      direction: 'ACTION',
+      kind: 'ACTION',
+      payload: action,
+      metadata: { correlationId: String(action.id), acknowledged: false, error: info.reason },
+    });
   }
 
   /** Send an action up the control plane, carrying the session context. */
@@ -408,6 +516,19 @@ export class LayoutManager {
       slot.element.innerHTML = '';
     }
   }
+}
+
+// ── Slot fallback (ADR-060) ──────────────────────────────────
+
+/**
+ * Default slot-scoped fallback: neutral markup, no framework. Rendered into the
+ * failed slot only, so a crashing MFE degrades to a message in its own region
+ * instead of cascading. Hosts override via `renderSlotFallback`.
+ */
+function defaultRenderSlotFallback(slot: SlotElementLike, info: SlotErrorInfo): void {
+  slot.innerHTML =
+    `<div role="alert" class="layout-slot__error" data-slot-error="${info.slot}">` +
+    `This experience is temporarily unavailable.</div>`;
 }
 
 // ── Built-in adaptors ────────────────────────────────────────
@@ -549,9 +670,12 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
 
     // provideSlot rides the render props (ADR-058): a layout MFE calls it to
     // contribute its regions as host slots. Offered to every MFE; games ignore it.
+    // hostContext rides the render props too (ADR-060 value-injection): the island
+    // re-provides its own framework context (theme/locale/auth) from these values.
     const props = {
       ...(output.props ?? {}),
       ...(experience.props ?? {}),
+      ...(helpers.providerValues ? { hostContext: helpers.providerValues } : {}),
       ...(helpers.provideSlot ? { provideSlot: helpers.provideSlot } : {}),
     };
     // The registry resolved which capability this experience renders.

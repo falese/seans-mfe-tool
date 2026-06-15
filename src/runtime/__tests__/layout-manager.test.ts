@@ -7,6 +7,7 @@
 import {
   GraphQLTransportWsDaemonTransport,
   LayoutManager,
+  type AdaptorHelpers,
   type DaemonEnvelope,
   type ExperienceAdaptor,
   type SlotElementLike,
@@ -296,6 +297,116 @@ describe('LayoutManager', () => {
 
     const envelope = transport.sent[0] as { payload: Record<string, unknown> };
     expect('context' in envelope.payload).toBe(false);
+  });
+});
+
+describe('LayoutManager — value-injection + self-healing (ADR-060)', () => {
+  const slotErrors = (transport: FakeTransport) =>
+    transport.sent.filter((e) => (e.payload as { actionType?: string })?.actionType === 'SLOT_ERROR');
+
+  it('injects host providerValues as data and marks the slot ready (value-injection)', async () => {
+    const seen: Array<Record<string, unknown> | undefined> = [];
+    const slots: FakeSlotElement[] = [];
+    const probe: ExperienceAdaptor = {
+      async mount(_e, _s, helpers) {
+        seen.push(helpers.providerValues);
+        return () => {};
+      },
+    };
+    const { manager, transport } = makeManager(probe, {
+      providerValues: { theme: 'dark', locale: 'en-AU' },
+      createSlotElement: () => { const el = new FakeSlotElement(); slots.push(el); return el; },
+    });
+    manager.start();
+    transport.emitExperience(experience('e-1'));
+    await flush();
+
+    expect(seen).toEqual([{ theme: 'dark', locale: 'en-AU' }]);
+    expect(slots[0].attributes['data-slot-state']).toBe('ready');
+  });
+
+  it('renders a slot-scoped fallback and escalates when an adaptor mount throws', async () => {
+    const slots: FakeSlotElement[] = [];
+    const boom: ExperienceAdaptor = { async mount() { throw new Error('kaboom'); } };
+    const { manager, transport, errors } = makeManager(boom, {
+      createSlotElement: () => { const el = new FakeSlotElement(); slots.push(el); return el; },
+    });
+    manager.start();
+    transport.emitExperience(experience('e-1'));
+    await flush();
+
+    expect(manager.activeSlots).toEqual(['main']);          // slot survives, fallback shown
+    expect(slots[0].innerHTML).toContain('temporarily unavailable');
+    expect(slots[0].attributes['data-slot-state']).toBe('error');
+    expect(errors[0]).toContain('Slot "main" failed');
+
+    expect(slotErrors(transport)).toHaveLength(1);
+    const action = slotErrors(transport)[0].payload as { stateKey: string; data: Record<string, unknown> };
+    expect(action.stateKey).toBe('slot.error');
+    expect(action.data).toMatchObject({
+      slot: 'main', mfe: 'csv-analyzer', capability: 'DataAnalysis', reason: 'kaboom', phase: 'mount',
+    });
+  });
+
+  it('handles a post-mount island error via reportError, isolated to the slot', async () => {
+    const slots: FakeSlotElement[] = [];
+    let report: AdaptorHelpers['reportError'] | undefined;
+    const adaptor: ExperienceAdaptor = {
+      async mount(_e, _s, helpers) { report = helpers.reportError; return () => {}; },
+    };
+    const { manager, transport } = makeManager(adaptor, {
+      createSlotElement: () => { const el = new FakeSlotElement(); slots.push(el); return el; },
+    });
+    manager.start();
+    transport.emitExperience(experience('e-1'));
+    await flush();
+    expect(slots[0].attributes['data-slot-state']).toBe('ready'); // mounted cleanly first
+
+    // Island throws after mount; its error boundary / error phase routes here.
+    report?.(new Error('render-crash'), { phase: 'render' });
+    await flush();
+    await flush();
+
+    expect(slots[0].attributes['data-slot-state']).toBe('error');
+    expect(slots[0].innerHTML).toContain('temporarily unavailable');
+    const action = slotErrors(transport)[0].payload as { data: Record<string, unknown> };
+    expect(action.data).toMatchObject({ slot: 'main', reason: 'render-crash', phase: 'render' });
+  });
+
+  it('caps repeated escalations per slot to avoid re-resolution storms', async () => {
+    const boom: ExperienceAdaptor = { async mount() { throw new Error('boom'); } };
+    const { manager, transport } = makeManager(boom);
+    manager.start();
+    for (let i = 0; i < 6; i++) {
+      transport.emitExperience(experience(`e-${i}`)); // all route to 'main'
+      await flush();
+    }
+    expect(slotErrors(transport)).toHaveLength(3); // MAX_SLOT_ESCALATIONS
+  });
+
+  it('isolates a slot failure — sibling slots keep rendering', async () => {
+    const good: ExperienceAdaptor = { async mount() { return () => {}; } };
+    const bad: ExperienceAdaptor = { async mount() { throw new Error('nope'); } };
+    const host = { children: [] as unknown[], appendChild(c: unknown) { this.children.push(c); return c; } };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: host,
+      transport,
+      adaptors: { 'good/x': good, 'bad/x': bad },
+      createSlotElement: () => new FakeSlotElement(),
+      onError: () => undefined,
+    });
+    manager.start();
+    const make = (id: string, contentType: string, slot: string) =>
+      ({ id, mfe: 'm', capability: 'C', output: {}, contentType, props: { slot }, createdAt: '' });
+
+    transport.emitExperience(make('g', 'good/x', 'main'));
+    await flush();
+    transport.emitExperience(make('b', 'bad/x', 'sidebar'));
+    await flush();
+
+    // The failing 'sidebar' slot did not tear down or affect the healthy 'main' slot.
+    expect(manager.activeSlots.sort()).toEqual(['main', 'sidebar']);
   });
 });
 
