@@ -10,6 +10,26 @@ This document has three parts:
 
 ---
 
+## Execution status (updated 2026-07-01)
+
+The PR triage in §2 has been carried out. Snapshot:
+
+| Action | Result |
+|---|---|
+| **Merged (7)** | #232 (query() comment), #192 (Playwright E2E), #243 (`--json` conformance test), #244 (doc link-hygiene CI), #245 (PDR remediation doc), **#235 (ADR-060 keystone)**, #246 (CI cleanup + this doc) |
+| **Closed / superseded (3)** | #153 (stale shell:init draft), #205 (off-product inner-voice), **#191** (error boundaries — superseded by ADR-044's `createErrorBoundary`; see below) |
+| **Restructure issues filed (7)** | #236–#242 (the §2.4 create-list, one issue each) |
+| **Other issues filed (1)** | #247 — the genuine delta from #191 (MFE-provided fallback + `render-fallback-applied` telemetry + Angular parity, folded onto `createErrorBoundary`) |
+| **CI de-noised** | Removed the broken `examples` build job (`seans-mfe-tool: not found` on every PR) in #246 |
+
+**Two items need a toolchain session (npm registry is 403-blocked in the web session, so coverage/build can't be verified here):**
+- **#247** — the error-boundary delta (clean feature task, no stale-branch baggage).
+- The §2.4 P0 refactors (#236–#238) — real engineering, each with its own tests.
+
+**Key correction discovered during execution:** #191's error-boundary feature was **superseded by main**. `createErrorBoundary` (ADR-044, `src/runtime/error-boundary.ts`) already satisfies REQ-RUNTIME-011's core, and #235 tightened `boundary.test.ts` to forbid UI-framework imports in the neutral runtime — which #191's react-importing, barrel-exported `ErrorBoundary.tsx` would break. So it was closed rather than rebased; only its net-new capabilities survive, in #247.
+
+---
+
 ## 0. What the review found (the numbers)
 
 | Area | Measured | Observation |
@@ -84,24 +104,24 @@ Each move is independently landable and reversible. Moves 1, 5, 6, 7, 8 are pure
 
 ## 2. Prioritized merge / prune / create list
 
-### 2.1 Open PRs — disposition
+### 2.1 Open PRs — disposition (all executed)
 
-| PR | What it is | Verdict | Why |
+| PR | What it is | Verdict | Outcome |
 |---|---|---|---|
-| **#235** ADR-060 Contextualized VM Composition | Large runtime + ADR reconciliation; realigns the inlined mirror | **MERGE (P0, first)** | It fixes the mirror drift and lands the composition model everything else builds on. Gates couldn't run in-session — **require green CI before merge.** |
-| **#191** Error boundaries (REQ-RUNTIME-011, Closes #58) | Real runtime feature, tests included | **MERGE (P1)** — after rebasing onto #235 | Touches the same runtime front-ends #235/§1.3 refactor; land it, then it becomes part of the `BaseRemoteMFE` collapse. |
-| **#232** Stale `query()` comment (CA-4, Closes #229) | Comment-only bot fix | **MERGE (P2)** or fold into #235 | Trivial and correct; zero risk. Don't let it linger. |
-| **#192** Playwright E2E for abc-kids | 14 tests, needs docker-compose | **MERGE (P2) with a CI caveat** | Valuable, but wire it as an optional/manual job — CI can't run docker-compose today. Merge the tests; gate them behind a compose service or mark non-blocking. |
-| **#153** shell:init orchestration (Copilot draft) | Stale draft, ADR-068–071 | **PRUNE / rework** | Draft since April, only two checkboxes done, depends on ADRs not in the current set. Close and re-open from a fresh issue if shell:init is still wanted (#144 covers it). |
-| **#205** inner-voice sessionId + persona dial | Off-product LLM UI wiring | **PRUNE (move to coder repo)** | Not a platform change (see §1.3.7). Close here; relocate with the example. |
+| **#235** ADR-060 Contextualized VM Composition | Large runtime + ADR reconciliation; realigns the inlined mirror | **MERGE (P0, first)** | ✅ **Merged.** Devin's `layout-manager` fallback-timing fix turned `test (22.x)` green (render the slot fallback before any stale unmount, same tick); verified the fix was real, not a weakened assertion. |
+| **#191** Error boundaries (REQ-RUNTIME-011, Closes #58) | Real runtime feature, tests included | ~~MERGE (P1)~~ → **CLOSED (superseded)** | ❌ **Closed.** Rebase attempt revealed main already ships `createErrorBoundary` (ADR-044) and #235's `boundary.test.ts` forbids the react import in #191's barrel-exported `ErrorBoundary.tsx`. Net-new delta → **#247**. |
+| **#232** Stale `query()` comment (CA-4, Closes #229) | Comment-only bot fix | **MERGE (P2)** | ✅ **Merged.** |
+| **#192** Playwright E2E for abc-kids | 14 tests, needs docker-compose | **MERGE (P2) with a CI caveat** | ✅ **Merged.** Suite is present for manual runs; still not wired into CI (needs a compose service). |
+| **#153** shell:init orchestration (Copilot draft) | Stale draft, ADR-068–071 | **PRUNE / rework** | ❌ **Closed.** Restart from #144 if wanted. |
+| **#205** inner-voice sessionId + persona dial | Off-product LLM UI wiring | **PRUNE (move to coder repo)** | ❌ **Closed.** Relocation tracked by #242. |
+
+Also merged during execution (not in the original triage, appeared mid-session from a Devin PDR-remediation run): **#243** (`--json` conformance test), **#244** (doc link-hygiene CI), **#245** (remediation status doc). And **#246** — removed the broken `examples` CI job and added this doc.
 
 ### 2.2 Issues — prune (already done or obsolete)
 
-Verify and close:
-
-- **#58** Error boundaries — has PR #191; close on merge.
-- **#229** stale comment — has PR #232.
-- Cross-check the CLAUDE.md "✅ Done" streams against still-open issues: oclif migration, codegen+DSL, GraphQL BFF, framework plugin system are marked done but several backlog issues (#15–38 registry/discovery/health/secrets/RTK/interactive) predate them and may be stale. **Audit #15–38 first — expect ~half to be closable.**
+- **#58** Error boundaries — **stays open**, now tracked by **#247** (not #191, which is closed).
+- **#229** stale comment — ✅ closed via #232.
+- Cross-check the CLAUDE.md "✅ Done" streams against still-open issues: oclif migration, codegen+DSL, GraphQL BFF, framework plugin system are marked done but several backlog issues (#15–38 registry/discovery/health/secrets/RTK/interactive) predate them and may be stale. **Audit #15–38 first — expect ~half to be closable.** *(Not yet done.)*
 
 ### 2.3 Issues — the real backlog, grouped and prioritized
 
@@ -124,15 +144,17 @@ Verify and close:
 - **#66/#70/#71/#72** GraphQL Mesh TS migration epic — real but large; confirm it's still wanted before investing.
 - **#15–38** legacy backlog — audit, close the stale, re-scope the survivors.
 
-### 2.4 Create (new issues to file)
+### 2.4 Create (new issues to file) — ✅ all filed
 
-1. Delete inlined `runtime/contracts.ts`; real dependency on contracts (P0).
-2. `BaseRemoteMFE` collapse of React/Angular front-ends (P0).
-3. Split `unified-generator.ts` into plan/render/emit (P0, pairs with #140).
-4. Quarantine/delete `examples/archive` + `docs/archive`; exclude from tooling (P1).
-5. Promote `src/runtime` → `packages/runtime`; move root contract docs into `docs/` (P1).
-6. ADR curation: move superseded ADRs to `superseded/` (P2).
-7. Extract `inner-voice`/coder to its own repo (P2).
+1. Delete inlined `runtime/contracts.ts`; real dependency on contracts (P0). → **#236**
+2. `BaseRemoteMFE` collapse of React/Angular front-ends (P0). → **#237**
+3. Split `unified-generator.ts` into plan/render/emit (P0, pairs with #140). → **#238**
+4. Quarantine/delete `examples/archive` + `docs/archive`; exclude from tooling (P1). → **#239**
+5. Promote `src/runtime` → `packages/runtime`; move root contract docs into `docs/` (P1). → **#240**
+6. ADR curation: move superseded ADRs to `superseded/` (P2). → **#241**
+7. Extract `inner-voice`/coder to its own repo (P2). → **#242**
+
+Plus, discovered during execution: **#247** — error-boundary delta folded onto `createErrorBoundary` (the survivor of closed #191).
 
 ---
 
