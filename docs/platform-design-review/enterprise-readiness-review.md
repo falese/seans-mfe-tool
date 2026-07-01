@@ -54,12 +54,12 @@ These are tracked work items that extend beyond the documentation program itself
 | ID | Action | Source | Type | Status |
 |---|---|---|---|---|
 | R1 | Author `cli-contract.md` (envelope/`--json`/exit codes) | CA-1/2/3, G05/G06 | Docs | ✅ Done — `docs/cli-contract.md` (this PR) |
-| R2 | Fix stale `query()` summary comment `base-mfe.ts:847–849` | CA-4 | Code | 📋 Tracked — [#229](https://github.com/falese/seans-mfe-tool/issues/229), separate code PR |
+| R2 | Fix stale `query()` summary comment `base-mfe.ts:847–849` | CA-4 | Code | ✅ Done — [#229](https://github.com/falese/seans-mfe-tool/issues/229) via [#232](https://github.com/falese/seans-mfe-tool/pull/232) (merged) |
 | R3 | Fix lifecycle state-machine diagram (`ready→loading`, `error→loading`) | CA-6 | Docs | ✅ Done — `docs/runtime-class-hierarchy.md` (this PR) |
 | R4 | Author 4 "Coming Soon" subsystem docs | G01–G04 | Docs | ✅ Done — codegen/dsl/bff/api-generator (this PR) |
-| R5 | Promote link-hygiene check to CI (non-blocking → gate) | #222 Tier-3 | CI | 📋 Tracked — [#231](https://github.com/falese/seans-mfe-tool/issues/231), separate tooling PR |
+| R5 | Promote link-hygiene check to CI (non-blocking → gate) | #222 Tier-3 | CI | ✅ Done (report-only) — [#231](https://github.com/falese/seans-mfe-tool/issues/231) via [#244](https://github.com/falese/seans-mfe-tool/pull/244); gate deferred until G15 cleared |
 | R6 | Reconcile ADR statuses (e.g. ADR-007 deferred) | G14, G26 | Docs | ✅ Done — ADR register erratum (this PR) |
-| R7 | Add `--json` envelope-conformance test (one stdout line) | CA-2, KPI-4 | Code | 📋 Tracked — [#230](https://github.com/falese/seans-mfe-tool/issues/230), separate code PR |
+| R7 | Add `--json` envelope-conformance test (one stdout line) | CA-2, KPI-4 | Code | ✅ Done — [#230](https://github.com/falese/seans-mfe-tool/issues/230) via [#243](https://github.com/falese/seans-mfe-tool/pull/243) |
 | R8 | Author getting-started + onboarding baseline | KPI-5, G27/G29 | Docs | ✅ Done — `docs/getting-started.md` (this PR) |
 
 The **documentation** remediations (R1, R3, R4, R6, R8) are completed in this PR. The
