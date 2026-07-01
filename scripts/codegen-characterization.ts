@@ -17,7 +17,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { createHash } from 'crypto';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
-import { generateAllFiles } from '../src/codegen/UnifiedGenerator/unified-generator';
+import { generateAllFiles } from '@seans-mfe/codegen';
 
 const EXAMPLES = path.resolve(__dirname, '../examples/abc-kids');
 

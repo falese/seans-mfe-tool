@@ -2,7 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../../../codegen/UnifiedGenerator/unified-generator';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../../framework/loader';
 import { BaseCommand } from '../../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';

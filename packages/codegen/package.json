@@ -1,0 +1,36 @@
+{
+  "name": "@seans-mfe/codegen",
+  "version": "0.1.0",
+  "description": "Manifest -> files MFE generator (plan/render/emit) for the seans-mfe platform; framework variant injected, ships EJS templates",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'codegen tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@seans-mfe/dsl": "file:../dsl",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.9.3"
+  }
+}

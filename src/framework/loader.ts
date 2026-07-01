@@ -11,7 +11,7 @@
 import * as path from 'path';
 import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
 import type { DSLManifest } from '@seans-mfe/dsl';
-import type { FrameworkVariant } from '../codegen/UnifiedGenerator/unified-generator';
+import type { FrameworkVariant } from '@seans-mfe/codegen';
 
 /** Built-in framework names and their package directory names. */
 const BUILTIN_FRAMEWORKS: Record<string, string> = {

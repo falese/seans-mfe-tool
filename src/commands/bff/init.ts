@@ -9,7 +9,7 @@ import { SystemError, ValidationError } from '@seans-mfe/contracts';
 import { addMeshDependencies } from './_shared';
 import type { BFFCommandOptions, TemplateSource, TemplateVars } from './_shared';
 import type { BffInitResult, PlannedChange } from '../../oclif/results';
-import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '../../codegen/UnifiedGenerator/unified-generator';
+import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '@seans-mfe/codegen';
 
 export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffInitResult> {
   try {

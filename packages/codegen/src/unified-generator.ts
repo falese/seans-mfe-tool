@@ -1071,7 +1071,7 @@ async function renderFiles(
     // BFF main server and root files.
     //
     // Important: `package.json` is intentionally NOT in this list. The MFE root
-    // template at `src/codegen/templates/base-mfe/package.json.ejs` is already a
+    // template at `packages/codegen/templates/base-mfe/package.json.ejs` is already a
     // hybrid that owns BOTH MFE deps (rspack, react, MUI, etc.) AND BFF deps
     // (mesh, express, helmet, etc.). The BFF template's `package.json.ejs` is a
     // strict subset (no MUI, no MFE-specific scripts) and previously clobbered

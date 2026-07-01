@@ -94,6 +94,14 @@ out
 .nuxt
 dist
 
+# Compiled output must never live beside TS sources in packages/*/src.
+# Guards against a stray `tsc`/`tsc -b` emitting declarations into src
+# (the leakage cleaned up in ADR-061); packages here are TypeScript-only.
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
+packages/*/src/**/*.js.map
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js

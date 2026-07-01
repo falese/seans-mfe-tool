@@ -28,14 +28,14 @@ jest.mock('@seans-mfe/dsl', () => ({
   formatErrorsForCLI: jest.fn((errors: any[]) => errors.map((e: any) => e.message).join('\n'))
 }));
 
-jest.mock('../../codegen/UnifiedGenerator/unified-generator', () => ({
+jest.mock('@seans-mfe/codegen', () => ({
   generateAllFiles: jest.fn(),
   writeGeneratedFiles: jest.fn()
 }));
 
 import { remoteGenerateCapabilityCommand } from '../remote/generate/capability';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;
