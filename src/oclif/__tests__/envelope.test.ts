@@ -16,7 +16,7 @@ import {
   SystemError,
   SecurityError,
   TimeoutError,
-} from '../../runtime/errors';
+} from '../../../packages/runtime/src/errors';
 
 // ---------------------------------------------------------------------------
 // exitCodeFor

@@ -1,0 +1,11 @@
+{
+  "//": "Compiles the runtime to the repo-root dist/runtime — the self-contained package staged into generated MFEs and baked into the CLI image (see scripts/copy-runtime-files.js, ADR-064). Emit options are inherited from the root tsconfig so dist/runtime output stays byte-identical to the pre-move (src/runtime) build; only rootDir/outDir change.",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../dist/runtime",
+    "paths": {}
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**", "**/*.test.ts"]
+}

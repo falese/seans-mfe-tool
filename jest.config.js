@@ -47,9 +47,11 @@ module.exports = {
     'src/utils/**/*.{js,ts}',
     'src/codegen/UnifiedGenerator/**/*.{js,ts}',
     'src/codegen/APIGenerator/**/*.{js,ts}',
-    // Include DSL/runtime for TDD Guardian phase
+    // Include DSL/runtime for TDD Guardian phase.
+    // Runtime is now the packages/runtime package (ADR-064); collected here so
+    // its per-file coverage gates keep enforcing.
     'src/dsl/**/*.{js,ts}',
-    'src/runtime/**/*.{js,ts}',
+    'packages/runtime/src/**/*.{js,ts}',
     'src/build/**/*.{js,ts}',
     '!src/**/index.{js,ts}',
     '!src/**/__tests__/**',
@@ -57,7 +59,11 @@ module.exports = {
     '!src/**/*.d.ts',          // Skip - TypeScript declaration files have no executable code
     '!src/dsl/schema.js',      // Skip - compiled Peggy parser artifact (not a source file)
     '!src/**/fixtures/**',
-    '!src/codegen/templates/**'
+    '!src/codegen/templates/**',
+    '!packages/runtime/src/**/__tests__/**',
+    '!packages/runtime/src/**/*.test.{js,ts}',
+    '!packages/runtime/src/**/*.d.ts',
+    '!packages/runtime/src/index.ts'
   ],
   
   // Coverage thresholds. Phase 1.1 adds per-file thresholds for the four
@@ -84,7 +90,7 @@ module.exports = {
       statements: 100
     },
     // Enforce strict coverage locally for Runtime BaseMFE
-    'src/runtime/base-mfe.ts': {
+    'packages/runtime/src/base-mfe.ts': {
       branches: 90,
       functions: 100,
       lines: 95,
@@ -117,7 +123,7 @@ module.exports = {
       statements: 90
     },
     // Phase 1.1: runtime-layer coverage target
-    'src/runtime/graphql-ws-client.ts': {
+    'packages/runtime/src/graphql-ws-client.ts': {
       branches: 90,
       functions: 100,
       lines: 95,

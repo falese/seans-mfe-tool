@@ -14,7 +14,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
-const ROOT = resolve(__dirname, '..', '..', '..');
+const ROOT = resolve(__dirname, '..', '..', '..', '..');
 
 // `from '<framework>'` or `require('<framework>')`, robust to multiline import
 // bodies (the `from '…'` clause is always on one line).
@@ -34,14 +34,14 @@ const NEUTRAL_DIRS = ['packages/contracts/src'];
 // excluded: they produce the native handle and are allowed to import React /
 // Angular.
 const NEUTRAL_FILES = [
-  'src/runtime/base-mfe.ts',
-  'src/runtime/base-remote-mfe.ts',
-  'src/runtime/context.ts',
-  'src/runtime/graphql-ws-client.ts',
-  'src/runtime/layout-manager.ts',
-  'src/runtime/base-control-plane.ts',
-  'src/runtime/daemon-channel.ts',
-  'src/runtime/imperative-handle.ts',
+  'packages/runtime/src/base-mfe.ts',
+  'packages/runtime/src/base-remote-mfe.ts',
+  'packages/runtime/src/context.ts',
+  'packages/runtime/src/graphql-ws-client.ts',
+  'packages/runtime/src/layout-manager.ts',
+  'packages/runtime/src/base-control-plane.ts',
+  'packages/runtime/src/daemon-channel.ts',
+  'packages/runtime/src/imperative-handle.ts',
 ];
 
 function tsFiles(dir: string): string[] {
