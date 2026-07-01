@@ -10,6 +10,8 @@
 
 import * as path from 'path';
 import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
+import type { DSLManifest } from '@seans-mfe/dsl';
+import type { FrameworkVariant } from '../codegen/UnifiedGenerator/unified-generator';
 
 /** Built-in framework names and their package directory names. */
 const BUILTIN_FRAMEWORKS: Record<string, string> = {
@@ -100,4 +102,24 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
 
     throw err;
   }
+}
+
+/**
+ * Resolve the codegen variant a manifest maps to (ADR-061 injection point).
+ *
+ * The CLI owns framework resolution: it loads the plugin (built-in or
+ * third-party, ADR-036) and hands the generator the `{ framework, bundler,
+ * templateVariant }` trio via `generateAllFiles(..., { frameworkVariant })`.
+ * The generator itself never loads a plugin. Resolution rule matches the
+ * generator's built-in default: explicit `framework`, else `bundler:'webpack'`
+ * selects Angular.
+ */
+export function resolveFrameworkVariant(manifest: DSLManifest): FrameworkVariant {
+  const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  const plugin = loadFrameworkPlugin(frameworkName);
+  return {
+    framework: plugin.framework,
+    bundler: plugin.bundler,
+    templateVariant: plugin.id as 'react-rspack' | 'angular-webpack',
+  };
 }

@@ -8,7 +8,33 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '@seans-mfe/dsl';
-import { loadFrameworkPlugin } from '../../framework/loader';
+
+/**
+ * The resolved codegen variant a caller injects (ADR-061). The CLI derives it
+ * from the framework plugin (loadFrameworkPlugin) so third-party frameworks
+ * work; the generator itself never loads a plugin. When no variant is injected
+ * the generator falls back to `deriveBuiltinVariant` — the two built-in trios,
+ * computed purely from the manifest with no framework-loader dependency.
+ */
+export interface FrameworkVariant {
+  framework: 'react' | 'angular' | string;
+  bundler: 'rspack' | 'webpack' | string;
+  templateVariant: 'react-rspack' | 'angular-webpack';
+}
+
+/**
+ * Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
+ * returns for the two shipped plugins (react-rspack, angular-webpack), using
+ * the same resolution rule (explicit `framework`, else `bundler:'webpack'`
+ * selects Angular). Keeps the generator independently runnable/testable
+ * without importing the framework loader (ADR-036, ADR-061).
+ */
+export function deriveBuiltinVariant(manifest: DSLManifest): FrameworkVariant {
+  const framework = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  return framework === 'angular'
+    ? { framework: 'angular', bundler: 'webpack', templateVariant: 'angular-webpack' }
+    : { framework: 'react', bundler: 'rspack', templateVariant: 'react-rspack' };
+}
 
 export interface GeneratedFile {
   path: string;
@@ -419,7 +445,10 @@ export function validateManifestConfiguration(manifest: DSLManifest): void {
 /**
  * Extract manifest variables for template rendering
  */
-export function extractManifestVars(manifest: DSLManifest) {
+export function extractManifestVars(
+  manifest: DSLManifest,
+  variant: FrameworkVariant = deriveBuiltinVariant(manifest)
+) {
   const className = manifest.name.replace(/[^a-zA-Z0-9]/g, '') + 'MFE';
   const inputTypeName = className + 'Inputs';
   const outputTypeName = className + 'Outputs';
@@ -470,11 +499,9 @@ export function extractManifestVars(manifest: DSLManifest) {
     neededTransforms.add('resolversComposition');
   }
 
-  // Variant selection via plugin (ADR-036, #176).
-  // bundler:'webpack' alone still resolves to angular so the trio stays consistent.
-  const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
-  const fwPlugin = loadFrameworkPlugin(frameworkName);
-
+  // Variant selection is injected by the caller (ADR-061). The CLI resolves it
+  // via the framework plugin (ADR-036, #176) so third-party frameworks work;
+  // the default is the built-in trio derived purely from the manifest.
   return {
     name: manifest.name,
     version: manifest.version,
@@ -490,11 +517,10 @@ export function extractManifestVars(manifest: DSLManifest) {
     lifecycleHooks: [], // will be overwritten in generateAllFiles
     handlerSources: [], // ADR-040 — overwritten in generateAllFiles
 
-    // Codegen variant selection — driven by plugin (ADR-036).
-    // Exposed to templates and read back by generateAllFiles.
-    framework: fwPlugin.framework as 'react' | 'angular',
-    bundler: fwPlugin.bundler as 'rspack' | 'webpack',
-    templateVariant: fwPlugin.id as 'react-rspack' | 'angular-webpack',
+    // Codegen variant selection — injected (ADR-061), read back by generateAllFiles.
+    framework: variant.framework as 'react' | 'angular',
+    bundler: variant.bundler as 'rspack' | 'webpack',
+    templateVariant: variant.templateVariant,
 
     // NEW: Dependency versions for templates (ADR-027)
     dependencyVersions: DEPENDENCY_VERSIONS,
@@ -694,15 +720,16 @@ interface RenderModel {
 export async function generateAllFiles(
   manifest: DSLManifest,
   basePath: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  options: { force?: boolean; dryRun?: boolean } = {}
+  options: { force?: boolean; dryRun?: boolean; frameworkVariant?: FrameworkVariant } = {}
 ): Promise<GenerateAllFilesResult> {
   // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
   validateManifestConfiguration(manifest);
 
-  const model = planRenderModel(manifest);
+  // Variant is injected by the CLI (ADR-061); default to the built-in trio.
+  const variant = options.frameworkVariant ?? deriveBuiltinVariant(manifest);
+  const model = planRenderModel(manifest, variant);
   return renderFiles(manifest, basePath, model);
 }
 
@@ -711,8 +738,8 @@ export async function generateAllFiles(
  * external handler sources (ADR-040) into the template `vars`. Pure: no disk
  * access, no template rendering.
  */
-function planRenderModel(manifest: DSLManifest): RenderModel {
-  const vars = extractManifestVars(manifest);
+function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): RenderModel {
+  const vars = extractManifestVars(manifest, variant);
   // --- Platform contract-driven capability and lifecycle aggregation ---
   const platformCapabilities = {
     Load: { method: 'load', returnTypeBase: 'LoadResult' },

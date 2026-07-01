@@ -51,11 +51,16 @@ templates. It does **not** import the framework loader.
 **3. Inject the framework variant; do not resolve it inside codegen.**
 `extractManifestVars` / `generateAllFiles` receive the resolved variant
 `{ framework, bundler, templateVariant }` from their caller. The **CLI owns
-framework resolution** — it already calls `loadFrameworkPlugin()` in the build
-and deploy commands — and passes the trio in. codegen never loads a plugin. The
-same resolution rule (`manifest.framework ?? (bundler === 'webpack' ? angular :
-react)`, then `loadFrameworkPlugin`) moves to the CLI edge unchanged, so output
-is identical.
+framework resolution** — `resolveFrameworkVariant()` (in `src/framework/loader.ts`)
+calls `loadFrameworkPlugin()` and passes the trio via
+`generateAllFiles(..., { frameworkVariant })`. codegen never imports the
+framework loader. When no variant is injected the generator falls back to a
+pure `deriveBuiltinVariant(manifest)` — the two shipped trios (`react-rspack`,
+`angular-webpack`) computed directly from the manifest with the same rule
+(`manifest.framework ?? (bundler === 'webpack' ? angular : react)`). This keeps
+the generator independently runnable/testable without the loader; third-party
+frameworks (ADR-036) are supported only through injection, which the CLI always
+does. Both paths produce byte-identical output for the built-in frameworks.
 
 **4. Break the `dsl → codegen` re-export.** The generator exports leave
 `src/dsl/index.ts` (no source consumes them via `dsl`; they are imported from
