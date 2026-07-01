@@ -175,7 +175,7 @@ describe('LayoutManager', () => {
     transport.emitExperience(experience('e-1'));
     await flush();
 
-    expect(errors[0]).toMatch(/csv-analyzer\.DataAnalysis in slot "main": boom/);
+    expect(errors[0]).toMatch(/Slot "main" failed: csv-analyzer\.DataAnalysis \(mount\): boom/);
   });
 
   it('sendAction carries the session context up the control plane', async () => {

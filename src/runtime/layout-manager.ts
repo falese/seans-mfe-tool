@@ -403,12 +403,19 @@ export class LayoutManager {
 
     const slot = this.slots.get(slotId);
     if (slot) {
-      try {
-        await slot.unmount?.();
-      } catch {
-        /* best-effort teardown of the failed island */
+      // Tear the failed island down before rendering the fallback so a stale
+      // unmount can't wipe it. Only yield when there is actually something to
+      // unmount — a mount that threw never assigned one, and awaiting a no-op
+      // would defer the fallback/escalation a microtask past a mount that
+      // succeeds (ADR-060: a failing slot degrades in the same tick budget).
+      if (slot.unmount) {
+        try {
+          await slot.unmount();
+        } catch {
+          /* best-effort teardown of the failed island */
+        }
+        slot.unmount = undefined;
       }
-      slot.unmount = undefined;
       slot.element.innerHTML = '';
       (this.config.renderSlotFallback ?? defaultRenderSlotFallback)(slot.element, info);
       slot.element.setAttribute('data-slot-state', 'error');
