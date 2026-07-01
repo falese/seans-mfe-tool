@@ -126,7 +126,7 @@ All underlying code is complete; documentation is the gap.
 ### npm Publish: `@seans-mfe/contracts` + `@seans-mfe/oclif-base`
 
 **Blocker for:** MERGE-PLAN.md Phase 1 success criteria  
-**Tracking:** [`MERGE-PLAN.md`](../MERGE-PLAN.md)
+**Tracking:** [`MERGE-PLAN.md`](MERGE-PLAN.md)
 
 Phase 1 success criteria (all must be true before Phase 2 / monorepo merge):
 
@@ -162,7 +162,7 @@ See [`docs/requirements/deferred-backlog.md`](./requirements/deferred-backlog.md
 | Understand the CLI/oclif migration that just shipped | [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)                               |
 | Work on the runtime platform                         | [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md) + `packages/runtime/`     |
 | Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-028–032 |
-| Understand the merge/monorepo plan                   | [`MERGE-PLAN.md`](../MERGE-PLAN.md)                                                                     |
+| Understand the merge/monorepo plan                   | [`MERGE-PLAN.md`](MERGE-PLAN.md)                                                                     |
 | Find a specific requirement (REQ-XXX)                | [`docs/requirements/TRACEABILITY.md`](./requirements/TRACEABILITY.md)                                   |
 | Understand the full architecture                     | [`docs/architecture-current-state.md`](./architecture-current-state.md)                                 |
 | Check coding patterns and agent guidance             | [`CLAUDE.md`](../CLAUDE.md) + [`.github/copilot-instructions.md`](../.github/copilot-instructions.md)   |

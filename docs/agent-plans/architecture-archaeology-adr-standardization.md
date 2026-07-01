@@ -223,7 +223,7 @@ This is a process asymmetry rather than a code defect: the repo knows how to doc
 
 #### DEV-006: Release discipline is described as necessary, but not executable
 
-Release discipline is explicitly called out as necessary in [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70) and public API stability is partially documented in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/PLUGIN-CONTRACT.md#L160). The implementation side still lacks a release workflow, changelog process, and automated dependency/security maintenance configuration.
+Release discipline is explicitly called out as necessary in [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70) and public API stability is partially documented in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/PLUGIN-CONTRACT.md#L160). The implementation side still lacks a release workflow, changelog process, and automated dependency/security maintenance configuration.
 
 This is a real architectural gap because the plugin-first ecosystem choice increases the need for release hygiene rather than reducing it.
 
@@ -258,7 +258,7 @@ Risk if left undocumented:
 
 #### API versioning and deprecation policy
 
-The DSL requires semantic versions for MFEs in [src/dsl/schema.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/dsl/schema.ts#L379), and plugin compatibility guarantees are partially described in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/PLUGIN-CONTRACT.md#L160). What is missing is a policy for generated REST/BFF/API evolution: no accepted ADR defines versioning, deprecation notices, compatibility windows, or upgrade contracts for generated service surfaces. The repository-wide need is acknowledged indirectly in [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70), which calls for real release discipline.
+The DSL requires semantic versions for MFEs in [src/dsl/schema.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/dsl/schema.ts#L379), and plugin compatibility guarantees are partially described in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/PLUGIN-CONTRACT.md#L160). What is missing is a policy for generated REST/BFF/API evolution: no accepted ADR defines versioning, deprecation notices, compatibility windows, or upgrade contracts for generated service surfaces. The repository-wide need is acknowledged indirectly in [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70), which calls for real release discipline.
 
 #### Service-to-service authentication
 
@@ -289,7 +289,7 @@ The codebase already distinguishes retryable and non-retryable failure classes i
 | ADR-046 | `ADR-046-environment-configuration-and-secret-validation.md` | Environment Configuration and Secret Validation | D/E | new | Proposed | [src/dsl/schema.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/dsl/schema.ts#L279), [src/commands/deploy.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/commands/deploy.ts#L399) | Type-safe config module, CI validation, generated `.env.example` |
 | ADR-047 | `ADR-047-codeowners-and-review-routing.md` | CODEOWNERS and Review Routing for Architectural Surfaces | G/F | new | Proposed | absence of CODEOWNERS, [docs/architecture-decisions](/Users/sean/Documents/Development/seans-mfe-tool/docs/architecture-decisions), [packages/contracts](/Users/sean/Documents/Development/seans-mfe-tool/packages/contracts) | CODEOWNERS plus required review on critical paths |
 | ADR-048 | `ADR-048-dependency-update-and-vulnerability-response.md` | Dependency Update and Vulnerability Response Policy | A/E | new | Proposed | no Renovate/Dependabot config, no `SECURITY.md`, dependency surface in [package.json](/Users/sean/Documents/Development/seans-mfe-tool/package.json#L67) | dependency bot plus CI audit and security policy |
-| ADR-049 | `ADR-049-release-versioning-and-publish-automation.md` | Release, Versioning, and Publish Automation | A/E | new | Proposed | [MERGE-PLAN.md](/Users/sean/Documents/Development/seans-mfe-tool/MERGE-PLAN.md), [.github/workflows](/Users/sean/Documents/Development/seans-mfe-tool/.github/workflows) | release workflow, changelog generation, package publish gates |
+| ADR-049 | `ADR-049-release-versioning-and-publish-automation.md` | Release, Versioning, and Publish Automation | A/E | new | Proposed | [MERGE-PLAN.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/MERGE-PLAN.md), [.github/workflows](/Users/sean/Documents/Development/seans-mfe-tool/.github/workflows) | release workflow, changelog generation, package publish gates |
 
 ## 8. Full ADR Documents
 
@@ -315,7 +315,7 @@ This first implementation tranche writes the ADR files listed in the index into 
 | [src/runtime/handlers/auth.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/runtime/handlers/auth.ts#L16) and [src/commands/deploy.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/commands/deploy.ts#L413) | secrets and config read directly from env / placeholders | ADR-046 | boot-time fail-fast validation and safer scaffolding |
 | absence of `CODEOWNERS` with critical surfaces under [packages/contracts](/Users/sean/Documents/Development/seans-mfe-tool/packages/contracts) and [src/runtime](/Users/sean/Documents/Development/seans-mfe-tool/src/runtime) | governance gap in review routing | ADR-047 | CODEOWNERS plus required review |
 | absence of Renovate/Dependabot and `SECURITY.md` | dependency maintenance and vulnerability response gap | ADR-048 | dependency automation and CI audit gate |
-| [MERGE-PLAN.md](/Users/sean/Documents/Development/seans-mfe-tool/MERGE-PLAN.md) and [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70) | release discipline is required but not implemented | ADR-049 | release workflow and changelog gate |
+| [MERGE-PLAN.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/MERGE-PLAN.md) and [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70) | release discipline is required but not implemented | ADR-049 | release workflow and changelog gate |
 | [docs/architecture-decisions/ADR-039-structured-logger-no-console-log.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/architecture-decisions/ADR-039-structured-logger-no-console-log.md) versus [src/commands/remote/generate.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/commands/remote/generate.ts#L16) | logging policy drift | follow-up enforcement work under ADR-039 | lint rule plus migration plan |
 
 ## 11. Consolidated References Index
@@ -323,7 +323,7 @@ This first implementation tranche writes the ADR files listed in the index into 
 - Local ADR corpus in [docs/architecture-decisions](/Users/sean/Documents/Development/seans-mfe-tool/docs/architecture-decisions)
 - Project governance in [CLAUDE.md](/Users/sean/Documents/Development/seans-mfe-tool/CLAUDE.md)
 - Project instructions in [.github/copilot-instructions.md](/Users/sean/Documents/Development/seans-mfe-tool/.github/copilot-instructions.md)
-- Plugin API and compatibility expectations in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/PLUGIN-CONTRACT.md#L160)
+- Plugin API and compatibility expectations in [PLUGIN-CONTRACT.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/PLUGIN-CONTRACT.md#L160)
 - Plugin-first release implications in [docs/product-decisions/PDR-004-plugin-first-ecosystem.md](/Users/sean/Documents/Development/seans-mfe-tool/docs/product-decisions/PDR-004-plugin-first-ecosystem.md#L70)
 - Operational config and secret examples in [src/commands/deploy.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/commands/deploy.ts#L399)
 - Runtime auth handler evidence in [src/runtime/handlers/auth.ts](/Users/sean/Documents/Development/seans-mfe-tool/src/runtime/handlers/auth.ts#L1)

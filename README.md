@@ -237,7 +237,7 @@ BaseMFE (abstract)
   └── AngularRemoteMFE   — Angular / webpack Module Federation
 ```
 
-Long-form capability reference: [`PLATFORM-CONTRACT.md`](./PLATFORM-CONTRACT.md).
+Long-form capability reference: [`PLATFORM-CONTRACT.md`](./docs/PLATFORM-CONTRACT.md).
 
 ---
 
@@ -292,10 +292,10 @@ turbo run docker:build:examples
   template variant. See the
   [Framework Plugin Authoring Guide](./docs/framework-plugin-authoring.md)
   (ADR-036) and `packages/framework-react/` / `packages/framework-angular/`.
-- **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md)
+- **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./docs/PLUGIN-CONTRACT.md)
   and the `@falese/bff-plugin` package under `packages/bff-plugin/` as a worked
   example of an out-of-tree oclif plugin.
-- **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./MERGE-PLAN.md).
+- **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./docs/MERGE-PLAN.md).
 
 ---
 
