@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-01
+- **Tracking issue (future direction):** #250
 - **Relates to:** ADR-036 (framework plugins / `loadFrameworkPlugin`), ADR-044 (production container hardening for generated MFEs), ADR-022 (plugin-first architecture), ADR-034 (framework/bundler as DSL fields), the RESTRUCTURE-PLAN §3 item 5 ("slim the big command files")
 - **Supersedes:** the inline production-deployment codegen in `src/commands/deploy.ts` (the `productionDeploy` / `dockerComposeProductionDeploy` / `kubernetesProductionDeploy` generators)
 
