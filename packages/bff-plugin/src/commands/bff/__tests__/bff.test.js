@@ -9,7 +9,7 @@ jest.mock('js-yaml', () => ({
 }));
 
 // Mock templateProcessor to avoid EJS rendering issues
-jest.mock('../../utils/templateProcessor', () => ({
+jest.mock('../../../utils/templateProcessor', () => ({
   processTemplates: jest.fn().mockResolvedValue(undefined)
 }));
 
@@ -50,16 +50,13 @@ childProcess.spawn = jest.fn(() => {
   return mockSpawnProcess;
 });
 
-// Now require bff module AFTER all mocks are set up
-const {
-  extractMeshConfig,
-  writeMeshConfig,
-  bffValidateCommand,
-  bffBuildCommand,
-  bffDevCommand,
-  bffInitCommand,
-  addMeshDependencies
-} = require('../bff');
+// Now require the bff command logic AFTER all mocks are set up.
+// After D4 (#126–130) these live in @falese/bff-plugin alongside this test.
+const { extractMeshConfig, writeMeshConfig, addMeshDependencies } = require('../../../shared');
+const { bffInitCommand } = require('../init');
+const { bffBuildCommand } = require('../build');
+const { bffDevCommand } = require('../dev');
+const { bffValidateCommand } = require('../validate');
 
 describe('BFF Commands', () => {
   mockProcessExit();
@@ -630,8 +627,11 @@ describe('BFF Commands', () => {
       });
 
       it('should throw error if template directory not found', async () => {
+        // The plugin's template dir is resolved relative to the command file
+        // (…/templates). Match the trailing segment so this stays robust to the
+        // package layout (ADR-061/D4 moved it into @falese/bff-plugin).
         mockFs.pathExists.mockImplementation(async (p) => {
-          if (p.includes('bff-plugin/templates')) return false;
+          if (/[\\/]templates$/.test(p)) return false;
           return true;
         });
 

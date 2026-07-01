@@ -4,11 +4,11 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { processTemplates } from '../../utils/templateProcessor';
-import { BaseCommand } from '../../oclif/BaseCommand';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { SystemError, ValidationError } from '@seans-mfe/contracts';
-import { addMeshDependencies } from './_shared';
-import type { BFFCommandOptions, TemplateSource, TemplateVars } from './_shared';
-import type { BffInitResult, PlannedChange } from '../../oclif/results';
+import { addMeshDependencies } from '../../shared';
+import type { BFFCommandOptions, TemplateSource, TemplateVars } from '../../shared';
+import type { BffInitResult, PlannedChange } from '../../types';
 import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '@seans-mfe/codegen';
 
 export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffInitResult> {
@@ -33,7 +33,9 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
     }
 
     // 3 levels up from src/commands/bff/ (or dist/commands/bff/) reaches the project root
-    const templateDir = path.resolve(__dirname, '..', '..', '..', 'packages', 'bff-plugin', 'templates');
+    // Templates ship with this plugin: from src/commands/bff (or dist/commands/bff),
+    // three levels up is the package root, then templates/.
+    const templateDir = path.resolve(__dirname, '..', '..', '..', 'templates');
 
     if (!await fs.pathExists(templateDir)) {
       throw new SystemError(`BFF template directory not found: ${templateDir}`);

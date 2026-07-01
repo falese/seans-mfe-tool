@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk = require('chalk');
 import * as yaml from 'js-yaml';
+import { ValidationError, SystemError } from '@seans-mfe/contracts';
 
 // ============================================================================
 // Type Definitions
@@ -125,18 +126,26 @@ export async function extractMeshConfig(manifestPath: string): Promise<ExtractMe
   const absolutePath = path.resolve(process.cwd(), manifestPath);
 
   if (!await fs.pathExists(absolutePath)) {
-    throw new Error(`Manifest not found: ${absolutePath}`);
+    throw new SystemError(`Manifest not found: ${absolutePath}`);
   }
 
   const manifestContent = await fs.readFile(absolutePath, 'utf8');
   const manifest = yaml.load(manifestContent) as MFEManifest;
 
   if (!manifest.data) {
-    throw new Error('No "data:" section found in manifest. BFF requires data configuration.');
+    throw new ValidationError(
+      'No "data:" section found in manifest. BFF requires data configuration.',
+      'data',
+      'required',
+    );
   }
 
   if (!manifest.data.sources || manifest.data.sources.length === 0) {
-    throw new Error('No sources defined in data: section. At least one OpenAPI source is required.');
+    throw new ValidationError(
+      'No sources defined in data: section. At least one OpenAPI source is required.',
+      'data.sources',
+      'required',
+    );
   }
 
   const meshConfig: MeshConfig = {

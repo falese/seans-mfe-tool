@@ -155,6 +155,8 @@ module.exports = {
     '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
     '^@seans-mfe/codegen$': '<rootDir>/packages/codegen/src/index.ts',
     '^@seans-mfe/codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',
+    '^@falese/bff-plugin$': '<rootDir>/packages/bff-plugin/src/index.ts',
+    '^@falese/bff-plugin/(.*)$': '<rootDir>/packages/bff-plugin/src/$1',
     '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
     '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
     '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',

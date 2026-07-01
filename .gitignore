@@ -94,10 +94,10 @@ out
 .nuxt
 dist
 
-# Compiled output must never live beside TS sources in packages/*/src.
-# Guards against a stray `tsc`/`tsc -b` emitting declarations into src
-# (the leakage cleaned up in ADR-061); packages here are TypeScript-only.
-packages/*/src/**/*.js
+# Compiled declaration output must never live beside TS sources in packages/*/src.
+# Guards against a stray `tsc`/`tsc -b` emitting declarations into src (the
+# leakage cleaned up in ADR-061). Bare *.js is NOT ignored — some packages ship
+# genuine JS sources (e.g. bff-plugin's templateProcessor.js, test-utils.js).
 packages/*/src/**/*.d.ts
 packages/*/src/**/*.d.ts.map
 packages/*/src/**/*.js.map

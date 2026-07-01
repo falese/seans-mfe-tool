@@ -8,7 +8,7 @@
     "src/runtime"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/contracts packages/dsl packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular packages/codegen",
+    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
@@ -65,7 +65,8 @@
     "scope": "@seans-mfe",
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-plugins",
+      "@falese/bff-plugin"
     ],
     "topics": {
       "daemon": {

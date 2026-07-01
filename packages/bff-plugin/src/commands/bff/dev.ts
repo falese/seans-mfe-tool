@@ -1,11 +1,11 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { spawn } from 'child_process';
-import { BaseCommand } from '../../oclif/BaseCommand';
-import { writeMeshConfig } from './_shared';
+import { BaseCommand } from '@seans-mfe/oclif-base';
+import { writeMeshConfig } from '../../shared';
 import { bffValidateCommand } from './validate';
-import type { BFFCommandOptions } from './_shared';
-import type { BffDevResult } from '../../oclif/results';
+import type { BFFCommandOptions } from '../../shared';
+import type { BffDevResult } from '../../types';
 
 export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<BffDevResult> {
   try {

@@ -2,11 +2,11 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { BaseCommand } from '../../oclif/BaseCommand';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { ValidationError } from '@seans-mfe/contracts';
-import { extractMeshConfig } from './_shared';
-import type { BFFCommandOptions } from './_shared';
-import type { BffValidateResult, BffValidationIssue } from '../../oclif/results';
+import { extractMeshConfig } from '../../shared';
+import type { BFFCommandOptions } from '../../shared';
+import type { BffValidateResult, BffValidationIssue } from '../../types';
 
 export async function bffValidateCommand(
   options: BFFCommandOptions = {}

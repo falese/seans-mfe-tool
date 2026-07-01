@@ -25,9 +25,9 @@ import * as os from 'os';
 import * as yaml from 'js-yaml';
 import { execSync } from 'child_process';
 
-import { bffInitCommand } from '../../commands/bff/init';
-import { bffValidateCommand } from '../../commands/bff/validate';
-import { bffBuildCommand } from '../../commands/bff/build';
+import { bffInitCommand } from '../init';
+import { bffValidateCommand } from '../validate';
+import { bffBuildCommand } from '../build';
 
 const execSyncMock = execSync as jest.MockedFunction<typeof execSync>;
 

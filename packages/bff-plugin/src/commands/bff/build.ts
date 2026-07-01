@@ -1,12 +1,12 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { execSync } from 'child_process';
-import { BaseCommand } from '../../oclif/BaseCommand';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { NetworkError } from '@seans-mfe/contracts';
-import { writeMeshConfig } from './_shared';
+import { writeMeshConfig } from '../../shared';
 import { bffValidateCommand } from './validate';
-import type { BFFCommandOptions } from './_shared';
-import type { BffBuildResult, PlannedChange } from '../../oclif/results';
+import type { BFFCommandOptions } from '../../shared';
+import type { BffBuildResult, PlannedChange } from '../../types';
 
 export async function bffBuildCommand(
   options: BFFCommandOptions & { dryRun?: boolean } = {}
