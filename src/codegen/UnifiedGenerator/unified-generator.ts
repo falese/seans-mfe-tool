@@ -670,9 +670,31 @@ export interface GenerateAllFilesResult {
   preservedCapabilities: string[];
 }
 
+/**
+ * The planned model handed from the plan phase to the render phase.
+ *
+ * `vars` is the template context (populated with the aggregated capabilities,
+ * lifecycle hooks, and handler sources); `handlerSources` is surfaced
+ * separately because the render phase gates the handler-registry file on it
+ * (ADR-040).
+ */
+interface RenderModel {
+  vars: ReturnType<typeof extractManifestVars>;
+  handlerSources: Array<{ localName: string; module: string; exportName: string }>;
+}
+
+/**
+ * Generate all files (features, platform, BFF, configs) for a manifest.
+ *
+ * Three phases, each isolated so they can be reasoned about (and reused)
+ * independently: validate → plan (aggregate manifest into a RenderModel) →
+ * render (turn the model into concrete GeneratedFiles). Emit is a separate
+ * step (writeGeneratedFiles).
+ */
 export async function generateAllFiles(
   manifest: DSLManifest,
   basePath: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<GenerateAllFilesResult> {
   // === Validation Layer (ADR-027) ===
@@ -680,7 +702,16 @@ export async function generateAllFiles(
   // Throws if validation fails (prevents bad configurations)
   validateManifestConfiguration(manifest);
 
-  const files: GeneratedFile[] = [];
+  const model = planRenderModel(manifest);
+  return renderFiles(manifest, basePath, model);
+}
+
+/**
+ * Plan phase — aggregate the manifest's capabilities, lifecycle hooks, and
+ * external handler sources (ADR-040) into the template `vars`. Pure: no disk
+ * access, no template rendering.
+ */
+function planRenderModel(manifest: DSLManifest): RenderModel {
   const vars = extractManifestVars(manifest);
   // --- Platform contract-driven capability and lifecycle aggregation ---
   const platformCapabilities = {
@@ -772,6 +803,23 @@ export async function generateAllFiles(
   vars.capabilities = capabilities;
   vars.lifecycleHooks = lifecycleHooks;
   vars.handlerSources = handlerSources;
+
+  return { vars, handlerSources };
+}
+
+/**
+ * Render phase — turn the planned model into the concrete GeneratedFile[] set
+ * (features, platform, BFF, root/config, entry, and public assets). This is
+ * where the framework/bundler variant, the presence of a `data:` section, and
+ * external handler sources fan out into template renders.
+ */
+async function renderFiles(
+  manifest: DSLManifest,
+  basePath: string,
+  model: RenderModel
+): Promise<GenerateAllFilesResult> {
+  const { vars, handlerSources } = model;
+  const files: GeneratedFile[] = [];
 
   // Codegen template variant selection (computed in extractManifestVars).
   // Manifest.framework + manifest.bundler pick the directory and per-file
