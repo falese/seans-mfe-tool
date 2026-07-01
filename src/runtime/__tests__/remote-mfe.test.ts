@@ -20,6 +20,40 @@ import {
   MockDaemonWebSocketClient,
 } from './test-harness';
 import type { Context, LoadResult, RenderResult } from '../base-mfe';
+import type { DSLManifest } from '../../dsl/schema';
+
+/**
+ * Mock react-dom/client + react so the REAL RemoteMFE.mountComponent path runs
+ * under testEnvironment: 'node' — mirrors the AngularRemoteMFE sibling test.
+ * A minimal React with Component (for the error boundary) and createElement.
+ */
+jest.mock(
+  'react-dom/client',
+  () => ({
+    __esModule: true,
+    createRoot: jest.fn(() => ({ render: jest.fn(), unmount: jest.fn() })),
+  }),
+  { virtual: true }
+);
+jest.mock(
+  'react',
+  () => ({
+    __esModule: true,
+    Component: class {
+      props: any;
+      state: any;
+      constructor(props: any) {
+        this.props = props;
+      }
+    },
+    createElement: jest.fn((type: any, props: any, ...children: any[]) => ({
+      type,
+      props,
+      children,
+    })),
+  }),
+  { virtual: true }
+);
 
 describe('RemoteMFE', () => {
   const AppComponent = createMockComponent('App');
@@ -654,5 +688,149 @@ describe('RemoteMFE.doUpdateControlPlaneState', () => {
     expect(result.correlationId).toBe('explicit-corr-id');
     const envelope = JSON.parse(ws.assertCalledOnce().variables['m'] as string);
     expect(envelope.metadata.correlationId).toBe('explicit-corr-id');
+  });
+});
+
+/**
+ * React adapter surface (mountComponent / unmount / getSharedDependencies).
+ *
+ * These exercise the REAL RemoteMFE React-specific methods (the shared load/
+ * render lifecycle is covered above and in BaseRemoteMFE). react-dom/client and
+ * react are mocked at module scope so mountComponent runs without a browser.
+ */
+describe('RemoteMFE React adapter', () => {
+  const telemetry = new TelemetryCapture();
+
+  class TestRemoteMFE extends RemoteMFE {
+    constructor(
+      manifest: DSLManifest,
+      deps: any,
+      private components: Record<string, any>
+    ) {
+      super(manifest, deps);
+    }
+    protected async loadDomainComponent(name: string): Promise<any> {
+      if (!this.components[name]) throw new Error(`Test component "${name}" not registered`);
+      return this.components[name];
+    }
+  }
+
+  function buildManifest(): DSLManifest {
+    return {
+      name: 'test-react-remote',
+      version: '1.0.0',
+      type: 'remote',
+      language: 'typescript',
+      framework: 'react',
+      bundler: 'rspack',
+      remoteEntry: 'http://localhost:5000/remoteEntry.js',
+      capabilities: [
+        { load: { type: 'platform' } },
+        { render: { type: 'platform' } },
+        { Widget: { type: 'domain', description: 'A widget' } },
+      ],
+    } as DSLManifest;
+  }
+
+  function makeContext(inputs: Record<string, unknown> = {}): Context {
+    return new ContextBuilder().withInputs(inputs).build();
+  }
+
+  function installDocumentStub(): { id: string } {
+    const el = { id: 'host' };
+    (global as any).document = {
+      getElementById: (id: string) => (id === 'host' ? el : null),
+    };
+    return el;
+  }
+  function removeDocumentStub(): void {
+    delete (global as any).document;
+  }
+
+  beforeEach(() => jest.clearAllMocks());
+  afterEach(() => removeDocumentStub());
+
+  it('creates a React root, wraps in an error boundary, and renders', async () => {
+    const el = installDocumentStub();
+    const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+    await (mfe as any).doLoad(makeContext());
+
+    const result = await (mfe as any).doRender(
+      makeContext({ component: 'Widget', containerId: 'host', props: { title: 'hi' } })
+    );
+
+    expect(result.status).toBe('rendered');
+    expect(result.element).toBe(el);
+    const { createRoot } = await import('react-dom/client');
+    expect(createRoot).toHaveBeenCalledWith(el);
+    const root = (mfe as any).reactRoots.get('host');
+    expect(root.render).toHaveBeenCalledTimes(1);
+  });
+
+  it('reuses an existing root when re-rendering the same container', async () => {
+    installDocumentStub();
+    const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+    await (mfe as any).doLoad(makeContext());
+
+    await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+    const firstRoot = (mfe as any).reactRoots.get('host');
+    await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+    const { createRoot } = await import('react-dom/client');
+    expect(createRoot).toHaveBeenCalledTimes(1); // not re-created
+    expect((mfe as any).reactRoots.get('host')).toBe(firstRoot);
+    expect(firstRoot.render).toHaveBeenCalledTimes(2);
+  });
+
+  it('errors when the DOM container is not found', async () => {
+    installDocumentStub();
+    const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+    await (mfe as any).doLoad(makeContext());
+
+    const result = await (mfe as any).doRender(
+      makeContext({ component: 'Widget', containerId: 'missing' })
+    );
+    expect(result.status).toBe('error');
+    expect((result.error as Error).message).toMatch(/DOM container #missing not found/);
+  });
+
+  it('errors when mountComponent runs outside a browser (no document)', async () => {
+    removeDocumentStub();
+    const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+    await (mfe as any).doLoad(makeContext());
+
+    const result = await (mfe as any).doRender(
+      makeContext({ component: 'Widget', containerId: 'host' })
+    );
+    expect(result.status).toBe('error');
+    expect((result.error as Error).message).toMatch(/outside a browser environment/);
+  });
+
+  describe('unmount', () => {
+    it('unmounts and removes the React root for a container', async () => {
+      installDocumentStub();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+      const root = (mfe as any).reactRoots.get('host');
+      mfe.unmount('host');
+      expect(root.unmount).toHaveBeenCalledTimes(1);
+      expect((mfe as any).reactRoots.has('host')).toBe(false);
+    });
+
+    it('is a no-op for an unknown container', () => {
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, {});
+      expect(() => mfe.unmount('nope')).not.toThrow();
+    });
+  });
+
+  describe('Shared dependencies', () => {
+    it('returns React singletons', () => {
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, {});
+      const shared = (mfe as any).getSharedDependencies();
+      expect(shared['react']).toEqual(expect.objectContaining({ singleton: true }));
+      expect(shared['react-dom']).toEqual(expect.objectContaining({ singleton: true }));
+    });
   });
 });
