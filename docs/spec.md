@@ -290,6 +290,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-059 | BaseControlPlane — Abstract Base for All Control-Plane Implementations | Runtime / control-plane / abstract-base | Accepted |
 | ADR-060 | Contextualized VM Composition — Value-Injection, Slot-Scoped Self-Healing, Control-Plane Re-Resolution | Runtime / composition / resilience / context | Accepted |
 | ADR-061 | `@seans-mfe/dsl` and `@seans-mfe/codegen` as Packages; Framework Variant Injected, Not Resolved | Codegen / DSL / packaging | Accepted |
+| ADR-062 | `deploy` is Dev-Convenience Only; Production Deployment Returns as a Plugin-Resolved Target Axis | Deploy / plugins / scope | Accepted |
 
 ---
 

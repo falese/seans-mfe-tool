@@ -4,12 +4,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
-import * as ejs from 'ejs';
 import { BaseCommand } from '../oclif/BaseCommand';
 import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
-import { loadFrameworkPlugin } from '../framework/loader';
-import { generateDockerfile } from './build/docker';
 
 interface DeployOptions {
   name: string;
@@ -17,15 +14,6 @@ interface DeployOptions {
   port?: number;
   type: string;
   logs?: boolean;
-  registry?: string;
-  mode?: string;
-  replicas?: number;
-  memory?: string;
-  cpu?: string;
-  domain?: string;
-  namespace?: string;
-  tag?: string;
-  framework?: string;
 }
 
 // Keep track of temp directories for cleanup
@@ -246,20 +234,31 @@ async function waitForContainer(containerName: string, timeout: number = 30000):
   throw new TimeoutError('Container failed to start within timeout', timeout, Date.now() - startTime);
 }
 
-// Main deployment command
+// Main deployment command.
+//
+// `deploy` is a development-convenience wrapper only (ADR-062): it builds and
+// runs a local Docker container. Production deployment is intentionally not
+// implemented in-tree — it will return as a manifest-driven, plugin-resolved
+// deploy-target axis (ADR-062, mirroring the ADR-036 framework-plugin model).
+// The previous inline docker-compose / Kubernetes manifest generators were
+// removed as premature, off-pattern, and unreachable from the CLI.
 async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Promise<DeployResult> {
   try {
+    if (options.env === 'production') {
+      throw new BusinessError(
+        'Production deployment not yet implemented — planned as deploy-target plugins (ADR-062)',
+        'NOT_IMPLEMENTED',
+      );
+    }
+
+    if (options.env !== 'development') {
+      throw new ValidationError(`Unknown environment: ${options.env}`, 'env', 'enum');
+    }
+
     if (options.dryRun) {
-      const containerName = `${options.name}-${options.env === 'development' ? 'dev' : 'prod'}`;
-      const generatedFiles =
-        options.env === 'production'
-          ? options.mode === 'kubernetes' || options.mode === 'k8s'
-            ? ['k8s/deployment.yaml', 'k8s/secrets.yaml', 'k8s/configmap.yaml', 'k8s/hpa.yaml', 'k8s/kustomization.yaml', 'k8s/README.md']
-            : ['deploy/docker-compose.yml', 'deploy/Dockerfile', 'deploy/.env.production', 'deploy/README.md']
-          : [];
+      const containerName = `${options.name}-dev`;
       const plannedChanges: PlannedChange[] = [
         { op: 'spawn', target: containerName, detail: `docker run (${options.type}) on port ${options.port || 8080}` },
-        ...generatedFiles.map((f): PlannedChange => ({ op: 'create', target: f })),
       ];
       console.log(chalk.yellow('\n[DRY RUN] Would deploy:'));
       for (const c of plannedChanges) {
@@ -267,31 +266,24 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
       }
       return {
         appName: options.name,
-        environment: (options.env === 'production' ? 'production' : 'development'),
+        environment: 'development',
         ports: [Number(options.port) || 8080],
-        generatedFiles,
-        mode: options.mode || options.env,
+        generatedFiles: [],
+        mode: options.env,
         dryRun: true,
         plannedChanges,
       };
     }
 
     await verifyProjectStructure();
-
-    if (options.env === 'development') {
-      await developmentDeploy(options);
-      return {
-        appName: options.name,
-        environment: 'development',
-        ports: [Number(options.port) || 8080],
-        generatedFiles: [],
-        dryRun: false,
-      };
-    } else if (options.env === 'production') {
-      throw new BusinessError('Production deployment not yet implemented', 'NOT_IMPLEMENTED');
-    } else {
-      throw new ValidationError(`Unknown environment: ${options.env}`, 'env', 'enum');
-    }
+    await developmentDeploy(options);
+    return {
+      appName: options.name,
+      environment: 'development',
+      ports: [Number(options.port) || 8080],
+      generatedFiles: [],
+      dryRun: false,
+    };
   } catch (error: any) {
     console.error(chalk.red('\n✗ Deployment failed:'));
     console.error(chalk.red(error.message));
@@ -303,448 +295,16 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
   }
 }
 
-// Production deployment function
-async function productionDeploy(options: DeployOptions): Promise<void> {
-  const { name, port, type, registry, mode = 'docker-compose' } = options;
-  const projectDir = process.cwd();
-
-  console.log(chalk.blue('\n🚀 Starting production deployment...'));
-  console.log(chalk.gray(`Mode: ${mode}`));
-  console.log(chalk.gray(`Type: ${type}`));
-  console.log(chalk.gray(`Registry: ${registry || 'local'}\n`));
-
-  try {
-    if (mode === 'kubernetes' || mode === 'k8s') {
-      await kubernetesProductionDeploy(options);
-    } else {
-      await dockerComposeProductionDeploy(options);
-    }
-  } catch (error: any) {
-    console.error(chalk.red('\n✗ Production deployment failed:'));
-    console.error(error.message);
-    throw error;
-  }
-}
-
-// Docker Compose production deployment
-async function dockerComposeProductionDeploy(options: DeployOptions): Promise<void> {
-  const { name, port, type, registry } = options;
-  const projectDir = process.cwd();
-  const deployDir = path.join(projectDir, 'deploy');
-
-  console.log(chalk.blue('📦 Generating Docker Compose configuration...'));
-
-  // Create deploy directory
-  await fs.ensureDir(deployDir);
-
-  // Read package.json for project info
-  const packageJson: any = await fs.readJson(path.join(projectDir, 'package.json'));
-  const database = packageJson.database || 'sqlite';
-
-  // Generate docker-compose.production.yml
-  const composeTemplatePath = path.join(
-    __dirname,
-    '../templates/docker/docker-compose.production.yml'
-  );
-  const composeTemplate = await fs.readFile(composeTemplatePath, 'utf8');
-  // MFEs are served by the unprivileged nginx image on 8080; API services
-  // listen on their own app port (ADR-044).
-  const containerPort = type === 'api' ? port || 3000 : 8080;
-  const composeContent = ejs.render(composeTemplate, {
-    name,
-    port: port || 3000,
-    containerPort,
-    type,
-    database,
-    registry: registry || 'myregistry',
-  });
-
-  await fs.writeFile(path.join(deployDir, 'docker-compose.yml'), composeContent);
-  console.log(chalk.green('✓ Generated docker-compose.yml'));
-
-  // Generate production Dockerfile — use the plugin for MFE types (ADR-036, #178).
-  let dockerfileContent: string;
-  if (type === 'api') {
-    const dockerfileTemplatePath = path.join(
-      __dirname,
-      `../templates/docker/Dockerfile.production.api`,
-    );
-    dockerfileContent = await fs.readFile(dockerfileTemplatePath, 'utf8');
-  } else {
-    const frameworkName = options.framework ?? 'react';
-    const plugin = loadFrameworkPlugin(frameworkName);
-    const strategy = plugin.getDockerStrategy(null);
-    dockerfileContent = generateDockerfile(strategy, name);
-  }
-  await fs.writeFile(path.join(deployDir, 'Dockerfile'), dockerfileContent);
-  console.log(chalk.green('✓ Generated Dockerfile'));
-
-  // Emit the hardened nginx server block as a reference/override. The generated
-  // Dockerfile bakes this same config from the CLI image, so editing this file
-  // only takes effect if the Dockerfile COPY is repointed at it (ADR-044).
-  if (type === 'shell' || type === 'remote') {
-    const nginxTemplatePath = path.join(
-      __dirname,
-      '../templates/docker/nginx.mfe.conf'
-    );
-    const nginxContent = await fs.readFile(nginxTemplatePath, 'utf8');
-    await fs.writeFile(path.join(deployDir, 'nginx.conf'), nginxContent);
-    console.log(chalk.green('✓ Generated nginx.conf (reference/override)'));
-  }
-
-  // Generate .env.production template
-  const envProductionContent = `# Production Environment Variables
-# Copy this to .env and fill in actual values
-
-NODE_ENV=production
-PORT=${port || 3000}
-VERSION=latest
-
-# Docker Registry
-REGISTRY=${registry || 'myregistry'}
-
-# Resource Limits
-CPU_LIMIT=1.0
-CPU_RESERVATION=0.25
-MEMORY_LIMIT=512M
-MEMORY_RESERVATION=128M
-
-${type === 'api' ? `# Security (REQUIRED - Change these!)
-JWT_SECRET=CHANGE_THIS_TO_A_SECURE_RANDOM_SECRET
-API_KEY=CHANGE_THIS_TO_A_SECURE_API_KEY
-
-# Database
-DATABASE_URL=CHANGE_THIS_TO_YOUR_DATABASE_URL
-LOG_LEVEL=info
-
-${database === 'mongodb' ? `# MongoDB
-MONGO_USERNAME=admin
-MONGO_PASSWORD=CHANGE_THIS_PASSWORD` : ''}
-
-${database === 'postgres' ? `# PostgreSQL
-POSTGRES_DB=${name}
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=CHANGE_THIS_PASSWORD` : ''}` : ''}
-`;
-
-  await fs.writeFile(path.join(deployDir, '.env.production'), envProductionContent);
-  console.log(chalk.green('✓ Generated .env.production'));
-
-  // Generate deployment README
-  const readmeContent = `# Production Deployment for ${name}
-
-## Prerequisites
-
-- Docker and Docker Compose installed
-- Access to container registry: ${registry || 'Docker Hub'}
-- Environment variables configured
-
-## Setup
-
-1. Copy .env.production to .env and fill in actual values:
-   \`\`\`bash
-   cp .env.production .env
-   # Edit .env with your actual values
-   \`\`\`
-
-2. Build the production image:
-   \`\`\`bash
-   docker-compose build
-   \`\`\`
-
-3. Push to registry (if using remote registry):
-   \`\`\`bash
-   docker-compose push
-   \`\`\`
-
-4. Deploy:
-   \`\`\`bash
-   docker-compose up -d
-   \`\`\`
-
-## Management
-
-- View logs: \`docker-compose logs -f\`
-- Stop services: \`docker-compose down\`
-- Restart services: \`docker-compose restart\`
-- Scale services: \`docker-compose up -d --scale ${name}=3\`
-
-## Health Checks
-
-- Application: http://localhost:${port || 3000}/health
-- Logs: \`docker-compose logs ${name}\`
-- Status: \`docker-compose ps\`
-
-## Security Notes
-
-⚠️  **IMPORTANT**: Before deploying to production:
-
-1. Change all default passwords and secrets in .env
-2. Use a secrets management solution (Vault, AWS Secrets Manager, etc.)
-3. Enable HTTPS/TLS
-4. Configure firewall rules
-5. Set up monitoring and logging
-6. Review and adjust resource limits
-
-## Troubleshooting
-
-- Check container status: \`docker-compose ps\`
-- View logs: \`docker-compose logs ${name}\`
-- Access container shell: \`docker-compose exec ${name} sh\`
-- Rebuild: \`docker-compose build --no-cache\`
-`;
-
-  await fs.writeFile(path.join(deployDir, 'README.md'), readmeContent);
-  console.log(chalk.green('✓ Generated README.md'));
-
-  console.log(chalk.green('\n✅ Production deployment configuration generated!'));
-  console.log(chalk.blue('\nNext steps:'));
-  console.log(chalk.gray(`  cd ${deployDir}`));
-  console.log(chalk.gray('  cp .env.production .env'));
-  console.log(chalk.gray('  # Edit .env with your actual values'));
-  console.log(chalk.gray('  docker-compose build'));
-  console.log(chalk.gray('  docker-compose up -d\n'));
-  console.log(chalk.yellow('⚠️  See README.md for security and deployment instructions'));
-}
-
-// Kubernetes production deployment
-async function kubernetesProductionDeploy(options: DeployOptions): Promise<void> {
-  const { name, port, type, registry, replicas = 2, memory = '256Mi', cpu = '0.5' } = options;
-  const projectDir = process.cwd();
-  const deployDir = path.join(projectDir, 'k8s');
-
-  console.log(chalk.blue('☸️  Generating Kubernetes manifests...'));
-
-  // Create k8s directory
-  await fs.ensureDir(deployDir);
-
-  // Read package.json for project info
-  const packageJson: any = await fs.readJson(path.join(projectDir, 'package.json'));
-  const database = packageJson.database || 'sqlite';
-
-  // MFEs are served by the unprivileged nginx image on 8080 (ADR-044).
-  const containerPort = type === 'api' ? port || 3000 : 8080;
-  const templateData = {
-    name,
-    type,
-    port: port || 3000,
-    containerPort,
-    registry: registry || 'myregistry',
-    replicas,
-    memory,
-    memoryLimit: multiplyMemory(memory, 2),
-    cpu,
-    cpuLimit: multiplyCPU(cpu, 2),
-    domain: options.domain || `${name}.example.com`,
-  };
-
-  // Generate deployment.yaml
-  const deploymentTemplatePath = path.join(
-    __dirname,
-    '../templates/kubernetes/deployment.yaml'
-  );
-  const deploymentTemplate = await fs.readFile(deploymentTemplatePath, 'utf8');
-  const deploymentContent = ejs.render(deploymentTemplate, templateData);
-  await fs.writeFile(path.join(deployDir, 'deployment.yaml'), deploymentContent);
-  console.log(chalk.green('✓ Generated deployment.yaml'));
-
-  // Generate secrets.yaml
-  const secretsTemplatePath = path.join(
-    __dirname,
-    '../templates/kubernetes/secrets.yaml'
-  );
-  const secretsTemplate = await fs.readFile(secretsTemplatePath, 'utf8');
-  const secretsContent = ejs.render(secretsTemplate, templateData);
-  await fs.writeFile(path.join(deployDir, 'secrets.yaml'), secretsContent);
-  console.log(chalk.green('✓ Generated secrets.yaml'));
-
-  // Generate configmap.yaml
-  const configmapTemplatePath = path.join(
-    __dirname,
-    '../templates/kubernetes/configmap.yaml'
-  );
-  const configmapTemplate = await fs.readFile(configmapTemplatePath, 'utf8');
-  const configmapContent = ejs.render(configmapTemplate, templateData);
-  await fs.writeFile(path.join(deployDir, 'configmap.yaml'), configmapContent);
-  console.log(chalk.green('✓ Generated configmap.yaml'));
-
-  // Generate hpa.yaml
-  const hpaTemplatePath = path.join(__dirname, '../templates/kubernetes/hpa.yaml');
-  const hpaTemplate = await fs.readFile(hpaTemplatePath, 'utf8');
-  const hpaContent = ejs.render(hpaTemplate, { ...templateData, minReplicas: replicas });
-  await fs.writeFile(path.join(deployDir, 'hpa.yaml'), hpaContent);
-  console.log(chalk.green('✓ Generated hpa.yaml'));
-
-  // Generate kustomization.yaml
-  const kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-  - deployment.yaml
-  - configmap.yaml
-  - secrets.yaml
-  - hpa.yaml
-
-namespace: ${options.namespace || 'default'}
-
-commonLabels:
-  app: ${name}
-  environment: production
-
-images:
-  - name: ${registry}/${name}
-    newTag: ${options.tag || 'latest'}
-`;
-
-  await fs.writeFile(path.join(deployDir, 'kustomization.yaml'), kustomizationContent);
-  console.log(chalk.green('✓ Generated kustomization.yaml'));
-
-  // Generate deployment README
-  const readmeContent = `# Kubernetes Deployment for ${name}
-
-## Prerequisites
-
-- Kubernetes cluster (v1.20+)
-- kubectl configured
-- Container registry access: ${registry}
-- cert-manager (for TLS certificates)
-- nginx-ingress-controller
-
-## Setup
-
-1. **Update secrets** in \`secrets.yaml\`:
-   - Replace placeholder values with actual secrets
-   - Consider using external secret management
-
-2. **Review and customize**:
-   - \`deployment.yaml\`: Adjust resources, replicas
-   - \`configmap.yaml\`: Update environment variables
-   - \`hpa.yaml\`: Configure autoscaling thresholds
-
-3. **Deploy**:
-   \`\`\`bash
-   # Create namespace
-   kubectl create namespace ${options.namespace || 'default'}
-
-   # Apply manifests
-   kubectl apply -f .
-
-   # Or use kustomize
-   kubectl apply -k .
-   \`\`\`
-
-## Verification
-
-\`\`\`bash
-# Check deployment status
-kubectl get deployments -n ${options.namespace || 'default'}
-
-# Check pods
-kubectl get pods -n ${options.namespace || 'default'} -l app=${name}
-
-# Check service
-kubectl get svc -n ${options.namespace || 'default'} ${name}-service
-
-# Check ingress
-kubectl get ingress -n ${options.namespace || 'default'} ${name}-ingress
-
-# View logs
-kubectl logs -n ${options.namespace || 'default'} -l app=${name} -f
-\`\`\`
-
-## Scaling
-
-\`\`\`bash
-# Manual scaling
-kubectl scale deployment ${name}-deployment -n ${options.namespace || 'default'} --replicas=5
-
-# Check HPA status
-kubectl get hpa -n ${options.namespace || 'default'} ${name}-hpa
-\`\`\`
-
-## Rollout Management
-
-\`\`\`bash
-# Update image
-kubectl set image deployment/${name}-deployment ${name}=${registry}/${name}:v2.0.0 -n ${options.namespace || 'default'}
-
-# Check rollout status
-kubectl rollout status deployment/${name}-deployment -n ${options.namespace || 'default'}
-
-# Rollback if needed
-kubectl rollout undo deployment/${name}-deployment -n ${options.namespace || 'default'}
-\`\`\`
-
-## Security Checklist
-
-- [ ] Update all secrets in secrets.yaml
-- [ ] Configure RBAC policies
-- [ ] Set up network policies
-- [ ] Enable pod security policies
-- [ ] Configure TLS certificates
-- [ ] Set resource limits appropriately
-- [ ] Enable monitoring and logging
-- [ ] Configure backup strategy
-
-## Monitoring
-
-Access logs and metrics:
-- Application: https://${templateData.domain}
-- Health check: https://${templateData.domain}/health
-- Logs: \`kubectl logs -n ${options.namespace || 'default'} -l app=${name}\`
-
-## Troubleshooting
-
-\`\`\`bash
-# Describe deployment
-kubectl describe deployment ${name}-deployment -n ${options.namespace || 'default'}
-
-# Get pod details
-kubectl describe pod <pod-name> -n ${options.namespace || 'default'}
-
-# Access pod shell
-kubectl exec -it <pod-name> -n ${options.namespace || 'default'} -- sh
-
-# View events
-kubectl get events -n ${options.namespace || 'default'} --sort-by='.lastTimestamp'
-\`\`\`
-`;
-
-  await fs.writeFile(path.join(deployDir, 'README.md'), readmeContent);
-  console.log(chalk.green('✓ Generated README.md'));
-
-  console.log(chalk.green('\n✅ Kubernetes manifests generated!'));
-  console.log(chalk.blue('\nNext steps:'));
-  console.log(chalk.gray(`  cd ${deployDir}`));
-  console.log(chalk.gray('  # Review and update secrets.yaml'));
-  console.log(chalk.gray('  kubectl apply -f .\n'));
-  console.log(chalk.yellow('⚠️  See README.md for complete deployment instructions'));
-}
-
-// Helper functions
-function multiplyMemory(memory: string, multiplier: number): string {
-  const value = parseInt(memory);
-  const unit = memory.replace(/[0-9]/g, '');
-  return `${value * multiplier}${unit}`;
-}
-
-function multiplyCPU(cpu: string, multiplier: number): string {
-  return (parseFloat(cpu) * multiplier).toFixed(1);
-}
-
 export {
   deployCommand,
   verifyProjectStructure,
   copyDockerFiles,
   developmentDeploy,
-  productionDeploy,
-  dockerComposeProductionDeploy,
-  kubernetesProductionDeploy,
-  waitForContainer
+  waitForContainer,
 };
 
 export default class Deploy extends BaseCommand<DeployResult> {
-  static description = 'Deploy an application'
+  static description = 'Deploy an application to a local development container'
 
   static args = {
     name: Args.string({ description: 'Application name', required: true }),
@@ -760,7 +320,7 @@ export default class Deploy extends BaseCommand<DeployResult> {
     }),
     env: Flags.string({
       char: 'e',
-      description: 'Deployment environment (development or production)',
+      description: 'Deployment environment (development; production is not yet implemented — see ADR-062)',
       default: 'development',
     }),
     port: Flags.string({
@@ -768,50 +328,10 @@ export default class Deploy extends BaseCommand<DeployResult> {
       description: 'Port number for development deployment',
       default: '8080',
     }),
-    registry: Flags.string({
-      char: 'r',
-      description: 'Docker registry URL for production deployment',
-    }),
-    mode: Flags.string({
-      description: 'Production deployment mode (docker-compose or kubernetes)',
-      default: 'docker-compose',
-    }),
-    namespace: Flags.string({
-      char: 'n',
-      description: 'Kubernetes namespace',
-      default: 'default',
-    }),
-    domain: Flags.string({
-      char: 'd',
-      description: 'Domain name for production deployment',
-    }),
-    tag: Flags.string({
-      description: 'Docker image tag',
-      default: 'latest',
-    }),
-    memory: Flags.string({
-      char: 'm',
-      description: 'Memory limit for API containers',
-      default: '256Mi',
-    }),
-    cpu: Flags.string({
-      char: 'c',
-      description: 'CPU limit for API containers',
-      default: '0.5',
-    }),
-    replicas: Flags.string({
-      description: 'Number of API replicas',
-      default: '2',
-    }),
     'dry-run': Flags.boolean({
       char: 'D',
       description: 'Preview deployment without executing',
       default: false,
-    }),
-    framework: Flags.string({
-      char: 'f',
-      description: 'Framework for MFE Dockerfile generation (react or angular; default: react)',
-      options: ['react', 'angular'],
     }),
   }
 
