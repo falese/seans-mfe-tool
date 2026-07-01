@@ -196,6 +196,24 @@ jobs:
         run: npm run build
         working-directory: ${{ matrix.example.dir }}
 
+  doc-links:
+    # Tier-1 docs link hygiene (cross-reference-standards.md). Report-only for
+    # now — a clean baseline must be established (broken links tracked by G15)
+    # before this is flipped to a required gate. Refs #231 (R5), #222.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Check relative doc links resolve
+        run: node scripts/check-doc-links.js
+
   quality:
     # Enforce the same gates required before commit (CLAUDE.md): lint,
     # typecheck, full build, and schema drift.
