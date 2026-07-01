@@ -289,6 +289,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-058 | Slot-Provider MFEs — MFEs that Provide Slots for Other MFEs | Runtime / slots / composition | Implemented |
 | ADR-059 | BaseControlPlane — Abstract Base for All Control-Plane Implementations | Runtime / control-plane / abstract-base | Accepted |
 | ADR-060 | Contextualized VM Composition — Value-Injection, Slot-Scoped Self-Healing, Control-Plane Re-Resolution | Runtime / composition / resilience / context | Accepted |
+| ADR-061 | `@seans-mfe/dsl` and `@seans-mfe/codegen` as Packages; Framework Variant Injected, Not Resolved | Codegen / DSL / packaging | Accepted |
 
 ---
 
