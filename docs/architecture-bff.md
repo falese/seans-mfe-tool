@@ -13,10 +13,9 @@ gap **G03**.
 | `query()` runtime path | `src/runtime/base-mfe.ts:861–886` |
 | Governing decisions | ADR-012 (Mesh BFF), ADR-027 (Mesh v0.100.x plugins/transforms), ADR-052 (demo mode) |
 
-> **ADR numbering note:** some generated BFF template comments still cite pre-reflow ADR
-> numbers (e.g. `ADR-046`, `ADR-062` in `meshrc.yaml.ejs`). The canonical numbers are
-> ADR-012 / ADR-027 in [`spec.md#adr-index`](./spec.md#adr-index); this is tracked in the
-> [ADR register erratum](./architecture-decisions/README.md).
+> **ADR numbering note (resolved 2026-07-01):** generated BFF template comments previously
+> cited pre-reflow ADR numbers (`ADR-046`/`ADR-062` in `meshrc.yaml.ejs`); they now use the
+> canonical ADR-012 / ADR-027 (see [`spec.md#adr-index`](./spec.md#adr-index)).
 
 ---
 
