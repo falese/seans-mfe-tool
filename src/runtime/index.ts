@@ -43,6 +43,7 @@ export type {
   DaemonEnvelope,
   LayoutManagerConfig,
   SlotElementLike,
+  SlotErrorInfo,
   TransportStatus,
   UnmountFn,
   WebSocketLike,

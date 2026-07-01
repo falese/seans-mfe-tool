@@ -71,6 +71,13 @@ export interface ControlPlaneConfig {
    */
   hostFramework?: string;
   /**
+   * Host-injected provider values (theme, locale, auth claims, router state, …)
+   * delivered to every composed MFE as `props.hostContext` (ADR-060
+   * value-injection). The island re-provides its own framework context from
+   * these — context reaches the MFE without a shared reconciler.
+   */
+  providerValues?: Record<string, unknown>;
+  /**
    * Custom content-type adaptors merged with the built-in set.
    * Use sparingly — prefer the built-in adaptors (module-federation,
    * text/html, application/json).
@@ -136,13 +143,14 @@ export abstract class BaseControlPlane {
       await this.doStart();
 
       this._layoutManager = new LayoutManager({
-        container:     this.config.container,
-        transport:     this.createTransport(),
-        session:       this.config.session,
-        hostFramework: this.config.hostFramework,
-        adaptors:      this.config.adaptors,
-        onStatus:      this.config.onStatus,
-        onError:       this.config.onError,
+        container:      this.config.container,
+        transport:      this.createTransport(),
+        session:        this.config.session,
+        hostFramework:  this.config.hostFramework,
+        providerValues: this.config.providerValues,
+        adaptors:       this.config.adaptors,
+        onStatus:       this.config.onStatus,
+        onError:        this.config.onError,
       });
       this._layoutManager.start();
 

@@ -237,6 +237,14 @@ Explicitly DEFERRED (non-goals here; a follow-up ADR when a concrete need lands)
   the optional native-component handle — **no contract, core, or daemon change
   required.** Deferring it honors the directive not to invest in React depth
   before a real shared-context requirement justifies the singleton coupling.
+
+  > **Superseded by [ADR-060](./ADR-060-contextualized-vm-composition.md).** When
+  > the shared-context need landed, the review chose **value-injection** (context
+  > crosses the waist as data; each island re-provides) plus **slot-scoped
+  > self-healing** over a shared reconciler — keeping VM isolation, polyglot, and
+  > multi-version React. The in-tree provider is **not built**; the
+  > `NativeComponentHandle` / `selectHandle` types remain a latent optional for a
+  > possible future narrow exception. The rest of ADR-056 stands unchanged.
 - The **`hostFramework × handleKind` re-key** of the provider registry (Decision
   item 3). It lands with the native provider above, because that is the first
   consumer that needs the second axis; the `hostFramework` value is already
