@@ -26,7 +26,9 @@ const NEUTRAL_DIRS = ['packages/contracts/src'];
 
 // Individual neutral runtime files: boundary layer 4 (BaseMFE) plus the
 // framework-free control-plane core — LayoutManager, BaseControlPlane,
-// DaemonChannel, the imperative-handle port, and the inlined contract mirror.
+// DaemonChannel, and the imperative-handle port. The contract shapes these
+// depend on now live in the scanned NEUTRAL_DIRS (@seans-mfe/contracts); the
+// inlined src/runtime/contracts.ts mirror was deleted in #236.
 // RemoteMFE / AngularRemoteMFE (layer 5) are intentionally excluded: they
 // produce the native handle and are allowed to import React / Angular.
 const NEUTRAL_FILES = [
@@ -37,7 +39,6 @@ const NEUTRAL_FILES = [
   'src/runtime/base-control-plane.ts',
   'src/runtime/daemon-channel.ts',
   'src/runtime/imperative-handle.ts',
-  'src/runtime/contracts.ts',
 ];
 
 function tsFiles(dir: string): string[] {

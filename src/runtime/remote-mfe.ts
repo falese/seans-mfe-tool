@@ -25,7 +25,7 @@ import {
   type CapabilityMetadata,
 } from './base-mfe';
 import type { DSLManifest } from '../dsl/schema';
-import type { Message, ActionRecord, MessageMetadata } from './contracts';
+import type { Message, ActionRecord, MessageMetadata } from '@seans-mfe/contracts';
 
 /**
  * Module Federation container interface

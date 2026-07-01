@@ -28,7 +28,7 @@ import {
   ControlPlaneStateResult,
   type CapabilityMetadata,
 } from './base-mfe';
-import type { Message, ActionRecord, MessageMetadata } from './contracts';
+import type { Message, ActionRecord, MessageMetadata } from '@seans-mfe/contracts';
 import type { ModuleFederationContainer } from './remote-mfe';
 
 /**
