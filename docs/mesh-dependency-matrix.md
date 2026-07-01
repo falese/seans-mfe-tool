@@ -231,5 +231,5 @@ Do **not** hardcode versions in template `.ejs` files — always reference `DEPE
 
 - [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md) — Mesh v0.100.x decision
 - [bff-refactor-analysis.md](./bff-refactor-analysis.md) — Dependency migration findings
-- [docs/archive/planning/DEPENDENCY-PLAN.md](./archive/planning/DEPENDENCY-PLAN.md) — Original resolution work
+- `docs/archive/planning/DEPENDENCY-PLAN.md` — Original resolution work (in git history; archive removed from the tree, #239)
 - [GraphQL Mesh v0.100.x Docs](https://the-guild.dev/graphql/mesh/docs)

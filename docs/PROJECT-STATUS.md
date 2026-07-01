@@ -100,7 +100,7 @@ Priority order:
 | Inter-hook communication   | ADR-032 | 📋 Planned |
 
 **Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)  
-**Issue templates ready:** [`docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md`](./archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md)
+**Issue templates ready:** see `docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md` in git history (archive removed from the tree; #239)
 
 To create issues:
 

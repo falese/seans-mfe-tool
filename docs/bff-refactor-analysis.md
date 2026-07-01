@@ -186,7 +186,7 @@ These may be revisited when `@graphql-mesh` v1 reaches LTS status.
 
 - [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md)
 - [docs/mesh-dependency-matrix.md](./mesh-dependency-matrix.md)
-- [docs/archive/planning/DEPENDENCY-PLAN.md](./archive/planning/DEPENDENCY-PLAN.md)
-- [docs/archive/planning/TEMPLATE-UPDATE-PLAN.md](./archive/planning/TEMPLATE-UPDATE-PLAN.md)
+- `docs/archive/planning/DEPENDENCY-PLAN.md` (in git history; archive removed from the tree, #239)
+- `docs/archive/planning/TEMPLATE-UPDATE-PLAN.md` (in git history; archive removed from the tree, #239)
 - [packages/bff-plugin/templates/package.json.ejs](../packages/bff-plugin/templates/package.json.ejs)
 - [src/codegen/UnifiedGenerator/unified-generator.ts](../src/codegen/UnifiedGenerator/unified-generator.ts)
