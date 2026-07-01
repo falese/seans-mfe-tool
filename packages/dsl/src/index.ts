@@ -40,9 +40,8 @@ export {
   formatErrorsForCLI,
   getErrorSummary
 } from './validator';
-// Generator functions
-export {
-  generateAllFiles,
-  writeGeneratedFiles,
-  extractManifestVars
-} from '../codegen/UnifiedGenerator/unified-generator';
+// NOTE: the generator (generateAllFiles / writeGeneratedFiles /
+// extractManifestVars) is intentionally NOT re-exported here. It lives in
+// @seans-mfe/codegen, which depends on this package for manifest types —
+// re-exporting it would form a dsl -> codegen -> dsl cycle (ADR-061). Import
+// generator functions from '@seans-mfe/codegen' directly.

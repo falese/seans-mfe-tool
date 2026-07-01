@@ -30,7 +30,7 @@ jest.mock('path', () => ({
 }));
 
 // Mock DSL modules
-jest.mock('../../dsl', () => ({
+jest.mock('@seans-mfe/dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
   formatErrorsForCLI: jest.fn((errors) => errors.map((e: any) => e.message).join('\n'))
 }));
@@ -50,7 +50,7 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
 import { remoteGenerateCommand } from '../remote-generate';
-import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
 
 import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
 

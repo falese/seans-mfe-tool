@@ -36,7 +36,7 @@ import type {
   DaemonWebSocketClient,
 } from '../base-mfe';
 
-import type { DSLManifest, Language } from '../../dsl/schema.ts';
+import type { DSLManifest, Language } from '@seans-mfe/dsl';
 
 /**
  * Mock Module Federation Container

@@ -2,12 +2,12 @@ import { Args, Flags } from '@oclif/core';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk = require('chalk');
-import { createMinimalManifest, writeManifest, generateEndpoints } from '../../dsl/parser';
+import { createMinimalManifest, writeManifest, generateEndpoints } from '@seans-mfe/dsl';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { BusinessError, SystemError } from '@seans-mfe/contracts';
 import { loadFrameworkPlugin } from '../../framework/loader';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
-import type { RemoteInitOptions, DSLManifest } from '../../dsl/schema';
+import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
 
 export async function remoteInitCommand(
   name: string,

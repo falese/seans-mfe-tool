@@ -17,7 +17,7 @@ import {
   ContextBuilder,
   MockDaemonWebSocketClient,
 } from './test-harness';
-import type { DSLManifest } from '../../dsl/schema';
+import type { DSLManifest } from '@seans-mfe/dsl';
 import type { Context } from '../base-mfe';
 
 /**

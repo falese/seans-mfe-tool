@@ -9,7 +9,7 @@ import { loadFrameworkPlugin } from '../../../framework/loader';
 import { ValidationError } from '@seans-mfe/contracts';
 
 jest.mock('../../../framework/loader');
-jest.mock('../../../dsl/parser', () => ({
+jest.mock('@seans-mfe/dsl', () => ({
   findManifest: jest.fn().mockResolvedValue(null),
   parseManifestFile: jest.fn(),
 }));

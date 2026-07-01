@@ -9,7 +9,7 @@
  * MFE type determines generated code CONTENT in doCapability() methods.
  */
 
-import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '../dsl/schema';
+import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe/dsl';
 import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
@@ -84,7 +84,7 @@ export interface LoadResult {
   container?: unknown;
   mesh?: unknown;
   worker?: Worker;
-  manifest?: import('../dsl/schema').DSLManifest;
+  manifest?: import('@seans-mfe/dsl').DSLManifest;
   availableComponents?: string[];
   capabilities?: CapabilityMetadata[];
   timestamp: Date;

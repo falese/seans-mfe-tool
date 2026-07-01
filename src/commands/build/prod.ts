@@ -11,7 +11,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin } from '../../framework/loader';
-import { findManifest, parseManifestFile } from '../../dsl/parser';
+import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
 import type { BuildProdResult } from '../../oclif/results';
 

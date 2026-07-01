@@ -20,7 +20,7 @@ import {
   MockDaemonWebSocketClient,
 } from './test-harness';
 import type { Context, LoadResult, RenderResult } from '../base-mfe';
-import type { DSLManifest } from '../../dsl/schema';
+import type { DSLManifest } from '@seans-mfe/dsl';
 
 /**
  * Mock react-dom/client + react so the REAL RemoteMFE.mountComponent path runs

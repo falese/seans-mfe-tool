@@ -18,6 +18,8 @@
     "paths": {
       "@seans-mfe/contracts": ["./packages/contracts/src/index.ts"],
       "@seans-mfe/contracts/*": ["./packages/contracts/src/*"],
+      "@seans-mfe/dsl": ["./packages/dsl/src/index.ts"],
+      "@seans-mfe/dsl/*": ["./packages/dsl/src/*"],
       "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],
       "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"],
       "@falese/bff-plugin": ["./packages/bff-plugin/src/index.ts"],

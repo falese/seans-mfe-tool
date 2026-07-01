@@ -1,12 +1,12 @@
 import { Args, Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
-import { parseAndValidateDirectory, formatErrorsForCLI } from '../../../dsl';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
 import { generateAllFiles, writeGeneratedFiles } from '../../../codegen/UnifiedGenerator/unified-generator';
 import { BaseCommand } from '../../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
-import type { RemoteGenerateOptions } from '../../../dsl/schema';
+import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
 export async function remoteGenerateCapabilityCommand(
   capabilityName: string,
