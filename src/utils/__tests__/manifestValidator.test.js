@@ -1,6 +1,6 @@
 /**
  * Tests for manifestValidator.js
- * Validates MFE manifest structure and configuration per ADR-062
+ * Validates MFE manifest structure and configuration per ADR-027
  */
 
 const {
@@ -136,7 +136,7 @@ describe('manifestValidator', () => {
         expect(result.valid).toBe(false);
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0]).toContain('Legacy "performance" section detected');
-        expect(result.errors[0]).toContain('ADR-062');
+        expect(result.errors[0]).toContain('ADR-027');
       });
     });
 

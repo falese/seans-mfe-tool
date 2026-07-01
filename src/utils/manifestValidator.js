@@ -1,7 +1,7 @@
 /**
  * DSL Manifest Validator
  * Validates MFE manifest structure and configuration
- * ADR-062: Ensures proper separation of plugins and transforms
+ * ADR-027: Ensures proper separation of plugins and transforms
  * 
  * SYNC WITH: src/codegen/UnifiedGenerator/unified-generator.ts (KNOWN_MESH_PLUGINS/TRANSFORMS)
  */
@@ -62,7 +62,7 @@ function validateManifest(manifest) {
   // Check if performance section exists (legacy format)
   if (manifest.performance) {
     errors.push(
-      'Legacy "performance" section detected. Please migrate to "plugins" and "transforms" sections (see ADR-062)'
+      'Legacy "performance" section detected. Please migrate to "plugins" and "transforms" sections (see ADR-027)'
     );
   }
 

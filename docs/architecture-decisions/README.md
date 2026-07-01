@@ -41,7 +41,7 @@ Known reconciliations from the platform design review (see the
 | Status vocabulary | `Accepted` vs `Implemented` | `Accepted` = decision ratified; `Implemented` = code in place. The CLI contract ADRs (016–019) are `Accepted` and also shipped — read them as implemented. |
 | ADR-007 Authorization grammar | `Deferred` | Correct — `authorization` is an `unknown` optional field in the manifest (`src/dsl/schema.ts:415`); the grammar is not yet designed. |
 | ADR-018 envelope shape | `Accepted` | The **implemented** envelope (`{ok, error.code: number, warnings[], telemetry}`) is documented in the canonical [CLI Contract](../cli-contract.md), which supersedes ADR-018's older prose (finding CA-1). |
-| BFF template ADR numbers | n/a | Generated BFF templates (`packages/bff-plugin/templates/meshrc.yaml.ejs`) still cite pre-reflow numbers `ADR-046`/`ADR-062`; the canonical numbers are `ADR-012`/`ADR-027`. Tracked for a code follow-up, not an ADR edit. |
+| BFF template ADR numbers | n/a | **Resolved (2026-07-01).** Generated BFF/MFE templates now cite the canonical numbers `ADR-012` (Mesh BFF) / `ADR-027` (Mesh v0.100.x plugins); the Angular MFE template's framework ref was also corrected `ADR-069`→`ADR-034`. No template retains the pre-reflow `ADR-046`/`ADR-062`/`ADR-069` numbers. |
 
 ## Historical narrative
 
