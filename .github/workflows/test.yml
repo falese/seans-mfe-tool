@@ -200,8 +200,11 @@ jobs:
     # Tier-1 docs link hygiene (cross-reference-standards.md). Report-only for
     # now — a clean baseline must be established (broken links tracked by G15)
     # before this is flipped to a required gate. Refs #231 (R5), #222.
+    #
+    # The step surfaces findings as a GitHub warning annotation but does not
+    # fail the check yet. To flip to a required gate once G15 is cleared,
+    # replace the step body with `run: node scripts/check-doc-links.js`.
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v3
@@ -211,8 +214,11 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Check relative doc links resolve
-        run: node scripts/check-doc-links.js
+      - name: Check relative doc links resolve (report-only)
+        run: |
+          if ! node scripts/check-doc-links.js; then
+            echo "::warning title=Doc link hygiene::Broken relative doc links found (report-only; tracked by G15). Run 'npm run docs:check-links' locally."
+          fi
 
   quality:
     # Enforce the same gates required before commit (CLAUDE.md): lint,
