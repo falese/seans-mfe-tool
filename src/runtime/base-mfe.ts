@@ -845,8 +845,10 @@ export abstract class BaseMFE {
    * Execute a GraphQL query against this MFE's BFF endpoint.
    *
    * Default implementation dispatches `context.inputs.document` + `context.inputs.variables`
-   * to the BFF URL resolved in order: deps.bffUrl → BFF_URL env var →
-   * manifest.data.serve.endpoint → '/graphql'.
+   * to the BFF URL resolved in priority order: context.inputs.bffUrl →
+   * deps.bffUrl → BFF_URL env var → manifest.endpoint + manifest.data.serve.endpoint →
+   * manifest.data.serve.endpoint → '/graphql'. See the numbered comment in the body
+   * for the authoritative order.
    *
    * Override in concrete subclasses for typed, operation-specific queries:
    *
