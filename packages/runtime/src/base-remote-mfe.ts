@@ -90,8 +90,8 @@ function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined):
  * Module Federation container interface
  */
 export interface ModuleFederationContainer {
-  init(shared: Record<string, any>): Promise<void>;
-  get(module: string): Promise<() => any>;
+  init(shared: Record<string, unknown>): Promise<void>;
+  get(module: string): Promise<() => unknown>;
 }
 
 /**
@@ -103,7 +103,11 @@ export interface ModuleFederationContainer {
 export abstract class BaseRemoteMFE extends BaseMFE {
   protected container: ModuleFederationContainer | null = null;
   protected availableComponents: string[] = [];
-  protected mountedComponent: any = null;
+  protected mountedComponent: {
+    component: string;
+    element: unknown;
+    props: Record<string, unknown>;
+  } | null = null;
   /** ID of the currently mounted component; used as actionRecord.componentId */
   protected currentComponentId: string | null = null;
 
@@ -115,17 +119,17 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * The Module Federation shared-scope map for this framework (e.g. React
    * singletons vs Angular singletons + zone.js). Wired into container.init().
    */
-  protected abstract getSharedDependencies(): Record<string, any>;
+  protected abstract getSharedDependencies(): Record<string, unknown>;
 
   /**
    * Mount a loaded component into the DOM container and return the host element.
    * Called by doRender() after the component is resolved.
    */
   protected abstract mountComponent(
-    Component: any,
-    props: Record<string, any>,
+    Component: unknown,
+    props: Record<string, unknown>,
     containerId: string
-  ): Promise<any>;
+  ): Promise<unknown>;
 
   /**
    * Tear down a previously rendered component and release its mount handle.
@@ -289,7 +293,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     try {
       // Extract render parameters from context
       const componentName = context.inputs?.component as string;
-      const props = (context.inputs?.props as Record<string, any>) || {};
+      const props = (context.inputs?.props as Record<string, unknown>) || {};
       const containerId = context.inputs?.containerId as string;
 
       if (!componentName) {
@@ -391,7 +395,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
   protected async fetchContainer(remoteEntry: string): Promise<ModuleFederationContainer> {
     void remoteEntry;
     return {
-      init: async (shared: Record<string, any>) => {
+      init: async (shared: Record<string, unknown>) => {
         // Initialize with shared dependencies
         void shared; // Module Federation shared scope
       },
@@ -421,7 +425,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     // Primary: explicit render.components list
     for (const capEntry of this.manifest.capabilities) {
       if (capEntry.render) {
-        const components = (capEntry.render as any).components;
+        const components = (capEntry.render as unknown as { components?: string[] }).components;
         if (Array.isArray(components) && components.length > 0) {
           return components;
         }
@@ -489,7 +493,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * Override in subclass to load the named domain component.
    * Called by doRender() instead of going through the Module Federation container API.
    */
-  protected async loadDomainComponent(_name: string): Promise<any> {
+  protected async loadDomainComponent(_name: string): Promise<unknown> {
     throw new Error(
       '[BaseRemoteMFE] loadDomainComponent() not implemented — subclass must override this method'
     );
@@ -546,9 +550,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
 
   protected async doEmit(context: Context): Promise<EmitResult> {
     if (this.deps?.telemetry) {
-      const event = context.inputs?.event;
+      const event = context.inputs?.event as TelemetryEvent | undefined;
       if (event) {
-        this.deps.telemetry.emit(event as any);
+        this.deps.telemetry.emit(event);
         return {
           emitted: true,
           eventId: 'generated-event-id',

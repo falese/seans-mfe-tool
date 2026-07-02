@@ -26,11 +26,11 @@ export type { DaemonWebSocketClient };
 // =============================================================================
 
 export interface PlatformHandlerMap {
-  [key: string]: (context: Context) => Promise<any>;
+  [key: string]: (context: Context) => Promise<unknown>;
 }
 
 export interface CustomHandlerMap {
-  [key: string]: (context: Context) => Promise<any>;
+  [key: string]: (context: Context) => Promise<unknown>;
 }
 
 export interface TelemetryService {
@@ -41,8 +41,22 @@ export interface StateValidator {
   isValidTransition(from: MFEState, to: MFEState): boolean;
 }
 
+/**
+ * The slice of a capability's manifest entry the lifecycle engine reads:
+ * the per-phase hook lists. Everything else on the entry is opaque.
+ */
+export interface CapabilityLifecycleConfig {
+  lifecycle?: {
+    before?: LifecycleHookEntry[];
+    main?: LifecycleHookEntry[];
+    after?: LifecycleHookEntry[];
+    error?: LifecycleHookEntry[];
+  };
+  [key: string]: unknown;
+}
+
 export interface ManifestParser {
-  parse(manifest: DSLManifest): any;
+  parse(manifest: DSLManifest): Record<string, CapabilityLifecycleConfig | null | undefined>;
 }
 
 export interface LifecycleExecutor {
@@ -71,8 +85,6 @@ export interface BaseMFEDependencies {
 // Result Types
 // =============================================================================
 
-type Worker = any;
-
 /** Metadata for a single capability declared in the manifest */
 export interface CapabilityMetadata {
   name: string;
@@ -85,7 +97,7 @@ export interface LoadResult {
   status: 'loaded' | 'error';
   container?: unknown;
   mesh?: unknown;
-  worker?: Worker;
+  worker?: unknown;
   manifest?: import('@seans-mfe/dsl').DSLManifest;
   availableComponents?: string[];
   capabilities?: CapabilityMetadata[];
@@ -628,7 +640,7 @@ export abstract class BaseMFE {
   /**
    * Find capability configuration from manifest
    */
-  private findCapabilityConfig(capability: string): any {
+  private findCapabilityConfig(capability: string): CapabilityLifecycleConfig | null {
     if (!this.manifest.capabilities) {
       return null;
     }
@@ -637,7 +649,7 @@ export abstract class BaseMFE {
     for (const entry of this.manifest.capabilities) {
       const key = Object.keys(entry).find(k => k.toLowerCase() === lc);
       if (key) {
-        return entry[key];
+        return entry[key] as unknown as CapabilityLifecycleConfig;
       }
     }
 
