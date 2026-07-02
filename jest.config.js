@@ -50,7 +50,7 @@ module.exports = {
     // Include DSL/runtime for TDD Guardian phase.
     // Runtime is now the packages/runtime package (ADR-064); collected here so
     // its per-file coverage gates keep enforcing.
-    'src/dsl/**/*.{js,ts}',
+    'packages/dsl/src/**/*.{js,ts}',
     'packages/runtime/src/**/*.{js,ts}',
     'src/build/**/*.{js,ts}',
     '!src/**/index.{js,ts}',
@@ -58,6 +58,10 @@ module.exports = {
     '!src/**/*.test.{js,ts}',
     '!src/**/*.d.ts',          // Skip - TypeScript declaration files have no executable code
     '!src/dsl/schema.js',      // Skip - compiled Peggy parser artifact (not a source file)
+    '!packages/dsl/src/**/__tests__/**',
+    '!packages/dsl/src/**/*.test.{js,ts}',
+    '!packages/dsl/src/**/*.d.ts',
+    '!packages/dsl/src/index.ts',
     '!src/**/fixtures/**',
     '!src/codegen/templates/**',
     '!packages/runtime/src/**/__tests__/**',
@@ -83,7 +87,7 @@ module.exports = {
       statements: 80
     },
     // Enforce strict coverage locally for DSL Type System
-    'src/dsl/type-system.ts': {
+    'packages/dsl/src/type-system.ts': {
       branches: 99,
       functions: 100,
       lines: 100,
