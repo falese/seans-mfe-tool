@@ -37,6 +37,7 @@ import {
   EmitResult,
   ControlPlaneStateResult,
   type CapabilityMetadata,
+  type TelemetryEvent,
 } from './base-mfe';
 import type { Message, ActionRecord, MessageMetadata } from '@seans-mfe/contracts';
 
@@ -88,6 +89,30 @@ export abstract class BaseRemoteMFE extends BaseMFE {
   public abstract unmount(containerId: string): void;
 
   /**
+   * Emit a telemetry event with the standard shape shared by every checkpoint
+   * in doLoad()/doRender(): `metadata.mfe` is always set, extra metadata is
+   * merged in, and `duration` is set at the top level only when provided.
+   * No-ops when no telemetry service is injected.
+   */
+  protected emitTelemetry(
+    name: string,
+    capability: string,
+    phase: string,
+    status: TelemetryEvent['status'],
+    extra?: { duration?: number; metadata?: Record<string, unknown> }
+  ): void {
+    this.deps?.telemetry?.emit({
+      name,
+      capability,
+      phase,
+      status,
+      metadata: { mfe: this.manifest.name, ...(extra?.metadata ?? {}) },
+      timestamp: new Date(),
+      ...(extra?.duration !== undefined ? { duration: extra.duration } : {}),
+    });
+  }
+
+  /**
    * Implement load logic for Module Federation remote
    *
    * REQ-RUNTIME-001: Atomic operation with three phases:
@@ -97,7 +122,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    */
   protected async doLoad(context: Context): Promise<LoadResult> {
     const startTime = Date.now();
-    const telemetry: LoadResult['telemetry'] = {
+    const telemetry: NonNullable<LoadResult['telemetry']> = {
       entry: { start: new Date(), duration: 0 },
       mount: { start: new Date(), duration: 0 },
       enableRender: { start: new Date(), duration: 0 },
@@ -106,18 +131,8 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     try {
       // Phase 1: Entry - Fetch Module Federation remote entry
       const entryStart = Date.now();
-      (telemetry as any).entry = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-entry',
-          capability: 'load',
-          phase: 'entry',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.entry = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-entry', 'load', 'entry', 'start');
 
       // Get remote entry URL from context or manifest
       const remoteEntry = (context.inputs?.remoteEntry as string) || this.manifest.remoteEntry;
@@ -128,37 +143,16 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       // Fetch container (in real implementation, this would use Module Federation runtime)
       this.container = await this.fetchContainer(remoteEntry);
 
-      (telemetry as any).entry.duration = Date.now() - entryStart;
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-entry-metric',
-          capability: 'load',
-          phase: 'entry',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).entry.duration,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).entry.duration,
-        });
-      }
+      telemetry.entry.duration = Date.now() - entryStart;
+      this.emitTelemetry('load-entry-metric', 'load', 'entry', 'success', {
+        duration: telemetry.entry.duration,
+        metadata: { duration: telemetry.entry.duration },
+      });
 
       // Phase 2: Mount - Initialize container and wire shared dependencies
       const mountStart = Date.now();
-      (telemetry as any).mount = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-mount',
-          capability: 'load',
-          phase: 'mount',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.mount = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-mount', 'load', 'mount', 'start');
 
       // Initialize container with shared dependencies
       const sharedDeps = this.getSharedDependencies();
@@ -167,75 +161,34 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       // Extract available components from manifest
       this.availableComponents = this.extractAvailableComponents();
 
-      (telemetry as any).mount.duration = Date.now() - mountStart;
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-mount-metric',
-          capability: 'load',
-          phase: 'mount',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).mount.duration,
-            componentsCount: this.availableComponents.length,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).mount.duration,
-        });
-      }
+      telemetry.mount.duration = Date.now() - mountStart;
+      this.emitTelemetry('load-mount-metric', 'load', 'mount', 'success', {
+        duration: telemetry.mount.duration,
+        metadata: {
+          duration: telemetry.mount.duration,
+          componentsCount: this.availableComponents.length,
+        },
+      });
 
       // Phase 3: Enable-render - Prepare MFE state for render phase
       const enableRenderStart = Date.now();
-      (telemetry as any).enableRender = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-enable-render',
-          capability: 'load',
-          phase: 'enable_render',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.enableRender = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-enable-render', 'load', 'enable_render', 'start');
 
       // Prepare render state (validate components, prepare metadata)
       const capabilities = this.extractCapabilities();
 
-      (telemetry as any).enableRender.duration = Date.now() - enableRenderStart;
+      telemetry.enableRender.duration = Date.now() - enableRenderStart;
+      this.emitTelemetry('load-enable-render-metric', 'load', 'enable_render', 'success', {
+        duration: telemetry.enableRender.duration,
+        metadata: { duration: telemetry.enableRender.duration },
+      });
 
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-enable-render-metric',
-          capability: 'load',
-          phase: 'enable_render',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).enableRender.duration,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).enableRender.duration,
-        });
-      }
-
-      // Emit completion telemetry
       const totalDuration = Date.now() - startTime;
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-completed',
-          capability: 'load',
-          phase: 'completed',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            success: true,
-          },
-          timestamp: new Date(),
-          duration: totalDuration,
-        });
-      }
+      this.emitTelemetry('load-completed', 'load', 'completed', 'success', {
+        duration: totalDuration,
+        metadata: { success: true },
+      });
 
       // Populate context outputs
       context.outputs = {
@@ -256,22 +209,11 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         telemetry,
       };
     } catch (error) {
-      // Emit error telemetry
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-error',
-          capability: 'load',
-          phase: 'error',
-          status: 'error',
-          metadata: {
-            mfe: this.manifest.name,
-            error: (error as Error).message,
-          },
-          timestamp: new Date(),
-        });
-      }
-
       const err = error as Error;
+      this.emitTelemetry('load-error', 'load', 'error', 'error', {
+        metadata: { error: err.message },
+      });
+
       return {
         status: 'error',
         timestamp: new Date(),
@@ -313,20 +255,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         throw new Error('Container ID not provided in context.inputs.containerId');
       }
 
-      // Telemetry: Render start
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-start',
-          capability: 'render',
-          phase: 'render_start',
-          status: 'start',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-        });
-      }
+      this.emitTelemetry('render-start', 'render', 'render_start', 'start', {
+        metadata: { component: componentName },
+      });
 
       // Validate component exists in available components
       if (!this.availableComponents.includes(componentName)) {
@@ -345,62 +276,25 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       const Component = await this.loadDomainComponent(componentName);
 
       const renderDuration = Date.now() - renderStart;
-
-      // Telemetry: Component fetch duration
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-component-fetch',
-          capability: 'render',
-          phase: 'component_fetch',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-          duration: renderDuration,
-        });
-      }
+      this.emitTelemetry('render-component-fetch', 'render', 'component_fetch', 'success', {
+        duration: renderDuration,
+        metadata: { component: componentName },
+      });
 
       // Mount component to DOM
       const mountStart = Date.now();
       const element = await this.mountComponent(Component, props, containerId);
       const mountDuration = Date.now() - mountStart;
-
-      // Telemetry: Mount duration
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-mount',
-          capability: 'render',
-          phase: 'mount',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-          duration: mountDuration,
-        });
-      }
+      this.emitTelemetry('render-mount', 'render', 'mount', 'success', {
+        duration: mountDuration,
+        metadata: { component: componentName },
+      });
 
       const totalDuration = Date.now() - startTime;
-
-      // Telemetry: Render completed
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-completed',
-          capability: 'render',
-          phase: 'completed',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-            success: true,
-          },
-          timestamp: new Date(),
-          duration: totalDuration,
-        });
-      }
+      this.emitTelemetry('render-completed', 'render', 'completed', 'success', {
+        duration: totalDuration,
+        metadata: { component: componentName, success: true },
+      });
 
       // Store mounted component reference
       this.mountedComponent = { component: componentName, element, props };
@@ -425,20 +319,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         mountDuration,
       };
     } catch (error) {
-      // Emit error telemetry
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-error',
-          capability: 'render',
-          phase: 'error',
-          status: 'error',
-          metadata: {
-            mfe: this.manifest.name,
-            error: (error as Error).message,
-          },
-          timestamp: new Date(),
-        });
-      }
+      this.emitTelemetry('render-error', 'render', 'error', 'error', {
+        metadata: { error: (error as Error).message },
+      });
 
       return {
         status: 'error',
