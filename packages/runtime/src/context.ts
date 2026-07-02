@@ -16,11 +16,18 @@
  * Related ADRs: ADR-002, ADR-013
  */
 
+import type { ControlPlaneUser } from '@seans-mfe/contracts';
+
 /**
- * User authentication and authorization context
+ * User authentication and authorization context.
+ *
+ * Extends the wire-level ControlPlaneUser (the principal a session acts as,
+ * @seans-mfe/contracts) with the fields the lifecycle engine needs locally:
+ * a mandatory username, mandatory roles, and optional fine-grained
+ * permissions. Anything that crosses the daemon socket uses the contracts
+ * base; the runtime works with this richer view.
  */
-export interface UserContext {
-  id: string;
+export interface UserContext extends ControlPlaneUser {
   username: string;
   roles: string[];
   permissions?: string[];
