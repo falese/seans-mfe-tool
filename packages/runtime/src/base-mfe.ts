@@ -14,6 +14,7 @@ import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 import { ValidationError as RuntimeValidationError } from '@seans-mfe/contracts';
+import type { Resolution } from '@seans-mfe/contracts';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -143,7 +144,13 @@ export interface EmitResult {
   eventId?: string;
 }
 
-/** Result from updateControlPlaneState capability */
+/**
+ * Result from updateControlPlaneState capability.
+ *
+ * Mirrors ControlPlaneStateResult in @seans-mfe/contracts, with `error`
+ * optional so implementors of doUpdateControlPlaneState may omit it (the wire
+ * form always sets it). The `resolution` shape IS the contracts `Resolution`.
+ */
 export interface ControlPlaneStateResult {
   /** Whether the daemon acknowledged the state update */
   acknowledged: boolean;
@@ -156,11 +163,7 @@ export interface ControlPlaneStateResult {
    * on the state update. In practice this may arrive asynchronously via the
    * daemon's Subscription.messages channel instead.
    */
-  resolution?: {
-    mfe: string;
-    capability: string;
-    props: Record<string, unknown>;
-  };
+  resolution?: Resolution | null;
 }
 
 // =============================================================================

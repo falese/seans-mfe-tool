@@ -39,7 +39,52 @@ import {
   type CapabilityMetadata,
   type TelemetryEvent,
 } from './base-mfe';
-import type { Message, ActionRecord, MessageMetadata } from '@seans-mfe/contracts';
+import { buildMessage } from '@seans-mfe/contracts';
+import type { ActionRecord } from '@seans-mfe/contracts';
+
+/**
+ * Validate and narrow the inputs required by updateControlPlaneState.
+ * Throws on malformed input (programming error, not a network condition).
+ */
+function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined): {
+  stateKey: string;
+  stateData: Record<string, unknown>;
+  correlationId?: string;
+} {
+  const rawStateKey = inputs?.stateKey;
+  const rawStateData = inputs?.stateData;
+  const rawCorrelationId = inputs?.correlationId;
+
+  if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
+    );
+  }
+
+  if (
+    rawStateData !== undefined &&
+    (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
+  ) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
+    );
+  }
+
+  if (
+    rawCorrelationId !== undefined &&
+    (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
+  ) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
+    );
+  }
+
+  return {
+    stateKey: rawStateKey.trim(),
+    stateData: (rawStateData ?? {}) as Record<string, unknown>,
+    correlationId: (rawCorrelationId as string | undefined)?.trim(),
+  };
+}
 
 /**
  * Module Federation container interface
@@ -530,58 +575,19 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * Subscription.messages channel the Renderer is already subscribed to.
    */
   protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
-    // -------------------------------------------------------------------------
     // 1. Extract and validate inputs
-    // -------------------------------------------------------------------------
-    const rawStateKey = context.inputs?.stateKey;
-    const rawStateData = context.inputs?.stateData;
-    const rawCorrelationId = context.inputs?.correlationId;
+    const inputs = validateStateUpdateInputs(context.inputs);
+    const { stateKey, stateData } = inputs;
+    const correlationId = inputs.correlationId ?? context.requestId;
 
-    if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
-      );
-    }
-
-    if (
-      rawStateData !== undefined &&
-      (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
-    ) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
-      );
-    }
-
-    if (
-      rawCorrelationId !== undefined &&
-      (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
-    ) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
-      );
-    }
-
-    const stateKey = rawStateKey.trim();
-    const stateData = (rawStateData ?? {}) as Record<string, unknown>;
-    const correlationId = (rawCorrelationId as string | undefined)?.trim() ?? context.requestId;
-
-    // -------------------------------------------------------------------------
     // 2. Guard: daemon WebSocket must be connected
-    // -------------------------------------------------------------------------
     const wsClient = this.deps?.wsClient;
     if (!wsClient || !wsClient.connected) {
       return { acknowledged: false, correlationId, error: 'Daemon WebSocket not connected' };
     }
 
-    // -------------------------------------------------------------------------
-    // 3. Build the Message envelope typed against @control-plane/contracts
-    // -------------------------------------------------------------------------
-    const metadata: MessageMetadata = {
-      correlationId,
-      acknowledged: false,
-      error: null,
-    };
-
+    // 3. Build the Message envelope via the contracts builder.
+    //
     // Emit what the registry actually routes on (ADR-057): a canonical
     // STATE_UPDATE actionType plus the stateKey. The registry matches rules on
     // `when.stateKey`; setting actionType: stateKey (and no stateKey field)
@@ -594,17 +600,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       data: stateData,
       timestamp: new Date().toISOString(),
     };
+    const envelope = buildMessage({ direction: 'ACTION', kind: 'ACTION', payload, correlationId });
 
-    const envelope: Message = {
-      direction: 'ACTION',
-      kind: 'ACTION',
-      payload,
-      metadata,
-    };
-
-    // -------------------------------------------------------------------------
     // 4. Send via the daemon's sendMessage GraphQL mutation (WS subscribe/next)
-    // -------------------------------------------------------------------------
     let success: boolean;
     try {
       success = await wsClient.mutation(
@@ -618,23 +616,16 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       return { acknowledged: false, correlationId, error };
     }
 
-    // -------------------------------------------------------------------------
     // 5. Telemetry
-    // -------------------------------------------------------------------------
-    if (this.deps?.telemetry) {
-      this.deps.telemetry.emit({
-        name: 'control-plane-state-update',
-        capability: 'updateControlPlaneState',
-        phase: 'main',
-        status: success ? 'success' : 'error',
-        metadata: { mfe: this.manifest.name, stateKey, correlationId, acknowledged: success },
-        timestamp: new Date(),
-      });
-    }
+    this.emitTelemetry(
+      'control-plane-state-update',
+      'updateControlPlaneState',
+      'main',
+      success ? 'success' : 'error',
+      { metadata: { stateKey, correlationId, acknowledged: success } }
+    );
 
-    // -------------------------------------------------------------------------
     // 6. Return ControlPlaneStateResult
-    // -------------------------------------------------------------------------
     return {
       acknowledged: success,
       correlationId,

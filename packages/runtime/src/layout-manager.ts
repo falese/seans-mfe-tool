@@ -14,8 +14,10 @@
  * logic is unit-testable without a browser.
  */
 
-import type { RenderedExperience, SessionContext } from '@seans-mfe/contracts';
+import { buildMessage } from '@seans-mfe/contracts';
+import type { ActionRecord, RenderedExperience, SessionContext } from '@seans-mfe/contracts';
 import { DaemonChannel } from './daemon-channel';
+import { uuidv4 } from './util/uuid';
 import type { DaemonEnvelope, DaemonTransport, TransportStatus } from './layout-transport';
 import {
   defaultAdaptors,
@@ -246,39 +248,47 @@ export class LayoutManager {
 
   /** Emit a SLOT_ERROR action up the control plane for re-resolution (ADR-060). */
   private async signalSlotError(componentId: string, info: SlotErrorInfo): Promise<void> {
-    const action: Record<string, unknown> = {
-      id: `slot-err-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    await this.buildAndSendAction(
       componentId,
-      actionType: 'SLOT_ERROR',
-      stateKey: 'slot.error',
-      data: { slot: info.slot, mfe: info.mfe, capability: info.capability, reason: info.reason, phase: info.phase },
-      timestamp: new Date().toISOString(),
-    };
-    if (this.config.session) action.context = this.config.session;
-    await this.config.transport.send({
-      direction: 'ACTION',
-      kind: 'ACTION',
-      payload: action,
-      metadata: { correlationId: String(action.id), acknowledged: false, error: info.reason },
-    });
+      'SLOT_ERROR',
+      { slot: info.slot, mfe: info.mfe, capability: info.capability, reason: info.reason, phase: info.phase },
+      { stateKey: 'slot.error', error: info.reason }
+    );
   }
 
   /** Send an action up the control plane, carrying the session context. */
   async sendAction(componentId: string, actionType: string, data: Record<string, unknown>): Promise<void> {
-    const action: Record<string, unknown> = {
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    await this.buildAndSendAction(componentId, actionType, data);
+  }
+
+  /**
+   * Shared upward path: build an ActionRecord (session context attached when
+   * the shell has one), wrap it in the ADR-054 envelope via the contracts
+   * builder, and hand it to the transport.
+   */
+  private async buildAndSendAction(
+    componentId: string,
+    actionType: string,
+    data: Record<string, unknown>,
+    extra?: { stateKey?: string; error?: string }
+  ): Promise<void> {
+    const action: ActionRecord = {
+      id: uuidv4(),
       componentId,
       actionType,
       data,
       timestamp: new Date().toISOString(),
+      ...(extra?.stateKey ? { stateKey: extra.stateKey } : {}),
+      ...(this.config.session ? { context: this.config.session } : {}),
     };
-    if (this.config.session) action.context = this.config.session;
-    await this.config.transport.send({
+    const envelope = buildMessage({
       direction: 'ACTION',
       kind: 'ACTION',
       payload: action,
-      metadata: { correlationId: String(action.id), acknowledged: false, error: null },
+      correlationId: action.id,
+      error: extra?.error,
     });
+    await this.config.transport.send(envelope as unknown as Record<string, unknown>);
   }
 
   private ensureSlot(slotId: string): ActiveSlot {
