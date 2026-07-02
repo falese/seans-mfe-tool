@@ -18,6 +18,40 @@ export interface RetryConfig {
   fallbackHandler?: string;
 }
 
+/** Retry state this wrapper carries on the context (REQ-LIFECYCLE-005). */
+export interface RetryState {
+  attempt: number;
+  maxRetries: number;
+  isRetry: boolean;
+  previousErrors: Array<{ message: string; timestamp: string }>;
+}
+
+/** Fallback state this wrapper carries on the context (REQ-LIFECYCLE-005). */
+export interface FallbackState {
+  active: boolean;
+  reason: string;
+  originalError: Error;
+  retriesExhausted: number;
+}
+
+/** Handler registry carried on the context for onRetry/fallback handlers. */
+export type ContextHandlerRegistry = Record<string, (context: Context) => Promise<unknown>>;
+
+/** Typed accessor for the retry state this wrapper owns on a context. */
+export function getRetryState(context: Context): RetryState | undefined {
+  return context.retry as RetryState | undefined;
+}
+
+/** Typed accessor for the fallback state this wrapper owns on a context. */
+export function getFallbackState(context: Context): FallbackState | undefined {
+  return context.fallback as FallbackState | undefined;
+}
+
+/** Typed accessor for the onRetry/fallback handler registry on a context. */
+export function getContextHandlers(context: Context): ContextHandlerRegistry | undefined {
+  return context.handlers as ContextHandlerRegistry | undefined;
+}
+
 /**
  * Wraps a function with retry logic based on error classification.
  * 
@@ -42,16 +76,18 @@ export async function withRetry<T>(
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
       // Mark retry state in context
-      context.retry = {
+      const retryState: RetryState = {
         attempt,
         maxRetries: config.maxRetries,
         isRetry: attempt > 0,
         previousErrors
       };
+      context.retry = retryState;
 
       // Call onRetry hook if configured (before retry attempt)
-      if (attempt > 0 && config.onRetry && context.handlers?.[config.onRetry]) {
-        await context.handlers[config.onRetry](context);
+      const onRetryHandler = config.onRetry ? getContextHandlers(context)?.[config.onRetry] : undefined;
+      if (attempt > 0 && onRetryHandler) {
+        await onRetryHandler(context);
       }
 
       // Emit retry telemetry
@@ -195,12 +231,13 @@ async function invokeFallbackHandler<T>(
   classification: ErrorClassification
 ): Promise<T> {
   // Mark fallback mode in context
-  context.fallback = {
+  const fallbackState: FallbackState = {
     active: true,
     reason: classification.type,
     originalError,
     retriesExhausted
   };
+  context.fallback = fallbackState;
 
   // Emit fallback telemetry
   if (context.emit) {
@@ -220,17 +257,17 @@ async function invokeFallbackHandler<T>(
   }
 
   // Invoke fallback handler
-  const handler = context.handlers?.[fallbackHandlerName];
+  const handler = getContextHandlers(context)?.[fallbackHandlerName];
   if (!handler) {
     throw new Error(`Fallback handler '${fallbackHandlerName}' not found`);
   }
 
   const result = await handler(context);
-  
+
   // Clear fallback state
   delete context.fallback;
-  
-  return result;
+
+  return result as T;
 }
 
 /**

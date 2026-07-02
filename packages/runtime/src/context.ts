@@ -1,11 +1,18 @@
 /**
  * REQ-RUNTIME-002: Shared Context Across All Phases & Lifecycles
- * 
+ *
  * Context flows through all lifecycle phases (before, main, after, error)
  * within a single capability execution, and across multiple capabilities
  * (load → render). The context carries user state, authentication, request
  * metadata, and capability-specific inputs/outputs.
- * 
+ *
+ * Core vs extensions: the interface below declares only the fields the
+ * lifecycle engine and capabilities themselves read. Handler-owned state
+ * (retry, fallback, cache, timeouts, …) is NOT part of the core — handlers
+ * carry it under `extensions` (or, during migration, as ad-hoc fields via the
+ * index signature) and own its type via accessors in their own modules
+ * (retry-wrapper.ts, timeout-wrapper.ts, handlers/*).
+ *
  * Related ADRs: ADR-002, ADR-013
  */
 
@@ -71,8 +78,8 @@ export interface Context {
   /** Number of retry attempts for current capability */
   retryCount?: number;
   
-  // === Handler-specific Data (mutated by handlers) ===
-  
+  // === Observability ===
+
   /** Telemetry data for observability */
   telemetry?: {
     startTime?: number;
@@ -81,58 +88,24 @@ export interface Context {
     subphases?: Record<string, { start: number; duration: number }>;
     events?: TelemetryEvent[];
   };
-  
-  /** Cache control metadata */
-  cache?: {
-    key?: string;
-    hit?: boolean;
-    ttl?: number;
-    fromCache?: boolean;
-  };
-  
-  /** Validation results */
-  validation?: {
-    passed?: boolean;
-    errors?: ValidationError[];
-  };
-  
-  /** Error handling state */
-  errorHandling?: {
-    recoverable?: boolean;
-    fallbackApplied?: boolean;
-    retryStrategy?: 'exponential' | 'linear' | 'none';
-  };
-  
-  /** Timeout tracking (REQ-LIFECYCLE-002) */
-  timeouts?: Record<string, {
-    occurred: boolean;
-    elapsed: number;
-    onTimeout: 'error' | 'warn' | 'skip';
-  }>;
-  
-  /** Retry state (REQ-LIFECYCLE-005) */
-  retry?: {
-    attempt: number;
-    maxRetries: number;
-    isRetry: boolean;
-    previousErrors: Array<{ message: string; timestamp: string }>;
-  };
-  
-  /** Fallback handler state (REQ-LIFECYCLE-005) */
-  fallback?: {
-    active: boolean;
-    reason: string;
-    originalError: Error;
-    retriesExhausted: number;
-  };
-  
-  /** Handler registry for onRetry and fallback handlers */
-  handlers?: Record<string, (context: Context) => Promise<any>>;
-  
-  /** Telemetry emit function */
+
+  /** Telemetry emit function (injected by the engine, not handler state) */
   emit?: (event: TelemetryEvent) => Promise<void>;
-  
-  /** Custom handler data (extensible for MFE-specific needs) */
+
+  // === Handler-owned Extension Data ===
+
+  /**
+   * Handler-owned extension state, namespaced per handler. The shapes are
+   * declared by the owning modules (e.g. RetryState in retry-wrapper.ts,
+   * TimeoutState in timeout-wrapper.ts) — the core Context stays agnostic.
+   */
+  extensions?: Record<string, unknown>;
+
+  /**
+   * Backward-compat escape hatch: handlers historically wrote their state as
+   * ad-hoc top-level fields (context.retry, context.timeouts, …). Those writes
+   * keep compiling via this index signature; new code should use `extensions`.
+   */
   [key: string]: unknown;
 }
 

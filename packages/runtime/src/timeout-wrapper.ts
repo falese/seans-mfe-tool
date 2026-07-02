@@ -15,6 +15,21 @@ export interface TimeoutOptions {
   signal?: AbortSignal;
 }
 
+/** Per-hook timeout occurrence this wrapper records on the context (REQ-LIFECYCLE-002). */
+export interface TimeoutEntry {
+  occurred: boolean;
+  elapsed: number;
+  onTimeout: 'error' | 'warn' | 'skip';
+}
+
+/** Timeout state keyed by hook name. */
+export type TimeoutState = Record<string, TimeoutEntry>;
+
+/** Typed accessor for the timeout state this wrapper owns on a context. */
+export function getTimeoutState(context: Context): TimeoutState | undefined {
+  return context.timeouts as TimeoutState | undefined;
+}
+
 /**
  * Wraps a function with timeout protection.
  * 
@@ -55,12 +70,13 @@ export async function withTimeout<T>(
     
     if (error instanceof TimeoutError) {
       // Mark context with timeout occurrence
-      context.timeouts = context.timeouts || {};
-      context.timeouts[options.hookName] = {
+      const timeouts: TimeoutState = getTimeoutState(context) ?? {};
+      timeouts[options.hookName] = {
         occurred: true,
         elapsed: options.timeoutMs,
         onTimeout: options.onTimeout
       };
+      context.timeouts = timeouts;
 
       // Emit telemetry event
       if (context.emit) {
