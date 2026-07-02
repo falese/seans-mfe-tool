@@ -695,6 +695,7 @@ export abstract class BaseMFE {
       this.lifecyclePhase(name, 'before'),
       this.lifecyclePhase(name, 'main'),
       async (ctx, next) => {
+        this.assertCapabilityImplemented(name);
         result.value = await doFn(ctx);
         await next();
       },
@@ -704,6 +705,25 @@ export abstract class BaseMFE {
 
     await runPipeline(pipeline, context);
     return result.value as T;
+  }
+
+  /**
+   * Guard the doX() invocation: the abstract-method contract is compile-time
+   * only, so a subclass built without the method (plain JS, `as any` casts,
+   * partial test doubles) would otherwise fail with a raw TypeError. Throw
+   * the descriptive platform error instead — same message the handler
+   * resolution path uses. Runs inside the error boundary, after the
+   * before/main phases, so the error lifecycle semantics match a failing
+   * implementation.
+   */
+  private assertCapabilityImplemented(name: string): void {
+    const methodName = `do${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    const method = (this as unknown as Record<string, unknown>)[methodName];
+    if (typeof method !== 'function') {
+      throw new Error(
+        `Platform handler not implemented: platform.${name}. Expected method ${methodName} on MFE class.`
+      );
+    }
   }
 
   /** Middleware: assert the MFE is in one of the allowed pre-states. */
