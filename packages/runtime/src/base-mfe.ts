@@ -187,6 +187,54 @@ export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
 };
 
 // =============================================================================
+// Capability Descriptors (REQ-054)
+// =============================================================================
+
+/**
+ * How a capability interacts with the lifecycle state machine (ADR-042).
+ * Everything else about capability orchestration (before → main → doX →
+ * after, error phase on failure) is identical across the 10 platform
+ * capabilities and lives once in BaseMFE.executeCapability().
+ */
+interface CapabilityDescriptor {
+  /** States this capability may be invoked from; empty = any state. */
+  preStates: MFEState[];
+  /** State entered before execution (e.g. load → 'loading'). */
+  enterState?: MFEState;
+  /** State entered after successful execution. */
+  exitState?: MFEState;
+  /** State entered when execution fails. */
+  errorState?: MFEState;
+}
+
+/** Any state except 'destroyed' — read-only capabilities run everywhere. */
+const ANY_LIVE_STATE: MFEState[] = ['uninitialized', 'loading', 'ready', 'rendering', 'error'];
+
+const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
+  load: {
+    preStates: ['uninitialized', 'ready', 'error'],
+    enterState: 'loading',
+    exitState: 'ready',
+    errorState: 'error',
+  },
+  render: {
+    preStates: ['ready'],
+    enterState: 'rendering',
+    exitState: 'ready',
+    errorState: 'error',
+  },
+  refresh: { preStates: ['ready'] },
+  authorizeAccess: { preStates: ['ready'] },
+  health: { preStates: ANY_LIVE_STATE },
+  describe: { preStates: ANY_LIVE_STATE },
+  schema: { preStates: ['ready'] },
+  query: { preStates: ['ready'] },
+  emit: { preStates: [] },
+  // Available from ready OR rendering — an MFE may push state mid-render.
+  updateControlPlaneState: { preStates: ['ready', 'rendering'] },
+};
+
+// =============================================================================
 // BaseMFE Abstract Class
 // =============================================================================
 
@@ -586,181 +634,105 @@ export abstract class BaseMFE {
   // Platform Capabilities (REQ-054)
   // Generated wrappers that orchestrate lifecycle
   // ===========================================================================
-  
+
   /**
-   * Load capability: Initialize and prepare MFE for use
-   * 
-   * Generated wrapper - orchestrates lifecycle phases
+   * Orchestrate one capability invocation: state guard, optional enter
+   * transition, lifecycle phases around the doX() implementation, optional
+   * exit/error transitions. The per-capability variations live in
+   * CAPABILITY_DESCRIPTORS; this method is the single copy of the pattern.
    */
-  public async load(context: Context): Promise<LoadResult> {
-    this.assertState('uninitialized', 'ready', 'error');
-    this.transitionState('loading');
-    
+  private async executeCapability<T>(
+    name: string,
+    doFn: (context: Context) => Promise<T>,
+    context: Context
+  ): Promise<T> {
+    const desc = CAPABILITY_DESCRIPTORS[name];
+    if (desc.preStates.length > 0) {
+      this.assertState(...desc.preStates);
+    }
+    if (desc.enterState) {
+      this.transitionState(desc.enterState);
+    }
+
     try {
-      await this.executeLifecycle('load', 'before', context);
-      await this.executeLifecycle('load', 'main', context);
-      const result = await this.doLoad(context);
-      await this.executeLifecycle('load', 'after', context);
-      
-      this.transitionState('ready');
+      await this.executeLifecycle(name, 'before', context);
+      await this.executeLifecycle(name, 'main', context);
+      const result = await doFn(context);
+      await this.executeLifecycle(name, 'after', context);
+      if (desc.exitState) {
+        this.transitionState(desc.exitState);
+      }
       return result;
     } catch (error) {
-      await this.executeLifecycle('load', 'error', { ...context, error: error as Error });
-      this.transitionState('error');
+      await this.executeLifecycle(name, 'error', { ...context, error: error as Error });
+      if (desc.errorState) {
+        this.transitionState(desc.errorState);
+      }
       throw error;
     }
   }
-  
+
+  /**
+   * Load capability: Initialize and prepare MFE for use
+   */
+  public async load(context: Context): Promise<LoadResult> {
+    return this.executeCapability('load', (ctx) => this.doLoad(ctx), context);
+  }
+
   /**
    * Render capability: Render MFE UI into target container
    */
   public async render(context: Context): Promise<RenderResult> {
-    this.assertState('ready');
-    this.transitionState('rendering');
-    
-    try {
-      await this.executeLifecycle('render', 'before', context);
-      await this.executeLifecycle('render', 'main', context);
-      const result = await this.doRender(context);
-      await this.executeLifecycle('render', 'after', context);
-      
-      this.transitionState('ready');
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('render', 'error', { ...context, error: error as Error });
-      this.transitionState('error');
-      throw error;
-    }
+    return this.executeCapability('render', (ctx) => this.doRender(ctx), context);
   }
-  
+
   /**
    * Refresh capability: Refresh MFE data/state
    */
   public async refresh(context: Context): Promise<void> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('refresh', 'before', context);
-      await this.executeLifecycle('refresh', 'main', context);
-      await this.doRefresh(context);
-      await this.executeLifecycle('refresh', 'after', context);
-    } catch (error) {
-      await this.executeLifecycle('refresh', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('refresh', (ctx) => this.doRefresh(ctx), context);
   }
-  
+
   /**
    * AuthorizeAccess capability: Check authorization
    */
   public async authorizeAccess(context: Context): Promise<boolean> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('authorizeAccess', 'before', context);
-      await this.executeLifecycle('authorizeAccess', 'main', context);
-      const result = await this.doAuthorizeAccess(context);
-      await this.executeLifecycle('authorizeAccess', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('authorizeAccess', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('authorizeAccess', (ctx) => this.doAuthorizeAccess(ctx), context);
   }
-  
+
   /**
    * Health capability: Check MFE health status
    */
   public async health(context: Context): Promise<HealthResult> {
-    // Health check can run in any state except destroyed
-    this.assertState('uninitialized', 'loading', 'ready', 'rendering', 'error');
-    
-    try {
-      await this.executeLifecycle('health', 'before', context);
-      await this.executeLifecycle('health', 'main', context);
-      const result = await this.doHealth(context);
-      await this.executeLifecycle('health', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('health', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('health', (ctx) => this.doHealth(ctx), context);
   }
-  
+
   /**
    * Describe capability: Return MFE metadata
    */
   public async describe(context: Context): Promise<DescribeResult> {
-    // Describe can run in any state
-    this.assertState('uninitialized', 'loading', 'ready', 'rendering', 'error');
-    
-    try {
-      await this.executeLifecycle('describe', 'before', context);
-      await this.executeLifecycle('describe', 'main', context);
-      const result = await this.doDescribe(context);
-      await this.executeLifecycle('describe', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('describe', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('describe', (ctx) => this.doDescribe(ctx), context);
   }
-  
+
   /**
    * Schema capability: Return GraphQL/JSON schema
    */
   public async schema(context: Context): Promise<SchemaResult> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('schema', 'before', context);
-      await this.executeLifecycle('schema', 'main', context);
-      const result = await this.doSchema(context);
-      await this.executeLifecycle('schema', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('schema', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('schema', (ctx) => this.doSchema(ctx), context);
   }
-  
+
   /**
    * Query capability: Execute data query
    */
   public async query(context: Context): Promise<QueryResult> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('query', 'before', context);
-      await this.executeLifecycle('query', 'main', context);
-      const result = await this.doQuery(context);
-      await this.executeLifecycle('query', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('query', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('query', (ctx) => this.doQuery(ctx), context);
   }
-  
+
   /**
    * Emit capability: Emit telemetry/events
    */
   public async emit(context: Context): Promise<EmitResult> {
-    // Emit can run in any state
-    try {
-      await this.executeLifecycle('emit', 'before', context);
-      await this.executeLifecycle('emit', 'main', context);
-      // If doEmit is not implemented, throw error
-      if (typeof this.doEmit !== 'function') {
-        throw new Error('Platform handler not implemented: platform.emit. Expected method doEmit on MFE class.');
-      }
-      const result = await this.doEmit(context);
-      await this.executeLifecycle('emit', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('emit', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('emit', (ctx) => this.doEmit(ctx), context);
   }
 
   /**
@@ -785,19 +757,11 @@ export abstract class BaseMFE {
    * Available from 'ready' or 'rendering' — an MFE can push state mid-render.
    */
   public async updateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
-    // Available from ready OR rendering — MFE may push state mid-render
-    this.assertState('ready', 'rendering');
-
-    try {
-      await this.executeLifecycle('updateControlPlaneState', 'before', context);
-      await this.executeLifecycle('updateControlPlaneState', 'main', context);
-      const result = await this.doUpdateControlPlaneState(context);
-      await this.executeLifecycle('updateControlPlaneState', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('updateControlPlaneState', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability(
+      'updateControlPlaneState',
+      (ctx) => this.doUpdateControlPlaneState(ctx),
+      context
+    );
   }
   
   // ===========================================================================
