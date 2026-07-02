@@ -13,7 +13,7 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe/
 import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
-import { ValidationError as RuntimeValidationError } from './errors/ValidationError';
+import { ValidationError as RuntimeValidationError } from '@seans-mfe/contracts';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
