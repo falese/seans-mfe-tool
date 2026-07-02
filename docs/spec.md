@@ -289,6 +289,10 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-058 | Slot-Provider MFEs — MFEs that Provide Slots for Other MFEs | Runtime / slots / composition | Implemented |
 | ADR-059 | BaseControlPlane — Abstract Base for All Control-Plane Implementations | Runtime / control-plane / abstract-base | Accepted |
 | ADR-060 | Contextualized VM Composition — Value-Injection, Slot-Scoped Self-Healing, Control-Plane Re-Resolution | Runtime / composition / resilience / context | Accepted |
+| ADR-061 | `@seans-mfe/dsl` and `@seans-mfe/codegen` as Packages; Framework Variant Injected, Not Resolved | Codegen / DSL / packaging | Accepted |
+| ADR-062 | `deploy` is Dev-Convenience Only; Production Deployment Returns as a Plugin-Resolved Target Axis | Deploy / plugins / scope | Accepted |
+| ADR-063 | API-Backend Generation is a Plugin Axis, Not a Wrapper Around One OSS Codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
+| ADR-064 | Runtime's Future is a Semver-Published Package, Not a Staged `dist/runtime` Folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
 
 ---
 

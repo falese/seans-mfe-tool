@@ -9,7 +9,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin } from '../../framework/loader';
-import { parseManifestFile, findManifest } from '../../dsl/parser';
+import { parseManifestFile, findManifest } from '@seans-mfe/dsl';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { EnvCheckResult } from '@seans-mfe/contracts';
 

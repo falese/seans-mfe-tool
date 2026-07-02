@@ -237,7 +237,7 @@ BaseMFE (abstract)
   └── AngularRemoteMFE   — Angular / webpack Module Federation
 ```
 
-Long-form capability reference: [`PLATFORM-CONTRACT.md`](./PLATFORM-CONTRACT.md).
+Long-form capability reference: [`PLATFORM-CONTRACT.md`](./docs/PLATFORM-CONTRACT.md).
 
 ---
 
@@ -277,7 +277,6 @@ Name collisions across sources are a startup error.
 |---|---|
 | [`examples/abc-kids/`](./examples/abc-kids/) | A full shell composing three generated MFEs (`flappy`, `hockey`, `multiplication-quiz`) — each with its own `mfe-manifest.yaml`, rspack Module Federation, Dockerfile, and `docker-compose.yaml` |
 | [`examples/api-examples/`](./examples/api-examples/) | REST APIs generated from OpenAPI specs (`bizcase-api`, `petstore-api`) |
-| [`examples/archive/`](./examples/archive/) | Retired reference material (dsl-mfe, polyglot stubs, experiments) — kept for history, not maintained |
 
 ```bash
 # Build the CLI image + every abc-kids MFE image (full chain, cached by Turborepo)
@@ -293,9 +292,10 @@ turbo run docker:build:examples
   template variant. See the
   [Framework Plugin Authoring Guide](./docs/framework-plugin-authoring.md)
   (ADR-036) and `packages/framework-react/` / `packages/framework-angular/`.
-- **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./PLUGIN-CONTRACT.md)
-  and the starter at [`examples/archive/plugin-skeleton/`](./examples/archive/plugin-skeleton/).
-- **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./MERGE-PLAN.md).
+- **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./docs/PLUGIN-CONTRACT.md)
+  and the `@falese/bff-plugin` package under `packages/bff-plugin/` as a worked
+  example of an out-of-tree oclif plugin.
+- **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./docs/MERGE-PLAN.md).
 
 ---
 

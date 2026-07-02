@@ -14,11 +14,8 @@
     "composite": true,
     "moduleResolution": "node",
     "ignoreDeprecations": "5.0",
-    "paths": {
-      "@seans-mfe/contracts": ["../contracts/src/index.ts"],
-      "@seans-mfe/oclif-base": ["../oclif-base/src/index.ts"]
-    }
+    "allowJs": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "src/**/*.test.ts", "src/**/*.test.js"]
 }

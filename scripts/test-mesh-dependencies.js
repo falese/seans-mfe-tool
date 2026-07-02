@@ -79,7 +79,7 @@ function fileExists(filePath) {
  * Returns a plain object with the same structure, or null on parse failure.
  */
 function loadDependencyVersions() {
-  const genFile = path.join(ROOT, 'src/codegen/UnifiedGenerator/unified-generator.ts');
+  const genFile = path.join(ROOT, 'packages/codegen/src/unified-generator.ts');
   if (!fileExists(genFile)) {
     return null;
   }
@@ -137,7 +137,7 @@ function loadDependencyVersions() {
 
 section('Check 1: Centralized Version Constants');
 
-const genPath = path.join(ROOT, 'src/codegen/UnifiedGenerator/unified-generator.ts');
+const genPath = path.join(ROOT, 'packages/codegen/src/unified-generator.ts');
 if (!fileExists(genPath)) {
   fail('unified-generator.ts exists', `File not found: ${genPath}`);
 } else {

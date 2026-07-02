@@ -1,0 +1,19 @@
+{
+  "name": "@seans-mfe-tool/runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runtime: BaseMFE/RemoteMFE lifecycle classes consumed by generated MFEs",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./angular": {
+      "types": "./src/angular.ts",
+      "default": "./src/angular.ts"
+    },
+    "./package.json": "./package.json"
+  }
+}

@@ -47,17 +47,27 @@ module.exports = {
     'src/utils/**/*.{js,ts}',
     'src/codegen/UnifiedGenerator/**/*.{js,ts}',
     'src/codegen/APIGenerator/**/*.{js,ts}',
-    // Include DSL/runtime for TDD Guardian phase
-    'src/dsl/**/*.{js,ts}',
-    'src/runtime/**/*.{js,ts}',
+    // Include DSL/runtime for TDD Guardian phase.
+    // Runtime is now the packages/runtime package (ADR-064); collected here so
+    // its per-file coverage gates keep enforcing.
+    'packages/dsl/src/**/*.{js,ts}',
+    'packages/runtime/src/**/*.{js,ts}',
     'src/build/**/*.{js,ts}',
     '!src/**/index.{js,ts}',
     '!src/**/__tests__/**',
     '!src/**/*.test.{js,ts}',
     '!src/**/*.d.ts',          // Skip - TypeScript declaration files have no executable code
     '!src/dsl/schema.js',      // Skip - compiled Peggy parser artifact (not a source file)
+    '!packages/dsl/src/**/__tests__/**',
+    '!packages/dsl/src/**/*.test.{js,ts}',
+    '!packages/dsl/src/**/*.d.ts',
+    '!packages/dsl/src/index.ts',
     '!src/**/fixtures/**',
-    '!src/codegen/templates/**'
+    '!src/codegen/templates/**',
+    '!packages/runtime/src/**/__tests__/**',
+    '!packages/runtime/src/**/*.test.{js,ts}',
+    '!packages/runtime/src/**/*.d.ts',
+    '!packages/runtime/src/index.ts'
   ],
   
   // Coverage thresholds. Phase 1.1 adds per-file thresholds for the four
@@ -77,14 +87,14 @@ module.exports = {
       statements: 80
     },
     // Enforce strict coverage locally for DSL Type System
-    'src/dsl/type-system.ts': {
+    'packages/dsl/src/type-system.ts': {
       branches: 99,
       functions: 100,
       lines: 100,
       statements: 100
     },
     // Enforce strict coverage locally for Runtime BaseMFE
-    'src/runtime/base-mfe.ts': {
+    'packages/runtime/src/base-mfe.ts': {
       branches: 90,
       functions: 100,
       lines: 95,
@@ -117,7 +127,7 @@ module.exports = {
       statements: 90
     },
     // Phase 1.1: runtime-layer coverage target
-    'src/runtime/graphql-ws-client.ts': {
+    'packages/runtime/src/graphql-ws-client.ts': {
       branches: 90,
       functions: 100,
       lines: 95,
@@ -151,6 +161,12 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
     '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
+    '^@seans-mfe/dsl$': '<rootDir>/packages/dsl/src/index.ts',
+    '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
+    '^@seans-mfe/codegen$': '<rootDir>/packages/codegen/src/index.ts',
+    '^@seans-mfe/codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',
+    '^@falese/bff-plugin$': '<rootDir>/packages/bff-plugin/src/index.ts',
+    '^@falese/bff-plugin/(.*)$': '<rootDir>/packages/bff-plugin/src/$1',
     '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
     '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
     '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',

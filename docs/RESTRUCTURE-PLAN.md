@@ -62,11 +62,12 @@ seans-mfe-tool/
 │   ├── contracts/            # THE source of truth: envelope, errors, messages, lifecycle types
 │   ├── oclif-base/           # BaseCommand
 │   ├── runtime/              # ← promote src/runtime here (see 1.3); the single home of BaseMFE
-│   ├── codegen/              # ← extract src/codegen here (issue #140); zero-dep generator
+│   ├── codegen/              # ← extract src/codegen here (issue #140); framework variant injected (ADR-061)
+│   ├── dsl/                  # ← promote src/dsl here (ADR-061); manifest schema + parser (Zod)
 │   ├── framework-react/      # thin plugin: React/rspack adapter
 │   ├── framework-angular/    # thin plugin: Angular/webpack adapter
 │   └── bff-plugin/           # BFF (finish #126–130 migration, delete shims)
-├── src/                      # ONLY the CLI now: commands/, hooks/, oclif/, mcp/, dsl/
+├── src/                      # ONLY the CLI now: commands/, hooks/, oclif/, mcp/
 ├── examples/
 │   └── abc-kids/             # the ONE canonical, tested example
 ├── docs/

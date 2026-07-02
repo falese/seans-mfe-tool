@@ -1,12 +1,13 @@
 import { Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
-import { parseAndValidateDirectory, formatErrorsForCLI } from '../../dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
+import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
-import type { RemoteGenerateOptions } from '../../dsl/schema';
+import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
 export async function remoteGenerateCommand(
   options: RemoteGenerateOptions & { dryRun?: boolean } = {}
@@ -32,7 +33,11 @@ export async function remoteGenerateCommand(
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
 
     console.log(chalk.blue('\nGenerating files...'));
-    const { files: allFiles, preservedCapabilities } = await generateAllFiles(manifest, cwd, { force: true });
+    const frameworkVariant = resolveFrameworkVariant(manifest);
+    const { files: allFiles, preservedCapabilities } = await generateAllFiles(manifest, cwd, {
+      force: true,
+      frameworkVariant,
+    });
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({

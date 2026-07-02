@@ -3,3 +3,6 @@
 *.d.ts
 *.d.ts.map
 !*.test.js
+# Genuine JS sources this package ships (not compiled output):
+!**/test-utils.js
+!utils/templateProcessor.js

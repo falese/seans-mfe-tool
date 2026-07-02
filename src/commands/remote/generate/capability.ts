@@ -1,12 +1,13 @@
 import { Args, Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
-import { parseAndValidateDirectory, formatErrorsForCLI } from '../../../dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../../../codegen/UnifiedGenerator/unified-generator';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
+import { resolveFrameworkVariant } from '../../../framework/loader';
 import { BaseCommand } from '../../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
-import type { RemoteGenerateOptions } from '../../../dsl/schema';
+import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
 export async function remoteGenerateCapabilityCommand(
   capabilityName: string,
@@ -52,7 +53,11 @@ export async function remoteGenerateCapabilityCommand(
     const filteredManifest = { ...manifest, capabilities: matchingCapabilities };
 
     console.log(chalk.blue(`\nGenerating capability: ${capabilityName}`));
-    const { files: allFiles, preservedCapabilities } = await generateAllFiles(filteredManifest, cwd, { force: true });
+    const frameworkVariant = resolveFrameworkVariant(filteredManifest);
+    const { files: allFiles, preservedCapabilities } = await generateAllFiles(filteredManifest, cwd, {
+      force: true,
+      frameworkVariant,
+    });
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({

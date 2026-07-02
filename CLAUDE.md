@@ -80,7 +80,7 @@ ADR quick index: `@docs/spec.md#adr-index`
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
 | Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
-| npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (MERGE-PLAN.md Phase 1) |
+| npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
 
 See `docs/PROJECT-STATUS.md` for priority order and blockers.
 
@@ -126,7 +126,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
 6. Lifecycle engine enhancements — ADR-028–032 (issues not yet created) 📋
 7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
-8. Monorepo consolidation (MERGE-PLAN.md Phase 2) ⏳
+8. Monorepo consolidation (docs/MERGE-PLAN.md Phase 2) ⏳
 
 ## Verification gates before push
 
@@ -170,4 +170,4 @@ Before opening the PR:
 - [ ] New architectural decisions either cite an existing ADR or include a new ADR file in the PR
 - [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `pnpm-workspace.yaml`, `turbo.json`, `schemas/`)
 
-For the current session's active issue and spec context: `@session-prompt.md`
+For the current session's active issue and spec context: `@docs/session-prompt.md`

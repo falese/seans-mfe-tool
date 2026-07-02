@@ -1,0 +1,41 @@
+{
+  "name": "@seans-mfe/dsl",
+  "version": "0.1.0",
+  "description": "MFE DSL manifest schema, parser, and validator (Zod) for the seans-mfe platform",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schema": {
+      "require": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
+    },
+    "./parser": {
+      "require": "./dist/parser.js",
+      "types": "./dist/parser.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'dsl tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.9.3"
+  }
+}

@@ -23,24 +23,19 @@ jest.mock('path', () => ({
   relative: jest.fn((from: string, to: string) => to.replace(from + '/', ''))
 }));
 
-jest.mock('../../../src/dsl', () => ({
-  parseAndValidateDirectory: jest.fn(),
-  formatErrorsForCLI: jest.fn((errors: any[]) => errors.map((e) => e.message).join('\n'))
-}), { virtual: true });
-
-jest.mock('../../dsl', () => ({
+jest.mock('@seans-mfe/dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
   formatErrorsForCLI: jest.fn((errors: any[]) => errors.map((e: any) => e.message).join('\n'))
 }));
 
-jest.mock('../../codegen/UnifiedGenerator/unified-generator', () => ({
+jest.mock('@seans-mfe/codegen', () => ({
   generateAllFiles: jest.fn(),
   writeGeneratedFiles: jest.fn()
 }));
 
 import { remoteGenerateCapabilityCommand } from '../remote/generate/capability';
-import { parseAndValidateDirectory } from '../../dsl';
-import { generateAllFiles, writeGeneratedFiles } from '../../codegen/UnifiedGenerator/unified-generator';
+import { parseAndValidateDirectory } from '@seans-mfe/dsl';
+import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;

@@ -6,7 +6,7 @@
  * coverage targets (>=90% statements/branches/functions/lines):
  *   - waitForContainer timeout path → TimeoutError
  *   - copyDockerFiles missing-nginx branch → SystemError
- *   - dry-run plans for development, docker-compose production, and k8s production
+ *   - development dry-run plan; production rejected as NOT_IMPLEMENTED (ADR-062)
  *   - Deploy.runCommand dispatch
  *   - cleanupTempDirs swallows fs.remove failures
  *
@@ -116,50 +116,16 @@ describe('deployCommand dry-run plans', () => {
     expect(mockExec).not.toHaveBeenCalled();
   });
 
-  it('plans docker-compose production manifests', async () => {
-    const result = await deployCommand({
-      name: 'prod-app',
-      env: 'production',
-      type: 'shell',
-      port: 8080,
-      mode: 'docker-compose',
-      dryRun: true,
-    });
-
-    expect(result.dryRun).toBe(true);
-    expect(result.environment).toBe('production');
-    expect(result.generatedFiles).toEqual(
-      expect.arrayContaining([
-        'deploy/docker-compose.yml',
-        'deploy/Dockerfile',
-        'deploy/.env.production',
-        'deploy/README.md',
-      ]),
-    );
-  });
-
-  it('plans kubernetes production manifests for both "kubernetes" and "k8s" mode aliases', async () => {
-    for (const mode of ['kubernetes', 'k8s']) {
-      const result = await deployCommand({
-        name: 'k8s-app',
+  it('rejects production deployment (not yet implemented — ADR-062)', async () => {
+    await expect(
+      deployCommand({
+        name: 'prod-app',
         env: 'production',
-        type: 'api',
+        type: 'shell',
         port: 8080,
-        mode,
         dryRun: true,
-      });
-
-      expect(result.generatedFiles).toEqual(
-        expect.arrayContaining([
-          'k8s/deployment.yaml',
-          'k8s/secrets.yaml',
-          'k8s/configmap.yaml',
-          'k8s/hpa.yaml',
-          'k8s/kustomization.yaml',
-          'k8s/README.md',
-        ]),
-      );
-    }
+      }),
+    ).rejects.toThrow('Production deployment not yet implemented');
   });
 
   it('defaults port to 8080 in the dry-run plan when port is omitted', async () => {
@@ -200,14 +166,13 @@ describe('process signal handlers', () => {
 });
 
 describe('Deploy oclif command', () => {
-  it('declares the required oclif metadata (name arg, type flag, env, mode)', () => {
+  it('declares the required oclif metadata (name arg, type flag, env, dry-run)', () => {
     expect(DeployCommand.description).toMatch(/deploy/i);
     expect(DeployCommand.args.name.required).toBe(true);
     const flags = DeployCommand.flags as Record<string, { required?: boolean }>;
     expect(flags.type).toBeDefined();
     expect(flags.type.required).toBe(true);
     expect(flags.env).toBeDefined();
-    expect(flags.mode).toBeDefined();
     expect(flags['dry-run']).toBeDefined();
     // BaseCommand provides --json
     expect(flags.json).toBeDefined();
@@ -221,7 +186,6 @@ describe('Deploy oclif command', () => {
         type: 'shell',
         env: 'development',
         port: '3000',
-        mode: 'docker-compose',
         'dry-run': true,
       },
     });
