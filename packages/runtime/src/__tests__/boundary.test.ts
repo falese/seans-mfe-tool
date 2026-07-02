@@ -39,6 +39,8 @@ const NEUTRAL_FILES = [
   'packages/runtime/src/context.ts',
   'packages/runtime/src/graphql-ws-client.ts',
   'packages/runtime/src/layout-manager.ts',
+  'packages/runtime/src/layout-transport.ts',
+  'packages/runtime/src/layout-adaptors.ts',
   'packages/runtime/src/base-control-plane.ts',
   'packages/runtime/src/daemon-channel.ts',
   'packages/runtime/src/imperative-handle.ts',
