@@ -1,5 +1,5 @@
 
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 
 /** Cache control metadata this handler owns on the context. */
 export interface CacheState {

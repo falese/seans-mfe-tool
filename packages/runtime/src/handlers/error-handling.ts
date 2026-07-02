@@ -1,4 +1,4 @@
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 
 /** Error-handling state this handler owns on the context. */
 export interface ErrorHandlingState {

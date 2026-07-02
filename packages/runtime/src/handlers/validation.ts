@@ -1,4 +1,4 @@
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 import type { ValidationError } from '../context';
 
 /** Validation results these handlers own on the context. */

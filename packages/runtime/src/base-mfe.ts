@@ -15,6 +15,7 @@ import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 import { ValidationError as RuntimeValidationError } from '@seans-mfe/contracts';
 import type { Resolution } from '@seans-mfe/contracts';
+import * as platformHandlerLibrary from './handlers';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -236,6 +237,24 @@ const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
   // Available from ready OR rendering — an MFE may push state mid-render.
   updateControlPlaneState: { preStates: ['ready', 'rendering'] },
 };
+
+// =============================================================================
+// Platform Handler Library (REQ-058)
+// =============================================================================
+
+type PlatformHandlerFn = (context: Context) => Promise<unknown>;
+
+/**
+ * The platform handler library, resolved once at module load from the static
+ * './handlers' barrel (flat namespace — `export *` per category module).
+ * Replaces the former per-invocation dynamic import: resolution is O(1) and
+ * the full set of resolvable names is visible here at startup.
+ */
+const PLATFORM_HANDLER_LIBRARY: ReadonlyMap<string, PlatformHandlerFn> = new Map(
+  Object.entries(platformHandlerLibrary as unknown as Record<string, unknown>)
+    .filter(([, value]) => typeof value === 'function')
+    .map(([name, value]) => [name, value as PlatformHandlerFn])
+);
 
 // =============================================================================
 // Capability Middleware Pipeline
@@ -509,87 +528,52 @@ export abstract class BaseMFE {
    */
   protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
     if (handlerName.startsWith('platform.')) {
+      // Platform: DI map first, then the static library.
       const platformHandlerName = handlerName.slice(9);
-      if (this.deps?.platformHandlers && this.deps.platformHandlers[platformHandlerName]) {
-        await this.deps.platformHandlers[platformHandlerName](context);
+      const injected = this.deps?.platformHandlers?.[platformHandlerName];
+      if (injected) {
+        await injected(context);
       } else {
         await this.invokePlatformHandler(platformHandlerName, context);
       }
-    } else {
-      // Try full custom handler name first, then fallback to last segment
-      const customHandlerName = handlerName;
-      if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
-        await this.deps.customHandlers[customHandlerName](context);
-        return;
-      }
-      // Fallback: strip prefix (e.g., 'custom.fail' -> 'fail')
-      const lastSegment = customHandlerName.includes('.') ? customHandlerName.split('.').pop() : customHandlerName;
-      if (lastSegment && this.deps?.customHandlers && this.deps.customHandlers[lastSegment]) {
-        await this.deps.customHandlers[lastSegment](context);
-        return;
-      }
-      // Fallback: invoke as method on subclass
-      await this.invokeCustomHandler(lastSegment!, context);
+      return;
     }
+
+    // Custom: DI map by full name, then by last segment (e.g. 'custom.fail'
+    // -> 'fail'), finally a method on the subclass.
+    const injected = this.deps?.customHandlers?.[handlerName];
+    if (injected) {
+      await injected(context);
+      return;
+    }
+    const lastSegment = handlerName.includes('.') ? handlerName.split('.').pop()! : handlerName;
+    const injectedLastSegment = this.deps?.customHandlers?.[lastSegment];
+    if (injectedLastSegment) {
+      await injectedLastSegment(context);
+      return;
+    }
+    await this.invokeCustomHandler(lastSegment, context);
   }
-  
+
   /**
-  * Invoke a platform handler from standard library
-  * @throws Error if platform handler not found
-  *
-  * ---
-  * Coverage Note:
-  * The dynamic import (await import('./handlers')) below is not reliably covered by Jest/Istanbul/nyc.
-  * This is a known limitation for dynamic imports in JavaScript/TypeScript coverage tools:
-  *   - Jest FAQ: https://jestjs.io/docs/coverage#why-are-some-lines-not-covered
-  *   - Istanbul Issue #879: https://github.com/istanbuljs/istanbuljs/issues/879
-  *   - Stack Overflow: https://stackoverflow.com/questions/56357938/jest-coverage-for-dynamic-import
-  *   - Jest Issue #9430: https://github.com/facebook/jest/issues/9430
-  *
-  * Do not refactor production code solely for coverage. All other branches and error paths are strictly covered.
-  * ---
+   * Invoke a platform handler from the standard library — a flat, statically
+   * built map (PLATFORM_HANDLER_LIBRARY), so resolution is a single lookup.
+   * @throws Error if platform handler not found
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
-    // Integration: resolve platform handler from src/runtime/handlers
-    // Supports category.name (e.g., auth.validateJWT) and flat name (e.g., validateJWT)
-    let handlerFn: ((context: Context, ...args: any[]) => Promise<any>) | undefined;
-    try {
-      // Dynamically import all platform handlers
-      const handlers = await import('./handlers');
-      type H = (context: Context, ...args: any[]) => Promise<any>;
-      const h = handlers as unknown as Record<string, Record<string, H>>;
-      // Support category.name (e.g., auth.validateJWT)
-      if (name.includes('.')) {
-        const [category, fn] = name.split('.');
-        handlerFn = h[category]?.[fn];
-      } else {
-        // Flat namespace (e.g., validateJWT)
-        handlerFn = (handlers as unknown as Record<string, H>)[name];
-        // Try each category if not found
-        if (!handlerFn) {
-          for (const cat of Object.keys(handlers)) {
-            if (h[cat]?.[name]) {
-              handlerFn = h[cat][name];
-              break;
-            }
-          }
-        }
-      }
-    } catch (err) {
-      throw new Error(`Failed to import platform handlers: ${(err as Error).message}`);
-    }
+    const handlerFn = PLATFORM_HANDLER_LIBRARY.get(name);
     if (!handlerFn) {
       throw new Error(`Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`);
     }
     await handlerFn(context);
   }
-  
+
   /**
    * Invoke a custom handler from developer implementation
    * @throws Error if custom handler not found
    */
   protected async invokeCustomHandler(name: string, context: Context): Promise<void> {
-    const method = (this as any)[name];
+    const method = (this as unknown as Record<string, unknown>)[name];
     if (typeof method !== 'function') {
       throw new Error(
         `Custom handler not found: ${name}. ` +
@@ -599,7 +583,7 @@ export abstract class BaseMFE {
         `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`
       );
     }
-    await method.call(this, context);
+    await (method as (context: Context) => Promise<void>).call(this, context);
   }
   
   /**
