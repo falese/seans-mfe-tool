@@ -238,6 +238,33 @@ const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
 };
 
 // =============================================================================
+// Capability Middleware Pipeline
+// =============================================================================
+
+/**
+ * One stage of the capability execution pipeline. A middleware does its work,
+ * then calls next() to run the rest of the chain — or catches errors thrown
+ * by it (the error boundary). This is the koa/express onion, minus the
+ * framework: the lifecycle engine's execution model expressed as data.
+ */
+type Middleware = (context: Context, next: () => Promise<void>) => Promise<void>;
+
+/** Run a middleware chain in order. Guards against a stage calling next() twice. */
+async function runPipeline(middlewares: Middleware[], context: Context): Promise<void> {
+  let lastIndex = -1;
+  const dispatch = async (index: number): Promise<void> => {
+    if (index <= lastIndex) {
+      throw new Error('Capability pipeline: next() called multiple times in one middleware');
+    }
+    lastIndex = index;
+    const middleware = middlewares[index];
+    if (!middleware) return;
+    await middleware(context, () => dispatch(index + 1));
+  };
+  await dispatch(0);
+}
+
+// =============================================================================
 // BaseMFE Abstract Class
 // =============================================================================
 
@@ -639,10 +666,23 @@ export abstract class BaseMFE {
   // ===========================================================================
 
   /**
-   * Orchestrate one capability invocation: state guard, optional enter
-   * transition, lifecycle phases around the doX() implementation, optional
-   * exit/error transitions. The per-capability variations live in
-   * CAPABILITY_DESCRIPTORS; this method is the single copy of the pattern.
+   * Orchestrate one capability invocation as an explicit middleware pipeline.
+   *
+   * The pipeline is a data structure — each stage is a small composable
+   * middleware, so the execution model can be read (and, later, extended: the
+   * proposed retry/timeout stages of ADR-028–032 slot in as middleware)
+   * instead of being buried in procedural code:
+   *
+   *   stateGuard → stateTransition(enter) → errorBoundary(
+   *     lifecycle(before) → lifecycle(main) → doX → lifecycle(after) →
+   *     stateTransition(exit)
+   *   )
+   *
+   * The error boundary sits AFTER the guard and enter-transition on purpose:
+   * an invalid-state or invalid-transition error propagates without running
+   * the capability's error lifecycle phase or error state, exactly as before.
+   * Per-capability variation (allowed pre-states, enter/exit/error states)
+   * lives in CAPABILITY_DESCRIPTORS.
    */
   private async executeCapability<T>(
     name: string,
@@ -650,29 +690,70 @@ export abstract class BaseMFE {
     context: Context
   ): Promise<T> {
     const desc = CAPABILITY_DESCRIPTORS[name];
-    if (desc.preStates.length > 0) {
-      this.assertState(...desc.preStates);
-    }
-    if (desc.enterState) {
-      this.transitionState(desc.enterState);
-    }
+    const result: { value?: T } = {};
 
-    try {
-      await this.executeLifecycle(name, 'before', context);
-      await this.executeLifecycle(name, 'main', context);
-      const result = await doFn(context);
-      await this.executeLifecycle(name, 'after', context);
-      if (desc.exitState) {
-        this.transitionState(desc.exitState);
+    const pipeline: Middleware[] = [
+      this.stateGuard(desc.preStates),
+      this.stateTransition(desc.enterState),
+      this.errorBoundary(name, desc.errorState),
+      this.lifecyclePhase(name, 'before'),
+      this.lifecyclePhase(name, 'main'),
+      async (ctx, next) => {
+        result.value = await doFn(ctx);
+        await next();
+      },
+      this.lifecyclePhase(name, 'after'),
+      this.stateTransition(desc.exitState),
+    ];
+
+    await runPipeline(pipeline, context);
+    return result.value as T;
+  }
+
+  /** Middleware: assert the MFE is in one of the allowed pre-states. */
+  private stateGuard(preStates: MFEState[]): Middleware {
+    return async (_ctx, next) => {
+      if (preStates.length > 0) {
+        this.assertState(...preStates);
       }
-      return result;
-    } catch (error) {
-      await this.executeLifecycle(name, 'error', { ...context, error: error as Error });
-      if (desc.errorState) {
-        this.transitionState(desc.errorState);
+      await next();
+    };
+  }
+
+  /** Middleware: transition the state machine (no-op when state is undefined). */
+  private stateTransition(state: MFEState | undefined): Middleware {
+    return async (_ctx, next) => {
+      if (state) {
+        this.transitionState(state);
       }
-      throw error;
-    }
+      await next();
+    };
+  }
+
+  /** Middleware: run one lifecycle phase's DSL hooks for a capability. */
+  private lifecyclePhase(capability: string, phase: 'before' | 'main' | 'after'): Middleware {
+    return async (ctx, next) => {
+      await this.executeLifecycle(capability, phase, ctx);
+      await next();
+    };
+  }
+
+  /**
+   * Middleware: on downstream failure, run the capability's error lifecycle
+   * phase and error-state transition, then rethrow.
+   */
+  private errorBoundary(capability: string, errorState: MFEState | undefined): Middleware {
+    return async (ctx, next) => {
+      try {
+        await next();
+      } catch (error) {
+        await this.executeLifecycle(capability, 'error', { ...ctx, error: error as Error });
+        if (errorState) {
+          this.transitionState(errorState);
+        }
+        throw error;
+      }
+    };
   }
 
   /**
