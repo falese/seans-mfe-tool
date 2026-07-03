@@ -53,12 +53,12 @@ cannot be regenerated offline, and an out-of-sync lockfile breaks `npm ci`).
 
 ## Phasing
 
-| Phase | What | Where |
-| --- | --- | --- |
-| 1 (this change) | ADR, `typedoc.json`, `tsconfig.typedoc.json`, `scripts/generate-dsl-schema.ts`, npm scripts, `api-docs.yml` workflow | #263 |
-| 2 | Run the workflow, review output, commit the seeded `docs/api/` + `schemas/dsl/manifest.schema.json`; promote `typedoc`/`typedoc-plugin-markdown` to `devDependencies` with a lockfile update (requires registry access) | #264 |
-| 3 | API Extractor `.api.md` public-API reports per package — turns the "no public API change" invariant asserted manually in #263 into a CI check. Deferred until per-package builds exist (ADR-064 / #252) | #252 |
-| 4 | `oclif readme` command reference once README `<!-- commands -->` markers are added | #264 |
+| Phase | What | Where | Status |
+| --- | --- | --- | --- |
+| 1 | ADR, `typedoc.json`, `tsconfig.typedoc.json`, `scripts/generate-dsl-schema.ts`, npm scripts, `api-docs.yml` workflow | #263 | ✅ Done |
+| 2 | Generate + review output; commit seeded `docs/api/` + `schemas/dsl/manifest.schema.json`; promote `typedoc`/`typedoc-plugin-markdown` to `devDependencies` with lockfile; drop the `--no-save` install from the workflow; arm the drift gates | #263 | ✅ Done (generated locally with registry access; 126 doc files + the DSL schema seeded) |
+| 3 | API Extractor `.api.md` public-API reports per package — turns the "no public API change" invariant asserted manually in #263 into a CI check. Deferred until per-package builds exist (ADR-064 / #252) | #252 | 📋 Deferred |
+| 4 | `oclif readme` command reference once README `<!-- commands -->` markers are added | #264 | 📋 Deferred |
 
 ## Alternatives considered
 
@@ -76,12 +76,19 @@ cannot be regenerated offline, and an out-of-sync lockfile breaks `npm ci`).
 
 ## Consequences
 
-- `docs/api/` and `schemas/dsl/manifest.schema.json` become generated,
+- `docs/api/` and `schemas/dsl/manifest.schema.json` are generated,
   never-hand-edited artifacts (same contract as `schemas/`); PRs that change
   public types show the reference diff alongside the code diff.
-- Until phase 2 completes, the doc tools are workflow-installed
-  (`--no-save`, pinned) rather than lockfile-managed — an explicit, tracked
-  inconsistency (#264), not a pattern to copy.
-- Verification gates gain one step once seeded: `npm run build:docs:check`
-  joins the pre-push list for changes to `packages/contracts/src/**` or
-  `packages/runtime/src/**`.
+- `typedoc` + `typedoc-plugin-markdown` are lockfile-managed `devDependencies`
+  (phase 2); `npm ci` installs them and the workflow has no ad-hoc install.
+- Verification gains one step for changes to `packages/contracts/src/**`,
+  `packages/runtime/src/**`, or `packages/dsl/src/**`: run `npm run
+  build:docs:check` (and `build:schema:dsl:check` for DSL changes) before
+  push, or let the `api-docs` workflow's drift gate catch it.
+
+### Note on the `typedoc.json` config
+
+TypeDoc's option parser is strict and rejects unknown keys, so — unlike the
+other JSON config files in this repo — `typedoc.json` cannot carry a `"//"`
+comment key. Provenance/rationale for the config lives here and in the
+workflow header instead.

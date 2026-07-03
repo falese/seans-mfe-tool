@@ -1,6 +1,5 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "//": "API reference generation (ADR-065). Output is checked into docs/api/ and drift-gated by build:docs:check — never hand-edit docs/api. Tooling is workflow-installed until #264 phase 2 promotes it to devDependencies.",
   "entryPoints": [
     "packages/contracts/src/index.ts",
     "packages/runtime/src/index.ts",
