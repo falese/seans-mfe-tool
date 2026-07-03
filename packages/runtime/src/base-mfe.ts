@@ -13,7 +13,9 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe/
 import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
-import { ValidationError as RuntimeValidationError } from './errors/ValidationError';
+import { ValidationError as RuntimeValidationError } from '@seans-mfe/contracts';
+import type { Resolution } from '@seans-mfe/contracts';
+import * as platformHandlerLibrary from './handlers';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -24,11 +26,11 @@ export type { DaemonWebSocketClient };
 // =============================================================================
 
 export interface PlatformHandlerMap {
-  [key: string]: (context: Context) => Promise<any>;
+  [key: string]: (context: Context) => Promise<unknown>;
 }
 
 export interface CustomHandlerMap {
-  [key: string]: (context: Context) => Promise<any>;
+  [key: string]: (context: Context) => Promise<unknown>;
 }
 
 export interface TelemetryService {
@@ -39,8 +41,22 @@ export interface StateValidator {
   isValidTransition(from: MFEState, to: MFEState): boolean;
 }
 
+/**
+ * The slice of a capability's manifest entry the lifecycle engine reads:
+ * the per-phase hook lists. Everything else on the entry is opaque.
+ */
+export interface CapabilityLifecycleConfig {
+  lifecycle?: {
+    before?: LifecycleHookEntry[];
+    main?: LifecycleHookEntry[];
+    after?: LifecycleHookEntry[];
+    error?: LifecycleHookEntry[];
+  };
+  [key: string]: unknown;
+}
+
 export interface ManifestParser {
-  parse(manifest: DSLManifest): any;
+  parse(manifest: DSLManifest): Record<string, CapabilityLifecycleConfig | null | undefined>;
 }
 
 export interface LifecycleExecutor {
@@ -69,8 +85,6 @@ export interface BaseMFEDependencies {
 // Result Types
 // =============================================================================
 
-type Worker = any;
-
 /** Metadata for a single capability declared in the manifest */
 export interface CapabilityMetadata {
   name: string;
@@ -83,7 +97,7 @@ export interface LoadResult {
   status: 'loaded' | 'error';
   container?: unknown;
   mesh?: unknown;
-  worker?: Worker;
+  worker?: unknown;
   manifest?: import('@seans-mfe/dsl').DSLManifest;
   availableComponents?: string[];
   capabilities?: CapabilityMetadata[];
@@ -143,7 +157,13 @@ export interface EmitResult {
   eventId?: string;
 }
 
-/** Result from updateControlPlaneState capability */
+/**
+ * Result from updateControlPlaneState capability.
+ *
+ * Mirrors ControlPlaneStateResult in @seans-mfe/contracts, with `error`
+ * optional so implementors of doUpdateControlPlaneState may omit it (the wire
+ * form always sets it). The `resolution` shape IS the contracts `Resolution`.
+ */
 export interface ControlPlaneStateResult {
   /** Whether the daemon acknowledged the state update */
   acknowledged: boolean;
@@ -156,11 +176,7 @@ export interface ControlPlaneStateResult {
    * on the state update. In practice this may arrive asynchronously via the
    * daemon's Subscription.messages channel instead.
    */
-  resolution?: {
-    mfe: string;
-    capability: string;
-    props: Record<string, unknown>;
-  };
+  resolution?: Resolution | null;
 }
 
 // =============================================================================
@@ -185,6 +201,99 @@ export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
   error: ['loading', 'destroyed'],
   destroyed: []
 };
+
+// =============================================================================
+// Capability Descriptors (REQ-054)
+// =============================================================================
+
+/**
+ * How a capability interacts with the lifecycle state machine (ADR-042).
+ * Everything else about capability orchestration (before → main → doX →
+ * after, error phase on failure) is identical across the 10 platform
+ * capabilities and lives once in BaseMFE.executeCapability().
+ */
+interface CapabilityDescriptor {
+  /** States this capability may be invoked from; empty = any state. */
+  preStates: MFEState[];
+  /** State entered before execution (e.g. load → 'loading'). */
+  enterState?: MFEState;
+  /** State entered after successful execution. */
+  exitState?: MFEState;
+  /** State entered when execution fails. */
+  errorState?: MFEState;
+}
+
+/** Any state except 'destroyed' — read-only capabilities run everywhere. */
+const ANY_LIVE_STATE: MFEState[] = ['uninitialized', 'loading', 'ready', 'rendering', 'error'];
+
+const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
+  load: {
+    preStates: ['uninitialized', 'ready', 'error'],
+    enterState: 'loading',
+    exitState: 'ready',
+    errorState: 'error',
+  },
+  render: {
+    preStates: ['ready'],
+    enterState: 'rendering',
+    exitState: 'ready',
+    errorState: 'error',
+  },
+  refresh: { preStates: ['ready'] },
+  authorizeAccess: { preStates: ['ready'] },
+  health: { preStates: ANY_LIVE_STATE },
+  describe: { preStates: ANY_LIVE_STATE },
+  schema: { preStates: ['ready'] },
+  query: { preStates: ['ready'] },
+  emit: { preStates: [] },
+  // Available from ready OR rendering — an MFE may push state mid-render.
+  updateControlPlaneState: { preStates: ['ready', 'rendering'] },
+};
+
+// =============================================================================
+// Platform Handler Library (REQ-058)
+// =============================================================================
+
+type PlatformHandlerFn = (context: Context) => Promise<unknown>;
+
+/**
+ * The platform handler library, resolved once at module load from the static
+ * './handlers' barrel (flat namespace — `export *` per category module).
+ * Replaces the former per-invocation dynamic import: resolution is O(1) and
+ * the full set of resolvable names is visible here at startup.
+ */
+const PLATFORM_HANDLER_LIBRARY: ReadonlyMap<string, PlatformHandlerFn> = new Map(
+  Object.entries(platformHandlerLibrary as unknown as Record<string, unknown>)
+    .filter(([, value]) => typeof value === 'function')
+    .map(([name, value]) => [name, value as PlatformHandlerFn])
+);
+
+// =============================================================================
+// Capability Middleware Pipeline
+// =============================================================================
+
+/**
+ * One stage of the capability execution pipeline. A middleware does its work,
+ * then calls next() to run the rest of the chain — or catches errors thrown
+ * by it (the error boundary). This is the koa/express onion, minus the
+ * framework: the lifecycle engine's execution model expressed as data.
+ */
+type Middleware = (context: Context, next: () => Promise<void>) => Promise<void>;
+
+/** Run a middleware chain in order. Guards against a stage calling next() twice. */
+async function runPipeline(middlewares: Middleware[], context: Context): Promise<void> {
+  let lastIndex = -1;
+  const dispatch = async (index: number): Promise<void> => {
+    if (index <= lastIndex) {
+      throw new Error('Capability pipeline: next() called multiple times in one middleware');
+    }
+    lastIndex = index;
+    const middleware = middlewares[index];
+    if (!middleware) return;
+    await middleware(context, () => dispatch(index + 1));
+  };
+  await dispatch(0);
+}
 
 // =============================================================================
 // BaseMFE Abstract Class
@@ -431,87 +540,52 @@ export abstract class BaseMFE {
    */
   protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
     if (handlerName.startsWith('platform.')) {
+      // Platform: DI map first, then the static library.
       const platformHandlerName = handlerName.slice(9);
-      if (this.deps?.platformHandlers && this.deps.platformHandlers[platformHandlerName]) {
-        await this.deps.platformHandlers[platformHandlerName](context);
+      const injected = this.deps?.platformHandlers?.[platformHandlerName];
+      if (injected) {
+        await injected(context);
       } else {
         await this.invokePlatformHandler(platformHandlerName, context);
       }
-    } else {
-      // Try full custom handler name first, then fallback to last segment
-      const customHandlerName = handlerName;
-      if (this.deps?.customHandlers && this.deps.customHandlers[customHandlerName]) {
-        await this.deps.customHandlers[customHandlerName](context);
-        return;
-      }
-      // Fallback: strip prefix (e.g., 'custom.fail' -> 'fail')
-      const lastSegment = customHandlerName.includes('.') ? customHandlerName.split('.').pop() : customHandlerName;
-      if (lastSegment && this.deps?.customHandlers && this.deps.customHandlers[lastSegment]) {
-        await this.deps.customHandlers[lastSegment](context);
-        return;
-      }
-      // Fallback: invoke as method on subclass
-      await this.invokeCustomHandler(lastSegment!, context);
+      return;
     }
+
+    // Custom: DI map by full name, then by last segment (e.g. 'custom.fail'
+    // -> 'fail'), finally a method on the subclass.
+    const injected = this.deps?.customHandlers?.[handlerName];
+    if (injected) {
+      await injected(context);
+      return;
+    }
+    const lastSegment = handlerName.includes('.') ? handlerName.split('.').pop()! : handlerName;
+    const injectedLastSegment = this.deps?.customHandlers?.[lastSegment];
+    if (injectedLastSegment) {
+      await injectedLastSegment(context);
+      return;
+    }
+    await this.invokeCustomHandler(lastSegment, context);
   }
-  
+
   /**
-  * Invoke a platform handler from standard library
-  * @throws Error if platform handler not found
-  *
-  * ---
-  * Coverage Note:
-  * The dynamic import (await import('./handlers')) below is not reliably covered by Jest/Istanbul/nyc.
-  * This is a known limitation for dynamic imports in JavaScript/TypeScript coverage tools:
-  *   - Jest FAQ: https://jestjs.io/docs/coverage#why-are-some-lines-not-covered
-  *   - Istanbul Issue #879: https://github.com/istanbuljs/istanbuljs/issues/879
-  *   - Stack Overflow: https://stackoverflow.com/questions/56357938/jest-coverage-for-dynamic-import
-  *   - Jest Issue #9430: https://github.com/facebook/jest/issues/9430
-  *
-  * Do not refactor production code solely for coverage. All other branches and error paths are strictly covered.
-  * ---
+   * Invoke a platform handler from the standard library — a flat, statically
+   * built map (PLATFORM_HANDLER_LIBRARY), so resolution is a single lookup.
+   * @throws Error if platform handler not found
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
-    // Integration: resolve platform handler from src/runtime/handlers
-    // Supports category.name (e.g., auth.validateJWT) and flat name (e.g., validateJWT)
-    let handlerFn: ((context: Context, ...args: any[]) => Promise<any>) | undefined;
-    try {
-      // Dynamically import all platform handlers
-      const handlers = await import('./handlers');
-      type H = (context: Context, ...args: any[]) => Promise<any>;
-      const h = handlers as unknown as Record<string, Record<string, H>>;
-      // Support category.name (e.g., auth.validateJWT)
-      if (name.includes('.')) {
-        const [category, fn] = name.split('.');
-        handlerFn = h[category]?.[fn];
-      } else {
-        // Flat namespace (e.g., validateJWT)
-        handlerFn = (handlers as unknown as Record<string, H>)[name];
-        // Try each category if not found
-        if (!handlerFn) {
-          for (const cat of Object.keys(handlers)) {
-            if (h[cat]?.[name]) {
-              handlerFn = h[cat][name];
-              break;
-            }
-          }
-        }
-      }
-    } catch (err) {
-      throw new Error(`Failed to import platform handlers: ${(err as Error).message}`);
-    }
+    const handlerFn = PLATFORM_HANDLER_LIBRARY.get(name);
     if (!handlerFn) {
       throw new Error(`Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`);
     }
     await handlerFn(context);
   }
-  
+
   /**
    * Invoke a custom handler from developer implementation
    * @throws Error if custom handler not found
    */
   protected async invokeCustomHandler(name: string, context: Context): Promise<void> {
-    const method = (this as any)[name];
+    const method = (this as unknown as Record<string, unknown>)[name];
     if (typeof method !== 'function') {
       throw new Error(
         `Custom handler not found: ${name}. ` +
@@ -521,7 +595,7 @@ export abstract class BaseMFE {
         `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`
       );
     }
-    await method.call(this, context);
+    await (method as (context: Context) => Promise<void>).call(this, context);
   }
   
   /**
@@ -566,7 +640,7 @@ export abstract class BaseMFE {
   /**
    * Find capability configuration from manifest
    */
-  private findCapabilityConfig(capability: string): any {
+  private findCapabilityConfig(capability: string): CapabilityLifecycleConfig | null {
     if (!this.manifest.capabilities) {
       return null;
     }
@@ -575,7 +649,7 @@ export abstract class BaseMFE {
     for (const entry of this.manifest.capabilities) {
       const key = Object.keys(entry).find(k => k.toLowerCase() === lc);
       if (key) {
-        return entry[key];
+        return entry[key] as unknown as CapabilityLifecycleConfig;
       }
     }
 
@@ -586,181 +660,179 @@ export abstract class BaseMFE {
   // Platform Capabilities (REQ-054)
   // Generated wrappers that orchestrate lifecycle
   // ===========================================================================
-  
+
   /**
-   * Load capability: Initialize and prepare MFE for use
-   * 
-   * Generated wrapper - orchestrates lifecycle phases
+   * Orchestrate one capability invocation as an explicit middleware pipeline.
+   *
+   * The pipeline is a data structure — each stage is a small composable
+   * middleware, so the execution model can be read (and, later, extended: the
+   * proposed retry/timeout stages of ADR-028–032 slot in as middleware)
+   * instead of being buried in procedural code:
+   *
+   *   stateGuard → stateTransition(enter) → errorBoundary(
+   *     lifecycle(before) → lifecycle(main) → doX → lifecycle(after) →
+   *     stateTransition(exit)
+   *   )
+   *
+   * The error boundary sits AFTER the guard and enter-transition on purpose:
+   * an invalid-state or invalid-transition error propagates without running
+   * the capability's error lifecycle phase or error state, exactly as before.
+   * Per-capability variation (allowed pre-states, enter/exit/error states)
+   * lives in CAPABILITY_DESCRIPTORS.
    */
-  public async load(context: Context): Promise<LoadResult> {
-    this.assertState('uninitialized', 'ready', 'error');
-    this.transitionState('loading');
-    
-    try {
-      await this.executeLifecycle('load', 'before', context);
-      await this.executeLifecycle('load', 'main', context);
-      const result = await this.doLoad(context);
-      await this.executeLifecycle('load', 'after', context);
-      
-      this.transitionState('ready');
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('load', 'error', { ...context, error: error as Error });
-      this.transitionState('error');
-      throw error;
+  private async executeCapability<T>(
+    name: string,
+    doFn: (context: Context) => Promise<T>,
+    context: Context
+  ): Promise<T> {
+    const desc = CAPABILITY_DESCRIPTORS[name];
+    const result: { value?: T } = {};
+
+    const pipeline: Middleware[] = [
+      this.stateGuard(desc.preStates),
+      this.stateTransition(desc.enterState),
+      this.errorBoundary(name, desc.errorState),
+      this.lifecyclePhase(name, 'before'),
+      this.lifecyclePhase(name, 'main'),
+      async (ctx, next) => {
+        this.assertCapabilityImplemented(name);
+        result.value = await doFn(ctx);
+        await next();
+      },
+      this.lifecyclePhase(name, 'after'),
+      this.stateTransition(desc.exitState),
+    ];
+
+    await runPipeline(pipeline, context);
+    return result.value as T;
+  }
+
+  /**
+   * Guard the doX() invocation: the abstract-method contract is compile-time
+   * only, so a subclass built without the method (plain JS, `as any` casts,
+   * partial test doubles) would otherwise fail with a raw TypeError. Throw
+   * the descriptive platform error instead — same message the handler
+   * resolution path uses. Runs inside the error boundary, after the
+   * before/main phases, so the error lifecycle semantics match a failing
+   * implementation.
+   */
+  private assertCapabilityImplemented(name: string): void {
+    const methodName = `do${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    const method = (this as unknown as Record<string, unknown>)[methodName];
+    if (typeof method !== 'function') {
+      throw new Error(
+        `Platform handler not implemented: platform.${name}. Expected method ${methodName} on MFE class.`
+      );
     }
   }
-  
+
+  /** Middleware: assert the MFE is in one of the allowed pre-states. */
+  private stateGuard(preStates: MFEState[]): Middleware {
+    return async (_ctx, next) => {
+      if (preStates.length > 0) {
+        this.assertState(...preStates);
+      }
+      await next();
+    };
+  }
+
+  /** Middleware: transition the state machine (no-op when state is undefined). */
+  private stateTransition(state: MFEState | undefined): Middleware {
+    return async (_ctx, next) => {
+      if (state) {
+        this.transitionState(state);
+      }
+      await next();
+    };
+  }
+
+  /** Middleware: run one lifecycle phase's DSL hooks for a capability. */
+  private lifecyclePhase(capability: string, phase: 'before' | 'main' | 'after'): Middleware {
+    return async (ctx, next) => {
+      await this.executeLifecycle(capability, phase, ctx);
+      await next();
+    };
+  }
+
+  /**
+   * Middleware: on downstream failure, run the capability's error lifecycle
+   * phase and error-state transition, then rethrow.
+   */
+  private errorBoundary(capability: string, errorState: MFEState | undefined): Middleware {
+    return async (ctx, next) => {
+      try {
+        await next();
+      } catch (error) {
+        await this.executeLifecycle(capability, 'error', { ...ctx, error: error as Error });
+        if (errorState) {
+          this.transitionState(errorState);
+        }
+        throw error;
+      }
+    };
+  }
+
+  /**
+   * Load capability: Initialize and prepare MFE for use
+   */
+  public async load(context: Context): Promise<LoadResult> {
+    return this.executeCapability('load', (ctx) => this.doLoad(ctx), context);
+  }
+
   /**
    * Render capability: Render MFE UI into target container
    */
   public async render(context: Context): Promise<RenderResult> {
-    this.assertState('ready');
-    this.transitionState('rendering');
-    
-    try {
-      await this.executeLifecycle('render', 'before', context);
-      await this.executeLifecycle('render', 'main', context);
-      const result = await this.doRender(context);
-      await this.executeLifecycle('render', 'after', context);
-      
-      this.transitionState('ready');
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('render', 'error', { ...context, error: error as Error });
-      this.transitionState('error');
-      throw error;
-    }
+    return this.executeCapability('render', (ctx) => this.doRender(ctx), context);
   }
-  
+
   /**
    * Refresh capability: Refresh MFE data/state
    */
   public async refresh(context: Context): Promise<void> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('refresh', 'before', context);
-      await this.executeLifecycle('refresh', 'main', context);
-      await this.doRefresh(context);
-      await this.executeLifecycle('refresh', 'after', context);
-    } catch (error) {
-      await this.executeLifecycle('refresh', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('refresh', (ctx) => this.doRefresh(ctx), context);
   }
-  
+
   /**
    * AuthorizeAccess capability: Check authorization
    */
   public async authorizeAccess(context: Context): Promise<boolean> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('authorizeAccess', 'before', context);
-      await this.executeLifecycle('authorizeAccess', 'main', context);
-      const result = await this.doAuthorizeAccess(context);
-      await this.executeLifecycle('authorizeAccess', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('authorizeAccess', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('authorizeAccess', (ctx) => this.doAuthorizeAccess(ctx), context);
   }
-  
+
   /**
    * Health capability: Check MFE health status
    */
   public async health(context: Context): Promise<HealthResult> {
-    // Health check can run in any state except destroyed
-    this.assertState('uninitialized', 'loading', 'ready', 'rendering', 'error');
-    
-    try {
-      await this.executeLifecycle('health', 'before', context);
-      await this.executeLifecycle('health', 'main', context);
-      const result = await this.doHealth(context);
-      await this.executeLifecycle('health', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('health', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('health', (ctx) => this.doHealth(ctx), context);
   }
-  
+
   /**
    * Describe capability: Return MFE metadata
    */
   public async describe(context: Context): Promise<DescribeResult> {
-    // Describe can run in any state
-    this.assertState('uninitialized', 'loading', 'ready', 'rendering', 'error');
-    
-    try {
-      await this.executeLifecycle('describe', 'before', context);
-      await this.executeLifecycle('describe', 'main', context);
-      const result = await this.doDescribe(context);
-      await this.executeLifecycle('describe', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('describe', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('describe', (ctx) => this.doDescribe(ctx), context);
   }
-  
+
   /**
    * Schema capability: Return GraphQL/JSON schema
    */
   public async schema(context: Context): Promise<SchemaResult> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('schema', 'before', context);
-      await this.executeLifecycle('schema', 'main', context);
-      const result = await this.doSchema(context);
-      await this.executeLifecycle('schema', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('schema', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('schema', (ctx) => this.doSchema(ctx), context);
   }
-  
+
   /**
    * Query capability: Execute data query
    */
   public async query(context: Context): Promise<QueryResult> {
-    this.assertState('ready');
-    
-    try {
-      await this.executeLifecycle('query', 'before', context);
-      await this.executeLifecycle('query', 'main', context);
-      const result = await this.doQuery(context);
-      await this.executeLifecycle('query', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('query', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('query', (ctx) => this.doQuery(ctx), context);
   }
-  
+
   /**
    * Emit capability: Emit telemetry/events
    */
   public async emit(context: Context): Promise<EmitResult> {
-    // Emit can run in any state
-    try {
-      await this.executeLifecycle('emit', 'before', context);
-      await this.executeLifecycle('emit', 'main', context);
-      // If doEmit is not implemented, throw error
-      if (typeof this.doEmit !== 'function') {
-        throw new Error('Platform handler not implemented: platform.emit. Expected method doEmit on MFE class.');
-      }
-      const result = await this.doEmit(context);
-      await this.executeLifecycle('emit', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('emit', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability('emit', (ctx) => this.doEmit(ctx), context);
   }
 
   /**
@@ -785,19 +857,11 @@ export abstract class BaseMFE {
    * Available from 'ready' or 'rendering' — an MFE can push state mid-render.
    */
   public async updateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
-    // Available from ready OR rendering — MFE may push state mid-render
-    this.assertState('ready', 'rendering');
-
-    try {
-      await this.executeLifecycle('updateControlPlaneState', 'before', context);
-      await this.executeLifecycle('updateControlPlaneState', 'main', context);
-      const result = await this.doUpdateControlPlaneState(context);
-      await this.executeLifecycle('updateControlPlaneState', 'after', context);
-      return result;
-    } catch (error) {
-      await this.executeLifecycle('updateControlPlaneState', 'error', { ...context, error: error as Error });
-      throw error;
-    }
+    return this.executeCapability(
+      'updateControlPlaneState',
+      (ctx) => this.doUpdateControlPlaneState(ctx),
+      context
+    );
   }
   
   // ===========================================================================

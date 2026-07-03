@@ -1,5 +1,5 @@
 
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 export async function logTelemetry(context: Context, event?: object): Promise<void> {
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
   if (emit) {

@@ -1,5 +1,5 @@
 
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 
 /**
  * Validates JWT in context and sets context.user

@@ -4,7 +4,7 @@
  */
 
 import { withTimeout } from '../timeout-wrapper';
-import { TimeoutError } from '../errors/TimeoutError';
+import { TimeoutError } from '../errors';
 import { ContextFactory } from '../context';
 
 describe('withTimeout - quick tests', () => {

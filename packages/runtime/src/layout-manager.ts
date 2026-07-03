@@ -5,238 +5,50 @@
  * renders nothing until the daemon control plane publishes EXPERIENCE
  * components (PLATFORM-CONTRACT v3.2 / ADR-054). Each experience is routed to
  * a layout slot (`experience.props.slot`, default 'main') and mounted by the
- * adaptor registered for its `contentType`:
- *
- *   module-federation → loads the remote container (React, Angular, anything
- *                       that ships the BaseMFE bootstrap `{ mfe, mfeReady }`)
- *                       and drives load()/render() — framework-independent
- *                       because the lifecycle contract is (ADR-041)
- *   text/html         → MFE-owned markup with data-action delegation
- *   application/json  → generic data view
- *
- * Adaptors are pluggable: register one per contentType to support new
- * delivery mechanisms without touching the manager or the shell.
+ * adaptor registered for its `contentType` (see layout-adaptors.ts); the
+ * daemon connection rides the graphql-transport-ws client in
+ * layout-transport.ts.
  *
  * The manager is deliberately framework-free (no React/Angular imports) and
  * DOM-light: hosts and slot elements are typed structurally so the routing
  * logic is unit-testable without a browser.
  */
 
-import type {
-  ImperativeMountHandle,
-  PresentationHandles,
-  RenderedExperience,
-  SessionContext,
-} from '@seans-mfe/contracts';
-// isImperativeMountHandle is a *value*, so this emits a
-// require("@seans-mfe/contracts") in the compiled runtime. That resolves in
-// every consumer: the CLI image (workspace node_modules) and generated MFEs
-// (contracts is staged as a file: dep of dist/runtime — #236, ADR-054/056).
-import { isImperativeMountHandle } from '@seans-mfe/contracts';
+import { buildMessage } from '@seans-mfe/contracts';
+import type { ActionRecord, RenderedExperience, SessionContext } from '@seans-mfe/contracts';
 import { DaemonChannel } from './daemon-channel';
-import type { DaemonWebSocketClient } from './graphql-ws-client';
+import { uuidv4 } from './util/uuid';
+import type { DaemonEnvelope, DaemonTransport, TransportStatus } from './layout-transport';
+import {
+  defaultAdaptors,
+  defaultCreateSlotElement,
+  defaultRenderSlotFallback,
+} from './layout-adaptors';
+import type {
+  AdaptorHelpers,
+  ExperienceAdaptor,
+  SlotElementLike,
+  SlotErrorInfo,
+  UnmountFn,
+} from './layout-adaptors';
 
-// ── Structural element types (testable without a DOM) ────────
+// Compatibility re-exports: these lived in this module before the transport/
+// adaptor split; existing imports from './layout-manager' keep working.
+export { GraphQLTransportWsDaemonTransport } from './layout-transport';
+export type { DaemonEnvelope, DaemonTransport, TransportStatus, WebSocketLike } from './layout-transport';
+export { htmlAdaptor, jsonAdaptor, moduleFederationAdaptor } from './layout-adaptors';
+export type {
+  AdaptorHelpers,
+  ExperienceAdaptor,
+  SlotElementLike,
+  SlotErrorInfo,
+  UnmountFn,
+} from './layout-adaptors';
 
-export interface SlotElementLike {
-  innerHTML: string;
-  appendChild(child: unknown): unknown;
-  remove(): void;
-  setAttribute(name: string, value: string): void;
-  addEventListener(type: string, listener: (event: unknown) => void): void;
-}
+// ── Structural host type (testable without a DOM) ────────────
 
 export interface LayoutHostLike {
   appendChild(child: unknown): unknown;
-}
-
-// ── Adaptors ─────────────────────────────────────────────────
-
-export type UnmountFn = () => void | Promise<void>;
-
-export interface AdaptorHelpers {
-  /** Send an action back up the control plane for this experience. */
-  sendAction(actionType: string, data: Record<string, unknown>): Promise<void>;
-  /**
-   * A virtual daemon channel for this slot (ADR-057): the host's single socket,
-   * scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
-   * `updateControlPlaneState` platform capability rides the shared connection.
-   */
-  channel?: DaemonWebSocketClient;
-  /**
-   * Contribute a named slot to the host layout (ADR-058): the MFE renders a
-   * region and registers its element so the host routes later experiences
-   * (`props.slot === slotId`) into it. The layout itself becomes an MFE.
-   */
-  provideSlot?(slotId: string, element: SlotElementLike): void;
-  /** The session this experience was rendered for, when known. */
-  session?: SessionContext;
-  /**
-   * The host's framework (e.g. 'react'), when known. Threaded for ADR-056
-   * handle negotiation: a provider will pick the MFE's native handle when the
-   * host framework matches. The in-tree native path is DEFERRED (ADR-056), so
-   * today every adaptor composes via the guaranteed imperative floor regardless
-   * of this value — it is carried, not yet acted on.
-   */
-  hostFramework?: string;
-  /**
-   * Host-injected provider values (theme, locale, auth claims, router state, …)
-   * that cross the waist as DATA (ADR-060 value-injection). The MFE island
-   * re-provides its own context from these — context reaches the MFE without a
-   * shared reconciler, so isolation, polyglot, and multi-version React all hold.
-   */
-  providerValues?: Record<string, unknown>;
-  /**
-   * Report an unrecovered error from inside the mounted island (ADR-060). The
-   * MFE's framework error boundary / lifecycle `error` phase routes here via its
-   * `emit` capability. The host renders a slot-scoped fallback and escalates to
-   * the control plane; it is slot-isolated and never cascades to siblings.
-   */
-  reportError(error: unknown, info?: { phase?: string }): void;
-}
-
-/** Describes a slot-scoped failure (ADR-060) for fallback + escalation. */
-export interface SlotErrorInfo {
-  slot: string;
-  mfe: string;
-  capability: string;
-  reason: string;
-  phase?: string;
-}
-
-export interface ExperienceAdaptor {
-  mount(
-    experience: RenderedExperience,
-    slot: SlotElementLike,
-    helpers: AdaptorHelpers
-  ): Promise<UnmountFn | void>;
-}
-
-// ── Daemon transport (graphql-transport-ws) ──────────────────
-
-export interface DaemonTransport {
-  /** Open the `messages` subscription; deliver each envelope to onMessage. */
-  start(onMessage: (envelope: DaemonEnvelope) => void, onStatus?: (s: TransportStatus) => void): void;
-  stop(): void;
-  /** Fire the sendMessage mutation with a JSON-encoded envelope. */
-  send(envelope: Record<string, unknown>): Promise<void>;
-}
-
-export type TransportStatus = 'connecting' | 'connected' | 'disconnected';
-
-/**
- * The transport envelope delivered on the daemon's `messages` subscription.
- *
- * This is NOT the logical `Message` (ADR-054). The downward payload is wrapped
- * in a component envelope: `kind: 'COMPONENT_UPDATE'` with `payload.type`
- * (`'EXPERIENCE' | 'RESOLUTION_ERROR'`) discriminating the envelope and
- * `payload.data` carrying the ADR-054 `RenderedExperience`. The `type`
- * discriminator is an envelope tag, not a revived CARD/FORM/NOTIFICATION
- * component type (ADR-054 "Wire envelope vs logical message").
- */
-export interface DaemonEnvelope {
-  direction?: string;
-  kind?: string;
-  payload?: {
-    id?: string;
-    type?: string;
-    data?: Record<string, unknown>;
-    [key: string]: unknown;
-  };
-  metadata?: { correlationId?: string; acknowledged?: boolean; error?: string | null };
-}
-
-/** Minimal WebSocket surface so tests can inject a fake socket factory. */
-export interface WebSocketLike {
-  send(data: string): void;
-  close(): void;
-  onopen: (() => void) | null;
-  onmessage: ((event: { data: string }) => void) | null;
-  onclose: (() => void) | null;
-  onerror: ((err: unknown) => void) | null;
-}
-
-const RECONNECT_BASE_MS = 400;
-const RECONNECT_MAX_MS = 5_000;
-const RECONNECT_FACTOR = 1.6;
-
-/**
- * Self-contained graphql-transport-ws client for the daemon's `messages`
- * subscription and `sendMessage` mutation, with bounded-backoff reconnect.
- */
-export class GraphQLTransportWsDaemonTransport implements DaemonTransport {
-  private socket: WebSocketLike | null = null;
-  private stopped = false;
-  private attempt = 0;
-  private acked = false;
-
-  constructor(
-    private readonly url: string,
-    private readonly createSocket: (url: string, protocol: string) => WebSocketLike
-  ) {}
-
-  start(onMessage: (envelope: DaemonEnvelope) => void, onStatus?: (s: TransportStatus) => void): void {
-    this.stopped = false;
-    const connect = (): void => {
-      if (this.stopped) return;
-      onStatus?.('connecting');
-      const socket = this.createSocket(this.url, 'graphql-transport-ws');
-      this.socket = socket;
-      this.acked = false;
-
-      socket.onopen = () => socket.send(JSON.stringify({ type: 'connection_init' }));
-      socket.onmessage = (event) => {
-        let frame: { type?: string; payload?: { data?: { messages?: DaemonEnvelope } } };
-        try {
-          frame = JSON.parse(event.data) as typeof frame;
-        } catch {
-          return;
-        }
-        if (frame.type === 'connection_ack') {
-          this.acked = true;
-          this.attempt = 0;
-          onStatus?.('connected');
-          socket.send(JSON.stringify({
-            id: 'layout-sub',
-            type: 'subscribe',
-            payload: { query: 'subscription { messages { direction kind payload metadata { correlationId acknowledged error } } }' },
-          }));
-        } else if (frame.type === 'next' && frame.payload?.data?.messages) {
-          onMessage(frame.payload.data.messages);
-        } else if (frame.type === 'ping') {
-          socket.send(JSON.stringify({ type: 'pong' }));
-        }
-      };
-      socket.onclose = () => {
-        onStatus?.('disconnected');
-        if (this.stopped) return;
-        const delay = Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * Math.pow(RECONNECT_FACTOR, this.attempt++));
-        setTimeout(connect, delay);
-      };
-      socket.onerror = () => { /* onclose drives the reconnect */ };
-    };
-    connect();
-  }
-
-  stop(): void {
-    this.stopped = true;
-    this.socket?.close();
-    this.socket = null;
-  }
-
-  async send(envelope: Record<string, unknown>): Promise<void> {
-    if (!this.socket || !this.acked) {
-      throw new Error('LayoutManager: daemon transport is not connected');
-    }
-    this.socket.send(JSON.stringify({
-      id: `action-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      type: 'subscribe',
-      payload: {
-        query: 'mutation($message: String!) { sendMessage(message: $message) }',
-        variables: { message: JSON.stringify(envelope) },
-      },
-    }));
-  }
 }
 
 // ── LayoutManager ────────────────────────────────────────────
@@ -436,39 +248,47 @@ export class LayoutManager {
 
   /** Emit a SLOT_ERROR action up the control plane for re-resolution (ADR-060). */
   private async signalSlotError(componentId: string, info: SlotErrorInfo): Promise<void> {
-    const action: Record<string, unknown> = {
-      id: `slot-err-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    await this.buildAndSendAction(
       componentId,
-      actionType: 'SLOT_ERROR',
-      stateKey: 'slot.error',
-      data: { slot: info.slot, mfe: info.mfe, capability: info.capability, reason: info.reason, phase: info.phase },
-      timestamp: new Date().toISOString(),
-    };
-    if (this.config.session) action.context = this.config.session;
-    await this.config.transport.send({
-      direction: 'ACTION',
-      kind: 'ACTION',
-      payload: action,
-      metadata: { correlationId: String(action.id), acknowledged: false, error: info.reason },
-    });
+      'SLOT_ERROR',
+      { slot: info.slot, mfe: info.mfe, capability: info.capability, reason: info.reason, phase: info.phase },
+      { stateKey: 'slot.error', error: info.reason }
+    );
   }
 
   /** Send an action up the control plane, carrying the session context. */
   async sendAction(componentId: string, actionType: string, data: Record<string, unknown>): Promise<void> {
-    const action: Record<string, unknown> = {
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    await this.buildAndSendAction(componentId, actionType, data);
+  }
+
+  /**
+   * Shared upward path: build an ActionRecord (session context attached when
+   * the shell has one), wrap it in the ADR-054 envelope via the contracts
+   * builder, and hand it to the transport.
+   */
+  private async buildAndSendAction(
+    componentId: string,
+    actionType: string,
+    data: Record<string, unknown>,
+    extra?: { stateKey?: string; error?: string }
+  ): Promise<void> {
+    const action: ActionRecord = {
+      id: uuidv4(),
       componentId,
       actionType,
       data,
       timestamp: new Date().toISOString(),
+      ...(extra?.stateKey ? { stateKey: extra.stateKey } : {}),
+      ...(this.config.session ? { context: this.config.session } : {}),
     };
-    if (this.config.session) action.context = this.config.session;
-    await this.config.transport.send({
+    const envelope = buildMessage({
       direction: 'ACTION',
       kind: 'ACTION',
       payload: action,
-      metadata: { correlationId: String(action.id), acknowledged: false, error: null },
+      correlationId: action.id,
+      error: extra?.error,
     });
+    await this.config.transport.send(envelope as unknown as Record<string, unknown>);
   }
 
   private ensureSlot(slotId: string): ActiveSlot {
@@ -523,205 +343,4 @@ export class LayoutManager {
       slot.element.innerHTML = '';
     }
   }
-}
-
-// ── Slot fallback (ADR-060) ──────────────────────────────────
-
-/**
- * Default slot-scoped fallback: neutral markup, no framework. Rendered into the
- * failed slot only, so a crashing MFE degrades to a message in its own region
- * instead of cascading. Hosts override via `renderSlotFallback`.
- */
-function defaultRenderSlotFallback(slot: SlotElementLike, info: SlotErrorInfo): void {
-  slot.innerHTML =
-    `<div role="alert" class="layout-slot__error" data-slot-error="${info.slot}">` +
-    `This experience is temporarily unavailable.</div>`;
-}
-
-// ── Built-in adaptors ────────────────────────────────────────
-
-/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
-function defaultCreateSlotElement(slotId: string): SlotElementLike {
-  const element = document.createElement('section');
-  element.className = `layout-slot layout-slot--${slotId}`;
-  return element as unknown as SlotElementLike;
-}
-
-/** text/html — MFE-owned markup. Elements with data-action send actions. */
-/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
-export const htmlAdaptor: ExperienceAdaptor = {
-  async mount(experience, slot, helpers) {
-    slot.innerHTML = String(experience.output ?? '');
-    slot.addEventListener('click', (event) => {
-      const target = (event as { target?: { closest?: (sel: string) => { dataset: Record<string, string> } | null } }).target;
-      const actionEl = target?.closest?.('[data-action]');
-      if (!actionEl) return;
-      const { action, ...payload } = actionEl.dataset;
-      if (action) void helpers.sendAction(action, payload);
-    });
-    return () => { slot.innerHTML = ''; };
-  },
-};
-
-/** application/json — generic data view for data-only experiences. */
-/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
-export const jsonAdaptor: ExperienceAdaptor = {
-  async mount(experience, slot) {
-    const pre = document.createElement('pre');
-    pre.className = 'layout-slot__json';
-    pre.textContent = JSON.stringify(experience.output, null, 2);
-    slot.appendChild(pre);
-    return () => { slot.innerHTML = ''; };
-  },
-};
-
-// Module Federation runtime globals — present when the shell is built with
-// rspack/webpack; guarded at runtime so other hosts degrade gracefully.
-declare const __webpack_init_sharing__: ((scope: string) => Promise<void>) | undefined;
-declare const __webpack_share_scopes__: { default: unknown } | undefined;
-
-interface MfBootstrapModule {
-  mfe: {
-    load(context: Record<string, unknown>): Promise<unknown>;
-    render(context: Record<string, unknown>): Promise<unknown>;
-    destroy?(): Promise<void> | void;
-    /** ADR-057: host injects a per-slot daemon channel for updateControlPlaneState. */
-    attachControlPlane?(wsClient: DaemonWebSocketClient): void;
-  };
-  mfeReady?: Promise<unknown>;
-}
-
-/** What a remote module may export (ADR-056). Preferred: a presentation
- *  handle bundle or an imperative mount handle. Legacy: the bootstrap pair. */
-interface RemoteModuleExports {
-  handles?: PresentationHandles;
-  mount?: ImperativeMountHandle;
-  mfe?: MfBootstrapModule['mfe'];
-  mfeReady?: Promise<unknown>;
-  default?: RemoteModuleExports;
-}
-
-interface MfContainer {
-  init(shareScope: unknown): Promise<void>;
-  get(module: string): Promise<() => RemoteModuleExports>;
-}
-
-/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
-async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promise<MfContainer> {
-  const globalScope = globalThis as unknown as Record<string, MfContainer | undefined>;
-  if (!globalScope[scope]) {
-    await new Promise<void>((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = remoteEntryUrl;
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load remoteEntry from ${remoteEntryUrl}`));
-      document.head.appendChild(script);
-    });
-  }
-  const container = globalScope[scope];
-  if (!container) throw new Error(`Remote container "${scope}" not found after loading ${remoteEntryUrl}`);
-  if (typeof __webpack_init_sharing__ === 'function') {
-    await __webpack_init_sharing__('default');
-  }
-  const shareScope = typeof __webpack_share_scopes__ === 'object' && __webpack_share_scopes__
-    ? __webpack_share_scopes__.default
-    : {};
-  await container.init(shareScope);
-  return container;
-}
-
-/**
- * module-federation — the imperative-island provider (ADR-056). Loads the
- * remote container, then composes via the MFE's **presentation handle**: it
- * consumes the sealed port (`handle.mount(element, props) → unmount`) and
- * owns the slot element and teardown. The MFE no longer decides where it
- * renders. Framework-independent: any remote (React, Angular) that exposes
- * the imperative handle mounts here as an isolated island.
- *
- * Resolution order for what the remote exposes:
- *   1. `handles` (PresentationHandles) — consume `handles.imperative`
- *   2. `mount` (ImperativeMountHandle) — consume it directly
- *   3. legacy `{ mfe, mfeReady }` bootstrap — adapted in place (migration)
- *
- * (The optional native-component handle is consumed by the React in-tree
- * provider, a deferred follow-up — not by this island provider.)
- */
-/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
-export const moduleFederationAdaptor: ExperienceAdaptor = {
-  async mount(experience, slot, helpers) {
-    const output = experience.output as {
-      remoteEntryUrl?: string; scope?: string; module?: string;
-      component?: string; props?: Record<string, unknown>;
-    };
-    if (!output?.remoteEntryUrl || !output.scope || !output.module) {
-      throw new Error('module-federation experience output requires remoteEntryUrl, scope, and module');
-    }
-
-    const mountPoint = document.createElement('div');
-    mountPoint.id = `layout-mfe-${experience.id}`;
-    slot.appendChild(mountPoint);
-
-    const container = await loadRemoteContainer(output.remoteEntryUrl, output.scope);
-    const factory = await container.get(output.module);
-    const raw = factory();
-    const exports: RemoteModuleExports =
-      raw.handles || raw.mount || raw.mfe ? raw : raw.default ?? raw;
-
-    // ADR-057: give the composed MFE the host's socket (scoped to this slot) so
-    // its updateControlPlaneState platform capability can drive the control
-    // plane without opening its own connection.
-    if (helpers.channel && typeof exports.mfe?.attachControlPlane === 'function') {
-      exports.mfe.attachControlPlane(helpers.channel);
-    }
-
-    // provideSlot rides the render props (ADR-058): a layout MFE calls it to
-    // contribute its regions as host slots. Offered to every MFE; games ignore it.
-    // hostContext rides the render props too (ADR-060 value-injection): the island
-    // re-provides its own framework context (theme/locale/auth) from these values.
-    const props = {
-      ...(output.props ?? {}),
-      ...(experience.props ?? {}),
-      ...(helpers.providerValues ? { hostContext: helpers.providerValues } : {}),
-      ...(helpers.provideSlot ? { provideSlot: helpers.provideSlot } : {}),
-    };
-    // The registry resolved which capability this experience renders.
-    const capability = output.component ?? experience.capability;
-
-    // 1 & 2: the MFE exposes a presentation handle — consume the sealed port,
-    // selecting the resolved capability (multi-capability MFEs).
-    const handle = exports.handles?.imperative ?? exports.mount;
-    if (isImperativeMountHandle(handle)) {
-      return handle.mount(mountPoint, { capability, props });
-    }
-
-    // 3: legacy bootstrap — adapt the lifecycle in place during migration.
-    if (exports.mfe) {
-      await exports.mfeReady;
-      await exports.mfe.render({
-        requestId: `layout-render-${experience.id}`,
-        timestamp: new Date(),
-        user: helpers.session?.user,
-        jwt: helpers.session?.jwt,
-        inputs: { component: output.component ?? experience.capability, containerId: mountPoint.id, props },
-      });
-      return async () => {
-        await exports.mfe?.destroy?.();
-        slot.innerHTML = '';
-      };
-    }
-
-    throw new Error(
-      `Remote module "${output.module}" exposes neither a presentation handle ` +
-        `(handles/mount, ADR-056) nor a legacy bootstrap ({ mfe, mfeReady })`
-    );
-  },
-};
-
-function defaultAdaptors(): Record<string, ExperienceAdaptor> {
-  return {
-    'text/html': htmlAdaptor,
-    'application/json': jsonAdaptor,
-    'module-federation': moduleFederationAdaptor,
-  };
 }

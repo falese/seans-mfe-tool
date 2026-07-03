@@ -28,26 +28,26 @@ export type { DaemonWebSocketClient } from './graphql-ws-client';
 export * from './handlers';
 
 // Daemon-driven slot composition (ADR-055) — generic shells host a
-// LayoutManager and stay empty until the daemon publishes experiences
-export {
-  LayoutManager,
-  GraphQLTransportWsDaemonTransport,
-  htmlAdaptor,
-  jsonAdaptor,
-  moduleFederationAdaptor,
-} from './layout-manager';
+// LayoutManager and stay empty until the daemon publishes experiences.
+// Split across three modules at the natural seams: manager (routing),
+// transport (graphql-transport-ws client), adaptors (per-contentType mounts).
+export { LayoutManager } from './layout-manager';
+export type { LayoutManagerConfig, LayoutHostLike } from './layout-manager';
+export { GraphQLTransportWsDaemonTransport } from './layout-transport';
+export type {
+  DaemonTransport,
+  DaemonEnvelope,
+  TransportStatus,
+  WebSocketLike,
+} from './layout-transport';
+export { htmlAdaptor, jsonAdaptor, moduleFederationAdaptor } from './layout-adaptors';
 export type {
   ExperienceAdaptor,
   AdaptorHelpers,
-  DaemonTransport,
-  DaemonEnvelope,
-  LayoutManagerConfig,
   SlotElementLike,
   SlotErrorInfo,
-  TransportStatus,
   UnmountFn,
-  WebSocketLike,
-} from './layout-manager';
+} from './layout-adaptors';
 
 // Presentation boundary (ADR-056) — the MFE side exposes its lifecycle as the
 // guaranteed imperative handle; host-side providers consume the sealed port.

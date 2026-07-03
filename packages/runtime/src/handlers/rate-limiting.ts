@@ -1,4 +1,4 @@
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
 
 export async function rateLimitCheck(context: Context, options?: { limit?: number }): Promise<void> {
   // Example: stub for rate limiting

@@ -37,15 +37,61 @@ import {
   EmitResult,
   ControlPlaneStateResult,
   type CapabilityMetadata,
+  type TelemetryEvent,
 } from './base-mfe';
-import type { Message, ActionRecord, MessageMetadata } from '@seans-mfe/contracts';
+import { buildMessage } from '@seans-mfe/contracts';
+import type { ActionRecord } from '@seans-mfe/contracts';
+
+/**
+ * Validate and narrow the inputs required by updateControlPlaneState.
+ * Throws on malformed input (programming error, not a network condition).
+ */
+function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined): {
+  stateKey: string;
+  stateData: Record<string, unknown>;
+  correlationId?: string;
+} {
+  const rawStateKey = inputs?.stateKey;
+  const rawStateData = inputs?.stateData;
+  const rawCorrelationId = inputs?.correlationId;
+
+  if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
+    );
+  }
+
+  if (
+    rawStateData !== undefined &&
+    (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
+  ) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
+    );
+  }
+
+  if (
+    rawCorrelationId !== undefined &&
+    (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
+  ) {
+    throw new Error(
+      'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
+    );
+  }
+
+  return {
+    stateKey: rawStateKey.trim(),
+    stateData: (rawStateData ?? {}) as Record<string, unknown>,
+    correlationId: (rawCorrelationId as string | undefined)?.trim(),
+  };
+}
 
 /**
  * Module Federation container interface
  */
 export interface ModuleFederationContainer {
-  init(shared: Record<string, any>): Promise<void>;
-  get(module: string): Promise<() => any>;
+  init(shared: Record<string, unknown>): Promise<void>;
+  get(module: string): Promise<() => unknown>;
 }
 
 /**
@@ -57,7 +103,11 @@ export interface ModuleFederationContainer {
 export abstract class BaseRemoteMFE extends BaseMFE {
   protected container: ModuleFederationContainer | null = null;
   protected availableComponents: string[] = [];
-  protected mountedComponent: any = null;
+  protected mountedComponent: {
+    component: string;
+    element: unknown;
+    props: Record<string, unknown>;
+  } | null = null;
   /** ID of the currently mounted component; used as actionRecord.componentId */
   protected currentComponentId: string | null = null;
 
@@ -69,23 +119,47 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * The Module Federation shared-scope map for this framework (e.g. React
    * singletons vs Angular singletons + zone.js). Wired into container.init().
    */
-  protected abstract getSharedDependencies(): Record<string, any>;
+  protected abstract getSharedDependencies(): Record<string, unknown>;
 
   /**
    * Mount a loaded component into the DOM container and return the host element.
    * Called by doRender() after the component is resolved.
    */
   protected abstract mountComponent(
-    Component: any,
-    props: Record<string, any>,
+    Component: unknown,
+    props: Record<string, unknown>,
     containerId: string
-  ): Promise<any>;
+  ): Promise<unknown>;
 
   /**
    * Tear down a previously rendered component and release its mount handle.
    * Call from the shell's lifecycle cleanup to avoid memory leaks.
    */
   public abstract unmount(containerId: string): void;
+
+  /**
+   * Emit a telemetry event with the standard shape shared by every checkpoint
+   * in doLoad()/doRender(): `metadata.mfe` is always set, extra metadata is
+   * merged in, and `duration` is set at the top level only when provided.
+   * No-ops when no telemetry service is injected.
+   */
+  protected emitTelemetry(
+    name: string,
+    capability: string,
+    phase: string,
+    status: TelemetryEvent['status'],
+    extra?: { duration?: number; metadata?: Record<string, unknown> }
+  ): void {
+    this.deps?.telemetry?.emit({
+      name,
+      capability,
+      phase,
+      status,
+      metadata: { mfe: this.manifest.name, ...(extra?.metadata ?? {}) },
+      timestamp: new Date(),
+      ...(extra?.duration !== undefined ? { duration: extra.duration } : {}),
+    });
+  }
 
   /**
    * Implement load logic for Module Federation remote
@@ -97,7 +171,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    */
   protected async doLoad(context: Context): Promise<LoadResult> {
     const startTime = Date.now();
-    const telemetry: LoadResult['telemetry'] = {
+    const telemetry: NonNullable<LoadResult['telemetry']> = {
       entry: { start: new Date(), duration: 0 },
       mount: { start: new Date(), duration: 0 },
       enableRender: { start: new Date(), duration: 0 },
@@ -106,18 +180,8 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     try {
       // Phase 1: Entry - Fetch Module Federation remote entry
       const entryStart = Date.now();
-      (telemetry as any).entry = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-entry',
-          capability: 'load',
-          phase: 'entry',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.entry = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-entry', 'load', 'entry', 'start');
 
       // Get remote entry URL from context or manifest
       const remoteEntry = (context.inputs?.remoteEntry as string) || this.manifest.remoteEntry;
@@ -128,37 +192,16 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       // Fetch container (in real implementation, this would use Module Federation runtime)
       this.container = await this.fetchContainer(remoteEntry);
 
-      (telemetry as any).entry.duration = Date.now() - entryStart;
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-entry-metric',
-          capability: 'load',
-          phase: 'entry',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).entry.duration,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).entry.duration,
-        });
-      }
+      telemetry.entry.duration = Date.now() - entryStart;
+      this.emitTelemetry('load-entry-metric', 'load', 'entry', 'success', {
+        duration: telemetry.entry.duration,
+        metadata: { duration: telemetry.entry.duration },
+      });
 
       // Phase 2: Mount - Initialize container and wire shared dependencies
       const mountStart = Date.now();
-      (telemetry as any).mount = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-mount',
-          capability: 'load',
-          phase: 'mount',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.mount = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-mount', 'load', 'mount', 'start');
 
       // Initialize container with shared dependencies
       const sharedDeps = this.getSharedDependencies();
@@ -167,75 +210,34 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       // Extract available components from manifest
       this.availableComponents = this.extractAvailableComponents();
 
-      (telemetry as any).mount.duration = Date.now() - mountStart;
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-mount-metric',
-          capability: 'load',
-          phase: 'mount',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).mount.duration,
-            componentsCount: this.availableComponents.length,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).mount.duration,
-        });
-      }
+      telemetry.mount.duration = Date.now() - mountStart;
+      this.emitTelemetry('load-mount-metric', 'load', 'mount', 'success', {
+        duration: telemetry.mount.duration,
+        metadata: {
+          duration: telemetry.mount.duration,
+          componentsCount: this.availableComponents.length,
+        },
+      });
 
       // Phase 3: Enable-render - Prepare MFE state for render phase
       const enableRenderStart = Date.now();
-      (telemetry as any).enableRender = { start: new Date() };
-
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-enable-render',
-          capability: 'load',
-          phase: 'enable_render',
-          status: 'start',
-          metadata: { mfe: this.manifest.name },
-          timestamp: new Date(),
-        });
-      }
+      telemetry.enableRender = { start: new Date(), duration: 0 };
+      this.emitTelemetry('load-enable-render', 'load', 'enable_render', 'start');
 
       // Prepare render state (validate components, prepare metadata)
       const capabilities = this.extractCapabilities();
 
-      (telemetry as any).enableRender.duration = Date.now() - enableRenderStart;
+      telemetry.enableRender.duration = Date.now() - enableRenderStart;
+      this.emitTelemetry('load-enable-render-metric', 'load', 'enable_render', 'success', {
+        duration: telemetry.enableRender.duration,
+        metadata: { duration: telemetry.enableRender.duration },
+      });
 
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-enable-render-metric',
-          capability: 'load',
-          phase: 'enable_render',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            duration: (telemetry as any).enableRender.duration,
-          },
-          timestamp: new Date(),
-          duration: (telemetry as any).enableRender.duration,
-        });
-      }
-
-      // Emit completion telemetry
       const totalDuration = Date.now() - startTime;
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-completed',
-          capability: 'load',
-          phase: 'completed',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            success: true,
-          },
-          timestamp: new Date(),
-          duration: totalDuration,
-        });
-      }
+      this.emitTelemetry('load-completed', 'load', 'completed', 'success', {
+        duration: totalDuration,
+        metadata: { success: true },
+      });
 
       // Populate context outputs
       context.outputs = {
@@ -256,22 +258,11 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         telemetry,
       };
     } catch (error) {
-      // Emit error telemetry
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'load-error',
-          capability: 'load',
-          phase: 'error',
-          status: 'error',
-          metadata: {
-            mfe: this.manifest.name,
-            error: (error as Error).message,
-          },
-          timestamp: new Date(),
-        });
-      }
-
       const err = error as Error;
+      this.emitTelemetry('load-error', 'load', 'error', 'error', {
+        metadata: { error: err.message },
+      });
+
       return {
         status: 'error',
         timestamp: new Date(),
@@ -302,7 +293,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     try {
       // Extract render parameters from context
       const componentName = context.inputs?.component as string;
-      const props = (context.inputs?.props as Record<string, any>) || {};
+      const props = (context.inputs?.props as Record<string, unknown>) || {};
       const containerId = context.inputs?.containerId as string;
 
       if (!componentName) {
@@ -313,20 +304,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         throw new Error('Container ID not provided in context.inputs.containerId');
       }
 
-      // Telemetry: Render start
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-start',
-          capability: 'render',
-          phase: 'render_start',
-          status: 'start',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-        });
-      }
+      this.emitTelemetry('render-start', 'render', 'render_start', 'start', {
+        metadata: { component: componentName },
+      });
 
       // Validate component exists in available components
       if (!this.availableComponents.includes(componentName)) {
@@ -345,62 +325,25 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       const Component = await this.loadDomainComponent(componentName);
 
       const renderDuration = Date.now() - renderStart;
-
-      // Telemetry: Component fetch duration
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-component-fetch',
-          capability: 'render',
-          phase: 'component_fetch',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-          duration: renderDuration,
-        });
-      }
+      this.emitTelemetry('render-component-fetch', 'render', 'component_fetch', 'success', {
+        duration: renderDuration,
+        metadata: { component: componentName },
+      });
 
       // Mount component to DOM
       const mountStart = Date.now();
       const element = await this.mountComponent(Component, props, containerId);
       const mountDuration = Date.now() - mountStart;
-
-      // Telemetry: Mount duration
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-mount',
-          capability: 'render',
-          phase: 'mount',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-          },
-          timestamp: new Date(),
-          duration: mountDuration,
-        });
-      }
+      this.emitTelemetry('render-mount', 'render', 'mount', 'success', {
+        duration: mountDuration,
+        metadata: { component: componentName },
+      });
 
       const totalDuration = Date.now() - startTime;
-
-      // Telemetry: Render completed
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-completed',
-          capability: 'render',
-          phase: 'completed',
-          status: 'success',
-          metadata: {
-            mfe: this.manifest.name,
-            component: componentName,
-            success: true,
-          },
-          timestamp: new Date(),
-          duration: totalDuration,
-        });
-      }
+      this.emitTelemetry('render-completed', 'render', 'completed', 'success', {
+        duration: totalDuration,
+        metadata: { component: componentName, success: true },
+      });
 
       // Store mounted component reference
       this.mountedComponent = { component: componentName, element, props };
@@ -425,20 +368,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         mountDuration,
       };
     } catch (error) {
-      // Emit error telemetry
-      if (this.deps?.telemetry) {
-        this.deps.telemetry.emit({
-          name: 'render-error',
-          capability: 'render',
-          phase: 'error',
-          status: 'error',
-          metadata: {
-            mfe: this.manifest.name,
-            error: (error as Error).message,
-          },
-          timestamp: new Date(),
-        });
-      }
+      this.emitTelemetry('render-error', 'render', 'error', 'error', {
+        metadata: { error: (error as Error).message },
+      });
 
       return {
         status: 'error',
@@ -463,7 +395,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
   protected async fetchContainer(remoteEntry: string): Promise<ModuleFederationContainer> {
     void remoteEntry;
     return {
-      init: async (shared: Record<string, any>) => {
+      init: async (shared: Record<string, unknown>) => {
         // Initialize with shared dependencies
         void shared; // Module Federation shared scope
       },
@@ -493,7 +425,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     // Primary: explicit render.components list
     for (const capEntry of this.manifest.capabilities) {
       if (capEntry.render) {
-        const components = (capEntry.render as any).components;
+        const components = (capEntry.render as unknown as { components?: string[] }).components;
         if (Array.isArray(components) && components.length > 0) {
           return components;
         }
@@ -561,7 +493,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * Override in subclass to load the named domain component.
    * Called by doRender() instead of going through the Module Federation container API.
    */
-  protected async loadDomainComponent(_name: string): Promise<any> {
+  protected async loadDomainComponent(_name: string): Promise<unknown> {
     throw new Error(
       '[BaseRemoteMFE] loadDomainComponent() not implemented — subclass must override this method'
     );
@@ -618,9 +550,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
 
   protected async doEmit(context: Context): Promise<EmitResult> {
     if (this.deps?.telemetry) {
-      const event = context.inputs?.event;
+      const event = context.inputs?.event as TelemetryEvent | undefined;
       if (event) {
-        this.deps.telemetry.emit(event as any);
+        this.deps.telemetry.emit(event);
         return {
           emitted: true,
           eventId: 'generated-event-id',
@@ -647,58 +579,19 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * Subscription.messages channel the Renderer is already subscribed to.
    */
   protected async doUpdateControlPlaneState(context: Context): Promise<ControlPlaneStateResult> {
-    // -------------------------------------------------------------------------
     // 1. Extract and validate inputs
-    // -------------------------------------------------------------------------
-    const rawStateKey = context.inputs?.stateKey;
-    const rawStateData = context.inputs?.stateData;
-    const rawCorrelationId = context.inputs?.correlationId;
+    const inputs = validateStateUpdateInputs(context.inputs);
+    const { stateKey, stateData } = inputs;
+    const correlationId = inputs.correlationId ?? context.requestId;
 
-    if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
-      );
-    }
-
-    if (
-      rawStateData !== undefined &&
-      (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
-    ) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
-      );
-    }
-
-    if (
-      rawCorrelationId !== undefined &&
-      (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
-    ) {
-      throw new Error(
-        'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
-      );
-    }
-
-    const stateKey = rawStateKey.trim();
-    const stateData = (rawStateData ?? {}) as Record<string, unknown>;
-    const correlationId = (rawCorrelationId as string | undefined)?.trim() ?? context.requestId;
-
-    // -------------------------------------------------------------------------
     // 2. Guard: daemon WebSocket must be connected
-    // -------------------------------------------------------------------------
     const wsClient = this.deps?.wsClient;
     if (!wsClient || !wsClient.connected) {
       return { acknowledged: false, correlationId, error: 'Daemon WebSocket not connected' };
     }
 
-    // -------------------------------------------------------------------------
-    // 3. Build the Message envelope typed against @control-plane/contracts
-    // -------------------------------------------------------------------------
-    const metadata: MessageMetadata = {
-      correlationId,
-      acknowledged: false,
-      error: null,
-    };
-
+    // 3. Build the Message envelope via the contracts builder.
+    //
     // Emit what the registry actually routes on (ADR-057): a canonical
     // STATE_UPDATE actionType plus the stateKey. The registry matches rules on
     // `when.stateKey`; setting actionType: stateKey (and no stateKey field)
@@ -711,17 +604,9 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       data: stateData,
       timestamp: new Date().toISOString(),
     };
+    const envelope = buildMessage({ direction: 'ACTION', kind: 'ACTION', payload, correlationId });
 
-    const envelope: Message = {
-      direction: 'ACTION',
-      kind: 'ACTION',
-      payload,
-      metadata,
-    };
-
-    // -------------------------------------------------------------------------
     // 4. Send via the daemon's sendMessage GraphQL mutation (WS subscribe/next)
-    // -------------------------------------------------------------------------
     let success: boolean;
     try {
       success = await wsClient.mutation(
@@ -735,23 +620,16 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       return { acknowledged: false, correlationId, error };
     }
 
-    // -------------------------------------------------------------------------
     // 5. Telemetry
-    // -------------------------------------------------------------------------
-    if (this.deps?.telemetry) {
-      this.deps.telemetry.emit({
-        name: 'control-plane-state-update',
-        capability: 'updateControlPlaneState',
-        phase: 'main',
-        status: success ? 'success' : 'error',
-        metadata: { mfe: this.manifest.name, stateKey, correlationId, acknowledged: success },
-        timestamp: new Date(),
-      });
-    }
+    this.emitTelemetry(
+      'control-plane-state-update',
+      'updateControlPlaneState',
+      'main',
+      success ? 'success' : 'error',
+      { metadata: { stateKey, correlationId, acknowledged: success } }
+    );
 
-    // -------------------------------------------------------------------------
     // 6. Return ControlPlaneStateResult
-    // -------------------------------------------------------------------------
     return {
       acknowledged: success,
       correlationId,

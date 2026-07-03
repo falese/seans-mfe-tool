@@ -1,4 +1,17 @@
-import { Context } from '../base-mfe';
+import type { Context } from '../context';
+import type { ValidationError } from '../context';
+
+/** Validation results these handlers own on the context. */
+export interface ValidationState {
+  passed?: boolean;
+  errors?: ValidationError[];
+}
+
+/** Typed accessor for the validation state these handlers own on a context. */
+export function getValidationState(context: Context): ValidationState | undefined {
+  return context.validation as ValidationState | undefined;
+}
+
 export async function validateInputs(context: Context): Promise<void> {
   // Example: validate required fields
   if (!context.inputs) {

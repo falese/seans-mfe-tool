@@ -1,0 +1,68 @@
+# API reference generation + drift gate (ADR-065, #264).
+#
+# typedoc + typedoc-plugin-markdown are lockfile-managed devDependencies
+# (ADR-065 phase 2), so `npm ci` installs them — no ad-hoc install step.
+# docs/api and schemas/dsl are seeded, so the drift gates below are live: a
+# stale docs/api or DSL schema fails the job.
+name: API docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/contracts/src/**'
+      - 'packages/runtime/src/**'
+      - 'packages/dsl/src/**'
+      - 'typedoc.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/generate-dsl-schema.ts'
+      - '.github/workflows/api-docs.yml'
+
+jobs:
+  api-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate API reference (TypeDoc -> docs/api)
+        run: npm run build:docs
+
+      - name: Generate DSL manifest JSON Schema
+        run: npm run build:schema:dsl
+
+      - name: Upload generated docs as artifact (for seeding / review)
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: |
+            docs/api
+            schemas/dsl
+          if-no-files-found: error
+
+      - name: Drift gate — docs/api
+        run: |
+          if git ls-files --error-unmatch docs/api > /dev/null 2>&1; then
+            git diff --exit-code docs/api \
+              || { echo "::error::docs/api is stale — run 'npm run build:docs' and commit the result."; exit 1; }
+          else
+            echo "docs/api not tracked — gate skipped."
+          fi
+
+      - name: Drift gate — DSL manifest schema
+        run: |
+          if git ls-files --error-unmatch schemas/dsl/manifest.schema.json > /dev/null 2>&1; then
+            git diff --exit-code schemas/dsl/manifest.schema.json \
+              || { echo "::error::schemas/dsl/manifest.schema.json is stale — run 'npm run build:schema:dsl' and commit the result."; exit 1; }
+          else
+            echo "schemas/dsl/manifest.schema.json not tracked — gate skipped."
+          fi

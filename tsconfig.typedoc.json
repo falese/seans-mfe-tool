@@ -1,0 +1,18 @@
+{
+  "//": "Compiler context for TypeDoc only (ADR-065). The root tsconfig includes just src/**; API docs are generated from the package sources, so TypeDoc gets its own include list. Not part of build or typecheck.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": [
+    "packages/contracts/src/**/*",
+    "packages/runtime/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**",
+    "**/*.test.ts"
+  ]
+}
