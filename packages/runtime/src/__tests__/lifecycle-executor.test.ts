@@ -219,6 +219,27 @@ describe('BaseMFE State Machine (REQ-056)', () => {
         const test = new Test(manifest, {});
         await test.testReentrant({ timestamp: new Date(), requestId: 'x' });
       });
+      it('should not leak the re-entrancy stack when a hook throws', async () => {
+        const manifest = { name: 'test', version: '1.0.0', type: 'tool', capabilities: [{ load: { lifecycle: { main: [{ hook: { handler: 'custom.customHandler' } }] } } }] };
+        const err = new Error('hook boom');
+        const lifecycleExecutor = { execute: jest.fn().mockRejectedValue(err) };
+        class Test extends BaseMFE {
+          protected async doLoad() { return { status: 'loaded', timestamp: new Date() }; }
+          protected async doRender() { return { status: 'rendered', timestamp: new Date() }; }
+          protected async doRefresh() { }
+          protected async doAuthorizeAccess() { return true; }
+          protected async doHealth() { return { status: 'healthy', checks: [], timestamp: new Date() }; }
+          protected async doDescribe() { return { name: '', version: '', type: '', capabilities: [], manifest } }
+          protected async doSchema() { return { schema: '', format: 'graphql' }; }
+          protected async doQuery() { return { data: {} }; }
+          protected async doEmit() { return { emitted: true }; }
+        }
+        const test = new Test(manifest, { lifecycleExecutor });
+        await expect(test['executeLifecycle']('load', 'main', { timestamp: new Date(), requestId: 'x' })).rejects.toThrow('hook boom');
+        // The stack must be unwound even though the hook threw, otherwise the
+        // re-entrancy guard permanently skips this capability/phase.
+        expect(test['_lifecycleStack']).toEqual([]);
+      });
     it('should call errorHandler on invalid state in assertState', () => {
       const manifest = { name: 'test', version: '1.0.0', type: 'tool' };
       const errorHandler = { handle: jest.fn() };

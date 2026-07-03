@@ -219,8 +219,17 @@ interface CapabilityDescriptor {
   enterState?: MFEState;
   /** State entered after successful execution. */
   exitState?: MFEState;
-  /** State entered when execution fails. */
+  /** State entered when execution THROWS (routed via the error boundary). */
   errorState?: MFEState;
+  /**
+   * State entered when the capability reports a HANDLED failure by returning a
+   * result with `status:'error'` (doLoad/doRender do this instead of throwing).
+   * Defaults to `errorState`. `render` overrides to `'ready'`: a bad render
+   * request must not poison an otherwise-usable, already-loaded MFE — it stays
+   * renderable. Without this, a returned error would fall through to `exitState`
+   * and a failed load would masquerade as `'ready'`.
+   */
+  returnedErrorState?: MFEState;
 }
 
 /** Any state except 'destroyed' — read-only capabilities run everywhere. */
@@ -238,6 +247,9 @@ const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
     enterState: 'rendering',
     exitState: 'ready',
     errorState: 'error',
+    // A bad render request (returned status:'error') leaves the MFE ready to
+    // try again; only an unexpected throw poisons it to 'error'.
+    returnedErrorState: 'ready',
   },
   refresh: { preStates: ['ready'] },
   authorizeAccess: { preStates: ['ready'] },
@@ -293,6 +305,20 @@ async function runPipeline(middlewares: Middleware[], context: Context): Promise
     await middleware(context, () => dispatch(index + 1));
   };
   await dispatch(0);
+}
+
+/**
+ * True when a capability's returned result signals failure via `status:'error'`
+ * (the LoadResult/RenderResult error contract) rather than by throwing. Used by
+ * the exit-transition stage to route such results to the error state.
+ */
+function resultSignalsError(value: unknown): boolean {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'status' in value &&
+    (value as { status?: unknown }).status === 'error'
+  );
 }
 
 // =============================================================================
@@ -433,39 +459,42 @@ export abstract class BaseMFE {
       return;
     }
     this._lifecycleStack.push({capability, phase});
-    // DI: allow manifest parsing override
-    const capabilityConfig = this.deps?.manifestParser
-      ? this.deps.manifestParser.parse(this.manifest)[capability]
-      : this.findCapabilityConfig(capability);
-    if (!capabilityConfig?.lifecycle) {
-      this._lifecycleStack.pop();
-      return; // No lifecycle hooks defined
-    }
-
-    const hooks = capabilityConfig.lifecycle[phase];
-    if (!hooks || hooks.length === 0) {
-      this._lifecycleStack.pop();
-      return; // No hooks for this phase
-    }
-
-    // Update context with phase and capability
-    context.phase = phase;
-    context.capability = capability;
-
-    // DI: allow lifecycle executor override
-    if (this.deps?.lifecycleExecutor) {
-      for (const hookEntry of hooks) {
-        await this.deps.lifecycleExecutor.execute(hookEntry, context, phase);
+    // Always unwind the re-entrancy stack, even when a hook throws — otherwise
+    // a failing hook leaves a stale entry and the guard above permanently skips
+    // this capability/phase on every subsequent invocation.
+    try {
+      // DI: allow manifest parsing override
+      const capabilityConfig = this.deps?.manifestParser
+        ? this.deps.manifestParser.parse(this.manifest)[capability]
+        : this.findCapabilityConfig(capability);
+      if (!capabilityConfig?.lifecycle) {
+        return; // No lifecycle hooks defined
       }
-      this._lifecycleStack.pop();
-      return;
-    }
 
-    // Default: Execute hooks sequentially
-    for (const hookEntry of hooks) {
-      await this.executeHookEntry(hookEntry, context, phase);
+      const hooks = capabilityConfig.lifecycle[phase];
+      if (!hooks || hooks.length === 0) {
+        return; // No hooks for this phase
+      }
+
+      // Update context with phase and capability
+      context.phase = phase;
+      context.capability = capability;
+
+      // DI: allow lifecycle executor override
+      if (this.deps?.lifecycleExecutor) {
+        for (const hookEntry of hooks) {
+          await this.deps.lifecycleExecutor.execute(hookEntry, context, phase);
+        }
+        return;
+      }
+
+      // Default: Execute hooks sequentially
+      for (const hookEntry of hooks) {
+        await this.executeHookEntry(hookEntry, context, phase);
+      }
+    } finally {
+      this._lifecycleStack.pop();
     }
-    this._lifecycleStack.pop();
   }
   
   /**
@@ -700,7 +729,21 @@ export abstract class BaseMFE {
         await next();
       },
       this.lifecyclePhase(name, 'after'),
-      this.stateTransition(desc.exitState),
+      // Exit transition. A capability may report failure by RETURNING a result
+      // with status:'error' (doLoad/doRender do this instead of throwing, to
+      // keep the LoadResult/RenderResult error contract) — the errorBoundary
+      // never sees those. Honor the returned status here so a failed load does
+      // not masquerade as 'ready', while a bad render request leaves the MFE
+      // renderable (see CapabilityDescriptor.returnedErrorState).
+      async (_ctx, next) => {
+        const target = resultSignalsError(result.value)
+          ? (desc.returnedErrorState ?? desc.errorState)
+          : desc.exitState;
+        if (target) {
+          this.transitionState(target);
+        }
+        await next();
+      },
     ];
 
     await runPipeline(pipeline, context);

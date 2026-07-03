@@ -358,10 +358,44 @@ describe('RemoteMFE', () => {
       expect(harness.getMFE().getState()).toBe('ready');
 
       harness.reset();
-      
+
       expect(harness.getMFE().getState()).toBe('uninitialized');
       expect((harness.getMFE() as any).container).toBeNull();
       expect((harness.getMFE() as any).availableComponents).toEqual([]);
+    });
+
+    it('should enter error state (not ready) when load fails', async () => {
+      const mfe = harness.getMFE();
+      // doLoad reports failure by RETURNING status:'error' (its real contract),
+      // not by throwing — the case that used to slip past the error boundary.
+      (mfe as any).doLoad = async () => ({
+        status: 'error',
+        timestamp: new Date(),
+        duration: 1,
+        error: { message: 'remote entry unreachable', phase: 'entry', retryCount: 0, retryable: true },
+      });
+
+      const loadResult = await harness.testLoad();
+
+      // The return-value contract is preserved…
+      expect(loadResult.status).toBe('error');
+      // …but a failed load must NOT masquerade as a ready MFE.
+      expect(mfe.getState()).toBe('error');
+    });
+
+    it('should stay ready (retryable) when a render request fails', async () => {
+      await harness.testLoad();
+      expect(harness.getMFE().getState()).toBe('ready');
+
+      const renderResult = await harness.testRender('UnknownComponent');
+
+      // A bad render request reports status:'error' but must NOT poison the
+      // MFE — it remains ready to attempt another render.
+      expect(renderResult.status).toBe('error');
+      expect(harness.getMFE().getState()).toBe('ready');
+
+      const retry = await harness.testRender('App');
+      expect(retry.status).toBe('rendered');
     });
   });
 
