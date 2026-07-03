@@ -1,0 +1,76 @@
+# API reference generation + drift gate (ADR-065, #264).
+#
+# Phase 1 behavior: the doc toolchain is installed --no-save (pinned) because
+# the lockfile could not be regenerated in the environment that authored this
+# workflow. Phase 2 (#264) promotes typedoc to devDependencies and drops the
+# ad-hoc install.
+#
+# The drift gates only fire once their outputs exist in the tree, so this
+# workflow cannot fail before the first generated output has been reviewed
+# and committed ("seeded"). After seeding, a stale docs/api or DSL schema
+# fails the job.
+name: API docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/contracts/src/**'
+      - 'packages/runtime/src/**'
+      - 'packages/dsl/src/**'
+      - 'typedoc.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/generate-dsl-schema.ts'
+      - '.github/workflows/api-docs.yml'
+
+jobs:
+  api-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install doc toolchain (pinned, --no-save until #264 phase 2)
+        run: npm install --no-save typedoc@0.28.14 typedoc-plugin-markdown@4.9.0
+
+      - name: Generate API reference (TypeDoc -> docs/api)
+        run: npm run build:docs
+
+      - name: Generate DSL manifest JSON Schema
+        run: npm run build:schema:dsl
+
+      - name: Upload generated docs as artifact (for seeding / review)
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: |
+            docs/api
+            schemas/dsl
+          if-no-files-found: error
+
+      - name: Drift gate — docs/api (armed once seeded)
+        run: |
+          if git ls-files --error-unmatch docs/api > /dev/null 2>&1; then
+            git diff --exit-code docs/api \
+              || { echo "::error::docs/api is stale — run 'npm run build:docs' and commit the result."; exit 1; }
+          else
+            echo "docs/api not yet seeded — gate skipped (see ADR-065 phase 2)."
+          fi
+
+      - name: Drift gate — DSL manifest schema (armed once seeded)
+        run: |
+          if git ls-files --error-unmatch schemas/dsl/manifest.schema.json > /dev/null 2>&1; then
+            git diff --exit-code schemas/dsl/manifest.schema.json \
+              || { echo "::error::schemas/dsl/manifest.schema.json is stale — run 'npm run build:schema:dsl' and commit the result."; exit 1; }
+          else
+            echo "schemas/dsl/manifest.schema.json not yet seeded — gate skipped (see ADR-065 phase 2)."
+          fi
