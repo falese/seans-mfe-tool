@@ -351,6 +351,15 @@ describe('createApiCommand', () => {
     mockExec.mockReturnValue(Buffer.from(''));
   });
 
+  it('rejects a name that would traverse outside the working directory', async () => {
+    await expect(
+      createApiCommand('../../../tmp/evil', { spec: 'spec.yaml', database: 'sqlite', port: 3001 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    // Nothing should have been generated for a rejected name.
+    expect(mockParser.parse).not.toHaveBeenCalled();
+    expect(DatabaseGenerator.generate).not.toHaveBeenCalled();
+  });
+
   it('returns dry-run metadata without writing files or running npm install', async () => {
     const result = await createApiCommand('my-api', {
       spec: 'spec.yaml',

@@ -17,7 +17,7 @@ jest.mock('fs-extra', () => ({
   pathExists: jest.fn().mockResolvedValue(false),
 }));
 jest.mock('child_process', () => ({
-  execSync: jest.fn(),
+  execFileSync: jest.fn(),
 }));
 
 const mockLoadPlugin = loadFrameworkPlugin as jest.Mock;
@@ -144,12 +144,13 @@ describe('buildDockerCommand', () => {
   it('runs docker build when --build is passed', async () => {
     const { plugin } = makeMockPlugin('react-rspack', 'react', 'rspack', reactStrategy);
     mockLoadPlugin.mockReturnValue(plugin);
-    const { execSync } = require('child_process');
+    const { execFileSync } = require('child_process');
 
     const result = await buildDockerCommand({ framework: 'react', build: true, tag: 'my-mfe:latest' });
 
-    expect(execSync).toHaveBeenCalledWith(
-      expect.stringContaining('docker build'),
+    expect(execFileSync).toHaveBeenCalledWith(
+      'docker',
+      ['build', '-t', 'my-mfe:latest', expect.any(String)],
       expect.any(Object),
     );
     expect(result.built).toBe(true);

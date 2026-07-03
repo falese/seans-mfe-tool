@@ -9,6 +9,7 @@ import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator
 import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
 import { generateJWTSecret } from '../utils/securityUtils';
 import { BaseCommand } from '../oclif/BaseCommand';
+import { validateProjectName } from '../utils/validateProjectName';
 import { ValidationError, NetworkError, SystemError } from '@seans-mfe/contracts';
 import type { ApiResult, PlannedChange } from '../oclif/results';
 
@@ -535,6 +536,11 @@ module.exports = initializeDatabase;`;
 async function createApiCommand(name: string, options: ApiOptions & { dryRun?: boolean }): Promise<ApiResult> {
   let tmpSpec: OpenAPISpec | null = null;
   try {
+    // Reject names with path separators / `..` before they reach
+    // path.resolve — otherwise generation could escape the working directory
+    // and overwrite arbitrary files (also reachable via the `mfe:api` MCP tool).
+    validateProjectName(name, 'name');
+
     console.log(chalk.blue(`Creating API "${name}"...`));
 
     const projectRoot = path.resolve(__dirname, '..');

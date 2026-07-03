@@ -1,11 +1,12 @@
 import { Args, Flags } from '@oclif/core';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
 import { BaseCommand } from '../oclif/BaseCommand';
 import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
+import { validateProjectName } from '../utils/validateProjectName';
 import type { DeployResult, PlannedChange } from '../oclif/results';
 
 interface DeployOptions {
@@ -149,11 +150,13 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     // Copy Docker configuration
     await copyDockerFiles(tempDir, type);
 
-    // Build image
+    // Build image. Arguments are passed as an argv array (execFileSync, no
+    // shell) so a hostile app name / path can never inject a command.
     console.log(chalk.blue('\nBuilding Docker image...'));
     try {
-      execSync(
-        `docker build -t ${imageTag} --target development ${tempDir}`,
+      execFileSync(
+        'docker',
+        ['build', '-t', imageTag, '--target', 'development', tempDir],
         {
           stdio: 'inherit',
           env: { ...process.env, DOCKER_BUILDKIT: '1' }
@@ -168,8 +171,8 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
 
     // Stop existing container if it exists
     try {
-      execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
-      execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
+      execFileSync('docker', ['stop', containerName], { stdio: 'ignore' });
+      execFileSync('docker', ['rm', containerName], { stdio: 'ignore' });
       console.log(chalk.blue(`Removed existing container: ${containerName}`));
     } catch (e) {
       // Container doesn't exist, continue
@@ -177,14 +180,17 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
 
     // Run container with development settings
     console.log(chalk.blue('\nStarting development container...'));
-    execSync(
-      `docker run -d \
-        --name ${containerName} \
-        -p ${port}:80 \
-        -v ${projectDir}/src:/app/src \
-        -v ${projectDir}/public:/app/public \
-        --env-file .env.development \
-        ${imageTag}`,
+    execFileSync(
+      'docker',
+      [
+        'run', '-d',
+        '--name', containerName,
+        '-p', `${port}:80`,
+        '-v', `${projectDir}/src:/app/src`,
+        '-v', `${projectDir}/public:/app/public`,
+        '--env-file', '.env.development',
+        imageTag,
+      ],
       { stdio: 'inherit' }
     );
 
@@ -201,7 +207,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     // Stream logs if requested
     if (options.logs) {
       console.log(chalk.blue('\nStreaming container logs...'));
-      execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
+      execFileSync('docker', ['logs', '-f', containerName], { stdio: 'inherit' });
     }
 
   } catch (error: any) {
@@ -218,8 +224,9 @@ async function waitForContainer(containerName: string, timeout: number = 30000):
   const startTime = Date.now();
   while (Date.now() - startTime < timeout) {
     try {
-      const status = execSync(
-        `docker inspect -f '{{.State.Status}}' ${containerName}`,
+      const status = execFileSync(
+        'docker',
+        ['inspect', '-f', '{{.State.Status}}', containerName],
         { encoding: 'utf8' }
       ).trim();
 
@@ -254,6 +261,10 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
     if (options.env !== 'development') {
       throw new ValidationError(`Unknown environment: ${options.env}`, 'env', 'enum');
     }
+
+    // Reject names that could traverse the temp build path or reach docker as
+    // anything other than a plain image/container identifier.
+    validateProjectName(options.name, 'name');
 
     if (options.dryRun) {
       const containerName = `${options.name}-dev`;

