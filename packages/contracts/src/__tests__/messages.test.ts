@@ -101,6 +101,23 @@ describe('control-plane message protocol', () => {
       expect(a.metadata.correlationId).not.toBe(b.metadata.correlationId);
     });
 
+    it('generates a correlationId without crashing when crypto.randomUUID is unavailable', () => {
+      // Node 18 has no global `crypto`, and browsers on insecure origins expose
+      // `crypto` without `randomUUID`. buildMessage must fall back, not throw.
+      const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+      try {
+        Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true });
+        const message = buildMessage({ direction: 'ACTION', kind: 'ACTION', payload: action });
+        expect(message.metadata.correlationId).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+        );
+      } finally {
+        if (original) {
+          Object.defineProperty(globalThis, 'crypto', original);
+        }
+      }
+    });
+
     it('honours explicit acknowledged and error overrides', () => {
       const message = buildMessage({
         direction: 'COMPONENT',

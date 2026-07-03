@@ -18,6 +18,7 @@
  */
 
 import type { HandleKind } from './presentation';
+import { randomUUID } from './uuid';
 
 // ── Session / user context ───────────────────────────────────
 
@@ -330,7 +331,7 @@ export function buildMessage(parts: {
     kind: parts.kind,
     payload: parts.payload,
     metadata: {
-      correlationId: parts.correlationId ?? globalThis.crypto.randomUUID(),
+      correlationId: parts.correlationId ?? randomUUID(),
       acknowledged: parts.acknowledged ?? false,
       error: parts.error ?? null,
     },
