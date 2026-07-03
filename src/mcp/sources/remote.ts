@@ -94,8 +94,12 @@ function listToolsHttp(url: string): Promise<McpTool[]> {
     const lib = parsedUrl.protocol === 'https:' ? https : http;
     const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
 
+    // Pass the URL object directly: spreading `{ ...parsedUrl }` would drop
+    // host/port/path (a WHATWG URL exposes those as prototype getters, not own
+    // enumerable properties), leaving http.request to target localhost:80.
     const req = lib.request(
-      { ...parsedUrl, method: 'POST', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) } },
+      parsedUrl,
+      { method: 'POST', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) } },
       (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });
