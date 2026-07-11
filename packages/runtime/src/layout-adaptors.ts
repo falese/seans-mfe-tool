@@ -156,6 +156,7 @@ interface MfBootstrapModule {
   mfe: {
     load(context: Record<string, unknown>): Promise<unknown>;
     render(context: Record<string, unknown>): Promise<unknown>;
+    unmount?(containerId: string): void;
     destroy?(): Promise<void> | void;
     /** ADR-057: host injects a per-slot daemon channel for updateControlPlaneState. */
     attachControlPlane?(wsClient: DaemonWebSocketClient): void;
@@ -278,7 +279,11 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
         inputs: { component: output.component ?? experience.capability, containerId: mountPoint.id, props },
       });
       return async () => {
-        await exports.mfe?.destroy?.();
+        if (exports.mfe?.unmount) {
+          exports.mfe.unmount(mountPoint.id);
+        } else {
+          await exports.mfe?.destroy?.();
+        }
         slot.innerHTML = '';
       };
     }
