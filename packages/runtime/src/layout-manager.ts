@@ -381,6 +381,7 @@ export class LayoutManager {
           previous.element.remove();
         }
       }
+      element.setAttribute('data-layout-slot', address);
       this.slots.set(address, { element, provided: true, providerExperienceId });
       await this.signalSlotTopology(providerExperienceId, 'SLOT_PROVIDED', address);
       if (this.slots.get(address)?.providerExperienceId !== providerExperienceId) return;

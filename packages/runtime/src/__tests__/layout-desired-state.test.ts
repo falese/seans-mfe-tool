@@ -143,6 +143,7 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
 
     expect(game.mounts).toHaveLength(2);
     expect(game.mounts[1]).toBe(providedMain);
+    expect(providedMain.attributes['data-layout-slot']).toBe('layout/main');
     expect(game.unmounts()).toBe(1); // the placeholder binding, torn down once
     const mainPlaceholders = hostCreated.filter(
       (el) => el.attributes['data-layout-slot'] === 'layout/main'
