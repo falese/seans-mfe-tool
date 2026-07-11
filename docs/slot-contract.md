@@ -50,10 +50,13 @@ providesSlots:
 identity from the item's own key, never from its position in the list.
 Sorting and filtering change order; they don't change identity.
 
-**2. Generate.** Codegen turns the declaration into `src/slots.tsx`:
-`PROVIDED_SLOTS` (the manifest mirrored into code) and a `DeclaredSlot`
-component. The file is always regenerated — it is contract, not scaffold —
-so the code can never claim a slot the manifest doesn't declare:
+**2. Generate.** Codegen turns the declaration into `src/slots.tsx` — **data
+only**: `PROVIDED_SLOTS` (the manifest mirrored into code) bound to
+`createSlotContract()` from the runtime, plus a thin `DeclaredSlot` binding.
+The matching and guard *logic* lives once in `@seans-mfe-tool/runtime`, so a
+fix there never requires regenerating MFEs. The file is always regenerated —
+it is contract, not scaffold — so the code can never claim a slot the
+manifest doesn't declare:
 
 ```tsx
 <DeclaredSlot id="main" provideSlot={provideSlot}>
@@ -128,7 +131,9 @@ right now*; convergence makes the gap between them safe.
 | Piece | Path |
 | --- | --- |
 | Manifest schema (`providesSlots`, id grammar) | `packages/dsl/src/schema.ts` |
-| Generated slot contract template | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
+| Contract logic (matching, guard) — framework-free, written once | `packages/runtime/src/slot-contract.ts` |
+| React sugar for shells/hand-written MFEs (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
+| Generated slot contract template (data + thin binding) | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
 | Generator wiring | `packages/codegen/src/unified-generator.ts` |
 | Desired-state binding, topology signals | `packages/runtime/src/layout-manager.ts` |
 | `provideSlot` render-prop plumbing | `packages/runtime/src/layout-adaptors.ts` |

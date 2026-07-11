@@ -31,13 +31,28 @@ disagree.**
    segment is rejected, so an ordinal-form address can never enter the
    contract. `/` is rejected because path composition is host-owned (ADR-057).
    Duplicate ids are rejected.
-2. **Generated `src/slots.tsx`** (React template variant;
-   `packages/codegen/templates/base-mfe/slots.tsx.ejs`): emits
-   `PROVIDED_SLOTS` (the manifest mirrored into code), `isDeclaredSlotId()`
-   (literal + keyed-pattern matching), and `DeclaredSlot` — a component that
-   registers its element through the host's `provideSlot` render prop
-   (ADR-058) and **throws on an undeclared id**. Registration via ref callback
-   is remount-safe because the host re-binds rather than destroys (ADR-066).
+2. **Three layers, one direction of dependency.** *Data* is generated, *logic*
+   is published once, *sugar* is thin and framework-specific:
+   - **Logic — `createSlotContract()`** (`packages/runtime/src/slot-contract.ts`,
+     framework-free, DOM-free): literal + keyed-pattern matching,
+     `assertDeclared()` (typed `ValidationError`), and guarded `register()`.
+     A matcher fix ships in the runtime package once, not in N regenerated
+     MFEs.
+   - **Data — generated `src/slots.tsx`** (React template variant;
+     `packages/codegen/templates/base-mfe/slots.tsx.ejs`): `PROVIDED_SLOTS`
+     (the manifest mirrored into code), `slotContract =
+     createSlotContract(PROVIDED_SLOTS)`, and a thin local `DeclaredSlot`
+     binding with no logic of its own. Generated MFEs already depend on
+     `@seans-mfe-tool/runtime`, so this adds no dependency.
+   - **Sugar — `DeclaredSlot`** (`packages/framework-react/src/runtime/`,
+     exported from `./runtime` beside `MfeHost`): the written-once React
+     registration component for shells and hand-written MFEs, structurally
+     typed (`SlotContractLike`) so the plugin package needs no runtime
+     dependency. Registration via ref callback is remount-safe because the
+     host re-binds rather than destroys (ADR-066). Angular/native variants
+     add their own sugar over the same contract (ADR-036 posture); the data
+     and logic layers are already portable — the contract is JSON-shaped and
+     the runtime module has no DOM types.
 3. **Always regenerated.** `slots.tsx` is emitted with `overwrite: true`,
    unlike user-owned entry points — it is contract, not scaffold. Changing a
    slot id therefore *requires* a manifest edit: a reviewable, semver-taggable
@@ -61,7 +76,9 @@ flowchart LR
 
 - **Framework variants, not framework logic** (ADR-036 posture): this ADR
   ships the React variant; Angular gets its own template variant when needed.
-  The contract (manifest section, id grammar) is framework-neutral.
+  The contract (manifest section, id grammar, `createSlotContract`) is
+  framework-neutral — a non-web host (native shell) consumes the same
+  manifest data over `describe()` and reimplements only the sugar layer.
 - **Host-owned slots** (shell-configured regions, the `'main'` default) are
   not covered by any MFE manifest; the shell's own configuration is their
   declaration surface.
