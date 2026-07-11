@@ -36,9 +36,12 @@ local slot id: `<provider-mfe-id>/<declared-slot-id>`.**
 - Ref-based registration forwards `null` on region unmount. The host releases
   the address only when the callback's owner token still matches, retains
   desired placement, and re-binds if the region returns.
-- Provide/release callbacks are serialized per qualified address. Async
-  teardown therefore cannot let an older overlapping registration finish
-  after and replace the most recently requested provider.
+- Provide/release callbacks are serialized per qualified address — as is
+  every other lifecycle mutation of that address: registry-driven binds and
+  clears ride the same per-address queue (ADR-066). Async teardown therefore
+  cannot let an older overlapping registration finish after and replace the
+  most recently requested provider, and an overlapping bind cannot leak a
+  superseded mount.
 
 The stable MFE id is deliberately separate from the owner token. Registry rules
 can validate and target an MFE id before runtime; an experience id is ephemeral

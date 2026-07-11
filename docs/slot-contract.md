@@ -147,6 +147,9 @@ what should be at this address, independent of what's currently mounted.
   same placement re-binds into the new element.
 - The same placement is **replayed** (reconnect, refresh) → no-op; already
   true.
+- The same experience is **moved** to a new address → the old placement is
+  cleared; an experience occupies at most one address, so a later
+  re-provision of the old region cannot resurrect it (ADR-066).
 - The slot's content **crashes** → scoped fallback in that region only, and
   the registry is asked to re-resolve (ADR-060).
 

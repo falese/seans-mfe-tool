@@ -72,9 +72,28 @@ independently of what is currently bound:
 - An experience targeting an address whose slot is not (yet) registered is
   **parked** and binds the instant the slot registers. Placement never fails
   for topology-timing reasons — it waits.
+- **Parking is parking-by-placeholder**: the host creates a placeholder
+  element for the unregistered address (appended to its container) and mounts
+  the experience there immediately; when the provider registers, the
+  placeholder is retired and the experience re-binds into the provided
+  element (pillar 4). Content is live before the provider arrives, at the
+  cost of one remount and pre-provision rendering in the host's default
+  region — hosts that must not show parked content can hide it via the
+  placeholder's `data-layout-slot` attribute.
+- **An experience id occupies at most one address.** Re-placing an experience
+  at a new address unplaces it from its old one: the desired entry is pruned
+  and the old binding cleared, so a later re-provision of the old address can
+  never resurrect a placement the registry has moved. This also bounds the
+  desired map to the set of live placements.
 - Replaying the composition map (reconnect, refresh) is **idempotent**: an
   experience already bound at its address is not remounted; convergence, not
   re-execution.
+- **All lifecycle mutations of one address are serialized** on a per-address
+  operation queue — bind, clear, provide, and release alike (generalizing
+  ADR-068's provide/release serialization). Overlapping placements therefore
+  cannot interleave at await points: a superseded mount is torn down by the
+  queue, never leaked, and a failing teardown is reported and skipped so the
+  replacement still binds.
 
 This is the mechanism that makes the target property literally true: the
 backend targets any address at any time; the client converges when the region
