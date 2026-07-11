@@ -95,6 +95,9 @@ interface ActiveSlot {
   provided?: boolean;
   /** Slot ids this slot's MFE provided — released when this slot clears (ADR-058). */
   providedSlotIds?: string[];
+  /** Binding state; mirrors the element's data-slot-state. A replayed
+   *  experience only skips re-binding when the slot is not in error (ADR-066). */
+  state?: 'pending' | 'ready' | 'error';
   /** Consecutive unrecovered failures escalated to the control plane (ADR-060).
    *  Reset to 0 on a successful mount; capped to avoid re-resolution storms. */
   escalations?: number;
@@ -105,6 +108,13 @@ const MAX_SLOT_ESCALATIONS = 3;
 
 export class LayoutManager {
   private readonly slots = new Map<string, ActiveSlot>();
+  /**
+   * Desired composition map (ADR-066): what the registry wants at each
+   * address, independent of what is currently bound. Binding is deferred —
+   * an experience targeting a slot that is provided later re-binds when the
+   * provision arrives, so placement never depends on message ordering.
+   */
+  private readonly desired = new Map<string, RenderedExperience>();
   private readonly adaptors: Record<string, ExperienceAdaptor>;
   /** Latest transport status — backs the per-slot channels' `connected` (ADR-057). */
   private currentStatus: TransportStatus = 'connecting';
@@ -151,6 +161,26 @@ export class LayoutManager {
 
   private async mountExperience(experience: RenderedExperience): Promise<void> {
     const slotId = typeof experience.props?.slot === 'string' ? experience.props.slot : 'main';
+    if (!this.adaptors[experience.contentType]) {
+      this.config.onError?.(`No adaptor registered for contentType "${experience.contentType}"`);
+      return;
+    }
+
+    // Desired-state placement (ADR-066): record the registry's intent for this
+    // address before binding, so slot-provision timing can never lose it.
+    this.desired.set(slotId, experience);
+
+    // Idempotent replay (ADR-066): the same experience already bound at this
+    // address converges without a remount — unless it failed, where a replay
+    // is the retry.
+    const bound = this.slots.get(slotId);
+    if (bound?.experienceId === experience.id && bound.state !== 'error') return;
+
+    await this.bindExperience(slotId, experience);
+  }
+
+  /** Bind an experience to whatever element currently backs `slotId`. */
+  private async bindExperience(slotId: string, experience: RenderedExperience): Promise<void> {
     const adaptor = this.adaptors[experience.contentType];
     if (!adaptor) {
       this.config.onError?.(`No adaptor registered for contentType "${experience.contentType}"`);
@@ -162,6 +192,7 @@ export class LayoutManager {
     slot.experienceId = experience.id;
     // Generic Suspense floor: mark the slot pending until the lifecycle settles
     // (ADR-060). Host chrome can render a skeleton on [data-slot-state=pending].
+    slot.state = 'pending';
     slot.element.setAttribute('data-slot-state', 'pending');
 
     const helpers: AdaptorHelpers = {
@@ -183,7 +214,7 @@ export class LayoutManager {
       // The MFE may contribute named slots to the host layout (ADR-058); track
       // them on this slot so they are released when this experience clears.
       provideSlot: (childId, element) => {
-        this.registerProvidedSlot(childId, element);
+        this.registerProvidedSlot(childId, element, experience.id);
         (slot.providedSlotIds ??= []).push(childId);
       },
     };
@@ -191,6 +222,7 @@ export class LayoutManager {
     try {
       const unmount = await adaptor.mount(experience, slot.element, helpers);
       if (unmount) slot.unmount = unmount;
+      slot.state = 'ready';
       slot.element.setAttribute('data-slot-state', 'ready');
       slot.escalations = 0; // a healthy mount re-arms escalation for this slot
     } catch (error) {
@@ -230,6 +262,7 @@ export class LayoutManager {
       }
       slot.element.innerHTML = '';
       (this.config.renderSlotFallback ?? defaultRenderSlotFallback)(slot.element, info);
+      slot.state = 'error';
       slot.element.setAttribute('data-slot-state', 'error');
       slot.escalations = (slot.escalations ?? 0) + 1;
     }
@@ -306,10 +339,43 @@ export class LayoutManager {
    * Register an MFE-contributed element as a host slot (ADR-058). The element
    * already lives in the providing MFE's DOM, so — unlike ensureSlot — we do
    * not create or append one; we just route into it. Last writer wins.
+   *
+   * Provision is a change of where the address is bound, never a teardown of
+   * what the registry placed there (ADR-066): an experience already occupying
+   * this address — including one mounted into an auto-created placeholder
+   * before the provider arrived — re-binds into the new element.
    */
-  private registerProvidedSlot(slotId: string, element: SlotElementLike): void {
-    void this.clearSlot(slotId);
-    this.slots.set(slotId, { element, provided: true });
+  private registerProvidedSlot(slotId: string, element: SlotElementLike, providerId: string): void {
+    const previous = this.slots.get(slotId);
+    void (async () => {
+      if (previous) {
+        await this.clearSlot(slotId);
+        // The provider's element supersedes an auto-created placeholder;
+        // remove it from the host container so it doesn't linger empty.
+        if (!previous.provided) previous.element.remove();
+      }
+      this.slots.set(slotId, { element, provided: true });
+      await this.signalSlotTopology(providerId, 'SLOT_PROVIDED', slotId);
+      const desired = this.desired.get(slotId);
+      if (desired) await this.bindExperience(slotId, desired);
+    })();
+  }
+
+  /**
+   * Announce slot topology up the control plane (ADR-066): advisory only —
+   * the registry may use it for topology-aware rules and debugging, but
+   * placement correctness never depends on it, so delivery is best-effort.
+   */
+  private async signalSlotTopology(
+    componentId: string,
+    actionType: 'SLOT_PROVIDED' | 'SLOT_RELEASED',
+    slotId: string
+  ): Promise<void> {
+    try {
+      await this.buildAndSendAction(componentId, actionType, { slot: slotId }, { stateKey: 'slot.topology' });
+    } catch {
+      /* advisory signal on a disconnected transport — drop it */
+    }
   }
 
   private async clearSlot(slotId: string): Promise<void> {
@@ -318,7 +384,10 @@ export class LayoutManager {
 
     // Release any slots this experience contributed (ADR-058) before tearing it
     // down, so the host stops routing into elements that are about to vanish.
+    // Desired state for released addresses is kept: it re-binds when a new
+    // provider registers the id (ADR-066).
     if (slot.providedSlotIds) {
+      const providerId = slot.experienceId;
       for (const childId of slot.providedSlotIds) {
         const child = this.slots.get(childId);
         if (child) {
@@ -328,6 +397,7 @@ export class LayoutManager {
             /* best-effort release */
           }
           this.slots.delete(childId);
+          if (providerId) await this.signalSlotTopology(providerId, 'SLOT_RELEASED', childId);
         }
       }
       slot.providedSlotIds = undefined;

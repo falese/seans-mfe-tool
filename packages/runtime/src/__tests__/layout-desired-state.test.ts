@@ -1,0 +1,282 @@
+/**
+ * Desired-state placement (ADR-066): the daemon's placements are desired state
+ * addressed by declared slot ids; binding to elements is deferred and
+ * reconciled. Placement must never depend on the ordering between an
+ * EXPERIENCE arriving and the slot being provided — every ordering converges
+ * to the same binding, re-provision re-binds instead of destroying, replay is
+ * idempotent, and slot topology is signalled up the control plane. Refs #265.
+ */
+import {
+  LayoutManager,
+  type DaemonEnvelope,
+  type ExperienceAdaptor,
+  type SlotElementLike,
+} from '../layout-manager';
+
+class FakeSlotElement implements SlotElementLike {
+  innerHTML = '';
+  attributes: Record<string, string> = {};
+  children: unknown[] = [];
+  removed = false;
+  constructor(public readonly tag = 'slot') {}
+  appendChild(child: unknown): unknown {
+    this.children.push(child);
+    return child;
+  }
+  remove(): void {
+    this.removed = true;
+  }
+  setAttribute(name: string, value: string): void {
+    this.attributes[name] = value;
+  }
+  addEventListener(): void {}
+}
+
+class FakeTransport {
+  onMessage: ((e: DaemonEnvelope) => void) | null = null;
+  sent: Record<string, unknown>[] = [];
+  start(onMessage: (e: DaemonEnvelope) => void): void {
+    this.onMessage = onMessage;
+  }
+  stop(): void {}
+  async send(envelope: Record<string, unknown>): Promise<void> {
+    this.sent.push(envelope);
+  }
+  emit(experience: Record<string, unknown>): void {
+    this.onMessage?.({
+      direction: 'COMPONENT',
+      kind: 'COMPONENT_UPDATE',
+      payload: { id: String(experience.id), type: 'EXPERIENCE', data: experience },
+      metadata: { correlationId: 'c', error: null },
+    });
+  }
+}
+
+// Drain the full async mount chain (see layout-provided-slots.test.ts).
+const flush = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
+
+const experience = (id: string, contentType: string, props: Record<string, unknown>) => ({
+  id,
+  mfe: id,
+  capability: 'X',
+  output: {},
+  contentType,
+  props,
+  createdAt: new Date().toISOString(),
+});
+
+/** Extract the ActionRecords of one actionType sent up the transport. */
+const actionsOf = (transport: FakeTransport, actionType: string): Record<string, unknown>[] =>
+  transport.sent
+    .map((envelope) => envelope.payload)
+    .filter(
+      (payload): payload is Record<string, unknown> =>
+        typeof payload === 'object' && payload !== null &&
+        (payload as Record<string, unknown>).actionType === actionType
+    );
+
+/** A game adaptor that records every element it mounts into and its unmounts. */
+const trackingAdaptor = () => {
+  const mounts: SlotElementLike[] = [];
+  let unmounts = 0;
+  const adaptor: ExperienceAdaptor = {
+    async mount(_exp, slot) {
+      mounts.push(slot);
+      return () => {
+        unmounts += 1;
+      };
+    },
+  };
+  return { adaptor, mounts, unmounts: () => unmounts };
+};
+
+const makeHost = () => ({
+  children: [] as unknown[],
+  appendChild(c: unknown) {
+    this.children.push(c);
+    return c;
+  },
+});
+
+describe('LayoutManager — desired-state placement (ADR-066)', () => {
+  it('re-binds an already-mounted experience into a later-provided element instead of destroying it', async () => {
+    const providedMain = new FakeSlotElement('mfe-main');
+    const hostCreated: FakeSlotElement[] = [];
+    const game = trackingAdaptor();
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(_exp, _slot, helpers) {
+        helpers.provideSlot?.('main', providedMain);
+      },
+    };
+
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: { 'test/layout': layoutAdaptor, 'test/game': game.adaptor },
+      createSlotElement: () => {
+        const el = new FakeSlotElement('host-created');
+        hostCreated.push(el);
+        return el;
+      },
+    });
+    manager.start();
+
+    // The daemon places the game BEFORE any provider registers 'main' — the
+    // host auto-creates a slot (ADR-055) and mounts there.
+    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    await flush();
+    expect(game.mounts).toHaveLength(1);
+
+    // The layout MFE arrives late and provides 'main'. The placement must
+    // survive: the game re-binds into the provided element; the auto-created
+    // placeholder is unmounted and removed, not the experience.
+    transport.emit(experience('layout', 'test/layout', { slot: 'root' }));
+    await flush();
+
+    expect(game.mounts).toHaveLength(2);
+    expect(game.mounts[1]).toBe(providedMain);
+    expect(game.unmounts()).toBe(1); // the placeholder binding, torn down once
+    const mainPlaceholders = hostCreated.filter((el) => el.attributes['data-layout-slot'] === 'main');
+    expect(mainPlaceholders).toHaveLength(1);
+    expect(mainPlaceholders[0].removed).toBe(true);
+    expect(manager.activeSlots.filter((s) => s === 'main')).toHaveLength(1);
+  });
+
+  it('converges to the same binding regardless of experience/provision ordering', async () => {
+    const run = async (order: 'slot-first' | 'experience-first') => {
+      const providedMain = new FakeSlotElement('mfe-main');
+      const game = trackingAdaptor();
+      const layoutAdaptor: ExperienceAdaptor = {
+        async mount(_exp, _slot, helpers) {
+          helpers.provideSlot?.('main', providedMain);
+        },
+      };
+      const transport = new FakeTransport();
+      const manager = new LayoutManager({
+        container: makeHost(),
+        transport,
+        adaptors: { 'test/layout': layoutAdaptor, 'test/game': game.adaptor },
+        createSlotElement: () => new FakeSlotElement(),
+      });
+      manager.start();
+
+      const events = [
+        () => transport.emit(experience('layout', 'test/layout', { slot: 'root' })),
+        () => transport.emit(experience('flappy', 'test/game', { slot: 'main' })),
+      ];
+      if (order === 'experience-first') events.reverse();
+      for (const fire of events) {
+        fire();
+        await flush();
+      }
+      return game.mounts[game.mounts.length - 1];
+    };
+
+    const slotFirst = await run('slot-first');
+    const experienceFirst = await run('experience-first');
+    expect(slotFirst.tag).toBe('mfe-main');
+    expect(experienceFirst.tag).toBe('mfe-main');
+  });
+
+  it('re-provision re-binds the occupying experience into the new element', async () => {
+    const first = new FakeSlotElement('first');
+    const second = new FakeSlotElement('second');
+    const provided = [first, second];
+    let i = 0;
+    const game = trackingAdaptor();
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(_exp, _slot, helpers) {
+        helpers.provideSlot?.('main', provided[i++]);
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: { 'test/layout': layoutAdaptor, 'test/game': game.adaptor },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout-a', 'test/layout', { slot: 'root' }));
+    await flush();
+    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    await flush();
+    expect(game.mounts[0]).toBe(first);
+
+    // Replacing the provider must carry the game to the new element — a
+    // provision is a change of where 'main' is bound, not a teardown of what
+    // the registry placed there.
+    transport.emit(experience('layout-b', 'test/layout', { slot: 'root' }));
+    await flush();
+    expect(game.mounts).toHaveLength(2);
+    expect(game.mounts[1]).toBe(second);
+    expect(game.unmounts()).toBe(1);
+  });
+
+  it('replaying the same experience at the same address is idempotent; a new experience replaces', async () => {
+    const game = trackingAdaptor();
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: { 'test/game': game.adaptor },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    await flush();
+    // Reconnect replay: same experience id at the same address → no remount.
+    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    await flush();
+    expect(game.mounts).toHaveLength(1);
+    expect(game.unmounts()).toBe(0);
+
+    // A different experience at the address is a replacement, as before.
+    transport.emit(experience('hockey', 'test/game', { slot: 'main' }));
+    await flush();
+    expect(game.mounts).toHaveLength(2);
+    expect(game.unmounts()).toBe(1);
+  });
+
+  it('signals SLOT_PROVIDED and SLOT_RELEASED up the control plane', async () => {
+    const providedMain = new FakeSlotElement('mfe-main');
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(_exp, _slot, helpers) {
+        helpers.provideSlot?.('main', providedMain);
+      },
+    };
+    const plainAdaptor: ExperienceAdaptor = {
+      async mount() {
+        return () => undefined;
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: { 'test/layout': layoutAdaptor, 'test/plain': plainAdaptor },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout', 'test/layout', { slot: 'root' }));
+    await flush();
+    const provided = actionsOf(transport, 'SLOT_PROVIDED');
+    expect(provided).toHaveLength(1);
+    expect(provided[0].componentId).toBe('layout');
+    expect(provided[0].data).toEqual({ slot: 'main' });
+
+    // Replacing the provider releases its slots — the registry hears it.
+    transport.emit(experience('other', 'test/plain', { slot: 'root' }));
+    await flush();
+    const released = actionsOf(transport, 'SLOT_RELEASED');
+    expect(released).toHaveLength(1);
+    expect(released[0].componentId).toBe('layout');
+    expect(released[0].data).toEqual({ slot: 'main' });
+  });
+});
