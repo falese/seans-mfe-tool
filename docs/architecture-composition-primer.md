@@ -187,6 +187,13 @@ uncaught throw tears down the whole tree. Suspense falls out of the same lifecyc
 slots carry `data-slot-state` (`pending → ready | error`) from the load/render
 promises, so the host renders skeletons without React Suspense.
 
+Slot *identity and placement* have their own contract layered on top of this:
+ids are assigned names declared in each MFE's manifest (ADR-067), placement is
+desired state the host converges on regardless of ordering (ADR-066), and
+`SLOT_PROVIDED`/`SLOT_RELEASED` ride the same action path as `SLOT_ERROR`
+above. See **[`slot-contract.md`](./slot-contract.md)** for the plain-language
+end-to-end.
+
 ---
 
 ## 6. What you get (and the one honest cost)

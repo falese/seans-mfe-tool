@@ -209,7 +209,15 @@ A generic shell owns *where* (slots) and *how* (adaptors). The control plane own
 - **LayoutManager** (`src/runtime/layout-manager.ts`) — the host-side placement
   engine. Subscribes to the daemon, routes each experience to a slot
   (`props.slot`, default `main`), and mounts it via the adaptor for its
-  `contentType`.
+  `contentType`. Placement is **desired state** (ADR-066): experiences
+  targeting a not-yet-provided slot bind when it registers, re-provision
+  re-binds instead of destroying, and replay is idempotent — so placement
+  never depends on message ordering.
+
+Slot identity is a contract of its own: ids are assigned names declared in
+each MFE's manifest (`providesSlots`, ADR-067), never render-order ordinals.
+The full story — addressing rules, the manifest→codegen→runtime→registry
+chain, rename semantics — is in **[`slot-contract.md`](./slot-contract.md)**.
 
 `BaseControlPlane` (ADR-059) is the abstract base that bundles daemon + registry +
 LayoutManager into one swappable unit (Node daemon, Rust daemon, in-process mock).

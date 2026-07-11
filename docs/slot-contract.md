@@ -6,7 +6,61 @@ intent, and the registry validates against the same declaration. This
 document explains the whole chain in plain language.*
 
 Governing decisions: ADR-066 (addressing + binding), ADR-067 (manifest
-contract). Tracked in #265.
+contract + three-layer split). Tracked in #265.
+
+## The short version
+
+If you only read one section, read this one.
+
+1. **The problem.** The backend (registry/daemon) must be able to say "put
+   this MFE in that region" *before* anything renders. That only works if
+   regions have names that don't depend on what happened to render — so slot
+   addresses are **names people assign** (`main`, `info`, `card.{sku}`),
+   never positions the tree produces (`parent.2`). Positions renumber under
+   feature flags, sorting, tabs, and lazy loading; names don't.
+2. **The contract.** Every MFE declares the slots it provides in its
+   **manifest** (`providesSlots`). The schema physically rejects positional
+   ids. Because the declaration is data in the manifest, the registry can
+   validate every placement rule against it *before* runtime, and a rename
+   becomes a reviewable manifest diff instead of a silent string change.
+3. **The guarantee.** The client treats each placement as **desired state**
+   and converges on it: if the target region doesn't exist yet, the
+   placement waits and binds the moment the region registers; if the region
+   remounts, the placement follows it; replays are no-ops. Ordering between
+   "backend places" and "frontend renders" can never lose content.
+4. **The construction — three layers, so it ports anywhere:**
+   - **Data** (generated): your manifest's slot list, mirrored into a tiny
+     generated file. Data is JSON-shaped — any language can read it.
+   - **Logic** (published once): matching and the "declare it before you
+     register it" guard live in `@seans-mfe-tool/runtime`, framework-free
+     and DOM-free. One implementation, one place to fix.
+   - **Sugar** (thin, per framework): a small `DeclaredSlot` React component
+     wires the contract to React's lifecycle. Angular or a native shell
+     writes its own ~20-line equivalent; nothing else changes.
+5. **What a dev actually does:** add an id to `providesSlots` in the
+   manifest, regenerate, render `<DeclaredSlot id="…">` around the region.
+   Everything else — validation, registration, convergence, telemetry — is
+   platform machinery you never touch.
+
+## The three layers at a glance
+
+| Layer | What it is | Where it lives | Why it's a separate layer |
+| --- | --- | --- | --- |
+| **Data** | `PROVIDED_SLOTS` — the manifest's slot list mirrored into generated code and bound with `createSlotContract(PROVIDED_SLOTS)` | generated `src/slots.tsx` (from `packages/codegen/templates/base-mfe/slots.tsx.ejs`) | Regenerated on every manifest change (`overwrite: true`), so code and manifest cannot drift; JSON-shaped, so any platform can consume the same declaration via `describe()` |
+| **Logic** | `createSlotContract()` — literal + `{param}` pattern matching, `assertDeclared()` (typed error), guarded `register()` | `packages/runtime/src/slot-contract.ts`, exported from `@seans-mfe-tool/runtime` | Written and tested once; a matcher fix ships in the runtime package, not in N regenerated MFEs; no framework or DOM types, so it ports to any host |
+| **Sugar** | `DeclaredSlot` — assert on render, register the element via a stable ref | `packages/framework-react/src/runtime/DeclaredSlot.tsx` (published, beside `MfeHost`); a thin generated twin in `slots.tsx` for generated MFEs | Irreducibly framework-specific, so it's kept tiny and logic-free; a new framework adds only this layer (ADR-036 posture) |
+
+```mermaid
+flowchart TD
+  M["mfe-manifest.yaml\nprovidesSlots (DATA · declared once)"]
+  M -- "codegen mirrors it" --> G["generated src/slots.tsx\nPROVIDED_SLOTS + slotContract"]
+  L["@seans-mfe-tool/runtime\ncreateSlotContract (LOGIC · published once)"]
+  G -- "binds data to logic" --> L
+  S["DeclaredSlot\n(SUGAR · thin, per framework)"] -- "assert + register via" --> L
+  S -- "provideSlot(id, element)" --> H["host LayoutManager\ndesired-state binding (ADR-066)"]
+  M -- "describe() serves the same data" --> R["registry rules\nvalidated at design time"]
+  H -- "SLOT_PROVIDED / SLOT_RELEASED" --> R
+```
 
 ## The whole model in one sentence
 
@@ -151,3 +205,6 @@ right now*; convergence makes the gap between them safe.
    remounts can't lose it.
 5. A rename is a **contract change** — make it in the manifest, on purpose,
    with a migration plan.
+6. **Data is generated, logic is published, sugar is thin.** If you find
+   yourself writing slot logic in a component or a template, it belongs in
+   `slot-contract.ts` instead.
