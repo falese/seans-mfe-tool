@@ -190,6 +190,8 @@ promises, so the host renders skeletons without React Suspense.
 Slot *identity and placement* have their own contract layered on top of this:
 ids are assigned names declared in each MFE's manifest (ADR-067), placement is
 desired state the host converges on regardless of ordering (ADR-066), and
+provided addresses are scoped as `provider-mfe/local-id` with lifecycle
+ownership protected from stale teardown (ADR-068). The
 `SLOT_PROVIDED`/`SLOT_RELEASED` ride the same action path as `SLOT_ERROR`
 above. See **[`slot-contract.md`](./slot-contract.md)** for the plain-language
 end-to-end.

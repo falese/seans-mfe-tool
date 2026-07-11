@@ -24,6 +24,7 @@ import {
   defaultCreateSlotElement,
   defaultRenderSlotFallback,
 } from './layout-adaptors';
+import { toProvidedSlotAddress } from './slot-contract';
 import type {
   AdaptorHelpers,
   ExperienceAdaptor,
@@ -93,8 +94,10 @@ interface ActiveSlot {
   unmount?: UnmountFn;
   /** This slot's element was contributed by an MFE via provideSlot (ADR-058). */
   provided?: boolean;
-  /** Slot ids this slot's MFE provided — released when this slot clears (ADR-058). */
-  providedSlotIds?: string[];
+  /** Runtime owner token for a provided slot; prevents stale lifecycle cleanup. */
+  providerExperienceId?: string;
+  /** Scoped addresses this slot's MFE provided — released when this slot clears. */
+  providedSlotAddresses?: string[];
   /** Binding state; mirrors the element's data-slot-state. A replayed
    *  experience only skips re-binding when the slot is not in error (ADR-066). */
   state?: 'pending' | 'ready' | 'error';
@@ -115,6 +118,8 @@ export class LayoutManager {
    * provision arrives, so placement never depends on message ordering.
    */
   private readonly desired = new Map<string, RenderedExperience>();
+  /** Serializes provide/release callbacks per qualified address. */
+  private readonly providedSlotOperations = new Map<string, Promise<void>>();
   private readonly adaptors: Record<string, ExperienceAdaptor>;
   /** Latest transport status — backs the per-slot channels' `connected` (ADR-057). */
   private currentStatus: TransportStatus = 'connecting';
@@ -214,8 +219,14 @@ export class LayoutManager {
       // The MFE may contribute named slots to the host layout (ADR-058); track
       // them on this slot so they are released when this experience clears.
       provideSlot: (childId, element) => {
-        this.registerProvidedSlot(childId, element, experience.id);
-        (slot.providedSlotIds ??= []).push(childId);
+        const address = toProvidedSlotAddress(experience.mfe, childId);
+        if (element === null) {
+          void this.releaseProvidedSlot(address, experience.id);
+          return;
+        }
+        this.registerProvidedSlot(address, element, experience.id);
+        const providedAddresses = (slot.providedSlotAddresses ??= []);
+        if (!providedAddresses.includes(address)) providedAddresses.push(address);
       },
     };
 
@@ -338,27 +349,89 @@ export class LayoutManager {
   /**
    * Register an MFE-contributed element as a host slot (ADR-058). The element
    * already lives in the providing MFE's DOM, so — unlike ensureSlot — we do
-   * not create or append one; we just route into it. Last writer wins.
+   * not create or append one; we just route into it. Different provider MFEs
+   * have different qualified addresses; callbacks for the same address are
+   * serialized so the latest registration wins even when teardown is async.
    *
    * Provision is a change of where the address is bound, never a teardown of
    * what the registry placed there (ADR-066): an experience already occupying
    * this address — including one mounted into an auto-created placeholder
    * before the provider arrived — re-binds into the new element.
    */
-  private registerProvidedSlot(slotId: string, element: SlotElementLike, providerId: string): void {
-    const previous = this.slots.get(slotId);
-    void (async () => {
-      if (previous) {
-        await this.clearSlot(slotId);
-        // The provider's element supersedes an auto-created placeholder;
-        // remove it from the host container so it doesn't linger empty.
-        if (!previous.provided) previous.element.remove();
+  private registerProvidedSlot(
+    address: string,
+    element: SlotElementLike,
+    providerExperienceId: string
+  ): void {
+    void this.enqueueProvidedSlotOperation(address, async () => {
+      const previous = this.slots.get(address);
+      if (
+        previous?.provided &&
+        previous.providerExperienceId === providerExperienceId &&
+        previous.element === element
+      ) {
+        return;
       }
-      this.slots.set(slotId, { element, provided: true });
-      await this.signalSlotTopology(providerId, 'SLOT_PROVIDED', slotId);
-      const desired = this.desired.get(slotId);
-      if (desired) await this.bindExperience(slotId, desired);
-    })();
+
+      if (previous) {
+        if (previous.provided && previous.providerExperienceId) {
+          await this.releaseProvidedSlotNow(address, previous.providerExperienceId);
+        } else {
+          await this.clearSlot(address);
+          previous.element.remove();
+        }
+      }
+      this.slots.set(address, { element, provided: true, providerExperienceId });
+      await this.signalSlotTopology(providerExperienceId, 'SLOT_PROVIDED', address);
+      if (this.slots.get(address)?.providerExperienceId !== providerExperienceId) return;
+      const desired = this.desired.get(address);
+      if (desired) await this.bindExperience(address, desired);
+    });
+  }
+
+  /** Release one provided address only while the requesting instance owns it. */
+  private releaseProvidedSlot(
+    address: string,
+    providerExperienceId: string
+  ): Promise<void> {
+    return this.enqueueProvidedSlotOperation(
+      address,
+      () => this.releaseProvidedSlotNow(address, providerExperienceId)
+    );
+  }
+
+  private async releaseProvidedSlotNow(
+    address: string,
+    providerExperienceId: string
+  ): Promise<void> {
+    const child = this.slots.get(address);
+    if (!child || child.providerExperienceId !== providerExperienceId) return;
+
+    try {
+      if (child.unmount) await child.unmount();
+    } catch {
+      /* best-effort release */
+    }
+
+    if (this.slots.get(address) !== child) return;
+    this.slots.delete(address);
+    await this.signalSlotTopology(providerExperienceId, 'SLOT_RELEASED', address);
+  }
+
+  private enqueueProvidedSlotOperation(
+    address: string,
+    operation: () => Promise<void>
+  ): Promise<void> {
+    const previous = this.providedSlotOperations.get(address) ?? Promise.resolve();
+    const current = previous.catch(() => undefined).then(operation);
+    this.providedSlotOperations.set(address, current);
+    const cleanup = (): void => {
+      if (this.providedSlotOperations.get(address) === current) {
+        this.providedSlotOperations.delete(address);
+      }
+    };
+    void current.then(cleanup, cleanup);
+    return current;
   }
 
   /**
@@ -386,21 +459,12 @@ export class LayoutManager {
     // down, so the host stops routing into elements that are about to vanish.
     // Desired state for released addresses is kept: it re-binds when a new
     // provider registers the id (ADR-066).
-    if (slot.providedSlotIds) {
-      const providerId = slot.experienceId;
-      for (const childId of slot.providedSlotIds) {
-        const child = this.slots.get(childId);
-        if (child) {
-          try {
-            await child.unmount?.();
-          } catch {
-            /* best-effort release */
-          }
-          this.slots.delete(childId);
-          if (providerId) await this.signalSlotTopology(providerId, 'SLOT_RELEASED', childId);
-        }
+    if (slot.providedSlotAddresses) {
+      const providerExperienceId = slot.experienceId;
+      for (const address of slot.providedSlotAddresses) {
+        if (providerExperienceId) await this.releaseProvidedSlot(address, providerExperienceId);
       }
-      slot.providedSlotIds = undefined;
+      slot.providedSlotAddresses = undefined;
     }
 
     try {

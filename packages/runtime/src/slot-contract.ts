@@ -24,7 +24,12 @@ export interface ProvidedSlotDeclaration {
 }
 
 /** Host registration callback (ADR-058), structural over the element type. */
-export type ProvideSlotFn<E> = (slotId: string, element: E) => void;
+export type ProvideSlotFn<E> = (slotId: string, element: E | null) => void;
+
+/** Compose the stable host address for an MFE-provided local slot id. */
+export function toProvidedSlotAddress(providerMfeId: string, declaredSlotId: string): string {
+  return `${providerMfeId}/${declaredSlotId}`;
+}
 
 export interface SlotContract {
   /** The manifest declarations this contract was built from. */
@@ -35,9 +40,9 @@ export interface SlotContract {
   assertDeclared(id: string): void;
   /**
    * Guarded registration: asserts the id is declared, then hands the element
-   * to the host. No-op when the element is absent (unmount tick) or there is
-   * no host callback (standalone/dev mode) — the assertion still runs, so an
-   * undeclared id fails fast even before composition.
+   * to the host. A null element releases the runtime registration; without a
+   * host callback (standalone/dev mode) registration is a no-op. The assertion
+   * still runs, so an undeclared id fails fast even before composition.
    */
   register<E>(provideSlot: ProvideSlotFn<E> | undefined, id: string, element: E | null): void;
 }
@@ -78,7 +83,7 @@ export function createSlotContract(declarations: readonly ProvidedSlotDeclaratio
     assertDeclared,
     register<E>(provideSlot: ProvideSlotFn<E> | undefined, id: string, element: E | null): void {
       assertDeclared(id);
-      if (element !== null && provideSlot) provideSlot(id, element);
+      provideSlot?.(id, element);
     },
   };
 }

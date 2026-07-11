@@ -57,9 +57,14 @@ const flush = async () => {
   for (let i = 0; i < 20; i += 1) await Promise.resolve();
 };
 
-const experience = (id: string, contentType: string, props: Record<string, unknown>) => ({
+const experience = (
+  id: string,
+  contentType: string,
+  props: Record<string, unknown>,
+  mfe = id
+) => ({
   id,
-  mfe: id,
+  mfe,
   capability: 'X',
   output: {},
   contentType,
@@ -126,7 +131,7 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
 
     // The daemon places the game BEFORE any provider registers 'main' — the
     // host auto-creates a slot (ADR-055) and mounts there.
-    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    transport.emit(experience('flappy', 'test/game', { slot: 'layout/main' }));
     await flush();
     expect(game.mounts).toHaveLength(1);
 
@@ -139,10 +144,12 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
     expect(game.mounts).toHaveLength(2);
     expect(game.mounts[1]).toBe(providedMain);
     expect(game.unmounts()).toBe(1); // the placeholder binding, torn down once
-    const mainPlaceholders = hostCreated.filter((el) => el.attributes['data-layout-slot'] === 'main');
+    const mainPlaceholders = hostCreated.filter(
+      (el) => el.attributes['data-layout-slot'] === 'layout/main'
+    );
     expect(mainPlaceholders).toHaveLength(1);
     expect(mainPlaceholders[0].removed).toBe(true);
-    expect(manager.activeSlots.filter((s) => s === 'main')).toHaveLength(1);
+    expect(manager.activeSlots.filter((s) => s === 'layout/main')).toHaveLength(1);
   });
 
   it('converges to the same binding regardless of experience/provision ordering', async () => {
@@ -165,7 +172,7 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
 
       const events = [
         () => transport.emit(experience('layout', 'test/layout', { slot: 'root' })),
-        () => transport.emit(experience('flappy', 'test/game', { slot: 'main' })),
+        () => transport.emit(experience('flappy', 'test/game', { slot: 'layout/main' })),
       ];
       if (order === 'experience-first') events.reverse();
       for (const fire of events) {
@@ -201,16 +208,16 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
     });
     manager.start();
 
-    transport.emit(experience('layout-a', 'test/layout', { slot: 'root' }));
+    transport.emit(experience('layout-a', 'test/layout', { slot: 'root' }, 'layout'));
     await flush();
-    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    transport.emit(experience('flappy', 'test/game', { slot: 'layout/main' }));
     await flush();
     expect(game.mounts[0]).toBe(first);
 
     // Replacing the provider must carry the game to the new element — a
     // provision is a change of where 'main' is bound, not a teardown of what
     // the registry placed there.
-    transport.emit(experience('layout-b', 'test/layout', { slot: 'root' }));
+    transport.emit(experience('layout-b', 'test/layout', { slot: 'root' }, 'layout'));
     await flush();
     expect(game.mounts).toHaveLength(2);
     expect(game.mounts[1]).toBe(second);
@@ -269,7 +276,7 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
     const provided = actionsOf(transport, 'SLOT_PROVIDED');
     expect(provided).toHaveLength(1);
     expect(provided[0].componentId).toBe('layout');
-    expect(provided[0].data).toEqual({ slot: 'main' });
+    expect(provided[0].data).toEqual({ slot: 'layout/main' });
 
     // Replacing the provider releases its slots — the registry hears it.
     transport.emit(experience('other', 'test/plain', { slot: 'root' }));
@@ -277,6 +284,187 @@ describe('LayoutManager — desired-state placement (ADR-066)', () => {
     const released = actionsOf(transport, 'SLOT_RELEASED');
     expect(released).toHaveLength(1);
     expect(released[0].componentId).toBe('layout');
-    expect(released[0].data).toEqual({ slot: 'main' });
+    expect(released[0].data).toEqual({ slot: 'layout/main' });
+  });
+
+  it('scopes identical declared slot ids by provider MFE', async () => {
+    const provided = {
+      'layout-a': new FakeSlotElement('layout-a-main'),
+      'layout-b': new FakeSlotElement('layout-b-main'),
+    };
+    const gameA = trackingAdaptor();
+    const gameB = trackingAdaptor();
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        helpers.provideSlot?.('main', provided[exp.mfe as keyof typeof provided]);
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: {
+        'test/layout': layoutAdaptor,
+        'test/game-a': gameA.adaptor,
+        'test/game-b': gameB.adaptor,
+      },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout-a-instance', 'test/layout', { slot: 'root-a' }, 'layout-a'));
+    transport.emit(experience('layout-b-instance', 'test/layout', { slot: 'root-b' }, 'layout-b'));
+    await flush();
+    transport.emit(experience('game-a', 'test/game-a', { slot: 'layout-a/main' }));
+    transport.emit(experience('game-b', 'test/game-b', { slot: 'layout-b/main' }));
+    await flush();
+
+    expect(gameA.mounts).toEqual([provided['layout-a']]);
+    expect(gameB.mounts).toEqual([provided['layout-b']]);
+    expect(manager.activeSlots).toEqual(
+      expect.arrayContaining(['layout-a/main', 'layout-b/main'])
+    );
+  });
+
+  it('does not let an old provider instance release its replacement', async () => {
+    const first = new FakeSlotElement('first');
+    const second = new FakeSlotElement('second');
+    const elements = new Map([
+      ['layout-old', first],
+      ['layout-new', second],
+    ]);
+    const game = trackingAdaptor();
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        helpers.provideSlot?.('main', elements.get(exp.id)!);
+      },
+    };
+    const plainAdaptor: ExperienceAdaptor = {
+      async mount() {
+        return () => undefined;
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: {
+        'test/layout': layoutAdaptor,
+        'test/game': game.adaptor,
+        'test/plain': plainAdaptor,
+      },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout-old', 'test/layout', { slot: 'root-old' }, 'layout'));
+    await flush();
+    transport.emit(experience('game', 'test/game', { slot: 'layout/main' }));
+    await flush();
+    transport.emit(experience('layout-new', 'test/layout', { slot: 'root-new' }, 'layout'));
+    await flush();
+    expect(game.mounts[game.mounts.length - 1]).toBe(second);
+
+    transport.emit(experience('replacement', 'test/plain', { slot: 'root-old' }));
+    await flush();
+
+    expect(manager.activeSlots).toContain('layout/main');
+    expect(game.mounts[game.mounts.length - 1]).toBe(second);
+    expect(game.unmounts()).toBe(1);
+  });
+
+  it('serializes overlapping replacements so the latest provider wins', async () => {
+    const elements = new Map([
+      ['layout-old', new FakeSlotElement('old')],
+      ['layout-middle', new FakeSlotElement('middle')],
+      ['layout-new', new FakeSlotElement('new')],
+    ]);
+    const mounts: SlotElementLike[] = [];
+    const releaseUnmount: Array<() => void> = [];
+    const gameAdaptor: ExperienceAdaptor = {
+      async mount(_exp, slot) {
+        mounts.push(slot);
+        return () =>
+          new Promise<void>((resolve) => {
+            releaseUnmount.push(resolve);
+          });
+      },
+    };
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        helpers.provideSlot?.('main', elements.get(exp.id)!);
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: {
+        'test/layout': layoutAdaptor,
+        'test/game': gameAdaptor,
+      },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout-old', 'test/layout', { slot: 'root-old' }, 'layout'));
+    await flush();
+    transport.emit(experience('game', 'test/game', { slot: 'layout/main' }));
+    await flush();
+
+    transport.emit(
+      experience('layout-middle', 'test/layout', { slot: 'root-middle' }, 'layout')
+    );
+    await flush();
+    transport.emit(experience('layout-new', 'test/layout', { slot: 'root-new' }, 'layout'));
+    await flush();
+    expect(releaseUnmount).toHaveLength(1);
+
+    releaseUnmount[0]();
+    await flush();
+    expect(releaseUnmount).toHaveLength(2);
+    releaseUnmount[1]();
+    await flush();
+
+    expect(manager.activeSlots).toContain('layout/main');
+    expect(mounts[mounts.length - 1]).toBe(elements.get('layout-new'));
+  });
+
+  it('releases a conditionally unmounted slot and re-binds when it returns', async () => {
+    const first = new FakeSlotElement('first');
+    const second = new FakeSlotElement('second');
+    const game = trackingAdaptor();
+    let provideSlot:
+      | ((slotId: string, element: SlotElementLike | null) => void)
+      | undefined;
+    const layoutAdaptor: ExperienceAdaptor = {
+      async mount(_exp, _slot, helpers) {
+        provideSlot = helpers.provideSlot;
+        provideSlot?.('main', first);
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport,
+      adaptors: { 'test/layout': layoutAdaptor, 'test/game': game.adaptor },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('layout', 'test/layout', { slot: 'root' }));
+    await flush();
+    transport.emit(experience('game', 'test/game', { slot: 'layout/main' }));
+    await flush();
+
+    provideSlot?.('main', null);
+    await flush();
+    expect(manager.activeSlots).not.toContain('layout/main');
+    expect(game.unmounts()).toBe(1);
+
+    provideSlot?.('main', second);
+    await flush();
+    expect(manager.activeSlots).toContain('layout/main');
+    expect(game.mounts[game.mounts.length - 1]).toBe(second);
   });
 });

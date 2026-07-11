@@ -19,7 +19,7 @@ import * as React from 'react';
 export interface SlotContractLike {
   assertDeclared(id: string): void;
   register<E>(
-    provideSlot: ((slotId: string, element: E) => void) | undefined,
+    provideSlot: ((slotId: string, element: E | null) => void) | undefined,
     id: string,
     element: E | null
   ): void;
@@ -35,7 +35,7 @@ export interface DeclaredSlotProps {
    * the LayoutManager adaptor. Optional: absent in standalone/dev mode, where
    * the region renders inert but undeclared ids still fail fast.
    */
-  provideSlot?: (slotId: string, element: HTMLElement) => void;
+  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
   className?: string;
   children?: React.ReactNode;
 }

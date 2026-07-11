@@ -53,7 +53,7 @@ export interface AdaptorHelpers {
    * region and registers its element so the host routes later experiences
    * (`props.slot === slotId`) into it. The layout itself becomes an MFE.
    */
-  provideSlot?(slotId: string, element: SlotElementLike): void;
+  provideSlot?(slotId: string, element: SlotElementLike | null): void;
   /** The session this experience was rendered for, when known. */
   session?: SessionContext;
   /**

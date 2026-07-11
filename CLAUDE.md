@@ -78,7 +78,7 @@ ADR quick index: `@docs/spec.md#adr-index`
 | GraphQL BFF layer | ✅ Done |
 | Framework plugin system (ADR-036, #167–#185, PRs #187–#188) | ✅ Done |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
-| Slot contract — stable addressing, desired-state placement, manifest-declared slots (ADR-066/067, #265) | 🟡 On branch `claude/slot-address-stability-t4cx9u`, pending PR/CI; see `docs/slot-contract.md` |
+| Slot contract — stable addressing, desired-state placement, manifest-declared/provider-scoped slots (ADR-066/067/068, #265) | 🟡 On branch `claude/slot-address-stability-t4cx9u`, pending PR/CI; see `docs/slot-contract.md` |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
 | Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
 | npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
@@ -105,7 +105,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Slot contract logic (matching + guard, framework-free) | `packages/runtime/src/slot-contract.ts` |
 | React slot sugar (`DeclaredSlot`, beside `MfeHost`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
 | Generated slot contract template (data + thin binding) | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
-| Slot contract explainer (ADR-066/067 in plain language) | `docs/slot-contract.md` |
+| Slot contract explainer (ADR-066/067/068 in plain language) | `docs/slot-contract.md` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
 | Framework plugin loader | `src/framework/loader.ts` |
 | React plugin | `packages/framework-react/src/plugin.ts` |

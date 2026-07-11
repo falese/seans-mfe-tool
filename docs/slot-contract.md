@@ -6,7 +6,8 @@ intent, and the registry validates against the same declaration. This
 document explains the whole chain in plain language.*
 
 Governing decisions: ADR-066 (addressing + binding), ADR-067 (manifest
-contract + three-layer split). Tracked in #265.
+contract + three-layer split), ADR-068 (provider scoping + lifecycle
+ownership). Tracked in #265.
 
 ## The short version
 
@@ -14,8 +15,8 @@ If you only read one section, read this one.
 
 1. **The problem.** The backend (registry/daemon) must be able to say "put
    this MFE in that region" *before* anything renders. That only works if
-   regions have names that don't depend on what happened to render — so slot
-   addresses are **names people assign** (`main`, `info`, `card.{sku}`),
+   regions have names that don't depend on what happened to render — so local
+   slot ids are **names people assign** (`main`, `info`, `card.{sku}`),
    never positions the tree produces (`parent.2`). Positions renumber under
    feature flags, sorting, tabs, and lazy loading; names don't.
 2. **The contract.** Every MFE declares the slots it provides in its
@@ -23,12 +24,15 @@ If you only read one section, read this one.
    ids. Because the declaration is data in the manifest, the registry can
    validate every placement rule against it *before* runtime, and a rename
    becomes a reviewable manifest diff instead of a silent string change.
-3. **The guarantee.** The client treats each placement as **desired state**
+3. **The address.** The host scopes each local declaration by its stable MFE
+   id: `abc-kids-home/main`. Different MFEs can both declare `main` without
+   sharing runtime state.
+4. **The guarantee.** The client treats each placement as **desired state**
    and converges on it: if the target region doesn't exist yet, the
    placement waits and binds the moment the region registers; if the region
    remounts, the placement follows it; replays are no-ops. Ordering between
    "backend places" and "frontend renders" can never lose content.
-4. **The construction — three layers, so it ports anywhere:**
+5. **The construction — three layers, so it ports anywhere:**
    - **Data** (generated): your manifest's slot list, mirrored into a tiny
      generated file. Data is JSON-shaped — any language can read it.
    - **Logic** (published once): matching and the "declare it before you
@@ -37,7 +41,7 @@ If you only read one section, read this one.
    - **Sugar** (thin, per framework): a small `DeclaredSlot` React component
      wires the contract to React's lifecycle. Angular or a native shell
      writes its own ~20-line equivalent; nothing else changes.
-5. **What a dev actually does:** add an id to `providesSlots` in the
+6. **What a dev actually does:** add an id to `providesSlots` in the
    manifest, regenerate, render `<DeclaredSlot id="…">` around the region.
    Everything else — validation, registration, convergence, telemetry — is
    platform machinery you never touch.
@@ -118,19 +122,22 @@ manifest doesn't declare:
 </DeclaredSlot>
 ```
 
-`DeclaredSlot` registers its element with the host on mount and **throws on
-an undeclared id** — "declare it in the manifest first" is enforced by the
-generated code, not by code review.
+`DeclaredSlot` registers its element with the host on mount, releases it on the
+ref's `null` unmount tick, and **throws on an undeclared id** — "declare it in
+the manifest first" is enforced by generated code, not by code review.
 
 **3. Register (runtime).** Registration rides `provideSlot`, the callback the
-host hands every mounted MFE (ADR-058). The host's LayoutManager owns one
-flat namespace of named slots per shell — it is not React context, so
-multiple roots, portals, and mixed frameworks all land in the same registry.
+host hands every mounted MFE (ADR-058). The MFE registers its declared local
+id (`main`); the host takes the stable provider identity from
+`RenderedExperience.mfe` and stores the full address
+`abc-kids-home/main` (ADR-068). A separate experience-id owner token prevents
+an old provider lifecycle from deleting a newer registration.
 
 **4. Place.** The registry resolves *what* renders for whom and emits
-experiences addressed to slot names (`props.slot: 'main'`). The LayoutManager
-treats each placement as **desired state**: what should be at this address,
-independent of what's currently mounted.
+experiences addressed to full provided-slot names
+(`props.slot: 'abc-kids-home/main'`). Host-owned slots such as `root` remain
+unqualified. The LayoutManager treats each placement as **desired state**:
+what should be at this address, independent of what's currently mounted.
 
 **5. Converge.** Binding is reconciled, not assumed:
 
@@ -193,18 +200,20 @@ right now*; convergence makes the gap between them safe.
 | `provideSlot` render-prop plumbing | `packages/runtime/src/layout-adaptors.ts` |
 | Behavior tests (ordering, re-bind, replay, signals) | `packages/runtime/src/__tests__/layout-desired-state.test.ts` |
 | Contract tests (schema grammar, codegen output) | `packages/dsl/src/__tests__/schema.slots.test.ts`, `packages/codegen/src/__tests__/provided-slots.test.ts` |
-| Decisions | ADR-066, ADR-067 (and ADR-055/057/058/060 they build on) |
+| Decisions | ADR-066, ADR-067, ADR-068 (and ADR-055/057/058/060 they build on) |
 
 ## The rules, if you remember nothing else
 
 1. Slot ids are **names people assign**, never positions the tree produces.
 2. A repeated slot takes its identity from **the data that repeats it**.
-3. The **manifest declares** every id; generated code can't register anything
-   else; the registry validates against the same declaration.
-4. Placement is **desired state**; the client converges, so ordering and
+3. The **manifest declares** every local id; the host scopes it by MFE id, and
+   the registry validates the resulting `mfe/id` address.
+4. A runtime owner token prevents stale provider teardown from deleting a
+   replacement at the same stable address.
+5. Placement is **desired state**; the client converges, so ordering and
    remounts can't lose it.
-5. A rename is a **contract change** — make it in the manifest, on purpose,
+6. A rename is a **contract change** — make it in the manifest, on purpose,
    with a migration plan.
-6. **Data is generated, logic is published, sugar is thin.** If you find
+7. **Data is generated, logic is published, sugar is thin.** If you find
    yourself writing slot logic in a component or a template, it belongs in
    `slot-contract.ts` instead.

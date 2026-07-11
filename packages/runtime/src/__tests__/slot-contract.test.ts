@@ -4,7 +4,7 @@
  * the runtime — so generated MFEs carry data, not logic. Framework packages
  * add thin sugar over `register()`. Refs #265.
  */
-import { createSlotContract } from '../slot-contract';
+import { createSlotContract, toProvidedSlotAddress } from '../slot-contract';
 import { ValidationError } from '@seans-mfe/contracts';
 
 const contract = createSlotContract([
@@ -66,11 +66,14 @@ describe('createSlotContract — register', () => {
     expect(calls).toEqual([['main', element]]);
   });
 
-  it('is a no-op without an element (unmount tick) or without a host callback (standalone mode)', () => {
-    const calls: unknown[] = [];
+  it('forwards an unmount tick so the host can release the provided slot', () => {
+    const calls: Array<[string, unknown]> = [];
     contract.register((id, el) => calls.push([id, el]), 'main', null);
+    expect(calls).toEqual([['main', null]]);
+  });
+
+  it('is a no-op without a host callback (standalone mode)', () => {
     contract.register(undefined, 'main', { tag: 'div' });
-    expect(calls).toEqual([]);
   });
 
   it('rejects undeclared ids even when no element is attached yet', () => {
@@ -79,5 +82,14 @@ describe('createSlotContract — register', () => {
 
   it('exposes the declarations it was built from', () => {
     expect(contract.declarations.map((d) => d.id)).toEqual(['main', 'info', 'card.{sku}']);
+  });
+});
+
+describe('toProvidedSlotAddress', () => {
+  it('scopes a declared slot id by the stable provider MFE id', () => {
+    expect(toProvidedSlotAddress('abc-kids-home', 'main')).toBe('abc-kids-home/main');
+    expect(toProvidedSlotAddress('@seans-mfe/home', 'card.SKU-42')).toBe(
+      '@seans-mfe/home/card.SKU-42'
+    );
   });
 });

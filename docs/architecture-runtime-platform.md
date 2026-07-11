@@ -300,7 +300,9 @@ The layout itself can be an MFE. When the host mounts an MFE it passes a
 its regions (menu, main, info) and registers each as a host slot; the host keeps
 its single subscription and routes later experiences into those elements. Slot
 provision is a capability offered to *every* MFE — the layout MFE is just the
-first to use it.
+first to use it. Provided addresses are scoped by the stable provider MFE id
+(`abc-kids-home/main`), while an internal experience-id token prevents stale
+provider teardown from deleting a replacement (ADR-068).
 
 ---
 

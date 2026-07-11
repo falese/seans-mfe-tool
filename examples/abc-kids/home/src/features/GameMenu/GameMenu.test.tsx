@@ -19,4 +19,18 @@ describe('GameMenu (ABC Kids home)', () => {
     render(<GameMenu games={[]} provideSlot={(id) => provided.push(id)} />);
     expect(provided).toEqual(expect.arrayContaining(['main', 'info']));
   });
+
+  it('releases the main and info slots on unmount', () => {
+    const calls: Array<[string, HTMLElement | null]> = [];
+    const { unmount } = render(
+      <GameMenu games={[]} provideSlot={(id, element) => calls.push([id, element])} />
+    );
+    unmount();
+    expect(calls).toEqual(
+      expect.arrayContaining([
+        ['main', null],
+        ['info', null],
+      ])
+    );
+  });
 });

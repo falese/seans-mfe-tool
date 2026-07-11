@@ -18,8 +18,8 @@ interface Game {
 interface GameMenuProps {
   /** Catalog injected by the registry root rule (ADR-058). */
   games?: Game[];
-  /** Host callback to contribute a slot element (ADR-058). */
-  provideSlot?: (slotId: string, element: HTMLElement) => void;
+  /** Host callback to contribute or release a slot element (ADR-058). */
+  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
 }
 
 // Narrow view of the MFE's inherited platform capability — avoids importing the
@@ -49,6 +49,10 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
     if (!provideSlot) return;
     if (mainRef.current) provideSlot('main', mainRef.current);
     if (infoRef.current) provideSlot('info', infoRef.current);
+    return () => {
+      provideSlot('main', null);
+      provideSlot('info', null);
+    };
   }, [provideSlot]);
 
   return (

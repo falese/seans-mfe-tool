@@ -60,7 +60,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
     "moduleFederation": { "scope": "abc_kids_flappy", "module": "./App", "component": "PlayGame" }
   },
   "routes": [
-    { "when": { "stateKey": "abc.play.flappy" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+    { "when": { "stateKey": "abc.play.flappy" }, "resolve": { "capability": "PlayGame", "props": { "slot": "abc-kids-home/main" } } }
   ]
 }'
 
@@ -76,7 +76,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
     "moduleFederation": { "scope": "abc_kids_hockey", "module": "./App", "component": "PlayGame" }
   },
   "routes": [
-    { "when": { "stateKey": "abc.play.hockey" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+    { "when": { "stateKey": "abc.play.hockey" }, "resolve": { "capability": "PlayGame", "props": { "slot": "abc-kids-home/main" } } }
   ]
 }'
 ```
@@ -85,7 +85,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
 
 Send a state-change action (any renderer, MFE `updateControlPlaneState()`,
 or curl). The registry resolves it, the daemon relays the experience, and
-the shell's LayoutManager mounts flappy into the `main` slot:
+the shell's LayoutManager mounts flappy into `abc-kids-home/main`:
 
 ```bash
 curl -s -X POST http://localhost:3004/graphql -H 'Content-Type: application/json' -d '{
@@ -95,7 +95,7 @@ curl -s -X POST http://localhost:3004/graphql -H 'Content-Type: application/json
 ```
 
 Repeat with `abc.play.hockey` and the LayoutManager unmounts flappy and
-mounts hockey in its place — same slot, different MFE, zero shell changes.
+mounts hockey in its place — same scoped slot, different MFE, zero shell changes.
 The same state key can resolve different MFEs per user: routes evaluate
 against `action.context` (user, roles, application, locale).
 
@@ -155,8 +155,9 @@ whatever sessions are connected.
 
 The shell does not even render the menu. `abc-kids-home` is a generated MFE
 (port 3015, one `GameMenu` capability) that **is** the layout: it renders a tile
-per registered game in its own menu region and *contributes* the `main` and
-`info` regions to the host as slots (`provideSlot`, ADR-058). Selecting a tile
+per registered game in its own menu region and *contributes* the local `main`
+and `info` regions to the host as `abc-kids-home/main` and
+`abc-kids-home/info` (`provideSlot`, ADR-058/068). Selecting a tile
 drives the control plane through the inherited BaseMFE platform capability
 `updateControlPlaneState` (ADR-057) — the home knows no game by name.
 
@@ -169,8 +170,8 @@ changes.
 ./scripts/register-games.sh   # registers 12 games + the home (root rule + catalog)
 ./scripts/home.sh             # composes the home into the empty shell (abc.root)
 # now click a tile in the UI — or drive it directly:
-./scripts/play.sh flappy      # PlayGame → the home-provided 'main' slot
-./scripts/play.sh flappy show # ShowCover → the home-provided 'info' slot
+./scripts/play.sh flappy      # PlayGame → abc-kids-home/main
+./scripts/play.sh flappy show # ShowCover → abc-kids-home/info
 ```
 
 The daemon holds **one** socket; the LayoutManager virtualizes it into a channel

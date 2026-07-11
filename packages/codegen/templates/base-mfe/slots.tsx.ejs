@@ -32,7 +32,7 @@ export interface DeclaredSlotProps {
    * component renders inert in standalone/dev mode — undeclared ids still
    * fail fast either way.
    */
-  provideSlot?: (slotId: string, element: HTMLElement) => void;
+  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
   className?: string;
   children?: React.ReactNode;
 }

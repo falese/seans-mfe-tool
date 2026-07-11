@@ -21,12 +21,12 @@ function fakeContract(log: Array<[string, unknown]>): SlotContractLike {
   return {
     assertDeclared,
     register<E>(
-      provideSlot: ((slotId: string, element: E) => void) | undefined,
+      provideSlot: ((slotId: string, element: E | null) => void) | undefined,
       id: string,
       element: E | null
     ): void {
       assertDeclared(id);
-      if (element !== null && provideSlot) {
+      if (provideSlot) {
         provideSlot(id, element);
         log.push([id, element]);
       }
@@ -37,8 +37,8 @@ function fakeContract(log: Array<[string, unknown]>): SlotContractLike {
 describe('DeclaredSlot (ADR-067)', () => {
   it('registers its element with the host on mount and renders children', () => {
     const log: Array<[string, unknown]> = [];
-    const provided: Array<[string, HTMLElement]> = [];
-    const { getByText, container } = render(
+    const provided: Array<[string, HTMLElement | null]> = [];
+    const { getByText, container, unmount } = render(
       <DeclaredSlot
         contract={fakeContract(log)}
         id="main"
@@ -54,6 +54,9 @@ describe('DeclaredSlot (ADR-067)', () => {
     expect(provided).toHaveLength(1);
     expect(provided[0][0]).toBe('main');
     expect(provided[0][1]).toBe(region);
+
+    unmount();
+    expect(provided[1]).toEqual(['main', null]);
   });
 
   it('throws during render for an undeclared id — declare it in the manifest first', () => {
