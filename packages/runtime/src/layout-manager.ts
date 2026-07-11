@@ -92,9 +92,12 @@ interface ActiveSlot {
   element: SlotElementLike;
   experienceId?: string;
   unmount?: UnmountFn;
-  /** This slot's element was contributed by an MFE via provideSlot (ADR-058). */
-  provided?: boolean;
-  /** Runtime owner token for a provided slot; prevents stale lifecycle cleanup. */
+  /**
+   * Present exactly when this slot's element was contributed by an MFE via
+   * provideSlot (ADR-058): the provider's runtime owner token. Its presence
+   * marks the slot as provided; its value guards release against stale
+   * lifecycle cleanup (ADR-068).
+   */
   providerExperienceId?: string;
   /** Scoped addresses this slot's MFE provided — released when this slot clears. */
   providedSlotAddresses?: string[];
@@ -118,8 +121,20 @@ export class LayoutManager {
    * provision arrives, so placement never depends on message ordering.
    */
   private readonly desired = new Map<string, RenderedExperience>();
-  /** Serializes provide/release callbacks per qualified address. */
-  private readonly providedSlotOperations = new Map<string, Promise<void>>();
+  /**
+   * Reverse index over `desired`: experience id → the one address it
+   * occupies. An experience re-placed at a new address is unplaced from its
+   * old one (ADR-066: an id occupies at most one address), which also keeps
+   * `desired` bounded by the set of live placements.
+   */
+  private readonly desiredAddressByExperience = new Map<string, string>();
+  /**
+   * Serializes ALL lifecycle mutations per address — bind, clear, provide,
+   * release (ADR-068). Envelope-driven binds and provider callbacks ride the
+   * same queue, so overlapping operations on one address can never interleave
+   * at an await point.
+   */
+  private readonly slotOperations = new Map<string, Promise<void>>();
   private readonly adaptors: Record<string, ExperienceAdaptor>;
   /** Latest transport status — backs the per-slot channels' `connected` (ADR-057). */
   private currentStatus: TransportStatus = 'connecting';
@@ -131,7 +146,14 @@ export class LayoutManager {
   /** Connect to the daemon. The layout stays empty until experiences arrive. */
   start(): void {
     this.config.transport.start(
-      (envelope) => void this.handleEnvelope(envelope),
+      (envelope) =>
+        void this.handleEnvelope(envelope).catch((error: unknown) => {
+          // Terminal guard: lifecycle failures are reported per slot; anything
+          // that still escapes must surface, never become an unhandled rejection.
+          this.config.onError?.(
+            `Envelope handling failed: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }),
       (status) => {
         this.currentStatus = status;
         this.config.onStatus?.(status);
@@ -141,7 +163,9 @@ export class LayoutManager {
 
   async stop(): Promise<void> {
     this.config.transport.stop();
-    for (const [slotId] of this.slots) await this.clearSlot(slotId);
+    for (const slotId of Array.from(this.slots.keys())) {
+      await this.enqueueSlotOperation(slotId, () => this.clearSlotNow(slotId));
+    }
   }
 
   /** Slot ids currently mounted (mainly for tests and shell debugging). */
@@ -171,28 +195,67 @@ export class LayoutManager {
       return;
     }
 
-    // Desired-state placement (ADR-066): record the registry's intent for this
-    // address before binding, so slot-provision timing can never lose it.
-    this.desired.set(slotId, experience);
+    // An experience id occupies at most one address (ADR-066): re-placement
+    // at a new address unplaces the old one — desired entry pruned, and the
+    // old binding cleared once its queue drains (guarded, in case the address
+    // was re-occupied meanwhile).
+    const previousAddress = this.desiredAddressByExperience.get(experience.id);
+    if (previousAddress && previousAddress !== slotId) {
+      if (this.desired.get(previousAddress)?.id === experience.id) {
+        this.desired.delete(previousAddress);
+        void this.enqueueSlotOperation(previousAddress, async () => {
+          if (this.desired.has(previousAddress)) return; // re-occupied: reconcile owns it
+          if (this.slots.get(previousAddress)?.experienceId !== experience.id) return;
+          await this.clearSlotNow(previousAddress);
+        });
+      }
+    }
 
-    // Idempotent replay (ADR-066): the same experience already bound at this
-    // address converges without a remount — unless it failed, where a replay
-    // is the retry.
+    // Desired-state placement (ADR-066): record the registry's intent for this
+    // address before binding, so slot-provision timing can never lose it. Keep
+    // the reverse index consistent when this placement displaces another id.
+    const displaced = this.desired.get(slotId);
+    if (
+      displaced &&
+      displaced.id !== experience.id &&
+      this.desiredAddressByExperience.get(displaced.id) === slotId
+    ) {
+      this.desiredAddressByExperience.delete(displaced.id);
+    }
+    this.desired.set(slotId, experience);
+    this.desiredAddressByExperience.set(experience.id, slotId);
+
+    // Idempotent replay fast path (ADR-066): the same experience already bound
+    // at this address converges without a remount — unless it failed, where a
+    // replay is the retry. (reconcileSlotNow re-checks inside the queue.)
     const bound = this.slots.get(slotId);
     if (bound?.experienceId === experience.id && bound.state !== 'error') return;
 
-    await this.bindExperience(slotId, experience);
+    await this.enqueueSlotOperation(slotId, () => this.reconcileSlotNow(slotId));
   }
 
-  /** Bind an experience to whatever element currently backs `slotId`. */
-  private async bindExperience(slotId: string, experience: RenderedExperience): Promise<void> {
-    const adaptor = this.adaptors[experience.contentType];
-    if (!adaptor) {
-      this.config.onError?.(`No adaptor registered for contentType "${experience.contentType}"`);
-      return;
-    }
+  /**
+   * Converge `slotId` on its desired experience. Runs only inside the
+   * per-address operation queue (the `…Now` suffix marks queue-interior
+   * helpers: they mutate immediately and must not re-enqueue on their own
+   * address, or the queue would wait on itself).
+   */
+  private async reconcileSlotNow(slotId: string): Promise<void> {
+    const desired = this.desired.get(slotId);
+    if (!desired) return;
+    const bound = this.slots.get(slotId);
+    if (bound?.experienceId === desired.id && bound.state !== 'error') return;
+    await this.bindExperienceNow(slotId, desired);
+  }
 
-    await this.clearSlot(slotId);
+  /** Bind an experience to whatever element currently backs `slotId`.
+   *  The adaptor exists: every `desired` entry was validated by
+   *  mountExperience before it was recorded, and the adaptor registry is
+   *  fixed at construction. */
+  private async bindExperienceNow(slotId: string, experience: RenderedExperience): Promise<void> {
+    const adaptor = this.adaptors[experience.contentType];
+
+    await this.clearSlotNow(slotId);
     const slot = this.ensureSlot(slotId);
     slot.experienceId = experience.id;
     // Generic Suspense floor: mark the slot pending until the lifecycle settles
@@ -209,7 +272,12 @@ export class LayoutManager {
       sendAction: (actionType, data) => this.sendAction(experience.id, actionType, data),
       // Neutral sink for post-mount island errors (ADR-060); the MFE routes here
       // via its emit/error phase. Slot-isolated: fallback here, never cascade.
-      reportError: (error, info) => void this.handleSlotError(slotId, experience, error, info?.phase),
+      // Queued: a late island error may not interleave with an in-flight
+      // bind/clear on the same address.
+      reportError: (error, info) =>
+        void this.enqueueSlotOperation(slotId, () =>
+          this.handleSlotError(slotId, experience, error, info?.phase)
+        ),
       // One virtual channel per slot over the host's single socket (ADR-057).
       channel: new DaemonChannel(
         this.config.transport,
@@ -363,30 +431,29 @@ export class LayoutManager {
     element: SlotElementLike,
     providerExperienceId: string
   ): void {
-    void this.enqueueProvidedSlotOperation(address, async () => {
+    void this.enqueueSlotOperation(address, async () => {
       const previous = this.slots.get(address);
       if (
-        previous?.provided &&
-        previous.providerExperienceId === providerExperienceId &&
+        previous?.providerExperienceId === providerExperienceId &&
         previous.element === element
       ) {
         return;
       }
 
       if (previous) {
-        if (previous.provided && previous.providerExperienceId) {
+        if (previous.providerExperienceId) {
           await this.releaseProvidedSlotNow(address, previous.providerExperienceId);
         } else {
-          await this.clearSlot(address);
+          await this.clearSlotNow(address);
           previous.element.remove();
         }
       }
       element.setAttribute('data-layout-slot', address);
-      this.slots.set(address, { element, provided: true, providerExperienceId });
-      await this.signalSlotTopology(providerExperienceId, 'SLOT_PROVIDED', address);
-      if (this.slots.get(address)?.providerExperienceId !== providerExperienceId) return;
-      const desired = this.desired.get(address);
-      if (desired) await this.bindExperience(address, desired);
+      this.slots.set(address, { element, providerExperienceId });
+      // Advisory topology signal (ADR-066): never load-bearing, so it must
+      // not delay the desired bind behind a slow transport.
+      void this.signalSlotTopology(providerExperienceId, 'SLOT_PROVIDED', address);
+      await this.reconcileSlotNow(address);
     });
   }
 
@@ -395,7 +462,7 @@ export class LayoutManager {
     address: string,
     providerExperienceId: string
   ): Promise<void> {
-    return this.enqueueProvidedSlotOperation(
+    return this.enqueueSlotOperation(
       address,
       () => this.releaseProvidedSlotNow(address, providerExperienceId)
     );
@@ -416,19 +483,21 @@ export class LayoutManager {
 
     if (this.slots.get(address) !== child) return;
     this.slots.delete(address);
-    await this.signalSlotTopology(providerExperienceId, 'SLOT_RELEASED', address);
+    void this.signalSlotTopology(providerExperienceId, 'SLOT_RELEASED', address);
   }
 
-  private enqueueProvidedSlotOperation(
+  private enqueueSlotOperation(
     address: string,
     operation: () => Promise<void>
   ): Promise<void> {
-    const previous = this.providedSlotOperations.get(address) ?? Promise.resolve();
-    const current = previous.catch(() => undefined).then(operation);
-    this.providedSlotOperations.set(address, current);
+    // Uncontended fast path: start immediately so an empty queue adds no
+    // microtask latency over calling the operation directly.
+    const previous = this.slotOperations.get(address);
+    const current = previous ? previous.catch(() => undefined).then(operation) : operation();
+    this.slotOperations.set(address, current);
     const cleanup = (): void => {
-      if (this.providedSlotOperations.get(address) === current) {
-        this.providedSlotOperations.delete(address);
+      if (this.slotOperations.get(address) === current) {
+        this.slotOperations.delete(address);
       }
     };
     void current.then(cleanup, cleanup);
@@ -452,24 +521,37 @@ export class LayoutManager {
     }
   }
 
-  private async clearSlot(slotId: string): Promise<void> {
+  /**
+   * Queue-interior teardown of whatever occupies `slotId`. Never throws: a
+   * failing island unmount is reported via onError, then teardown completes —
+   * a replacement bind must not be stranded by its predecessor's teardown
+   * (ADR-066 convergence).
+   */
+  private async clearSlotNow(slotId: string): Promise<void> {
     const slot = this.slots.get(slotId);
     if (!slot) return;
 
     // Release any slots this experience contributed (ADR-058) before tearing it
     // down, so the host stops routing into elements that are about to vanish.
     // Desired state for released addresses is kept: it re-binds when a new
-    // provider registers the id (ADR-066).
+    // provider registers the id (ADR-066). Releases are enqueued, not awaited:
+    // per-address ordering is what matters, and awaiting another address's
+    // queue from inside an operation could wait on itself (self- or mutual
+    // provision cycles).
     if (slot.providedSlotAddresses) {
       const providerExperienceId = slot.experienceId;
       for (const address of slot.providedSlotAddresses) {
-        if (providerExperienceId) await this.releaseProvidedSlot(address, providerExperienceId);
+        if (providerExperienceId) void this.releaseProvidedSlot(address, providerExperienceId);
       }
       slot.providedSlotAddresses = undefined;
     }
 
     try {
       await slot.unmount?.();
+    } catch (error) {
+      this.config.onError?.(
+        `Slot "${slotId}" teardown failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       slot.unmount = undefined;
       slot.experienceId = undefined;

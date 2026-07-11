@@ -85,7 +85,11 @@ const experience = (id: string, props: Record<string, unknown> = {}) => ({
   createdAt: new Date().toISOString(),
 });
 
-const flush = () => new Promise((resolve) => { void Promise.resolve().then(resolve); });
+// Drain the full async lifecycle chain (matches the other layout suites):
+// per-address queued operations resolve over several microtask rounds.
+const flush = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
 
 // ── Tests ────────────────────────────────────────────────────
 
