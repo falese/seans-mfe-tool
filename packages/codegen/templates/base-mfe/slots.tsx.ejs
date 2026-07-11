@@ -1,0 +1,89 @@
+/**
+ * Slot contract for <%= name %> — GENERATED from mfe-manifest `providesSlots`.
+ * Do not edit: regenerate after changing the manifest.
+ *
+ * The manifest is the single source of slot identity (ADR-067): these are the
+ * only ids this MFE may register with the host (ADR-058), registry rules are
+ * validated against the same declaration at design time, and renaming a slot
+ * is a reviewable manifest diff — a contract change, not an incidental string
+ * edit. Ids are assigned names, never positions (ADR-066).
+ */
+import React, { useCallback } from 'react';
+
+export interface ProvidedSlotDeclaration {
+  id: string;
+  description?: string;
+}
+
+/** The manifest's providesSlots section, mirrored into code. */
+export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
+<%_ providesSlots.forEach(function(slot) { _%>
+  { id: <%- JSON.stringify(slot.id) %><% if (slot.description) { %>, description: <%- JSON.stringify(slot.description) %><% } %> },
+<%_ }); _%>
+] as const;
+
+/**
+ * A declared id is a dot-separated path whose segments are literals or
+ * `{param}` placeholders. A placeholder matches exactly one runtime segment —
+ * the domain key of a repeated slot (ADR-066: repetition takes identity from
+ * data, never from position).
+ */
+function toMatcher(declaredId: string): RegExp {
+  const source = declaredId
+    .split('.')
+    .map((segment) =>
+      /^\{[A-Za-z][A-Za-z0-9_]*\}$/.test(segment)
+        ? '[A-Za-z0-9_-]+'
+        : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    )
+    .join('\\.');
+  return new RegExp('^' + source + '$');
+}
+
+const MATCHERS = PROVIDED_SLOTS.map((slot) => toMatcher(slot.id));
+
+/** True when `id` matches a slot this MFE's manifest declares. */
+export function isDeclaredSlotId(id: string): boolean {
+  return MATCHERS.some((matcher) => matcher.test(id));
+}
+
+export interface DeclaredSlotProps {
+  /** The slot id to register — must match a manifest declaration. */
+  id: string;
+  /**
+   * The host-supplied registration callback (ADR-058), delivered to this MFE
+   * through its render props by the LayoutManager adaptor. Optional so the
+   * component renders inert in standalone/dev mode.
+   */
+  provideSlot?: (slotId: string, element: HTMLElement) => void;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+/**
+ * A named region this MFE contributes to the host layout. Registration happens
+ * via ref callback on mount and again on any remount — safe because the host
+ * re-binds the address's desired experience instead of destroying it (ADR-066).
+ */
+export const DeclaredSlot: React.FC<DeclaredSlotProps> = ({ id, provideSlot, className, children }) => {
+  if (!isDeclaredSlotId(id)) {
+    throw new Error(
+      `[<%= name %>] Slot "${id}" is not declared in mfe-manifest providesSlots. ` +
+        `Declare it there and regenerate — the manifest is the contract registry rules ` +
+        `validate against (ADR-067); code cannot register ids the contract does not know.`
+    );
+  }
+
+  const register = useCallback(
+    (element: HTMLElement | null) => {
+      if (element && provideSlot) provideSlot(id, element);
+    },
+    [id, provideSlot]
+  );
+
+  return (
+    <div ref={register} className={className} data-declared-slot={id}>
+      {children}
+    </div>
+  );
+};

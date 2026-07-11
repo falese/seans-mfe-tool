@@ -375,6 +375,58 @@ export const DependenciesSchema = z.object({
 export type Dependencies = z.infer<typeof DependenciesSchema>;
 
 // =============================================================================
+// Provided Slots (ADR-066 / ADR-067)
+// =============================================================================
+
+/**
+ * A slot id segment is either a `{param}` placeholder (keyed/repeated slots —
+ * the ADR-066 domain-key rule) or a literal containing at least one letter.
+ * Purely numeric segments are rejected: a number describes a position, and
+ * addresses must be assigned names, never measured ordinals (ADR-066).
+ */
+const SLOT_ID_SEGMENT = /^(\{[A-Za-z][A-Za-z0-9_]*\}|[A-Za-z0-9_-]*[A-Za-z][A-Za-z0-9_-]*)$/;
+
+/** One slot an MFE declares it will provide at runtime (ADR-067). */
+export const ProvidedSlotSchema = z.object({
+  id: z.string().min(1, 'Slot id is required').superRefine((id, ctx) => {
+    if (id.includes('/')) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `Slot id "${id}" must not contain "/" — path composition is host-owned (ADR-057); declare the local name only`,
+      });
+      return;
+    }
+    for (const segment of id.split('.')) {
+      if (!SLOT_ID_SEGMENT.test(segment)) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            `Slot id "${id}" segment "${segment}" is invalid: each dot-separated segment must be an assigned name ` +
+            `(contain a letter) or a {param} placeholder — positional/numeric addresses are not part of the contract (ADR-066)`,
+        });
+      }
+    }
+  }),
+  description: z.string().optional(),
+});
+export type ProvidedSlot = z.infer<typeof ProvidedSlotSchema>;
+
+/** The manifest's slot contract: unique, assigned slot ids (ADR-067). */
+export const ProvidesSlotsSchema = z.array(ProvidedSlotSchema).superRefine((slots, ctx) => {
+  const seen = new Set<string>();
+  for (const slot of slots) {
+    if (seen.has(slot.id)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `Duplicate slot id "${slot.id}" — each declared slot must have a unique assigned name (ADR-066)`,
+      });
+    }
+    seen.add(slot.id);
+  }
+});
+export type ProvidesSlots = z.infer<typeof ProvidesSlotsSchema>;
+
+// =============================================================================
 // Main DSL Schema
 // =============================================================================
 
@@ -406,6 +458,11 @@ export const DSLManifestSchema = z.object({
   capabilities: z.array(CapabilityEntrySchema),
   dependencies: DependenciesSchema.optional(),
   data: DataConfigSchema.optional(),
+
+  // Slot contract: the named regions this MFE registers at runtime via
+  // provideSlot (ADR-058). Declared here so codegen emits the registration
+  // and registry rules validate placement targets at design time (ADR-067).
+  providesSlots: ProvidesSlotsSchema.optional(),
   
   // Performance & observability config (ADR-027)
   performance: PerformanceConfigSchema.optional(),
