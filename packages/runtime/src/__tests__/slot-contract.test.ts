@@ -92,4 +92,14 @@ describe('toProvidedSlotAddress', () => {
       '@seans-mfe/home/card.SKU-42'
     );
   });
+
+  it('rejects local ids containing "/" — the host owns path composition (ADR-068)', () => {
+    expect(() => toProvidedSlotAddress('home', 'other-mfe/main')).toThrow(ValidationError);
+    expect(() => toProvidedSlotAddress('home', '/main')).toThrow(ValidationError);
+  });
+
+  it('rejects empty provider or local ids', () => {
+    expect(() => toProvidedSlotAddress('', 'main')).toThrow(ValidationError);
+    expect(() => toProvidedSlotAddress('home', '')).toThrow(ValidationError);
+  });
 });

@@ -26,8 +26,31 @@ export interface ProvidedSlotDeclaration {
 /** Host registration callback (ADR-058), structural over the element type. */
 export type ProvideSlotFn<E> = (slotId: string, element: E | null) => void;
 
-/** Compose the stable host address for an MFE-provided local slot id. */
+/**
+ * Compose the stable host address for an MFE-provided local slot id.
+ *
+ * Path composition is host-owned (ADR-068): a local id containing "/" could
+ * mint an address outside the provider's own prefix (provider `a` +
+ * `b/main` colliding with provider `a/b` + `main`), so it is rejected here —
+ * the one seam every registration crosses, including contract-bypassing
+ * callers that never ran the manifest guard.
+ */
 export function toProvidedSlotAddress(providerMfeId: string, declaredSlotId: string): string {
+  if (!providerMfeId) {
+    throw new ValidationError(
+      'Provider MFE id is required to compose a provided slot address (ADR-068)',
+      'providerMfeId',
+      'non-empty'
+    );
+  }
+  if (!declaredSlotId || declaredSlotId.includes('/')) {
+    throw new ValidationError(
+      `Slot id "${declaredSlotId}" must not contain "/" and must be non-empty — ` +
+        `path composition is host-owned (ADR-068); register the local name only`,
+      'slotId',
+      'local-name-only'
+    );
+  }
   return `${providerMfeId}/${declaredSlotId}`;
 }
 

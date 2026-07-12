@@ -166,6 +166,16 @@ export class LayoutManager {
     for (const slotId of Array.from(this.slots.keys())) {
       await this.enqueueSlotOperation(slotId, () => this.clearSlotNow(slotId));
     }
+    // Full shutdown: retire host-created elements and drop all composition
+    // state, so nothing is retained and a restarted manager begins from
+    // scratch. Provided elements belong to their MFE's DOM — already cleared
+    // above, never removed by the host.
+    for (const slot of this.slots.values()) {
+      if (!slot.providerExperienceId) slot.element.remove();
+    }
+    this.slots.clear();
+    this.desired.clear();
+    this.desiredAddressByExperience.clear();
   }
 
   /** Slot ids currently mounted (mainly for tests and shell debugging). */
@@ -321,30 +331,34 @@ export class LayoutManager {
     error: unknown,
     phase?: string
   ): Promise<void> {
+    // Stale-reporter guard (ADR-060/066): only the experience that currently
+    // occupies the address may degrade it. A late error from a replaced or
+    // released island (in-flight fetch handler, stray timer) must not wipe
+    // its successor or escalate under a stale identity.
+    const slot = this.slots.get(slotId);
+    if (slot?.experienceId !== experience.id) return;
+
     const reason = error instanceof Error ? error.message : String(error);
     const info: SlotErrorInfo = { slot: slotId, mfe: experience.mfe, capability: experience.capability, reason, phase };
 
-    const slot = this.slots.get(slotId);
-    if (slot) {
-      // Tear the failed island down before rendering the fallback so a stale
-      // unmount can't wipe it. Only yield when there is actually something to
-      // unmount — a mount that threw never assigned one, and awaiting a no-op
-      // would defer the fallback/escalation a microtask past a mount that
-      // succeeds (ADR-060: a failing slot degrades in the same tick budget).
-      if (slot.unmount) {
-        try {
-          await slot.unmount();
-        } catch {
-          /* best-effort teardown of the failed island */
-        }
-        slot.unmount = undefined;
+    // Tear the failed island down before rendering the fallback so a stale
+    // unmount can't wipe it. Only yield when there is actually something to
+    // unmount — a mount that threw never assigned one, and awaiting a no-op
+    // would defer the fallback/escalation a microtask past a mount that
+    // succeeds (ADR-060: a failing slot degrades in the same tick budget).
+    if (slot.unmount) {
+      try {
+        await slot.unmount();
+      } catch {
+        /* best-effort teardown of the failed island */
       }
-      slot.element.innerHTML = '';
-      (this.config.renderSlotFallback ?? defaultRenderSlotFallback)(slot.element, info);
-      slot.state = 'error';
-      slot.element.setAttribute('data-slot-state', 'error');
-      slot.escalations = (slot.escalations ?? 0) + 1;
+      slot.unmount = undefined;
     }
+    slot.element.innerHTML = '';
+    (this.config.renderSlotFallback ?? defaultRenderSlotFallback)(slot.element, info);
+    slot.state = 'error';
+    slot.element.setAttribute('data-slot-state', 'error');
+    slot.escalations = (slot.escalations ?? 0) + 1;
 
     this.config.onError?.(
       `Slot "${slotId}" failed: ${info.mfe}.${info.capability}` +
@@ -353,7 +367,7 @@ export class LayoutManager {
 
     // Bigger door: let the registry re-resolve this slot, bounded so a slot that
     // keeps failing settles on its fallback instead of storming the daemon.
-    if (!slot || (slot.escalations ?? 0) <= MAX_SLOT_ESCALATIONS) {
+    if ((slot.escalations ?? 0) <= MAX_SLOT_ESCALATIONS) {
       await this.signalSlotError(experience.id, info);
     }
   }

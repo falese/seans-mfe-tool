@@ -209,6 +209,118 @@ describe('LayoutManager — per-address lifecycle serialization (ADR-066/068)', 
     expect(Array.from(live).sort()).toEqual(['G@home/main']);
   });
 
+  it('ignores a stale island error report after the address was re-bound', async () => {
+    const errors: string[] = [];
+    const unmounts: string[] = [];
+    let reportFromA: ((error: unknown) => void) | undefined;
+    const adaptor: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        if (exp.id === 'A') reportFromA = (error) => helpers.reportError(error);
+        return () => {
+          unmounts.push(exp.id);
+        };
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport: transport as never,
+      adaptors: { 'test/game': adaptor },
+      createSlotElement: () => new FakeSlotElement(),
+      onError: (m) => errors.push(m),
+    });
+    manager.start();
+
+    transport.emit(experience('A', 'test/game', { slot: 'main' }));
+    await flush();
+    transport.emit(experience('B', 'test/game', { slot: 'main' })); // A replaced
+    await flush();
+    expect(unmounts).toEqual(['A']);
+
+    // A's island fires a late error (in-flight fetch handler, stray timer).
+    reportFromA?.(new Error('ghost failure'));
+    await flush();
+
+    // B is untouched: not unmounted, no fallback, and no SLOT_ERROR was
+    // escalated under A's stale identity.
+    expect(unmounts).toEqual(['A']);
+    expect(errors.some((m) => m.includes('ghost failure'))).toBe(false);
+    const slotErrors = transport.sent
+      .map((e) => e.payload as Record<string, unknown>)
+      .filter((p) => p?.actionType === 'SLOT_ERROR');
+    expect(slotErrors).toHaveLength(0);
+  });
+
+  it('rejects a provided slot id containing "/" — path composition is host-owned', async () => {
+    const errors: string[] = [];
+    const region = new FakeSlotElement();
+    const sneakyProvider: ExperienceAdaptor = {
+      async mount(_exp, _slot, helpers) {
+        // Bypasses the manifest contract (raw provideSlot) and tries to mint
+        // an address outside its own prefix.
+        helpers.provideSlot?.('other-mfe/main', region as never);
+        return () => {};
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport: transport as never,
+      adaptors: { 'test/layout': sneakyProvider },
+      createSlotElement: () => new FakeSlotElement(),
+      onError: (m) => errors.push(m),
+    });
+    manager.start();
+
+    transport.emit(experience('sneaky', 'test/layout', { slot: 'root' }, 'sneaky'));
+    await flush();
+
+    // The registration is refused: no shadow address exists under any
+    // spelling, and the violation surfaced through the slot error path.
+    expect(manager.activeSlots.some((s) => s.includes('other-mfe'))).toBe(false);
+    expect(errors.some((m) => m.includes('must not contain'))).toBe(true);
+  });
+
+  it('stop() empties the layout and a restarted manager begins from scratch', async () => {
+    const mounts: string[] = [];
+    const hostElements: FakeSlotElement[] = [];
+    const gameAdaptor: ExperienceAdaptor = {
+      async mount(exp) {
+        mounts.push(exp.id);
+        return () => {};
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport: transport as never,
+      adaptors: { 'test/game': gameAdaptor },
+      createSlotElement: () => {
+        const el = new FakeSlotElement();
+        hostElements.push(el);
+        return el;
+      },
+    });
+    manager.start();
+
+    transport.emit(experience('A', 'test/game', { slot: 'main' }));
+    await flush();
+    await manager.stop();
+
+    // Nothing lingers: no active slots, no retained placements, and the
+    // host-created element was retired from the container.
+    expect(manager.activeSlots).toEqual([]);
+    expect(hostElements[0]?.removed).toBe(true);
+
+    // A restarted manager is 100% empty until the daemon speaks again — and
+    // then composes fresh instead of into stale entries.
+    manager.start();
+    transport.emit(experience('A', 'test/game', { slot: 'main' }));
+    await flush();
+    expect(mounts).toEqual(['A', 'A']);
+    expect(manager.activeSlots).toEqual(['main']);
+  });
+
   it('a failing transport during error escalation surfaces via onError, never as an unhandled rejection', async () => {
     const errors: string[] = [];
     const adaptor: ExperienceAdaptor = {
