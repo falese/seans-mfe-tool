@@ -13,6 +13,11 @@
  * Outbound envelopes are stamped with the channel id (`metadata.channel`) so
  * the control plane — and the host — can reason about which slot/MFE a signal
  * came from. Nested hosts compose the id into a path (`main` → `main/quiz`).
+ * Provided-slot addresses (`abc-kids-home/main`, ADR-068) share this "/"
+ * namespace deliberately: in both cases the segment left of the "/" names the
+ * container the signal originated under — a parent channel or a provider MFE —
+ * so channel ids read uniformly as containment paths. Consumers must treat
+ * the id as an opaque address, not split it to recover a slot name.
  *
  * Framework-neutral and DOM-free: it depends only on the neutral transport
  * `send()` and the `DaemonWebSocketClient` port (ADR-056 boundary).

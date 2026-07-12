@@ -25,7 +25,14 @@ local slot id: `<provider-mfe-id>/<declared-slot-id>`.**
 
 - The MFE still declares and registers only its local id, for example `main`.
 - The LayoutManager takes the provider id from `RenderedExperience.mfe` and
-  composes `abc-kids-home/main`. The MFE cannot choose or spoof the prefix.
+  composes `abc-kids-home/main`. The MFE cannot choose or spoof the prefix:
+  the host rejects local ids containing `/` at composition time (typed
+  `ValidationError`), so a contract-bypassing caller cannot mint an address
+  outside its own prefix either.
+- Channel ids and provided addresses share the `/` namespace deliberately —
+  both read as containment paths (parent channel or provider MFE on the
+  left). Consumers treat `metadata.channel` as an opaque address; they do not
+  split it to recover a local slot name.
 - Registry placement targets use the full address in `props.slot`. Host-owned
   slots such as `root` remain unqualified.
 - The desired-composition map, active-slot map, `DaemonChannel`, DOM
