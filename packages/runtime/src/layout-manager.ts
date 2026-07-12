@@ -299,9 +299,15 @@ export class LayoutManager {
       provideSlot: (childId, element) => {
         const address = toProvidedSlotAddress(experience.mfe, childId);
         if (element === null) {
+          // A stale instance may still RELEASE — only entries it owns
+          // (releaseProvidedSlotNow's owner-token check).
           void this.releaseProvidedSlot(address, experience.id);
           return;
         }
+        // …but never REGISTER: a late callback from an instance that no
+        // longer occupies its slot would create a provided address owned by
+        // a dead experience, unreleasable by the current occupant's cleanup.
+        if (slot.experienceId !== experience.id) return;
         this.registerProvidedSlot(address, element, experience.id);
         const providedAddresses = (slot.providedSlotAddresses ??= []);
         if (!providedAddresses.includes(address)) providedAddresses.push(address);

@@ -251,6 +251,40 @@ describe('LayoutManager — per-address lifecycle serialization (ADR-066/068)', 
     expect(slotErrors).toHaveLength(0);
   });
 
+  it('ignores a slot registration from a provider instance that was already replaced', async () => {
+    let lateProvide: (() => void) | undefined;
+    const region = new FakeSlotElement();
+    const adaptor: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        if (exp.id === 'old-layout') {
+          // The island defers its registration (setTimeout-style) and fires it
+          // only after the host has already replaced this experience.
+          lateProvide = () => helpers.provideSlot?.('main', region as never);
+        }
+        return () => {};
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport: transport as never,
+      adaptors: { 'test/layout': adaptor, 'test/plain': adaptor },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('old-layout', 'test/layout', { slot: 'root' }, 'layout'));
+    await flush();
+    transport.emit(experience('replacement', 'test/plain', { slot: 'root' }, 'other'));
+    await flush();
+
+    // The dead instance's late registration must not create a live provided
+    // address owned by an experience that can never release it.
+    lateProvide?.();
+    await flush();
+    expect(manager.activeSlots).not.toContain('layout/main');
+  });
+
   it('rejects a provided slot id containing "/" — path composition is host-owned', async () => {
     const errors: string[] = [];
     const region = new FakeSlotElement();
