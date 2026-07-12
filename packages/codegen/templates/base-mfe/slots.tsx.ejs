@@ -41,8 +41,18 @@ export interface DeclaredSlotProps {
  * A named region this MFE contributes to the host layout. Registration rides
  * a stable ref callback; re-registration on remount is safe because the host
  * re-binds the address's desired experience instead of destroying it (ADR-066).
+ *
+ * Keep in lock-step with packages/framework-react/src/runtime/DeclaredSlot.tsx:
+ * this is the same component with the contract pre-bound instead of passed as
+ * a prop (generated MFEs depend on the runtime package, not framework-react).
+ * A change to ref-callback or registration semantics must land in both.
  */
-export const DeclaredSlot: React.FC<DeclaredSlotProps> = ({ id, provideSlot, className, children }) => {
+export function DeclaredSlot({
+  id,
+  provideSlot,
+  className,
+  children,
+}: DeclaredSlotProps): React.ReactElement {
   slotContract.assertDeclared(id);
 
   const register = useCallback(
@@ -55,4 +65,4 @@ export const DeclaredSlot: React.FC<DeclaredSlotProps> = ({ id, provideSlot, cla
       {children}
     </div>
   );
-};
+}

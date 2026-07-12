@@ -12,6 +12,11 @@
  * sugar), same posture as MfeHost. React is a peer dependency. The contract
  * is accepted structurally so this package needs no dependency on the runtime
  * package: `createSlotContract(...)` satisfies `SlotContractLike`.
+ *
+ * Mirrored by the generated template
+ * packages/codegen/templates/base-mfe/slots.tsx.ejs (same component with the
+ * contract pre-bound — generated MFEs do not depend on framework-react). A
+ * change to ref-callback or registration semantics must land in both.
  */
 import * as React from 'react';
 
