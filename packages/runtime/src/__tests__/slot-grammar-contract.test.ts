@@ -1,12 +1,12 @@
 /**
- * Cross-package grammar contract (ADR-066/067): the DSL's `providesSlots` id
- * grammar (packages/dsl/src/schema.ts, SLOT_ID_SEGMENT) and the runtime
- * matcher (packages/runtime/src/slot-contract.ts, toMatcher) are written as
- * two regexes in two packages. Single-sourcing them would add a cross-package
- * dependency neither package has today (an ADR-worthy decision, deliberately
- * not taken here) — so this suite pins the two grammars to each other
- * behaviorally: any drift fails CI instead of splitting the contract
- * silently. Refs #265.
+ * Cross-package grammar contract (ADR-066/067): the slot-id grammar is
+ * single-sourced in @seans-mfe/contracts (slot-grammar.ts, ADR-069) and
+ * consumed by both the DSL's `providesSlots` validation and the runtime
+ * matcher. This suite pins the two CONSUMERS to each other behaviorally —
+ * the dsl composes the segment rule into whole-id validation while the
+ * runtime compiles declarations into matchers, and those compositions could
+ * still drift even over one grammar. Any divergence fails here instead of
+ * silently splitting what can be declared from what can match. Refs #265.
  */
 import { ProvidedSlotSchema } from '@seans-mfe/dsl';
 import { createSlotContract } from '../slot-contract';

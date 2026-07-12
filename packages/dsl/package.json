@@ -29,6 +29,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
     "zod": "^4.1.13"

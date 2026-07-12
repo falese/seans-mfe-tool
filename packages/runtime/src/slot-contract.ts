@@ -15,7 +15,7 @@
  * rejects them), so they can never match here either.
  */
 
-import { ValidationError } from '@seans-mfe/contracts';
+import { SLOT_PARAM_VALUE_SOURCE, ValidationError, isSlotParamSegment } from '@seans-mfe/contracts';
 
 /** One slot declaration, as it appears in the manifest's `providesSlots`. */
 export interface ProvidedSlotDeclaration {
@@ -70,13 +70,14 @@ export interface SlotContract {
   register<E>(provideSlot: ProvideSlotFn<E> | undefined, id: string, element: E | null): void;
 }
 
-/** Compile one declared id into a matcher: literals escaped, `{param}` → one segment. */
+/** Compile one declared id into a matcher: literals escaped, `{param}` → one
+ *  segment value. Grammar single-sourced in @seans-mfe/contracts (ADR-069). */
 function toMatcher(declaredId: string): RegExp {
   const source = declaredId
     .split('.')
     .map((segment) =>
-      /^\{[A-Za-z][A-Za-z0-9_]*\}$/.test(segment)
-        ? '[A-Za-z0-9_-]+'
+      isSlotParamSegment(segment)
+        ? SLOT_PARAM_VALUE_SOURCE
         : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     )
     .join('\\.');

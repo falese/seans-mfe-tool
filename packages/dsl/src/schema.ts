@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { SLOT_ID_SEGMENT } from '@seans-mfe/contracts';
 
 // =============================================================================
 // Enums and Constants
@@ -383,8 +384,9 @@ export type Dependencies = z.infer<typeof DependenciesSchema>;
  * the ADR-066 domain-key rule) or a literal containing at least one letter.
  * Purely numeric segments are rejected: a number describes a position, and
  * addresses must be assigned names, never measured ordinals (ADR-066).
+ * The grammar is single-sourced in @seans-mfe/contracts (ADR-069); the
+ * runtime matcher compiles from the same definition.
  */
-const SLOT_ID_SEGMENT = /^(\{[A-Za-z][A-Za-z0-9_]*\}|[A-Za-z0-9_-]*[A-Za-z][A-Za-z0-9_-]*)$/;
 
 /** One slot an MFE declares it will provide at runtime (ADR-067). */
 export const ProvidedSlotSchema = z.object({
