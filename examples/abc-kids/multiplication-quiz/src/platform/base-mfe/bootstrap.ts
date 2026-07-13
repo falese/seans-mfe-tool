@@ -125,6 +125,29 @@ const manifest = {
       "rxjs": "^7.8.0",
       "zone.js": "~0.14.0"
     }
+  },
+  "data": {
+    "sources": [
+      {
+        "name": "PetStoreAPI",
+        "handler": {
+          "openapi": {
+            "source": "./specs/petstore.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
+          }
+        }
+      }
+    ],
+    "serve": {
+      "endpoint": "/graphql",
+      "playground": true
+    },
+    "mockSwitch": {
+      "enabled": true
+    }
   }
 };
 

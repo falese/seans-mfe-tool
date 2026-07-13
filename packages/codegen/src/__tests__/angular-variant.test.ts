@@ -56,6 +56,21 @@ describe('unified-generator angular-webpack variant', () => {
     expect(tsconfig!.content).not.toContain('react-jsx');
   });
 
+  // #273: GraphQL Mesh derives its artifact module system from the ROOT tsconfig.
+  // ESM there makes .mesh/index.js use import.meta.url, which the CommonJS BFF
+  // server.js cannot require(). Root must be commonjs; the Angular app build
+  // gets ES modules from tsconfig.app.json instead.
+  it('emits a commonjs root tsconfig (for the Mesh BFF) and an ES2022 app tsconfig', async () => {
+    const { files } = await generateAllFiles(baseManifest as any, basePath, { force: true });
+    const root = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
+    const app = files.find((f) => f.path === path.join(basePath, 'tsconfig.app.json'));
+    expect(root).toBeDefined();
+    expect(app).toBeDefined();
+    expect(root!.content).toMatch(/"module"\s*:\s*"commonjs"/);
+    expect(root!.content).not.toMatch(/"module"\s*:\s*"ES2022"/);
+    expect(app!.content).toMatch(/"module"\s*:\s*"ES2022"/);
+  });
+
   it('emits Angular entry files instead of App.tsx / index.tsx', async () => {
     const { files } = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const paths = files.map((f) => f.path);

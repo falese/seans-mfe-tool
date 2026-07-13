@@ -49,6 +49,10 @@ services:
       - seans-mfe-tool-cli
     ports:
       - '3003:3003'
+    environment:
+      # BFF + static assets served together on 3003 so the shell can reach
+      # both remoteEntry.js and /graphql at the same origin (localhost:3003).
+      - PORT=3003
     healthcheck:
       test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 10s

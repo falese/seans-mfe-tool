@@ -19,7 +19,11 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "ES2022",
-    "module": "ES2022",
+    <%# Root module MUST be commonjs: GraphQL Mesh derives its artifact module
+        system from this file (ts-artifacts.js). ESM here makes .mesh/index.js use
+        import.meta.url, which the CommonJS BFF server.js cannot require(). The
+        Angular application build uses tsconfig.app.json (module: ES2022). %>
+    "module": "commonjs",
     "useDefineForClassFields": false,
     "lib": ["ES2022", "dom"],
     "types": ["jest", "node"],

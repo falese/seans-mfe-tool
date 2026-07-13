@@ -48,13 +48,21 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Use the builder's package.json (@seans-mfe-tool/runtime was deleted from it
-# before install) so the server install never tries to resolve the runtime —
-# the browser bundle is already built; the server doesn't need it.
+# Copy node_modules from builder — the .mesh/index.js requires @graphql-mesh/http,
+# @graphql-mesh/runtime, etc., which are transitive deps of @graphql-mesh/cli
+# (devDep) and not installed by a production --omit=dev install. Reusing the
+# builder's modules also avoids re-resolving @seans-mfe-tool/runtime (a local-only
+# package staged as a real dir, not published to npm).
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 # Copy Mesh artifacts
 COPY --from=builder /app/.mesh ./.mesh
+
+# Copy BFF platform files dynamically imported by the built Mesh artifacts at runtime.
+# .mesh/index.js resolves these relative to the project root via the paths in .meshrc.yaml.
+COPY --from=builder /app/src/platform/bff/mesh-context.js ./src/platform/bff/
+COPY --from=builder /app/src/platform/bff/mock-switch.js ./src/platform/bff/
+COPY --from=builder /app/src/platform/bff/mocks.json ./src/platform/bff/
 
 # Copy built static assets
 COPY --from=builder /app/dist ./dist
