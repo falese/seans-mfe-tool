@@ -21,24 +21,32 @@ changes (the LayoutManager lives there):
 # repo root — one time, and after any src/runtime change
 npm install && npm run build && npm run docker:build:cli
 
-# from examples/abc-kids/ — force-rebuild so the new shell replaces old images
-docker compose up -d --build  # flappy :3001, hockey :3002, quiz :3003, shell :3000
+# from examples/abc-kids/ — force-rebuild so the new shell replaces old images.
+# This one compose now brings up the control plane too (see step 2).
+docker compose up -d --build
+#   registry :4000, daemon :3004, flappy :3001, hockey :3002, quiz :3003, shell :3000
 ```
 
-## 2. Start the control plane (falese/daemon repo)
+## 2. The control plane comes up with the fleet
+
+The registry and node daemon are ported into this example under
+`control-plane/{registry,daemon}/` (from falese/daemon) and run as their own
+images — **part of the `docker compose up` above, not bundled with the shell**:
 
 ```bash
-# registry on :4000
-node component-system/registry/simple-registry.js &
-
-# Node daemon on :3004 (3001-3003 belong to the MFEs above)
-REGISTRY_HOST=localhost DAEMON_PORT=3004 \
-  node component-system/daemon/simple-daemon.js &
+# already started by step 1; to (re)build or restart just the control plane:
+docker compose up -d --build registry daemon   # registry :4000, daemon :3004
+docker logs -f abc-kids-daemon-1               # watch the resolution/relay loop
 ```
 
-The shell connects to `ws://localhost:3004/graphql` (override at build time
-with `DAEMON_WS_URL`). It shows *"Waiting for the control plane to compose
-this application…"* — and nothing else. That's the point.
+The daemon reaches the registry by service name on the compose network; the
+shell's browser connects to `ws://localhost:3004/graphql` (override at build
+time with `DAEMON_WS_URL`). Until the control plane composes something, the
+shell shows *"Waiting for the control plane to compose this application…"* —
+and nothing else. That's the point.
+
+> Registry state is in-memory: if you restart the `registry` container, re-run
+> `./scripts/register-games.sh`.
 
 ## 3. Register the MFEs and their resolution routes
 
