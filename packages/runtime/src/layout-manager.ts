@@ -499,6 +499,11 @@ export class LayoutManager {
       if (child.unmount) await child.unmount();
     } catch {
       /* best-effort release */
+    } finally {
+      // Clear the handle so a retained reference to this entry (e.g. the
+      // clearSlotNow that triggered a self-provision release) cannot invoke
+      // the island's unmount a second time.
+      child.unmount = undefined;
     }
 
     if (this.slots.get(address) !== child) return;
@@ -510,10 +515,13 @@ export class LayoutManager {
     address: string,
     operation: () => Promise<void>
   ): Promise<void> {
-    // Uncontended fast path: start immediately so an empty queue adds no
-    // microtask latency over calling the operation directly.
-    const previous = this.slotOperations.get(address);
-    const current = previous ? previous.catch(() => undefined).then(operation) : operation();
+    // The queue entry is stored before the operation can execute (then
+    // callbacks run in a later microtask), so an enqueue from INSIDE a
+    // running operation always chains — never races. A synchronous fast
+    // path is not safe here: it would start the operation before the entry
+    // exists, letting a nested same-address enqueue interleave.
+    const previous = this.slotOperations.get(address) ?? Promise.resolve();
+    const current = previous.catch(() => undefined).then(operation);
     this.slotOperations.set(address, current);
     const cleanup = (): void => {
       if (this.slotOperations.get(address) === current) {
@@ -561,7 +569,15 @@ export class LayoutManager {
     if (slot.providedSlotAddresses) {
       const providerExperienceId = slot.experienceId;
       for (const address of slot.providedSlotAddresses) {
-        if (providerExperienceId) void this.releaseProvidedSlot(address, providerExperienceId);
+        if (!providerExperienceId) continue;
+        if (address === slotId) {
+          // Self-provision: this operation already owns the queue for the
+          // address, so release inline — enqueueing would run the release
+          // AFTER the replacement re-binds and tear down the wrong island.
+          await this.releaseProvidedSlotNow(address, providerExperienceId);
+        } else {
+          void this.releaseProvidedSlot(address, providerExperienceId);
+        }
       }
       slot.providedSlotAddresses = undefined;
     }

@@ -355,6 +355,51 @@ describe('LayoutManager — per-address lifecycle serialization (ADR-066/068)', 
     expect(manager.activeSlots).toEqual(['main']);
   });
 
+  it('replacing a self-providing experience unmounts it exactly once', async () => {
+    // G (mfe 'layout') occupies its own provided address AND provides it.
+    // Replacing G while the address queue is idle exercises the seam where
+    // clearSlotNow releases the very address being cleared: the release must
+    // run inline (inside the current queue operation, before the re-bind),
+    // and the island's unmount must never be invoked a second time through
+    // the retained ActiveSlot reference.
+    const mounts: string[] = [];
+    const unmounts: string[] = [];
+    const stable = new FakeSlotElement();
+    const selfProvider: ExperienceAdaptor = {
+      async mount(exp, _slot, helpers) {
+        mounts.push(exp.id);
+        if (exp.id === 'G') helpers.provideSlot?.('main', stable as never);
+        return () => {
+          unmounts.push(exp.id);
+        };
+      },
+    };
+    const transport = new FakeTransport();
+    const manager = new LayoutManager({
+      container: makeHost(),
+      transport: transport as never,
+      adaptors: { 'test/layout': selfProvider },
+      createSlotElement: () => new FakeSlotElement(),
+    });
+    manager.start();
+
+    transport.emit(experience('G', 'test/layout', { slot: 'layout/main' }, 'layout'));
+    await flush();
+    transport.emit(experience('H', 'test/layout', { slot: 'layout/main' }, 'layout'));
+    await flush();
+    await manager.stop();
+
+    // G legitimately mounts twice (parked placeholder, then re-bind into its
+    // provided element — the ADR-066 remount) — so exactly two unmounts.
+    // The defect this pins: the release/clear pair double-invoking the same
+    // island's unmount, leaving unmounts > mounts.
+    const count = (list: string[], id: string) => list.filter((x) => x === id).length;
+    expect(count(unmounts, 'G')).toBe(count(mounts, 'G'));
+    expect(count(unmounts, 'H')).toBe(count(mounts, 'H'));
+    expect(count(mounts, 'G')).toBeGreaterThanOrEqual(1);
+    expect(count(mounts, 'H')).toBeGreaterThanOrEqual(1);
+  });
+
   it('a failing transport during error escalation surfaces via onError, never as an unhandled rejection', async () => {
     const errors: string[] = [];
     const adaptor: ExperienceAdaptor = {
