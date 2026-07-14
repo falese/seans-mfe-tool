@@ -1,3 +1,6 @@
+// Vendored from falese/daemon component-system/registry (ported 2026-07-13, PR #266).
+// This is a demo-scoped copy for the abc-kids fleet — the canonical implementation
+// lives in falese/daemon; reconcile against upstream when it changes.
 // ========================
 // COMPONENT REGISTRY
 // ========================

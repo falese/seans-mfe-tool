@@ -1,4 +1,6 @@
-# Use Node.js LTS
+# abc-kids control-plane registry (ported from falese/daemon component-system).
+# Resolution rules + MFE registrations: answers the daemon's resolve calls and
+# accepts registrations on :4000 (register-games.sh posts here).
 FROM node:20-slim
 
 WORKDIR /app
@@ -7,12 +9,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --omit=dev --no-audit --no-fund
 
 # Copy source code
-COPY . .
+COPY simple-registry.js ./
 
-# Expose the port the app runs on
+# Listen on 4000 by default (overridable via PORT).
 EXPOSE 4000
 
 # Start the registry
