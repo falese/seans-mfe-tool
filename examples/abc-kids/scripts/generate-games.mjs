@@ -80,6 +80,7 @@ const HOME = {
 const CATALOG = [
   { id: 'flappy', title: 'Flappy', emoji: '🐤', color: '#0277bd' },
   { id: 'hockey', title: 'Hockey', emoji: '🏒', color: '#37474f' },
+  { id: 'multiplication-quiz', title: 'Multiplication Quiz', emoji: '✖️', color: '#6a1b9a' },
   ...GAMES.map((g) => ({ id: g.id, title: g.title, emoji: g.emoji, color: g.color })),
 ];
 
@@ -763,8 +764,9 @@ export const handles = {
 export { default } from './App.tsx';
 `;
 
-const gameMenu = () => `import React, { useEffect, useRef } from 'react';
+const gameMenu = () => `import React, { useCallback } from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
+import { slotContract } from '../../slots';
 
 /**
  * GameMenu — the ABC Kids home (ADR-058). Renders a tile per registered game in
@@ -807,18 +809,20 @@ function dispatch(verb: 'play' | 'show', id: string): void {
 }
 
 export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) => {
-  const mainRef = useRef<HTMLDivElement>(null);
-  const infoRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!provideSlot) return;
-    if (mainRef.current) provideSlot('main', mainRef.current);
-    if (infoRef.current) provideSlot('info', infoRef.current);
-    return () => {
-      provideSlot('main', null);
-      provideSlot('info', null);
-    };
-  }, [provideSlot]);
+  // Register the two contributed regions through the manifest-backed slot
+  // contract (ADR-067, generated src/slots.tsx): assertDeclared runs on every
+  // bind, so a region id not in the manifest's providesSlots fails fast instead
+  // of silently registering an address the registry rules never validate. This
+  // replaces the raw provideSlot('main', ref) magic string with the contract —
+  // declaration and behavior share one source (the manifest).
+  const registerMain = useCallback(
+    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
+    [provideSlot]
+  );
+  const registerInfo = useCallback(
+    (el: HTMLElement | null) => slotContract.register(provideSlot, 'info', el),
+    [provideSlot]
+  );
 
   return (
     <div
@@ -886,7 +890,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
 
       {/* Contributed to the host as slot 'main' — the selected game mounts here. */}
       <section
-        ref={mainRef}
+        ref={registerMain}
         aria-label="game"
         style={{
           borderRadius: 16,
@@ -903,7 +907,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
 
       {/* Contributed to the host as slot 'info' — cover / game info mounts here. */}
       <aside
-        ref={infoRef}
+        ref={registerInfo}
         aria-label="info"
         style={{
           borderRadius: 16,
@@ -1027,6 +1031,78 @@ for (const game of GAMES) {
 }
 
 // ── Generate the home / launcher MFE (ADR-058) ───────────────
+// Mirrors packages/codegen/templates/base-mfe/slots.tsx.ejs for the home's
+// manifest (providesSlots: main, info) — the DATA layer of ADR-067. Keep in
+// lock-step with the codegen template; GameMenu imports slotContract from it.
+const homeSlots = () => `/**
+ * Slot contract for abc-kids-home — GENERATED from mfe-manifest \`providesSlots\`.
+ * Do not edit: regenerate after changing the manifest.
+ *
+ * Three-layer split (ADR-067): this file is the DATA layer — the manifest
+ * mirrored into code and bound to the framework-free contract logic in
+ * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
+ * live there, once; the DeclaredSlot below is thin sugar with no logic of
+ * its own. Ids are assigned names, never positions (ADR-066); renaming one
+ * is a manifest diff — a contract change, not an incidental string edit.
+ */
+import React, { useCallback } from 'react';
+import { createSlotContract } from '@seans-mfe-tool/runtime';
+import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
+
+/** The manifest's providesSlots section, mirrored into code. */
+export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
+  { id: "main", description: "Primary game region" },
+  { id: "info", description: "Contextual game information region" },
+] as const;
+
+/** This MFE's slot contract: matching + declare-before-register guard. */
+export const slotContract = createSlotContract(PROVIDED_SLOTS);
+
+export interface DeclaredSlotProps {
+  /** The slot id to register — must match a manifest declaration. */
+  id: string;
+  /**
+   * The host-supplied registration callback (ADR-058), delivered to this MFE
+   * through its render props by the LayoutManager adaptor. Optional so the
+   * component renders inert in standalone/dev mode — undeclared ids still
+   * fail fast either way.
+   */
+  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+/**
+ * A named region this MFE contributes to the host layout. Registration rides
+ * a stable ref callback; re-registration on remount is safe because the host
+ * re-binds the address's desired experience instead of destroying it (ADR-066).
+ *
+ * Keep in lock-step with packages/framework-react/src/runtime/DeclaredSlot.tsx:
+ * this is the same component with the contract pre-bound instead of passed as
+ * a prop (generated MFEs depend on the runtime package, not framework-react).
+ * A change to ref-callback or registration semantics must land in both.
+ */
+export function DeclaredSlot({
+  id,
+  provideSlot,
+  className,
+  children,
+}: DeclaredSlotProps): React.ReactElement {
+  slotContract.assertDeclared(id);
+
+  const register = useCallback(
+    (element: HTMLElement | null) => slotContract.register(provideSlot, id, element),
+    [id, provideSlot]
+  );
+
+  return (
+    <div ref={register} className={className} data-declared-slot={id}>
+      {children}
+    </div>
+  );
+}
+`;
+
 // Same template as the games, but a single GameMenu capability. The manifest
 // drives `seans-mfe-tool remote:generate` at build time (regenerates
 // remote.tsx / mfe.ts / bootstrap); the GameMenu feature is preserved.
@@ -1044,15 +1120,30 @@ for (const game of GAMES) {
   writeFileSync(join(gmDir, 'GameMenu.test.tsx'), gameMenuTest());
 
   writeFileSync(join(dest, 'mfe-manifest.yaml'), homeManifest());
+  writeFileSync(join(dest, 'src', 'slots.tsx'), homeSlots());
   writeFileSync(join(dest, 'src', 'remote.tsx'), homeRemoteEntry());
   writeFileSync(join(dest, 'src', 'index.tsx'), homeIndex());
   writeFileSync(join(dest, 'Dockerfile'), gameDockerfile(HOME));
-  writeFileSync(join(dest, 'README.md'),
-    '# abc-kids-home ' + HOME.emoji + '\n\n' + HOME.desc + '\n\n' +
-    'The home/launcher MFE (ADR-058): renders a tile per registered game and\n' +
-    'contributes `abc-kids-home/main` + `abc-kids-home/info`. Selecting a\n' +
-    'tile drives the control plane via updateControlPlaneState (ADR-057).\n' +
-    'Generated by `scripts/generate-games.mjs` — do not edit by hand.\n');
+  writeFileSync(join(dest, 'README.md'), `# abc-kids-home 🧸
+
+ABC Kids — the home launcher; pick a game to play!
+
+The home/launcher MFE (ADR-058) renders the game catalog supplied by the
+registry's \`abc.root\` rule. It is also the layout provider:
+
+- \`mfe-manifest.yaml\` declares local slots \`main\` and \`info\`.
+- Codegen mirrors those declarations into \`src/slots.tsx\`.
+- \`GameMenu\` registers the regions through the generated \`slotContract\`.
+- The host scopes them to \`abc-kids-home/main\` and
+  \`abc-kids-home/info\` (ADR-068).
+
+Selecting a tile drives the control plane through
+\`updateControlPlaneState\` (ADR-057); the home knows state-key grammar, not
+how the shell or target game is implemented.
+
+This example is generated by \`scripts/generate-games.mjs\`; update the
+generator when changing generated files.
+`);
   console.log('generated home (port ' + HOME.port + ')');
 }
 
@@ -1174,7 +1265,17 @@ const reg = ['#!/usr/bin/env bash',
   'set -euo pipefail',
   'REGISTRY=${REGISTRY:-http://localhost:4000}',
   ''];
-for (const m of all) {
+// The Angular quiz is a hand-built MFE (not in GAMES); it registers with the
+// same slot/route grammar so the shell composes it identically (ADR-067 parity).
+const QUIZ = {
+  id: 'multiplication-quiz', port: 3003, scope: 'abc_kids_multiplication_quiz',
+  name: 'abc-kids-multiplication-quiz', module: './Component',
+  comment: '# abc-kids-multiplication-quiz — the Angular MFE (with a mock GraphQL BFF, ADR-052). Same slot/route grammar as the React games; the shell composes it identically.',
+  echoSuffix: ' (Angular — PlayGame/ShowCover/GetGameInfo)',
+};
+const registered = [...all.slice(0, 2), QUIZ, ...all.slice(2)];
+for (const m of registered) {
+  if (m.comment) reg.push(m.comment);
   reg.push(
     'curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d \'' + JSON.stringify({
       registration: {
@@ -1186,7 +1287,7 @@ for (const m of all) {
         // No pinned `component`: the daemon synthesizes the experience as
         // `moduleFederation.component || capability`, so omitting it lets each
         // route's resolved capability select the mounted component (ADR-056).
-        moduleFederation: { scope: m.scope, module: './App' },
+        moduleFederation: { scope: m.scope, module: m.module || './App' },
       },
       // Provided addresses are scoped by the stable home MFE id (ADR-068).
       routes: [
@@ -1194,7 +1295,7 @@ for (const m of all) {
         { when: { stateKey: 'abc.show.' + m.id }, resolve: { capability: 'ShowCover', props: { slot: 'abc-kids-home/info' } } },
         { when: { stateKey: 'abc.info.' + m.id }, resolve: { capability: 'GetGameInfo', props: { slot: 'abc-kids-home/info' } } },
       ],
-    }) + '\' && echo " registered ' + m.name + ' (PlayGame/ShowCover/GetGameInfo)"'
+    }) + '\' && echo " registered ' + m.name + (m.echoSuffix || ' (PlayGame/ShowCover/GetGameInfo)') + '"'
   );
 }
 
@@ -1219,7 +1320,7 @@ reg.push('',
   }) + '\' && echo " registered abc-kids-home (GameMenu — root rule returns ' + CATALOG.length + ' games)"');
 
 reg.push('',
-  'echo "All ' + all.length + ' games + home registered. Compose the home with:"',
+  'echo "All ' + registered.length + ' games + home registered. Compose the home with:"',
   'echo "  ./scripts/home.sh"',
   'echo "...then pick a game in the UI, or drive it directly:"',
   'echo "  ./scripts/play.sh ' + all[2].id + '"', '');
