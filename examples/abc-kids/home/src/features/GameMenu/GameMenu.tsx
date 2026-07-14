@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
+import { slotContract } from '../../slots';
 
 /**
  * GameMenu — the ABC Kids home (ADR-058). Renders a tile per registered game in
@@ -42,18 +43,20 @@ function dispatch(verb: 'play' | 'show', id: string): void {
 }
 
 export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) => {
-  const mainRef = useRef<HTMLDivElement>(null);
-  const infoRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!provideSlot) return;
-    if (mainRef.current) provideSlot('main', mainRef.current);
-    if (infoRef.current) provideSlot('info', infoRef.current);
-    return () => {
-      provideSlot('main', null);
-      provideSlot('info', null);
-    };
-  }, [provideSlot]);
+  // Register the two contributed regions through the manifest-backed slot
+  // contract (ADR-067, generated src/slots.tsx): assertDeclared runs on every
+  // bind, so a region id not in the manifest's providesSlots fails fast instead
+  // of silently registering an address the registry rules never validate. This
+  // replaces the raw provideSlot('main', ref) magic string with the contract —
+  // declaration and behavior share one source (the manifest).
+  const registerMain = useCallback(
+    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
+    [provideSlot]
+  );
+  const registerInfo = useCallback(
+    (el: HTMLElement | null) => slotContract.register(provideSlot, 'info', el),
+    [provideSlot]
+  );
 
   return (
     <div
@@ -121,7 +124,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
 
       {/* Contributed to the host as slot 'main' — the selected game mounts here. */}
       <section
-        ref={mainRef}
+        ref={registerMain}
         aria-label="game"
         style={{
           borderRadius: 16,
@@ -138,7 +141,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
 
       {/* Contributed to the host as slot 'info' — cover / game info mounts here. */}
       <aside
-        ref={infoRef}
+        ref={registerInfo}
         aria-label="info"
         style={{
           borderRadius: 16,

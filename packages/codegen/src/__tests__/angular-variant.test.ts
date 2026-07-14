@@ -71,6 +71,32 @@ describe('unified-generator angular-webpack variant', () => {
     expect(app!.content).toMatch(/"module"\s*:\s*"ES2022"/);
   });
 
+  // ADR-067: an Angular MFE that declares providesSlots gets the slot sugar as
+  // src/slots.ts (a DeclaredSlotDirective with the contract pre-bound), never the
+  // React src/slots.tsx.
+  it('emits src/slots.ts (not slots.tsx) with the pre-bound DeclaredSlotDirective when providesSlots present', async () => {
+    const withSlots = {
+      ...baseManifest,
+      providesSlots: [
+        { id: 'main', description: 'Primary region' },
+        { id: 'info', description: 'Info region' },
+      ],
+    };
+    const { files } = await generateAllFiles(withSlots as any, basePath, { force: true });
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(path.join(basePath, 'src', 'slots.ts'));
+    expect(paths).not.toContain(path.join(basePath, 'src', 'slots.tsx'));
+
+    const slots = files.find((f) => f.path === path.join(basePath, 'src', 'slots.ts'));
+    expect(slots).toBeDefined();
+    expect(slots!.content).toContain('createSlotContract');
+    expect(slots!.content).toContain('DeclaredSlotDirective');
+    expect(slots!.content).toContain('@angular/core');
+    // The manifest's providesSlots are mirrored into the data layer.
+    expect(slots!.content).toContain('"main"');
+    expect(slots!.content).toContain('"info"');
+  });
+
   it('emits Angular entry files instead of App.tsx / index.tsx', async () => {
     const { files } = await generateAllFiles(baseManifest as any, basePath, { force: true });
     const paths = files.map((f) => f.path);

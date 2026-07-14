@@ -1,0 +1,81 @@
+/**
+ * Slot contract for <%= name %> — GENERATED from mfe-manifest `providesSlots`.
+ * Do not edit: regenerate after changing the manifest.
+ *
+ * Three-layer split (ADR-067): this file is the DATA layer — the manifest
+ * mirrored into code and bound to the framework-free contract logic in
+ * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
+ * live there, once; the DeclaredSlotDirective below is thin sugar with no
+ * logic of its own. Ids are assigned names, never positions (ADR-066);
+ * renaming one is a manifest diff — a contract change, not a string edit.
+ */
+import {
+  Directive,
+  ElementRef,
+  Input,
+  type AfterViewInit,
+  type OnDestroy,
+  type OnInit,
+} from '@angular/core';
+import { createSlotContract } from '@seans-mfe-tool/runtime';
+import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
+
+/** The manifest's providesSlots section, mirrored into code. */
+export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
+<%_ providesSlots.forEach(function(slot) { _%>
+  { id: <%- JSON.stringify(slot.id) %><% if (slot.description) { %>, description: <%- JSON.stringify(slot.description) %><% } %> },
+<%_ }); _%>
+] as const;
+
+/** This MFE's slot contract: matching + declare-before-register guard. */
+export const slotContract = createSlotContract(PROVIDED_SLOTS);
+
+/** Host registration callback (ADR-058). */
+export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => void;
+
+/**
+ * A named region this MFE contributes to the host layout. Drop the attribute on
+ * the region element:
+ *
+ *   <div [smtDeclaredSlot]="'main'" [provideSlot]="provideSlot"></div>
+ *
+ * Registration rides Angular's element lifecycle; re-registration on remount is
+ * safe because the host re-binds the address's desired experience instead of
+ * destroying it (ADR-066).
+ *
+ * Keep in lock-step with packages/framework-angular/src/runtime/declared-slot.directive.ts:
+ * this is the same directive with the contract pre-bound instead of passed as an
+ * @Input (generated MFEs depend on the runtime package, not framework-angular).
+ * A change to lifecycle or registration semantics must land in both.
+ */
+@Directive({
+  selector: '[smtDeclaredSlot]',
+  standalone: true,
+})
+export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
+  /** The slot id to register — must match a manifest declaration. */
+  @Input('smtDeclaredSlot') id!: string;
+
+  /**
+   * The host-supplied registration callback (ADR-058), delivered to this MFE
+   * through its render props by the LayoutManager adaptor. Optional so the
+   * directive renders inert in standalone/dev mode — undeclared ids still fail
+   * fast either way.
+   */
+  @Input() provideSlot?: ProvideSlotFn;
+
+  constructor(private readonly elementRef: ElementRef<HTMLElement>) {}
+
+  ngOnInit(): void {
+    // Fail fast on an undeclared id, before the host ever composes into it.
+    slotContract.assertDeclared(this.id);
+  }
+
+  ngAfterViewInit(): void {
+    slotContract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    slotContract.register(this.provideSlot, this.id, null);
+  }
+}

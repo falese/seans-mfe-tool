@@ -1224,26 +1224,32 @@ async function renderFiles(
         `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
       );
     }
+  }
 
-    // Slot contract (ADR-067): emit src/slots.tsx from providesSlots. Always
-    // regenerated (overwrite: true) so the code can never register a slot id
-    // the manifest doesn't declare — declaration and behavior share one source.
-    const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
-      .providesSlots;
-    if (providesSlots && providesSlots.length > 0) {
-      const slotsTemplatePath = path.join(templateDir, 'slots.tsx.ejs');
-      if (await fs.pathExists(slotsTemplatePath)) {
-        files.push({
-          path: path.join(basePath, 'src', 'slots.tsx'),
-          content: await renderTemplate(slotsTemplatePath, { ...vars, providesSlots }),
-          overwrite: true,
-        });
-      } else {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[unified-generator] WARNING: Missing template for slots.tsx: ${slotsTemplatePath}`
-        );
-      }
+  // Slot contract (ADR-067): emit the slot sugar from providesSlots — for BOTH
+  // frameworks (the entry-file if/else above is React-vs-Angular; slots apply to
+  // either). Always regenerated (overwrite: true) so the code can never register
+  // a slot id the manifest doesn't declare — declaration and behavior share one
+  // source. Framework-aware output: Angular gets src/slots.ts (a
+  // DeclaredSlotDirective), React gets src/slots.tsx (a DeclaredSlot component).
+  const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
+    .providesSlots;
+  if (providesSlots && providesSlots.length > 0) {
+    const isAngular = templateVariant === 'angular-webpack';
+    const slotsTemplateName = isAngular ? 'slots.ts.ejs' : 'slots.tsx.ejs';
+    const slotsOutputName = isAngular ? 'slots.ts' : 'slots.tsx';
+    const slotsTemplatePath = path.join(templateDir, slotsTemplateName);
+    if (await fs.pathExists(slotsTemplatePath)) {
+      files.push({
+        path: path.join(basePath, 'src', slotsOutputName),
+        content: await renderTemplate(slotsTemplatePath, { ...vars, providesSlots }),
+        overwrite: true,
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[unified-generator] WARNING: Missing template for ${slotsOutputName}: ${slotsTemplatePath}`
+      );
     }
   }
 
