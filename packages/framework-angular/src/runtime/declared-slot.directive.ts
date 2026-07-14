@@ -5,7 +5,8 @@
  * The contract logic (matching, declare-before-register guard) lives in
  * `@seans-mfe-tool/runtime` (`createSlotContract`); this directive only wires it
  * to Angular's element lifecycle: assert on init, register the host element on
- * view init, release on destroy. Re-registration on remount is safe — the host
+ * view init, re-register on input changes (releasing the old id first), release
+ * on destroy. Re-registration on remount is safe — the host
  * re-binds the address's desired experience instead of destroying it (ADR-066).
  *
  * This module imports @angular/core by design — it is boundary layer 3 (host-side
@@ -27,8 +28,10 @@ import {
   ElementRef,
   Input,
   type AfterViewInit,
+  type OnChanges,
   type OnDestroy,
   type OnInit,
+  type SimpleChanges,
 } from '@angular/core';
 
 /** Structural view of `SlotContract` from `@seans-mfe-tool/runtime`. */
@@ -58,7 +61,7 @@ export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => voi
   selector: '[smtDeclaredSlot]',
   standalone: true,
 })
-export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
+export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnChanges, OnDestroy {
   /** The slot id to register — must match a manifest declaration. */
   @Input('smtDeclaredSlot') id!: string;
 
@@ -72,6 +75,15 @@ export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
    */
   @Input() provideSlot?: ProvideSlotFn;
 
+  /**
+   * What is currently registered with the host, captured at registration time
+   * so a later input change releases exactly what was registered (old id, old
+   * callback, old contract) before re-registering — the Angular equivalent of
+   * React's ref-callback release/re-attach on dependency change.
+   */
+  private registeredWith?: { contract: SlotContractLike; id: string; provideSlot?: ProvideSlotFn };
+  private viewReady = false;
+
   constructor(private readonly elementRef: ElementRef<HTMLElement>) {}
 
   ngOnInit(): void {
@@ -80,10 +92,40 @@ export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.contract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
+    this.viewReady = true;
+    this.registerNow();
+  }
+
+  /**
+   * React to post-registration input changes: a new `id` (dynamic binding), a
+   * late-arriving `provideSlot`, or a swapped `contract` releases the previous
+   * registration and re-registers under the current inputs. Before the view
+   * exists this is a no-op — ngAfterViewInit performs the first registration.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.viewReady) return;
+    const relevant = ['id', 'contract', 'provideSlot'].some(
+      (key) => key in changes && !changes[key].firstChange
+    );
+    if (!relevant) return;
+    this.releaseNow();
+    this.contract.assertDeclared(this.id);
+    this.registerNow();
   }
 
   ngOnDestroy(): void {
-    this.contract.register(this.provideSlot, this.id, null);
+    this.releaseNow();
+  }
+
+  private registerNow(): void {
+    this.contract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
+    this.registeredWith = { contract: this.contract, id: this.id, provideSlot: this.provideSlot };
+  }
+
+  private releaseNow(): void {
+    if (!this.registeredWith) return;
+    const { contract, id, provideSlot } = this.registeredWith;
+    this.registeredWith = undefined;
+    contract.register(provideSlot, id, null);
   }
 }

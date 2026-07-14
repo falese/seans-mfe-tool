@@ -14,8 +14,10 @@ import {
   ElementRef,
   Input,
   type AfterViewInit,
+  type OnChanges,
   type OnDestroy,
   type OnInit,
+  type SimpleChanges,
 } from '@angular/core';
 import { createSlotContract } from '@seans-mfe-tool/runtime';
 import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
@@ -52,7 +54,7 @@ export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => voi
   selector: '[smtDeclaredSlot]',
   standalone: true,
 })
-export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
+export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnChanges, OnDestroy {
   /** The slot id to register — must match a manifest declaration. */
   @Input('smtDeclaredSlot') id!: string;
 
@@ -64,6 +66,15 @@ export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
    */
   @Input() provideSlot?: ProvideSlotFn;
 
+  /**
+   * What is currently registered with the host, captured at registration time
+   * so a later input change releases exactly what was registered (old id, old
+   * callback) before re-registering — the Angular equivalent of React's
+   * ref-callback release/re-attach on dependency change.
+   */
+  private registeredWith?: { id: string; provideSlot?: ProvideSlotFn };
+  private viewReady = false;
+
   constructor(private readonly elementRef: ElementRef<HTMLElement>) {}
 
   ngOnInit(): void {
@@ -72,10 +83,40 @@ export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    slotContract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
+    this.viewReady = true;
+    this.registerNow();
+  }
+
+  /**
+   * React to post-registration input changes: a new `id` (dynamic binding) or a
+   * late-arriving `provideSlot` releases the previous registration and
+   * re-registers under the current inputs. Before the view exists this is a
+   * no-op — ngAfterViewInit performs the first registration.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.viewReady) return;
+    const relevant = ['id', 'provideSlot'].some(
+      (key) => key in changes && !changes[key].firstChange
+    );
+    if (!relevant) return;
+    this.releaseNow();
+    slotContract.assertDeclared(this.id);
+    this.registerNow();
   }
 
   ngOnDestroy(): void {
-    slotContract.register(this.provideSlot, this.id, null);
+    this.releaseNow();
+  }
+
+  private registerNow(): void {
+    slotContract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
+    this.registeredWith = { id: this.id, provideSlot: this.provideSlot };
+  }
+
+  private releaseNow(): void {
+    if (!this.registeredWith) return;
+    const { id, provideSlot } = this.registeredWith;
+    this.registeredWith = undefined;
+    slotContract.register(provideSlot, id, null);
   }
 }
