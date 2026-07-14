@@ -1,6 +1,6 @@
 # ADR-066 — Stable slot addressing and desired-state placement
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-11
 - **Relates to:** ADR-055 (LayoutManager / daemon-driven shells), ADR-057 (virtualized daemon socket), ADR-058 (slot-provider MFEs), ADR-060 (contextualized VM composition)
 - **Tracked in:** #265
