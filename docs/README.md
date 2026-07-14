@@ -2,6 +2,16 @@
 
 This directory contains agent definitions for GitHub Copilot to perform specialized development tasks. Agents work together in a coordinated workflow to maintain code quality and traceability.
 
+## Platform documentation
+
+- [Getting started](./getting-started.md)
+- [Current architecture](./architecture-current-state.md)
+- [Runtime platform](./architecture-runtime-platform.md)
+- [Slot contract](./slot-contract.md)
+- [DSL manifest schema](./schemas/dsl-manifest.md)
+- [ADR index](./spec.md#adr-index)
+- [ABC Kids end-to-end example](../examples/abc-kids/README.md)
+
 ## Available Agents
 
 ### Requirements Elicitation Agent

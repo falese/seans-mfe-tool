@@ -5,9 +5,9 @@
 **Updated:** 2025-11-27  
 **Related Docs:**
 
-- [DSL Contract Requirements](./dsl-contract-requirements.md) - Runtime semantics
-- [DSL Remote Requirements](./dsl-remote-requirements.md) - Code generation workflow
-- [GraphQL BFF Requirements](./graphql-bff-requirements.md) - Data layer generation
+- [DSL Contract Requirements](../requirements/dsl-contract-requirements.md) - Runtime semantics
+- [DSL Remote Requirements](../requirements/dsl-remote-requirements.md) - Code generation workflow
+- [GraphQL BFF Requirements](../requirements/graphql-bff-requirements.md) - Data layer generation
 - [Example DSL](./dsl.yaml) - Complete working example
 
 ---
@@ -54,6 +54,7 @@ discovery: url # DSL manifest endpoint
 
 # Core sections
 capabilities: Capability[] # What this MFE provides
+providesSlots: ProvidedSlot[] # Named layout regions this MFE contributes
 data: DataConfig # GraphQL/REST data layer
 dependencies: Dependencies # Shared deps and MFE deps
 performance: PerformanceConfig # Caching, observability, rate-limit (ADR-062)
@@ -110,6 +111,43 @@ discovery: http://localhost:3001/.well-known/mfe-manifest.yaml
 ```
 
 **Note:** For code generation (`remote:init`), these are generated from the `name`. For runtime, they must be accurate URLs.
+
+---
+
+### Provided Slots
+
+`providesSlots` is the design-time contract for named layout regions that the
+MFE registers with its host (ADR-067). The MFE declares only local ids; the
+host scopes each runtime address with the stable provider MFE id (ADR-068):
+`abc-kids-home` + `main` becomes `abc-kids-home/main`.
+
+```yaml
+providesSlots:
+  - id: main
+    description: Primary content region
+  - id: info
+    description: Contextual information
+  - id: card.{sku}
+    description: One stable card region per product SKU
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | yes | Unique local slot id. Dot-separated segments must be assigned-name literals containing a letter or `{param}` placeholders. |
+| `description` | `string` | no | Human-readable purpose exposed through manifest discovery. |
+
+Validation rules:
+
+- Duplicate ids are rejected.
+- `/` is rejected because provider scoping and path composition are host-owned.
+- Purely numeric segments are rejected; positions are not stable addresses.
+- `{param}` segments match one runtime value containing letters, digits, `_`, or `-`.
+
+Codegen emits `src/slots.tsx` with `DeclaredSlot` for React and `src/slots.ts`
+with the standalone `[smtDeclaredSlot]` directive for Angular. Both bind the
+manifest data to `createSlotContract()` and release registrations with
+`provideSlot(id, null)` on unmount. See the [Slot Contract](../slot-contract.md)
+and ADR-066 through ADR-069.
 
 ---
 
@@ -811,7 +849,7 @@ data:
 
 ## Related Documents
 
-- **[dsl-contract-requirements.md](./dsl-contract-requirements.md)** - Runtime execution semantics
-- **[dsl-remote-requirements.md](./dsl-remote-requirements.md)** - Code generation workflow
-- **[graphql-bff-requirements.md](./graphql-bff-requirements.md)** - Data layer generation
-- **[architecture-decisions.md](./architecture-decisions.md)** - ADRs for all decisions
+- **[dsl-contract-requirements.md](../requirements/dsl-contract-requirements.md)** - Runtime execution semantics
+- **[dsl-remote-requirements.md](../requirements/dsl-remote-requirements.md)** - Code generation workflow
+- **[graphql-bff-requirements.md](../requirements/graphql-bff-requirements.md)** - Data layer generation
+- **[architecture-decisions.md](../architecture-decisions/architecture-decisions.md)** - ADRs for all decisions

@@ -202,11 +202,12 @@ A generic shell owns *where* (slots) and *how* (adaptors). The control plane own
 
 - **Registry** — resolves a state change to a `Resolution { mfe, capability, props }`.
   It can answer differently per user / per application, because every action
-  carries a `SessionContext`. (Lives in a daemon implementation repo.)
+  carries a `SessionContext`. Production implementations stay external; the
+  ABC Kids example includes a local containerized registry for development.
 - **Daemon** — the router. Receives actions going up, asks the registry, invokes
   the resolved MFE, relays the `RenderedExperience` going down. Defines no
   component types (ADR-054).
-- **LayoutManager** (`src/runtime/layout-manager.ts`) — the host-side placement
+- **LayoutManager** (`packages/runtime/src/layout-manager.ts`) — the host-side placement
   engine. Subscribes to the daemon, routes each experience to a slot
   (`props.slot`, default `main`), and mounts it via the adaptor for its
   `contentType`. Placement is **desired state** (ADR-066): experiences
@@ -266,22 +267,24 @@ sequenceDiagram
 
     Note over Shell: empty host; one WS to the daemon
     R-->>D: resolve(root, session) → home experience
-    D-->>Shell: COMPONENT_UPDATE (EXPERIENCE, slot 'main')
-    Shell->>Shell: mount launcher into slot 'main'
+    D-->>Shell: COMPONENT_UPDATE (EXPERIENCE, slot 'root')
+    Shell->>Shell: mount launcher into host-owned slot 'root'
+    Shell->>Shell: home registers local slots 'main' + 'info'
+    Note over Shell: public addresses become<br/>abc-kids-home/main + abc-kids-home/info
 
     U->>Shell: tap "Flappy" tile
     Shell->>D: ACTION updateControlPlaneState (stateKey 'abc.play.flappy')
     D->>R: forward action + session
     R-->>D: Resolution { mfe: 'abc-kids-flappy', capability: 'PlayGame', props }
-    D-->>Shell: COMPONENT_UPDATE (module-federation experience, slot 'main')
-    Shell->>Flappy: load remoteEntry.js, mount(slotEl, {capability:'PlayGame'})
+    D-->>Shell: COMPONENT_UPDATE (experience, slot 'abc-kids-home/main')
+    Shell->>Flappy: load remoteEntry.js, mount(providerSlot, {capability:'PlayGame'})
     Flappy-->>U: the game renders in the slot
 ```
 
-The registry chose the game; the shell only provided the slot and the mount.
-Swapping `main` from the launcher to Flappy is a control-plane decision, not shell
-code. A different user, or a different `application`, could resolve a different MFE
-for the same tap.
+The registry chose the game; the shell only provided the mount and tracked the
+home MFE's provider slot. Swapping the occupant of `abc-kids-home/main` is a
+control-plane decision, not shell code. A different user, or a different
+`application`, could resolve a different MFE for the same tap.
 
 ### One socket, many slots (ADR-057)
 
@@ -289,20 +292,23 @@ Composed MFEs still need to drive the control plane (e.g. the launcher emitting
 `abc.play.flappy`). The host owns **one** physical daemon socket and virtualizes
 it: each slot gets a `DaemonChannel` (implements `DaemonWebSocketClient`),
 injected as the MFE's `deps.wsClient` via `attachControlPlane()`. Outbound
-envelopes are stamped with the slot id; nested hosts compose ids into a path
-(`main` → `main/quiz`). So `updateControlPlaneState` works for any composed MFE
-with no extra connection and no daemon URL in the MFE.
+envelopes are stamped with the full slot address (`root`,
+`abc-kids-home/main`, …). So `updateControlPlaneState` works for any composed
+MFE with no extra connection and no daemon URL in the MFE.
 
 ### MFE-provided layout (ADR-058)
 
 The layout itself can be an MFE. When the host mounts an MFE it passes a
 `provideSlot(slotId, element)` callback alongside the channel. A "home" MFE renders
-its regions (menu, main, info) and registers each as a host slot; the host keeps
-its single subscription and routes later experiences into those elements. Slot
-provision is a capability offered to *every* MFE — the layout MFE is just the
+its menu and registers the `main` and `info` regions as host slots; the host
+keeps its single subscription and routes later experiences into those elements.
+Slot provision is a capability offered to *every* MFE — the layout MFE is just the
 first to use it. Provided addresses are scoped by the stable provider MFE id
-(`abc-kids-home/main`), while an internal experience-id token prevents stale
-provider teardown from deleting a replacement (ADR-068).
+from `RenderedExperience.mfe` (`abc-kids-home/main`), while
+`RenderedExperience.id` is the internal owner token that prevents stale
+provider teardown from deleting a replacement (ADR-068). Registration,
+replacement, and release are serialized per qualified address; desired
+placement survives release and rebinds when the provider returns (ADR-066).
 
 ---
 
@@ -365,7 +371,8 @@ composes via the imperative floor regardless — `hostFramework` is carried, not
 acted on. When the native provider lands, the registry re-keys onto
 `hostFramework × handleKind` additively.
 
-The bright line is **machine-checked**: `src/runtime/__tests__/boundary.test.ts`
+The bright line is **machine-checked**:
+`packages/runtime/src/__tests__/boundary.test.ts`
 asserts that `packages/contracts` and the neutral runtime core (`base-mfe`,
 `layout-manager`, `base-control-plane`, `daemon-channel`, `imperative-handle`,
 `contracts`) import **zero** UI-framework packages. Only the framework-specialized
@@ -378,7 +385,7 @@ provider/abstract package, zero core change.*
 ## Where things live
 
 ```
-src/runtime/
+packages/runtime/src/
 ├── base-mfe.ts            # abstract base — the 10 capabilities + lifecycle
 ├── remote-mfe.ts          # React / Module Federation concrete (layer 5)
 ├── angular-remote-mfe.ts  # Angular concrete (layer 5)
@@ -396,8 +403,11 @@ packages/contracts/src/
 └── presentation.ts        # presentation handle types + selectHandle (ADR-056)
 
 examples/abc-kids/
+├── control-plane/         # local registry + daemon implementation
 ├── shell/                 # generic LayoutManager host (imports no games)
-└── flappy, hockey, …      # remote MFEs (type: remote, framework: react)
+├── home/                  # launcher + provider of main/info slots
+├── multiplication-quiz/   # Angular remote + GraphQL BFF
+└── flappy, hockey, …      # React remote MFEs
 ```
 
 ---
@@ -435,6 +445,11 @@ examples/abc-kids/
 - ADR-057 — Virtualized daemon socket (`DaemonChannel`)
 - ADR-058 — Slot-provider MFEs
 - ADR-059 — `BaseControlPlane` abstract base
+- ADR-060 — Context injection, slot-scoped self-healing, re-resolution
+- ADR-066 — Stable slot addressing and desired-state placement
+- ADR-067 — Manifest-declared slot contract
+- ADR-068 — Provider-scoped addresses and lifecycle ownership
+- ADR-069 — Slot grammar single-sourced in contracts
 
 **Product framing**
 - PDR-002 — Language-/framework-neutral platform contract
@@ -448,5 +463,6 @@ examples/abc-kids/
 **[ADR index](./spec.md#adr-index)** ·
 **↑ [Documentation Index](./README.md)**
 
-**Status:** Runtime composition — 054/055/057/058 implemented; 056/059 accepted
+**Status:** Runtime composition — 054/055/057/058 implemented;
+056/059/060/067/068/069 accepted; 066 proposed
 (see [`spec.md#adr-index`](./spec.md#adr-index) for canonical status).

@@ -168,17 +168,17 @@ input.
 
 ```mermaid
 sequenceDiagram
-    participant Game as MFE in slot "main"
+    participant Game as MFE in "abc-kids-home/main"
     participant LM as LayoutManager
     participant D as Daemon
     participant R as Registry
 
     Game-->>LM: throws (render) → emit → reportError(err, {phase})
-    Note over LM: isolate — fallback into "main" ONLY<br/>data-slot-state = error · siblings untouched
+    Note over LM: isolate — fallback into provider slot ONLY<br/>data-slot-state = error · siblings untouched
     LM->>D: ACTION SLOT_ERROR { slot, mfe, capability, reason }
     D->>R: forward (bounded by escalation cap)
-    R-->>D: Resolution → alternate MFE for "main"
-    D-->>LM: COMPONENT_UPDATE (new experience, slot "main")
+    R-->>D: Resolution → alternate MFE for "abc-kids-home/main"
+    D-->>LM: COMPONENT_UPDATE (new experience, slot "abc-kids-home/main")
     LM->>LM: mount the alternate — slot self-heals
 ```
 

@@ -54,7 +54,18 @@ for back-compat (see [DSL Architecture](./architecture-dsl.md) §2).
 ## 3. Declare capabilities, then generate
 
 Edit `mfe-manifest.yaml` to add capabilities (the platform contract surface — `load`,
-`render`, etc., plus any domain capabilities), then scaffold source from it:
+`render`, etc., plus any domain capabilities). If the MFE contributes named layout
+regions, declare those too:
+
+```yaml
+providesSlots:
+  - id: main
+    description: Primary content region
+  - id: info
+    description: Contextual information
+```
+
+Then scaffold source from the manifest:
 
 ```bash
 cd my-feature
@@ -66,6 +77,16 @@ Codegen is idempotent: your edits to `src/features/**` are developer-owned and s
 re-runs; the platform layer is regenerated. See
 [Code Generation Architecture](./architecture-codegen.md) §4 for the ownership-marker
 contract.
+
+When `providesSlots` is present, generation also writes the manifest-backed slot
+contract:
+
+- React: `src/slots.tsx`, including the thin `DeclaredSlot` component.
+- Angular: `src/slots.ts`, including the standalone `[smtDeclaredSlot]` directive.
+
+Both variants validate local ids against the manifest and register them through the
+host-provided `provideSlot(id, element | null)` callback. The host turns local ids into
+stable addresses such as `my-feature/main`; see the [Slot Contract](./slot-contract.md).
 
 ## 4. Install and run
 
@@ -117,5 +138,7 @@ this baseline.
 
 - [CLI Contract](./cli-contract.md)
 - [DSL Architecture](./architecture-dsl.md) · [Code Generation](./architecture-codegen.md) · [BFF](./architecture-bff.md)
+- [Slot Contract](./slot-contract.md)
+- [ABC Kids end-to-end example](../examples/abc-kids/README.md)
 - [Architecture: current state](./architecture-current-state.md)
 </content>

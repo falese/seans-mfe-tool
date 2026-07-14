@@ -7,7 +7,7 @@ document explains the whole chain in plain language.*
 
 Governing decisions: ADR-066 (addressing + binding), ADR-067 (manifest
 contract + three-layer split), ADR-068 (provider scoping + lifecycle
-ownership). Tracked in #265.
+ownership), ADR-069 (single-sourced grammar). Tracked in #265.
 
 ## The short version
 
@@ -38,11 +38,13 @@ If you only read one section, read this one.
    - **Logic** (published once): matching and the "declare it before you
      register it" guard live in `@seans-mfe-tool/runtime`, framework-free
      and DOM-free. One implementation, one place to fix.
-   - **Sugar** (thin, per framework): a small `DeclaredSlot` React component
-     wires the contract to React's lifecycle. Angular or a native shell
-     writes its own ~20-line equivalent; nothing else changes.
+   - **Sugar** (thin, per framework): React uses `DeclaredSlot`; Angular uses
+     the standalone `[smtDeclaredSlot]` directive. Both wire the same contract
+     to their framework's element lifecycle. A native shell implements only
+     this small boundary; nothing else changes.
 6. **What a dev actually does:** add an id to `providesSlots` in the
-   manifest, regenerate, render `<DeclaredSlot id="…">` around the region.
+   manifest, regenerate, then use `<DeclaredSlot id="…">` in React or
+   `[smtDeclaredSlot]="'…'"` in Angular.
    Everything else — validation, registration, convergence, telemetry — is
    platform machinery you never touch.
 
@@ -50,17 +52,17 @@ If you only read one section, read this one.
 
 | Layer | What it is | Where it lives | Why it's a separate layer |
 | --- | --- | --- | --- |
-| **Data** | `PROVIDED_SLOTS` — the manifest's slot list mirrored into generated code and bound with `createSlotContract(PROVIDED_SLOTS)` | generated `src/slots.tsx` (from `packages/codegen/templates/base-mfe/slots.tsx.ejs`) | Regenerated on every manifest change (`overwrite: true`), so code and manifest cannot drift; JSON-shaped, so any platform can consume the same declaration via `describe()` |
-| **Logic** | `createSlotContract()` — literal + `{param}` pattern matching, `assertDeclared()` (typed error), guarded `register()` | `packages/runtime/src/slot-contract.ts`, exported from `@seans-mfe-tool/runtime` | Written and tested once; a matcher fix ships in the runtime package, not in N regenerated MFEs; no framework or DOM types, so it ports to any host |
-| **Sugar** | `DeclaredSlot` — assert on render, register the element via a stable ref | `packages/framework-react/src/runtime/DeclaredSlot.tsx` (published, beside `MfeHost`); a thin generated twin in `slots.tsx` for generated MFEs | Irreducibly framework-specific, so it's kept tiny and logic-free; a new framework adds only this layer (ADR-036 posture) |
+| **Data** | `PROVIDED_SLOTS` — the manifest's slot list mirrored into generated code and bound with `createSlotContract(PROVIDED_SLOTS)` | generated React `src/slots.tsx` or Angular `src/slots.ts` | Regenerated on every manifest change (`overwrite: true`), so code and manifest cannot drift; JSON-shaped, so any platform can consume the same declaration via `describe()` |
+| **Logic** | Shared grammar plus `createSlotContract()` — literal + `{param}` matching, `assertDeclared()` (typed error), guarded `register()` | grammar: `packages/contracts/src/slot-grammar.ts`; contract: `packages/runtime/src/slot-contract.ts` | The DSL validator and runtime matcher consume one grammar (ADR-069); matching and registration stay framework- and DOM-free |
+| **Sugar** | React `DeclaredSlot` or Angular `DeclaredSlotDirective` — assert, register on mount, release on unmount | `packages/framework-react/src/runtime/DeclaredSlot.tsx`; `packages/framework-angular/src/runtime/declared-slot.directive.ts`; generated pre-bound twins in `slots.tsx` / `slots.ts` | Irreducibly framework-specific, so it stays tiny and logic-free; a new framework adds only this layer (ADR-036 posture) |
 
 ```mermaid
 flowchart TD
   M["mfe-manifest.yaml\nprovidesSlots (DATA · declared once)"]
-  M -- "codegen mirrors it" --> G["generated src/slots.tsx\nPROVIDED_SLOTS + slotContract"]
+  M -- "codegen mirrors it" --> G["generated src/slots.tsx or slots.ts\nPROVIDED_SLOTS + slotContract"]
   L["@seans-mfe-tool/runtime\ncreateSlotContract (LOGIC · published once)"]
   G -- "binds data to logic" --> L
-  S["DeclaredSlot\n(SUGAR · thin, per framework)"] -- "assert + register via" --> L
+  S["DeclaredSlot / smtDeclaredSlot\n(SUGAR · thin, per framework)"] -- "assert + register via" --> L
   S -- "provideSlot(id, element)" --> H["host LayoutManager\ndesired-state binding (ADR-066)"]
   M -- "describe() serves the same data" --> R["registry rules\nvalidated at design time"]
   H -- "SLOT_PROVIDED / SLOT_RELEASED" --> R
@@ -108,13 +110,17 @@ providesSlots:
 identity from the item's own key, never from its position in the list.
 Sorting and filtering change order; they don't change identity.
 
-**2. Generate.** Codegen turns the declaration into `src/slots.tsx` — **data
-only**: `PROVIDED_SLOTS` (the manifest mirrored into code) bound to
-`createSlotContract()` from the runtime, plus a thin `DeclaredSlot` binding.
+**2. Generate.** Codegen turns the declaration into `src/slots.tsx` for React
+or `src/slots.ts` for Angular — **data plus thin framework binding**:
+`PROVIDED_SLOTS` (the manifest mirrored into code) bound to
+`createSlotContract()` from the runtime, plus `DeclaredSlot` or
+`DeclaredSlotDirective`.
 The matching and guard *logic* lives once in `@seans-mfe-tool/runtime`, so a
 fix there never requires regenerating MFEs. The file is always regenerated —
 it is contract, not scaffold — so the code can never claim a slot the
 manifest doesn't declare:
+
+React:
 
 ```tsx
 <DeclaredSlot id="main" provideSlot={provideSlot}>
@@ -122,16 +128,27 @@ manifest doesn't declare:
 </DeclaredSlot>
 ```
 
-`DeclaredSlot` registers its element with the host on mount, releases it on the
-ref's `null` unmount tick, and **throws on an undeclared id** — "declare it in
-the manifest first" is enforced by generated code, not by code review.
+Angular:
+
+```html
+<section [smtDeclaredSlot]="'main'" [provideSlot]="provideSlot">
+  <app-welcome-pane />
+</section>
+```
+
+The generated React component and Angular directive register their element
+with the host on mount, release it with `null` on unmount/destroy, and
+**throw on an undeclared id** — "declare it in the manifest first" is
+enforced by generated code, not by code review.
 
 **3. Register (runtime).** Registration rides `provideSlot`, the callback the
 host hands every mounted MFE (ADR-058). The MFE registers its declared local
 id (`main`); the host takes the stable provider identity from
 `RenderedExperience.mfe` and stores the full address
-`abc-kids-home/main` (ADR-068). A separate experience-id owner token prevents
-an old provider lifecycle from deleting a newer registration.
+`abc-kids-home/main` (ADR-068). The provider's `RenderedExperience.id` is a
+separate internal owner token, so a stale callback cannot release a newer
+registration at the same public address. Registration, replacement, and
+release mutations are serialized per qualified address.
 
 **4. Place.** The registry resolves *what* renders for whom and emits
 experiences addressed to full provided-slot names
@@ -194,16 +211,19 @@ right now*; convergence makes the gap between them safe.
 
 | Piece | Path |
 | --- | --- |
-| Manifest schema (`providesSlots`, id grammar) | `packages/dsl/src/schema.ts` |
+| Shared slot grammar (ADR-069) | `packages/contracts/src/slot-grammar.ts` |
+| Manifest schema (`providesSlots`) | `packages/dsl/src/schema.ts` |
 | Contract logic (matching, guard) — framework-free, written once | `packages/runtime/src/slot-contract.ts` |
 | React sugar for shells/hand-written MFEs (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
-| Generated slot contract template (data + thin binding) | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
+| Angular sugar for shells/hand-written MFEs (`DeclaredSlotDirective`) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
+| Generated React slot template | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
+| Generated Angular slot template | `packages/codegen/templates/base-mfe-angular/slots.ts.ejs` |
 | Generator wiring | `packages/codegen/src/unified-generator.ts` |
 | Desired-state binding, topology signals | `packages/runtime/src/layout-manager.ts` |
 | `provideSlot` render-prop plumbing | `packages/runtime/src/layout-adaptors.ts` |
 | Behavior tests (ordering, re-bind, replay, signals) | `packages/runtime/src/__tests__/layout-desired-state.test.ts` |
-| Contract tests (schema grammar, codegen output) | `packages/dsl/src/__tests__/schema.slots.test.ts`, `packages/codegen/src/__tests__/provided-slots.test.ts` |
-| Decisions | ADR-066, ADR-067, ADR-068 (and ADR-055/057/058/060 they build on) |
+| Contract tests (shared grammar, schema, codegen, framework sugar) | `packages/contracts/src/__tests__/slot-grammar.test.ts`, `packages/dsl/src/__tests__/schema.slots.test.ts`, `packages/codegen/src/__tests__/provided-slots.test.ts`, `packages/codegen/src/__tests__/angular-variant.test.ts` |
+| Decisions | ADR-066, ADR-067, ADR-068, ADR-069 (and ADR-055/057/058/060 they build on) |
 
 ## The rules, if you remember nothing else
 
