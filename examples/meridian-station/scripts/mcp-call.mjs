@@ -2,12 +2,12 @@
 /**
  * Drives one seans-mfe-tool MCP tool call and prints the result envelope —
  * the agent-facing entry point exercised by the Meridian build (see
- * DX-REPORT.md). MCP children inherit the SERVER's cwd (there is no cwd
- * argument on the tools — punch list #11), so the server is spawned in the
- * target directory per call.
+ * DX-REPORT.md). Tools accept a reserved `cwd` argument (#279), so ONE
+ * server instance can target any directory — the first positional here is
+ * passed through as that argument.
  *
  * Usage: node scripts/mcp-call.mjs <cwd> <tool> '<json-args>'
- *   e.g. node scripts/mcp-call.mjs . mfe:remote:init '{"name":"my-mfe","framework":"react","port":"5005","skip-install":true}'
+ *   e.g. node scripts/mcp-call.mjs meridian-crew-services mfe:remote:generate '{}'
  */
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -20,7 +20,6 @@ if (!cwd || !tool) {
 
 const cliBin = resolve(new URL('.', import.meta.url).pathname, '../../../bin/run.js');
 const proc = spawn(cliBin, ['mcp:serve'], {
-  cwd: resolve(cwd),
   stdio: ['pipe', 'pipe', 'inherit'],
 });
 
@@ -67,7 +66,7 @@ proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initial
 
 const response = await rpc('tools/call', {
   name: tool,
-  arguments: rawArgs ? JSON.parse(rawArgs) : {},
+  arguments: { ...(rawArgs ? JSON.parse(rawArgs) : {}), cwd: resolve(cwd) },
 });
 
 const result = response.result ?? response.error;

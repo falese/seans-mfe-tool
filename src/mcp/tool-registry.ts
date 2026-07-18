@@ -57,6 +57,27 @@ export async function loadToolRegistry(
     seen.set(tool.name, tool.name);
   }
 
+  // Every tool accepts a reserved `cwd` (#279): the directory the child CLI
+  // runs in. Injected centrally so all sources (local, plugin, remote)
+  // advertise it without each schema having to declare it.
+  for (const tool of all) {
+    const schema = tool.inputSchema as {
+      type?: string;
+      properties?: Record<string, unknown>;
+    };
+    if (schema && typeof schema === 'object') {
+      schema.properties = {
+        ...(schema.properties ?? {}),
+        cwd: {
+          type: 'string',
+          description:
+            'Working directory for this call — the directory the command operates on ' +
+            '(e.g. the MFE folder for remote:generate). Must exist. Defaults to the server\'s cwd.',
+        },
+      };
+    }
+  }
+
   return all;
 }
 
@@ -76,9 +97,15 @@ export function buildArgv(toolName: string, input: Record<string, unknown>): str
   const argv: string[] = [commandId];
 
   const positionalKeys = new Set(['name', 'spec']);
+  // Reserved execution arguments consumed by the MCP server itself (#279):
+  // never forwarded to the CLI.
+  const reservedKeys = new Set(['cwd']);
   const flags: string[] = [];
 
   for (const [key, value] of Object.entries(input)) {
+    if (reservedKeys.has(key)) {
+      continue;
+    }
     if (positionalKeys.has(key) && typeof value === 'string') {
       argv.push(value);
     } else if (typeof value === 'boolean') {
