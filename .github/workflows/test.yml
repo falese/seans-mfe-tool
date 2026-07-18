@@ -217,3 +217,8 @@ jobs:
 
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
+
+      - name: Meridian regen invariant — generated artifacts match the manifests
+        # Re-runs remote:generate across the reference fleet + derives seeds,
+        # then fails on any drift (#274 discipline, #276 reference app).
+        run: node examples/meridian-station/scripts/generate.mjs --check

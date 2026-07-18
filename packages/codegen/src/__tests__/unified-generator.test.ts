@@ -425,6 +425,22 @@ describe('unified-generator', () => {
     });
   });
 
+  describe('generated Dockerfile stages the runtime as a real directory (#274)', () => {
+    it('copies dist/runtime into node_modules instead of a file: dep', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const dockerfile = files.find((f) => f.path.endsWith('Dockerfile'));
+      expect(dockerfile).toBeDefined();
+      // A file: dep resolves as a SYMLINK, so module resolution escapes the
+      // project and Angular builds fail with "Can't resolve
+      // '@angular/platform-browser' in dist/runtime". The proven pattern
+      // (abc-kids' hand-patched Dockerfiles) copies a real directory.
+      expect(dockerfile!.content).toContain(
+        "cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime"
+      );
+      expect(dockerfile!.content).not.toContain("file:/seans-mfe-tool/dist/runtime");
+    });
+  });
+
   describe('BFF files omitted when manifest has no data: section (#149)', () => {
     const noDataManifest = {
       name: 'NoDataMFE',
