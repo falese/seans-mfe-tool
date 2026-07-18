@@ -42,5 +42,41 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
   ]
 }' && echo " registered meridian-console (StationConsole — root rule)"
 
-echo "Console registered. Compose it into the shell with:"
+# meridian-docking-control — Angular ops MFE with a 2-source BFF
+# (Harbormaster + StellarLedger). One meridian.open.docking action fires
+# TWO rules: DockingBoard into main and TrafficLog into status. The six
+# keyed berth routes each resolve BerthTile into its own
+# meridian-console/berth.<id> address with props.berthId (ADR-069).
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-docking-control",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5002",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5002/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_docking_control", "module": "./Component" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.docking" },
+      "resolve": { "capability": "DockingBoard", "props": { "slot": "meridian-console/main" } } },
+    { "when": { "stateKey": "meridian.open.docking" },
+      "resolve": { "capability": "TrafficLog", "props": { "slot": "meridian-console/status" } } },
+    { "when": { "stateKey": "meridian.berth.b1" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b1", "berthId": "b1" } } },
+    { "when": { "stateKey": "meridian.berth.b2" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b2", "berthId": "b2" } } },
+    { "when": { "stateKey": "meridian.berth.b3" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b3", "berthId": "b3" } } },
+    { "when": { "stateKey": "meridian.berth.b4" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b4", "berthId": "b4" } } },
+    { "when": { "stateKey": "meridian.berth.b5" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b5", "berthId": "b5" } } },
+    { "when": { "stateKey": "meridian.berth.b6" },
+      "resolve": { "capability": "BerthTile", "props": { "slot": "meridian-console/berth.b6", "berthId": "b6" } } }
+  ]
+}' && echo " registered meridian-docking-control (DockingBoard/TrafficLog/BerthTile — Angular)"
+
+echo "MFEs registered. Compose the console into the shell with:"
 echo "  ./scripts/console.sh"

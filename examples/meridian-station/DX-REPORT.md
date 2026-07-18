@@ -264,6 +264,69 @@ with all five domains, six keyed berth slots, and the main/status regions
 — composed entirely by the control plane into an empty shell. Total shell
 knowledge of Meridian domains: zero lines. 😍
 
+## Phase 3 — docking-control: the vertical slice that earned its keep
+
+The hardest slice first: an Angular MFE with a two-source BFF (Harbormaster +
+StellarLedger), composers-free envelope normalization, and the keyed berth
+strip. This phase found and fixed **one codegen defect and three runtime
+defects** — the single most productive dogfooding session of the build.
+
+### 3.1 The BFF pipeline earns the "hero" title
+
+- 😍 Source-level `hoistField` transforms flow from the manifest straight
+  into `.meshrc.yaml`: the ledger's `{result, meta}` envelopes are unwrapped
+  AT THE GRAPH — `charges: [Charge]` and `valuations: [Valuation]` appear as
+  clean root fields beside the raw `listCharges: ListCharges_200Response`
+  originals. One schema shows the before and after of the whole pitch.
+- 😍 One GraphQL query returns live berths (snake_case → camelCase) joined
+  with live charges and valuations (envelope → list) from two different
+  databases. The only feature-level glue is the docking-ref format helper —
+  the documented `additionalResolvers` gap.
+- 🐛 **The generated BFF client dialed a relative `/graphql`** — which
+  resolves against the SHELL's origin the moment the MFE composes remotely.
+  The user's design instinct was right: the MFE + BFF are a **single
+  deployable unit** on the manifest's `endpoint` origin, so codegen now
+  bakes `manifest.endpoint + data.serve.endpoint` into the connector, and
+  `mfe.query()` (the platform capability) picks it up with zero extra
+  wiring. Manifest in, capability out. Filed + fixed as #278.
+
+### 3.2 The keyed-slot fan-out: three runtime bugs in one afternoon
+
+The console fires six `meridian.berth.<id>` actions; the registry resolves
+six `BerthTile` experiences of the same Angular MFE into six keyed slots.
+Nothing in the platform had ever mounted N instances of one remote at once:
+
+- 🐛 **Mount race:** concurrent renders through the shared MFE singleton hit
+  the ADR-042 lifecycle gate — `Invalid state: expected ready, got
+  rendering`; one tile survived, one slot showed the fallback. The ADR-066
+  per-address queues can't help (each keyed slot IS its own address), so the
+  module-federation adaptor now serializes mounts per remote scope.
+- 🐛 **Selector collapse:** `bootstrapApplication` binds to the FIRST
+  matching selector in the document — all six tiles bootstrapped onto slot
+  one's element, last-writer-wins props (a tile labeled b6 showing b1's
+  data). Replaced with `createApplication` +
+  `ApplicationRef.bootstrap(Component, hostElement)`.
+- 🐛 **Frozen change detection:** manual bootstrap runs outside any NgZone,
+  so fetch continuations never triggered CD — six perfectly mounted tiles
+  rendering their initial state forever. Bootstrap and prop application now
+  run inside the app's own `zone.run`.
+- Props are now applied via `ComponentRef.setInput` (fires `ngOnChanges`)
+  instead of post-CD field assignment that `ngOnInit` never saw.
+
+All filed + fixed as #277, with regression tests. Feature-side lesson worth
+keeping: an input-driven component should load in `ngOnChanges` with a
+stale-response guard — the `ngOnInit` default fetch WILL race the
+registry-injected prop.
+
+### 3.3 The payoff
+
+`meridian.open.docking` fires **two** registry rules from one click —
+DockingBoard into `meridian-console/main`, TrafficLog into
+`meridian-console/status` — while six independent control-plane round trips
+fill the berth strip. Verified in the browser: 6/6 tiles with correct
+per-berth data (b4/b6 free, no phantom dues), the two-source join showing
+₢ 8,500.00 DISPUTED on b1. Zero shell knowledge of any of it. 😍
+
 *(Journal continues per phase below as the build proceeds.)*
 
 ## Punch list (running)
@@ -290,3 +353,6 @@ regression tests in `src/codegen/APIGenerator/__tests__/generated-api-regression
 16. ⏳ Generated query validator rejects unknown keys, so generated APIs can't honor pagination conventions other than limit/offset (cursor, Page/PageSize are accepted but ignored).
 17. ⏳ Freshly generated MFEs are not tsc-clean: generated `bootstrap.ts` passes a partial Context to `updateControlPlaneState`; `remote.tsx` uses `.tsx` import extensions without `allowImportingTsExtensions`. Builds (swc) and tests (isolated ts-jest) mask it.
 18. ⏳ abc-kids shell package.json still references `file:../../../src/runtime`, removed by the packages/runtime promotion (#240) — host-side installs of the abc-kids shell are broken; only the docker path (which rewrites the dep) works.
+19. ✅ Generated BFF client dials relative `/graphql` — breaks under cross-origin composition. → connector now bakes `manifest.endpoint + data.serve.endpoint` (single deployable unit); `mfe.query()` inherits it (#278).
+20. ✅ Keyed-slot fan-out (N instances of one remote): mount race on the ADR-042 gate, Angular `bootstrapApplication` selector collapse, out-of-zone change detection, and post-CD prop assignment — all four fixed in packages/runtime (#277).
+21. ⏳ `file:`-linked runtime symlink breaks Angular builds (resolution escapes the project: `Can't resolve '@angular/platform-browser' in dist/runtime`); works only as a real directory copy — plus a stale `.angular` cache kept the failure alive after the fix. More weight behind publishing the runtime (ADR-064/#252).
