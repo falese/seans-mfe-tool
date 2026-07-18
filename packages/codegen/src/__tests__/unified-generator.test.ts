@@ -395,6 +395,36 @@ describe('unified-generator', () => {
     });
   });
 
+  describe('BFF endpoint derivation (single deployable unit)', () => {
+    it('bakes manifest.endpoint + data.serve.endpoint into the generated connector', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff).toBeDefined();
+      // The MFE and its BFF ship as ONE deployable unit on the manifest's
+      // endpoint origin; a relative '/graphql' would resolve against the
+      // SHELL's origin once the MFE is composed remotely.
+      expect(bff!.content).toContain("'http://localhost:3001/graphql'");
+      expect(bff!.content).not.toContain("|| '/graphql'");
+    });
+
+    it('honors a custom data.serve.endpoint path against the manifest origin', async () => {
+      const custom = {
+        ...manifest,
+        data: { ...(manifest as any).data, serve: { endpoint: '/api/graph' } },
+      };
+      const { files } = await generateAllFiles(custom as any, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff!.content).toContain("'http://localhost:3001/api/graph'");
+    });
+
+    it('falls back to the relative serve path when the manifest has no endpoint', async () => {
+      const { endpoint: _omitted, ...noEndpoint } = manifest as any;
+      const { files } = await generateAllFiles(noEndpoint, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff!.content).toContain("'/graphql'");
+    });
+  });
+
   describe('BFF files omitted when manifest has no data: section (#149)', () => {
     const noDataManifest = {
       name: 'NoDataMFE',
