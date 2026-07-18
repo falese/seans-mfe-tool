@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: StationOS API
+  description: >
+    Meridian Station's facilities ERP. SOAP heritage, proud of it:
+    PascalCase field names, every list wrapped in {Data, Pagination} with
+    Page/PageSize/TotalPages, and dates that end in Utc because someone was
+    burned once. References the harbormaster's dockings by a bare integer
+    DockingNo (same number, third format). Money, where it appears, is
+    decimal "credits" — the ledger's integer-cents convention never made it
+    over the wall. Owns station modules, life-support telemetry, crew and
+    certifications, passenger records, and the concourse vendor directory.
+  version: 11.4.0
+servers:
+  - url: http://station-os-api:5103/api
+paths:
+  /modules:
+    get:
+      operationId: GetModules
+      summary: List station modules
+      parameters:
+        - name: DeckZone
+          in: query
+          schema: { type: string }
+        - name: ModuleType
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of modules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/module' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /modules/{ModuleId}:
+    get:
+      operationId: GetModuleById
+      summary: Get one module
+      parameters:
+        - name: ModuleId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A module
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/module' }
+  /telemetry:
+    get:
+      operationId: GetTelemetry
+      summary: List life-support telemetry readings
+      parameters:
+        - name: ModuleId
+          in: query
+          schema: { type: integer }
+        - name: MetricKind
+          in: query
+          schema: { type: string }
+        - name: AlertLevel
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of telemetry readings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/telemetry' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /crew:
+    get:
+      operationId: GetCrew
+      summary: List crew members
+      parameters:
+        - name: Section
+          in: query
+          schema: { type: string }
+        - name: DutyStatus
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of crew members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/crew' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /crew/{CrewId}:
+    get:
+      operationId: GetCrewById
+      summary: Get one crew member
+      parameters:
+        - name: CrewId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A crew member
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/crew' }
+  /certifications:
+    get:
+      operationId: GetCertifications
+      summary: List crew certifications
+      parameters:
+        - name: CrewId
+          in: query
+          schema: { type: integer }
+        - name: Status
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of certifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/certification' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /passengers:
+    get:
+      operationId: GetPassengers
+      summary: List passenger records
+      parameters:
+        - name: DockingNo
+          in: query
+          schema: { type: integer }
+        - name: ClearanceStatus
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of passenger records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/passenger' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /vendors:
+    get:
+      operationId: GetVendors
+      summary: List concourse vendors
+      parameters:
+        - name: ConcourseZone
+          in: query
+          schema: { type: string }
+        - name: LicenseStatus
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of vendors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/vendor' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+  /vendors/{VendorId}:
+    get:
+      operationId: GetVendorById
+      summary: Get one vendor
+      parameters:
+        - name: VendorId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A vendor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/vendor' }
+  /stalls:
+    get:
+      operationId: GetStalls
+      summary: List concourse stalls
+      parameters:
+        - name: VendorId
+          in: query
+          schema: { type: integer }
+        - name: ConcourseZone
+          in: query
+          schema: { type: string }
+        - name: Page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: PageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Page of stalls
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: array
+                    items: { $ref: '#/components/schemas/stall' }
+                  Pagination:
+                    type: object
+                    properties:
+                      Page: { type: integer }
+                      PageSize: { type: integer }
+                      TotalPages: { type: integer }
+components:
+  schemas:
+    module:
+      type: object
+      properties:
+        ModuleId: { type: integer, example: 3 }
+        ModuleName: { type: string, example: Life Support Ring B }
+        DeckZone: { type: string, example: RING-B }
+        ModuleType:
+          type: string
+          example: LIFE_SUPPORT
+          description: HABITAT | LIFE_SUPPORT | DOCKING | CONCOURSE | POWER
+    telemetry:
+      type: object
+      properties:
+        ReadingId: { type: integer, example: 91007 }
+        ModuleId: { type: integer, example: 3 }
+        MetricKind:
+          type: string
+          example: O2_PARTIAL_PRESSURE
+          description: O2_PARTIAL_PRESSURE | CO2_PPM | TEMP_C | POWER_KW | PRESSURE_KPA
+        MetricValue: { type: number, example: 21.2 }
+        RecordedAtUtc: { type: string, example: '2026-07-18T05:40:00Z' }
+        AlertLevel:
+          type: string
+          example: NOMINAL
+          description: NOMINAL | WATCH | CRITICAL
+    crew:
+      type: object
+      properties:
+        CrewId: { type: integer, example: 42 }
+        CrewMemberName: { type: string, example: Imani Okafor }
+        Section:
+          type: string
+          example: OPERATIONS
+          description: OPERATIONS | MEDICAL | ENGINEERING | HOSPITALITY
+        DutyStatus:
+          type: string
+          example: ON_DUTY
+          description: ON_DUTY | OFF_DUTY | LEAVE
+        BerthAssignment: { type: string, example: HAB-2-114 }
+    certification:
+      type: object
+      properties:
+        CertificationId: { type: integer, example: 5531 }
+        CrewId: { type: integer, example: 42 }
+        CertificationCode:
+          type: string
+          example: DOCKING_CONTROL
+          description: EVA | DOCKING_CONTROL | HAZMAT | MEDICAL | FOOD_SAFETY
+        ExpiresOnUtc: { type: string, example: '2027-01-31T00:00:00Z' }
+        Status:
+          type: string
+          example: VALID
+          description: VALID | EXPIRING | EXPIRED
+    passenger:
+      type: object
+      properties:
+        PassengerId: { type: integer, example: 30017 }
+        PassengerName: { type: string, example: Rosa Delgado }
+        DockingNo: { type: integer, example: 4025, description: The harbormaster's docking_id, third format, no prefix }
+        CabinClass:
+          type: string
+          example: BUSINESS
+          description: ECONOMY | BUSINESS | STATEROOM
+        ClearanceStatus:
+          type: string
+          example: CLEARED
+          description: PENDING | CLEARED | FLAGGED
+    vendor:
+      type: object
+      properties:
+        VendorId: { type: integer, example: 105 }
+        VendorName: { type: string, example: Red Dust Noodle Bar }
+        ConcourseZone: { type: string, example: CONCOURSE-A }
+        CuisineOrCategory: { type: string, example: Noodles }
+        LicenseStatus:
+          type: string
+          example: ACTIVE
+          description: ACTIVE | PROBATION | SUSPENDED
+    stall:
+      type: object
+      properties:
+        StallId: { type: integer, example: 218 }
+        VendorId: { type: integer, example: 105 }
+        ConcourseZone: { type: string, example: CONCOURSE-A }
+        StallNo: { type: string, example: A-18 }
+        LeaseCredits: { type: number, example: 5400.5, description: Decimal credits per period — integer cents never made it over the wall from finance }

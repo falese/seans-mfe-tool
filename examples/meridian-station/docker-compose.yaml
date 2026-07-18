@@ -1,0 +1,73 @@
+# Meridian Station — full-stack compose.
+# Phase 1 scope: mongo + the three domain APIs (control plane, MFEs, and
+# shell join in later phases). Ports stay clear of abc-kids (3000-3015,
+# 4000) so both example stacks can run side by side.
+#
+#   harbormaster-api   :5101  sqlite   snake_case, bare arrays, X-Total-Count
+#   stellar-ledger-api :5102  mongodb  camelCase, {result, meta}, cents
+#   station-os-api     :5103  sqlite   PascalCase, {Data, Pagination}
+#
+# All three seed themselves at boot (SEED_DATA=true) from the projections
+# of seed/station.json — run scripts/derive-seeds.mjs after editing it.
+
+services:
+  mongo:
+    image: mongo:7
+    # No host port on purpose: only the ledger API talks to it.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  harbormaster-api:
+    build: ./apis/harbormaster-api
+    ports:
+      - "5101:5101"
+    environment:
+      PORT: 5101
+      NODE_ENV: development
+      SEED_DATA: "true"
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5101/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  stellar-ledger-api:
+    build: ./apis/stellar-ledger-api
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "5102:5102"
+    environment:
+      PORT: 5102
+      NODE_ENV: development
+      SEED_DATA: "true"
+      MONGODB_URI: mongodb://mongo:27017/stellar-ledger
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5102/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  station-os-api:
+    build: ./apis/station-os-api
+    ports:
+      - "5103:5103"
+    environment:
+      PORT: 5103
+      NODE_ENV: development
+      SEED_DATA: "true"
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5103/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6

@@ -1,0 +1,216 @@
+openapi: 3.0.3
+info:
+  title: Harbormaster API
+  description: >
+    Meridian Station port authority system. In service for fifteen years and
+    it shows: snake_case everywhere, list endpoints return bare JSON arrays
+    with the total in an X-Total-Count header, pagination is offset/limit,
+    and identifiers are whatever the original team picked that week
+    (numeric docking ids, string berth ids, registry numbers).
+    Owns berths, vessels, dockings — and, because customs filings arrive
+    through the harbormaster, the cargo manifest header lines. Valuations
+    live in the finance system (StellarLedger); this API has never heard of
+    money.
+  version: 3.7.2
+servers:
+  - url: http://harbormaster-api:5101/api
+paths:
+  /berths:
+    get:
+      operationId: list_berths
+      summary: List berths
+      parameters:
+        - name: berth_class
+          in: query
+          schema: { type: string }
+        - name: occupied_flag
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Bare array of berths (total in X-Total-Count header)
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/berth' }
+  /berths/{berth_id}:
+    get:
+      operationId: get_berth
+      summary: Get one berth
+      parameters:
+        - name: berth_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: A berth
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/berth' }
+  /dockings:
+    get:
+      operationId: list_dockings
+      summary: List dockings
+      parameters:
+        - name: berth_id
+          in: query
+          schema: { type: string }
+        - name: status_code
+          in: query
+          schema: { type: string }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Bare array of dockings
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/docking' }
+  /dockings/{docking_id}:
+    get:
+      operationId: get_docking
+      summary: Get one docking
+      parameters:
+        - name: docking_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A docking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/docking' }
+  /manifest_lines:
+    get:
+      operationId: list_manifest_lines
+      summary: List cargo manifest lines (customs filing headers)
+      parameters:
+        - name: docking_id
+          in: query
+          schema: { type: integer }
+        - name: hazard_class
+          in: query
+          schema: { type: string }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Bare array of manifest lines. No valuations here — finance owns those.
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/manifest_line' }
+  /vessels:
+    get:
+      operationId: list_vessels
+      summary: List registered vessels
+      parameters:
+        - name: operator_name
+          in: query
+          schema: { type: string }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Bare array of vessels
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/vessel' }
+  /vessels/{vessel_registry_no}:
+    get:
+      operationId: get_vessel
+      summary: Get one vessel by registry number
+      parameters:
+        - name: vessel_registry_no
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: A vessel
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/vessel' }
+components:
+  schemas:
+    berth:
+      type: object
+      properties:
+        berth_id: { type: string, example: b1 }
+        berth_class:
+          type: string
+          example: medium_freight
+          description: light_personnel | medium_freight | heavy_bulk
+        occupied_flag: { type: integer, example: 1, description: 0 or 1 — booleans were added to the schema language after this system shipped }
+        max_mass_kg: { type: number, example: 250000 }
+        current_docking_id: { type: integer, example: 4021, nullable: true }
+    docking:
+      type: object
+      properties:
+        docking_id: { type: integer, example: 4021 }
+        berth_id: { type: string, example: b1 }
+        vessel_registry_no: { type: string, example: VR-88213 }
+        eta_utc: { type: string, example: '2026-07-18T14:30:00Z' }
+        departed_utc: { type: string, example: '2026-07-19T02:10:00Z', nullable: true }
+        status_code:
+          type: string
+          example: DOCKED
+          description: SCHEDULED | APPROACH | DOCKED | DEPARTED | ABORTED
+    manifest_line:
+      type: object
+      properties:
+        line_id: { type: integer, example: 7 }
+        docking_id: { type: integer, example: 4021 }
+        sku: { type: string, example: CRYO-CELL-42 }
+        description: { type: string, example: Cryogenic fuel cells, crated }
+        qty: { type: integer, example: 12 }
+        declared_mass_kg: { type: number, example: 1840.5 }
+        hazard_class:
+          type: string
+          example: CRYO
+          description: NONE | CRYO | CORROSIVE | RADIOLOGICAL | BIO
+    vessel:
+      type: object
+      properties:
+        vessel_registry_no: { type: string, example: VR-88213 }
+        vessel_name: { type: string, example: Aurora Freight Nine }
+        operator_name: { type: string, example: Helios Cargo Lines }
+        max_capacity_kg: { type: number, example: 300000 }

@@ -1,0 +1,172 @@
+{
+  "$comment": "Single source of truth for Meridian Station demo data. scripts/derive-seeds.mjs projects this into each API's native convention (snake_case rows for Harbormaster, camelCase docs for StellarLedger, PascalCase rows for StationOS). Entity ids are canonical here; the per-API ID formats (docking 4021 vs 'DCK-004021' vs DockingNo 4021, crew 42 vs 'CRW-0042', vendor 105 vs merchant 'ACC-7105') are applied by the projection — the inconsistency between systems is deliberate and documented in the README.",
+  "berths": [
+    { "id": "b1", "class": "medium_freight", "occupied": true,  "maxMassKg": 250000, "currentDocking": 4021 },
+    { "id": "b2", "class": "heavy_bulk",     "occupied": true,  "maxMassKg": 900000, "currentDocking": 4022 },
+    { "id": "b3", "class": "light_personnel","occupied": true,  "maxMassKg": 80000,  "currentDocking": 4025 },
+    { "id": "b4", "class": "medium_freight", "occupied": false, "maxMassKg": 250000, "currentDocking": null },
+    { "id": "b5", "class": "heavy_bulk",     "occupied": true,  "maxMassKg": 900000, "currentDocking": 4027 },
+    { "id": "b6", "class": "light_personnel","occupied": false, "maxMassKg": 80000,  "currentDocking": null }
+  ],
+  "vessels": [
+    { "registry": "VR-88213", "name": "Aurora Freight Nine", "operator": "Helios Cargo Lines", "maxCapacityKg": 300000 },
+    { "registry": "VR-77045", "name": "Cinder Hauler",       "operator": "Vulcan Bulk Haulage", "maxCapacityKg": 850000 },
+    { "registry": "VR-91102", "name": "Starlark",            "operator": "Meridian Transit",    "maxCapacityKg": 60000 },
+    { "registry": "VR-66320", "name": "Pale Horizon",        "operator": "Helios Cargo Lines",  "maxCapacityKg": 280000 },
+    { "registry": "VR-55871", "name": "Kestrel Run",         "operator": "Quickstep Couriers",  "maxCapacityKg": 90000 },
+    { "registry": "VR-49008", "name": "Iron Meridian",       "operator": "Vulcan Bulk Haulage", "maxCapacityKg": 880000 },
+    { "registry": "VR-83555", "name": "Nightjar",            "operator": "Quickstep Couriers",  "maxCapacityKg": 85000 },
+    { "registry": "VR-72410", "name": "Solace",              "operator": "Meridian Transit",    "maxCapacityKg": 65000 }
+  ],
+  "dockings": [
+    { "id": 4019, "berth": "b2", "vessel": "VR-77045", "etaUtc": "2026-07-14T06:00:00Z", "departedUtc": "2026-07-15T18:40:00Z", "status": "DEPARTED" },
+    { "id": 4020, "berth": "b4", "vessel": "VR-55871", "etaUtc": "2026-07-15T09:30:00Z", "departedUtc": "2026-07-15T21:05:00Z", "status": "DEPARTED" },
+    { "id": 4021, "berth": "b1", "vessel": "VR-88213", "etaUtc": "2026-07-17T14:30:00Z", "departedUtc": null, "status": "DOCKED" },
+    { "id": 4022, "berth": "b2", "vessel": "VR-49008", "etaUtc": "2026-07-17T20:15:00Z", "departedUtc": null, "status": "DOCKED" },
+    { "id": 4023, "berth": "b6", "vessel": "VR-83555", "etaUtc": "2026-07-16T11:00:00Z", "departedUtc": "2026-07-16T19:20:00Z", "status": "DEPARTED" },
+    { "id": 4024, "berth": "b4", "vessel": "VR-66320", "etaUtc": "2026-07-17T08:45:00Z", "departedUtc": null, "status": "ABORTED" },
+    { "id": 4025, "berth": "b3", "vessel": "VR-91102", "etaUtc": "2026-07-18T07:10:00Z", "departedUtc": null, "status": "DOCKED" },
+    { "id": 4026, "berth": "b4", "vessel": "VR-55871", "etaUtc": "2026-07-19T10:00:00Z", "departedUtc": null, "status": "SCHEDULED" },
+    { "id": 4027, "berth": "b5", "vessel": "VR-77045", "etaUtc": "2026-07-18T02:20:00Z", "departedUtc": null, "status": "DOCKED" },
+    { "id": 4028, "berth": "b6", "vessel": "VR-83555", "etaUtc": "2026-07-19T16:30:00Z", "departedUtc": null, "status": "SCHEDULED" },
+    { "id": 4029, "berth": "b1", "vessel": "VR-66320", "etaUtc": "2026-07-20T05:00:00Z", "departedUtc": null, "status": "SCHEDULED" },
+    { "id": 4030, "berth": "b6", "vessel": "VR-72410", "etaUtc": "2026-07-18T09:55:00Z", "departedUtc": null, "status": "APPROACH" }
+  ],
+  "manifestLines": [
+    { "docking": 4021, "line": 1, "sku": "CRYO-CELL-42", "description": "Cryogenic fuel cells, crated", "qty": 12,  "massKg": 1840.5,  "hazard": "CRYO" },
+    { "docking": 4021, "line": 2, "sku": "HAB-PANEL-7",  "description": "Habitat wall panels",          "qty": 40,  "massKg": 5200,    "hazard": "NONE" },
+    { "docking": 4021, "line": 3, "sku": "MED-ISO-9",    "description": "Medical isotopes, shielded",   "qty": 2,   "massKg": 18.2,    "hazard": "RADIOLOGICAL" },
+    { "docking": 4022, "line": 1, "sku": "ORE-FE-RAW",   "description": "Iron ore, unprocessed",        "qty": 900, "massKg": 88000,   "hazard": "NONE" },
+    { "docking": 4022, "line": 2, "sku": "ACID-H2SO4",   "description": "Sulfuric acid drums",          "qty": 24,  "massKg": 3100,    "hazard": "CORROSIVE" },
+    { "docking": 4027, "line": 1, "sku": "GRAIN-BULK",   "description": "Grain, bulk containers",       "qty": 300, "massKg": 42000,   "hazard": "NONE" },
+    { "docking": 4027, "line": 2, "sku": "BIO-CULT-3",   "description": "Live bio cultures",            "qty": 6,   "massKg": 240,     "hazard": "BIO" },
+    { "docking": 4019, "line": 1, "sku": "SCRAP-ALLOY",  "description": "Alloy scrap, baled",           "qty": 120, "massKg": 15000,   "hazard": "NONE" }
+  ],
+  "accounts": [
+    { "id": "ACC-7001", "name": "Helios Cargo Lines",  "type": "OPERATOR", "standing": "GOOD",       "balanceCents": 1250000 },
+    { "id": "ACC-7002", "name": "Vulcan Bulk Haulage", "type": "OPERATOR", "standing": "DELINQUENT", "balanceCents": -2150000 },
+    { "id": "ACC-7003", "name": "Meridian Transit",    "type": "OPERATOR", "standing": "GOOD",       "balanceCents": 890000 },
+    { "id": "ACC-7004", "name": "Quickstep Couriers",  "type": "OPERATOR", "standing": "GOOD",       "balanceCents": 310000 },
+    { "id": "ACC-7105", "name": "Red Dust Noodle Bar", "type": "MERCHANT", "standing": "GOOD",       "balanceCents": 461000, "vendorId": 105 },
+    { "id": "ACC-7106", "name": "Orbit Outfitters",    "type": "MERCHANT", "standing": "GOOD",       "balanceCents": 1180000, "vendorId": 106 },
+    { "id": "ACC-7107", "name": "Lagrange Coffee",     "type": "MERCHANT", "standing": "DELINQUENT", "balanceCents": -96000, "vendorId": 107 }
+  ],
+  "charges": [
+    { "id": "CHG-90301", "docking": 4021, "account": "ACC-7001", "type": "DOCKING_FEE",      "amountCents": 480000, "status": "PENDING" },
+    { "id": "CHG-90302", "docking": 4021, "account": "ACC-7001", "type": "MASS_TARIFF",      "amountCents": 220000, "status": "PENDING" },
+    { "id": "CHG-90303", "docking": 4021, "account": "ACC-7001", "type": "HAZMAT_SURCHARGE", "amountCents": 150000, "status": "DISPUTED" },
+    { "id": "CHG-90304", "docking": 4022, "account": "ACC-7002", "type": "DOCKING_FEE",      "amountCents": 520000, "status": "PENDING" },
+    { "id": "CHG-90305", "docking": 4022, "account": "ACC-7002", "type": "MASS_TARIFF",      "amountCents": 610000, "status": "PENDING" },
+    { "id": "CHG-90306", "docking": 4025, "account": "ACC-7003", "type": "DOCKING_FEE",      "amountCents": 310000, "status": "PAID" },
+    { "id": "CHG-90307", "docking": 4027, "account": "ACC-7002", "type": "DOCKING_FEE",      "amountCents": 495000, "status": "PENDING" },
+    { "id": "CHG-90308", "docking": 4027, "account": "ACC-7002", "type": "HAZMAT_SURCHARGE", "amountCents": 90000,  "status": "PENDING" },
+    { "id": "CHG-90309", "docking": 4019, "account": "ACC-7002", "type": "DOCKING_FEE",      "amountCents": 505000, "status": "PAID" },
+    { "id": "CHG-90310", "docking": 4019, "account": "ACC-7002", "type": "LATE_DEPARTURE",   "amountCents": 75000,  "status": "PAID" },
+    { "id": "CHG-90311", "docking": 4020, "account": "ACC-7004", "type": "DOCKING_FEE",      "amountCents": 260000, "status": "PAID" },
+    { "id": "CHG-90312", "docking": 4023, "account": "ACC-7004", "type": "DOCKING_FEE",      "amountCents": 240000, "status": "PAID" }
+  ],
+  "valuations": [
+    { "id": "VAL-33101", "docking": 4021, "line": 1, "valueCents": 9600000,  "insuranceClass": "SPECIALIZED" },
+    { "id": "VAL-33102", "docking": 4021, "line": 2, "valueCents": 2400000,  "insuranceClass": "STANDARD" },
+    { "id": "VAL-33103", "docking": 4021, "line": 3, "valueCents": 18750000, "insuranceClass": "SPECIALIZED" },
+    { "id": "VAL-33104", "docking": 4022, "line": 1, "valueCents": 5100000,  "insuranceClass": "STANDARD" },
+    { "id": "VAL-33105", "docking": 4022, "line": 2, "valueCents": 890000,   "insuranceClass": "SPECIALIZED" },
+    { "id": "VAL-33106", "docking": 4027, "line": 1, "valueCents": 1300000,  "insuranceClass": "STANDARD" },
+    { "id": "VAL-33108", "docking": 4019, "line": 1, "valueCents": 210000,   "insuranceClass": "STANDARD" }
+  ],
+  "$valuationsNote": "DCK-004027/2 (live bio cultures) deliberately has NO valuation — finance hasn't processed it. The cargo manifest view must handle the gap.",
+  "settlements": [
+    { "id": "STL-51220", "merchantAccount": "ACC-7105", "periodStart": "2026-07-01", "periodEnd": "2026-07-15", "grossCents": 2210000, "feeCents": 110500, "status": "SETTLED" },
+    { "id": "STL-51221", "merchantAccount": "ACC-7106", "periodStart": "2026-07-01", "periodEnd": "2026-07-15", "grossCents": 1480000, "feeCents": 74000,  "status": "SETTLED" },
+    { "id": "STL-51222", "merchantAccount": "ACC-7107", "periodStart": "2026-07-01", "periodEnd": "2026-07-15", "grossCents": 640000,  "feeCents": 32000,  "status": "HELD" },
+    { "id": "STL-51230", "merchantAccount": "ACC-7105", "periodStart": "2026-07-16", "periodEnd": "2026-07-31", "grossCents": 380000,  "feeCents": 19000,  "status": "OPEN" }
+  ],
+  "crew": [
+    { "id": 42, "name": "Imani Okafor",  "section": "OPERATIONS",  "dutyStatus": "ON_DUTY",  "berthAssignment": "HAB-2-114" },
+    { "id": 43, "name": "Wei Zhang",     "section": "ENGINEERING", "dutyStatus": "ON_DUTY",  "berthAssignment": "HAB-2-115" },
+    { "id": 44, "name": "Sofia Marek",   "section": "MEDICAL",     "dutyStatus": "OFF_DUTY", "berthAssignment": "HAB-3-021" },
+    { "id": 45, "name": "Dmitri Volkov", "section": "OPERATIONS",  "dutyStatus": "ON_DUTY",  "berthAssignment": "HAB-2-116" },
+    { "id": 46, "name": "Amara Diallo",  "section": "HOSPITALITY", "dutyStatus": "ON_DUTY",  "berthAssignment": "HAB-4-007" },
+    { "id": 47, "name": "Jonas Berg",    "section": "ENGINEERING", "dutyStatus": "LEAVE",    "berthAssignment": "HAB-3-030" },
+    { "id": 48, "name": "Priya Nair",    "section": "MEDICAL",     "dutyStatus": "ON_DUTY",  "berthAssignment": "HAB-3-022" },
+    { "id": 49, "name": "Tomás Rivera",  "section": "OPERATIONS",  "dutyStatus": "OFF_DUTY", "berthAssignment": "HAB-2-117" }
+  ],
+  "certifications": [
+    { "id": 5531, "crew": 42, "code": "DOCKING_CONTROL", "expiresUtc": "2027-01-31T00:00:00Z", "status": "VALID" },
+    { "id": 5532, "crew": 42, "code": "EVA",             "expiresUtc": "2026-08-10T00:00:00Z", "status": "EXPIRING" },
+    { "id": 5533, "crew": 43, "code": "HAZMAT",          "expiresUtc": "2027-03-15T00:00:00Z", "status": "VALID" },
+    { "id": 5534, "crew": 43, "code": "EVA",             "expiresUtc": "2026-12-05T00:00:00Z", "status": "VALID" },
+    { "id": 5535, "crew": 44, "code": "MEDICAL",         "expiresUtc": "2027-06-20T00:00:00Z", "status": "VALID" },
+    { "id": 5536, "crew": 45, "code": "DOCKING_CONTROL", "expiresUtc": "2026-07-30T00:00:00Z", "status": "EXPIRING" },
+    { "id": 5537, "crew": 45, "code": "EVA",             "expiresUtc": "2026-06-01T00:00:00Z", "status": "EXPIRED" },
+    { "id": 5538, "crew": 46, "code": "FOOD_SAFETY",     "expiresUtc": "2027-02-14T00:00:00Z", "status": "VALID" },
+    { "id": 5539, "crew": 46, "code": "MEDICAL",         "expiresUtc": "2026-08-01T00:00:00Z", "status": "EXPIRING" },
+    { "id": 5540, "crew": 47, "code": "HAZMAT",          "expiresUtc": "2026-05-30T00:00:00Z", "status": "EXPIRED" },
+    { "id": 5541, "crew": 48, "code": "MEDICAL",         "expiresUtc": "2027-09-09T00:00:00Z", "status": "VALID" },
+    { "id": 5542, "crew": 49, "code": "DOCKING_CONTROL", "expiresUtc": "2027-04-22T00:00:00Z", "status": "VALID" }
+  ],
+  "payroll": [
+    { "id": "PAY-80412", "crew": 42, "periodEnd": "2026-07-15", "grossCents": 720000, "status": "PAID" },
+    { "id": "PAY-80413", "crew": 43, "periodEnd": "2026-07-15", "grossCents": 700000, "status": "PAID" },
+    { "id": "PAY-80414", "crew": 44, "periodEnd": "2026-07-15", "grossCents": 690000, "status": "PAID" },
+    { "id": "PAY-80415", "crew": 45, "periodEnd": "2026-07-15", "grossCents": 720000, "status": "HELD" },
+    { "id": "PAY-80416", "crew": 46, "periodEnd": "2026-07-15", "grossCents": 540000, "status": "PAID" },
+    { "id": "PAY-80417", "crew": 47, "periodEnd": "2026-07-15", "grossCents": 610000, "status": "SCHEDULED" },
+    { "id": "PAY-80418", "crew": 48, "periodEnd": "2026-07-15", "grossCents": 695000, "status": "PAID" },
+    { "id": "PAY-80419", "crew": 49, "periodEnd": "2026-07-15", "grossCents": 705000, "status": "PAID" }
+  ],
+  "modules": [
+    { "id": 1, "name": "Docking Ring A",     "zone": "RING-A",      "type": "DOCKING" },
+    { "id": 2, "name": "Habitat Block 2",    "zone": "HAB-2",       "type": "HABITAT" },
+    { "id": 3, "name": "Life Support Ring B","zone": "RING-B",      "type": "LIFE_SUPPORT" },
+    { "id": 4, "name": "Concourse A",        "zone": "CONCOURSE-A", "type": "CONCOURSE" },
+    { "id": 5, "name": "Power Core",         "zone": "CORE",        "type": "POWER" },
+    { "id": 6, "name": "Habitat Block 3",    "zone": "HAB-3",       "type": "HABITAT" }
+  ],
+  "telemetry": [
+    { "id": 91001, "module": 3, "metric": "O2_PARTIAL_PRESSURE", "value": 21.2,   "atUtc": "2026-07-18T05:40:00Z", "alert": "NOMINAL" },
+    { "id": 91002, "module": 3, "metric": "CO2_PPM",             "value": 640,    "atUtc": "2026-07-18T05:40:00Z", "alert": "WATCH" },
+    { "id": 91003, "module": 3, "metric": "TEMP_C",              "value": 21.5,   "atUtc": "2026-07-18T05:40:00Z", "alert": "NOMINAL" },
+    { "id": 91004, "module": 3, "metric": "PRESSURE_KPA",        "value": 101.1,  "atUtc": "2026-07-18T05:40:00Z", "alert": "NOMINAL" },
+    { "id": 91005, "module": 2, "metric": "O2_PARTIAL_PRESSURE", "value": 20.9,   "atUtc": "2026-07-18T05:41:00Z", "alert": "NOMINAL" },
+    { "id": 91006, "module": 2, "metric": "CO2_PPM",             "value": 480,    "atUtc": "2026-07-18T05:41:00Z", "alert": "NOMINAL" },
+    { "id": 91007, "module": 2, "metric": "TEMP_C",              "value": 22.1,   "atUtc": "2026-07-18T05:41:00Z", "alert": "NOMINAL" },
+    { "id": 91008, "module": 6, "metric": "CO2_PPM",             "value": 1180,   "atUtc": "2026-07-18T05:42:00Z", "alert": "CRITICAL" },
+    { "id": 91009, "module": 6, "metric": "O2_PARTIAL_PRESSURE", "value": 20.1,   "atUtc": "2026-07-18T05:42:00Z", "alert": "WATCH" },
+    { "id": 91010, "module": 6, "metric": "TEMP_C",              "value": 23.9,   "atUtc": "2026-07-18T05:42:00Z", "alert": "WATCH" },
+    { "id": 91011, "module": 1, "metric": "PRESSURE_KPA",        "value": 100.8,  "atUtc": "2026-07-18T05:43:00Z", "alert": "NOMINAL" },
+    { "id": 91012, "module": 1, "metric": "TEMP_C",              "value": 19.4,   "atUtc": "2026-07-18T05:43:00Z", "alert": "NOMINAL" },
+    { "id": 91013, "module": 4, "metric": "TEMP_C",              "value": 22.8,   "atUtc": "2026-07-18T05:44:00Z", "alert": "NOMINAL" },
+    { "id": 91014, "module": 4, "metric": "CO2_PPM",             "value": 720,    "atUtc": "2026-07-18T05:44:00Z", "alert": "WATCH" },
+    { "id": 91015, "module": 5, "metric": "POWER_KW",            "value": 8420,   "atUtc": "2026-07-18T05:45:00Z", "alert": "NOMINAL" },
+    { "id": 91016, "module": 5, "metric": "TEMP_C",              "value": 31.2,   "atUtc": "2026-07-18T05:45:00Z", "alert": "WATCH" }
+  ],
+  "passengers": [
+    { "id": 30011, "name": "Rosa Delgado",   "docking": 4025, "cabin": "BUSINESS",  "clearance": "CLEARED" },
+    { "id": 30012, "name": "Ken Watanabe",   "docking": 4025, "cabin": "ECONOMY",   "clearance": "CLEARED" },
+    { "id": 30013, "name": "Fatima Al-Sayed","docking": 4025, "cabin": "STATEROOM", "clearance": "CLEARED" },
+    { "id": 30014, "name": "Marcus Boone",   "docking": 4025, "cabin": "ECONOMY",   "clearance": "FLAGGED" },
+    { "id": 30015, "name": "Lena Novak",     "docking": 4025, "cabin": "ECONOMY",   "clearance": "CLEARED" },
+    { "id": 30016, "name": "Yusuf Kamara",   "docking": 4025, "cabin": "BUSINESS",  "clearance": "CLEARED" },
+    { "id": 30017, "name": "Ada Lindqvist",  "docking": 4025, "cabin": "ECONOMY",   "clearance": "PENDING" },
+    { "id": 30018, "name": "Owen Hale",      "docking": 4030, "cabin": "ECONOMY",   "clearance": "PENDING" },
+    { "id": 30019, "name": "Mei Fong",       "docking": 4030, "cabin": "BUSINESS",  "clearance": "PENDING" },
+    { "id": 30020, "name": "Silas Ward",     "docking": 4025, "cabin": "ECONOMY",   "clearance": "CLEARED" }
+  ],
+  "vendors": [
+    { "id": 105, "name": "Red Dust Noodle Bar", "zone": "CONCOURSE-A", "category": "Noodles",     "license": "ACTIVE" },
+    { "id": 106, "name": "Orbit Outfitters",    "zone": "CONCOURSE-A", "category": "Outfitters",  "license": "ACTIVE" },
+    { "id": 107, "name": "Lagrange Coffee",     "zone": "CONCOURSE-B", "category": "Coffee",      "license": "PROBATION" },
+    { "id": 108, "name": "The Vacuum Lounge",   "zone": "CONCOURSE-B", "category": "Bar",         "license": "ACTIVE" },
+    { "id": 109, "name": "Ring B Pharmacy",     "zone": "CONCOURSE-A", "category": "Pharmacy",    "license": "ACTIVE" },
+    { "id": 110, "name": "Starlight Sundries",  "zone": "CONCOURSE-B", "category": "Convenience", "license": "SUSPENDED" }
+  ],
+  "stalls": [
+    { "id": 218, "vendor": 105, "zone": "CONCOURSE-A", "stallNo": "A-18", "leaseCredits": 5400.5 },
+    { "id": 219, "vendor": 106, "zone": "CONCOURSE-A", "stallNo": "A-22", "leaseCredits": 7200.0 },
+    { "id": 305, "vendor": 107, "zone": "CONCOURSE-B", "stallNo": "B-04", "leaseCredits": 3950.75 },
+    { "id": 306, "vendor": 108, "zone": "CONCOURSE-B", "stallNo": "B-11", "leaseCredits": 6100.0 },
+    { "id": 220, "vendor": 109, "zone": "CONCOURSE-A", "stallNo": "A-03", "leaseCredits": 4800.25 },
+    { "id": 307, "vendor": 110, "zone": "CONCOURSE-B", "stallNo": "B-19", "leaseCredits": 2900.0 }
+  ]
+}
