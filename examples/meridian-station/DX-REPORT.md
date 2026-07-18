@@ -383,7 +383,30 @@ Scaffolded entirely through `mcp:serve` tool calls
   stack (`scripts/dev-up.sh`), and the runbook flags image builds as the
   one step verified only by pattern.
 
-*(Journal continues per phase below as the build proceeds.)*
+## Closing verdict
+
+**The platform delivered its pitch.** Manifest in — capability out: three
+hostile API dialects became one typed graph per MFE with zero hand-written
+normalization code beyond six tiny id-format helpers; a shell with zero
+static remotes composed six MFEs across two frameworks, including a keyed
+six-way fan-out of a single Angular remote; and the whole fleet was produced
+by the real CLI (a third of it through MCP), with `generate.mjs --check`
+holding the regen invariant.
+
+**And the dogfooding paid its rent.** Eleven fixed defects shipped alongside
+the example — six in the API generator (#275), the mongodb boot hang, the
+SEED_DATA connection teardown, the BFF endpoint derivation (#278), and the
+multi-instance composition trio in the runtime (#277) — every one found by
+building the thing the platform says it's for. The punch list below carries
+what remains.
+
+The single highest-leverage next fixes, by this build's experience:
+1. Publish the runtime (ADR-064/#252) — the `dist/runtime` staging pattern
+   caused every one of this build's environment-specific detours.
+2. `--force`-clean regeneration incl. the Dockerfile template (#274 with the
+   #268–273 family) — until then, generated-then-hand-tuned files drift.
+3. MCP cwd targeting (punch list #11) — one server per directory is the only
+   thing keeping the MCP path from being the best agent interface here.
 
 ## Punch list (running)
 
