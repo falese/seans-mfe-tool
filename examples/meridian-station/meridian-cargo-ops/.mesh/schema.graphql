@@ -1,0 +1,201 @@
+schema {
+  query: Query
+}
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HttpMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """List berths"""
+  listBerths(berth_class: String, occupied_flag: Int, offset: Int, limit: Int = 50): [Berth] @httpOperation(subgraph: "Harbormaster", path: "/berths", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"berth_class\":\"berth_class\",\"occupied_flag\":\"occupied_flag\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one berth"""
+  getBerth(berth_id: String!): Berth @httpOperation(subgraph: "Harbormaster", path: "/berths/{args.berth_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List dockings"""
+  listDockings(berth_id: String, status_code: String, offset: Int, limit: Int = 50): [Docking] @httpOperation(subgraph: "Harbormaster", path: "/dockings", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"berth_id\":\"berth_id\",\"status_code\":\"status_code\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one docking"""
+  getDocking(docking_id: Int!): Docking @httpOperation(subgraph: "Harbormaster", path: "/dockings/{args.docking_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List cargo manifest lines (customs filing headers)"""
+  listManifestLines(docking_id: Int, hazard_class: String, offset: Int, limit: Int = 50): [ManifestLine] @httpOperation(subgraph: "Harbormaster", path: "/manifest_lines", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"docking_id\":\"docking_id\",\"hazard_class\":\"hazard_class\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """List registered vessels"""
+  listVessels(operator_name: String, offset: Int, limit: Int = 50): [Vessel] @httpOperation(subgraph: "Harbormaster", path: "/vessels", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"operator_name\":\"operator_name\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one vessel by registry number"""
+  getVessel(vessel_registry_no: String!): Vessel @httpOperation(subgraph: "Harbormaster", path: "/vessels/{args.vessel_registry_no}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List accounts"""
+  listAccounts(accountType: String, standing: String, cursor: String, pageSize: Int = 25): ListAccounts_200Response @httpOperation(subgraph: "StellarLedger", path: "/accounts", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"accountType\":\"accountType\",\"standing\":\"standing\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """Get one account"""
+  getAccount(accountId: String!): Account @httpOperation(subgraph: "StellarLedger", path: "/accounts/{args.accountId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List tariff charges"""
+  listCharges(dockingRef: String, accountId: String, status: String, cursor: String, pageSize: Int = 25): ListCharges_200Response @httpOperation(subgraph: "StellarLedger", path: "/charges", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"dockingRef\":\"dockingRef\",\"accountId\":\"accountId\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List cargo line valuations"""
+  listValuations(manifestLineRef: String, dockingRef: String, cursor: String, pageSize: Int = 25): ListValuations_200Response @httpOperation(subgraph: "StellarLedger", path: "/valuations", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"manifestLineRef\":\"manifestLineRef\",\"dockingRef\":\"dockingRef\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List merchant settlements"""
+  listSettlements(merchantId: String, status: String, cursor: String, pageSize: Int = 25): ListSettlements_200Response @httpOperation(subgraph: "StellarLedger", path: "/settlements", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"merchantId\":\"merchantId\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List crew payroll records"""
+  listPayroll(crewRef: String, status: String, cursor: String, pageSize: Int = 25): ListPayroll_200Response @httpOperation(subgraph: "StellarLedger", path: "/payroll", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"crewRef\":\"crewRef\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  valuations(manifestLineRef: String, dockingRef: String, cursor: String, pageSize: Int = 25): [Valuation]
+}
+
+type Berth {
+  berthId: String
+  """light_personnel | medium_freight | heavy_bulk"""
+  berthClass: String
+  """
+  0 or 1 — booleans were added to the schema language after this system shipped
+  """
+  occupiedFlag: Int
+  maxMassKg: Float
+  currentDockingId: Int
+}
+
+type Docking {
+  dockingId: Int
+  berthId: String
+  vesselRegistryNo: String
+  etaUtc: DateTime
+  departedUtc: DateTime
+  """SCHEDULED | APPROACH | DOCKED | DEPARTED | ABORTED"""
+  statusCode: String
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type ManifestLine {
+  lineId: Int
+  dockingId: Int
+  sku: String
+  description: String
+  qty: Int
+  declaredMassKg: Float
+  """NONE | CRYO | CORROSIVE | RADIOLOGICAL | BIO"""
+  hazardClass: String
+}
+
+type Vessel {
+  vesselRegistryNo: String
+  vesselName: String
+  operatorName: String
+  maxCapacityKg: Float
+}
+
+enum HttpMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
+
+type ListAccounts_200Response {
+  result: [Account]
+  meta: QueryListAccountsMeta
+}
+
+type Account {
+  accountId: String
+  displayName: String
+  """OPERATOR | MERCHANT | CREW"""
+  accountType: String
+  """GOOD | DELINQUENT | FROZEN"""
+  standing: String
+  balanceCents: Int
+  currency: String
+}
+
+type QueryListAccountsMeta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type ListCharges_200Response {
+  result: [Charge]
+  meta: QueryListChargesMeta
+}
+
+type Charge {
+  chargeId: String
+  dockingRef: String
+  accountId: String
+  """DOCKING_FEE | MASS_TARIFF | HAZMAT_SURCHARGE | LATE_DEPARTURE"""
+  chargeType: String
+  amountCents: Int
+  currency: String
+  """PENDING | PAID | DISPUTED | WAIVED"""
+  status: String
+}
+
+type QueryListChargesMeta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type ListValuations_200Response {
+  meta: QueryListValuationsMeta
+}
+
+type Valuation {
+  valuationId: String
+  manifestLineRef: String
+  declaredValueCents: Int
+  currency: String
+  """STANDARD | SPECIALIZED | UNINSURABLE"""
+  insuranceClass: String
+}
+
+type QueryListValuationsMeta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type ListSettlements_200Response {
+  result: [Settlement]
+  meta: QueryListSettlementsMeta
+}
+
+type Settlement {
+  settlementId: String
+  merchantId: String
+  periodStart: Date
+  periodEnd: Date
+  grossCents: Int
+  feeCents: Int
+  netCents: Int
+  """OPEN | SETTLED | HELD"""
+  status: String
+}
+
+"""Represents date values"""
+scalar Date
+
+type QueryListSettlementsMeta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type ListPayroll_200Response {
+  result: [Payroll]
+  meta: QueryListPayrollMeta
+}
+
+type Payroll {
+  payrollId: String
+  crewRef: String
+  periodEnd: Date
+  grossCents: Int
+  """SCHEDULED | PAID | HELD"""
+  status: String
+}
+
+type QueryListPayrollMeta {
+  cursor: String
+  hasMore: Boolean
+}

@@ -1,0 +1,196 @@
+schema @transport(subgraph: "StationOS", kind: "rest", location: "http://station-os-api:5103/api") {
+  query: Query
+}
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """List station modules"""
+  GetModules(DeckZone: String, ModuleType: String, Page: Int = 1, PageSize: Int = 20): GetModules_200_response @httpOperation(subgraph: "StationOS", path: "/modules", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"DeckZone\":\"DeckZone\",\"ModuleType\":\"ModuleType\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """Get one module"""
+  GetModuleById(ModuleId: Int!): module @httpOperation(subgraph: "StationOS", path: "/modules/{args.ModuleId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List life-support telemetry readings"""
+  GetTelemetry(ModuleId: Int, MetricKind: String, AlertLevel: String, Page: Int = 1, PageSize: Int = 20): GetTelemetry_200_response @httpOperation(subgraph: "StationOS", path: "/telemetry", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"ModuleId\":\"ModuleId\",\"MetricKind\":\"MetricKind\",\"AlertLevel\":\"AlertLevel\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """List crew members"""
+  GetCrew(Section: String, DutyStatus: String, Page: Int = 1, PageSize: Int = 20): GetCrew_200_response @httpOperation(subgraph: "StationOS", path: "/crew", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"Section\":\"Section\",\"DutyStatus\":\"DutyStatus\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """Get one crew member"""
+  GetCrewById(CrewId: Int!): crew @httpOperation(subgraph: "StationOS", path: "/crew/{args.CrewId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List crew certifications"""
+  GetCertifications(CrewId: Int, Status: String, Page: Int = 1, PageSize: Int = 20): GetCertifications_200_response @httpOperation(subgraph: "StationOS", path: "/certifications", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"CrewId\":\"CrewId\",\"Status\":\"Status\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """List passenger records"""
+  GetPassengers(DockingNo: Int, ClearanceStatus: String, Page: Int = 1, PageSize: Int = 20): GetPassengers_200_response @httpOperation(subgraph: "StationOS", path: "/passengers", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"DockingNo\":\"DockingNo\",\"ClearanceStatus\":\"ClearanceStatus\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """List concourse vendors"""
+  GetVendors(ConcourseZone: String, LicenseStatus: String, Page: Int = 1, PageSize: Int = 20): GetVendors_200_response @httpOperation(subgraph: "StationOS", path: "/vendors", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"ConcourseZone\":\"ConcourseZone\",\"LicenseStatus\":\"LicenseStatus\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  """Get one vendor"""
+  GetVendorById(VendorId: Int!): vendor @httpOperation(subgraph: "StationOS", path: "/vendors/{args.VendorId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List concourse stalls"""
+  GetStalls(VendorId: Int, ConcourseZone: String, Page: Int = 1, PageSize: Int = 20): GetStalls_200_response @httpOperation(subgraph: "StationOS", path: "/stalls", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"VendorId\":\"VendorId\",\"ConcourseZone\":\"ConcourseZone\",\"Page\":\"Page\",\"PageSize\":\"PageSize\"}")
+  vendors(ConcourseZone: String, LicenseStatus: String, Page: Int = 1, PageSize: Int = 20): [vendor]
+  stalls(VendorId: Int, ConcourseZone: String, Page: Int = 1, PageSize: Int = 20): [stall]
+}
+
+type GetModules_200_response {
+  Data: [module]
+  Pagination: query_GetModules_Pagination
+}
+
+type module {
+  ModuleId: Int
+  ModuleName: String
+  DeckZone: String
+  """HABITAT | LIFE_SUPPORT | DOCKING | CONCOURSE | POWER"""
+  ModuleType: String
+}
+
+type query_GetModules_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetTelemetry_200_response {
+  Data: [telemetry]
+  Pagination: query_GetTelemetry_Pagination
+}
+
+type telemetry {
+  ReadingId: Int
+  ModuleId: Int
+  """O2_PARTIAL_PRESSURE | CO2_PPM | TEMP_C | POWER_KW | PRESSURE_KPA"""
+  MetricKind: String
+  MetricValue: Float
+  RecordedAtUtc: DateTime
+  """NOMINAL | WATCH | CRITICAL"""
+  AlertLevel: String
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type query_GetTelemetry_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetCrew_200_response {
+  Data: [crew]
+  Pagination: query_GetCrew_Pagination
+}
+
+type crew {
+  CrewId: Int
+  CrewMemberName: String
+  """OPERATIONS | MEDICAL | ENGINEERING | HOSPITALITY"""
+  Section: String
+  """ON_DUTY | OFF_DUTY | LEAVE"""
+  DutyStatus: String
+  BerthAssignment: String
+}
+
+type query_GetCrew_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetCertifications_200_response {
+  Data: [certification]
+  Pagination: query_GetCertifications_Pagination
+}
+
+type certification {
+  CertificationId: Int
+  CrewId: Int
+  """EVA | DOCKING_CONTROL | HAZMAT | MEDICAL | FOOD_SAFETY"""
+  CertificationCode: String
+  ExpiresOnUtc: DateTime
+  """VALID | EXPIRING | EXPIRED"""
+  Status: String
+}
+
+type query_GetCertifications_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetPassengers_200_response {
+  Data: [passenger]
+  Pagination: query_GetPassengers_Pagination
+}
+
+type passenger {
+  PassengerId: Int
+  PassengerName: String
+  """The harbormaster's docking_id"""
+  DockingNo: Int
+  """ECONOMY | BUSINESS | STATEROOM"""
+  CabinClass: String
+  """PENDING | CLEARED | FLAGGED"""
+  ClearanceStatus: String
+}
+
+type query_GetPassengers_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetVendors_200_response {
+  Pagination: query_GetVendors_Pagination
+}
+
+type vendor {
+  VendorId: Int
+  VendorName: String
+  ConcourseZone: String
+  CuisineOrCategory: String
+  """ACTIVE | PROBATION | SUSPENDED"""
+  LicenseStatus: String
+}
+
+type query_GetVendors_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+type GetStalls_200_response {
+  Pagination: query_GetStalls_Pagination
+}
+
+type stall {
+  StallId: Int
+  VendorId: Int
+  ConcourseZone: String
+  StallNo: String
+  """
+  Decimal credits per period — integer cents never made it over the wall from finance
+  """
+  LeaseCredits: Float
+}
+
+type query_GetStalls_Pagination {
+  Page: Int
+  PageSize: Int
+  TotalPages: Int
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap

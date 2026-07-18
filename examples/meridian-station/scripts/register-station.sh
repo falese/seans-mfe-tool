@@ -78,5 +78,87 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
   ]
 }' && echo " registered meridian-docking-control (DockingBoard/TrafficLog/BerthTile — Angular)"
 
+# meridian-life-support — Angular, single-source BFF (StationOS only).
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-life-support",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5003",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5003/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_life_support", "module": "./Component" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.life-support" },
+      "resolve": { "capability": "TelemetryDashboard", "props": { "slot": "meridian-console/main" } } },
+    { "when": { "stateKey": "meridian.open.life-support" },
+      "resolve": { "capability": "AlertsFeed", "props": { "slot": "meridian-console/status" } } },
+    { "when": { "stateKey": "meridian.status.life-support" },
+      "resolve": { "capability": "ModuleStatus", "props": { "slot": "meridian-console/status" } } }
+  ]
+}' && echo " registered meridian-life-support (TelemetryDashboard/AlertsFeed/ModuleStatus — Angular)"
+
+# meridian-cargo-ops — Angular, two-source BFF; the flagship split-document
+# manifest view (valuation gaps included).
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-cargo-ops",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5004",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5004/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_cargo_ops", "module": "./Component" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.cargo" },
+      "resolve": { "capability": "CargoManifest", "props": { "slot": "meridian-console/main" } } },
+    { "when": { "stateKey": "meridian.open.cargo" },
+      "resolve": { "capability": "HazardSummary", "props": { "slot": "meridian-console/status" } } }
+  ]
+}' && echo " registered meridian-cargo-ops (CargoManifest/HazardSummary — Angular)"
+
+# meridian-crew-services — React, two-source BFF (StationOS + StellarLedger),
+# scaffolded through the MCP server (see DX-REPORT.md Phase 4).
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-crew-services",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5005",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5005/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_crew_services", "module": "./App" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.crew" },
+      "resolve": { "capability": "CrewRoster", "props": { "slot": "meridian-console/main" } } },
+    { "when": { "stateKey": "meridian.open.crew" },
+      "resolve": { "capability": "PayStatus", "props": { "slot": "meridian-console/status" } } }
+  ]
+}' && echo " registered meridian-crew-services (CrewRoster/PayStatus — React, MCP-scaffolded)"
+
+# meridian-concourse — React, THREE-source BFF; also MCP-scaffolded.
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-concourse",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5006",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5006/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_concourse", "module": "./App" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.concourse" },
+      "resolve": { "capability": "MarketDirectory", "props": { "slot": "meridian-console/main" } } }
+  ]
+}' && echo " registered meridian-concourse (MarketDirectory — React, MCP-scaffolded)"
+
 echo "MFEs registered. Compose the console into the shell with:"
 echo "  ./scripts/console.sh"

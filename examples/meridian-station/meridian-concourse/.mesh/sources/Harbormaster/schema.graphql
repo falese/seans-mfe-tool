@@ -1,0 +1,83 @@
+schema @transport(subgraph: "Harbormaster", kind: "rest", location: "http://harbormaster-api:5101/api") {
+  query: Query
+}
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """List berths"""
+  list_berths(berth_class: String, occupied_flag: Int, offset: Int, limit: Int = 50): [berth] @httpOperation(subgraph: "Harbormaster", path: "/berths", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"berth_class\":\"berth_class\",\"occupied_flag\":\"occupied_flag\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one berth"""
+  get_berth(berth_id: String!): berth @httpOperation(subgraph: "Harbormaster", path: "/berths/{args.berth_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List dockings"""
+  list_dockings(berth_id: String, status_code: String, offset: Int, limit: Int = 50): [docking] @httpOperation(subgraph: "Harbormaster", path: "/dockings", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"berth_id\":\"berth_id\",\"status_code\":\"status_code\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one docking"""
+  get_docking(docking_id: Int!): docking @httpOperation(subgraph: "Harbormaster", path: "/dockings/{args.docking_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List cargo manifest lines (customs filing headers)"""
+  list_manifest_lines(docking_id: Int, hazard_class: String, offset: Int, limit: Int = 50): [manifest_line] @httpOperation(subgraph: "Harbormaster", path: "/manifest_lines", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"docking_id\":\"docking_id\",\"hazard_class\":\"hazard_class\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """List registered vessels"""
+  list_vessels(operator_name: String, offset: Int, limit: Int = 50): [vessel] @httpOperation(subgraph: "Harbormaster", path: "/vessels", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"operator_name\":\"operator_name\",\"offset\":\"offset\",\"limit\":\"limit\"}")
+  """Get one vessel by registry number"""
+  get_vessel(vessel_registry_no: String!): vessel @httpOperation(subgraph: "Harbormaster", path: "/vessels/{args.vessel_registry_no}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+}
+
+type berth {
+  berth_id: String
+  """light_personnel | medium_freight | heavy_bulk"""
+  berth_class: String
+  """
+  0 or 1 — booleans were added to the schema language after this system shipped
+  """
+  occupied_flag: Int
+  max_mass_kg: Float
+  current_docking_id: Int
+}
+
+type docking {
+  docking_id: Int
+  berth_id: String
+  vessel_registry_no: String
+  eta_utc: DateTime
+  departed_utc: DateTime
+  """SCHEDULED | APPROACH | DOCKED | DEPARTED | ABORTED"""
+  status_code: String
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type manifest_line {
+  line_id: Int
+  docking_id: Int
+  sku: String
+  description: String
+  qty: Int
+  declared_mass_kg: Float
+  """NONE | CRYO | CORROSIVE | RADIOLOGICAL | BIO"""
+  hazard_class: String
+}
+
+type vessel {
+  vessel_registry_no: String
+  vessel_name: String
+  operator_name: String
+  max_capacity_kg: Float
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap

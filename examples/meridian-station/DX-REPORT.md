@@ -327,6 +327,42 @@ fill the berth strip. Verified in the browser: 6/6 tiles with correct
 per-berth data (b4/b6 free, no phantom dues), the two-source join showing
 ₢ 8,500.00 DISPUTED on b1. Zero shell knowledge of any of it. 😍
 
+## Phase 4 — the remaining domains, and the CLI-vs-MCP comparison
+
+### 4.1 CLI lane (life-support, cargo-ops)
+
+By the third and fourth Angular MFEs the recipe is muscle memory:
+`remote:init` → manifest → `remote:generate` → implement features → build.
+Each MFE took roughly a quarter of the time docking-control did — the
+platform's leverage is real once the sharp edges are off.
+
+- 😍 `hoistField` scaled to every envelope in the fleet: StationOS's
+  `{Data, Pagination}` unwraps exactly like the ledger's `{result, meta}`.
+  One gotcha worth documenting: pathConfig uses **source-level** names
+  (`[GetTelemetry, Data]`, PascalCase intact) because namingConvention is a
+  root-level transform that runs after source transforms.
+- 😍 The cargo manifest — the flagship view — renders the split document
+  with the DCK-004027/2 valuation gap shown as *"valuation pending —
+  finance"*. The gap in the data became a feature of the demo.
+
+### 4.2 MCP lane (crew-services, concourse)
+
+Scaffolded entirely through `mcp:serve` tool calls
+(`scripts/mcp-call.mjs`, a ~70-line stdio client):
+
+- 😍 The tool-call envelope is genuinely good: a structured JSON result
+  (name, port, targetDir, generatedFiles) with the human-readable CLI
+  narration separated into a `[stderr]` content block. An agent gets
+  machine-readable state AND the guidance text without parsing prose.
+- 😕 The cwd limitation (punch list #11) shapes the whole integration: one
+  server per target directory, spawned per call. Workable for scripted
+  drives; awkward for a long-lived agent connection, which would have to
+  restart its server to work on a second MFE.
+- 👍 Verdict: same generator, same outputs, byte-for-byte — the difference
+  is purely ergonomic. CLI wins for humans (colors, next-steps text); MCP
+  wins for agents (typed results, no prose parsing) once cwd targeting
+  lands.
+
 *(Journal continues per phase below as the build proceeds.)*
 
 ## Punch list (running)
