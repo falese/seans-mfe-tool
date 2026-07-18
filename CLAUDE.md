@@ -78,6 +78,7 @@ ADR quick index: `@docs/spec.md#adr-index`
 | GraphQL BFF layer | ✅ Done |
 | Framework plugin system (ADR-036, #167–#185, PRs #187–#188) | ✅ Done |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
+| Slot contract — stable addressing, desired-state placement, manifest-declared/provider-scoped slots, React + Angular sugar, single-sourced grammar (ADR-066/067/068/069, #265) | ✅ Done (PR #266); see `docs/slot-contract.md` |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
 | Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
 | npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
@@ -101,6 +102,14 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | ADRs | `docs/architecture-decisions/` |
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |
 | Product decisions (why) | `docs/product-decisions/` (PDRs + register) |
+| Slot contract logic (matching + guard, framework-free) | `packages/runtime/src/slot-contract.ts` |
+| React slot sugar (`DeclaredSlot`, beside `MfeHost`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
+| Generated slot contract template (data + thin binding) | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
+| Slot id grammar (single source, ADR-069) | `packages/contracts/src/slot-grammar.ts` |
+| Angular slot sugar (`[smtDeclaredSlot]` directive) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
+| Generated Angular slot template | `packages/codegen/templates/base-mfe-angular/slots.ts.ejs` |
+| Example control plane (vendored daemon + registry images) | `examples/abc-kids/control-plane/` |
+| Slot contract explainer (ADR-066–069 in plain language) | `docs/slot-contract.md` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
 | Framework plugin loader | `src/framework/loader.ts` |
 | React plugin | `packages/framework-react/src/plugin.ts` |

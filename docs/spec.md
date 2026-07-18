@@ -294,6 +294,10 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-063 | API-Backend Generation is a Plugin Axis, Not a Wrapper Around One OSS Codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
 | ADR-064 | Runtime's Future is a Semver-Published Package, Not a Staged `dist/runtime` Folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
 | ADR-065 | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Accepted (impl phased, #264) |
+| ADR-066 | Stable Slot Addressing and Desired-State Placement — Backend Places Any Experience in Any Slot, Always | Runtime / slots / addressing / control-plane | Accepted (#265) |
+| ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Accepted (#265) |
+| ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Accepted (#265) |
+| ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted (#265) |
 
 ---
 

@@ -168,17 +168,17 @@ input.
 
 ```mermaid
 sequenceDiagram
-    participant Game as MFE in slot "main"
+    participant Game as MFE in "abc-kids-home/main"
     participant LM as LayoutManager
     participant D as Daemon
     participant R as Registry
 
     Game-->>LM: throws (render) → emit → reportError(err, {phase})
-    Note over LM: isolate — fallback into "main" ONLY<br/>data-slot-state = error · siblings untouched
+    Note over LM: isolate — fallback into provider slot ONLY<br/>data-slot-state = error · siblings untouched
     LM->>D: ACTION SLOT_ERROR { slot, mfe, capability, reason }
     D->>R: forward (bounded by escalation cap)
-    R-->>D: Resolution → alternate MFE for "main"
-    D-->>LM: COMPONENT_UPDATE (new experience, slot "main")
+    R-->>D: Resolution → alternate MFE for "abc-kids-home/main"
+    D-->>LM: COMPONENT_UPDATE (new experience, slot "abc-kids-home/main")
     LM->>LM: mount the alternate — slot self-heals
 ```
 
@@ -186,6 +186,15 @@ Blast radius is one slot — strictly *better* than a shared host reconciler, wh
 uncaught throw tears down the whole tree. Suspense falls out of the same lifecycle:
 slots carry `data-slot-state` (`pending → ready | error`) from the load/render
 promises, so the host renders skeletons without React Suspense.
+
+Slot *identity and placement* have their own contract layered on top of this:
+ids are assigned names declared in each MFE's manifest (ADR-067), placement is
+desired state the host converges on regardless of ordering (ADR-066), and
+provided addresses are scoped as `provider-mfe/local-id` with lifecycle
+ownership protected from stale teardown (ADR-068). The
+`SLOT_PROVIDED`/`SLOT_RELEASED` ride the same action path as `SLOT_ERROR`
+above. See **[`slot-contract.md`](./slot-contract.md)** for the plain-language
+end-to-end.
 
 ---
 

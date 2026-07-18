@@ -7,6 +7,39 @@ services:
   seans-mfe-tool-cli:
     image: seans-mfe-tool-cli:latest
 
+  # Control plane (ported from falese/daemon into this example, ADR-054/055) —
+  # part of the fleet bring-up, not bundled with the shell. registry :4000,
+  # daemon :3004. The daemon reaches the registry by service name; the shell's
+  # browser reaches the daemon at ws://localhost:3004/graphql.
+  registry:
+    build:
+      context: ./control-plane/registry
+      dockerfile: Dockerfile
+    image: abc-kids-control-registry:latest
+    ports:
+      - '4000:4000'
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:4000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  daemon:
+    build:
+      context: ./control-plane/daemon
+      dockerfile: Dockerfile
+    image: abc-kids-control-daemon:latest
+    environment:
+      - DAEMON_PORT=3004
+      - REGISTRY_HOST=registry
+      - REGISTRY_PORT=4000
+    ports:
+      - '3004:3004'
+    depends_on:
+      registry:
+        condition: service_healthy
+
   abc-kids-flappy:
     build:
       context: ./flappy
@@ -49,6 +82,10 @@ services:
       - seans-mfe-tool-cli
     ports:
       - '3003:3003'
+    environment:
+      # BFF + static assets served together on 3003 so the shell can reach
+      # both remoteEntry.js and /graphql at the same origin (localhost:3003).
+      - PORT=3003
     healthcheck:
       test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 10s

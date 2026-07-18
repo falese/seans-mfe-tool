@@ -1,8 +1,9 @@
 # ABC Kids — Daemon-Driven Composition Demo (ADR-054 / ADR-055)
 
 The shell in this example is a **100% generic layout host**: it knows nothing
-about flappy, hockey, or any other MFE. Composition arrives entirely from the
-daemon control plane (falese/daemon). This runbook drives the full loop:
+about flappy, hockey, the Angular multiplication quiz, or any other MFE.
+Composition arrives entirely from the registry + daemon control plane ported
+into this example from `falese/daemon`. This runbook drives the full loop:
 
 ```
 shell (3000, empty) ──action──► daemon (3004) ──forward──► registry (4000)
@@ -11,34 +12,43 @@ shell (3000, empty) ──action──► daemon (3004) ──forward──► r
         └─── EXPERIENCE (module-federation payload) ◄── RESOLUTION component
 ```
 
-## 1. Start the MFEs and the shell
+## 1. Start the core MFEs and the shell
 
 The shell (and every MFE) builds against the pre-compiled runtime from the
-`seans-mfe-tool-cli:latest` image — rebuild it first whenever `src/runtime/**`
+`seans-mfe-tool-cli:latest` image — rebuild it first whenever
+`packages/runtime/src/**`
 changes (the LayoutManager lives there):
 
 ```bash
 # repo root — one time, and after any src/runtime change
-npm install && npm run build && npm run docker:build:cli
+npm ci && npm run build && npm run docker:build:cli
 
-# from examples/abc-kids/ — force-rebuild so the new shell replaces old images
-docker compose up -d --build  # flappy :3001, hockey :3002, quiz :3003, shell :3000
+# from examples/abc-kids/ — force-rebuild so the new shell replaces old images.
+# This one compose now brings up the control plane too (see step 2).
+docker compose up -d --build
+#   registry :4000, daemon :3004, flappy :3001, hockey :3002, quiz :3003, shell :3000
 ```
 
-## 2. Start the control plane (falese/daemon repo)
+## 2. The control plane comes up with the fleet
+
+The registry and node daemon are ported into this example under
+`control-plane/{registry,daemon}/` (from falese/daemon) and run as their own
+images — **part of the `docker compose up` above, not bundled with the shell**:
 
 ```bash
-# registry on :4000
-node component-system/registry/simple-registry.js &
-
-# Node daemon on :3004 (3001-3003 belong to the MFEs above)
-REGISTRY_HOST=localhost DAEMON_PORT=3004 \
-  node component-system/daemon/simple-daemon.js &
+# already started by step 1; to (re)build or restart just the control plane:
+docker compose up -d --build registry daemon   # registry :4000, daemon :3004
+docker logs -f abc-kids-daemon-1               # watch the resolution/relay loop
 ```
 
-The shell connects to `ws://localhost:3004/graphql` (override at build time
-with `DAEMON_WS_URL`). It shows *"Waiting for the control plane to compose
-this application…"* — and nothing else. That's the point.
+The daemon reaches the registry by service name on the compose network; the
+shell's browser connects to `ws://localhost:3004/graphql` (override at build
+time with `DAEMON_WS_URL`). Until the control plane composes something, the
+shell shows *"Waiting for the control plane to compose this application…"* —
+and nothing else. That's the point.
+
+> Registry state is in-memory: if you restart the `registry` container, re-run
+> `./scripts/register-games.sh`.
 
 ## 3. Register the MFEs and their resolution routes
 
@@ -60,7 +70,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
     "moduleFederation": { "scope": "abc_kids_flappy", "module": "./App", "component": "PlayGame" }
   },
   "routes": [
-    { "when": { "stateKey": "abc.play.flappy" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+    { "when": { "stateKey": "abc.play.flappy" }, "resolve": { "capability": "PlayGame", "props": { "slot": "abc-kids-home/main" } } }
   ]
 }'
 
@@ -76,7 +86,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
     "moduleFederation": { "scope": "abc_kids_hockey", "module": "./App", "component": "PlayGame" }
   },
   "routes": [
-    { "when": { "stateKey": "abc.play.hockey" }, "resolve": { "capability": "PlayGame", "props": { "slot": "main" } } }
+    { "when": { "stateKey": "abc.play.hockey" }, "resolve": { "capability": "PlayGame", "props": { "slot": "abc-kids-home/main" } } }
   ]
 }'
 ```
@@ -85,7 +95,7 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
 
 Send a state-change action (any renderer, MFE `updateControlPlaneState()`,
 or curl). The registry resolves it, the daemon relays the experience, and
-the shell's LayoutManager mounts flappy into the `main` slot:
+the shell's LayoutManager mounts flappy into `abc-kids-home/main`:
 
 ```bash
 curl -s -X POST http://localhost:3004/graphql -H 'Content-Type: application/json' -d '{
@@ -95,7 +105,7 @@ curl -s -X POST http://localhost:3004/graphql -H 'Content-Type: application/json
 ```
 
 Repeat with `abc.play.hockey` and the LayoutManager unmounts flappy and
-mounts hockey in its place — same slot, different MFE, zero shell changes.
+mounts hockey in its place — same scoped slot, different MFE, zero shell changes.
 The same state key can resolve different MFEs per user: routes evaluate
 against `action.context` (user, roles, application, locale).
 
@@ -107,7 +117,7 @@ MFEs that expose the HTTP capability endpoints (`/authorize` `/load`
 `moduleFederation` block; the daemon then drives their lifecycle over HTTP
 and relays whatever their `render()` produced.
 
-## Orchestration at scale: 12 games, one empty shell
+## Orchestration at scale: 13 games, one empty shell
 
 Ten additional games are generated by `scripts/generate-games.mjs` (ports
 3005-3014: counting-stars, letter-pop, shape-sorter, color-mixer,
@@ -115,18 +125,20 @@ animal-sounds, memory-match, rocket-math, word-builder, rhythm-tap,
 maze-runner — re-run the script after editing the game table; generated
 directories are overwritten).
 
-The ten games share **one dependency pack**: `game-base/` builds
+The ten generated React games share **one dependency pack**: `game-base/` builds
 `abc-kids-game-base:latest` (a single `npm install` + the pre-compiled SMT
-runtime), and every game image builds FROM it — twelve independently
-deployable features, one shared install. `scripts/build-games.sh` builds the
-fleet in order (CLI image → dependency pack → services, sequentially, so 13
+runtime), and every generated game image builds FROM it. Together with
+flappy, hockey, and the Angular multiplication quiz, the fleet contains 13
+independently deployable games. `scripts/build-games.sh` builds the fleet in
+order (CLI image → dependency pack → services, sequentially, so many
 parallel installs can't exhaust the Docker VM disk):
 
 ```bash
-# build + start all 12 game MFEs and the shell (SKIP_CLI=1 if the CLI image is fresh)
+# build + start all 13 game MFEs, the home MFE, and the shell
+# (SKIP_CLI=1 if the CLI image is fresh)
 ./scripts/build-games.sh
 
-# register every game with the control plane (12 registrations, 3 routes each)
+# register every game with the control plane (13 registrations, 3 routes each)
 ./scripts/register-games.sh
 
 # compose any game into the empty shell with one state change:
@@ -151,12 +163,32 @@ exist — every swap is the registry resolving `abc.<verb>.<game>` to a
 module-federation registration and the daemon relaying the experience to
 whatever sessions are connected.
 
+## Mixed-framework parity and the Angular BFF
+
+`multiplication-quiz` is an Angular 19 + webpack Module Federation remote.
+The shell loads it through the same `moduleFederation` experience shape and
+the same `BaseMFE` lifecycle used by the React games; no Angular branch exists
+in the shell or registry.
+
+The quiz also demonstrates the manifest-driven GraphQL BFF. Its
+`data.mockSwitch.enabled: true` configuration (ADR-052) enables
+self-contained fixture responses per request with `x-bff-mode: mock`, and the
+container serves both `remoteEntry.js` and `/graphql` on port 3003. Drive all
+three MFE capabilities:
+
+```bash
+./scripts/play.sh multiplication-quiz
+./scripts/play.sh multiplication-quiz show
+./scripts/play.sh multiplication-quiz info
+```
+
 ## The home / launcher — the layout is an MFE too (ADR-057 / ADR-058)
 
 The shell does not even render the menu. `abc-kids-home` is a generated MFE
 (port 3015, one `GameMenu` capability) that **is** the layout: it renders a tile
-per registered game in its own menu region and *contributes* the `main` and
-`info` regions to the host as slots (`provideSlot`, ADR-058). Selecting a tile
+per registered game in its own menu region and *contributes* the local `main`
+and `info` regions to the host as `abc-kids-home/main` and
+`abc-kids-home/info` (`provideSlot`, ADR-058/068). Selecting a tile
 drives the control plane through the inherited BaseMFE platform capability
 `updateControlPlaneState` (ADR-057) — the home knows no game by name.
 
@@ -166,14 +198,17 @@ registry "returns all MFEs" on the `abc.root` action with zero daemon/registry
 changes.
 
 ```bash
-./scripts/register-games.sh   # registers 12 games + the home (root rule + catalog)
+./scripts/register-games.sh   # registers 13 games + the home (root rule + catalog)
 ./scripts/home.sh             # composes the home into the empty shell (abc.root)
 # now click a tile in the UI — or drive it directly:
-./scripts/play.sh flappy      # PlayGame → the home-provided 'main' slot
-./scripts/play.sh flappy show # ShowCover → the home-provided 'info' slot
+./scripts/play.sh flappy      # PlayGame → abc-kids-home/main
+./scripts/play.sh flappy show # ShowCover → abc-kids-home/info
 ```
 
 The daemon holds **one** socket; the LayoutManager virtualizes it into a channel
 per slot (ADR-057), injected into each composed MFE so `updateControlPlaneState`
 works without any MFE opening its own connection. Everything on screen — menu,
 games, info — is an independently deployed MFE; the shell only hosts.
+
+For the shortest setup path and the service/port table, start with
+[`README.md`](./README.md).

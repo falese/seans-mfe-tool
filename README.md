@@ -275,13 +275,17 @@ Name collisions across sources are a startup error.
 
 | Path | What it shows |
 |---|---|
-| [`examples/abc-kids/`](./examples/abc-kids/) | A full shell composing three generated MFEs (`flappy`, `hockey`, `multiplication-quiz`) — each with its own `mfe-manifest.yaml`, rspack Module Federation, Dockerfile, and `docker-compose.yaml` |
+| [`examples/abc-kids/`](./examples/abc-kids/) | End-to-end platform demo: a generic shell composes 13 game MFEs plus a home/layout MFE through a containerized registry + daemon control plane. The fleet mixes React/rspack and Angular/webpack Module Federation; the home MFE provides the stable `abc-kids-home/main` and `abc-kids-home/info` slots. |
 | [`examples/api-examples/`](./examples/api-examples/) | REST APIs generated from OpenAPI specs (`bizcase-api`, `petstore-api`) |
 
 ```bash
 # Build the CLI image + every abc-kids MFE image (full chain, cached by Turborepo)
-turbo run docker:build:examples
+npx turbo run docker:build:examples
 ```
+
+See the [ABC Kids quick start](./examples/abc-kids/README.md), the
+[control-plane walkthrough](./examples/abc-kids/DAEMON-DEMO.md), and the
+[slot contract](./docs/slot-contract.md).
 
 ---
 
@@ -313,6 +317,7 @@ Foundational decisions worth reading first:
 | [ADR-042](./docs/architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE lifecycle state machine |
 | [ADR-043](./docs/architecture-decisions/ADR-043-manifest-driven-codegen.md) | Manifest-driven code generation pipeline |
 | [ADR-036](./docs/architecture-decisions/ADR-036-framework-plugins.md) | Framework plugin system |
+| [ADR-066](./docs/architecture-decisions/ADR-066-stable-slot-addressing-desired-state-placement.md) / [067](./docs/architecture-decisions/ADR-067-manifest-declared-slot-contract.md) / [068](./docs/architecture-decisions/ADR-068-provider-scoped-slot-addresses.md) / [069](./docs/architecture-decisions/ADR-069-slot-grammar-single-source.md) | Stable, manifest-declared, provider-scoped slot contract |
 | [ADR-016](./docs/architecture-decisions/ADR-016-base-command-pattern.md) / [ADR-018](./docs/architecture-decisions/ADR-018-command-result-envelope.md) | BaseCommand pattern & `CommandResult<T>` JSON envelope |
 
 Product rationale ("why") lives in

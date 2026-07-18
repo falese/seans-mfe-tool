@@ -32,8 +32,20 @@
       "inputs": ["src/**/*", "tsconfig.json"],
       "cache": true
     },
+    "//#build": {
+      "inputs": [
+        "src/**",
+        "bin/**",
+        "packages/*/src/**",
+        "scripts/**",
+        "tsconfig*.json",
+        "packages/*/tsconfig*.json",
+        "package.json"
+      ],
+      "outputs": ["dist/**", "packages/*/dist/**", "oclif.manifest.json", "schemas/**"]
+    },
     "//#docker:build:cli": {
-      "dependsOn": ["build"],
+      "dependsOn": ["//#build"],
       "inputs": ["dist/**", "Dockerfile.cli", "package.json", "oclif.manifest.json"],
       "outputs": [],
       "cache": true

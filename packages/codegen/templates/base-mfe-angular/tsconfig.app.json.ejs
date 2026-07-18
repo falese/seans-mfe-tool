@@ -2,7 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": ["node"]
+    "types": ["node"],
+    "//": "Angular application build needs ES modules; the root tsconfig is commonjs for the Mesh BFF (see tsconfig.json).",
+    "module": "ES2022"
   },
   "files": ["src/main.ts"],
   "include": ["src/**/*.ts"],

@@ -1226,6 +1226,41 @@ async function renderFiles(
     }
   }
 
+  // Slot contract (ADR-067): emit the slot sugar from providesSlots — for every
+  // framework. Always regenerated (overwrite: true) so the code can never
+  // register a slot id the manifest doesn't declare — declaration and behavior
+  // share one source. Variant-agnostic (ADR-036): the template VARIANT owns
+  // which sugar flavor it ships — the generator probes the variant's templateDir
+  // for a slots.*.ejs instead of hardcoding framework names, so a new framework
+  // plugin adds slot support by shipping the template, never by editing this
+  // generator. (Angular variants ship slots.ts.ejs — a DeclaredSlotDirective;
+  // React ships slots.tsx.ejs — a DeclaredSlot component.)
+  const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
+    .providesSlots;
+  if (providesSlots && providesSlots.length > 0) {
+    const slotsTemplateCandidates = ['slots.ts.ejs', 'slots.tsx.ejs'];
+    let slotsEmitted = false;
+    for (const candidate of slotsTemplateCandidates) {
+      const slotsTemplatePath = path.join(templateDir, candidate);
+      if (await fs.pathExists(slotsTemplatePath)) {
+        files.push({
+          path: path.join(basePath, 'src', candidate.replace(/\.ejs$/, '')),
+          content: await renderTemplate(slotsTemplatePath, { ...vars, providesSlots }),
+          overwrite: true,
+        });
+        slotsEmitted = true;
+        break;
+      }
+    }
+    if (!slotsEmitted) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[unified-generator] WARNING: manifest declares providesSlots but template variant ` +
+          `"${templateVariant}" ships no slots template (looked for ${slotsTemplateCandidates.join(', ')} in ${templateDir})`
+      );
+    }
+  }
+
   // --- Public assets ---
   // Generate public/index.html and favicon.ico from EJS templates
   const publicDir = path.join(basePath, 'public');

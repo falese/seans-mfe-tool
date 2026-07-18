@@ -52,6 +52,12 @@ capabilities:
               contained: true
               description: Log render failure
 
+providesSlots:
+  - id: main
+    description: Primary game region
+  - id: info
+    description: Contextual game information region
+
 dependencies:
   runtime:
     react: ^18.2.0

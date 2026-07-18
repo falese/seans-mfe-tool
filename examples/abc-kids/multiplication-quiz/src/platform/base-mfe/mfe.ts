@@ -1,11 +1,12 @@
 
 
 import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
-import type { Context, LoadResult, RenderResult} from '@seans-mfe-tool/runtime';
+import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
 
+import { query as bffQuery } from '../bff/bff';
 
 /**
  * abckidsmultiplicationquizMFE
@@ -56,6 +57,31 @@ export class abckidsmultiplicationquizMFE extends AngularRemoteMFE {
     return result;
   }
 
+  /**
+   * doQuery — routes mfe.query() calls to the BFF connector.
+   *
+   * Reads context.inputs.document + variables and dispatches via the generated
+   * bff.ts connector. The BFF URL is resolved automatically from
+   * manifest.endpoint + data.serve.endpoint (e.g. http://localhost:3003/graphql).
+   * Pass context.inputs.bffUrl to override when the shell is on a different origin.
+   *
+   * Re-generated on every `remote:generate` run — do not edit by hand.
+   */
+  protected override async doQuery(context: Context): Promise<QueryResult> {
+    const { document, variables } = (context.inputs ?? {}) as {
+      document: string;
+      variables?: Record<string, unknown>;
+    };
+    try {
+      const data = await bffQuery(document, variables, {
+        ...(context.jwt ? { Authorization: `Bearer ${context.jwt}` } : {}),
+        ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
+      });
+      return { data };
+    } catch (err) {
+      return { data: null, errors: [{ message: (err as Error).message }] };
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

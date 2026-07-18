@@ -33,6 +33,11 @@ export * from './handlers';
 // transport (graphql-transport-ws client), adaptors (per-contentType mounts).
 export { LayoutManager } from './layout-manager';
 export type { LayoutManagerConfig, LayoutHostLike } from './layout-manager';
+// Slot contract logic (ADR-067): manifest-declared identity, matching, and
+// the declare-before-register guard — framework-free; generated MFEs mirror
+// their providesSlots into createSlotContract and carry no slot logic.
+export { createSlotContract, toProvidedSlotAddress } from './slot-contract';
+export type { ProvidedSlotDeclaration, ProvideSlotFn, SlotContract } from './slot-contract';
 export { GraphQLTransportWsDaemonTransport } from './layout-transport';
 export type {
   DaemonTransport,

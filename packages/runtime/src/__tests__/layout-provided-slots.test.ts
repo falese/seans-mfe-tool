@@ -51,9 +51,14 @@ const flush = async () => {
   for (let i = 0; i < 20; i += 1) await Promise.resolve();
 };
 
-const experience = (id: string, contentType: string, props: Record<string, unknown>) => ({
+const experience = (
+  id: string,
+  contentType: string,
+  props: Record<string, unknown>,
+  mfe = id
+) => ({
   id,
-  mfe: id,
+  mfe,
   capability: 'X',
   output: {},
   contentType,
@@ -92,11 +97,11 @@ describe('LayoutManager — slot-provider MFEs (ADR-058)', () => {
     // The layout MFE lands in 'root' and provides 'main'.
     transport.emit(experience('layout', 'test/layout', { slot: 'root' }));
     await flush();
-    expect(manager.activeSlots).toContain('main');
+    expect(manager.activeSlots).toContain('layout/main');
     expect(host.children).toHaveLength(1); // only 'root'; provided 'main' is the MFE's own element
 
     // A game targeting 'main' mounts into the MFE-provided element.
-    transport.emit(experience('flappy', 'test/game', { slot: 'main' }));
+    transport.emit(experience('flappy', 'test/game', { slot: 'layout/main' }));
     await flush();
     expect(gameSlot).toBe(providedMain);
     expect(host.children).toHaveLength(1); // still not appended by the host
@@ -123,15 +128,15 @@ describe('LayoutManager — slot-provider MFEs (ADR-058)', () => {
     });
     manager.start();
 
-    transport.emit(experience('layout-a', 'test/layout', { slot: 'root' }));
+    transport.emit(experience('layout-a', 'test/layout', { slot: 'root' }, 'layout'));
     await flush();
-    expect(manager.activeSlots).toContain('main');
+    expect(manager.activeSlots).toContain('layout/main');
 
     // Replacing the provider in 'root' releases its old 'main' and re-registers
     // the new one (last writer wins) — no stale element keeps receiving routes.
-    transport.emit(experience('layout-b', 'test/layout', { slot: 'root' }));
+    transport.emit(experience('layout-b', 'test/layout', { slot: 'root' }, 'layout'));
     await flush();
-    expect(manager.activeSlots).toContain('main');
-    expect(manager.activeSlots.filter((s) => s === 'main')).toHaveLength(1);
+    expect(manager.activeSlots).toContain('layout/main');
+    expect(manager.activeSlots.filter((s) => s === 'layout/main')).toHaveLength(1);
   });
 });

@@ -1,6 +1,6 @@
 # DSL Manifest Schema
 
-Source of truth: `src/dsl/schema.ts` (Zod). TypeScript types are inferred from the
+Source of truth: `packages/dsl/src/schema.ts` (Zod). TypeScript types are inferred from the
 Zod schemas — never defined separately. Reference: `docs/DSL/dsl-schema-reference.md`
 v3.2 for worked examples and YAML snippets.
 
@@ -45,9 +45,44 @@ v3.2 for worked examples and YAML snippets.
 |---|---|---|
 | `dependencies` | `Dependencies` | Runtime, design-system, and MFE-to-MFE dependency declarations. |
 | `data` | `DataConfig` | GraphQL Mesh BFF configuration. See [Data section](#data-section). |
+| `providesSlots` | `ProvidedSlot[]` | Named layout regions this MFE contributes to a host. See [Provided slots](#provided-slots). |
 | `performance` | `PerformanceConfig` | Caching, observability, rate limiting. See [Performance section](#performance-section). |
 | `transforms` | `string[]` | YAML strings for custom resolver composition. |
 | `authorization` | `unknown` | Deferred — ADR-007. Reserved field; no validation applied yet. |
+
+---
+
+## Provided slots
+
+`providesSlots` declares the local slot ids an MFE may register through the
+host-provided `provideSlot` callback (ADR-067).
+
+```yaml
+providesSlots:
+  - id: main
+    description: Primary content region
+  - id: card.{sku}
+    description: Stable repeated region keyed by product SKU
+```
+
+### ProvidedSlot
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `id` | `string` | yes | Unique within the manifest. Dot-separated segments are assigned-name literals containing a letter or `{param}` placeholders. `/`, empty segments, and purely numeric segments are rejected. |
+| `description` | `string` | no | Human-readable purpose for discovery and rule-authoring tools. |
+
+The MFE registers the local id (`main`). The host builds the public address
+from `RenderedExperience.mfe`, for example `catalog-layout/main` (ADR-068).
+Codegen emits a manifest-bound slot helper for both supported frameworks:
+
+- React: `src/slots.tsx` with `DeclaredSlot`.
+- Angular: `src/slots.ts` with standalone `DeclaredSlotDirective`
+  (`[smtDeclaredSlot]`).
+
+The grammar is defined once in `@seans-mfe/contracts` and consumed by both
+the DSL validator and runtime matcher (ADR-069). See
+[The Slot Contract](../slot-contract.md).
 
 ---
 
