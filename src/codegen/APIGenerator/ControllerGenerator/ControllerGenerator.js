@@ -97,7 +97,7 @@ class ControllerGenerator {
         // Skip parameters
         if (method === 'parameters') continue;
 
-        const functionName = NameGenerator.generateControllerMethodName(method, resourceName, path);
+        const functionName = NameGenerator.generateControllerMethodName(method, resourceName, path, operation);
         const validations = ValidationGenerator.generateValidations({
           ...operation,
           parameters: [...(pathParameters || []), ...(operation.parameters || [])]

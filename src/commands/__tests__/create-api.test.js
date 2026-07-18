@@ -123,7 +123,9 @@ describe('Create API Command', () => {
 
       expect(mockFs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining('users.controller.js'),
-        expect.stringContaining('getAllUsers'),
+        // Controller exports must follow the spec's operationId so they
+        // match the names the route files import.
+        expect.stringContaining('getUsers'),
         expect.any(String)
       );
     });
@@ -228,6 +230,25 @@ describe('Create API Command', () => {
         expect.stringContaining('"name": "test-api"'),
         expect.any(String)
       );
+    });
+
+    it('wires db:seed to the generated seed runner for every database type', async () => {
+      for (const database of ['sqlite', 'mongodb']) {
+        mockFs.writeFile.mockClear();
+        await createApiCommand('test-api', {
+          port: '3001',
+          database,
+          spec: 'api.yaml'
+        });
+
+        // sequelize-cli db:seed:all points at a seeders/ directory the
+        // generator never writes; seed.js runs the generated ./seeds set.
+        expect(mockFs.writeFile).toHaveBeenCalledWith(
+          expect.stringContaining('package.json'),
+          expect.stringContaining('"db:seed": "node src/database/seed.js"'),
+          expect.any(String)
+        );
+      }
     });
   });
 });

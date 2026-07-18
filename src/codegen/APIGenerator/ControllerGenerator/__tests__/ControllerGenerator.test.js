@@ -245,7 +245,7 @@ describe('ControllerGenerator', () => {
       const result = ControllerGenerator.generateMethods('pets', 'Pet', pathGroup, mockDbAdapter);
       
       expect(result).toHaveLength(1);
-      expect(NameGenerator.generateControllerMethodName).toHaveBeenCalledWith('get', 'pets', '/pets');
+      expect(NameGenerator.generateControllerMethodName).toHaveBeenCalledWith('get', 'pets', '/pets', { responses: {} });
     });
 
     it('should skip parameters in operations', () => {

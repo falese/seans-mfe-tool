@@ -13,7 +13,7 @@ describe('ImplementationGenerator', () => {
   describe('generate', () => {
     it('should route to GET implementation', () => {
       const result = ImplementationGenerator.generate('get', '/pets/{petId}', {}, 'Pet', mongoAdapter);
-      expect(result).toContain('Model.Pet.findById');
+      expect(result).toContain('Model.Pet.findOne');
       expect(result).toContain('res.status(200)');
     });
 
@@ -25,19 +25,19 @@ describe('ImplementationGenerator', () => {
 
     it('should route to PUT implementation', () => {
       const result = ImplementationGenerator.generate('put', '/pets/{petId}', {}, 'Pet', mongoAdapter);
-      expect(result).toContain('findByIdAndUpdate');
+      expect(result).toContain('findOneAndUpdate');
       expect(result).toContain('res.status(200)');
     });
 
     it('should route to PATCH implementation', () => {
       const result = ImplementationGenerator.generate('patch', '/pets/{petId}', {}, 'Pet', mongoAdapter);
-      expect(result).toContain('findByIdAndUpdate');
+      expect(result).toContain('findOneAndUpdate');
       expect(result).toContain('res.status(200)');
     });
 
     it('should route to DELETE implementation', () => {
       const result = ImplementationGenerator.generate('delete', '/pets/{petId}', {}, 'Pet', mongoAdapter);
-      expect(result).toContain('findByIdAndDelete');
+      expect(result).toContain('findOneAndDelete');
       expect(result).toContain('res.status(204)');
     });
 
@@ -63,7 +63,7 @@ describe('ImplementationGenerator', () => {
       it('should generate findById query for item paths', () => {
         const result = ImplementationGenerator.generateGetImplementation('/pets/{petId}', mongoAdapter);
         
-        expect(result).toContain('Model.Pet.findById(req.params.petId)');
+        expect(result).toContain('Model.Pet.findOne({ petId: req.params.petId })');
         expect(result).toContain('if (!item)');
         expect(result).toContain('ApiError(404');
         expect(result).toContain('res.status(200).json(item)');
@@ -73,7 +73,7 @@ describe('ImplementationGenerator', () => {
         const result = ImplementationGenerator.generateGetImplementation('/pets', mongoAdapter);
         
         expect(result).toContain('Model.Pet');
-        expect(result).toContain('.find(req.query)');
+        expect(result).toContain('schema.paths');
         expect(result).toContain('.limit(parseInt(req.query.limit) || 10)');
         expect(result).toContain('.skip(parseInt(req.query.offset) || 0)');
         expect(result).toContain('res.status(200).json(item)');
@@ -82,7 +82,7 @@ describe('ImplementationGenerator', () => {
       it('should handle complex path parameters', () => {
         const result = ImplementationGenerator.generateGetImplementation('/organizations/{orgId}/projects/{projectId}', mongoAdapter);
         
-        expect(result).toContain('Model.Organization.findById(req.params.orgId)');
+        expect(result).toContain('Model.Organization.findOne({ orgId: req.params.orgId })');
         expect(result).toContain('if (!item)');
         expect(result).toContain('ApiError(404');
       });
@@ -92,7 +92,7 @@ describe('ImplementationGenerator', () => {
       it('should generate findByPk query for item paths', () => {
         const result = ImplementationGenerator.generateGetImplementation('/pets/{petId}', sqliteAdapter);
         
-        expect(result).toContain('db.Pet.findByPk(req.params.id)');
+        expect(result).toContain('db.Pet.findOne({ where: { petId: req.params.petId } })');
         expect(result).toContain('if (!item)');
         expect(result).toContain('ApiError(404');
         expect(result).toContain('res.status(200).json(item)');
@@ -102,7 +102,7 @@ describe('ImplementationGenerator', () => {
         const result = ImplementationGenerator.generateGetImplementation('/pets', sqliteAdapter);
         
         expect(result).toContain('db.Pet.findAll');
-        expect(result).toContain('where: req.query');
+        expect(result).toContain('rawAttributes');
         expect(result).toContain('limit: parseInt(req.query.limit) || 10');
         expect(result).toContain('offset: parseInt(req.query.offset) || 0');
         expect(result).toContain('res.status(200).json(item)');
@@ -165,7 +165,7 @@ describe('ImplementationGenerator', () => {
       it('should generate findByIdAndUpdate query', () => {
         const result = ImplementationGenerator.generatePutImplementation('/pets/{petId}', 'Pet', mongoAdapter);
         
-        expect(result).toContain('Model.Pet.findByIdAndUpdate');
+        expect(result).toContain('Model.Pet.findOneAndUpdate');
         expect(result).toContain('req.params.petId');
         expect(result).toContain('req.body');
         expect(result).toContain('{ new: true }');
@@ -186,7 +186,7 @@ describe('ImplementationGenerator', () => {
         const result = ImplementationGenerator.generatePutImplementation('/pets/{petId}', 'Pet', sqliteAdapter);
         
         expect(result).toContain('db.Pet.update(req.body');
-        expect(result).toContain('where: { id: req.params.id }');
+        expect(result).toContain('where: { petId: req.params.petId }');
         expect(result).toContain('if (!updatedItem)');
         expect(result).toContain('ApiError(404');
         expect(result).toContain('res.status(200).json(updatedItem)');
@@ -215,7 +215,7 @@ describe('ImplementationGenerator', () => {
       it('should generate findByIdAndUpdate query', () => {
         const result = ImplementationGenerator.generatePatchImplementation('/pets/{petId}', 'Pet', mongoAdapter);
         
-        expect(result).toContain('Model.Pet.findByIdAndUpdate');
+        expect(result).toContain('Model.Pet.findOneAndUpdate');
         expect(result).toContain('req.params.petId');
         expect(result).toContain('req.body');
         expect(result).toContain('{ new: true }');
@@ -230,7 +230,7 @@ describe('ImplementationGenerator', () => {
         const result = ImplementationGenerator.generatePatchImplementation('/pets/{petId}', 'Pet', sqliteAdapter);
         
         expect(result).toContain('db.Pet.update(req.body');
-        expect(result).toContain('where: { id: req.params.id }');
+        expect(result).toContain('where: { petId: req.params.petId }');
         expect(result).toContain('if (!patchedItem)');
         expect(result).toContain('ApiError(404');
         expect(result).toContain('res.status(200).json(patchedItem)');
@@ -258,7 +258,7 @@ describe('ImplementationGenerator', () => {
       it('should generate findByIdAndDelete query', () => {
         const result = ImplementationGenerator.generateDeleteImplementation('/pets/{petId}', 'Pet', mongoAdapter);
         
-        expect(result).toContain('Model.Pet.findByIdAndDelete');
+        expect(result).toContain('Model.Pet.findOneAndDelete');
         expect(result).toContain('req.params.petId');
         expect(result).toContain('if (!deletedItem)');
         expect(result).toContain('ApiError(404');
@@ -271,7 +271,7 @@ describe('ImplementationGenerator', () => {
         const result = ImplementationGenerator.generateDeleteImplementation('/pets/{petId}', 'Pet', sqliteAdapter);
         
         expect(result).toContain('db.Pet.destroy');
-        expect(result).toContain('where: { id: req.params.id }');
+        expect(result).toContain('where: { petId: req.params.petId }');
         expect(result).toContain('if (!deletedItem)');
         expect(result).toContain('ApiError(404');
         expect(result).toContain('res.status(204).send()');

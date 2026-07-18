@@ -79,10 +79,17 @@ class NameGenerator {
     return path.replace(/{([^}]+)}/g, ':$1');
   }
 
-  static generateControllerMethodName(method, resourceName, path) {
+  static generateControllerMethodName(method, resourceName, path, operation) {
+    // operationId is the spec author's chosen name; route files already use
+    // it, so controllers must derive the identical identifier or the route
+    // imports resolve to undefined and Express crashes at mount.
+    if (operation?.operationId) {
+      return this.toCamelCase(operation.operationId);
+    }
+
     const isCollection = !path.includes('{');
     const base = this.toPascalCase(resourceName);
-    
+
     if (isCollection) {
       switch (method.toLowerCase()) {
         case 'get': return `getAll${base}`;

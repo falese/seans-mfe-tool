@@ -47,5 +47,9 @@ process.on('SIGINT', async () => {
 module.exports = {
   sequelize,
   connectDatabase,
-  disconnectDatabase
+  disconnectDatabase,
+  // Aliases matching the interface src/index.js consumes (the mongodb
+  // variant exports connect/disconnect; both variants must satisfy it).
+  connect: connectDatabase,
+  disconnect: disconnectDatabase
 };

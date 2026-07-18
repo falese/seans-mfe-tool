@@ -1,74 +1,32 @@
-const mongoose = require('mongoose');
+require('dotenv').config();
 const logger = require('../utils/logger');
+const database = require('./index');
 
-async function clearCollections() {
-    logger.info('Clearing existing data...');
-    
-    const collections = mongoose.connection.collections;
-    
-    for (const key in collections) {
-        await collections[key].deleteMany();
-    }
-}
-
-async function seedCollection(Model, data) {
-    try {
-        const result = await Model.create(data);
-        logger.info(`Seeded ${Model.modelName} with ${data.length} records`);
-        return result;
-    } catch (error) {
-        logger.error(`Error seeding ${Model.modelName}:`, error);
-        throw error;
-    }
-}
-
+/**
+ * Runs the generated seed set in ./seeds (derived from the OpenAPI spec's
+ * example values — replace those files with real fixtures as needed).
+ * Used by `npm run db:seed` and by src/index.js when SEED_DATA=true.
+ */
 async function seed() {
-    try {
-        // Ensure we have a database connection
-        if (mongoose.connection.readyState !== 1) {
-            logger.info('Waiting for database connection...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            if (mongoose.connection.readyState !== 1) {
-                throw new Error('Database connection not ready');
-            }
-        }
+  try {
+    await database.connect();
+    logger.info('Starting database seed...');
 
-        logger.info('Starting database seeding...');
-        
-        // Clear existing data
-        await clearCollections();
-        
-        // Load all models
-        const models = require('../models');
-        
-        // Get example data from OpenAPI spec
-        const exampleData = require('../seeds/examples');
-        
-        // Seed each model with its example data
-        for (const [modelName, Model] of Object.entries(models)) {
-            if (exampleData[modelName]) {
-                await seedCollection(Model, exampleData[modelName]);
-            }
-        }
+    const seedDatabase = require('./seeds');
+    await seedDatabase();
 
-        logger.info('✓ Database seeding completed successfully');
-    } catch (error) {
-        logger.error('Seeding failed:', error);
-        throw error;
-    }
+    logger.info('Database seed completed');
+    await database.disconnect();
+  } catch (error) {
+    logger.error('Seeding failed:', error);
+    throw error;
+  }
 }
 
-// Handle direct execution
 if (require.main === module) {
-    seed()
-        .then(() => {
-            logger.info('Seeding completed, exiting...');
-            process.exit(0);
-        })
-        .catch(error => {
-            logger.error('Seeding failed:', error);
-            process.exit(1);
-        });
+  seed()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
 }
 
 module.exports = seed;

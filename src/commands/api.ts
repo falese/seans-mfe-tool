@@ -314,7 +314,9 @@ async function mergePackageJson(targetDir: string, dbType: string, vars: Templat
     } else {
       basePkg.scripts["db:migrate"] = "sequelize-cli db:migrate";
       basePkg.scripts["db:migrate:undo"] = "sequelize-cli db:migrate:undo";
-      basePkg.scripts["db:seed"] = "sequelize-cli db:seed:all";
+      // sequelize-cli's seeder format/path never matches the generated
+      // src/database/seeds set; seed.js connects and runs that set directly.
+      basePkg.scripts["db:seed"] = "node src/database/seed.js";
       basePkg.scripts["db:reset"] = "node src/database/reset.js";
     }
 
