@@ -8,6 +8,12 @@ let dbConnection = null;
 const database = {
     connect: async function() {
         try {
+            // Idempotent: seed.js (and SEED_DATA=true) may call connect()
+            // from a process that is already connected.
+            if (mongoose.connection.readyState === 1) {
+                return dbConnection;
+            }
+
             if (process.env.NODE_ENV !== 'production' && !process.env.MONGODB_URI) {
                 logger.info('Development mode: Using MongoDB Memory Server');
                 mongod = await MongoMemoryServer.create();
@@ -15,19 +21,13 @@ const database = {
                 logger.info('MongoDB Memory Server started at:', process.env.MONGODB_URI);
             }
 
-            // Connect with buffering disabled
+            // mongoose.connect resolves once the connection is ready;
+            // waiting for a 'connected' event afterwards would hang — the
+            // event fires before a late listener attaches.
             dbConnection = await mongoose.connect(process.env.MONGODB_URI || mongod.getUri(), {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
                 serverSelectionTimeoutMS: 30000,
                 family: 4,
                 bufferCommands: false
-            });
-
-            // Wait for connection to be ready
-            await new Promise((resolve, reject) => {
-                mongoose.connection.once('connected', resolve);
-                mongoose.connection.once('error', reject);
             });
 
             logger.info('MongoDB connected successfully');
@@ -40,8 +40,6 @@ const database = {
                     process.env.MONGODB_URI = mongod.getUri();
                     
                     dbConnection = await mongoose.connect(mongod.getUri(), {
-                        useNewUrlParser: true,
-                        useUnifiedTopology: true,
                         family: 4,
                         bufferCommands: false
                     });

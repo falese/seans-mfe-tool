@@ -190,6 +190,29 @@ describe('generated API regressions (Meridian Phase 0)', () => {
       }
     });
 
+    it('mongodb connect() is idempotent and never waits for an already-fired event', async () => {
+      const content = await fs.readFile(
+        path.join(templatesDir, 'mongodb', 'src', 'database', 'index.js'), 'utf8'
+      );
+      // mongoose.connect() resolves once connected; waiting for a
+      // 'connected' event afterwards hangs forever on any valid
+      // MONGODB_URI (the event fired before the listener attached).
+      expect(content).not.toContain("once('connected'");
+      // seed.js calls database.connect() from a process that may already
+      // be connected (SEED_DATA=true path) — must be a no-op then.
+      expect(content).toContain('readyState === 1');
+    });
+
+    it('SEED_DATA path runs ./database/seeds directly, never the standalone seed.js', async () => {
+      const content = await fs.readFile(
+        path.join(templatesDir, 'base', 'src', 'index.js'), 'utf8'
+      );
+      // seed.js is the standalone entry: it connects AND disconnects.
+      // Running it in-process would tear down the server's own connection.
+      expect(content).toContain("require('./database/seeds')");
+      expect(content).not.toContain("require('./database/seed')");
+    });
+
     it('seed.js connects and runs the generated ./seeds runner in every variant', async () => {
       for (const variant of ['base', 'sqlite', 'mongodb']) {
         const content = await fs.readFile(
