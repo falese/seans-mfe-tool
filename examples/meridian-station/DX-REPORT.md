@@ -363,6 +363,26 @@ Scaffolded entirely through `mcp:serve` tool calls
   wins for agents (typed results, no prose parsing) once cwd targeting
   lands.
 
+## Phase 5 — fleet orchestration
+
+- 😍 `remote:generate` emits per-MFE Dockerfiles for BFF MFEs — the SSOT
+  extends all the way to the container recipe. Meridian keeps hand-tuned
+  Dockerfiles (cloned from the battle-tested abc-kids set) because the
+  generated template still needs the #268–#273 fix family; once those land,
+  `--force` regeneration should own these files too (#274's endgame).
+- 👍 `scripts/generate.mjs` is the anti-`generate-games.mjs`: a ~70-line
+  driver that only shells out to the real CLI, plus `--check` as the CI
+  invariant (regenerate → `git status` must stay clean). It holds.
+- 👍 Six-test Playwright smoke suite drives the exact demo path (compose
+  console → open all five domains → assert live cross-source data) — all
+  green against the running stack. `CHROMIUM_PATH` env override supports
+  sandboxes with a preinstalled browser.
+- 😕 Docker image builds are authored from the proven abc-kids patterns but
+  could not be executed in this environment (no docker daemon) — the
+  compose topology is validated by structure and by the identical local
+  stack (`scripts/dev-up.sh`), and the runbook flags image builds as the
+  one step verified only by pattern.
+
 *(Journal continues per phase below as the build proceeds.)*
 
 ## Punch list (running)

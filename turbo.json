@@ -59,6 +59,16 @@
       ],
       "outputs": [],
       "cache": true
+    },
+    "//#docker:build:examples:meridian": {
+      "dependsOn": ["//#docker:build:cli"],
+      "inputs": [
+        "examples/meridian-station/**/*",
+        "examples/meridian-station/**/Dockerfile",
+        "examples/meridian-station/docker-compose.yaml"
+      ],
+      "outputs": [],
+      "cache": true
     }
   }
 }
