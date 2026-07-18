@@ -1,0 +1,72 @@
+name: meridian-console
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: Meridian Station console — the station operator's home screen and slot provider
+owner: meridian-station
+tags: [meridian, console, launcher, slot-provider]
+category: console
+
+endpoint: http://localhost:5001
+remoteEntry: http://localhost:5001/remoteEntry.js
+discovery: http://localhost:5001/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - StationConsole:
+      type: domain
+      description: Render the station console — domain menu, status rail, and the berth strip; selecting a domain drives the control plane
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+# The console contributes three regions to the host layout (ADR-058/066-069).
+# berth.{id} is a keyed pattern: one address per berth (meridian-console/berth.b1
+# … berth.b6), each a desired-state placement target for the docking-control
+# BerthTile capability.
+providesSlots:
+  - id: main
+    description: Primary work area — the active domain MFE composes here
+  - id: status
+    description: Secondary status rail — compact status cards compose here
+  - id: berth.{id}
+    description: One tile per docking berth on the berth strip, keyed by berth id
+
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  design-system:
+    "@mui/material": ^5.14.0

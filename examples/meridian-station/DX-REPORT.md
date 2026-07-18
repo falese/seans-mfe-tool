@@ -208,6 +208,62 @@ The envelope layer is one ~20-line hand-written middleware per API — the
 "API team's framework layer" — plus one `app.use` line in the generated
 `src/index.js`. Everything else is generator output.
 
+## Phase 2 — Control plane, shell, console
+
+### 2.1 Vendoring the control plane
+
+Zero patches needed: the registry honors `PORT`, the daemon honors
+`DAEMON_PORT`/`REGISTRY_HOST`/`REGISTRY_PORT`. Copy, set env (4500/4504),
+done. 😍
+
+### 2.2 The shell (hand-written — no generator exists)
+
+Copied from abc-kids and adapted in ~15 line-level edits. Notes:
+
+- 😕 abc-kids' shell package.json still points `@seans-mfe-tool/runtime` at
+  `file:../../../src/runtime` — a directory that no longer exists after the
+  `packages/runtime` promotion (#240). It only works in docker, where the
+  Dockerfile rewrites the dep to the staged `dist/runtime`. Meridian points
+  at `file:../../../dist/runtime` directly (build the repo first).
+- 😍 The Meridian shell declares **zero** static remotes
+  (`remotes: {}`) — abc-kids still hardcodes three. Every MFE arrives via
+  control-plane module-federation payloads; the shell is finally 100%
+  generic, and it works.
+- 😕 A `/shell:init` generator (issue #144) would have made this whole
+  section unnecessary.
+
+### 2.3 The console (`remote:init` + manifest + `remote:generate`)
+
+- 😍 The keyed slot pattern `berth.{id}` went from one manifest line to a
+  generated `slots.tsx` entry with the pattern intact, and
+  `slotContract.register(provideSlot, 'berth.b1', el)` matched it at
+  runtime with no extra code. The grammar (ADR-069) does what it says.
+- 😍 `capabilityImplemented()` honored our StationConsole implementation on
+  regen — feature code written once stays written.
+- 🐛 `npx tsc --noEmit` on a freshly generated MFE fails: the generated
+  `bootstrap.ts` passes a partial `Context` to `updateControlPlaneState`
+  (missing `requestId`/`timestamp`) and `remote.tsx` imports with a `.tsx`
+  extension without `allowImportingTsExtensions`. The bundle builds anyway
+  (swc doesn't type-check) and jest passes (isolated modules) — so the
+  generated project ships latent type errors that only bite when someone
+  adds a real typecheck step. Punch list.
+
+### 2.4 The loop, end to end
+
+Registry + daemon up locally, console registered via
+`scripts/register-station.sh`, `scripts/console.sh` fires `meridian.root`:
+
+```text
+DAE-220 ACTION_RECEIVED    | actionId=meridian-root-…
+DAE-250 RESOLUTION_RECEIVED| mfe=meridian-console capability=StationConsole
+DAE-253 EXPERIENCE_RELAYED | mfe=meridian-console clientSide=true
+```
+
+Verified in a real browser (Playwright + the shell at :5000): console menu
+with all five domains, six keyed berth slots, and the main/status regions
+— composed entirely by the control plane into an empty shell. Total shell
+knowledge of Meridian domains: zero lines. 😍
+
 *(Journal continues per phase below as the build proceeds.)*
 
 ## Punch list (running)
@@ -232,3 +288,5 @@ regression tests in `src/codegen/APIGenerator/__tests__/generated-api-regression
 14. ✅ `SEED_DATA=true` disconnects the server's own DB connection (in-process path ran standalone seed.js). → index.js template now runs `./database/seeds` directly (Refs #275).
 15. ⏳ Docs gap: the schema↔model mapping rules (every components.schemas entry becomes a model; controller model = path's first segment singularized) are only discoverable from generator source.
 16. ⏳ Generated query validator rejects unknown keys, so generated APIs can't honor pagination conventions other than limit/offset (cursor, Page/PageSize are accepted but ignored).
+17. ⏳ Freshly generated MFEs are not tsc-clean: generated `bootstrap.ts` passes a partial Context to `updateControlPlaneState`; `remote.tsx` uses `.tsx` import extensions without `allowImportingTsExtensions`. Builds (swc) and tests (isolated ts-jest) mask it.
+18. ⏳ abc-kids shell package.json still references `file:../../../src/runtime`, removed by the packages/runtime promotion (#240) — host-side installs of the abc-kids shell are broken; only the docker path (which rewrites the dep) works.
