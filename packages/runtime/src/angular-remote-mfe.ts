@@ -31,7 +31,15 @@ import type { Context, QueryResult } from './base-mfe';
 export interface AngularApplicationRef {
   destroy(): void;
   tick(): void;
-  components: ReadonlyArray<{ instance: Record<string, unknown> }>;
+  /** ApplicationRef.bootstrap(componentType, rootElement) — binds to the given node. */
+  bootstrap(component: unknown, rootElement?: Element): unknown;
+  /** The app's injector — used to fetch its NgZone. */
+  injector: { get(token: unknown): { run<T>(fn: () => T): T } };
+  components: ReadonlyArray<{
+    instance: Record<string, unknown>;
+    /** Angular ≥14.1 ComponentRef.setInput — fires ngOnChanges for declared inputs. */
+    setInput?(name: string, value: unknown): void;
+  }>;
 }
 
 /**
@@ -105,21 +113,52 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
     // Angular Component metadata is attached via the ɵcmp static field; fall
     // back to a generic 'app-mfe-root' if the component wasn't decorated.
     const selector = this.resolveSelector(Component) || 'app-mfe-root';
-    element.innerHTML = `<${selector}></${selector}>`;
+
+    // Bootstrap bound to THIS container's host element. bootstrapApplication
+    // is selector-driven — it binds to the FIRST matching selector in the
+    // whole document, which collapses multi-instance composition (six keyed
+    // BerthTiles would all bootstrap onto slot one's element). createApplication
+    // + ApplicationRef.bootstrap(Component, hostElement) targets the exact node.
+    element.innerHTML = '';
+    const host = (document as Document).createElement(selector);
+    element.appendChild(host);
 
     // @ts-ignore — @angular/platform-browser types not in root tsconfig; browser-only code
-    const { bootstrapApplication } = await import('@angular/platform-browser');
-    const appRef: AngularApplicationRef = await bootstrapApplication(Component, {
-      providers: [],
-    });
+    const { createApplication } = await import('@angular/platform-browser');
+    // @ts-ignore — @angular/core types not in root tsconfig; browser-only code
+    const { NgZone } = await import('@angular/core');
+    const appRef: AngularApplicationRef = await createApplication({ providers: [] });
 
-    // Apply props as @Input() fields on the bootstrapped instance.
+    // Everything the component does must happen INSIDE the app's NgZone:
+    // manual bootstrap() runs from host code (outside any zone), and a
+    // component initialized out-of-zone never gets change detection when
+    // its async work (fetches in ngOnInit/ngOnChanges) settles.
+    const zone = appRef.injector.get(NgZone);
+    zone.run(() => appRef.bootstrap(Component, host as unknown as Element));
+
+    // Apply props to the bootstrapped instance. bootstrap() has already run
+    // the first change-detection pass (ngOnInit saw defaults), so declared
+    // inputs must go through ComponentRef.setInput — it fires ngOnChanges,
+    // letting components react to registry-injected props (e.g. BerthTile's
+    // berthId). Props that are not @Input()s — helper callbacks like
+    // provideSlot — make setInput throw; those fall back to plain assignment,
+    // matching the previous behavior.
     const root = appRef.components[0];
     if (root && root.instance && props) {
-      for (const [key, value] of Object.entries(props)) {
-        (root.instance as Record<string, unknown>)[key] = value;
-      }
-      appRef.tick();
+      zone.run(() => {
+        for (const [key, value] of Object.entries(props)) {
+          if (typeof root.setInput === 'function') {
+            try {
+              root.setInput(key, value);
+              continue;
+            } catch {
+              // Not a declared input — assign directly below.
+            }
+          }
+          (root.instance as Record<string, unknown>)[key] = value;
+        }
+        appRef.tick();
+      });
     }
 
     this.applicationRefs.set(containerId, appRef);
