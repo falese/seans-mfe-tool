@@ -3,7 +3,7 @@
 - **Status:** Accepted (implementation phased)
 - **Date:** 2026-07-19
 - **Relates to:** ADR-012 (GraphQL Mesh BFF layer), ADR-010 (data lifecycle alignment), ADR-003 (no custom lifecycle phases), ADR-042 (MFE lifecycle state machine), ADR-053 (RemoteMFE `doQuery`), ADR-027 (context injection), ADR-054 (control-plane message protocol), ADR-055 (LayoutManager — daemon-driven slot composition), ADR-057 (virtualized per-slot `DaemonChannel`), ADR-059 (`BaseControlPlane`), ADR-066/067/068 (desired-state placement, manifest-declared slots, provider-scoped addresses)
-- **Tracked in:** _(to be filed)_
+- **Tracked in:** #282
 - **PDR:** PDR-005 (runtime composition), PDR-006 (ecosystem scaling thesis)
 
 ## Context
