@@ -29,7 +29,9 @@ const th: React.CSSProperties = { textAlign: 'left', color: '#5d6690', padding: 
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid #141a33', fontSize: 13 };
 const chip = (color: string): React.CSSProperties => ({ display: 'inline-block', padding: '1px 7px', borderRadius: 999, fontSize: 10, fontWeight: 700, color, border: `1px solid ${color}`, marginRight: 4 });
 
-export const CrewRoster: React.FC = () => {
+export type CrewRosterProps = Record<string, never>;
+
+export const CrewRoster: React.FC<CrewRosterProps> = () => {
   const [data, setData] = useState<RosterData | null>(null);
   const [error, setError] = useState<string | null>(null);
 

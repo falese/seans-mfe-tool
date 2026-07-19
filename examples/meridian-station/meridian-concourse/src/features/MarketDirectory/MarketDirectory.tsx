@@ -50,7 +50,9 @@ function settlementLabel(settlements: Settlement[]): string {
 const wrap: React.CSSProperties = { background: '#0e1226', color: '#dfe4ff', borderRadius: 12, padding: 20, fontFamily: 'system-ui, sans-serif' };
 const card: React.CSSProperties = { border: '1px solid #1c2340', borderRadius: 10, padding: 12 };
 
-export const MarketDirectory: React.FC = () => {
+export type MarketDirectoryProps = Record<string, never>;
+
+export const MarketDirectory: React.FC<MarketDirectoryProps> = () => {
   const [data, setData] = useState<MarketData | null>(null);
   const [error, setError] = useState<string | null>(null);
 

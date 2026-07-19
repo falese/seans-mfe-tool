@@ -2,9 +2,9 @@
  * Remote Entry Point — domain capabilities + the ADR-056 presentation handle.
  * Generated from mfe-manifest.yaml
  */
-import { createImperativeHandle } from '@seans-mfe-tool/runtime';
+import { createImperativeHandle, type ImperativeMountHandle } from '@seans-mfe-tool/runtime';
 import { mfe, mfeReady } from './platform/base-mfe/bootstrap';
-import { MarketDirectory } from './features/MarketDirectory/MarketDirectory.tsx';
+import { MarketDirectory } from './features/MarketDirectory/MarketDirectory';
 
 export { MarketDirectory };
 
@@ -16,7 +16,7 @@ export { mfe, mfeReady };
  * props }) → unmount. This MFE is multi-capability (MarketDirectory);
  * the host selects one per mount, defaulting to MarketDirectory.
  */
-export const handles = {
+export const handles: { imperative: ImperativeMountHandle } = {
   imperative: createImperativeHandle(mfe, {
     framework: 'react',
     mfeReady,
@@ -24,4 +24,4 @@ export const handles = {
   }),
 };
 
-export { default } from './App.tsx';
+export { default } from './App';

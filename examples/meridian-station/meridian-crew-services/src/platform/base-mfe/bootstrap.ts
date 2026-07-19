@@ -188,6 +188,10 @@ export const mfe = new meridiancrewservicesMFE(manifest);
 
 export const mfeReady: Promise<void> = mfe
   .load({
+    // Context requires request identity — a partial literal fails typecheck
+    // in every generated project (DX punch list #17).
+    requestId: `bootstrap-load-${Date.now()}`,
+    timestamp: new Date(),
     inputs: {
       remoteEntry: manifest.remoteEntry,
     },

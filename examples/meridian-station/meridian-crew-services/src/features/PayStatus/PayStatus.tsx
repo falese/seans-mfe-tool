@@ -16,7 +16,9 @@ const PAY_QUERY = /* GraphQL */ `
 
 const wrap: React.CSSProperties = { background: '#0e1226', color: '#dfe4ff', borderRadius: 12, padding: 14, fontFamily: 'system-ui, sans-serif' };
 
-export const PayStatus: React.FC = () => {
+export type PayStatusProps = Record<string, never>;
+
+export const PayStatus: React.FC<PayStatusProps> = () => {
   const [rows, setRows] = useState<Payroll[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 

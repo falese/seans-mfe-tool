@@ -2,10 +2,10 @@
  * Remote Entry Point — domain capabilities + the ADR-056 presentation handle.
  * Generated from mfe-manifest.yaml
  */
-import { createImperativeHandle } from '@seans-mfe-tool/runtime';
+import { createImperativeHandle, type ImperativeMountHandle } from '@seans-mfe-tool/runtime';
 import { mfe, mfeReady } from './platform/base-mfe/bootstrap';
-import { CrewRoster } from './features/CrewRoster/CrewRoster.tsx';
-import { PayStatus } from './features/PayStatus/PayStatus.tsx';
+import { CrewRoster } from './features/CrewRoster/CrewRoster';
+import { PayStatus } from './features/PayStatus/PayStatus';
 
 export { CrewRoster };
 export { PayStatus };
@@ -18,7 +18,7 @@ export { mfe, mfeReady };
  * props }) → unmount. This MFE is multi-capability (CrewRoster, PayStatus);
  * the host selects one per mount, defaulting to CrewRoster.
  */
-export const handles = {
+export const handles: { imperative: ImperativeMountHandle } = {
   imperative: createImperativeHandle(mfe, {
     framework: 'react',
     mfeReady,
@@ -26,4 +26,4 @@ export const handles = {
   }),
 };
 
-export { default } from './App.tsx';
+export { default } from './App';

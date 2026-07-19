@@ -425,6 +425,28 @@ describe('unified-generator', () => {
     });
   });
 
+  describe('generated code is tsc-clean (DX punch list #17)', () => {
+    it('bootstrap load() passes a complete Context (requestId + timestamp)', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const bootstrap = files.find((f) => f.path.endsWith('base-mfe/bootstrap.ts'));
+      expect(bootstrap).toBeDefined();
+      // Context requires requestId and timestamp; a partial literal fails
+      // `tsc --noEmit` in every generated project (swc builds masked it).
+      expect(bootstrap!.content).toMatch(/requestId:\s*[`']bootstrap-load/);
+      expect(bootstrap!.content).toContain('timestamp: new Date()');
+    });
+
+    it('remote entry imports are extensionless (no allowImportingTsExtensions)', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const remote = files.find((f) => f.path.endsWith('src/remote.tsx'));
+      expect(remote).toBeDefined();
+      expect(remote!.content).not.toMatch(/from '\.[^']*\.tsx'/);
+      // Explicit annotation: inference would name the staged runtime's
+      // bundled contracts copy (TS2742, non-portable) under file: installs.
+      expect(remote!.content).toContain('handles: { imperative: ImperativeMountHandle }');
+    });
+  });
+
   describe('generated Dockerfile stages the runtime as a real directory (#274)', () => {
     it('copies dist/runtime into node_modules instead of a file: dep', async () => {
       const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
