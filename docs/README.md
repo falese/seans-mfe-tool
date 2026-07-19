@@ -8,6 +8,7 @@ This directory contains agent definitions for GitHub Copilot to perform speciali
 - [Current architecture](./architecture-current-state.md)
 - [Runtime platform](./architecture-runtime-platform.md)
 - [Slot contract](./slot-contract.md)
+- [Query capability](./query-capability.md)
 - [DSL manifest schema](./schemas/dsl-manifest.md)
 - [ADR index](./spec.md#adr-index)
 - [ABC Kids end-to-end example](../examples/abc-kids/README.md)
