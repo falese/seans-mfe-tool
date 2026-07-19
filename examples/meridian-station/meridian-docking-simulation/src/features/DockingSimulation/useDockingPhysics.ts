@@ -58,7 +58,19 @@ export function useDockingPhysics({
   const startTimeRef = useRef<number>(Date.now());
   const approachCompleteRef = useRef<boolean>(false);
 
-  // Initialize GameEngine
+  // Latest input/callback are read through refs so the game loop always sees
+  // fresh values WITHOUT being a dependency of the engine effect. `useInput`
+  // emits a new object on every change; if `input` were an effect dependency
+  // the GameEngine (and its WebGL context) would be disposed and recreated on
+  // every keystroke/frame — the browser's WebGL-context cap is hit almost
+  // immediately and the scene never renders.
+  const inputRef = useRef<InputState>(input);
+  inputRef.current = input;
+  const onStateChangeRef = useRef(onStateChange);
+  onStateChangeRef.current = onStateChange;
+
+  // Initialize GameEngine. Keyed only on canvas + the simulation inputs (ship,
+  // berth); the engine is created exactly once per docking scenario.
   useEffect(() => {
     if (!canvas) return;
 
@@ -73,7 +85,7 @@ export function useDockingPhysics({
     startTimeRef.current = Date.now();
     approachCompleteRef.current = false;
 
-    // Render loop
+    // Game-state loop: reads engine physics, applies input, updates React state.
     const renderInterval = setInterval(() => {
       if (!engineRef.current) return;
 
@@ -90,24 +102,25 @@ export function useDockingPhysics({
         approachCompleteRef.current = true;
         phase = 'docking';
 
-        // Apply player input
+        // Apply player input (read live from the ref, never a closed-over value).
+        const currentInput = inputRef.current;
         const thrustMagnitude = Math.max(
-          Math.abs(input.translation.x),
-          Math.abs(input.translation.y),
-          Math.abs(input.translation.z),
-          Math.abs(input.rotation.pitch),
-          Math.abs(input.rotation.yaw),
-          Math.abs(input.rotation.roll),
-          input.thrust,
+          Math.abs(currentInput.translation.x),
+          Math.abs(currentInput.translation.y),
+          Math.abs(currentInput.translation.z),
+          Math.abs(currentInput.rotation.pitch),
+          Math.abs(currentInput.rotation.yaw),
+          Math.abs(currentInput.rotation.roll),
+          currentInput.thrust,
         );
 
         const thrustVector = [
-          input.translation.x,
-          input.translation.y,
-          input.translation.z,
-          input.rotation.pitch,
-          input.rotation.yaw,
-          input.rotation.roll,
+          currentInput.translation.x,
+          currentInput.translation.y,
+          currentInput.translation.z,
+          currentInput.rotation.pitch,
+          currentInput.rotation.yaw,
+          currentInput.rotation.roll,
         ];
 
         if (thrustMagnitude > 0) {
@@ -156,7 +169,7 @@ export function useDockingPhysics({
       };
 
       setGameState(nextState);
-      onStateChange?.(nextState);
+      onStateChangeRef.current?.(nextState);
     }, 1000 / 60); // 60 FPS
 
     return () => {
@@ -166,7 +179,10 @@ export function useDockingPhysics({
         engineRef.current = null;
       }
     };
-  }, [canvas, ship, berth, input, onStateChange]);
+    // `input`/`onStateChange` are intentionally excluded — they are read through
+    // refs so the engine is created once and lives for the scenario's lifetime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, ship, berth]);
 
   return gameState;
 }

@@ -114,11 +114,11 @@ const manifest = {
   ],
   "dependencies": {
     "runtime": {
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0",
-      "@babylonjs/core": "^6.40.0",
-      "@babylonjs/havok": "^6.40.0",
-      "@babylonjs/gui": "^6.40.0",
+      "react": "~18.2.0",
+      "react-dom": "~18.2.0",
+      "@babylonjs/core": "^9.17.0",
+      "@babylonjs/havok": "^1.3.13",
+      "@babylonjs/gui": "^9.17.0",
       "zustand": "^4.4.7",
       "styled-components": "^6.1.0"
     }

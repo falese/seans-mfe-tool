@@ -6,7 +6,6 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import HavokPlugin from '@babylonjs/havok';
 
 // Spawn the ship this many meters in front of the berth so the docking target
 // is framed the moment the scene mounts.
@@ -47,7 +46,6 @@ export class GameEngine {
   private scene: BABYLON.Scene;
   private engine: BABYLON.Engine;
   private camera!: BABYLON.UniversalCamera;
-  private physicsEngine: BABYLON.PhysicsEngine | null = null;
 
   // Game objects
   private shipMesh: BABYLON.AbstractMesh | null = null;
@@ -83,7 +81,6 @@ export class GameEngine {
       stencil: true,
     });
     this.scene = this.createScene();
-    this.physicsEngine = this.initializePhysics();
 
     // Babylon sizes its render buffer from the canvas; force a resize now that
     // the canvas is laid out, and keep it in sync with the viewport.
@@ -114,10 +111,11 @@ export class GameEngine {
       new BABYLON.Vector3(this.state.position.x, this.state.position.y, this.state.position.z),
       scene,
     );
-    this.camera.attachControl(this.engine.getRenderingCanvas()!, true);
+    // No attachControl: camera position/orientation are driven entirely from the
+    // physics state each frame. Attaching Babylon's built-in controls would fight
+    // the per-frame rotationQuaternion we set in update().
     this.camera.speed = 0; // Manual control via physics
-    this.camera.angularSensibility = 1000; // Low sensitivity; we handle input separately
-    this.camera.inertia = 0.7;
+    this.camera.inertia = 0; // No built-in smoothing; physics owns the motion
     this.camera.minZ = 0.1;
     this.camera.maxZ = 6000; // keep the far berth and starfield inside the frustum
     this.camera.fov = 0.9;
@@ -163,13 +161,16 @@ export class GameEngine {
     starGeo.material = starMaterial;
     starGeo.isVisible = false;
 
-    // Create a sparse grid of stars
-    for (let i = 0; i < 100; i++) {
+    // Scatter stars across a large shell surrounding the whole play volume so
+    // the starfield frames the scene from every angle rather than clustering in
+    // front of the berth.
+    for (let i = 0; i < 300; i++) {
       const star = starGeo.createInstance(`star_${i}`);
-      star.position.x = (Math.random() - 0.5) * 2000;
-      star.position.y = (Math.random() - 0.5) * 2000;
-      star.position.z = (Math.random() + 0.5) * 500; // Behind the camera
-      star.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2);
+      star.position.x = (Math.random() - 0.5) * 4000;
+      star.position.y = (Math.random() - 0.5) * 4000;
+      star.position.z = (Math.random() - 0.5) * 4000;
+      const s = 0.5 + Math.random() * 1.5;
+      star.scaling = new BABYLON.Vector3(s, s, s);
     }
   }
 
@@ -213,16 +214,6 @@ export class GameEngine {
       : new BABYLON.Color3(color.r * 0.25, color.g * 0.25, color.b * 0.25);
 
     return mat;
-  }
-
-  private initializePhysics(): BABYLON.PhysicsEngine | null {
-    try {
-      // For now, skip physics setup — use simple distance-based collision detection
-      return null;
-    } catch (e) {
-      console.warn('[GameEngine] Physics init failed, using arcade collision only', e);
-      return null;
-    }
   }
 
   /**

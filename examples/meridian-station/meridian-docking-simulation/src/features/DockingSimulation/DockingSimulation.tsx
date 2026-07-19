@@ -3,7 +3,7 @@
  * Renders Babylon canvas + neon HUD overlay with game state feedback.
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useInput } from './useInput';
 import { useDockingPhysics } from './useDockingPhysics';
@@ -121,11 +121,14 @@ export const DockingSimulation: React.FC<DockingSimulationProps> = ({
   ship = DEFAULT_SHIP,
   berth = DEFAULT_BERTH,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // A callback ref stored in state: assigning the <canvas> triggers a re-render
+  // so `useDockingPhysics` receives the real element (a plain useRef mutation
+  // would not, and the engine effect would never fire).
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [showHelp, setShowHelp] = useState(true);
   const input = useInput();
   const gameState = useDockingPhysics({
-    canvas: canvasRef.current,
+    canvas,
     ship,
     berth,
     input,
@@ -135,7 +138,7 @@ export const DockingSimulation: React.FC<DockingSimulationProps> = ({
 
   return (
     <Container>
-      <Canvas ref={canvasRef} />
+      <Canvas ref={setCanvas} />
 
       <HUD>
         {/* Top-left: Status info */}

@@ -11,6 +11,18 @@ export interface InputState {
   thrust: number; // Space key intensity
 }
 
+function inputsEqual(a: InputState, b: InputState): boolean {
+  return (
+    a.translation.x === b.translation.x &&
+    a.translation.y === b.translation.y &&
+    a.translation.z === b.translation.z &&
+    a.rotation.pitch === b.rotation.pitch &&
+    a.rotation.yaw === b.rotation.yaw &&
+    a.rotation.roll === b.rotation.roll &&
+    a.thrust === b.thrust
+  );
+}
+
 export function useInput(): InputState {
   const [input, setInput] = useState<InputState>({
     translation: { x: 0, y: 0, z: 0 },
@@ -70,7 +82,9 @@ export function useInput(): InputState {
       // Thrust: Space
       if (keysPressed.current[' ']) nextInput.thrust = 1;
 
-      setInput(nextInput);
+      // Only emit a new state object when the control vector actually changed;
+      // otherwise every poll would trigger a redundant re-render at 60 FPS.
+      setInput((prev) => (inputsEqual(prev, nextInput) ? prev : nextInput));
     }, 1000 / 60); // 60 FPS polling
 
     return () => {
