@@ -8,6 +8,13 @@
 import * as BABYLON from '@babylonjs/core';
 import HavokPlugin from '@babylonjs/havok';
 
+// Spawn the ship this many meters in front of the berth so the docking target
+// is framed the moment the scene mounts.
+const APPROACH_STANDOFF = 140;
+// Arcade multiplier turning the (realistically weak) RCS thrust-to-mass ratio
+// into usable acceleration for gameplay.
+const THRUST_SCALE = 60;
+
 export interface Ship {
   mass: number; // kg
   rcsThrust: number; // Newton per RCS thruster
@@ -63,10 +70,30 @@ export class GameEngine {
 
   constructor(config: GameEngineConfig) {
     this.config = config;
-    this.engine = new BABYLON.Engine(config.canvas, true);
+
+    // Begin at an approach standoff directly in front of the berth.
+    this.state.position = {
+      x: config.berth.centerPosition.x,
+      y: config.berth.centerPosition.y,
+      z: config.berth.centerPosition.z - APPROACH_STANDOFF,
+    };
+
+    this.engine = new BABYLON.Engine(config.canvas, true, {
+      preserveDrawingBuffer: true,
+      stencil: true,
+    });
     this.scene = this.createScene();
     this.physicsEngine = this.initializePhysics();
+
+    // Babylon sizes its render buffer from the canvas; force a resize now that
+    // the canvas is laid out, and keep it in sync with the viewport.
+    this.engine.resize();
+    window.addEventListener('resize', this.handleResize);
   }
+
+  private handleResize = (): void => {
+    this.engine.resize();
+  };
 
   private createScene(): BABYLON.Scene {
     const scene = new BABYLON.Scene(this.engine);
@@ -82,32 +109,50 @@ export class GameEngine {
   }
 
   private setupCamera(scene: BABYLON.Scene): void {
-    this.camera = new BABYLON.UniversalCamera('camera', new BABYLON.Vector3(0, 0, -510), scene);
+    this.camera = new BABYLON.UniversalCamera(
+      'camera',
+      new BABYLON.Vector3(this.state.position.x, this.state.position.y, this.state.position.z),
+      scene,
+    );
     this.camera.attachControl(this.engine.getRenderingCanvas()!, true);
     this.camera.speed = 0; // Manual control via physics
     this.camera.angularSensibility = 1000; // Low sensitivity; we handle input separately
     this.camera.inertia = 0.7;
+    this.camera.minZ = 0.1;
+    this.camera.maxZ = 6000; // keep the far berth and starfield inside the frustum
+    this.camera.fov = 0.9;
 
-    // First-person view: start far behind berth, looking forward
-    this.camera.position = new BABYLON.Vector3(0, 0, -510);
+    // First-person view: orientation is driven entirely from physics state.
+    this.camera.rotationQuaternion = BABYLON.Quaternion.Identity();
   }
 
   private setupLighting(scene: BABYLON.Scene): void {
-    // Ambient light — dark space
+    scene.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.4);
+
+    // Fill light so lit surfaces read against deep space.
     const ambientLight = new BABYLON.HemisphericLight('ambient', new BABYLON.Vector3(0, 1, 0), scene);
-    ambientLight.intensity = 0.3;
-    ambientLight.diffuse = new BABYLON.Color3(0.1, 0.1, 0.2);
+    ambientLight.intensity = 0.8;
+    ambientLight.diffuse = new BABYLON.Color3(0.6, 0.6, 0.8);
+    ambientLight.groundColor = new BABYLON.Color3(0.2, 0.2, 0.3);
 
-    // Docking port glow
-    const portLight = new BABYLON.PointLight('portLight', new BABYLON.Vector3(0, 0, 50), scene);
-    portLight.intensity = 1.5;
-    portLight.range = 200;
+    // Key light travelling down the approach axis toward the berth.
+    const keyLight = new BABYLON.DirectionalLight('key', new BABYLON.Vector3(0, -0.2, 1), scene);
+    keyLight.intensity = 0.9;
+    keyLight.diffuse = new BABYLON.Color3(0.8, 0.85, 1);
+
+    // Docking-port glow, anchored on the berth so it reaches the target.
+    const portLight = new BABYLON.PointLight(
+      'portLight',
+      new BABYLON.Vector3(
+        this.config.berth.centerPosition.x,
+        this.config.berth.centerPosition.y,
+        this.config.berth.centerPosition.z,
+      ),
+      scene,
+    );
+    portLight.intensity = 1.2;
+    portLight.range = 600;
     portLight.diffuse = new BABYLON.Color3(0, 0.4, 1); // Blue
-
-    // Distant stars as ambient
-    const starsLight = new BABYLON.PointLight('starsLight', new BABYLON.Vector3(-100, 100, -100), scene);
-    starsLight.intensity = 0.2;
-    starsLight.range = 300;
   }
 
   private setupEnvironment(scene: BABYLON.Scene): void {
@@ -129,33 +174,25 @@ export class GameEngine {
   }
 
   private setupGameObjects(scene: BABYLON.Scene): void {
-    // Berth (docking station)
+    const center = this.config.berth.centerPosition;
+
+    // Berth (docking station) — lit neon hull so it reads at approach range.
     this.berthMesh = BABYLON.MeshBuilder.CreateCylinder('berth', {
       height: 50,
       diameter: 30,
     }, scene);
-    const berthMat = this.createNeonMaterial(scene, 'berth', { r: 0.2, g: 0.2, b: 0.3 });
-    this.berthMesh.material = berthMat;
-    this.berthMesh.position = new BABYLON.Vector3(
-      this.config.berth.centerPosition.x,
-      this.config.berth.centerPosition.y,
-      this.config.berth.centerPosition.z,
-    );
+    this.berthMesh.material = this.createNeonMaterial(scene, 'berth', { r: 0.35, g: 0.4, b: 0.6 }, true);
+    this.berthMesh.position = new BABYLON.Vector3(center.x, center.y, center.z);
 
-    // Docking port (glowing target)
+    // Docking port (glowing target) — on the face turned toward the approach.
     const portDim = this.config.berth.dockingPortDimensions;
     this.dockingPortMesh = BABYLON.MeshBuilder.CreateBox('port', {
       width: portDim.width,
       height: portDim.height,
       depth: 2,
     }, scene);
-    const portMat = this.createNeonMaterial(scene, 'port', { r: 0, g: 0.6, b: 1 }, true);
-    this.dockingPortMesh.material = portMat;
-    this.dockingPortMesh.position = new BABYLON.Vector3(
-      this.config.berth.centerPosition.x,
-      this.config.berth.centerPosition.y,
-      this.config.berth.centerPosition.z + 25,
-    );
+    this.dockingPortMesh.material = this.createNeonMaterial(scene, 'port', { r: 0, g: 0.8, b: 1 }, true);
+    this.dockingPortMesh.position = new BABYLON.Vector3(center.x, center.y, center.z - 25);
   }
 
   private createNeonMaterial(
@@ -165,13 +202,15 @@ export class GameEngine {
     emissive = false,
   ): BABYLON.StandardMaterial {
     const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
-    mat.diffuse = new BABYLON.Color3(color.r, color.g, color.b);
+    mat.diffuseColor = new BABYLON.Color3(color.r, color.g, color.b);
     mat.specularColor = new BABYLON.Color3(1, 1, 1);
     mat.specularPower = 64;
 
-    if (emissive) {
-      mat.emissiveColor = new BABYLON.Color3(color.r * 0.75, color.g * 0.75, color.b * 0.75);
-    }
+    // Every surface gets a self-lit floor so nothing renders pure black; the
+    // neon targets glow at full colour.
+    mat.emissiveColor = emissive
+      ? new BABYLON.Color3(color.r, color.g, color.b)
+      : new BABYLON.Color3(color.r * 0.25, color.g * 0.25, color.b * 0.25);
 
     return mat;
   }
@@ -190,26 +229,48 @@ export class GameEngine {
    * Apply thrust impulse (6DOF: 3 translation axes, 3 rotation axes).
    */
   public applyThrust(thrustVector: number[], magnitude: number): void {
-    if (this.state.fuel < 0) return;
+    if (this.state.fuel <= 0) return;
 
-    const maxThrust = this.config.ship.rcsThrust * magnitude;
-    const maxTorque = maxThrust * 0.5;
+    // Convert the RCS thrust-to-mass ratio into an arcade acceleration.
+    const accel =
+      (this.config.ship.rcsThrust / this.config.ship.mass) *
+      THRUST_SCALE *
+      this.deltaTime;
+    const angAccel = accel * 0.5;
 
-    // Linear acceleration
-    const accelX = thrustVector[0] * maxThrust * this.deltaTime / this.config.ship.mass;
-    const accelY = thrustVector[1] * maxThrust * this.deltaTime / this.config.ship.mass;
-    const accelZ = thrustVector[2] * maxThrust * this.deltaTime / this.config.ship.mass;
+    // Linear impulse
+    this.state.linearVelocity.x += thrustVector[0] * accel;
+    this.state.linearVelocity.y += thrustVector[1] * accel;
+    this.state.linearVelocity.z += thrustVector[2] * accel;
 
-    this.state.linearVelocity.x += accelX;
-    this.state.linearVelocity.y += accelY;
-    this.state.linearVelocity.z += accelZ;
+    // Angular impulse
+    this.state.angularVelocity.x += thrustVector[3] * angAccel;
+    this.state.angularVelocity.y += thrustVector[4] * angAccel;
+    this.state.angularVelocity.z += thrustVector[5] * angAccel;
 
-    // Damping
-    this.state.linearVelocity.x *= 0.98;
-    this.state.linearVelocity.y *= 0.98;
-    this.state.linearVelocity.z *= 0.98;
+    // Consume fuel
+    this.state.fuel = Math.max(0, this.state.fuel - magnitude * this.deltaTime * 5);
+  }
 
-    // Clamp velocity
+  /**
+   * Update physics and render one frame.
+   */
+  public update(): PhysicsState {
+    const now = Date.now();
+    this.deltaTime = Math.min((now - this.lastFrameTime) / 1000, 0.05);
+    this.lastFrameTime = now;
+
+    // Arcade damping so the ship settles when thrust stops.
+    const linDamp = 0.995;
+    const angDamp = 0.98;
+    this.state.linearVelocity.x *= linDamp;
+    this.state.linearVelocity.y *= linDamp;
+    this.state.linearVelocity.z *= linDamp;
+    this.state.angularVelocity.x *= angDamp;
+    this.state.angularVelocity.y *= angDamp;
+    this.state.angularVelocity.z *= angDamp;
+
+    // Clamp linear velocity
     const speed = Math.sqrt(
       this.state.linearVelocity.x ** 2 +
       this.state.linearVelocity.y ** 2 +
@@ -222,20 +283,7 @@ export class GameEngine {
       this.state.linearVelocity.z *= scale;
     }
 
-    // Angular velocity
-    const angAccelX = thrustVector[3] * maxTorque * this.deltaTime;
-    const angAccelY = thrustVector[4] * maxTorque * this.deltaTime;
-    const angAccelZ = thrustVector[5] * maxTorque * this.deltaTime;
-
-    this.state.angularVelocity.x += angAccelX;
-    this.state.angularVelocity.y += angAccelY;
-    this.state.angularVelocity.z += angAccelZ;
-
-    // Damping and clamp
-    this.state.angularVelocity.x *= 0.98;
-    this.state.angularVelocity.y *= 0.98;
-    this.state.angularVelocity.z *= 0.98;
-
+    // Clamp angular velocity
     const angSpeed = Math.sqrt(
       this.state.angularVelocity.x ** 2 +
       this.state.angularVelocity.y ** 2 +
@@ -247,18 +295,6 @@ export class GameEngine {
       this.state.angularVelocity.y *= scale;
       this.state.angularVelocity.z *= scale;
     }
-
-    // Consume fuel
-    this.state.fuel = Math.max(0, this.state.fuel - magnitude * this.deltaTime * 10);
-  }
-
-  /**
-   * Update physics and render one frame.
-   */
-  public update(): PhysicsState {
-    const now = Date.now();
-    this.deltaTime = Math.min((now - this.lastFrameTime) / 1000, 0.05);
-    this.lastFrameTime = now;
 
     // Update position
     this.state.position.x += this.state.linearVelocity.x * this.deltaTime;
@@ -279,38 +315,36 @@ export class GameEngine {
         this.state.angularVelocity.z / angMag,
       );
       const deltaQuat = BABYLON.Quaternion.RotationAxis(axis, theta);
-      const euler = BABYLON.Quaternion.FromArray([
+      const current = BABYLON.Quaternion.FromArray([
         this.state.orientation.x,
         this.state.orientation.y,
         this.state.orientation.z,
         this.state.orientation.w,
       ]);
-      const newQuat = BABYLON.Quaternion.Multiply(euler, deltaQuat);
+      const newQuat = current.multiply(deltaQuat).normalize();
       this.state.orientation.x = newQuat.x;
       this.state.orientation.y = newQuat.y;
       this.state.orientation.z = newQuat.z;
       this.state.orientation.w = newQuat.w;
     }
 
-    // Update camera
-    this.camera.position = new BABYLON.Vector3(
-      this.state.position.x,
-      this.state.position.y + 0.5,
-      this.state.position.z,
-    );
-    // Look at the berth (target ahead of current position)
-    const lookAheadDistance = 100;
-    this.camera.setTarget(new BABYLON.Vector3(
+    // First-person camera follows the ship; orientation comes from physics.
+    this.camera.position.set(
       this.state.position.x,
       this.state.position.y,
-      this.state.position.z + lookAheadDistance,
-    ));
-    this.camera.rotationQuaternion = new BABYLON.Quaternion(
-      this.state.orientation.x,
-      this.state.orientation.y,
-      this.state.orientation.z,
-      this.state.orientation.w,
+      this.state.position.z,
     );
+    if (!this.camera.rotationQuaternion) {
+      this.camera.rotationQuaternion = BABYLON.Quaternion.Identity();
+    }
+    this.camera.rotationQuaternion
+      .set(
+        this.state.orientation.x,
+        this.state.orientation.y,
+        this.state.orientation.z,
+        this.state.orientation.w,
+      )
+      .normalize();
 
     // Collision detection
     if (this.dockingPortMesh) {
@@ -367,6 +401,7 @@ export class GameEngine {
    */
   public dispose(): void {
     this.stop();
+    window.removeEventListener('resize', this.handleResize);
     this.scene.dispose();
     this.engine.dispose();
   }

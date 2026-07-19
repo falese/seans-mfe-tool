@@ -86,9 +86,9 @@ const StatusPanel = styled.div`
   text-shadow: 0 0 10px #0f0;
 `;
 
-const VelocityGauge = styled.div<{ danger?: boolean }>`
-  color: ${(p) => (p.danger ? '#f00' : '#0f0')};
-  text-shadow: ${(p) => (p.danger ? '0 0 10px #f00' : '0 0 10px #0f0')};
+const VelocityGauge = styled.div<{ $danger?: boolean }>`
+  color: ${(p) => (p.$danger ? '#f00' : '#0f0')};
+  text-shadow: ${(p) => (p.$danger ? '0 0 10px #f00' : '0 0 10px #0f0')};
 `;
 
 const ControlsHelp = styled(StatusPanel)`
@@ -143,11 +143,11 @@ export const DockingSimulation: React.FC<DockingSimulationProps> = ({
           <div>DOCKING SIMULATION</div>
           <div>Phase: {gameState.phase.toUpperCase()}</div>
           <div>Time: {gameState.time.toFixed(1)}s</div>
-          <VelocityGauge danger={isDanger}>
+          <VelocityGauge $danger={isDanger}>
             Velocity: {gameState.relativeVelocity.toFixed(2)} m/s
           </VelocityGauge>
           <div>Distance: {gameState.distanceToDock.toFixed(1)}m</div>
-          <div>Fuel: {(gameState.physics.fuel * 100).toFixed(0)}%</div>
+          <div>Fuel: {gameState.physics.fuel.toFixed(0)}%</div>
           <div>Collisions: {gameState.physics.collisionCount}</div>
         </StatusPanel>
 
@@ -184,7 +184,7 @@ export const DockingSimulation: React.FC<DockingSimulationProps> = ({
           <StatusPanel style={{ alignSelf: 'flex-end', color: '#0f0' }}>
             ✓ DOCKING SUCCESSFUL
             <div style={{ fontSize: '10px', marginTop: '4px' }}>
-              Time: {gameState.time.toFixed(1)}s | Fuel: {(gameState.physics.fuel * 100).toFixed(0)}%
+              Time: {gameState.time.toFixed(1)}s | Fuel: {gameState.physics.fuel.toFixed(0)}%
             </div>
           </StatusPanel>
         )}
