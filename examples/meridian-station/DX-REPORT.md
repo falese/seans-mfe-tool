@@ -425,7 +425,7 @@ runtime trio as #277; BFF endpoint as #278; MCP cwd as #279:
 4. ✅ API by-id controllers call `findByPk(req.params.id)` regardless of the declared path param name. → lookups on the declared param; `findByPk`/`findById` reserved for params literally named `id`/`_id`.
 5. ✅ API list controllers pass `limit`/`offset` into the `where` clause — SQL error on any paginated request. → filters restricted to real model attributes (`rawAttributes`/`schema.paths`).
 6. ✅ API `npm run db:seed` points sequelize-cli at `seeders/`; generator writes `seeds/`; two other seed stubs disconnected. → unified `seed.js` connects and runs the generated `./seeds` set; `db:seed` wired to it for both databases.
-7. ⏳ Generated MFE devDependencies pin unpublished `@seans-mfe-tool/runtime` — host-side `npm install` fails with no workaround hint (known deferral, ADR-064 / #252; generated README should mention the staging workaround).
+7. ⏳ Generated MFE devDependencies pin unpublished `@seans-mfe-tool/runtime` — host-side `npm install` fails (known deferral, ADR-064 / #252). *Mitigated in this PR:* the generated README now documents the staging workaround (point the dep at `file:<checkout>/dist/runtime`, install, replace the symlink with a real directory copy); the pin itself waits on the publish decision.
 8. ✅ Angular template `tsconfig.app.json.ejs` puts a `"//"` comment key inside `compilerOptions` — every fresh Angular MFE fails to compile (TS5023). → JSONC line comment instead (Refs #274).
 9. ✅ Seed derivation from spec examples produced type-violating rows (floats in `integer` fields, suffixed strings in keys) — GraphQL rejected them at the BFF. → `SeedGenerator.generateVariation` is now type-aware: integer fields vary by whole steps, numbers keep 2-decimal floats, strings suffix only beyond the base row.
 10. ✅ *(by design)* `mcp serve` space form shows topic help and exits 0; only `mcp:serve` starts the server. Colon topics are the locked oclif convention for this CLI (CLAUDE.md resolved decisions) — the space form showing topic help IS oclif's standard behavior, same as `git remote` printing usage. Not a bug; noted here so nobody re-trips on it.
@@ -457,4 +457,4 @@ extensions, unannotated handles) so those can't silently return, but they are
 content assertions, not a cross-framework contract check. A structural fix
 (shared template fragments, or a per-framework `tsc --noEmit` gate on a freshly
 generated MFE in CI, per ADR-034's template-variant rule) is a design question
-worth its own issue, not a punch-list item.
+worth its own issue — filed as #281.

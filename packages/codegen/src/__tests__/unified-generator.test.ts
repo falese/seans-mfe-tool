@@ -385,6 +385,19 @@ describe('unified-generator', () => {
       }
     });
 
+    it('README documents the unpublished-runtime staging workaround (DX punch list #7)', async () => {
+      // Generated package.json pins @seans-mfe-tool/runtime, which is not on
+      // npm yet (ADR-064) — a plain `npm install` 404s with no hint. Until the
+      // runtime ships, the README must carry the staging workaround.
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const readme = files.find((f) => f.path === path.join(basePath, 'README.md'));
+      expect(readme).toBeDefined();
+      expect(readme!.content).toContain('@seans-mfe-tool/runtime` is not published yet');
+      expect(readme!.content).toContain('dist/runtime node_modules/@seans-mfe-tool/runtime');
+      // Must warn against file:/symlink staging — resolution escapes the project.
+      expect(readme!.content).toMatch(/real directory/i);
+    });
+
     it('keeps server.ts as overwrite:true so BFF runtime refresh stays automatic', async () => {
       // server.ts is generated BFF runtime, not user-customised — regeneration
       // must keep delivering the latest version.
