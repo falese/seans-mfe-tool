@@ -410,9 +410,14 @@ The single highest-leverage next fixes, by this build's experience:
 
 ## Punch list (running)
 
-Template/CLI bugs found so far. Items 1–6 and 8 are **fixed in this PR**
-(1–6 filed as #275; 8 belongs to the template family tracked by #274, with
-regression tests in `src/codegen/APIGenerator/__tests__/generated-api-regressions.test.js`):
+Template/CLI bugs found while building the station. Final score: **18 of 22
+fixed in this PR** (✅), one resolved as by-design (10), and three deliberately
+left open: 7 and 22 are facets of the unpublished-runtime decision gated on
+ADR-064/#252, and 16 needs the pagination design in #251 (the adjacent
+config-ownership question is parked in #274). API-generator fixes filed as
+#275 with regression
+tests in `src/codegen/APIGenerator/__tests__/generated-api-regressions.test.js`;
+runtime trio as #277; BFF endpoint as #278; MCP cwd as #279:
 
 1. ✅ API `src/index.js` calls `database.connect()`; sqlite DB module exports `connectDatabase()` — API never boots. → sqlite module now exports `connect`/`disconnect` aliases.
 2. ✅ API route files import operationId-derived handler names; controllers export path-derived names — Express crash at mount. → one shared naming function, operationId preferred.
@@ -422,17 +427,34 @@ regression tests in `src/codegen/APIGenerator/__tests__/generated-api-regression
 6. ✅ API `npm run db:seed` points sequelize-cli at `seeders/`; generator writes `seeds/`; two other seed stubs disconnected. → unified `seed.js` connects and runs the generated `./seeds` set; `db:seed` wired to it for both databases.
 7. ⏳ Generated MFE devDependencies pin unpublished `@seans-mfe-tool/runtime` — host-side `npm install` fails with no workaround hint (known deferral, ADR-064 / #252; generated README should mention the staging workaround).
 8. ✅ Angular template `tsconfig.app.json.ejs` puts a `"//"` comment key inside `compilerOptions` — every fresh Angular MFE fails to compile (TS5023). → JSONC line comment instead (Refs #274).
-9. ⏳ Seed derivation from spec examples produces type-violating rows (floats in `integer` fields, suffixed strings in keys) — GraphQL rejects them at the BFF. Meridian replaces the derived seeds with hand-written fixtures; generator-side fix not attempted here.
-10. ⏳ `mcp serve` space form silently shows help and exits 0; only `mcp:serve` starts the server.
+9. ✅ Seed derivation from spec examples produced type-violating rows (floats in `integer` fields, suffixed strings in keys) — GraphQL rejected them at the BFF. → `SeedGenerator.generateVariation` is now type-aware: integer fields vary by whole steps, numbers keep 2-decimal floats, strings suffix only beyond the base row.
+10. ✅ *(by design)* `mcp serve` space form shows topic help and exits 0; only `mcp:serve` starts the server. Colon topics are the locked oclif convention for this CLI (CLAUDE.md resolved decisions) — the space form showing topic help IS oclif's standard behavior, same as `git remote` printing usage. Not a bug; noted here so nobody re-trips on it.
 11. ✅ MCP tool calls cannot target a working directory. → every tool now accepts a reserved `cwd` argument (validated, stripped from argv, applied to the child spawn); `scripts/mcp-call.mjs` runs one server for the whole fleet (#279).
-12. ⏳ Cosmetic: TS build artifacts (`.d.ts`, `.d.ts.map`, compiled jest config) emitted into generated JS API projects.
+12. ✅ Cosmetic: TS build artifacts (`.d.ts`, `.d.ts.map`, compiled jest config) emitted into generated JS API projects. → the `api` command's template copy now filters `*.d.ts` / `*.d.ts.map` / `*.js.map` out of the scaffold.
 13. ✅ mongodb variant hangs on boot with any valid `MONGODB_URI` (post-connect wait for an already-fired `'connected'` event); connect() also not idempotent. → wait removed, readyState guard added (Refs #275).
 14. ✅ `SEED_DATA=true` disconnects the server's own DB connection (in-process path ran standalone seed.js). → index.js template now runs `./database/seeds` directly (Refs #275).
-15. ⏳ Docs gap: the schema↔model mapping rules (every components.schemas entry becomes a model; controller model = path's first segment singularized) are only discoverable from generator source.
+15. ✅ Docs gap: the schema↔model mapping rules (every components.schemas entry becomes a model; controller model = path's first segment singularized) were only discoverable from generator source. → documented as the "Naming contract" section in `docs/architecture-api-generator.md`, with the Meridian specs cited as working examples.
 16. ⏳ Generated query validator rejects unknown keys, so generated APIs can't honor pagination conventions other than limit/offset (cursor, Page/PageSize are accepted but ignored).
-17. ⏳ Freshly generated MFEs are not tsc-clean: generated `bootstrap.ts` passes a partial Context to `updateControlPlaneState`; `remote.tsx` uses `.tsx` import extensions without `allowImportingTsExtensions`. Builds (swc) and tests (isolated ts-jest) mask it.
-18. ⏳ abc-kids shell package.json still references `file:../../../src/runtime`, removed by the packages/runtime promotion (#240) — host-side installs of the abc-kids shell are broken; only the docker path (which rewrites the dep) works.
+17. ✅ Freshly generated MFEs were not tsc-clean: generated `bootstrap.ts` passed a partial Context to `updateControlPlaneState`; `remote.tsx` used `.tsx` import extensions without `allowImportingTsExtensions`, and its `handles` export leaked an unnameable inferred type (TS2742). Builds (swc) and tests (isolated ts-jest) masked all three. → React bootstrap template now passes a full Context (matching the Angular twin, which already did — see the template-drift note below), remote imports are extensionless, `handles.imperative` carries an explicit `ImperativeMountHandle` annotation (now re-exported from the runtime), and codegen regression tests pin all three template fixes. Verified by hand: `tsc --noEmit` is 0-error in the regenerated console, crew-services, and concourse.
+18. ✅ abc-kids shell package.json still referenced `file:../../../src/runtime`, removed by the packages/runtime promotion (#240) — host-side installs of the abc-kids shell were broken; only the docker path (which rewrites the dep) worked. → dep repointed to `file:../../../dist/runtime`.
 19. ✅ Generated BFF client dials relative `/graphql` — breaks under cross-origin composition. → connector now bakes `manifest.endpoint + data.serve.endpoint` (single deployable unit); `mfe.query()` inherits it (#278).
 20. ✅ Keyed-slot fan-out (N instances of one remote): mount race on the ADR-042 gate, Angular `bootstrapApplication` selector collapse, out-of-zone change detection, and post-CD prop assignment — all four fixed in packages/runtime (#277).
 21. ✅ `remote:generate --force` was a no-op wearing a threatening name: generated-owned files already re-stamp on every run, developer-owned files are never overwritten by ANY flag — but the CLI printed "Use --force to overwrite" anyway. Hint now tells the truth ("Yours to edit — regeneration never overwrites these"), the flag is documented as a deprecated no-op, and the Dockerfile template absorbed the proven runtime-staging pattern so committed Dockerfiles ARE template output (regen invariant now wired into CI).
 22. ⏳ `file:`-linked runtime symlink breaks Angular builds (resolution escapes the project: `Can't resolve '@angular/platform-browser' in dist/runtime`); works only as a real directory copy — plus a stale `.angular` cache kept the failure alive after the fix. More weight behind publishing the runtime (ADR-064/#252).
+
+### Meta-finding: the React and Angular templates drift
+
+Fixing item 17 surfaced a pattern worth naming: the Angular `bootstrap.ts.ejs`
+already passed a complete Context to `updateControlPlaneState` — only the React
+twin was broken. The two template trees (`base-mfe/` and `base-mfe-angular/`)
+encode the same lifecycle contract twice and are edited independently, so every
+fix has to be remembered in both places, and item 8 (Angular tsconfig) vs item
+17 (React bootstrap) show drift in both directions. There's no structural
+guard: no shared partials for the framework-independent parts, and no test that
+diffs the two lanes' behavior against the contract. The item-17 regression
+tests pin the specific React-template mistakes (partial Context, `.tsx`
+extensions, unannotated handles) so those can't silently return, but they are
+content assertions, not a cross-framework contract check. A structural fix
+(shared template fragments, or a per-framework `tsc --noEmit` gate on a freshly
+generated MFE in CI, per ADR-034's template-variant rule) is a design question
+worth its own issue, not a punch-list item.

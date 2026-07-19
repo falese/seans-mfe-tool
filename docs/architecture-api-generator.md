@@ -74,7 +74,39 @@ The generator supports a SQLite path and a MongoDB path (under
 `codegen/templates/api/<db>/` overlay supplies driver-specific files. The controller layer
 uses adapters (`ControllerGenerator/adapters/`) so handler code stays database-agnostic.
 
-## 5. Output
+## 5. Naming contract — paths ↔ schemas ↔ models
+
+The three generators run independently but meet on **names**. A spec that ignores these
+rules produces controllers referencing models that were never generated (or junk models
+for envelope shapes). The contract, derived from the generator sources:
+
+| Rule | Where enforced |
+| --- | --- |
+| A model is generated for **every** `components.schemas` entry, named `toModelName(schemaName)` (PascalCase, as-is otherwise) | `DatabaseGenerator` |
+| A controller derives its model name from the **path's first segment**: singularized + PascalCased (`/manifest_lines` → `ManifestLine`) | `ControllerGenerator` |
+| Route handler names come from each operation's `operationId`; controller method names are generated from the same operation, so they always match (`NameGenerator.generateControllerMethodName`) | `RouteGenerator` + `ControllerGenerator` |
+| SQLite `tableName` is the model name pluralized (`ManifestLine` → `manifest_lines` table via `${model}s` convention) | SQLite model template |
+
+Practical consequences when authoring a spec:
+
+1. **Each resource path needs a matching schema named as the singular snake_case of the
+   path segment.** `/manifest_lines` requires `components.schemas.manifest_line`;
+   `/telemetry` requires `telemetry`; `/crew` requires `crew`. If the schema is named
+   anything else (`ManifestLineDto`, `Line`), the controller will import a model that
+   doesn't exist.
+2. **`components.schemas` must contain ONLY entity schemas.** Response envelope shapes
+   (`{ result, meta }`, `{ Data, Pagination }`) must be declared **inline** in each
+   response — a named envelope schema becomes a junk model with a junk table. Inline
+   schemas still flow through to GraphQL Mesh typing when the API is consumed by a BFF.
+3. **Sub-resources keyed by a path parameter** (`/dockings/{docking_id}/manifest_lines`)
+   resolve the model from the first *non-parameter* segment after stripping the parent
+   segment — keep the sub-resource segment's singular form as a schema too.
+
+The Meridian Station reference specs (`examples/meridian-station/specs/*.yaml`) follow
+these rules across three deliberately different API conventions and are the working
+examples of this contract.
+
+## 6. Output
 
 A self-contained Express project (`<name>/src/`, `<name>/package.json`, `:639`) with auth,
 validation, error handling, request IDs, logging, and a production Dockerfile
