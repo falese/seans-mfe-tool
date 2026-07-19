@@ -64,6 +64,26 @@ describe('unified-generator angular-webpack variant', () => {
     );
   });
 
+  it('emits declared non-framework runtime deps into package.json (#294)', async () => {
+    const withExtras: DSLManifest = {
+      ...baseManifest,
+      dependencies: {
+        runtime: {
+          '@angular/core': '^19.0.0',
+          rxjs: '^7.8.0',
+          '@ngrx/store': '^19.0.0',
+        },
+      },
+    };
+    const { files } = await generateAllFiles(withExtras, basePath, { force: true });
+    const pkg = JSON.parse(
+      files.find((f) => f.path === path.join(basePath, 'package.json'))!.content,
+    );
+    // Extra lib lands in deps; framework versions still come from platform defaults.
+    expect(pkg.dependencies['@ngrx/store']).toBe('^19.0.0');
+    expect(pkg.dependencies['@angular/core']).toBe(DEPENDENCY_VERSIONS.angular.core);
+  });
+
   it('emits an Angular-aware tsconfig.json (not the BFF/React one)', async () => {
     const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
     const tsconfig = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));

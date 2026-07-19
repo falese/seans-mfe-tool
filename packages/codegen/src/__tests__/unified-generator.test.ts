@@ -178,6 +178,61 @@ describe('unified-generator', () => {
     );
   });
 
+  describe('manifest-driven client dependencies + federation shared (#294)', () => {
+    it('emits declared runtime deps into package.json but NOT into shared', async () => {
+      const withRuntime = {
+        ...manifest,
+        dependencies: {
+          runtime: { react: '^18.0.0', 'react-dom': '^18.0.0', '@babylonjs/core': '^9.17.0' },
+          'design-system': { 'styled-components': '^6.1.0' },
+        },
+      };
+      const { files } = await generateAllFiles(withRuntime as any, basePath, { force: true });
+      const pkg = JSON.parse(
+        files.find((f) => f.path === path.join(basePath, 'package.json'))!.content,
+      );
+      const rspack = files.find((f) => f.path === path.join(basePath, 'rspack.config.js'))!.content;
+
+      // Declared library lands in package.json...
+      expect(pkg.dependencies['@babylonjs/core']).toBe('^9.17.0');
+      // ...framework versions still come from platform defaults (#293), not the manifest.
+      expect(pkg.dependencies.react).toBe(DEPENDENCY_VERSIONS.react.react);
+      // ...but a heavy runtime lib is NOT force-shared as a singleton.
+      expect(rspack).not.toContain('@babylonjs/core');
+    });
+
+    it('lets a non-MUI design-system replace MUI in deps and shared', async () => {
+      const styled = {
+        ...manifest,
+        dependencies: { 'design-system': { 'styled-components': '^6.1.0' }, mfes: {} },
+      };
+      const { files } = await generateAllFiles(styled as any, basePath, { force: true });
+      const pkg = JSON.parse(
+        files.find((f) => f.path === path.join(basePath, 'package.json'))!.content,
+      );
+      const rspack = files.find((f) => f.path === path.join(basePath, 'rspack.config.js'))!.content;
+
+      expect(pkg.dependencies['styled-components']).toBe('^6.1.0');
+      expect(pkg.dependencies['@mui/material']).toBeUndefined();
+      expect(rspack).toContain("'styled-components'");
+      expect(rspack).not.toContain('@mui/material');
+    });
+
+    it('keeps MUI (with emotion peers) as the default when no design-system is declared', async () => {
+      const { 'design-system': _omit, ...deps } = manifest.dependencies as any;
+      const { files } = await generateAllFiles(
+        { ...manifest, dependencies: deps } as any,
+        basePath,
+        { force: true },
+      );
+      const pkg = JSON.parse(
+        files.find((f) => f.path === path.join(basePath, 'package.json'))!.content,
+      );
+      expect(pkg.dependencies['@mui/material']).toBe(DEPENDENCY_VERSIONS.mui.material);
+      expect(pkg.dependencies['@emotion/react']).toBe(DEPENDENCY_VERSIONS.mui.emotionReact);
+    });
+  });
+
   it('generates rspack.config.js with static demo configuration', async () => {
     const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const rspackConfig = files.find(f => f.path === path.join(basePath, 'rspack.config.js'));
