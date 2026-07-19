@@ -1,137 +1,184 @@
-# ADR-070 — Control-plane-owned data-fetch lifecycle (desired-data-state resolution)
+# ADR-070 — Experience-scoped federated supergraph (control-plane-composed data over participant MFE BFFs)
 
-- **Status:** Proposed
+- **Status:** Accepted (implementation phased)
 - **Date:** 2026-07-19
-- **Relates to:** ADR-010 (data lifecycle alignment), ADR-003 (no custom lifecycle phases), ADR-042 (MFE lifecycle state machine), ADR-053 (RemoteMFE `doQuery`), ADR-012 (GraphQL Mesh BFF layer), ADR-027 (context injection), ADR-066/067/068 (desired-state placement, manifest-declared slots, provider-scoped addresses), ADR-054/059 (control-plane protocol / `BaseControlPlane`)
+- **Relates to:** ADR-012 (GraphQL Mesh BFF layer), ADR-010 (data lifecycle alignment), ADR-003 (no custom lifecycle phases), ADR-042 (MFE lifecycle state machine), ADR-053 (RemoteMFE `doQuery`), ADR-027 (context injection), ADR-054 (control-plane message protocol), ADR-055 (LayoutManager — daemon-driven slot composition), ADR-057 (virtualized per-slot `DaemonChannel`), ADR-059 (`BaseControlPlane`), ADR-066/067/068 (desired-state placement, manifest-declared slots, provider-scoped addresses)
 - **Tracked in:** _(to be filed)_
-- **PDR:** PDR-005 (runtime composition)
+- **PDR:** PDR-005 (runtime composition), PDR-006 (ecosystem scaling thesis)
 
 ## Context
 
-The `query` capability is available on every MFE (`BaseMFE.query`), and per
-**ADR-010** data fetching is already modelled as an ordinary **capability
-invocation** running the same four-phase lifecycle (`before/main/after/error`)
-as any other capability — there is no separate "data-loading" lifecycle, and per
-**ADR-003** we do not add custom phases. So the platform already treats "fetch
-data" as a first-class, lifecycle-governed operation.
+The `query` capability is on every MFE, and per **ADR-010** data fetching is already
+an ordinary capability invocation on the four standard lifecycle phases (**ADR-003**:
+no custom phases). What was missing is the **control plane owning the data-fetch
+lifecycle at the high level** — deciding _when / whether / in what order_ data is
+fetched across the MFEs composing an experience, and being able to call any
+participant for its data.
 
-What is _not_ yet true is that the **control plane owns the data-fetch lifecycle
-at the high level**. Today:
+The first proposal made the control plane depend on **manifest-declared
+data-dependencies** — each MFE declaring the data shape it needs. That was rejected:
+it is *static-shape coupling*, it grows with every MFE's schema, and it pushes data
+knowledge upward, undermining the "MFEs as independently deployable units" thesis
+(CLAUDE.md, PDR-006).
 
-- Data is **self-fetched** by the MFE: a component calls `query()` (or the
-  generated `bff.ts` connector) from its own render path (e.g. Meridian's Angular
-  components fetch in `ngOnInit`). The registry only decides _placement_ — which
-  MFE+capability lands in which slot (ADR-066) — not _what data is fetched, when,
-  in what order, or whether it is shared_.
-- The `query` capability is **not uniform**: React remotes inherit the working
-  `BaseMFE.doQuery` (fetches the BFF); `AngularRemoteMFE.doQuery` **throws**
-  `Query not supported`. An MFE with no `data:` section has no BFF to answer.
-- There is no declaration of **what data a capability/state needs**, so nothing
-  server-side can fetch on an MFE's behalf without executing its browser code.
+The synthesis that resolves the coupling: **discover, don't declare.** The registry
+already knows which MFEs participate in an experience (it resolved their placement,
+ADR-066). Each participant's BFF already publishes a schema (the `schema()`
+capability / Mesh SDL). So the control plane **introspects the participants and
+stitches their schemas into one supergraph — composed at resolution time, for exactly
+that set of participants, at that moment.** There is no static data-dependency
+artifact anywhere; the "data-dependency graph" is the emergent composition of the
+self-describing schemas of whoever is on stage right now. This is **ADR-012's Mesh
+BFF one level up**: a gateway whose *sources are the participant BFFs*.
 
-The desired end state: the same desired-state engine that resolves _placement_
-also resolves _data_ — the control plane can call any MFE for its data and
-orchestrate the fetch lifecycle centrally (prefetch, ordering, dedup, caching,
-one auth story), while staying inside the ADR-003/010 model (data = capability,
-four phases, no new phase).
+This also makes the platform's composition thesis literal — independently published
+domain graphs composing into an experience is exactly the "marketplace of
+domain-capability packages" goal (PDR-006) — and it is the point of the Meridian
+Station demo ("the mess is the point": cargo manifest lines in one system, their
+valuations in another; the per-MFE BFF tames each mess, the supergraph is where the
+cross-MFE composition happens).
 
-### One reframing that shapes the whole design
+## Decision
 
-"The control plane calls each MFE for its data" resolves, mechanically, to **the
-control plane calling each MFE's BFF** — a server-side, manifest-declared HTTP
-endpoint (`manifest.endpoint` + `data.serve.endpoint`, absolute since #278). The
-registry already holds every MFE's manifest and can introspect each graph via the
-`schema()` capability. The browser-side `mfe.query()` method (plus the ADR-054
-daemon channel) is for coordinating **live, mounted instances**; it is not the
-addressing primitive for "any MFE's data." The BFF is.
+The **control-plane registry composes an experience-scoped federated supergraph** from
+the schemas of the MFEs currently participating in an experience, and owns the
+data-fetch lifecycle over it. Data ownership stays in the MFEs; the control plane owns
+*composition and orchestration*, not data shape.
 
-## Decision (proposed)
+1. **Discovery, not declaration.** Participants come from placement resolution
+   (ADR-066). The registry fetches each participant's schema via the `schema()`
+   capability and composes them. No manifest data-dependency declaration exists.
 
-Extend registry **desired-state resolution to the `query` capability**, making the
-control plane the owner of the data-fetch lifecycle. Concretely:
+2. **The supergraph gateway runs in the daemon as a Mesh instance** whose `sources`
+   are the participant BFFs' `/graphql` endpoints — dogfooding ADR-012: the platform's
+   own BFF technology composes the supergraph. (Where each MFE BFF is a Mesh over its
+   own upstreams, the daemon supergraph is a Mesh over the MFE BFFs.)
 
-1. **Desired data state, analogous to desired placement (ADR-066).** The registry
-   resolves `state → (MFE, capability=query, { operation, variables })` the same
-   way it resolves `state → (MFE, capability=render, props)` today. This adds no
-   lifecycle phase (ADR-003) and reuses the capability lifecycle (ADR-010); the
-   control plane owns _when / whether / in what order_ a query runs, not a new
-   phase.
+3. **Type scoping by provider MFE id.** Every type in the supergraph is namespaced to
+   the unique id of the MFE that provides it — conceptually `<mfeId>.User`
+   (`meridian-docking-control.User`, `meridian-life-support.User`). On the wire this is
+   a per-source prefix/rename transform (GraphQL identifiers can't contain `.`), e.g.
+   `meridian_docking_control_User`. Collisions become impossible and provenance is
+   explicit.
 
-2. **The BFF is the data surface.** Server-side orchestration fetches from each
-   MFE's manifest-declared BFF endpoint. `schema()` provides introspection so the
-   registry knows what each MFE can answer.
+4. **Union-first; joins are phase 2.** The default supergraph is a **union** — one
+   endpoint, query any participant's data, **zero config**. Cross-graph **joins**
+   (type merging across subgraphs) are a later phase and require **relationship keys**
+   (identity only, e.g. `manifestLineId`) that live in the **control-plane / experience
+   layer, never in the MFEs**. Even joined, no MFE declares its data shape; the only
+   new artifact is a small relationship map owned by the composition layer.
 
-3. **New primitive — manifest-declared data-dependencies.** Each capability/state
-   declares the data it needs (operation ref + variable bindings from context) so
-   the orchestrator knows what to fetch _without running browser code_. This is
-   the linchpin: it is what turns the desired-state engine into a data-orchestration
-   engine. Exact syntax is an open question (see below); it must stay expressible
-   within the four-phase capability model.
+5. **Two caches.** The **registry caches the composed schema**, keyed by a
+   participant-set signature (recompose when participants change, not per query). The
+   **control plane caches the resultant data**. Invalidation rides
+   `updateControlPlaneState` (ADR-054): a participant pushing new domain state signals
+   the control plane to invalidate/refresh dependent data.
 
-4. **Uniform `query` contract across frameworks.** `AngularRemoteMFE.doQuery`
-   delegates to its BFF connector (kill the throw) so `mfe.query()` behaves
-   identically on React and Angular. MFEs with no `data:` section return a defined
-   empty result (`{ data: null }`) rather than dialing a non-existent endpoint —
-   uniformity of _contract_, not a forced BFF on presentational MFEs (preserves
-   the #271 "no data → no BFF" invariant).
+6. **Degrade, never fail the experience.** If a participant BFF is unreachable, its
+   subgraph is dropped and the supergraph recomposed without it. The experience renders
+   with reduced data; it is never failed by one participant.
 
-5. **Rollout in two stages.**
-   - **Hybrid first:** the control plane decides _when_ and **prefetches / primes
-     a cache**; MFEs still call `query()` but hit warm data. Low coupling,
-     incremental from today, no render-model change.
-   - **Full orchestration:** the control plane fetches server-side and **injects
-     data as render inputs** (props) so the MFE renders data-ready — server-driven
-     data to match server-driven placement.
+7. **Auth passes through per subgraph.** The daemon gateway forwards the request JWT to
+   each participant BFF; tenancy/scoping is enforced at each subgraph's own BFF (the
+   boundary that already owns it).
+
+8. **`schema()` becomes mandatory and load-bearing.** Every data-owning MFE must
+   publish an accurate SDL via `schema()` — it is the composition contract. This is
+   enforced (a data-owning MFE with no/invalid schema is a build/registration error).
+
+9. **Uniform `query` / `schema` across frameworks (increment 1).**
+   `AngularRemoteMFE.doQuery`/`doSchema` currently throw; they must delegate to the
+   MFE's BFF like React's do. MFEs with no `data:` section contribute no subgraph and
+   their `query()` returns `{ data: null }` — uniform *contract*, not a forced BFF
+   (preserves the #271 "no data → no BFF" invariant).
+
+10. **The registry owns the data-fetch lifecycle** — compose / recompose / fetch /
+    refresh / invalidate — expressed over the supergraph. This stays inside ADR-003/010
+    (data is a capability on the four phases; no new phase is introduced). The
+    `LayoutManager` (ADR-055) — which already executes control-plane decisions on
+    mounted instances — is the executor; the ADR-057 `DaemonChannel` is the transport.
+
+## How it rides existing rails
+
+- **Participant set** — placement resolution (ADR-066) already produces it.
+- **Per-MFE data surface** — the manifest-declared BFF endpoint (absolute since #278),
+  introspectable via `schema()`.
+- **Executor + transport** — `LayoutManager` (ADR-055) + `DaemonChannel` (ADR-057)
+  already drive capabilities on mounted instances from control-plane resolution.
+- **Feedback loop** — `updateControlPlaneState` (ADR-054) already carries domain-state
+  changes upward; it becomes the invalidation trigger.
+- **Composition technology** — Mesh (ADR-012), reused one level up.
+
+New components: a **daemon-hosted supergraph Mesh gateway**, a **registry schema
+cache**, and a **control-plane data cache**.
 
 ## Consequences
 
 **Positive**
-- One mental model: the desired-state engine governs both what is _shown_ and what
-  is _fetched_.
-- Eliminates request waterfalls; enables cross-MFE data coordination and shared
-  caching/dedup at the control plane.
-- One auth/tenancy story (JWT applied once at the orchestrator/BFF boundary).
-- Uniform, testable `query` contract on every MFE.
+- Zero static-shape coupling — dependencies are discovered from published schemas, not
+  declared. MFE independence preserved (PDR-006).
+- Server-side unified data surface with cross-MFE composition — the capability pure
+  daemon-driven self-fetch could not provide.
+- One auth story, one cache tier, one place that owns the data-fetch lifecycle.
+- The composition thesis and the Meridian demo become literal, dogfooding Mesh.
 
 **Negative / cost**
-- **Coupling via declared data-dependencies:** the control plane must know each
-  MFE's data needs. This is deliberate (it's what enables orchestration) but it
-  narrows MFE independence and must be declared, not inferred.
-- The control plane becomes a **data-critical path** — needs caching, invalidation
-  (likely driven by `updateControlPlaneState`, ADR-054), and partial-failure
-  semantics.
-- **Security surface:** a control plane that can read any MFE's data is powerful;
-  the BFF auth boundary and per-MFE scoping must hold.
+- A new stateful control-plane component (daemon gateway + caches) on the data path —
+  needs cache-invalidation discipline and a participant-set signature definition.
+- `schema()` accuracy is now load-bearing across every data-owning MFE and both
+  frameworks.
+- Joined supergraphs reintroduce a *small* config surface (relationship keys) — bounded
+  to identity, and located in the control-plane layer, not the MFEs.
 
 ## Alternatives considered
 
-- **(A) Self-fetch only, just make the contract uniform.** Smallest change (only
-  the Angular `doQuery` fix + no-data answer). Keeps data ownership in the MFE; the
-  control plane never orchestrates. Rejected as the _end_ state because it does not
-  deliver high-level lifecycle control — but it is the correct **first increment**
-  and a subset of this decision.
-- **(B) Browser-driven via the daemon channel only.** The control plane drives
-  `mfe.query()` on mounted instances over ADR-054. Deferred: works only for live,
-  mounted MFEs, so it cannot be the primitive for "any MFE's data"; useful later
-  for coordinating live instances.
+- **(A) Manifest-declared data-dependencies.** _Rejected_ — static-shape coupling that
+  grows per MFE and pushes data knowledge upward, against PDR-006.
+- **(B) Daemon-driven self-fetch only (browser instances via the daemon channel).**
+  _Subsumed_ — B was the lifecycle-control half without server-side composition. This
+  decision keeps B's decoupling and adds the supergraph as the composition half.
+- **(C) Client-side schema stitching in the shell.** _Rejected_ — defeats server-side
+  composition/caching and cross-origin control; puts the supergraph in every browser.
 
-## Open questions (to resolve before/inside implementation)
+## Decisions locked this session
 
-1. **Data-dependency declaration syntax** in the manifest — operation reference +
-   variable binding from `context`, kept inside the four-phase model (ADR-003/010).
-2. **Cache + invalidation policy** — TTL vs event-driven; how `updateControlPlaneState`
-   invalidates dependent data.
-3. **Auth / tenancy** — how the orchestrator scopes each BFF call per user.
-4. **Partial-failure semantics** — one BFF down: degrade the slot, block render, or
-   render with `errors[]`?
-5. **Injection contract** — how orchestrated data reaches the MFE as render inputs
-   without breaking the ADR-056/060 presentation boundary.
+| Consideration | Decision |
+| --- | --- |
+| Type/name collisions | Scope every type to the provider MFE id (`<mfeId>.Type`; wire form = per-source prefix) |
+| Composition/data caching | Schema cached in the **registry**; resultant data cached in the **control plane** |
+| Participant BFF down | **Degrade** the supergraph (drop subgraph, recompose) — **never fail** the experience |
+| Auth | JWT **passthrough** to each participant BFF; tenancy enforced per subgraph |
+| `schema()` | **Mandatory** and load-bearing for data-owning MFEs; enforced |
+| Gateway location | Runs in the **daemon** as a **Mesh instance** over the participant BFFs (dogfooding) |
+| Starting scope | **Union-first**; joined (relationship keys) is an explicit phase 2 |
+
+## Open questions (phase 2 / detail)
+
+1. **Relationship-key syntax** for joined supergraphs and where in the control-plane
+   layer it is authored (experience config vs registry rules).
+2. **Participant-set signature** definition for the schema cache key (ids + versions +
+   schema hash?).
+3. **Cache-invalidation policy** specifics — which `updateControlPlaneState` stateKeys
+   invalidate which cached data.
+4. **Supergraph exposure** — is the endpoint control-plane-internal only, or also
+   queryable by participant MFEs (so a sibling can read composed data)?
+5. **Prefetch-before-mount** — composing/warming before any instance is mounted.
 
 ## Enabling increments (suggested order)
 
-1. **Uniform `query`:** `AngularRemoteMFE.doQuery` delegates to its BFF; no-data
-   MFEs return `{ data: null }`. _(bounded, TDD, valuable regardless of the rest)_
-2. **Manifest data-dependency schema** (Zod) + validation.
-3. **Registry desired-data-state resolver** (mirror the ADR-066 placement resolver).
-4. **Server-side orchestrator** + render-input injection (full-orchestration stage).
-5. **Cache / invalidation** wired to `updateControlPlaneState`.
+1. **Uniform `query`/`schema`** — `AngularRemoteMFE.doQuery`/`doSchema` delegate to the
+   BFF; no-data MFEs return `{ data: null }`. _(bounded, TDD; unblocks everything)_
+2. **`schema()` SDL enforcement** for data-owning MFEs (build/registration gate).
+3. **Registry schema cache** + participant-schema introspection at resolution.
+4. **Daemon supergraph Mesh gateway** — union composition with per-source id prefixing.
+5. **Control-plane data cache** + degrade-on-participant-down.
+6. **Joined supergraph** — relationship keys + cross-subgraph type merge. _(phase 2)_
+
+## References
+
+- ADR-012 GraphQL Mesh BFF layer · `docs/architecture-bff.md`
+- ADR-010 data lifecycle alignment · ADR-003 no custom lifecycle phases
+- ADR-054 control-plane message protocol · ADR-055 LayoutManager · ADR-057 DaemonChannel
+- ADR-066/067/068 desired-state placement and slot contract
+- #278 manifest-derived absolute BFF endpoint · `docs/query-capability.md`
+- Meridian Station reference app (`examples/meridian-station/`) — the composition showcase
