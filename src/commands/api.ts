@@ -566,11 +566,15 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
     const spec = dereferencedSpec as unknown as OpenAPISpec;
 
     await fs.ensureDir(targetDir);
-    await fs.copy(baseTemplateDir, targetDir);
+    // The built templates dir accumulates tsc byproducts (.d.ts/.map for
+    // template .js files) — never ship build artifacts into a scaffold.
+    const withoutBuildArtifacts = (src: string): boolean =>
+      !/\.(d\.ts|d\.ts\.map|js\.map)$/.test(src);
+    await fs.copy(baseTemplateDir, targetDir, { filter: withoutBuildArtifacts });
 
     const dbTemplateDir = path.join(projectRoot, `codegen/templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
-      await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
+      await fs.copy(dbTemplateDir, targetDir, { overwrite: true, filter: withoutBuildArtifacts });
     }
 
     const dirs = {

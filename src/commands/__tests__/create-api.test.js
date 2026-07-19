@@ -252,3 +252,21 @@ describe('Create API Command', () => {
     });
   });
 });
+describe('template copy hygiene (DX punch list #12)', () => {
+  const mockFs = require('fs-extra');
+  const { createApiCommand } = require('../create-api');
+
+  it('filters tsc byproducts out of the scaffold copy', async () => {
+    await createApiCommand('test-api', { port: '3001', database: 'sqlite', spec: 'api.yaml' });
+
+    const copyCalls = mockFs.copy.mock.calls.filter(([, , opts]) => opts?.filter);
+    expect(copyCalls.length).toBeGreaterThan(0);
+    for (const [, , opts] of copyCalls) {
+      expect(opts.filter('/tpl/jest-config.d.ts')).toBe(false);
+      expect(opts.filter('/tpl/jest-config.d.ts.map')).toBe(false);
+      expect(opts.filter('/tpl/database/index.js.map')).toBe(false);
+      expect(opts.filter('/tpl/database/index.js')).toBe(true);
+      expect(opts.filter('/tpl/package.json')).toBe(true);
+    }
+  });
+});

@@ -56,7 +56,7 @@ module.exports = ${modelName}Seed;`;
       
       for (const [prop, config] of Object.entries(schema.properties)) {
         if (config.example !== undefined) {
-          example[prop] = this.generateVariation(config.example, i);
+          example[prop] = this.generateVariation(config.example, i, config);
         } else if (config.examples?.length > 0) {
           example[prop] = config.examples[i % config.examples.length];
         } else {
@@ -70,14 +70,19 @@ module.exports = ${modelName}Seed;`;
     return examples;
   }
 
-  generateVariation(baseValue, index) {
+  generateVariation(baseValue, index, config = {}) {
     if (typeof baseValue === 'number') {
-      // Vary numbers by ±10%
+      // integer-typed fields must stay integral — a ±10% multiply produced
+      // floats the spec's own types reject downstream (a typed BFF throws
+      // "Int cannot represent non-integer value").
+      if (config.type === 'integer' || Number.isInteger(baseValue)) {
+        return baseValue + (index - 2);
+      }
       const variation = baseValue * 0.1;
-      return baseValue + (variation * (index - 2));
+      return Number((baseValue + variation * (index - 2)).toFixed(2));
     } else if (typeof baseValue === 'string') {
-      // Append index to strings
-      return `${baseValue} ${index + 1}`;
+      // No spaces: id-ish formats (berth ids, registry refs) must survive.
+      return index === 0 ? baseValue : `${baseValue}-${index + 1}`;
     }
     return baseValue;
   }

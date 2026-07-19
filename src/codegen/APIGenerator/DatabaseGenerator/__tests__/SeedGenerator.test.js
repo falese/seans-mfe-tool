@@ -184,10 +184,10 @@ describe('SeedGenerator', () => {
       expect(typeof result0).toBe('number');
     });
 
-    it('should append index to strings', () => {
+    it('should vary strings without spaces so id formats survive (#9)', () => {
       const result = generator.generateVariation('Test', 2);
-      
-      expect(result).toBe('Test 3');
+
+      expect(result).toBe('Test-3');
     });
 
     it('should return unchanged for other types', () => {
@@ -368,5 +368,52 @@ describe('SeedGenerator', () => {
       expect(result).toContain('ValidSeed');
       expect(result).not.toContain('EmptySeed');
     });
+  });
+});
+
+describe('seed variation respects the spec types (DX punch list #9)', () => {
+  const { SeedGenerator } = require('../generators/SeedGenerator');
+
+  it('keeps integer fields integral instead of multiplying into floats', () => {
+    const generator = new SeedGenerator({});
+    const rows = generator.extractExamples({
+      type: 'object',
+      properties: {
+        docking_id: { type: 'integer', example: 4021 },
+        qty: { type: 'integer', example: 12 },
+      },
+    });
+    for (const row of rows) {
+      expect(Number.isInteger(row.docking_id)).toBe(true);
+      expect(Number.isInteger(row.qty)).toBe(true);
+    }
+  });
+
+  it('rounds non-integer numeric variations to 2 decimals', () => {
+    const generator = new SeedGenerator({});
+    const rows = generator.extractExamples({
+      type: 'object',
+      properties: {
+        declared_mass_kg: { type: 'number', example: 1840.5 },
+      },
+    });
+    for (const row of rows) {
+      expect(row.declared_mass_kg).toBeCloseTo(Number(row.declared_mass_kg.toFixed(2)), 10);
+    }
+  });
+
+  it('varies strings without inserting spaces (id-ish formats survive)', () => {
+    const generator = new SeedGenerator({});
+    const rows = generator.extractExamples({
+      type: 'object',
+      properties: {
+        berth_id: { type: 'string', example: 'b1' },
+      },
+    });
+    const distinct = new Set(rows.map((row) => row.berth_id));
+    expect(distinct.size).toBe(rows.length);
+    for (const row of rows) {
+      expect(row.berth_id).not.toContain(' ');
+    }
   });
 });
