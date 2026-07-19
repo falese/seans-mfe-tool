@@ -914,6 +914,10 @@ export abstract class BaseMFE {
    * manifest.data.serve.endpoint → '/graphql'. See the numbered comment in the body
    * for the authoritative order.
    *
+   * An MFE with no `data:` section (and no explicit bffUrl override) has no BFF —
+   * it returns `{ data: null }` rather than dialing a non-existent endpoint, so
+   * the query capability is uniform across every MFE and both frameworks (ADR-070).
+   *
    * Override in concrete subclasses for typed, operation-specific queries:
    *
    *   protected async doQuery(context: Context): Promise<QueryResult> {
@@ -926,6 +930,22 @@ export abstract class BaseMFE {
    */
   protected async doQuery(context: Context): Promise<QueryResult> {
     const inputs = (context.inputs ?? {}) as Partial<QueryInput> & { bffUrl?: string };
+    const m = this.manifest as { endpoint?: string; data?: { serve?: { endpoint?: string } } };
+
+    // Explicit BFF overrides (priority 1-3) win over any manifest/env default.
+    const override =
+      inputs.bffUrl ??
+      this.deps.bffUrl ??
+      (typeof process !== 'undefined' ? process.env['BFF_URL'] : undefined);
+
+    // Uniform no-data contract (ADR-070): an MFE with no `data:` section has no
+    // BFF to answer and contributes no subgraph to the experience supergraph, so
+    // its query() resolves to null rather than dialing a non-existent '/graphql'.
+    // This makes the query capability uniform across every MFE and both
+    // frameworks — Angular remotes inherit this instead of throwing.
+    if (!override && !m.data) {
+      return { data: null };
+    }
 
     if (!inputs.document) {
       throw new RuntimeValidationError(
@@ -935,22 +955,14 @@ export abstract class BaseMFE {
       );
     }
 
-    // URL resolution order:
-    //   1. context.inputs.bffUrl  — caller override (e.g. shell passing the remote's absolute URL)
-    //   2. deps.bffUrl            — constructor injection
-    //   3. BFF_URL env var        — runtime configuration
+    // URL resolution order (ADR-053):
+    //   1-3. override — context.inputs.bffUrl → deps.bffUrl → BFF_URL env (above)
     //   4. manifest.endpoint + manifest.data.serve.endpoint — self-describing manifest
     //   5. manifest.data.serve.endpoint alone (relative path)
-    //   6. '/graphql' fallback
-    const m = this.manifest as { endpoint?: string; data?: { serve?: { endpoint?: string } } };
+    //   6. '/graphql' fallback (only when a data: section is present)
     const servePath = m.data?.serve?.endpoint ?? '/graphql';
     const derivedUrl = m.endpoint ? `${m.endpoint}${servePath}` : servePath;
-
-    const bffUrl =
-      inputs.bffUrl ??
-      this.deps.bffUrl ??
-      (typeof process !== 'undefined' ? process.env['BFF_URL'] : undefined) ??
-      derivedUrl;
+    const bffUrl = override ?? derivedUrl;
 
     const authHeaders: Record<string, string> = context.jwt
       ? { Authorization: `Bearer ${context.jwt}` }

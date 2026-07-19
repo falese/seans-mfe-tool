@@ -517,9 +517,37 @@ describe('AngularRemoteMFE', () => {
       expect(JSON.parse(result.schema).name).toBe('test-angular-remote');
     });
 
-    it('doQuery throws (not supported on remote MFE)', async () => {
+    // ADR-070 increment 1 — Angular remotes no longer throw on query; they
+    // inherit the framework-neutral BaseMFE.doQuery. A no-data manifest yields
+    // the uniform { data: null } contract without dialing a BFF.
+    it('doQuery returns { data: null } for a no-data manifest (inherited, not throwing)', async () => {
+      const fetchMock = jest.fn();
+      global.fetch = fetchMock as unknown as typeof fetch;
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {});
-      await expect((mfe as any).doQuery(makeContext())).rejects.toThrow(/not supported/);
+      const result = await (mfe as any).doQuery(makeContext());
+      expect(result).toEqual({ data: null });
+      expect(fetchMock).not.toHaveBeenCalled();
+      jest.restoreAllMocks();
+    });
+
+    it('doQuery dispatches to the BFF when the manifest declares a data: section', async () => {
+      const fetchMock = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { ok: true } }),
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+      const mfe = new TestAngularRemoteMFE(
+        buildManifest({
+          endpoint: 'http://localhost:3101',
+          data: { sources: [], serve: { endpoint: '/graphql', playground: false } },
+        } as any),
+        { telemetry },
+        {},
+      );
+      const result = await (mfe as any).doQuery(makeContext({ document: '{ ok }' }));
+      expect(fetchMock).toHaveBeenCalledWith('http://localhost:3101/graphql', expect.anything());
+      expect(result).toEqual({ data: { ok: true }, errors: undefined });
+      jest.restoreAllMocks();
     });
 
     it('doEmit forwards an event to telemetry and reports emitted=true', async () => {

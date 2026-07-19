@@ -10,7 +10,10 @@
  *   • getSharedDependencies() — Angular singletons + zone.js for the MF scope
  *   • mountComponent()        — bootstrapApplication() of a standalone component
  *   • unmount()               — destroy the ApplicationRef
- *   • doQuery()               — Angular remotes do not support query
+ *
+ * The query/schema capabilities are framework-neutral (they dispatch to the
+ * MFE's BFF, ADR-053/070), so Angular remotes inherit them from BaseMFE /
+ * BaseRemoteMFE unchanged — no Angular-specific override.
  *
  * Implements:
  * - REQ-RUNTIME-001: Load capability with atomic entry/mount/enable-render
@@ -19,7 +22,6 @@
  */
 
 import { BaseRemoteMFE } from './base-remote-mfe';
-import type { Context, QueryResult } from './base-mfe';
 
 /**
  * Minimal Angular ApplicationRef surface the runtime depends on.
@@ -190,10 +192,5 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
       appRef.destroy();
       this.applicationRefs.delete(containerId);
     }
-  }
-
-  protected override async doQuery(context: Context): Promise<QueryResult> {
-    void context;
-    throw new Error('Query not supported for remote MFE type');
   }
 }
