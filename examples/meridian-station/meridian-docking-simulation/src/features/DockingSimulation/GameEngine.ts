@@ -111,17 +111,19 @@ export class GameEngine {
       new BABYLON.Vector3(this.state.position.x, this.state.position.y, this.state.position.z),
       scene,
     );
-    // No attachControl: camera position/orientation are driven entirely from the
-    // physics state each frame. Attaching Babylon's built-in controls would fight
-    // the per-frame rotationQuaternion we set in update().
+    // No attachControl: the physics state is the only thing that moves the view.
+    // The camera is aimed each frame from the ship's orientation quaternion (see
+    // update()); we deliberately do not use the built-in input controllers.
     this.camera.speed = 0; // Manual control via physics
     this.camera.inertia = 0; // No built-in smoothing; physics owns the motion
     this.camera.minZ = 0.1;
     this.camera.maxZ = 6000; // keep the far berth and starfield inside the frustum
     this.camera.fov = 0.9;
-
-    // First-person view: orientation is driven entirely from physics state.
-    this.camera.rotationQuaternion = BABYLON.Quaternion.Identity();
+    // Leave rotationQuaternion null on purpose: a UniversalCamera re-derives its
+    // rotationQuaternion from the Euler `rotation` every frame, so a quaternion
+    // written straight onto the camera is silently overwritten and the view
+    // never turns. We drive `camera.rotation` (Euler) from physics instead.
+    this.camera.rotationQuaternion = null;
   }
 
   private setupLighting(scene: BABYLON.Scene): void {
@@ -319,23 +321,22 @@ export class GameEngine {
       this.state.orientation.w = newQuat.w;
     }
 
-    // First-person camera follows the ship; orientation comes from physics.
+    // First-person camera follows the ship. Convert the orientation quaternion
+    // to Euler angles and feed the camera's `rotation` (yaw/pitch/roll) — the
+    // representation a UniversalCamera actually renders from. This carries all
+    // three rotational axes, including roll.
     this.camera.position.set(
       this.state.position.x,
       this.state.position.y,
       this.state.position.z,
     );
-    if (!this.camera.rotationQuaternion) {
-      this.camera.rotationQuaternion = BABYLON.Quaternion.Identity();
-    }
-    this.camera.rotationQuaternion
-      .set(
-        this.state.orientation.x,
-        this.state.orientation.y,
-        this.state.orientation.z,
-        this.state.orientation.w,
-      )
-      .normalize();
+    const orientation = new BABYLON.Quaternion(
+      this.state.orientation.x,
+      this.state.orientation.y,
+      this.state.orientation.z,
+      this.state.orientation.w,
+    );
+    this.camera.rotation.copyFrom(orientation.toEulerAngles());
 
     // Collision detection
     if (this.dockingPortMesh) {

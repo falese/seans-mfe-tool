@@ -67,16 +67,19 @@ export function useInput(): InputState {
       if (keysPressed.current['q']) nextInput.translation.y -= 1;
       if (keysPressed.current['e']) nextInput.translation.y += 1;
 
-      // Rotation: Arrow keys
+      // Rotation: Up/Down arrows always pitch.
       if (keysPressed.current['arrowup']) nextInput.rotation.pitch += 1;
       if (keysPressed.current['arrowdown']) nextInput.rotation.pitch -= 1;
-      if (keysPressed.current['arrowleft']) nextInput.rotation.yaw += 1;
-      if (keysPressed.current['arrowright']) nextInput.rotation.yaw -= 1;
 
-      // Roll: Shift + arrow left/right (or separate keys)
+      // Left/Right arrows yaw, or — while Shift is held — roll instead (per the
+      // on-screen "Shift+←→ - Roll" help). Shift redirects the axis; it must not
+      // apply yaw AND roll at the same time.
       if (keysPressed.current['shift']) {
         if (keysPressed.current['arrowleft']) nextInput.rotation.roll -= 1;
         if (keysPressed.current['arrowright']) nextInput.rotation.roll += 1;
+      } else {
+        if (keysPressed.current['arrowleft']) nextInput.rotation.yaw += 1;
+        if (keysPressed.current['arrowright']) nextInput.rotation.yaw -= 1;
       }
 
       // Thrust: Space

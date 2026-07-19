@@ -25,6 +25,7 @@ export interface UseDockingPhysicsProps {
 }
 
 const APPROACH_DISTANCE = 500; // meters
+const DOCKING_RANGE = 40; // within this range the HUD reads "docking", else "approach"
 const DOCKING_SUCCESS_DISTANCE = 1.0; // meters
 const DOCKING_SUCCESS_ORIENTATION = 10 * (Math.PI / 180); // 10 degrees
 const DOCKING_SUCCESS_VELOCITY = 0.5; // m/s
@@ -56,7 +57,6 @@ export function useDockingPhysics({
   });
 
   const startTimeRef = useRef<number>(Date.now());
-  const approachCompleteRef = useRef<boolean>(false);
 
   // Latest input/callback are read through refs so the game loop always sees
   // fresh values WITHOUT being a dependency of the engine effect. `useInput`
@@ -83,7 +83,6 @@ export function useDockingPhysics({
     engineRef.current = new GameEngine(config);
     engineRef.current.start();
     startTimeRef.current = Date.now();
-    approachCompleteRef.current = false;
 
     // Game-state loop: reads engine physics, applies input, updates React state.
     const renderInterval = setInterval(() => {
@@ -92,40 +91,31 @@ export function useDockingPhysics({
       const physicsState = engineRef.current.getState();
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
 
-      // Auto-approach phase (first 30 sec)
-      let phase: DockingGameState['phase'] = 'approach';
-      if (elapsed < 30 && !approachCompleteRef.current) {
-        // Move ship toward berth automatically (apply thrust along Z axis)
-        const autoApproachThrust = [0, 0, 1, 0, 0, 0]; // Forward thrust
-        engineRef.current.applyThrust(autoApproachThrust, 0.3);
-      } else if (elapsed >= 30) {
-        approachCompleteRef.current = true;
-        phase = 'docking';
+      // Player has full manual RCS control from t=0 — the ship spawns at an
+      // approach standoff with the berth already framed. Read input live from
+      // the ref (never a closed-over value) so the engine effect never restarts.
+      const currentInput = inputRef.current;
+      const thrustMagnitude = Math.max(
+        Math.abs(currentInput.translation.x),
+        Math.abs(currentInput.translation.y),
+        Math.abs(currentInput.translation.z),
+        Math.abs(currentInput.rotation.pitch),
+        Math.abs(currentInput.rotation.yaw),
+        Math.abs(currentInput.rotation.roll),
+        currentInput.thrust,
+      );
 
-        // Apply player input (read live from the ref, never a closed-over value).
-        const currentInput = inputRef.current;
-        const thrustMagnitude = Math.max(
-          Math.abs(currentInput.translation.x),
-          Math.abs(currentInput.translation.y),
-          Math.abs(currentInput.translation.z),
-          Math.abs(currentInput.rotation.pitch),
-          Math.abs(currentInput.rotation.yaw),
-          Math.abs(currentInput.rotation.roll),
-          currentInput.thrust,
-        );
+      const thrustVector = [
+        currentInput.translation.x,
+        currentInput.translation.y,
+        currentInput.translation.z,
+        currentInput.rotation.pitch,
+        currentInput.rotation.yaw,
+        currentInput.rotation.roll,
+      ];
 
-        const thrustVector = [
-          currentInput.translation.x,
-          currentInput.translation.y,
-          currentInput.translation.z,
-          currentInput.rotation.pitch,
-          currentInput.rotation.yaw,
-          currentInput.rotation.roll,
-        ];
-
-        if (thrustMagnitude > 0) {
-          engineRef.current.applyThrust(thrustVector, thrustMagnitude);
-        }
+      if (thrustMagnitude > 0) {
+        engineRef.current.applyThrust(thrustVector, thrustMagnitude);
       }
 
       // Calculate metrics
@@ -140,6 +130,10 @@ export function useDockingPhysics({
         physicsState.linearVelocity.y ** 2 +
         physicsState.linearVelocity.z ** 2,
       );
+
+      // Phase is a HUD label driven by range: close in = 'docking', else 'approach'.
+      let phase: DockingGameState['phase'] =
+        distanceToDock <= DOCKING_RANGE ? 'docking' : 'approach';
 
       // Check for success
       if (
