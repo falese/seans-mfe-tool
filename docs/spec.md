@@ -298,6 +298,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Accepted (#265) |
 | ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Accepted (#265) |
 | ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted (#265) |
+| ADR-070 | Control-Plane-Owned Data-Fetch Lifecycle — Desired-Data-State Resolution over Per-MFE BFFs | Runtime / control-plane / data / lifecycle | Proposed |
 
 ---
 
