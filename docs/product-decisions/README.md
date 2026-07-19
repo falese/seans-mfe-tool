@@ -28,6 +28,7 @@ A single PDR is typically implemented by several ADRs, which are in turn detaile
 | [PDR-004](./PDR-004-plugin-first-ecosystem.md) | Plugin-first federated ecosystem (not monorepo-first) | Accepted | ADR-022, ADR-021, ADR-015, `MERGE-PLAN.md` |
 | [PDR-005](./PDR-005-runtime-composition.md) | Runtime composition via shell + daemon control plane + registry | Proposed | PR #153 (draft); ADRs pending merge |
 | [PDR-006](./PDR-006-ecosystem-scaling-thesis.md) | Ecosystem scaling thesis | Proposed | Composes PDR-001–005; see `CLAUDE.md` "What this project is" |
+| [PDR-007](./PDR-007-model-messy-reality.md) | Reference apps model messy reality | Accepted | Overlapping, inconsistent APIs are the point; born from the Meridian Station build (#276) |
 
 ## Conventions
 

@@ -557,8 +557,12 @@ export function extractManifestVars(
       customTransforms: (manifest as any).transforms || [],
     },
 
-    // BFF endpoint for the client-side connector template (bff.ts.ejs)
-    bffEndpoint: (manifest as any).data?.serve?.endpoint ?? '/graphql',
+    // BFF endpoint for the client-side connector template (bff.ts.ejs).
+    // The MFE and its BFF are ONE deployable unit served from the manifest's
+    // endpoint origin (server.ts hosts remoteEntry.js and /graphql together),
+    // so the connector must carry the absolute URL: a relative path would
+    // resolve against the SHELL's origin once the MFE is composed remotely.
+    bffEndpoint: resolveBffEndpoint(manifest),
 
     // True when the manifest declares a data: section — gates doQuery() generation
     // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
@@ -738,6 +742,24 @@ export async function generateAllFiles(
  * external handler sources (ADR-040) into the template `vars`. Pure: no disk
  * access, no template rendering.
  */
+/**
+ * The BFF endpoint the generated client connector dials. An MFE with a
+ * `data:` section is a single deployable unit: server.ts serves the
+ * remoteEntry AND /graphql from the manifest's `endpoint` origin, so the
+ * connector bakes the absolute URL (endpoint + data.serve.endpoint).
+ * Without a manifest endpoint the relative serve path is all we have.
+ */
+function resolveBffEndpoint(manifest: DSLManifest): string {
+  const servePath = (manifest as any).data?.serve?.endpoint ?? '/graphql';
+  const origin = (manifest as any).endpoint;
+  if (!origin) return servePath;
+  try {
+    return new URL(servePath, origin).toString();
+  } catch {
+    return servePath;
+  }
+}
+
 function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): RenderModel {
   const vars = extractManifestVars(manifest, variant);
   // --- Platform contract-driven capability and lifecycle aggregation ---

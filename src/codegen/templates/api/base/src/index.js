@@ -38,8 +38,11 @@ async function startServer() {
 
         // Optional seeding in development
         if (process.env.NODE_ENV === 'development' && process.env.SEED_DATA === 'true') {
-            const seed = require('./database/seed');
-            await seed();
+            // The connection is already open — run the seed set directly.
+            // (seed.js is the standalone entry: it connects AND disconnects,
+            // which would tear down this server's connection.)
+            const seedDatabase = require('./database/seeds');
+            await seedDatabase();
         }
 
         // Middleware

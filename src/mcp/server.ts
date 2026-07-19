@@ -45,6 +45,25 @@ export async function executeToolCall(
   const cliBin = options.cliBin;
   const timeoutMs = options.timeoutMs ?? 300_000;
 
+  // Reserved execution argument (#279): run the child in the requested
+  // directory. Validated here — the child would otherwise fail with an
+  // opaque ENOENT before the CLI even parses argv.
+  const requestedCwd = typeof input.cwd === 'string' ? input.cwd : undefined;
+  if (requestedCwd !== undefined) {
+    const stat = await fs.stat(requestedCwd).catch(() => null);
+    if (!stat || !stat.isDirectory()) {
+      return {
+        ok: false,
+        error: {
+          type: 'validation',
+          code: 400,
+          message: `cwd is not an existing directory: ${requestedCwd}`,
+        },
+        stderr: '',
+      };
+    }
+  }
+
   return new Promise((resolve) => {
     let stdout = '';
     let stderr = '';
@@ -53,6 +72,7 @@ export async function executeToolCall(
     const child = spawn('node', [cliBin, ...argv], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
+      ...(requestedCwd !== undefined ? { cwd: requestedCwd } : {}),
     });
 
     const timer = setTimeout(() => {

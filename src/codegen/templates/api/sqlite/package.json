@@ -9,7 +9,7 @@
   "scripts": {
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:seed": "sequelize-cli db:seed:all",
+    "db:seed": "node src/database/seed.js",
     "db:reset": "node src/database/reset.js"
   }
 }

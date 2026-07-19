@@ -30,10 +30,33 @@ jest.mock(
   () => {
     return {
       __esModule: true,
-      bootstrapApplication: jest.fn(async (Component: any) => {
-        const instance: Record<string, unknown> = {};
-        const appRef = {
-          components: [{ instance, componentType: Component }],
+      createApplication: jest.fn(async () => {
+        const zone = { run: jest.fn((fn: () => unknown) => fn()) };
+        const appRef: any = {
+          zone,
+          injector: { get: jest.fn(() => zone) },
+          components: [] as any[],
+          // Mirrors ApplicationRef.bootstrap(componentType, rootElement):
+          // binds the app to the GIVEN element (never a global selector
+          // lookup) and returns the ComponentRef.
+          bootstrap: jest.fn((Component: any, hostElement?: unknown) => {
+            const instance: Record<string, unknown> = {};
+            const compRef = {
+              instance,
+              componentType: Component,
+              hostElement,
+              // Mirrors ComponentRef.setInput: declared inputs are applied
+              // (and would fire ngOnChanges); unknown inputs throw.
+              setInput: jest.fn((key: string, value: unknown) => {
+                if (key === 'provideSlot') {
+                  throw new Error('NG0303: provideSlot is not an @Input');
+                }
+                instance[key] = value;
+              }),
+            };
+            appRef.components.push(compRef);
+            return compRef;
+          }),
           destroy: jest.fn(),
           tick: jest.fn(),
         };
@@ -41,6 +64,12 @@ jest.mock(
       }),
     };
   },
+  { virtual: true }
+);
+
+jest.mock(
+  '@angular/core',
+  () => ({ __esModule: true, NgZone: class NgZone {} }),
   { virtual: true }
 );
 
@@ -90,10 +119,19 @@ function makeContext(inputs: Record<string, unknown> = {}): Context {
 }
 
 /** Minimal DOM element stub with a settable innerHTML. */
-function installDocumentStub(): { id: string; innerHTML: string } {
-  const el = { id: 'host', innerHTML: '' };
+function installDocumentStub(): { id: string; innerHTML: string; children: unknown[] } {
+  const el = {
+    id: 'host',
+    innerHTML: '',
+    children: [] as unknown[],
+    appendChild(child: unknown): unknown {
+      this.children.push(child);
+      return child;
+    },
+  };
   (global as any).document = {
     getElementById: (id: string) => (id === 'host' ? el : null),
+    createElement: (tagName: string) => ({ tagName, appendChild: () => undefined }),
   };
   return el;
 }
@@ -238,10 +276,23 @@ describe('AngularRemoteMFE', () => {
       );
 
       expect(result.status).toBe('rendered');
-      expect(el.innerHTML).toBe('<app-greeter></app-greeter>');
+      // The selector host is appended as a real node (never innerHTML), so
+      // bootstrap can bind to this exact element.
+      expect((el.children[0] as { tagName: string }).tagName).toBe('app-greeter');
 
-      const { bootstrapApplication } = await import('@angular/platform-browser');
-      expect(bootstrapApplication).toHaveBeenCalledWith(GreeterComponent, expect.any(Object));
+      const { createApplication } = await import('@angular/platform-browser');
+      expect(createApplication).toHaveBeenCalled();
+      const appRefBoot = (mfe as any).applicationRefs.get('host');
+      // Bootstrap and prop application must run INSIDE the app's NgZone —
+      // otherwise the component's async continuations (fetches in
+      // ngOnInit/ngOnChanges) never trigger change detection.
+      expect(appRefBoot.zone.run).toHaveBeenCalled();
+      // Bootstrapped onto the host element created INSIDE #host — never a
+      // document-wide selector lookup (that collapses multi-instance mounts).
+      expect(appRefBoot.bootstrap).toHaveBeenCalledWith(
+        GreeterComponent,
+        expect.objectContaining({ tagName: 'app-greeter' })
+      );
 
       // appRef instance got the prop applied
       const appRef = (mfe as any).applicationRefs.get('host');
@@ -259,6 +310,36 @@ describe('AngularRemoteMFE', () => {
       );
     });
 
+    it('applies props via ComponentRef.setInput (ngOnChanges) with assignment fallback', async () => {
+      class GreeterComponent {}
+      (GreeterComponent as any).ɵcmp = { selectors: [['app-greeter']] };
+
+      installDocumentStub();
+      const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+        Greeter: GreeterComponent,
+      });
+      await (mfe as any).doLoad(makeContext());
+
+      const provideSlot = (): void => undefined;
+      await (mfe as any).doRender(
+        makeContext({
+          component: 'Greeter',
+          containerId: 'host',
+          props: { title: 'hi', provideSlot },
+        })
+      );
+
+      const root = (mfe as any).applicationRefs.get('host').components[0];
+      // Declared inputs go through setInput so ngOnChanges fires and the
+      // component can react to registry-injected props (e.g. berthId).
+      expect(root.setInput).toHaveBeenCalledWith('title', 'hi');
+      expect(root.instance.title).toBe('hi');
+      // Helpers that are not @Input()s (provideSlot) fall back to plain
+      // assignment instead of crashing the mount.
+      expect(root.setInput).toHaveBeenCalledWith('provideSlot', provideSlot);
+      expect(root.instance.provideSlot).toBe(provideSlot);
+    });
+
     it('falls back to app-mfe-root selector when component has no ɵcmp', async () => {
       const el = installDocumentStub();
       const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
@@ -267,7 +348,7 @@ describe('AngularRemoteMFE', () => {
       await (mfe as any).doLoad(makeContext());
 
       await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
-      expect(el.innerHTML).toBe('<app-mfe-root></app-mfe-root>');
+      expect((el.children[0] as { tagName: string }).tagName).toBe('app-mfe-root');
     });
 
     it('destroys the prior ApplicationRef when re-rendering the same container', async () => {

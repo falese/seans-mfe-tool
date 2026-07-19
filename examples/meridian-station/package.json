@@ -1,0 +1,15 @@
+{
+  "name": "meridian-station-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Meridian Station — the SMT full-platform reference app (see README.md)",
+  "scripts": {
+    "e2e": "playwright test",
+    "generate": "node scripts/generate.mjs",
+    "generate:check": "node scripts/generate.mjs --check",
+    "seeds": "node scripts/derive-seeds.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

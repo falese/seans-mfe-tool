@@ -35,28 +35,9 @@ class PathGenerator {
   }
 
   static generateMethodName(method, resourceName, path, operation) {
-    const isCollection = !path.includes('{');
-    const base = NameGenerator.toPascalCase(resourceName);
-    
-    if (operation.operationId) {
-      return NameGenerator.toCamelCase(operation.operationId);
-    }
-
-    if (isCollection) {
-      switch (method.toLowerCase()) {
-        case 'get': return `getAll${base}`;
-        case 'post': return `create${base}`;
-        default: return `${method.toLowerCase()}${base}`;
-      }
-    } else {
-      switch (method.toLowerCase()) {
-        case 'get': return `get${base}ById`;
-        case 'put': return `update${base}`;
-        case 'patch': return `patch${base}`;
-        case 'delete': return `delete${base}`;
-        default: return `${method.toLowerCase()}${base}ById`;
-      }
-    }
+    // Single source of truth shared with ControllerGenerator so route
+    // imports and controller exports can never drift apart.
+    return NameGenerator.generateControllerMethodName(method, resourceName, path, operation);
   }
 
   static generateRoute(method, path, functionName, operation, resourceName) {
@@ -75,11 +56,11 @@ class PathGenerator {
   }
 
   static normalizeRoutePath(path, resourceName) {
-    const prefix = `/${resourceName}`;
-    const normalized = path.startsWith(prefix)
-      ? path.slice(prefix.length) || '/'
-      : path;
-
+    // The router is mounted at the resource's URL segment, so strip the
+    // path's own first segment. resourceName may be camelCased while the
+    // URL segment is snake_case/kebab-case, so cutting by the derived name
+    // would fail to match and double the segment once mounted.
+    const normalized = path.replace(/^\/(?!\{)[^/]+/, '') || '/';
     return normalized.replace(/{([^}]+)}/g, ':$1');
   }
 

@@ -58,6 +58,10 @@ export type {
 // guaranteed imperative handle; host-side providers consume the sealed port.
 export { createImperativeHandle } from './imperative-handle';
 export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-handle';
+// The sealed-port handle type (ADR-056) — re-exported so generated remotes
+// can annotate their `handles` export without reaching into contracts
+// through the staged runtime's bundled copy (non-portable, TS2742).
+export type { ImperativeMountHandle } from '@seans-mfe/contracts';
 
 // Virtualized daemon socket (ADR-057) — per-slot control-plane channels over
 // the host's single connection, injected into composed MFEs as deps.wsClient.

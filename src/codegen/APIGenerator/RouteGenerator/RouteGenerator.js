@@ -41,10 +41,12 @@ class RouteGenerator {
         const routeContent = this.generateRouteFile(paths, camelResource, spec);
         
         await fs.writeFile(routeFilePath, routeContent, 'utf8');
-        routes.push({ 
+        routes.push({
           name: fileName,
-          path: `/${routePath}`,
-          camelName: camelResource 
+          // Mount at the original resource segment: the OpenAPI spec (and any
+          // BFF generated from it) addresses the API by these exact paths.
+          path: `/${resource}`,
+          camelName: camelResource
         });
         console.log(chalk.green(`✓ Generated route: ${fileName}`));
       }
@@ -104,9 +106,9 @@ router.use((req, res, next) => {
   next();
 });
 
-${routes.map(({ name, path }) => 
+${routes.map(({ name, path }) =>
   `// Mount ${path} routes
-router.use('', require('./${name}.route'));`
+router.use('${path}', require('./${name}.route'));`
 ).join('\n\n')}
 
 module.exports = router;`;

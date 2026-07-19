@@ -220,17 +220,51 @@ async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promi
  * (The optional native-component handle is consumed by the React in-tree
  * provider, a deferred follow-up — not by this island provider.)
  */
+/**
+ * One mount at a time per remote scope. Concurrent placements of the SAME
+ * remote (the console's keyed berth strip fires one action per berth, six
+ * BerthTile experiences arrive together) all render through one shared MFE
+ * instance, and the BaseMFE lifecycle gate (ADR-042: render only from
+ * 'ready') rejects overlap with "expected ready, got rendering". The
+ * per-ADDRESS queues (ADR-066) can't help — each keyed slot is its own
+ * address — so the per-INSTANCE critical section lives here. A failed mount
+ * must not poison the queue for the next placement.
+ */
+const scopeMountQueues = new Map<string, Promise<unknown>>();
+
+function enqueueScopeMount<T>(scope: string, task: () => Promise<T>): Promise<T> {
+  const tail = scopeMountQueues.get(scope) ?? Promise.resolve();
+  const run = tail.then(task, task);
+  scopeMountQueues.set(scope, run.then(() => undefined, () => undefined));
+  return run;
+}
+
 /* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const moduleFederationAdaptor: ExperienceAdaptor = {
-  async mount(experience, slot, helpers) {
+  mount(experience, slot, helpers) {
     const output = experience.output as {
       remoteEntryUrl?: string; scope?: string; module?: string;
       component?: string; props?: Record<string, unknown>;
     };
     if (!output?.remoteEntryUrl || !output.scope || !output.module) {
-      throw new Error('module-federation experience output requires remoteEntryUrl, scope, and module');
+      return Promise.reject(
+        new Error('module-federation experience output requires remoteEntryUrl, scope, and module')
+      );
     }
+    return enqueueScopeMount(output.scope, () => mountModuleFederation(experience, slot, helpers, output));
+  },
+};
 
+/* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
+async function mountModuleFederation(
+  experience: RenderedExperience,
+  slot: SlotElementLike,
+  helpers: AdaptorHelpers,
+  output: {
+    remoteEntryUrl?: string; scope?: string; module?: string;
+    component?: string; props?: Record<string, unknown>;
+  }
+): Promise<UnmountFn | void> {
     const mountPoint = document.createElement('div');
     mountPoint.id = `layout-mfe-${experience.id}`;
     slot.appendChild(mountPoint);
@@ -292,8 +326,7 @@ export const moduleFederationAdaptor: ExperienceAdaptor = {
       `Remote module "${output.module}" exposes neither a presentation handle ` +
         `(handles/mount, ADR-056) nor a legacy bootstrap ({ mfe, mfeReady })`
     );
-  },
-};
+}
 
 export function defaultAdaptors(): Record<string, ExperienceAdaptor> {
   return {

@@ -125,18 +125,25 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateFindQuery', () => {
-      it('should generate findById for paths with parameters', () => {
+      it('should generate findOne on the declared parameter for business keys', () => {
         const result = adapter.generateFindQuery('get', '/users/{userId}');
-        
-        expect(result).toContain('Model.User.findById');
-        expect(result).toContain('req.params.userId');
+
+        expect(result).toContain('Model.User.findOne');
+        expect(result).toContain('userId: req.params.userId');
       });
 
-      it('should generate find with query for collection paths', () => {
+      it('should generate findById only for a parameter literally named id', () => {
+        const result = adapter.generateFindQuery('get', '/users/{id}');
+
+        expect(result).toContain('Model.User.findById(req.params.id)');
+      });
+
+      it('should generate find restricted to schema paths for collection paths', () => {
         const result = adapter.generateFindQuery('get', '/users');
-        
+
         expect(result).toContain('Model.User');
-        expect(result).toContain('.find(req.query)');
+        expect(result).not.toContain('.find(req.query)');
+        expect(result).toContain('schema.paths');
         expect(result).toContain('.limit(parseInt(req.query.limit) || 10)');
         expect(result).toContain('.skip(parseInt(req.query.offset) || 0)');
       });
@@ -148,9 +155,9 @@ describe('DatabaseAdapter', () => {
 
       it('should handle multiple parameters (use first)', () => {
         const result = adapter.generateFindQuery('get', '/orgs/{orgId}/projects/{projectId}');
-        
-        expect(result).toContain('Model.Org.findById');
-        expect(result).toContain('req.params.orgId');
+
+        expect(result).toContain('Model.Org.findOne');
+        expect(result).toContain('orgId: req.params.orgId');
       });
 
       it('should singularize model names', () => {
@@ -186,20 +193,26 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateUpdateQuery', () => {
-      it('should generate findByIdAndUpdate for PUT', () => {
+      it('should generate findOneAndUpdate on the declared parameter for PUT', () => {
         const result = adapter.generateUpdateQuery('put', '/users/{userId}');
-        
-        expect(result).toContain('Model.User.findByIdAndUpdate');
-        expect(result).toContain('req.params.userId');
+
+        expect(result).toContain('Model.User.findOneAndUpdate');
+        expect(result).toContain('userId: req.params.userId');
         expect(result).toContain('req.body');
         expect(result).toContain('{ new: true }');
       });
 
-      it('should generate findByIdAndUpdate for PATCH', () => {
+      it('should generate findOneAndUpdate on the declared parameter for PATCH', () => {
         const result = adapter.generateUpdateQuery('patch', '/users/{userId}');
-        
-        expect(result).toContain('Model.User.findByIdAndUpdate');
+
+        expect(result).toContain('Model.User.findOneAndUpdate');
         expect(result).toContain('{ new: true }');
+      });
+
+      it('should keep findByIdAndUpdate for a parameter literally named id', () => {
+        const result = adapter.generateUpdateQuery('put', '/users/{id}');
+
+        expect(result).toContain('Model.User.findByIdAndUpdate(req.params.id');
       });
 
       it('should extract parameter name', () => {
@@ -222,11 +235,16 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateDeleteQuery', () => {
-      it('should generate findByIdAndDelete query', () => {
+      it('should generate findOneAndDelete on the declared parameter', () => {
         const result = adapter.generateDeleteQuery('/users/{userId}');
-        
-        expect(result).toContain('Model.User.findByIdAndDelete');
-        expect(result).toContain('req.params.userId');
+
+        expect(result).toContain('Model.User.findOneAndDelete');
+        expect(result).toContain('userId: req.params.userId');
+      });
+
+      it('should keep findByIdAndDelete for a parameter literally named id', () => {
+        expect(adapter.generateDeleteQuery('/users/{id}'))
+          .toContain('Model.User.findByIdAndDelete(req.params.id)');
       });
 
       it('should extract parameter name from path', () => {
@@ -256,24 +274,32 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateFindQuery', () => {
-      it('should generate findByPk for paths with parameters', () => {
+      it('should generate findOne on the declared parameter for business keys', () => {
         const result = adapter.generateFindQuery('get', '/users/{userId}');
-        
+
+        expect(result).toContain('db.User.findOne');
+        expect(result).toContain('userId: req.params.userId');
+      });
+
+      it('should keep findByPk for a parameter literally named id', () => {
+        const result = adapter.generateFindQuery('get', '/users/{id}');
+
         expect(result).toContain('db.User.findByPk(req.params.id)');
       });
 
-      it('should generate findAll for collection paths', () => {
+      it('should generate findAll restricted to model attributes for collection paths', () => {
         const result = adapter.generateFindQuery('get', '/users');
-        
+
         expect(result).toContain('db.User.findAll');
-        expect(result).toContain('where: req.query');
+        expect(result).not.toContain('where: req.query');
+        expect(result).toContain('rawAttributes');
         expect(result).toContain('limit: parseInt(req.query.limit) || 10');
         expect(result).toContain('offset: parseInt(req.query.offset) || 0');
       });
 
-      it('should always use req.params.id for findByPk (Sequelize convention)', () => {
-        expect(adapter.generateFindQuery('get', '/pets/{petId}')).toContain('req.params.id');
-        expect(adapter.generateFindQuery('get', '/users/{userId}')).toContain('req.params.id');
+      it('should use the declared parameter name for every by-id lookup', () => {
+        expect(adapter.generateFindQuery('get', '/pets/{petId}')).toContain('req.params.petId');
+        expect(adapter.generateFindQuery('get', '/users/{userId}')).toContain('req.params.userId');
       });
 
       it('should singularize model names', () => {
@@ -288,10 +314,10 @@ describe('DatabaseAdapter', () => {
         expect(result).toContain('offset: parseInt(req.query.offset) || 0');
       });
 
-      it('should include where clause for findAll', () => {
+      it('should filter the where clause to model attributes', () => {
         const result = adapter.generateFindQuery('get', '/users');
-        
-        expect(result).toContain('where: req.query');
+
+        expect(result).toContain('key in db.User.rawAttributes');
       });
     });
 
@@ -315,11 +341,11 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateUpdateQuery', () => {
-      it('should generate update query with where clause', () => {
+      it('should generate update query with where clause on the declared parameter', () => {
         const result = adapter.generateUpdateQuery('put', '/users/{userId}');
-        
+
         expect(result).toContain('db.User.update(req.body');
-        expect(result).toContain('where: { id: req.params.id }');
+        expect(result).toContain('where: { userId: req.params.userId }');
       });
 
       it('should work for both PUT and PATCH', () => {
@@ -330,9 +356,9 @@ describe('DatabaseAdapter', () => {
         expect(patchResult).toContain('db.User.update');
       });
 
-      it('should always use req.params.id in where clause (Sequelize convention)', () => {
-        expect(adapter.generateUpdateQuery('put', '/pets/{petId}')).toContain('req.params.id');
-        expect(adapter.generateUpdateQuery('patch', '/users/{userId}')).toContain('req.params.id');
+      it('should use the declared parameter name in the where clause', () => {
+        expect(adapter.generateUpdateQuery('put', '/pets/{petId}')).toContain('req.params.petId');
+        expect(adapter.generateUpdateQuery('patch', '/users/{userId}')).toContain('req.params.userId');
       });
 
       it('should singularize model names', () => {
@@ -348,16 +374,16 @@ describe('DatabaseAdapter', () => {
     });
 
     describe('generateDeleteQuery', () => {
-      it('should generate destroy query with where clause', () => {
+      it('should generate destroy query with where clause on the declared parameter', () => {
         const result = adapter.generateDeleteQuery('/users/{userId}');
-        
+
         expect(result).toContain('db.User.destroy');
-        expect(result).toContain('where: { id: req.params.id }');
+        expect(result).toContain('where: { userId: req.params.userId }');
       });
 
-      it('should always use req.params.id in where clause', () => {
-        expect(adapter.generateDeleteQuery('/pets/{petId}')).toContain('req.params.id');
-        expect(adapter.generateDeleteQuery('/users/{userId}')).toContain('req.params.id');
+      it('should use the declared parameter name in the where clause', () => {
+        expect(adapter.generateDeleteQuery('/pets/{petId}')).toContain('req.params.petId');
+        expect(adapter.generateDeleteQuery('/users/{userId}')).toContain('req.params.userId');
       });
 
       it('should singularize model names', () => {

@@ -31,7 +31,8 @@
     "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
     "docs:check-links": "node scripts/check-doc-links.js",
     "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",
-    "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build"
+    "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
+    "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build"
   },
   "keywords": [
     "module-federation",

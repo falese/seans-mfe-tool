@@ -1,0 +1,3 @@
+{
+  "_comment": "Demo-mode fixtures (ADR-052). Key by GraphQL Query field name; value is what that field returns when mock mode is active. Example: \"findPetsByStatus\": [{ \"id\": 1001, \"name\": \"Demo Pet\", \"status\": \"available\" }]. This file is developer-owned and is NOT overwritten on regeneration."
+}

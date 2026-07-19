@@ -49,6 +49,6 @@
     "serve": "^14.2.1",
     "ts-jest": "^29.4.11",
     "typescript": "^5.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../src/runtime"
+    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
   }
 }

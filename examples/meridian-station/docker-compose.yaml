@@ -1,0 +1,177 @@
+# Meridian Station — full-stack compose: three messy domain APIs, the
+# control plane (registry + daemon), six MFEs (each BFF MFE serves its
+# remoteEntry AND /graphql as one deployable unit), and the generic shell.
+# Ports stay clear of abc-kids (3000-3015, 4000) so both stacks coexist.
+#
+#   shell               :5000   generic layout host (zero static remotes)
+#   meridian-console    :5001   slot provider (main/status/berth.{id})
+#   docking-control     :5002   Angular · harbormaster + ledger BFF
+#   life-support        :5003   Angular · station-os BFF (single source)
+#   cargo-ops           :5004   Angular · harbormaster + ledger BFF
+#   crew-services       :5005   React  · station-os + ledger BFF (MCP-built)
+#   concourse           :5006   React  · all three sources (MCP-built)
+#   registry / daemon   :4500 / :4504
+#   harbormaster-api    :5101   sqlite   snake_case, bare arrays, X-Total-Count
+#   stellar-ledger-api  :5102   mongodb  camelCase, {result, meta}, cents
+#   station-os-api      :5103   sqlite   PascalCase, {Data, Pagination}
+#
+# Build seans-mfe-tool-cli:latest first (repo root:
+#   npm run build && npm run docker:build:cli), then ./scripts/build-station.sh.
+# APIs seed themselves at boot (SEED_DATA=true) from the projections of
+# seed/station.json — run scripts/derive-seeds.mjs after editing it.
+# The registry is in-memory: re-run scripts/register-station.sh after any
+# registry restart, then scripts/console.sh, and open http://localhost:5000.
+
+services:
+  registry:
+    build: ./control-plane/registry
+    environment:
+      PORT: 4500
+    ports:
+      - "4500:4500"
+
+  daemon:
+    build: ./control-plane/daemon
+    depends_on:
+      - registry
+    environment:
+      DAEMON_PORT: 4504
+      REGISTRY_HOST: registry
+      REGISTRY_PORT: 4500
+    ports:
+      - "4504:4504"
+
+  shell:
+    build:
+      context: ./shell
+      args:
+        DAEMON_WS_URL: ws://localhost:4504/graphql
+    depends_on:
+      - daemon
+    ports:
+      - "5000:5000"
+
+  meridian-console:
+    build: ./meridian-console
+    ports:
+      - "5001:5001"
+
+  meridian-docking-control:
+    build: ./meridian-docking-control
+    depends_on:
+      harbormaster-api:
+        condition: service_healthy
+      stellar-ledger-api:
+        condition: service_healthy
+    environment:
+      PORT: 5002
+    ports:
+      - "5002:5002"
+
+  meridian-life-support:
+    build: ./meridian-life-support
+    depends_on:
+      station-os-api:
+        condition: service_healthy
+    environment:
+      PORT: 5003
+    ports:
+      - "5003:5003"
+
+  meridian-cargo-ops:
+    build: ./meridian-cargo-ops
+    depends_on:
+      harbormaster-api:
+        condition: service_healthy
+      stellar-ledger-api:
+        condition: service_healthy
+    environment:
+      PORT: 5004
+    ports:
+      - "5004:5004"
+
+  meridian-crew-services:
+    build: ./meridian-crew-services
+    depends_on:
+      station-os-api:
+        condition: service_healthy
+      stellar-ledger-api:
+        condition: service_healthy
+    environment:
+      PORT: 5005
+    ports:
+      - "5005:5005"
+
+  meridian-concourse:
+    build: ./meridian-concourse
+    depends_on:
+      harbormaster-api:
+        condition: service_healthy
+      station-os-api:
+        condition: service_healthy
+      stellar-ledger-api:
+        condition: service_healthy
+    environment:
+      PORT: 5006
+    ports:
+      - "5006:5006"
+  mongo:
+    image: mongo:7
+    # No host port on purpose: only the ledger API talks to it.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  harbormaster-api:
+    build: ./apis/harbormaster-api
+    ports:
+      - "5101:5101"
+    environment:
+      PORT: 5101
+      NODE_ENV: development
+      SEED_DATA: "true"
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5101/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  stellar-ledger-api:
+    build: ./apis/stellar-ledger-api
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "5102:5102"
+    environment:
+      PORT: 5102
+      NODE_ENV: development
+      SEED_DATA: "true"
+      MONGODB_URI: mongodb://mongo:27017/stellar-ledger
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5102/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  station-os-api:
+    build: ./apis/station-os-api
+    ports:
+      - "5103:5103"
+    environment:
+      PORT: 5103
+      NODE_ENV: development
+      SEED_DATA: "true"
+      LOG_LEVEL: info
+      JWT_SECRET: meridian-demo-not-a-secret
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5103/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6

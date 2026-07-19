@@ -1,0 +1,100 @@
+name: meridian-docking-control
+version: 1.0.0
+type: remote
+language: typescript
+framework: angular
+bundler: webpack
+description: Meridian Station docking & traffic control — berth board, berth tiles, traffic log
+owner: meridian-station
+tags: [meridian, docking, ops, angular]
+category: operations
+
+endpoint: http://localhost:5002
+remoteEntry: http://localhost:5002/remoteEntry.js
+discovery: http://localhost:5002/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - DockingBoard:
+      type: domain
+      description: Full berth board — occupancy from Harbormaster joined with outstanding tariff status from StellarLedger
+
+  - BerthTile:
+      type: domain
+      description: Compact single-berth tile for the console's keyed berth strip (props.berthId selects the berth)
+
+  - TrafficLog:
+      type: domain
+      description: Recent and scheduled dockings — the station traffic picture
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+# BFF (ADR-012/046): two upstreams with clashing conventions. Harbormaster's
+# snake_case is camelCased by the always-on namingConvention transform;
+# StellarLedger's {result, meta} envelopes are unwrapped at the graph level
+# by hoistField, so consumers see plain lists — the mess stops here.
+data:
+  sources:
+    - name: Harbormaster
+      handler:
+        openapi:
+          source: ./specs/harbormaster.yaml
+    - name: StellarLedger
+      handler:
+        openapi:
+          source: ./specs/stellar-ledger.yaml
+      transforms:
+        - hoistField:
+            - typeName: Query
+              pathConfig: [listCharges, result]
+              newFieldName: charges
+            - typeName: Query
+              pathConfig: [listValuations, result]
+              newFieldName: valuations
+            - typeName: Query
+              pathConfig: [listAccounts, result]
+              newFieldName: accounts
+  mockSwitch:
+    enabled: true
+  serve:
+    endpoint: /graphql
+    playground: true
+
+dependencies:
+  runtime:
+    "@angular/core": ^19.2.16
+    "@angular/common": ^19.2.16
+    "@angular/platform-browser": ^19.2.16
+    rxjs: ^7.8.0
+    zone.js: ~0.14.0

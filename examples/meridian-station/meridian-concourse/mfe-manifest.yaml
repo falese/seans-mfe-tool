@@ -1,0 +1,97 @@
+name: meridian-concourse
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: Meridian Station concourse — vendor directory, stalls, settlements, inbound supplies
+owner: meridian-station
+tags: [meridian, concourse, marketplace, react]
+category: services
+
+endpoint: http://localhost:5006
+remoteEntry: http://localhost:5006/remoteEntry.js
+discovery: http://localhost:5006/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - MarketDirectory:
+      type: domain
+      description: The three-source screen — StationOS vendors and stalls, StellarLedger settlement standing, Harbormaster inbound supply dockings
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+# THREE-source BFF — the maximal mess: PascalCase pages (StationOS),
+# camelCase cursor envelopes (StellarLedger), bare snake_case arrays
+# (Harbormaster), all normalized onto one graph. Vendor identity is the
+# cross-system pun: VendorId 105 <-> merchantId "ACC-7105".
+data:
+  sources:
+    - name: StationOS
+      handler:
+        openapi:
+          source: ./specs/station-os.yaml
+      transforms:
+        - hoistField:
+            - typeName: Query
+              pathConfig: [GetVendors, Data]
+              newFieldName: vendors
+            - typeName: Query
+              pathConfig: [GetStalls, Data]
+              newFieldName: stalls
+    - name: StellarLedger
+      handler:
+        openapi:
+          source: ./specs/stellar-ledger.yaml
+      transforms:
+        - hoistField:
+            - typeName: Query
+              pathConfig: [listSettlements, result]
+              newFieldName: settlements
+    - name: Harbormaster
+      handler:
+        openapi:
+          source: ./specs/harbormaster.yaml
+  mockSwitch:
+    enabled: true
+  serve:
+    endpoint: /graphql
+    playground: true
+
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  design-system:
+    "@mui/material": ^5.14.0

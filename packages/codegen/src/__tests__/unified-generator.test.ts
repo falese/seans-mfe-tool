@@ -385,6 +385,19 @@ describe('unified-generator', () => {
       }
     });
 
+    it('README documents the unpublished-runtime staging workaround (DX punch list #7)', async () => {
+      // Generated package.json pins @seans-mfe-tool/runtime, which is not on
+      // npm yet (ADR-064) — a plain `npm install` 404s with no hint. Until the
+      // runtime ships, the README must carry the staging workaround.
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const readme = files.find((f) => f.path === path.join(basePath, 'README.md'));
+      expect(readme).toBeDefined();
+      expect(readme!.content).toContain('@seans-mfe-tool/runtime` is not published yet');
+      expect(readme!.content).toContain('dist/runtime node_modules/@seans-mfe-tool/runtime');
+      // Must warn against file:/symlink staging — resolution escapes the project.
+      expect(readme!.content).toMatch(/real directory/i);
+    });
+
     it('keeps server.ts as overwrite:true so BFF runtime refresh stays automatic', async () => {
       // server.ts is generated BFF runtime, not user-customised — regeneration
       // must keep delivering the latest version.
@@ -392,6 +405,74 @@ describe('unified-generator', () => {
       const serverTs = files.find((f) => f.path === path.join(basePath, 'server.ts'));
       expect(serverTs).toBeDefined();
       expect(serverTs!.overwrite).toBe(true);
+    });
+  });
+
+  describe('BFF endpoint derivation (single deployable unit)', () => {
+    it('bakes manifest.endpoint + data.serve.endpoint into the generated connector', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff).toBeDefined();
+      // The MFE and its BFF ship as ONE deployable unit on the manifest's
+      // endpoint origin; a relative '/graphql' would resolve against the
+      // SHELL's origin once the MFE is composed remotely.
+      expect(bff!.content).toContain("'http://localhost:3001/graphql'");
+      expect(bff!.content).not.toContain("|| '/graphql'");
+    });
+
+    it('honors a custom data.serve.endpoint path against the manifest origin', async () => {
+      const custom = {
+        ...manifest,
+        data: { ...(manifest as any).data, serve: { endpoint: '/api/graph' } },
+      };
+      const { files } = await generateAllFiles(custom as any, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff!.content).toContain("'http://localhost:3001/api/graph'");
+    });
+
+    it('falls back to the relative serve path when the manifest has no endpoint', async () => {
+      const { endpoint: _omitted, ...noEndpoint } = manifest as any;
+      const { files } = await generateAllFiles(noEndpoint, basePath, { force: true });
+      const bff = files.find((f) => f.path.endsWith('src/platform/bff/bff.ts'));
+      expect(bff!.content).toContain("'/graphql'");
+    });
+  });
+
+  describe('generated code is tsc-clean (DX punch list #17)', () => {
+    it('bootstrap load() passes a complete Context (requestId + timestamp)', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const bootstrap = files.find((f) => f.path.endsWith('base-mfe/bootstrap.ts'));
+      expect(bootstrap).toBeDefined();
+      // Context requires requestId and timestamp; a partial literal fails
+      // `tsc --noEmit` in every generated project (swc builds masked it).
+      expect(bootstrap!.content).toMatch(/requestId:\s*[`']bootstrap-load/);
+      expect(bootstrap!.content).toContain('timestamp: new Date()');
+    });
+
+    it('remote entry imports are extensionless (no allowImportingTsExtensions)', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const remote = files.find((f) => f.path.endsWith('src/remote.tsx'));
+      expect(remote).toBeDefined();
+      expect(remote!.content).not.toMatch(/from '\.[^']*\.tsx'/);
+      // Explicit annotation: inference would name the staged runtime's
+      // bundled contracts copy (TS2742, non-portable) under file: installs.
+      expect(remote!.content).toContain('handles: { imperative: ImperativeMountHandle }');
+    });
+  });
+
+  describe('generated Dockerfile stages the runtime as a real directory (#274)', () => {
+    it('copies dist/runtime into node_modules instead of a file: dep', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const dockerfile = files.find((f) => f.path.endsWith('Dockerfile'));
+      expect(dockerfile).toBeDefined();
+      // A file: dep resolves as a SYMLINK, so module resolution escapes the
+      // project and Angular builds fail with "Can't resolve
+      // '@angular/platform-browser' in dist/runtime". The proven pattern
+      // (abc-kids' hand-patched Dockerfiles) copies a real directory.
+      expect(dockerfile!.content).toContain(
+        "cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime"
+      );
+      expect(dockerfile!.content).not.toContain("file:/seans-mfe-tool/dist/runtime");
     });
   });
 

@@ -1,0 +1,55 @@
+# .meshrc.yaml - Auto-generated from DSL manifest data section
+# REQ-BFF-001: DSL as Single Source of Truth
+# ADR-012: GraphQL Mesh with DSL-embedded config
+# ADR-027: Mesh v0.100.x with production plugins
+
+# GraphQL Mesh Configuration
+sources:
+  - name: Harbormaster
+    handler:
+      openapi:
+        source: ./specs/harbormaster.yaml
+  - name: StellarLedger
+    handler:
+      openapi:
+        source: ./specs/stellar-ledger.yaml
+    transforms:
+      - hoistField:
+          - typeName: Query
+            pathConfig:
+              - listValuations
+              - result
+            newFieldName: valuations
+serve:
+  endpoint: /graphql
+  playground: true
+
+
+# Context injection plugin (ADR-027): injects jwt, requestId, userId, headers
+# into every GraphQL execution context from the incoming HTTP request.
+additionalEnvelopPlugins: ./src/platform/bff/mesh-context.js
+
+# Plugins (Performance & Observability)
+plugins:
+  - responseCache:
+      ttl: 300000
+      # Skip cache when x-bff-mode header is present so live/mock overrides
+      # are never served stale data from a prior request (ADR-052).
+      if: "context.headers?.get?.('x-bff-mode') == null"
+
+  - prometheus: {}
+
+
+# Transforms (Schema Manipulation)
+transforms:
+  # Demo-mode mock switch (ADR-052): wraps Query.* so a request with
+  # `x-bff-mode: mock` (or DEMO_MODE=true) returns fixtures from mocks.json.
+  - resolversComposition:
+      mode: bare
+      compositions:
+        - resolver: 'Query.*'
+          composer: ./src/platform/bff/mock-switch#mockSwitch
+  - namingConvention:
+      typeNames: pascalCase
+      fieldNames: camelCase
+

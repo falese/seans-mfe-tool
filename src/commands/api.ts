@@ -314,7 +314,9 @@ async function mergePackageJson(targetDir: string, dbType: string, vars: Templat
     } else {
       basePkg.scripts["db:migrate"] = "sequelize-cli db:migrate";
       basePkg.scripts["db:migrate:undo"] = "sequelize-cli db:migrate:undo";
-      basePkg.scripts["db:seed"] = "sequelize-cli db:seed:all";
+      // sequelize-cli's seeder format/path never matches the generated
+      // src/database/seeds set; seed.js connects and runs that set directly.
+      basePkg.scripts["db:seed"] = "node src/database/seed.js";
       basePkg.scripts["db:reset"] = "node src/database/reset.js";
     }
 
@@ -564,11 +566,15 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
     const spec = dereferencedSpec as unknown as OpenAPISpec;
 
     await fs.ensureDir(targetDir);
-    await fs.copy(baseTemplateDir, targetDir);
+    // The built templates dir accumulates tsc byproducts (.d.ts/.map for
+    // template .js files) — never ship build artifacts into a scaffold.
+    const withoutBuildArtifacts = (src: string): boolean =>
+      !/\.(d\.ts|d\.ts\.map|js\.map)$/.test(src);
+    await fs.copy(baseTemplateDir, targetDir, { filter: withoutBuildArtifacts });
 
     const dbTemplateDir = path.join(projectRoot, `codegen/templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
-      await fs.copy(dbTemplateDir, targetDir, { overwrite: true });
+      await fs.copy(dbTemplateDir, targetDir, { overwrite: true, filter: withoutBuildArtifacts });
     }
 
     const dirs = {

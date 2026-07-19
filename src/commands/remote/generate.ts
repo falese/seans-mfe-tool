@@ -76,11 +76,13 @@ export async function remoteGenerateCommand(
     }
 
     if (genResult.skipped.length > 0) {
-      console.log(chalk.yellow('\nSkipped (already exist):'));
+      console.log(chalk.yellow('\nKept (developer-owned):'));
       for (const file of genResult.skipped) {
         console.log(chalk.yellow(`  ${path.relative(cwd, file)}`));
       }
-      console.log(chalk.gray('  Use --force to overwrite'));
+      // These files are yours after the first generation — regeneration
+      // never overwrites them (no flag does; see writeGeneratedFiles).
+      console.log(chalk.gray('  Yours to edit — regeneration never overwrites these'));
     }
 
     if (genResult.errors.length > 0) {
@@ -134,7 +136,8 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
     }),
     force: Flags.boolean({
       char: 'f',
-      description: 'Overwrite existing files',
+      description:
+        'Deprecated no-op: generated platform files re-stamp on every run; developer-owned files are never overwritten',
       default: false,
     }),
   }

@@ -1,33 +1,32 @@
-
-
+require('dotenv').config();
 const logger = require('../utils/logger');
-const { connectDatabase, disconnectDatabase } = require('./index');
+const database = require('./index');
 
-async function seedDatabase() {
+/**
+ * Runs the generated seed set in ./seeds (derived from the OpenAPI spec's
+ * example values — replace those files with real fixtures as needed).
+ * Used by `npm run db:seed` and by src/index.js when SEED_DATA=true.
+ */
+async function seed() {
   try {
-    await connectDatabase();
+    await database.connect();
     logger.info('Starting database seed...');
 
-    // Import all models
-    const models = require('../models');
-
-    // Add your seed data here
-    // Example:
-    // await models.User.create({ 
-    //   name: 'Admin User',
-    //   email: 'admin@example.com'
-    // });
+    const seedDatabase = require('./seeds');
+    await seedDatabase();
 
     logger.info('Database seed completed');
-    await disconnectDatabase();
+    await database.disconnect();
   } catch (error) {
-    logger.error('Error seeding database:', error);
-    process.exit(1);
+    logger.error('Seeding failed:', error);
+    throw error;
   }
 }
 
 if (require.main === module) {
-  seedDatabase();
+  seed()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
 }
 
-module.exports = seedDatabase;
+module.exports = seed;

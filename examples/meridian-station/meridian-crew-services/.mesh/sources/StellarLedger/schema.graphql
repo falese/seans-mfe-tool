@@ -1,0 +1,142 @@
+schema @transport(subgraph: "StellarLedger", kind: "rest", location: "http://stellar-ledger-api:5102/api") {
+  query: Query
+}
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  """List accounts"""
+  listAccounts(accountType: String, standing: String, cursor: String, pageSize: Int = 25): listAccounts_200_response @httpOperation(subgraph: "StellarLedger", path: "/accounts", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"accountType\":\"accountType\",\"standing\":\"standing\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """Get one account"""
+  getAccount(accountId: String!): account @httpOperation(subgraph: "StellarLedger", path: "/accounts/{args.accountId}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET)
+  """List tariff charges"""
+  listCharges(dockingRef: String, accountId: String, status: String, cursor: String, pageSize: Int = 25): listCharges_200_response @httpOperation(subgraph: "StellarLedger", path: "/charges", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"dockingRef\":\"dockingRef\",\"accountId\":\"accountId\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List cargo line valuations"""
+  listValuations(manifestLineRef: String, dockingRef: String, cursor: String, pageSize: Int = 25): listValuations_200_response @httpOperation(subgraph: "StellarLedger", path: "/valuations", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"manifestLineRef\":\"manifestLineRef\",\"dockingRef\":\"dockingRef\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List merchant settlements"""
+  listSettlements(merchantId: String, status: String, cursor: String, pageSize: Int = 25): listSettlements_200_response @httpOperation(subgraph: "StellarLedger", path: "/settlements", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"merchantId\":\"merchantId\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  """List crew payroll records"""
+  listPayroll(crewRef: String, status: String, cursor: String, pageSize: Int = 25): listPayroll_200_response @httpOperation(subgraph: "StellarLedger", path: "/payroll", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"crewRef\":\"crewRef\",\"status\":\"status\",\"cursor\":\"cursor\",\"pageSize\":\"pageSize\"}")
+  payroll(crewRef: String, status: String, cursor: String, pageSize: Int = 25): [payroll]
+}
+
+type listAccounts_200_response {
+  result: [account]
+  meta: query_listAccounts_meta
+}
+
+type account {
+  accountId: String
+  displayName: String
+  """OPERATOR | MERCHANT | CREW"""
+  accountType: String
+  """GOOD | DELINQUENT | FROZEN"""
+  standing: String
+  balanceCents: Int
+  currency: String
+}
+
+type query_listAccounts_meta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type listCharges_200_response {
+  result: [charge]
+  meta: query_listCharges_meta
+}
+
+type charge {
+  chargeId: String
+  dockingRef: String
+  accountId: String
+  """DOCKING_FEE | MASS_TARIFF | HAZMAT_SURCHARGE | LATE_DEPARTURE"""
+  chargeType: String
+  amountCents: Int
+  currency: String
+  """PENDING | PAID | DISPUTED | WAIVED"""
+  status: String
+}
+
+type query_listCharges_meta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type listValuations_200_response {
+  result: [valuation]
+  meta: query_listValuations_meta
+}
+
+type valuation {
+  valuationId: String
+  manifestLineRef: String
+  declaredValueCents: Int
+  currency: String
+  """STANDARD | SPECIALIZED | UNINSURABLE"""
+  insuranceClass: String
+}
+
+type query_listValuations_meta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type listSettlements_200_response {
+  result: [settlement]
+  meta: query_listSettlements_meta
+}
+
+type settlement {
+  settlementId: String
+  merchantId: String
+  periodStart: Date
+  periodEnd: Date
+  grossCents: Int
+  feeCents: Int
+  netCents: Int
+  """OPEN | SETTLED | HELD"""
+  status: String
+}
+
+"""Represents date values"""
+scalar Date
+
+type query_listSettlements_meta {
+  cursor: String
+  hasMore: Boolean
+}
+
+type listPayroll_200_response {
+  meta: query_listPayroll_meta
+}
+
+type payroll {
+  payrollId: String
+  crewRef: String
+  periodEnd: Date
+  grossCents: Int
+  """SCHEDULED | PAID | HELD"""
+  status: String
+}
+
+type query_listPayroll_meta {
+  cursor: String
+  hasMore: Boolean
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
