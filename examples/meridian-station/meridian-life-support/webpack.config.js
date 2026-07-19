@@ -22,7 +22,7 @@ const mfConfig = withModuleFederationPlugin({
   filename: 'remoteEntry.js',
   library: { type: 'var', name: 'meridian_life_support' },
   exposes: {
-    './Component': './src/remote.ts',
+    './App': './src/remote.ts',
   },
   shared: {
     '@angular/core': {

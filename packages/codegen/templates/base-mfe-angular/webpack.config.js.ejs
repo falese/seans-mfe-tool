@@ -21,8 +21,12 @@ const mfConfig = withModuleFederationPlugin({
   name: '<%= name.replace(/-/g, "_") %>',
   filename: 'remoteEntry.js',
   library: { type: 'var', name: '<%= name.replace(/-/g, "_") %>' },
+  // #272: expose key standardized on './App' across every framework template
+  // (React exposes './App' too). The runtime never hard-codes the key — it reads
+  // `module` from the experience registration — so a single convention lets hosts
+  // register any MFE, React or Angular, without per-framework special-casing.
   exposes: {
-    './Component': './src/remote.ts',
+    './App': './src/remote.ts',
   },
   shared: {
     '@angular/core': {

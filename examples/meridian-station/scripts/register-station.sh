@@ -56,7 +56,7 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
     "capabilities": ["load", "render"],
     "contentType": "module-federation",
     "remoteEntryUrl": "http://localhost:5002/remoteEntry.js",
-    "moduleFederation": { "scope": "meridian_docking_control", "module": "./Component" }
+    "moduleFederation": { "scope": "meridian_docking_control", "module": "./App" }
   },
   "routes": [
     { "when": { "stateKey": "meridian.open.docking" },
@@ -88,7 +88,7 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
     "capabilities": ["load", "render"],
     "contentType": "module-federation",
     "remoteEntryUrl": "http://localhost:5003/remoteEntry.js",
-    "moduleFederation": { "scope": "meridian_life_support", "module": "./Component" }
+    "moduleFederation": { "scope": "meridian_life_support", "module": "./App" }
   },
   "routes": [
     { "when": { "stateKey": "meridian.open.life-support" },
@@ -111,7 +111,7 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
     "capabilities": ["load", "render"],
     "contentType": "module-federation",
     "remoteEntryUrl": "http://localhost:5004/remoteEntry.js",
-    "moduleFederation": { "scope": "meridian_cargo_ops", "module": "./Component" }
+    "moduleFederation": { "scope": "meridian_cargo_ops", "module": "./App" }
   },
   "routes": [
     { "when": { "stateKey": "meridian.open.cargo" },
