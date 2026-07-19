@@ -16,7 +16,7 @@ SERVICES=(
   registry daemon
   harbormaster-api stellar-ledger-api station-os-api
   meridian-console
-  meridian-docking-control meridian-life-support meridian-cargo-ops
+  meridian-docking-control meridian-docking-simulation meridian-life-support meridian-cargo-ops
   meridian-crew-services meridian-concourse
   shell
 )

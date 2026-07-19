@@ -31,6 +31,7 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
           "berths": ["b1", "b2", "b3", "b4", "b5", "b6"],
           "domains": [
             { "id": "docking",      "title": "Docking Control", "emoji": "🛰️", "color": "#3b6ff5", "blurb": "Berths, traffic, assignments" },
+            { "id": "docking-simulation", "title": "Docking Simulator", "emoji": "🎮", "color": "#ff6b9d", "blurb": "First-person 3D docking gameplay" },
             { "id": "life-support", "title": "Life Support",    "emoji": "🫁", "color": "#2e9e6b", "blurb": "Telemetry, environment, alerts" },
             { "id": "cargo",        "title": "Cargo Operations","emoji": "📦", "color": "#c77b21", "blurb": "Manifests, hazards, valuations" },
             { "id": "crew",         "title": "Crew Services",   "emoji": "🧑‍🚀", "color": "#8455d6", "blurb": "Roster, certifications, pay" },
@@ -159,6 +160,25 @@ curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
       "resolve": { "capability": "MarketDirectory", "props": { "slot": "meridian-console/main" } } }
   ]
 }' && echo " registered meridian-concourse (MarketDirectory — React, MCP-scaffolded)"
+
+# meridian-docking-simulation — React, two-source BFF (Harbormaster + StationOS),
+# first-person 3D docking gameplay with Babylon.js and arcade physics.
+curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d '{
+  "registration": {
+    "name": "meridian-docking-simulation",
+    "version": "1.0.0",
+    "type": "remote",
+    "baseUrl": "http://localhost:5007",
+    "capabilities": ["load", "render"],
+    "contentType": "module-federation",
+    "remoteEntryUrl": "http://localhost:5007/remoteEntry.js",
+    "moduleFederation": { "scope": "meridian_docking_simulation", "module": "./App" }
+  },
+  "routes": [
+    { "when": { "stateKey": "meridian.open.docking-simulation" },
+      "resolve": { "capability": "DockingSimulation", "props": { "slot": "meridian-console/main" } } }
+  ]
+}' && echo " registered meridian-docking-simulation (DockingSimulation — React, Babylon.js 3D)"
 
 echo "MFEs registered. Compose the console into the shell with:"
 echo "  ./scripts/console.sh"
