@@ -100,6 +100,14 @@ export const DEPENDENCY_VERSIONS = {
     reactDom: '~18.2.0',
   },
 
+  // Platform runtime contract (@seans-mfe-tool/runtime).
+  // Not published to npm yet (ADR-064); generated projects stage dist/runtime
+  // (Dockerfile copies it as a real directory, #274). Single-sourced here so
+  // the React and Angular templates can't drift on the declared spec.
+  runtime: {
+    package: '^0.1.0',
+  },
+
   // MUI (Design System)
   mui: {
     material: '^5.14.0',

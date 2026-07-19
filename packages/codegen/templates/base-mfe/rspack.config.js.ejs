@@ -99,12 +99,12 @@ module.exports = {
       shared: {
         react: {
           singleton: true,
-          requiredVersion: '^18.2.0',
+          requiredVersion: '<%= dependencyVersions.react.react %>',
           eager: true
         },
         'react-dom': { 
           singleton: true, 
-          requiredVersion: '^18.2.0',
+          requiredVersion: '<%= dependencyVersions.react.reactDom %>',
           eager: true
         },
         '@mui/material': { 
@@ -119,12 +119,12 @@ module.exports = {
         },
         '@emotion/react': { 
           singleton: true, 
-          requiredVersion: '^11.11.1',
+          requiredVersion: '<%= dependencyVersions.mui.emotionReact %>',
           eager: true
         },
         '@emotion/styled': { 
           singleton: true, 
-          requiredVersion: '^11.11.0',
+          requiredVersion: '<%= dependencyVersions.mui.emotionStyled %>',
           eager: true
         }
       },

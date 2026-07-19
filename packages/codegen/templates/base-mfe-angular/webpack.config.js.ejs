@@ -28,21 +28,21 @@ const mfConfig = withModuleFederationPlugin({
     '@angular/core': {
       singleton: true,
       strictVersion: true,
-      requiredVersion: '^19.2.16',
+      requiredVersion: '<%= dependencyVersions.angular.core %>',
     },
     '@angular/common': {
       singleton: true,
       strictVersion: true,
-      requiredVersion: '^19.2.16',
+      requiredVersion: '<%= dependencyVersions.angular.common %>',
     },
     '@angular/platform-browser': {
       singleton: true,
       strictVersion: true,
-      requiredVersion: '^19.2.16',
+      requiredVersion: '<%= dependencyVersions.angular.platformBrowser %>',
     },
     rxjs: {
       singleton: true,
-      requiredVersion: '^7.8.0',
+      requiredVersion: '<%= dependencyVersions.angular.rxjs %>',
     },
   },
 });
