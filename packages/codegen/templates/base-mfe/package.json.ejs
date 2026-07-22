@@ -50,12 +50,7 @@
     "helmet": "<%= dependencyVersions.core.helmet %>",
     "tslib": "<%= dependencyVersions.core.tslib %>",
 <%_ } _%>
-    "react": "<%= dependencyVersions.react.react %>",
-    "react-dom": "<%= dependencyVersions.react.reactDom %>",
-    "@mui/material": "<%= dependencyVersions.mui.material %>",
-    "@mui/system": "<%= dependencyVersions.mui.system %>",
-    "@emotion/react": "<%= dependencyVersions.mui.emotionReact %>",
-    "@emotion/styled": "<%= dependencyVersions.mui.emotionStyled %>"
+<%- clientDependencyLines %>
   },
   "devDependencies": {
 <%_ if (hasBff) { _%>
