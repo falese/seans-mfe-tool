@@ -218,6 +218,13 @@ jobs:
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
 
+      - name: MFE drift gate — generator-owned files match their manifests
+        # Regenerates every MFE from its mfe-manifest.yaml and fails if any
+        # generator-owned file (overwrite:true — the platform-contract shims:
+        # remote entry, base-mfe/*, bff/*, server.ts, public/*) has drifted.
+        # Generic, platform-wide; developer-owned code is untouched (#295).
+        run: npm run check:mfe-drift:check
+
       - name: Meridian regen invariant — generated artifacts match the manifests
         # Re-runs remote:generate across the reference fleet + derives seeds,
         # then fails on any drift (#274 discipline, #276 reference app).

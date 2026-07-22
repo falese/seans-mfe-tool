@@ -108,7 +108,6 @@ export class abckidscountingstarsMFE extends RemoteMFE {
     return result;
   }
 
-
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below
   // ---------------------------------------------------------------------------

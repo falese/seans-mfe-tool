@@ -9,7 +9,9 @@ import {
 
 import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
 
+
 import { handlerRegistry } from './handler-registry';
+
 
 /**
  * abckidsflappyMFE
@@ -107,16 +109,6 @@ export class abckidsflappyMFE extends RemoteMFE {
     console.log('[abckidsflappyMFE][doRender] result=%s duration=%dms', result.status, result.duration);
     return result;
   }
-
-  /**
-   * doQuery — routes mfe.query() calls to the PetStore BFF connector.
-   *
-   * Reads context.inputs.document + variables and dispatches via the generated
-   * bff.ts connector. The BFF URL is resolved automatically from
-   * manifest.endpoint + data.serve.endpoint (e.g. http://localhost:3001/graphql).
-   * Pass context.inputs.bffUrl to override when the shell is on a different origin.
-   * BaseMFE.doQuery handles this via inheritance (ADR-053).
-   */
 
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below

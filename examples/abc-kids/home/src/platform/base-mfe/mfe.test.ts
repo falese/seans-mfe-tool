@@ -40,18 +40,8 @@ describe('abckidshomeMFE', () => {
   // ---------------------------------------------------------------------------
 
 
-  it('should call PlayGame() and return an object', async () => {
-    const result = await mfe.PlayGame(context);
-    expect(result).toBeDefined();
-  });
-
-  it('should call ShowCover() and return an object', async () => {
-    const result = await mfe.ShowCover(context);
-    expect(result).toBeDefined();
-  });
-
-  it('should call GetGameInfo() and return an object', async () => {
-    const result = await mfe.GetGameInfo(context);
+  it('should call GameMenu() and return an object', async () => {
+    const result = await mfe.GameMenu(context);
     expect(result).toBeDefined();
   });
 

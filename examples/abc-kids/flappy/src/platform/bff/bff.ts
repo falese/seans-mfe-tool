@@ -11,7 +11,7 @@
 
 const BFF_ENDPOINT =
   (typeof process !== 'undefined' && (process.env['BFF_URL'] || process.env['VITE_BFF_URL'])) ||
-  '/graphql';
+  'http://localhost:3001/graphql';
 
 export interface BffError {
   message: string;
