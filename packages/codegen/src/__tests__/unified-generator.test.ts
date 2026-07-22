@@ -213,6 +213,30 @@ describe('unified-generator', () => {
     expect(dockerfile?.content).toContain("process.env.PORT || 4002");
   });
 
+  // #274: the base-MFE generator emits a .gitignore so build artifacts
+  // (.mesh/, compiled server.js, out-tsc/, dist/) never leak into the tree.
+  // It must NOT use a blanket `*.js` (that would ignore committed config like
+  // rspack.config.js / mock-switch.js).
+  describe('emits a .gitignore that ignores build artifacts (#274)', () => {
+    it('emits .gitignore ignoring .mesh/, server.js, out-tsc/, dist/', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const gitignore = files.find((f) => f.path === path.join(basePath, '.gitignore'));
+      expect(gitignore).toBeDefined();
+      expect(gitignore!.content).toContain('.mesh/');
+      expect(gitignore!.content).toContain('/server.js');
+      expect(gitignore!.content).toContain('out-tsc/');
+      expect(gitignore!.content).toContain('dist/');
+      expect(gitignore!.content).toContain('node_modules/');
+    });
+
+    it('does not blanket-ignore *.js (committed config files survive)', async () => {
+      const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+      const gitignore = files.find((f) => f.path === path.join(basePath, '.gitignore'));
+      expect(gitignore).toBeDefined();
+      expect(gitignore!.content).not.toMatch(/^\*\.js\s*$/m);
+    });
+  });
+
   it('Dockerfile always includes .mesh artifact copy — no hasData conditional (#189)', async () => {
     // Dockerfile is only emitted when manifest.data exists (fixed in #149).
     // Within that block hasData is always true, so the template must not

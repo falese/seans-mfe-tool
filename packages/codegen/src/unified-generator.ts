@@ -1158,11 +1158,15 @@ async function renderFiles(
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
           { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
           { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
+          // #274: keep build artifacts (.mesh/, out-tsc/, compiled server.js) out of the tree.
+          { name: '.gitignore', ejs: '.gitignore.ejs' },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
+          // #274: keep build artifacts (.mesh/, dist/, compiled server.js) out of the tree.
+          { name: '.gitignore', ejs: '.gitignore.ejs' },
         ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);

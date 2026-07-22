@@ -27,7 +27,7 @@ declare module 'abcKidsHockey/App' {
   export const mfeReady: Promise<void>;
 }
 
-declare module 'abcKidsMultiplicationQuiz/Component' {
+declare module 'abcKidsMultiplicationQuiz/App' {
   export const PlayGameComponent: any;
   export const ShowCoverComponent: any;
   export const GetGameInfoComponent: any;

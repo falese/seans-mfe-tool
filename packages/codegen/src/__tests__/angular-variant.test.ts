@@ -174,6 +174,17 @@ describe('unified-generator angular-webpack variant', () => {
     expect(webpackConfig!.content).not.toContain("require('webpack')");
   });
 
+  // #272: the MF expose key is standardized on './App' across frameworks (React
+  // exposes './App' too), so hosts register any MFE without per-framework casing.
+  it('exposes the remote under ./App (not ./Component) for cross-framework parity (#272)', async () => {
+    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const webpackConfig = files.find((f) => f.path.endsWith('webpack.config.js'));
+
+    expect(webpackConfig).toBeDefined();
+    expect(webpackConfig!.content).toContain("'./App': './src/remote.ts'");
+    expect(webpackConfig!.content).not.toContain("'./Component'");
+  });
+
   it('renders package.json with Angular CLI builder deps (and no react/rspack/ngtools)', async () => {
     const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
@@ -185,19 +196,71 @@ describe('unified-generator angular-webpack variant', () => {
     // platform-browser is), but jest-preset-angular's TestBed requires
     // @angular/platform-browser-dynamic/testing — so it lives in devDependencies.
     expect(pkg!.content).toContain('"@angular/platform-browser-dynamic"');
-    // mesh CLI is a build tool — must be in devDependencies
-    expect(pkg!.content).toContain('"@graphql-mesh/cli"');
-    expect(pkg!.content).not.toContain('"dependencies":\n    "@graphql-mesh/cli"');
     expect(pkg!.content).toContain('"@angular-builders/custom-webpack"');
     expect(pkg!.content).toContain('"@angular-devkit/build-angular"');
     expect(pkg!.content).toContain('"@angular-architects/module-federation"');
     expect(pkg!.content).not.toContain('"webpack"');
-    // prebff:dev builds the GraphQL Mesh artifacts so `npm run dev` works cold
-    // (server.ts imports ./.mesh, which only exists after `mesh build`).
-    expect(pkg!.content).toContain('"prebff:dev"');
     expect(pkg!.content).not.toContain('"@ngtools/webpack"');
     expect(pkg!.content).not.toContain('"react":');
     expect(pkg!.content).not.toContain('"@rspack/core"');
+  });
+
+  // #271: an Angular MFE with no data: section must not emit a Mesh BFF — the
+  // React template already gates this behind hasBff; the Angular template used to
+  // emit build:server / bff:dev / mesh deps unconditionally, so `tsc server.ts`
+  // (build:server) failed on a missing ./.mesh for every no-data Angular MFE.
+  it('omits BFF scripts and mesh deps when the manifest has no data: section (#271)', async () => {
+    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
+
+    expect(pkg).toBeDefined();
+    expect(pkg!.content).not.toContain('"build:server"');
+    expect(pkg!.content).not.toContain('"bff:dev"');
+    expect(pkg!.content).not.toContain('"prebff:dev"');
+    expect(pkg!.content).not.toContain('"mesh:validate"');
+    expect(pkg!.content).not.toContain('@graphql-mesh/cli');
+    expect(pkg!.content).not.toContain('@graphql-mesh/openapi');
+    expect(pkg!.content).not.toContain('"express"');
+    // Angular framework deps are always present regardless of BFF.
+    expect(pkg!.content).toContain('"@angular/core"');
+  });
+
+  // #271: with a data: section the Angular BFF scripts + mesh deps come back.
+  it('emits BFF scripts and mesh deps when the manifest has a data: section (#271)', async () => {
+    const withData: DSLManifest = {
+      ...baseManifest,
+      data: {
+        sources: [{ name: 'TestAPI', handler: { openapi: { source: './test.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    } as DSLManifest;
+    const { files } = await generateAllFiles(withData, basePath, { force: true });
+    const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
+
+    expect(pkg).toBeDefined();
+    // mesh CLI is a build tool — must be in devDependencies
+    expect(pkg!.content).toContain('"@graphql-mesh/cli"');
+    expect(pkg!.content).not.toContain('"dependencies":\n    "@graphql-mesh/cli"');
+    // prebff:dev builds the GraphQL Mesh artifacts so `npm run dev` works cold
+    // (server.ts imports ./.mesh, which only exists after `mesh build`).
+    expect(pkg!.content).toContain('"prebff:dev"');
+    expect(pkg!.content).toContain('"bff:dev"');
+    expect(pkg!.content).toContain('"build:server"');
+    expect(pkg!.content).toContain('"express"');
+    expect(pkg!.content).toContain('"@angular/core"');
+  });
+
+  // #274: the Angular variant also emits a .gitignore keeping build artifacts
+  // (.angular/, out-tsc/, .mesh/, compiled server.js) out of the tree.
+  it('emits a .gitignore that ignores Angular + BFF build artifacts (#274)', async () => {
+    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const gitignore = files.find((f) => f.path === path.join(basePath, '.gitignore'));
+    expect(gitignore).toBeDefined();
+    expect(gitignore!.content).toContain('.mesh/');
+    expect(gitignore!.content).toContain('out-tsc/');
+    expect(gitignore!.content).toContain('.angular/');
+    expect(gitignore!.content).toContain('/server.js');
+    expect(gitignore!.content).not.toMatch(/^\*\.js\s*$/m);
   });
 
   it('generates mfe.ts that extends AngularRemoteMFE (not RemoteMFE)', async () => {
