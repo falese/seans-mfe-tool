@@ -68,6 +68,18 @@ services:
     ports:
       - "5002:5002"
 
+  meridian-docking-simulation:
+    build: ./meridian-docking-simulation
+    depends_on:
+      harbormaster-api:
+        condition: service_healthy
+      station-os-api:
+        condition: service_healthy
+    environment:
+      PORT: 5007
+    ports:
+      - "5007:5007"
+
   meridian-life-support:
     build: ./meridian-life-support
     depends_on:

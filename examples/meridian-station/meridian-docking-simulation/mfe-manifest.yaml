@@ -1,0 +1,88 @@
+name: meridian-docking-simulation
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: Meridian Station docking simulation — first-person 3D spacecraft docking gameplay
+owner: meridian-station
+tags: [meridian, docking, simulation, 3d, babylon, react]
+category: operations
+
+endpoint: http://localhost:5007
+remoteEntry: http://localhost:5007/remoteEntry.js
+discovery: http://localhost:5007/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - DockingSimulation:
+      type: domain
+      description: First-person 3D docking simulation gameplay with physics-based ship control
+  - ShipControl:
+      type: domain
+      description: Manual ship orientation & translation controls (WASD + arrow keys)
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Initialize Babylon scene and physics
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Babylon scene mounted and game loop active
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Render error in Babylon scene
+
+# BFF: Harbormaster (berth details) + StationOS (ship specs, RCS thrust, fuel)
+data:
+  sources:
+    - name: Harbormaster
+      handler:
+        openapi:
+          source: ./specs/harbormaster.yaml
+    - name: StationOS
+      handler:
+        openapi:
+          source: ./specs/station-os.yaml
+  mockSwitch:
+    enabled: true
+  serve:
+    endpoint: /graphql
+    playground: true
+
+dependencies:
+  runtime:
+    react: ~18.2.0
+    react-dom: ~18.2.0
+    "@babylonjs/core": ^9.17.0
+    "@babylonjs/havok": ^1.3.13
+    "@babylonjs/gui": ^9.17.0
+    zustand: ^4.4.7
+  # styled-components is this MFE's design system (not MUI). Declared here so the
+  # manifest-driven generator (ADR-071, #294) resolves deps + federation `shared`
+  # to styled-components and drops the default MUI stack, instead of it having to
+  # be hand-added to package.json and drifting. See PR #292 / ADR-071.
+  design-system:
+    styled-components: ^6.1.0
+  devDependencies:
+    "@types/styled-components": ^5.1.26
