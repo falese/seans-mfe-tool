@@ -1,4 +1,4 @@
-import { generateAllFiles, writeGeneratedFiles } from '../unified-generator';
+import { generateAllFiles, writeGeneratedFiles, DEPENDENCY_VERSIONS } from '../unified-generator';
 import * as fs from 'fs-extra';
 import path from 'path';
 
@@ -150,6 +150,32 @@ describe('unified-generator', () => {
     expect(rspackConfig?.content).toMatch(/@mui\/system['"]:\s*\{[^}]*eager:\s*true/);
     expect(rspackConfig?.content).toMatch(/@emotion\/react['"]:\s*\{[^}]*eager:\s*true/);
     expect(rspackConfig?.content).toMatch(/@emotion\/styled['"]:\s*\{[^}]*eager:\s*true/);
+  });
+
+  it('single-sources the module-federation shared versions from DEPENDENCY_VERSIONS', async () => {
+    // Divergence prevention (#293): the federation `shared` requiredVersions must
+    // come from the one platform-defaults source, not scattered literals — so a
+    // bump to DEPENDENCY_VERSIONS can never leave the shared block behind.
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+    const rspackConfig = files.find(f => f.path === path.join(basePath, 'rspack.config.js'));
+
+    expect(rspackConfig).toBeDefined();
+    expect(rspackConfig?.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.react.react}'`);
+    expect(rspackConfig?.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.react.reactDom}'`);
+    expect(rspackConfig?.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.mui.emotionReact}'`);
+    expect(rspackConfig?.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.mui.emotionStyled}'`);
+    // No hardcoded framework version literals should remain in the shared block.
+    expect(rspackConfig?.content).not.toContain("requiredVersion: '^18.2.0'");
+  });
+
+  it('single-sources the @seans-mfe-tool/runtime dependency spec', async () => {
+    const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
+    const pkg = files.find(f => f.path === path.join(basePath, 'package.json'));
+
+    expect(pkg).toBeDefined();
+    expect(JSON.parse(pkg!.content).devDependencies['@seans-mfe-tool/runtime']).toBe(
+      DEPENDENCY_VERSIONS.runtime.package,
+    );
   });
 
   it('generates rspack.config.js with static demo configuration', async () => {

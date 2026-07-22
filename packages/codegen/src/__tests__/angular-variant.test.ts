@@ -1,4 +1,4 @@
-import { generateAllFiles, extractManifestVars } from '../unified-generator';
+import { generateAllFiles, extractManifestVars, DEPENDENCY_VERSIONS } from '../unified-generator';
 import type { DSLManifest } from '@seans-mfe/dsl';
 import * as fs from 'fs-extra';
 import path from 'path';
@@ -46,6 +46,22 @@ describe('unified-generator angular-webpack variant', () => {
     expect(paths).toContain(path.join(basePath, 'tsconfig.json'));
     expect(paths).toContain(path.join(basePath, 'tsconfig.app.json'));
     expect(paths).not.toContain(path.join(basePath, 'rspack.config.js'));
+  });
+
+  it('single-sources federation shared + runtime versions from DEPENDENCY_VERSIONS (#293)', async () => {
+    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const webpack = files.find((f) => f.path === path.join(basePath, 'webpack.config.js'));
+    const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
+
+    expect(webpack).toBeDefined();
+    expect(webpack!.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.angular.core}'`);
+    expect(webpack!.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.angular.rxjs}'`);
+    expect(webpack!.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.angular.platformBrowser}'`);
+
+    expect(pkg).toBeDefined();
+    expect(JSON.parse(pkg!.content).devDependencies['@seans-mfe-tool/runtime']).toBe(
+      DEPENDENCY_VERSIONS.runtime.package,
+    );
   });
 
   it('emits an Angular-aware tsconfig.json (not the BFF/React one)', async () => {
