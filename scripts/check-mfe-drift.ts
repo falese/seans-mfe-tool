@@ -1,6 +1,9 @@
 #!/usr/bin/env ts-node
 /**
- * Generate-and-diff drift gate for MFEs (#295, ADR-065 idiom).
+ * Generate-and-diff drift gate for MFEs (#295).
+ *
+ * CI enforcement of ADR-043's idempotent-regeneration property, using the same
+ * generate-and-diff idiom the repo already applies to schemas (build:schemas:check).
  *
  * The codegen tags every emitted file with an `overwrite` flag
  * (`unified-generator.ts`): `overwrite: true` files are **generator-owned** — a

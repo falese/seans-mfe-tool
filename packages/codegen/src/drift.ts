@@ -1,5 +1,10 @@
 /**
- * Generator-owned drift detection (#295, ADR-065 idiom).
+ * Generator-owned drift detection (#295).
+ *
+ * Enforces the idempotent-regeneration property of ADR-043 (manifest-driven
+ * codegen): a regenerate with an unchanged manifest is a no-op, and generated
+ * files carry `overwrite: true`. This is the CI enforcement of that invariant
+ * via the same generate-and-diff idiom the repo uses for schemas.
  *
  * The generator tags every emitted file with an `overwrite` flag: `true` files
  * are generator-owned and re-stamped on every `remote:generate`, so they must
