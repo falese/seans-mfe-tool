@@ -211,16 +211,40 @@ describe('BaseMFE.doQuery() — default BFF dispatch', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/graphql', expect.anything());
   });
 
-  it('falls back to /graphql when nothing else is configured', async () => {
+  it('falls back to /graphql when a data: section is present but no endpoint/override', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ data: {} }),
     });
 
-    const mfe = new TestMFE(BASE_MANIFEST);
+    // A data: section means a BFF exists; with no endpoint/serve/override the
+    // last-resort relative '/graphql' path is still dialed.
+    const manifestWithBareData = { ...BASE_MANIFEST, data: { sources: [] } };
+    const mfe = new TestMFE(manifestWithBareData as unknown as typeof BASE_MANIFEST);
     const ctx = makeContext({ document: '{ hello }' });
     await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
 
     expect(fetchMock).toHaveBeenCalledWith('/graphql', expect.anything());
+  });
+
+  // ADR-070 — uniform no-data contract.
+  it('returns { data: null } and does not fetch when the manifest has no data: section', async () => {
+    const mfe = new TestMFE(BASE_MANIFEST); // no data:, no deps.bffUrl, no BFF_URL
+    const ctx = makeContext({ document: '{ hello }' });
+    const result = await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
+
+    expect(result).toEqual({ data: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('an explicit bffUrl override still queries even with no data: section', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ok: 1 } }) });
+
+    const mfe = new TestMFE(BASE_MANIFEST); // no data: section
+    const ctx = makeContext({ document: '{ ok }', bffUrl: 'http://override/graphql' });
+    const result = await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(ctx);
+
+    expect(fetchMock).toHaveBeenCalledWith('http://override/graphql', expect.anything());
+    expect(result).toEqual({ data: { ok: 1 }, errors: undefined });
   });
 });

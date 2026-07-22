@@ -110,6 +110,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Generated Angular slot template | `packages/codegen/templates/base-mfe-angular/slots.ts.ejs` |
 | Example control plane (vendored daemon + registry images) | `examples/abc-kids/control-plane/` |
 | Slot contract explainer (ADR-066–069 in plain language) | `docs/slot-contract.md` |
+| Query capability explainer (`mfe.query()` vs BFF connector, endpoint resolution) | `docs/query-capability.md` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
 | Framework plugin loader | `src/framework/loader.ts` |
 | React plugin | `packages/framework-react/src/plugin.ts` |
