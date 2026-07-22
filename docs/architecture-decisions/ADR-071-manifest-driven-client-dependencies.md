@@ -1,5 +1,5 @@
 ---
-id: 0070
+id: 0071
 title: Manifest-Driven Client Dependencies and Federation Shared
 status: Accepted
 date: 2026-07-19
@@ -13,7 +13,7 @@ rationale-summary: The templates force-injected React + MUI + emotion into every
 long-form: true
 ---
 
-# ADR-070: Manifest-Driven Client Dependencies and Federation Shared
+# ADR-071: Manifest-Driven Client Dependencies and Federation Shared
 
 ## Context
 

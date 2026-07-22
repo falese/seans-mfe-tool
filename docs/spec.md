@@ -298,7 +298,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Accepted (#265) |
 | ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Accepted (#265) |
 | ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted (#265) |
-| ADR-070 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted (#294) |
+| ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted (#294) |
 
 ---
 
