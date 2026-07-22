@@ -158,6 +158,42 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
     },
     additionalProperties: false,
   },
+  'mfe:validate': {
+    type: 'object',
+    required: ['mfe', 'framework', 'ok', 'checked', 'issues'],
+    properties: {
+      mfe:       { type: 'string' },
+      framework: { type: 'string' },
+      ok:        { type: 'boolean' },
+      checked:   { type: 'array', items: { type: 'string' } },
+      issues: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['rule', 'message'],
+          properties: {
+            rule:     { type: 'string' },
+            message:  { type: 'string' },
+            package:  { type: 'string' },
+            expected: { type: 'string' },
+            actual:   { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+      typecheck: {
+        type: 'object',
+        required: ['ran', 'ok'],
+        properties: {
+          ran:    { type: 'boolean' },
+          ok:     { type: 'boolean' },
+          output: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+    additionalProperties: false,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -165,6 +201,13 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
 // ---------------------------------------------------------------------------
 
 const INPUT_SCHEMAS: Record<string, object> = {
+  'mfe:validate': {
+    type: 'object',
+    properties: {
+      dir:       { type: 'string', description: 'MFE directory to validate (default: cwd)' },
+      typecheck: { type: 'boolean', default: false, description: 'Also run `tsc --noEmit`' },
+    },
+  },
   deploy: {
     type: 'object',
     required: ['name', 'type'],

@@ -218,6 +218,14 @@ jobs:
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
 
+      - name: MFE consistency gate — manifest ⇄ package.json ⇄ federation shared
+        # Runs the reusable `mfe:validate` core over every examples/** MFE:
+        # asserts react/react-dom pins, that manifest deps land in package.json,
+        # that every federation `shared` key is a declared dep at the platform
+        # version, and that the runtime is declared. Developer-owned config the
+        # #295 drift gate never touches (#296).
+        run: npm run check:mfe-consistency
+
       - name: Meridian regen invariant — generated artifacts match the manifests
         # Re-runs remote:generate across the reference fleet + derives seeds,
         # then fails on any drift (#274 discipline, #276 reference app).

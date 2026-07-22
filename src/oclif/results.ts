@@ -135,3 +135,22 @@ export interface BuildProdResult {
     suggestion?: string;
   }>;
 }
+
+export interface MfeValidateResult {
+  mfe: string;
+  framework: string;
+  ok: boolean;
+  checked: string[];
+  issues: Array<{
+    rule: string;
+    message: string;
+    package?: string;
+    expected?: string;
+    actual?: string;
+  }>;
+  typecheck?: {
+    ran: boolean;
+    ok: boolean;
+    output?: string;
+  };
+}
