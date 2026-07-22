@@ -48,8 +48,8 @@ module.exports = {
         abcKidsMultiplicationQuiz: 'abc_kids_multiplication_quiz@http://localhost:3003/remoteEntry.js',
       },
       shared: {
-        react:              { singleton: true, requiredVersion: '^18.2.0', eager: true },
-        'react-dom':        { singleton: true, requiredVersion: '^18.2.0', eager: true },
+        react:              { singleton: true, requiredVersion: '~18.2.0', eager: true },
+        'react-dom':        { singleton: true, requiredVersion: '~18.2.0', eager: true },
         '@mui/material':    { singleton: true, requiredVersion: '^5.14.0', eager: true },
         '@emotion/react':   { singleton: true, requiredVersion: '^11.11.1', eager: true },
         '@emotion/styled':  { singleton: true, requiredVersion: '^11.11.0', eager: true },

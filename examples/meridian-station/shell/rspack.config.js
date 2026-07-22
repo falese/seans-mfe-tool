@@ -46,8 +46,8 @@ module.exports = {
       // module-federation payloads (ADR-055). Nothing is hardcoded here.
       remotes: {},
       shared: {
-        react:              { singleton: true, requiredVersion: '^18.2.0', eager: true },
-        'react-dom':        { singleton: true, requiredVersion: '^18.2.0', eager: true },
+        react:              { singleton: true, requiredVersion: '~18.2.0', eager: true },
+        'react-dom':        { singleton: true, requiredVersion: '~18.2.0', eager: true },
         '@mui/material':    { singleton: true, requiredVersion: '^5.14.0', eager: true },
         '@emotion/react':   { singleton: true, requiredVersion: '^11.11.1', eager: true },
         '@emotion/styled':  { singleton: true, requiredVersion: '^11.11.0', eager: true },
