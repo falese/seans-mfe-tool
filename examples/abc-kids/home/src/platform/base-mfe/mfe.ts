@@ -7,7 +7,7 @@ import {
   type RenderResult,
 } from '@seans-mfe-tool/runtime';
 
-import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './types';
+import type { GameMenuOutputs } from './types';
 
 
 
@@ -53,11 +53,7 @@ import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './ty
  *
  * DOMAIN CAPABILITIES (this MFE's business logic — implement below):
  *
- *   PlayGame() — Play the ABC Kids game
- *
- *   ShowCover() — Show the ABC Kids game cover card with title and art
- *
- *   GetGameInfo() — Return game metadata including title, age range, and description
+ *   GameMenu() — Render the ABC Kids home — a tile per registered game; selecting one drives the control plane
  *
  */
 export class abckidshomeMFE extends RemoteMFE {
@@ -108,7 +104,6 @@ export class abckidshomeMFE extends RemoteMFE {
     return result;
   }
 
-
   // ---------------------------------------------------------------------------
   // Domain Capabilities — implement your business logic below
   // ---------------------------------------------------------------------------
@@ -122,19 +117,9 @@ export class abckidshomeMFE extends RemoteMFE {
   protected async loadDomainComponent(name: string): Promise<any> {
     switch (name) {
 
-      case 'PlayGame':
-        return import('../../features/PlayGame/PlayGame').then(
-          (m: any) => m['PlayGame'] ?? m.default
-        );
-
-      case 'ShowCover':
-        return import('../../features/ShowCover/ShowCover').then(
-          (m: any) => m['ShowCover'] ?? m.default
-        );
-
-      case 'GetGameInfo':
-        return import('../../features/GetGameInfo/GetGameInfo').then(
-          (m: any) => m['GetGameInfo'] ?? m.default
+      case 'GameMenu':
+        return import('../../features/GameMenu/GameMenu').then(
+          (m: any) => m['GameMenu'] ?? m.default
         );
 
       default:
@@ -143,33 +128,13 @@ export class abckidshomeMFE extends RemoteMFE {
   }
 
   /**
-   * PlayGame
-   * @description Play the ABC Kids game
+   * GameMenu
+   * @description Render the ABC Kids home — a tile per registered game; selecting one drives the control plane
    * @generated Stub — replace with your domain implementation.
    */
-  async PlayGame(context: Context): Promise<PlayGameOutputs> {
-    // TODO: Implement PlayGame domain logic
-    return {} as PlayGameOutputs;
-  }
-
-  /**
-   * ShowCover
-   * @description Show the ABC Kids game cover card with title and art
-   * @generated Stub — replace with your domain implementation.
-   */
-  async ShowCover(context: Context): Promise<ShowCoverOutputs> {
-    // TODO: Implement ShowCover domain logic
-    return {} as ShowCoverOutputs;
-  }
-
-  /**
-   * GetGameInfo
-   * @description Return game metadata including title, age range, and description
-   * @generated Stub — replace with your domain implementation.
-   */
-  async GetGameInfo(context: Context): Promise<GetGameInfoOutputs> {
-    // TODO: Implement GetGameInfo domain logic
-    return {} as GetGameInfoOutputs;
+  async GameMenu(context: Context): Promise<GameMenuOutputs> {
+    // TODO: Implement GameMenu domain logic
+    return {} as GameMenuOutputs;
   }
 
   // ---------------------------------------------------------------------------

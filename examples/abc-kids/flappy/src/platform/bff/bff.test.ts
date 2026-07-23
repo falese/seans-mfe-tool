@@ -1,6 +1,6 @@
 import { query, mutate } from './bff';
 
-const MOCK_ENDPOINT = '/graphql';
+const MOCK_ENDPOINT = 'http://localhost:3001/graphql';
 
 describe('abc-kids-flappy BFF connector', () => {
   beforeEach(() => {
