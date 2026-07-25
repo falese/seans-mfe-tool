@@ -148,6 +148,16 @@ the demo registries:
   `createSlotAddressRegistry` — reject when the provider is registered and does not
   declare the id, warn when the provider has not registered yet.
 
+The matcher lives in `control-plane/registry/slot-target.js` as a **copy** of the
+one in contracts, not a call into it. That is a compromise, not a preference:
+these registries are standalone dockerized services with their own
+`package.json`, and `@seans-mfe/contracts` is not published yet
+(docs/MERGE-PLAN.md Phase 1), so there is nothing for them to import. A silently
+drifting copy would be worse than none — the registry would accept placements
+the runtime rejects — so `packages/contracts/src/__tests__/registry-slot-pin.test.ts`
+pins the two against each other across every branch, the same idiom ADR-069 used
+for the grammar. Delete the copy and the pin when contracts is published.
+
 These are vendored copies of `falese/daemon`'s registry; the same change belongs
 upstream, and the plugin-first posture (unchanged) means this repo carries it only
 for the examples.

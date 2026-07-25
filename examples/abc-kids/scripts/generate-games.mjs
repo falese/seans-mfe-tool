@@ -1232,6 +1232,14 @@ rules.push({
     contentType: 'module-federation',
     remoteEntryUrl: 'http://localhost:' + HOME.port + '/remoteEntry.js',
     moduleFederation: { scope: 'abc_kids_home', module: './App' },
+    // The home is this fleet's only slot provider. Carrying its declarations in
+    // the registration gives the registry the slot vocabulary it needs to reject
+    // a placement aimed at an id nobody declares (ADR-073 §5); in a real
+    // deployment this rides describe() rather than a generator.
+    providesSlots: [
+      { id: 'main', description: 'Primary game region' },
+      { id: 'info', description: 'Contextual game information region' },
+    ],
   },
   routes: [
     { when: { stateKey: 'abc.root' }, resolve: { capability: 'GameMenu', props: { slot: 'root', games: CATALOG } } },

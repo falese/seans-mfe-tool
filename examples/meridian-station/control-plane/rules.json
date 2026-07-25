@@ -14,7 +14,21 @@
       "moduleFederation": {
         "scope": "meridian_console",
         "module": "./App"
-      }
+      },
+      "providesSlots": [
+        {
+          "id": "main",
+          "description": "Primary work area — the active domain MFE composes here"
+        },
+        {
+          "id": "status",
+          "description": "Secondary status rail — compact status cards compose here"
+        },
+        {
+          "id": "berth.{id}",
+          "description": "One tile per docking berth on the berth strip, keyed by berth id"
+        }
+      ]
     },
     "routes": [
       {

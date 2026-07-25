@@ -703,7 +703,17 @@
       "moduleFederation": {
         "scope": "abc_kids_home",
         "module": "./App"
-      }
+      },
+      "providesSlots": [
+        {
+          "id": "main",
+          "description": "Primary game region"
+        },
+        {
+          "id": "info",
+          "description": "Contextual game information region"
+        }
+      ]
     },
     "routes": [
       {
