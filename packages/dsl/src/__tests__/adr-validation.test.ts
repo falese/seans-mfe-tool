@@ -75,6 +75,16 @@ describe('validateAdrLibrary', () => {
   });
 
   describe('reference-resolves', () => {
+    it('reports the file line, not the body line', () => {
+      // The frontmatter block sits above the body; a body-relative index
+      // printed as `file:line` points at unrelated text.
+      const doc = adr(10, 'Ten', {}, 'intro\n\nSee ADR-999 here.');
+      const result = validateAdrLibrary({ documents: [doc], parseFailures: [] });
+      const issue = result.issues.find((i) => i.rule === 'reference-resolves');
+      expect(issue?.line).toBe(doc.bodyLine + 2);
+      expect(issue?.line).toBeGreaterThan(3);
+    });
+
     it('reports a citation of an ADR that does not exist', () => {
       const result = validateAdrLibrary({
         documents: [adr(10, 'Ten', {}, 'See ADR-999 for the rationale.')],

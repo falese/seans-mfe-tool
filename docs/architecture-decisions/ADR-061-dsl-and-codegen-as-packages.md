@@ -1,9 +1,21 @@
-# ADR-061 — `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved
-
-- **Status:** Accepted
-- **Date:** 2026-07-01
-- **Relates to:** ADR-027 (manifest validation layer), ADR-034 (framework/bundler as DSL fields), ADR-036 (framework plugins), ADR-040 (handler sources), the RESTRUCTURE-PLAN §1.3.4 generator split, issues #140 / #238
-- **Amends:** RESTRUCTURE-PLAN.md §1.2 — `dsl/` is a **platform package**, not part of the "`src/` is CLI-only" set.
+---
+id: 0061
+title: "`@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved"
+status: Accepted
+date: 2026-07-01
+deciders: [sean]
+area: Codegen / DSL / packaging
+enforcement: code
+tags: [codegen, dsl, packaging]
+relates-to: [27, 34, 36, 40]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/dsl/src/index.ts
+  - packages/codegen/src/index.ts
+verified-by: []
+long-form: true
+---
 
 ## Context
 

@@ -1,8 +1,24 @@
-# ADR-065: Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth
-
-**Status:** Accepted (impl phased, #264)
-**Date:** 2026-07-03
-**Refs:** ADR-064 (runtime as a published package), #252, #254, #264
+---
+id: 0065
+title: Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#264"]
+date: 2026-07-03
+deciders: [sean]
+area: Docs / tooling / packaging
+enforcement: code
+tags: [docs, tooling, packaging]
+relates-to: [64]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - scripts/generate-dsl-schema.ts
+verified-by:
+  - build:schema:dsl:check
+long-form: true
+---
 
 ## Context
 

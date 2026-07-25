@@ -4,12 +4,22 @@ title: CODEOWNERS and Review Routing for Architectural Surfaces
 status: Proposed
 date: 2026-05-28
 deciders: [sean]
+area: Governance / review
 enforcement: convention
+tags: [governance, codeowners, review, architecture, gap]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [governance, codeowners, review, architecture, gap]
-summary: Architecture-critical paths must be covered by CODEOWNERS and required review so changes to contracts, runtime, framework plugins, CLI base infrastructure, and ADRs cannot merge without explicit domain review.
-rationale-summary: The repository has a mature ADR and governance culture but no CODEOWNERS file. That leaves review routing implicit and makes it too easy for high-impact architectural changes to merge without the right maintainer in the loop.
+implemented-by: []
+verified-by: []
+summary: >-
+  Architecture-critical paths must be covered by CODEOWNERS and required review so changes to
+  contracts, runtime, framework plugins, CLI base infrastructure, and ADRs cannot merge without
+  explicit domain review.
+rationale-summary: >-
+  The repository has a mature ADR and governance culture but no CODEOWNERS file. That leaves
+  review routing implicit and makes it too easy for high-impact architectural changes to merge
+  without the right maintainer in the loop.
 long-form: true
 ---
 

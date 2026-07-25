@@ -1,9 +1,19 @@
-# ADR-067 — Manifest-declared slot contract: slots are declared in the DSL, code is generated from the declaration
-
-- **Status:** Accepted
-- **Date:** 2026-07-11
-- **Relates to:** ADR-043 (manifest-driven codegen), ADR-057 (host-assigned channel paths), ADR-058 (slot-provider MFEs), ADR-066 (stable slot addressing / desired-state placement)
-- **Tracked in:** #265
+---
+id: 0067
+title: "Manifest-declared slot contract: slots are declared in the DSL, code is generated from the declaration"
+status: Accepted
+date: 2026-07-11
+deciders: [sean]
+area: DSL / codegen / slots / contract
+enforcement: code
+tags: [dsl, codegen, slots, contract]
+relates-to: [43, 57, 58, 66]
+supersedes: []
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 

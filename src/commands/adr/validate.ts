@@ -39,7 +39,7 @@ const DEFAULT_SOURCE_ROOTS = ['src', 'packages', 'scripts'];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage', '__tests__']);
 
-/** Rows of the ADR index table in `docs/spec.md`: `| ADR-074 | … |`. */
+/** Rows of the ADR index table in `docs/spec.md`: `| ADR-0NN | … |`. */
 const INDEX_ROW = /^\|\s*ADR-(\d{2,4})\s*\|/gm;
 
 export interface AdrValidateOptions {

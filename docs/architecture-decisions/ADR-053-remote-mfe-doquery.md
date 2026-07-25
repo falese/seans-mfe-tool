@@ -1,20 +1,24 @@
 ---
 id: 0053
-title: "RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient for all MFE+BFF combinations"
+title: RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient for all MFE+BFF combinations
 status: Implemented
 date: 2026-06-03
 deciders: [sean]
+area: Runtime / query / BFF
 enforcement: code
+tags: [runtime, base-mfe, remote-mfe, bff, doquery, codegen]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, base-mfe, remote-mfe, bff, doquery, codegen]
-summary: >
-  The RemoteMFE.doQuery override that threw "Query not supported for remote MFE type"
-  is removed. BaseMFE.doQuery already handles URL resolution (inputs.bffUrl, manifest,
-  env, fallback), header forwarding, and error shaping for all MFE+BFF combinations.
-  The throw was blocking RemoteMFE+BFF subclasses and forcing codegen to emit duplicated
-  fetch logic as a workaround. The generated doQuery override and its fetchBff helper
-  are also removed — the inheritance chain now works without them.
+implemented-by: []
+verified-by: []
+summary: >-
+  The RemoteMFE.doQuery override that threw "Query not supported for remote MFE type" is
+  removed. BaseMFE.doQuery already handles URL resolution (inputs.bffUrl, manifest, env,
+  fallback), header forwarding, and error shaping for all MFE+BFF combinations. The throw was
+  blocking RemoteMFE+BFF subclasses and forcing codegen to emit duplicated fetch logic as a
+  workaround. The generated doQuery override and its fetchBff helper are also removed — the
+  inheritance chain now works without them.
 long-form: true
 ---
 

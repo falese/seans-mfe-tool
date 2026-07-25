@@ -4,12 +4,23 @@ title: BaseCommand pattern — every oclif command extends BaseCommand
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: CLI / contracts
 enforcement: code
+tags: [cli, oclif, base-command, json-envelope, error-handling]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [cli, oclif, base-command, json-envelope, error-handling]
-summary: Every oclif command must extend BaseCommand from @seans-mfe/oclif-base and implement runCommand() instead of run(), which provides automatic JSON envelope output, structured error handling, and hook lifecycle.
-rationale-summary: Without a shared base, each command reimplements --json output, error serialisation, and exit code logic differently; BaseCommand enforces a single contract that works for both human (colored) and AI (--json) consumers.
+implemented-by:
+  - packages/oclif-base/src/BaseCommand.ts
+verified-by: []
+summary: >-
+  Every oclif command must extend BaseCommand from @seans-mfe/oclif-base and implement
+  runCommand() instead of run(), which provides automatic JSON envelope output, structured error
+  handling, and hook lifecycle.
+rationale-summary: >-
+  Without a shared base, each command reimplements --json output, error serialisation, and exit
+  code logic differently; BaseCommand enforces a single contract that works for both human
+  (colored) and AI (--json) consumers.
 long-form: true
 ---
 

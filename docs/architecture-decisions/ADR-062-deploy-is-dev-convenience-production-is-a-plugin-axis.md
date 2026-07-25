@@ -1,10 +1,19 @@
-# ADR-062 — `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis
-
-- **Status:** Accepted
-- **Date:** 2026-07-01
-- **Tracking issue (future direction):** #250
-- **Relates to:** ADR-036 (framework plugins / `loadFrameworkPlugin`), ADR-044 (production container hardening for generated MFEs), ADR-022 (plugin-first architecture), ADR-034 (framework/bundler as DSL fields), the RESTRUCTURE-PLAN §3 item 5 ("slim the big command files")
-- **Supersedes:** the inline production-deployment codegen in `src/commands/deploy.ts` (the `productionDeploy` / `dockerComposeProductionDeploy` / `kubernetesProductionDeploy` generators)
+---
+id: 0062
+title: "`deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis"
+status: Accepted
+date: 2026-07-01
+deciders: [sean]
+area: Deploy / plugins / scope
+enforcement: code
+tags: [deploy, plugins, scope]
+relates-to: [22, 34, 36, 44]
+supersedes: []
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 

@@ -4,12 +4,28 @@ title: Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contrac
 status: Implemented
 date: 2026-06-10
 deciders: [sean]
+area: Contracts / daemon / control-plane
 enforcement: code
+tags: [contracts, daemon, control-plane, runtime, protocol, messages]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [contracts, daemon, control-plane, runtime, protocol, messages]
-summary: The Renderer ⇄ Daemon ⇄ Registry ⇄ MFE wire protocol (PLATFORM-CONTRACT.md v3.2) is codified once in `@seans-mfe/contracts/messages` — Message envelope, ActionRecord, Resolution, RenderedExperience, ExperienceState, SessionContext, MfeRegistration, DaemonConfig — plus runtime guards (`isResolution`, `isRenderedExperience`, `isActionRecord`, `buildMessage`). The daemon repo's `@control-plane/contracts` re-exports these types instead of defining its own; component-era CARD/FORM/NOTIFICATION shapes are replaced by MFE-owned `RenderedExperience`.
-rationale-summary: Three divergent copies of the protocol existed (PLATFORM-CONTRACT.md, packages/contracts/src/messages.ts, daemon/contracts/types.ts) with incompatible direction/kind unions and a component-typed payload the platform spec explicitly forbids. A single typed source of truth — with per-user SessionContext so the registry can resolve experiences per user, per application — is the precondition for the daemon to select, render, and control SMT-generated MFEs dynamically.
+implemented-by: []
+verified-by: []
+summary: >-
+  The Renderer ⇄ Daemon ⇄ Registry ⇄ MFE wire protocol (PLATFORM-CONTRACT.md v3.2) is codified
+  once in `@seans-mfe/contracts/messages` — Message envelope, ActionRecord, Resolution,
+  RenderedExperience, ExperienceState, SessionContext, MfeRegistration, DaemonConfig — plus
+  runtime guards (`isResolution`, `isRenderedExperience`, `isActionRecord`, `buildMessage`). The
+  daemon repo's `@control-plane/contracts` re-exports these types instead of defining its own;
+  component-era CARD/FORM/NOTIFICATION shapes are replaced by MFE-owned `RenderedExperience`.
+rationale-summary: >-
+  Three divergent copies of the protocol existed (PLATFORM-CONTRACT.md,
+  packages/contracts/src/messages.ts, daemon/contracts/types.ts) with incompatible
+  direction/kind unions and a component-typed payload the platform spec explicitly forbids. A
+  single typed source of truth — with per-user SessionContext so the registry can resolve
+  experiences per user, per application — is the precondition for the daemon to select, render,
+  and control SMT-generated MFEs dynamically.
 long-form: true
 ---
 

@@ -4,12 +4,21 @@ title: Plugin-first architecture — falese/daemon and falese/coder as oclif plu
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: Architecture
 enforcement: convention
+tags: [plugin-architecture, oclif, monorepo, daemon, coder]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [plugin-architecture, oclif, monorepo, daemon, coder]
-summary: The daemon and coder toolsets ship as separate oclif plugins depending on @seans-mfe/contracts rather than being merged into this monorepo; monorepo consolidation is a later phase.
-rationale-summary: Merging prematurely would entangle release cycles; keeping them as oclif plugins lets them evolve independently while sharing the contracts package, and validates the plugin model before committing to consolidation.
+implemented-by: []
+verified-by: []
+summary: >-
+  The daemon and coder toolsets ship as separate oclif plugins depending on @seans-mfe/contracts
+  rather than being merged into this monorepo; monorepo consolidation is a later phase.
+rationale-summary: >-
+  Merging prematurely would entangle release cycles; keeping them as oclif plugins lets them
+  evolve independently while sharing the contracts package, and validates the plugin model
+  before committing to consolidation.
 long-form: false
 ---
 

@@ -4,12 +4,23 @@ title: Typed error hierarchy — never throw raw Error
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: CLI / contracts
 enforcement: code
+tags: [errors, contracts, cli, runtime, type-safety]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [errors, contracts, cli, runtime, type-safety]
-summary: All thrown errors must be instances of a domain-typed class from @seans-mfe/contracts — ValidationError, BusinessError, NetworkError, SystemError, TimeoutError, or SecurityError — never raw Error.
-rationale-summary: Raw errors provide no retryability signal, no user-facing vs internal distinction, and no structured serialisation; typed errors enable BaseCommand and the runtime to handle them correctly without pattern-matching on message strings.
+implemented-by:
+  - packages/contracts/src/errors
+verified-by: []
+summary: >-
+  All thrown errors must be instances of a domain-typed class from @seans-mfe/contracts —
+  ValidationError, BusinessError, NetworkError, SystemError, TimeoutError, or SecurityError —
+  never raw Error.
+rationale-summary: >-
+  Raw errors provide no retryability signal, no user-facing vs internal distinction, and no
+  structured serialisation; typed errors enable BaseCommand and the runtime to handle them
+  correctly without pattern-matching on message strings.
 long-form: true
 ---
 

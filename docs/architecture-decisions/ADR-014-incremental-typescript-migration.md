@@ -4,12 +4,20 @@ title: Incremental TypeScript Migration
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Codebase
 enforcement: code
+tags: [typescript, migration, codegen]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [typescript, migration, codegen]
-summary: New CLI code and recently-completed modules are written in TypeScript; existing JavaScript remains until touched, with ts-node inline registration enabling a mixed JS/TS codebase.
-rationale-summary: Incremental migration delivers type safety where it matters most (DSL parsing, codegen) without the big-bang risk and scope creep of a full codebase rewrite.
+implemented-by: []
+verified-by: []
+summary: >-
+  New CLI code and recently-completed modules are written in TypeScript; existing JavaScript
+  remains until touched, with ts-node inline registration enabling a mixed JS/TS codebase.
+rationale-summary: >-
+  Incremental migration delivers type safety where it matters most (DSL parsing, codegen)
+  without the big-bang risk and scope creep of a full codebase rewrite.
 long-form: true
 ---
 
@@ -91,5 +99,5 @@ module.exports = {
 ## References
 
 - Session 7 requirements elicitation
-- ADR-008: TypeScript Strict Mode (Agent Orchestrator — intentionally stricter)
+- ADR-023: No-any TypeScript discipline
 - ADR-009: Language Field and Template Selection

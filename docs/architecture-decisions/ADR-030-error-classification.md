@@ -1,15 +1,27 @@
 ---
 id: 0030
 title: Error Classification with Hybrid Detection
-status: Proposed
+status: Implemented
 date: 2025-12-11
 deciders: [sean]
+area: Lifecycle engine
 enforcement: code
+tags: [runtime, errors, retry, classification, security]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, errors, retry, classification, security]
-summary: Implement typed error classes (NetworkError, ValidationError, SecurityError, etc.) with a hybrid detection algorithm — typed error properties first, regex pattern matching fallback — and exponential-backoff retry with onRetry hooks.
-rationale-summary: All errors were handled generically regardless of type, causing inappropriate retry of validation errors, stack traces leaked to users, and security errors reaching client output without sanitisation.
+implemented-by:
+  - packages/contracts/src/error-classifier.ts
+  - packages/runtime/src/retry-wrapper.ts
+verified-by: []
+summary: >-
+  Implement typed error classes (NetworkError, ValidationError, SecurityError, etc.) with a
+  hybrid detection algorithm — typed error properties first, regex pattern matching fallback —
+  and exponential-backoff retry with onRetry hooks.
+rationale-summary: >-
+  All errors were handled generically regardless of type, causing inappropriate retry of
+  validation errors, stack traces leaked to users, and security errors reaching client output
+  without sanitisation.
 long-form: true
 ---
 

@@ -1,8 +1,22 @@
-# ADR-072 — The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest
-
-- **Status:** Accepted
-- **Date:** 2026-07-25
-- **Relates to:** ADR-036 (framework plugins), ADR-058 (slot-provider MFEs), ADR-066 (assigned-name identity), ADR-067 (manifest-declared slot contract / three layers), ADR-069 (grammar single source)
+---
+id: 0072
+title: "The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest"
+status: Accepted
+date: 2026-07-25
+deciders: [sean]
+area: Codegen / slots / app-code API / typing
+enforcement: code
+tags: [codegen, slots, app-code-api, typing]
+relates-to: [36, 58, 66, 67, 69]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/codegen/src/slot-types.ts
+  - packages/framework-react/src/runtime/DeclaredSlot.tsx
+  - packages/framework-angular/src/runtime/declared-slot.directive.ts
+verified-by: []
+long-form: true
+---
 
 ## Context
 

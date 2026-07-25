@@ -1,9 +1,20 @@
-# ADR-069 — Slot grammar single-sourced in contracts
-
-- **Status:** Accepted
-- **Date:** 2026-07-12
-- **Relates to:** ADR-061 (contracts zero-dependency invariant), ADR-066 (assigned-name identity rules), ADR-067 (manifest-declared slot contract)
-- **Tracked in:** #265
+---
+id: 0069
+title: Slot grammar single-sourced in contracts
+status: Accepted
+date: 2026-07-12
+deciders: [sean]
+area: Contracts / DSL / runtime / packaging
+enforcement: code
+tags: [contracts, dsl, runtime, packaging]
+relates-to: [61, 66, 67]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/contracts/src/slot-grammar.ts
+verified-by: []
+long-form: true
+---
 
 ## Context
 

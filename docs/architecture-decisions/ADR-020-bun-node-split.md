@@ -4,12 +4,21 @@ title: Bun for dev entry, Node for published entry — permanent split
 status: Accepted
 date: 2026-04-17
 deciders: [sean]
+area: CLI dev workflow
 enforcement: code
+tags: [cli, bun, node, dev-experience, publish]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [cli, bun, node, dev-experience, publish]
-summary: bin/dev.ts runs under Bun for zero-transpile development iteration; bin/run.js is the pure-Node published entry that loads compiled dist/ — these two entry points are a permanent architectural split.
-rationale-summary: Bun's direct TypeScript execution eliminates the build-then-run loop during development, but the published npm package must run on Node ≥18 without requiring Bun in consumer environments.
+implemented-by: []
+verified-by: []
+summary: >-
+  bin/dev.ts runs under Bun for zero-transpile development iteration; bin/run.js is the
+  pure-Node published entry that loads compiled dist/ — these two entry points are a permanent
+  architectural split.
+rationale-summary: >-
+  Bun's direct TypeScript execution eliminates the build-then-run loop during development, but
+  the published npm package must run on Node ≥18 without requiring Bun in consumer environments.
 long-form: false
 ---
 

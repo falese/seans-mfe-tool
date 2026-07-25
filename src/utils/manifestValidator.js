@@ -53,7 +53,7 @@ const KNOWN_TRANSFORMS = [
  * 
  * NOTE: This JavaScript validator is used by CLI commands for pre-generation checks.
  * The TypeScript version in unified-generator.ts is used during code generation.
- * Both should be kept in sync until we fully migrate to TypeScript (ADR-048).
+ * Both should be kept in sync until we fully migrate to TypeScript (ADR-014).
  */
 function validateManifest(manifest) {
   const errors = [];

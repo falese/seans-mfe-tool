@@ -4,12 +4,25 @@ title: Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs
 status: Implemented
 date: 2026-05-30
 deciders: [sean]
+area: Angular / security
 enforcement: code
+tags: [angular, security, codegen, dependencies, vulnerability]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [angular, security, codegen, dependencies, vulnerability]
-summary: Upgrade Angular from ^17.0.0 to ^19.2.16 in all generated Angular MFE templates and runtime shared-dependency declarations to resolve five HIGH severity XSS CVEs fixed in Angular 18/19. TypeScript constraint is bumped from ~5.2.0 to ~5.7.0 to satisfy Angular 19's peer requirement (>=5.5 <5.9).
-rationale-summary: Angular 17 carries 5 HIGH XSS CVEs (GHSA-58c5-g7wp-6w37, GHSA-v4hv-rgfq-gp49, GHSA-g93w-mfhg-p222, GHSA-prjf-86w9-mfqv, GHSA-jrmj-c5cx-3cw6). Generated MFEs are covered by the policy set in ADR-048 (Dependency Update and Vulnerability Response Policy): HIGH severity vulnerabilities in production packages require remediation within 30 days. Angular 19.2.16 is the earliest release that resolves all five CVEs.
+implemented-by: []
+verified-by: []
+summary: >-
+  Upgrade Angular from ^17.0.0 to ^19.2.16 in all generated Angular MFE templates and runtime
+  shared-dependency declarations to resolve five HIGH severity XSS CVEs fixed in Angular 18/19.
+  TypeScript constraint is bumped from ~5.2.0 to ~5.7.0 to satisfy Angular 19's peer requirement
+  (>=5.5 <5.9).
+rationale-summary: >-
+  Angular 17 carries 5 HIGH XSS CVEs (GHSA-58c5-g7wp-6w37, GHSA-v4hv-rgfq-gp49,
+  GHSA-g93w-mfhg-p222, GHSA-prjf-86w9-mfqv, GHSA-jrmj-c5cx-3cw6). Generated MFEs are covered by
+  the policy set in ADR-048 (Dependency Update and Vulnerability Response Policy): HIGH severity
+  vulnerabilities in production packages require remediation within 30 days. Angular 19.2.16 is
+  the earliest release that resolves all five CVEs.
 long-form: true
 ---
 

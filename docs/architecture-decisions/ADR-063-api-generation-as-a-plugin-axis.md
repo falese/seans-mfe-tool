@@ -1,9 +1,22 @@
-# ADR-063 — API-backend generation is a plugin axis, not a wrapper around one OSS codegen
-
-- **Status:** Accepted (implementation deferred)
-- **Date:** 2026-07-01
-- **Tracking issue:** #251
-- **Relates to:** ADR-036 (framework plugins / `loadFrameworkPlugin`), ADR-022 (plugin-first architecture), ADR-061 (`@seans-mfe/dsl` + `@seans-mfe/codegen` packaging; byte-identical characterization harness), ADR-062 (the same "return as a plugin axis" move applied to deploy), PDR-001 (generate, don't hand-write), PDR-004 (plugin-first ecosystem)
+---
+id: 0063
+title: API-backend generation is a plugin axis, not a wrapper around one OSS codegen
+status: Accepted
+impl:
+  stage: deferred
+  refs: ["#251"]
+date: 2026-07-01
+deciders: [sean]
+area: Codegen / API / plugins
+enforcement: code
+tags: [codegen, api, plugins]
+relates-to: [22, 36, 61, 62]
+supersedes: []
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 

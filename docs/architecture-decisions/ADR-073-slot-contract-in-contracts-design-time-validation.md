@@ -1,8 +1,23 @@
-# ADR-073 — Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable
-
-- **Status:** Accepted
-- **Date:** 2026-07-25
-- **Relates to:** ADR-061 (contracts zero-dependency invariant), ADR-064 (runtime as a published package), ADR-065 (generate-and-diff idiom), ADR-066 (desired-state placement), ADR-067 (manifest-declared slot contract), ADR-068 (provider-scoped addresses), ADR-069 (grammar single source)
+---
+id: 0073
+title: Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable
+status: Accepted
+date: 2026-07-25
+deciders: [sean]
+area: Contracts / CLI / slots / design-time validation
+enforcement: code
+tags: [contracts, cli, slots, design-time-validation]
+relates-to: [61, 64, 65, 66, 67, 68, 69]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/contracts/src/slot-contract.ts
+  - packages/dsl/src/slot-validation.ts
+  - src/commands/slots/validate.ts
+verified-by:
+  - check:mfe-consistency
+long-form: true
+---
 
 ## Context
 

@@ -1,9 +1,19 @@
-# ADR-060 — Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution
-
-- **Status:** Accepted
-- **Date:** 2026-06-15
-- **Relates to:** ADR-054 (control-plane protocol), ADR-055 (LayoutManager), ADR-056 (presentation boundary), ADR-057 (virtualized socket), ADR-058 (slot-provider MFEs), ADR-059 (BaseControlPlane), ADR-041 (BaseMFE capability contract), ADR-042 (lifecycle state machine), ADR-030 (error classification)
-- **Supersedes (partial):** the *deferred React in-tree declarative provider* of ADR-056. The rest of ADR-056 (the thin waist, the imperative floor, the six layers, the boundary test) stands unchanged.
+---
+id: 0060
+title: "Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution"
+status: Accepted
+date: 2026-06-15
+deciders: [sean]
+area: Runtime / composition / resilience / context
+enforcement: code
+tags: [runtime, composition, resilience, context]
+relates-to: [30, 41, 42, 54, 55, 56, 57, 58, 59]
+supersedes: [56]
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 

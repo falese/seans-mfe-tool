@@ -4,12 +4,24 @@ title: Production Container Hardening for Generated MFEs
 status: Accepted
 date: 2026-05-28
 deciders: [sean]
+area: Docker / deploy / security
 enforcement: code
+tags: [docker, nginx, kubernetes, security, deploy, generated-output, non-root]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [docker, nginx, kubernetes, security, deploy, generated-output, non-root]
-summary: Generated MFE containers run as non-root on unprivileged nginx (port 8080), ship a hardened federation-aware nginx server block (security headers, gzip, /health, content-hash-friendly caching, remoteEntry CORS), and the Docker/compose/k8s artifacts are wired consistently (matching Dockerfile name, container port, readiness path, securityContext).
-rationale-summary: The runtime/federation layer was production-capable but the packaging layer was not — the generated Dockerfile copied no nginx config and ran as root, the prod compose referenced a Dockerfile that was never written, and the nginx config lacked security headers and federation CORS. Hardening the generators makes every generated MFE production-ready by default.
+implemented-by: []
+verified-by: []
+summary: >-
+  Generated MFE containers run as non-root on unprivileged nginx (port 8080), ship a hardened
+  federation-aware nginx server block (security headers, gzip, /health, content-hash-friendly
+  caching, remoteEntry CORS), and the Docker/compose/k8s artifacts are wired consistently
+  (matching Dockerfile name, container port, readiness path, securityContext).
+rationale-summary: >-
+  The runtime/federation layer was production-capable but the packaging layer was not — the
+  generated Dockerfile copied no nginx config and ran as root, the prod compose referenced a
+  Dockerfile that was never written, and the nginx config lacked security headers and federation
+  CORS. Hardening the generators makes every generated MFE production-ready by default.
 long-form: true
 ---
 

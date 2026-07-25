@@ -1,15 +1,26 @@
 ---
 id: 0029
 title: Timeout Protection with AbortSignal
-status: Proposed
+status: Implemented
 date: 2025-12-11
 deciders: [sean]
+area: Lifecycle engine
 enforcement: code
+tags: [runtime, platform-handlers, timeout, reliability, abort-signal]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, platform-handlers, timeout, reliability, abort-signal]
-summary: Implement hierarchical timeout configuration (hook > handler > phase > global default) using Promise.race and AbortSignal, with configurable onTimeout behaviour (error | warn | skip).
-rationale-summary: Handlers that hang indefinitely block MFE lifecycle execution and exhaust resources; no cancellation mechanism existed; AbortSignal is the standard Node.js pattern and integrates cleanly with fetch.
+implemented-by:
+  - packages/runtime/src/timeout-wrapper.ts
+verified-by:
+  - packages/runtime/src/__tests__/timeout-wrapper.test.ts
+summary: >-
+  Implement hierarchical timeout configuration (hook > handler > phase > global default) using
+  Promise.race and AbortSignal, with configurable onTimeout behaviour (error | warn | skip).
+rationale-summary: >-
+  Handlers that hang indefinitely block MFE lifecycle execution and exhaust resources; no
+  cancellation mechanism existed; AbortSignal is the standard Node.js pattern and integrates
+  cleanly with fetch.
 long-form: true
 ---
 

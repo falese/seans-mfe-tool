@@ -3,7 +3,7 @@
  *
  * The decision record governs every other gate in this repo and was the last
  * artifact kept in sync by hand. It drifted exactly as the platform's own thesis
- * predicts (ADR-065, ADR-074): twelve cross-references left pointing at
+ * predicts (ADR-065, ADR-075 §Context): twelve cross-references left pointing at
  * renumbered decisions, `superseded-by` empty in all 58 frontmatter files while
  * three real supersessions lived in prose, and two ADRs marked `Proposed` while
  * shipped code cited them by number.
@@ -208,7 +208,7 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
 
     lines(document.body).forEach((line, index) => {
       const suppressed = SUPPRESSION.exec(line)?.[1];
-      const lineNumber = index + 1;
+      const lineNumber = document.bodyLine + index;
 
       for (const match of line.matchAll(ADR_MENTION)) {
         const id = Number.parseInt(match[1], 10);
