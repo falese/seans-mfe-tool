@@ -217,7 +217,7 @@ versus wrong-but-invisible is the entire argument.
 | --- | --- | --- |
 | Design time | Every slot id an MFE can provide, with descriptions; keyed patterns validate target *shape* | `providesSlots` in the manifest, served by `describe()` / discovery |
 | Config time | "Does any installed MFE declare this target?" — typos and renames rejected in CI (`slots:validate`) and at rule-save (registry `POST /mfes`) | Union of registered manifests |
-| Config time | "Does this MFE actually implement what it declares?" — a declared slot no component registers (`mfe:validate`) | The MFE's own sources |
+| Config time | "Does this MFE actually implement what it declares?" — a declared slot no component registers (`mfe:validate`, `slots-implemented` rule) | The MFE's own sources |
 | Runtime | Which slots this session actually has right now; drift between declared and provided | `SLOT_PROVIDED` / `SLOT_RELEASED` signals |
 
 Design time answers *may this address exist*; runtime answers *does it exist
@@ -232,7 +232,7 @@ right now*; convergence makes the gap between them safe.
 | Contract logic (matching, guard, address registry) — framework-free, written once | `packages/contracts/src/slot-contract.ts` (re-exported by `packages/runtime/src/slot-contract.ts`) |
 | Design-time checks (unreferenced slots, placement targets) | `packages/dsl/src/slot-validation.ts` |
 | `DeclaredSlotId` derivation | `packages/codegen/src/slot-types.ts` |
-| CLI gates | `src/commands/mfe/validate.ts`, `src/commands/slots/validate.ts` |
+| CLI gates | `packages/codegen/src/validate.ts` (`slots-implemented` rule), `src/commands/slots/validate.ts` |
 | Placement rules as data | `examples/*/control-plane/rules.json` |
 | React sugar for shells/hand-written MFEs (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
 | Angular sugar for shells/hand-written MFEs (`DeclaredSlotDirective`) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |

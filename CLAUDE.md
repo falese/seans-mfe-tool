@@ -81,7 +81,7 @@ ADR quick index: `@docs/spec.md#adr-index`
 | Framework plugin system (ADR-036, #167–#185, PRs #187–#188) | ✅ Done |
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
 | Slot contract — stable addressing, desired-state placement, manifest-declared/provider-scoped slots, React + Angular sugar, single-sourced grammar (ADR-066/067/068/069, #265) | ✅ Done (PR #266); see `docs/slot-contract.md` |
-| Slot app-code API + design-time validation — `DeclaredSlot` as the sanctioned API with manifest-typed ids, `mfe:validate` / `slots:validate`, registry rule-save checks (ADR-072/073) | ✅ Done; see `docs/slot-architecture.md` |
+| Slot app-code API + design-time validation — `DeclaredSlot` as the sanctioned API with manifest-typed ids, the `slots-implemented` rule in `mfe:validate`, `slots:validate`, registry rule-save checks (ADR-072/073) | ✅ Done; see `docs/slot-architecture.md` |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
 | Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
 | npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
@@ -109,7 +109,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |
 | Product decisions (why) | `docs/product-decisions/` (PDRs + register) |
 | Slot contract logic (matching, guard, address registry) | `packages/contracts/src/slot-contract.ts` (re-exported by `packages/runtime/src/slot-contract.ts`, ADR-073) |
-| Design-time slot checks | `packages/dsl/src/slot-validation.ts`; commands `src/commands/mfe/validate.ts`, `src/commands/slots/validate.ts` |
+| Design-time slot checks | `packages/dsl/src/slot-validation.ts` (pure); wired as the `slots-implemented` rule in `packages/codegen/src/validate.ts` and as `src/commands/slots/validate.ts` |
 | `DeclaredSlotId` derivation (ADR-072) | `packages/codegen/src/slot-types.ts` |
 | Placement rules as data | `examples/*/control-plane/rules.json` |
 | React slot sugar (`DeclaredSlot`, beside `MfeHost`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |

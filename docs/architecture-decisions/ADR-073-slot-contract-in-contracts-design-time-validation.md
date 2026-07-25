@@ -97,30 +97,46 @@ Rules it encodes, following ADR-068's address grammar:
   order is not guaranteed and a fleet may be validated one MFE at a time; treating
   this as fatal would make the check unusable during incremental rollout.
 
-### 3. Two CLI surfaces, because there are two questions
+### 3. Two questions, two surfaces — but only one new command
 
-Both extend `BaseCommand`, implement `runCommand()`, use typed errors, and emit
-exactly one `CommandResult` line under `--json`.
+The intra-MFE question ("does this MFE implement what it declares?") and the
+cross-MFE question ("does this rule target something that exists?") are different,
+but only the second one needs a command of its own.
 
-- **`mfe:validate [dir]`** — *intra*-MFE consistency: is every slot this MFE
-  declares actually implemented? Reports `declared-but-unreferenced` for a declared
-  id with no reference anywhere in `src/**`, matching on the literal prefix before
-  the first `{param}` segment (`berth.{id}` → search for `berth.`).
+- **`mfe:validate [dir]` — a rule, not a new command.** PR #309 already ships
+  `mfe:validate` for #296, built as a `ValidationRule` union over a pure,
+  I/O-free `validateMfeConsistency()` with a thin command shell. The slot check is
+  one more rule in that set — `slots-implemented` — not a second command wearing
+  the same name.
 
-  **This is explicitly a heuristic**, and the command says so in its output. It
-  catches dead declarations, typos, and slots deleted from a component but left in
-  the manifest. It cannot see conditional registration, and a sufficiently dynamic
-  id will evade it. It is a lint, not a proof — the alternative (rendering every
-  capability with synthesized props to observe real registrations) needs props the
-  platform cannot invent.
+  An earlier draft of this ADR had it the other way around, claiming the
+  dependency assertions would later drop into a slot-first command. That was
+  backwards, and the two commands collided add/add on
+  `src/commands/mfe/validate.ts`. #309 is the host.
 
-  This is the slot half of #296. The dependency and typecheck assertions in that
-  issue drop into the same command later; #296 stays open until they do.
+  The rule reports a declared id with no reference anywhere in `src/**`, matching
+  on the literal prefix before the first `{param}` segment (`berth.{id}` → search
+  for `berth.`), delegating to `findUnreferencedSlots` in `@seans-mfe/dsl` so the
+  matching has one implementation. It is skipped when the manifest declares no
+  slots, and when the caller supplies no sources — a scan over nothing would flag
+  every declaration.
+
+  **This is explicitly a heuristic.** It catches dead declarations, typos, and
+  slots deleted from a component but left in the manifest. It cannot see
+  conditional registration, and a sufficiently dynamic id will evade it. It is a
+  lint, not a proof — the alternative (rendering every capability with synthesized
+  props to observe real registrations) needs props the platform cannot invent.
+
+  Living inside `validateMfeConsistency` means `check:mfe-consistency` carries the
+  slot rule fleet-wide, which a standalone command would not have.
 
 - **`slots:validate --manifests <glob> --rules <file>`** — *cross*-MFE placement:
-  does every rule target a slot that exists? Parses provider manifests through
-  `@seans-mfe/dsl`, builds the address registry, and checks every
-  `resolve.props.slot`.
+  does every rule target a slot that exists? This one is genuinely new: it operates
+  over the fleet and its rule documents, not over one MFE directory, so it has no
+  home in a per-directory checker. Extends `BaseCommand`, implements
+  `runCommand()`, uses typed errors, and emits exactly one `CommandResult` line
+  under `--json`. Parses provider manifests through `@seans-mfe/dsl`, builds the
+  address registry, and checks every `resolve.props.slot`.
 
 ### 4. Placement rules become a committed artifact
 

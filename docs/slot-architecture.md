@@ -250,7 +250,7 @@ These are true of the implementation and are documented nowhere else:
 | Build | `check:mfe-drift:check` | hand-edited `slots.tsx` |
 | Build | `build:schema:dsl:check` | a stale published manifest schema |
 | Compile | `DeclaredSlotId` | app code using a slot the manifest no longer declares |
-| Design time | `mfe:validate` | a declared slot no component ever registers |
+| Design time | `mfe:validate` (`slots-implemented` rule) | a declared slot no component ever registers |
 | Design time | `slots:validate` | a rule targeting an address no provider declares |
 | Rule save | registry `POST /mfes` | the same, for rules submitted at runtime |
 | Render | `assertDeclared` | an undeclared local id, including from contract-bypassing callers |
@@ -269,6 +269,6 @@ These are true of the implementation and are documented nowhere else:
 | Published sugar | `packages/framework-react/src/runtime/DeclaredSlot.tsx`, `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
 | Binding + convergence | `packages/runtime/src/layout-manager.ts` |
 | Mount adaptors | `packages/runtime/src/layout-adaptors.ts` |
-| CLI gates | `src/commands/mfe/validate.ts`, `src/commands/slots/validate.ts` |
+| CLI gates | `packages/codegen/src/validate.ts` (`slots-implemented` rule, run by `mfe:validate`), `src/commands/slots/validate.ts` |
 | Reference provider | `examples/meridian-station/meridian-console` |
 | Placement rules | `examples/*/control-plane/rules.json` |
