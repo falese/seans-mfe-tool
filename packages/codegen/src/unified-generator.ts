@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '@seans-mfe/dsl';
+import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
  * The resolved codegen variant a caller injects (ADR-061). The CLI derives it
@@ -1422,7 +1423,13 @@ async function renderFiles(
       if (await fs.pathExists(slotsTemplatePath)) {
         files.push({
           path: path.join(basePath, 'src', candidate.replace(/\.ejs$/, '')),
-          content: await renderTemplate(slotsTemplatePath, { ...vars, providesSlots }),
+          content: await renderTemplate(slotsTemplatePath, {
+            ...vars,
+            providesSlots,
+            // ADR-072: the ids are emitted as a type, not only as data, so a
+            // manifest rename is a compile error at every use site.
+            declaredSlotIdUnion: toDeclaredSlotIdUnion(providesSlots),
+          }),
           overwrite: true,
         });
         slotsEmitted = true;

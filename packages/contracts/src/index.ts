@@ -5,3 +5,4 @@ export * from './messages';
 export * from './presentation';
 export * from './framework-plugin';
 export * from './slot-grammar';
+export * from './slot-contract';

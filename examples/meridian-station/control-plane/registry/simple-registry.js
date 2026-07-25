@@ -23,6 +23,7 @@ import { PubSub } from 'graphql-subscriptions';
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocketServer } from 'ws';
+import { validateSlotTarget } from './slot-target.js';
 
 // How long a component stays in memory before being evicted.
 // Keeps the in-memory store from growing forever in a long-running demo.
@@ -37,6 +38,10 @@ class ComponentRegistry {
     this.components = new Map(); // id -> { component, actions: [], lastUpdated }
     this.rules = new Map();      // ruleName -> { condition(state, action), generate(state, action) }
     this.mfes = new Map();       // mfeName -> MfeRegistration (ADR-054, PLATFORM-CONTRACT v3.2)
+    this.routes = new Map();     // mfeName -> routes[] retained as DATA, so the
+                                 // registry can report what it was asked to place
+                                 // (GET /rules). Rules themselves are closures.
+    this.providedSlots = new Map(); // mfeName -> declared local slot ids (ADR-073)
     this.pubsub = new PubSub();
 
     this.setupDefaultRules();
@@ -57,6 +62,35 @@ class ComponentRegistry {
       throw new Error('registerMfe: registration requires name and baseUrl');
     }
     this.mfes.set(registration.name, registration);
+
+    // The slot vocabulary this MFE contributes (ADR-067/ADR-073). Recorded
+    // before the routes are validated so an MFE may target its own slots.
+    if (Array.isArray(registration.providesSlots)) {
+      this.providedSlots.set(
+        registration.name,
+        registration.providesSlots.map((slot) => (typeof slot === 'string' ? slot : slot?.id)).filter(Boolean)
+      );
+    }
+
+    // Reject placements aimed at a slot a registered provider does not declare,
+    // before the rule can ever fire (ADR-067 §4). Warn — never reject — when the
+    // provider has not registered yet: order is not guaranteed.
+    const slotWarnings = [];
+    routes.forEach((route, index) => {
+      const slot = route?.resolve?.props?.slot;
+      if (typeof slot !== 'string' || slot.length === 0) return;
+      const problem = validateSlotTarget(slot, this.providedSlots);
+      if (!problem) return;
+      if (problem.fatal) {
+        throw new Error(
+          `registerMfe: ${registration.name} route ${index} targets an undeclared slot — ${problem.message}`
+        );
+      }
+      slotWarnings.push(problem.message);
+    });
+    for (const warning of slotWarnings) console.warn(`⚠️  Registry: ${warning}`);
+
+    this.routes.set(registration.name, routes);
 
     routes.forEach((route, index) => {
       const when = route.when || {};
@@ -405,6 +439,22 @@ async function startRegistry(port = 4000) {
   // REST: list registered MFEs — the daemon's directory syncs from here
   app.get('/mfes', (_req, res) => {
     res.json({ mfes: registry.getMfes() });
+  });
+
+  // REST: report the placement rules the registry holds, with their targets
+  // (ADR-073). Routes used to vanish into closures the moment they were
+  // registered, so nothing could audit what had been placed where.
+  app.get('/rules', (_req, res) => {
+    const mfes = Array.from(registry.routes.entries()).map(([name, routes]) => ({
+      mfe: name,
+      providesSlots: registry.providedSlots.get(name) || [],
+      routes: routes.map((route) => ({
+        when: route.when || {},
+        capability: route.resolve?.capability,
+        slot: route.resolve?.props?.slot,
+      })),
+    }));
+    res.json({ mfes });
   });
 
   // Health check

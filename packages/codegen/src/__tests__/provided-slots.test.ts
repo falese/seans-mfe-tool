@@ -75,4 +75,46 @@ describe('provided-slots codegen (ADR-067)', () => {
     expect(slots).toBeUndefined();
   });
 
+  // ADR-072: the ids are a generated TYPE, not just data. A manifest rename must
+  // break `tsc` at every use site rather than throwing at runtime in production.
+  it('emits a DeclaredSlotId union so a rename is a compile error', async () => {
+    const manifest = {
+      ...baseManifest,
+      providesSlots: [{ id: 'main' }, { id: 'status' }, { id: 'berth.{id}' }],
+    };
+    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
+
+    // A literal declaration becomes a string-literal member; a {param} segment
+    // becomes `${string}` so `berth.${berthId}` type-checks by interpolation.
+    expect(content).toContain(
+      "export type DeclaredSlotId = 'main' | 'status' | `berth.${string}`;"
+    );
+    // The component's id prop is typed by it — that is what makes it a gate.
+    expect(content).toContain('id: DeclaredSlotId;');
+  });
+
+  it('types multi-param and mid-id {param} segments positionally', async () => {
+    const manifest = {
+      ...baseManifest,
+      providesSlots: [{ id: 'section.{key}.footer' }, { id: 'cell.{row}.{col}' }],
+    };
+    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
+
+    expect(content).toContain(
+      'export type DeclaredSlotId = `section.${string}.footer` | `cell.${string}.${string}`;'
+    );
+  });
+
+  // ADR-072 §3: the sugar lost to the hand-rolled primitive partly because it
+  // could not express what real providers needed (inline style, semantic elements).
+  it('accepts standard element props and an `as` element override', async () => {
+    const manifest = { ...baseManifest, providesSlots: [{ id: 'main' }] };
+    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
+
+    expect(content).toContain('extends React.HTMLAttributes<HTMLElement>');
+    expect(content).toContain('as?: keyof JSX.IntrinsicElements');
+  });
 });

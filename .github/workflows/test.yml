@@ -218,12 +218,33 @@ jobs:
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
 
+      - name: DSL manifest schema is current
+        # The published JSON Schema is what editors and registry rule-authoring
+        # tooling validate manifests against (ADR-067 §4). It is generated from
+        # the zod schema, and without a gate it rots: providesSlots landed
+        # 2026-07-11 and was still missing from the artifact months later
+        # because this check existed but was never wired in (ADR-073 §6).
+        run: npm run build:schema:dsl:check
+
       - name: MFE drift gate — generator-owned files match their manifests
         # Regenerates every MFE from its mfe-manifest.yaml and fails if any
         # generator-owned file (overwrite:true — the platform-contract shims:
         # remote entry, base-mfe/*, bff/*, server.ts, public/*) has drifted.
         # Generic, platform-wide; developer-owned code is untouched (#295).
         run: npm run check:mfe-drift:check
+
+      - name: Slot placement targets resolve to declared slots
+        # Every registry rule's resolve.props.slot must name an address some
+        # provider declares (ADR-067 §4, implemented in ADR-073). An unbindable
+        # placement does not fail loudly at runtime — ADR-066 parks it and waits
+        # — so this is the only place a typo'd or renamed target is caught.
+        run: |
+          ./bin/run.js slots:validate \
+            --rules examples/meridian-station/control-plane/rules.json \
+            --manifests examples/meridian-station
+          ./bin/run.js slots:validate \
+            --rules examples/abc-kids/control-plane/rules.json \
+            --manifests examples/abc-kids
 
       - name: MFE consistency gate — manifest ⇄ package.json ⇄ federation shared
         # Runs the reusable `mfe:validate` core over every examples/** MFE:

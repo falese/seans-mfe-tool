@@ -8,4 +8,5 @@
  */
 export * from './unified-generator';
 export * from './drift';
+export * from './slot-types';
 export * from './validate';

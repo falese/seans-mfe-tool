@@ -11,6 +11,10 @@
  * (`validateMfeConsistency`, unit-tested); this command is the thin I/O shell:
  * read files, parse the config, run an optional `tsc --noEmit`, and throw a
  * typed error (non-zero exit) on any inconsistency.
+ *
+ * It also carries the slot rule (ADR-073): every slot an MFE declares in
+ * `providesSlots` should be registered by its app code. That check needs the
+ * MFE's sources, so the reading happens here and the matching stays pure.
  */
 
 import * as path from 'path';
@@ -24,6 +28,7 @@ import {
   validateMfeConsistency,
   parseFederationSharedEntries,
 } from '@seans-mfe/codegen';
+import type { SourceFile } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
 import type { MfeValidateResult } from '../../oclif/results';
 
@@ -36,6 +41,39 @@ const CONFIG_BY_BUNDLER: Record<string, string> = {
   rspack: 'rspack.config.js',
   webpack: 'webpack.config.js',
 };
+
+/** Extensions worth scanning for a slot reference. */
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte']);
+
+/** Never scanned: build output, dependencies, and the generated contract itself. */
+const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage']);
+
+/**
+ * Read every scannable source file under `dir/src`, skipping the generated slot
+ * contract — `slots.tsx` mirrors the manifest by construction, so counting it as
+ * a reference would make the slot rule vacuous.
+ */
+async function collectSources(dir: string): Promise<SourceFile[]> {
+  const root = path.join(dir, 'src');
+  const sources: SourceFile[] = [];
+
+  const walk = async (current: string): Promise<void> => {
+    for (const entry of await fs.readdir(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (SKIP_DIRECTORIES.has(entry.name)) continue;
+        await walk(full);
+        continue;
+      }
+      if (!SOURCE_EXTENSIONS.has(path.extname(entry.name))) continue;
+      if (/^slots\.(tsx?|jsx?)$/.test(entry.name)) continue;
+      sources.push({ path: full, text: await fs.readFile(full, 'utf8') });
+    }
+  };
+
+  if (await fs.pathExists(root)) await walk(root);
+  return sources;
+}
 
 async function readMergedDependencies(dir: string): Promise<Record<string, string>> {
   const pkgPath = path.join(dir, 'package.json');
@@ -95,12 +133,14 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
 
   const packageDependencies = await readMergedDependencies(dir);
   const sharedEntries = await readSharedEntries(dir, bundler);
+  const sources = await collectSources(dir);
 
   const { ok, checked, issues } = validateMfeConsistency({
     manifest,
     framework,
     packageDependencies,
     sharedEntries,
+    sources,
   });
 
   const typecheck = opts.typecheck ? runTypecheck(dir) : undefined;

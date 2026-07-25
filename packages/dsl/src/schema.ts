@@ -394,7 +394,7 @@ export const ProvidedSlotSchema = z.object({
     if (id.includes('/')) {
       ctx.addIssue({
         code: 'custom',
-        message: `Slot id "${id}" must not contain "/" — path composition is host-owned (ADR-057); declare the local name only`,
+        message: `Slot id "${id}" must not contain "/" — path composition is host-owned (ADR-068); declare the local name only`,
       });
       return;
     }

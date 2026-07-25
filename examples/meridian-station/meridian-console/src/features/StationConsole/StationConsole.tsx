@@ -2,8 +2,8 @@
  * StationConsole — the Meridian Station operator home (ADR-058).
  *
  * Renders the domain menu in its own region and contributes three kinds of
- * region to the host layout through the manifest-backed slot contract
- * (generated src/slots.tsx, ADR-067):
+ * region to the host layout through `DeclaredSlot` — the generated,
+ * manifest-typed registration component (src/slots.tsx, ADR-067/ADR-072):
  *
  *   main       — the active domain MFE composes here
  *   status     — compact status cards compose here
@@ -16,9 +16,9 @@
  * populates itself through six independent control-plane round trips —
  * the console knows nothing about what renders inside a tile.
  */
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
-import { slotContract } from '../../slots';
+import { DeclaredSlot } from '../../slots';
 
 export interface Domain {
   id: string;
@@ -65,49 +65,38 @@ function dispatch(stateKey: string): void {
   });
 }
 
-/** One keyed berth slot — its own component so the ref callback is stable. */
+/**
+ * One keyed berth slot. `berth.${berthId}` type-checks against the generated
+ * `DeclaredSlotId` (ADR-072) — renaming the pattern in the manifest breaks the
+ * build here rather than parking the placement at runtime.
+ */
 const BerthSlot: React.FC<{
   berthId: string;
   provideSlot?: StationConsoleProps['provideSlot'];
-}> = ({ berthId, provideSlot }) => {
-  const register = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, `berth.${berthId}`, el),
-    [berthId, provideSlot]
-  );
-  return (
-    <div
-      ref={register}
-      data-berth={berthId}
-      style={{
-        minHeight: 96,
-        borderRadius: 10,
-        border: '1px dashed #2a3358',
-        background: '#111631',
-        display: 'grid',
-        placeItems: 'center',
-        color: '#3d4770',
-        fontSize: 12,
-      }}
-    >
-      {berthId}
-    </div>
-  );
-};
+}> = ({ berthId, provideSlot }) => (
+  <DeclaredSlot
+    id={`berth.${berthId}`}
+    provideSlot={provideSlot}
+    style={{
+      minHeight: 96,
+      borderRadius: 10,
+      border: '1px dashed #2a3358',
+      background: '#111631',
+      display: 'grid',
+      placeItems: 'center',
+      color: '#3d4770',
+      fontSize: 12,
+    }}
+  >
+    {berthId}
+  </DeclaredSlot>
+);
 
 export const StationConsole: React.FC<StationConsoleProps> = ({
   domains = DEFAULT_DOMAINS as Domain[],
   berths = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6'],
   provideSlot,
 }) => {
-  const registerMain = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
-    [provideSlot]
-  );
-  const registerStatus = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'status', el),
-    [provideSlot]
-  );
-
   // Populate the berth strip: one action per berth, each resolved by the
   // registry into a BerthTile experience addressed to its keyed slot.
   const berthKey = berths.join(',');
@@ -186,14 +175,14 @@ export const StationConsole: React.FC<StationConsoleProps> = ({
       </nav>
 
       {/* Contributed regions: the active domain and the status rail */}
-      <div
-        ref={registerMain}
-        data-declared-slot="main"
+      <DeclaredSlot
+        id="main"
+        provideSlot={provideSlot}
         style={{ minHeight: '60vh', borderRadius: 12, border: '1px dashed #2a3358', background: '#0e1226' }}
       />
-      <div
-        ref={registerStatus}
-        data-declared-slot="status"
+      <DeclaredSlot
+        id="status"
+        provideSlot={provideSlot}
         style={{ minHeight: '60vh', borderRadius: 12, border: '1px dashed #2a3358', background: '#0e1226' }}
       />
     </div>

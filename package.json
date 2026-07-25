@@ -76,11 +76,17 @@
       "@falese/bff-plugin"
     ],
     "topics": {
+      "coder": {
+        "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
+      },
       "daemon": {
         "description": "Control-plane daemon commands (requires @falese/daemon-plugin)"
       },
-      "coder": {
-        "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
+      "mfe": {
+        "description": "MFE consistency checks (mfe:validate)"
+      },
+      "slots": {
+        "description": "Slot contract tooling \u2014 validate registry placement targets (ADR-073)"
       }
     },
     "hooks": {

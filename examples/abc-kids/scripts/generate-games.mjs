@@ -13,8 +13,9 @@
  *
  * Also generates the home/launcher MFE (port 3015, ADR-058) and regenerates:
  *   docker-compose.games.yaml   (one service per game + home, ports 3005-3015)
- *   scripts/register-games.sh   (registers every game + the home, with the
- *                                root catalog rule — ADR-054/055/057/058)
+ *   control-plane/rules.json    (placement rules as data — reviewable and
+ *                                checkable by slots:validate, ADR-073)
+ *   scripts/register-games.sh   (thin loop that POSTs rules.json — ADR-054/055/057/058)
  *   scripts/home.sh             (composes the home into the empty shell)
  */
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -764,14 +765,15 @@ export const handles = {
 export { default } from './App.tsx';
 `;
 
-const gameMenu = () => `import React, { useCallback } from 'react';
+const gameMenu = () => `import React from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
-import { slotContract } from '../../slots';
+import { DeclaredSlot } from '../../slots';
 
 /**
  * GameMenu — the ABC Kids home (ADR-058). Renders a tile per registered game in
  * its own menu region, and contributes the 'main' and 'info' regions to the
- * host as slots (provideSlot) so selected games compose alongside the menu.
+ * host through \`DeclaredSlot\` — the generated, manifest-typed registration
+ * component (ADR-067/ADR-072) — so selected games compose alongside the menu.
  * A tile drives the control plane via the inherited BaseMFE platform capability
  * updateControlPlaneState (ADR-057) — no direct knowledge of any game.
  */
@@ -809,21 +811,10 @@ function dispatch(verb: 'play' | 'show', id: string): void {
 }
 
 export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) => {
-  // Register the two contributed regions through the manifest-backed slot
-  // contract (ADR-067, generated src/slots.tsx): assertDeclared runs on every
-  // bind, so a region id not in the manifest's providesSlots fails fast instead
-  // of silently registering an address the registry rules never validate. This
-  // replaces the raw provideSlot('main', ref) magic string with the contract —
-  // declaration and behavior share one source (the manifest).
-  const registerMain = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
-    [provideSlot]
-  );
-  const registerInfo = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'info', el),
-    [provideSlot]
-  );
-
+  // The two contributed regions are registered by DeclaredSlot below (ADR-072).
+  // Its \`id\` is typed by the manifest (DeclaredSlotId), so a region id the
+  // manifest does not declare fails the build; assertDeclared still runs on
+  // every bind as the runtime backstop. \`as\` keeps the semantic element.
   return (
     <div
       style={{
@@ -889,8 +880,10 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
       </nav>
 
       {/* Contributed to the host as slot 'main' — the selected game mounts here. */}
-      <section
-        ref={registerMain}
+      <DeclaredSlot
+        id="main"
+        provideSlot={provideSlot}
+        as="section"
         aria-label="game"
         style={{
           borderRadius: 16,
@@ -903,11 +896,13 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Select a game from the menu
-      </section>
+      </DeclaredSlot>
 
       {/* Contributed to the host as slot 'info' — cover / game info mounts here. */}
-      <aside
-        ref={registerInfo}
+      <DeclaredSlot
+        id="info"
+        provideSlot={provideSlot}
+        as="aside"
         aria-label="info"
         style={{
           borderRadius: 16,
@@ -918,7 +913,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Tap the info button on a game for details
-      </aside>
+      </DeclaredSlot>
     </div>
   );
 };
@@ -1031,77 +1026,13 @@ for (const game of GAMES) {
 }
 
 // ── Generate the home / launcher MFE (ADR-058) ───────────────
-// Mirrors packages/codegen/templates/base-mfe/slots.tsx.ejs for the home's
-// manifest (providesSlots: main, info) — the DATA layer of ADR-067. Keep in
-// lock-step with the codegen template; GameMenu imports slotContract from it.
-const homeSlots = () => `/**
- * Slot contract for abc-kids-home — GENERATED from mfe-manifest \`providesSlots\`.
- * Do not edit: regenerate after changing the manifest.
- *
- * Three-layer split (ADR-067): this file is the DATA layer — the manifest
- * mirrored into code and bound to the framework-free contract logic in
- * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
- * live there, once; the DeclaredSlot below is thin sugar with no logic of
- * its own. Ids are assigned names, never positions (ADR-066); renaming one
- * is a manifest diff — a contract change, not an incidental string edit.
- */
-import React, { useCallback } from 'react';
-import { createSlotContract } from '@seans-mfe-tool/runtime';
-import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
-
-/** The manifest's providesSlots section, mirrored into code. */
-export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
-  { id: "main", description: "Primary game region" },
-  { id: "info", description: "Contextual game information region" },
-] as const;
-
-/** This MFE's slot contract: matching + declare-before-register guard. */
-export const slotContract = createSlotContract(PROVIDED_SLOTS);
-
-export interface DeclaredSlotProps {
-  /** The slot id to register — must match a manifest declaration. */
-  id: string;
-  /**
-   * The host-supplied registration callback (ADR-058), delivered to this MFE
-   * through its render props by the LayoutManager adaptor. Optional so the
-   * component renders inert in standalone/dev mode — undeclared ids still
-   * fail fast either way.
-   */
-  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
-  className?: string;
-  children?: React.ReactNode;
-}
-
-/**
- * A named region this MFE contributes to the host layout. Registration rides
- * a stable ref callback; re-registration on remount is safe because the host
- * re-binds the address's desired experience instead of destroying it (ADR-066).
- *
- * Keep in lock-step with packages/framework-react/src/runtime/DeclaredSlot.tsx:
- * this is the same component with the contract pre-bound instead of passed as
- * a prop (generated MFEs depend on the runtime package, not framework-react).
- * A change to ref-callback or registration semantics must land in both.
- */
-export function DeclaredSlot({
-  id,
-  provideSlot,
-  className,
-  children,
-}: DeclaredSlotProps): React.ReactElement {
-  slotContract.assertDeclared(id);
-
-  const register = useCallback(
-    (element: HTMLElement | null) => slotContract.register(provideSlot, id, element),
-    [id, provideSlot]
-  );
-
-  return (
-    <div ref={register} className={className} data-declared-slot={id}>
-      {children}
-    </div>
-  );
-}
-`;
+// src/slots.tsx is NOT written here. It is generator-owned output of
+// `seans-mfe-tool remote:generate` (ADR-067, emitted overwrite:true from
+// packages/codegen/templates/base-mfe/slots.tsx.ejs), which the home's own
+// `npm run build` runs and which the repo-wide drift gate
+// (`npm run check:mfe-drift`) keeps current. This script used to carry an
+// inlined copy of that template; ADR-072 §4 removed it — one template, one
+// owner, no lock-step burden.
 
 // Same template as the games, but a single GameMenu capability. The manifest
 // drives `seans-mfe-tool remote:generate` at build time (regenerates
@@ -1120,7 +1051,6 @@ export function DeclaredSlot({
   writeFileSync(join(gmDir, 'GameMenu.test.tsx'), gameMenuTest());
 
   writeFileSync(join(dest, 'mfe-manifest.yaml'), homeManifest());
-  writeFileSync(join(dest, 'src', 'slots.tsx'), homeSlots());
   writeFileSync(join(dest, 'src', 'remote.tsx'), homeRemoteEntry());
   writeFileSync(join(dest, 'src', 'index.tsx'), homeIndex());
   writeFileSync(join(dest, 'Dockerfile'), gameDockerfile(HOME));
@@ -1133,7 +1063,7 @@ registry's \`abc.root\` rule. It is also the layout provider:
 
 - \`mfe-manifest.yaml\` declares local slots \`main\` and \`info\`.
 - Codegen mirrors those declarations into \`src/slots.tsx\`.
-- \`GameMenu\` registers the regions through the generated \`slotContract\`.
+- \`GameMenu\` registers the regions through the generated \`DeclaredSlot\` (ADR-072).
 - The host scopes them to \`abc-kids-home/main\` and
   \`abc-kids-home/info\` (ADR-068).
 
@@ -1254,76 +1184,108 @@ const all = [
   ...EXISTING,
   ...GAMES.map((g) => ({ id: g.id, port: g.port, scope: 'abc_kids_' + underscore(g.id), name: 'abc-kids-' + g.id })),
 ];
-const reg = ['#!/usr/bin/env bash',
-  '# Generated by scripts/generate-games.mjs — registers every ABC Kids game',
-  '# with the control-plane registry (ADR-054/ADR-055). Each game is multi-',
-  '# capability (ADR-056): three routes map state to a capability in the main',
-  '# slot — abc.play.<game> -> PlayGame, abc.show.<game> -> ShowCover,',
-  '# abc.info.<game> -> GetGameInfo. The registration does NOT pin',
-  '# moduleFederation.component, so the resolved capability per route drives',
-  '# which component the LayoutManager mounts.',
-  'set -euo pipefail',
-  'REGISTRY=${REGISTRY:-http://localhost:4000}',
-  ''];
+// ── Placement rules (ADR-073) ────────────────────────────────────────────────
+// Rules are emitted as DATA (control-plane/rules.json), not as inline JSON
+// inside curl heredocs. As an artifact they are reviewable in a diff and
+// checkable in CI — `slots:validate` verifies every resolve.props.slot against
+// the fleet's declared providesSlots before anything is deployed. The register
+// script became a thin loop over the file.
+
 // The Angular quiz is a hand-built MFE (not in GAMES); it registers with the
 // same slot/route grammar so the shell composes it identically (ADR-067 parity).
 const QUIZ = {
   id: 'multiplication-quiz', port: 3003, scope: 'abc_kids_multiplication_quiz',
   name: 'abc-kids-multiplication-quiz', module: './Component',
-  comment: '# abc-kids-multiplication-quiz — the Angular MFE (with a mock GraphQL BFF, ADR-052). Same slot/route grammar as the React games; the shell composes it identically.',
-  echoSuffix: ' (Angular — PlayGame/ShowCover/GetGameInfo)',
 };
 const registered = [...all.slice(0, 2), QUIZ, ...all.slice(2)];
-for (const m of registered) {
-  if (m.comment) reg.push(m.comment);
-  reg.push(
-    'curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d \'' + JSON.stringify({
-      registration: {
-        name: m.name, version: '1.0.0', type: 'remote',
-        baseUrl: 'http://localhost:' + m.port,
-        capabilities: ['load', 'render'],
-        contentType: 'module-federation',
-        remoteEntryUrl: 'http://localhost:' + m.port + '/remoteEntry.js',
-        // No pinned `component`: the daemon synthesizes the experience as
-        // `moduleFederation.component || capability`, so omitting it lets each
-        // route's resolved capability select the mounted component (ADR-056).
-        moduleFederation: { scope: m.scope, module: m.module || './App' },
-      },
-      // Provided addresses are scoped by the stable home MFE id (ADR-068).
-      routes: [
-        { when: { stateKey: 'abc.play.' + m.id }, resolve: { capability: 'PlayGame', props: { slot: 'abc-kids-home/main' } } },
-        { when: { stateKey: 'abc.show.' + m.id }, resolve: { capability: 'ShowCover', props: { slot: 'abc-kids-home/info' } } },
-        { when: { stateKey: 'abc.info.' + m.id }, resolve: { capability: 'GetGameInfo', props: { slot: 'abc-kids-home/info' } } },
-      ],
-    }) + '\' && echo " registered ' + m.name + (m.echoSuffix || ' (PlayGame/ShowCover/GetGameInfo)') + '"'
-  );
-}
+
+const rules = registered.map((m) => ({
+  registration: {
+    name: m.name, version: '1.0.0', type: 'remote',
+    baseUrl: 'http://localhost:' + m.port,
+    capabilities: ['load', 'render'],
+    contentType: 'module-federation',
+    remoteEntryUrl: 'http://localhost:' + m.port + '/remoteEntry.js',
+    // No pinned `component`: the daemon synthesizes the experience as
+    // `moduleFederation.component || capability`, so omitting it lets each
+    // route's resolved capability select the mounted component (ADR-056).
+    moduleFederation: { scope: m.scope, module: m.module || './App' },
+  },
+  // Provided addresses are scoped by the stable home MFE id (ADR-068).
+  routes: [
+    { when: { stateKey: 'abc.play.' + m.id }, resolve: { capability: 'PlayGame', props: { slot: 'abc-kids-home/main' } } },
+    { when: { stateKey: 'abc.show.' + m.id }, resolve: { capability: 'ShowCover', props: { slot: 'abc-kids-home/info' } } },
+    { when: { stateKey: 'abc.info.' + m.id }, resolve: { capability: 'GetGameInfo', props: { slot: 'abc-kids-home/info' } } },
+  ],
+}));
 
 // Home / launcher MFE (ADR-058): the root rule (when stateKey abc.root) resolves
 // GameMenu and embeds the full catalog in the resolution props — so the registry
 // "returns all MFEs" with NO daemon/registry code, only a rule. The home renders
 // a tile per game and provides the 'main' + 'info' slots the games mount into.
-reg.push('',
-  '# Home / launcher MFE — root rule returns the full game catalog (ADR-058).',
-  'curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d \'' + JSON.stringify({
-    registration: {
-      name: 'abc-kids-home', version: '1.0.0', type: 'remote',
-      baseUrl: 'http://localhost:' + HOME.port,
-      capabilities: ['load', 'render'],
-      contentType: 'module-federation',
-      remoteEntryUrl: 'http://localhost:' + HOME.port + '/remoteEntry.js',
-      moduleFederation: { scope: 'abc_kids_home', module: './App' },
-    },
-    routes: [
-      { when: { stateKey: 'abc.root' }, resolve: { capability: 'GameMenu', props: { slot: 'root', games: CATALOG } } },
+// `root` is host-owned and unqualified — no MFE manifest declares it.
+rules.push({
+  registration: {
+    name: 'abc-kids-home', version: '1.0.0', type: 'remote',
+    baseUrl: 'http://localhost:' + HOME.port,
+    capabilities: ['load', 'render'],
+    contentType: 'module-federation',
+    remoteEntryUrl: 'http://localhost:' + HOME.port + '/remoteEntry.js',
+    moduleFederation: { scope: 'abc_kids_home', module: './App' },
+    // The home is this fleet's only slot provider. Carrying its declarations in
+    // the registration gives the registry the slot vocabulary it needs to reject
+    // a placement aimed at an id nobody declares (ADR-073 §5); in a real
+    // deployment this rides describe() rather than a generator.
+    providesSlots: [
+      { id: 'main', description: 'Primary game region' },
+      { id: 'info', description: 'Contextual game information region' },
     ],
-  }) + '\' && echo " registered abc-kids-home (GameMenu — root rule returns ' + CATALOG.length + ' games)"');
+  },
+  routes: [
+    { when: { stateKey: 'abc.root' }, resolve: { capability: 'GameMenu', props: { slot: 'root', games: CATALOG } } },
+  ],
+});
 
-reg.push('',
+mkdirSync(join(ROOT, 'control-plane'), { recursive: true });
+writeFileSync(join(ROOT, 'control-plane', 'rules.json'), JSON.stringify(rules, null, 2) + '\n');
+
+const reg = ['#!/usr/bin/env bash',
+  '# Generated by scripts/generate-games.mjs — registers every ABC Kids game',
+  '# with the control-plane registry (ADR-054/ADR-055) from',
+  '# control-plane/rules.json. Each game is multi-capability (ADR-056): three',
+  '# routes map state to a capability — abc.play.<game> -> PlayGame into',
+  '# abc-kids-home/main, abc.show/abc.info -> ShowCover/GetGameInfo into',
+  '# abc-kids-home/info. The registration does NOT pin',
+  '# moduleFederation.component, so the resolved capability per route drives',
+  '# which component the LayoutManager mounts.',
+  '#',
+  '# The rules are data, so CI can check them before deploy (ADR-073):',
+  '#   seans-mfe-tool slots:validate --rules control-plane/rules.json --manifests .',
+  'set -euo pipefail',
+  '',
+  'HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
+  'ROOT="$(dirname "$HERE")"',
+  'RULES="${RULES:-$ROOT/control-plane/rules.json}"',
+  'REGISTRY=${REGISTRY:-http://localhost:4000}',
+  '',
+  'if [ ! -f "$RULES" ]; then',
+  '  echo "rules file not found: $RULES" >&2',
+  '  exit 1',
+  'fi',
+  '',
+  'count="$(jq \'length\' "$RULES")"',
+  'for i in $(seq 0 $((count - 1))); do',
+  '  doc="$(jq -c ".[$i]" "$RULES")"',
+  '  name="$(printf \'%s\' "$doc" | jq -r \'.registration.name\')"',
+  '  caps="$(printf \'%s\' "$doc" | jq -r \'[.routes[].resolve.capability] | unique | join("/")\')"',
+  '  curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d "$doc" > /dev/null',
+  '  echo " registered $name ($caps)"',
+  'done',
+  '',
   'echo "All ' + registered.length + ' games + home registered. Compose the home with:"',
   'echo "  ./scripts/home.sh"',
   'echo "...then pick a game in the UI, or drive it directly:"',
-  'echo "  ./scripts/play.sh ' + all[2].id + '"', '');
+  'echo "  ./scripts/play.sh ' + all[2].id + '"', ''];
 writeFileSync(join(ROOT, 'scripts', 'register-games.sh'), reg.join('\n'), { mode: 0o755 });
 
 // Kickoff helper: compose the home/launcher into the empty shell (ADR-058).

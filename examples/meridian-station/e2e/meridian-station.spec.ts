@@ -23,8 +23,12 @@ test.beforeEach(async ({ page }) => {
 test('console composes with the keyed berth strip', async ({ page }) => {
   await expect(page.getByText('Meridian Station', { exact: false }).first()).toBeVisible();
   // Six keyed slots; the strip fills itself through six control-plane round trips.
-  await expect(page.locator('[data-berth]')).toHaveCount(6);
-  await expect(page.locator('[data-berth] .tile')).toHaveCount(6, { timeout: 60_000 });
+  // DeclaredSlot stamps data-declared-slot on every provided region (ADR-072),
+  // so the strip is addressed by its declared ids rather than a bespoke attribute.
+  await expect(page.locator('[data-declared-slot^="berth."]')).toHaveCount(6);
+  await expect(page.locator('[data-declared-slot^="berth."] .tile')).toHaveCount(6, {
+    timeout: 60_000,
+  });
 });
 
 test('docking: one action fills main and status', async ({ page }) => {

@@ -4,7 +4,7 @@
  * registry rules validate against. Ids are assigned names (ADR-066) — the
  * schema rejects ordinal-form segments so a positional address can never
  * enter the contract, and rejects '/' because path composition belongs to
- * the host (ADR-057), not the declaring MFE. Refs #265.
+ * the host (ADR-068), not the declaring MFE. Refs #265.
  */
 import { ProvidedSlotSchema, ProvidesSlotsSchema, DSLManifestSchema } from '../schema';
 
@@ -38,7 +38,7 @@ describe('ProvidedSlotSchema (ADR-067)', () => {
     expect(() => ProvidedSlotSchema.parse({ id: 'main.02.footer' })).toThrow(/assigned name/i);
   });
 
-  it('rejects "/" — path composition is host-owned (ADR-057)', () => {
+  it('rejects "/" — path composition is host-owned (ADR-068)', () => {
     expect(() => ProvidedSlotSchema.parse({ id: 'main/quiz' })).toThrow(/host/i);
   });
 

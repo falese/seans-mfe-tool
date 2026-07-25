@@ -30,10 +30,16 @@ export interface SlotContractLike {
   ): void;
 }
 
-export interface DeclaredSlotProps {
+export interface DeclaredSlotProps extends React.HTMLAttributes<HTMLElement> {
   /** The MFE's slot contract, built from its manifest's providesSlots. */
   contract: SlotContractLike;
-  /** The slot id to register — must match a manifest declaration. */
+  /**
+   * The slot id to register — must match a manifest declaration.
+   *
+   * Stays `string` here, unlike the generated twin's `DeclaredSlotId`
+   * (ADR-072): this component is published sugar bound to no single manifest,
+   * so the contract it is handed is the only thing that can judge the id.
+   */
   id: string;
   /**
    * Host registration callback (ADR-058), delivered through render props by
@@ -41,16 +47,17 @@ export interface DeclaredSlotProps {
    * the region renders inert but undeclared ids still fail fast.
    */
   provideSlot?: (slotId: string, element: HTMLElement | null) => void;
-  className?: string;
-  children?: React.ReactNode;
+  /** Element to render as the region. Defaults to `div`. */
+  as?: keyof JSX.IntrinsicElements;
 }
 
 export function DeclaredSlot({
   contract,
   id,
   provideSlot,
-  className,
+  as,
   children,
+  ...rest
 }: DeclaredSlotProps): React.ReactElement {
   contract.assertDeclared(id);
 
@@ -59,9 +66,15 @@ export function DeclaredSlot({
     [contract, id, provideSlot]
   );
 
+  // Narrowed to one concrete tag so `ref` resolves to a single element type
+  // rather than the union of every intrinsic element (which has no common
+  // callable ref signature). The runtime tag is still whatever `as` supplied;
+  // `register` takes HTMLElement, a supertype of every tag's instance type.
+  const Element = (as ?? 'div') as 'div';
+
   return (
-    <div ref={register} className={className} data-declared-slot={id}>
+    <Element {...rest} ref={register} data-declared-slot={id}>
       {children}
-    </div>
+    </Element>
   );
 }

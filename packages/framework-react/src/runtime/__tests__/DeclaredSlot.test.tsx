@@ -71,4 +71,49 @@ describe('DeclaredSlot (ADR-067)', () => {
     expect(container.querySelector('[data-declared-slot="main"]')).not.toBeNull();
     expect(log).toHaveLength(0);
   });
+
+  // ADR-072 §3: providers hand-rolled their own ref callbacks partly because the
+  // sugar could not express inline styles or semantic elements. If it cannot
+  // replace the primitive, it will keep losing to it.
+  it('renders the element named by `as`, keeping registration intact', () => {
+    const provided: Array<[string, HTMLElement | null]> = [];
+    const { container } = render(
+      <DeclaredSlot
+        contract={fakeContract([])}
+        id="main"
+        as="section"
+        provideSlot={(id, el) => provided.push([id, el])}
+      />
+    );
+
+    const region = container.querySelector('section[data-declared-slot="main"]');
+    expect(region).not.toBeNull();
+    expect(provided[0][1]).toBe(region);
+  });
+
+  it('forwards arbitrary element props (aria, style, data-*) to the region', () => {
+    const { container } = render(
+      <DeclaredSlot
+        contract={fakeContract([])}
+        id="main"
+        as="aside"
+        aria-label="game info"
+        style={{ minHeight: 96 }}
+        data-testid="info-region"
+      />
+    );
+
+    const region = container.querySelector('[data-declared-slot="main"]') as HTMLElement;
+    expect(region.tagName).toBe('ASIDE');
+    expect(region.getAttribute('aria-label')).toBe('game info');
+    expect(region.getAttribute('data-testid')).toBe('info-region');
+    expect(region.style.minHeight).toBe('96px');
+  });
+
+  it('defaults to a div when `as` is omitted', () => {
+    const { container } = render(<DeclaredSlot contract={fakeContract([])} id="main" />);
+    expect((container.querySelector('[data-declared-slot="main"]') as HTMLElement).tagName).toBe(
+      'DIV'
+    );
+  });
 });

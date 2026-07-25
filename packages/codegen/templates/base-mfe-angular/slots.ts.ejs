@@ -36,6 +36,17 @@ export const slotContract = createSlotContract(PROVIDED_SLOTS);
 export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => void;
 
 /**
+ * The ids this MFE may register (ADR-072). Renaming a slot in the manifest
+ * makes every stale use site a compile error instead of a runtime throw.
+ * A `{param}` segment becomes `${string}`, so a keyed id type-checks by
+ * interpolation: `` `berth.${berthId}` ``.
+ *
+ * Looser than the runtime matcher by necessity — TypeScript cannot express
+ * "a string with no dot" — so `assertDeclared()` remains the backstop.
+ */
+export type DeclaredSlotId = <%- declaredSlotIdUnion %>;
+
+/**
  * A named region this MFE contributes to the host layout. Drop the attribute on
  * the region element:
  *
@@ -44,6 +55,10 @@ export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => voi
  * Registration rides Angular's element lifecycle; re-registration on remount is
  * safe because the host re-binds the address's desired experience instead of
  * destroying it (ADR-066).
+ *
+ * This is the app-code API for providing a slot (ADR-072). `slotContract` stays
+ * public as the framework-adaptor escape hatch, but feature code should reach
+ * for this directive so every region registers the same way.
  *
  * Keep in lock-step with packages/framework-angular/src/runtime/declared-slot.directive.ts:
  * this is the same directive with the contract pre-bound instead of passed as an
@@ -55,8 +70,8 @@ export type ProvideSlotFn = (slotId: string, element: HTMLElement | null) => voi
   standalone: true,
 })
 export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnChanges, OnDestroy {
-  /** The slot id to register — must match a manifest declaration. */
-  @Input('smtDeclaredSlot') id!: string;
+  /** The slot id to register — must be one this manifest declares (ADR-072). */
+  @Input('smtDeclaredSlot') id!: DeclaredSlotId;
 
   /**
    * The host-supplied registration callback (ADR-058), delivered to this MFE
@@ -72,7 +87,7 @@ export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnChanges, 
    * callback) before re-registering — the Angular equivalent of React's
    * ref-callback release/re-attach on dependency change.
    */
-  private registeredWith?: { id: string; provideSlot?: ProvideSlotFn };
+  private registeredWith?: { id: DeclaredSlotId; provideSlot?: ProvideSlotFn };
   private viewReady = false;
 
   constructor(private readonly elementRef: ElementRef<HTMLElement>) {}

@@ -125,4 +125,54 @@ describe('validateMfeConsistency', () => {
     });
     expect(res.issues.map((i) => i.rule)).not.toContain('react-pinned');
   });
+
+  // ── slots-implemented (ADR-073) ───────────────────────────────────────────
+  // The slot half of #296. A slot declared in providesSlots that no component
+  // registers is not a loud failure — ADR-066 parks a placement aimed at it and
+  // waits forever — so it needs a design-time rule. It lives here, in the same
+  // rule set, rather than in a second command wearing the same name.
+
+  it('passes when every declared slot is referenced in source', () => {
+    const input = consistentInput();
+    input.manifest = reactManifest({ 'design-system': { 'styled-components': '^6.1.0' } });
+    (input.manifest as unknown as { providesSlots: unknown }).providesSlots = [
+      { id: 'main' },
+      { id: 'berth.{id}' },
+    ];
+    input.sources = [
+      { path: 'src/Console.tsx', text: '<DeclaredSlot id="main" /> id={`berth.${b}`}' },
+    ];
+    const res = validateMfeConsistency(input);
+    expect(res.checked).toContain('slots-implemented');
+    expect(res.issues.map((i) => i.rule)).not.toContain('slots-implemented');
+  });
+
+  it('flags a declared slot no source registers', () => {
+    const input = consistentInput();
+    (input.manifest as unknown as { providesSlots: unknown }).providesSlots = [
+      { id: 'main' },
+      { id: 'ghost' },
+    ];
+    input.sources = [{ path: 'src/Console.tsx', text: '<DeclaredSlot id="main" />' }];
+    const res = validateMfeConsistency(input);
+    expect(res.ok).toBe(false);
+    const slotIssues = res.issues.filter((i) => i.rule === 'slots-implemented');
+    expect(slotIssues).toHaveLength(1);
+    expect(slotIssues[0].package).toBe('ghost');
+  });
+
+  it('skips the slot rule entirely when the manifest declares no slots', () => {
+    const input = consistentInput();
+    input.sources = [{ path: 'src/App.tsx', text: '' }];
+    const res = validateMfeConsistency(input);
+    expect(res.checked).not.toContain('slots-implemented');
+  });
+
+  it('skips the slot rule when sources were not supplied', () => {
+    // The pure function must stay usable without the command layer's file IO.
+    const input = consistentInput();
+    (input.manifest as unknown as { providesSlots: unknown }).providesSlots = [{ id: 'main' }];
+    const res = validateMfeConsistency(input);
+    expect(res.checked).not.toContain('slots-implemented');
+  });
 });

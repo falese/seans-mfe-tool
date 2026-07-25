@@ -12,6 +12,7 @@
  * the rules pure makes them unit-testable in the platform, not per example.
  */
 
+import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
 import type { DSLManifest } from '@seans-mfe/dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
 
@@ -30,6 +31,12 @@ export interface MfeValidationInput {
   packageDependencies: Record<string, string>;
   /** `shared` entries parsed from rspack/webpack federation config. */
   sharedEntries: SharedEntry[];
+  /**
+   * The MFE's own source files, for the slot rule (ADR-073). Optional: the
+   * function stays usable without the command layer's file IO, and the rule is
+   * skipped when they are absent rather than reporting false positives.
+   */
+  sources?: SourceFile[];
 }
 
 export type ValidationRule =
@@ -37,7 +44,8 @@ export type ValidationRule =
   | 'manifest-package-sync'
   | 'shared-declared'
   | 'shared-version-sync'
-  | 'runtime-declared';
+  | 'runtime-declared'
+  | 'slots-implemented';
 
 export interface ValidationIssue {
   rule: ValidationRule;
@@ -77,7 +85,7 @@ export function parseFederationSharedEntries(configSource: string): SharedEntry[
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
-  const { manifest, framework, packageDependencies, sharedEntries } = input;
+  const { manifest, framework, packageDependencies, sharedEntries, sources } = input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
 
@@ -160,6 +168,27 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
       package: RUNTIME_PACKAGE,
       message: `${RUNTIME_PACKAGE} must be declared as a dependency`,
     });
+  }
+
+  // Every slot the manifest declares should actually be registered by app code
+  // (ADR-073). A declared slot nothing registers is silent at runtime: ADR-066
+  // parks a placement aimed at it and waits indefinitely, by design.
+  //
+  // Skipped when the MFE declares no slots, or when the caller supplied no
+  // sources — a scan over nothing would report every declaration as missing.
+  // Matching is delegated to @seans-mfe/dsl so the needle logic (literal prefix
+  // before the first {param}) has one implementation.
+  const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
+    .providesSlots;
+  if (providesSlots?.length && sources) {
+    checked.push('slots-implemented');
+    for (const finding of findUnreferencedSlots(providesSlots, sources)) {
+      issues.push({
+        rule: 'slots-implemented',
+        package: finding.slotId,
+        message: finding.message,
+      });
+    }
   }
 
   return { ok: issues.length === 0, checked, issues };
