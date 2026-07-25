@@ -33,6 +33,11 @@ export const COMMENT_MARKER = '<!-- adr-governance-report -->';
 
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 
+/** Escape what would break a Markdown table cell or be read as an HTML tag. */
+function cell(text: string): string {
+  return text.replace(/\|/g, '\\|').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function git(...args: string[]): string {
   return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
 }
@@ -91,33 +96,49 @@ function main(): void {
 
   const out: string[] = [COMMENT_MARKER, '## 🏛 ADR governance', ''];
 
-  if (touched.length > 0) {
-    out.push('### Decisions changed by this PR', '');
+  // A row per touched file would mean 48 rows for a metadata backfill — the
+  // exact noise this report exists to avoid. Only a *lifecycle* change earns a
+  // row; everything else collapses to a count.
+  const notable: string[] = [];
+  let metadataOnly = 0;
+
+  for (const file of touched) {
+    const id = Number.parseInt(/ADR-(\d+)/.exec(file)![1], 10);
+    const doc = byId.get(id);
+    if (!doc) continue;
+    const fm = doc.frontmatter;
+    const before = statusOnBase(file);
+
+    if (before !== 'new' && before === fm.status) {
+      metadataOnly += 1;
+      continue;
+    }
+
+    const transition = before === 'new' ? '**new**' : `${before} → **${fm.status}**`;
+    const carried =
+      fm['implemented-by'].length > 0
+        ? `\`${fm['implemented-by'][0]}\`${fm['implemented-by'].length > 1 ? ` +${fm['implemented-by'].length - 1}` : ''}`
+        : fm.impl?.refs.length
+          ? fm.impl.refs.join(', ')
+          : '—';
+    notable.push(
+      `| [ADR-${formatAdrId(id)}](./docs/architecture-decisions/${doc.path}) | ${cell(fm.title)} | ${STATUS_ICON[fm.status] ?? ''} ${transition} | ${carried} |`
+    );
+  }
+
+  if (notable.length > 0) {
+    out.push('### Lifecycle changes', '');
     out.push('| ADR | Title | Status | Carried by |');
     out.push('| --- | --- | --- | --- |');
-    for (const file of touched) {
-      const id = Number.parseInt(/ADR-(\d+)/.exec(file)![1], 10);
-      const doc = byId.get(id);
-      if (!doc) continue;
-      const fm = doc.frontmatter;
-      const before = statusOnBase(file);
-      const transition =
-        before === 'new'
-          ? '**new**'
-          : before && before !== fm.status
-            ? `${before} → **${fm.status}**`
-            : fm.status;
-      const carried =
-        fm['implemented-by'].length > 0
-          ? `\`${fm['implemented-by'][0]}\`${fm['implemented-by'].length > 1 ? ` +${fm['implemented-by'].length - 1}` : ''}`
-          : fm.impl?.refs.length
-            ? fm.impl.refs.join(', ')
-            : '—';
-      out.push(
-        `| [ADR-${formatAdrId(id)}](./docs/architecture-decisions/${doc.path}) | ${fm.title} | ${STATUS_ICON[fm.status] ?? ''} ${transition} | ${carried} |`
-      );
-    }
+    out.push(...notable);
     out.push('');
+  }
+
+  if (metadataOnly > 0) {
+    out.push(
+      `${metadataOnly} further ADR${metadataOnly === 1 ? '' : 's'} had metadata updated with no status change.`,
+      ''
+    );
   }
 
   const restsOn = [...cited].filter((id) => byId.has(id)).sort((a, b) => a - b);
