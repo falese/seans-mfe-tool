@@ -22,6 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
     "@seans-mfe/dsl": "file:../dsl",
     "ejs": "^3.1.10",
     "fs-extra": "^11.2.0",

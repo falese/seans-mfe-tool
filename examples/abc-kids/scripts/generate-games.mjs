@@ -764,14 +764,15 @@ export const handles = {
 export { default } from './App.tsx';
 `;
 
-const gameMenu = () => `import React, { useCallback } from 'react';
+const gameMenu = () => `import React from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
-import { slotContract } from '../../slots';
+import { DeclaredSlot } from '../../slots';
 
 /**
  * GameMenu — the ABC Kids home (ADR-058). Renders a tile per registered game in
  * its own menu region, and contributes the 'main' and 'info' regions to the
- * host as slots (provideSlot) so selected games compose alongside the menu.
+ * host through \`DeclaredSlot\` — the generated, manifest-typed registration
+ * component (ADR-067/ADR-072) — so selected games compose alongside the menu.
  * A tile drives the control plane via the inherited BaseMFE platform capability
  * updateControlPlaneState (ADR-057) — no direct knowledge of any game.
  */
@@ -809,21 +810,10 @@ function dispatch(verb: 'play' | 'show', id: string): void {
 }
 
 export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) => {
-  // Register the two contributed regions through the manifest-backed slot
-  // contract (ADR-067, generated src/slots.tsx): assertDeclared runs on every
-  // bind, so a region id not in the manifest's providesSlots fails fast instead
-  // of silently registering an address the registry rules never validate. This
-  // replaces the raw provideSlot('main', ref) magic string with the contract —
-  // declaration and behavior share one source (the manifest).
-  const registerMain = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
-    [provideSlot]
-  );
-  const registerInfo = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'info', el),
-    [provideSlot]
-  );
-
+  // The two contributed regions are registered by DeclaredSlot below (ADR-072).
+  // Its \`id\` is typed by the manifest (DeclaredSlotId), so a region id the
+  // manifest does not declare fails the build; assertDeclared still runs on
+  // every bind as the runtime backstop. \`as\` keeps the semantic element.
   return (
     <div
       style={{
@@ -889,8 +879,10 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
       </nav>
 
       {/* Contributed to the host as slot 'main' — the selected game mounts here. */}
-      <section
-        ref={registerMain}
+      <DeclaredSlot
+        id="main"
+        provideSlot={provideSlot}
+        as="section"
         aria-label="game"
         style={{
           borderRadius: 16,
@@ -903,11 +895,13 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Select a game from the menu
-      </section>
+      </DeclaredSlot>
 
       {/* Contributed to the host as slot 'info' — cover / game info mounts here. */}
-      <aside
-        ref={registerInfo}
+      <DeclaredSlot
+        id="info"
+        provideSlot={provideSlot}
+        as="aside"
         aria-label="info"
         style={{
           borderRadius: 16,
@@ -918,7 +912,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Tap the info button on a game for details
-      </aside>
+      </DeclaredSlot>
     </div>
   );
 };
@@ -1031,77 +1025,13 @@ for (const game of GAMES) {
 }
 
 // ── Generate the home / launcher MFE (ADR-058) ───────────────
-// Mirrors packages/codegen/templates/base-mfe/slots.tsx.ejs for the home's
-// manifest (providesSlots: main, info) — the DATA layer of ADR-067. Keep in
-// lock-step with the codegen template; GameMenu imports slotContract from it.
-const homeSlots = () => `/**
- * Slot contract for abc-kids-home — GENERATED from mfe-manifest \`providesSlots\`.
- * Do not edit: regenerate after changing the manifest.
- *
- * Three-layer split (ADR-067): this file is the DATA layer — the manifest
- * mirrored into code and bound to the framework-free contract logic in
- * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
- * live there, once; the DeclaredSlot below is thin sugar with no logic of
- * its own. Ids are assigned names, never positions (ADR-066); renaming one
- * is a manifest diff — a contract change, not an incidental string edit.
- */
-import React, { useCallback } from 'react';
-import { createSlotContract } from '@seans-mfe-tool/runtime';
-import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
-
-/** The manifest's providesSlots section, mirrored into code. */
-export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
-  { id: "main", description: "Primary game region" },
-  { id: "info", description: "Contextual game information region" },
-] as const;
-
-/** This MFE's slot contract: matching + declare-before-register guard. */
-export const slotContract = createSlotContract(PROVIDED_SLOTS);
-
-export interface DeclaredSlotProps {
-  /** The slot id to register — must match a manifest declaration. */
-  id: string;
-  /**
-   * The host-supplied registration callback (ADR-058), delivered to this MFE
-   * through its render props by the LayoutManager adaptor. Optional so the
-   * component renders inert in standalone/dev mode — undeclared ids still
-   * fail fast either way.
-   */
-  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
-  className?: string;
-  children?: React.ReactNode;
-}
-
-/**
- * A named region this MFE contributes to the host layout. Registration rides
- * a stable ref callback; re-registration on remount is safe because the host
- * re-binds the address's desired experience instead of destroying it (ADR-066).
- *
- * Keep in lock-step with packages/framework-react/src/runtime/DeclaredSlot.tsx:
- * this is the same component with the contract pre-bound instead of passed as
- * a prop (generated MFEs depend on the runtime package, not framework-react).
- * A change to ref-callback or registration semantics must land in both.
- */
-export function DeclaredSlot({
-  id,
-  provideSlot,
-  className,
-  children,
-}: DeclaredSlotProps): React.ReactElement {
-  slotContract.assertDeclared(id);
-
-  const register = useCallback(
-    (element: HTMLElement | null) => slotContract.register(provideSlot, id, element),
-    [id, provideSlot]
-  );
-
-  return (
-    <div ref={register} className={className} data-declared-slot={id}>
-      {children}
-    </div>
-  );
-}
-`;
+// src/slots.tsx is NOT written here. It is generator-owned output of
+// `seans-mfe-tool remote:generate` (ADR-067, emitted overwrite:true from
+// packages/codegen/templates/base-mfe/slots.tsx.ejs), which the home's own
+// `npm run build` runs and which the repo-wide drift gate
+// (`npm run check:mfe-drift`) keeps current. This script used to carry an
+// inlined copy of that template; ADR-072 §4 removed it — one template, one
+// owner, no lock-step burden.
 
 // Same template as the games, but a single GameMenu capability. The manifest
 // drives `seans-mfe-tool remote:generate` at build time (regenerates
@@ -1120,7 +1050,6 @@ export function DeclaredSlot({
   writeFileSync(join(gmDir, 'GameMenu.test.tsx'), gameMenuTest());
 
   writeFileSync(join(dest, 'mfe-manifest.yaml'), homeManifest());
-  writeFileSync(join(dest, 'src', 'slots.tsx'), homeSlots());
   writeFileSync(join(dest, 'src', 'remote.tsx'), homeRemoteEntry());
   writeFileSync(join(dest, 'src', 'index.tsx'), homeIndex());
   writeFileSync(join(dest, 'Dockerfile'), gameDockerfile(HOME));
@@ -1133,7 +1062,7 @@ registry's \`abc.root\` rule. It is also the layout provider:
 
 - \`mfe-manifest.yaml\` declares local slots \`main\` and \`info\`.
 - Codegen mirrors those declarations into \`src/slots.tsx\`.
-- \`GameMenu\` registers the regions through the generated \`slotContract\`.
+- \`GameMenu\` registers the regions through the generated \`DeclaredSlot\` (ADR-072).
 - The host scopes them to \`abc-kids-home/main\` and
   \`abc-kids-home/info\` (ADR-068).
 

@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { mfe } from '../../platform/base-mfe/bootstrap';
-import { slotContract } from '../../slots';
+import { DeclaredSlot } from '../../slots';
 
 /**
  * GameMenu — the ABC Kids home (ADR-058). Renders a tile per registered game in
  * its own menu region, and contributes the 'main' and 'info' regions to the
- * host as slots (provideSlot) so selected games compose alongside the menu.
+ * host through `DeclaredSlot` — the generated, manifest-typed registration
+ * component (ADR-067/ADR-072) — so selected games compose alongside the menu.
  * A tile drives the control plane via the inherited BaseMFE platform capability
  * updateControlPlaneState (ADR-057) — no direct knowledge of any game.
  */
@@ -43,21 +44,10 @@ function dispatch(verb: 'play' | 'show', id: string): void {
 }
 
 export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) => {
-  // Register the two contributed regions through the manifest-backed slot
-  // contract (ADR-067, generated src/slots.tsx): assertDeclared runs on every
-  // bind, so a region id not in the manifest's providesSlots fails fast instead
-  // of silently registering an address the registry rules never validate. This
-  // replaces the raw provideSlot('main', ref) magic string with the contract —
-  // declaration and behavior share one source (the manifest).
-  const registerMain = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'main', el),
-    [provideSlot]
-  );
-  const registerInfo = useCallback(
-    (el: HTMLElement | null) => slotContract.register(provideSlot, 'info', el),
-    [provideSlot]
-  );
-
+  // The two contributed regions are registered by DeclaredSlot below (ADR-072).
+  // Its `id` is typed by the manifest (DeclaredSlotId), so a region id the
+  // manifest does not declare fails the build; assertDeclared still runs on
+  // every bind as the runtime backstop. `as` keeps the semantic element.
   return (
     <div
       style={{
@@ -123,8 +113,10 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
       </nav>
 
       {/* Contributed to the host as slot 'main' — the selected game mounts here. */}
-      <section
-        ref={registerMain}
+      <DeclaredSlot
+        id="main"
+        provideSlot={provideSlot}
+        as="section"
         aria-label="game"
         style={{
           borderRadius: 16,
@@ -137,11 +129,13 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Select a game from the menu
-      </section>
+      </DeclaredSlot>
 
       {/* Contributed to the host as slot 'info' — cover / game info mounts here. */}
-      <aside
-        ref={registerInfo}
+      <DeclaredSlot
+        id="info"
+        provideSlot={provideSlot}
+        as="aside"
         aria-label="info"
         style={{
           borderRadius: 16,
@@ -152,7 +146,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({ games = [], provideSlot }) =
         }}
       >
         Tap the info button on a game for details
-      </aside>
+      </DeclaredSlot>
     </div>
   );
 };

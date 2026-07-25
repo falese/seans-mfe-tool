@@ -300,6 +300,8 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted (#265) |
 | ADR-070 | Experience-Scoped Federated Supergraph — Control-Plane-Composed Data over Participant MFE BFFs | Runtime / control-plane / data / federation / lifecycle | Accepted (impl phased) |
 | ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted (#294) |
+| ADR-072 | The Sanctioned Slot Registration API — `DeclaredSlot`, Typed by the Manifest | Codegen / slots / app-code API / typing | Accepted |
+| ADR-073 | Slot Contract Logic in Contracts; Placement Targets Become Validatable | Contracts / CLI / slots / design-time validation | Accepted |
 
 ---
 
