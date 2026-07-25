@@ -218,6 +218,13 @@ jobs:
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
 
+      - name: MFE drift gate — generator-owned files match their manifests
+        # Regenerates every MFE from its mfe-manifest.yaml and fails if any
+        # generator-owned file (overwrite:true — the platform-contract shims:
+        # remote entry, base-mfe/*, bff/*, server.ts, public/*) has drifted.
+        # Generic, platform-wide; developer-owned code is untouched (#295).
+        run: npm run check:mfe-drift:check
+
       - name: MFE consistency gate — manifest ⇄ package.json ⇄ federation shared
         # Runs the reusable `mfe:validate` core over every examples/** MFE:
         # asserts react/react-dom pins, that manifest deps land in package.json,

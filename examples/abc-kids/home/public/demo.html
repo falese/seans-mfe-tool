@@ -199,7 +199,7 @@
           });
           
           await new Promise(resolve => setTimeout(resolve, 200));
-          loadedComponents = ["PlayGame","ShowCover","GetGameInfo"];
+          loadedComponents = ["GameMenu"];
           mfeContainer = { ready: true };
           
           logToUI('✓ Mount: Container initialized, shared deps wired', 'success');
@@ -266,11 +266,7 @@
             <p>Visit <a href="http://localhost:3015" style="color: #1976d2; font-weight: bold;">http://localhost:3015</a> to see the full interactive app with:</ p>
             <ul style="text-align: left; display: inline-block;">
               
-              <li>PlayGame component</li>
-              
-              <li>ShowCover component</li>
-              
-              <li>GetGameInfo component</li>
+              <li>GameMenu component</li>
               
               <li>Material-UI styled components</li>
               <li>Platform handler integration (REQ-RUNTIME-005)</li>

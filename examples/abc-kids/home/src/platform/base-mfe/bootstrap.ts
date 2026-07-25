@@ -24,31 +24,19 @@ const manifest = {
   "owner": "abc-kids-team",
   "tags": [
     "kids",
-    "game",
+    "launcher",
     "home",
     "shell"
   ],
-  "category": "games",
+  "category": "launcher",
   "endpoint": "http://localhost:3015",
   "remoteEntry": "http://localhost:3015/remoteEntry.js",
   "discovery": "http://localhost:3015/.well-known/mfe-manifest.yaml",
   "capabilities": [
     {
-      "PlayGame": {
+      "GameMenu": {
         "type": "domain",
-        "description": "Play the ABC Kids game"
-      }
-    },
-    {
-      "ShowCover": {
-        "type": "domain",
-        "description": "Show the ABC Kids game cover card with title and art"
-      }
-    },
-    {
-      "GetGameInfo": {
-        "type": "domain",
-        "description": "Return game metadata including title, age range, and description"
+        "description": "Render the ABC Kids home — a tile per registered game; selecting one drives the control plane"
       }
     },
     {
@@ -126,13 +114,27 @@ const manifest = {
       "@emotion/react": "^11.11.1",
       "@emotion/styled": "^11.11.0"
     }
-  }
+  },
+  "providesSlots": [
+    {
+      "id": "main",
+      "description": "Primary game region"
+    },
+    {
+      "id": "info",
+      "description": "Contextual game information region"
+    }
+  ]
 };
 
 export const mfe = new abckidshomeMFE(manifest);
 
 export const mfeReady: Promise<void> = mfe
   .load({
+    // Context requires request identity — a partial literal fails typecheck
+    // in every generated project (DX punch list #17).
+    requestId: `bootstrap-load-${Date.now()}`,
+    timestamp: new Date(),
     inputs: {
       remoteEntry: manifest.remoteEntry,
     },

@@ -114,12 +114,14 @@ const manifest = {
   ],
   "dependencies": {
     "runtime": {
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0",
-      "@babylonjs/core": "^6.40.0",
-      "@babylonjs/havok": "^6.40.0",
-      "@babylonjs/gui": "^6.40.0",
-      "zustand": "^4.4.7",
+      "react": "~18.2.0",
+      "react-dom": "~18.2.0",
+      "@babylonjs/core": "^9.17.0",
+      "@babylonjs/havok": "^1.3.13",
+      "@babylonjs/gui": "^9.17.0",
+      "zustand": "^4.4.7"
+    },
+    "design-system": {
       "styled-components": "^6.1.0"
     }
   },
@@ -129,7 +131,7 @@ const manifest = {
         "name": "Harbormaster",
         "handler": {
           "openapi": {
-            "source": "../apis/harbormaster-api/specs/harbormaster.yaml"
+            "source": "./specs/harbormaster.yaml"
           }
         }
       },
@@ -137,7 +139,7 @@ const manifest = {
         "name": "StationOS",
         "handler": {
           "openapi": {
-            "source": "../apis/station-os-api/specs/station-os.yaml"
+            "source": "./specs/station-os.yaml"
           }
         }
       }

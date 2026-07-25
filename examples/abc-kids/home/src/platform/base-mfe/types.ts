@@ -7,38 +7,14 @@
 type ComponentType = (...args: any[]) => any;
 
 // ---------------------------------------------------------------------------
-// PlayGame — input / output types
+// GameMenu — input / output types
 // ---------------------------------------------------------------------------
 
-export interface PlayGameInputs {
+export interface GameMenuInputs {
 
 }
 
-export interface PlayGameOutputs {
-
-}
-
-// ---------------------------------------------------------------------------
-// ShowCover — input / output types
-// ---------------------------------------------------------------------------
-
-export interface ShowCoverInputs {
-
-}
-
-export interface ShowCoverOutputs {
-
-}
-
-// ---------------------------------------------------------------------------
-// GetGameInfo — input / output types
-// ---------------------------------------------------------------------------
-
-export interface GetGameInfoInputs {
-
-}
-
-export interface GetGameInfoOutputs {
+export interface GameMenuOutputs {
 
 }
 

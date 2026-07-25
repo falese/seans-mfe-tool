@@ -7,4 +7,5 @@
  * dependency/plugin/transform constants the CLI's bff:init reads.
  */
 export * from './unified-generator';
+export * from './drift';
 export * from './validate';
