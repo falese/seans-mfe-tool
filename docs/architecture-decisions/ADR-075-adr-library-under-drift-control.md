@@ -260,7 +260,7 @@ produces is the merge.
   generate-and-diff gate is a stale artifact eventually". This applies it to the
   register itself.
 - ADR-069 / ADR-071 — single-sourcing a fact that two consumers restate. <!-- adr-lint-ignore: reference-gloss-matches -->
-- ADR-074 — drift made unrepresentable rather than detected; the Boundaries
+- ADR-074 — drift made unrepresentable rather than detected; the Boundaries <!-- adr-lint-ignore: reference-gloss-matches -->
   section above qualifies its §1 coverage claim.
 - ADR-073 — the pure-rules + thin-command split this reuses, and the <!-- adr-lint-ignore: reference-gloss-matches -->
   documented-heuristic precedent for `reference-gloss-matches`.

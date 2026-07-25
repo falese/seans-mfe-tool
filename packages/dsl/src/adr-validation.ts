@@ -131,7 +131,7 @@ function contentTokens(text: string): Set<string> {
  * this rule:
  *
  *   - Comparing every gloss against the title alone flags legitimate paraphrases
- *     — ADR-074's "ADR-073 — design-time validation" describes a decision whose
+ *     — ADR-074's "ADR-073 — design-time validation" describes a decision whose — adr-lint-ignore: code-cites-ratified-adr
  *     title names the relocation instead.
  *   - Comparing every gloss against title + tags + summary masks real defects.
  *     "ADR-031: Standardized Extensible Lifecycle Hooks" survives — adr-lint-ignore: code-cites-ratified-adr
@@ -380,7 +380,7 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
   // cited it while the register still called it Proposed.
 
   // 8. accepted-work-is-tracked — a ratified decision is either carried by code
-  //    or scheduled by an issue. "Neither" is how the ADR-045..049 batch became
+  //    or scheduled by an issue. "Neither" is how the ADR-045..049 batch became — adr-lint-ignore: code-cites-ratified-adr
   //    permanent: five decisions authored in a day, with no owner and nothing
   //    pointing at them ever again.
   checked.push('accepted-work-is-tracked');
