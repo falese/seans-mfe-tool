@@ -1,15 +1,27 @@
 ---
 id: 0025
 title: Platform Handler Interface & Execution Model
-status: In Progress
+status: Accepted
+impl:
+  stage: phased
+  refs: []
 date: 2025-12-06
 deciders: [sean]
+area: Runtime handlers
 enforcement: code
+tags: [runtime, platform-handlers, lifecycle, interfaces, registry]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, platform-handlers, lifecycle, interfaces, registry]
-summary: Define a PlatformHandler interface with name/phases/errorConfig/execute contract, a PlatformHandlerRegistry for DSL-driven resolution, and a sequential before→main→after→error execution model.
-rationale-summary: ADR-024 established principles; this ADR specifies the concrete interface, registry API, and execution semantics that enable handler composability and DSL-driven configuration.
+implemented-by: []
+verified-by: []
+summary: >-
+  Define a PlatformHandler interface with name/phases/errorConfig/execute contract, a
+  PlatformHandlerRegistry for DSL-driven resolution, and a sequential before→main→after→error
+  execution model.
+rationale-summary: >-
+  ADR-024 established principles; this ADR specifies the concrete interface, registry API, and
+  execution semantics that enable handler composability and DSL-driven configuration.
 long-form: true
 ---
 
@@ -365,7 +377,7 @@ Telemetry handler never blocks (continueOnError: true) but emits events for all 
 ## Related ADRs
 
 - ADR-002: Lifecycle execution model (phases, hooks)
-- ADR-013: BaseMFE abstract base (context, state machine)
+- ADR-041: BaseMFE Abstract Base Class & Platform Capability Contract (context, state machine)
 - ADR-024: Platform handler standardization (principles)
 - ADR-026: Load capability atomic operation (uses handler registry)
 

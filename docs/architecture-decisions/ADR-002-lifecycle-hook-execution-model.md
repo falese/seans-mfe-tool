@@ -4,12 +4,20 @@ title: Lifecycle Hook Execution Model
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [runtime, lifecycle, hooks, resilience]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, lifecycle, hooks, resilience]
-summary: Hooks use a contained execution model where before/after/error phase failures are silently logged via telemetry and only main phase failures propagate to the caller.
-rationale-summary: Resilience over strict propagation — lifecycle hooks enhance capabilities without the risk of a telemetry or logging hook breaking the core business operation.
+implemented-by: []
+verified-by: []
+summary: >-
+  Hooks use a contained execution model where before/after/error phase failures are silently
+  logged via telemetry and only main phase failures propagate to the caller.
+rationale-summary: >-
+  Resilience over strict propagation — lifecycle hooks enhance capabilities without the risk of
+  a telemetry or logging hook breaking the core business operation.
 long-form: true
 ---
 
@@ -59,6 +67,5 @@ capabilities:
 - DEC-016
 - REQ-042
 - REQ-043
-- ADR-031: Standardized Extensible Lifecycle Hooks (precursor)
 - ADR-003: No Custom Lifecycle Phases
 - `docs/acceptance-criteria/lifecycle-hooks.feature`

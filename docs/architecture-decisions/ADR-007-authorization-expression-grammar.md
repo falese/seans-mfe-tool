@@ -4,12 +4,22 @@ title: Authorization Expression Grammar
 status: Deferred
 date: 2025-12-13
 deciders: [sean]
+area: DSL / security
 enforcement: code
+tags: [authorization, dsl, deferred]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [authorization, dsl, deferred]
-summary: Authorization expressions in the DSL will support AND/OR/NOT Boolean logic with atoms for user identity, roles, permissions, and resource ownership — but this feature is deferred to a separate requirements document.
-rationale-summary: The authorization expression grammar is complex enough to warrant its own requirements elicitation and design session rather than being designed as an incidental part of the DSL contract.
+implemented-by: []
+verified-by: []
+summary: >-
+  Authorization expressions in the DSL will support AND/OR/NOT Boolean logic with atoms for user
+  identity, roles, permissions, and resource ownership — but this feature is deferred to a
+  separate requirements document.
+rationale-summary: >-
+  The authorization expression grammar is complex enough to warrant its own requirements
+  elicitation and design session rather than being designed as an incidental part of the DSL
+  contract.
 long-form: true
 ---
 
@@ -57,4 +67,3 @@ No implementation should proceed until the separate requirements document is com
 ## References
 
 - REQ-048 (deferred)
-- ADR-019: JWT-Based Authorization (current approach while this is deferred)

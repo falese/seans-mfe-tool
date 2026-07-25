@@ -4,12 +4,20 @@ title: Structured logger — no console.log in production code
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: CLI / logging
 enforcement: convention
+tags: [logging, observability, cli, production-code]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [logging, observability, cli, production-code]
-summary: Production src/ and packages/ code uses the structured logger from @seans-mfe/oclif-base; console.log is forbidden outside tests and scripts.
-rationale-summary: console.log in --json mode corrupts stdout and breaks the CommandResult<T> contract (ADR-018); structured logging routes output to stderr and adds context fields for observability.
+implemented-by: []
+verified-by: []
+summary: >-
+  Production src/ and packages/ code uses the structured logger from @seans-mfe/oclif-base;
+  console.log is forbidden outside tests and scripts.
+rationale-summary: >-
+  console.log in --json mode corrupts stdout and breaks the CommandResult<T> contract (ADR-018);
+  structured logging routes output to stderr and adds context fields for observability.
 long-form: false
 ---
 

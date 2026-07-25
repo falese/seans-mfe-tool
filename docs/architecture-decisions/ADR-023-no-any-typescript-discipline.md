@@ -4,12 +4,21 @@ title: No-any TypeScript discipline — use unknown and narrow
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: TypeScript
 enforcement: convention
+tags: [typescript, type-safety, contracts, code-quality]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [typescript, type-safety, contracts, code-quality]
-summary: The any type is forbidden in all src/ and packages/ code; unknown is used at system boundaries and narrowed via type guards or Zod parse before use.
-rationale-summary: any types propagate unsafety silently — a single any can suppress errors across an entire call chain; unknown forces explicit narrowing at the boundary and keeps the type system honest everywhere else.
+implemented-by: []
+verified-by: []
+summary: >-
+  The any type is forbidden in all src/ and packages/ code; unknown is used at system boundaries
+  and narrowed via type guards or Zod parse before use.
+rationale-summary: >-
+  any types propagate unsafety silently — a single any can suppress errors across an entire call
+  chain; unknown forces explicit narrowing at the boundary and keeps the type system honest
+  everywhere else.
 long-form: false
 ---
 

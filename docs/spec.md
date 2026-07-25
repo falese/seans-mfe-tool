@@ -252,13 +252,13 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-021 | Package namespace strategy (@seans-mfe/* vs @falese/*) | Packages | Accepted |
 | ADR-022 | Plugin-first architecture | Architecture | Accepted |
 | ADR-023 | No-any TypeScript discipline | TypeScript | Accepted |
-| ADR-024 | Platform Handler Library Standardization | Runtime handlers | Planned |
-| ADR-025 | Platform Handler Interface & Execution Model | Runtime handlers | In Progress |
-| ADR-026 | Load Capability — Atomic Operation Design | Runtime lifecycle | In Progress |
+| ADR-024 | Platform Handler Library Standardization | Runtime handlers | Proposed |
+| ADR-025 | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased) |
+| ADR-026 | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased) |
 | ADR-027 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
 | ADR-028 | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
-| ADR-029 | Timeout Protection with AbortSignal | Lifecycle engine | Proposed |
-| ADR-030 | Error Classification with Hybrid Detection | Lifecycle engine | Proposed |
+| ADR-029 | Timeout Protection with AbortSignal | Lifecycle engine | Implemented |
+| ADR-030 | Error Classification with Hybrid Detection | Lifecycle engine | Implemented |
 | ADR-031 | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
 | ADR-032 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
 | ADR-033 | Two-headed giant — AI-native + human-legible DX | Developer model | Accepted |
@@ -294,12 +294,12 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-063 | API-Backend Generation is a Plugin Axis, Not a Wrapper Around One OSS Codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
 | ADR-064 | Runtime's Future is a Semver-Published Package, Not a Staged `dist/runtime` Folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
 | ADR-065 | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Accepted (impl phased, #264) |
-| ADR-066 | Stable Slot Addressing and Desired-State Placement — Backend Places Any Experience in Any Slot, Always | Runtime / slots / addressing / control-plane | Accepted (#265) |
-| ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Accepted (#265) |
-| ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Accepted (#265) |
-| ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted (#265) |
+| ADR-066 | Stable Slot Addressing and Desired-State Placement — Backend Places Any Experience in Any Slot, Always | Runtime / slots / addressing / control-plane | Accepted |
+| ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Accepted |
+| ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Accepted |
+| ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Accepted |
 | ADR-070 | Experience-Scoped Federated Supergraph — Control-Plane-Composed Data over Participant MFE BFFs | Runtime / control-plane / data / federation / lifecycle | Accepted (impl phased) |
-| ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted (#294) |
+| ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted |
 | ADR-072 | The Sanctioned Slot Registration API — `DeclaredSlot`, Typed by the Manifest | Codegen / slots / app-code API / typing | Accepted |
 | ADR-073 | Slot Contract Logic in Contracts; Placement Targets Become Validatable | Contracts / CLI / slots / design-time validation | Accepted |
 | ADR-075 | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Accepted |

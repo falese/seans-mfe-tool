@@ -4,12 +4,20 @@ title: Lifecycle Re-Entrancy Guard in BaseMFE
 status: Accepted
 date: 2025-12-13
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [runtime, lifecycle, base-mfe, safety]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, lifecycle, base-mfe, safety]
-summary: Introduce a re-entrancy guard in BaseMFE that tracks executing {capability, phase} pairs and aborts on re-entry to prevent infinite recursion from misconfigured lifecycle hooks.
-rationale-summary: Certain manifest patterns that map lifecycle hooks to wrapper methods caused runaway recursion leading to OOM errors; the guard provides a last-resort safety net at the platform level.
+implemented-by: []
+verified-by: []
+summary: >-
+  Introduce a re-entrancy guard in BaseMFE that tracks executing {capability, phase} pairs and
+  aborts on re-entry to prevent infinite recursion from misconfigured lifecycle hooks.
+rationale-summary: >-
+  Certain manifest patterns that map lifecycle hooks to wrapper methods caused runaway recursion
+  leading to OOM errors; the guard provides a last-resort safety net at the platform level.
 long-form: true
 ---
 

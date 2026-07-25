@@ -666,7 +666,8 @@ export abstract class BaseMFE {
    *
    * The pipeline is a data structure — each stage is a small composable
    * middleware, so the execution model can be read (and, later, extended: the
-   * proposed retry/timeout stages of ADR-028–032 slot in as middleware)
+   * retry/timeout stages of ADR-029/ADR-030 already do, and the proposed
+   * ADR-028/031/032 stages would) — adr-lint-ignore: code-cites-ratified-adr
    * instead of being buried in procedural code:
    *
    *   stateGuard → stateTransition(enter) → errorBoundary(

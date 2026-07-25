@@ -57,7 +57,9 @@ Full spec: `@docs/spec.md`
 - If a relevant ADR exists → reference it in code comments, commit messages, and PR body (`ADR-NNN`)
 - If no ADR covers the decision → **stop and ask the human** before implementing; do not invent architecture
 - Never edit existing ADRs mid-implementation — add a new ADR file instead
-- New ADRs go in `docs/architecture-decisions/ADR-NNN-short-slug.md`
+- New ADRs go in `docs/architecture-decisions/ADR-NNN-short-slug.md`, with frontmatter
+  matching the ADR-075 schema — `npm run check:adr` is the gate, and the frontmatter is
+  the source of truth for the `docs/spec.md` index
 - Reference the new ADR in the PR body
 
 ADR quick index: `@docs/spec.md#adr-index`
@@ -83,7 +85,9 @@ ADR quick index: `@docs/spec.md#adr-index`
 | Slot contract — stable addressing, desired-state placement, manifest-declared/provider-scoped slots, React + Angular sugar, single-sourced grammar (ADR-066/067/068/069, #265) | ✅ Done (PR #266); see `docs/slot-contract.md` |
 | Slot app-code API + design-time validation — `DeclaredSlot` as the sanctioned API with manifest-typed ids, the `slots-implemented` rule in `mfe:validate`, `slots:validate`, registry rule-save checks (ADR-072/073) | ✅ Done; see `docs/slot-architecture.md` |
 | BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
-| Lifecycle engine enhancements (ADR-028–032) | 📋 Planned (issues not yet created) |
+| Lifecycle engine — timeout (ADR-029) + error classification/retry (ADR-030) | ✅ Done (`timeout-wrapper.ts`, `error-classifier.ts`, `retry-wrapper.ts`; status reconciled in the ADR-075 pass) |
+| Lifecycle engine — parallel exec (ADR-028), conditional/Jexl (ADR-031), inter-hook (ADR-032) | 📋 Proposed (issues not yet created) |
+| ADR library drift control (ADR-075) | ✅ Done — `npm run check:adr`; frontmatter is the source of truth |
 | npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
 
 See `docs/PROJECT-STATUS.md` for priority order and blockers.
@@ -144,7 +148,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 3. ~~GraphQL BFF layer~~ ✅
 4. Runtime platform — REQ-RUNTIME-002 → 005 → 001 → 004 → … (issues #47–59) 🟡
 5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
-6. Lifecycle engine enhancements — ADR-028–032 (issues not yet created) 📋
+6. Lifecycle engine enhancements — ADR-028 / ADR-031 / ADR-032 (issues not yet created) 📋
+   (ADR-029 timeout and ADR-030 error classification already shipped)
 7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
 8. Monorepo consolidation (docs/MERGE-PLAN.md Phase 2) ⏳
 
@@ -157,6 +162,7 @@ Run in order — push only after all pass:
 3. `npm test` (or `npm run test:ci` if you touched runtime code)
 4. `npm run build`
 5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command flags/types)
+6. `npm run check:adr` (if you added or edited an ADR — ADR-075)
 
 ## Branch and commit discipline
 

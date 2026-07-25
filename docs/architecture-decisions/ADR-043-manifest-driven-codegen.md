@@ -4,12 +4,25 @@ title: Manifest-Driven Code Generation Pipeline
 status: Accepted
 date: 2026-05-28
 deciders: [sean]
+area: Codegen / DSL
 enforcement: code
+tags: [codegen, dsl, manifest, pipeline, templates, single-source-of-truth]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [codegen, dsl, manifest, pipeline, templates, single-source-of-truth]
-summary: The `mfe-manifest.yaml` DSL is the single source of truth for a generated MFE. `remote:generate` runs one pipeline — parse/validate (Zod) → resolve the framework/bundler template variant → extract manifest variables → render EJS templates → write files — with no framework branching in the generator logic itself.
-rationale-summary: Centralizing generation in one manifest-driven pipeline keeps "generate, don't hand-write" (PDR-001) enforceable: the manifest declares intent, variant selection is data, and adding a framework is a new template directory rather than new generator code.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-drift:check
+summary: >-
+  The `mfe-manifest.yaml` DSL is the single source of truth for a generated MFE.
+  `remote:generate` runs one pipeline — parse/validate (Zod) → resolve the framework/bundler
+  template variant → extract manifest variables → render EJS templates → write files — with no
+  framework branching in the generator logic itself.
+rationale-summary: >-
+  Centralizing generation in one manifest-driven pipeline keeps "generate, don't hand-write"
+  (PDR-001) enforceable: the manifest declares intent, variant selection is data, and adding a
+  framework is a new template directory rather than new generator code.
 long-form: true
 ---
 

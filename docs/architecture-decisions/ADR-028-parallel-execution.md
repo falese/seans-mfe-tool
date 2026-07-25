@@ -4,12 +4,22 @@ title: Parallel Handler Execution with Context Isolation
 status: Proposed
 date: 2025-12-11
 deciders: [sean]
+area: Lifecycle engine
 enforcement: code
+tags: [runtime, platform-handlers, performance, parallelism, lifecycle]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, platform-handlers, performance, parallelism, lifecycle]
-summary: Implement opt-in parallel handler execution with isolated read-only context copies per handler, namespaced outputs, and three failure strategies (fail-fast, complete-all, partial-success).
-rationale-summary: Sequential-only handler execution causes unnecessary latency for independent operations like multi-validation checks or fan-out API calls; shared mutable context under concurrency causes race conditions.
+implemented-by: []
+verified-by: []
+summary: >-
+  Implement opt-in parallel handler execution with isolated read-only context copies per
+  handler, namespaced outputs, and three failure strategies (fail-fast, complete-all,
+  partial-success).
+rationale-summary: >-
+  Sequential-only handler execution causes unnecessary latency for independent operations like
+  multi-validation checks or fan-out API calls; shared mutable context under concurrency causes
+  race conditions.
 long-form: true
 ---
 

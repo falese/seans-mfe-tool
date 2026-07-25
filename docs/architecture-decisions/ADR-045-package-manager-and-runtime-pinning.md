@@ -4,12 +4,21 @@ title: Package Manager and Local Runtime Pinning
 status: Proposed
 date: 2026-05-28
 deciders: [sean]
+area: Tooling / package manager / runtime
 enforcement: code
+tags: [tooling, package-manager, node, reproducibility, gap]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [tooling, package-manager, node, reproducibility, gap]
-summary: Standardize the contributor toolchain on a single package manager and an explicit local Node runtime pin so workspace installs, builds, and release tasks are reproducible outside CI.
-rationale-summary: The repository currently declares npm as its package manager, also carries a pnpm workspace file, and tests multiple Node versions in CI without pinning one locally. That combination is workable for one maintainer but scales poorly and makes local behavior ambiguous.
+implemented-by: []
+verified-by: []
+summary: >-
+  Standardize the contributor toolchain on a single package manager and an explicit local Node
+  runtime pin so workspace installs, builds, and release tasks are reproducible outside CI.
+rationale-summary: >-
+  The repository currently declares npm as its package manager, also carries a pnpm workspace
+  file, and tests multiple Node versions in CI without pinning one locally. That combination is
+  workable for one maintainer but scales poorly and makes local behavior ambiguous.
 long-form: true
 ---
 

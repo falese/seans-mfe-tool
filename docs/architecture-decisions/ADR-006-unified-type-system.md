@@ -4,12 +4,22 @@ title: Unified Type System
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: DSL / types
 enforcement: code
+tags: [dsl, types, graphql, typescript]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, types, graphql, typescript]
-summary: A single type system flows from the DSL through GraphQL schema to TypeScript/Python types; types are nullable by default following GraphQL convention, with ! indicating required/non-null.
-rationale-summary: A unified type system with the DSL as the single source of truth eliminates type drift between the manifest, API schema, and generated code, and fails builds rather than allowing runtime type errors.
+implemented-by: []
+verified-by: []
+summary: >-
+  A single type system flows from the DSL through GraphQL schema to TypeScript/Python types;
+  types are nullable by default following GraphQL convention, with ! indicating
+  required/non-null.
+rationale-summary: >-
+  A unified type system with the DSL as the single source of truth eliminates type drift between
+  the manifest, API schema, and generated code, and fails builds rather than allowing runtime
+  type errors.
 long-form: true
 ---
 
@@ -51,6 +61,6 @@ Adopt a single type system where the DSL is the source of truth. Types flow DSL 
 
 - DEC-020
 - REQ-047
-- ADR-001: GraphQL Data Standardization
-- ADR-013: Language-Agnostic DSL Contract
+- ADR-012: GraphQL Mesh for BFF Layer with DSL-Embedded Configuration
+- PDR-002: Language-/framework-neutral platform contract
 - `docs/acceptance-criteria/type-system.feature`

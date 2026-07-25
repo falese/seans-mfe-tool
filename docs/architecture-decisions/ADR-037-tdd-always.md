@@ -4,12 +4,21 @@ title: TDD-always — write the failing test before the code
 status: Accepted
 date: 2026-04-17
 deciders: [sean]
+area: Process
 enforcement: convention
+tags: [testing, tdd, quality, process]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [testing, tdd, quality, process]
-summary: Every production code change must be preceded by a failing test; no code is written without a corresponding test; npm run test:ci enforces 80% coverage on runtime code.
-rationale-summary: Ad-hoc testing after the fact produces coverage gaps and tests that pass because they were written to match existing (potentially buggy) behavior; TDD inverts this by making the failure case explicit first.
+implemented-by: []
+verified-by: []
+summary: >-
+  Every production code change must be preceded by a failing test; no code is written without a
+  corresponding test; npm run test:ci enforces 80% coverage on runtime code.
+rationale-summary: >-
+  Ad-hoc testing after the fact produces coverage gaps and tests that pass because they were
+  written to match existing (potentially buggy) behavior; TDD inverts this by making the failure
+  case explicit first.
 long-form: false
 ---
 

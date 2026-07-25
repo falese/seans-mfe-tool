@@ -136,6 +136,9 @@ export const AdrFrontmatterSchema = z.object({
 
   summary: z.string().min(1).optional(),
   'rationale-summary': z.string().min(1).optional(),
+
+  /** Pre-existing marker on 57 ADRs; preserved rather than silently stripped. */
+  'long-form': z.boolean().optional(),
 });
 
 export type AdrFrontmatter = z.infer<typeof AdrFrontmatterSchema>;
@@ -151,6 +154,14 @@ export interface AdrDocument {
   frontmatter: AdrFrontmatter;
   /** Everything after the closing `---`, for cross-reference scanning. */
   body: string;
+  /**
+   * 1-indexed file line on which `body` starts.
+   *
+   * Without this, a finding's line is relative to the body and gets printed as
+   * `file:line`, sending the reader to a line that has nothing to do with the
+   * defect — off by the whole length of the frontmatter block.
+   */
+  bodyLine: number;
 }
 
 export interface AdrParseFailure {
@@ -233,5 +244,12 @@ export function parseAdrDocument(path: string, text: string): AdrParseResult {
     };
   }
 
-  return { status: 'ok', document: { path, frontmatter: parsed.data, body: match[2] } };
+  // Lines consumed before the body starts: the whole matched prefix minus the
+  // body itself. Reported findings are file-relative because of this.
+  const bodyLine = text.slice(0, text.length - match[2].length).split(/\r?\n/).length;
+
+  return {
+    status: 'ok',
+    document: { path, frontmatter: parsed.data, body: match[2], bodyLine },
+  };
 }

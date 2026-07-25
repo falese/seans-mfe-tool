@@ -1,15 +1,28 @@
 ---
 id: 0026
 title: Load Capability — Atomic Operation Design
-status: In Progress
+status: Accepted
+impl:
+  stage: phased
+  refs: []
 date: 2025-12-06
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [runtime, load, atomic, telemetry, module-federation]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, load, atomic, telemetry, module-federation]
-summary: Implement load as three sequential atomic subphases (entry → mount → enable-render) with per-subphase telemetry checkpoints and a LoadResult that carries metadata for shell validation before render.
-rationale-summary: The load capability needed to be atomic (fully succeeds or fully fails) and observable (subphase timing), while surfacing enough metadata for the shell to validate component availability before calling render.
+implemented-by: []
+verified-by: []
+summary: >-
+  Implement load as three sequential atomic subphases (entry → mount → enable-render) with
+  per-subphase telemetry checkpoints and a LoadResult that carries metadata for shell validation
+  before render.
+rationale-summary: >-
+  The load capability needed to be atomic (fully succeeds or fully fails) and observable
+  (subphase timing), while surfacing enough metadata for the shell to validate component
+  availability before calling render.
 long-form: true
 ---
 
@@ -352,7 +365,7 @@ context.retryCount = 3;
 ## Related ADRs
 
 - ADR-002: Lifecycle execution model (before/main/after/error)
-- ADR-013: BaseMFE abstract base (load method signature)
+- ADR-041: BaseMFE Abstract Base Class & Platform Capability Contract (load method signature)
 - ADR-024: Platform handler standardization (handler types)
 - ADR-025: Platform handler interface (handler registry, execution)
 

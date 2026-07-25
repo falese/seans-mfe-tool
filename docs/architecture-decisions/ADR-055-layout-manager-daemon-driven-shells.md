@@ -4,12 +4,29 @@ title: LayoutManager — Daemon-Driven Slot Composition for Generic Shells
 status: Implemented
 date: 2026-06-10
 deciders: [sean]
+area: Runtime / shell / layout / control-plane
 enforcement: code
+tags: [runtime, layout, shell, slots, daemon, control-plane, module-federation]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, layout, shell, slots, daemon, control-plane, module-federation]
-summary: `src/runtime/layout-manager.ts` adds a framework-free LayoutManager that turns any shell into a 100% generic, initially empty host — it connects to the daemon's `messages` subscription and mounts each EXPERIENCE component into a named layout slot (`props.slot`, default 'main') via a pluggable adaptor keyed by `contentType`. Built-in adaptors: `module-federation` (loads any remote — React or Angular — through the shared BaseMFE bootstrap `{ mfe, mfeReady }`), `text/html` (data-action delegation), `application/json`. `ModuleFederationExperienceOutput` `{remoteEntryUrl, scope, module, component?, props?}` is added to `@seans-mfe/contracts`. The ABC Kids shell is the reference host.
-rationale-summary: PLATFORM-CONTRACT v3.2 + ADR-054 made the daemon select and render MFEs, but every shell still hardcoded which remotes exist and when to mount them (the ABC Kids GameLauncher pattern). Composition belongs to the control plane; the shell should only own slots and adaptors. A framework-free manager with injectable transport/slot factories keeps it testable in node and hostable from React, Angular, or plain HTML shells alike.
+implemented-by: []
+verified-by: []
+summary: >-
+  `src/runtime/layout-manager.ts` adds a framework-free LayoutManager that turns any shell into
+  a 100% generic, initially empty host — it connects to the daemon's `messages` subscription and
+  mounts each EXPERIENCE component into a named layout slot (`props.slot`, default 'main') via a
+  pluggable adaptor keyed by `contentType`. Built-in adaptors: `module-federation` (loads any
+  remote — React or Angular — through the shared BaseMFE bootstrap `{ mfe, mfeReady }`),
+  `text/html` (data-action delegation), `application/json`. `ModuleFederationExperienceOutput`
+  `{remoteEntryUrl, scope, module, component?, props?}` is added to `@seans-mfe/contracts`. The
+  ABC Kids shell is the reference host.
+rationale-summary: >-
+  PLATFORM-CONTRACT v3.2 + ADR-054 made the daemon select and render MFEs, but every shell still
+  hardcoded which remotes exist and when to mount them (the ABC Kids GameLauncher pattern).
+  Composition belongs to the control plane; the shell should only own slots and adaptors. A
+  framework-free manager with injectable transport/slot factories keeps it testable in node and
+  hostable from React, Angular, or plain HTML shells alike.
 long-form: true
 ---
 

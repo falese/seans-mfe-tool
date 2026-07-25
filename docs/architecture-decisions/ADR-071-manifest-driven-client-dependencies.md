@@ -4,12 +4,28 @@ title: Manifest-Driven Client Dependencies and Federation Shared
 status: Accepted
 date: 2026-07-19
 deciders: [sean]
+area: Codegen / dependencies / module-federation
 enforcement: code
+tags: [codegen, dependencies, module-federation, package.json, templates, drift]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [codegen, dependencies, module-federation, package.json, templates, drift]
-summary: Generated React `package.json` client dependencies and the Module-Federation `shared` block are derived from `mfe-manifest.yaml` (`dependencies.runtime` + `dependencies.design-system`) instead of being hardcoded in the EJS templates. Framework versions still come from `DEPENDENCY_VERSIONS` (ADR-027/ADR-050); the manifest chooses which libraries ship. `shared` covers framework singletons + the design-system only, never arbitrary runtime libraries.
-rationale-summary: The templates force-injected React + MUI + emotion into every MFE and ignored `dependencies.runtime`, so any other library (babylon, styled-components, zustand) had to be hand-added to `package.json` and then drifted from the manifest and the federation config. Deriving both from the manifest makes that class of drift impossible by construction while preserving today's default (MUI) for MFEs that declare nothing.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-consistency
+summary: >-
+  Generated React `package.json` client dependencies and the Module-Federation `shared` block
+  are derived from `mfe-manifest.yaml` (`dependencies.runtime` + `dependencies.design-system`)
+  instead of being hardcoded in the EJS templates. Framework versions still come from
+  `DEPENDENCY_VERSIONS` (ADR-027/ADR-050); the manifest chooses which libraries ship. `shared`
+  covers framework singletons + the design-system only, never arbitrary runtime libraries.
+rationale-summary: >-
+  The templates force-injected React + MUI + emotion into every MFE and ignored
+  `dependencies.runtime`, so any other library (babylon, styled-components, zustand) had to be
+  hand-added to `package.json` and then drifted from the manifest and the federation config.
+  Deriving both from the manifest makes that class of drift impossible by construction while
+  preserving today's default (MUI) for MFEs that declare nothing.
 long-form: true
 ---
 

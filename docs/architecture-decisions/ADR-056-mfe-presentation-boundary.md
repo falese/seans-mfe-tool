@@ -1,36 +1,28 @@
 ---
-id: "0056"
+id: 0056
 title: MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model)
 status: Accepted
 date: 2026-06-13
-deciders:
-  - sean
+deciders: [sean]
+area: Runtime / boundary / providers / polyglot
 enforcement: code
+tags: [runtime, boundary, providers, polyglot, module-federation, react, angular, basemfe, control-plane, layout]
+relates-to: []
 supersedes: []
-superseded-by: []
-tags:
-  - runtime
-  - boundary
-  - providers
-  - polyglot
-  - module-federation
-  - react
-  - angular
-  - basemfe
-  - control-plane
-  - layout
+superseded-by: [60]
+implemented-by: []
+verified-by: []
 summary: >-
-  An MFE is a sealed, framework-opaque virtual machine composed like a Helm
-  chart — never optimized through from the outside. The platform is split at a
-  thin waist with exactly two things crossing it: the neutral capability
-  contract and a presentation handle. All framework-specific composition lives
-  in host-side providers, not in BaseMFE.
+  An MFE is a sealed, framework-opaque virtual machine composed like a Helm chart — never
+  optimized through from the outside. The platform is split at a thin waist with exactly two
+  things crossing it: the neutral capability contract and a presentation handle. All
+  framework-specific composition lives in host-side providers, not in BaseMFE.
 rationale-summary: >-
-  BaseMFE.doRender currently calls createRoot, making every MFE its own React
-  root and conflating lifecycle orchestration with DOM rendering. That breaks
-  host→MFE React context, host error boundaries, and single-root composition.
-  The fix is to move framework-aware composition into host-side providers while
-  keeping the core runtime and daemon framework-neutral.
+  BaseMFE.doRender currently calls createRoot, making every MFE its own React root and
+  conflating lifecycle orchestration with DOM rendering. That breaks host→MFE React context,
+  host error boundaries, and single-root composition. The fix is to move framework-aware
+  composition into host-side providers while keeping the core runtime and daemon
+  framework-neutral.
 long-form: true
 ---
 

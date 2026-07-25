@@ -4,12 +4,20 @@ title: Data Lifecycle Alignment
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: DSL
 enforcement: code
+tags: [dsl, lifecycle, data]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, lifecycle, data]
-summary: Data queries and mutations use the same four-phase lifecycle as capability execution; there is no separate loading phase, as data fetching is modeled as a capability invocation.
-rationale-summary: Aligning data lifecycle with capability lifecycle provides a single mental model and avoids special-casing data operations in the platform runtime.
+implemented-by: []
+verified-by: []
+summary: >-
+  Data queries and mutations use the same four-phase lifecycle as capability execution; there is
+  no separate loading phase, as data fetching is modeled as a capability invocation.
+rationale-summary: >-
+  Aligning data lifecycle with capability lifecycle provides a single mental model and avoids
+  special-casing data operations in the platform runtime.
 long-form: true
 ---
 
