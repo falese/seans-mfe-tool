@@ -10,7 +10,9 @@ tags: [dsl, handlers, codegen, polyglot]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+  - packages/codegen/templates/base-mfe/handler-registry.ts.ejs
 verified-by: []
 summary: >-
   DSL handler names are neutral strings; code generators map them to language-specific

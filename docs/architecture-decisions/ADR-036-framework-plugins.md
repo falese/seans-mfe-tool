@@ -1,7 +1,7 @@
 ---
 id: 0036
 title: Framework plugins — abstract BaseFrameworkPlugin with concrete implementations
-status: Accepted
+status: Implemented
 date: 2026-05-25
 deciders: [sean]
 area: Build / codegen / deploy

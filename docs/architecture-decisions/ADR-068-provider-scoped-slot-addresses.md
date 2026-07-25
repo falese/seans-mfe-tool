@@ -1,7 +1,7 @@
 ---
 id: 0068
 title: Provider-scoped slot addresses
-status: Accepted
+status: Implemented
 date: 2026-07-11
 deciders: [sean]
 area: Runtime / slots / addressing / ownership
@@ -10,7 +10,8 @@ tags: [runtime, slots, addressing, ownership]
 relates-to: [57, 58, 66, 67]
 supersedes: [58]
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/contracts/src/slot-contract.ts
 verified-by: []
 long-form: true
 ---

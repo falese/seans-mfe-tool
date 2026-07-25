@@ -10,7 +10,9 @@ tags: [cli, oclif, commander, migration, plugin-architecture]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - bin/run.js
+  - bin/dev.ts
 verified-by: []
 summary: >-
   Replace the Commander-based CLI with oclif, adopting colon-topic command structure, plugin

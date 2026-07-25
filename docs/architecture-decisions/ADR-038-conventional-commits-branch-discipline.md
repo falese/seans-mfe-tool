@@ -10,7 +10,8 @@ tags: [git, commits, branch-naming, process, traceability]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - CLAUDE.md
 verified-by: []
 summary: >-
   All commits use Conventional Commits format (feat/fix/refactor/test/docs/chore) with Refs

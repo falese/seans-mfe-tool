@@ -2,6 +2,9 @@
 id: 0062
 title: "`deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis"
 status: Accepted
+impl:
+  stage: deferred
+  refs: ["#250"]
 date: 2026-07-01
 deciders: [sean]
 area: Deploy / plugins / scope

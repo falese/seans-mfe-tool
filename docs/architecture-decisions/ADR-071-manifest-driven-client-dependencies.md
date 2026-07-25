@@ -1,7 +1,7 @@
 ---
 id: 0071
 title: Manifest-Driven Client Dependencies and Federation Shared
-status: Accepted
+status: Implemented
 date: 2026-07-19
 deciders: [sean]
 area: Codegen / dependencies / module-federation

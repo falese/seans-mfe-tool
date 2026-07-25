@@ -10,7 +10,8 @@ tags: [runtime, base-mfe, remote-mfe, bff, doquery, codegen]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/remote-mfe.ts
 verified-by: []
 summary: >-
   The RemoteMFE.doQuery override that threw "Query not supported for remote MFE type" is

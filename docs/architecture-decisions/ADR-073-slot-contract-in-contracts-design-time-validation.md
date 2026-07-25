@@ -1,7 +1,7 @@
 ---
 id: 0073
 title: Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable
-status: Accepted
+status: Implemented
 date: 2026-07-25
 deciders: [sean]
 area: Contracts / CLI / slots / design-time validation

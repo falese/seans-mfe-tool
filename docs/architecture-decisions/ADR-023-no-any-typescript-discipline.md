@@ -10,8 +10,11 @@ tags: [typescript, type-safety, contracts, code-quality]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - CLAUDE.md
+  - eslint.config.js
+verified-by:
+  - lint
 summary: >-
   The any type is forbidden in all src/ and packages/ code; unknown is used at system boundaries
   and narrowed via type guards or Zod parse before use.

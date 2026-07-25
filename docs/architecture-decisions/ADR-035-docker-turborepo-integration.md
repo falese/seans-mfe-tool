@@ -1,7 +1,7 @@
 ---
 id: 0035
 title: Docker Build Orchestration via Turborepo Task Graph
-status: Accepted
+status: Implemented
 date: 2026-05-24
 deciders: [sean]
 area: Docker / CI
@@ -10,7 +10,8 @@ tags: [docker, turborepo, build, ci, infra]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - turbo.json
 verified-by: []
 summary: >-
   Bring Docker builds into the Turborepo task graph so that `turbo run docker:build:examples`

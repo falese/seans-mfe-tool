@@ -10,7 +10,9 @@ tags: [testing, codegen, scaffolding, tdd]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/codegen/templates/base-mfe/mfe.test.ts.ejs
+  - packages/codegen/templates/base-mfe-angular/mfe.test.ts.ejs
 verified-by: []
 summary: >-
   Every scaffolded MFE project includes working test files that teams can run immediately and

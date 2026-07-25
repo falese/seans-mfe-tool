@@ -10,8 +10,10 @@ tags: [dsl, codegen, language, templates]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-drift:check
 summary: >-
   The DSL language field drives template selection and build tooling; V1 supports JavaScript and
   TypeScript only, with non-JS backends treated as data-only services consumed by a JS shell.

@@ -10,7 +10,8 @@ tags: [dsl, lifecycle, data]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/schema.ts
 verified-by: []
 summary: >-
   Data queries and mutations use the same four-phase lifecycle as capability execution; there is

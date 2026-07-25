@@ -10,7 +10,9 @@ tags: [bff, graphql, mesh, dsl]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/bff-plugin/templates/server.ts.ejs
+  - packages/bff-plugin/templates/meshrc.yaml.ejs
 verified-by: []
 summary: >-
   Use GraphQL Mesh as the BFF passthrough layer with configuration embedded directly in the MFE

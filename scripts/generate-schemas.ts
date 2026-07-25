@@ -196,6 +196,33 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
     },
     additionalProperties: false,
   },
+  'adr:status': {
+    type: 'object',
+    required: ['total', 'counts', 'outstanding', 'entries'],
+    properties: {
+      total:  { type: 'number' },
+      counts: { type: 'object', additionalProperties: { type: 'number' } },
+      outstanding: { type: 'array', items: { $ref: '#/definitions/adrStatusEntry' } },
+      entries:     { type: 'array', items: { $ref: '#/definitions/adrStatusEntry' } },
+    },
+    definitions: {
+      adrStatusEntry: {
+        type: 'object',
+        required: ['id', 'title', 'status', 'area', 'refs', 'implementedBy'],
+        properties: {
+          id:            { type: 'number' },
+          title:         { type: 'string' },
+          status:        { type: 'string' },
+          area:          { type: 'string' },
+          stage:         { type: 'string' },
+          refs:          { type: 'array', items: { type: 'string' } },
+          implementedBy: { type: 'array', items: { type: 'string' } },
+        },
+        additionalProperties: false,
+      },
+    },
+    additionalProperties: false,
+  },
   'adr:validate': {
     type: 'object',
     required: ['adrs', 'ok', 'checked', 'issues'],
@@ -272,6 +299,16 @@ const INPUT_SCHEMAS: Record<string, object> = {
     properties: {
       dir:       { type: 'string', description: 'MFE directory to validate (default: cwd)' },
       typecheck: { type: 'boolean', default: false, description: 'Also run `tsc --noEmit`' },
+    },
+  },
+  'adr:status': {
+    type: 'object',
+    properties: {
+      outstanding: { type: 'boolean', default: false, description: 'Only ratified work still to do' },
+      status: {
+        type: 'string',
+        enum: ['Proposed', 'Accepted', 'Implemented', 'Deferred', 'Superseded', 'Withdrawn'],
+      },
     },
   },
   'adr:validate': {

@@ -1,7 +1,7 @@
 ---
 id: 0044
 title: Production Container Hardening for Generated MFEs
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Docker / deploy / security
@@ -10,7 +10,8 @@ tags: [docker, nginx, kubernetes, security, deploy, generated-output, non-root]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/bff-plugin/templates/Dockerfile.ejs
 verified-by: []
 summary: >-
   Generated MFE containers run as non-root on unprivileged nginx (port 8080), ship a hardened

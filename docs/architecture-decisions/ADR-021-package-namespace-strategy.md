@@ -10,7 +10,8 @@ tags: [packages, namespace, oclif, monorepo, plugin-architecture]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - CLAUDE.md
 verified-by: []
 summary: >-
   Shared platform packages use the @seans-mfe/* namespace (contracts, oclif-base, runtime,

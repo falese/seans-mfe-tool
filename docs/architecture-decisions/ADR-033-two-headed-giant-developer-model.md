@@ -10,7 +10,8 @@ tags: [dx, ai, cli, meta]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - CLAUDE.md
 verified-by: []
 summary: >-
   The target developer of seans-mfe-tool is a two-headed giant — one head is an AI agent that

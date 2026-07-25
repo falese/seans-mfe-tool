@@ -10,8 +10,10 @@ tags: [typescript, migration, codegen]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - tsconfig.json
+verified-by:
+  - typecheck
 summary: >-
   New CLI code and recently-completed modules are written in TypeScript; existing JavaScript
   remains until touched, with ts-node inline registration enabling a mixed JS/TS codebase.

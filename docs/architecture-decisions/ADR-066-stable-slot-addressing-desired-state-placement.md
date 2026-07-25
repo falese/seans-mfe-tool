@@ -1,7 +1,7 @@
 ---
 id: 0066
 title: Stable slot addressing and desired-state placement
-status: Accepted
+status: Implemented
 date: 2026-07-11
 deciders: [sean]
 area: Runtime / slots / addressing / control-plane
@@ -10,8 +10,10 @@ tags: [runtime, slots, addressing, control-plane]
 relates-to: [55, 57, 58, 60]
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/contracts/src/slot-contract.ts
+verified-by:
+  - check:mfe-consistency
 long-form: true
 ---
 

@@ -10,7 +10,9 @@ tags: [mcp, child-process, isolation, ai-native, concurrency]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - src/commands/mcp/serve.ts
+  - src/mcp/tool-registry.ts
 verified-by: []
 summary: >-
   Each MCP tool call spawns seans-mfe-tool <cmd> --json as a child process, parses stdout as

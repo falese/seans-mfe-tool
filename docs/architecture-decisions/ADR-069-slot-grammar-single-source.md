@@ -1,7 +1,7 @@
 ---
 id: 0069
 title: Slot grammar single-sourced in contracts
-status: Accepted
+status: Implemented
 date: 2026-07-12
 deciders: [sean]
 area: Contracts / DSL / runtime / packaging

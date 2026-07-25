@@ -4,7 +4,7 @@ title: Experience-scoped federated supergraph (control-plane-composed data over 
 status: Accepted
 impl:
   stage: phased
-  refs: []
+  refs: ["#282", "#284", "#285", "#286", "#287", "#288"]
 date: 2026-07-19
 deciders: [sean]
 area: Runtime / control-plane / data / federation / lifecycle

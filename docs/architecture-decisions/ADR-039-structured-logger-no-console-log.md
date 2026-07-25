@@ -10,8 +10,10 @@ tags: [logging, observability, cli, production-code]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - CLAUDE.md
+verified-by:
+  - lint
 summary: >-
   Production src/ and packages/ code uses the structured logger from @seans-mfe/oclif-base;
   console.log is forbidden outside tests and scripts.

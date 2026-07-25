@@ -10,7 +10,8 @@ tags: [contracts, daemon, control-plane, runtime, protocol, messages]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/contracts/src/messages.ts
 verified-by: []
 summary: >-
   The Renderer ⇄ Daemon ⇄ Registry ⇄ MFE wire protocol (PLATFORM-CONTRACT.md v3.2) is codified

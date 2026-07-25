@@ -10,7 +10,8 @@ tags: [runtime, layout, shell, slots, daemon, control-plane, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/layout-manager.ts
 verified-by: []
 summary: >-
   `src/runtime/layout-manager.ts` adds a framework-free LayoutManager that turns any shell into
