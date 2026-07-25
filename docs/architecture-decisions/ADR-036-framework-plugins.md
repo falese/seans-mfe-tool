@@ -1,15 +1,34 @@
 ---
 id: 0036
 title: Framework plugins — abstract BaseFrameworkPlugin with concrete implementations
-status: Accepted
+status: Implemented
 date: 2026-05-25
 deciders: [sean]
-enforcement: code (abstract class + oclif plugin packages)
+area: Build / codegen / deploy
+enforcement: code
+tags: [build, codegen, framework, bundler, plugin, oclif]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [build, codegen, framework, bundler, plugin, oclif]
-summary: Introduce an abstract `BaseFrameworkPlugin` class in core that defines the shape of framework-specific build, scaffold, and Docker concerns. Each framework is a concrete implementation (`ReactRspackPlugin`, `AngularWebpackPlugin`) in its own oclif plugin package. `remote:init` gains a `--framework` flag. UnifiedGenerator delegates to the resolved plugin. Follows the same abstract-base → concrete-implementation pattern as `BaseMFE → RemoteMFE / AngularRemoteMFE`.
-rationale-summary: ADR-034's "branch in UnifiedGenerator" approach required 15+ fix commits for Angular. A custom `BuildAdapter` registry was rejected as over-engineering on top of oclif. A data-only config object was rejected because the core must own the build *logic* (dev server, Docker, env check) the same way `BaseMFE` owns lifecycle orchestration — concrete plugins implement the framework-specific parts. This mirrors the proven `BaseMFE` pattern already in the codebase.
+implemented-by:
+  - packages/contracts/src/framework-plugin.ts
+  - src/framework/loader.ts
+  - packages/framework-react/src/plugin.ts
+  - packages/framework-angular/src/plugin.ts
+verified-by: []
+summary: >-
+  Introduce an abstract `BaseFrameworkPlugin` class in core that defines the shape of
+  framework-specific build, scaffold, and Docker concerns. Each framework is a concrete
+  implementation (`ReactRspackPlugin`, `AngularWebpackPlugin`) in its own oclif plugin package.
+  `remote:init` gains a `--framework` flag. UnifiedGenerator delegates to the resolved plugin.
+  Follows the same abstract-base → concrete-implementation pattern as `BaseMFE → RemoteMFE /
+  AngularRemoteMFE`.
+rationale-summary: >-
+  ADR-034's "branch in UnifiedGenerator" approach required 15+ fix commits for Angular. A custom
+  `BuildAdapter` registry was rejected as over-engineering on top of oclif. A data-only config
+  object was rejected because the core must own the build *logic* (dev server, Docker, env
+  check) the same way `BaseMFE` owns lifecycle orchestration — concrete plugins implement the
+  framework-specific parts. This mirrors the proven `BaseMFE` pattern already in the codebase.
 long-form: true
 ---
 

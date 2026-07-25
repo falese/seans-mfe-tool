@@ -4,12 +4,23 @@ title: Handler Discovery Convention
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [dsl, handlers, codegen, polyglot]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, handlers, codegen, polyglot]
-summary: DSL handler names are neutral strings; code generators map them to language-specific conventions (camelCase for JS/TS, snake_case for Python, PascalCase for Go) with validation timing differing by handler type.
-rationale-summary: Neutral handler naming keeps the DSL language-agnostic while generated code feels native to each language's conventions.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+  - packages/codegen/templates/base-mfe/handler-registry.ts.ejs
+verified-by: []
+summary: >-
+  DSL handler names are neutral strings; code generators map them to language-specific
+  conventions (camelCase for JS/TS, snake_case for Python, PascalCase for Go) with validation
+  timing differing by handler type.
+rationale-summary: >-
+  Neutral handler naming keeps the DSL language-agnostic while generated code feels native to
+  each language's conventions.
 long-form: true
 ---
 
@@ -58,5 +69,5 @@ lifecycle:
 
 - DEC-019
 - REQ-046
-- ADR-013: Language-Agnostic DSL Contract
+- PDR-002: Language-/framework-neutral platform contract
 - ADR-004: Handler Array Support

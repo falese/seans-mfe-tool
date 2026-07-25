@@ -1,15 +1,23 @@
 ---
 id: 0024
 title: Platform Handler Library Standardization
-status: Planned
+status: Proposed
 date: 2025-12-13
 deciders: [sean]
+area: Runtime handlers
 enforcement: convention
+tags: [runtime, platform-handlers, lifecycle, standardization]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, platform-handlers, lifecycle, standardization]
-summary: Standardize all platform handlers under the platform.* prefix, require async support and telemetry emission, and mandate 100% test coverage for every handler in the library.
-rationale-summary: Platform handlers were ad-hoc and lacked consistent error propagation, telemetry, and retry semantics, making cross-MFE behavior unpredictable.
+implemented-by: []
+verified-by: []
+summary: >-
+  Standardize all platform handlers under the platform.* prefix, require async support and
+  telemetry emission, and mandate 100% test coverage for every handler in the library.
+rationale-summary: >-
+  Platform handlers were ad-hoc and lacked consistent error propagation, telemetry, and retry
+  semantics, making cross-MFE behavior unpredictable.
 long-form: false
 ---
 

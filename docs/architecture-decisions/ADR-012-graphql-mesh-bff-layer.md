@@ -4,12 +4,23 @@ title: GraphQL Mesh for BFF Layer with DSL-Embedded Configuration
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: BFF
 enforcement: code
+tags: [bff, graphql, mesh, dsl]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [bff, graphql, mesh, dsl]
-summary: Use GraphQL Mesh as the BFF passthrough layer with configuration embedded directly in the MFE DSL data section as the single source of configuration truth.
-rationale-summary: Mesh provides production-ready GraphQL-to-REST passthrough without custom resolver code; embedding its configuration in the DSL eliminates a separate .meshrc.yaml file and makes the DSL the single source of truth.
+implemented-by:
+  - packages/bff-plugin/templates/server.ts.ejs
+  - packages/bff-plugin/templates/meshrc.yaml.ejs
+verified-by: []
+summary: >-
+  Use GraphQL Mesh as the BFF passthrough layer with configuration embedded directly in the MFE
+  DSL data section as the single source of configuration truth.
+rationale-summary: >-
+  Mesh provides production-ready GraphQL-to-REST passthrough without custom resolver code;
+  embedding its configuration in the DSL eliminates a separate .meshrc.yaml file and makes the
+  DSL the single source of truth.
 long-form: true
 ---
 
@@ -110,7 +121,6 @@ data:
 ## References
 
 - REQ-BFF-001 through REQ-BFF-008
-- ADR-001: GraphQL Data Standardization
 - ADR-011: GeneratedFrom Traceability
 - ADR-027: GraphQL Mesh v0.100.x (production evolution)
 - Replaces custom code generation approach from R1-R8 draft

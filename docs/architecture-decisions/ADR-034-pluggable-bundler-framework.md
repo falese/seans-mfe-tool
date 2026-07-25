@@ -1,15 +1,31 @@
 ---
 id: 0034
 title: Pluggable bundler + framework via codegen variants
-status: Accepted
+status: Implemented
 date: 2026-05-21
 deciders: [sean]
+area: Codegen / polyglot
 enforcement: convention
+tags: [codegen, bundler, framework, mfe, module-federation]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [codegen, bundler, framework, mfe, module-federation]
-summary: Add optional manifest fields `framework` and `bundler` that drive codegen template variant selection in UnifiedGenerator, alongside a new concrete runtime class `AngularRemoteMFE` that is a direct sibling of `RemoteMFE`. The first non-default variant is Angular 17+ standalone components + webpack 5 native ModuleFederationPlugin.
-rationale-summary: The codegen path was hardcoded to React + rspack. Adding Angular + webpack support without breaking the dozens of existing MFEs requires (a) the manifest schema to express which target the MFE wants, (b) a parallel template directory selected by that field, and (c) a parallel runtime class implementing the same `BaseMFE` contract with framework-specific render/mount and shared-deps. The new class is a sibling — not a subclass — of `RemoteMFE` so React assumptions can't bleed into Angular code and vice versa.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-drift:check
+summary: >-
+  Add optional manifest fields `framework` and `bundler` that drive codegen template variant
+  selection in UnifiedGenerator, alongside a new concrete runtime class `AngularRemoteMFE` that
+  is a direct sibling of `RemoteMFE`. The first non-default variant is Angular 17+ standalone
+  components + webpack 5 native ModuleFederationPlugin.
+rationale-summary: >-
+  The codegen path was hardcoded to React + rspack. Adding Angular + webpack support without
+  breaking the dozens of existing MFEs requires (a) the manifest schema to express which target
+  the MFE wants, (b) a parallel template directory selected by that field, and (c) a parallel
+  runtime class implementing the same `BaseMFE` contract with framework-specific render/mount
+  and shared-deps. The new class is a sibling — not a subclass — of `RemoteMFE` so React
+  assumptions can't bleed into Angular code and vice versa.
 long-form: true
 ---
 

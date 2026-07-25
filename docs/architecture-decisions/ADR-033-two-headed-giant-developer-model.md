@@ -4,18 +4,26 @@ title: Two-headed giant — AI-native + human-legible developer experience
 status: Accepted
 date: 2026-04-26
 deciders: [sean]
+area: Developer model
 enforcement: convention
+tags: [dx, ai, cli, meta]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dx, ai, cli, meta]
-summary: The target developer of seans-mfe-tool is a two-headed giant — one head is an AI agent that moves fast and makes decisions; the other is a human who rationalizes, audits, and can take over. The CLI is the universal interface for both heads.
-rationale-summary: Building ABC Kids exposed that the tool was designed for a single-headed human. The AI head needs zero-registry scaffolding, machine-readable output, and structured errors it can parse and fix. The human head needs audit trails, a system map, and file ownership markers so it always knows what the AI did and where it can safely take over. A shared CLI with --json/--no-interactive as the "agent profile" serves both without diverging tool surfaces.
+implemented-by:
+  - CLAUDE.md
+verified-by: []
+summary: >-
+  The target developer of seans-mfe-tool is a two-headed giant — one head is an AI agent that
+  moves fast and makes decisions; the other is a human who rationalizes, audits, and can take
+  over. The CLI is the universal interface for both heads.
+rationale-summary: >-
+  Building ABC Kids exposed that the tool was designed for a single-headed human. The AI head
+  needs zero-registry scaffolding, machine-readable output, and structured errors it can parse
+  and fix. The human head needs audit trails, a system map, and file ownership markers so it
+  always knows what the AI did and where it can safely take over. A shared CLI with
+  --json/--no-interactive as the "agent profile" serves both without diverging tool surfaces.
 long-form: true
-enforcer-config:
-  cli-agent-profile-flags: [--json, --no-interactive, --dry-run]
-  cli-human-profile: colored output with prompts (default when flags absent)
-  ownership-markers: [GENERATED, DEVELOPER-OWNED]
-  exit-codes: [0, 2, 64, 65, 66, 69, 70, 77, 124]
 ---
 
 # ADR-033: Two-headed giant — AI-native + human-legible developer experience

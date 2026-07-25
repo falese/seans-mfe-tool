@@ -4,12 +4,22 @@ title: CommandResult<T> JSON envelope — single stdout line under --json
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: CLI / contracts
 enforcement: code
+tags: [cli, json-envelope, oclif, ai-native, stdout]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [cli, json-envelope, oclif, ai-native, stdout]
-summary: Under --json, every command emits exactly one CommandResult<T> JSON object to stdout; all other output (progress, warnings, interactive prompts) goes to stderr.
-rationale-summary: AI agents parsing CLI output need a guaranteed single parseable line on stdout; mixing progress messages with data output makes stdout unparseable without complex filtering.
+implemented-by:
+  - packages/contracts/src/envelope.ts
+verified-by:
+  - docs/cli-contract.md
+summary: >-
+  Under --json, every command emits exactly one CommandResult<T> JSON object to stdout; all
+  other output (progress, warnings, interactive prompts) goes to stderr.
+rationale-summary: >-
+  AI agents parsing CLI output need a guaranteed single parseable line on stdout; mixing
+  progress messages with data output makes stdout unparseable without complex filtering.
 long-form: true
 ---
 

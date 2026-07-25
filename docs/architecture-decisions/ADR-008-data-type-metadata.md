@@ -4,12 +4,21 @@ title: Data Type Metadata
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: DSL
 enforcement: code
+tags: [dsl, types, metadata, registry]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, types, metadata, registry]
-summary: DSL type definitions carry owner and tags metadata fields to support registry search, documentation tooling, and future access control.
-rationale-summary: Owner attribution and custom tags enable registry-based discovery of types by owning team and semantic category, which is the primary value driver for a shared type system.
+implemented-by:
+  - packages/dsl/src/schema.ts
+verified-by: []
+summary: >-
+  DSL type definitions carry owner and tags metadata fields to support registry search,
+  documentation tooling, and future access control.
+rationale-summary: >-
+  Owner attribution and custom tags enable registry-based discovery of types by owning team and
+  semantic category, which is the primary value driver for a shared type system.
 long-form: true
 ---
 

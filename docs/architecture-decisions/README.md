@@ -17,6 +17,7 @@ product decision can be traced to the architecture decisions that implement it.
 | [PDR-004](../product-decisions/PDR-004-plugin-first-ecosystem.md) — Plugin-first ecosystem | ADR-022 plugin-first architecture; ADR-021 package namespace strategy; ADR-015 oclif migration; ADR-062 deploy is dev-convenience only (production returns as plugin-resolved deploy-target axis; tracked in #250); ADR-063 API-backend generation as a plugin axis (default `@seans-mfe/api-express`, OSS wrappers as alt plugins; tracked in #251) |
 | [PDR-005](../product-decisions/PDR-005-runtime-composition.md) — Runtime composition | ADR-054 control-plane message protocol; ADR-055 LayoutManager (daemon-driven slot composition); ADR-056 MFE presentation boundary (polyglot VM / host-side providers); ADR-057 virtualized daemon socket (per-slot `DaemonChannel`); ADR-058 slot-provider MFEs; ADR-059 `BaseControlPlane` abstract base; ADR-060 contextualized VM composition (value-injection + slot-scoped self-healing + control-plane re-resolution; supersedes ADR-056's deferred in-tree provider); ADR-066 stable slot addressing + desired-state placement (assigned ids, deferred binding; tracked in #265); ADR-067 manifest-declared slot contract (`providesSlots` → generated `slots.tsx` for React or `slots.ts` for Angular; #265); ADR-068 provider-scoped slot addresses (`mfe/id` + lifecycle owner token; #265); ADR-069 slot grammar single-sourced in contracts (#265); ADR-072 sanctioned slot registration API (`DeclaredSlot` is the app-code API; generated `DeclaredSlotId` makes a manifest rename a compile error); ADR-073 slot contract logic relocated to `@seans-mfe/contracts` + design-time placement-target validation (`mfe:validate`, `slots:validate`, registry rule-save checks); ADR-074 the MFE registration is a build artifact (generated from the manifest; `routes` stay hand-authored; records the #272 `./App` expose convention) — **Proposed**; ADR-070 experience-scoped federated supergraph (daemon-hosted Mesh gateway composes participant MFE BFF schemas per experience; control plane owns the data-fetch lifecycle; **Accepted, impl phased**). (054/055/057/058 Implemented; 056/059/060/066/067/068/069 Accepted; 070 Accepted (impl phased) — see `spec.md#adr-index` for canonical status.) |
 | [PDR-006](../product-decisions/PDR-006-ecosystem-scaling-thesis.md) — Ecosystem scaling thesis | Composes PDR-001–005. See `CLAUDE.md` ("What this project is") for the canonical product framing. |
+| [PDR-007](../product-decisions/PDR-007-model-messy-reality.md) — Reference apps model messy reality | ADR-066 stable slot addressing (an experience composes MFEs that disagree about conventions); ADR-067 manifest-declared slot contract; ADR-070 experience-scoped federated supergraph (participant BFFs with overlapping domains); ADR-075 the ADR library under drift control (the register admits its own gaps rather than presenting a tidy fiction). Added in the ADR-075 pass — PDR-007 had been missing from this map since it landed. |
 
 ## Numbering hygiene
 
@@ -39,9 +40,33 @@ Known reconciliations from the platform design review (see the
 | Item | What the index says | Note |
 | --- | --- | --- |
 | Status vocabulary | `Accepted` vs `Implemented` | `Accepted` = decision ratified; `Implemented` = code in place. The CLI contract ADRs (016–019) are `Accepted` and also shipped — read them as implemented. |
-| ADR-007 Authorization grammar | `Deferred` | Correct — `authorization` is an `unknown` optional field in the manifest (`src/dsl/schema.ts:415`); the grammar is not yet designed. |
+| ADR-007 Authorization grammar | `Deferred` | Correct — the grammar is not yet designed. **Path corrected (ADR-075 pass):** the erratum previously cited `src/dsl/schema.ts:415`, a file ADR-061 moved. The field is now `packages/dsl/src/schema.ts:474` (`authorization: z.unknown().optional()`), and a second, narrower `authorization: z.string().optional()` sits at `:151`. |
 | ADR-018 envelope shape | `Accepted` | The **implemented** envelope (`{ok, error.code: number, warnings[], telemetry}`) is documented in the canonical [CLI Contract](../cli-contract.md), which supersedes ADR-018's older prose (finding CA-1). |
-| BFF template ADR numbers | n/a | **Resolved (2026-07-01).** Generated BFF/MFE templates now cite the canonical numbers `ADR-012` (Mesh BFF) / `ADR-027` (Mesh v0.100.x plugins); the Angular MFE template's framework ref was also corrected `ADR-069`→`ADR-034`. No template retains the pre-reflow `ADR-046`/`ADR-062`/`ADR-069` numbers. |
+| BFF template ADR numbers | n/a | **Partly resolved.** The *templates* were fixed 2026-07-01 (`ADR-012` Mesh BFF / `ADR-027` Mesh plugins; the Angular framework ref `ADR-069`→`ADR-034`). **Corrected (ADR-075 pass):** the previous wording claimed the problem was gone. It is not — committed *generated output* under `examples/` still carries the pre-reflow numbers (44 files with `ADR-046`, 25 with `ADR-062`, 9 with `ADR-069`). Those files fell out of the generation graph and no gate walks them; `npm run check:adr -- --include-examples` reports them. Tracked separately. |
+
+### Cross-references corrected in the ADR-075 normalization pass
+
+PR #194 renumbered the ADR files into 001–040 and never rewrote the references
+*inside* ADR bodies. Twelve pointed at a number whose meaning had changed —
+each resolving to a real file about something else. Repointed where a modern
+decision carries the idea; **removed** where none does, since a guess would be
+worse than a gap:
+
+| Was | In | Now |
+| --- | --- | --- |
+| `ADR-013: Language-Agnostic DSL Contract` | ADR-005, ADR-006, ADR-009 | `PDR-002` — language-/framework-neutral platform contract |
+| `ADR-013: BaseMFE abstract base` | ADR-025, ADR-026 | `ADR-041` — the repoint ADR-041 §Context identified and applied only to the code comment |
+| `ADR-001: GraphQL Data Standardization` | ADR-006 | `ADR-012` — GraphQL Mesh BFF layer |
+| `ADR-001: GraphQL Data Standardization` | ADR-012 | **removed** — a self-reference once repointed |
+| `ADR-008: TypeScript Strict Mode` | ADR-014 | `ADR-023` — no-any TypeScript discipline |
+| `ADR-031: Standardized Extensible Lifecycle Hooks` | ADR-002, ADR-003 | **removed** — pre-reflow; the four-phase model is ADR-003 itself and the execution semantics are ADR-002 |
+| `ADR-019: JWT-Based Authorization` | ADR-007 | **removed** — pre-reflow; no ADR designs authorization, which is precisely what ADR-007 defers |
+
+Three stale numbers in *code* were repointed in the same pass: `ADR-048`→`ADR-014`
+(`src/utils/manifestValidator.js`), `ADR-045`→`ADR-011`
+(`packages/bff-plugin/templates/mfe-manifest.yaml.ejs` — a template, so every
+generated MFE had inherited it), and `packages/runtime/src/base-mfe.ts` no longer
+calls the shipped retry/timeout stages "proposed".
 
 ## Historical narrative
 

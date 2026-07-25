@@ -4,12 +4,23 @@ title: oclif as CLI framework — replace Commander
 status: Accepted
 date: 2026-04-17
 deciders: [sean]
+area: CLI
 enforcement: code
+tags: [cli, oclif, commander, migration, plugin-architecture]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [cli, oclif, commander, migration, plugin-architecture]
-summary: Replace the Commander-based CLI with oclif, adopting colon-topic command structure, plugin architecture, and the @oclif/core scaffold.
-rationale-summary: Commander lacks plugin architecture, machine-readable output, and structured command discovery; oclif provides all three plus first-class TypeScript support and a plugin registry compatible with the falese/* ecosystem.
+implemented-by:
+  - bin/run.js
+  - bin/dev.ts
+verified-by: []
+summary: >-
+  Replace the Commander-based CLI with oclif, adopting colon-topic command structure, plugin
+  architecture, and the @oclif/core scaffold.
+rationale-summary: >-
+  Commander lacks plugin architecture, machine-readable output, and structured command
+  discovery; oclif provides all three plus first-class TypeScript support and a plugin registry
+  compatible with the falese/* ecosystem.
 long-form: true
 ---
 

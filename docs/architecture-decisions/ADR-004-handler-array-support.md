@@ -4,12 +4,22 @@ title: Handler Array Support
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [dsl, lifecycle, handlers]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, lifecycle, handlers]
-summary: The DSL handler field accepts either a single string or an array of strings; semantics differ by phase — main uses AND (first failure stops), before/after/error use OR-like (all run, failures logged).
-rationale-summary: Array support allows related operations to be grouped naturally in DSL while phase-specific AND/OR semantics ensure the execution model remains predictable.
+implemented-by:
+  - packages/dsl/src/schema.ts
+verified-by: []
+summary: >-
+  The DSL handler field accepts either a single string or an array of strings; semantics differ
+  by phase — main uses AND (first failure stops), before/after/error use OR-like (all run,
+  failures logged).
+rationale-summary: >-
+  Array support allows related operations to be grouped naturally in DSL while phase-specific
+  AND/OR semantics ensure the execution model remains predictable.
 long-form: true
 ---
 

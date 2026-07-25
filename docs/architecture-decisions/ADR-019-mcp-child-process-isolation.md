@@ -4,12 +4,24 @@ title: MCP child-process isolation — spawn seans-mfe-tool per tool call
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: MCP
 enforcement: code
+tags: [mcp, child-process, isolation, ai-native, concurrency]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [mcp, child-process, isolation, ai-native, concurrency]
-summary: Each MCP tool call spawns seans-mfe-tool <cmd> --json as a child process, parses stdout as CommandResult<T>, and maps it to the MCP tool response — never calling command logic in-process.
-rationale-summary: In-process command invocation is unsafe because oclif commands call process.exit, mutate process.cwd, and assume a clean global state; child-process isolation makes each tool call atomic and concurrency-safe.
+implemented-by:
+  - src/commands/mcp/serve.ts
+  - src/mcp/tool-registry.ts
+verified-by: []
+summary: >-
+  Each MCP tool call spawns seans-mfe-tool <cmd> --json as a child process, parses stdout as
+  CommandResult<T>, and maps it to the MCP tool response — never calling command logic
+  in-process.
+rationale-summary: >-
+  In-process command invocation is unsafe because oclif commands call process.exit, mutate
+  process.cwd, and assume a clean global state; child-process isolation makes each tool call
+  atomic and concurrency-safe.
 long-form: true
 ---
 

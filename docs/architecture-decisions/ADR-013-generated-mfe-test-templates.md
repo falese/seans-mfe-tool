@@ -4,12 +4,22 @@ title: Generated MFE Test Templates
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Codegen / testing
 enforcement: code
+tags: [testing, codegen, scaffolding, tdd]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [testing, codegen, scaffolding, tdd]
-summary: Every scaffolded MFE project includes working test files that teams can run immediately and extend, with an 80% coverage threshold configured from day one.
-rationale-summary: Providing runnable tests from scaffolding reduces the testing setup overhead that commonly delays teams and establishes a TDD culture baseline through immediate coverage gates.
+implemented-by:
+  - packages/codegen/templates/base-mfe/mfe.test.ts.ejs
+  - packages/codegen/templates/base-mfe-angular/mfe.test.ts.ejs
+verified-by: []
+summary: >-
+  Every scaffolded MFE project includes working test files that teams can run immediately and
+  extend, with an 80% coverage threshold configured from day one.
+rationale-summary: >-
+  Providing runnable tests from scaffolding reduces the testing setup overhead that commonly
+  delays teams and establishes a TDD culture baseline through immediate coverage gates.
 long-form: true
 ---
 

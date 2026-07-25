@@ -1,10 +1,22 @@
-# ADR-070 — Experience-scoped federated supergraph (control-plane-composed data over participant MFE BFFs)
-
-- **Status:** Accepted (implementation phased)
-- **Date:** 2026-07-19
-- **Relates to:** ADR-012 (GraphQL Mesh BFF layer), ADR-010 (data lifecycle alignment), ADR-003 (no custom lifecycle phases), ADR-042 (MFE lifecycle state machine), ADR-053 (RemoteMFE `doQuery`), ADR-027 (context injection), ADR-054 (control-plane message protocol), ADR-055 (LayoutManager — daemon-driven slot composition), ADR-057 (virtualized per-slot `DaemonChannel`), ADR-059 (`BaseControlPlane`), ADR-066/067/068 (desired-state placement, manifest-declared slots, provider-scoped addresses)
-- **Tracked in:** #282
-- **PDR:** PDR-005 (runtime composition), PDR-006 (ecosystem scaling thesis)
+---
+id: 0070
+title: Experience-scoped federated supergraph (control-plane-composed data over participant MFE BFFs)
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#282", "#284", "#285", "#286", "#287", "#288"]
+date: 2026-07-19
+deciders: [sean]
+area: Runtime / control-plane / data / federation / lifecycle
+enforcement: code
+tags: [runtime, control-plane, data, federation, lifecycle]
+relates-to: [3, 10, 12, 27, 42, 53, 54, 55, 57, 59, 66]
+supersedes: []
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 
@@ -50,7 +62,7 @@ data-fetch lifecycle over it. Data ownership stays in the MFEs; the control plan
    capability and composes them. No manifest data-dependency declaration exists.
 
 2. **The supergraph gateway runs in the daemon as a Mesh instance** whose `sources`
-   are the participant BFFs' `/graphql` endpoints — dogfooding ADR-012: the platform's
+   are the participant BFFs' `/graphql` endpoints — dogfooding ADR-012: the platform's <!-- adr-lint-ignore: reference-gloss-matches -->
    own BFF technology composes the supergraph. (Where each MFE BFF is a Mesh over its
    own upstreams, the daemon supergraph is a Mesh over the MFE BFFs.)
 

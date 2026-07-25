@@ -68,13 +68,26 @@ describe('validateAdrLibrary', () => {
     });
 
     it('accepts a well-formed ADR', () => {
-      const result = validateAdrLibrary({ documents: [adr(75, 'Fine')], parseFailures: [] });
+      const result = validateAdrLibrary({
+        documents: [adr(75, 'Fine', { 'implemented-by': ['CLAUDE.md'] })],
+        parseFailures: [],
+      });
       expect(result.ok).toBe(true);
       expect(result.issues).toHaveLength(0);
     });
   });
 
   describe('reference-resolves', () => {
+    it('reports the file line, not the body line', () => {
+      // The frontmatter block sits above the body; a body-relative index
+      // printed as `file:line` points at unrelated text.
+      const doc = adr(10, 'Ten', {}, 'intro\n\nSee ADR-999 here.');
+      const result = validateAdrLibrary({ documents: [doc], parseFailures: [] });
+      const issue = result.issues.find((i) => i.rule === 'reference-resolves');
+      expect(issue?.line).toBe(doc.bodyLine + 2);
+      expect(issue?.line).toBeGreaterThan(3);
+    });
+
     it('reports a citation of an ADR that does not exist', () => {
       const result = validateAdrLibrary({
         documents: [adr(10, 'Ten', {}, 'See ADR-999 for the rationale.')],
@@ -189,8 +202,14 @@ describe('validateAdrLibrary', () => {
     it('accepts a supersession linked from both sides', () => {
       const result = validateAdrLibrary({
         documents: [
-          adr(68, 'Provider-scoped slot addresses', { supersedes: [58] }),
-          adr(58, 'Slot-provider MFEs', { 'superseded-by': [68] }),
+          adr(68, 'Provider-scoped slot addresses', {
+            supersedes: [58],
+            'implemented-by': ['CLAUDE.md'],
+          }),
+          adr(58, 'Slot-provider MFEs', {
+            'superseded-by': [68],
+            'implemented-by': ['CLAUDE.md'],
+          }),
         ],
         parseFailures: [],
       });
@@ -320,11 +339,197 @@ describe('validateAdrLibrary', () => {
 
     it('accepts a matching set', () => {
       const result = validateAdrLibrary({
-        documents: [adr(74, 'Registration is a build artifact')],
+        documents: [adr(74, 'Registration is a build artifact', { 'implemented-by': ['CLAUDE.md'] })],
         parseFailures: [],
         indexIds: [74],
       });
       expect(result.ok).toBe(true);
+    });
+  });
+
+  describe('accepted-work-is-tracked (ADR-075 §6)', () => {
+    it('reports an Accepted ADR that neither names code nor schedules work', () => {
+      // The ADR-045..049 shape: ratified, then nothing ever pointed at it again.
+      const result = validateAdrLibrary({
+        documents: [adr(47, 'CODEOWNERS and review routing')],
+        parseFailures: [],
+      });
+      expect(rulesHit(result.issues)).toContain('accepted-work-is-tracked');
+    });
+
+    it('accepts an Accepted ADR whose code exists', () => {
+      const result = validateAdrLibrary({
+        documents: [adr(41, 'BaseMFE', { 'implemented-by': ['packages/runtime/src/base-mfe.ts'] })],
+        parseFailures: [],
+        existingPaths: new Set(['packages/runtime/src/base-mfe.ts']),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('accepts an Accepted ADR whose work is scheduled by an issue', () => {
+      const result = validateAdrLibrary({
+        documents: [adr(70, 'Supergraph', { impl: { stage: 'phased', refs: ['#282'] } })],
+        parseFailures: [],
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('reports parked work with no tracking issue', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(70, 'Federated supergraph', {
+            impl: { stage: 'deferred', refs: [] },
+            'implemented-by': ['packages/runtime/src/base-mfe.ts'],
+          }),
+        ],
+        existingPaths: new Set(['packages/runtime/src/base-mfe.ts']),
+        parseFailures: [],
+      });
+      expect(rulesHit(result.issues)).toContain('accepted-work-is-tracked');
+    });
+
+    it('accepts parked work that names its issue', () => {
+      const result = validateAdrLibrary({
+        documents: [adr(64, 'Runtime as a package', { impl: { stage: 'deferred', refs: ['#252'] } })],
+        parseFailures: [],
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('does not require refs for phased work already carried by code', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(25, 'Handler interface', {
+            impl: { stage: 'phased', refs: [] },
+            'implemented-by': ['packages/runtime/src/base-mfe.ts'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/runtime/src/base-mfe.ts']),
+      });
+      expect(rulesHit(result.issues)).not.toContain('accepted-work-is-tracked');
+    });
+  });
+
+  describe('implemented-claims-evidence (ADR-075 §6)', () => {
+    it('reports an Implemented ADR that names no code', () => {
+      const result = validateAdrLibrary({
+        documents: [adr(53, 'RemoteMFE.doQuery', { status: 'Implemented' })],
+        parseFailures: [],
+      });
+      expect(rulesHit(result.issues)).toContain('implemented-claims-evidence');
+    });
+
+    it('accepts an Implemented ADR that names code', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(53, 'RemoteMFE.doQuery', {
+            status: 'Implemented',
+            'implemented-by': ['packages/runtime/src/remote-mfe.ts'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/runtime/src/remote-mfe.ts']),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('does not demand verified-by — some decisions have no dedicated gate', () => {
+      // ADR-004 "Handler Array Support" is verified by the general suite;
+      // forcing it to name a gate would mean inventing one.
+      const result = validateAdrLibrary({
+        documents: [
+          adr(4, 'Handler Array Support', {
+            status: 'Implemented',
+            'implemented-by': ['packages/dsl/src/schema.ts'],
+            'verified-by': [],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/dsl/src/schema.ts']),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('reports a verified-by entry that resolves to nothing', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(50, 'Dependency governance', {
+            status: 'Implemented',
+            'implemented-by': ['packages/codegen/src/unified-generator.ts'],
+            'verified-by': ['check:does-not-exist'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/codegen/src/unified-generator.ts']),
+        scriptNames: new Set(['check:mfe-consistency', 'check:adr']),
+      });
+      expect(rulesHit(result.issues)).toContain('implemented-claims-evidence');
+    });
+
+    it('accepts a verified-by naming a real npm script', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(50, 'Dependency governance', {
+            status: 'Implemented',
+            'implemented-by': ['packages/codegen/src/unified-generator.ts'],
+            'verified-by': ['check:mfe-consistency'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/codegen/src/unified-generator.ts']),
+        scriptNames: new Set(['check:mfe-consistency']),
+      });
+      expect(result.ok).toBe(true);
+    });
+  });
+
+  describe('finished-work-says-so (ADR-075 §6)', () => {
+    it('reports an Accepted ADR whose work is done and cited by code', () => {
+      // The ADR-029 failure inverted: code shipped, status never moved.
+      const result = validateAdrLibrary({
+        documents: [
+          adr(29, 'Timeout Protection', {
+            status: 'Accepted',
+            'implemented-by': ['packages/runtime/src/timeout-wrapper.ts'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['packages/runtime/src/timeout-wrapper.ts']),
+        sources: [{ path: 'packages/runtime/src/timeout-wrapper.ts', text: '// ADR-029' }],
+      });
+      expect(rulesHit(result.issues)).toContain('finished-work-says-so');
+    });
+
+    it('stays quiet while work is still phased', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(65, 'Generated API reference', {
+            status: 'Accepted',
+            impl: { stage: 'phased', refs: ['#264'] },
+            'implemented-by': ['scripts/generate-dsl-schema.ts'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['scripts/generate-dsl-schema.ts']),
+        sources: [{ path: 'x.ts', text: '// ADR-065' }],
+      });
+      expect(rulesHit(result.issues)).not.toContain('finished-work-says-so');
+    });
+
+    it('stays quiet when no code cites it — a ratified decision may just be policy', () => {
+      const result = validateAdrLibrary({
+        documents: [
+          adr(37, 'TDD always', {
+            status: 'Accepted',
+            'implemented-by': ['CLAUDE.md'],
+          }),
+        ],
+        parseFailures: [],
+        existingPaths: new Set(['CLAUDE.md']),
+        sources: [{ path: 'x.ts', text: 'unrelated' }],
+      });
+      expect(rulesHit(result.issues)).not.toContain('finished-work-says-so');
     });
   });
 

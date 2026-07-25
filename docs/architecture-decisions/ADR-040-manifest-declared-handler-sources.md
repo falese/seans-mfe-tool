@@ -1,15 +1,27 @@
 ---
 id: 0040
 title: Manifest-Declared Handler Sources
-status: Accepted
+status: Implemented
 date: 2026-05-27
 deciders: [sean]
+area: DSL / handlers / codegen
 enforcement: code
+tags: [dsl, lifecycle, handlers, codegen, source, di, traceability]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, lifecycle, handlers, codegen, source, di, traceability]
-summary: Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare where its handler implementation lives; codegen emits a static `handler-registry.ts` that wires the import into the existing customHandlers DI map.
-rationale-summary: Editing generated mfe.ts stubs couples handler logic to codegen; DI-injected maps in bootstrap are imperative and drift from the manifest — a declarative `source:` field makes the manifest the single source of truth.
+implemented-by:
+  - packages/dsl/src/schema.ts
+  - packages/codegen/src/unified-generator.ts
+verified-by: []
+summary: >-
+  Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare
+  where its handler implementation lives; codegen emits a static `handler-registry.ts` that
+  wires the import into the existing customHandlers DI map.
+rationale-summary: >-
+  Editing generated mfe.ts stubs couples handler logic to codegen; DI-injected maps in bootstrap
+  are imperative and drift from the manifest — a declarative `source:` field makes the manifest
+  the single source of truth.
 long-form: true
 ---
 

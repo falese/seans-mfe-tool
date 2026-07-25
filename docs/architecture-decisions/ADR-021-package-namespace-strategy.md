@@ -4,12 +4,21 @@ title: Package namespace strategy — @seans-mfe/* vs @falese/*
 status: Accepted
 date: 2026-04-18
 deciders: [sean]
+area: Packages
 enforcement: convention
+tags: [packages, namespace, oclif, monorepo, plugin-architecture]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [packages, namespace, oclif, monorepo, plugin-architecture]
-summary: Shared platform packages use the @seans-mfe/* namespace (contracts, oclif-base, runtime, framework-*); third-party and personal plugins use the @falese/* namespace.
-rationale-summary: A single namespace for both platform packages and plugins would conflate tool internals with community extensions; separate namespaces make dependency direction and ownership clear.
+implemented-by:
+  - CLAUDE.md
+verified-by: []
+summary: >-
+  Shared platform packages use the @seans-mfe/* namespace (contracts, oclif-base, runtime,
+  framework-*); third-party and personal plugins use the @falese/* namespace.
+rationale-summary: >-
+  A single namespace for both platform packages and plugins would conflate tool internals with
+  community extensions; separate namespaces make dependency direction and ownership clear.
 long-form: false
 ---
 

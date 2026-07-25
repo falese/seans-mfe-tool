@@ -4,12 +4,28 @@ title: BFF Demo Mode — Per-Request Mock Switch via resolversComposition
 status: Implemented
 date: 2026-06-01
 deciders: [sean]
+area: BFF / mock / demo-mode
 enforcement: code
+tags: [bff, graphql-mesh, mock, demo-mode, codegen, dsl]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [bff, graphql-mesh, mock, demo-mode, codegen, dsl]
-summary: Generated BFFs gain an opt-in "demo mode" — they serve live upstream data by default but return deterministic mock fixtures when a request carries `x-bff-mode: mock` (per-request) or when `DEMO_MODE=true` is set (deployment-wide default). Implemented with a Mesh `resolversComposition` transform wrapping `Query.*`, NOT `@graphql-mesh/plugin-mock`.
-rationale-summary: Production apps need a demo/sandbox mode that returns stable, presentable data without a live backend — for sales demos, offline previews, and deterministic e2e. A trial (docs/agent-plans/bff-live-api-plus-context-mock-RESULTS.md) proved the Guild mock plugin is broken in the v0.100.x matrix and architecturally cannot gate per-request, while resolversComposition wraps the live resolver cleanly and supports both per-request and env-default switching.
+implemented-by:
+  - packages/bff-plugin/templates/mock-switch.js.ejs
+  - packages/bff-plugin/templates/mocks.json.ejs
+verified-by: []
+summary: >-
+  Generated BFFs gain an opt-in "demo mode" — they serve live upstream data by default but
+  return deterministic mock fixtures when a request carries `x-bff-mode: mock` (per-request) or
+  when `DEMO_MODE=true` is set (deployment-wide default). Implemented with a Mesh
+  `resolversComposition` transform wrapping `Query.*`, NOT `@graphql-mesh/plugin-mock`.
+rationale-summary: >-
+  Production apps need a demo/sandbox mode that returns stable, presentable data without a live
+  backend — for sales demos, offline previews, and deterministic e2e. A trial
+  (docs/agent-plans/bff-live-api-plus-context-mock-RESULTS.md) proved the Guild mock plugin is
+  broken in the v0.100.x matrix and architecturally cannot gate per-request, while
+  resolversComposition wraps the live resolver cleanly and supports both per-request and
+  env-default switching.
 long-form: true
 ---
 

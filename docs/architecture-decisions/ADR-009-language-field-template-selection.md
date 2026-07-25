@@ -4,12 +4,22 @@ title: Language Field and Template Selection
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Codegen
 enforcement: code
+tags: [dsl, codegen, language, templates]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, codegen, language, templates]
-summary: The DSL language field drives template selection and build tooling; V1 supports JavaScript and TypeScript only, with non-JS backends treated as data-only services consumed by a JS shell.
-rationale-summary: Module Federation is JavaScript-native, making JS/TS the only viable first-class MFE language for V1; non-JS backend support is deferred to avoid indefinite scope expansion.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-drift:check
+summary: >-
+  The DSL language field drives template selection and build tooling; V1 supports JavaScript and
+  TypeScript only, with non-JS backends treated as data-only services consumed by a JS shell.
+rationale-summary: >-
+  Module Federation is JavaScript-native, making JS/TS the only viable first-class MFE language
+  for V1; non-JS backend support is deferred to avoid indefinite scope expansion.
 long-form: true
 ---
 
@@ -51,6 +61,6 @@ The codegen template directory structure is organized by language, not by MFE ty
 - DEC-022
 - REQ-052
 - REQ-059
-- ADR-013: Language-Agnostic DSL Contract
+- PDR-002: Language-/framework-neutral platform contract
 - ADR-014: Incremental TypeScript Migration
 - Migration note in `architecture-decisions.md`: Legacy template folders removed

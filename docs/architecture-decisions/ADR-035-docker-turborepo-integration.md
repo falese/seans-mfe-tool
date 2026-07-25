@@ -1,15 +1,24 @@
 ---
 id: 0035
 title: Docker Build Orchestration via Turborepo Task Graph
-status: Accepted
+status: Implemented
 date: 2026-05-24
 deciders: [sean]
+area: Docker / CI
 enforcement: tooling
+tags: [docker, turborepo, build, ci, infra]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [docker, turborepo, build, ci, infra]
-summary: Bring Docker builds into the Turborepo task graph so that `turbo run docker:build:examples` handles TypeScript compilation, CLI image build, and MFE image builds in dependency order with input-hash caching.
-rationale-summary: Manual multi-step Docker build sequences caused stale-template failures (#163, #164); Turborepo already owned the build graph and its content-hash caching is more reliable than make's mtime tracking.
+implemented-by:
+  - turbo.json
+verified-by: []
+summary: >-
+  Bring Docker builds into the Turborepo task graph so that `turbo run docker:build:examples`
+  handles TypeScript compilation, CLI image build, and MFE image builds in dependency order with
+  input-hash caching.
+rationale-summary: >-
+  Manual multi-step Docker build sequences caused stale-template failures (#163,
 long-form: true
 ---
 

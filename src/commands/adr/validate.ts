@@ -39,7 +39,7 @@ const DEFAULT_SOURCE_ROOTS = ['src', 'packages', 'scripts'];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage', '__tests__']);
 
-/** Rows of the ADR index table in `docs/spec.md`: `| ADR-074 | … |`. */
+/** Rows of the ADR index table in `docs/spec.md`: `| ADR-0NN | … |`. */
 const INDEX_ROW = /^\|\s*ADR-(\d{2,4})\s*\|/gm;
 
 export interface AdrValidateOptions {
@@ -105,19 +105,33 @@ async function collectSources(root: string, roots: string[]): Promise<SourceFile
 /**
  * Resolve only the paths ADRs actually declare.
  *
- * Cheaper and equivalent to walking the repo: the rule asks whether each
+ * Cheaper and equivalent to walking the repo: the rules ask whether each
  * declared path exists, so the set need only contain the ones that do.
+ *
+ * Both fields contribute. `verified-by` may name either an npm script or a
+ * path, and resolving only `implemented-by` made every path-shaped
+ * `verified-by` entry look unresolvable.
  */
 async function resolveDeclaredPaths(
   root: string,
   documents: readonly AdrDocument[]
 ): Promise<Set<string>> {
-  const declared = new Set(documents.flatMap((d) => d.frontmatter['implemented-by']));
+  const declared = new Set(
+    documents.flatMap((d) => [...d.frontmatter['implemented-by'], ...d.frontmatter['verified-by']])
+  );
   const existing = new Set<string>();
   for (const relative of declared) {
     if (await fs.pathExists(path.join(root, relative))) existing.add(relative);
   }
   return existing;
+}
+
+/** npm script names, so `verified-by` can name a gate and be checked (ADR-075 §6). */
+async function readScriptNames(root: string): Promise<Set<string>> {
+  const pkgPath = path.join(root, 'package.json');
+  if (!(await fs.pathExists(pkgPath))) return new Set();
+  const pkg = (await fs.readJson(pkgPath)) as { scripts?: Record<string, string> };
+  return new Set(Object.keys(pkg.scripts ?? {}));
 }
 
 /** ADR ids listed in the `docs/spec.md` index table. */
@@ -145,6 +159,7 @@ export async function adrValidateCommand(
     existingPaths: await resolveDeclaredPaths(root, documents),
     sources: await collectSources(root, sourceRoots),
     indexIds: await readIndexIds(root),
+    scriptNames: await readScriptNames(root),
   });
 
   const result: AdrValidateResult = {

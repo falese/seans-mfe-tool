@@ -4,12 +4,23 @@ title: Environment Configuration and Secret Validation
 status: Proposed
 date: 2026-05-28
 deciders: [sean]
+area: Configuration / security
 enforcement: code
+tags: [configuration, secrets, validation, security, gap]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [configuration, secrets, validation, security, gap]
-summary: All process environment and generated deployment configuration must load through typed schemas with fail-fast validation, documented non-secret examples, and explicit secret injection boundaries.
-rationale-summary: The repository has strong manifest validation via Zod but weak runtime configuration discipline. Commands and runtime helpers still consume raw environment values or emit placeholder secrets without a central validation contract, which makes misconfiguration easy and security posture uneven.
+implemented-by: []
+verified-by: []
+summary: >-
+  All process environment and generated deployment configuration must load through typed schemas
+  with fail-fast validation, documented non-secret examples, and explicit secret injection
+  boundaries.
+rationale-summary: >-
+  The repository has strong manifest validation via Zod but weak runtime configuration
+  discipline. Commands and runtime helpers still consume raw environment values or emit
+  placeholder secrets without a central validation contract, which makes misconfiguration easy
+  and security posture uneven.
 long-form: true
 ---
 

@@ -1,9 +1,22 @@
-# ADR-064 — The runtime's future is a semver-published package, not a staged `dist/runtime` folder
-
-- **Status:** Accepted (implementation deferred — gated on the publish decision)
-- **Date:** 2026-07-01
-- **Tracking issue:** #252
-- **Relates to:** ADR-061 (`@seans-mfe/dsl` + `@seans-mfe/codegen` as packages), ADR-021 (package namespace strategy), ADR-045 (package-manager + runtime pinning), ADR-056 (`boundary.test` neutral-runtime invariant), ADR-036 (framework plugins), the RESTRUCTURE-PLAN §1.3.1 ("promote the runtime to a real package")
+---
+id: 0064
+title: The runtime's future is a semver-published package, not a staged `dist/runtime` folder
+status: Accepted
+impl:
+  stage: deferred
+  refs: ["#252"]
+date: 2026-07-01
+deciders: [sean]
+area: Runtime / packaging / distribution
+enforcement: code
+tags: [runtime, packaging, distribution]
+relates-to: [21, 36, 45, 56, 61]
+supersedes: []
+superseded-by: []
+implemented-by: []
+verified-by: []
+long-form: true
+---
 
 ## Context
 

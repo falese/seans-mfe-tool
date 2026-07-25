@@ -1,7 +1,7 @@
 ---
 id: 0075
 title: The ADR Library Is Itself Under Drift Control
-status: Accepted
+status: Implemented
 date: 2026-07-25
 deciders: [sean]
 area: Governance / docs / tooling
@@ -115,8 +115,9 @@ Two new fields close the loop between a decision and the code that carries it:
 - **`verified-by`** — test names or npm-script gate names that demonstrate the
   decision holds.
 
-Both may be empty; a decision that is pure convention has nothing to point at,
-and forcing an invented path would be worse than an honest `[]`.
+A decision that is pure convention has nothing dedicated to point at, and forcing
+an invented path would be worse than an honest `[]` — §6 sets exactly when each
+field stops being optional.
 
 ### 4. Rules, not a linter
 
@@ -164,6 +165,62 @@ removed and the removal recorded in the README erratum table rather than
 repointed at a guess. After this pass the normal rule resumes, now with a gate
 that keeps it cheap to obey.
 
+### 6. The implementation lifecycle
+
+The five sections above make an ADR's state *representable*. They do not make the
+transitions *happen*, and the library's own history shows what that costs:
+ADR-029 and ADR-030 sat at `Proposed` while three files implemented and cited
+them, because nothing turns finished work into a status change except somebody
+remembering. Five more (ADR-045, 047, 048, 049 and their sibling ADR-046) were
+authored in a single day, marked `Proposed`, and never actioned — no owner, no
+issue, no expiry.
+
+So the states get a defined path and each transition gets an artifact:
+
+```
+Proposed ──ratify──> Accepted ──evidence──> Implemented
+   │                    │
+   └──> Withdrawn       └──> Deferred | Superseded
+```
+
+**`Proposed` is a proposal, not a plan.** Merging a `Proposed` ADR means "we
+agree with the direction" and nothing more. Code may not cite it — already
+enforced by `code-cites-ratified-adr` — so a `Proposed` decision cannot quietly
+acquire dependents.
+
+**`Accepted` means ratified, and outstanding work must be named.** An ADR that is
+`Accepted` with `impl.stage: deferred` has explicitly parked its implementation,
+and parked work without a tracking issue is how the 045–049 batch became
+permanent. Rule — `accepted-names-its-work`: `impl.stage: deferred` requires a
+non-empty `impl.refs`. `phased` does not, because incremental delivery is already
+in flight by definition.
+
+**`Implemented` is a claim the repo checks.** Rule —
+`implemented-claims-evidence`: `status: Implemented` requires a non-empty
+`implemented-by`. That is the tie between a decision and the code carrying it,
+and it is the field `implemented-by-exists` already validates, so the claim
+cannot rot as files move.
+
+`verified-by` is **not** required alongside it. Requiring a named gate for every
+implemented decision would force inventing one for ADR-004 ("Handler Array
+Support") and similar — a decision genuinely verified by the general suite rather
+than by a dedicated check. Instead, `verified-by` must *resolve* whenever it is
+present: an entry naming an npm script must exist in `package.json`, and an entry
+naming a path must exist on disk. Optional, but never decorative — the failure
+mode a declared-and-unchecked field always ends in.
+
+**The reverse direction is the one that would have caught ADR-029.** Rule —
+`finished-work-says-so`: an ADR that is `Accepted`, has no pending `impl.stage`,
+declares `implemented-by` paths that all exist, and is cited by source code, is
+finished — and is told to say so. The repo notices the transition instead of
+waiting to be told about it.
+
+Two things this deliberately does not do. It does not expire a `Proposed` ADR on
+a timer: staleness is a judgement about whether an argument still holds, and a
+date cannot make it. And it does not gate the `Proposed → Accepted` transition on
+anything mechanical — ratifying a decision is a human act, and the artifact it
+produces is the merge.
+
 ## Boundaries
 
 - **The gate protects only what it walks.** A lesson from #295 worth stating
@@ -202,10 +259,10 @@ that keeps it cheap to obey.
 - ADR-065 — the generate-and-diff idiom, and "a generated artifact with no
   generate-and-diff gate is a stale artifact eventually". This applies it to the
   register itself.
-- ADR-069 / ADR-071 — single-sourcing a fact that two consumers restate.
-- ADR-074 — drift made unrepresentable rather than detected; the Boundaries
+- ADR-069 / ADR-071 — single-sourcing a fact that two consumers restate. <!-- adr-lint-ignore: reference-gloss-matches -->
+- ADR-074 — drift made unrepresentable rather than detected; the Boundaries <!-- adr-lint-ignore: reference-gloss-matches -->
   section above qualifies its §1 coverage claim.
-- ADR-073 — the pure-rules + thin-command split this reuses, and the
+- ADR-073 — the pure-rules + thin-command split this reuses, and the <!-- adr-lint-ignore: reference-gloss-matches -->
   documented-heuristic precedent for `reference-gloss-matches`.
 - `docs/platform-design-review/cross-reference-standards.md` §3–§4 — the
   normative standard this implements: bidirectional supersession links and the

@@ -1,10 +1,20 @@
-# ADR-068 — Provider-scoped slot addresses
-
-- **Status:** Accepted
-- **Date:** 2026-07-11
-- **Relates to:** ADR-057 (host-assigned paths), ADR-058 (slot-provider MFEs), ADR-066 (stable addressing), ADR-067 (manifest-declared slots)
-- **Supersedes:** ADR-058's flat provided-slot namespace and cross-provider last-writer-wins collision rule
-- **Tracked in:** #265
+---
+id: 0068
+title: Provider-scoped slot addresses
+status: Implemented
+date: 2026-07-11
+deciders: [sean]
+area: Runtime / slots / addressing / ownership
+enforcement: code
+tags: [runtime, slots, addressing, ownership]
+relates-to: [57, 58, 66, 67]
+supersedes: [58]
+superseded-by: []
+implemented-by:
+  - packages/contracts/src/slot-contract.ts
+verified-by: []
+long-form: true
+---
 
 ## Context
 

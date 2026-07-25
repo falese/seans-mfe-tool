@@ -3,7 +3,7 @@
  *
  * The decision record governs every other gate in this repo and was the last
  * artifact kept in sync by hand. It drifted exactly as the platform's own thesis
- * predicts (ADR-065, ADR-074): twelve cross-references left pointing at
+ * predicts (ADR-065, ADR-075 §Context): twelve cross-references left pointing at
  * renumbered decisions, `superseded-by` empty in all 58 frontmatter files while
  * three real supersessions lived in prose, and two ADRs marked `Proposed` while
  * shipped code cited them by number.
@@ -36,7 +36,11 @@ export type AdrValidationRule =
   | 'supersession-bidirectional'
   | 'implemented-by-exists'
   | 'code-cites-ratified-adr'
-  | 'register-complete';
+  | 'register-complete'
+  // ADR-075 §6 — the implementation lifecycle.
+  | 'accepted-work-is-tracked'
+  | 'implemented-claims-evidence'
+  | 'finished-work-says-so';
 
 export interface AdrValidationIssue {
   rule: AdrValidationRule;
@@ -66,6 +70,11 @@ export interface AdrValidationInput {
   sources?: readonly SourceFile[];
   /** ADR ids listed in the generated index, for `register-complete`. */
   indexIds?: readonly (number | string)[];
+  /**
+   * npm script names from `package.json`, so a `verified-by` entry naming a gate
+   * can be resolved (ADR-075 §6). Omit to skip that half of the check.
+   */
+  scriptNames?: ReadonlySet<string>;
 }
 
 export interface AdrValidationResult {
@@ -122,7 +131,7 @@ function contentTokens(text: string): Set<string> {
  * this rule:
  *
  *   - Comparing every gloss against the title alone flags legitimate paraphrases
- *     — ADR-074's "ADR-073 — design-time validation" describes a decision whose
+ *     — ADR-074's "ADR-073 — design-time validation" describes a decision whose — adr-lint-ignore: code-cites-ratified-adr
  *     title names the relocation instead.
  *   - Comparing every gloss against title + tags + summary masks real defects.
  *     "ADR-031: Standardized Extensible Lifecycle Hooks" survives — adr-lint-ignore: code-cites-ratified-adr
@@ -208,7 +217,7 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
 
     lines(document.body).forEach((line, index) => {
       const suppressed = SUPPRESSION.exec(line)?.[1];
-      const lineNumber = index + 1;
+      const lineNumber = document.bodyLine + index;
 
       for (const match of line.matchAll(ADR_MENTION)) {
         const id = Number.parseInt(match[1], 10);
@@ -358,6 +367,115 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
         rule: 'register-complete',
         file: 'docs/spec.md',
         message: `the index lists ADR-${formatAdrId(id)}, which has no file`,
+      });
+    }
+  }
+
+  // ── ADR-075 §6: the implementation lifecycle ──────────────────────────────
+  //
+  // The rules above describe an ADR's state. These three move it: parked work
+  // has to name its issue, a claim of `Implemented` has to name its code, and
+  // finished work gets told to say so instead of waiting to be noticed. That
+  // last one is the ADR-029 failure inverted — three files implemented and
+  // cited it while the register still called it Proposed.
+
+  // 8. accepted-work-is-tracked — a ratified decision is either carried by code
+  //    or scheduled by an issue. "Neither" is how the ADR-045..049 batch became — adr-lint-ignore: code-cites-ratified-adr
+  //    permanent: five decisions authored in a day, with no owner and nothing
+  //    pointing at them ever again.
+  checked.push('accepted-work-is-tracked');
+  for (const document of input.documents) {
+    const fm = document.frontmatter;
+    if (fm.status !== 'Accepted') continue;
+
+    const carried = fm['implemented-by'].length > 0;
+    const scheduled = (fm.impl?.refs.length ?? 0) > 0;
+
+    if (!carried && !scheduled) {
+      issues.push({
+        rule: 'accepted-work-is-tracked',
+        file: document.path,
+        message:
+          'status is `Accepted` but nothing carries it and nothing is scheduled to — ' +
+          'name the code in implemented-by, or the issues in impl.refs',
+        expected: 'implemented-by: [<path>] or impl.refs: ["#NNN"]',
+      });
+      continue;
+    }
+
+    // Work explicitly parked still needs an issue even when something partial
+    // already carries it — otherwise the remainder has no owner.
+    if (fm.impl?.stage === 'deferred' && !scheduled) {
+      issues.push({
+        rule: 'accepted-work-is-tracked',
+        file: document.path,
+        message:
+          'impl.stage is `deferred` but impl.refs is empty — parked work needs a tracking issue',
+        expected: 'impl.refs: ["#NNN"]',
+      });
+    }
+  }
+
+  // 9. implemented-claims-evidence — `Implemented` must name the code that
+  //    carries it. `verified-by` stays optional but must resolve when present:
+  //    a declared field nothing checks is a field that rots.
+  checked.push('implemented-claims-evidence');
+  for (const document of input.documents) {
+    const fm = document.frontmatter;
+
+    if (fm.status === 'Implemented' && fm['implemented-by'].length === 0) {
+      issues.push({
+        rule: 'implemented-claims-evidence',
+        file: document.path,
+        message:
+          'status is `Implemented` but implemented-by is empty — name the code that carries it',
+        expected: 'implemented-by: [<path>]',
+      });
+    }
+
+    for (const claim of fm['verified-by']) {
+      const isScript = input.scriptNames?.has(claim);
+      const isPath = input.existingPaths?.has(claim);
+      // Skip when neither lookup is available rather than guessing.
+      if (input.scriptNames === undefined && input.existingPaths === undefined) break;
+      if (isScript || isPath) continue;
+      issues.push({
+        rule: 'implemented-claims-evidence',
+        file: document.path,
+        message:
+          `verified-by names "${claim}", which is neither an npm script nor a file in the repo`,
+        actual: claim,
+      });
+    }
+  }
+
+  // 10. finished-work-says-so — the transition nobody remembers to make.
+  if (input.sources) {
+    checked.push('finished-work-says-so');
+    const cited = new Set<number>();
+    for (const source of input.sources) {
+      for (const match of source.text.matchAll(ADR_MENTION)) {
+        cited.add(Number.parseInt(match[1], 10));
+      }
+    }
+
+    for (const document of input.documents) {
+      const fm = document.frontmatter;
+      const id = normalizeAdrId(fm.id);
+      if (fm.status !== 'Accepted' || fm.impl) continue;
+      if (fm['implemented-by'].length === 0) continue;
+      if (!cited.has(id)) continue;
+      if (input.existingPaths && fm['implemented-by'].some((p) => !input.existingPaths!.has(p))) {
+        continue; // implemented-by-exists owns that failure.
+      }
+      issues.push({
+        rule: 'finished-work-says-so',
+        file: document.path,
+        message:
+          'status is `Accepted` with no work outstanding, its implemented-by paths all exist, ' +
+          'and source code cites it — this looks Implemented',
+        expected: 'status: Implemented',
+        actual: 'Accepted',
       });
     }
   }

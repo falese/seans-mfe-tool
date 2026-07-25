@@ -4,12 +4,21 @@ title: Conventional Commits and branch discipline
 status: Accepted
 date: 2026-04-17
 deciders: [sean]
+area: Process
 enforcement: convention
+tags: [git, commits, branch-naming, process, traceability]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [git, commits, branch-naming, process, traceability]
-summary: All commits use Conventional Commits format (feat/fix/refactor/test/docs/chore) with Refs #N or Closes #N in the body; branches follow the claude/issue-<N>-<slug> pattern.
-rationale-summary: Consistent commit messages and branch names enable automated changelog generation, clear traceability from code to issue, and predictable PR hygiene for both human and AI contributors.
+implemented-by:
+  - CLAUDE.md
+verified-by: []
+summary: >-
+  All commits use Conventional Commits format (feat/fix/refactor/test/docs/chore) with Refs
+rationale-summary: >-
+  Consistent commit messages and branch names enable automated changelog generation, clear
+  traceability from code to issue, and predictable PR hygiene for both human and AI
+  contributors.
 long-form: false
 ---
 

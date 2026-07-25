@@ -4,12 +4,22 @@ title: Release, Versioning, and Publish Automation
 status: Proposed
 date: 2026-05-28
 deciders: [sean]
+area: Release / packages
 enforcement: code
+tags: [release, versioning, publishing, packages, gap]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [release, versioning, publishing, packages, gap]
-summary: First-party packages and the CLI must move from informal release intent to an explicit automated release workflow with changelog generation, versioning rules, and publish gates tied to the repository's quality checks.
-rationale-summary: The repository documents phased publish intent and semver expectations, but it does not yet encode a release workflow, changelog policy, or publish automation. As the package set matures, that gap becomes an architectural and operational risk.
+implemented-by: []
+verified-by: []
+summary: >-
+  First-party packages and the CLI must move from informal release intent to an explicit
+  automated release workflow with changelog generation, versioning rules, and publish gates tied
+  to the repository's quality checks.
+rationale-summary: >-
+  The repository documents phased publish intent and semver expectations, but it does not yet
+  encode a release workflow, changelog policy, or publish automation. As the package set
+  matures, that gap becomes an architectural and operational risk.
 long-form: true
 ---
 

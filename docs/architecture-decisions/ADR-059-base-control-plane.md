@@ -1,8 +1,21 @@
-# ADR-059 — BaseControlPlane: abstract base for all control-plane implementations
-
-- **Status:** Accepted
-- **Date:** 2026-06-14
-- **Relates to:** ADR-054 (control-plane message protocol), ADR-055 (LayoutManager), ADR-056 (MFE presentation boundary), ADR-057 (virtualized daemon socket), ADR-058 (slot-provider MFEs)
+---
+id: 0059
+title: "BaseControlPlane: abstract base for all control-plane implementations"
+status: Implemented
+date: 2026-06-14
+deciders: [sean]
+area: Runtime / control-plane / abstract-base
+enforcement: code
+tags: [runtime, control-plane, abstract-base]
+relates-to: [54, 55, 56, 57, 58]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/runtime/src/base-control-plane.ts
+verified-by:
+  - packages/runtime/src/base-control-plane.test.ts
+long-form: true
+---
 
 ## Context
 

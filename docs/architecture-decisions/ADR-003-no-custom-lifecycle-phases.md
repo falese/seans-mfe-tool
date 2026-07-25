@@ -4,12 +4,21 @@ title: No Custom Lifecycle Phases
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [dsl, lifecycle, simplicity]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, lifecycle, simplicity]
-summary: The DSL lifecycle is restricted to exactly four standard phases — before, main, after, error — with no custom phase extension point.
-rationale-summary: Restricting to four phases eliminates phase ordering ambiguity, simplifies the mental model, and ensures all hooks follow the same execution semantics defined in ADR-002.
+implemented-by:
+  - packages/dsl/src/schema.ts
+verified-by: []
+summary: >-
+  The DSL lifecycle is restricted to exactly four standard phases — before, main, after, error —
+  with no custom phase extension point.
+rationale-summary: >-
+  Restricting to four phases eliminates phase ordering ambiguity, simplifies the mental model,
+  and ensures all hooks follow the same execution semantics defined in ADR-002.
 long-form: true
 ---
 
@@ -49,6 +58,5 @@ If a domain capability needs a "validation phase" and a "transformation phase", 
 
 - DEC-017
 - REQ-044
-- ADR-031: Standardized Extensible Lifecycle Hooks (supersedes custom phase design)
 - ADR-002: Lifecycle Hook Execution Model
 - Migration note in `architecture-decisions.md`: Custom lifecycle phases removed; only standard phases supported

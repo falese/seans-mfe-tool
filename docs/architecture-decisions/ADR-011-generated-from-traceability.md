@@ -4,12 +4,22 @@ title: GeneratedFrom Traceability
 status: Implemented
 date: 2025-12-13
 deciders: [sean]
+area: DSL
 enforcement: code
+tags: [dsl, data, traceability, lineage]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [dsl, data, traceability, lineage]
-summary: The DSL data section includes a generatedFrom field that records the source API specifications and versions that the data types were derived from, enabling impact analysis and regeneration workflows.
-rationale-summary: Tracking data lineage in the DSL enables the registry to answer dependency questions (which MFEs use this API?) and supports automated regeneration when upstream APIs change.
+implemented-by:
+  - packages/bff-plugin/templates/mfe-manifest.yaml.ejs
+verified-by: []
+summary: >-
+  The DSL data section includes a generatedFrom field that records the source API specifications
+  and versions that the data types were derived from, enabling impact analysis and regeneration
+  workflows.
+rationale-summary: >-
+  Tracking data lineage in the DSL enables the registry to answer dependency questions (which
+  MFEs use this API?) and supports automated regeneration when upstream APIs change.
 long-form: true
 ---
 

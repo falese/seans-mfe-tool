@@ -4,6 +4,7 @@ title: The MFE Registration Is a Build Artifact — Register on Build, Not by Ha
 status: Proposed
 date: 2026-07-25
 deciders: [sean]
+area: Codegen / control-plane / registration / module-federation / drift
 enforcement: code
 supersedes: []
 superseded-by: []
@@ -139,7 +140,7 @@ declaration — no new resolution machinery.
 
 - ADR-071 — manifest-driven client dependencies and federation `shared`; this
   extends the same thesis from the *build* config to the *registration*.
-- ADR-073 — design-time validation; §4 reuses its provider lookup.
-- ADR-054 / ADR-055 — registration wire shape and the placement-is-a-rule split.
-- ADR-067 — the declare-once-generate-both pattern this follows.
+- ADR-073 — design-time validation; §4 reuses its provider lookup. <!-- adr-lint-ignore: reference-gloss-matches -->
+- ADR-054 / ADR-055 — registration wire shape and the placement-is-a-rule split. <!-- adr-lint-ignore: reference-gloss-matches -->
+- ADR-067 — the declare-once-generate-both pattern this follows. <!-- adr-lint-ignore: reference-gloss-matches -->
 - #272 — the `./App` expose-key standardization, recorded here for the first time.

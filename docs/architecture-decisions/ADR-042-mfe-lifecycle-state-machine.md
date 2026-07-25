@@ -1,15 +1,28 @@
 ---
 id: 0042
 title: MFE Lifecycle State Machine
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
+area: Runtime lifecycle
 enforcement: code
+tags: [runtime, lifecycle, state-machine, invariants]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, lifecycle, state-machine, invariants]
-summary: BaseMFE models its lifecycle as an explicit six-state machine (`uninitialized → loading → ready → rendering → error → destroyed`) with a static transition table. Every capability asserts its required entry state and transitions through validated edges; illegal transitions throw.
-rationale-summary: A capability called in the wrong order (render before load, anything after destroy) is a programming error that should fail deterministically at the boundary, not corrupt MFE state silently. An explicit, inspectable state machine makes the lifecycle contract enforceable and debuggable.
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
+verified-by: []
+summary: >-
+  BaseMFE models its lifecycle as an explicit six-state machine (`uninitialized → loading →
+  ready → rendering → error → destroyed`) with a static transition table. Every capability
+  asserts its required entry state and transitions through validated edges; illegal transitions
+  throw.
+rationale-summary: >-
+  A capability called in the wrong order (render before load, anything after destroy) is a
+  programming error that should fail deterministically at the boundary, not corrupt MFE state
+  silently. An explicit, inspectable state machine makes the lifecycle contract enforceable and
+  debuggable.
 long-form: true
 ---
 

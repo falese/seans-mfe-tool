@@ -1,15 +1,28 @@
 ---
 id: 0041
 title: BaseMFE Abstract Base Class & Platform Capability Contract
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
+area: Runtime / base-class
 enforcement: code
+tags: [runtime, base-class, lifecycle, capabilities, contract]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [runtime, base-class, lifecycle, capabilities, contract]
-summary: All MFEs extend a single `BaseMFE` abstract class that owns lifecycle orchestration, state management, and handler dispatch, and exposes exactly ten platform capabilities. Subclasses differ only by the content of their abstract `do*()` overrides — not by introducing new capabilities or a parallel type hierarchy.
-rationale-summary: A single abstract base keeps the platform lifecycle contract identical across every delivery mechanism (rspack/React, webpack/Angular, future ESM/iframe/web-component variants); the "what" is fixed in the base, only the "how" varies per subclass via `do*()`.
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
+verified-by:
+  - packages/runtime/src/__tests__/lifecycle-acceptance.test.ts
+summary: >-
+  All MFEs extend a single `BaseMFE` abstract class that owns lifecycle orchestration, state
+  management, and handler dispatch, and exposes exactly ten platform capabilities. Subclasses
+  differ only by the content of their abstract `do*()` overrides — not by introducing new
+  capabilities or a parallel type hierarchy.
+rationale-summary: >-
+  A single abstract base keeps the platform lifecycle contract identical across every delivery
+  mechanism (rspack/React, webpack/Angular, future ESM/iframe/web-component variants); the
+  "what" is fixed in the base, only the "how" varies per subclass via `do*()`.
 long-form: true
 ---
 
@@ -27,7 +40,7 @@ shell composes capabilities without knowing how any of them were built
 This decision was made early in the runtime platform's life and is
 implemented in `src/runtime/base-mfe.ts`, but its ADR was lost during the
 ADR library reflow into 001–040 (PR #194). The class header still carries a
-dangling reference — `Following ADR-013: BaseMFE Abstract Base (Not Type
+dangling reference — `Following ADR-013: BaseMFE Abstract Base (Not Type <!-- adr-lint-ignore: reference-gloss-matches -->
 Hierarchy)` — to a number that now belongs to "Generated MFE Test
 Templates." There is currently **no ADR of record** for the most
 foundational runtime decision in the repo. This ADR re-establishes it and

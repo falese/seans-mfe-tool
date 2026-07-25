@@ -4,12 +4,23 @@ title: GraphQL Mesh v0.100.x with Production Plugins & Transforms
 status: Implemented
 date: 2025-12-06
 deciders: [sean]
+area: BFF layer
 enforcement: code
+tags: [bff, graphql-mesh, production, codegen, performance, observability]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [bff, graphql-mesh, production, codegen, performance, observability]
-summary: Lock BFF templates to GraphQL Mesh v0.100.x, adopt the createBuiltMeshHTTPHandler() runtime API, and wire response-cache/prometheus/opentelemetry plugins plus naming-convention transforms via DSL-driven configuration.
-rationale-summary: The e2e2 example project revealed version conflicts and missing production features (caching, metrics, tracing, rate limiting) when templates used floating latest versions with no DSL-driven plugin control.
+implemented-by:
+  - packages/bff-plugin/templates/server.ts.ejs
+verified-by: []
+summary: >-
+  Lock BFF templates to GraphQL Mesh v0.100.x, adopt the createBuiltMeshHTTPHandler() runtime
+  API, and wire response-cache/prometheus/opentelemetry plugins plus naming-convention
+  transforms via DSL-driven configuration.
+rationale-summary: >-
+  The e2e2 example project revealed version conflicts and missing production features (caching,
+  metrics, tracing, rate limiting) when templates used floating latest versions with no
+  DSL-driven plugin control.
 long-form: true
 ---
 

@@ -4,12 +4,27 @@ title: Dependency Governance — Pinning Strategy, hasBff Gate, and DEPENDENCY_V
 status: Implemented
 date: 2026-05-30
 deciders: [sean]
+area: Codegen / dependencies / security
 enforcement: code
+tags: [codegen, dependencies, security, bff, package.json, templates]
+relates-to: []
 supersedes: []
 superseded-by: []
-tags: [codegen, dependencies, security, bff, package.json, templates]
-summary: Three rules govern generated MFE `package.json` files. (1) All version strings come from the `DEPENDENCY_VERSIONS` constant in `unified-generator.ts` — no hardcoded versions in templates. (2) Mesh/BFF deps are only emitted when the manifest declares a `data:` section (`hasBff`). (3) A targeted `overrides` block forces safe transitive versions to close known vulnerability chains without a blanket `npm audit fix --force`.
-rationale-summary: Phantom BFF deps in non-BFF projects bloated installs, broke dev scripts, and added unnecessary Mesh vulnerability surface. DEPENDENCY_VERSIONS as a single source of truth prevents template drift. The npm overrides block is the minimal, deliberate response to known transitive CVEs in generated projects.
+implemented-by:
+  - packages/codegen/src/unified-generator.ts
+verified-by:
+  - check:mfe-consistency
+summary: >-
+  Three rules govern generated MFE `package.json` files. (1) All version strings come from the
+  `DEPENDENCY_VERSIONS` constant in `unified-generator.ts` — no hardcoded versions in templates.
+  (2) Mesh/BFF deps are only emitted when the manifest declares a `data:` section (`hasBff`).
+  (3) A targeted `overrides` block forces safe transitive versions to close known vulnerability
+  chains without a blanket `npm audit fix --force`.
+rationale-summary: >-
+  Phantom BFF deps in non-BFF projects bloated installs, broke dev scripts, and added
+  unnecessary Mesh vulnerability surface. DEPENDENCY_VERSIONS as a single source of truth
+  prevents template drift. The npm overrides block is the minimal, deliberate response to known
+  transitive CVEs in generated projects.
 long-form: true
 ---
 

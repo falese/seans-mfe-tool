@@ -1,8 +1,20 @@
-# ADR-057 — Virtualized daemon socket: per-slot control-plane channels over one host connection
-
-- **Status:** Accepted
-- **Date:** 2026-06-14
-- **Relates to:** ADR-054 (control-plane message protocol), ADR-055 (LayoutManager / daemon-driven shells), ADR-056 (MFE presentation boundary), ADR-041 (BaseMFE capability contract)
+---
+id: 0057
+title: "Virtualized daemon socket: per-slot control-plane channels over one host connection"
+status: Implemented
+date: 2026-06-14
+deciders: [sean]
+area: Runtime / control-plane / channels
+enforcement: code
+tags: [runtime, control-plane, channels]
+relates-to: [41, 54, 55, 56]
+supersedes: []
+superseded-by: []
+implemented-by:
+  - packages/runtime/src/daemon-channel.ts
+verified-by: []
+long-form: true
+---
 
 ## Context
 
