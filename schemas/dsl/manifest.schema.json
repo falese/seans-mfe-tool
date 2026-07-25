@@ -509,6 +509,25 @@
       ],
       "additionalProperties": false
     },
+    "providesSlots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
     "performance": {
       "type": "object",
       "properties": {

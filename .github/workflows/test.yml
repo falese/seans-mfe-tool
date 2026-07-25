@@ -218,6 +218,14 @@ jobs:
       - name: Check generated schemas are committed
         run: git diff --exit-code schemas/
 
+      - name: DSL manifest schema is current
+        # The published JSON Schema is what editors and registry rule-authoring
+        # tooling validate manifests against (ADR-067 §4). It is generated from
+        # the zod schema, and without a gate it rots: providesSlots landed
+        # 2026-07-11 and was still missing from the artifact months later
+        # because this check existed but was never wired in (ADR-073 §6).
+        run: npm run build:schema:dsl:check
+
       - name: MFE drift gate — generator-owned files match their manifests
         # Regenerates every MFE from its mfe-manifest.yaml and fails if any
         # generator-owned file (overwrite:true — the platform-contract shims:

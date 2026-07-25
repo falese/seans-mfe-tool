@@ -140,9 +140,15 @@ export type SlotTargetRejection =
   /** The address is syntactically unusable (empty provider or slot segment). */
   | 'malformed-address';
 
+/**
+ * Discriminated on `status` rather than a boolean: this repo compiles without
+ * `strictNullChecks`, and TypeScript does not narrow a boolean-literal
+ * discriminant in that mode, so `{ ok: true } | { ok: false; ... }` would force
+ * every consumer into a cast.
+ */
 export type SlotTargetResult =
-  | { ok: true }
-  | { ok: false; reason: SlotTargetRejection; message: string };
+  | { status: 'ok' }
+  | { status: 'rejected'; reason: SlotTargetRejection; message: string };
 
 /** One provider's contribution to the fleet-wide address space. */
 export interface SlotProviderDeclarations {
@@ -176,14 +182,14 @@ export function createSlotAddressRegistry(
       if (separator === -1) {
         // Host-owned region — the shell's own configuration is its declaration
         // surface, so there is nothing here to validate against.
-        return { ok: true };
+        return { status: 'ok' };
       }
 
       const providerMfeId = address.slice(0, separator);
       const localSlotId = address.slice(separator + 1);
       if (!providerMfeId || !localSlotId) {
         return {
-          ok: false,
+          status: 'rejected',
           reason: 'malformed-address',
           message:
             `Placement target "${address}" is malformed — expected ` +
@@ -194,7 +200,7 @@ export function createSlotAddressRegistry(
       const contract = contracts.get(providerMfeId);
       if (!contract) {
         return {
-          ok: false,
+          status: 'rejected',
           reason: 'unknown-provider',
           message:
             `Placement target "${address}" names provider "${providerMfeId}", whose manifest ` +
@@ -203,11 +209,11 @@ export function createSlotAddressRegistry(
         };
       }
 
-      if (contract.matches(localSlotId)) return { ok: true };
+      if (contract.matches(localSlotId)) return { status: 'ok' };
 
       const declared = contract.declarations.map((d) => `"${d.id}"`).join(', ') || 'none';
       return {
-        ok: false,
+        status: 'rejected',
         reason: 'undeclared-slot',
         message:
           `Placement target "${address}" is not declared by "${providerMfeId}" ` +

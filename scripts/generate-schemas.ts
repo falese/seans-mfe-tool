@@ -158,6 +158,68 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
     },
     additionalProperties: false,
   },
+  'mfe:validate': {
+    type: 'object',
+    required: ['manifest', 'declaredSlots', 'scannedFiles', 'findings', 'ok'],
+    properties: {
+      manifest:      { type: 'string' },
+      declaredSlots: { type: 'array', items: { type: 'string' } },
+      scannedFiles:  { type: 'number' },
+      findings: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['slotId', 'reason', 'message'],
+          properties: {
+            slotId:  { type: 'string' },
+            reason:  { type: 'string', enum: ['declared-but-unreferenced'] },
+            message: { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+      ok: { type: 'boolean' },
+    },
+    additionalProperties: false,
+  },
+  'slots:validate': {
+    type: 'object',
+    required: ['providers', 'rulesFile', 'rulesChecked', 'findings', 'ok'],
+    properties: {
+      providers: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['mfe', 'slots'],
+          properties: {
+            mfe:   { type: 'string' },
+            slots: { type: 'array', items: { type: 'string' } },
+          },
+          additionalProperties: false,
+        },
+      },
+      rulesFile:    { type: 'string' },
+      rulesChecked: { type: 'number' },
+      findings: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['mfe', 'capability', 'slot', 'reason', 'fatal', 'message'],
+          properties: {
+            mfe:        { type: 'string' },
+            capability: { type: 'string' },
+            slot:       { type: 'string' },
+            reason:     { type: 'string', enum: ['undeclared-slot', 'unknown-provider', 'malformed-address'] },
+            fatal:      { type: 'boolean' },
+            message:    { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+      ok: { type: 'boolean' },
+    },
+    additionalProperties: false,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -251,6 +313,21 @@ const INPUT_SCHEMAS: Record<string, object> = {
       name:      { type: 'string', description: 'Capability name' },
       'dry-run': { type: 'boolean', default: false },
       force:     { type: 'boolean', default: false },
+    },
+  },
+  'mfe:validate': {
+    type: 'object',
+    properties: {
+      dir:      { type: 'string', description: 'MFE directory to validate' },
+      manifest: { type: 'string', description: 'Path to mfe-manifest.yaml' },
+    },
+  },
+  'slots:validate': {
+    type: 'object',
+    required: ['rules'],
+    properties: {
+      rules:     { type: 'string', description: 'Path to a placement rules JSON file' },
+      manifests: { type: 'string', description: 'Directory to scan for mfe-manifest.yaml files' },
     },
   },
 };

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/mfe:validate.json",
+  "title": "mfe:validate",
+  "description": "Input/output contract for seans-mfe-tool mfe:validate",
+  "input": {
+    "type": "object",
+    "properties": {
+      "dir": {
+        "type": "string",
+        "description": "MFE directory to validate"
+      },
+      "manifest": {
+        "type": "string",
+        "description": "Path to mfe-manifest.yaml"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "manifest",
+      "declaredSlots",
+      "scannedFiles",
+      "findings",
+      "ok"
+    ],
+    "properties": {
+      "manifest": {
+        "type": "string"
+      },
+      "declaredSlots": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "scannedFiles": {
+        "type": "number"
+      },
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "slotId",
+            "reason",
+            "message"
+          ],
+          "properties": {
+            "slotId": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "declared-but-unreferenced"
+              ]
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
