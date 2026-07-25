@@ -11,8 +11,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install --omit=dev --no-audit --no-fund
 
-# Copy source code
-COPY simple-registry.js ./
+# Copy source code. Glob, not a named file: the registry was split into
+# simple-registry.js + slot-target.js (ADR-073 §5), and a single-file COPY
+# silently ships an image that dies on ERR_MODULE_NOT_FOUND the moment a
+# module is extracted. .dockerignore already keeps node_modules out.
+COPY *.js ./
 
 # Listen on 4000 by default (overridable via PORT).
 EXPOSE 4000
