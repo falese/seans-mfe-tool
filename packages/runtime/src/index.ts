@@ -36,8 +36,16 @@ export type { LayoutManagerConfig, LayoutHostLike } from './layout-manager';
 // Slot contract logic (ADR-067): manifest-declared identity, matching, and
 // the declare-before-register guard — framework-free; generated MFEs mirror
 // their providesSlots into createSlotContract and carry no slot logic.
-export { createSlotContract, toProvidedSlotAddress } from './slot-contract';
-export type { ProvidedSlotDeclaration, ProvideSlotFn, SlotContract } from './slot-contract';
+export { createSlotContract, createSlotAddressRegistry, toProvidedSlotAddress } from './slot-contract';
+export type {
+  ProvidedSlotDeclaration,
+  ProvideSlotFn,
+  SlotContract,
+  SlotAddressRegistry,
+  SlotProviderDeclarations,
+  SlotTargetRejection,
+  SlotTargetResult,
+} from './slot-contract';
 export { GraphQLTransportWsDaemonTransport } from './layout-transport';
 export type {
   DaemonTransport,
