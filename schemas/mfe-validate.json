@@ -8,64 +8,86 @@
     "properties": {
       "dir": {
         "type": "string",
-        "description": "MFE directory to validate"
+        "description": "MFE directory to validate (default: cwd)"
       },
-      "manifest": {
-        "type": "string",
-        "description": "Path to mfe-manifest.yaml"
+      "typecheck": {
+        "type": "boolean",
+        "default": false,
+        "description": "Also run `tsc --noEmit`"
       }
     }
   },
   "output": {
     "type": "object",
     "required": [
-      "manifest",
-      "declaredSlots",
-      "scannedFiles",
-      "findings",
-      "ok"
+      "mfe",
+      "framework",
+      "ok",
+      "checked",
+      "issues"
     ],
     "properties": {
-      "manifest": {
+      "mfe": {
         "type": "string"
       },
-      "declaredSlots": {
+      "framework": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "checked": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "scannedFiles": {
-        "type": "number"
-      },
-      "findings": {
+      "issues": {
         "type": "array",
         "items": {
           "type": "object",
           "required": [
-            "slotId",
-            "reason",
+            "rule",
             "message"
           ],
           "properties": {
-            "slotId": {
+            "rule": {
               "type": "string"
             },
-            "reason": {
-              "type": "string",
-              "enum": [
-                "declared-but-unreferenced"
-              ]
-            },
             "message": {
+              "type": "string"
+            },
+            "package": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "actual": {
               "type": "string"
             }
           },
           "additionalProperties": false
         }
       },
-      "ok": {
-        "type": "boolean"
+      "typecheck": {
+        "type": "object",
+        "required": [
+          "ran",
+          "ok"
+        ],
+        "properties": {
+          "ran": {
+            "type": "boolean"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "output": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       }
     },
     "additionalProperties": false

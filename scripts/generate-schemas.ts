@@ -158,27 +158,41 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
     },
     additionalProperties: false,
   },
+  // #309's dependency/federation consistency rules, plus the slot rule wired
+  // into the same command (ADR-073): one MFE-consistency surface, not two.
   'mfe:validate': {
     type: 'object',
-    required: ['manifest', 'declaredSlots', 'scannedFiles', 'findings', 'ok'],
+    required: ['mfe', 'framework', 'ok', 'checked', 'issues'],
     properties: {
-      manifest:      { type: 'string' },
-      declaredSlots: { type: 'array', items: { type: 'string' } },
-      scannedFiles:  { type: 'number' },
-      findings: {
+      mfe:       { type: 'string' },
+      framework: { type: 'string' },
+      ok:        { type: 'boolean' },
+      checked:   { type: 'array', items: { type: 'string' } },
+      issues: {
         type: 'array',
         items: {
           type: 'object',
-          required: ['slotId', 'reason', 'message'],
+          required: ['rule', 'message'],
           properties: {
-            slotId:  { type: 'string' },
-            reason:  { type: 'string', enum: ['declared-but-unreferenced'] },
-            message: { type: 'string' },
+            rule:     { type: 'string' },
+            message:  { type: 'string' },
+            package:  { type: 'string' },
+            expected: { type: 'string' },
+            actual:   { type: 'string' },
           },
           additionalProperties: false,
         },
       },
-      ok: { type: 'boolean' },
+      typecheck: {
+        type: 'object',
+        required: ['ran', 'ok'],
+        properties: {
+          ran:    { type: 'boolean' },
+          ok:     { type: 'boolean' },
+          output: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
     },
     additionalProperties: false,
   },
@@ -227,6 +241,13 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
 // ---------------------------------------------------------------------------
 
 const INPUT_SCHEMAS: Record<string, object> = {
+  'mfe:validate': {
+    type: 'object',
+    properties: {
+      dir:       { type: 'string', description: 'MFE directory to validate (default: cwd)' },
+      typecheck: { type: 'boolean', default: false, description: 'Also run `tsc --noEmit`' },
+    },
+  },
   deploy: {
     type: 'object',
     required: ['name', 'type'],
@@ -313,13 +334,6 @@ const INPUT_SCHEMAS: Record<string, object> = {
       name:      { type: 'string', description: 'Capability name' },
       'dry-run': { type: 'boolean', default: false },
       force:     { type: 'boolean', default: false },
-    },
-  },
-  'mfe:validate': {
-    type: 'object',
-    properties: {
-      dir:      { type: 'string', description: 'MFE directory to validate' },
-      manifest: { type: 'string', description: 'Path to mfe-manifest.yaml' },
     },
   },
   'slots:validate': {

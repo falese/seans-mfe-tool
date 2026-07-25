@@ -17,6 +17,7 @@
     "build:schema:dsl:check": "ts-node scripts/generate-dsl-schema.ts --check",
     "check:mfe-drift": "ts-node scripts/check-mfe-drift.ts",
     "check:mfe-drift:check": "ts-node scripts/check-mfe-drift.ts --check",
+    "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
