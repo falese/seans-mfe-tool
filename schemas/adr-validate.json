@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/adr:validate.json",
+  "title": "adr:validate",
+  "description": "Input/output contract for seans-mfe-tool adr:validate",
+  "input": {
+    "type": "object",
+    "properties": {
+      "include-examples": {
+        "type": "boolean",
+        "default": false,
+        "description": "Also scan examples/** for ADR citations"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "adrs",
+      "ok",
+      "checked",
+      "issues"
+    ],
+    "properties": {
+      "adrs": {
+        "type": "number"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "checked": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "issues": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "rule",
+            "file",
+            "message"
+          ],
+          "properties": {
+            "rule": {
+              "type": "string"
+            },
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "number"
+            },
+            "message": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "actual": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

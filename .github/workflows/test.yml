@@ -254,6 +254,23 @@ jobs:
         # #295 drift gate never touches (#296).
         run: npm run check:mfe-consistency
 
+      - name: ADR library drift gate (report-only)
+        # The decision record governs every gate above it and was the last
+        # artifact kept in sync by hand (ADR-075). Checks frontmatter against the
+        # ADR-075 schema, cross-references against what they claim to cite,
+        # supersessions for bidirectionality, declared implementation paths for
+        # existence, and source citations for pointing at a decision that was
+        # actually made.
+        #
+        # Report-only on landing, following the doc-links precedent in this file:
+        # the gate is red on the defects it was built to find, and the
+        # normalization pass is what turns it green. Flip to a required check by
+        # replacing the step body with `run: npm run check:adr`.
+        run: |
+          if ! npm run check:adr; then
+            echo "::warning title=ADR library drift::ADR metadata or cross-references are inconsistent (report-only until the ADR-075 normalization pass lands). Run 'npm run check:adr' locally."
+          fi
+
       - name: Meridian regen invariant — generated artifacts match the manifests
         # Re-runs remote:generate across the reference fleet + derives seeds,
         # then fails on any drift (#274 discipline, #276 reference app).

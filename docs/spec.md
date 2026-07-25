@@ -302,6 +302,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Accepted (#294) |
 | ADR-072 | The Sanctioned Slot Registration API — `DeclaredSlot`, Typed by the Manifest | Codegen / slots / app-code API / typing | Accepted |
 | ADR-073 | Slot Contract Logic in Contracts; Placement Targets Become Validatable | Contracts / CLI / slots / design-time validation | Accepted |
+| ADR-075 | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Accepted |
 
 ---
 
