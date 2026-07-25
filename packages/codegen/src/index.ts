@@ -8,3 +8,4 @@
  */
 export * from './unified-generator';
 export * from './drift';
+export * from './validate';

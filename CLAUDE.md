@@ -30,6 +30,8 @@ Full spec: `@docs/spec.md`
 | `npm run test:ci` | If you touched `src/runtime/` (enforces 80% coverage) |
 | `npm run build` | Before pushing — catches broken oclif manifest |
 | `npm run build:schemas` | After any change to command flags, args, or return types |
+| `npm run check:mfe-consistency` | Validate every `examples/**` MFE's internal consistency (manifest ⇄ package.json ⇄ federation `shared`); CI-gated (#296) |
+| `seans-mfe-tool mfe:validate [dir] [--typecheck]` | Validate a single MFE dir (a.k.a. `mfe:doctor`); non-zero exit on any inconsistency |
 | `npm run format` | Before PR |
 | `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
 | `turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged) |
@@ -90,6 +92,9 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Concept | Path |
 |---|---|
 | `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |
+| MFE consistency rules (pure, unit-tested) | `packages/codegen/src/validate.ts` |
+| `mfe:validate` command (I/O wrapper) | `src/commands/mfe/validate.ts` |
+| Fleet consistency CI gate | `scripts/check-mfe-consistency.ts` |
 | Envelope types | `packages/contracts/src/envelope.ts` |
 | Typed errors | `packages/contracts/src/errors/` |
 | Error classifier | `packages/contracts/src/error-classifier.ts` |
