@@ -7,7 +7,12 @@ document explains the whole chain in plain language.*
 
 Governing decisions: ADR-066 (addressing + binding), ADR-067 (manifest
 contract + three-layer split), ADR-068 (provider scoping + lifecycle
-ownership), ADR-069 (single-sourced grammar). Tracked in #265.
+ownership), ADR-069 (single-sourced grammar), ADR-072 (the app-code API),
+ADR-073 (design-time validation). Tracked in #265.
+
+For the diagrams — design time, the build pipeline, how a registry rule fills
+a slot, and the runtime binding sequence — see
+[`docs/slot-architecture.md`](./slot-architecture.md).
 
 ## The short version
 
@@ -113,10 +118,12 @@ Sorting and filtering change order; they don't change identity.
 **2. Generate.** Codegen turns the declaration into `src/slots.tsx` for React
 or `src/slots.ts` for Angular — **data plus thin framework binding**:
 `PROVIDED_SLOTS` (the manifest mirrored into code) bound to
-`createSlotContract()` from the runtime, plus `DeclaredSlot` or
-`DeclaredSlotDirective`.
-The matching and guard *logic* lives once in `@seans-mfe-tool/runtime`, so a
-fix there never requires regenerating MFEs. The file is always regenerated —
+`createSlotContract()`, plus `DeclaredSlot` or `DeclaredSlotDirective`, plus
+`DeclaredSlotId` — a type union of the declared ids (ADR-072), so using a slot
+the manifest no longer declares is a **compile error**, not a runtime throw.
+The matching and guard *logic* lives once in `@seans-mfe/contracts` and is
+re-exported from `@seans-mfe-tool/runtime` (ADR-073), so a fix there never
+requires regenerating MFEs, and design-time tooling shares the same matcher. The file is always regenerated —
 it is contract, not scaffold — so the code can never claim a slot the
 manifest doesn't declare:
 
@@ -140,6 +147,14 @@ The generated React component and Angular directive register their element
 with the host on mount, release it with `null` on unmount/destroy, and
 **throw on an undeclared id** — "declare it in the manifest first" is
 enforced by generated code, not by code review.
+
+These snippets show the *generated*, pre-bound twins, which is what feature
+code inside an MFE uses. The published `framework-react` / `framework-angular`
+sugar is the same component with the contract passed in, for shells and
+hand-written MFEs: `<DeclaredSlot contract={slotContract} id="main" …>`.
+Both accept ordinary element props and an element override (`as="section"` in
+React; the Angular directive is an attribute, so its host element is already
+yours).
 
 **3. Register (runtime).** Registration rides `provideSlot`, the callback the
 host hands every mounted MFE (ADR-058). The MFE registers its declared local
@@ -201,7 +216,8 @@ versus wrong-but-invisible is the entire argument.
 | When | What's available | Source |
 | --- | --- | --- |
 | Design time | Every slot id an MFE can provide, with descriptions; keyed patterns validate target *shape* | `providesSlots` in the manifest, served by `describe()` / discovery |
-| Config time | "Does any installed MFE declare this target?" — typos and renames rejected at rule-save | Union of registered manifests |
+| Config time | "Does any installed MFE declare this target?" — typos and renames rejected in CI (`slots:validate`) and at rule-save (registry `POST /mfes`) | Union of registered manifests |
+| Config time | "Does this MFE actually implement what it declares?" — a declared slot no component registers (`mfe:validate`) | The MFE's own sources |
 | Runtime | Which slots this session actually has right now; drift between declared and provided | `SLOT_PROVIDED` / `SLOT_RELEASED` signals |
 
 Design time answers *may this address exist*; runtime answers *does it exist
@@ -213,7 +229,11 @@ right now*; convergence makes the gap between them safe.
 | --- | --- |
 | Shared slot grammar (ADR-069) | `packages/contracts/src/slot-grammar.ts` |
 | Manifest schema (`providesSlots`) | `packages/dsl/src/schema.ts` |
-| Contract logic (matching, guard) — framework-free, written once | `packages/runtime/src/slot-contract.ts` |
+| Contract logic (matching, guard, address registry) — framework-free, written once | `packages/contracts/src/slot-contract.ts` (re-exported by `packages/runtime/src/slot-contract.ts`) |
+| Design-time checks (unreferenced slots, placement targets) | `packages/dsl/src/slot-validation.ts` |
+| `DeclaredSlotId` derivation | `packages/codegen/src/slot-types.ts` |
+| CLI gates | `src/commands/mfe/validate.ts`, `src/commands/slots/validate.ts` |
+| Placement rules as data | `examples/*/control-plane/rules.json` |
 | React sugar for shells/hand-written MFEs (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
 | Angular sugar for shells/hand-written MFEs (`DeclaredSlotDirective`) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
 | Generated React slot template | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
@@ -223,14 +243,17 @@ right now*; convergence makes the gap between them safe.
 | `provideSlot` render-prop plumbing | `packages/runtime/src/layout-adaptors.ts` |
 | Behavior tests (ordering, re-bind, replay, signals) | `packages/runtime/src/__tests__/layout-desired-state.test.ts` |
 | Contract tests (shared grammar, schema, codegen, framework sugar) | `packages/contracts/src/__tests__/slot-grammar.test.ts`, `packages/dsl/src/__tests__/schema.slots.test.ts`, `packages/codegen/src/__tests__/provided-slots.test.ts`, `packages/codegen/src/__tests__/angular-variant.test.ts` |
-| Decisions | ADR-066, ADR-067, ADR-068, ADR-069 (and ADR-055/057/058/060 they build on) |
+| Decisions | ADR-066, ADR-067, ADR-068, ADR-069, ADR-072, ADR-073 (and ADR-055/057/058/060 they build on) |
+| Diagrams | [`docs/slot-architecture.md`](./slot-architecture.md) |
 
 ## The rules, if you remember nothing else
 
 1. Slot ids are **names people assign**, never positions the tree produces.
 2. A repeated slot takes its identity from **the data that repeats it**.
 3. The **manifest declares** every local id; the host scopes it by MFE id, and
-   the registry validates the resulting `mfe/id` address.
+   the resulting `mfe/id` address is validated in CI (`slots:validate`) and at
+   rule-save (registry `POST /mfes`). At runtime the contract only ever sees
+   the *local* id — the qualified address is composed afterwards.
 4. A runtime owner token prevents stale provider teardown from deleting a
    replacement at the same stable address.
 5. Placement is **desired state**; the client converges, so ordering and
@@ -240,3 +263,7 @@ right now*; convergence makes the gap between them safe.
 7. **Data is generated, logic is published, sugar is thin.** If you find
    yourself writing slot logic in a component or a template, it belongs in
    `slot-contract.ts` instead.
+8. **`DeclaredSlot` is the app-code API** (ADR-072). `slotContract.register()`
+   stays public as the framework-adaptor escape hatch — reach for it when you
+   are wiring a framework the platform has no sugar for, not when you are
+   writing a feature.
