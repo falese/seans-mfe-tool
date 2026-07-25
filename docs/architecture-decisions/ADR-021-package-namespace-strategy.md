@@ -10,6 +10,7 @@ tags: [packages, namespace, oclif, monorepo, plugin-architecture]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [2, 4]
 implemented-by:
   - CLAUDE.md
 verified-by: []

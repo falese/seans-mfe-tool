@@ -13,6 +13,7 @@ tags: [runtime, load, atomic, telemetry, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by: []

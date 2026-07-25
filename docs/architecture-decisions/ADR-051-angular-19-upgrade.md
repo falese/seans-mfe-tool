@@ -10,6 +10,7 @@ tags: [angular, security, codegen, dependencies, vulnerability]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/codegen/templates/base-mfe-angular/package.json.ejs
 verified-by: []

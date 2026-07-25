@@ -10,6 +10,7 @@ tags: [runtime, boundary, providers, polyglot, module-federation, react, angular
 relates-to: []
 supersedes: []
 superseded-by: [60]
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/presentation.ts
 verified-by: []

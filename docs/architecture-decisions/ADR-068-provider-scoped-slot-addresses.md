@@ -10,6 +10,7 @@ tags: [runtime, slots, addressing, ownership]
 relates-to: [57, 58, 66, 67]
 supersedes: [58]
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/slot-contract.ts
 verified-by: []

@@ -10,6 +10,7 @@ tags: [contracts, cli, slots, design-time-validation]
 relates-to: [61, 64, 65, 66, 67, 68, 69]
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/slot-contract.ts
   - packages/dsl/src/slot-validation.ts

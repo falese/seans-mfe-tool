@@ -10,6 +10,7 @@ tags: [dsl, lifecycle, handlers, codegen, source, di, traceability]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/dsl/src/schema.ts
   - packages/codegen/src/unified-generator.ts

@@ -10,6 +10,7 @@ tags: [runtime, composition, resilience, context]
 relates-to: [30, 41, 42, 54, 55, 56, 57, 58, 59]
 supersedes: [56]
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/runtime/src/layout-adaptors.ts
   - packages/runtime/src/error-boundary.ts

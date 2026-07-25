@@ -10,6 +10,7 @@ tags: [contracts, dsl, runtime, packaging]
 relates-to: [61, 66, 67]
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/slot-grammar.ts
 verified-by: []

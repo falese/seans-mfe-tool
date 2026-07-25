@@ -189,6 +189,62 @@ jobs:
             echo "::warning title=Doc link hygiene::Broken relative doc links found (report-only; tracked by G15). Run 'npm run docs:check-links' locally."
           fi
 
+  adr-governance:
+    # Post a governance summary on every PR: which decisions it changes, which
+    # its code rests on, and the register's state (ADR-075).
+    #
+    # Scoped to the diff on purpose. A 75-row index on every PR is noise nobody
+    # reads, and noise nobody reads makes the governance signal look like
+    # boilerplate. The comment is sticky — found by its marker and updated in
+    # place — so a PR carries one summary, not one per push.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # The report diffs against the base branch, so it needs the history.
+          fetch-depth: 0
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build:packages
+
+      - name: Render the governance summary
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=0 || true
+          npx ts-node scripts/adr-governance-report.ts "origin/${{ github.base_ref }}" > /tmp/adr-governance.md
+          cat /tmp/adr-governance.md
+
+      - name: Post or update the sticky comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          MARKER='<!-- adr-governance-report -->'
+          EXISTING=$(gh api "repos/$REPO/issues/$PR_NUM/comments" --paginate \
+            --jq "map(select(.body | contains(\"$MARKER\"))) | .[0].id // empty")
+          if [ -n "$EXISTING" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" \
+              -F body=@/tmp/adr-governance.md >/dev/null
+            echo "updated comment $EXISTING"
+          else
+            gh pr comment "$PR_NUM" --body-file /tmp/adr-governance.md --repo "$REPO"
+          fi
+
   quality:
     # Enforce the same gates required before commit (CLAUDE.md): lint,
     # typecheck, full build, and schema drift.
@@ -270,6 +326,14 @@ jobs:
         # pre-reflow numbers in generated output that fell out of the generation
         # graph. `npm run check:adr -- --include-examples` reports them.
         run: npm run check:adr
+
+      - name: ADR index and PDR map are generated from frontmatter
+        # The spec.md index and the PDR↔ADR map are views of ADR frontmatter
+        # (ADR-075 §1), not second copies of it. Same generate-and-diff idiom as
+        # the schema gates above: edit frontmatter, run `npm run build:adr-index`,
+        # commit both. Without this the views rot — they disagreed with the files
+        # on ADR-057/058 and on qualifiers for six more before ADR-075.
+        run: npm run build:adr-index:check
 
       - name: Meridian regen invariant — generated artifacts match the manifests
         # Re-runs remote:generate across the reference fleet + derives seeds,

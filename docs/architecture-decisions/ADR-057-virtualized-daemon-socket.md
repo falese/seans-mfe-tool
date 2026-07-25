@@ -10,6 +10,7 @@ tags: [runtime, control-plane, channels]
 relates-to: [41, 54, 55, 56]
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/runtime/src/daemon-channel.ts
 verified-by: []

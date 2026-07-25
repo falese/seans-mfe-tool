@@ -10,6 +10,7 @@ tags: [contracts, daemon, control-plane, runtime, protocol, messages]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/messages.ts
 verified-by: []

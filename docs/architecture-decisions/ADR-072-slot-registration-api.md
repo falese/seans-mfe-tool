@@ -10,6 +10,7 @@ tags: [codegen, slots, app-code-api, typing]
 relates-to: [36, 58, 66, 67, 69]
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/codegen/src/slot-types.ts
   - packages/framework-react/src/runtime/DeclaredSlot.tsx

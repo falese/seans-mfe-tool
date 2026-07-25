@@ -10,6 +10,7 @@ tags: [dsl, handlers, codegen, polyglot]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
   - packages/codegen/templates/base-mfe/handler-registry.ts.ejs

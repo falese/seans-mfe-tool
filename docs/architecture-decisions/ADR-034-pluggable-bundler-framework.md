@@ -10,6 +10,7 @@ tags: [codegen, bundler, framework, mfe, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [2]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:

@@ -10,6 +10,7 @@ tags: [build, codegen, framework, bundler, plugin, oclif]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [2]
 implemented-by:
   - packages/contracts/src/framework-plugin.ts
   - src/framework/loader.ts

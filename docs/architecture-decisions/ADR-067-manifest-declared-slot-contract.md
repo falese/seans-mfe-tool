@@ -10,6 +10,7 @@ tags: [dsl, codegen, slots, contract]
 relates-to: [43, 57, 58, 66]
 supersedes: []
 superseded-by: []
+implements-pdr: [5, 7]
 implemented-by:
   - packages/codegen/templates/base-mfe/slots.tsx.ejs
   - packages/codegen/templates/base-mfe-angular/slots.ts.ejs

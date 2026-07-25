@@ -10,6 +10,7 @@ tags: [governance, adr, drift, metadata, single-source, tooling]
 relates-to: [0065, 0069, 0071, 0074]
 supersedes: []
 superseded-by: []
+implements-pdr: [7]
 implemented-by:
   - packages/dsl/src/adr-schema.ts
   - packages/dsl/src/adr-validation.ts

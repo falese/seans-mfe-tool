@@ -19,6 +19,8 @@
     "check:mfe-drift:check": "ts-node scripts/check-mfe-drift.ts --check",
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
+    "build:adr-index": "ts-node scripts/generate-adr-index.ts",
+    "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -88,6 +90,9 @@
       },
       "slots": {
         "description": "Slot contract tooling \u2014 validate registry placement targets (ADR-073)"
+      },
+      "adr": {
+        "description": "ADR library governance \u2014 validate metadata and report lifecycle state (ADR-075)"
       }
     },
     "hooks": {

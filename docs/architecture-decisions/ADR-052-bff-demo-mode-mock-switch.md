@@ -10,6 +10,7 @@ tags: [bff, graphql-mesh, mock, demo-mode, codegen, dsl]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/bff-plugin/templates/mock-switch.js.ejs
   - packages/bff-plugin/templates/mocks.json.ejs

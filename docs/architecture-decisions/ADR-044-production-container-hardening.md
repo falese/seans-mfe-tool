@@ -10,6 +10,7 @@ tags: [docker, nginx, kubernetes, security, deploy, generated-output, non-root]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/bff-plugin/templates/Dockerfile.ejs
 verified-by: []

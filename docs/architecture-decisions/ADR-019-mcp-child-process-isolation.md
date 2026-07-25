@@ -10,6 +10,7 @@ tags: [mcp, child-process, isolation, ai-native, concurrency]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - src/commands/mcp/serve.ts
   - src/mcp/tool-registry.ts

@@ -39,8 +39,16 @@ const DEFAULT_SOURCE_ROOTS = ['src', 'packages', 'scripts'];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage', '__tests__']);
 
-/** Rows of the ADR index table in `docs/spec.md`: `| ADR-0NN | … |`. */
-const INDEX_ROW = /^\|\s*ADR-(\d{2,4})\s*\|/gm;
+/**
+ * Rows of the ADR index table in `docs/spec.md`.
+ *
+ * Tolerates both spellings of the first cell — the bare `| ADR-075 |` the table
+ * used while it was hand-maintained, and the `| [ADR-075](./…) |` the generator
+ * emits (ADR-075 §1). Matching only the bare form made every row invisible the
+ * moment the table became generated, and `register-complete` then reported all
+ * 75 ADRs as missing from an index that listed every one of them.
+ */
+const INDEX_ROW = /^\|\s*\[?ADR-(\d{2,4})\]?/gm;
 
 export interface AdrValidateOptions {
   /** Repo root; defaults to cwd. */
