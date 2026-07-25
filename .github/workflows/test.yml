@@ -223,8 +223,9 @@ jobs:
         run: npm run build:packages
 
       - name: Render the governance summary
+        # `fetch-depth: 0` above already gives full history, so the base ref is
+        # present — no extra fetch, and no `|| true` swallowing a real failure.
         run: |
-          git fetch origin "${{ github.base_ref }}" --depth=0 || true
           npx ts-node scripts/adr-governance-report.ts "origin/${{ github.base_ref }}" > /tmp/adr-governance.md
           cat /tmp/adr-governance.md
 
