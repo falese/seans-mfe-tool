@@ -1,7 +1,7 @@
 ---
 id: 0072
 title: "The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest"
-status: Accepted
+status: Implemented
 date: 2026-07-25
 deciders: [sean]
 area: Codegen / slots / app-code API / typing

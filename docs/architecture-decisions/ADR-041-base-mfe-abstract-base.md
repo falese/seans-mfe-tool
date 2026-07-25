@@ -1,7 +1,7 @@
 ---
 id: 0041
 title: BaseMFE Abstract Base Class & Platform Capability Contract
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Runtime / base-class

@@ -10,7 +10,8 @@ tags: [dsl, lifecycle, handlers]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/schema.ts
 verified-by: []
 summary: >-
   The DSL handler field accepts either a single string or an array of strings; semantics differ

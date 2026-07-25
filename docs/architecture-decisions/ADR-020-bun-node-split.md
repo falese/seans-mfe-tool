@@ -10,7 +10,9 @@ tags: [cli, bun, node, dev-experience, publish]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - bin/dev.ts
+  - bin/run.js
 verified-by: []
 summary: >-
   bin/dev.ts runs under Bun for zero-transpile development iteration; bin/run.js is the

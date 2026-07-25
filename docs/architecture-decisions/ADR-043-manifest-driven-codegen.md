@@ -1,7 +1,7 @@
 ---
 id: 0043
 title: Manifest-Driven Code Generation Pipeline
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Codegen / DSL

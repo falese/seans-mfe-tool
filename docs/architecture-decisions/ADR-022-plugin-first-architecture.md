@@ -10,7 +10,8 @@ tags: [plugin-architecture, oclif, monorepo, daemon, coder]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - CLAUDE.md
 verified-by: []
 summary: >-
   The daemon and coder toolsets ship as separate oclif plugins depending on @seans-mfe/contracts

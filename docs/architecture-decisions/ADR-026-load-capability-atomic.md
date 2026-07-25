@@ -13,7 +13,8 @@ tags: [runtime, load, atomic, telemetry, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
 verified-by: []
 summary: >-
   Implement load as three sequential atomic subphases (entry → mount → enable-render) with

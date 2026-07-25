@@ -1,7 +1,7 @@
 ---
 id: 0040
 title: Manifest-Declared Handler Sources
-status: Accepted
+status: Implemented
 date: 2026-05-27
 deciders: [sean]
 area: DSL / handlers / codegen
@@ -10,7 +10,9 @@ tags: [dsl, lifecycle, handlers, codegen, source, di, traceability]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/schema.ts
+  - packages/codegen/src/unified-generator.ts
 verified-by: []
 summary: >-
   Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare

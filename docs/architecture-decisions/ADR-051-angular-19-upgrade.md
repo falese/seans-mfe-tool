@@ -10,7 +10,8 @@ tags: [angular, security, codegen, dependencies, vulnerability]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/codegen/templates/base-mfe-angular/package.json.ejs
 verified-by: []
 summary: >-
   Upgrade Angular from ^17.0.0 to ^19.2.16 in all generated Angular MFE templates and runtime

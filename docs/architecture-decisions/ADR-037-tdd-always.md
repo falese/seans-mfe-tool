@@ -10,7 +10,8 @@ tags: [testing, tdd, quality, process]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - CLAUDE.md
 verified-by: []
 summary: >-
   Every production code change must be preceded by a failing test; no code is written without a

@@ -1,7 +1,7 @@
 ---
 id: 0061
 title: "`@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved"
-status: Accepted
+status: Implemented
 date: 2026-07-01
 deciders: [sean]
 area: Codegen / DSL / packaging

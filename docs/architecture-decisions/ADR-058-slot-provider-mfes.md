@@ -10,7 +10,8 @@ tags: [runtime, slots, composition]
 relates-to: [55, 56, 57]
 supersedes: []
 superseded-by: [68]
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/layout-manager.ts
 verified-by: []
 long-form: true
 ---

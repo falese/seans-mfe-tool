@@ -10,7 +10,8 @@ tags: [runtime, lifecycle, hooks, resilience]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
 verified-by: []
 summary: >-
   Hooks use a contained execution model where before/after/error phase failures are silently

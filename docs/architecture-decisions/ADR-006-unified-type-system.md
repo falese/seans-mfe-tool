@@ -10,7 +10,8 @@ tags: [dsl, types, graphql, typescript]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/type-system.ts
 verified-by: []
 summary: >-
   A single type system flows from the DSL through GraphQL schema to TypeScript/Python types;

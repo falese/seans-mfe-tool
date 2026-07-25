@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/adr:status.json",
+  "title": "adr:status",
+  "description": "Input/output contract for seans-mfe-tool adr:status",
+  "input": {
+    "type": "object",
+    "properties": {
+      "outstanding": {
+        "type": "boolean",
+        "default": false,
+        "description": "Only ratified work still to do"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "Proposed",
+          "Accepted",
+          "Implemented",
+          "Deferred",
+          "Superseded",
+          "Withdrawn"
+        ]
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "total",
+      "counts",
+      "outstanding",
+      "entries"
+    ],
+    "properties": {
+      "total": {
+        "type": "number"
+      },
+      "counts": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number"
+        }
+      },
+      "outstanding": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/adrStatusEntry"
+        }
+      },
+      "entries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/adrStatusEntry"
+        }
+      }
+    },
+    "definitions": {
+      "adrStatusEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "area",
+          "refs",
+          "implementedBy"
+        ],
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "implementedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

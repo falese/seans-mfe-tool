@@ -1,7 +1,7 @@
 ---
 id: 0059
 title: "BaseControlPlane: abstract base for all control-plane implementations"
-status: Accepted
+status: Implemented
 date: 2026-06-14
 deciders: [sean]
 area: Runtime / control-plane / abstract-base
@@ -10,8 +10,10 @@ tags: [runtime, control-plane, abstract-base]
 relates-to: [54, 55, 56, 57, 58]
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/runtime/src/base-control-plane.ts
+verified-by:
+  - packages/runtime/src/base-control-plane.test.ts
 long-form: true
 ---
 

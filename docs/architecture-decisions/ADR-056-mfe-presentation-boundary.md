@@ -1,7 +1,7 @@
 ---
 id: 0056
 title: MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model)
-status: Accepted
+status: Implemented
 date: 2026-06-13
 deciders: [sean]
 area: Runtime / boundary / providers / polyglot
@@ -10,7 +10,8 @@ tags: [runtime, boundary, providers, polyglot, module-federation, react, angular
 relates-to: []
 supersedes: []
 superseded-by: [60]
-implemented-by: []
+implemented-by:
+  - packages/contracts/src/presentation.ts
 verified-by: []
 summary: >-
   An MFE is a sealed, framework-opaque virtual machine composed like a Helm chart — never

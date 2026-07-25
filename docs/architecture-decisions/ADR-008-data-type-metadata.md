@@ -10,7 +10,8 @@ tags: [dsl, types, metadata, registry]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/schema.ts
 verified-by: []
 summary: >-
   DSL type definitions carry owner and tags metadata fields to support registry search,

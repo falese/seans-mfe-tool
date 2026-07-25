@@ -1,7 +1,7 @@
 ---
 id: 0042
 title: MFE Lifecycle State Machine
-status: Accepted
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Runtime lifecycle
@@ -10,7 +10,8 @@ tags: [runtime, lifecycle, state-machine, invariants]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
 verified-by: []
 summary: >-
   BaseMFE models its lifecycle as an explicit six-state machine (`uninitialized → loading →

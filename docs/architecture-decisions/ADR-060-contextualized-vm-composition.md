@@ -1,7 +1,7 @@
 ---
 id: 0060
 title: "Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution"
-status: Accepted
+status: Implemented
 date: 2026-06-15
 deciders: [sean]
 area: Runtime / composition / resilience / context
@@ -10,7 +10,9 @@ tags: [runtime, composition, resilience, context]
 relates-to: [30, 41, 42, 54, 55, 56, 57, 58, 59]
 supersedes: [56]
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/layout-adaptors.ts
+  - packages/runtime/src/error-boundary.ts
 verified-by: []
 long-form: true
 ---

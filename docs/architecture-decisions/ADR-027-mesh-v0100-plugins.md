@@ -10,7 +10,8 @@ tags: [bff, graphql-mesh, production, codegen, performance, observability]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/bff-plugin/templates/server.ts.ejs
 verified-by: []
 summary: >-
   Lock BFF templates to GraphQL Mesh v0.100.x, adopt the createBuiltMeshHTTPHandler() runtime

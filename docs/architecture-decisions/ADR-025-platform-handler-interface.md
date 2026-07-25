@@ -13,7 +13,8 @@ tags: [runtime, platform-handlers, lifecycle, interfaces, registry]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/runtime/src/base-mfe.ts
 verified-by: []
 summary: >-
   Define a PlatformHandler interface with name/phases/errorConfig/execute contract, a

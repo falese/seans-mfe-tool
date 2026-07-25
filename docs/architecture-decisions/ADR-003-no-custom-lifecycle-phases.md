@@ -10,7 +10,8 @@ tags: [dsl, lifecycle, simplicity]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
+implemented-by:
+  - packages/dsl/src/schema.ts
 verified-by: []
 summary: >-
   The DSL lifecycle is restricted to exactly four standard phases — before, main, after, error —
