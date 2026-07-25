@@ -303,6 +303,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | ADR-072 | The Sanctioned Slot Registration API — `DeclaredSlot`, Typed by the Manifest | Codegen / slots / app-code API / typing | Accepted |
 | ADR-073 | Slot Contract Logic in Contracts; Placement Targets Become Validatable | Contracts / CLI / slots / design-time validation | Accepted |
 | ADR-075 | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Accepted |
+| ADR-074 | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
 
 ---
 
