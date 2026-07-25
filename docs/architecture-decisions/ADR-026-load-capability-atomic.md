@@ -4,7 +4,7 @@ title: Load Capability — Atomic Operation Design
 status: Accepted
 impl:
   stage: phased
-  refs: []
+  refs: ["#318"]
 date: 2025-12-06
 deciders: [sean]
 area: Runtime lifecycle

@@ -4,7 +4,7 @@ title: Platform Handler Interface & Execution Model
 status: Accepted
 impl:
   stage: phased
-  refs: []
+  refs: ["#317"]
 date: 2025-12-06
 deciders: [sean]
 area: Runtime handlers
