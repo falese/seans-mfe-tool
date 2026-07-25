@@ -233,6 +233,19 @@ jobs:
         # Generic, platform-wide; developer-owned code is untouched (#295).
         run: npm run check:mfe-drift:check
 
+      - name: Slot placement targets resolve to declared slots
+        # Every registry rule's resolve.props.slot must name an address some
+        # provider declares (ADR-067 §4, implemented in ADR-073). An unbindable
+        # placement does not fail loudly at runtime — ADR-066 parks it and waits
+        # — so this is the only place a typo'd or renamed target is caught.
+        run: |
+          ./bin/run.js slots:validate \
+            --rules examples/meridian-station/control-plane/rules.json \
+            --manifests examples/meridian-station
+          ./bin/run.js slots:validate \
+            --rules examples/abc-kids/control-plane/rules.json \
+            --manifests examples/abc-kids
+
       - name: Meridian regen invariant — generated artifacts match the manifests
         # Re-runs remote:generate across the reference fleet + derives seeds,
         # then fails on any drift (#274 discipline, #276 reference app).

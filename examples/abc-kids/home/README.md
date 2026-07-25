@@ -7,7 +7,7 @@ registry's `abc.root` rule. It is also the layout provider:
 
 - `mfe-manifest.yaml` declares local slots `main` and `info`.
 - Codegen mirrors those declarations into `src/slots.tsx`.
-- `GameMenu` registers the regions through the generated `slotContract`.
+- `GameMenu` registers the regions through the generated `DeclaredSlot` (ADR-072).
 - The host scopes them to `abc-kids-home/main` and
   `abc-kids-home/info` (ADR-068).
 
