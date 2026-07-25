@@ -196,6 +196,32 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
     },
     additionalProperties: false,
   },
+  'adr:validate': {
+    type: 'object',
+    required: ['adrs', 'ok', 'checked', 'issues'],
+    properties: {
+      adrs:    { type: 'number' },
+      ok:      { type: 'boolean' },
+      checked: { type: 'array', items: { type: 'string' } },
+      issues: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['rule', 'file', 'message'],
+          properties: {
+            rule:     { type: 'string' },
+            file:     { type: 'string' },
+            line:     { type: 'number' },
+            message:  { type: 'string' },
+            expected: { type: 'string' },
+            actual:   { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+    additionalProperties: false,
+  },
   'slots:validate': {
     type: 'object',
     required: ['providers', 'rulesFile', 'rulesChecked', 'findings', 'ok'],
@@ -246,6 +272,16 @@ const INPUT_SCHEMAS: Record<string, object> = {
     properties: {
       dir:       { type: 'string', description: 'MFE directory to validate (default: cwd)' },
       typecheck: { type: 'boolean', default: false, description: 'Also run `tsc --noEmit`' },
+    },
+  },
+  'adr:validate': {
+    type: 'object',
+    properties: {
+      'include-examples': {
+        type: 'boolean',
+        default: false,
+        description: 'Also scan examples/** for ADR citations',
+      },
     },
   },
   deploy: {

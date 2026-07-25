@@ -11,6 +11,11 @@ export * from './types';
 // Design-time slot checks (ADR-073): declared-but-unreferenced slots and
 // registry placement targets. Pure functions; the CLI supplies the IO.
 export * from './slot-validation';
+// ADR library drift control (ADR-075): the frontmatter schema that makes the
+// decision record machine-readable, and the rules that keep it from rotting.
+// Same pure-core / thin-command split as the slot checks above.
+export * from './adr-schema';
+export * from './adr-validation';
 
 // Parser functions
 export {
