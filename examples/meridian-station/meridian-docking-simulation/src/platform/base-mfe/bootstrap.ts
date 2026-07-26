@@ -131,7 +131,11 @@ const manifest = {
         "name": "Harbormaster",
         "handler": {
           "openapi": {
-            "source": "./specs/harbormaster.yaml"
+            "source": "./specs/harbormaster.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
           }
         }
       },
@@ -139,7 +143,11 @@ const manifest = {
         "name": "StationOS",
         "handler": {
           "openapi": {
-            "source": "./specs/station-os.yaml"
+            "source": "./specs/station-os.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
           }
         }
       }

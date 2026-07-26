@@ -125,7 +125,11 @@ const manifest = {
         "name": "Harbormaster",
         "handler": {
           "openapi": {
-            "source": "./specs/harbormaster.yaml"
+            "source": "./specs/harbormaster.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
           }
         }
       },
@@ -133,7 +137,11 @@ const manifest = {
         "name": "StellarLedger",
         "handler": {
           "openapi": {
-            "source": "./specs/stellar-ledger.yaml"
+            "source": "./specs/stellar-ledger.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
           }
         },
         "transforms": [
