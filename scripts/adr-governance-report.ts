@@ -21,7 +21,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFileSync } from 'child_process';
-import { parseAdrDocument, formatAdrId, normalizeAdrId } from '@seans-mfe/dsl';
+import { parseAdrDocument, formatAdrId, normalizeAdrId, SUPPRESSION } from '@seans-mfe/dsl';
 import type { AdrDocument, AdrStatus } from '@seans-mfe/dsl';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -44,13 +44,16 @@ const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '
 /**
  * Strip Markdown blockquotes before scanning an issue body for citations.
  *
- * A blockquote is commentary *about* the issue, not a claim the issue makes.
- * The ADR-075 backlog pass appended a `> **Reference corrected…**` footer to
- * every issue whose ADR number was stale, and each footer necessarily *quotes*
- * the wrong number it is correcting — so without this, fixing an issue makes it
- * scan worse than leaving it broken. #16 reported `ADR-012, ADR-046, ADR-075` — adr-lint-ignore: code-cites-ratified-adr
- * where only ADR-012 is the subject: the second is the corrected-away number
- * and the third is the pass that corrected it.
+ * A blockquote is commentary *about* an issue, not a claim the issue makes.
+ * The ADR-075 §7 backlog pass appended a `> **Reference corrected…**` footer to
+ * every issue whose decision number was stale, and each footer necessarily
+ * *quotes* the wrong number it is correcting and names the pass that corrected
+ * it. Counting those meant fixing an issue made it scan worse than leaving it
+ * broken — one issue went from one genuine reference to three.
+ *
+ * This comment names no decision numbers on purpose. Prose that cites a number
+ * to talk *about* citing is exactly the case the rule exists to exclude, and
+ * demonstrating that by needing a suppression here would be a poor advert for it.
  */
 function withoutQuotes(text: string): string {
   return text
@@ -111,12 +114,21 @@ function main(): void {
   const codeFiles = files.filter((f) => CODE_EXTENSIONS.has(path.extname(f)));
 
   // Decisions this PR's changed code rests on.
+  //
+  // Honours the same `adr-lint-ignore: code-cites-ratified-adr` marker the gate
+  // uses, sharing one regex rather than a second copy of it. A line the gate has
+  // been told is explanatory prose is not a dependency either — without this,
+  // the doc comment above, which names a renumbered decision to explain the
+  // blockquote rule, made this report claim the PR's code rests on it.
   const cited = new Set<number>();
   for (const file of codeFiles) {
     const full = path.join(REPO_ROOT, file);
     if (!fs.existsSync(full)) continue;
-    for (const m of fs.readFileSync(full, 'utf8').matchAll(/ADR-(\d{2,4})\b/g)) {
-      cited.add(Number.parseInt(m[1], 10));
+    for (const line of fs.readFileSync(full, 'utf8').split(/\r?\n/)) {
+      if (SUPPRESSION.exec(line)?.[1] === 'code-cites-ratified-adr') continue;
+      for (const m of line.matchAll(/ADR-(\d{2,4})\b/g)) {
+        cited.add(Number.parseInt(m[1], 10));
+      }
     }
   }
 
