@@ -15,6 +15,7 @@ implemented-by:
   - eslint.config.js
 verified-by:
   - lint
+tracked-by: ["#321"]
 summary: >-
   The any type is forbidden in all src/ and packages/ code; unknown is used at system boundaries
   and narrowed via type guards or Zod parse before use.
