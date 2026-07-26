@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
@@ -759,6 +760,12 @@ export function extractManifestVars(
     // True when the manifest declares a data: section — gates doQuery() generation
     // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
     hasBff: !!manifest.data,
+
+    // The ten platform capability names, from the canonical definition in
+    // @seans-mfe/contracts (ADR-080). Templates classify a manifest capability
+    // as platform vs domain against this instead of an inline literal array —
+    // four such arrays existed and two of them were a capability short.
+    platformCapabilityNames: [...PLATFORM_CAPABILITIES],
   };
 }
 
@@ -956,17 +963,19 @@ function resolveBffEndpoint(manifest: DSLManifest): string {
 function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): RenderModel {
   const vars = extractManifestVars(manifest, variant);
   // --- Platform contract-driven capability and lifecycle aggregation ---
-  const platformCapabilities = {
-    Load: { method: 'load', returnTypeBase: 'LoadResult' },
-    Render: { method: 'render', returnTypeBase: 'RenderResult' },
-    Refresh: { method: 'refresh', returnTypeBase: 'void' },
-    AuthorizeAccess: { method: 'authorizeAccess', returnTypeBase: 'boolean' },
-    Health: { method: 'health', returnTypeBase: 'HealthResult' },
-    Describe: { method: 'describe', returnTypeBase: 'DescribeResult' },
-    Schema: { method: 'schema', returnTypeBase: 'SchemaResult' },
-    Query: { method: 'query', returnTypeBase: 'QueryResult' },
-    Emit: { method: 'emit', returnTypeBase: 'EmitResult' },
-  };
+  // Keyed by the PascalCase manifest spelling, derived from the canonical
+  // capability set in @seans-mfe/contracts (ADR-080). This map was previously
+  // written out by hand and omitted UpdateControlPlaneState, so a manifest
+  // declaring it was generated as a domain capability.
+  const platformCapabilities: Record<
+    string,
+    { method: string; returnTypeBase: string } | undefined
+  > = Object.fromEntries(
+    PLATFORM_CAPABILITIES.map((name) => {
+      const spec = PLATFORM_CAPABILITY_SPECS[name];
+      return [spec.manifestKey, { method: spec.name, returnTypeBase: spec.resultType }];
+    })
+  );
 
   const capabilities: RenderCapability[] = [];
   const lifecycleHookNames = new Set<string>();
@@ -990,9 +999,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
       // `method` comes from Object.entries over manifest data, so it is a bare
       // string. Look it up once and narrow, rather than indexing three times
       // with a key the compiler cannot prove is present.
-      const platformCapability = (
-        platformCapabilities as Record<string, { method: string; returnTypeBase: string } | undefined>
-      )[method];
+      const platformCapability = platformCapabilities[method];
 
       if (platformCapability) {
         capabilities.push({
@@ -1011,7 +1018,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
       }
       // Collect lifecycle hooks from capability config, deduplicated
       // Filter out base capability names to prevent conflicts
-      const baseCapabilityNames = Object.values(platformCapabilities).map((c) => c.method);
+      const baseCapabilityNames: readonly string[] = PLATFORM_CAPABILITIES;
       if (safeConfig.lifecycle) {
         for (const phase of ['before', 'main', 'after', 'error'] as const) {
           if (safeConfig.lifecycle[phase]) {

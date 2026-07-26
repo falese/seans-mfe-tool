@@ -16,7 +16,7 @@
  * Related ADRs: ADR-002, ADR-013
  */
 
-import type { ControlPlaneUser } from '@seans-mfe/contracts';
+import type { ControlPlaneUser, PlatformCapability } from '@seans-mfe/contracts';
 
 /**
  * User authentication and authorization context.
@@ -74,8 +74,12 @@ export interface Context {
   /** Current lifecycle phase */
   phase?: 'before' | 'main' | 'after' | 'error';
   
-  /** Current capability being executed */
-  capability?: 'load' | 'render' | 'refresh' | 'authorizeAccess' | 'health' | 'describe' | 'schema' | 'query' | 'emit' | 'updateControlPlaneState' | string;
+  /**
+   * Current capability being executed — one of the ten platform capabilities
+   * (single-sourced in @seans-mfe/contracts, ADR-080) or a domain capability
+   * name, which is why the union stays open.
+   */
+  capability?: PlatformCapability | string;
   
   // === Error Context (populated in error phase) ===
   

@@ -13,8 +13,13 @@ import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe/
 import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
-import { ValidationError as RuntimeValidationError } from '@seans-mfe/contracts';
-import type { Resolution } from '@seans-mfe/contracts';
+import {
+  ValidationError as RuntimeValidationError,
+  MFE_LIFECYCLE_TRANSITIONS,
+  MFE_LIFECYCLE_INITIAL_STATE,
+  PLATFORM_CAPABILITY_SPECS,
+} from '@seans-mfe/contracts';
+import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
 import * as platformHandlerLibrary from './handlers';
 
 // Re-export for convenience
@@ -178,72 +183,38 @@ export interface ControlPlaneStateResult {
 // State Machine Types (REQ-056)
 // =============================================================================
 
-/** MFE lifecycle state */
-export type MFEState = 
-  | 'uninitialized'  // Initial state
-  | 'loading'        // Load in progress
-  | 'ready'          // Ready to use
-  | 'rendering'      // Render in progress
-  | 'error'          // Error state
-  | 'destroyed';     // Destroyed, cannot recover
+/**
+ * MFE lifecycle state. The states and their legal edges are defined once in
+ * `@seans-mfe/contracts` (ADR-080); this is the runtime's name for the same
+ * type, kept because generated MFEs and the runtime's public surface refer to
+ * it as `MFEState`.
+ */
+export type MFEState = MfeLifecycleState;
 
-/** Valid state transitions */
-export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
-  uninitialized: ['loading'],
-  loading: ['ready', 'error'],
-  ready: ['loading', 'rendering', 'destroyed'],
-  rendering: ['ready', 'error'],
-  error: ['loading', 'destroyed'],
-  destroyed: []
-};
+/** Valid state transitions — the canonical table (ADR-042, ADR-080). */
+export const VALID_TRANSITIONS: Readonly<Record<MFEState, readonly MFEState[]>> =
+  MFE_LIFECYCLE_TRANSITIONS;
 
 // =============================================================================
 // Capability Descriptors (REQ-054)
 // =============================================================================
 
 /**
- * How a capability interacts with the lifecycle state machine (ADR-042).
- * Everything else about capability orchestration (before → main → doX →
+ * How each capability interacts with the lifecycle state machine (ADR-042):
+ * allowed pre-states, and the enter/exit/error transitions it drives. That is
+ * per-capability contract data, so it lives in `@seans-mfe/contracts`
+ * alongside the state machine itself (ADR-080) rather than being re-declared
+ * here. Everything else about capability orchestration (before → main → doX →
  * after, error phase on failure) is identical across the 10 platform
  * capabilities and lives once in BaseMFE.executeCapability().
  */
-interface CapabilityDescriptor {
-  /** States this capability may be invoked from; empty = any state. */
-  preStates: MFEState[];
-  /** State entered before execution (e.g. load → 'loading'). */
-  enterState?: MFEState;
-  /** State entered after successful execution. */
-  exitState?: MFEState;
-  /** State entered when execution fails. */
-  errorState?: MFEState;
-}
+type CapabilityDescriptor = Pick<
+  PlatformCapabilitySpec,
+  'preStates' | 'enterState' | 'exitState' | 'errorState'
+>;
 
-/** Any state except 'destroyed' — read-only capabilities run everywhere. */
-const ANY_LIVE_STATE: MFEState[] = ['uninitialized', 'loading', 'ready', 'rendering', 'error'];
-
-const CAPABILITY_DESCRIPTORS: Record<string, CapabilityDescriptor> = {
-  load: {
-    preStates: ['uninitialized', 'ready', 'error'],
-    enterState: 'loading',
-    exitState: 'ready',
-    errorState: 'error',
-  },
-  render: {
-    preStates: ['ready'],
-    enterState: 'rendering',
-    exitState: 'ready',
-    errorState: 'error',
-  },
-  refresh: { preStates: ['ready'] },
-  authorizeAccess: { preStates: ['ready'] },
-  health: { preStates: ANY_LIVE_STATE },
-  describe: { preStates: ANY_LIVE_STATE },
-  schema: { preStates: ['ready'] },
-  query: { preStates: ['ready'] },
-  emit: { preStates: [] },
-  // Available from ready OR rendering — an MFE may push state mid-render.
-  updateControlPlaneState: { preStates: ['ready', 'rendering'] },
-};
+const CAPABILITY_DESCRIPTORS: Readonly<Record<string, CapabilityDescriptor>> =
+  PLATFORM_CAPABILITY_SPECS;
 
 // =============================================================================
 // Platform Handler Library (REQ-058)
@@ -316,7 +287,7 @@ export abstract class BaseMFE {
   protected readonly deps: BaseMFEDependencies;
 
   /** Current lifecycle state */
-  protected state: MFEState = 'uninitialized';
+  protected state: MFEState = MFE_LIFECYCLE_INITIAL_STATE;
 
   /** State transition history (for debugging) */
   protected stateHistory: Array<{ from: MFEState; to: MFEState; timestamp: Date }> = [];
@@ -716,7 +687,7 @@ export abstract class BaseMFE {
   }
 
   /** Middleware: assert the MFE is in one of the allowed pre-states. */
-  private stateGuard(preStates: MFEState[]): Middleware {
+  private stateGuard(preStates: readonly MFEState[]): Middleware {
     return async (_ctx, next) => {
       if (preStates.length > 0) {
         this.assertState(...preStates);
