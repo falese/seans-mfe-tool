@@ -62,6 +62,9 @@ data:
       handler:
         openapi:
           source: ./specs/station-os.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
       transforms:
         - hoistField:
             - typeName: Query
@@ -74,6 +77,9 @@ data:
       handler:
         openapi:
           source: ./specs/stellar-ledger.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
       transforms:
         - hoistField:
             - typeName: Query
@@ -83,6 +89,9 @@ data:
       handler:
         openapi:
           source: ./specs/harbormaster.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
   mockSwitch:
     enabled: true
   serve:

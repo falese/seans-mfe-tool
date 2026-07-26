@@ -69,6 +69,9 @@ data:
       handler:
         openapi:
           source: ./specs/station-os.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
       transforms:
         - hoistField:
             - typeName: Query
