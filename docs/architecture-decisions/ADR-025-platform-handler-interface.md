@@ -1,18 +1,15 @@
 ---
 id: 0025
 title: Platform Handler Interface & Execution Model
-status: Accepted
-impl:
-  stage: phased
-  refs: ["#317"]
+status: Superseded
 date: 2025-12-06
 deciders: [sean]
 area: Runtime handlers
 enforcement: code
 tags: [runtime, platform-handlers, lifecycle, interfaces, registry]
-relates-to: []
+relates-to: [76]
 supersedes: []
-superseded-by: []
+superseded-by: [76]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by: []
