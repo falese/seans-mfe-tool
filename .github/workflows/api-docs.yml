@@ -6,10 +6,24 @@
 # stale docs/api or DSL schema fails the job.
 name: API docs
 
+# Runs on PRs as well as main. Main-only meant the drift gate could not block
+# anything — it fired after merge, so a stale docs/api landed first and turned
+# main red afterwards. That is how 124 files of drift accumulated unnoticed
+# between 2026-07-03 and 2026-07-26 (the job was failing before the gate, and
+# nothing ran the gate on the way in). Same path filters on both triggers.
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'packages/contracts/src/**'
+      - 'packages/runtime/src/**'
+      - 'packages/dsl/src/**'
+      - 'typedoc.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/generate-dsl-schema.ts'
+      - '.github/workflows/api-docs.yml'
+  pull_request:
     paths:
       - 'packages/contracts/src/**'
       - 'packages/runtime/src/**'
