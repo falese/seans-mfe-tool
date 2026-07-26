@@ -6,6 +6,10 @@
   "input": {
     "type": "object",
     "properties": {
+      "dir": {
+        "type": "string",
+        "description": "Repo root holding docs/architecture-decisions (default: search upward from cwd)"
+      },
       "include-examples": {
         "type": "boolean",
         "default": false,

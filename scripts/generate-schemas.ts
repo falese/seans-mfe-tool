@@ -304,9 +304,17 @@ const INPUT_SCHEMAS: Record<string, object> = {
   'adr:status': {
     type: 'object',
     properties: {
+      dir: {
+        type: 'string',
+        description: 'Repo root holding docs/architecture-decisions (default: search upward from cwd)',
+      },
       outstanding: { type: 'boolean', default: false, description: 'Only ratified work still to do' },
+      // The enum stays canonical — a machine caller should send these exact values.
+      // The CLI additionally accepts any casing, which is a human affordance and
+      // not something an MCP client needs to rely on.
       status: {
         type: 'string',
+        description: 'Filter to one status (the CLI also accepts these case-insensitively)',
         enum: ['Proposed', 'Accepted', 'Implemented', 'Deferred', 'Superseded', 'Withdrawn'],
       },
     },
@@ -314,6 +322,10 @@ const INPUT_SCHEMAS: Record<string, object> = {
   'adr:validate': {
     type: 'object',
     properties: {
+      dir: {
+        type: 'string',
+        description: 'Repo root holding docs/architecture-decisions (default: search upward from cwd)',
+      },
       'include-examples': {
         type: 'boolean',
         default: false,
