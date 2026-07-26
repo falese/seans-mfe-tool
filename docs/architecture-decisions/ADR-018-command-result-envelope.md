@@ -1,7 +1,7 @@
 ---
 id: 0018
 title: CommandResult<T> JSON envelope — single stdout line under --json
-status: Accepted
+status: Implemented
 date: 2026-04-18
 deciders: [sean]
 area: CLI / contracts

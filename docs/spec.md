@@ -249,12 +249,12 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-012](./architecture-decisions/ADR-012-graphql-mesh-bff-layer.md) | GraphQL Mesh for BFF Layer with DSL-Embedded Configuration | BFF | Implemented |
 | [ADR-013](./architecture-decisions/ADR-013-generated-mfe-test-templates.md) | Generated MFE Test Templates | Codegen / testing | Implemented |
 | [ADR-014](./architecture-decisions/ADR-014-incremental-typescript-migration.md) | Incremental TypeScript Migration | Codebase | Implemented |
-| [ADR-015](./architecture-decisions/ADR-015-oclif-migration.md) | oclif as CLI framework — replace Commander | CLI | Accepted |
-| [ADR-016](./architecture-decisions/ADR-016-base-command-pattern.md) | BaseCommand pattern — every oclif command extends BaseCommand | CLI / contracts | Accepted |
+| [ADR-015](./architecture-decisions/ADR-015-oclif-migration.md) | oclif as CLI framework — replace Commander | CLI | Implemented |
+| [ADR-016](./architecture-decisions/ADR-016-base-command-pattern.md) | BaseCommand pattern — every oclif command extends BaseCommand | CLI / contracts | Implemented |
 | [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Accepted |
-| [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Accepted |
-| [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Accepted |
-| [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Accepted |
+| [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Implemented |
+| [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Implemented |
+| [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
 | [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
 | [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Accepted |
