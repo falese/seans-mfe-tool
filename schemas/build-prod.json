@@ -84,10 +84,22 @@
               "type": "string"
             },
             "category": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "syntax",
+                "type",
+                "dependency",
+                "config",
+                "runtime",
+                "unknown"
+              ]
             },
             "suggestion": {
               "type": "string"
+            },
+            "code": {
+              "type": "string",
+              "description": "Compiler diagnostic code where the toolchain emits one (`TS2339`). Lets an\nagent look the failure up or match on it without parsing the message."
             }
           },
           "additionalProperties": false

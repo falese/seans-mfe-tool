@@ -78,6 +78,11 @@ export interface BuildError {
   message: string;
   category: 'syntax' | 'type' | 'dependency' | 'config' | 'runtime' | 'unknown';
   suggestion?: string;
+  /**
+   * Compiler diagnostic code where the toolchain emits one (`TS2339`). Lets an
+   * agent look the failure up or match on it without parsing the message.
+   */
+  code?: string;
 }
 
 /** Handle returned by startDevServer() for lifecycle control. */

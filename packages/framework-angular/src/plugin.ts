@@ -16,6 +16,7 @@ import {
   type DockerStrategy,
   type BuildResult,
   type DevServerHandle,
+  parseBuildOutput,
 } from '@seans-mfe/contracts';
 
 function semverSatisfies(found: string, required: string): boolean {
@@ -148,13 +149,33 @@ export class AngularWebpackPlugin extends BaseFrameworkPlugin {
         errors: [],
       };
     } catch (err: unknown) {
-      const stderr = (err as { stderr?: string }).stderr ?? '';
+      // Both rspack and tsc write diagnostics to STDOUT, not stderr. Reading
+      // only `stderr` here meant every failing build reported a single error
+      // whose message was the empty string. Read both, stdout first.
+      const e = err as { stdout?: string | Buffer; stderr?: string | Buffer; message?: string };
+      const output = [e.stdout, e.stderr]
+        .map((s) => (s === undefined ? '' : String(s)))
+        .filter((s) => s.trim().length > 0)
+        .join('\n');
+
+      // A build can fail having written nothing at all (a missing binary, a
+      // signal). Falling through to an empty errors[] would tell the caller it
+      // failed while giving it nothing to act on, so the thrown error is the
+      // last resort.
+      const errors = parseBuildOutput(output);
+      if (errors.length === 0) {
+        errors.push({
+          message: e.message?.trim() || 'Build failed with no diagnostic output',
+          category: 'unknown',
+        });
+      }
+
       return {
         success: false,
         artifacts: [],
         duration_ms: Date.now() - start,
         warnings: [],
-        errors: [{ message: stderr, category: 'unknown' }],
+        errors,
       };
     }
   }
