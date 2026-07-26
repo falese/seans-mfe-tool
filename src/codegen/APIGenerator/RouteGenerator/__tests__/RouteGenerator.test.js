@@ -1,11 +1,8 @@
 const fs = require('fs-extra');
 const path = require('path');
-const chalk = require('chalk');
 const { RouteGenerator } = require('../RouteGenerator');
 const { PathGenerator } = require('../../utils/PathGenerator');
-const { SchemaGenerator } = require('../../utils/SchemaGenerator');
-const { NameGenerator } = require('../../utils/NameGenerator');
-const { simpleSpec, petStoreSpec } = require('./fixtures/openapi-specs');
+const { simpleSpec } = require('./fixtures/openapi-specs');
 
 // Mock all dependencies
 jest.mock('fs-extra');

@@ -1,10 +1,9 @@
 const { MongoDBGenerator } = require('../generators/MongoDBGenerator');
-const { 
-  simpleSchema, 
-  complexSchema, 
+const {
+  simpleSchema,
+  complexSchema,
   relationshipSchema,
   validationSchema,
-  mongoSpecificSchema,
   multiSchemaSpec
 } = require('./fixtures/openapi-schemas');
 const fs = require('fs-extra');

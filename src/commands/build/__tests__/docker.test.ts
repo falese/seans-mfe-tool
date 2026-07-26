@@ -168,7 +168,6 @@ describe('buildDockerCommand', () => {
     await buildDockerCommand({ framework: 'react', output: '/custom/Dockerfile' });
 
     expect(fsExtra.outputFile).toHaveBeenCalledWith('/custom/Dockerfile', expect.any(String));
-    const [, result] = (await buildDockerCommand({ framework: 'react', output: '/custom/Dockerfile' }), []);
     expect(fsExtra.outputFile.mock.calls[0][0]).toBe('/custom/Dockerfile');
   });
 });

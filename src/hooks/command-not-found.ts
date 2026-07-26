@@ -22,6 +22,8 @@ const hook: Hook<'command_not_found'> = async function(opts) {
       },
     };
     process.stdout.write(JSON.stringify(envelope) + '\n');
+    // Same envelope exit-code contract as BaseCommand.run() (ADR-018).
+    // eslint-disable-next-line no-process-exit
     process.exit(2);
   }
   // No --json: oclif renders its default error and suggestion text

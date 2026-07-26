@@ -10,7 +10,6 @@ const {
   KNOWN_PLUGINS,
   KNOWN_TRANSFORMS,
 } = require('../manifestValidator');
-const chalk = require('chalk');
 
 // Mock console methods
 const mockConsole = () => {

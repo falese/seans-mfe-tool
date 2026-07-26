@@ -12,14 +12,13 @@
 import { RemoteMFE } from '../remote-mfe';
 import {
   createTestHarness,
-  createTestContext,
   createMockComponent,
   MFETestHarness,
   TelemetryCapture,
   ContextBuilder,
   MockDaemonWebSocketClient,
 } from './test-harness';
-import type { Context, LoadResult, RenderResult } from '../base-mfe';
+import type { Context } from '../base-mfe';
 import type { DSLManifest } from '@seans-mfe/dsl';
 
 /**
@@ -399,7 +398,7 @@ describe('RemoteMFE', () => {
     });
 
     it('should include capability in telemetry metadata', async () => {
-      const loadResult = await harness.testLoad();
+      await harness.testLoad();
       const loadTelemetry = harness.getTelemetry();
       const loadEvents = loadTelemetry.getEvents();
       

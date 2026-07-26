@@ -60,10 +60,6 @@ interface BffManifest {
   [key: string]: unknown;
 }
 
-async function readYaml<T = unknown>(filePath: string): Promise<T> {
-  return yaml.load(await fs.readFile(filePath, 'utf8')) as T;
-}
-
 async function writeYaml(filePath: string, value: unknown): Promise<void> {
   await fs.writeFile(filePath, yaml.dump(value), 'utf8');
 }

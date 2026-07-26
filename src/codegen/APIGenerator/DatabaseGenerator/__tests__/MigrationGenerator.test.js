@@ -1,8 +1,7 @@
 const { MigrationGenerator } = require('../generators/MigrationGenerator');
-const { 
-  simpleSchema, 
+const {
+  simpleSchema,
   relationshipSchema,
-  validationSchema,
   multiSchemaSpec
 } = require('./fixtures/openapi-schemas');
 const fs = require('fs-extra');

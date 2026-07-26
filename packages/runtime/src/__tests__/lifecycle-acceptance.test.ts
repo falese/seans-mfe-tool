@@ -51,25 +51,25 @@ class TestMFE extends BaseMFE {
 
 
   // Capability implementations
-  protected async doLoad(context: any) { this.calls.push('doLoad'); return { status: 'loaded', timestamp: new Date() }; }
-  protected async doRender(context: any) { this.calls.push('doRender'); return { element: null }; }
-  protected async doRefresh(context: any) { this.calls.push('doRefresh'); return { success: true }; }
-  protected async doAuthorizeAccess(context: any) { this.calls.push('doAuthorizeAccess'); return { authorized: true }; }
-  protected async doHealth(context: any) { this.calls.push('doHealth'); return { status: 'ok' }; }
-  protected async doDescribe(context: any) { this.calls.push('doDescribe'); return { description: 'desc' }; }
-  protected async doSchema(context: any) { this.calls.push('doSchema'); return { schema: {} }; }
-  protected async doQuery(context: any) { this.calls.push('doQuery'); return { data: 'ok' }; }
-  protected async doEmit(context: any) { this.calls.push('doEmit'); return { ok: true }; }
+  protected async doLoad(_context: any) { this.calls.push('doLoad'); return { status: 'loaded', timestamp: new Date() }; }
+  protected async doRender(_context: any) { this.calls.push('doRender'); return { element: null }; }
+  protected async doRefresh(_context: any) { this.calls.push('doRefresh'); return { success: true }; }
+  protected async doAuthorizeAccess(_context: any) { this.calls.push('doAuthorizeAccess'); return { authorized: true }; }
+  protected async doHealth(_context: any) { this.calls.push('doHealth'); return { status: 'ok' }; }
+  protected async doDescribe(_context: any) { this.calls.push('doDescribe'); return { description: 'desc' }; }
+  protected async doSchema(_context: any) { this.calls.push('doSchema'); return { schema: {} }; }
+  protected async doQuery(_context: any) { this.calls.push('doQuery'); return { data: 'ok' }; }
+  protected async doEmit(_context: any) { this.calls.push('doEmit'); return { ok: true }; }
   protected async doUpdateControlPlaneState(context: any) { this.calls.push('doUpdateControlPlaneState'); return { acknowledged: true, correlationId: context.requestId || 'test' }; }
 
   // Custom handlers referenced in tests
-  async validateInputs(context: any) { this.calls.push('validateInputs'); }
-  async runQuery(context: any) { this.calls.push('runQuery'); }
-  async logTelemetry(context: any) { this.calls.push('logTelemetry'); }
-  async hookA(context: any) { this.calls.push('hookA'); }
-  async hookB(context: any) { this.calls.push('hookB'); }
-  async step1(context: any) { this.calls.push('step1'); }
-  async step2(context: any) { this.calls.push('step2'); }
+  async validateInputs(_context: any) { this.calls.push('validateInputs'); }
+  async runQuery(_context: any) { this.calls.push('runQuery'); }
+  async logTelemetry(_context: any) { this.calls.push('logTelemetry'); }
+  async hookA(_context: any) { this.calls.push('hookA'); }
+  async hookB(_context: any) { this.calls.push('hookB'); }
+  async step1(_context: any) { this.calls.push('step1'); }
+  async step2(_context: any) { this.calls.push('step2'); }
 }
 
 function makeContext(overrides: any = {}) {
@@ -202,31 +202,31 @@ describe('Lifecycle Acceptance (REQ-042..045, REQ-054..056)', () => {
       ];
       mfe.calls = [];
       // render
-      const r = await mfe.render(makeContext({ capability: 'render' }));
+      await mfe.render(makeContext({ capability: 'render' }));
       expect(mfe.calls).toContain('doRender');
       // refresh
       mfe.calls = [];
-      const rf = await mfe.refresh(makeContext({ capability: 'refresh' }));
+      await mfe.refresh(makeContext({ capability: 'refresh' }));
       expect(mfe.calls).toContain('doRefresh');
       // authorizeAccess
       mfe.calls = [];
-      const aa = await mfe.authorizeAccess(makeContext({ capability: 'authorizeAccess' }));
+      await mfe.authorizeAccess(makeContext({ capability: 'authorizeAccess' }));
       expect(mfe.calls).toContain('doAuthorizeAccess');
       // health
       mfe.calls = [];
-      const h = await mfe.health(makeContext({ capability: 'health' }));
+      await mfe.health(makeContext({ capability: 'health' }));
       expect(mfe.calls).toContain('doHealth');
       // describe
       mfe.calls = [];
-      const d = await mfe.describe(makeContext({ capability: 'describe' }));
+      await mfe.describe(makeContext({ capability: 'describe' }));
       expect(mfe.calls).toContain('doDescribe');
       // schema
       mfe.calls = [];
-      const s = await mfe.schema(makeContext({ capability: 'schema' }));
+      await mfe.schema(makeContext({ capability: 'schema' }));
       expect(mfe.calls).toContain('doSchema');
       // emit
       mfe.calls = [];
-      const e = await mfe.emit(makeContext({ capability: 'emit' }));
+      await mfe.emit(makeContext({ capability: 'emit' }));
       expect(mfe.calls).toContain('doEmit');
     });
     });

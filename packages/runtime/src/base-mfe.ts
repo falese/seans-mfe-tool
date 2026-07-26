@@ -496,12 +496,10 @@ export abstract class BaseMFE {
     phase: string
   ): Promise<void> {
     // Handle array of handlers (REQ-045)
-    const handlers = Array.isArray(hookConfig.handler) 
-      ? hookConfig.handler 
+    const handlers = Array.isArray(hookConfig.handler)
+      ? hookConfig.handler
       : [hookConfig.handler];
-    
-    let lastError: Error | null = null;
-    
+
     for (const handlerName of handlers) {
       try {
         // Contained flag: wrap in try-catch (REQ-042)
@@ -518,7 +516,6 @@ export abstract class BaseMFE {
         }
       } catch (error) {
         // Handler failed
-        lastError = error as Error;
         await this.emitHookFailure(hookName, handlerName, error as Error, context, phase === 'main' ? 'error' : 'warn');
         
         // REQ-042: Main phase failures propagate immediately

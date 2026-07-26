@@ -1,12 +1,10 @@
 // src/commands/__tests__/create-api.test.js
 // Import test utils first to activate module mocks
-const { 
-  mockProcessExit, 
-  mockConsole, 
+const {
+  mockProcessExit,
+  mockConsole,
   setupCommonMocks,
   mockFs,
-  mockExec,
-  expectProcessExit,
   createTestData
 } = require('./test-utils');
 

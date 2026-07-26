@@ -47,8 +47,9 @@ export async function bffBuildCommand(
             stdio: 'inherit',
           });
           execSync('npx mesh build', { cwd: targetDir, stdio: 'inherit' });
-        } catch (installErr) {
-          throw new NetworkError('Failed to install or run @graphql-mesh/cli', 1);
+        } catch (installErr: unknown) {
+          const detail = installErr instanceof Error ? installErr.message : String(installErr);
+          throw new NetworkError(`Failed to install or run @graphql-mesh/cli: ${detail}`, 1);
         }
       } else {
         throw meshError;

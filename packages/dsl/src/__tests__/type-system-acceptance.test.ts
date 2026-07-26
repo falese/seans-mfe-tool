@@ -3,8 +3,6 @@
  * REQ-047
  */
 
-import { jest } from '@jest/globals';
-
 const { parseType, toGraphQLType, toTypeScriptType, toPythonType, generateZodSchema, validateValue } = require('../type-system');
 
 describe('Type System Acceptance (REQ-047)', () => {

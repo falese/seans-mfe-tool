@@ -14,7 +14,6 @@
  */
 
 import { spawn } from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs-extra';
 import { loadToolRegistry, buildArgv, McpToolDefinition } from './tool-registry';
 import type { CommandResult } from '@seans-mfe/contracts';
@@ -90,7 +89,7 @@ export async function executeToolCall(
     child.stdout.on('data', (chunk: Buffer) => { stdout += chunk.toString(); });
     child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
 
-    child.on('close', (code) => {
+    child.on('close', () => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -157,7 +156,7 @@ export async function startMcpServer(options: McpServerOptions): Promise<void> {
         if (response !== null) {
           process.stdout.write(JSON.stringify(response) + '\n');
         }
-      } catch (err) {
+      } catch {
         const errResponse = {
           jsonrpc: '2.0',
           id: null,
@@ -168,6 +167,9 @@ export async function startMcpServer(options: McpServerOptions): Promise<void> {
     }
   });
 
+  // This is the process's own stdio loop ending (parent disconnected) —
+  // there is no caller above it to throw to.
+  // eslint-disable-next-line no-process-exit
   process.stdin.on('end', () => { process.exit(0); });
 }
 

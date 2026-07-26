@@ -6,8 +6,6 @@
  * Supports GraphQL nullability conventions: nullable by default, ! for required.
  */
 
-import { z } from 'zod';
-
 // =============================================================================
 // Type Definitions
 // =============================================================================

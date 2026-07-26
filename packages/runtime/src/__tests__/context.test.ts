@@ -5,7 +5,6 @@
  */
 
 import {
-  Context,
   UserContext,
   ContextFactory,
   ContextValidator,

@@ -11,7 +11,6 @@ const os = require('os');
 const path = require('path');
 
 const { NameGenerator } = require('../utils/NameGenerator');
-const { PathGenerator } = require('../utils/PathGenerator');
 const { RouteGenerator } = require('../RouteGenerator/RouteGenerator');
 const { ControllerGenerator } = require('../ControllerGenerator/ControllerGenerator');
 const { DatabaseAdapter } = require('../ControllerGenerator/adapters/DatabaseAdapter');

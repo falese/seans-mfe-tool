@@ -127,7 +127,7 @@ describe('withTimeout - quick tests', () => {
 
     try {
       await promise;
-    } catch (error) {
+    } catch {
       // Expected
     }
 

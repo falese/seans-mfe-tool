@@ -54,7 +54,7 @@ export default class MockModuleFederationContainer {
     });
   }
 
-  async init(shared: any): Promise<void> {
+  async init(_shared: any): Promise<void> {
     this.initCalled = true;
     // Simulate async init with immediate resolution (no setTimeout)
     await Promise.resolve();
@@ -528,7 +528,7 @@ export function createTestHarness(config: MFETestHarnessConfig): MFETestHarness 
  * Create a context for testing
  */
 export function createTestContext(overrides?: Partial<Context>): Context {
-  return new ContextBuilder().build();
+  return overrides ? { ...new ContextBuilder().build(), ...overrides } : new ContextBuilder().build();
 }
 
 /**

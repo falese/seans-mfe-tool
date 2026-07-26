@@ -1,7 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
-const { SchemaGenerator } = require('../utils/SchemaGenerator');
 const { PathGenerator } = require('../utils/PathGenerator');
 const { NameGenerator } = require('../utils/NameGenerator');
 

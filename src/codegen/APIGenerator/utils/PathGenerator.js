@@ -10,7 +10,7 @@ class PathGenerator {
     const routes = [];
 
     paths.forEach(([path, operations]) => {
-      const { parameters: pathParams, ...pathOperations } = operations;
+      const { parameters: _pathParams, ...pathOperations } = operations;
       
       Object.entries(pathOperations).forEach(([method, operation]) => {
         const functionName = this.generateMethodName(method, resourceName, path, operation);
@@ -21,7 +21,7 @@ class PathGenerator {
           validationSchemas.push(validationSchema);
         }
 
-        const route = this.generateRoute(method, path, functionName, operation, resourceName);
+        const route = this.generateRoute(method, path, functionName, operation);
         routes.push(route);
         console.log("is it the path", path)
       });
@@ -40,8 +40,8 @@ class PathGenerator {
     return NameGenerator.generateControllerMethodName(method, resourceName, path, operation);
   }
 
-  static generateRoute(method, path, functionName, operation, resourceName) {
-    const routePath = this.normalizeRoutePath(path, resourceName);
+  static generateRoute(method, path, functionName, operation) {
+    const routePath = this.normalizeRoutePath(path);
     const middlewares = this.generateMiddleware(operation);
     
     let routeStr = `router.${method.toLowerCase()}('${routePath}'`;
@@ -55,7 +55,7 @@ class PathGenerator {
     return `${routeStr});`;
   }
 
-  static normalizeRoutePath(path, resourceName) {
+  static normalizeRoutePath(path) {
     // The router is mounted at the resource's URL segment, so strip the
     // path's own first segment. resourceName may be camelCased while the
     // URL segment is snake_case/kebab-case, so cutting by the derived name
