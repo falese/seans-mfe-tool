@@ -27,14 +27,20 @@ export type { ModuleFederationContainer } from './base-remote-mfe';
  * Mounts React components via React 18 createRoot. Tracks a root per
  * containerId so re-renders reuse the root and cleanup unmounts it.
  */
+/** The subset of react-dom/client's Root surface this file uses. */
+interface ReactRootLike {
+  render(node: unknown): void;
+  unmount(): void;
+}
+
 export class RemoteMFE extends BaseRemoteMFE {
   /** React roots keyed by containerId — reused on re-render, unmounted on cleanup */
-  private reactRoots: Map<string, any> = new Map();
+  private reactRoots: Map<string, ReactRootLike> = new Map();
 
   /**
    * Get shared dependencies for Module Federation
    */
-  protected getSharedDependencies(): Record<string, any> {
+  protected getSharedDependencies(): Record<string, unknown> {
     // Return shared dependencies (React, ReactDOM, etc.)
     return {
       react: { version: '18.2.0', singleton: true },
@@ -47,10 +53,10 @@ export class RemoteMFE extends BaseRemoteMFE {
    * Reuses an existing root for the containerId when re-rendering.
    */
   protected async mountComponent(
-    Component: any,
-    props: Record<string, any>,
+    Component: unknown,
+    props: Record<string, unknown>,
     containerId: string
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (typeof document === 'undefined') {
       throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
     }
@@ -79,7 +85,11 @@ export class RemoteMFE extends BaseRemoteMFE {
     const ErrorBoundary = createErrorBoundary(React, (error, info) => {
       console.error('[RemoteMFE] render error in remote component', error, info);
     });
-    root.render(createElement(ErrorBoundary, null, createElement(Component, props)));
+    // Component arrives as `unknown` (the base class's framework-neutral
+    // contract); by this point in the mount lifecycle it is guaranteed to be
+    // a valid React component type, which is what this cast asserts.
+    const ReactComponent = Component as Parameters<typeof createElement>[0];
+    root.render(createElement(ErrorBoundary, null, createElement(ReactComponent, props)));
 
     return element;
   }

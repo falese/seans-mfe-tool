@@ -53,9 +53,9 @@ module.exports = tseslint.config(
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
-      // `any` is discouraged (see CLAUDE.md) but flagged as a warning so the
-      // gate surfaces it without blocking incremental cleanup.
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // `any` is forbidden in production code (CLAUDE.md, ADR-023) — narrow to
+      // `unknown` and guard instead. Tests get a looser override below.
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-require-imports': 'off',
       // Browser-only dynamic imports legitimately need @ts-ignore because their
       // types are not present in the root tsconfig. Require a description so the

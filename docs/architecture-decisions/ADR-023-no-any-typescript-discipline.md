@@ -1,11 +1,11 @@
 ---
 id: 0023
 title: No-any TypeScript discipline — use unknown and narrow
-status: Accepted
+status: Implemented
 date: 2026-04-18
 deciders: [sean]
 area: TypeScript
-enforcement: convention
+enforcement: code
 tags: [typescript, type-safety, contracts, code-quality]
 relates-to: []
 supersedes: []
@@ -15,6 +15,7 @@ implemented-by:
   - eslint.config.js
 verified-by:
   - lint
+tracked-by: ["#321"]
 summary: >-
   The any type is forbidden in all src/ and packages/ code; unknown is used at system boundaries
   and narrowed via type guards or Zod parse before use.

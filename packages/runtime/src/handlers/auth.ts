@@ -15,7 +15,8 @@ import type { Context } from '../context';
 export async function validateJWT(context: Context): Promise<void> {
   const token = context.jwt;
   const emit = typeof context.emit === 'function' ? context.emit : undefined;
-  const secret = (globalThis as any).process?.env?.JWT_SECRET as string | undefined;
+  const secret = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process?.env?.JWT_SECRET;
   if (!token) {
     if (emit) {
       await emit({

@@ -1,7 +1,7 @@
 ---
 id: 0015
 title: oclif as CLI framework — replace Commander
-status: Accepted
+status: Implemented
 date: 2026-04-17
 deciders: [sean]
 area: CLI

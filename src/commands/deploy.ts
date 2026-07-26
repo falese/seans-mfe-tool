@@ -16,6 +16,19 @@ interface DeployOptions {
   logs?: boolean;
 }
 
+// A caught `unknown` is not always an Error (e.g. a rejected promise can
+// reject with anything) — these two helpers are the single, tested narrowing
+// point every catch block in this file uses, instead of repeating the
+// `instanceof Error` ternary (and its untested non-Error branch) at each
+// call site.
+function asError(error: unknown): Error | undefined {
+  return error instanceof Error ? error : undefined;
+}
+
+function errorMessage(error: unknown): string {
+  return asError(error)?.message ?? String(error);
+}
+
 // Keep track of temp directories for cleanup
 const tempDirs = new Set<string>();
 
@@ -28,9 +41,9 @@ async function cleanupTempDirs(): Promise<void> {
         await fs.remove(dir);
         console.log(chalk.green('✓ Cleanup complete'));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(chalk.yellow(`Warning: Failed to clean up directory: ${dir}`));
-      console.error(chalk.gray(error.message));
+      console.error(chalk.gray(errorMessage(error)));
     }
   }
   tempDirs.clear();
@@ -159,8 +172,8 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
           env: { ...process.env, DOCKER_BUILDKIT: '1' }
         }
       );
-    } catch (error: any) {
-      if (String(error.message || '').includes('Build failed')) {
+    } catch (error: unknown) {
+      if (errorMessage(error).includes('Build failed')) {
         throw error;
       }
       // Swallow unexpected first-call errors (e.g., unit test setup)
@@ -204,9 +217,9 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
       execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(chalk.red('\n✗ Development deployment failed:'));
-    console.error(error.message);
+    console.error(errorMessage(error));
     throw error;
   } finally {
     await cleanupTempDirs();
@@ -284,12 +297,13 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
       generatedFiles: [],
       dryRun: false,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(chalk.red('\n✗ Deployment failed:'));
-    console.error(chalk.red(error.message));
-    if (error.stack && process.env.DEBUG) {
+    console.error(chalk.red(errorMessage(error)));
+    const err = asError(error);
+    if (err?.stack && process.env.DEBUG) {
       console.error(chalk.gray('\nStack trace:'));
-      console.error(error.stack);
+      console.error(err.stack);
     }
     throw error;
   }
@@ -337,6 +351,12 @@ export default class Deploy extends BaseCommand<DeployResult> {
 
   protected async runCommand(): Promise<DeployResult> {
     const { args, flags } = await this.parse(Deploy)
-    return deployCommand({ name: args.name, ...flags, dryRun: flags['dry-run'] } as any)
+    return deployCommand({
+      name: args.name,
+      type: flags.type,
+      env: flags.env,
+      port: Number(flags.port),
+      dryRun: flags['dry-run'],
+    })
   }
 }

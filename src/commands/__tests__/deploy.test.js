@@ -218,6 +218,24 @@ describe('Deploy Command', () => {
 
       await expect(deployCommand(options)).rejects.toThrow('Missing required files');
     });
+
+    it('should handle a non-Error value thrown during deployment', async () => {
+      const options = {
+        name: 'test-app',
+        type: 'shell',
+        env: 'development',
+        port: 3000
+      };
+
+      // A rejected promise (or a thrown value from third-party code) is not
+      // guaranteed to be an Error instance — the failure path must not assume
+      // `.message`/`.stack` exist.
+      execSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(deployCommand(options)).rejects.toBe('boom');
+    });
   });
 
   describe('Edge cases', () => {

@@ -1,7 +1,7 @@
 ---
 id: 0019
 title: MCP child-process isolation — spawn seans-mfe-tool per tool call
-status: Accepted
+status: Implemented
 date: 2026-04-18
 deciders: [sean]
 area: MCP

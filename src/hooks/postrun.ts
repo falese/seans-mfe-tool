@@ -87,6 +87,15 @@ function markDaemonOffline(): void {
 // WebSocket emission
 // ---------------------------------------------------------------------------
 
+/** The subset of the WebSocket surface (native or the 'ws' package) this hook uses. */
+interface MinimalWebSocket {
+  close(): void;
+  send(data: string): void;
+  addEventListener(type: 'open' | 'error' | 'close', listener: () => void): void;
+  addEventListener(type: 'message', listener: (event: { data: unknown }) => void): void;
+}
+type WebSocketCtor = new (url: string, protocols?: string | string[]) => MinimalWebSocket;
+
 function emitTelemetry(url: string, message: Message, timeoutMs: number): Promise<void> {
   // Use native WebSocket (Node 22+) or fall back to the 'ws' package
   const WS = getWebSocketClass();
@@ -100,15 +109,15 @@ function emitTelemetry(url: string, message: Message, timeoutMs: number): Promis
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      try { (ws as any).close(); } catch { /* ignore */ }
+      try { ws.close(); } catch { /* ignore */ }
       reject(new Error('daemon connection timeout'));
     }, timeoutMs);
 
-    (ws as any).addEventListener('open', () => {
+    ws.addEventListener('open', () => {
       try {
         // graphql-transport-ws: send connection_init then our payload
-        (ws as any).send(JSON.stringify({ type: 'connection_init', payload: {} }));
-        (ws as any).send(JSON.stringify({
+        ws.send(JSON.stringify({ type: 'connection_init', payload: {} }));
+        ws.send(JSON.stringify({
           type: 'subscribe',
           id: randomUUID(),
           payload: {
@@ -121,7 +130,7 @@ function emitTelemetry(url: string, message: Message, timeoutMs: number): Promis
       }
     });
 
-    (ws as any).addEventListener('message', (event: { data: unknown }) => {
+    ws.addEventListener('message', (event: { data: unknown }) => {
       try {
         const msg = JSON.parse(event.data as string) as Record<string, unknown>;
         if (msg['type'] === 'connection_ack') {
@@ -129,20 +138,20 @@ function emitTelemetry(url: string, message: Message, timeoutMs: number): Promis
           if (settled) return;
           settled = true;
           clearTimeout(timer);
-          try { (ws as any).close(); } catch { /* ignore */ }
+          try { ws.close(); } catch { /* ignore */ }
           resolve();
         }
       } catch { /* ignore malformed frames */ }
     });
 
-    (ws as any).addEventListener('error', () => {
+    ws.addEventListener('error', () => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       reject(new Error('daemon WebSocket error'));
     });
 
-    (ws as any).addEventListener('close', () => {
+    ws.addEventListener('close', () => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -152,16 +161,17 @@ function emitTelemetry(url: string, message: Message, timeoutMs: number): Promis
   });
 }
 
-function getWebSocketClass(): (new (url: string, protocols?: string | string[]) => unknown) | null {
+function getWebSocketClass(): WebSocketCtor | null {
   // Node 22+ native WebSocket
-  if (typeof (globalThis as any).WebSocket !== 'undefined') {
-    return (globalThis as any).WebSocket;
+  const globalWebSocket = (globalThis as { WebSocket?: unknown }).WebSocket;
+  if (typeof globalWebSocket !== 'undefined') {
+    return globalWebSocket as WebSocketCtor;
   }
   // 'ws' npm package
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const ws = require('ws') as { default?: unknown };
-    return (ws.default ?? ws) as any;
+    return (ws.default ?? ws) as WebSocketCtor;
   } catch {
     return null;
   }

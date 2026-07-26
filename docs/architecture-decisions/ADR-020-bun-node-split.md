@@ -1,7 +1,7 @@
 ---
 id: 0020
 title: Bun for dev entry, Node for published entry — permanent split
-status: Accepted
+status: Implemented
 date: 2026-04-17
 deciders: [sean]
 area: CLI dev workflow

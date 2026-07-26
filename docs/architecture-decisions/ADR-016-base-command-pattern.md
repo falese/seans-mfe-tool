@@ -1,7 +1,7 @@
 ---
 id: 0016
 title: BaseCommand pattern — every oclif command extends BaseCommand
-status: Accepted
+status: Implemented
 date: 2026-04-18
 deciders: [sean]
 area: CLI / contracts

@@ -183,7 +183,7 @@ export const DataTransformSchema = z.record(z.string(), z.unknown()).superRefine
   
   for (const name of transformNames) {
     // Check if this looks like a plugin that was put in transforms
-    if (KNOWN_PLUGINS.includes(name as any)) {
+    if ((KNOWN_PLUGINS as readonly string[]).includes(name)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `"${name}" is a plugin, not a transform. Move it to the plugins section.`,
@@ -229,7 +229,7 @@ export const DataPluginSchema = z.record(z.string(), z.unknown()).superRefine((v
   
   for (const name of pluginNames) {
     // Check if this looks like a transform that was put in plugins
-    if (KNOWN_TRANSFORMS.includes(name as any)) {
+    if ((KNOWN_TRANSFORMS as readonly string[]).includes(name)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `"${name}" is a transform, not a plugin. Move it to the transforms section.`,

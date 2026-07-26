@@ -24,6 +24,25 @@ export interface ErrorHandlingConfig {
 }
 
 /**
+ * The shape a typed error from @seans-mfe/contracts (or a duck-typed
+ * equivalent) may carry. `type` is the only field classifyError requires;
+ * the rest vary by error class (e.g. only ValidationError sets `field`).
+ */
+interface TypedErrorLike {
+  type: string;
+  retryable?: boolean;
+  userFacing?: boolean;
+  auditLog?: boolean;
+  userMessage?: string;
+  field?: string;
+}
+
+function asTypedError(error: Error): (Error & TypedErrorLike) | undefined {
+  const candidate = error as unknown as Record<string, unknown>;
+  return typeof candidate.type === 'string' ? (error as Error & TypedErrorLike) : undefined;
+}
+
+/**
  * Classifies an error using hybrid detection:
  * 1. Check for typed error (has 'type' property)
  * 2. Pattern match error message against config
@@ -32,10 +51,10 @@ export interface ErrorHandlingConfig {
  * ADR-030: Error Classification with Hybrid Detection
  */
 export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorClassification {
-  if ('type' in error && typeof (error as any).type === 'string') {
-    const typedError = error as any;
+  const typedError = asTypedError(error);
+  if (typedError) {
     return {
-      type: typedError.type,
+      type: typedError.type as ErrorClassification['type'],
       retryable: typedError.retryable ?? false,
       userFacing: typedError.userFacing ?? false,
       auditLog: typedError.auditLog ?? false,
@@ -48,7 +67,7 @@ export function classifyError(error: Error, config: ErrorHandlingConfig): ErrorC
       const regex = new RegExp(typeConfig.pattern, 'i');
       if (regex.test(error.message)) {
         return {
-          type: typeConfig.type as any,
+          type: typeConfig.type as ErrorClassification['type'],
           retryable: typeConfig.retryable,
           userFacing: typeConfig.userFacing,
           userMessage: typeConfig.message,
@@ -66,7 +85,7 @@ export function formatErrorResponse(error: Error, classification: ErrorClassific
       error: {
         type: classification.type,
         message: classification.userMessage || error.message,
-        field: (error as any).field,
+        field: asTypedError(error)?.field,
         code: `ERR_${classification.type.toUpperCase()}`,
       },
     };

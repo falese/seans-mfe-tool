@@ -2,6 +2,9 @@
 id: 0039
 title: Structured logger — no console.log in production code
 status: Accepted
+impl:
+  stage: deferred
+  refs: ["#322"]
 date: 2026-04-18
 deciders: [sean]
 area: CLI / logging
