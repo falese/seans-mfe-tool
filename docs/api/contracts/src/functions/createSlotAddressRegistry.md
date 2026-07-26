@@ -8,7 +8,7 @@
 
 > **createSlotAddressRegistry**(`providers`): [`SlotAddressRegistry`](../interfaces/SlotAddressRegistry.md)
 
-Defined in: packages/contracts/src/slot-contract.ts:172
+Defined in: [packages/contracts/src/slot-contract.ts:172](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L172)
 
 Build the fleet's address space from the providers' manifests.
 

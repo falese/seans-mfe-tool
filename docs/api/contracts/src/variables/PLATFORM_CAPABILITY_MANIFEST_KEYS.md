@@ -8,7 +8,7 @@
 
 > `const` **PLATFORM\_CAPABILITY\_MANIFEST\_KEYS**: readonly `string`[]
 
-Defined in: packages/contracts/src/platform-contract.ts:288
+Defined in: [packages/contracts/src/platform-contract.ts:288](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L288)
 
 Every spelling a manifest may use as a platform capability entry key — both
 the camelCase name and the PascalCase manifest key. Consumers that classify

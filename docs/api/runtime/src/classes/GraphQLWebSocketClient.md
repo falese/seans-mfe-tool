@@ -6,7 +6,7 @@
 
 # Class: GraphQLWebSocketClient
 
-Defined in: packages/runtime/src/graphql-ws-client.ts:71
+Defined in: [packages/runtime/src/graphql-ws-client.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L71)
 
 Concrete implementation of DaemonWebSocketClient.
 
@@ -29,7 +29,7 @@ immediately after to free server-side resources.
 
 > **new GraphQLWebSocketClient**(`socket`): `GraphQLWebSocketClient`
 
-Defined in: packages/runtime/src/graphql-ws-client.ts:74
+Defined in: [packages/runtime/src/graphql-ws-client.ts:74](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L74)
 
 #### Parameters
 
@@ -49,7 +49,7 @@ Defined in: packages/runtime/src/graphql-ws-client.ts:74
 
 > **get** **connected**(): `boolean`
 
-Defined in: packages/runtime/src/graphql-ws-client.ts:78
+Defined in: [packages/runtime/src/graphql-ws-client.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L78)
 
 True when the underlying socket is open and ready to send frames.
 
@@ -69,7 +69,7 @@ True when the underlying socket is open and ready to send frames.
 
 > **mutation**(`query`, `variables`, `timeoutMs`): `Promise`\<`boolean`\>
 
-Defined in: packages/runtime/src/graphql-ws-client.ts:82
+Defined in: [packages/runtime/src/graphql-ws-client.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L82)
 
 Execute a GraphQL mutation over the existing WS connection using the
 graphql-transport-ws subscribe/next/complete protocol.

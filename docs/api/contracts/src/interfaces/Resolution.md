@@ -6,7 +6,7 @@
 
 # Interface: Resolution
 
-Defined in: packages/contracts/src/messages.ts:79
+Defined in: [packages/contracts/src/messages.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L79)
 
 The registry's answer to "what should render for this state change?":
 which MFE, which domain capability, and the props to render it with.
@@ -17,7 +17,7 @@ which MFE, which domain capability, and the props to render it with.
 
 > **capability**: `string`
 
-Defined in: packages/contracts/src/messages.ts:81
+Defined in: [packages/contracts/src/messages.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L81)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: packages/contracts/src/messages.ts:81
 
 > **mfe**: `string`
 
-Defined in: packages/contracts/src/messages.ts:80
+Defined in: [packages/contracts/src/messages.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L80)
 
 ***
 
@@ -33,4 +33,4 @@ Defined in: packages/contracts/src/messages.ts:80
 
 > **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/contracts/src/messages.ts:82
+Defined in: [packages/contracts/src/messages.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L82)

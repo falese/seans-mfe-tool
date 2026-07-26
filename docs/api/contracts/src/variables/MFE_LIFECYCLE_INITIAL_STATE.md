@@ -8,6 +8,6 @@
 
 > `const` **MFE\_LIFECYCLE\_INITIAL\_STATE**: [`MfeLifecycleState`](../type-aliases/MfeLifecycleState.md) = `'uninitialized'`
 
-Defined in: packages/contracts/src/platform-contract.ts:49
+Defined in: [packages/contracts/src/platform-contract.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L49)
 
 The state every MFE is constructed in.

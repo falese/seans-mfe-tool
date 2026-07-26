@@ -8,4 +8,4 @@
 
 > **ControlPlaneStatus** = `"idle"` \| `"starting"` \| `"running"` \| `"stopping"` \| `"stopped"` \| `"error"`
 
-Defined in: packages/runtime/src/base-control-plane.ts:37
+Defined in: [packages/runtime/src/base-control-plane.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L37)

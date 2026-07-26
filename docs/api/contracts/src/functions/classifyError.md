@@ -8,7 +8,7 @@
 
 > **classifyError**(`error`, `config`): [`ErrorClassification`](../interfaces/ErrorClassification.md)
 
-Defined in: packages/contracts/src/error-classifier.ts:53
+Defined in: [packages/contracts/src/error-classifier.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L53)
 
 Classifies an error using hybrid detection:
 1. Check for typed error (has 'type' property)

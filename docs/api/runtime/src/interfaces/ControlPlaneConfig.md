@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneConfig
 
-Defined in: packages/runtime/src/base-control-plane.ts:60
+Defined in: [packages/runtime/src/base-control-plane.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L60)
 
 Constructor configuration accepted by every control-plane implementation.
 
@@ -20,7 +20,7 @@ binary).
 
 > `optional` **adaptors**: `Record`\<`string`, [`ExperienceAdaptor`](ExperienceAdaptor.md)\>
 
-Defined in: packages/runtime/src/base-control-plane.ts:85
+Defined in: [packages/runtime/src/base-control-plane.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L85)
 
 Custom content-type adaptors merged with the built-in set.
 Use sparingly — prefer the built-in adaptors (module-federation,
@@ -32,7 +32,7 @@ text/html, application/json).
 
 > **container**: [`LayoutHostLike`](LayoutHostLike.md)
 
-Defined in: packages/runtime/src/base-control-plane.ts:62
+Defined in: [packages/runtime/src/base-control-plane.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L62)
 
 Host element (or structural equivalent) LayoutManager mounts into.
 
@@ -42,7 +42,7 @@ Host element (or structural equivalent) LayoutManager mounts into.
 
 > `optional` **hostFramework**: `string`
 
-Defined in: packages/runtime/src/base-control-plane.ts:72
+Defined in: [packages/runtime/src/base-control-plane.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L72)
 
 The host shell's framework (e.g. `'react'`).
 When set, LayoutManager uses ADR-056 handle negotiation: MFEs that expose a
@@ -56,7 +56,7 @@ every MFE then composes via its guaranteed imperative handle (isolation).
 
 > `optional` **onError**: (`message`) => `void`
 
-Defined in: packages/runtime/src/base-control-plane.ts:89
+Defined in: [packages/runtime/src/base-control-plane.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L89)
 
 Called when LayoutManager encounters a mounting error.
 
@@ -76,7 +76,7 @@ Called when LayoutManager encounters a mounting error.
 
 > `optional` **onStatus**: (`status`) => `void`
 
-Defined in: packages/runtime/src/base-control-plane.ts:87
+Defined in: [packages/runtime/src/base-control-plane.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L87)
 
 Called when the daemon transport status changes.
 
@@ -96,7 +96,7 @@ Called when the daemon transport status changes.
 
 > `optional` **providerValues**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/runtime/src/base-control-plane.ts:79
+Defined in: [packages/runtime/src/base-control-plane.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L79)
 
 Host-injected provider values (theme, locale, auth claims, router state, …)
 delivered to every composed MFE as `props.hostContext` (ADR-060
@@ -109,6 +109,6 @@ these — context reaches the MFE without a shared reconciler.
 
 > `optional` **session**: [`SessionContext`](../../../contracts/src/interfaces/SessionContext.md)
 
-Defined in: packages/runtime/src/base-control-plane.ts:64
+Defined in: [packages/runtime/src/base-control-plane.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L64)
 
 Session context threaded into every action (user, jwt, locale).

@@ -6,7 +6,7 @@
 
 # Interface: ErrorHandlingState
 
-Defined in: packages/runtime/src/handlers/error-handling.ts:4
+Defined in: [packages/runtime/src/handlers/error-handling.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L4)
 
 Error-handling state this handler owns on the context.
 
@@ -16,7 +16,7 @@ Error-handling state this handler owns on the context.
 
 > `optional` **fallbackApplied**: `boolean`
 
-Defined in: packages/runtime/src/handlers/error-handling.ts:6
+Defined in: [packages/runtime/src/handlers/error-handling.ts:6](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L6)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/runtime/src/handlers/error-handling.ts:6
 
 > `optional` **recoverable**: `boolean`
 
-Defined in: packages/runtime/src/handlers/error-handling.ts:5
+Defined in: [packages/runtime/src/handlers/error-handling.ts:5](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L5)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: packages/runtime/src/handlers/error-handling.ts:5
 
 > `optional` **retryStrategy**: `"exponential"` \| `"linear"` \| `"none"`
 
-Defined in: packages/runtime/src/handlers/error-handling.ts:7
+Defined in: [packages/runtime/src/handlers/error-handling.ts:7](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L7)

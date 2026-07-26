@@ -8,7 +8,7 @@
 
 > **isValidLifecycleTransition**(`from`, `to`): `boolean`
 
-Defined in: packages/contracts/src/platform-contract.ts:76
+Defined in: [packages/contracts/src/platform-contract.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L76)
 
 Whether `from → to` is an edge of the machine.
 

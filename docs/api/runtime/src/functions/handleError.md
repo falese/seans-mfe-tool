@@ -8,7 +8,7 @@
 
 > **handleError**(`context`, `error?`): `Promise`\<`void`\>
 
-Defined in: packages/runtime/src/handlers/error-handling.ts:25
+Defined in: [packages/runtime/src/handlers/error-handling.ts:25](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L25)
 
 `error` is optional because this handler is dispatched by name
 (`platform.handleError`, ADR-076) with only `context` — the engine sets

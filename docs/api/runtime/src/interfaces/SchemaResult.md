@@ -6,7 +6,7 @@
 
 # Interface: SchemaResult
 
-Defined in: packages/runtime/src/base-mfe.ts:143
+Defined in: [packages/runtime/src/base-mfe.ts:143](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L143)
 
 Result from schema capability
 
@@ -16,7 +16,7 @@ Result from schema capability
 
 > **format**: `"openapi"` \| `"graphql"` \| `"json"`
 
-Defined in: packages/runtime/src/base-mfe.ts:145
+Defined in: [packages/runtime/src/base-mfe.ts:145](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L145)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: packages/runtime/src/base-mfe.ts:145
 
 > **schema**: `string`
 
-Defined in: packages/runtime/src/base-mfe.ts:144
+Defined in: [packages/runtime/src/base-mfe.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L144)

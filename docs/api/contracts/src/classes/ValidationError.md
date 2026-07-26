@@ -6,7 +6,7 @@
 
 # Class: ValidationError
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:1
+Defined in: [packages/contracts/src/errors/ValidationError.ts:1](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L1)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:1
 
 > **new ValidationError**(`message`, `field`, `constraint`): `ValidationError`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:8
+Defined in: [packages/contracts/src/errors/ValidationError.ts:8](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L8)
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:8
 
 > **constraint**: `string`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:6
+Defined in: [packages/contracts/src/errors/ValidationError.ts:6](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L6)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:6
 
 > **field**: `string`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:5
+Defined in: [packages/contracts/src/errors/ValidationError.ts:5](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L5)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:5
 
 > `readonly` **retryable**: `false` = `false`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:3
+Defined in: [packages/contracts/src/errors/ValidationError.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L3)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:3
 
 > `readonly` **type**: `"validation"` = `'validation'`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:2
+Defined in: [packages/contracts/src/errors/ValidationError.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L2)
 
 ***
 
@@ -80,4 +80,4 @@ Defined in: packages/contracts/src/errors/ValidationError.ts:2
 
 > `readonly` **userFacing**: `true` = `true`
 
-Defined in: packages/contracts/src/errors/ValidationError.ts:4
+Defined in: [packages/contracts/src/errors/ValidationError.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/ValidationError.ts#L4)

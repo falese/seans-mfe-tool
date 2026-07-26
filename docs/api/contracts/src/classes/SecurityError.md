@@ -6,7 +6,7 @@
 
 # Class: SecurityError
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:1
+Defined in: [packages/contracts/src/errors/SecurityError.ts:1](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L1)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:1
 
 > **new SecurityError**(`message`, `details?`): `SecurityError`
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:8
+Defined in: [packages/contracts/src/errors/SecurityError.ts:8](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L8)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:8
 
 > `readonly` **auditLog**: `true` = `true`
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:4
+Defined in: [packages/contracts/src/errors/SecurityError.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L4)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:4
 
 > `optional` **details**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:6
+Defined in: [packages/contracts/src/errors/SecurityError.ts:6](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L6)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:6
 
 > `readonly` **retryable**: `false` = `false`
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:3
+Defined in: [packages/contracts/src/errors/SecurityError.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L3)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:3
 
 > `readonly` **type**: `"security"` = `'security'`
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:2
+Defined in: [packages/contracts/src/errors/SecurityError.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L2)
 
 ***
 
@@ -76,4 +76,4 @@ Defined in: packages/contracts/src/errors/SecurityError.ts:2
 
 > `readonly` **userMessage**: `"Access denied"` = `'Access denied'`
 
-Defined in: packages/contracts/src/errors/SecurityError.ts:5
+Defined in: [packages/contracts/src/errors/SecurityError.ts:5](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SecurityError.ts#L5)

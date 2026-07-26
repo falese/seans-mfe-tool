@@ -8,7 +8,7 @@
 
 > **CommandResult**\<`T`\> = `object`
 
-Defined in: packages/contracts/src/envelope.ts:57
+Defined in: [packages/contracts/src/envelope.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L57)
 
 ## Type Parameters
 
@@ -22,7 +22,7 @@ Defined in: packages/contracts/src/envelope.ts:57
 
 > `optional` **data**: `T`
 
-Defined in: packages/contracts/src/envelope.ts:59
+Defined in: [packages/contracts/src/envelope.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L59)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/contracts/src/envelope.ts:59
 
 > `optional` **error**: [`CommandError`](CommandError.md)
 
-Defined in: packages/contracts/src/envelope.ts:60
+Defined in: [packages/contracts/src/envelope.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L60)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: packages/contracts/src/envelope.ts:60
 
 > **ok**: `boolean`
 
-Defined in: packages/contracts/src/envelope.ts:58
+Defined in: [packages/contracts/src/envelope.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L58)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: packages/contracts/src/envelope.ts:58
 
 > **telemetry**: `object`
 
-Defined in: packages/contracts/src/envelope.ts:62
+Defined in: [packages/contracts/src/envelope.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L62)
 
 #### correlationId
 
@@ -62,4 +62,4 @@ Defined in: packages/contracts/src/envelope.ts:62
 
 > **warnings**: `string`[]
 
-Defined in: packages/contracts/src/envelope.ts:61
+Defined in: [packages/contracts/src/envelope.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L61)

@@ -6,7 +6,7 @@
 
 # Interface: DaemonEnvelope
 
-Defined in: packages/runtime/src/layout-transport.ts:30
+Defined in: [packages/runtime/src/layout-transport.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L30)
 
 The transport envelope delivered on the daemon's `messages` subscription.
 
@@ -23,7 +23,7 @@ component type (ADR-054 "Wire envelope vs logical message").
 
 > `optional` **direction**: `string`
 
-Defined in: packages/runtime/src/layout-transport.ts:31
+Defined in: [packages/runtime/src/layout-transport.ts:31](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L31)
 
 ***
 
@@ -31,7 +31,7 @@ Defined in: packages/runtime/src/layout-transport.ts:31
 
 > `optional` **kind**: `string`
 
-Defined in: packages/runtime/src/layout-transport.ts:32
+Defined in: [packages/runtime/src/layout-transport.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L32)
 
 ***
 
@@ -39,7 +39,7 @@ Defined in: packages/runtime/src/layout-transport.ts:32
 
 > `optional` **metadata**: `object`
 
-Defined in: packages/runtime/src/layout-transport.ts:39
+Defined in: [packages/runtime/src/layout-transport.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L39)
 
 #### acknowledged?
 
@@ -59,7 +59,7 @@ Defined in: packages/runtime/src/layout-transport.ts:39
 
 > `optional` **payload**: `object`
 
-Defined in: packages/runtime/src/layout-transport.ts:33
+Defined in: [packages/runtime/src/layout-transport.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L33)
 
 #### Index Signature
 

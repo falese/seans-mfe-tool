@@ -8,7 +8,7 @@
 
 > **isImperativeMountHandle**(`value`): `value is ImperativeMountHandle`
 
-Defined in: packages/contracts/src/presentation.ts:88
+Defined in: [packages/contracts/src/presentation.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L88)
 
 ## Parameters
 

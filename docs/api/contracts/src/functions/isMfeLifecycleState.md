@@ -8,7 +8,7 @@
 
 > **isMfeLifecycleState**(`value`): value is "uninitialized" \| "loading" \| "ready" \| "rendering" \| "error" \| "destroyed"
 
-Defined in: packages/contracts/src/platform-contract.ts:71
+Defined in: [packages/contracts/src/platform-contract.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L71)
 
 Narrow an arbitrary string to a lifecycle state.
 

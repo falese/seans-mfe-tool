@@ -6,7 +6,7 @@
 
 # Interface: Message
 
-Defined in: packages/contracts/src/messages.ts:236
+Defined in: [packages/contracts/src/messages.ts:236](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L236)
 
 The wire envelope for every message on the daemon's `messages` GraphQL
 subscription. `payload` by `kind`:
@@ -20,7 +20,7 @@ subscription. `payload` by `kind`:
 
 > **direction**: [`MessageDirection`](../type-aliases/MessageDirection.md)
 
-Defined in: packages/contracts/src/messages.ts:237
+Defined in: [packages/contracts/src/messages.ts:237](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L237)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: packages/contracts/src/messages.ts:237
 
 > **kind**: [`MessageKind`](../type-aliases/MessageKind.md)
 
-Defined in: packages/contracts/src/messages.ts:238
+Defined in: [packages/contracts/src/messages.ts:238](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L238)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: packages/contracts/src/messages.ts:238
 
 > **metadata**: [`MessageMetadata`](MessageMetadata.md)
 
-Defined in: packages/contracts/src/messages.ts:240
+Defined in: [packages/contracts/src/messages.ts:240](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L240)
 
 ***
 
@@ -44,4 +44,4 @@ Defined in: packages/contracts/src/messages.ts:240
 
 > **payload**: [`ActionRecord`](ActionRecord.md) \| [`RenderedExperience`](RenderedExperience.md) \| [`ExperienceState`](ExperienceState.md)
 
-Defined in: packages/contracts/src/messages.ts:239
+Defined in: [packages/contracts/src/messages.ts:239](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L239)

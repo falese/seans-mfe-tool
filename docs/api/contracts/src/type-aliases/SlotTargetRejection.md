@@ -8,6 +8,6 @@
 
 > **SlotTargetRejection** = `"undeclared-slot"` \| `"unknown-provider"` \| `"malformed-address"`
 
-Defined in: packages/contracts/src/slot-contract.ts:135
+Defined in: [packages/contracts/src/slot-contract.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L135)
 
 Why a placement target was rejected.

@@ -8,6 +8,6 @@
 
 > `const` **SLOT\_PARAM\_SEGMENT\_SOURCE**: "\\\{\[A-Za-z\]\[A-Za-z0-9\_\]\*\\\}" = `'\\{[A-Za-z][A-Za-z0-9_]*\\}'`
 
-Defined in: packages/contracts/src/slot-grammar.ts:25
+Defined in: [packages/contracts/src/slot-grammar.ts:25](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-grammar.ts#L25)
 
 A `{param}` placeholder segment, e.g. `{gameId}` in `games.{gameId}`.

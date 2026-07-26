@@ -8,7 +8,7 @@
 
 > **cacheResult**(`context`, `options?`): `Promise`\<`void`\>
 
-Defined in: packages/runtime/src/handlers/caching.ts:17
+Defined in: [packages/runtime/src/handlers/caching.ts:17](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/caching.ts#L17)
 
 ## Parameters
 

@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneStateResult
 
-Defined in: packages/runtime/src/base-mfe.ts:167
+Defined in: [packages/runtime/src/base-mfe.ts:167](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L167)
 
 Result from updateControlPlaneState capability.
 
@@ -20,7 +20,7 @@ form always sets it). The `resolution` shape IS the contracts `Resolution`.
 
 > **acknowledged**: `boolean`
 
-Defined in: packages/runtime/src/base-mfe.ts:169
+Defined in: [packages/runtime/src/base-mfe.ts:169](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L169)
 
 Whether the daemon acknowledged the state update
 
@@ -30,7 +30,7 @@ Whether the daemon acknowledged the state update
 
 > **correlationId**: `string`
 
-Defined in: packages/runtime/src/base-mfe.ts:171
+Defined in: [packages/runtime/src/base-mfe.ts:171](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L171)
 
 Correlation ID for tracing this update through the control plane
 
@@ -40,7 +40,7 @@ Correlation ID for tracing this update through the control plane
 
 > `optional` **error**: `string` \| `null`
 
-Defined in: packages/runtime/src/base-mfe.ts:173
+Defined in: [packages/runtime/src/base-mfe.ts:173](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L173)
 
 Non-null when the update could not be delivered (not connected, timeout, etc.)
 
@@ -50,7 +50,7 @@ Non-null when the update could not be delivered (not connected, timeout, etc.)
 
 > `optional` **resolution**: [`Resolution`](../../../contracts/src/interfaces/Resolution.md) \| `null`
 
-Defined in: packages/runtime/src/base-mfe.ts:179
+Defined in: [packages/runtime/src/base-mfe.ts:179](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L179)
 
 Populated when the registry immediately resolved a new component based
 on the state update. In practice this may arrive asynchronously via the

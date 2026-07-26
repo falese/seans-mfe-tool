@@ -6,7 +6,7 @@
 
 # Interface: SlotAddressRegistry
 
-Defined in: packages/contracts/src/slot-contract.ts:160
+Defined in: [packages/contracts/src/slot-contract.ts:160](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L160)
 
 ## Methods
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/slot-contract.ts:160
 
 > **validateTarget**(`address`): [`SlotTargetResult`](../type-aliases/SlotTargetResult.md)
 
-Defined in: packages/contracts/src/slot-contract.ts:162
+Defined in: [packages/contracts/src/slot-contract.ts:162](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L162)
 
 Validate one `props.slot` placement target.
 

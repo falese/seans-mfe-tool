@@ -8,7 +8,7 @@
 
 > **SlotTargetResult** = \{ `status`: `"ok"`; \} \| \{ `message`: `string`; `reason`: [`SlotTargetRejection`](SlotTargetRejection.md); `status`: `"rejected"`; \}
 
-Defined in: packages/contracts/src/slot-contract.ts:149
+Defined in: [packages/contracts/src/slot-contract.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L149)
 
 Discriminated on `status` rather than a boolean: this repo compiles without
 `strictNullChecks`, and TypeScript does not narrow a boolean-literal

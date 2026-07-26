@@ -8,7 +8,7 @@
 
 > **rateLimitCheck**(`context`, `options?`): `Promise`\<`void`\>
 
-Defined in: packages/runtime/src/handlers/rate-limiting.ts:3
+Defined in: [packages/runtime/src/handlers/rate-limiting.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/rate-limiting.ts#L3)
 
 ## Parameters
 

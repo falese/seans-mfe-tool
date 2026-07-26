@@ -6,7 +6,7 @@
 
 # Interface: AdaptorHelpers
 
-Defined in: packages/runtime/src/layout-adaptors.ts:42
+Defined in: [packages/runtime/src/layout-adaptors.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L42)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/runtime/src/layout-adaptors.ts:42
 
 > `optional` **channel**: [`DaemonWebSocketClient`](DaemonWebSocketClient.md)
 
-Defined in: packages/runtime/src/layout-adaptors.ts:50
+Defined in: [packages/runtime/src/layout-adaptors.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L50)
 
 A virtual daemon channel for this slot (ADR-057): the host's single socket,
 scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
@@ -26,7 +26,7 @@ scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
 
 > `optional` **hostFramework**: `string`
 
-Defined in: packages/runtime/src/layout-adaptors.ts:66
+Defined in: [packages/runtime/src/layout-adaptors.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L66)
 
 The host's framework (e.g. 'react'), when known. Threaded for ADR-056
 handle negotiation: a provider will pick the MFE's native handle when the
@@ -40,7 +40,7 @@ of this value — it is carried, not yet acted on.
 
 > `optional` **providerValues**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/runtime/src/layout-adaptors.ts:73
+Defined in: [packages/runtime/src/layout-adaptors.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L73)
 
 Host-injected provider values (theme, locale, auth claims, router state, …)
 that cross the waist as DATA (ADR-060 value-injection). The MFE island
@@ -53,7 +53,7 @@ shared reconciler, so isolation, polyglot, and multi-version React all hold.
 
 > `optional` **session**: [`SessionContext`](../../../contracts/src/interfaces/SessionContext.md)
 
-Defined in: packages/runtime/src/layout-adaptors.ts:58
+Defined in: [packages/runtime/src/layout-adaptors.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L58)
 
 The session this experience was rendered for, when known.
 
@@ -63,7 +63,7 @@ The session this experience was rendered for, when known.
 
 > `optional` **provideSlot**(`slotId`, `element`): `void`
 
-Defined in: packages/runtime/src/layout-adaptors.ts:56
+Defined in: [packages/runtime/src/layout-adaptors.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L56)
 
 Contribute a named slot to the host layout (ADR-058): the MFE renders a
 region and registers its element so the host routes later experiences
@@ -89,7 +89,7 @@ region and registers its element so the host routes later experiences
 
 > **reportError**(`error`, `info?`): `void`
 
-Defined in: packages/runtime/src/layout-adaptors.ts:80
+Defined in: [packages/runtime/src/layout-adaptors.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L80)
 
 Report an unrecovered error from inside the mounted island (ADR-060). The
 MFE's framework error boundary / lifecycle `error` phase routes here via its
@@ -118,7 +118,7 @@ the control plane; it is slot-isolated and never cascades to siblings.
 
 > **sendAction**(`actionType`, `data`): `Promise`\<`void`\>
 
-Defined in: packages/runtime/src/layout-adaptors.ts:44
+Defined in: [packages/runtime/src/layout-adaptors.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L44)
 
 Send an action back up the control plane for this experience.
 

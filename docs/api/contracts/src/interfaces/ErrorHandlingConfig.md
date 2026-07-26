@@ -6,7 +6,7 @@
 
 # Interface: ErrorHandlingConfig
 
-Defined in: packages/contracts/src/error-classifier.ts:9
+Defined in: [packages/contracts/src/error-classifier.ts:9](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L9)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/error-classifier.ts:9
 
 > **types**: `object`[]
 
-Defined in: packages/contracts/src/error-classifier.ts:10
+Defined in: [packages/contracts/src/error-classifier.ts:10](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L10)
 
 #### backoff?
 

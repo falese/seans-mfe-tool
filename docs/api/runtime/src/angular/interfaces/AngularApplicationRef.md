@@ -6,7 +6,7 @@
 
 # Interface: AngularApplicationRef
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:33
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L33)
 
 Minimal Angular ApplicationRef surface the runtime depends on.
 
@@ -20,7 +20,7 @@ The real @angular/core ApplicationRef is structurally compatible.
 
 > **components**: readonly `object`[]
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:40
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L40)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: packages/runtime/src/angular-remote-mfe.ts:40
 
 > **injector**: `object`
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:39
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L39)
 
 The app's injector — used to fetch its NgZone.
 
@@ -72,7 +72,7 @@ The app's injector — used to fetch its NgZone.
 
 > **bootstrap**(`component`, `rootElement?`): `unknown`
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:37
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L37)
 
 ApplicationRef.bootstrap(componentType, rootElement) — binds to the given node.
 
@@ -96,7 +96,7 @@ ApplicationRef.bootstrap(componentType, rootElement) — binds to the given node
 
 > **destroy**(): `void`
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:34
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L34)
 
 #### Returns
 
@@ -108,7 +108,7 @@ Defined in: packages/runtime/src/angular-remote-mfe.ts:34
 
 > **tick**(): `void`
 
-Defined in: packages/runtime/src/angular-remote-mfe.ts:35
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L35)
 
 #### Returns
 

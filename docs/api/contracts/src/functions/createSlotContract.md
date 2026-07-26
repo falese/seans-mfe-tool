@@ -8,7 +8,7 @@
 
 > **createSlotContract**(`declarations`): [`SlotContract`](../interfaces/SlotContract.md)
 
-Defined in: packages/contracts/src/slot-contract.ts:99
+Defined in: [packages/contracts/src/slot-contract.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L99)
 
 ## Parameters
 

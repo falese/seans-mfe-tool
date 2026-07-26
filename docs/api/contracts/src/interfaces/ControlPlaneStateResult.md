@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneStateResult
 
-Defined in: packages/contracts/src/messages.ts:251
+Defined in: [packages/contracts/src/messages.ts:251](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L251)
 
 What `BaseMFE.updateControlPlaneState()` resolves with. Maps to the
 ACTION_ECHO metadata the daemon publishes; `resolution` is populated when
@@ -19,7 +19,7 @@ asynchronously as a COMPONENT_UPDATE instead).
 
 > **acknowledged**: `boolean`
 
-Defined in: packages/contracts/src/messages.ts:252
+Defined in: [packages/contracts/src/messages.ts:252](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L252)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: packages/contracts/src/messages.ts:252
 
 > **correlationId**: `string`
 
-Defined in: packages/contracts/src/messages.ts:253
+Defined in: [packages/contracts/src/messages.ts:253](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L253)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: packages/contracts/src/messages.ts:253
 
 > **error**: `string` \| `null`
 
-Defined in: packages/contracts/src/messages.ts:254
+Defined in: [packages/contracts/src/messages.ts:254](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L254)
 
 ***
 
@@ -43,4 +43,4 @@ Defined in: packages/contracts/src/messages.ts:254
 
 > `optional` **resolution**: [`Resolution`](Resolution.md) \| `null`
 
-Defined in: packages/contracts/src/messages.ts:255
+Defined in: [packages/contracts/src/messages.ts:255](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L255)

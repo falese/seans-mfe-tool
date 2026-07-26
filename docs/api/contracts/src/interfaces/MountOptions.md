@@ -6,7 +6,7 @@
 
 # Interface: MountOptions
 
-Defined in: packages/contracts/src/presentation.ts:41
+Defined in: [packages/contracts/src/presentation.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L41)
 
 Per-mount options. `capability` selects WHICH named domain capability to
 render — MFEs are multi-capability by design (e.g. PlayGame, ShowCover,
@@ -19,7 +19,7 @@ handle's bound default capability.
 
 > `optional` **capability**: `string`
 
-Defined in: packages/contracts/src/presentation.ts:42
+Defined in: [packages/contracts/src/presentation.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L42)
 
 ***
 
@@ -27,4 +27,4 @@ Defined in: packages/contracts/src/presentation.ts:42
 
 > `optional` **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/contracts/src/presentation.ts:43
+Defined in: [packages/contracts/src/presentation.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L43)

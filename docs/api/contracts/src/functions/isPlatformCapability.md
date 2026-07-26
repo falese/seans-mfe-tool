@@ -8,7 +8,7 @@
 
 > **isPlatformCapability**(`value`): value is "describe" \| "load" \| "render" \| "refresh" \| "emit" \| "query" \| "schema" \| "authorizeAccess" \| "health" \| "updateControlPlaneState"
 
-Defined in: packages/contracts/src/platform-contract.ts:294
+Defined in: [packages/contracts/src/platform-contract.ts:294](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L294)
 
 Narrow an arbitrary string to the camelCase name of a platform capability.
 

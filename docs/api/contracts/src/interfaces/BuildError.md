@@ -6,7 +6,7 @@
 
 # Interface: BuildError
 
-Defined in: packages/contracts/src/framework-plugin.ts:74
+Defined in: [packages/contracts/src/framework-plugin.ts:74](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L74)
 
 Classified build error with optional source location.
 
@@ -16,7 +16,7 @@ Classified build error with optional source location.
 
 > **category**: `"syntax"` \| `"type"` \| `"dependency"` \| `"config"` \| `"runtime"` \| `"unknown"`
 
-Defined in: packages/contracts/src/framework-plugin.ts:79
+Defined in: [packages/contracts/src/framework-plugin.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L79)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/contracts/src/framework-plugin.ts:79
 
 > `optional` **code**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:85
+Defined in: [packages/contracts/src/framework-plugin.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L85)
 
 Compiler diagnostic code where the toolchain emits one (`TS2339`). Lets an
 agent look the failure up or match on it without parsing the message.
@@ -35,7 +35,7 @@ agent look the failure up or match on it without parsing the message.
 
 > `optional` **column**: `number`
 
-Defined in: packages/contracts/src/framework-plugin.ts:77
+Defined in: [packages/contracts/src/framework-plugin.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L77)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: packages/contracts/src/framework-plugin.ts:77
 
 > `optional` **file**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:75
+Defined in: [packages/contracts/src/framework-plugin.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L75)
 
 ***
 
@@ -51,7 +51,7 @@ Defined in: packages/contracts/src/framework-plugin.ts:75
 
 > `optional` **line**: `number`
 
-Defined in: packages/contracts/src/framework-plugin.ts:76
+Defined in: [packages/contracts/src/framework-plugin.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L76)
 
 ***
 
@@ -59,7 +59,7 @@ Defined in: packages/contracts/src/framework-plugin.ts:76
 
 > **message**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:78
+Defined in: [packages/contracts/src/framework-plugin.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L78)
 
 ***
 
@@ -67,4 +67,4 @@ Defined in: packages/contracts/src/framework-plugin.ts:78
 
 > `optional` **suggestion**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:80
+Defined in: [packages/contracts/src/framework-plugin.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L80)

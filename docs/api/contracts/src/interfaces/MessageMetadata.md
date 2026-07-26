@@ -6,7 +6,7 @@
 
 # Interface: MessageMetadata
 
-Defined in: packages/contracts/src/messages.ts:220
+Defined in: [packages/contracts/src/messages.ts:220](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L220)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/messages.ts:220
 
 > **acknowledged**: `boolean`
 
-Defined in: packages/contracts/src/messages.ts:224
+Defined in: [packages/contracts/src/messages.ts:224](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L224)
 
 True once the daemon has processed (not just received) the message.
 
@@ -24,7 +24,7 @@ True once the daemon has processed (not just received) the message.
 
 > **correlationId**: `string`
 
-Defined in: packages/contracts/src/messages.ts:222
+Defined in: [packages/contracts/src/messages.ts:222](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L222)
 
 UUID shared by the originating request and every downstream message.
 
@@ -34,6 +34,6 @@ UUID shared by the originating request and every downstream message.
 
 > **error**: `string` \| `null`
 
-Defined in: packages/contracts/src/messages.ts:226
+Defined in: [packages/contracts/src/messages.ts:226](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L226)
 
 Non-null when the daemon or registry rejected or failed to process.

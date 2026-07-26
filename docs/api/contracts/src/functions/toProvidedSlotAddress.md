@@ -8,7 +8,7 @@
 
 > **toProvidedSlotAddress**(`providerMfeId`, `declaredSlotId`): `string`
 
-Defined in: packages/contracts/src/slot-contract.ts:50
+Defined in: [packages/contracts/src/slot-contract.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L50)
 
 Compose the stable host address for an MFE-provided local slot id.
 

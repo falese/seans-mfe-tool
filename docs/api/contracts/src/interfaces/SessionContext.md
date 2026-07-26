@@ -6,7 +6,7 @@
 
 # Interface: SessionContext
 
-Defined in: packages/contracts/src/messages.ts:37
+Defined in: [packages/contracts/src/messages.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L37)
 
 Per-session context threaded through every action so the registry can
 resolve experiences for THIS user, in THIS application, right now.
@@ -19,7 +19,7 @@ Carried on `ActionRecord.context`; the daemon copies it into the MFE
 
 > `optional` **application**: `string`
 
-Defined in: packages/contracts/src/messages.ts:43
+Defined in: [packages/contracts/src/messages.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L43)
 
 Host application type: 'web' | 'mobile' | 'desktop' | 'cli' | … (open).
 
@@ -29,7 +29,7 @@ Host application type: 'web' | 'mobile' | 'desktop' | 'cli' | … (open).
 
 > `optional` **attributes**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/contracts/src/messages.ts:45
+Defined in: [packages/contracts/src/messages.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L45)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: packages/contracts/src/messages.ts:45
 
 > `optional` **jwt**: `string`
 
-Defined in: packages/contracts/src/messages.ts:41
+Defined in: [packages/contracts/src/messages.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L41)
 
 Raw JWT, forwarded as the Authorization header on MFE capability calls.
 
@@ -47,7 +47,7 @@ Raw JWT, forwarded as the Authorization header on MFE capability calls.
 
 > `optional` **locale**: `string`
 
-Defined in: packages/contracts/src/messages.ts:44
+Defined in: [packages/contracts/src/messages.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L44)
 
 ***
 
@@ -55,7 +55,7 @@ Defined in: packages/contracts/src/messages.ts:44
 
 > **sessionId**: `string`
 
-Defined in: packages/contracts/src/messages.ts:38
+Defined in: [packages/contracts/src/messages.ts:38](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L38)
 
 ***
 
@@ -63,4 +63,4 @@ Defined in: packages/contracts/src/messages.ts:38
 
 > `optional` **user**: [`ControlPlaneUser`](ControlPlaneUser.md)
 
-Defined in: packages/contracts/src/messages.ts:39
+Defined in: [packages/contracts/src/messages.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L39)

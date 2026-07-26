@@ -6,7 +6,7 @@
 
 # Interface: SlotContract
 
-Defined in: packages/contracts/src/slot-contract.ts:69
+Defined in: [packages/contracts/src/slot-contract.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L69)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/slot-contract.ts:69
 
 > `readonly` **declarations**: readonly [`ProvidedSlotDeclaration`](ProvidedSlotDeclaration.md)[]
 
-Defined in: packages/contracts/src/slot-contract.ts:71
+Defined in: [packages/contracts/src/slot-contract.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L71)
 
 The manifest declarations this contract was built from.
 
@@ -24,7 +24,7 @@ The manifest declarations this contract was built from.
 
 > **assertDeclared**(`id`): `void`
 
-Defined in: packages/contracts/src/slot-contract.ts:75
+Defined in: [packages/contracts/src/slot-contract.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L75)
 
 Throw a ValidationError unless `id` is declared.
 
@@ -44,7 +44,7 @@ Throw a ValidationError unless `id` is declared.
 
 > **matches**(`id`): `boolean`
 
-Defined in: packages/contracts/src/slot-contract.ts:73
+Defined in: [packages/contracts/src/slot-contract.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L73)
 
 True when `id` matches a declared literal or keyed pattern.
 
@@ -64,7 +64,7 @@ True when `id` matches a declared literal or keyed pattern.
 
 > **register**\<`E`\>(`provideSlot`, `id`, `element`): `void`
 
-Defined in: packages/contracts/src/slot-contract.ts:82
+Defined in: [packages/contracts/src/slot-contract.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L82)
 
 Guarded registration: asserts the id is declared, then hands the element
 to the host. A null element releases the runtime registration; without a

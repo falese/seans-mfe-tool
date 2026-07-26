@@ -8,7 +8,7 @@
 
 > `const` **PLATFORM\_CAPABILITIES**: readonly \[`"describe"`, `"load"`, `"render"`, `"refresh"`, `"emit"`, `"query"`, `"schema"`, `"authorizeAccess"`, `"health"`, `"updateControlPlaneState"`\]
 
-Defined in: packages/contracts/src/platform-contract.ts:92
+Defined in: [packages/contracts/src/platform-contract.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L92)
 
 The ten platform capabilities, ordered as in the
 `docs/PLATFORM-CONTRACT.md` reference table. Anything a manifest declares

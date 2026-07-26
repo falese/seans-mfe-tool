@@ -6,7 +6,7 @@
 
 # Interface: ImperativeHandleOptions
 
-Defined in: packages/runtime/src/imperative-handle.ts:26
+Defined in: [packages/runtime/src/imperative-handle.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L26)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/runtime/src/imperative-handle.ts:26
 
 > `optional` **defaultCapability**: `string`
 
-Defined in: packages/runtime/src/imperative-handle.ts:42
+Defined in: [packages/runtime/src/imperative-handle.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L42)
 
 The capability rendered when `mount` is called without an explicit one.
 Multi-capability MFEs expose several (PlayGame, ShowCover, …); this is the
@@ -27,7 +27,7 @@ always wins.
 
 > `optional` **framework**: `string`
 
-Defined in: packages/runtime/src/imperative-handle.ts:28
+Defined in: [packages/runtime/src/imperative-handle.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L28)
 
 Observability / negotiation tag (e.g. 'react', 'angular').
 
@@ -37,7 +37,7 @@ Observability / negotiation tag (e.g. 'react', 'angular').
 
 > `optional` **inputs**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/runtime/src/imperative-handle.ts:47
+Defined in: [packages/runtime/src/imperative-handle.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L47)
 
 Extra base render inputs merged beneath the resolved capability and the
 per-mount props. Rarely needed; `defaultCapability` covers the common case.
@@ -48,7 +48,7 @@ per-mount props. Rarely needed; `defaultCapability` covers the common case.
 
 > `optional` **mfeReady**: `Promise`\<`unknown`\>
 
-Defined in: packages/runtime/src/imperative-handle.ts:35
+Defined in: [packages/runtime/src/imperative-handle.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L35)
 
 The remote's bootstrap load() promise, if it kicks load off itself
 (the generated bootstrap does). When provided, the handle awaits it

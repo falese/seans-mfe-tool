@@ -6,7 +6,7 @@
 
 # Interface: SlotProviderDeclarations
 
-Defined in: packages/contracts/src/slot-contract.ts:154
+Defined in: [packages/contracts/src/slot-contract.ts:154](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L154)
 
 One provider's contribution to the fleet-wide address space.
 
@@ -16,7 +16,7 @@ One provider's contribution to the fleet-wide address space.
 
 > **declarations**: readonly [`ProvidedSlotDeclaration`](ProvidedSlotDeclaration.md)[]
 
-Defined in: packages/contracts/src/slot-contract.ts:157
+Defined in: [packages/contracts/src/slot-contract.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L157)
 
 ***
 
@@ -24,6 +24,6 @@ Defined in: packages/contracts/src/slot-contract.ts:157
 
 > **mfeId**: `string`
 
-Defined in: packages/contracts/src/slot-contract.ts:156
+Defined in: [packages/contracts/src/slot-contract.ts:156](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L156)
 
 The stable MFE id that prefixes this provider's addresses (ADR-068).

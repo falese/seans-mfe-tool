@@ -8,7 +8,7 @@
 
 > **parseBuildOutput**(`raw`): [`BuildError`](../interfaces/BuildError.md)[]
 
-Defined in: packages/contracts/src/build-output-parser.ts:68
+Defined in: [packages/contracts/src/build-output-parser.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/build-output-parser.ts#L68)
 
 ## Parameters
 

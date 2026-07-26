@@ -6,7 +6,7 @@
 
 # Interface: NativeComponentHandle
 
-Defined in: packages/contracts/src/presentation.ts:68
+Defined in: [packages/contracts/src/presentation.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L68)
 
 An opt-in, framework-native artifact. `component` is opaque to the core —
 only a Framework Provider for `framework` knows its shape (e.g. a React
@@ -18,7 +18,7 @@ component). Tagging, never inspection, is what keeps the core neutral.
 
 > **component**: `unknown`
 
-Defined in: packages/contracts/src/presentation.ts:72
+Defined in: [packages/contracts/src/presentation.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L72)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: packages/contracts/src/presentation.ts:72
 
 > **framework**: `string`
 
-Defined in: packages/contracts/src/presentation.ts:71
+Defined in: [packages/contracts/src/presentation.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L71)
 
 ***
 
@@ -34,6 +34,6 @@ Defined in: packages/contracts/src/presentation.ts:71
 
 > **kind**: `string`
 
-Defined in: packages/contracts/src/presentation.ts:70
+Defined in: [packages/contracts/src/presentation.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L70)
 
 Anything but 'imperative-dom', e.g. 'react-component'.

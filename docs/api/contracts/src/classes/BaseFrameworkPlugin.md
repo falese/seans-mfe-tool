@@ -6,7 +6,7 @@
 
 # Abstract Class: BaseFrameworkPlugin
 
-Defined in: packages/contracts/src/framework-plugin.ts:103
+Defined in: [packages/contracts/src/framework-plugin.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L103)
 
 Abstract base class every framework plugin must extend.
 
@@ -30,7 +30,7 @@ orchestrating this.doLoad().
 
 > `readonly` **\_\_frameworkPluginBrand**: `"__BaseFrameworkPlugin__"`
 
-Defined in: packages/contracts/src/framework-plugin.ts:110
+Defined in: [packages/contracts/src/framework-plugin.ts:110](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L110)
 
 Brand tag for cross-module instanceof checks.
 When the same class is loaded from different physical paths
@@ -43,7 +43,7 @@ class objects.  This string brand lets us duck-type safely.
 
 > `abstract` `readonly` **bundler**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:124
+Defined in: [packages/contracts/src/framework-plugin.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L124)
 
 Bundler name matching the manifest `bundler` field.
 
@@ -53,7 +53,7 @@ Bundler name matching the manifest `bundler` field.
 
 > `abstract` `readonly` **defaultPort**: `number`
 
-Defined in: packages/contracts/src/framework-plugin.ts:129
+Defined in: [packages/contracts/src/framework-plugin.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L129)
 
 Default port for dev server.
 
@@ -63,7 +63,7 @@ Default port for dev server.
 
 > `abstract` `readonly` **directoryStructure**: `string`[]
 
-Defined in: packages/contracts/src/framework-plugin.ts:132
+Defined in: [packages/contracts/src/framework-plugin.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L132)
 
 Directories to create on `remote:init`.
 
@@ -73,7 +73,7 @@ Directories to create on `remote:init`.
 
 > `abstract` `readonly` **displayName**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:118
+Defined in: [packages/contracts/src/framework-plugin.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L118)
 
 Human-readable name for CLI output.
 
@@ -83,7 +83,7 @@ Human-readable name for CLI output.
 
 > `abstract` `readonly` **framework**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:121
+Defined in: [packages/contracts/src/framework-plugin.ts:121](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L121)
 
 Framework name matching the manifest `framework` field.
 
@@ -93,7 +93,7 @@ Framework name matching the manifest `framework` field.
 
 > `abstract` `readonly` **id**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:115
+Defined in: [packages/contracts/src/framework-plugin.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L115)
 
 Unique id, e.g. `'react-rspack'`, `'angular-webpack'`.
 
@@ -103,7 +103,7 @@ Unique id, e.g. `'react-rspack'`, `'angular-webpack'`.
 
 > `abstract` **buildProduction**(`manifest`, `opts`): `Promise`\<[`BuildResult`](../interfaces/BuildResult.md)\>
 
-Defined in: packages/contracts/src/framework-plugin.ts:172
+Defined in: [packages/contracts/src/framework-plugin.ts:172](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L172)
 
 Run a production build with structured error output.
 
@@ -133,7 +133,7 @@ Run a production build with structured error output.
 
 > `abstract` **checkEnvironment**(): `Promise`\<[`EnvCheckResult`](../interfaces/EnvCheckResult.md)[]\>
 
-Defined in: packages/contracts/src/framework-plugin.ts:163
+Defined in: [packages/contracts/src/framework-plugin.ts:163](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L163)
 
 Validate that the local environment has the required tools.
 
@@ -147,7 +147,7 @@ Validate that the local environment has the required tools.
 
 > `abstract` **getDockerStrategy**(`manifest`): [`DockerStrategy`](../interfaces/DockerStrategy.md)
 
-Defined in: packages/contracts/src/framework-plugin.ts:180
+Defined in: [packages/contracts/src/framework-plugin.ts:180](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L180)
 
 Return the Docker build strategy for this framework.
 
@@ -167,7 +167,7 @@ Return the Docker build strategy for this framework.
 
 > `abstract` **getRuntimeClassName**(): `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:149
+Defined in: [packages/contracts/src/framework-plugin.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L149)
 
 Runtime class name for generated MFE code.
 
@@ -181,7 +181,7 @@ Runtime class name for generated MFE code.
 
 > `abstract` **getRuntimeDependencies**(): `Record`\<`string`, `string`\>
 
-Defined in: packages/contracts/src/framework-plugin.ts:135
+Defined in: [packages/contracts/src/framework-plugin.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L135)
 
 Runtime dependencies seeded into the manifest on init.
 
@@ -195,7 +195,7 @@ Runtime dependencies seeded into the manifest on init.
 
 > `abstract` **getRuntimeImport**(): `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:146
+Defined in: [packages/contracts/src/framework-plugin.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L146)
 
 Runtime package import path for generated MFE code.
 
@@ -209,7 +209,7 @@ Runtime package import path for generated MFE code.
 
 > `abstract` **getSharedDependencies**(`manifest`): [`SharedDep`](../interfaces/SharedDep.md)[]
 
-Defined in: packages/contracts/src/framework-plugin.ts:158
+Defined in: [packages/contracts/src/framework-plugin.ts:158](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L158)
 
 Shared dependencies for Module Federation. Empty for non-MF targets.
 
@@ -229,7 +229,7 @@ Shared dependencies for Module Federation. Empty for non-MF targets.
 
 > `abstract` **getSourceExtension**(): `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:152
+Defined in: [packages/contracts/src/framework-plugin.ts:152](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L152)
 
 Source file extension, e.g. `'.tsx'`.
 
@@ -243,7 +243,7 @@ Source file extension, e.g. `'.tsx'`.
 
 > `abstract` **getTemplateDir**(): `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:140
+Defined in: [packages/contracts/src/framework-plugin.ts:140](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L140)
 
 Absolute path to the EJS template directory.
 
@@ -257,7 +257,7 @@ Absolute path to the EJS template directory.
 
 > `abstract` **getTemplateVars**(`manifest`): `Record`\<`string`, `unknown`\>
 
-Defined in: packages/contracts/src/framework-plugin.ts:143
+Defined in: [packages/contracts/src/framework-plugin.ts:143](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L143)
 
 Framework-specific template variables, merged with base vars.
 
@@ -277,7 +277,7 @@ Framework-specific template variables, merged with base vars.
 
 > `abstract` **getTestExtension**(): `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:155
+Defined in: [packages/contracts/src/framework-plugin.ts:155](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L155)
 
 Test file extension, e.g. `'.test.tsx'`.
 
@@ -291,7 +291,7 @@ Test file extension, e.g. `'.test.tsx'`.
 
 > `abstract` **startDevServer**(`manifest`, `opts`): `Promise`\<[`DevServerHandle`](../interfaces/DevServerHandle.md)\>
 
-Defined in: packages/contracts/src/framework-plugin.ts:166
+Defined in: [packages/contracts/src/framework-plugin.ts:166](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L166)
 
 Start the dev server.
 

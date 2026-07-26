@@ -8,7 +8,7 @@
 
 > `const` **MFE\_LIFECYCLE\_STATES**: readonly \[`"uninitialized"`, `"loading"`, `"ready"`, `"rendering"`, `"error"`, `"destroyed"`\]
 
-Defined in: packages/contracts/src/platform-contract.ts:36
+Defined in: [packages/contracts/src/platform-contract.ts:36](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L36)
 
 The six lifecycle states, in progression order. An MFE starts at
 `uninitialized` and may end at `destroyed`; `error` is recoverable via

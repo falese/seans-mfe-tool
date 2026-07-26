@@ -8,7 +8,7 @@
 
 > **ProvideSlotFn**\<`E`\> = (`slotId`, `element`) => `void`
 
-Defined in: packages/contracts/src/slot-contract.ts:39
+Defined in: [packages/contracts/src/slot-contract.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L39)
 
 Host registration callback (ADR-058), structural over the element type.
 

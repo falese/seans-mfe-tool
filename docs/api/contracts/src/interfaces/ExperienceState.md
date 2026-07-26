@@ -6,7 +6,7 @@
 
 # Interface: ExperienceState
 
-Defined in: packages/contracts/src/messages.ts:190
+Defined in: [packages/contracts/src/messages.ts:190](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L190)
 
 The daemon's per-experience state entry: the experience plus every action
 submitted against it. Payload of a STATE_SNAPSHOT message.
@@ -17,7 +17,7 @@ submitted against it. Payload of a STATE_SNAPSHOT message.
 
 > **actions**: [`ActionRecord`](ActionRecord.md)[]
 
-Defined in: packages/contracts/src/messages.ts:192
+Defined in: [packages/contracts/src/messages.ts:192](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L192)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: packages/contracts/src/messages.ts:192
 
 > **experience**: [`RenderedExperience`](RenderedExperience.md)
 
-Defined in: packages/contracts/src/messages.ts:191
+Defined in: [packages/contracts/src/messages.ts:191](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L191)
 
 ***
 
@@ -33,4 +33,4 @@ Defined in: packages/contracts/src/messages.ts:191
 
 > **lastUpdated**: `string`
 
-Defined in: packages/contracts/src/messages.ts:193
+Defined in: [packages/contracts/src/messages.ts:193](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L193)

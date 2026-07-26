@@ -8,7 +8,7 @@
 
 > **ImperativeUnmount** = () => `void` \| `Promise`\<`void`\>
 
-Defined in: packages/contracts/src/presentation.ts:24
+Defined in: [packages/contracts/src/presentation.ts:24](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L24)
 
 Teardown returned by an imperative mount; idempotent by contract.
 

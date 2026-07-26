@@ -8,7 +8,7 @@
 
 > `const` **PLATFORM\_WRAPPER\_METHODS**: readonly `string`[]
 
-Defined in: packages/contracts/src/platform-contract.ts:278
+Defined in: [packages/contracts/src/platform-contract.ts:278](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L278)
 
 The `do*()` wrapper methods. A lifecycle hook may not reference one of these
 as its handler — that would re-enter the orchestrator it is running inside.

@@ -6,7 +6,7 @@
 
 # Interface: MountableLifecycle
 
-Defined in: packages/runtime/src/imperative-handle.ts:20
+Defined in: [packages/runtime/src/imperative-handle.ts:20](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L20)
 
 The neutral subset of BaseMFE that an imperative handle drives. Structural,
 so this module needs neither a concrete MFE class nor a UI framework.
@@ -17,7 +17,7 @@ so this module needs neither a concrete MFE class nor a UI framework.
 
 > `optional` **destroy**(): `void` \| `Promise`\<`void`\>
 
-Defined in: packages/runtime/src/imperative-handle.ts:23
+Defined in: [packages/runtime/src/imperative-handle.ts:23](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L23)
 
 #### Returns
 
@@ -29,7 +29,7 @@ Defined in: packages/runtime/src/imperative-handle.ts:23
 
 > `optional` **load**(`context`): `unknown`
 
-Defined in: packages/runtime/src/imperative-handle.ts:21
+Defined in: [packages/runtime/src/imperative-handle.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L21)
 
 #### Parameters
 
@@ -47,7 +47,7 @@ Defined in: packages/runtime/src/imperative-handle.ts:21
 
 > **render**(`context`): `unknown`
 
-Defined in: packages/runtime/src/imperative-handle.ts:22
+Defined in: [packages/runtime/src/imperative-handle.ts:22](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L22)
 
 #### Parameters
 

@@ -6,7 +6,7 @@
 
 # Interface: DockerConfigFile
 
-Defined in: packages/contracts/src/framework-plugin.ts:39
+Defined in: [packages/contracts/src/framework-plugin.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L39)
 
 A file copied into the runtime stage of a generated Dockerfile.
 `from` selects the COPY source: the build context, or the
@@ -18,7 +18,7 @@ A file copied into the runtime stage of a generated Dockerfile.
 
 > **dest**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:42
+Defined in: [packages/contracts/src/framework-plugin.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L42)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: packages/contracts/src/framework-plugin.ts:42
 
 > **from**: `"context"` \| `"cli-builder"`
 
-Defined in: packages/contracts/src/framework-plugin.ts:40
+Defined in: [packages/contracts/src/framework-plugin.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L40)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: packages/contracts/src/framework-plugin.ts:40
 
 > **src**: `string`
 
-Defined in: packages/contracts/src/framework-plugin.ts:41
+Defined in: [packages/contracts/src/framework-plugin.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L41)

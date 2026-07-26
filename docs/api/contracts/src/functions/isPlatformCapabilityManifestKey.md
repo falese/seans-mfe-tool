@@ -8,7 +8,7 @@
 
 > **isPlatformCapabilityManifestKey**(`value`): `boolean`
 
-Defined in: packages/contracts/src/platform-contract.ts:302
+Defined in: [packages/contracts/src/platform-contract.ts:302](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L302)
 
 Whether a manifest capability entry key names a platform capability in
 either spelling. False means the entry is a domain capability.

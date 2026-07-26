@@ -6,7 +6,7 @@
 
 # Interface: ProvidedSlotDeclaration
 
-Defined in: packages/contracts/src/slot-contract.ts:33
+Defined in: [packages/contracts/src/slot-contract.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L33)
 
 One slot declaration, as it appears in the manifest's `providesSlots`.
 
@@ -16,7 +16,7 @@ One slot declaration, as it appears in the manifest's `providesSlots`.
 
 > `optional` **description**: `string`
 
-Defined in: packages/contracts/src/slot-contract.ts:35
+Defined in: [packages/contracts/src/slot-contract.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L35)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: packages/contracts/src/slot-contract.ts:35
 
 > **id**: `string`
 
-Defined in: packages/contracts/src/slot-contract.ts:34
+Defined in: [packages/contracts/src/slot-contract.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/slot-contract.ts#L34)

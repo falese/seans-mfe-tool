@@ -6,7 +6,7 @@
 
 # Interface: QueryInput
 
-Defined in: packages/runtime/src/context.ts:142
+Defined in: [packages/runtime/src/context.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L142)
 
 Shape of context.inputs expected by the query capability.
 Pass via ContextFactory.create({ inputs: { document, variables } })
@@ -18,7 +18,7 @@ or ContextFactory.cloneForCapability(ctx, 'query', { document, variables }).
 
 > `optional` **bffUrl**: `string`
 
-Defined in: packages/runtime/src/context.ts:154
+Defined in: [packages/runtime/src/context.ts:154](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L154)
 
 Caller-supplied BFF URL override — takes priority over all manifest/env defaults.
 Use this when the shell knows the remote's absolute BFF endpoint
@@ -32,7 +32,7 @@ the full origin already.
 
 > **document**: `string`
 
-Defined in: packages/runtime/src/context.ts:144
+Defined in: [packages/runtime/src/context.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L144)
 
 GraphQL document string
 
@@ -42,6 +42,6 @@ GraphQL document string
 
 > `optional` **variables**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/runtime/src/context.ts:146
+Defined in: [packages/runtime/src/context.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L146)
 
 GraphQL variables

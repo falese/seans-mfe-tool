@@ -8,6 +8,6 @@
 
 > **MfeLifecycleState** = *typeof* [`MFE_LIFECYCLE_STATES`](../variables/MFE_LIFECYCLE_STATES.md)\[`number`\]
 
-Defined in: packages/contracts/src/platform-contract.ts:46
+Defined in: [packages/contracts/src/platform-contract.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L46)
 
 One MFE lifecycle state.

@@ -6,7 +6,7 @@
 
 # Interface: ValidationError
 
-Defined in: packages/runtime/src/context.ts:160
+Defined in: [packages/runtime/src/context.ts:160](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L160)
 
 Validation error structure
 
@@ -16,7 +16,7 @@ Validation error structure
 
 > `optional` **actual**: `unknown`
 
-Defined in: packages/runtime/src/context.ts:164
+Defined in: [packages/runtime/src/context.ts:164](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L164)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/runtime/src/context.ts:164
 
 > `optional` **expected**: `string`
 
-Defined in: packages/runtime/src/context.ts:163
+Defined in: [packages/runtime/src/context.ts:163](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L163)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: packages/runtime/src/context.ts:163
 
 > **field**: `string`
 
-Defined in: packages/runtime/src/context.ts:161
+Defined in: [packages/runtime/src/context.ts:161](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L161)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: packages/runtime/src/context.ts:161
 
 > **message**: `string`
 
-Defined in: packages/runtime/src/context.ts:162
+Defined in: [packages/runtime/src/context.ts:162](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L162)

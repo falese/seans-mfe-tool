@@ -8,7 +8,7 @@
 
 > **createImperativeHandle**(`mfe`, `options`): [`ImperativeMountHandle`](../../../contracts/src/interfaces/ImperativeMountHandle.md)
 
-Defined in: packages/runtime/src/imperative-handle.ts:52
+Defined in: [packages/runtime/src/imperative-handle.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/imperative-handle.ts#L52)
 
 ## Parameters
 
