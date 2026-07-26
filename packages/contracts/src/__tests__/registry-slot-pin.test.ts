@@ -14,7 +14,6 @@
 import * as path from 'path';
 import { createSlotAddressRegistry } from '../slot-contract';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const registryModulePath = path.join(
   __dirname,
   '../../../../examples/meridian-station/control-plane/registry/slot-target.js'
@@ -27,7 +26,6 @@ type ValidateSlotTarget = (
 ) => RegistryProblem;
 
 /** The registry copy is ESM-only JS; jest transpiles it on require. */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { validateSlotTarget } = require(registryModulePath) as {
   validateSlotTarget: ValidateSlotTarget;
 };

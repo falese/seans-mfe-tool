@@ -17,7 +17,6 @@ describe('uuidv4', () => {
       Object.defineProperty(globalThis, 'crypto', originalCrypto);
     } else {
       // Restoring an unset descriptor is best-effort.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (globalThis as any).crypto;
     }
   });
@@ -50,7 +49,6 @@ describe('uuidv4', () => {
   });
 
   it('falls back when globalThis.crypto itself is absent', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (globalThis as any).crypto;
 
     const id = uuidv4();

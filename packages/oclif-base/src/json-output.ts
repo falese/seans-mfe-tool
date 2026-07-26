@@ -76,7 +76,6 @@ export function blockInteractivePrompts(): void {
   Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true, configurable: true });
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const inquirer = require('inquirer') as { prompt: (...args: unknown[]) => Promise<unknown> };
     if (inquirer && typeof inquirer.prompt === 'function') {
       const originalPrompt = inquirer.prompt.bind(inquirer);

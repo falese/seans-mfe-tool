@@ -61,7 +61,6 @@ export class RemoteMFE extends BaseRemoteMFE {
       throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const element = (document as Document).getElementById(containerId);
     if (!element) {
       throw new Error(`[RemoteMFE] DOM container #${containerId} not found`);

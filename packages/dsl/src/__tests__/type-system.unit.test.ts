@@ -2,7 +2,6 @@
  * Type System Unit Tests for coverage
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { parseType, isPrimitive, isSpecialized, toGraphQLType, toTypeScriptType, toPythonType, generateZodSchema, validateValue } = require('../type-system');
 
 describe('type-system primitives and specialized', () => {

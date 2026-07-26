@@ -38,7 +38,6 @@
 import { jest } from '@jest/globals';
 
 // Lazy import to avoid type-only coupling; adapt path if needed
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { BaseMFE } = require('../base-mfe');
 
 class TestMFE extends BaseMFE {

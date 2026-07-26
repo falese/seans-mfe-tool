@@ -61,7 +61,6 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
       // In ts source:      __dirname is <root>/src/framework/
       // Either way, ../../packages/<dir> reaches the package.
       const builtinPath = path.resolve(__dirname, '..', '..', 'packages', builtinDir);
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const mod = require(builtinPath);
       const plugin: unknown = mod.frameworkPlugin ?? mod.default;
       if (isFrameworkPlugin(plugin)) {
@@ -74,7 +73,6 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
 
   // 2. Try npm package resolution (third-party plugins)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mod = require(packageName);
     const plugin: unknown = mod.frameworkPlugin ?? mod.default;
 

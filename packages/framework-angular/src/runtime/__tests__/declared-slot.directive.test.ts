@@ -25,7 +25,6 @@ jest.mock('@angular/core', () => ({
   },
 }));
 
-// eslint-disable-next-line import/first
 import { DeclaredSlotDirective, type SlotContractLike } from '../declared-slot.directive';
 
 /** Minimal contract fake: 'main' and 'info' are declared, everything else is not. */

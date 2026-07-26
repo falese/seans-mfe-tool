@@ -54,7 +54,6 @@ export async function validateJWT(context: Context): Promise<void> {
     // string defeats rspack/webpack static analysis, so the bundler never
     // walks the jsonwebtoken module graph (which would pull in stream/util/
     // buffer/crypto and require browser stubs to compile).
-    // eslint-disable-next-line no-eval
     const jwt = eval('require')('jsonwebtoken');
     const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
     context.user = decoded;

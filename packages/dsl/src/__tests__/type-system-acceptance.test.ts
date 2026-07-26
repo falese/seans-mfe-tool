@@ -5,7 +5,6 @@
 
 import { jest } from '@jest/globals';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { parseType, toGraphQLType, toTypeScriptType, toPythonType, generateZodSchema, validateValue } = require('../type-system');
 
 describe('Type System Acceptance (REQ-047)', () => {

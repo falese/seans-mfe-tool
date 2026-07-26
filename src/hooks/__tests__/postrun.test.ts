@@ -124,7 +124,6 @@ afterEach(() => {
 
 describe('postrun hook', () => {
   test('no-ops when SEANS_MFE_DAEMON_URL is not set', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     await hook.call(buildHookContext(), {});
     expect(lastMockWs).toBeNull();
@@ -139,7 +138,6 @@ describe('postrun hook', () => {
     // Patch globalThis.WebSocket with our mock
     (globalThis as any).WebSocket = createMockWsClass();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     const ctx = buildHookContext();
 
@@ -176,7 +174,6 @@ describe('postrun hook', () => {
     process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
     (globalThis as any).WebSocket = createMockWsClass();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
 
     const hookPromise = hook.call(buildHookContext(), {});
@@ -199,7 +196,6 @@ describe('postrun hook', () => {
   });
 
   test('no latency added when SEANS_MFE_DAEMON_URL is unset (<10ms)', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     const start = Date.now();
     await hook.call(buildHookContext(), {});
