@@ -2,13 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/deploy.json",
   "title": "deploy",
-  "description": "Input/output contract for seans-mfe-tool deploy",
+  "description": "Deploy an application to a local development container",
   "input": {
     "type": "object",
-    "required": [
-      "name",
-      "type"
-    ],
     "properties": {
       "name": {
         "type": "string",
@@ -20,25 +16,31 @@
           "shell",
           "remote",
           "api"
-        ]
+        ],
+        "description": "Application type (shell, remote, or api)"
       },
       "env": {
         "type": "string",
-        "enum": [
-          "development",
-          "production"
-        ],
+        "description": "Deployment environment (development; production is not yet implemented — see ADR-062)",
         "default": "development"
       },
       "port": {
         "type": "string",
+        "description": "Port number for development deployment",
         "default": "8080"
       },
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Preview deployment without executing"
       }
-    }
+    },
+    "required": [
+      "name",
+      "type"
+    ],
+    "x-positional": [
+      "name"
+    ]
   },
   "output": {
     "type": "object",
@@ -114,6 +116,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

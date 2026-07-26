@@ -7,34 +7,26 @@
  * instead, so the contract is checked by construction rather than by whoever
  * remembered to add a case.
  *
- * It also pins the MCP tool-catalog gap: schemas/ is what mcp:serve turns into
- * agent-callable tools, and a command with no schema is silently invisible to
- * agents. Commands legitimately outside that surface are listed in
- * SCHEMA_EXEMPT with a reason; everything else must have a schema.
+ * It also covers the MCP tool catalog: schemas/ is what mcp:serve turns into
+ * agent-callable tools, and a command with no schema is invisible to agents.
+ * That catalog is now generated from the oclif registry
+ * (scripts/generate-schemas.ts + src/oclif/schema-derivation.ts), so the
+ * exclusion list is imported rather than restated here — two copies of the
+ * policy is the drift this whole file exists to prevent.
  *
  * Refs #139 · ADR-016 · ADR-018 · ADR-019 · ADR-077
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { CATALOG_EXCLUDED } from '../schema-derivation';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const COMMANDS_DIR = path.join(REPO_ROOT, 'src', 'commands');
 const SCHEMAS_DIR = path.join(REPO_ROOT, 'schemas');
 
-/**
- * Commands that intentionally have no MCP schema.
- *
- * `build:*` is NOT in this list on purpose — those four are a real gap (an
- * agent can scaffold and validate an MFE over MCP but cannot build it) and are
- * covered by the expected-failure test at the bottom of this file, so the gap
- * stays visible instead of being quietly exempted.
- */
-const SCHEMA_EXEMPT: Record<string, string> = {
-  'mcp:serve': 'the MCP server itself — exposing it as one of its own tools would be recursive',
-  schemas: 'lists the tool catalog; agents get the same information from MCP tools/list',
-  'remote:init-angular': 'deprecated alias for `remote:init --framework angular`',
-};
+/** Single source of truth — see src/oclif/schema-derivation.ts. */
+const SCHEMA_EXEMPT: Record<string, string> = CATALOG_EXCLUDED;
 
 /** Files under src/commands that are not commands. */
 function isCommandFile(relPath: string): boolean {
@@ -115,18 +107,9 @@ describe('MCP schema coverage', () => {
   const covered = commands.filter((c) => !(c.id in SCHEMA_EXEMPT));
 
   it.each(covered.map((c) => [c.id, c] as const))(
-    '%s has an MCP schema, or a documented exemption',
+    '%s has an MCP schema',
     (id, _cmd) => {
-      const schemaPath = schemaPathFor(id);
-      const exists = fs.existsSync(schemaPath);
-
-      if (!exists) {
-        // Known gap: the build surface is invisible to agents over MCP.
-        // Tracked as part of the re-scoped #139 (agent contract completion).
-        expect(id).toMatch(/^build:/);
-        return;
-      }
-      expect(exists).toBe(true);
+      expect(fs.existsSync(schemaPathFor(id))).toBe(true);
     },
   );
 
@@ -137,15 +120,21 @@ describe('MCP schema coverage', () => {
     }
   });
 
-  it('the build surface is the only uncovered group (pin the known gap)', () => {
+  it('no command is uncovered — a new command without a schema fails here', () => {
     const uncovered = commands
       .filter((c) => !(c.id in SCHEMA_EXEMPT) && !fs.existsSync(schemaPathFor(c.id)))
       .map((c) => c.id)
       .sort();
 
-    // If this list shrinks, the gap is being closed — update the expectation.
-    // If it GROWS, a new command shipped without an MCP schema.
-    expect(uncovered).toEqual(['build:check', 'build:dev', 'build:docker', 'build:prod']);
+    expect(uncovered).toEqual([]);
+  });
+
+  it('the build surface is reachable by agents over MCP', () => {
+    // The gap this replaced: no mfe:build:* tool existed, so an agent could
+    // scaffold and validate an MFE but never build the thing it had made.
+    for (const id of ['build:check', 'build:dev', 'build:docker', 'build:prod']) {
+      expect(fs.existsSync(schemaPathFor(id))).toBe(true);
+    }
   });
 });
 
@@ -184,6 +173,40 @@ describe('schema catalog', () => {
           schema: file,
           flag: prop,
           known: true,
+        });
+      }
+    }
+  });
+
+  it('x-positional matches the command\'s declared args, in order', () => {
+    // buildArgv places these positionally. When this was a hardcoded guess it
+    // included `spec`, which is a flag — so `mfe:api` produced a second
+    // positional that a strict command rejects.
+    for (const file of schemaFiles) {
+      const id = path.basename(file, '.json').replace(/-/g, ':');
+      const cmd = commands.find((c) => c.id === id);
+      if (!cmd) continue;
+
+      const schema = JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, file), 'utf8'));
+      expect({ schema: file, positional: schema.input['x-positional'] }).toEqual({
+        schema: file,
+        positional: Object.keys(cmd.cls.args ?? {}),
+      });
+    }
+  });
+
+  it('no schema exposes a transport-owned flag', () => {
+    // --json is appended to every child call and the envelope depends on it;
+    // MCP is non-interactive by construction; `cwd` is injected as the reserved
+    // execution argument (#279). A caller setting any of them breaks the call.
+    for (const file of schemaFiles) {
+      const schema = JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, file), 'utf8'));
+      const declared = Object.keys(schema.input?.properties ?? {});
+      for (const owned of ['json', 'interactive', 'cwd']) {
+        expect({ schema: file, exposes: owned, present: declared.includes(owned) }).toEqual({
+          schema: file,
+          exposes: owned,
+          present: false,
         });
       }
     }

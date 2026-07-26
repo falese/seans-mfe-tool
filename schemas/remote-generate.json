@@ -2,19 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/remote:generate.json",
   "title": "remote:generate",
-  "description": "Input/output contract for seans-mfe-tool remote:generate",
+  "description": "Generate files from mfe-manifest.yaml capabilities",
   "input": {
     "type": "object",
     "properties": {
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Show what would be generated without writing"
       },
       "force": {
         "type": "boolean",
-        "default": false
+        "description": "Deprecated no-op: generated platform files re-stamp on every run; developer-owned files are never overwritten"
       }
-    }
+    },
+    "required": [],
+    "x-positional": []
   },
   "output": {
     "type": "object",
@@ -79,6 +81,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

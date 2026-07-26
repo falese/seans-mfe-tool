@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/adr:validate.json",
   "title": "adr:validate",
-  "description": "Input/output contract for seans-mfe-tool adr:validate",
+  "description": "Validate the ADR library's metadata, cross-references, and code citations (ADR-075)",
   "input": {
     "type": "object",
     "properties": {
@@ -12,10 +12,13 @@
       },
       "include-examples": {
         "type": "boolean",
-        "default": false,
-        "description": "Also scan examples/** for ADR citations"
+        "description": "Also scan examples/** for ADR citations (44 files carry pre-reflow numbers)"
       }
-    }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
   },
   "output": {
     "type": "object",
@@ -75,6 +78,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

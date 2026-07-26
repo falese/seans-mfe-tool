@@ -2,20 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/mfe:validate.json",
   "title": "mfe:validate",
-  "description": "Input/output contract for seans-mfe-tool mfe:validate",
+  "description": "Validate an MFE's internal consistency (manifest ⇄ package.json ⇄ federation)",
   "input": {
     "type": "object",
     "properties": {
       "dir": {
         "type": "string",
-        "description": "MFE directory to validate (default: cwd)"
+        "description": "MFE directory to validate (default: current directory)"
       },
       "typecheck": {
         "type": "boolean",
-        "default": false,
-        "description": "Also run `tsc --noEmit`"
+        "description": "Also run `tsc --noEmit` in the MFE directory"
       }
-    }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
   },
   "output": {
     "type": "object",
@@ -94,6 +97,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

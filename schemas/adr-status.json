@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/adr:status.json",
   "title": "adr:status",
-  "description": "Input/output contract for seans-mfe-tool adr:status",
+  "description": "Show ADR lifecycle state — what is proposed, outstanding, or done (ADR-075)",
   "input": {
     "type": "object",
     "properties": {
@@ -12,22 +12,17 @@
       },
       "outstanding": {
         "type": "boolean",
-        "default": false,
-        "description": "Only ratified work still to do"
+        "description": "Only decisions that are ratified with work still to do"
       },
       "status": {
         "type": "string",
-        "description": "Filter to one status (the CLI also accepts these case-insensitively)",
-        "enum": [
-          "Proposed",
-          "Accepted",
-          "Implemented",
-          "Deferred",
-          "Superseded",
-          "Withdrawn"
-        ]
+        "description": "Filter to one status (Proposed, Accepted, Implemented, Deferred, Superseded, Withdrawn); case-insensitive"
       }
-    }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
   },
   "output": {
     "type": "object",
@@ -107,6 +102,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

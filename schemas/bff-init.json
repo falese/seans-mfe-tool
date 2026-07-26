@@ -2,36 +2,44 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/bff:init.json",
   "title": "bff:init",
-  "description": "Input/output contract for seans-mfe-tool bff:init",
+  "description": "Initialize a new BFF project or add BFF to existing project",
   "input": {
     "type": "object",
     "properties": {
       "name": {
-        "type": "string"
+        "type": "string",
+        "description": "BFF project name (optional — omit to add to existing project)"
       },
       "port": {
         "type": "string",
+        "description": "Port number for the BFF server",
         "default": "3000"
       },
       "specs": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "OpenAPI specification file(s)"
       },
       "no-static": {
         "type": "boolean",
-        "default": false
+        "description": "Create standalone BFF without static asset serving"
       },
       "project-version": {
         "type": "string",
+        "description": "Project version",
         "default": "1.0.0"
       },
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Preview changes without writing"
       }
-    }
+    },
+    "required": [],
+    "x-positional": [
+      "name"
+    ]
   },
   "output": {
     "type": "object",
@@ -97,6 +105,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

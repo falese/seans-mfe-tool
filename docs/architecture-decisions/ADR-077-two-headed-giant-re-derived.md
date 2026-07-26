@@ -17,11 +17,15 @@ implements-pdr: [3]
 implemented-by:
   - packages/oclif-base/src/BaseCommand.ts
   - src/mcp/sources/local.ts
+  - src/oclif/schema-derivation.ts
+  - scripts/generate-schemas.ts
   - src/oclif/__tests__/command-conformance.test.ts
 verified-by:
   - packages/oclif-base/src/__tests__/base-command.agent-profile.test.ts
   - src/oclif/__tests__/command-conformance.test.ts
+  - src/oclif/__tests__/schema-derivation.test.ts
   - src/mcp/__tests__/local-source.test.ts
+  - src/mcp/__tests__/build-argv.test.ts
 tracked-by: ["#139"]
 summary: >-
   ADR-033's framing stands; its implementation table does not. The ownership half is withdrawn
@@ -114,7 +118,42 @@ oclif still renders the error. Two deliberate non-actions: an error that already
 code (oclif's own usage errors) is left alone, and an error that classifies as `unknown` is left
 alone rather than being relabelled as a typed failure class.
 
-### 5. The epic splits
+### 5. The MCP tool catalog is derived from the command registry
+
+`schemas/<cmd>.json` is what `mcp:serve` turns into agent-callable tools, so whatever decides its
+contents decides what agents can do. It was a hand-written literal in
+`scripts/generate-schemas.ts`, and it drifted in every available direction:
+
+- **Commands missing.** `build:check|dev|prod|docker` had no entry, so no `mfe:build:*` tool
+  existed. An agent over MCP could scaffold and validate an MFE and then not build it — which is
+  why the Meridian MCP lane scaffolded over MCP and dropped back to the CLI.
+- **Flags advertised that do not exist.** `deploy` offered `registry`, `mode`, `namespace`,
+  `domain`, `tag`, `memory`, `cpu`, `replicas` — a Kubernetes vocabulary the command never
+  implemented. Any agent using one got a hard oclif parse failure.
+- **Flags omitted that do exist.** `remote:init` did not advertise `framework`, so **an agent
+  could not scaffold an Angular MFE over MCP at all** — the flag that selects the framework was
+  invisible.
+- **Positionals guessed.** `buildArgv` carried `new Set(['name', 'spec'])`. `spec` is a flag on
+  every command that has one, so supplying it produced a second positional that a `strict`
+  command rejects.
+
+The command's own flag and arg declarations are the only honest source for its input contract.
+The generator now loads the live oclif registry (`Config.load()`, which includes first-party
+plugins), derives every input schema from it, and carries the declared args through as
+`x-positional` so `buildArgv` stops guessing. Each of the four failures above becomes
+unrepresentable rather than merely fixed.
+
+Output schemas stay hand-authored — a command's TypeScript result type is not introspectable at
+runtime — but a catalogued command with no output schema is a **build failure**, not an empty
+`{}`. Adding a command forces an explicit decision: author the output contract, or exclude it in
+`CATALOG_EXCLUDED` with a reason. Exclusions are for things that are not capabilities
+(`mcp:serve`, `schemas`, a deprecated alias); they are not a place to park a real gap.
+
+Three inputs are transport-owned and never appear in a schema: `--json` (appended to every child
+call; the envelope depends on it), `--interactive` (MCP is non-interactive by construction), and
+`cwd` (the reserved execution argument the registry injects, #279).
+
+### 6. The epic splits
 
 **#139 (re-scoped) — agent contract completion.** Build-output parsers behind the existing
 `BuildError` contract (absorbing #148); MCP schema coverage for the `build:*` surface; `received`
@@ -144,19 +183,33 @@ changing that needs its own decision.
 The conformance sweep covers this repo's command tree. Plugin-owned commands (`bff:*`) are
 checked only where they publish a schema into `schemas/`.
 
+§5 derives the *input* half of each contract. Output schemas remain hand-authored and unverified
+against the command's actual return value — a command whose result type changes can still
+publish a stale output schema. Closing that needs type-level extraction, which this ADR does not
+attempt.
+
 ## Consequences
 
 **Better.** The agent profile is now falsifiable: a command cannot ship without `--json`,
-`--no-interactive`, or an MCP schema without a test going red. The sweep found two real defects
-on its first run — a phantom `mfe:manifest.schema` tool, and eight non-existent flags advertised
-on `mfe:deploy` that would fail any agent that used them.
+`--no-interactive`, or an MCP schema without a test going red.
+
+**Better.** The tool catalog can no longer disagree with the CLI about what commands exist or
+what flags they take. Between them, the sweep and the derivation surfaced five defects that had
+each been live for months: a phantom `mfe:manifest.schema` tool; eight non-existent flags on
+`mfe:deploy`; the entire `build:*` surface missing; `remote:init` not advertising `framework`, so
+no agent could scaffold an Angular MFE over MCP; and `buildArgv` treating `spec` as a positional
+when it is a flag.
 
 **Better.** Closing #142/#145/#149 and rewriting #144 removes four issues that could not have
 been implemented as written without contradicting a later ADR or duplicating a solved problem.
 
-**Worse.** The exemption list in the sweep is a place where a real gap can be parked and
-forgotten. It is deliberately narrow: `build:*` is *not* exempt, and is instead pinned by an
-assertion that fails if the uncovered set changes in either direction.
+**Worse.** `Config.load()` at generation time means schema generation now depends on the CLI
+booting and its plugins resolving. A broken plugin install fails the build rather than silently
+emitting a smaller catalog — the right trade, but it is a new coupling.
+
+**Worse.** `CATALOG_EXCLUDED` is a place where a real gap could be parked and forgotten. It is
+deliberately narrow and each entry carries a reason; nothing in it is a capability an agent would
+want.
 
 **Cost accepted.** Typed exit codes in human mode change observable behaviour: a command that
 previously exited 1 on a `ValidationError` now exits 64. This is what ADR-033 always specified,
@@ -168,7 +221,7 @@ but any consumer branching on `=== 1` is affected.
 - ADR-074 — registration as a build artifact; the source of the generate-don't-check principle
   applied in §1.
 - ADR-055 — daemon-driven shells, which #144's original spec contradicts.
-- ADR-030 — error classification; §5 records that its pattern branch is unreachable in the CLI.
+- ADR-030 — error classification; §6 records that its pattern branch is unreachable in the CLI.
 - ADR-018 / ADR-017 — the envelope and error taxonomy this ADR enforces but does not change.
 - ADR-078 — the control plane and `platform:init` half of the split.
 - PDR-003 — AI-native, agent-operable tooling.

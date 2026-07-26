@@ -149,8 +149,8 @@ claims to honour.
 | `--no-interactive` as a real flag | ✅ shipped in the first slice |
 | Typed exit codes on *every* failure path, not only under `--json` | ✅ shipped in the first slice |
 | Cross-command conformance sweep | ✅ shipped in the first slice |
+| MCP tool catalog derived from the oclif registry — closes the `build:*` gap at its cause | ✅ shipped in the first slice |
 | Real build-output parsers behind the existing `BuildError` contract (absorbs #148) | open |
-| MCP schema coverage for `build:check\|dev\|prod\|docker` | open, pinned by a test |
 | `received` + `suggestion` on manifest validation errors (#141, remaining half) | open |
 | `classifyError(err, { types: [] })` — ADR-030's pattern branch is dead code in the CLI path | open |
 
@@ -201,13 +201,28 @@ flags the `deploy` command does not have — `registry`, `mode`, `namespace`, `d
 production deployment out of it entirely). An agent passing any of them got a hard oclif parse
 failure. Found by the conformance sweep on its first run, which is the argument for the sweep.
 
-**Still open, now pinned by a test.** No `mfe:build:*` tool exists. `build:check`, `build:dev`,
-`build:prod`, and `build:docker` are real, working commands with no `schemas/*.json`, and
-`scripts/generate-schemas.ts` iterates a hand-written `OUTPUT_SCHEMAS` literal rather than the
-oclif registry — so a command with no hand-authored schema silently produces no tool and nothing
-goes red. **An agent over MCP can scaffold, generate, and validate an MFE but cannot build it.**
-This is the substantive MCP gap, and it is the reason the Meridian MCP lane scaffolded over MCP
-and then dropped back to the CLI to build.
+**Fixed at the root, not patched.** No `mfe:build:*` tool existed — `build:check`, `build:dev`,
+`build:prod`, and `build:docker` were real, working commands with no `schemas/*.json`. **An agent
+over MCP could scaffold, generate, and validate an MFE but not build it**, which is why the
+Meridian MCP lane scaffolded over MCP and then dropped back to the CLI.
+
+The cause was that `scripts/generate-schemas.ts` iterated a hand-written literal rather than the
+oclif registry, so a command with no hand-authored entry silently produced no tool. Adding four
+schema files would have fixed the symptom and left the mechanism intact. Instead the catalog is
+now **derived from the live registry** (`Config.load()`, first-party plugins included) — see
+ADR-077 §5. Two more defects fell out of that immediately:
+
+- **`remote:init` never advertised `framework`.** The flag that selects React vs Angular was
+  missing from the hand-written schema, so **no agent could scaffold an Angular MFE over MCP.**
+  Both MCP-scaffolded Meridian MFEs are React; that was not a coincidence.
+- **`buildArgv` treated `spec` as a positional.** It carried `new Set(['name', 'spec'])`, but
+  `spec` is a flag on every command that has one, so `mfe:api` with a spec produced a second
+  positional that a `strict` command rejects. Positionals now come from the command's own arg
+  declarations, carried through the schema as `x-positional`.
+
+Verified against the running server: **17 tools**, all four `mfe:build:*` present, and
+`mfe:build:check` called against `examples/abc-kids/flappy` returns structured data matching its
+output schema.
 
 ---
 

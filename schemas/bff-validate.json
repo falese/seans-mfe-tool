@@ -2,15 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/bff:validate.json",
   "title": "bff:validate",
-  "description": "Input/output contract for seans-mfe-tool bff:validate",
+  "description": "Validate BFF configuration without building",
   "input": {
     "type": "object",
     "properties": {
       "manifest": {
         "type": "string",
+        "description": "Path to mfe-manifest.yaml",
         "default": "mfe-manifest.yaml"
       }
-    }
+    },
+    "required": [],
+    "x-positional": []
   },
   "output": {
     "type": "object",
@@ -53,6 +56,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,
