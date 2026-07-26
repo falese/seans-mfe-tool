@@ -8,8 +8,8 @@
  * Deliberately **scoped to the diff**, not a dump of the whole index. A 75-row
  * table on every PR is noise nobody reads, and noise nobody reads is worse than
  * nothing — it makes the governance signal look like boilerplate. What a
- * reviewer actually needs is: does this PR change a decision, does it rest on
- * one, and is that decision ratified.
+ * reviewer actually needs is: does this PR change a decision, which decisions
+ * does it reference, and are those ratified.
  *
  * Usage:
  *   ts-node scripts/adr-governance-report.ts <base-ref>
@@ -113,13 +113,18 @@ function main(): void {
   const touched = files.filter((f) => /docs\/architecture-decisions\/ADR-\d+.*\.md$/.test(f));
   const codeFiles = files.filter((f) => CODE_EXTENSIONS.has(path.extname(f)));
 
-  // Decisions this PR's changed code rests on.
+  // Decisions the changed code *mentions*.
   //
-  // Honours the same `adr-lint-ignore: code-cites-ratified-adr` marker the gate
-  // uses, sharing one regex rather than a second copy of it. A line the gate has
-  // been told is explanatory prose is not a dependency either — without this,
-  // the doc comment above, which names a renumbered decision to explain the
-  // blockquote rule, made this report claim the PR's code rests on it.
+  // Deliberately labelled "references", not "rests on". This is a text scan, and
+  // a text scan cannot tell a dependency from an example: files whose subject is
+  // the decision record — this one, the schema, the rules — name decisions in
+  // their prose constantly, and three rounds of suppressing those one at a time
+  // did not converge. Overclaiming would be the worse error, so the heading says
+  // what the scan actually knows.
+  //
+  // It still honours the gate's `adr-lint-ignore: code-cites-ratified-adr`
+  // marker, importing the one regex rather than copying it, so a line already
+  // declared to be prose stays excluded from both.
   const cited = new Set<number>();
   for (const file of codeFiles) {
     const full = path.join(REPO_ROOT, file);
@@ -216,7 +221,7 @@ function main(): void {
 
   const restsOn = [...cited].filter((id) => byId.has(id)).sort((a, b) => a - b);
   if (restsOn.length > 0) {
-    out.push('### Decisions this PR’s code rests on', '');
+    out.push('### Decisions referenced by the changed code', '');
     out.push(
       restsOn
         .map((id) => {
@@ -262,7 +267,8 @@ function main(): void {
   out.push(`**Register:** ${summary} — ${byId.size} ADRs.`);
   out.push('');
   out.push(
-    '<sub>Generated from ADR frontmatter (ADR-075). ' +
+    '<sub>Generated from ADR frontmatter (ADR-075). References are a text scan, so a ' +
+      'mention in prose counts — read that list as context, not a dependency set. ' +
       '`npm run check:adr` validates it; `npm run build:adr-index:check` proves the index matches. ' +
       '`seans-mfe-tool adr:status --outstanding` lists ratified work still to do.</sub>'
   );
