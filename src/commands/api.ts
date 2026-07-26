@@ -3,6 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import type { OpenAPI } from 'openapi-types';
 import { execSync } from 'child_process';
 import { DatabaseGenerator } from '../codegen/APIGenerator/DatabaseGenerator';
 import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator';
@@ -25,13 +26,22 @@ interface TemplateVars {
   port: number;
 }
 
+interface PackageJsonLike {
+  name?: string;
+  version?: string;
+  scripts?: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  [key: string]: unknown;
+}
+
 interface OpenAPISpec {
   info: {
     version?: string;
   };
-  paths: Record<string, any>;
+  paths: Record<string, unknown>;
   components?: {
-    schemas?: Record<string, any>;
+    schemas?: Record<string, unknown>;
   };
 }
 
@@ -50,11 +60,13 @@ async function loadOASSpec(specPath: string): Promise<OpenAPISpec> {
     }
     const localPath = path.resolve(process.cwd(), specPath);
     return await SwaggerParser.parse(localPath) as OpenAPISpec;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const cause = error instanceof Error ? error : undefined;
+    const message = cause?.message ?? String(error);
     if (specPath.startsWith('http')) {
-      throw new NetworkError(`Failed to fetch OpenAPI spec: ${error.message}`, 0);
+      throw new NetworkError(`Failed to fetch OpenAPI spec: ${message}`, 0);
     }
-    throw new SystemError(`Failed to parse OpenAPI spec: ${error.message}`, error);
+    throw new SystemError(`Failed to parse OpenAPI spec: ${message}`, cause);
   }
 }
 
@@ -273,8 +285,9 @@ async function processTemplates(targetDir: string, vars: TemplateVars): Promise<
     await mergePackageJson(targetDir, vars.database, vars);
     await processConfigFiles(targetDir, vars);
     await generateEnvironmentFiles(targetDir, vars);
-  } catch (error: any) {
-    throw new Error(`Failed to process templates: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to process templates: ${message}`);
   }
 }
 
@@ -283,7 +296,7 @@ async function mergePackageJson(targetDir: string, dbType: string, vars: Templat
     const basePkgPath = path.join(targetDir, 'package.json');
     const dbPkgPath = path.join(targetDir, `package.json.addon`);
 
-    let basePkg: any = await fs.readJson(basePkgPath);
+    let basePkg: PackageJsonLike = await fs.readJson(basePkgPath);
     basePkg.name = vars.name;
     basePkg.version = vars.version;
 
@@ -373,8 +386,9 @@ async function mergePackageJson(targetDir: string, dbType: string, vars: Templat
 
     await fs.writeFile(basePkgPath, JSON.stringify(basePkg, null, 2), 'utf8');
     console.log(chalk.green('✓ Generated package.json'));
-  } catch (error: any) {
-    throw new Error(`Failed to process package.json: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to process package.json: ${message}`);
   }
 }
 
@@ -562,7 +576,7 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
 
     console.log(chalk.blue('\nParsing OpenAPI specification...'));
     tmpSpec = await loadOASSpec(options.spec);
-    const dereferencedSpec = await SwaggerParser.dereference(tmpSpec as any);
+    const dereferencedSpec = await SwaggerParser.dereference(tmpSpec as unknown as OpenAPI.Document);
     const spec = dereferencedSpec as unknown as OpenAPISpec;
 
     await fs.ensureDir(targetDir);
@@ -646,12 +660,13 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
       dryRun: false,
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(chalk.red('\nFailed to create API:'));
-    console.error(error.message);
-    if (error.stack && process.env.DEBUG) {
+    const err = error instanceof Error ? error : undefined;
+    console.error(err?.message ?? String(error));
+    if (err?.stack && process.env.DEBUG) {
       console.error(chalk.gray('\nStack trace:'));
-      console.error(error.stack);
+      console.error(err.stack);
     }
     throw error;
   }

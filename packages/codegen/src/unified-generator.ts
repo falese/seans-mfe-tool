@@ -7,7 +7,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
-import type { DSLManifest, CapabilityConfig, CapabilityEntry } from '@seans-mfe/dsl';
+import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
 import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
@@ -336,14 +336,18 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
     },
   };
 
-  // Check if manifest has plugins section (can be array or object)
-  const manifestPlugins = (manifest as any).plugins;
+  // Check if manifest has plugins section (can be array or object). Not a
+  // field DSLManifest declares at the top level (plugins live under
+  // manifest.data.plugins per ADR-027) — this defends against pre-Zod-parse
+  // YAML that misplaces it, hence the unknown-narrowed read rather than a
+  // typed property access.
+  const manifestPlugins = (manifest as unknown as Record<string, unknown>).plugins;
   if (!manifestPlugins) return result;
 
   // Handle both array and object formats
   const pluginEntries = Array.isArray(manifestPlugins)
-    ? manifestPlugins.map((p) => (typeof p === 'string' ? p : Object.keys(p)[0]))
-    : Object.keys(manifestPlugins);
+    ? manifestPlugins.map((p) => (typeof p === 'string' ? p : Object.keys(p as object)[0]))
+    : Object.keys(manifestPlugins as object);
 
   for (const pluginName of pluginEntries) {
     if (KNOWN_MESH_PLUGINS.has(pluginName)) {
@@ -382,14 +386,17 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
     },
   };
 
-  // Check if manifest has transforms section (can be array or object)
-  const manifestTransforms = (manifest as any).transforms;
+  // Check if manifest has transforms section (can be array or object). Same
+  // unknown-narrowed defensive read as validateManifestPlugins above — this
+  // classification predates DSLManifestSchema's current `transforms: string[]`
+  // shape and still needs to tolerate a pre-Zod-parse {name: config} form.
+  const manifestTransforms = (manifest as unknown as Record<string, unknown>).transforms;
   if (!manifestTransforms) return result;
 
   // Handle both array and object formats
   const transformEntries = Array.isArray(manifestTransforms)
-    ? manifestTransforms.map((t) => (typeof t === 'string' ? t : Object.keys(t)[0]))
-    : Object.keys(manifestTransforms);
+    ? manifestTransforms.map((t) => (typeof t === 'string' ? t : Object.keys(t as object)[0]))
+    : Object.keys(manifestTransforms as object);
 
   for (const transformName of transformEntries) {
     if (KNOWN_MESH_TRANSFORMS.has(transformName)) {
@@ -590,9 +597,11 @@ export function extractManifestVars(
   const muiVersion =
     manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
 
-  // Filter out empty/invalid remote entries from YAML parsing issues
-  const rawRemotes = manifest.dependencies?.mfes || {};
-  const remotes: Record<string, any> = {};
+  // Filter out empty/invalid remote entries from YAML parsing issues. Schema
+  // types mfes as Record<string, string>, but this defends against
+  // pre-Zod-parse YAML where an entry can still be an object.
+  const rawRemotes = (manifest.dependencies?.mfes ?? {}) as unknown as Record<string, unknown>;
+  const remotes: Record<string, unknown> = {};
   for (const [name, config] of Object.entries(rawRemotes)) {
     if (name && name.trim() && config && typeof config === 'object') {
       remotes[name] = config;
@@ -600,7 +609,7 @@ export function extractManifestVars(
   }
 
   // Extract performance/observability config from manifest (ADR-027)
-  const performanceConfig = (manifest as any).performance || {};
+  const performanceConfig = manifest.performance || {};
   const observabilityConfig = performanceConfig.observability || {};
 
   // Determine which plugins are needed based on manifest config
@@ -624,11 +633,11 @@ export function extractManifestVars(
   if (performanceConfig.filterSchema?.enabled) {
     neededTransforms.add('filterSchema');
   }
-  if ((manifest as any).transforms && (manifest as any).transforms.length > 0) {
+  if (manifest.transforms && manifest.transforms.length > 0) {
     neededTransforms.add('resolversComposition');
   }
   // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
-  const mockSwitchEnabled = !!(manifest as any).data?.mockSwitch?.enabled;
+  const mockSwitchEnabled = !!manifest.data?.mockSwitch?.enabled;
   if (mockSwitchEnabled) {
     neededTransforms.add('resolversComposition');
   }
@@ -706,7 +715,7 @@ export function extractManifestVars(
       filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
       // Demo-mode mock switch (ADR-052) — emits a resolversComposition over Query.*
       mockSwitch: mockSwitchEnabled,
-      customTransforms: (manifest as any).transforms || [],
+      customTransforms: manifest.transforms || [],
     },
 
     // BFF endpoint for the client-side connector template (bff.ts.ejs).
@@ -718,7 +727,7 @@ export function extractManifestVars(
 
     // True when the manifest declares a data: section — gates doQuery() generation
     // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
-    hasBff: !!((manifest as any).data),
+    hasBff: !!manifest.data,
   };
 }
 
@@ -727,7 +736,7 @@ export function extractManifestVars(
  */
 export async function renderTemplate(
   templatePath: string,
-  vars: Record<string, any>
+  vars: Record<string, unknown>
 ): Promise<string> {
   const template = await fs.readFile(templatePath, 'utf8');
   return ejs.render(template, vars);
@@ -902,8 +911,8 @@ export async function generateAllFiles(
  * Without a manifest endpoint the relative serve path is all we have.
  */
 function resolveBffEndpoint(manifest: DSLManifest): string {
-  const servePath = (manifest as any).data?.serve?.endpoint ?? '/graphql';
-  const origin = (manifest as any).endpoint;
+  const servePath = manifest.data?.serve?.endpoint ?? '/graphql';
+  const origin = manifest.endpoint;
   if (!origin) return servePath;
   try {
     return new URL(servePath, origin).toString();
@@ -929,7 +938,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
 
   const capabilities: Array<{
     method: string;
-    config: any;
+    config: CapabilityConfig;
     returnTypeBase: string;
     stubBody: string;
   }> = [];
@@ -940,8 +949,8 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
   // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
   // (no stub method is emitted because the implementation lives elsewhere).
   const handlerSources: Array<{ localName: string; module: string; exportName: string }> = [];
-  let inputs: any[] = [];
-  let outputs: any[] = [];
+  let inputs: DSLInput[] = [];
+  let outputs: DSLOutput[] = [];
 
   for (const entry of manifest.capabilities) {
     for (const [method, config] of Object.entries(entry)) {
@@ -970,17 +979,17 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
       // Filter out base capability names to prevent conflicts
       const baseCapabilityNames = Object.values(platformCapabilities).map((c) => c.method);
       if (safeConfig.lifecycle) {
-        for (const phase of ['before', 'main', 'after', 'error']) {
+        for (const phase of ['before', 'main', 'after', 'error'] as const) {
           if (safeConfig.lifecycle[phase]) {
             for (const hookEntry of safeConfig.lifecycle[phase]) {
               for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
                 // Skip if it's a base capability name OR already added
                 if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
                   lifecycleHookNames.add(hookName);
-                  const hookDescription = (hookConfig as any)?.description || '';
+                  const hookDescription = hookConfig?.description || '';
                   // ADR-040: hooks with a `source` are wired through the
                   // generated handler-registry, not emitted as stubs.
-                  const source = (hookConfig as any)?.source as string | undefined;
+                  const source = hookConfig?.source;
                   if (typeof source === 'string' && source.length > 0) {
                     const parsed = parseHandlerSource(source, hookName);
                     if (parsed) {
@@ -1141,7 +1150,7 @@ async function renderFiles(
         source && typeof source === 'object' && source.name && source.name.trim() && source.handler
     );
 
-    const meshBaseConfig: any = {
+    const meshBaseConfig: Record<string, unknown> = {
       sources: validSources,
       serve: manifest.data.serve || { endpoint: '/graphql', playground: true },
     };
@@ -1167,7 +1176,7 @@ async function renderFiles(
 
     // Demo-mode mock switch (ADR-052): composer and developer-owned fixtures
     // live in src/platform/bff/ alongside the BFF connector.
-    if ((manifest.data as any).mockSwitch?.enabled) {
+    if (manifest.data.mockSwitch?.enabled) {
       files.push({
         path: path.join(bffDir, 'mock-switch.js'),
         content: await renderTemplate(path.join(bffTemplateDir, 'mock-switch.js.ejs'), vars),
@@ -1376,13 +1385,16 @@ async function renderFiles(
     if (await fs.pathExists(indexTemplatePath)) {
       // Build capability metadata for template
       const capabilityMetadata = domainCapabilities.map((name) => {
-        // Find the capability config to get icon/displayName
+        // Find the capability config to get icon/displayName. Neither field is
+        // part of CapabilityConfigSchema today, so this reads through an
+        // unknown-narrowed view rather than asserting a shape the schema
+        // doesn't declare; both fall through to the defaults below in practice.
         const capEntry = manifest.capabilities.find((c) => Object.keys(c).includes(name));
-        const capConfig = capEntry?.[name];
+        const capConfig = capEntry?.[name] as unknown as Record<string, unknown> | undefined;
         return {
           className: name,
-          displayName: (capConfig as any)?.displayName || name,
-          icon: (capConfig as any)?.icon || '📦',
+          displayName: (capConfig?.displayName as string | undefined) || name,
+          icon: (capConfig?.icon as string | undefined) || '📦',
         };
       });
 

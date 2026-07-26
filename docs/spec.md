@@ -257,7 +257,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
 | [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
-| [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Accepted (impl phased, #321) |
+| [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Implemented |
 | [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
 | [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased, #317) |
 | [ADR-026](./architecture-decisions/ADR-026-load-capability-atomic.md) | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased, #318) |

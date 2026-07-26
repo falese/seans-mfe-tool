@@ -63,7 +63,7 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
    * zone.js loads eagerly because Angular bootstrap is zone-dependent and
    * must be available synchronously.
    */
-  protected getSharedDependencies(): Record<string, any> {
+  protected getSharedDependencies(): Record<string, unknown> {
     return {
       '@angular/core': { singleton: true, strictVersion: true, requiredVersion: '^19.2.16' },
       '@angular/common': { singleton: true, strictVersion: true, requiredVersion: '^19.2.16' },
@@ -90,10 +90,10 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
    * after the initial component is created.
    */
   protected async mountComponent(
-    Component: any,
-    props: Record<string, any>,
+    Component: unknown,
+    props: Record<string, unknown>,
     containerId: string
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (typeof document === 'undefined') {
       throw new Error('[AngularRemoteMFE] mountComponent called outside a browser environment');
     }
@@ -171,8 +171,8 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
    * Resolve an Angular standalone component's selector from its ɵcmp metadata.
    * Returns null if the component wasn't decorated with @Component.
    */
-  private resolveSelector(Component: any): string | null {
-    const cmp = Component?.ɵcmp;
+  private resolveSelector(Component: unknown): string | null {
+    const cmp = (Component as { ɵcmp?: { selectors?: unknown } } | null | undefined)?.ɵcmp;
     if (!cmp) return null;
     // ɵcmp.selectors is an array of selector arrays, e.g. [['app-root']].
     const selectors = cmp.selectors;

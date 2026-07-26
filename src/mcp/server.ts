@@ -177,7 +177,7 @@ async function handleRequest(
   toolMap:  Map<string, McpToolDefinition>,
   options:  McpServerOptions,
 ): Promise<Record<string, unknown> | null> {
-  const { jsonrpc, id, method, params } = request as any;
+  const { jsonrpc, id, method, params } = request;
 
   if (method === 'initialize') {
     return {
@@ -210,8 +210,9 @@ async function handleRequest(
   }
 
   if (method === 'tools/call') {
-    const toolName = (params as any)?.name as string;
-    const input    = ((params as any)?.arguments ?? {}) as Record<string, unknown>;
+    const paramsObj = (params ?? {}) as Record<string, unknown>;
+    const toolName  = paramsObj.name as string;
+    const input     = (paramsObj.arguments ?? {}) as Record<string, unknown>;
 
     if (!toolMap.has(toolName)) {
       return {
