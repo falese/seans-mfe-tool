@@ -107,7 +107,7 @@ const ADR_GLOSS = /ADR-(\d{2,4})\s*[:—–-]\s*([A-Za-z][^.;|\n]{8,70})/g;
  * is the worst behaviour available for an escape hatch. The token is unusual
  * enough that its presence is the intent.
  */
-const SUPPRESSION = /adr-lint-ignore:\s*([a-z-]+)/;
+export const SUPPRESSION = /adr-lint-ignore:\s*([a-z-]+)/;
 
 const STOP_WORDS = new Set([
   'the', 'a', 'an', 'of', 'and', 'or', 'for', 'in', 'to', 'as', 'is', 'with',

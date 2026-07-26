@@ -8,6 +8,7 @@ area: Codegen / control-plane / registration / module-federation / drift
 enforcement: code
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 tags: [codegen, module-federation, control-plane, registration, drift, manifest]
 summary: The `registration` half of a control-plane rule document is generated from `mfe-manifest.yaml` at build time instead of being hand-authored. Every one of its nine fields is already a restatement of the manifest, so hand-maintaining it can only introduce drift. `routes` stay hand-authored — placement is an operator decision and is not derivable. The Module-Federation `exposes` key stays fixed at `./App` (#272); this ADR records that convention, which until now existed only as a template comment.
 rationale-summary: The platform has converged on build-time drift control — #295 (generator-owned files), #296 (package.json + federation `shared`), ADR-073 (declared vs implemented slots, and rules vs declarations). Each of those *detects* disagreement between two hand-maintained things. The registration is the last artifact still fully hand-authored, and it restates the manifest field for field. Generating it removes the disagreement rather than checking for it.

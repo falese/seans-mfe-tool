@@ -10,6 +10,7 @@ tags: [codegen, dependencies, module-federation, package.json, templates, drift]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:

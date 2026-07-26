@@ -10,6 +10,7 @@ tags: [cli, oclif, commander, migration, plugin-architecture]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [4]
 implemented-by:
   - bin/run.js
   - bin/dev.ts

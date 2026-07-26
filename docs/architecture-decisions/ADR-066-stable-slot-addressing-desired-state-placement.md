@@ -10,6 +10,7 @@ tags: [runtime, slots, addressing, control-plane]
 relates-to: [55, 57, 58, 60]
 supersedes: []
 superseded-by: []
+implements-pdr: [5, 7]
 implemented-by:
   - packages/contracts/src/slot-contract.ts
 verified-by:

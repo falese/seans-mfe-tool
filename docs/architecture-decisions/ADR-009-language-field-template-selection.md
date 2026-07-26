@@ -10,6 +10,7 @@ tags: [dsl, codegen, language, templates]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:

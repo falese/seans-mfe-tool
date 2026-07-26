@@ -10,9 +10,11 @@ tags: [contracts, daemon, control-plane, runtime, protocol, messages]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/messages.ts
 verified-by: []
+tracked-by: ["#210"]
 summary: >-
   The Renderer ⇄ Daemon ⇄ Registry ⇄ MFE wire protocol (PLATFORM-CONTRACT.md v3.2) is codified
   once in `@seans-mfe/contracts/messages` — Message envelope, ActionRecord, Resolution,

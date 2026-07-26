@@ -10,6 +10,7 @@ tags: [cli, json-envelope, oclif, ai-native, stdout]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - packages/contracts/src/envelope.ts
 verified-by:

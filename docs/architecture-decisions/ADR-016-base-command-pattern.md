@@ -10,6 +10,7 @@ tags: [cli, oclif, base-command, json-envelope, error-handling]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - packages/oclif-base/src/BaseCommand.ts
 verified-by: []

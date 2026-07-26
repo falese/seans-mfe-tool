@@ -134,6 +134,16 @@ export const AdrFrontmatterSchema = z.object({
   /** Test names or npm-script gate names that demonstrate the decision holds. */
   'verified-by': z.array(z.string().min(1)).default([]),
 
+  /**
+   * Open issues *concerning* this decision (ADR-075 §7).
+   *
+   * Deliberately not `impl.refs`. That field means "work required to finish
+   * ratifying this decision" and lives under `impl.stage`; putting a bug against
+   * an already-`Implemented` decision there would make `adr:status --outstanding`
+   * report finished work as outstanding. This field carries no such implication.
+   */
+  'tracked-by': z.array(z.string().regex(/^#\d+$/, 'must be an issue reference like "#123"')).default([]),
+
   summary: z.string().min(1).optional(),
   'rationale-summary': z.string().min(1).optional(),
 

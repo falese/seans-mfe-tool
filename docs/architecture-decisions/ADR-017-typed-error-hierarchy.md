@@ -10,6 +10,7 @@ tags: [errors, contracts, cli, runtime, type-safety]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - packages/contracts/src/errors
 verified-by: []

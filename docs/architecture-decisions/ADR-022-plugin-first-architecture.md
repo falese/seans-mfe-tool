@@ -10,6 +10,7 @@ tags: [plugin-architecture, oclif, monorepo, daemon, coder]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [4]
 implemented-by:
   - CLAUDE.md
 verified-by: []

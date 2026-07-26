@@ -10,6 +10,7 @@ tags: [runtime, layout, shell, slots, daemon, control-plane, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/runtime/src/layout-manager.ts
 verified-by: []

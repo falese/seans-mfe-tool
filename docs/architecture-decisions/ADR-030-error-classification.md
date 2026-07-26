@@ -10,6 +10,7 @@ tags: [runtime, errors, retry, classification, security]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - packages/contracts/src/error-classifier.ts
   - packages/runtime/src/retry-wrapper.ts

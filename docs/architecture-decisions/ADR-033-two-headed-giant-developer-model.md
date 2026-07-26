@@ -10,6 +10,7 @@ tags: [dx, ai, cli, meta]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [3]
 implemented-by:
   - CLAUDE.md
 verified-by: []

@@ -10,6 +10,7 @@ tags: [runtime, control-plane, abstract-base]
 relates-to: [54, 55, 56, 57, 58]
 supersedes: []
 superseded-by: []
+implements-pdr: [5]
 implemented-by:
   - packages/runtime/src/base-control-plane.ts
 verified-by:

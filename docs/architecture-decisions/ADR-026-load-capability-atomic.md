@@ -4,7 +4,7 @@ title: Load Capability — Atomic Operation Design
 status: Accepted
 impl:
   stage: phased
-  refs: []
+  refs: ["#318"]
 date: 2025-12-06
 deciders: [sean]
 area: Runtime lifecycle
@@ -13,6 +13,7 @@ tags: [runtime, load, atomic, telemetry, module-federation]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by: []

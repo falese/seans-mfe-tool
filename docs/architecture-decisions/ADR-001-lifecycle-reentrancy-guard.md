@@ -1,7 +1,7 @@
 ---
 id: 0001
 title: Lifecycle Re-Entrancy Guard in BaseMFE
-status: Accepted
+status: Implemented
 date: 2025-12-13
 deciders: [sean]
 area: Runtime lifecycle
@@ -10,6 +10,7 @@ tags: [runtime, lifecycle, base-mfe, safety]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by: []

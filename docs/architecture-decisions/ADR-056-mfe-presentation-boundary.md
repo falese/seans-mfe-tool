@@ -10,9 +10,11 @@ tags: [runtime, boundary, providers, polyglot, module-federation, react, angular
 relates-to: []
 supersedes: []
 superseded-by: [60]
+implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/presentation.ts
 verified-by: []
+tracked-by: ["#209", "#241", "#247"]
 summary: >-
   An MFE is a sealed, framework-opaque virtual machine composed like a Helm chart — never
   optimized through from the outside. The platform is split at a thin waist with exactly two

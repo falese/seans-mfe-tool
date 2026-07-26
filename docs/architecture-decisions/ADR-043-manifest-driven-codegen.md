@@ -10,6 +10,7 @@ tags: [codegen, dsl, manifest, pipeline, templates, single-source-of-truth]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:

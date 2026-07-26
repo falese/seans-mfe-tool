@@ -10,6 +10,7 @@ tags: [runtime, lifecycle, hooks, resilience]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by: []

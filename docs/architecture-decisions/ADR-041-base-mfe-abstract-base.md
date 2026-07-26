@@ -10,6 +10,7 @@ tags: [runtime, base-class, lifecycle, capabilities, contract]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [2]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
 verified-by:

@@ -227,83 +227,91 @@ All generation and training workflows emit structured JSON to stderr (or log fil
 
 All architecture decisions live in `docs/architecture-decisions/`. **Before implementing anything that touches the platform contract, bundler integration, lifecycle, or BFF layer — look here first.**
 
+**Generated** from ADR frontmatter (ADR-075 §1) — do not hand-edit. Run
+`npm run build:adr-index` after changing an ADR's `status`, `area`, `title`, or
+`impl`; CI gates it with `npm run build:adr-index:check`.
+
+<!-- BEGIN GENERATED: adr-index -->
+
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
-| ADR-001 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Accepted |
-| ADR-002 | Lifecycle Hook Execution Model | Runtime lifecycle | Implemented |
-| ADR-003 | No Custom Lifecycle Phases | Runtime lifecycle | Implemented |
-| ADR-004 | Handler Array Support | Runtime lifecycle | Implemented |
-| ADR-005 | Handler Discovery Convention | Runtime lifecycle | Implemented |
-| ADR-006 | Unified Type System | DSL / types | Implemented |
-| ADR-007 | Authorization Expression Grammar | DSL / security | Deferred |
-| ADR-008 | Data Type Metadata | DSL | Implemented |
-| ADR-009 | Language Field and Template Selection | Codegen | Implemented |
-| ADR-010 | Data Lifecycle Alignment | DSL | Implemented |
-| ADR-011 | GeneratedFrom Traceability | DSL | Implemented |
-| ADR-012 | GraphQL Mesh BFF Layer | BFF | Implemented |
-| ADR-013 | Generated MFE Test Templates | Codegen / testing | Implemented |
-| ADR-014 | Incremental TypeScript Migration | Codebase | Implemented |
-| ADR-015 | oclif as CLI framework — replace Commander | CLI | Accepted |
-| ADR-016 | BaseCommand pattern | CLI / contracts | Accepted |
-| ADR-017 | Typed error hierarchy | CLI / contracts | Accepted |
-| ADR-018 | CommandResult\<T\> JSON envelope | CLI / contracts | Accepted |
-| ADR-019 | MCP child-process isolation | MCP | Accepted |
-| ADR-020 | Bun for dev, Node for publish | CLI dev workflow | Accepted |
-| ADR-021 | Package namespace strategy (@seans-mfe/* vs @falese/*) | Packages | Accepted |
-| ADR-022 | Plugin-first architecture | Architecture | Accepted |
-| ADR-023 | No-any TypeScript discipline | TypeScript | Accepted |
-| ADR-024 | Platform Handler Library Standardization | Runtime handlers | Proposed |
-| ADR-025 | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased) |
-| ADR-026 | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased) |
-| ADR-027 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
-| ADR-028 | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
-| ADR-029 | Timeout Protection with AbortSignal | Lifecycle engine | Implemented |
-| ADR-030 | Error Classification with Hybrid Detection | Lifecycle engine | Implemented |
-| ADR-031 | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
-| ADR-032 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
-| ADR-033 | Two-headed giant — AI-native + human-legible DX | Developer model | Accepted |
-| ADR-034 | Pluggable bundler + framework via codegen variants | Codegen / polyglot | Implemented |
-| ADR-035 | Docker build orchestration via Turborepo task graph | Docker / CI | Implemented |
-| ADR-036 | Framework plugin system — `BaseFrameworkPlugin` + `loadFrameworkPlugin()` | Build / codegen / deploy | Implemented |
-| ADR-037 | TDD-always development discipline | Process | Accepted |
-| ADR-038 | Conventional Commits and branch naming | Process | Accepted |
-| ADR-039 | Structured logger — no console.log in production code | CLI / logging | Accepted |
-| ADR-040 | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
-| ADR-041 | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
-| ADR-042 | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
-| ADR-043 | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Implemented |
-| ADR-044 | Production Container Hardening for Generated MFEs | Docker / deploy / security | Implemented |
-| ADR-045 | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Proposed |
-| ADR-046 | Environment Configuration and Secret Validation | Configuration / security | Proposed |
-| ADR-047 | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
-| ADR-048 | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
-| ADR-049 | Release, Versioning, and Publish Automation | Release / packages | Proposed |
-| ADR-050 | Dependency Governance — Pinning, hasBff Gate, DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
-| ADR-051 | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
-| ADR-052 | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
-| ADR-053 | RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient | Runtime / query / BFF | Implemented |
-| ADR-054 | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
-| ADR-055 | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
-| ADR-056 | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented |
-| ADR-057 | Virtualized Daemon Socket — Per-Slot Control-Plane Channels (DaemonChannel) | Runtime / control-plane / channels | Implemented |
-| ADR-058 | Slot-Provider MFEs — MFEs that Provide Slots for Other MFEs | Runtime / slots / composition | Implemented |
-| ADR-059 | BaseControlPlane — Abstract Base for All Control-Plane Implementations | Runtime / control-plane / abstract-base | Implemented |
-| ADR-060 | Contextualized VM Composition — Value-Injection, Slot-Scoped Self-Healing, Control-Plane Re-Resolution | Runtime / composition / resilience / context | Implemented |
-| ADR-061 | `@seans-mfe/dsl` and `@seans-mfe/codegen` as Packages; Framework Variant Injected, Not Resolved | Codegen / DSL / packaging | Implemented |
-| ADR-062 | `deploy` is Dev-Convenience Only; Production Deployment Returns as a Plugin-Resolved Target Axis | Deploy / plugins / scope | Accepted (impl deferred, #250) |
-| ADR-063 | API-Backend Generation is a Plugin Axis, Not a Wrapper Around One OSS Codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
-| ADR-064 | Runtime's Future is a Semver-Published Package, Not a Staged `dist/runtime` Folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
-| ADR-065 | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Accepted (impl phased, #264) |
-| ADR-066 | Stable Slot Addressing and Desired-State Placement — Backend Places Any Experience in Any Slot, Always | Runtime / slots / addressing / control-plane | Implemented |
-| ADR-067 | Manifest-Declared Slot Contract — Slots Declared in the DSL, Registration Code Generated from the Declaration | DSL / codegen / slots / contract | Implemented |
-| ADR-068 | Provider-Scoped Slot Addresses — Stable MFE ID + Declared Local Slot ID | Runtime / slots / addressing / ownership | Implemented |
-| ADR-069 | Slot Grammar Single-Sourced in Contracts | Contracts / DSL / runtime / packaging | Implemented |
-| ADR-070 | Experience-Scoped Federated Supergraph — Control-Plane-Composed Data over Participant MFE BFFs | Runtime / control-plane / data / federation / lifecycle | Accepted (impl phased, #282, #284, #285, #286, #287, #288) |
-| ADR-071 | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Implemented |
-| ADR-072 | The Sanctioned Slot Registration API — `DeclaredSlot`, Typed by the Manifest | Codegen / slots / app-code API / typing | Implemented |
-| ADR-073 | Slot Contract Logic in Contracts; Placement Targets Become Validatable | Contracts / CLI / slots / design-time validation | Implemented |
-| ADR-074 | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
-| ADR-075 | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
+| [ADR-001](./architecture-decisions/ADR-001-lifecycle-reentrancy-guard.md) | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Implemented |
+| [ADR-002](./architecture-decisions/ADR-002-lifecycle-hook-execution-model.md) | Lifecycle Hook Execution Model | Runtime lifecycle | Implemented |
+| [ADR-003](./architecture-decisions/ADR-003-no-custom-lifecycle-phases.md) | No Custom Lifecycle Phases | Runtime lifecycle | Implemented |
+| [ADR-004](./architecture-decisions/ADR-004-handler-array-support.md) | Handler Array Support | Runtime lifecycle | Implemented |
+| [ADR-005](./architecture-decisions/ADR-005-handler-discovery-convention.md) | Handler Discovery Convention | Runtime lifecycle | Implemented |
+| [ADR-006](./architecture-decisions/ADR-006-unified-type-system.md) | Unified Type System | DSL / types | Implemented |
+| [ADR-007](./architecture-decisions/ADR-007-authorization-expression-grammar.md) | Authorization Expression Grammar | DSL / security | Deferred |
+| [ADR-008](./architecture-decisions/ADR-008-data-type-metadata.md) | Data Type Metadata | DSL | Implemented |
+| [ADR-009](./architecture-decisions/ADR-009-language-field-template-selection.md) | Language Field and Template Selection | Codegen | Implemented |
+| [ADR-010](./architecture-decisions/ADR-010-data-lifecycle-alignment.md) | Data Lifecycle Alignment | DSL | Implemented |
+| [ADR-011](./architecture-decisions/ADR-011-generated-from-traceability.md) | GeneratedFrom Traceability | DSL | Implemented |
+| [ADR-012](./architecture-decisions/ADR-012-graphql-mesh-bff-layer.md) | GraphQL Mesh for BFF Layer with DSL-Embedded Configuration | BFF | Implemented |
+| [ADR-013](./architecture-decisions/ADR-013-generated-mfe-test-templates.md) | Generated MFE Test Templates | Codegen / testing | Implemented |
+| [ADR-014](./architecture-decisions/ADR-014-incremental-typescript-migration.md) | Incremental TypeScript Migration | Codebase | Implemented |
+| [ADR-015](./architecture-decisions/ADR-015-oclif-migration.md) | oclif as CLI framework — replace Commander | CLI | Accepted |
+| [ADR-016](./architecture-decisions/ADR-016-base-command-pattern.md) | BaseCommand pattern — every oclif command extends BaseCommand | CLI / contracts | Accepted |
+| [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Accepted |
+| [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Accepted |
+| [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Accepted |
+| [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Accepted |
+| [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
+| [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
+| [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Accepted |
+| [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
+| [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased, #317) |
+| [ADR-026](./architecture-decisions/ADR-026-load-capability-atomic.md) | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased, #318) |
+| [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md) | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
+| [ADR-028](./architecture-decisions/ADR-028-parallel-execution.md) | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
+| [ADR-029](./architecture-decisions/ADR-029-timeout-protection.md) | Timeout Protection with AbortSignal | Lifecycle engine | Implemented |
+| [ADR-030](./architecture-decisions/ADR-030-error-classification.md) | Error Classification with Hybrid Detection | Lifecycle engine | Implemented |
+| [ADR-031](./architecture-decisions/ADR-031-conditional-execution.md) | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
+| [ADR-032](./architecture-decisions/ADR-032-inter-hook-communication.md) | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
+| [ADR-033](./architecture-decisions/ADR-033-two-headed-giant-developer-model.md) | Two-headed giant — AI-native + human-legible developer experience | Developer model | Accepted |
+| [ADR-034](./architecture-decisions/ADR-034-pluggable-bundler-framework.md) | Pluggable bundler + framework via codegen variants | Codegen / polyglot | Implemented |
+| [ADR-035](./architecture-decisions/ADR-035-docker-turborepo-integration.md) | Docker Build Orchestration via Turborepo Task Graph | Docker / CI | Implemented |
+| [ADR-036](./architecture-decisions/ADR-036-framework-plugins.md) | Framework plugins — abstract BaseFrameworkPlugin with concrete implementations | Build / codegen / deploy | Implemented |
+| [ADR-037](./architecture-decisions/ADR-037-tdd-always.md) | TDD-always — write the failing test before the code | Process | Accepted |
+| [ADR-038](./architecture-decisions/ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch discipline | Process | Accepted |
+| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted |
+| [ADR-040](./architecture-decisions/ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
+| [ADR-041](./architecture-decisions/ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
+| [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
+| [ADR-043](./architecture-decisions/ADR-043-manifest-driven-codegen.md) | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Implemented |
+| [ADR-044](./architecture-decisions/ADR-044-production-container-hardening.md) | Production Container Hardening for Generated MFEs | Docker / deploy / security | Implemented |
+| [ADR-045](./architecture-decisions/ADR-045-package-manager-and-runtime-pinning.md) | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Proposed |
+| [ADR-046](./architecture-decisions/ADR-046-environment-configuration-and-secret-validation.md) | Environment Configuration and Secret Validation | Configuration / security | Proposed |
+| [ADR-047](./architecture-decisions/ADR-047-codeowners-and-review-routing.md) | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
+| [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
+| [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
+| [ADR-050](./architecture-decisions/ADR-050-dependency-governance.md) | Dependency Governance — Pinning Strategy, hasBff Gate, and DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
+| [ADR-051](./architecture-decisions/ADR-051-angular-19-upgrade.md) | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
+| [ADR-052](./architecture-decisions/ADR-052-bff-demo-mode-mock-switch.md) | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
+| [ADR-053](./architecture-decisions/ADR-053-remote-mfe-doquery.md) | RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient for all MFE+BFF combinations | Runtime / query / BFF | Implemented |
+| [ADR-054](./architecture-decisions/ADR-054-control-plane-message-protocol.md) | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
+| [ADR-055](./architecture-decisions/ADR-055-layout-manager-daemon-driven-shells.md) | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
+| [ADR-056](./architecture-decisions/ADR-056-mfe-presentation-boundary.md) | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented |
+| [ADR-057](./architecture-decisions/ADR-057-virtualized-daemon-socket.md) | Virtualized daemon socket: per-slot control-plane channels over one host connection | Runtime / control-plane / channels | Implemented |
+| [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented |
+| [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Implemented |
+| [ADR-060](./architecture-decisions/ADR-060-contextualized-vm-composition.md) | Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution | Runtime / composition / resilience / context | Implemented |
+| [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
+| [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Accepted (impl deferred, #250) |
+| [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
+| [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
+| [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Accepted (impl phased, #264) |
+| [ADR-066](./architecture-decisions/ADR-066-stable-slot-addressing-desired-state-placement.md) | Stable slot addressing and desired-state placement | Runtime / slots / addressing / control-plane | Implemented |
+| [ADR-067](./architecture-decisions/ADR-067-manifest-declared-slot-contract.md) | Manifest-declared slot contract: slots are declared in the DSL, code is generated from the declaration | DSL / codegen / slots / contract | Implemented |
+| [ADR-068](./architecture-decisions/ADR-068-provider-scoped-slot-addresses.md) | Provider-scoped slot addresses | Runtime / slots / addressing / ownership | Implemented |
+| [ADR-069](./architecture-decisions/ADR-069-slot-grammar-single-source.md) | Slot grammar single-sourced in contracts | Contracts / DSL / runtime / packaging | Implemented |
+| [ADR-070](./architecture-decisions/ADR-070-control-plane-owned-data-fetch-lifecycle.md) | Experience-scoped federated supergraph (control-plane-composed data over participant MFE BFFs) | Runtime / control-plane / data / federation / lifecycle | Accepted (impl phased, #282, #284, #285, #286, #287, #288) |
+| [ADR-071](./architecture-decisions/ADR-071-manifest-driven-client-dependencies.md) | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Implemented |
+| [ADR-072](./architecture-decisions/ADR-072-slot-registration-api.md) | The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest | Codegen / slots / app-code API / typing | Implemented |
+| [ADR-073](./architecture-decisions/ADR-073-slot-contract-in-contracts-design-time-validation.md) | Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable | Contracts / CLI / slots / design-time validation | Implemented |
+| [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
+| [ADR-075](./architecture-decisions/ADR-075-adr-library-under-drift-control.md) | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
+
+<!-- END GENERATED: adr-index -->
 
 ---
 

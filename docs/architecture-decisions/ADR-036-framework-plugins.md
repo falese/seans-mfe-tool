@@ -10,12 +10,14 @@ tags: [build, codegen, framework, bundler, plugin, oclif]
 relates-to: []
 supersedes: []
 superseded-by: []
+implements-pdr: [2]
 implemented-by:
   - packages/contracts/src/framework-plugin.ts
   - src/framework/loader.ts
   - packages/framework-react/src/plugin.ts
   - packages/framework-angular/src/plugin.ts
 verified-by: []
+tracked-by: ["#281"]
 summary: >-
   Introduce an abstract `BaseFrameworkPlugin` class in core that defines the shape of
   framework-specific build, scaffold, and Docker concerns. Each framework is a concrete

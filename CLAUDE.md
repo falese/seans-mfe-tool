@@ -57,9 +57,10 @@ Full spec: `@docs/spec.md`
 - If a relevant ADR exists → reference it in code comments, commit messages, and PR body (`ADR-NNN`)
 - If no ADR covers the decision → **stop and ask the human** before implementing; do not invent architecture
 - Never edit existing ADRs mid-implementation — add a new ADR file instead
-- New ADRs go in `docs/architecture-decisions/ADR-NNN-short-slug.md`, with frontmatter
-  matching the ADR-075 schema — `npm run check:adr` is the gate, and the frontmatter is
-  the source of truth for the `docs/spec.md` index
+- New ADRs start from `docs/architecture-decisions/_TEMPLATE.md` and go in
+  `docs/architecture-decisions/ADR-NNN-short-slug.md`. Frontmatter is the source of
+  truth; `docs/spec.md#adr-index` and the PDR↔ADR map are generated from it
+  (`npm run build:adr-index`). `npm run check:adr` is the gate
 - Reference the new ADR in the PR body
 
 ADR quick index: `@docs/spec.md#adr-index`
@@ -163,6 +164,8 @@ Run in order — push only after all pass:
 4. `npm run build`
 5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command flags/types)
 6. `npm run check:adr` (if you added or edited an ADR — ADR-075)
+7. `npm run build:adr-index && git diff --exit-code docs/spec.md docs/architecture-decisions/README.md`
+   (the index and PDR map are generated from frontmatter — ADR-075 §1)
 
 ## Branch and commit discipline
 
