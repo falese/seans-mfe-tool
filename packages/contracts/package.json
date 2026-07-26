@@ -1,7 +1,7 @@
 {
   "name": "@seans-mfe/contracts",
   "version": "0.1.0",
-  "description": "Shared runtime contracts, typed errors, error classifier, and CommandResult envelope for the seans-mfe platform",
+  "description": "The seans-mfe platform contract: platform capabilities and MFE lifecycle machine, control-plane message protocol, slot contract and grammar, presentation boundary, framework-plugin base, typed errors, error classifier, and CommandResult envelope. Zero runtime dependencies.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -25,9 +25,29 @@
       "require": "./dist/messages.js",
       "types": "./dist/messages.d.ts"
     },
+    "./presentation": {
+      "require": "./dist/presentation.js",
+      "types": "./dist/presentation.d.ts"
+    },
+    "./framework-plugin": {
+      "require": "./dist/framework-plugin.js",
+      "types": "./dist/framework-plugin.d.ts"
+    },
     "./platform-contract": {
       "require": "./dist/platform-contract.js",
       "types": "./dist/platform-contract.d.ts"
+    },
+    "./slot-grammar": {
+      "require": "./dist/slot-grammar.js",
+      "types": "./dist/slot-grammar.d.ts"
+    },
+    "./slot-contract": {
+      "require": "./dist/slot-contract.js",
+      "types": "./dist/slot-contract.d.ts"
+    },
+    "./build-output-parser": {
+      "require": "./dist/build-output-parser.js",
+      "types": "./dist/build-output-parser.d.ts"
     }
   },
   "files": [
@@ -35,7 +55,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo 'No tests in @seans-mfe/contracts yet' && exit 0",
+    "test": "echo 'contracts tests run from the root jest project' && exit 0",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
