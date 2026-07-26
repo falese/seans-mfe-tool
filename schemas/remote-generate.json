@@ -50,7 +50,8 @@
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Capability names whose feature files were preserved (already implemented)."
       },
       "dryRun": {
         "type": "boolean"

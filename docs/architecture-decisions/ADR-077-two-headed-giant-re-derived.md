@@ -18,6 +18,7 @@ implemented-by:
   - packages/oclif-base/src/BaseCommand.ts
   - src/mcp/sources/local.ts
   - src/oclif/schema-derivation.ts
+  - src/oclif/type-to-schema.ts
   - scripts/generate-schemas.ts
   - src/oclif/__tests__/command-conformance.test.ts
 verified-by:
@@ -26,6 +27,7 @@ verified-by:
   - src/oclif/__tests__/schema-derivation.test.ts
   - src/mcp/__tests__/local-source.test.ts
   - src/mcp/__tests__/build-argv.test.ts
+  - src/oclif/__tests__/type-to-schema.test.ts
 tracked-by: ["#139"]
 summary: >-
   ADR-033's framing stands; its implementation table does not. The ownership half is withdrawn
@@ -118,7 +120,7 @@ oclif still renders the error. Two deliberate non-actions: an error that already
 code (oclif's own usage errors) is left alone, and an error that classifies as `unknown` is left
 alone rather than being relabelled as a typed failure class.
 
-### 5. The MCP tool catalog is derived from the command registry
+### 5. The MCP tool catalog is derived, both halves
 
 `schemas/<cmd>.json` is what `mcp:serve` turns into agent-callable tools, so whatever decides its
 contents decides what agents can do. It was a hand-written literal in
@@ -137,17 +139,34 @@ contents decides what agents can do. It was a hand-written literal in
   every command that has one, so supplying it produced a second positional that a `strict`
   command rejects.
 
-The command's own flag and arg declarations are the only honest source for its input contract.
-The generator now loads the live oclif registry (`Config.load()`, which includes first-party
-plugins), derives every input schema from it, and carries the declared args through as
-`x-positional` so `buildArgv` stops guessing. Each of the four failures above becomes
-unrepresentable rather than merely fixed.
+The output half drifted the same way, and worse, because it fails silently:
 
-Output schemas stay hand-authored — a command's TypeScript result type is not introspectable at
-runtime — but a catalogued command with no output schema is a **build failure**, not an empty
-`{}`. Adding a command forces an explicit decision: author the output contract, or exclude it in
-`CATALOG_EXCLUDED` with a reason. Exclusions are for things that are not capabilities
-(`mcp:serve`, `schemas`, a deprecated alias); they are not a place to park a real gap.
+- **`remote:generate` omitted `preserved`** — the field reporting which capability feature files
+  were kept because they are already implemented, i.e. whether the agent's own hand-written code
+  survived regeneration.
+- **`bff:validate` omitted `manifest` and `meshConfig`**, both non-optional.
+
+Both schemas are `additionalProperties: false`, so a schema-validating agent **rejected every
+response** from either command.
+
+The command's own declarations are the only honest source for both halves. The generator now
+loads the live oclif registry (`Config.load()`, first-party plugins included) and derives each
+input schema from the command's flags and args — carrying declared args through as
+`x-positional` so `buildArgv` stops guessing — and resolves each command's result type through
+the TypeScript compiler to derive the output schema.
+
+That closes the chain. TypeScript already enforces implementation → declared `T`; deriving the
+schema from that same `T` means implementation, type, and published contract cannot disagree,
+with no runtime validation anywhere. A command whose source cannot be resolved, or which declares
+no result type, is a **build failure** rather than an empty `{}` — so adding a command forces an
+explicit decision: give it a typed result, or exclude it in `CATALOG_EXCLUDED` with a reason.
+Exclusions are for things that are not capabilities (`mcp:serve`, `schemas`, a deprecated alias);
+they are not a place to park a real gap.
+
+Worth recording, because it bounds the cost: the output schema is **not** sent to agents.
+`tools/list` carries `name`, `description`, and `inputSchema` only, and measures ~11.7 KB
+(≈2.9k tokens) for the 17-tool catalog. Output schemas serve `schemas/`, the `schemas` command,
+and any client that validates responses.
 
 Three inputs are transport-owned and never appear in a schema: `--json` (appended to every child
 call; the envelope depends on it), `--interactive` (MCP is non-interactive by construction), and
@@ -183,10 +202,15 @@ changing that needs its own decision.
 The conformance sweep covers this repo's command tree. Plugin-owned commands (`bff:*`) are
 checked only where they publish a schema into `schemas/`.
 
-§5 derives the *input* half of each contract. Output schemas remain hand-authored and unverified
-against the command's actual return value — a command whose result type changes can still
-publish a stale output schema. Closing that needs type-level extraction, which this ADR does not
-attempt.
+§5 covers both halves, but by different means: inputs from the runtime registry, outputs from the
+compiler. What it does *not* do is validate responses at runtime, and deliberately — TypeScript
+already enforces that a command returns its declared `T`, so runtime validation would re-check a
+link that is not broken.
+
+The conversion is narrow on purpose. It handles the shapes command results actually use;
+anything it cannot represent faithfully (a union of object shapes, an index signature) degrades
+to an open schema rather than a confident wrong one. A result type too complex to express is a
+signal about the result type.
 
 ## Consequences
 

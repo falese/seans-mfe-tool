@@ -195,6 +195,28 @@ describe('schema catalog', () => {
     }
   });
 
+  it('every output schema is closed and complete', () => {
+    // Derived from the declared result type, so it enumerates every field the
+    // command can return. Closing the object is what makes a future undeclared
+    // field fail the drift gate instead of silently breaking validating
+    // clients — which is how `remote:generate.preserved` and the two
+    // `bff:validate` fields went missing for months.
+    for (const file of schemaFiles) {
+      const schema = JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, file), 'utf8'));
+      const output = schema.output;
+      // A result type with no enumerable members degrades to an open object
+      // rather than a confident wrong shape; those legitimately stay open.
+      if (!output.properties) {
+        expect({ schema: file, output }).toEqual({ schema: file, output: { type: 'object' } });
+        continue;
+      }
+      expect({ schema: file, closed: output.additionalProperties }).toEqual({
+        schema: file,
+        closed: false,
+      });
+    }
+  });
+
   it('no schema exposes a transport-owned flag', () => {
     // --json is appended to every child call and the envelope depends on it;
     // MCP is non-interactive by construction; `cwd` is injected as the reserved

@@ -55,10 +55,7 @@
               "type": "string"
             },
             "found": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "ok": {
               "type": "boolean"

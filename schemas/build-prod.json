@@ -84,15 +84,7 @@
               "type": "string"
             },
             "category": {
-              "type": "string",
-              "enum": [
-                "syntax",
-                "type",
-                "dependency",
-                "config",
-                "runtime",
-                "unknown"
-              ]
+              "type": "string"
             },
             "suggestion": {
               "type": "string"

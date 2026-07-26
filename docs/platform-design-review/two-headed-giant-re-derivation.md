@@ -224,6 +224,28 @@ Verified against the running server: **17 tools**, all four `mfe:build:*` presen
 `mfe:build:check` called against `examples/abc-kids/flappy` returns structured data matching its
 output schema.
 
+**And the output half drifted too — silently.** Output schemas were hand-typed against result
+types the commands already declare. Resolving those types through the TypeScript compiler and
+diffing found two commands publishing an incomplete contract, both `additionalProperties: false`:
+
+| Command | Missing from the published schema | Effect |
+|---|---|---|
+| `remote:generate` | `preserved` | A validating agent rejected **every** response — and could not see the field reporting whether its own hand-written feature code survived regeneration |
+| `bff:validate` | `manifest`, `meshConfig` (both non-optional) | Same |
+
+Worth noting how they were found: a hand audit over `src/oclif/results.ts` caught the first and
+missed the second, because `BffValidateResult` lives in `packages/bff-plugin/src/types.ts`. The
+generator found both. That is the argument for deriving rather than reviewing.
+
+Output schemas are now derived from each command's declared result type. TypeScript already
+enforces implementation → `T` (`BaseCommand<T>`, `runCommand(): Promise<T>`), so deriving the
+schema from the same `T` closes the chain with **no runtime validation anywhere** — the only
+unverified link was type → schema, and it is now generated.
+
+One bound worth recording: the output schema is **not** sent to agents. `tools/list` carries
+`name`, `description`, and `inputSchema` only — ~11.7 KB (≈2.9k tokens) for the 17-tool catalog.
+Output schemas serve `schemas/`, the `schemas` command, and response-validating clients.
+
 ---
 
 ## References

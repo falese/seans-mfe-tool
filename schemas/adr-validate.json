@@ -38,7 +38,20 @@
       "checked": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "frontmatter-valid",
+            "metadata-complete",
+            "reference-resolves",
+            "reference-gloss-matches",
+            "supersession-bidirectional",
+            "implemented-by-exists",
+            "code-cites-ratified-adr",
+            "register-complete",
+            "accepted-work-is-tracked",
+            "implemented-claims-evidence",
+            "finished-work-says-so"
+          ]
         }
       },
       "issues": {
@@ -52,13 +65,28 @@
           ],
           "properties": {
             "rule": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "frontmatter-valid",
+                "metadata-complete",
+                "reference-resolves",
+                "reference-gloss-matches",
+                "supersession-bidirectional",
+                "implemented-by-exists",
+                "code-cites-ratified-adr",
+                "register-complete",
+                "accepted-work-is-tracked",
+                "implemented-claims-evidence",
+                "finished-work-says-so"
+              ]
             },
             "file": {
-              "type": "string"
+              "type": "string",
+              "description": "Repo-relative path of the file the issue is in."
             },
             "line": {
-              "type": "number"
+              "type": "number",
+              "description": "1-indexed line, when the finding is anchored to one."
             },
             "message": {
               "type": "string"

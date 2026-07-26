@@ -2,17 +2,26 @@
 /**
  * Generates JSON Schema documents for every seans-mfe-tool command.
  *
- * The command list and every input schema are DERIVED from the live oclif
- * registry (`Config.load()`, which includes first-party plugins), not from a
- * hand-written list. That is the point: this file used to carry the command
- * roster as a literal, and it drifted in both directions — `build:*` had no
- * entry at all, so agents could scaffold an MFE over MCP but never build one,
- * and `deploy` advertised eight flags the command does not have.
+ * Nothing here is hand-written. Both halves of every contract are derived:
  *
- * Output schemas remain hand-authored below, because a command's TypeScript
- * result type is not introspectable at runtime. A command with no output
- * schema is a hard failure rather than an empty `{}` — adding a command forces
- * the decision instead of silently producing a useless tool.
+ *   inputs   the live oclif registry (`Config.load()`, first-party plugins
+ *            included) — the command's own flag and arg declarations
+ *   outputs  the command's declared result type, resolved through the
+ *            TypeScript compiler (the `T` in `extends BaseCommand<T>`)
+ *
+ * That is the point. This file used to carry both as literals and they drifted
+ * every way a literal can: `build:*` had no entry at all, so agents could
+ * scaffold an MFE over MCP but never build one; `deploy` advertised eight flags
+ * the command does not have; `remote:init` omitted `framework`, so no agent
+ * could scaffold Angular over MCP; and on the output side `remote:generate`
+ * and `bff:validate` both omitted fields they genuinely return, against schemas
+ * declared `additionalProperties: false` — so a validating agent rejected every
+ * response from either.
+ *
+ * The chain is now closed end to end. TypeScript already enforces that a
+ * command returns its declared `T`; deriving the schema from that same `T`
+ * means implementation, type, and published contract cannot disagree, with no
+ * runtime validation anywhere.
  *
  * Output: schemas/<command-name>.json  (one per command, topic:sub uses topic-sub)
  *
@@ -25,6 +34,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as ts from 'typescript';
 import { Config } from '@oclif/core';
 import { EXIT_CODES as EXIT_CODE_MAP } from '@seans-mfe/contracts';
 import {
@@ -33,6 +43,7 @@ import {
   CATALOG_EXCLUDED,
   type RegistryCommand,
 } from '../src/oclif/schema-derivation';
+import { typeToJsonSchema, resolveCommandResultType } from '../src/oclif/type-to-schema';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SCHEMAS_DIR = path.join(REPO_ROOT, 'schemas');
@@ -41,367 +52,6 @@ const CHECK_MODE = process.argv.includes('--check');
 // Sorted so the emitted array is stable; sourced from the contracts table
 // rather than restated, so adding an exit code cannot leave schemas stale.
 const EXIT_CODES = [...new Set(Object.values(EXIT_CODE_MAP))].sort((a, b) => a - b);
-
-// ---------------------------------------------------------------------------
-// Result schemas (JSON Schema for each command's data field)
-// ---------------------------------------------------------------------------
-
-const MUTATING_RESULT_PROPS = {
-  dryRun: { type: 'boolean' },
-  plannedChanges: {
-    type: 'array',
-    items: {
-      type: 'object',
-      required: ['op', 'target'],
-      properties: {
-        op:     { type: 'string', enum: ['create', 'overwrite', 'skip', 'spawn'] },
-        target: { type: 'string' },
-        detail: { type: 'string' },
-      },
-      additionalProperties: false,
-    },
-  },
-};
-
-const OUTPUT_SCHEMAS: Record<string, object> = {
-  deploy: {
-    type: 'object',
-    required: ['appName', 'environment', 'ports', 'generatedFiles', 'dryRun'],
-    properties: {
-      appName:        { type: 'string' },
-      environment:    { type: 'string', enum: ['development', 'production'] },
-      containerId:    { type: 'string' },
-      ports:          { type: 'array', items: { type: 'number' } },
-      generatedFiles: { type: 'array', items: { type: 'string' } },
-      mode:           { type: 'string' },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  api: {
-    type: 'object',
-    required: ['name', 'database', 'port', 'generatedFiles', 'dryRun'],
-    properties: {
-      name:           { type: 'string' },
-      database:       { type: 'string' },
-      port:           { type: 'number' },
-      generatedFiles: { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  'bff:init': {
-    type: 'object',
-    required: ['name', 'port', 'sources', 'generatedFiles', 'dryRun'],
-    properties: {
-      name:           { type: 'string' },
-      port:           { type: 'number' },
-      sources:        { type: 'array', items: { type: 'string' } },
-      generatedFiles: { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  'bff:build': {
-    type: 'object',
-    required: ['meshConfigPath', 'generatedFiles', 'dryRun'],
-    properties: {
-      meshConfigPath: { type: 'string' },
-      generatedFiles: { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  'bff:dev': {
-    type: 'object',
-    required: ['port', 'meshConfigPath'],
-    properties: {
-      port:           { type: 'number' },
-      meshConfigPath: { type: 'string' },
-    },
-    additionalProperties: false,
-  },
-  'bff:validate': {
-    type: 'object',
-    required: ['valid', 'issues'],
-    properties: {
-      valid:  { type: 'boolean' },
-      issues: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['severity', 'message'],
-          properties: {
-            severity: { type: 'string', enum: ['error', 'warning'] },
-            message:  { type: 'string' },
-            path:     { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-    },
-    additionalProperties: false,
-  },
-  'remote:init': {
-    type: 'object',
-    required: ['name', 'port', 'targetDir', 'generatedFiles', 'dryRun'],
-    properties: {
-      name:           { type: 'string' },
-      port:           { type: 'number' },
-      targetDir:      { type: 'string' },
-      generatedFiles: { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  'remote:generate': {
-    type: 'object',
-    required: ['generated', 'skipped', 'errors', 'preserved', 'dryRun'],
-    properties: {
-      generated: { type: 'array', items: { type: 'string' } },
-      skipped:   { type: 'array', items: { type: 'string' } },
-      errors:    { type: 'array', items: { type: 'string' } },
-      // RemoteGenerateResult.preserved — capability names whose feature files
-      // were kept because they are already implemented. Returned on both the
-      // dry-run and real paths, but missing here, and the schema is
-      // additionalProperties:false — so a schema-validating agent rejected
-      // every remote:generate response, and could not see the one field that
-      // tells it whether its own hand-written feature code survived.
-      preserved: { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  'remote:generate:capability': {
-    type: 'object',
-    required: ['capabilityName', 'generated', 'skipped', 'errors', 'dryRun'],
-    properties: {
-      capabilityName: { type: 'string' },
-      generated:      { type: 'array', items: { type: 'string' } },
-      skipped:        { type: 'array', items: { type: 'string' } },
-      errors:         { type: 'array', items: { type: 'string' } },
-      ...MUTATING_RESULT_PROPS,
-    },
-    additionalProperties: false,
-  },
-  // #309's dependency/federation consistency rules, plus the slot rule wired
-  // into the same command (ADR-073): one MFE-consistency surface, not two.
-  'mfe:validate': {
-    type: 'object',
-    required: ['mfe', 'framework', 'ok', 'checked', 'issues'],
-    properties: {
-      mfe:       { type: 'string' },
-      framework: { type: 'string' },
-      ok:        { type: 'boolean' },
-      checked:   { type: 'array', items: { type: 'string' } },
-      issues: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['rule', 'message'],
-          properties: {
-            rule:     { type: 'string' },
-            message:  { type: 'string' },
-            package:  { type: 'string' },
-            expected: { type: 'string' },
-            actual:   { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-      typecheck: {
-        type: 'object',
-        required: ['ran', 'ok'],
-        properties: {
-          ran:    { type: 'boolean' },
-          ok:     { type: 'boolean' },
-          output: { type: 'string' },
-        },
-        additionalProperties: false,
-      },
-    },
-    additionalProperties: false,
-  },
-  'adr:status': {
-    type: 'object',
-    required: ['total', 'counts', 'outstanding', 'entries'],
-    properties: {
-      total:  { type: 'number' },
-      counts: { type: 'object', additionalProperties: { type: 'number' } },
-      outstanding: { type: 'array', items: { $ref: '#/definitions/adrStatusEntry' } },
-      entries:     { type: 'array', items: { $ref: '#/definitions/adrStatusEntry' } },
-    },
-    definitions: {
-      adrStatusEntry: {
-        type: 'object',
-        required: ['id', 'title', 'status', 'area', 'refs', 'implementedBy'],
-        properties: {
-          id:            { type: 'number' },
-          title:         { type: 'string' },
-          status:        { type: 'string' },
-          area:          { type: 'string' },
-          stage:         { type: 'string' },
-          refs:          { type: 'array', items: { type: 'string' } },
-          implementedBy: { type: 'array', items: { type: 'string' } },
-        },
-        additionalProperties: false,
-      },
-    },
-    additionalProperties: false,
-  },
-  'adr:validate': {
-    type: 'object',
-    required: ['adrs', 'ok', 'checked', 'issues'],
-    properties: {
-      adrs:    { type: 'number' },
-      ok:      { type: 'boolean' },
-      checked: { type: 'array', items: { type: 'string' } },
-      issues: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['rule', 'file', 'message'],
-          properties: {
-            rule:     { type: 'string' },
-            file:     { type: 'string' },
-            line:     { type: 'number' },
-            message:  { type: 'string' },
-            expected: { type: 'string' },
-            actual:   { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-    },
-    additionalProperties: false,
-  },
-  'slots:validate': {
-    type: 'object',
-    required: ['providers', 'rulesFile', 'rulesChecked', 'findings', 'ok'],
-    properties: {
-      providers: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['mfe', 'slots'],
-          properties: {
-            mfe:   { type: 'string' },
-            slots: { type: 'array', items: { type: 'string' } },
-          },
-          additionalProperties: false,
-        },
-      },
-      rulesFile:    { type: 'string' },
-      rulesChecked: { type: 'number' },
-      findings: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['mfe', 'capability', 'slot', 'reason', 'fatal', 'message'],
-          properties: {
-            mfe:        { type: 'string' },
-            capability: { type: 'string' },
-            slot:       { type: 'string' },
-            reason:     { type: 'string', enum: ['undeclared-slot', 'unknown-provider', 'malformed-address'] },
-            fatal:      { type: 'boolean' },
-            message:    { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-      ok: { type: 'boolean' },
-    },
-    additionalProperties: false,
-  },
-
-  // build:* — the surface that had no schema at all, so no `mfe:build:*` tool
-  // existed and an agent over MCP could not build what it had just scaffolded.
-  // Shapes from src/commands/build/check.ts and src/oclif/results.ts.
-  'build:check': {
-    type: 'object',
-    required: ['plugin', 'framework', 'bundler', 'checks', 'allPassed'],
-    properties: {
-      plugin:    { type: 'string' },
-      framework: { type: 'string' },
-      bundler:   { type: 'string' },
-      checks: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['tool', 'required', 'found', 'ok'],
-          properties: {
-            tool:     { type: 'string' },
-            required: { type: 'string' },
-            found:    { type: ['string', 'null'] },
-            ok:       { type: 'boolean' },
-            fix:      { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-      allPassed: { type: 'boolean' },
-    },
-    additionalProperties: false,
-  },
-  'build:dev': {
-    type: 'object',
-    required: ['plugin', 'framework', 'bundler', 'url', 'port'],
-    properties: {
-      plugin:    { type: 'string' },
-      framework: { type: 'string' },
-      bundler:   { type: 'string' },
-      url:       { type: 'string' },
-      port:      { type: 'number' },
-    },
-    additionalProperties: false,
-  },
-  'build:docker': {
-    type: 'object',
-    required: ['plugin', 'framework', 'bundler', 'dockerfilePath', 'built'],
-    properties: {
-      plugin:         { type: 'string' },
-      framework:      { type: 'string' },
-      bundler:        { type: 'string' },
-      dockerfilePath: { type: 'string' },
-      imageTag:       { type: 'string' },
-      built:          { type: 'boolean' },
-    },
-    additionalProperties: false,
-  },
-  'build:prod': {
-    type: 'object',
-    required: ['plugin', 'framework', 'bundler', 'success', 'artifacts', 'duration_ms', 'warnings', 'errors'],
-    properties: {
-      plugin:      { type: 'string' },
-      framework:   { type: 'string' },
-      bundler:     { type: 'string' },
-      success:     { type: 'boolean' },
-      artifacts:   { type: 'array', items: { type: 'string' } },
-      duration_ms: { type: 'number' },
-      warnings:    { type: 'array', items: { type: 'string' } },
-      // BuildError (packages/contracts/src/framework-plugin.ts). `category` is
-      // 'unknown' for every real failure today — the parsers are still to come
-      // (#139) — but the contract an agent reads is already this shape.
-      errors: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['message', 'category'],
-          properties: {
-            file:       { type: 'string' },
-            line:       { type: 'number' },
-            column:     { type: 'number' },
-            message:    { type: 'string' },
-            category:   { type: 'string', enum: ['syntax', 'type', 'dependency', 'config', 'runtime', 'unknown'] },
-            suggestion: { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-    },
-    additionalProperties: false,
-  },
-};
 
 
 // ---------------------------------------------------------------------------
@@ -412,15 +62,70 @@ function schemaFilename(commandName: string): string {
   return commandName.replace(/:/g, '-') + '.json';
 }
 
-function buildSchema(command: RegistryCommand): object {
-  const output = OUTPUT_SCHEMAS[command.id];
+/**
+ * Where a command's source lives, by convention from its id and owning plugin.
+ * `remote:generate:capability` -> src/commands/remote/generate/capability.ts
+ */
+function sourceFileFor(command: RegistryCommand): string | undefined {
+  const rel = command.id.split(':').join('/') + '.ts';
+  const roots = command.pluginName === '@falese/bff-plugin'
+    ? [path.join(REPO_ROOT, 'packages/bff-plugin/src/commands')]
+    : [path.join(REPO_ROOT, 'src/commands')];
+
+  for (const root of roots) {
+    const file = path.join(root, rel);
+    if (fs.existsSync(file)) return file;
+  }
+  return undefined;
+}
+
+/**
+ * Output schemas derived from each command's declared result type.
+ *
+ * TypeScript already enforces that a command returns the `T` in
+ * `BaseCommand<T>`; deriving the schema from that same `T` closes the chain
+ * from implementation to published contract. Before this, the schema was
+ * hand-typed and drifted — `RemoteGenerateResult.preserved` was missing from a
+ * schema declared `additionalProperties: false`, so a validating agent
+ * rejected every `remote:generate` response.
+ */
+function deriveOutputSchemas(commands: RegistryCommand[]): Map<string, object> {
+  const files = new Map<string, string>();
+  for (const command of commands) {
+    const file = sourceFileFor(command);
+    if (file) files.set(command.id, file);
+  }
+
+  const configPath = path.join(REPO_ROOT, 'tsconfig.json');
+  const parsed = ts.parseJsonConfigFileContent(
+    ts.readConfigFile(configPath, ts.sys.readFile).config,
+    ts.sys,
+    REPO_ROOT,
+  );
+  const program = ts.createProgram([...files.values()], {
+    ...parsed.options,
+    noEmit: true,
+    skipLibCheck: true,
+  });
+  const checker = program.getTypeChecker();
+
+  const schemas = new Map<string, object>();
+  for (const [id, file] of files) {
+    const type = resolveCommandResultType(file, program);
+    if (type) schemas.set(id, typeToJsonSchema(type, checker));
+  }
+  return schemas;
+}
+
+function buildSchema(command: RegistryCommand, output: object | undefined): object {
   if (!output) {
     throw new Error(
       `No output schema for "${command.id}".\n\n` +
-      `Every catalogued command needs one — it is what an agent parses out of the\n` +
-      `--json envelope, and it cannot be derived from the TypeScript result type.\n\n` +
-      `Either add "${command.id}" to OUTPUT_SCHEMAS in scripts/generate-schemas.ts,\n` +
-      `or, if it should not be an agent-facing tool, add it to CATALOG_EXCLUDED in\n` +
+      `It is derived from the command's declared result type — the T in\n` +
+      `\`extends BaseCommand<T>\`. This usually means the command's source file was\n` +
+      `not found by convention, or it declares no type argument.\n\n` +
+      `Either give the command a typed result, or, if it should not be an\n` +
+      `agent-facing tool, add it to CATALOG_EXCLUDED in\n` +
       `src/oclif/schema-derivation.ts with a reason.`,
     );
   }
@@ -452,11 +157,12 @@ async function main(): Promise<void> {
   }
 
   const commands = selectCatalogCommands(await loadRegistry());
+  const outputs = deriveOutputSchemas(commands);
   const expected = new Set(commands.map((c) => schemaFilename(c.id)));
   let drifted = false;
 
   for (const command of commands) {
-    const json = JSON.stringify(buildSchema(command), null, 2) + '\n';
+    const json = JSON.stringify(buildSchema(command, outputs.get(command.id)), null, 2) + '\n';
     const file = path.join(SCHEMAS_DIR, schemaFilename(command.id));
 
     if (CHECK_MODE) {

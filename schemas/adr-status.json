@@ -37,65 +37,116 @@
         "type": "number"
       },
       "counts": {
-        "type": "object",
-        "additionalProperties": {
-          "type": "number"
-        }
+        "type": "object"
       },
       "outstanding": {
         "type": "array",
         "items": {
-          "$ref": "#/definitions/adrStatusEntry"
-        }
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "status",
+            "area",
+            "refs",
+            "implementedBy"
+          ],
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "Proposed",
+                "Accepted",
+                "Implemented",
+                "Deferred",
+                "Superseded",
+                "Withdrawn"
+              ]
+            },
+            "area": {
+              "type": "string"
+            },
+            "stage": {
+              "type": "string",
+              "description": "`phased` / `deferred` when work is outstanding."
+            },
+            "refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Issues tracking the outstanding work."
+            },
+            "implementedBy": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "Ratified but not finished — the actionable list."
       },
       "entries": {
         "type": "array",
         "items": {
-          "$ref": "#/definitions/adrStatusEntry"
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "status",
+            "area",
+            "refs",
+            "implementedBy"
+          ],
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "Proposed",
+                "Accepted",
+                "Implemented",
+                "Deferred",
+                "Superseded",
+                "Withdrawn"
+              ]
+            },
+            "area": {
+              "type": "string"
+            },
+            "stage": {
+              "type": "string",
+              "description": "`phased` / `deferred` when work is outstanding."
+            },
+            "refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Issues tracking the outstanding work."
+            },
+            "implementedBy": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
         }
-      }
-    },
-    "definitions": {
-      "adrStatusEntry": {
-        "type": "object",
-        "required": [
-          "id",
-          "title",
-          "status",
-          "area",
-          "refs",
-          "implementedBy"
-        ],
-        "properties": {
-          "id": {
-            "type": "number"
-          },
-          "title": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "area": {
-            "type": "string"
-          },
-          "stage": {
-            "type": "string"
-          },
-          "refs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "implementedBy": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "additionalProperties": false
       }
     },
     "additionalProperties": false
