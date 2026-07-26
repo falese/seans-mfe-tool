@@ -18,6 +18,7 @@
     "check:mfe-drift": "ts-node scripts/check-mfe-drift.ts",
     "check:mfe-drift:check": "ts-node scripts/check-mfe-drift.ts --check",
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
+    "check:template-typecheck": "ts-node scripts/check-template-typecheck.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
     "build:adr-index": "ts-node scripts/generate-adr-index.ts",
     "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",

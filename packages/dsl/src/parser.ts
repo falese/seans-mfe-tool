@@ -306,7 +306,7 @@ export function createMinimalManifest(
             '@angular/common': '^19.2.16',
             '@angular/platform-browser': '^19.2.16',
             'rxjs': '^7.8.0',
-            'zone.js': '~0.14.0'
+            'zone.js': '~0.15.0'
           }
         }
       : {

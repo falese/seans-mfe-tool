@@ -73,7 +73,10 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
         requiredVersion: '^19.2.16',
       },
       rxjs: { singleton: true, requiredVersion: '^7.8.0' },
-      'zone.js': { singleton: true, eager: true, requiredVersion: '~0.14.0' },
+      // @angular/core@19.2.16's peer dependency is zone.js@~0.15.0, not
+      // ~0.14.0 — see the DEPENDENCY_VERSIONS.angular.zoneJs note in
+      // unified-generator.ts (#281).
+      'zone.js': { singleton: true, eager: true, requiredVersion: '~0.15.0' },
     };
   }
 
