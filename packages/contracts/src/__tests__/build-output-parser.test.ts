@@ -145,26 +145,73 @@ describe('parseBuildOutput — behaviour under uncertainty', () => {
 });
 
 describe('parseBuildOutput — Angular / ng', () => {
-  // ng surfaces tsc diagnostics with an `Error: ` prefix and a colon-separated
-  // position rather than tsc's parenthesised one.
-  const output = [
-    'Error: src/app/app.component.ts:12:3 - error TS2554: Expected 1 arguments, but got 0.',
-    'Error: src/app/main.ts:4:1 - error TS2307: Cannot find module \'./missing\'.',
-  ].join('\n');
+  // Real `ng build --configuration production` output. Two things the earlier
+  // hand-written version of these tests got wrong, and only capturing real
+  // output revealed:
+  //
+  //   1. ng writes to STDERR while rspack and tsc write to stdout, and it
+  //      emits ANSI colour even when piped — so the diagnostic's file, line,
+  //      column and code are separated by escape sequences.
+  //   2. Its module-resolution errors use a webpack form
+  //      (`./file:line:colStart-colEnd - Error: Module not found: ...`)
+  //      that shares no shape with rspack's `ERROR in` header.
+  //
+  // Against this fixture the parser originally produced ONE unknown error.
+  const errors = parseBuildOutput(fixture('ng-build-errors.txt'));
 
-  it('parses the ng diagnostic form', () => {
-    const errors = parseBuildOutput(output);
-    expect(errors).toHaveLength(2);
-    expect(errors[0]).toMatchObject({
-      file: 'src/app/app.component.ts',
-      line: 12,
-      column: 3,
-      code: 'TS2554',
-      category: 'type',
-    });
+  it('finds every diagnostic in the real output', () => {
+    // 10 TS diagnostics + 1 webpack module-resolution line. Counted by
+    // stripping ANSI and matching, because `grep 'error TS'` finds zero in this
+    // fixture — the escapes sit between "error" and the code, which is exactly
+    // why the parser missed all of them before.
+    expect(errors).toHaveLength(11);
   });
 
-  it('classifies a missing module from ng output as `dependency`', () => {
-    expect(parseBuildOutput(output)[1].category).toBe('dependency');
+  it('gives every error a file and a position', () => {
+    for (const error of errors) {
+      expect(error.file).toBeTruthy();
+      expect(typeof error.line).toBe('number');
+    }
+  });
+
+  it('sees through ANSI colour codes', () => {
+    const typeError = errors.find((e) => e.code === 'TS2322');
+    expect(typeError).toMatchObject({
+      file: 'src/app/app.component.ts',
+      line: 22,
+      column: 9,
+      category: 'type',
+    });
+    expect(typeError?.message).toBe("Type 'number' is not assignable to type 'string'.");
+  });
+
+  it('leaves no escape sequences in any field', () => {
+    // eslint-disable-next-line no-control-regex
+    const ansi = /\[/;
+    for (const error of errors) {
+      expect(ansi.test(error.message)).toBe(false);
+      expect(ansi.test(error.file ?? '')).toBe(false);
+    }
+  });
+
+  it('parses the webpack-form module-not-found line', () => {
+    const moduleError = errors.find((e) => e.message.includes('runtime/angular') && e.line === 2);
+    expect(moduleError).toMatchObject({
+      file: './src/platform/base-mfe/mfe.ts',
+      line: 2,
+      category: 'dependency',
+    });
+    expect(moduleError?.suggestion).toMatch(/install/i);
+  });
+
+  it('classifies TS2307 as dependency, not type', () => {
+    const missing = errors.filter((e) => e.code === 'TS2307');
+    expect(missing.length).toBeGreaterThan(0);
+    expect(missing.every((e) => e.category === 'dependency')).toBe(true);
+  });
+
+  it('does not mistake progress lines for errors', () => {
+    expect(errors.some((e) => e.message.includes('bundle generation complete'))).toBe(false);
+    expect(errors.some((e) => e.category === 'unknown')).toBe(false);
   });
 });

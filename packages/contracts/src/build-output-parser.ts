@@ -36,8 +36,28 @@ const TSC_DIAGNOSTIC = /^(.+?)\((\d+),(\d+)\):\s+error\s+(TS\d+):\s+(.*)$/;
 /** ng/tsc pretty: `Error: src/a.ts:12:3 - error TS2554: message` */
 const NG_DIAGNOSTIC = /^(?:Error:\s*)?(.+?):(\d+):(\d+)\s+-\s+error\s+(TS\d+):\s+(.*)$/;
 
+/**
+ * webpack module-resolution line, as emitted by `ng build`:
+ * `./src/x.ts:2:0-67 - Error: Module not found: Error: Can't resolve 'y' in 'z'`
+ * Shares no shape with rspack's `ERROR in` header despite the same underlying
+ * bundler family.
+ */
+const WEBPACK_MODULE_ERROR = /^(\S+):(\d+):(\d+)(?:-\d+)?\s+-\s+Error:\s+(.*)$/;
+
 /** rspack/webpack block header: `ERROR in ./src/index.js 1:1-41` */
 const RSPACK_HEADER = /^ERROR in (\S+)(?:\s+(\d+):(\d+)(?:-\d+)?)?\s*$/;
+
+/**
+ * SGR escape sequences. `ng` colours its diagnostics even when stdout is a
+ * pipe, which puts escapes between the file, line, column and code — every
+ * pattern above fails on raw ng output without this.
+ */
+// eslint-disable-next-line no-control-regex
+const ANSI = /\[[0-9;]*m/g;
+
+function stripAnsi(text: string): string {
+  return text.replace(ANSI, '');
+}
 
 /** The `× message` rows inside an rspack block. */
 const RSPACK_MESSAGE = /^\s*(?:╰─▶\s*)?×\s*(.+?)\s*$/;
@@ -45,11 +65,13 @@ const RSPACK_MESSAGE = /^\s*(?:╰─▶\s*)?×\s*(.+?)\s*$/;
 /** Source-excerpt gutter inside an rspack block: ` 1 │ export const ...` */
 const RSPACK_GUTTER = /^\s*(\d+)\s*│/;
 
-export function parseBuildOutput(output: string): BuildError[] {
-  if (!output.trim()) return [];
+export function parseBuildOutput(raw: string): BuildError[] {
+  if (!raw.trim()) return [];
+  const output = stripAnsi(raw);
 
   const errors = [
     ...parseDiagnostics(output),
+    ...parseWebpackModuleErrors(output),
     ...parseRspackBlocks(output),
   ];
 
@@ -81,6 +103,35 @@ function parseDiagnostics(output: string): BuildError[] {
       code,
       category: MODULE_RESOLUTION_TS_CODES.has(code) ? 'dependency' : 'type',
       ...suggestionFor(message, MODULE_RESOLUTION_TS_CODES.has(code)),
+    });
+  }
+
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
+// webpack single-line module errors (the `ng build` form)
+// ---------------------------------------------------------------------------
+
+function parseWebpackModuleErrors(output: string): BuildError[] {
+  const errors: BuildError[] = [];
+
+  for (const line of output.split('\n')) {
+    const match = WEBPACK_MODULE_ERROR.exec(line.trim());
+    if (!match) continue;
+
+    const [, file, lineNo, column, rest] = match;
+    // ng doubles the prefix: "Module not found: Error: Can't resolve ...".
+    const message = rest.replace(/^Module not found:\s*Error:\s*/, 'Module not found: ').trim();
+    const isMissingModule = /Module not found|Can't resolve/i.test(message);
+
+    errors.push({
+      file,
+      line: Number(lineNo),
+      column: Number(column),
+      message,
+      category: isMissingModule ? 'dependency' : categorizeRspack(message),
+      ...suggestionFor(message, isMissingModule),
     });
   }
 

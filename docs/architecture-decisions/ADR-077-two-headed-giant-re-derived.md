@@ -181,10 +181,15 @@ call; the envelope depends on it), `--interactive` (MCP is non-interactive by co
 populated one — both framework plugins returned
 `[{ message: (err as {stderr?: string}).stderr ?? '', category: 'unknown' }]`.
 
-That is worse than an unparsed blob, because **rspack and tsc both write diagnostics to stdout**.
-Verified against the real `execSync` failure path: `err.stderr` is `''` and everything is in
-`err.stdout`. So every failing build reported one error whose message was the empty string — the
-agent learned only that something broke.
+The two framework paths then failed in two different ways, and the streams are the reason:
+
+| Toolchain | Writes diagnostics to | What the agent got |
+|---|---|---|
+| rspack, tsc (React path) | **stdout** | `message: ''` — `err.stderr` is empty. The agent learned only that something broke. |
+| `ng build` (Angular path) | **stderr** | the entire raw blob as one `unknown` error, ANSI escapes included |
+
+Both verified by running the real tools and reading the real `execSync` failure object. Plugins
+now read both streams.
 
 Both plugins now read stdout and stderr and pass the result through
 `parseBuildOutput` (`packages/contracts/src/build-output-parser.ts`, zero-dep, alongside
@@ -200,9 +205,22 @@ Both plugins now read stdout and stderr and pass the result through
   outcome.
 
 The parser is written against captured real output (`__tests__/fixtures/`), not the documented
-formats — which omit that rspack positions live on the `ERROR in` header, that a parse-error
-header has no position at all, and that the message contains an apostrophe that defeats
-quote-matching.
+formats. That choice paid for itself twice. The rspack fixtures showed that positions live on the
+`ERROR in` header, that a parse-error header has no position at all, and that the message contains
+an apostrophe which defeats quote-matching. Then the Angular fixture — captured by installing the
+real toolchain and breaking `examples/abc-kids/multiplication-quiz` — showed that the
+hand-written ng cases written *from the documented format* were wrong on both counts that matter:
+
+- **`ng` colours its diagnostics even when piped**, so escapes sit between the file, line, column
+  and code. Every pattern failed on real output; `grep 'error TS'` finds zero matches in the
+  fixture for the same reason.
+- **Its module-resolution errors use a webpack single-line form**
+  (`./file:line:col-col - Error: Module not found: Error: Can't resolve …`) that shares no shape
+  with rspack's `ERROR in` header, despite the same bundler family.
+
+Against that fixture the parser originally produced one unrecognised blob. It now produces 11
+classified errors, verified end to end through `AngularWebpackPlugin.buildProduction` against the
+actual broken project.
 
 ### 7. The epic splits
 
