@@ -71,7 +71,9 @@ export class RemoteMFE extends BaseRemoteMFE {
     if (!root) {
       // @ts-ignore — react-dom/client types not in root tsconfig; browser-only code
       const { createRoot } = await import('react-dom/client');
-      root = createRoot(element);
+      // createRoot's module is @ts-ignore'd above, so its return type does not
+      // narrow `root` out of the `| undefined` it inherits from Map.get().
+      root = createRoot(element) as ReactRootLike;
       this.reactRoots.set(containerId, root);
     }
 

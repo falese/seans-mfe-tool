@@ -593,6 +593,28 @@ function renderSharedEntries(deps: Record<string, string>, indent: string): stri
 /**
  * Extract manifest variables for template rendering
  */
+/** One capability row in the render model. */
+export interface RenderCapability {
+  method: string;
+  config: CapabilityConfig;
+  returnTypeBase: string;
+  stubBody: string;
+}
+
+/** One lifecycle hook stub in the render model. */
+export interface RenderLifecycleHook {
+  name: string;
+  description: string;
+  phase: string;
+}
+
+/** One manifest-declared handler import (ADR-040). */
+export interface RenderHandlerSource {
+  localName: string;
+  module: string;
+  exportName: string;
+}
+
 export function extractManifestVars(
   manifest: DSLManifest,
   variant: FrameworkVariant = deriveBuiltinVariant(manifest)
@@ -663,9 +685,11 @@ export function extractManifestVars(
     inputTypeName,
     outputTypeName,
     manifest,
-    capabilities: [], // will be overwritten in generateAllFiles
-    lifecycleHooks: [], // will be overwritten in generateAllFiles
-    handlerSources: [], // ADR-040 — overwritten in generateAllFiles
+    // Typed rather than bare `[]`: under strict these infer as never[], and
+    // planRenderModel then cannot assign the real values back into them.
+    capabilities: [] as RenderCapability[], // will be overwritten in generateAllFiles
+    lifecycleHooks: [] as RenderLifecycleHook[], // will be overwritten in generateAllFiles
+    handlerSources: [] as RenderHandlerSource[], // ADR-040 — overwritten in generateAllFiles
 
     // Codegen variant selection — injected (ADR-061), read back by generateAllFiles.
     framework: variant.framework as 'react' | 'angular',
@@ -793,7 +817,8 @@ export async function writeGeneratedFiles(
   files: GeneratedFile[],
   options: { force?: boolean; dryRun?: boolean } = {}
 ): Promise<{ files: GeneratedFile[]; skipped: string[]; errors: string[] }> {
-  const result = { files: [], skipped: [], errors: [] };
+  const result: { files: GeneratedFile[]; skipped: string[]; errors: string[] } =
+    { files: [], skipped: [], errors: [] };
   for (const file of files) {
     try {
       const exists = await fs.pathExists(file.path);
@@ -943,19 +968,14 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
     Emit: { method: 'emit', returnTypeBase: 'EmitResult' },
   };
 
-  const capabilities: Array<{
-    method: string;
-    config: CapabilityConfig;
-    returnTypeBase: string;
-    stubBody: string;
-  }> = [];
+  const capabilities: RenderCapability[] = [];
   const lifecycleHookNames = new Set<string>();
-  const lifecycleHooks: Array<{ name: string; description: string; phase: string }> = [];
+  const lifecycleHooks: RenderLifecycleHook[] = [];
   // ADR-040: handlers that declare a `source` in the DSL manifest are sourced
   // from external modules. They appear in handlerSources (drives the generated
   // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
   // (no stub method is emitted because the implementation lives elsewhere).
-  const handlerSources: Array<{ localName: string; module: string; exportName: string }> = [];
+  const handlerSources: RenderHandlerSource[] = [];
   let inputs: DSLInput[] = [];
   let outputs: DSLOutput[] = [];
 
@@ -967,11 +987,18 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
         inputs: Array.isArray(config.inputs) ? config.inputs : [],
         outputs: Array.isArray(config.outputs) ? config.outputs : [],
       };
-      if (platformCapabilities[method]) {
+      // `method` comes from Object.entries over manifest data, so it is a bare
+      // string. Look it up once and narrow, rather than indexing three times
+      // with a key the compiler cannot prove is present.
+      const platformCapability = (
+        platformCapabilities as Record<string, { method: string; returnTypeBase: string } | undefined>
+      )[method];
+
+      if (platformCapability) {
         capabilities.push({
-          method: platformCapabilities[method].method,
+          method: platformCapability.method,
           config: safeConfig,
-          returnTypeBase: platformCapabilities[method].returnTypeBase,
+          returnTypeBase: platformCapability.returnTypeBase,
           stubBody: '',
         });
       } else {

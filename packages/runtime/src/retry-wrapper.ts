@@ -70,7 +70,9 @@ export async function withRetry<T>(
   context: Context,
   hookName: string
 ): Promise<T> {
-  let lastError: Error;
+  // Read on the first retry's telemetry before any assignment, so it must be
+  // declared as possibly-absent rather than asserted with `!` at the throw.
+  let lastError: Error | undefined;
   const previousErrors: Array<{ message: string; timestamp: string }> = [];
 
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {

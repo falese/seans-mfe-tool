@@ -60,7 +60,22 @@ export interface ManifestParser {
 }
 
 export interface LifecycleExecutor {
-  execute(hook: LifecycleHook, context: Context, phase: string): Promise<void>;
+  /**
+   * Receives a whole hook ENTRY — the `{ hookName: config }` record as it
+   * appears in the manifest — not a single hook config.
+   *
+   * That is what the DI branch of `executeLifecycle` has always passed, while
+   * the default branch expands each entry and calls `executeHook` per hook.
+   * The signature said `LifecycleHook`, so the two paths disagreed and nothing
+   * caught it: the DI branch was untypechecked under `strict: false`, and the
+   * one test covering it asserts `expect.any(Object)`.
+   *
+   * Typed here to match the behaviour rather than changing it — a DI executor
+   * is an extension point someone may already rely on, and altering what it
+   * receives is a lifecycle semantics decision, not a strict-mode cleanup.
+   * The asymmetry between the two branches is worth resolving separately.
+   */
+  execute(hook: LifecycleHookEntry, context: Context, phase: string): Promise<void>;
 }
 
 export interface ErrorHandler {

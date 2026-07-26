@@ -106,11 +106,13 @@ function deriveOutputSchemas(commands: RegistryCommand[]): Map<string, object> {
     ...parsed.options,
     noEmit: true,
     skipLibCheck: true,
-    // The repo compiles with `strict: false`, which collapses `string | null`
-    // to `string` — so a schema read under the repo's own settings claimed
-    // `EnvCheckResult.found` was always a string while `build:check` really
-    // returns null for a missing tool. Read the types as they were AUTHORED:
-    // `| null` was written deliberately and is what the command does.
+    // Redundant now that the repo compiles strict, and kept deliberately: it
+    // was NOT redundant when written. Under the previous `strict: false` this
+    // schema claimed `EnvCheckResult.found` was always a string, while
+    // `build:check` really returns null for a missing tool — `string | null`
+    // collapses to `string` without strictNullChecks. Pinning it here means
+    // the published contract stays true to the authored types no matter what
+    // the repo's own compiler settings do later.
     strictNullChecks: true,
   });
   const checker = program.getTypeChecker();
