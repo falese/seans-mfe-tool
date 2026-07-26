@@ -15,6 +15,7 @@ implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:
   - check:mfe-drift:check
+tracked-by: ["#281"]
 summary: >-
   Add optional manifest fields `framework` and `bundler` that drive codegen template variant
   selection in UnifiedGenerator, alongside a new concrete runtime class `AngularRemoteMFE` that

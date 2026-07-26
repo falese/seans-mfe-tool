@@ -51,6 +51,11 @@ implemented-by: []
 # entry must resolve to a real script or file.
 verified-by: []
 
+# Open issues *concerning* this decision (ADR-075 §7) — any status, no implication
+# that the decision is unfinished. Distinct from impl.refs, which is work required
+# to finish ratifying it. Format: ["#123"].
+tracked-by: []
+
 # Long prose fields use a block scalar. An unquoted YAML scalar ends at the
 # first ": " — the defect that left ADR-043 and ADR-052 silently unparsed.
 summary: >-

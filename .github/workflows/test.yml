@@ -225,8 +225,19 @@ jobs:
       - name: Render the governance summary
         # `fetch-depth: 0` above already gives full history, so the base ref is
         # present — no extra fetch, and no `|| true` swallowing a real failure.
+        #
+        # Open issues are fetched here and passed to the script as a file rather
+        # than fetched by it (ADR-075 §7): the script stays offline-testable, and
+        # the network call lives in the job that already makes one. If the fetch
+        # fails the one-way section is simply omitted — it is advisory, and a
+        # transient API error must not fail a governance comment.
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          npx ts-node scripts/adr-governance-report.ts "origin/${{ github.base_ref }}" > /tmp/adr-governance.md
+          gh issue list --repo "${{ github.repository }}" --state open --limit 200 \
+            --json number,title,body > /tmp/adr-open-issues.json || echo '[]' > /tmp/adr-open-issues.json
+          npx ts-node scripts/adr-governance-report.ts \
+            "origin/${{ github.base_ref }}" /tmp/adr-open-issues.json > /tmp/adr-governance.md
           cat /tmp/adr-governance.md
 
       - name: Post or update the sticky comment

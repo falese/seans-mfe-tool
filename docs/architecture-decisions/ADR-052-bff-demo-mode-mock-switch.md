@@ -15,6 +15,7 @@ implemented-by:
   - packages/bff-plugin/templates/mock-switch.js.ejs
   - packages/bff-plugin/templates/mocks.json.ejs
 verified-by: []
+tracked-by: ["#199", "#289", "#301"]
 summary: >-
   Generated BFFs gain an opt-in "demo mode" — they serve live upstream data by default but
   return deterministic mock fixtures when a request carries `x-bff-mode: mock` (per-request) or

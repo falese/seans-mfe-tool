@@ -27,6 +27,14 @@ import type { AdrDocument, AdrStatus } from '@seans-mfe/dsl';
 const REPO_ROOT = path.resolve(__dirname, '..');
 const ADR_DIR = path.join(REPO_ROOT, 'docs', 'architecture-decisions');
 const BASE = process.argv[2] ?? 'origin/main';
+/**
+ * Optional path to a JSON array of open issues (`gh issue list --json number,title,body`).
+ *
+ * Live GitHub state is deliberately an *argument*, not a fetch (ADR-075 §7): the
+ * script stays offline-testable and CI keeps the network call in the job that
+ * already makes one. Absent, the one-way section is simply skipped.
+ */
+const ISSUES_FILE = process.argv[3];
 
 /** Marker so the CI step can find and update its own comment instead of piling up. */
 export const COMMENT_MARKER = '<!-- adr-governance-report -->';
@@ -96,6 +104,41 @@ function main(): void {
 
   const out: string[] = [COMMENT_MARKER, '## 🏛 ADR governance', ''];
 
+  // One-way links: an issue cites an ADR that names neither it in `tracked-by`
+  // nor in `impl.refs`. Advisory — §7 is explicit that one-way is not
+  // automatically a defect (#208 cites ADR-054/055/056 to say the warnings
+  // *predate* that work, which is correct and should stay one-way).
+  const oneWay: string[] = [];
+  if (ISSUES_FILE && fs.existsSync(ISSUES_FILE)) {
+    const claimed = new Set<number>();
+    for (const doc of byId.values()) {
+      for (const ref of [...doc.frontmatter['tracked-by'], ...(doc.frontmatter.impl?.refs ?? [])]) {
+        claimed.add(Number.parseInt(ref.replace('#', ''), 10));
+      }
+    }
+    const openIssues = JSON.parse(fs.readFileSync(ISSUES_FILE, 'utf8')) as {
+      number: number;
+      title: string;
+      body?: string;
+    }[];
+    for (const issue of openIssues) {
+      if (claimed.has(issue.number)) continue;
+      const cites = [
+        ...new Set(
+          [...`${issue.title} ${issue.body ?? ''}`.matchAll(/ADR-(\d{3})/g)].map((m) =>
+            Number.parseInt(m[1], 10)
+          )
+        ),
+      ]
+        .filter((id) => byId.has(id))
+        .sort((a, b) => a - b);
+      if (cites.length === 0) continue;
+      oneWay.push(
+        `| #${issue.number} | ${cell(issue.title.slice(0, 58))} | ${cites.map((id) => `ADR-${formatAdrId(id)}`).join(', ')} |`
+      );
+    }
+  }
+
   // A row per touched file would mean 48 rows for a metadata backfill — the
   // exact noise this report exists to avoid. Only a *lifecycle* change earns a
   // row; everything else collapses to a count.
@@ -157,6 +200,22 @@ function main(): void {
 
   if (touched.length === 0 && restsOn.length === 0) {
     out.push('No ADRs changed and no ADR citations in the changed code.', '');
+  }
+
+  if (oneWay.length > 0) {
+    out.push('<details>');
+    out.push(
+      `<summary>${oneWay.length} open issue(s) cite an ADR that does not cite them back</summary>`,
+      ''
+    );
+    out.push('| Issue | Title | Cites |', '| --- | --- | --- |', ...oneWay);
+    out.push('');
+    out.push(
+      'Advisory (ADR-075 §7). One-way is not automatically wrong — a reference can be ' +
+        'temporal ("these warnings predate ADR-054"). Where the issue genuinely concerns ' +
+        'a decision, add it to that ADR\'s `tracked-by`.'
+    );
+    out.push('</details>', '');
   }
 
   // Register-wide state, one line — the context a reviewer needs without a dump.

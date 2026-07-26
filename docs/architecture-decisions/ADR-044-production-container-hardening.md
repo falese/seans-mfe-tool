@@ -14,6 +14,7 @@ implements-pdr: [1]
 implemented-by:
   - packages/bff-plugin/templates/Dockerfile.ejs
 verified-by: []
+tracked-by: ["#247"]
 summary: >-
   Generated MFE containers run as non-root on unprivileged nginx (port 8080), ship a hardened
   federation-aware nginx server block (security headers, gzip, /health, content-hash-friendly

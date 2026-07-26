@@ -19,6 +19,7 @@ implemented-by:
 verified-by:
   - packages/dsl/src/__tests__/adr-validation.test.ts
   - check:adr
+tracked-by: ["#241"]
 summary: >-
   ADR frontmatter becomes the single source of truth for the decision record; the `docs/spec.md` index and the PDR↔ADR map become generated artifacts under a diff gate; and a rule set in `adr:validate` makes stale cross-references, one-way supersessions, unratified-ADR citations in code, and free-text statuses unrepresentable rather than merely noticeable.
 rationale-summary: >-
@@ -221,6 +222,50 @@ a timer: staleness is a judgement about whether an argument still holds, and a
 date cannot make it. And it does not gate the `Proposed → Accepted` transition on
 anything mechanical — ratifying a decision is a human act, and the artifact it
 produces is the merge.
+
+### 7. Issues concerning a decision, distinct from work that finishes it
+
+> **Added after ratification.** §1–6 were ratified together; this section was
+> appended once the backlog was measured against them. `CLAUDE.md` says not to
+> edit an existing ADR — the judgement here was that extending the *decision
+> record's own schema* belongs inside the decision about the decision record
+> rather than fragmenting one idea across two documents, on the same reasoning
+> §5 used to authorize its own bounded exemption. A reader should know this
+> section postdates the rest.
+
+Applying §6 to the backlog surfaced a gap in it. Of 57 open issues, 30 cite an
+ADR and only 9 were cited back. The obvious fix — mirror every citation into
+`impl.refs` — is wrong, and the reason matters.
+
+**`impl.refs` means "work required to finish ratifying this decision".** It lives
+under `impl.stage`, which only exists while a decision is `Accepted` and
+unfinished. #199 (a `bff:init` path that does not emit ADR-052's demo-mode files)
+and #281 (React/Angular template drift under ADR-036) are not that: both decisions
+are `Implemented`, and both issues are gaps in the realization rather than steps
+toward ratification. Putting them in `impl.refs` would make
+`adr:status --outstanding` report finished decisions as outstanding — destroying
+the signal §6 exists to create.
+
+So a second, optional field:
+
+- **`tracked-by`** — open issues *concerning* this decision. Any status. No
+  implication that the decision is unfinished.
+
+The two are deliberately separate: `impl.refs` answers "what has to happen before
+this is done", `tracked-by` answers "what is currently open about this". An issue
+may move from one to the other, and a decision may have both.
+
+**The reverse direction stays a report, not a gate.** Whether an issue exists, is
+open, or cites the right ADR is live GitHub state, and CI must not put a network
+call in the correctness path — the reasoning ADR-066 pillar 5 uses to keep live
+topology advisory. `adr:validate` therefore checks only what is in the repo: that
+`tracked-by` entries are well-formed issue references. The `adr-governance` job,
+which already talks to the API to post its comment, reports one-way links as
+information.
+
+**One-way is not automatically a defect.** #208 cites ADR-054/055/056 to say the
+lint warnings *predate* that work — a temporal reference, correctly one-way and
+correctly never mirrored. The report says what it found; a human decides.
 
 ## Boundaries
 
