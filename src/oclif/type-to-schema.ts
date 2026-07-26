@@ -160,11 +160,28 @@ function convertObject(
     type: 'object',
     ...(required.length ? { required } : {}),
     properties,
-    // Derived schemas are complete by construction, so closing the object is
-    // safe — and it is what makes a future undeclared field fail loudly rather
-    // than silently break validating clients.
-    additionalProperties: false,
+    // Closing the object is what makes a future undeclared field fail loudly
+    // rather than silently break validating clients — but only when the type
+    // is genuinely closed. A string index signature (`[key: string]: unknown`)
+    // says extra keys are legal, and closing anyway yields a schema STRICTER
+    // than the type it claims to describe. That is how `bff:validate`'s
+    // `manifest` came to be rejected by its own published contract.
+    additionalProperties: additionalPropertiesFor(type, checker, depth, nested),
   };
+}
+
+function additionalPropertiesFor(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+  depth: number,
+  seen: Set<ts.Type>,
+): boolean | JsonSchema {
+  const indexInfo = checker.getIndexInfoOfType(type, ts.IndexKind.String);
+  if (!indexInfo) return false;
+
+  // `unknown`/`any` index types constrain nothing; anything else does.
+  const valueSchema = convert(indexInfo.type, checker, depth + 1, seen);
+  return Object.keys(valueSchema).length === 0 ? true : valueSchema;
 }
 
 // ---------------------------------------------------------------------------

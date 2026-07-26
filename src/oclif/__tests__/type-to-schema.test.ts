@@ -131,6 +131,22 @@ describe('typeToJsonSchema', () => {
     });
   });
 
+  it('leaves a type with an index signature open', () => {
+    // `[key: string]: unknown` means extra keys are legal. Closing the object
+    // anyway produces a schema STRICTER than the type — which is how
+    // bff:validate's `manifest` came to be rejected by its own contract.
+    const s = schemaFor(`
+      interface Target { name: string; [key: string]: unknown; }
+    `);
+    expect(s.additionalProperties).toBe(true);
+    expect((s.properties as Record<string, unknown>).name).toEqual({ type: 'string' });
+  });
+
+  it('constrains additionalProperties when the index signature is typed', () => {
+    const s = schemaFor(`interface Target { a: string; [key: string]: string; }`);
+    expect(s.additionalProperties).toEqual({ type: 'string' });
+  });
+
   it('degrades a bare object to an open object rather than inventing a shape', () => {
     const s = schemaFor(`interface Target { input: object; }`);
     expect((s.properties as Record<string, unknown>).input).toEqual({ type: 'object' });

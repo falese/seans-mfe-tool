@@ -47,11 +47,24 @@ export interface MeshServe {
   playground: boolean;
 }
 
+/**
+ * The plugin's copy of the manifest's `data:` block. It fell behind the
+ * canonical `DataConfigSchema` in `@seans-mfe/dsl`: `mockSwitch` (ADR-052) and
+ * `generatedFrom` (ADR-011) were added there and never mirrored here, so
+ * `bff:validate` returned a manifest its own published schema rejected.
+ *
+ * Kept in sync by hand for now because the plugin is deliberately
+ * self-contained; the output-schema conformance test is what catches the drift.
+ */
 export interface DSLDataSection {
   sources: MeshSource[];
   transforms?: MeshTransform[];
   plugins?: MeshPlugin[];
   serve?: MeshServe;
+  /** Demo-mode live/mock switch (ADR-052). */
+  mockSwitch?: { enabled: boolean };
+  /** Provenance of a generated `data:` block (ADR-011). */
+  generatedFrom?: Array<{ openapi?: string; service?: string; version?: string }>;
 }
 
 export interface MFEManifest {
