@@ -311,6 +311,8 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
 | [ADR-075](./architecture-decisions/ADR-075-adr-library-under-drift-control.md) | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
 | [ADR-076](./architecture-decisions/ADR-076-platform-handler-dispatch.md) | Platform handlers dispatch by exported function name from a static library, not a registry class | Runtime handlers | Implemented |
+| [ADR-077](./architecture-decisions/ADR-077-two-headed-giant-re-derived.md) | The two-headed giant's implementation plan is re-derived from measured friction, not from the April spec | Developer model / DX / agent contract | Accepted (impl phased, #139) |
+| [ADR-078](./architecture-decisions/ADR-078-control-plane-in-platform.md) | The control plane ships in the platform, and a composition environment is generated from a manifest | Control plane / codegen / packaging | Proposed (impl deferred, #139) |
 
 <!-- END GENERATED: adr-index -->
 

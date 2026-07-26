@@ -12,7 +12,8 @@ A structured architecture + documentation review of **seans-mfe-tool**, delivere
 |---|---|---|
 | [Executive Architecture Narrative](./executive-architecture-narrative.md) | #212 | 2-page stakeholder framing: constant contract vs. swappable implementation; honest maturity/risk |
 | [Architecture Pillar Model](./architecture-pillar-model.md) | #213 | The 7 pillars, each with boundary, decisions, risks, doc score, and upgrades |
-| [AI-Native Readiness Scorecard](./ai-native-readiness-scorecard.md) | #214 | Evidence-based AI-native analysis; weighted 81/100 scorecard; maturity model |
+| [AI-Native Readiness Scorecard](./ai-native-readiness-scorecard.md) | #214 | Evidence-based AI-native analysis; weighted 81/100 scorecard; maturity model. **Two scores are corrected by the re-derivation below — see its §4.** |
+| [The Two-Headed Giant, Re-Derived](./two-headed-giant-re-derivation.md) | #139 | Epic #139 reconciled against three months of shipped work and two DX field reports; the epic split; corrections to D3/D6 of the scorecard |
 | Project status + architecture currency refresh | #216 | Reconciled [`PROJECT-STATUS.md`](../PROJECT-STATUS.md) + [`architecture-current-state.md`](../architecture-current-state.md) |
 
 ### Phase 2 — Analysis (what's *missing* / *misaligned*)
