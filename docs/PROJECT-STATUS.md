@@ -1,16 +1,26 @@
 # Project Status
 
-**Last Updated:** June 2026  
-**Branch:** `main`
+**Last Updated:** 2026-07-26
 
 This is the single authoritative overview of what's done, what's active, and what's deferred.
 Read this before starting any new work. Then read `CLAUDE.md` for coding conventions and `.github/copilot-instructions.md` for the full context.
 
-> **Currency note (June 2026, DOCS-P1 #216).** This file was reconciled against
-> `CLAUDE.md` and `docs/architecture-current-state.md` as part of the
-> [Platform Design Review](./platform-design-review/README.md). The Framework
-> Plugin System (ADR-036) is now reflected as shipped; the Runtime Platform
-> remains the primary active work stream.
+> **What this file is not.** It is hand-maintained, so it can drift — it did, by
+> two months, which is why the July refresh below exists. For anything with a
+> generated source, trust the source over this page:
+>
+> | Question | Generated source |
+> |---|---|
+> | Which ADRs exist, and their status | [`docs/spec.md#adr-index`](./spec.md#adr-index) (`npm run build:adr-index`) |
+> | Which decisions are outstanding | `seans-mfe-tool adr:status` |
+> | What the CLI accepts and returns | [`schemas/`](../schemas/) (`npm run build:schemas`) |
+> | Whether the fleet matches its manifests | `npm run check:mfe-drift` |
+>
+> **Currency note (2026-07-26).** Reconciled against the ADR register, the open
+> issue list, and the working tree. The June entry claimed the Runtime Platform
+> was the primary active stream; in practice the last two months were the slot
+> contract, the control plane, and the drift-gate program — none of which this
+> file mentioned. Corrected below.
 
 ---
 
@@ -56,26 +66,98 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/agent-plans/oclif-migrati
 | Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `src/dsl/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
 | Authoring guide                                                                   | [`docs/framework-plugin-authoring.md`](./framework-plugin-authoring.md) |
 
+### Runtime Composition — Control Plane, Slots, Layout (ADR-054–060, ADR-066–073)
+
+| What | Where |
+| --- | --- |
+| Control-plane message protocol; virtualized daemon socket | `packages/contracts/src/` (ADR-054, ADR-057) |
+| `LayoutManager` — daemon-driven slot composition; contextualized VM composition | `packages/runtime/src/layout-manager.ts` (ADR-055, ADR-060) |
+| `BaseControlPlane` abstract base | `packages/runtime/src/base-control-plane.ts` (ADR-059) |
+| Slot contract — stable addressing, desired-state placement, provider-scoped ids, single-sourced grammar | `packages/contracts/src/slot-contract.ts`, `slot-grammar.ts` (ADR-066–069) |
+| `DeclaredSlot` app-code API + design-time validation (`slots:validate`, `slots-implemented` rule) | `packages/framework-react/`, `packages/dsl/src/slot-validation.ts` (ADR-072, ADR-073) |
+| Explainers | [`docs/slot-contract.md`](./slot-contract.md), [`docs/slot-architecture.md`](./slot-architecture.md) |
+
+### Drift Control — the fleet cannot disagree with its manifests
+
+Five gates, all CI-enforced. This is the platform's answer to "what does the tool own": ownership is
+the `overwrite` flag on the generation plan, enforced by regenerating and diffing (ADR-074, ADR-077).
+
+| Gate | Keeps in sync | Command |
+| --- | --- | --- |
+| #295 | generator-owned files ⇄ manifest | `npm run check:mfe-drift` |
+| #296 | `package.json` + federation `shared` ⇄ manifest | `npm run check:mfe-consistency` |
+| ADR-073 | app code ⇄ manifest; registry rules ⇄ manifest | `mfe:validate`, `slots:validate` |
+| #328 | a freshly scaffolded MFE ⇄ `tsc` | `npm run check:template-typecheck` |
+| ADR-075 | the ADR library itself | `npm run check:adr` |
+
+### ADR Governance under Drift Control (ADR-075)
+
+Frontmatter is the source of truth; [`docs/spec.md#adr-index`](./spec.md#adr-index) and the PDR↔ADR
+map are generated from it. `adr:status` and `adr:validate` ship as commands. **79 ADRs**: 52
+Implemented, 14 Accepted, 11 Proposed, 1 Deferred, 1 Superseded.
+
+### Agent Contract (ADR-077, epic #139)
+
+| What | Where |
+| --- | --- |
+| `--no-interactive` as a real flag, separable from `--json` | `packages/oclif-base/src/BaseCommand.ts` |
+| Typed sysexits codes on *every* failure path, not only under `--json` | same |
+| MCP tool catalog derived from the oclif registry — inputs from flags/args, outputs from each command's declared result type | `src/oclif/schema-derivation.ts`, `src/oclif/type-to-schema.ts`, `scripts/generate-schemas.ts` |
+| Registry-driven conformance sweep + response validation against published schemas | `src/oclif/__tests__/command-conformance.test.ts`, `output-schema-conformance.test.ts` |
+| Build output parsed into classified `BuildError`s (rspack, tsc, `ng`) | `packages/contracts/src/build-output-parser.ts` |
+| `strict: true` across every tsconfig | root + `packages/*/tsconfig.json` |
+
+### Reference Applications
+
+| App | What it demonstrates |
+| --- | --- |
+| [`examples/meridian-station/`](../examples/meridian-station/) | 7 MFEs across React and Angular, three deliberately hostile APIs, per-MFE BFFs, a control-plane-driven generic shell. Everything but the shell generated by the real CLI, two MFEs through MCP. See its `DX-REPORT.md` — a 22-item field report, 18 fixed in the same PR. |
+| [`examples/abc-kids/`](../examples/abc-kids/) | 14 game MFEs, an imperative arcade shell, the ADR-052 live/mock switch. Engineering-discipline parity tracked in #289. |
+
 ---
 
 ## 🟡 Active
+
+### Agent contract completion — epic #139 (ADR-077)
+
+The two-headed giant epic, re-derived from measured friction rather than the April spec.
+Full evidence: [`docs/platform-design-review/two-headed-giant-re-derivation.md`](./platform-design-review/two-headed-giant-re-derivation.md).
+
+Remaining: real `likely-cause` classification beyond the current parsers, MCP schema coverage
+verified for the three commands with no cheap success-path fixture, `received`/`suggestion` on
+manifest validation errors (#141), and wiring ADR-030's dead pattern branch.
+
+### `platform:init` — composition environment as a generated artifact (#329)
+
+ADR-078 (Proposed) + PDR-008 (Accepted). Brings the registry and daemon into
+`packages/control-plane` — they are currently byte-identical vendored copies in both reference
+apps — makes persistence a manifest field, and generates the shell plus its control plane in one
+command. Absorbs #144. Retires `@falese/daemon`.
+
+### One fleet-description engine (#330)
+
+`explain` / `system:map` / `status` as renderings over a single pure `describe()` layer, rather
+than three discovery walks. Supersedes the approach in #146 and #147.
+
+### abc-kids → Meridian engineering-discipline parity (#289)
+
+Regen invariance, artifact hygiene, MCP dogfooding, and registry-resolved composition for the
+arcade — keeping its product identity, not homogenising it. Children #290, #300–#305.
+
+### ADR-070 experience-scoped federated supergraph (#282–#288)
+
+Phased: `schema()` returning BFF SDL, registry schema cache, daemon-hosted Mesh gateway, then
+cross-subgraph type merge.
 
 ### Runtime Platform (Issues #47–59)
 
 **Requirement set:** REQ-RUNTIME-001 through REQ-RUNTIME-012  
 **Architecture doc:** [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md)  
-**Requirements doc:** [`docs/requirements/`](./requirements/) (runtime-requirements.md)  
-**Code:** `src/runtime/`, `packages/runtime/`
+**Code:** `packages/runtime/`
 
-Priority order:
-
-1. #49 — REQ-RUNTIME-002: Shared Context
-2. #52 — REQ-RUNTIME-005: Platform Handler Registry
-3. #47 — REQ-RUNTIME-001: Load Capability (atomic — ADR-026)
-4. #51 — REQ-RUNTIME-004: Render Capability
-5. #53 — REQ-RUNTIME-006: Auth Handler
-6. #56 — REQ-RUNTIME-009: Error Handling Handler
-   7–12. Remaining handlers (#54, #55, #57, #50, #58, #59)
+Long-running and partially overtaken — much of the lifecycle, error-boundary and platform-handler
+work landed via ADR-024/025/076 and the control-plane stream rather than through these issues.
+**Audit before picking one up**; several are likely closable.
 
 ### BaseMFE Boilerplate Codegen from DSL (Issue #39)
 
@@ -91,13 +173,13 @@ Priority order:
 
 **5 enhancements** to the lifecycle engine — all ADRs written, GitHub issues not yet created.
 
-| Enhancement                | ADR     | Status     |
-| -------------------------- | ------- | ---------- |
-| Parallel handler execution | ADR-028 | 📋 Planned |
-| Timeout protection         | ADR-029 | 📋 Planned |
-| Error classification       | ADR-030 | 📋 Planned |
-| Conditional execution      | ADR-031 | 📋 Planned |
-| Inter-hook communication   | ADR-032 | 📋 Planned |
+| Enhancement                | ADR     | Status                                                     |
+| -------------------------- | ------- | ---------------------------------------------------------- |
+| Timeout protection         | ADR-029 | ✅ Implemented — `packages/runtime/src/timeout-wrapper.ts`  |
+| Error classification       | ADR-030 | ✅ Implemented — `packages/contracts/src/error-classifier.ts` (note: its pattern branch is unreachable from the CLI path — tracked in #139) |
+| Parallel handler execution | ADR-028 | 📋 Proposed — no issue yet                                  |
+| Conditional execution      | ADR-031 | 📋 Proposed — no issue yet                                  |
+| Inter-hook communication   | ADR-032 | 📋 Proposed — no issue yet                                  |
 
 **Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)  
 **Issue templates ready:** see `docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md` in git history (archive removed from the tree; #239)
@@ -107,17 +189,6 @@ To create issues:
 ```bash
 # See docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md for gh issue create commands
 ```
-
-### Architecture Sub-docs
-
-These are referenced in `architecture-current-state.md` but not yet written:
-
-- `docs/architecture-codegen.md` — Code Generation Engine
-- `docs/architecture-dsl.md` — DSL & Type System
-- `docs/architecture-bff.md` — BFF Layer
-- `docs/architecture-api-generator.md` — API Generator
-
-All underlying code is complete; documentation is the gap.
 
 ---
 
@@ -132,9 +203,16 @@ Phase 1 success criteria (all must be true before Phase 2 / monorepo merge):
 
 - [ ] `@seans-mfe/contracts` published to npm with stable semver
 - [ ] `@seans-mfe/oclif-base` published to npm with stable semver
-- [ ] `@falese/daemon-plugin` passes `plugins link` + `--json` envelope test
+- [ ] ~~`@falese/daemon-plugin` passes `plugins link` + `--json` envelope test~~ — **void.** PDR-008
+      brings the control plane into the platform and retires `@falese/daemon`; the daemon is no
+      longer a plugin to certify.
 - [ ] `@falese/coder-plugin` passes MCP federation test
-- [ ] All three repos have green CI running `turbo run test build`
+- [ ] Remaining repos have green CI running `turbo run test build`
+
+Also pending and higher-leverage than it looks: **`@seans-mfe/runtime` is unpublished**
+(ADR-064, #252). The Meridian DX report names the `dist/runtime` staging workaround as the cause
+of "every one of this build's environment-specific detours" — it is the single most-cited source
+of friction in the reference-app builds.
 
 ### Monorepo Consolidation
 
@@ -158,7 +236,11 @@ See [`docs/requirements/deferred-backlog.md`](./requirements/deferred-backlog.md
 | I want to...                                         | Go to                                                                                                   |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Understand *why* the platform is built this way      | [`docs/product-decisions/`](./product-decisions/README.md) (PDRs)                                       |
-| Find an architecture decision (ADR-NNN)              | [`docs/architecture-decisions/README.md`](./architecture-decisions/README.md) (register)                |
+| Find an architecture decision (ADR-NNN)              | [`docs/spec.md#adr-index`](./spec.md#adr-index) — generated from frontmatter (ADR-075)                  |
+| See which decisions are outstanding                 | `seans-mfe-tool adr:status`                                                                             |
+| Understand slot composition                         | [`docs/slot-contract.md`](./slot-contract.md), [`docs/slot-architecture.md`](./slot-architecture.md)   |
+| Understand the agent-facing contract                | [`docs/platform-design-review/two-headed-giant-re-derivation.md`](./platform-design-review/two-headed-giant-re-derivation.md) |
+| See what a real agent-driven build hit              | [`examples/meridian-station/DX-REPORT.md`](../examples/meridian-station/DX-REPORT.md)                   |
 | Understand the CLI/oclif migration that just shipped | [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)                               |
 | Work on the runtime platform                         | [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md) + `packages/runtime/`     |
 | Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-028–032 |
