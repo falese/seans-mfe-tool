@@ -41,6 +41,24 @@ export const COMMENT_MARKER = '<!-- adr-governance-report -->';
 
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 
+/**
+ * Strip Markdown blockquotes before scanning an issue body for citations.
+ *
+ * A blockquote is commentary *about* the issue, not a claim the issue makes.
+ * The ADR-075 backlog pass appended a `> **Reference corrected…**` footer to
+ * every issue whose ADR number was stale, and each footer necessarily *quotes*
+ * the wrong number it is correcting — so without this, fixing an issue makes it
+ * scan worse than leaving it broken. #16 reported `ADR-012, ADR-046, ADR-075` — adr-lint-ignore: code-cites-ratified-adr
+ * where only ADR-012 is the subject: the second is the corrected-away number
+ * and the third is the pass that corrected it.
+ */
+function withoutQuotes(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .filter((line) => !/^\s*>/.test(line))
+    .join('\n');
+}
+
 /** Escape what would break a Markdown table cell or be read as an HTML tag. */
 function cell(text: string): string {
   return text.replace(/\|/g, '\\|').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -125,7 +143,7 @@ function main(): void {
       if (claimed.has(issue.number)) continue;
       const cites = [
         ...new Set(
-          [...`${issue.title} ${issue.body ?? ''}`.matchAll(/ADR-(\d{3})/g)].map((m) =>
+          [...withoutQuotes(`${issue.title} ${issue.body ?? ''}`).matchAll(/ADR-(\d{3})/g)].map((m) =>
             Number.parseInt(m[1], 10)
           )
         ),
