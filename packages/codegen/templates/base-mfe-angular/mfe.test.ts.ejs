@@ -42,10 +42,14 @@ describe('<%= className %>', () => {
   // ---------------------------------------------------------------------------
   // Domain capability smoke tests
   // ---------------------------------------------------------------------------
-<%/* platformCapabilityNames comes from @seans-mfe/contracts via the render model
-     (ADR-080). The literal this replaced omitted updateControlPlaneState, so a
-     manifest declaring it got a domain-capability smoke test. */%>
-<% const domainCaps = capabilities.filter(c => !platformCapabilityNames.includes(c.method)); %>
+<%
+   // platformCapabilityNames comes from @seans-mfe/contracts via the render
+   // model (ADR-080). The literal this replaced omitted
+   // updateControlPlaneState, so a manifest declaring it got a
+   // domain-capability smoke test. Keep this comment INSIDE the scriptlet — a
+   // separate EJS comment block above it emits a newline into every generated
+   // mfe.test.ts and drifts all 21 committed examples.
+   const domainCaps = capabilities.filter(c => !platformCapabilityNames.includes(c.method)); %>
 <% domainCaps.forEach(function(cap) { %>
   it('should call <%= cap.method %>() and return an object', async () => {
     const result = await mfe.<%= cap.method %>(context);
