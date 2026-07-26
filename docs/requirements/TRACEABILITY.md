@@ -554,12 +554,12 @@ When requirements are superseded or no longer relevant:
 
 ## References
 
-- **Backlog:** [docs/BACKLOG.md](./BACKLOG.md)
+- **Backlog:** [docs/product-decisions/BACKLOG.md](../product-decisions/BACKLOG.md)
 - **Requirements Docs:** [docs/\*-requirements.md](./orchestration-requirements.md)
-- **ADRs:** [docs/architecture-decisions.md](./architecture-decisions.md)
-- **Acceptance Criteria:** [docs/acceptance-criteria/](./acceptance-criteria/)
-- **Issue Templates:** [.github/ISSUE_TEMPLATE/](./.github/ISSUE_TEMPLATE/)
-- **Agent Instructions:** [.github/agents/requirements-elicitation-agent.md](./.github/agents/requirements-elicitation-agent.md)
+- **ADRs:** [docs/spec.md#adr-index](../spec.md#adr-index) — generated from ADR frontmatter (ADR-075)
+- **Acceptance Criteria:** captured per-issue in the PR body; the `docs/acceptance-criteria/` directory no longer exists
+- **Issue Templates:** [.github/ISSUE_TEMPLATE/](../../.github/ISSUE_TEMPLATE/)
+- **Agent Instructions:** `CLAUDE.md` (the `.github/agents/` directory no longer exists)
 
 ---
 

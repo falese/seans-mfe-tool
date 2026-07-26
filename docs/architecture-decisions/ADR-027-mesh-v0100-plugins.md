@@ -410,7 +410,7 @@ npm run build
 - [GraphQL Mesh v0.100.x Documentation](https://the-guild.dev/graphql/mesh/docs)
 - [Mesh Plugins](https://the-guild.dev/graphql/mesh/docs/plugins/overview)
 - [Mesh Transforms](https://the-guild.dev/graphql/mesh/docs/transforms/overview)
-- [e2e2 Dependency Resolution Issue #123](../IMPLEMENTATION-PLAN.md)
+- e2e2 dependency resolution (issue #123) — the IMPLEMENTATION-PLAN.md it referenced no longer exists
 
 ## Decision Date
 

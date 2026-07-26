@@ -6,8 +6,8 @@
 **Related Documents**:
 
 - [Lifecycle Engine Analysis](../lifecycle-engine-analysis.md)
-- [Runtime Requirements](../runtime-requirements.md)
-- [DSL Contract Requirements](../dsl-contract-requirements.md)
+- [Runtime Requirements](../spec.md#adr-index)
+- [DSL Contract Requirements](./dsl-contract-requirements.md)
 
 ---
 

@@ -166,13 +166,19 @@ jobs:
           retention-days: 7
 
   doc-links:
-    # Tier-1 docs link hygiene (cross-reference-standards.md). Report-only for
-    # now — a clean baseline must be established (broken links tracked by G15)
-    # before this is flipped to a required gate. Refs #231 (R5), #222.
+    # Tier-1 docs link hygiene (cross-reference-standards.md). Refs #231 (R5),
+    # #222, #333.
     #
-    # The step surfaces findings as a GitHub warning annotation but does not
-    # fail the check yet. To flip to a required gate once G15 is cleared,
-    # replace the step body with `run: node scripts/check-doc-links.js`.
+    # Was report-only pending a clean baseline (G15). The baseline is clean —
+    # 972 relative links, 0 broken — so this is now a required gate, per the
+    # flip condition this job was written with. Eight of the sixteen were paths
+    # that moved (`architecture-decisions.md` → the generated `spec.md#adr-index`,
+    # `unified-generator.ts` → `packages/codegen/` under ADR-061); the other
+    # eight pointed at files that no longer exist and became prose naming the
+    # successor.
+    #
+    # Report-only was the right call while the baseline was dirty and the wrong
+    # one afterwards: a warning nobody has to act on is how sixteen accumulated.
     runs-on: ubuntu-latest
 
     steps:
@@ -183,11 +189,8 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Check relative doc links resolve (report-only)
-        run: |
-          if ! node scripts/check-doc-links.js; then
-            echo "::warning title=Doc link hygiene::Broken relative doc links found (report-only; tracked by G15). Run 'npm run docs:check-links' locally."
-          fi
+      - name: Check relative doc links resolve
+        run: node scripts/check-doc-links.js
 
   adr-governance:
     # Post a governance summary on every PR: which decisions it changes, which

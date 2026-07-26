@@ -1048,8 +1048,8 @@ The lifecycle engine is **already enterprise-ready** for production use. Its dec
 **Related Documents:**
 
 - [Runtime Platform Architecture](./architecture-runtime-platform.md)
-- [DSL Contract Requirements](./dsl-contract-requirements.md)
-- [Platform Handler Requirements](./runtime-requirements.md)
+- [DSL Contract Requirements](./requirements/dsl-contract-requirements.md)
+- Platform Handler Requirements — superseded by ADR-024/ADR-025/ADR-076; see `docs/spec.md#adr-index`
 
 ---
 

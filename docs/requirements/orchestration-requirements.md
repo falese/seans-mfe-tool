@@ -16,11 +16,11 @@ These files are part of the traceability chain (Requirements → ADRs → Issues
 **Feature:** MFE Orchestration System  
 **Related Docs:**
 
-- [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
-- [Architecture Decisions](./architecture-decisions.md)
+- GraphQL Code Generation Requirements — merged into ADR-012 / ADR-027 (GraphQL Mesh BFF layer)
+- [Architecture Decisions](../spec.md#adr-index)
   - ADR-046: Implemented (BFF Mesh via DSL data)
   - ADR-048: Implemented (DSL-first remote generation)
-- [Session 2 Summary](./SESSION-2-SUMMARY.md)
+
 
 ---
 
@@ -28,7 +28,7 @@ These files are part of the traceability chain (Requirements → ADRs → Issues
 
 This document captures requirements for adding orchestration capabilities to the MFE Development Tool. The orchestration feature will manage coordination, lifecycle, and communication between multiple MFE applications (shells, remotes, and APIs).
 
-**Note:** GraphQL code generation requirements have been moved to a [separate document](./graphql-codegen-requirements.md) for detailed technical specifications.
+**Note:** GraphQL code generation requirements now live in ADR-012 and ADR-027 (the separate requirements document was removed).
 
 ---
 
@@ -72,7 +72,7 @@ All MFEs will expose data via GraphQL, generated automatically from OpenAPI spec
 - AI agent introspection and discovery
 - Self-documenting data layer
 
-**Detailed requirements moved to:** [GraphQL Code Generation Requirements](./graphql-codegen-requirements.md)
+**Detailed requirements moved to:** ADR-012 (GraphQL Mesh BFF layer) and ADR-027 (Mesh v0.100.x plugins).
 
 **Key Decisions:**
 

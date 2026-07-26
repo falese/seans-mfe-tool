@@ -1337,7 +1337,7 @@ query findSharedDependencies($mfeName: String!) {
   - REQ-026: Standard Capabilities Listed in DSL
   - REQ-033: Standardized Extensible Lifecycle Hooks
   - REQ-041: Emit Platform Capability
-- [graphql-codegen-requirements.md](./graphql-codegen-requirements.md)
+- GraphQL codegen requirements — merged into ADR-012 / ADR-027
   - GraphQL schema generation patterns
   - Data layer lifecycle hooks
 

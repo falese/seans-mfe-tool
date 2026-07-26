@@ -5,7 +5,7 @@
 **Parent Feature:** MFE CLI Tool  
 **Related Docs:**
 
-- [Architecture Decisions](./architecture-decisions.md) - ADR-047
+- [Architecture Decisions](../spec.md#adr-index) - ADR-047
 - [Orchestration Requirements](./orchestration-requirements.md)
 - [GraphQL BFF Requirements](./graphql-bff-requirements.md)
 
