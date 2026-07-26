@@ -156,11 +156,18 @@ const OUTPUT_SCHEMAS: Record<string, object> = {
   },
   'remote:generate': {
     type: 'object',
-    required: ['generated', 'skipped', 'errors', 'dryRun'],
+    required: ['generated', 'skipped', 'errors', 'preserved', 'dryRun'],
     properties: {
       generated: { type: 'array', items: { type: 'string' } },
       skipped:   { type: 'array', items: { type: 'string' } },
       errors:    { type: 'array', items: { type: 'string' } },
+      // RemoteGenerateResult.preserved — capability names whose feature files
+      // were kept because they are already implemented. Returned on both the
+      // dry-run and real paths, but missing here, and the schema is
+      // additionalProperties:false — so a schema-validating agent rejected
+      // every remote:generate response, and could not see the one field that
+      // tells it whether its own hand-written feature code survived.
+      preserved: { type: 'array', items: { type: 'string' } },
       ...MUTATING_RESULT_PROPS,
     },
     additionalProperties: false,

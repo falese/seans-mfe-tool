@@ -24,6 +24,7 @@
       "generated",
       "skipped",
       "errors",
+      "preserved",
       "dryRun"
     ],
     "properties": {
@@ -40,6 +41,12 @@
         }
       },
       "errors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "preserved": {
         "type": "array",
         "items": {
           "type": "string"
