@@ -12,7 +12,7 @@
  */
 
 import * as path from 'path';
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
@@ -23,8 +23,7 @@ import {
   normalizeAdrId,
   type AdrStatus as AdrStatusValue,
 } from '@seans-mfe/dsl';
-
-const ADR_DIR = path.join('docs', 'architecture-decisions');
+import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 
 /** Display order — the lifecycle path, not alphabetical. */
 const STATUS_ORDER: readonly AdrStatusValue[] = [
@@ -64,12 +63,28 @@ export interface AdrStatusOptions {
   outstandingOnly?: boolean;
 }
 
+/**
+ * Resolve a user-supplied status against the vocabulary, case-insensitively.
+ *
+ * The filter has always compared with `toLowerCase()`, but the oclif flag pinned
+ * `options` to the exact-cased vocabulary, so `--status implemented` was rejected
+ * before the core ever saw it. Validating here instead makes the command and its
+ * core agree, and keeps the vocabulary in the error message where it is useful.
+ */
+function resolveStatus(input: string): AdrStatusValue {
+  const match = STATUS_ORDER.find((s) => s.toLowerCase() === input.toLowerCase());
+  if (match) return match;
+  throw new ValidationError(
+    `Unknown status "${input}" — expected one of: ${STATUS_ORDER.join(', ')}`,
+    'status',
+    'enum',
+  );
+}
+
 export async function adrStatusCommand(opts: AdrStatusOptions = {}): Promise<AdrStatusResult> {
-  const root = path.resolve(opts.root ?? process.cwd());
+  const root = await resolveAdrRoot(opts.root);
   const dir = path.join(root, ADR_DIR);
-  if (!(await fs.pathExists(dir))) {
-    throw new ValidationError(`No ADR directory at ${ADR_DIR}`, 'adr-dir', 'required');
-  }
+  const status = opts.status === undefined ? undefined : resolveStatus(opts.status);
 
   const entries: AdrStatusEntry[] = [];
   const unparsed: string[] = [];
@@ -103,27 +118,35 @@ export async function adrStatusCommand(opts: AdrStatusOptions = {}): Promise<Adr
     (e) => e.status === 'Accepted' && (e.stage !== undefined || e.implementedBy.length === 0)
   );
 
-  const wanted = opts.outstandingOnly
+  const shown = opts.outstandingOnly
     ? outstanding
-    : opts.status
-      ? entries.filter((e) => e.status.toLowerCase() === opts.status!.toLowerCase())
+    : status
+      ? entries.filter((e) => e.status === status)
       : entries;
 
+  // The register summary prints on every run, filtered or not. Suppressing it for
+  // filtered runs meant a filter matching nothing produced a single bare line and
+  // no indication the register had been read at all.
   console.log('');
-  if (!opts.status && !opts.outstandingOnly) {
-    const summary = STATUS_ORDER.filter((s) => counts[s])
-      .map((s) => `${chalk.bold(String(counts[s]))} ${s}`)
-      .join(chalk.gray('  ·  '));
-    console.log(`  ${summary}     ${chalk.gray(`(${entries.length} ADRs)`)}`);
-    if (unparsed.length > 0) {
-      console.log(chalk.yellow(`  ${unparsed.length} unparsed — run \`npm run check:adr\``));
-    }
-    console.log('');
+  const summary = STATUS_ORDER.filter((s) => counts[s])
+    .map((s) => `${chalk.bold(String(counts[s]))} ${s}`)
+    .join(chalk.gray('  ·  '));
+  console.log(`  ${summary}     ${chalk.gray(`(${entries.length} ADRs)`)}`);
+  if (unparsed.length > 0) {
+    console.log(chalk.yellow(`  ${unparsed.length} unparsed — run \`npm run check:adr\``));
   }
+  console.log('');
 
-  const shown = opts.outstandingOnly ? outstanding : wanted;
   if (shown.length === 0) {
-    console.log(chalk.green('  nothing outstanding.\n'));
+    // "nothing outstanding" is only true of an `--outstanding` run. Saying it for
+    // `--status Superseded` reported on a question nobody asked, and read as the
+    // command finding nothing at all.
+    const reason = opts.outstandingOnly
+      ? chalk.green('  nothing outstanding.')
+      : status
+        ? chalk.gray(`  No ADRs with status ${status}.`)
+        : chalk.yellow('  No ADRs found.');
+    console.log(`${reason}\n`);
     return { total: entries.length, counts, outstanding, entries };
   }
 
@@ -160,10 +183,18 @@ export async function adrStatusCommand(opts: AdrStatusOptions = {}): Promise<Adr
 export default class AdrStatus extends BaseCommand<AdrStatusResult> {
   static description = 'Show ADR lifecycle state — what is proposed, outstanding, or done (ADR-075)';
 
+  static args = {
+    dir: Args.string({
+      description: 'Repo root holding docs/architecture-decisions (default: search upward from cwd)',
+      required: false,
+    }),
+  };
+
   static examples = [
     '$ seans-mfe-tool adr:status',
     '$ seans-mfe-tool adr:status --outstanding',
     '$ seans-mfe-tool adr:status --status Proposed',
+    '$ seans-mfe-tool adr:status --status implemented',
     '$ seans-mfe-tool adr:status --json',
   ];
 
@@ -173,14 +204,20 @@ export default class AdrStatus extends BaseCommand<AdrStatusResult> {
       description: 'Only decisions that are ratified with work still to do',
       default: false,
     }),
+    // Deliberately not `options: STATUS_ORDER` — oclif matches those exactly, which
+    // rejected `--status implemented` before the case-insensitive core saw it.
+    // `resolveStatus` validates instead and names the vocabulary in the error.
     status: Flags.string({
-      description: 'Filter to one status',
-      options: [...STATUS_ORDER],
+      description: `Filter to one status (${STATUS_ORDER.join(', ')}); case-insensitive`,
     }),
   };
 
   protected async runCommand(): Promise<AdrStatusResult> {
-    const { flags } = await this.parse(AdrStatus);
-    return adrStatusCommand({ status: flags.status, outstandingOnly: flags.outstanding });
+    const { args, flags } = await this.parse(AdrStatus);
+    return adrStatusCommand({
+      root: args.dir,
+      status: flags.status,
+      outstandingOnly: flags.outstanding,
+    });
   }
 }

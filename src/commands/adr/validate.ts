@@ -15,11 +15,12 @@
  */
 
 import * as path from 'path';
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+import { BusinessError } from '@seans-mfe/contracts';
+import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 import {
   parseAdrDocument,
   validateAdrLibrary,
@@ -30,7 +31,6 @@ import {
 } from '@seans-mfe/dsl';
 import type { SourceFile } from '@seans-mfe/dsl';
 
-const ADR_DIR = path.join('docs', 'architecture-decisions');
 const SPEC_FILE = path.join('docs', 'spec.md');
 
 /** Where code that may cite an ADR lives. `examples/` is opt-in — see below. */
@@ -69,9 +69,6 @@ async function readAdrs(
   root: string
 ): Promise<{ documents: AdrDocument[]; parseFailures: AdrParseFailure[] }> {
   const dir = path.join(root, ADR_DIR);
-  if (!(await fs.pathExists(dir))) {
-    throw new ValidationError(`No ADR directory at ${ADR_DIR}`, 'adr-dir', 'required');
-  }
 
   const documents: AdrDocument[] = [];
   const parseFailures: AdrParseFailure[] = [];
@@ -154,7 +151,7 @@ async function readIndexIds(root: string): Promise<number[] | undefined> {
 export async function adrValidateCommand(
   opts: AdrValidateOptions = {}
 ): Promise<AdrValidateResult> {
-  const root = path.resolve(opts.root ?? process.cwd());
+  const root = await resolveAdrRoot(opts.root);
 
   const { documents, parseFailures } = await readAdrs(root);
   const sourceRoots = opts.includeExamples
@@ -210,6 +207,13 @@ export default class AdrValidate extends BaseCommand<AdrValidateResult> {
 
   static aliases = ['adr:doctor'];
 
+  static args = {
+    dir: Args.string({
+      description: 'Repo root holding docs/architecture-decisions (default: search upward from cwd)',
+      required: false,
+    }),
+  };
+
   static examples = [
     '$ seans-mfe-tool adr:validate',
     '$ seans-mfe-tool adr:validate --include-examples',
@@ -225,7 +229,7 @@ export default class AdrValidate extends BaseCommand<AdrValidateResult> {
   };
 
   protected async runCommand(): Promise<AdrValidateResult> {
-    const { flags } = await this.parse(AdrValidate);
-    return adrValidateCommand({ includeExamples: flags['include-examples'] });
+    const { args, flags } = await this.parse(AdrValidate);
+    return adrValidateCommand({ root: args.dir, includeExamples: flags['include-examples'] });
   }
 }

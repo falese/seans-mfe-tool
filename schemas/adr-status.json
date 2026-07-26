@@ -6,6 +6,10 @@
   "input": {
     "type": "object",
     "properties": {
+      "dir": {
+        "type": "string",
+        "description": "Repo root holding docs/architecture-decisions (default: search upward from cwd)"
+      },
       "outstanding": {
         "type": "boolean",
         "default": false,
@@ -13,6 +17,7 @@
       },
       "status": {
         "type": "string",
+        "description": "Filter to one status (the CLI also accepts these case-insensitively)",
         "enum": [
           "Proposed",
           "Accepted",
