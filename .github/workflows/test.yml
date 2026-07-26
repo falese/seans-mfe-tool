@@ -30,10 +30,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build workspace packages
-        run: |
-          ./node_modules/.bin/tsc -p packages/contracts/tsconfig.json
-          ./node_modules/.bin/tsc -p packages/oclif-base/tsconfig.json
+      # Full build, not a subset. This step used to compile only
+      # packages/contracts and packages/oclif-base, leaving `dist/`, the oclif
+      # manifest, and five workspace packages absent — so `node bin/run.js`
+      # resolved ZERO commands ("command adr:status not found") or crashed in
+      # findCommand with MODULE_NOT_FOUND. Verified by reproducing that exact
+      # build state locally: even `schemas --json` returns 0 bytes.
+      #
+      # The workaround had been to exclude the tests that noticed:
+      # json-contract.test.ts and remote-mfe.integration.test.ts were in
+      # --testPathIgnorePatterns below. Both pass against a built CLI, so the
+      # exclusions are gone and the build is real.
+      #
+      # This is what the local-test runbook tells a human to run, so it is what
+      # CI should run.
+      - name: Build the CLI
+        run: npm run build
 
       - name: Run all tests with coverage
         run: |
@@ -42,8 +54,6 @@ jobs:
             --testPathIgnorePatterns="/examples/" \
             --testPathIgnorePatterns="NodemonServer.test.js" \
             --testPathIgnorePatterns="create-shell.test.js" \
-            --testPathIgnorePatterns="json-contract.test.ts" \
-            --testPathIgnorePatterns="remote-mfe.integration.test.ts" \
             --json --outputFile=/tmp/jest-results.json
           JEST_EXIT=$?
           exit $JEST_EXIT
