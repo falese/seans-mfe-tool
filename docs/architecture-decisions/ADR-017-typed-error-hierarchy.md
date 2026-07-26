@@ -2,6 +2,9 @@
 id: 0017
 title: Typed error hierarchy — never throw raw Error
 status: Accepted
+impl:
+  stage: phased
+  refs: ["#320"]
 date: 2026-04-18
 deciders: [sean]
 area: CLI / contracts

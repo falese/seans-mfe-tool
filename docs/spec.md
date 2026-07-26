@@ -251,13 +251,13 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-014](./architecture-decisions/ADR-014-incremental-typescript-migration.md) | Incremental TypeScript Migration | Codebase | Implemented |
 | [ADR-015](./architecture-decisions/ADR-015-oclif-migration.md) | oclif as CLI framework — replace Commander | CLI | Implemented |
 | [ADR-016](./architecture-decisions/ADR-016-base-command-pattern.md) | BaseCommand pattern — every oclif command extends BaseCommand | CLI / contracts | Implemented |
-| [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Accepted |
+| [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Accepted (impl phased, #320) |
 | [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Implemented |
 | [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Implemented |
 | [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
 | [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
-| [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Accepted |
+| [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Accepted (impl phased, #321) |
 | [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
 | [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased, #317) |
 | [ADR-026](./architecture-decisions/ADR-026-load-capability-atomic.md) | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased, #318) |
@@ -273,7 +273,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-036](./architecture-decisions/ADR-036-framework-plugins.md) | Framework plugins — abstract BaseFrameworkPlugin with concrete implementations | Build / codegen / deploy | Implemented |
 | [ADR-037](./architecture-decisions/ADR-037-tdd-always.md) | TDD-always — write the failing test before the code | Process | Accepted |
 | [ADR-038](./architecture-decisions/ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch discipline | Process | Accepted |
-| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted |
+| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted (impl deferred, #322) |
 | [ADR-040](./architecture-decisions/ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
 | [ADR-041](./architecture-decisions/ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
 | [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |

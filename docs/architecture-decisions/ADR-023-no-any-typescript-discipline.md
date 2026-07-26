@@ -2,6 +2,9 @@
 id: 0023
 title: No-any TypeScript discipline — use unknown and narrow
 status: Accepted
+impl:
+  stage: phased
+  refs: ["#321"]
 date: 2026-04-18
 deciders: [sean]
 area: TypeScript
