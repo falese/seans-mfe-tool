@@ -163,7 +163,14 @@ export const DEPENDENCY_VERSIONS = {
     platformBrowser: '^19.2.16',
     forms: '^19.2.16',
     rxjs: '^7.8.0',
-    zoneJs: '~0.14.0',
+    // ADR-051 recorded this as "~0.14.0 — unchanged, compatible with Angular
+    // 19", but @angular/core@19.2.16's own peerDependencies require
+    // zone.js@~0.15.0 (verified via `npm view @angular/core@19.2.16
+    // peerDependencies`) — the claim was wrong from the start, and every
+    // fresh Angular MFE install failed with ERESOLVE until this was caught by
+    // the #281 fresh-scaffold typecheck gate, which actually runs `npm
+    // install`. See `scripts/check-template-typecheck.ts`.
+    zoneJs: '~0.15.0',
   },
 
   // Angular CLI builder toolchain (angular-webpack variant).

@@ -99,11 +99,30 @@ async function readSharedEntries(dir: string, bundler: string): Promise<ReturnTy
   return parseFederationSharedEntries(source);
 }
 
-function runTypecheck(dir: string): { ran: boolean; ok: boolean; output?: string } {
-  if (!fs.existsSync(path.join(dir, 'tsconfig.json'))) {
+/**
+ * Angular's actual app build reads `tsconfig.app.json` (see `angular.json`'s
+ * `tsConfig`), not the root `tsconfig.json` — the root config targets
+ * `commonjs` for the generated Mesh BFF (see `tsconfig.json.ejs`). Checking the
+ * root config only would have missed the DX punch-list #8 regression (a
+ * `"//"` comment key in `tsconfig.app.json.ejs` that broke every fresh
+ * Angular build) even with `--typecheck` on.
+ */
+function resolveTsconfig(dir: string, framework: string): string | undefined {
+  if (framework === 'angular' && fs.existsSync(path.join(dir, 'tsconfig.app.json'))) {
+    return 'tsconfig.app.json';
+  }
+  if (fs.existsSync(path.join(dir, 'tsconfig.json'))) {
+    return 'tsconfig.json';
+  }
+  return undefined;
+}
+
+function runTypecheck(dir: string, framework: string): { ran: boolean; ok: boolean; output?: string } {
+  const tsconfig = resolveTsconfig(dir, framework);
+  if (!tsconfig) {
     return { ran: false, ok: true };
   }
-  const res = spawnSync('npx', ['tsc', '--noEmit', '-p', 'tsconfig.json'], {
+  const res = spawnSync('npx', ['tsc', '--noEmit', '-p', tsconfig], {
     cwd: dir,
     encoding: 'utf8',
     shell: process.platform === 'win32',
@@ -143,7 +162,7 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
     sources,
   });
 
-  const typecheck = opts.typecheck ? runTypecheck(dir) : undefined;
+  const typecheck = opts.typecheck ? runTypecheck(dir, framework) : undefined;
 
   const result: MfeValidateResult = {
     mfe: (manifest as { name?: string }).name ?? path.basename(dir),

@@ -351,3 +351,13 @@ jobs:
         # Re-runs remote:generate across the reference fleet + derives seeds,
         # then fails on any drift (#274 discipline, #276 reference app).
         run: node examples/meridian-station/scripts/generate.mjs --check
+
+      - name: Template typecheck gate — fresh scaffold, real install, real tsc (#281)
+        # The other checks above regenerate against committed examples or
+        # assert in-memory string content; neither runs a real `npm install`
+        # against a freshly generated project. Both regressions that motivated
+        # this gate (Angular's tsconfig.app.json.ejs shipping a broken "//"
+        # comment key, and React's bootstrap.ts.ejs passing a partial Context)
+        # were masked by swc builds and isolated ts-jest — only `tsc --noEmit`
+        # against a real, installed, freshly generated project surfaces them.
+        run: npm run check:template-typecheck
