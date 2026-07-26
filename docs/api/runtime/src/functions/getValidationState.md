@@ -6,9 +6,9 @@
 
 # Function: getValidationState()
 
-> **getValidationState**(`context`): [`ValidationState`](../interfaces/ValidationState.md)
+> **getValidationState**(`context`): [`ValidationState`](../interfaces/ValidationState.md) \| `undefined`
 
-Defined in: [packages/runtime/src/handlers/validation.ts:11](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L11)
+Defined in: packages/runtime/src/handlers/validation.ts:11
 
 Typed accessor for the validation state these handlers own on a context.
 
@@ -20,4 +20,4 @@ Typed accessor for the validation state these handlers own on a context.
 
 ## Returns
 
-[`ValidationState`](../interfaces/ValidationState.md)
+[`ValidationState`](../interfaces/ValidationState.md) \| `undefined`

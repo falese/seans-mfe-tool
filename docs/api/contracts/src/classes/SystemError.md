@@ -6,7 +6,7 @@
 
 # Class: SystemError
 
-Defined in: [packages/contracts/src/errors/SystemError.ts:1](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SystemError.ts#L1)
+Defined in: packages/contracts/src/errors/SystemError.ts:1
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [packages/contracts/src/errors/SystemError.ts:1](https://github.com/
 
 > **new SystemError**(`message`, `cause?`): `SystemError`
 
-Defined in: [packages/contracts/src/errors/SystemError.ts:6](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SystemError.ts#L6)
+Defined in: packages/contracts/src/errors/SystemError.ts:6
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [packages/contracts/src/errors/SystemError.ts:6](https://github.com/
 
 > `optional` **cause**: `Error`
 
-Defined in: [packages/contracts/src/errors/SystemError.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SystemError.ts#L4)
+Defined in: packages/contracts/src/errors/SystemError.ts:4
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [packages/contracts/src/errors/SystemError.ts:4](https://github.com/
 
 > `readonly` **retryable**: `true` = `true`
 
-Defined in: [packages/contracts/src/errors/SystemError.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SystemError.ts#L3)
+Defined in: packages/contracts/src/errors/SystemError.ts:3
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [packages/contracts/src/errors/SystemError.ts:3](https://github.com/
 
 > `readonly` **type**: `"system"` = `'system'`
 
-Defined in: [packages/contracts/src/errors/SystemError.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/SystemError.ts#L2)
+Defined in: packages/contracts/src/errors/SystemError.ts:2

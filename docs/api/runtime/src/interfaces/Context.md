@@ -6,7 +6,7 @@
 
 # Interface: Context
 
-Defined in: [packages/runtime/src/context.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L41)
+Defined in: packages/runtime/src/context.ts:41
 
 Shared context object that flows through all lifecycle phases
 and across multiple capability invocations (load → render → query → emit)
@@ -25,9 +25,11 @@ keep compiling via this index signature; new code should use `extensions`.
 
 > `optional` **capability**: `string`
 
-Defined in: [packages/runtime/src/context.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L78)
+Defined in: packages/runtime/src/context.ts:82
 
-Current capability being executed
+Current capability being executed — one of the ten platform capabilities
+(single-sourced in @seans-mfe/contracts, ADR-080) or a domain capability
+name, which is why the union stays open.
 
 ***
 
@@ -35,7 +37,7 @@ Current capability being executed
 
 > `optional` **emit**: (`event`) => `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/context.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L100)
+Defined in: packages/runtime/src/context.ts:104
 
 Telemetry emit function (injected by the engine, not handler state)
 
@@ -55,7 +57,7 @@ Telemetry emit function (injected by the engine, not handler state)
 
 > `optional` **error**: `Error`
 
-Defined in: [packages/runtime/src/context.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L83)
+Defined in: packages/runtime/src/context.ts:87
 
 Error that triggered error phase
 
@@ -65,7 +67,7 @@ Error that triggered error phase
 
 > `optional` **extensions**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:109](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L109)
+Defined in: packages/runtime/src/context.ts:113
 
 Handler-owned extension state, namespaced per handler. The shapes are
 declared by the owning modules (e.g. RetryState in retry-wrapper.ts,
@@ -77,7 +79,7 @@ TimeoutState in timeout-wrapper.ts) — the core Context stays agnostic.
 
 > `optional` **headers**: `Record`\<`string`, `string`\>
 
-Defined in: [packages/runtime/src/context.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L67)
+Defined in: packages/runtime/src/context.ts:67
 
 HTTP headers (for auth, content-type, etc.)
 
@@ -87,7 +89,7 @@ HTTP headers (for auth, content-type, etc.)
 
 > `optional` **inputs**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L59)
+Defined in: packages/runtime/src/context.ts:59
 
 Inputs for the current capability (set before execution)
 
@@ -97,7 +99,7 @@ Inputs for the current capability (set before execution)
 
 > `optional` **jwt**: `string`
 
-Defined in: [packages/runtime/src/context.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L48)
+Defined in: packages/runtime/src/context.ts:48
 
 JWT token for authentication
 
@@ -107,7 +109,7 @@ JWT token for authentication
 
 > `optional` **outputs**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L62)
+Defined in: packages/runtime/src/context.ts:62
 
 Outputs from capability execution (populated during/after)
 
@@ -117,7 +119,7 @@ Outputs from capability execution (populated during/after)
 
 > `optional` **phase**: `"error"` \| `"before"` \| `"main"` \| `"after"`
 
-Defined in: [packages/runtime/src/context.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L75)
+Defined in: packages/runtime/src/context.ts:75
 
 Current lifecycle phase
 
@@ -127,7 +129,7 @@ Current lifecycle phase
 
 > `optional` **query**: `Record`\<`string`, `string`\>
 
-Defined in: [packages/runtime/src/context.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L70)
+Defined in: packages/runtime/src/context.ts:70
 
 Query parameters from request URL
 
@@ -137,7 +139,7 @@ Query parameters from request URL
 
 > **requestId**: `string`
 
-Defined in: [packages/runtime/src/context.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L51)
+Defined in: packages/runtime/src/context.ts:51
 
 Unique request identifier for tracing
 
@@ -147,7 +149,7 @@ Unique request identifier for tracing
 
 > `optional` **retryCount**: `number`
 
-Defined in: [packages/runtime/src/context.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L86)
+Defined in: packages/runtime/src/context.ts:90
 
 Number of retry attempts for current capability
 
@@ -157,7 +159,7 @@ Number of retry attempts for current capability
 
 > `optional` **telemetry**: `object`
 
-Defined in: [packages/runtime/src/context.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L91)
+Defined in: packages/runtime/src/context.ts:95
 
 Telemetry data for observability
 
@@ -187,7 +189,7 @@ Telemetry data for observability
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/context.ts:54](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L54)
+Defined in: packages/runtime/src/context.ts:54
 
 Request timestamp
 
@@ -197,6 +199,6 @@ Request timestamp
 
 > `optional` **user**: [`UserContext`](UserContext.md)
 
-Defined in: [packages/runtime/src/context.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L45)
+Defined in: packages/runtime/src/context.ts:45
 
 Authenticated user information

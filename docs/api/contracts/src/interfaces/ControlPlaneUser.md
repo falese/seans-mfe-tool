@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneUser
 
-Defined in: [packages/contracts/src/messages.ts:25](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L25)
+Defined in: packages/contracts/src/messages.ts:25
 
 The authenticated principal a session acts as.
 
@@ -20,7 +20,7 @@ The authenticated principal a session acts as.
 
 > `optional` **attributes**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/messages.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L28)
+Defined in: packages/contracts/src/messages.ts:28
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/contracts/src/messages.ts:28](https://github.com/falese/se
 
 > **id**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L26)
+Defined in: packages/contracts/src/messages.ts:26
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [packages/contracts/src/messages.ts:26](https://github.com/falese/se
 
 > `optional` **roles**: `string`[]
 
-Defined in: [packages/contracts/src/messages.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L27)
+Defined in: packages/contracts/src/messages.ts:27

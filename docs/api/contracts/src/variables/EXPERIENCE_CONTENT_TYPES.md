@@ -8,7 +8,7 @@
 
 > `const` **EXPERIENCE\_CONTENT\_TYPES**: `object`
 
-Defined in: [packages/contracts/src/messages.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L128)
+Defined in: packages/contracts/src/messages.ts:128
 
 Canonical delivery mechanisms. `contentType` remains an open string.
 

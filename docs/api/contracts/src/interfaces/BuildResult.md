@@ -6,7 +6,7 @@
 
 # Interface: BuildResult
 
-Defined in: [packages/contracts/src/framework-plugin.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L65)
+Defined in: packages/contracts/src/framework-plugin.ts:65
 
 Structured production build result.
 
@@ -16,7 +16,7 @@ Structured production build result.
 
 > **artifacts**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L67)
+Defined in: packages/contracts/src/framework-plugin.ts:67
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:67](https://github.com/f
 
 > **duration\_ms**: `number`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L68)
+Defined in: packages/contracts/src/framework-plugin.ts:68
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:68](https://github.com/f
 
 > **errors**: [`BuildError`](BuildError.md)[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L70)
+Defined in: packages/contracts/src/framework-plugin.ts:70
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:70](https://github.com/f
 
 > **success**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L66)
+Defined in: packages/contracts/src/framework-plugin.ts:66
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [packages/contracts/src/framework-plugin.ts:66](https://github.com/f
 
 > **warnings**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L69)
+Defined in: packages/contracts/src/framework-plugin.ts:69

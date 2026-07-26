@@ -6,7 +6,7 @@
 
 # Interface: LoadResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L96)
+Defined in: packages/runtime/src/base-mfe.ts:96
 
 Result from load capability
 
@@ -16,7 +16,7 @@ Result from load capability
 
 > `optional` **availableComponents**: `string`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L102)
+Defined in: packages/runtime/src/base-mfe.ts:102
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:102](https://github.com/falese/sea
 
 > `optional` **capabilities**: `CapabilityMetadata`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L103)
+Defined in: packages/runtime/src/base-mfe.ts:103
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:103](https://github.com/falese/sea
 
 > `optional` **container**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L98)
+Defined in: packages/runtime/src/base-mfe.ts:98
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:98](https://github.com/falese/sean
 
 > `optional` **duration**: `number`
 
-Defined in: [packages/runtime/src/base-mfe.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L105)
+Defined in: packages/runtime/src/base-mfe.ts:105
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:105](https://github.com/falese/sea
 
 > `optional` **error**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:111](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L111)
+Defined in: packages/runtime/src/base-mfe.ts:111
 
 #### message
 
@@ -72,7 +72,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:111](https://github.com/falese/sea
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L101)
+Defined in: packages/runtime/src/base-mfe.ts:101
 
 #### authorization?
 
@@ -84,7 +84,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/sea
 
 #### capabilities
 
-> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
+> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
 
 #### category?
 
@@ -262,6 +262,10 @@ Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/sea
 
 > **enabled**: `boolean`
 
+#### providesSlots?
+
+> `optional` **providesSlots**: `object`[]
+
 #### remoteEntry?
 
 > `optional` **remoteEntry**: `string`
@@ -288,7 +292,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/sea
 
 > `optional` **mesh**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L99)
+Defined in: packages/runtime/src/base-mfe.ts:99
 
 ***
 
@@ -296,7 +300,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 > **status**: `"error"` \| `"loaded"`
 
-Defined in: [packages/runtime/src/base-mfe.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L97)
+Defined in: packages/runtime/src/base-mfe.ts:97
 
 ***
 
@@ -304,7 +308,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:97](https://github.com/falese/sean
 
 > `optional` **telemetry**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L106)
+Defined in: packages/runtime/src/base-mfe.ts:106
 
 #### enableRender
 
@@ -348,7 +352,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:106](https://github.com/falese/sea
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/base-mfe.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L104)
+Defined in: packages/runtime/src/base-mfe.ts:104
 
 ***
 
@@ -356,4 +360,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:104](https://github.com/falese/sea
 
 > `optional` **worker**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L100)
+Defined in: packages/runtime/src/base-mfe.ts:100

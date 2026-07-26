@@ -6,7 +6,7 @@
 
 # Class: ContextFactory
 
-Defined in: [packages/runtime/src/context.ts:166](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L166)
+Defined in: packages/runtime/src/context.ts:170
 
 Context factory - creates a new context with required fields
 
@@ -26,7 +26,7 @@ Context factory - creates a new context with required fields
 
 > `static` **cloneForCapability**(`source`, `capability`, `inputs?`): [`Context`](../interfaces/Context.md)
 
-Defined in: [packages/runtime/src/context.ts:202](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L202)
+Defined in: packages/runtime/src/context.ts:206
 
 Clone context for a new capability while preserving user/auth
 
@@ -54,7 +54,7 @@ Clone context for a new capability while preserving user/auth
 
 > `static` **create**(`options`): [`Context`](../interfaces/Context.md)
 
-Defined in: [packages/runtime/src/context.ts:170](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L170)
+Defined in: packages/runtime/src/context.ts:174
 
 Create a new context for a capability invocation
 
@@ -96,7 +96,7 @@ Create a new context for a capability invocation
 
 > `static` **incrementRetry**(`context`): `void`
 
-Defined in: [packages/runtime/src/context.ts:239](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L239)
+Defined in: packages/runtime/src/context.ts:243
 
 Increment retry count
 
@@ -116,7 +116,7 @@ Increment retry count
 
 > `static` **recordError**(`context`, `error`): `void`
 
-Defined in: [packages/runtime/src/context.ts:231](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L231)
+Defined in: packages/runtime/src/context.ts:235
 
 Record error in context
 
@@ -140,7 +140,7 @@ Record error in context
 
 > `static` **setPhase**(`context`, `phase`): `void`
 
-Defined in: [packages/runtime/src/context.ts:224](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L224)
+Defined in: packages/runtime/src/context.ts:228
 
 Update context phase
 
@@ -152,7 +152,7 @@ Update context phase
 
 ##### phase
 
-`"error"` | `"before"` | `"main"` | `"after"`
+`"error"` | `"before"` | `"main"` | `"after"` | `undefined`
 
 #### Returns
 

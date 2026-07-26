@@ -8,7 +8,7 @@
 
 > **ImperativeMount** = (`element`, `options?`) => [`ImperativeUnmount`](ImperativeUnmount.md) \| `Promise`\<[`ImperativeUnmount`](ImperativeUnmount.md)\>
 
-Defined in: [packages/contracts/src/presentation.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L47)
+Defined in: packages/contracts/src/presentation.ts:47
 
 Imperative mount: element + options (capability + props) in, teardown out.
 

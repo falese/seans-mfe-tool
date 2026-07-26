@@ -6,71 +6,41 @@
 
 # Interface: WebSocketLike
 
-Defined in: [packages/runtime/src/layout-transport.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L43)
+Defined in: packages/runtime/src/layout-transport.ts:43
 
 Minimal WebSocket surface so tests can inject a fake socket factory.
 
 ## Properties
 
-### onclose()
+### onclose
 
-> **onclose**: () => `void`
+> **onclose**: () => `void` \| `null`
 
-Defined in: [packages/runtime/src/layout-transport.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L48)
-
-#### Returns
-
-`void`
+Defined in: packages/runtime/src/layout-transport.ts:48
 
 ***
 
-### onerror()
+### onerror
 
-> **onerror**: (`err`) => `void`
+> **onerror**: (`err`) => `void` \| `null`
 
-Defined in: [packages/runtime/src/layout-transport.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L49)
-
-#### Parameters
-
-##### err
-
-`unknown`
-
-#### Returns
-
-`void`
+Defined in: packages/runtime/src/layout-transport.ts:49
 
 ***
 
-### onmessage()
+### onmessage
 
-> **onmessage**: (`event`) => `void`
+> **onmessage**: (`event`) => `void` \| `null`
 
-Defined in: [packages/runtime/src/layout-transport.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L47)
-
-#### Parameters
-
-##### event
-
-###### data
-
-`string`
-
-#### Returns
-
-`void`
+Defined in: packages/runtime/src/layout-transport.ts:47
 
 ***
 
-### onopen()
+### onopen
 
-> **onopen**: () => `void`
+> **onopen**: () => `void` \| `null`
 
-Defined in: [packages/runtime/src/layout-transport.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L46)
-
-#### Returns
-
-`void`
+Defined in: packages/runtime/src/layout-transport.ts:46
 
 ## Methods
 
@@ -78,7 +48,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:46](https://github.com/fal
 
 > **close**(): `void`
 
-Defined in: [packages/runtime/src/layout-transport.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L45)
+Defined in: packages/runtime/src/layout-transport.ts:45
 
 #### Returns
 
@@ -90,7 +60,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:45](https://github.com/fal
 
 > **send**(`data`): `void`
 
-Defined in: [packages/runtime/src/layout-transport.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L44)
+Defined in: packages/runtime/src/layout-transport.ts:44
 
 #### Parameters
 

@@ -6,7 +6,7 @@
 
 # Interface: DaemonWebSocketClient
 
-Defined in: [packages/runtime/src/graphql-ws-client.ts:38](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L38)
+Defined in: packages/runtime/src/graphql-ws-client.ts:38
 
 Platform-facing interface used in BaseMFEDependencies.
 Keeps the abstract base class decoupled from the concrete implementation.
@@ -17,7 +17,7 @@ Keeps the abstract base class decoupled from the concrete implementation.
 
 > `readonly` **connected**: `boolean`
 
-Defined in: [packages/runtime/src/graphql-ws-client.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L40)
+Defined in: packages/runtime/src/graphql-ws-client.ts:40
 
 True when the underlying socket is open and ready to send frames.
 
@@ -27,7 +27,7 @@ True when the underlying socket is open and ready to send frames.
 
 > **mutation**(`query`, `variables`, `timeoutMs?`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/graphql-ws-client.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/graphql-ws-client.ts#L52)
+Defined in: packages/runtime/src/graphql-ws-client.ts:52
 
 Execute a GraphQL mutation over the existing WS connection using the
 graphql-transport-ws subscribe/next/complete protocol.

@@ -8,7 +8,7 @@
 
 > **isNativeComponentHandle**(`value`): `value is NativeComponentHandle`
 
-Defined in: [packages/contracts/src/presentation.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L97)
+Defined in: packages/contracts/src/presentation.ts:97
 
 ## Parameters
 

@@ -6,7 +6,7 @@
 
 # Interface: DescribeResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L134)
+Defined in: packages/runtime/src/base-mfe.ts:134
 
 Result from describe capability
 
@@ -16,7 +16,7 @@ Result from describe capability
 
 > **capabilities**: `string`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:138](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L138)
+Defined in: packages/runtime/src/base-mfe.ts:138
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:138](https://github.com/falese/sea
 
 > **manifest**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:139](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L139)
+Defined in: packages/runtime/src/base-mfe.ts:139
 
 #### authorization?
 
@@ -36,7 +36,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:139](https://github.com/falese/sea
 
 #### capabilities
 
-> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler?`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
+> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
 
 #### category?
 
@@ -214,6 +214,10 @@ Defined in: [packages/runtime/src/base-mfe.ts:139](https://github.com/falese/sea
 
 > **enabled**: `boolean`
 
+#### providesSlots?
+
+> `optional` **providesSlots**: `object`[]
+
 #### remoteEntry?
 
 > `optional` **remoteEntry**: `string`
@@ -240,7 +244,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:139](https://github.com/falese/sea
 
 > **name**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L135)
+Defined in: packages/runtime/src/base-mfe.ts:135
 
 ***
 
@@ -248,7 +252,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:135](https://github.com/falese/sea
 
 > **type**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L137)
+Defined in: packages/runtime/src/base-mfe.ts:137
 
 ***
 
@@ -256,4 +260,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:137](https://github.com/falese/sea
 
 > **version**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L136)
+Defined in: packages/runtime/src/base-mfe.ts:136

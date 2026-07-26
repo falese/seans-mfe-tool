@@ -8,7 +8,7 @@
 
 > **buildMessage**(`parts`): [`Message`](../interfaces/Message.md)
 
-Defined in: [packages/contracts/src/messages.ts:320](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L320)
+Defined in: packages/contracts/src/messages.ts:320
 
 Construct a protocol envelope with consistent defaults
 (acknowledged=false, error=null, generated correlationId).
@@ -31,7 +31,7 @@ Construct a protocol envelope with consistent defaults
 
 #### error?
 
-`string`
+`string` \| `null`
 
 #### kind
 

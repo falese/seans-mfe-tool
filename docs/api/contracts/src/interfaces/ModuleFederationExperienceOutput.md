@@ -6,7 +6,7 @@
 
 # Interface: ModuleFederationExperienceOutput
 
-Defined in: [packages/contracts/src/messages.ts:160](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L160)
+Defined in: packages/contracts/src/messages.ts:160
 
 The `output` shape for `contentType: 'module-federation'` experiences
 (ADR-055). Gives a layout manager everything needed to load the remote and
@@ -19,7 +19,7 @@ remotes share the same bootstrap contract (`{ mfe, mfeReady }`).
 
 > `optional` **component**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:168](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L168)
+Defined in: packages/contracts/src/messages.ts:168
 
 Component name passed to mfe.render() inputs.
 
@@ -29,7 +29,7 @@ Component name passed to mfe.render() inputs.
 
 > **module**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:166](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L166)
+Defined in: packages/contracts/src/messages.ts:166
 
 Exposed module to import, e.g. './App' (must export `{ mfe, mfeReady }`).
 
@@ -39,7 +39,7 @@ Exposed module to import, e.g. './App' (must export `{ mfe, mfeReady }`).
 
 > `optional` **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/messages.ts:170](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L170)
+Defined in: packages/contracts/src/messages.ts:170
 
 Extra props merged into the render inputs.
 
@@ -49,7 +49,7 @@ Extra props merged into the render inputs.
 
 > **remoteEntryUrl**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:162](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L162)
+Defined in: packages/contracts/src/messages.ts:162
 
 Where the renderer fetches the remote container, e.g. http://host:3001/remoteEntry.js
 
@@ -59,6 +59,6 @@ Where the renderer fetches the remote container, e.g. http://host:3001/remoteEnt
 
 > **scope**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:164](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L164)
+Defined in: packages/contracts/src/messages.ts:164
 
 Global container name, e.g. 'abc_kids_flappy'.

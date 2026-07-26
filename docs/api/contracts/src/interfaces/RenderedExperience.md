@@ -6,7 +6,7 @@
 
 # Interface: RenderedExperience
 
-Defined in: [packages/contracts/src/messages.ts:139](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L139)
+Defined in: packages/contracts/src/messages.ts:139
 
 What an MFE's `render()` returned, relayed by the daemon to renderers.
 The MFE owns the shape of `output` — HTML string, component reference,
@@ -18,7 +18,7 @@ or structured data — discriminated by `contentType`.
 
 > **capability**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L144)
+Defined in: packages/contracts/src/messages.ts:144
 
 Which domain capability was rendered.
 
@@ -28,7 +28,7 @@ Which domain capability was rendered.
 
 > **contentType**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:148](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L148)
+Defined in: packages/contracts/src/messages.ts:148
 
 'text/html' | 'application/json' | 'module-federation' | … (open).
 
@@ -38,7 +38,7 @@ Defined in: [packages/contracts/src/messages.ts:148](https://github.com/falese/s
 
 > **createdAt**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:151](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L151)
+Defined in: packages/contracts/src/messages.ts:151
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [packages/contracts/src/messages.ts:151](https://github.com/falese/s
 
 > **id**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:140](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L140)
+Defined in: packages/contracts/src/messages.ts:140
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [packages/contracts/src/messages.ts:140](https://github.com/falese/s
 
 > **mfe**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L142)
+Defined in: packages/contracts/src/messages.ts:142
 
 Which MFE produced this experience.
 
@@ -64,7 +64,7 @@ Which MFE produced this experience.
 
 > **output**: `unknown`
 
-Defined in: [packages/contracts/src/messages.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L146)
+Defined in: packages/contracts/src/messages.ts:146
 
 MFE-owned output: HTML string, component ref, data payload, …
 
@@ -74,6 +74,6 @@ MFE-owned output: HTML string, component ref, data payload, …
 
 > `optional` **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/messages.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L150)
+Defined in: packages/contracts/src/messages.ts:150
 
 The resolution props this experience was rendered with.

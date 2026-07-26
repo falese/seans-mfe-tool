@@ -8,7 +8,7 @@
 
 > **isResolution**(`value`): `value is Resolution`
 
-Defined in: [packages/contracts/src/messages.ts:286](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L286)
+Defined in: packages/contracts/src/messages.ts:286
 
 True when `value` is a registry resolution `{mfe, capability, props}`.
 

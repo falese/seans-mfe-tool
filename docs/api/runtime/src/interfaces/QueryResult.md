@@ -6,7 +6,7 @@
 
 # Interface: QueryResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L149)
+Defined in: packages/runtime/src/base-mfe.ts:149
 
 Result from query capability
 
@@ -16,7 +16,7 @@ Result from query capability
 
 > **data**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L150)
+Defined in: packages/runtime/src/base-mfe.ts:150
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:150](https://github.com/falese/sea
 
 > `optional` **errors**: `object`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:151](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L151)
+Defined in: packages/runtime/src/base-mfe.ts:151
 
 #### message
 

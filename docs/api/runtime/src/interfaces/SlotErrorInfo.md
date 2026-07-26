@@ -6,7 +6,7 @@
 
 # Interface: SlotErrorInfo
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:84](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L84)
+Defined in: packages/runtime/src/layout-adaptors.ts:84
 
 Describes a slot-scoped failure (ADR-060) for fallback + escalation.
 
@@ -16,7 +16,7 @@ Describes a slot-scoped failure (ADR-060) for fallback + escalation.
 
 > **capability**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L87)
+Defined in: packages/runtime/src/layout-adaptors.ts:87
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:87](https://github.com/fale
 
 > **mfe**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L86)
+Defined in: packages/runtime/src/layout-adaptors.ts:86
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:86](https://github.com/fale
 
 > `optional` **phase**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L89)
+Defined in: packages/runtime/src/layout-adaptors.ts:89
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:89](https://github.com/fale
 
 > **reason**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L88)
+Defined in: packages/runtime/src/layout-adaptors.ts:88
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:88](https://github.com/fale
 
 > **slot**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L85)
+Defined in: packages/runtime/src/layout-adaptors.ts:85

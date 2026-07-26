@@ -6,9 +6,9 @@
 
 # Function: getErrorHandlingState()
 
-> **getErrorHandlingState**(`context`): [`ErrorHandlingState`](../interfaces/ErrorHandlingState.md)
+> **getErrorHandlingState**(`context`): [`ErrorHandlingState`](../interfaces/ErrorHandlingState.md) \| `undefined`
 
-Defined in: [packages/runtime/src/handlers/error-handling.ts:11](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L11)
+Defined in: packages/runtime/src/handlers/error-handling.ts:11
 
 Typed accessor for the error-handling state this handler owns on a context.
 
@@ -20,4 +20,4 @@ Typed accessor for the error-handling state this handler owns on a context.
 
 ## Returns
 
-[`ErrorHandlingState`](../interfaces/ErrorHandlingState.md)
+[`ErrorHandlingState`](../interfaces/ErrorHandlingState.md) \| `undefined`

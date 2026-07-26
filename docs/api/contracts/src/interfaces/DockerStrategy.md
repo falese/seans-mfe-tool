@@ -6,7 +6,7 @@
 
 # Interface: DockerStrategy
 
-Defined in: [packages/contracts/src/framework-plugin.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L46)
+Defined in: packages/contracts/src/framework-plugin.ts:46
 
 Docker multi-stage build strategy.
 
@@ -16,7 +16,7 @@ Docker multi-stage build strategy.
 
 > **artifactPaths**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L50)
+Defined in: packages/contracts/src/framework-plugin.ts:50
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:50](https://github.com/f
 
 > **buildCommands**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L49)
+Defined in: packages/contracts/src/framework-plugin.ts:49
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:49](https://github.com/f
 
 > **builderImage**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L47)
+Defined in: packages/contracts/src/framework-plugin.ts:47
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:47](https://github.com/f
 
 > **cmd**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L51)
+Defined in: packages/contracts/src/framework-plugin.ts:51
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:51](https://github.com/f
 
 > `optional` **configFiles**: [`DockerConfigFile`](DockerConfigFile.md)[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L55)
+Defined in: packages/contracts/src/framework-plugin.ts:55
 
 Config files copied into the runtime stage (e.g. the nginx server block).
 
@@ -58,7 +58,7 @@ Config files copied into the runtime stage (e.g. the nginx server block).
 
 > `optional` **expose**: `number`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L61)
+Defined in: packages/contracts/src/framework-plugin.ts:61
 
 Port the runtime stage advertises via EXPOSE.
 
@@ -68,7 +68,7 @@ Port the runtime stage advertises via EXPOSE.
 
 > `optional` **healthcheck**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L53)
+Defined in: packages/contracts/src/framework-plugin.ts:53
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:53](https://github.com/f
 
 > **needsCliBuilder**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L52)
+Defined in: packages/contracts/src/framework-plugin.ts:52
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:52](https://github.com/f
 
 > **runtimeImage**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L48)
+Defined in: packages/contracts/src/framework-plugin.ts:48
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:48](https://github.com/f
 
 > `optional` **runtimeSetup**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L57)
+Defined in: packages/contracts/src/framework-plugin.ts:57
 
 RUN commands executed in the runtime stage (e.g. non-root user setup).
 
@@ -102,6 +102,6 @@ RUN commands executed in the runtime stage (e.g. non-root user setup).
 
 > `optional` **user**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L59)
+Defined in: packages/contracts/src/framework-plugin.ts:59
 
 Non-root user the runtime stage drops to via the USER directive.

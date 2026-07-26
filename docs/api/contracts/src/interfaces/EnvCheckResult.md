@@ -6,7 +6,7 @@
 
 # Interface: EnvCheckResult
 
-Defined in: [packages/contracts/src/framework-plugin.ts:17](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L17)
+Defined in: packages/contracts/src/framework-plugin.ts:17
 
 Result of a single environment check (tool presence + version).
 
@@ -16,15 +16,15 @@ Result of a single environment check (tool presence + version).
 
 > `optional` **fix**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:22](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L22)
+Defined in: packages/contracts/src/framework-plugin.ts:22
 
 ***
 
 ### found
 
-> **found**: `string`
+> **found**: `string` \| `null`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:20](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L20)
+Defined in: packages/contracts/src/framework-plugin.ts:20
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:20](https://github.com/f
 
 > **ok**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L21)
+Defined in: packages/contracts/src/framework-plugin.ts:21
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:21](https://github.com/f
 
 > **required**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:19](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L19)
+Defined in: packages/contracts/src/framework-plugin.ts:19
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [packages/contracts/src/framework-plugin.ts:19](https://github.com/f
 
 > **tool**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:18](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L18)
+Defined in: packages/contracts/src/framework-plugin.ts:18

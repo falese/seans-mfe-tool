@@ -6,7 +6,7 @@
 
 # Interface: PresentationHandles
 
-Defined in: [packages/contracts/src/presentation.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L81)
+Defined in: packages/contracts/src/presentation.ts:81
 
 The bundle an MFE exposes across the waist. The imperative floor is
 mandatory; native handles are optional integration upgrades.
@@ -17,7 +17,7 @@ mandatory; native handles are optional integration upgrades.
 
 > **imperative**: [`ImperativeMountHandle`](ImperativeMountHandle.md)
 
-Defined in: [packages/contracts/src/presentation.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L82)
+Defined in: packages/contracts/src/presentation.ts:82
 
 ***
 
@@ -25,4 +25,4 @@ Defined in: [packages/contracts/src/presentation.ts:82](https://github.com/fales
 
 > `optional` **native**: [`NativeComponentHandle`](NativeComponentHandle.md)[]
 
-Defined in: [packages/contracts/src/presentation.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L83)
+Defined in: packages/contracts/src/presentation.ts:83

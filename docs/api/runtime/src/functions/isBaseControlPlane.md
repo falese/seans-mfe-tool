@@ -8,7 +8,7 @@
 
 > **isBaseControlPlane**(`value`): `value is BaseControlPlane`
 
-Defined in: [packages/runtime/src/base-control-plane.ts:240](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L240)
+Defined in: packages/runtime/src/base-control-plane.ts:240
 
 ## Parameters
 

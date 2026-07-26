@@ -8,4 +8,4 @@
 
 > **PresentationHandle** = [`ImperativeMountHandle`](../interfaces/ImperativeMountHandle.md) \| [`NativeComponentHandle`](../interfaces/NativeComponentHandle.md)
 
-Defined in: [packages/contracts/src/presentation.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L75)
+Defined in: packages/contracts/src/presentation.ts:75

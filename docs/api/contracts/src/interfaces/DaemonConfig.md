@@ -6,7 +6,7 @@
 
 # Interface: DaemonConfig
 
-Defined in: [packages/contracts/src/messages.ts:264](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L264)
+Defined in: packages/contracts/src/messages.ts:264
 
 Configuration accepted by every daemon implementation. Reconnect constants
 are exposed so tests can inject small values.
@@ -17,7 +17,7 @@ are exposed so tests can inject small values.
 
 > `optional` **forwardTimeoutMs**: `number`
 
-Defined in: [packages/contracts/src/messages.ts:276](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L276)
+Defined in: packages/contracts/src/messages.ts:276
 
 Timeout (ms) for a forwarded action mutation. Default: 4000.
 
@@ -27,7 +27,7 @@ Timeout (ms) for a forwarded action mutation. Default: 4000.
 
 > `optional` **port**: `number`
 
-Defined in: [packages/contracts/src/messages.ts:268](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L268)
+Defined in: packages/contracts/src/messages.ts:268
 
 Port the daemon's own GraphQL/WebSocket server listens on. Default: 3001.
 
@@ -37,7 +37,7 @@ Port the daemon's own GraphQL/WebSocket server listens on. Default: 3001.
 
 > `optional` **reconnectBaseMs**: `number`
 
-Defined in: [packages/contracts/src/messages.ts:270](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L270)
+Defined in: packages/contracts/src/messages.ts:270
 
 Starting delay (ms) for the first reconnect attempt. Default: 400.
 
@@ -47,7 +47,7 @@ Starting delay (ms) for the first reconnect attempt. Default: 400.
 
 > `optional` **reconnectFactor**: `number`
 
-Defined in: [packages/contracts/src/messages.ts:274](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L274)
+Defined in: packages/contracts/src/messages.ts:274
 
 Exponential growth rate per failed attempt. Default: 1.6.
 
@@ -57,7 +57,7 @@ Exponential growth rate per failed attempt. Default: 1.6.
 
 > `optional` **reconnectMaxMs**: `number`
 
-Defined in: [packages/contracts/src/messages.ts:272](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L272)
+Defined in: packages/contracts/src/messages.ts:272
 
 Maximum reconnect delay (ms). Default: 5000.
 
@@ -67,6 +67,6 @@ Maximum reconnect delay (ms). Default: 5000.
 
 > `optional` **registryUrl**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:266](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L266)
+Defined in: packages/contracts/src/messages.ts:266
 
 WebSocket URL to the registry. Default: ws://registry:4000/graphql.

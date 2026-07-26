@@ -6,7 +6,7 @@
 
 # Interface: MfeRegistration
 
-Defined in: [packages/contracts/src/messages.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L90)
+Defined in: packages/contracts/src/messages.ts:90
 
 What the registry stores when an MFE registers (via `describe`). Gives the
 daemon everything it needs to reach the MFE's capability endpoints and
@@ -18,7 +18,7 @@ gives renderers what they need to mount the presentation layer.
 
 > **baseUrl**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L96)
+Defined in: packages/contracts/src/messages.ts:96
 
 Base URL where the daemon reaches the capability endpoints (/render, …).
 
@@ -28,7 +28,7 @@ Base URL where the daemon reaches the capability endpoints (/render, …).
 
 > **capabilities**: `string`[]
 
-Defined in: [packages/contracts/src/messages.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L97)
+Defined in: packages/contracts/src/messages.ts:97
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/contracts/src/messages.ts:97](https://github.com/falese/se
 
 > `optional` **contentType**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L99)
+Defined in: packages/contracts/src/messages.ts:99
 
 Default render delivery mechanism, e.g. 'module-federation'.
 
@@ -46,7 +46,7 @@ Default render delivery mechanism, e.g. 'module-federation'.
 
 > `optional` **framework**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L115)
+Defined in: packages/contracts/src/messages.ts:115
 
 Framework the MFE is built with (e.g. 'react', 'angular'). Observability
 plus native-handle negotiation (ADR-056). Open string (ADR-036).
@@ -57,7 +57,7 @@ plus native-handle negotiation (ADR-056). Open string (ADR-036).
 
 > `optional` **handleKinds**: `string`[]
 
-Defined in: [packages/contracts/src/messages.ts:121](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L121)
+Defined in: packages/contracts/src/messages.ts:121
 
 Presentation handle kinds this MFE exposes (ADR-056). Lets a host-side
 provider negotiate the composition strategy before loading the remote —
@@ -69,7 +69,7 @@ provider negotiate the composition strategy before loading the remote —
 
 > `optional` **manifest**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/messages.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L122)
+Defined in: packages/contracts/src/messages.ts:122
 
 ***
 
@@ -77,7 +77,7 @@ Defined in: [packages/contracts/src/messages.ts:122](https://github.com/falese/s
 
 > `optional` **moduleFederation**: `object`
 
-Defined in: [packages/contracts/src/messages.ts:110](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L110)
+Defined in: packages/contracts/src/messages.ts:110
 
 For client-side MFEs delivered via module federation: how a layout
 manager loads and mounts the remote (ADR-055). When present together
@@ -104,7 +104,7 @@ host shell, not server-side.
 
 > **name**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L91)
+Defined in: packages/contracts/src/messages.ts:91
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [packages/contracts/src/messages.ts:91](https://github.com/falese/se
 
 > `optional` **remoteEntryUrl**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L101)
+Defined in: packages/contracts/src/messages.ts:101
 
 For module-federation MFEs: where the renderer fetches remoteEntry.
 
@@ -122,7 +122,7 @@ For module-federation MFEs: where the renderer fetches remoteEntry.
 
 > **type**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L94)
+Defined in: packages/contracts/src/messages.ts:94
 
 DSL manifest `type`: tool | agent | feature | service | remote | shell | bff.
 
@@ -132,4 +132,4 @@ DSL manifest `type`: tool | agent | feature | service | remote | shell | bff.
 
 > **version**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L92)
+Defined in: packages/contracts/src/messages.ts:92

@@ -6,7 +6,7 @@
 
 # Interface: UserContext
 
-Defined in: [packages/runtime/src/context.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L30)
+Defined in: packages/runtime/src/context.ts:30
 
 User authentication and authorization context.
 
@@ -30,7 +30,7 @@ base; the runtime works with this richer view.
 
 > `optional` **attributes**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/messages.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L28)
+Defined in: packages/contracts/src/messages.ts:28
 
 #### Inherited from
 
@@ -42,7 +42,7 @@ Defined in: [packages/contracts/src/messages.ts:28](https://github.com/falese/se
 
 > **id**: `string`
 
-Defined in: [packages/contracts/src/messages.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L26)
+Defined in: packages/contracts/src/messages.ts:26
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [packages/contracts/src/messages.ts:26](https://github.com/falese/se
 
 > `optional` **permissions**: `string`[]
 
-Defined in: [packages/runtime/src/context.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L33)
+Defined in: packages/runtime/src/context.ts:33
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [packages/runtime/src/context.ts:33](https://github.com/falese/seans
 
 > **roles**: `string`[]
 
-Defined in: [packages/runtime/src/context.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L32)
+Defined in: packages/runtime/src/context.ts:32
 
 #### Overrides
 
@@ -74,4 +74,4 @@ Defined in: [packages/runtime/src/context.ts:32](https://github.com/falese/seans
 
 > **username**: `string`
 
-Defined in: [packages/runtime/src/context.ts:31](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L31)
+Defined in: packages/runtime/src/context.ts:31

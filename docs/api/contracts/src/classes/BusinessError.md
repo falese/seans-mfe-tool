@@ -6,7 +6,7 @@
 
 # Class: BusinessError
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:1](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L1)
+Defined in: packages/contracts/src/errors/BusinessError.ts:1
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [packages/contracts/src/errors/BusinessError.ts:1](https://github.co
 
 > **new BusinessError**(`message`, `code`, `details?`): `BusinessError`
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:7](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L7)
+Defined in: packages/contracts/src/errors/BusinessError.ts:7
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: [packages/contracts/src/errors/BusinessError.ts:7](https://github.co
 
 > **code**: `string`
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L4)
+Defined in: packages/contracts/src/errors/BusinessError.ts:4
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [packages/contracts/src/errors/BusinessError.ts:4](https://github.co
 
 > **details**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:5](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L5)
+Defined in: packages/contracts/src/errors/BusinessError.ts:5
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [packages/contracts/src/errors/BusinessError.ts:5](https://github.co
 
 > `readonly` **retryable**: `false` = `false`
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L3)
+Defined in: packages/contracts/src/errors/BusinessError.ts:3
 
 ***
 
@@ -72,4 +72,4 @@ Defined in: [packages/contracts/src/errors/BusinessError.ts:3](https://github.co
 
 > `readonly` **type**: `"business"` = `'business'`
 
-Defined in: [packages/contracts/src/errors/BusinessError.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/BusinessError.ts#L2)
+Defined in: packages/contracts/src/errors/BusinessError.ts:2

@@ -6,7 +6,7 @@
 
 # Interface: SharedDep
 
-Defined in: [packages/contracts/src/framework-plugin.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L26)
+Defined in: packages/contracts/src/framework-plugin.ts:26
 
 Shared dependency declaration for Module Federation (or equivalent).
 
@@ -16,7 +16,7 @@ Shared dependency declaration for Module Federation (or equivalent).
 
 > `optional` **eager**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L30)
+Defined in: packages/contracts/src/framework-plugin.ts:30
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:30](https://github.com/f
 
 > **name**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L27)
+Defined in: packages/contracts/src/framework-plugin.ts:27
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:27](https://github.com/f
 
 > **requiredVersion**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:29](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L29)
+Defined in: packages/contracts/src/framework-plugin.ts:29
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:29](https://github.com/f
 
 > **singleton**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L28)
+Defined in: packages/contracts/src/framework-plugin.ts:28
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [packages/contracts/src/framework-plugin.ts:28](https://github.com/f
 
 > `optional` **strictVersion**: `boolean`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:31](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L31)
+Defined in: packages/contracts/src/framework-plugin.ts:31

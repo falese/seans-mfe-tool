@@ -8,7 +8,7 @@
 
 > **MessageDirection** = `"COMPONENT"` \| `"ACTION"`
 
-Defined in: [packages/contracts/src/messages.ts:203](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L203)
+Defined in: packages/contracts/src/messages.ts:203
 
 Direction of data flow:
   COMPONENT = down (Registry → Daemon → Renderer)

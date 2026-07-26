@@ -6,7 +6,7 @@
 
 # Class: NetworkError
 
-Defined in: [packages/contracts/src/errors/NetworkError.ts:1](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/NetworkError.ts#L1)
+Defined in: packages/contracts/src/errors/NetworkError.ts:1
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [packages/contracts/src/errors/NetworkError.ts:1](https://github.com
 
 > **new NetworkError**(`message`, `statusCode`): `NetworkError`
 
-Defined in: [packages/contracts/src/errors/NetworkError.ts:6](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/NetworkError.ts#L6)
+Defined in: packages/contracts/src/errors/NetworkError.ts:6
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [packages/contracts/src/errors/NetworkError.ts:6](https://github.com
 
 > `readonly` **retryable**: `true` = `true`
 
-Defined in: [packages/contracts/src/errors/NetworkError.ts:3](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/NetworkError.ts#L3)
+Defined in: packages/contracts/src/errors/NetworkError.ts:3
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [packages/contracts/src/errors/NetworkError.ts:3](https://github.com
 
 > **statusCode**: `number`
 
-Defined in: [packages/contracts/src/errors/NetworkError.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/NetworkError.ts#L4)
+Defined in: packages/contracts/src/errors/NetworkError.ts:4
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [packages/contracts/src/errors/NetworkError.ts:4](https://github.com
 
 > `readonly` **type**: `"network"` = `'network'`
 
-Defined in: [packages/contracts/src/errors/NetworkError.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/errors/NetworkError.ts#L2)
+Defined in: packages/contracts/src/errors/NetworkError.ts:2

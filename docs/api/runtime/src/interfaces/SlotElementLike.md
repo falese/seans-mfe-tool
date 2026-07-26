@@ -6,7 +6,7 @@
 
 # Interface: SlotElementLike
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L30)
+Defined in: packages/runtime/src/layout-adaptors.ts:30
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:30](https://github.com/fale
 
 > **innerHTML**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:31](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L31)
+Defined in: packages/runtime/src/layout-adaptors.ts:31
 
 ## Methods
 
@@ -22,7 +22,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:31](https://github.com/fale
 
 > **addEventListener**(`type`, `listener`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L35)
+Defined in: packages/runtime/src/layout-adaptors.ts:35
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:35](https://github.com/fale
 
 > **appendChild**(`child`): `unknown`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L32)
+Defined in: packages/runtime/src/layout-adaptors.ts:32
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:32](https://github.com/fale
 
 > **remove**(): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L33)
+Defined in: packages/runtime/src/layout-adaptors.ts:33
 
 #### Returns
 
@@ -74,7 +74,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:33](https://github.com/fale
 
 > **setAttribute**(`name`, `value`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L34)
+Defined in: packages/runtime/src/layout-adaptors.ts:34
 
 #### Parameters
 

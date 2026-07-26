@@ -8,7 +8,7 @@
 
 > **isActionRecord**(`value`): `value is ActionRecord`
 
-Defined in: [packages/contracts/src/messages.ts:307](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L307)
+Defined in: packages/contracts/src/messages.ts:307
 
 True when `value` is an upward `ActionRecord`.
 
