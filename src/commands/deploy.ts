@@ -16,6 +16,19 @@ interface DeployOptions {
   logs?: boolean;
 }
 
+// A caught `unknown` is not always an Error (e.g. a rejected promise can
+// reject with anything) — these two helpers are the single, tested narrowing
+// point every catch block in this file uses, instead of repeating the
+// `instanceof Error` ternary (and its untested non-Error branch) at each
+// call site.
+function asError(error: unknown): Error | undefined {
+  return error instanceof Error ? error : undefined;
+}
+
+function errorMessage(error: unknown): string {
+  return asError(error)?.message ?? String(error);
+}
+
 // Keep track of temp directories for cleanup
 const tempDirs = new Set<string>();
 
@@ -30,7 +43,7 @@ async function cleanupTempDirs(): Promise<void> {
       }
     } catch (error: unknown) {
       console.error(chalk.yellow(`Warning: Failed to clean up directory: ${dir}`));
-      console.error(chalk.gray(error instanceof Error ? error.message : String(error)));
+      console.error(chalk.gray(errorMessage(error)));
     }
   }
   tempDirs.clear();
@@ -160,8 +173,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
         }
       );
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : '';
-      if (message.includes('Build failed')) {
+      if (errorMessage(error).includes('Build failed')) {
         throw error;
       }
       // Swallow unexpected first-call errors (e.g., unit test setup)
@@ -207,7 +219,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
 
   } catch (error: unknown) {
     console.error(chalk.red('\n✗ Development deployment failed:'));
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(errorMessage(error));
     throw error;
   } finally {
     await cleanupTempDirs();
@@ -287,8 +299,8 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
     };
   } catch (error: unknown) {
     console.error(chalk.red('\n✗ Deployment failed:'));
-    const err = error instanceof Error ? error : undefined;
-    console.error(chalk.red(err?.message ?? String(error)));
+    console.error(chalk.red(errorMessage(error)));
+    const err = asError(error);
     if (err?.stack && process.env.DEBUG) {
       console.error(chalk.gray('\nStack trace:'));
       console.error(err.stack);
