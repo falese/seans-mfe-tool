@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { SLOT_ID_SEGMENT } from '@seans-mfe/contracts';
+import { SLOT_ID_SEGMENT, PLATFORM_WRAPPER_METHODS } from '@seans-mfe/contracts';
 
 // =============================================================================
 // Enums and Constants
@@ -48,18 +48,13 @@ export type Bundler = z.infer<typeof BundlerSchema>;
 export const CapabilityTypeSchema = z.enum(['platform', 'domain']);
 export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
 
-/** Platform capabilities that all MFEs must implement */
-export const PLATFORM_CAPABILITIES = [
-  'load',
-  'render', 
-  'refresh',
-  'authorizeAccess',
-  'health',
-  'describe',
-  'schema',
-  'query',
-  'emit'
-] as const;
+/**
+ * Platform capabilities that all MFEs must implement. Single-sourced in
+ * `@seans-mfe/contracts` (ADR-080) — this list previously omitted
+ * `updateControlPlaneState`, which the runtime had already shipped.
+ */
+export { PLATFORM_CAPABILITIES } from '@seans-mfe/contracts';
+export type { PlatformCapability } from '@seans-mfe/contracts';
 
 // =============================================================================
 // Input/Output Schemas
@@ -88,11 +83,13 @@ export type DSLOutput = z.infer<typeof DSLOutputSchema>;
 // Lifecycle Schemas
 // =============================================================================
 
-/** Single lifecycle hook */
-/** Platform wrapper methods forbidden as handler references */
-export const PLATFORM_WRAPPER_METHODS = [
-  'doLoad', 'doRender', 'doRefresh', 'doAuthorizeAccess', 'doHealth', 'doDescribe', 'doSchema', 'doQuery', 'doEmit'
-];
+/**
+ * Platform wrapper methods forbidden as handler references — a hook naming one
+ * would re-enter the orchestrator it runs inside. Derived from the canonical
+ * capability set in `@seans-mfe/contracts` (ADR-080), so a new capability is
+ * forbidden here the moment it is defined there.
+ */
+export { PLATFORM_WRAPPER_METHODS };
 
 export const LifecycleHookSchema = z.object({
   handler: z.union([z.string(), z.array(z.string())]),

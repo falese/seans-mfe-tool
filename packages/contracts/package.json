@@ -24,6 +24,10 @@
     "./messages": {
       "require": "./dist/messages.js",
       "types": "./dist/messages.d.ts"
+    },
+    "./platform-contract": {
+      "require": "./dist/platform-contract.js",
+      "types": "./dist/platform-contract.d.ts"
     }
   },
   "files": [

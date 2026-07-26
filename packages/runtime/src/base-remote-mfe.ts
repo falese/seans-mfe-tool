@@ -39,7 +39,7 @@ import {
   type CapabilityMetadata,
   type TelemetryEvent,
 } from './base-mfe';
-import { buildMessage } from '@seans-mfe/contracts';
+import { buildMessage, isPlatformCapabilityManifestKey } from '@seans-mfe/contracts';
 import type { ActionRecord } from '@seans-mfe/contracts';
 
 /**
@@ -432,34 +432,14 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       }
     }
 
-    // Fallback: collect domain capability names (everything that is not a platform capability)
-    const PLATFORM_CAPABILITY_NAMES = new Set([
-      'load',
-      'render',
-      'refresh',
-      'authorizeAccess',
-      'health',
-      'describe',
-      'schema',
-      'query',
-      'emit',
-      'updateControlPlaneState',
-      // Also handle the PascalCase variants used as capability entry keys in YAML
-      'Load',
-      'Render',
-      'Refresh',
-      'AuthorizeAccess',
-      'Health',
-      'Describe',
-      'Schema',
-      'Query',
-      'Emit',
-      'UpdateControlPlaneState',
-    ]);
+    // Fallback: collect domain capability names — everything that is not a
+    // platform capability in either the camelCase or the PascalCase spelling a
+    // manifest may use as an entry key. Both spellings come from the canonical
+    // definition in @seans-mfe/contracts (ADR-080).
     const domainComponents: string[] = [];
     for (const capEntry of this.manifest.capabilities) {
       for (const name of Object.keys(capEntry)) {
-        if (!PLATFORM_CAPABILITY_NAMES.has(name)) {
+        if (!isPlatformCapabilityManifestKey(name)) {
           domainComponents.push(name);
         }
       }
