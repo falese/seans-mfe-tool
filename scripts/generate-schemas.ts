@@ -333,6 +333,11 @@ const INPUT_SCHEMAS: Record<string, object> = {
       },
     },
   },
+  // Only flags the command actually declares. This list once carried a
+  // Kubernetes vocabulary (registry, mode, namespace, domain, tag, memory,
+  // cpu, replicas) that `deploy` never implemented, so every one of them was
+  // advertised to agents over MCP and rejected by oclif on use. ADR-062 keeps
+  // production deployment out of this command; it is a plugin axis.
   deploy: {
     type: 'object',
     required: ['name', 'type'],
@@ -341,14 +346,6 @@ const INPUT_SCHEMAS: Record<string, object> = {
       type:      { type: 'string', enum: ['shell', 'remote', 'api'] },
       env:       { type: 'string', enum: ['development', 'production'], default: 'development' },
       port:      { type: 'string', default: '8080' },
-      registry:  { type: 'string' },
-      mode:      { type: 'string', enum: ['docker-compose', 'kubernetes'], default: 'docker-compose' },
-      namespace: { type: 'string', default: 'default' },
-      domain:    { type: 'string' },
-      tag:       { type: 'string', default: 'latest' },
-      memory:    { type: 'string', default: '256Mi' },
-      cpu:       { type: 'string', default: '0.5' },
-      replicas:  { type: 'string', default: '2' },
       'dry-run': { type: 'boolean', default: false },
     },
   },

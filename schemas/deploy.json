@@ -34,40 +34,6 @@
         "type": "string",
         "default": "8080"
       },
-      "registry": {
-        "type": "string"
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "docker-compose",
-          "kubernetes"
-        ],
-        "default": "docker-compose"
-      },
-      "namespace": {
-        "type": "string",
-        "default": "default"
-      },
-      "domain": {
-        "type": "string"
-      },
-      "tag": {
-        "type": "string",
-        "default": "latest"
-      },
-      "memory": {
-        "type": "string",
-        "default": "256Mi"
-      },
-      "cpu": {
-        "type": "string",
-        "default": "0.5"
-      },
-      "replicas": {
-        "type": "string",
-        "default": "2"
-      },
       "dry-run": {
         "type": "boolean",
         "default": false
