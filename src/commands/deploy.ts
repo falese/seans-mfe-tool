@@ -53,12 +53,15 @@ async function cleanupTempDirs(): Promise<void> {
 process.on('SIGINT', async () => {
   console.log(chalk.yellow('\nReceived SIGINT. Cleaning up...'));
   await cleanupTempDirs();
+  // A signal handler has no caller to throw to; this is the process exit.
+  // eslint-disable-next-line no-process-exit
   process.exit(1);
 });
 
 process.on('SIGTERM', async () => {
   console.log(chalk.yellow('\nReceived SIGTERM. Cleaning up...'));
   await cleanupTempDirs();
+  // eslint-disable-next-line no-process-exit -- same as the SIGINT handler above
   process.exit(1);
 });
 
@@ -184,7 +187,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
       execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
       execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
       console.log(chalk.blue(`Removed existing container: ${containerName}`));
-    } catch (e) {
+    } catch {
       // Container doesn't exist, continue
     }
 
@@ -239,7 +242,7 @@ async function waitForContainer(containerName: string, timeout: number = 30000):
       if (status === 'running') {
         return true;
       }
-    } catch (e) {
+    } catch {
       // Container not ready yet
     }
     await new Promise(resolve => setTimeout(resolve, 1000));

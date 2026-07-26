@@ -1,5 +1,3 @@
-const fs = require('fs-extra');
-const path = require('path');
 const chalk = require('chalk');
 const { MongoDBGenerator } = require('./generators/MongoDBGenerator');
 const { SQLiteGenerator } = require('./generators/SQLiteGenerator');

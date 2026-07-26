@@ -1,10 +1,9 @@
 const { SQLiteGenerator } = require('../generators/SQLiteGenerator');
-const { 
-  simpleSchema, 
-  complexSchema, 
+const {
+  simpleSchema,
+  complexSchema,
   relationshipSchema,
   validationSchema,
-  sqliteSpecificSchema,
   multiSchemaSpec
 } = require('./fixtures/openapi-schemas');
 const fs = require('fs-extra');

@@ -12,7 +12,6 @@ import {
   toPythonType,
   generateZodSchema,
   validateValue,
-  type ParsedType,
   type TypeConstraints
 } from '../type-system';
 

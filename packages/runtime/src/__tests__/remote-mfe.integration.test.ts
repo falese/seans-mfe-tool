@@ -14,7 +14,7 @@
  */
 
 import { RemoteMFE } from '../remote-mfe';
-import type { Context, LoadResult, RenderResult, TelemetryEvent, TelemetryService } from '../base-mfe';
+import type { Context, TelemetryEvent, TelemetryService } from '../base-mfe';
 import type { DSLManifest } from '@seans-mfe/dsl';
 
 /**

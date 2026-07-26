@@ -42,7 +42,7 @@ async function processTemplates(targetDir, vars) {
   let files;
   try {
     files = await fs.readdir(targetDir);
-  } catch (e) {
+  } catch {
     await tryFallback();
     return;
   }

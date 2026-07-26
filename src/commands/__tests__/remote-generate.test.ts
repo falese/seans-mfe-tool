@@ -4,7 +4,6 @@
  */
 
 import * as fs from 'fs-extra';
-import * as path from 'path';
 
 // Mock dependencies before importing command
 jest.mock('fs-extra');
@@ -50,7 +49,7 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
 import { remoteGenerateCommand } from '../remote-generate';
-import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
+import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 
 import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
 
@@ -138,7 +137,7 @@ describe('remote:generate Command', () => {
 
       try {
         await remoteGenerateCommand();
-      } catch (e) {
+      } catch {
         // Expected
       }
 

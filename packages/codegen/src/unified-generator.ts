@@ -1118,7 +1118,6 @@ async function renderFiles(
     }
   }
   if (preservedCapabilities.length > 0) {
-    // eslint-disable-next-line no-console
     console.log(
       `Preserved (already implemented): ${preservedCapabilities.join(', ')}`,
     );
@@ -1332,7 +1331,6 @@ async function renderFiles(
       });
     } else {
       // Diagnostic: warn if template missing
-      // eslint-disable-next-line no-console
       console.warn(
         `[unified-generator] WARNING: Missing template for ${tpl.name}: ${templatePath}`
       );
@@ -1358,7 +1356,6 @@ async function renderFiles(
           overwrite,
         });
       } else {
-        // eslint-disable-next-line no-console
         console.warn(`[unified-generator] WARNING: Missing template for ${out}: ${templatePath}`);
       }
     }
@@ -1375,7 +1372,6 @@ async function renderFiles(
       });
     } else {
       // Diagnostic: warn if App.tsx template missing
-      // eslint-disable-next-line no-console
       console.warn(`[unified-generator] WARNING: Missing template for App.tsx: ${appTemplatePath}`);
     }
 
@@ -1409,7 +1405,6 @@ async function renderFiles(
       });
     } else {
       // Diagnostic: warn if index.tsx template missing
-      // eslint-disable-next-line no-console
       console.warn(
         `[unified-generator] WARNING: Missing template for index.tsx: ${indexTemplatePath}`
       );
@@ -1449,7 +1444,6 @@ async function renderFiles(
       }
     }
     if (!slotsEmitted) {
-      // eslint-disable-next-line no-console
       console.warn(
         `[unified-generator] WARNING: manifest declares providesSlots but template variant ` +
           `"${templateVariant}" ships no slots template (looked for ${slotsTemplateCandidates.join(', ')} in ${templateDir})`
@@ -1470,7 +1464,6 @@ async function renderFiles(
       overwrite: true,
     });
   } else {
-    // eslint-disable-next-line no-console
     console.warn(
       `[unified-generator] WARNING: Missing template for public/index.html: ${indexHtmlTemplatePath}`
     );
@@ -1489,7 +1482,6 @@ async function renderFiles(
       overwrite: true,
     });
   } else {
-    // eslint-disable-next-line no-console
     console.warn(
       `[unified-generator] WARNING: Missing template for public/demo.html: ${demoHtmlTemplatePath}`
     );
@@ -1503,7 +1495,6 @@ async function renderFiles(
       overwrite: true,
     });
   } else {
-    // eslint-disable-next-line no-console
     console.warn(
       `[unified-generator] WARNING: Missing template for public/favicon.ico: ${faviconTemplatePath}`
     );

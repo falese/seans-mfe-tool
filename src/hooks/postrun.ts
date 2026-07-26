@@ -169,7 +169,6 @@ function getWebSocketClass(): WebSocketCtor | null {
   }
   // 'ws' npm package
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const ws = require('ws') as { default?: unknown };
     return (ws.default ?? ws) as WebSocketCtor;
   } catch {

@@ -1,5 +1,4 @@
 import { LifecycleHookSchema, PLATFORM_WRAPPER_METHODS } from '../schema';
-import { z } from 'zod';
 
 describe('LifecycleHookSchema handler reference validation', () => {
   it('accepts valid user-defined handler string', () => {

@@ -1,7 +1,6 @@
 const { PathGenerator } = require('../../utils/PathGenerator');
 const { SchemaGenerator } = require('../../utils/SchemaGenerator');
-const { NameGenerator } = require('../../utils/NameGenerator');
-const { simpleSpec, petStoreSpec, operationExamples } = require('./fixtures/openapi-specs');
+const { simpleSpec } = require('./fixtures/openapi-specs');
 
 // Mock SchemaGenerator since we're testing PathGenerator in isolation
 jest.mock('../../utils/SchemaGenerator');

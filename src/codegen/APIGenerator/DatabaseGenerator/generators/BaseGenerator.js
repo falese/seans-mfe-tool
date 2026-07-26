@@ -28,11 +28,11 @@ class BaseGenerator {
     await this.generateModelIndex(modelsDir, spec.components.schemas);
   }
 
-  generateModelFile(schemaName, schema) {
+  generateModelFile(_schemaName, _schema) {
     throw new Error('generateModelFile must be implemented by subclass');
   }
 
-  async generateModelIndex(modelsDir, schemas) {
+  async generateModelIndex(_modelsDir, _schemas) {
     throw new Error('generateModelIndex must be implemented by subclass');
   }
 

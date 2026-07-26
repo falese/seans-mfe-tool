@@ -3,8 +3,6 @@
  * Following TDD principles - testing REQ-REMOTE-003 (single-capability generation)
  */
 
-import * as fs from 'fs-extra';
-
 jest.mock('fs-extra');
 
 jest.mock('chalk', () => ({

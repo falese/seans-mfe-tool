@@ -6,18 +6,18 @@ class TestMFE extends BaseMFE {
   constructor(manifest: any, deps?: any) {
     super(manifest, deps);
   }
-  protected async doLoad(context: any): Promise<{ status: "loaded"; timestamp: Date }> {
+  protected async doLoad(_context: any): Promise<{ status: "loaded"; timestamp: Date }> {
     return { status: "loaded", timestamp: new Date() };
   }
-  protected async doRender(context: any): Promise<{ status: "rendered"; element: null; timestamp: Date }> {
+  protected async doRender(_context: any): Promise<{ status: "rendered"; element: null; timestamp: Date }> {
     return { status: "rendered", element: null, timestamp: new Date() };
   }
-  protected async doRefresh(context: any): Promise<void> { return; }
-  protected async doAuthorizeAccess(context: any): Promise<boolean> { return true; }
-  protected async doHealth(context: any): Promise<{ status: "healthy"; checks: any[]; timestamp: Date }> {
+  protected async doRefresh(_context: any): Promise<void> { return; }
+  protected async doAuthorizeAccess(_context: any): Promise<boolean> { return true; }
+  protected async doHealth(_context: any): Promise<{ status: "healthy"; checks: any[]; timestamp: Date }> {
     return { status: "healthy", checks: [], timestamp: new Date() };
   }
-  protected async doDescribe(context: any): Promise<{ name: string; version: string; type: "tool"; capabilities: any[]; manifest: { name: string; version: string; type: "tool"; language: "javascript"; capabilities: any[] } }> {
+  protected async doDescribe(_context: any): Promise<{ name: string; version: string; type: "tool"; capabilities: any[]; manifest: { name: string; version: string; type: "tool"; language: "javascript"; capabilities: any[] } }> {
     return {
       name: "test",
       version: "1.0",
@@ -32,13 +32,13 @@ class TestMFE extends BaseMFE {
       }
     };
   }
-  protected async doSchema(context: any): Promise<{ schema: string; format: "json" }> {
+  protected async doSchema(_context: any): Promise<{ schema: string; format: "json" }> {
     return { schema: "{}", format: "json" };
   }
-  protected async doQuery(context: any): Promise<{ data: string }> {
+  protected async doQuery(_context: any): Promise<{ data: string }> {
     return { data: "ok" };
   }
-  protected async doEmit(context: any): Promise<{ emitted: boolean }> {
+  protected async doEmit(_context: any): Promise<{ emitted: boolean }> {
     return { emitted: true };
   }
   protected async doUpdateControlPlaneState(context: any): Promise<{ acknowledged: boolean; correlationId: string }> {
@@ -209,7 +209,7 @@ it('should call errorHandler if DI errorHandler provided and state is invalid', 
   (mfeError as any).state = 'loading';
   try {
     (mfeError as any).assertState('ready');
-  } catch (e) {
+  } catch {
     // expected
   }
   expect(errorHandled).toBe(true);
@@ -221,18 +221,18 @@ describe('BaseMFE Full Coverage', () => {
     constructor(manifest: any, deps?: any) {
       super(manifest, deps);
     }
-    protected async doLoad(context: any): Promise<{ status: "loaded"; timestamp: Date }> {
+    protected async doLoad(_context: any): Promise<{ status: "loaded"; timestamp: Date }> {
       return { status: "loaded", timestamp: new Date() };
     }
-    protected async doRender(context: any): Promise<{ status: "rendered"; element: null; timestamp: Date }> {
+    protected async doRender(_context: any): Promise<{ status: "rendered"; element: null; timestamp: Date }> {
       return { status: "rendered", element: null, timestamp: new Date() };
     }
-    protected async doRefresh(context: any): Promise<void> { return; }
-    protected async doAuthorizeAccess(context: any): Promise<boolean> { return true; }
-    protected async doHealth(context: any): Promise<{ status: "healthy"; checks: any[]; timestamp: Date }> {
+    protected async doRefresh(_context: any): Promise<void> { return; }
+    protected async doAuthorizeAccess(_context: any): Promise<boolean> { return true; }
+    protected async doHealth(_context: any): Promise<{ status: "healthy"; checks: any[]; timestamp: Date }> {
       return { status: "healthy", checks: [], timestamp: new Date() };
     }
-    protected async doDescribe(context: any): Promise<{ name: string; version: string; type: "tool"; capabilities: any[]; manifest: { name: string; version: string; type: "tool"; language: "javascript"; capabilities: any[] } }> {
+    protected async doDescribe(_context: any): Promise<{ name: string; version: string; type: "tool"; capabilities: any[]; manifest: { name: string; version: string; type: "tool"; language: "javascript"; capabilities: any[] } }> {
       return {
         name: "test",
         version: "1.0",
@@ -247,13 +247,13 @@ describe('BaseMFE Full Coverage', () => {
         }
       };
     }
-    protected async doSchema(context: any): Promise<{ schema: string; format: "json" }> {
+    protected async doSchema(_context: any): Promise<{ schema: string; format: "json" }> {
       return { schema: "{}", format: "json" };
     }
-    protected async doQuery(context: any): Promise<{ data: string }> {
+    protected async doQuery(_context: any): Promise<{ data: string }> {
       return { data: "ok" };
     }
-    protected async doEmit(context: any): Promise<{ emitted: boolean }> {
+    protected async doEmit(_context: any): Promise<{ emitted: boolean }> {
       return { emitted: true };
     }
     async customA(context: any) { context.calledA = true; }

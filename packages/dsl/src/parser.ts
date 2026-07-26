@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
 import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
-import { validateManifest, validateFull } from './validator';
+import { validateFull } from './validator';
 
 // =============================================================================
 // Constants

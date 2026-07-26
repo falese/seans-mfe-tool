@@ -1,5 +1,5 @@
 class SchemaGenerator {
-  static generateValidationSchema(operation, components) {
+  static generateValidationSchema(operation) {
     const schemas = {
       body: this.generateRequestBodySchema(operation),
       params: this.generateParametersSchema(operation),

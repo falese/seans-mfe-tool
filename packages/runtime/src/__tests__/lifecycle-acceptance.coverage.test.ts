@@ -3,7 +3,6 @@
  * Targets uncovered lines/branches from coverage report
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { BaseMFE: ImportedBaseMFE, VALID_TRANSITIONS } = require('../base-mfe');
 
 class CoverageTestMFE extends ImportedBaseMFE {
@@ -17,15 +16,15 @@ class CoverageTestMFE extends ImportedBaseMFE {
   public testDoSchema(): any { return this.doSchema({}); }
   public testDoQuery(): any { return this.doQuery({}); }
   public testDoEmit(): any { return this.doEmit({}); }
-  protected async doLoad(context: any): Promise<any> { return { status: 'loaded', timestamp: new Date() }; }
-  protected async doRender(context: any): Promise<any> { return { element: null, timestamp: new Date() }; }
-  protected async doRefresh(context: any): Promise<void> { return; }
-  protected async doAuthorizeAccess(context: any): Promise<boolean> { return true; }
-  protected async doHealth(context: any): Promise<any> { return { status: 'healthy', checks: [], timestamp: new Date() }; }
-  protected async doDescribe(context: any): Promise<any> { return { name: 'test', version: '1.0', type: 'tool', capabilities: [], manifest: {} }; }
-  protected async doSchema(context: any): Promise<any> { return { schema: '{}', format: 'json' }; }
-  protected async doQuery(context: any): Promise<any> { return { data: 'ok' }; }
-  protected async doEmit(context: any): Promise<any> { return { emitted: true }; }
+  protected async doLoad(_context: any): Promise<any> { return { status: 'loaded', timestamp: new Date() }; }
+  protected async doRender(_context: any): Promise<any> { return { element: null, timestamp: new Date() }; }
+  protected async doRefresh(_context: any): Promise<void> { return; }
+  protected async doAuthorizeAccess(_context: any): Promise<boolean> { return true; }
+  protected async doHealth(_context: any): Promise<any> { return { status: 'healthy', checks: [], timestamp: new Date() }; }
+  protected async doDescribe(_context: any): Promise<any> { return { name: 'test', version: '1.0', type: 'tool', capabilities: [], manifest: {} }; }
+  protected async doSchema(_context: any): Promise<any> { return { schema: '{}', format: 'json' }; }
+  protected async doQuery(_context: any): Promise<any> { return { data: 'ok' }; }
+  protected async doEmit(_context: any): Promise<any> { return { emitted: true }; }
 }
 
 describe('BaseMFE Coverage Edge Cases', () => {

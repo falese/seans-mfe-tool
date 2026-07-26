@@ -18,8 +18,6 @@ import * as path from 'path';
 // Mock WebSocket
 // ---------------------------------------------------------------------------
 
-type WsListener = (event: { data: string }) => void;
-
 interface MockWsInstance {
   url: string;
   sentFrames: string[];
@@ -82,19 +80,12 @@ function createMockWsClass() {
 
 const OFFLINE_CACHE = path.join(os.homedir(), '.cache', 'seans-mfe', 'daemon-offline');
 
-const OFFLINE_TTL_MS = 60_000;
-
 function clearOfflineCache() {
   try {
     fs.unlinkSync(OFFLINE_CACHE);
   } catch {
     /* ignore */
   }
-}
-
-function writeOfflineCache(offsetMs = OFFLINE_TTL_MS + 1_000) {
-  fs.mkdirSync(path.dirname(OFFLINE_CACHE), { recursive: true });
-  fs.writeFileSync(OFFLINE_CACHE, String(Date.now() + offsetMs));
 }
 
 function buildHookContext(overrides: Record<string, unknown> = {}) {
@@ -124,7 +115,6 @@ afterEach(() => {
 
 describe('postrun hook', () => {
   test('no-ops when SEANS_MFE_DAEMON_URL is not set', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     await hook.call(buildHookContext(), {});
     expect(lastMockWs).toBeNull();
@@ -139,7 +129,6 @@ describe('postrun hook', () => {
     // Patch globalThis.WebSocket with our mock
     (globalThis as any).WebSocket = createMockWsClass();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     const ctx = buildHookContext();
 
@@ -176,7 +165,6 @@ describe('postrun hook', () => {
     process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
     (globalThis as any).WebSocket = createMockWsClass();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
 
     const hookPromise = hook.call(buildHookContext(), {});
@@ -189,7 +177,6 @@ describe('postrun hook', () => {
     expect(fs.existsSync(OFFLINE_CACHE)).toBe(true);
 
     // Second call — should skip without creating a new socket
-    const prevWs = lastMockWs;
     lastMockWs = null;
     await hook.call(buildHookContext(), {});
     expect(lastMockWs).toBeNull(); // no new socket created
@@ -199,7 +186,6 @@ describe('postrun hook', () => {
   });
 
   test('no latency added when SEANS_MFE_DAEMON_URL is unset (<10ms)', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const hook = require('../postrun').default;
     const start = Date.now();
     await hook.call(buildHookContext(), {});

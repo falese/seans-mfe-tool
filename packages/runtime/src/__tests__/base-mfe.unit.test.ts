@@ -5,7 +5,7 @@
 import { BaseMFE } from '../base-mfe';
 
 class TestMFE extends BaseMFE {
-    async fail(context: any) {
+    async fail(_context: any) {
       console.log('fail method called');
       throw new Error('boom');
     }
@@ -15,7 +15,7 @@ class TestMFE extends BaseMFE {
     super(manifest);
     this.handlers = {
       'custom.load': async (ctx: any) => { console.log('custom.load handler called'); return { status: 'loaded', timestamp: new Date(), context: ctx }; },
-      'custom.query': async (ctx: any) => { console.log('custom.query handler called'); return { data: 123, errors: [], timestamp: new Date() }; },
+      'custom.query': async (_ctx: any) => { console.log('custom.query handler called'); return { data: 123, errors: [], timestamp: new Date() }; },
       'custom.fail': async () => { console.log('custom.fail handler called'); throw new Error('boom'); },
       'fail': async () => { console.log('fail handler called'); throw new Error('boom'); },
       'custom.noop': async () => { console.log('custom.noop handler called'); return { emitted: true }; }
@@ -25,35 +25,35 @@ class TestMFE extends BaseMFE {
     console.log('doLoad called');
     return { status: 'loaded', timestamp: new Date(), context };
   }
-  async doRender(context: any): Promise<any> {
+  async doRender(_context: any): Promise<any> {
     console.log('doRender called');
     return { status: 'rendered', element: {}, timestamp: new Date() };
   }
-  async doRefresh(context: any): Promise<any> {
+  async doRefresh(_context: any): Promise<any> {
     console.log('doRefresh called');
     return { status: 'refreshed', timestamp: new Date() };
   }
-  async doAuthorizeAccess(context: any): Promise<any> {
+  async doAuthorizeAccess(_context: any): Promise<any> {
     console.log('doAuthorizeAccess called');
     return { status: 'authorized', timestamp: new Date() };
   }
-  async doHealth(context: any): Promise<any> {
+  async doHealth(_context: any): Promise<any> {
     console.log('doHealth called');
     return { status: 'healthy', timestamp: new Date() };
   }
-  async doDescribe(context: any): Promise<any> {
+  async doDescribe(_context: any): Promise<any> {
     console.log('doDescribe called');
     return { status: 'described', timestamp: new Date() };
   }
-  async doSchema(context: any): Promise<any> {
+  async doSchema(_context: any): Promise<any> {
     console.log('doSchema called');
     return { schema: '{}', format: 'json', timestamp: new Date() };
   }
-  async doQuery(context: any): Promise<any> {
+  async doQuery(_context: any): Promise<any> {
     console.log('doQuery called');
     return { data: 123, errors: [], timestamp: new Date() };
   }
-  async doEmit(context: any): Promise<any> {
+  async doEmit(_context: any): Promise<any> {
     console.log('doEmit called');
     return { emitted: true };
   }
