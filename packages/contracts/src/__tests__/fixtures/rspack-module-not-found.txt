@@ -1,0 +1,19 @@
+ERROR in ./src/index.js 1:1-41
+  × Module not found: Can't resolve './does-not-exist' in '/project/src'
+   ╭─[1:0]
+ 1 │ import { thing } from './does-not-exist';
+   · ─────────────────────────────────────────
+ 2 │ import react from 'react';
+ 3 │ export const ok = thing + react;
+   ╰────
+
+ERROR in ./src/index.js 2:1-26
+  × Module not found: Can't resolve 'react' in '/project/src'
+   ╭─[2:0]
+ 1 │ import { thing } from './does-not-exist';
+ 2 │ import react from 'react';
+   · ──────────────────────────
+ 3 │ export const ok = thing + react;
+   ╰────
+
+Rspack compiled with 2 errors in 22 ms

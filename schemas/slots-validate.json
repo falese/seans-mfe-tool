@@ -2,22 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/slots:validate.json",
   "title": "slots:validate",
-  "description": "Input/output contract for seans-mfe-tool slots:validate",
+  "description": "Validate registry placement targets against the fleet's declared slots",
   "input": {
     "type": "object",
-    "required": [
-      "rules"
-    ],
     "properties": {
       "rules": {
         "type": "string",
-        "description": "Path to a placement rules JSON file"
+        "description": "Path to a placement rules JSON file ({registration, routes} documents)"
       },
       "manifests": {
         "type": "string",
-        "description": "Directory to scan for mfe-manifest.yaml files"
+        "description": "Directory to scan for mfe-manifest.yaml files (default: current directory)"
       }
-    }
+    },
+    "required": [
+      "rules"
+    ],
+    "x-positional": []
   },
   "output": {
     "type": "object",
@@ -71,7 +72,8 @@
           ],
           "properties": {
             "mfe": {
-              "type": "string"
+              "type": "string",
+              "description": "The MFE whose rule targets the address."
             },
             "capability": {
               "type": "string"
@@ -88,7 +90,8 @@
               ]
             },
             "fatal": {
-              "type": "boolean"
+              "type": "boolean",
+              "description": "Advisory findings (unknown provider) must not fail a build."
             },
             "message": {
               "type": "string"
@@ -105,6 +108,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

@@ -2,12 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/api.json",
   "title": "api",
-  "description": "Input/output contract for seans-mfe-tool api",
+  "description": "Create a new API from OpenAPI specification",
   "input": {
     "type": "object",
-    "required": [
-      "name"
-    ],
     "properties": {
       "name": {
         "type": "string",
@@ -15,10 +12,12 @@
       },
       "port": {
         "type": "string",
+        "description": "Port number for the API",
         "default": "3001"
       },
       "spec": {
         "type": "string",
+        "description": "Path to OpenAPI specification file or URL",
         "default": "openapi.yaml"
       },
       "database": {
@@ -29,13 +28,20 @@
           "sqlite",
           "sql"
         ],
+        "description": "Database type to use",
         "default": "sqlite"
       },
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Preview changes without writing"
       }
-    }
+    },
+    "required": [
+      "name"
+    ],
+    "x-positional": [
+      "name"
+    ]
   },
   "output": {
     "type": "object",
@@ -98,6 +104,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

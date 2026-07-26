@@ -89,26 +89,42 @@ export async function loadToolRegistry(
  *   mfe:bff:init → ["bff:init", "--json"]
  *   daemon:start → ["daemon:start", "--json"]
  */
-export function buildArgv(toolName: string, input: Record<string, unknown>): string[] {
+export function buildArgv(
+  toolName: string,
+  input: Record<string, unknown>,
+  positional?: string[],
+): string[] {
   // Strip the source prefix (mfe:, daemon:, coder:, etc.)
   const parts = toolName.split(':');
   const commandParts = parts.slice(1); // drop source prefix
   const commandId = commandParts.join(':');
   const argv: string[] = [commandId];
 
-  const positionalKeys = new Set(['name', 'spec']);
+  // Which inputs the command takes positionally comes from its own arg
+  // declarations, carried in the schema as `x-positional`. The fallback is for
+  // third-party plugin schemas that predate it; it is deliberately just `name`
+  // — the previous hardcoded set also contained `spec`, which is a flag on
+  // every command that has one, so an agent supplying it produced an extra
+  // positional the command rejected.
+  const positionalKeys = positional ?? ['name'];
+
   // Reserved execution arguments consumed by the MCP server itself (#279):
   // never forwarded to the CLI.
   const reservedKeys = new Set(['cwd']);
   const flags: string[] = [];
 
+  // Declaration order is argv order, so walk the positionals rather than the
+  // caller's (unordered) input object.
+  for (const key of positionalKeys) {
+    const value = input[key];
+    if (typeof value === 'string') argv.push(value);
+  }
+
   for (const [key, value] of Object.entries(input)) {
-    if (reservedKeys.has(key)) {
+    if (reservedKeys.has(key) || positionalKeys.includes(key)) {
       continue;
     }
-    if (positionalKeys.has(key) && typeof value === 'string') {
-      argv.push(value);
-    } else if (typeof value === 'boolean') {
+    if (typeof value === 'boolean') {
       if (value) flags.push(`--${key}`);
     } else if (value !== undefined && value !== null) {
       if (Array.isArray(value)) {

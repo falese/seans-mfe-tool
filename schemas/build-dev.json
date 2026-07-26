@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/build:dev.json",
+  "title": "build:dev",
+  "description": "Start the dev server for the current MFE",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "description": "Path to mfe-manifest.yaml (default: auto-detect in cwd)"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Framework to use (overrides manifest)"
+      },
+      "port": {
+        "type": "string",
+        "description": "Port for the dev server (default: per-framework)"
+      }
+    },
+    "required": [],
+    "x-positional": []
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "plugin",
+      "framework",
+      "bundler",
+      "url",
+      "port"
+    ],
+    "properties": {
+      "plugin": {
+        "type": "string"
+      },
+      "framework": {
+        "type": "string"
+      },
+      "bundler": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      },
+      "port": {
+        "type": "number"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

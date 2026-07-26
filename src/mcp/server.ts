@@ -35,12 +35,24 @@ export interface ToolCallResult {
 // Child-process execution
 // ---------------------------------------------------------------------------
 
+/**
+ * The args this command takes positionally, as declared by the command itself
+ * and carried through the generated schema (`x-positional`). Undefined for
+ * third-party plugin schemas that predate it — buildArgv falls back there.
+ */
+function positionalsOf(tool?: McpToolDefinition): string[] | undefined {
+  const schema = tool?.inputSchema as { 'x-positional'?: unknown } | undefined;
+  const positional = schema?.['x-positional'];
+  return Array.isArray(positional) ? (positional as string[]) : undefined;
+}
+
 export async function executeToolCall(
   toolName:  string,
   input:     Record<string, unknown>,
   options:   McpServerOptions,
+  tool?:     McpToolDefinition,
 ): Promise<ToolCallResult> {
-  const argv   = buildArgv(toolName, input);
+  const argv   = buildArgv(toolName, input, positionalsOf(tool));
   const cliBin = options.cliBin;
   const timeoutMs = options.timeoutMs ?? 300_000;
 
@@ -223,7 +235,7 @@ async function handleRequest(
       };
     }
 
-    const result = await executeToolCall(toolName, input, options);
+    const result = await executeToolCall(toolName, input, options, toolMap.get(toolName));
 
     if (result.ok) {
       return {

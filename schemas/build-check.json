@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/build:check.json",
+  "title": "build:check",
+  "description": "Validate the local environment for the current MFE framework",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "description": "Path to mfe-manifest.yaml (default: auto-detect in cwd)"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Framework to check (overrides manifest)"
+      }
+    },
+    "required": [],
+    "x-positional": []
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "plugin",
+      "framework",
+      "bundler",
+      "checks",
+      "allPassed"
+    ],
+    "properties": {
+      "plugin": {
+        "type": "string"
+      },
+      "framework": {
+        "type": "string"
+      },
+      "bundler": {
+        "type": "string"
+      },
+      "checks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "tool",
+            "required",
+            "found",
+            "ok"
+          ],
+          "properties": {
+            "tool": {
+              "type": "string"
+            },
+            "required": {
+              "type": "string"
+            },
+            "found": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "ok": {
+              "type": "boolean"
+            },
+            "fix": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allPassed": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

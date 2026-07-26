@@ -189,4 +189,4 @@ These may be revisited when `@graphql-mesh` v1 reaches LTS status.
 - `docs/archive/planning/DEPENDENCY-PLAN.md` (in git history; archive removed from the tree, #239)
 - `docs/archive/planning/TEMPLATE-UPDATE-PLAN.md` (in git history; archive removed from the tree, #239)
 - [packages/bff-plugin/templates/package.json.ejs](../packages/bff-plugin/templates/package.json.ejs)
-- [src/codegen/UnifiedGenerator/unified-generator.ts](../src/codegen/UnifiedGenerator/unified-generator.ts)
+- [packages/codegen/src/unified-generator.ts](../packages/codegen/src/unified-generator.ts) (moved from `src/codegen/UnifiedGenerator/` by ADR-061)

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/build:prod.json",
+  "title": "build:prod",
+  "description": "Build the current MFE for production",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "description": "Path to mfe-manifest.yaml (default: auto-detect in cwd)"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Framework to use (overrides manifest)"
+      },
+      "output-dir": {
+        "type": "string",
+        "description": "Output directory for build artifacts (default: dist/)"
+      }
+    },
+    "required": [],
+    "x-positional": []
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "plugin",
+      "framework",
+      "bundler",
+      "success",
+      "artifacts",
+      "duration_ms",
+      "warnings",
+      "errors"
+    ],
+    "properties": {
+      "plugin": {
+        "type": "string"
+      },
+      "framework": {
+        "type": "string"
+      },
+      "bundler": {
+        "type": "string"
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "duration_ms": {
+        "type": "number"
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "message",
+            "category"
+          ],
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "number"
+            },
+            "column": {
+              "type": "number"
+            },
+            "message": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "syntax",
+                "type",
+                "dependency",
+                "config",
+                "runtime",
+                "unknown"
+              ]
+            },
+            "suggestion": {
+              "type": "string"
+            },
+            "code": {
+              "type": "string",
+              "description": "Compiler diagnostic code where the toolchain emits one (`TS2339`). Lets an\nagent look the failure up or match on it without parsing the message."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

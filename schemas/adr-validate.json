@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/adr:validate.json",
   "title": "adr:validate",
-  "description": "Input/output contract for seans-mfe-tool adr:validate",
+  "description": "Validate the ADR library's metadata, cross-references, and code citations (ADR-075)",
   "input": {
     "type": "object",
     "properties": {
@@ -12,10 +12,13 @@
       },
       "include-examples": {
         "type": "boolean",
-        "default": false,
-        "description": "Also scan examples/** for ADR citations"
+        "description": "Also scan examples/** for ADR citations (44 files carry pre-reflow numbers)"
       }
-    }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
   },
   "output": {
     "type": "object",
@@ -35,7 +38,20 @@
       "checked": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "frontmatter-valid",
+            "metadata-complete",
+            "reference-resolves",
+            "reference-gloss-matches",
+            "supersession-bidirectional",
+            "implemented-by-exists",
+            "code-cites-ratified-adr",
+            "register-complete",
+            "accepted-work-is-tracked",
+            "implemented-claims-evidence",
+            "finished-work-says-so"
+          ]
         }
       },
       "issues": {
@@ -49,13 +65,28 @@
           ],
           "properties": {
             "rule": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "frontmatter-valid",
+                "metadata-complete",
+                "reference-resolves",
+                "reference-gloss-matches",
+                "supersession-bidirectional",
+                "implemented-by-exists",
+                "code-cites-ratified-adr",
+                "register-complete",
+                "accepted-work-is-tracked",
+                "implemented-claims-evidence",
+                "finished-work-says-so"
+              ]
             },
             "file": {
-              "type": "string"
+              "type": "string",
+              "description": "Repo-relative path of the file the issue is in."
             },
             "line": {
-              "type": "number"
+              "type": "number",
+              "description": "1-indexed line, when the finding is anchored to one."
             },
             "message": {
               "type": "string"
@@ -75,6 +106,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

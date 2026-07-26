@@ -2,36 +2,46 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/remote:init.json",
   "title": "remote:init",
-  "description": "Input/output contract for seans-mfe-tool remote:init",
+  "description": "Initialize a new DSL-first remote MFE project",
   "input": {
     "type": "object",
-    "required": [
-      "name"
-    ],
     "properties": {
       "name": {
-        "type": "string"
+        "type": "string",
+        "description": "Remote MFE name"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.",
+        "default": "react"
       },
       "port": {
         "type": "string",
-        "default": "3001"
+        "description": "Port number for the remote MFE (default: per-framework)"
       },
       "template": {
-        "type": "string"
+        "type": "string",
+        "description": "Path to DSL template file"
       },
       "skip-install": {
         "type": "boolean",
-        "default": false
+        "description": "Skip npm install"
       },
       "force": {
         "type": "boolean",
-        "default": false
+        "description": "Overwrite existing files"
       },
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Preview changes without writing"
       }
-    }
+    },
+    "required": [
+      "name"
+    ],
+    "x-positional": [
+      "name"
+    ]
   },
   "output": {
     "type": "object",
@@ -94,6 +104,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

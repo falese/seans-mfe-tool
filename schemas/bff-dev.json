@@ -2,15 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/bff:dev.json",
   "title": "bff:dev",
-  "description": "Input/output contract for seans-mfe-tool bff:dev",
+  "description": "Start BFF development server with hot reload",
   "input": {
     "type": "object",
     "properties": {
       "manifest": {
         "type": "string",
+        "description": "Path to mfe-manifest.yaml",
         "default": "mfe-manifest.yaml"
       }
-    }
+    },
+    "required": [],
+    "x-positional": []
   },
   "output": {
     "type": "object",
@@ -30,6 +33,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

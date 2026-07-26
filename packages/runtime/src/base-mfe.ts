@@ -59,10 +59,6 @@ export interface ManifestParser {
   parse(manifest: DSLManifest): Record<string, CapabilityLifecycleConfig | null | undefined>;
 }
 
-export interface LifecycleExecutor {
-  execute(hook: LifecycleHook, context: Context, phase: string): Promise<void>;
-}
-
 export interface ErrorHandler {
   handle(error: Error, context: Context): void;
 }
@@ -73,7 +69,6 @@ export interface BaseMFEDependencies {
   telemetry?: TelemetryService;
   stateValidator?: StateValidator;
   manifestParser?: ManifestParser;
-  lifecycleExecutor?: LifecycleExecutor;
   errorHandler?: ErrorHandler;
   /** graphql-transport-ws connection to the daemon, shared with the Renderer's messages subscription */
   wsClient?: DaemonWebSocketClient;
@@ -452,16 +447,12 @@ export abstract class BaseMFE {
     context.phase = phase;
     context.capability = capability;
 
-    // DI: allow lifecycle executor override
-    if (this.deps?.lifecycleExecutor) {
-      for (const hookEntry of hooks) {
-        await this.deps.lifecycleExecutor.execute(hookEntry, context, phase);
-      }
-      this._lifecycleStack.pop();
-      return;
-    }
-
-    // Default: Execute hooks sequentially
+    // Hooks run sequentially through executeHookEntry -> executeHook, which is
+    // where ADR-002 lives: handler arrays (REQ-045), `contained` containment
+    // and `mandatory` (REQ-042), main-phase propagation, and telemetry on every
+    // failure. Substituting execution happens BELOW this, at
+    // `deps.customHandlers` in invokeHandler, so a substitute cannot sidestep
+    // any of it (ADR-079).
     for (const hookEntry of hooks) {
       await this.executeHookEntry(hookEntry, context, phase);
     }

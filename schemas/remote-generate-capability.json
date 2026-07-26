@@ -2,26 +2,29 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/remote:generate:capability.json",
   "title": "remote:generate:capability",
-  "description": "Input/output contract for seans-mfe-tool remote:generate:capability",
+  "description": "Generate a single capability from mfe-manifest.yaml",
   "input": {
     "type": "object",
-    "required": [
-      "name"
-    ],
     "properties": {
       "name": {
         "type": "string",
-        "description": "Capability name"
+        "description": "Capability name to generate"
       },
       "dry-run": {
         "type": "boolean",
-        "default": false
+        "description": "Show what would be generated without writing"
       },
       "force": {
         "type": "boolean",
-        "default": false
+        "description": "Overwrite existing files"
       }
-    }
+    },
+    "required": [
+      "name"
+    ],
+    "x-positional": [
+      "name"
+    ]
   },
   "output": {
     "type": "object",
@@ -90,6 +93,7 @@
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,

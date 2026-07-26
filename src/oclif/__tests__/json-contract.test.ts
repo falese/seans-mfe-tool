@@ -289,15 +289,18 @@ describe('JSON contract: schemas catalog', () => {
     commands = catalog.commands as Array<Record<string, unknown>>;
   });
 
-  it('includes all 9 expected command schemas', () => {
-    const names = new Set(commands.map((c) => c.name as string));
-    for (const expected of [
-      'deploy', 'api',
-      'bff:init', 'bff:build', 'bff:dev', 'bff:validate',
-      'remote:init', 'remote:generate', 'remote:generate:capability',
-    ]) {
-      expect(names).toContain(expected);
-    }
+  // Derived from schemas/ rather than hardcoded: the previous version asserted
+  // "all 9 expected command schemas" and went stale silently as the catalog
+  // grew past it. Per-command coverage is swept in command-conformance.test.ts.
+  it('exposes every schema on disk', () => {
+    const onDisk = fs
+      .readdirSync(path.resolve(__dirname, '../../../schemas'))
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => path.basename(f, '.json').replace(/-/g, ':'))
+      .sort();
+
+    const names = commands.map((c) => c.name as string).sort();
+    expect(names).toEqual(onDisk);
   });
 
   it('each schema entry has name, input, output, errorCodes', () => {

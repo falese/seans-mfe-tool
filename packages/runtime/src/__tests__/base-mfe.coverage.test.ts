@@ -111,36 +111,75 @@ describe('BaseMFE error path coverage for public capability methods', () => {
     expect(spy).toHaveBeenCalledWith('emit', 'error', expect.objectContaining({ error: expect.any(Error) }));
   });
 });
-it('should use DI lifecycleExecutor for all hook entries and skip default execution', async () => {
+// The lifecycleExecutor DI seam was deleted (ADR-079). What it was reaching for
+// — substituting hook execution — is `deps.customHandlers`, which sits below
+// executeHook and therefore inside ADR-002's guarantees rather than around them.
+it('runs every hook entry in a phase through customHandlers, in declared order', async () => {
   const manifest = {
     name: 'di-lifecycle-mfe',
     capabilities: [{
       emit: {
         type: 'platform',
         lifecycle: {
-          before: [ { emit: { handler: 'platform.emit' } } ],
-          main: [ { emit: { handler: 'platform.emit' } }, { emit: { handler: 'platform.emit2' } } ],
-          after: [ { emit: { handler: 'platform.emit' } } ]
+          before: [ { first: { handler: 'custom.one' } } ],
+          main: [ { first: { handler: 'custom.one' } }, { second: { handler: 'custom.two' } } ],
+          after: [ { first: { handler: 'custom.one' } } ]
         }
       }
     }]
   };
-  const calls: Array<{hookEntry: any, phase: string}> = [];
-  const lifecycleExecutor = {
-    async execute(hookEntry: any, context: any, phase: string) {
-      calls.push({ hookEntry, phase });
-    }
-  };
-  // Use only manifest for TestMFE constructor, set lifecycleExecutor after
+  const calls: string[] = [];
   const mfeDI = new TestMFE(manifest);
-  // Use DI setter for lifecycleExecutor
-  (mfeDI as any).deps = { lifecycleExecutor };
+  (mfeDI as any).deps = {
+    customHandlers: {
+      'custom.one': async () => { calls.push('one'); },
+      'custom.two': async () => { calls.push('two'); },
+    },
+  };
+
   const context = { timestamp: new Date(), requestId: 'di-lifecycle' };
   await mfeDI['executeLifecycle']('emit', 'main', context);
-  expect(calls.length).toBe(2);
-  expect(calls[0].phase).toBe('main');
-  expect(calls[1].phase).toBe('main');
+
+  // Both entries of the `main` phase ran, in manifest order — and only `main`.
+  expect(calls).toEqual(['one', 'two']);
 });
+
+it('keeps ADR-002 containment when execution is substituted', async () => {
+  // The deleted seam bypassed this entirely: a substitute executor received a
+  // raw hook entry and had to re-implement `contained` itself. Through
+  // customHandlers the platform still owns it.
+  const manifest = {
+    name: 'contained-mfe',
+    capabilities: [{
+      emit: {
+        type: 'platform',
+        lifecycle: {
+          before: [
+            { boom: { handler: 'custom.boom', contained: true } },
+            { after: { handler: 'custom.after' } },
+          ],
+        },
+      },
+    }],
+  };
+  const calls: string[] = [];
+  const mfe = new TestMFE(manifest);
+  (mfe as any).deps = {
+    customHandlers: {
+      'custom.boom': async () => { calls.push('boom'); throw new Error('contained failure'); },
+      'custom.after': async () => { calls.push('after'); },
+    },
+  };
+
+  const context = { timestamp: new Date(), requestId: 'contained' };
+  // `contained: true` in a non-main phase must not propagate...
+  await expect(
+    mfe['executeLifecycle']('emit', 'before', context),
+  ).resolves.toBeUndefined();
+  // ...and must not stop the following hook.
+  expect(calls).toEqual(['boom', 'after']);
+});
+
 // ...existing code...
 
 // ...existing code...

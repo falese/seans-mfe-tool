@@ -16,7 +16,16 @@
 **Why it's AI-native.** Agents operate in sandboxed, registry-blocked, TTY-less environments. Designing the agent profile as a first-class mode — rather than scraping human output — means the agent never has to interpret chalk-colored text or answer interactive prompts.
 
 **Evidence.**
-- ADR-033 `enforcer-config`: `cli-agent-profile-flags: [--json, --no-interactive, --dry-run]`; `exit-codes: [0, 2, 64, 65, 66, 69, 70, 77, 124]`; `ownership-markers: [GENERATED, DEVELOPER-OWNED]`.
+- > ⚠️ **Correction (2026-07-26).** This row originally cited an ADR-033 `enforcer-config` block
+  > listing `cli-agent-profile-flags`, `exit-codes`, and `ownership-markers`. **No such block
+  > exists** — ADR-033's frontmatter carries `enforcement: convention` and nothing else, and
+  > `contract-alignment-pass.md:89` analyses the same non-existent field. At the time of scoring,
+  > `--no-interactive` did not exist anywhere in `src/` or `packages/`. See
+  > [The Two-Headed Giant, Re-Derived §4](./two-headed-giant-re-derivation.md#4-a-correction-to-this-reviews-own-scorecard).
+  > The flag now exists and is enforced by a registry sweep (ADR-077).
+- `packages/oclif-base/src/BaseCommand.ts` — `baseFlags` declares `json` and `interactive`
+  (`allowNo`), inherited by every command; exit codes in `packages/contracts/src/envelope.ts`.
+- `src/oclif/__tests__/command-conformance.test.ts` — sweeps the command registry for both flags.
 - README documents `--json` on every command and `--dry-run` on every mutating command.
 
 ### 1.2 Structured output contract — `CommandResult<T>` (ADR-018)
@@ -71,10 +80,10 @@ Eight weighted dimensions. Each scored **0–5** against current `main`. **Weigh
 |---|---|:--:|:--:|:--:|---|
 | D1 | Machine-readable output (single-line envelope) | 20% | 5 | 20.0% | ADR-018; `envelope.ts` |
 | D2 | Structured, branchable errors + exit codes | 15% | 5 | 15.0% | ADR-017; `error-classifier.ts` |
-| D3 | Non-interactive / sandbox operation (`--no-interactive`, `--dry-run`) | 15% | 5 | 15.0% | ADR-033 flags |
+| D3 | Non-interactive / sandbox operation (`--no-interactive`, `--dry-run`) | 15% | 5 | 15.0% | ⚠️ **Overstated when scored** — `--no-interactive` did not exist; `--json` implied it and `--dry-run` was per-command. Honest score at review time ≈3/5. The flag now exists (ADR-077 §3), so 5/5 is accurate as of 2026-07-26 |
 | D4 | Agent tool exposure (MCP server + isolation) | 15% | 4 | 12.0% | ADR-019; `tool-registry.ts` |
 | D5 | Tool/schema discoverability (generated schemas, federation) | 10% | 4 | 8.0% | `schemas/*.json`; README MCP |
-| D6 | Auditability for human takeover (ownership markers, `system:map`, audit log) | 10% | 2 | 4.0% | ADR-033 (`explain`/`system:map`/audit log are open enhancements #145–147) |
+| D6 | Auditability for human takeover (ownership markers, `system:map`, audit log) | 10% | 2 | 4.0% | ⚠️ **Re-derive.** Scored against markers + an audit log that were never built and are now withdrawn (ADR-077 §1). Ownership is `overwrite` + five drift gates — strong. The missing half is legibility (`explain`, `system:map`). See [§4](./two-headed-giant-re-derivation.md#4-a-correction-to-this-reviews-own-scorecard) |
 | D7 | Reproducibility / determinism of generation | 10% | 3 | 6.0% | ADR-043, ADR-011; codegen docs thin (Pillar 3) |
 | D8 | Agent-facing documentation (playbooks, examples) | 5% | 2 | 1.0% | MCP playbook is open (#221); few agent examples |
 | | **Total** | **100%** | | **81.0%** | |

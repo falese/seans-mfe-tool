@@ -17,55 +17,70 @@
 
 ---
 
-## Session: 2026-05-24
+## Session: 2026-07-26
 
 ### Active issue(s)
 
-**ADR-036 Phase 4 close-out — [#181](https://github.com/falese/seans-mfe-tool/issues/181), [#185](https://github.com/falese/seans-mfe-tool/issues/185), [#182](https://github.com/falese/seans-mfe-tool/issues/182)**
+**Epic [#139](https://github.com/falese/seans-mfe-tool/issues/139) — agent contract completion**,
+re-derived from measured friction rather than the April spec. PR
+[#334](https://github.com/falese/seans-mfe-tool/pull/334).
 
-Validated at session start: #180 (contracts exports) and #172 (build:check) were already done and closed.
+Split out during the session: [#329](https://github.com/falese/seans-mfe-tool/issues/329)
+(`platform:init`), [#330](https://github.com/falese/seans-mfe-tool/issues/330) (one
+fleet-description engine), [#331](https://github.com/falese/seans-mfe-tool/issues/331)–[#333](https://github.com/falese/seans-mfe-tool/issues/333) (defects found en route).
+Closed as superseded or withdrawn: #142, #145, #149.
 
 ### Scope
 
-#181: `FrameworkSchema` / `BundlerSchema` in `src/dsl/schema.ts` changed from `z.enum` to `z.string().min(1)`. `KNOWN_FRAMEWORKS` / `KNOWN_BUNDLERS` constants exported for use in warnings. `parseManifestFile` in `src/dsl/parser.ts` emits a stderr warning (not error) for unknown values.
+Re-scoped the epic against three months of shipped work, then implemented what survived:
 
-#185: `remote:init --framework` flag drops the hardcoded `options: ['react', 'angular']` list. Any string accepted by oclif; unknown frameworks fail at `loadFrameworkPlugin()` with `ValidationError`. Type cast `as 'react' | 'angular'` removed from `init.ts`.
+- `--no-interactive` as a `baseFlag`, separable from `--json` (it did not exist at all)
+- typed sysexits codes on every failure path, not only under `--json`
+- MCP tool catalog **derived** from the oclif registry — inputs from flags/args, outputs from each
+  command's declared result type via the TypeScript compiler
+- registry-driven conformance sweep, plus response validation of 14 of 17 commands against their
+  published schemas
+- build output parsed into classified `BuildError`s for rspack, tsc and `ng`
+- `strict: true` across every tsconfig
+- deleted the `lifecycleExecutor` DI seam (ADR-079)
 
-#182: New `docs/framework-plugin-authoring.md` — full guide for third-party plugin authors. Covers all abstract methods, VueVitePlugin skeleton, template directory conventions, npm package structure, and publishing steps. Link added to `README.md`.
-
-NOT changing: existing plugin implementations, build commands, deploy logic, abc-kids examples.
-
-**Acceptance criteria:**
-- `FrameworkSchema.parse('svelte')` passes without error
-- Unknown framework in manifest → warning on stderr, no schema error
-- `remote:init --framework vue` → `ValidationError` from loader (not oclif)
-- `docs/framework-plugin-authoring.md` exists with vue-vite skeleton
-- All existing tests pass (2 pre-existing failures in cli-workflow + codegen-workflow are unrelated)
+NOT changing: the `CommandResult<T>` envelope (ADR-018), the error taxonomy (ADR-017), the exit
+code table, or lifecycle semantics.
 
 ### ADR check
 
 | ADR | Title | Governs |
 |-----|-------|---------|
-| ADR-036 | Framework plugin pattern (`BaseFrameworkPlugin`) | All Phase 4 issues |
+| ADR-077 | Two-headed giant, re-derived | The whole epic; replaces ADR-033's implementation plan |
+| ADR-078 | Control plane in the platform | #329, split out — Proposed |
+| ADR-079 | One execution-substitution seam | Deleting `lifecycleExecutor` |
+| PDR-008 | Control plane is platform, not plugin | Narrows PDR-004 for the daemon only |
+| ADR-018 / ADR-017 / ADR-030 | Envelope, error taxonomy, classification | Enforced, not changed |
+| ADR-002 | Lifecycle hook execution model | The guarantees ADR-079 keeps inside `BaseMFE` |
 
 ### Spec context
 
-From ADR-036:
-> Third-party plugins live at `@seans-mfe/framework-<name>` and are resolved by `loadFrameworkPlugin()`.
-> The schema must accept arbitrary framework/bundler strings so plugin authors don't need to fork the core.
+From ADR-074, the principle the session kept applying:
+
+> Generating it removes the disagreement rather than checking for it.
+
+Applied to the MCP catalog: it was a hand-written literal and had drifted every way a literal can
+— commands missing (the whole `build:*` surface), flags advertised that do not exist (eight on
+`deploy`), flags omitted that do (`remote:init --framework`, so no agent could scaffold Angular
+over MCP), and positionals guessed.
 
 ### Current branch
 
-`claude/phase4-adr071-close-out` — PR #188 open against `main`.
+`claude/issue-139-strategy-review-nr90y1` — PR #334 open against `main`.
 
-### Key files modified this session
+### Method note worth carrying forward
 
-| File | Change |
-|---|---|
-| `src/dsl/schema.ts` | `FrameworkSchema`/`BundlerSchema` → open string; `KNOWN_*` constants |
-| `src/dsl/parser.ts` | `warnUnknownPluginValues()` added to `parseManifestFile` |
-| `src/commands/remote/init.ts` | Removed `options:[]` list + type cast |
-| `src/dsl/__tests__/validator.test.ts` | 2 tests flipped to expect acceptance of unknown values |
-| `src/commands/__tests__/remote-init.test.ts` | New test: unknown framework → `ValidationError` |
-| `docs/framework-plugin-authoring.md` | New — full authoring guide |
-| `README.md` | Link to authoring guide |
+Every parser in this session was written against **captured real output**, not documented formats,
+and that decision paid for itself twice. rspack and tsc write diagnostics to **stdout**; `ng`
+writes to **stderr** and colours them even when piped, so ANSI escapes sit between the file, line
+and code. Hand-written cases based on the documented format were wrong for `ng` and passed anyway
+until real output replaced them.
+
+The same held for schemas: deriving them from declared types caught contract drift, and running
+the commands caught a defect in the derivation itself (`strict: false` collapsing `string | null`).
+Neither check subsumes the other.

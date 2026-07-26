@@ -6,6 +6,8 @@
  * Refs #102 (B3), #107 (B8 adds MutatingResult mixin)
  */
 
+import type { BuildError } from '@seans-mfe/contracts';
+
 // BFF result types live in @falese/bff-plugin (migrated in plugin extraction epic)
 export type {
   BffInitResult,
@@ -126,14 +128,11 @@ export interface BuildProdResult {
   artifacts: string[];
   duration_ms: number;
   warnings: string[];
-  errors: Array<{
-    file?: string;
-    line?: number;
-    column?: number;
-    message: string;
-    category: string;
-    suggestion?: string;
-  }>;
+  // `BuildError` itself, not a copy of its fields. The inline restatement this
+  // replaces had already fallen behind: no `code`, and `category: string`
+  // instead of the union, so the published schema advertised a free-form
+  // string where the contract has six known values.
+  errors: BuildError[];
 }
 
 export interface MfeValidateResult {

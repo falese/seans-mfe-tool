@@ -269,8 +269,24 @@ async function mountModuleFederation(
     mountPoint.id = `layout-mfe-${experience.id}`;
     slot.appendChild(mountPoint);
 
-    const container = await loadRemoteContainer(output.remoteEntryUrl, output.scope);
-    const factory = await container.get(output.module);
+    // These arrive from a control-plane rule, so they are optional on the wire
+    // and can genuinely be absent. Without this the undefined was passed
+    // straight through and surfaced as `script.src = "undefined"` — a 404 on a
+    // nonsense URL rather than a statement of what the rule is missing.
+    const { remoteEntryUrl, scope, module } = output;
+    if (!remoteEntryUrl || !scope || !module) {
+      throw new Error(
+        `Cannot mount MFE for experience "${experience.id}": the placement rule is missing ` +
+        [
+          !remoteEntryUrl && 'remoteEntryUrl',
+          !scope && 'scope',
+          !module && 'module',
+        ].filter(Boolean).join(', '),
+      );
+    }
+
+    const container = await loadRemoteContainer(remoteEntryUrl, scope);
+    const factory = await container.get(module);
     const raw = factory();
     const exports: RemoteModuleExports =
       raw.handles || raw.mount || raw.mfe ? raw : raw.default ?? raw;

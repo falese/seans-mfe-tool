@@ -30,10 +30,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build workspace packages
-        run: |
-          ./node_modules/.bin/tsc -p packages/contracts/tsconfig.json
-          ./node_modules/.bin/tsc -p packages/oclif-base/tsconfig.json
+      # Full build, not a subset. This step used to compile only
+      # packages/contracts and packages/oclif-base, leaving `dist/`, the oclif
+      # manifest, and five workspace packages absent — so `node bin/run.js`
+      # resolved ZERO commands ("command adr:status not found") or crashed in
+      # findCommand with MODULE_NOT_FOUND. Verified by reproducing that exact
+      # build state locally: even `schemas --json` returns 0 bytes.
+      #
+      # The workaround had been to exclude the tests that noticed:
+      # json-contract.test.ts and remote-mfe.integration.test.ts were in
+      # --testPathIgnorePatterns below. Both pass against a built CLI, so the
+      # exclusions are gone and the build is real.
+      #
+      # This is what the local-test runbook tells a human to run, so it is what
+      # CI should run.
+      - name: Build the CLI
+        run: npm run build
 
       - name: Run all tests with coverage
         run: |
@@ -42,8 +54,6 @@ jobs:
             --testPathIgnorePatterns="/examples/" \
             --testPathIgnorePatterns="NodemonServer.test.js" \
             --testPathIgnorePatterns="create-shell.test.js" \
-            --testPathIgnorePatterns="json-contract.test.ts" \
-            --testPathIgnorePatterns="remote-mfe.integration.test.ts" \
             --json --outputFile=/tmp/jest-results.json
           JEST_EXIT=$?
           exit $JEST_EXIT
@@ -166,13 +176,19 @@ jobs:
           retention-days: 7
 
   doc-links:
-    # Tier-1 docs link hygiene (cross-reference-standards.md). Report-only for
-    # now — a clean baseline must be established (broken links tracked by G15)
-    # before this is flipped to a required gate. Refs #231 (R5), #222.
+    # Tier-1 docs link hygiene (cross-reference-standards.md). Refs #231 (R5),
+    # #222, #333.
     #
-    # The step surfaces findings as a GitHub warning annotation but does not
-    # fail the check yet. To flip to a required gate once G15 is cleared,
-    # replace the step body with `run: node scripts/check-doc-links.js`.
+    # Was report-only pending a clean baseline (G15). The baseline is clean —
+    # 972 relative links, 0 broken — so this is now a required gate, per the
+    # flip condition this job was written with. Eight of the sixteen were paths
+    # that moved (`architecture-decisions.md` → the generated `spec.md#adr-index`,
+    # `unified-generator.ts` → `packages/codegen/` under ADR-061); the other
+    # eight pointed at files that no longer exist and became prose naming the
+    # successor.
+    #
+    # Report-only was the right call while the baseline was dirty and the wrong
+    # one afterwards: a warning nobody has to act on is how sixteen accumulated.
     runs-on: ubuntu-latest
 
     steps:
@@ -183,11 +199,8 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Check relative doc links resolve (report-only)
-        run: |
-          if ! node scripts/check-doc-links.js; then
-            echo "::warning title=Doc link hygiene::Broken relative doc links found (report-only; tracked by G15). Run 'npm run docs:check-links' locally."
-          fi
+      - name: Check relative doc links resolve
+        run: node scripts/check-doc-links.js
 
   adr-governance:
     # Post a governance summary on every PR: which decisions it changes, which

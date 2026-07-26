@@ -171,9 +171,13 @@ beforeEach(() => {
 // =============================================================================
 
 describe('BaseMFE State Machine (REQ-056)', () => {
-        it('should delegate lifecycle execution to DI lifecycleExecutor', async () => {
+        // Execution substitution happens at `deps.customHandlers` (ADR-079), the
+        // seam every generated MFE already uses. It sits BELOW executeHook, so a
+        // substitute cannot bypass ADR-002 — unlike the deleted lifecycleExecutor,
+        // which received a raw hook entry and skipped containment and telemetry.
+        it('routes lifecycle hooks through the customHandlers seam', async () => {
           const manifest = { name: 'test', version: '1.0.0', type: 'tool', capabilities: [{ load: { lifecycle: { before: [{ hook: { handler: 'custom.customHandler' } }] } } }] };
-          const lifecycleExecutor = { execute: jest.fn().mockResolvedValue(undefined) };
+          const customHandler = jest.fn().mockResolvedValue(undefined);
           class Test extends BaseMFE {
             protected async doLoad() { return { status: 'loaded', timestamp: new Date() }; }
             protected async doRender() { return { status: 'rendered', timestamp: new Date() }; }
@@ -185,13 +189,11 @@ describe('BaseMFE State Machine (REQ-056)', () => {
             protected async doQuery() { return { data: {} }; }
             protected async doEmit() { return { emitted: true }; }
           }
-          const test = new Test(manifest, { lifecycleExecutor });
+          const test = new Test(manifest, { customHandlers: { 'custom.customHandler': customHandler } });
           await test['executeLifecycle']('load', 'before', { timestamp: new Date(), requestId: 'x' });
-          expect(lifecycleExecutor.execute).toHaveBeenCalledWith(
-            expect.any(Object),
-            expect.any(Object),
-            'before'
-          );
+          expect(customHandler).toHaveBeenCalledTimes(1);
+          // The handler receives the shared Context, not a raw manifest record.
+          expect(customHandler.mock.calls[0][0]).toMatchObject({ phase: 'before', capability: 'load' });
         });
       it('should prevent re-entrant lifecycle execution', async () => {
         const manifest = { name: 'test', version: '1.0.0', type: 'tool', capabilities: [{ load: { lifecycle: { before: [] } } }] };

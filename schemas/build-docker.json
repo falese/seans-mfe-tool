@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/build:docker.json",
+  "title": "build:docker",
+  "description": "Generate a Dockerfile for the current MFE from the framework plugin",
+  "input": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "string",
+        "description": "Path to mfe-manifest.yaml (default: auto-detect in cwd)"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Framework to use (overrides manifest)"
+      },
+      "output": {
+        "type": "string",
+        "description": "Output path for the generated Dockerfile (default: ./Dockerfile.generated)"
+      },
+      "tag": {
+        "type": "string",
+        "description": "Docker image tag for --build (default: <cwd-basename>:latest)"
+      },
+      "build": {
+        "type": "boolean",
+        "description": "Run docker build after generating the Dockerfile"
+      }
+    },
+    "required": [],
+    "x-positional": []
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "plugin",
+      "framework",
+      "bundler",
+      "dockerfilePath",
+      "built"
+    ],
+    "properties": {
+      "plugin": {
+        "type": "string"
+      },
+      "framework": {
+        "type": "string"
+      },
+      "bundler": {
+        "type": "string"
+      },
+      "dockerfilePath": {
+        "type": "string"
+      },
+      "imageTag": {
+        "type": "string"
+      },
+      "built": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

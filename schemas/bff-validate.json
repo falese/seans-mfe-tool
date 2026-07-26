@@ -2,21 +2,26 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/bff:validate.json",
   "title": "bff:validate",
-  "description": "Input/output contract for seans-mfe-tool bff:validate",
+  "description": "Validate BFF configuration without building",
   "input": {
     "type": "object",
     "properties": {
       "manifest": {
         "type": "string",
+        "description": "Path to mfe-manifest.yaml",
         "default": "mfe-manifest.yaml"
       }
-    }
+    },
+    "required": [],
+    "x-positional": []
   },
   "output": {
     "type": "object",
     "required": [
       "valid",
-      "issues"
+      "issues",
+      "meshConfig",
+      "manifest"
     ],
     "properties": {
       "valid": {
@@ -47,12 +52,676 @@
           },
           "additionalProperties": false
         }
+      },
+      "meshConfig": {
+        "type": "object",
+        "required": [
+          "sources",
+          "serve"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "handler"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "handler": {
+                  "type": "object",
+                  "required": [
+                    "openapi"
+                  ],
+                  "properties": {
+                    "openapi": {
+                      "type": "object",
+                      "required": [
+                        "source"
+                      ],
+                      "properties": {
+                        "source": {
+                          "type": "string"
+                        },
+                        "operationHeaders": {
+                          "type": "object"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "transforms": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "prefix": {
+                        "type": "object",
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "includeRootOperations": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rename": {
+                        "type": "object"
+                      },
+                      "filterSchema": {
+                        "type": "object",
+                        "required": [
+                          "filters"
+                        ],
+                        "properties": {
+                          "filters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "encapsulate": {
+                        "type": "object",
+                        "required": [
+                          "applyTo"
+                        ],
+                        "properties": {
+                          "applyTo": {
+                            "type": "object",
+                            "required": [
+                              "query",
+                              "mutation"
+                            ],
+                            "properties": {
+                              "query": {
+                                "type": "boolean"
+                              },
+                              "mutation": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "namingConvention": {
+                        "type": "object",
+                        "required": [
+                          "typeNames",
+                          "fieldNames"
+                        ],
+                        "properties": {
+                          "typeNames": {
+                            "type": "string"
+                          },
+                          "fieldNames": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "transforms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "prefix": {
+                  "type": "object",
+                  "required": [
+                    "value"
+                  ],
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "includeRootOperations": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "rename": {
+                  "type": "object"
+                },
+                "filterSchema": {
+                  "type": "object",
+                  "required": [
+                    "filters"
+                  ],
+                  "properties": {
+                    "filters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "encapsulate": {
+                  "type": "object",
+                  "required": [
+                    "applyTo"
+                  ],
+                  "properties": {
+                    "applyTo": {
+                      "type": "object",
+                      "required": [
+                        "query",
+                        "mutation"
+                      ],
+                      "properties": {
+                        "query": {
+                          "type": "boolean"
+                        },
+                        "mutation": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "namingConvention": {
+                  "type": "object",
+                  "required": [
+                    "typeNames",
+                    "fieldNames"
+                  ],
+                  "properties": {
+                    "typeNames": {
+                      "type": "string"
+                    },
+                    "fieldNames": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "plugins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "responseCache": {
+                  "type": "object",
+                  "required": [
+                    "ttl"
+                  ],
+                  "properties": {
+                    "ttl": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "rateLimit": {
+                  "type": "object",
+                  "required": [
+                    "config"
+                  ],
+                  "properties": {
+                    "config": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "field",
+                          "max",
+                          "window"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string"
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "max": {
+                            "type": "number"
+                          },
+                          "window": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "prometheus": {
+                  "type": "object"
+                },
+                "depthLimit": {
+                  "type": "object",
+                  "required": [
+                    "maxDepth"
+                  ],
+                  "properties": {
+                    "maxDepth": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "csrf": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "serve": {
+            "type": "object",
+            "required": [
+              "endpoint",
+              "playground"
+            ],
+            "properties": {
+              "endpoint": {
+                "type": "string"
+              },
+              "playground": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "manifest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "sources"
+            ],
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "handler"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "handler": {
+                      "type": "object",
+                      "required": [
+                        "openapi"
+                      ],
+                      "properties": {
+                        "openapi": {
+                          "type": "object",
+                          "required": [
+                            "source"
+                          ],
+                          "properties": {
+                            "source": {
+                              "type": "string"
+                            },
+                            "operationHeaders": {
+                              "type": "object"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "transforms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "prefix": {
+                            "type": "object",
+                            "required": [
+                              "value"
+                            ],
+                            "properties": {
+                              "value": {
+                                "type": "string"
+                              },
+                              "includeRootOperations": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "rename": {
+                            "type": "object"
+                          },
+                          "filterSchema": {
+                            "type": "object",
+                            "required": [
+                              "filters"
+                            ],
+                            "properties": {
+                              "filters": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "encapsulate": {
+                            "type": "object",
+                            "required": [
+                              "applyTo"
+                            ],
+                            "properties": {
+                              "applyTo": {
+                                "type": "object",
+                                "required": [
+                                  "query",
+                                  "mutation"
+                                ],
+                                "properties": {
+                                  "query": {
+                                    "type": "boolean"
+                                  },
+                                  "mutation": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "namingConvention": {
+                            "type": "object",
+                            "required": [
+                              "typeNames",
+                              "fieldNames"
+                            ],
+                            "properties": {
+                              "typeNames": {
+                                "type": "string"
+                              },
+                              "fieldNames": {
+                                "type": "string"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "transforms": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "prefix": {
+                      "type": "object",
+                      "required": [
+                        "value"
+                      ],
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "includeRootOperations": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "rename": {
+                      "type": "object"
+                    },
+                    "filterSchema": {
+                      "type": "object",
+                      "required": [
+                        "filters"
+                      ],
+                      "properties": {
+                        "filters": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "encapsulate": {
+                      "type": "object",
+                      "required": [
+                        "applyTo"
+                      ],
+                      "properties": {
+                        "applyTo": {
+                          "type": "object",
+                          "required": [
+                            "query",
+                            "mutation"
+                          ],
+                          "properties": {
+                            "query": {
+                              "type": "boolean"
+                            },
+                            "mutation": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "namingConvention": {
+                      "type": "object",
+                      "required": [
+                        "typeNames",
+                        "fieldNames"
+                      ],
+                      "properties": {
+                        "typeNames": {
+                          "type": "string"
+                        },
+                        "fieldNames": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "plugins": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "responseCache": {
+                      "type": "object",
+                      "required": [
+                        "ttl"
+                      ],
+                      "properties": {
+                        "ttl": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "rateLimit": {
+                      "type": "object",
+                      "required": [
+                        "config"
+                      ],
+                      "properties": {
+                        "config": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "field",
+                              "max",
+                              "window"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "field": {
+                                "type": "string"
+                              },
+                              "max": {
+                                "type": "number"
+                              },
+                              "window": {
+                                "type": "string"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "prometheus": {
+                      "type": "object"
+                    },
+                    "depthLimit": {
+                      "type": "object",
+                      "required": [
+                        "maxDepth"
+                      ],
+                      "properties": {
+                        "maxDepth": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "csrf": {
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "serve": {
+                "type": "object",
+                "required": [
+                  "endpoint",
+                  "playground"
+                ],
+                "properties": {
+                  "endpoint": {
+                    "type": "string"
+                  },
+                  "playground": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "mockSwitch": {
+                "type": "object",
+                "required": [
+                  "enabled"
+                ],
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Demo-mode live/mock switch (ADR-052)."
+              },
+              "generatedFrom": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "openapi": {
+                      "type": "string"
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "description": "Provenance of a generated `data:` block (ADR-011)."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": true
       }
     },
     "additionalProperties": false
   },
   "errorCodes": [
     0,
+    1,
     2,
     64,
     65,
