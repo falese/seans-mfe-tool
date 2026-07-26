@@ -19,6 +19,7 @@ implemented-by:
   - src/mcp/sources/local.ts
   - src/oclif/schema-derivation.ts
   - src/oclif/type-to-schema.ts
+  - packages/contracts/src/build-output-parser.ts
   - scripts/generate-schemas.ts
   - src/oclif/__tests__/command-conformance.test.ts
 verified-by:
@@ -28,6 +29,8 @@ verified-by:
   - src/mcp/__tests__/local-source.test.ts
   - src/mcp/__tests__/build-argv.test.ts
   - src/oclif/__tests__/type-to-schema.test.ts
+  - src/oclif/__tests__/output-schema-conformance.test.ts
+  - packages/contracts/src/__tests__/build-output-parser.test.ts
 tracked-by: ["#139"]
 summary: >-
   ADR-033's framing stands; its implementation table does not. The ownership half is withdrawn
@@ -172,7 +175,36 @@ Three inputs are transport-owned and never appear in a schema: `--json` (appende
 call; the envelope depends on it), `--interactive` (MCP is non-interactive by construction), and
 `cwd` (the reserved execution argument the registry injects, #279).
 
-### 6. The epic splits
+### 6. Build failures are classified, and read from the right stream
+
+`BuildError` and the `build:prod` plumbing have existed since ADR-036. Nothing ever produced a
+populated one — both framework plugins returned
+`[{ message: (err as {stderr?: string}).stderr ?? '', category: 'unknown' }]`.
+
+That is worse than an unparsed blob, because **rspack and tsc both write diagnostics to stdout**.
+Verified against the real `execSync` failure path: `err.stderr` is `''` and everything is in
+`err.stdout`. So every failing build reported one error whose message was the empty string — the
+agent learned only that something broke.
+
+Both plugins now read stdout and stderr and pass the result through
+`parseBuildOutput` (`packages/contracts/src/build-output-parser.ts`, zero-dep, alongside
+`error-classifier`). Three rules the parser follows:
+
+- **Classify by actionable cause, not by emitting tool.** `TS2307` is a type-checker diagnostic,
+  but the fix is a missing dependency, so it is `dependency` rather than `type`.
+- **Distinguish the two module failures.** A relative specifier is a path mistake; a bare one is
+  a missing install. That distinction is most of what a suggestion is worth.
+- **Never go quiet.** Unrecognised output becomes a single `unknown` error carrying the whole
+  text; a failure that wrote nothing falls back to the thrown error's message. Reporting
+  `success: false` with an empty `errors[]` is the failure mode being removed, not a valid
+  outcome.
+
+The parser is written against captured real output (`__tests__/fixtures/`), not the documented
+formats — which omit that rspack positions live on the `ERROR in` header, that a parse-error
+header has no position at all, and that the message contains an apostrophe that defeats
+quote-matching.
+
+### 7. The epic splits
 
 **#139 (re-scoped) — agent contract completion.** Build-output parsers behind the existing
 `BuildError` contract (absorbing #148); MCP schema coverage for the `build:*` surface; `received`
@@ -203,9 +235,27 @@ The conformance sweep covers this repo's command tree. Plugin-owned commands (`b
 checked only where they publish a schema into `schemas/`.
 
 §5 covers both halves, but by different means: inputs from the runtime registry, outputs from the
-compiler. What it does *not* do is validate responses at runtime, and deliberately — TypeScript
-already enforces that a command returns its declared `T`, so runtime validation would re-check a
-link that is not broken.
+compiler.
+
+**A correction, recorded because it changes the argument.** This ADR first claimed derivation
+made response validation redundant, on the grounds that TypeScript already enforces
+implementation → declared `T`. That is only true where the compiler is actually checking. The
+repo compiles with `strict: false`, so `strictNullChecks` is off and `string | null` collapses to
+`string` — the derived schema for `build:check` asserted `EnvCheckResult.found` was always a
+string while the command really returns `null` for a missing tool. The generator now reads types
+with `strictNullChecks: true` regardless of repo settings, because `| null` was authored
+deliberately and describes what the command does.
+
+Nothing found that defect except running the command and validating the result. So the two
+checks are complements, not substitutes: derivation keeps the schema honest about the *declared*
+type; response conformance
+(`src/oclif/__tests__/output-schema-conformance.test.ts`) keeps the declared type honest about
+*runtime*. Seven commands have a success-path invocation cheap enough to run in the suite; the
+rest name their infrastructure cost rather than being silently skipped.
+
+Still not done, and still deliberate: `BaseCommand` does not validate its own output at runtime.
+That would put the cost on every call in production to catch a class of defect a test run
+catches once.
 
 The conversion is narrow on purpose. It handles the shapes command results actually use;
 anything it cannot represent faithfully (a union of object shapes, an index signature) degrades
@@ -245,7 +295,7 @@ but any consumer branching on `=== 1` is affected.
 - ADR-074 — registration as a build artifact; the source of the generate-don't-check principle
   applied in §1.
 - ADR-055 — daemon-driven shells, which #144's original spec contradicts.
-- ADR-030 — error classification; §6 records that its pattern branch is unreachable in the CLI.
+- ADR-030 — error classification; §7 records that its pattern branch is unreachable in the CLI.
 - ADR-018 / ADR-017 — the envelope and error taxonomy this ADR enforces but does not change.
 - ADR-078 — the control plane and `platform:init` half of the split.
 - PDR-003 — AI-native, agent-operable tooling.

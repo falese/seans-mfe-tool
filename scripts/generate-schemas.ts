@@ -106,6 +106,12 @@ function deriveOutputSchemas(commands: RegistryCommand[]): Map<string, object> {
     ...parsed.options,
     noEmit: true,
     skipLibCheck: true,
+    // The repo compiles with `strict: false`, which collapses `string | null`
+    // to `string` — so a schema read under the repo's own settings claimed
+    // `EnvCheckResult.found` was always a string while `build:check` really
+    // returns null for a missing tool. Read the types as they were AUTHORED:
+    // `| null` was written deliberately and is what the command does.
+    strictNullChecks: true,
   });
   const checker = program.getTypeChecker();
 
