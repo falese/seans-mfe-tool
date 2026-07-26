@@ -259,7 +259,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
 | [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Implemented |
 | [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
-| [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Accepted (impl phased, #317) |
+| [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Superseded |
 | [ADR-026](./architecture-decisions/ADR-026-load-capability-atomic.md) | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased, #318) |
 | [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md) | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
 | [ADR-028](./architecture-decisions/ADR-028-parallel-execution.md) | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
@@ -310,6 +310,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-073](./architecture-decisions/ADR-073-slot-contract-in-contracts-design-time-validation.md) | Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable | Contracts / CLI / slots / design-time validation | Implemented |
 | [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
 | [ADR-075](./architecture-decisions/ADR-075-adr-library-under-drift-control.md) | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
+| [ADR-076](./architecture-decisions/ADR-076-platform-handler-dispatch.md) | Platform handlers dispatch by exported function name from a static library, not a registry class | Runtime handlers | Implemented |
 
 <!-- END GENERATED: adr-index -->
 
