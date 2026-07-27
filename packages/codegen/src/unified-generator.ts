@@ -31,6 +31,27 @@ export interface FrameworkVariant {
  * selects Angular). Keeps the generator independently runnable/testable
  * without importing the framework loader (ADR-036, ADR-061).
  */
+/**
+ * Public assets a template variant may legitimately not ship (#341).
+ *
+ * Absence is a variant's choice, not a defect, so it is emitted silently rather
+ * than warned about. `base-mfe-angular` ships neither: an Angular MFE is served
+ * through the Angular builder and has no standalone demo page. Warning anyway
+ * printed two lines per Angular MFE on every run — eight across the fleet,
+ * landing in the middle of `check:mfe-drift` output a reader is meant to be
+ * studying carefully.
+ *
+ * The set is deliberately short. Everything not in it — `index.html`,
+ * `App.tsx`, `index.tsx`, `mfe.ts` — still warns when its template is missing,
+ * because there the absence really is a broken variant. Silencing the
+ * diagnostic wholesale would trade a noisy gate for a silent one.
+ *
+ * Follows the same rule as slot emission below, which probes the variant's
+ * `templateDir` for a `slots.*.ejs` instead of hardcoding framework names, so
+ * a new framework adds support by shipping a template (ADR-036).
+ */
+export const OPTIONAL_PUBLIC_ASSETS: readonly string[] = ['demo.html', 'favicon.ico'];
+
 export function deriveBuiltinVariant(manifest: DSLManifest): FrameworkVariant {
   const framework = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
   return framework === 'angular'
@@ -1342,7 +1363,24 @@ async function renderFiles(
   // react-rspack keeps the existing package.json + rspack.config.js shape.
   // tsconfig.json is only emitted here for non-BFF React MFEs — when a BFF
   // is present the BFF plugin already owns it (packages/bff-plugin/templates/tsconfig.json).
-  const rootTemplates =
+  //
+  // Ownership is per-entry. These are developer-owned by default — seeded once
+  // and never touched again — because an MFE author edits `package.json`,
+  // the bundler config and the tsconfigs as a matter of course.
+  //
+  // `.gitignore` is the exception (#341): every line of it names a build
+  // artifact the *platform* produces (`.mesh/`, `dist/`, `out-tsc/`, the
+  // compiled `server.js` — #274), so the platform is the thing that knows when
+  // that list changes. Owning it also brings it under `check:mfe-drift`, which
+  // only compares generator-owned files — until now whether an MFE had a
+  // `.gitignore` at all depended on whether anyone had run `remote:generate`
+  // in it (7 of 8 meridian, 0 of 13 abc-kids).
+  //
+  // The accepted cost: regeneration now overwrites it, so a customised
+  // `.gitignore` outside this repo loses its edits. ADR-082 cannot warn about
+  // that — its registry is scoped to developer-owned files, and this one is no
+  // longer among them.
+  const rootTemplates: Array<{ name: string; ejs: string; overwrite?: boolean }> =
     templateVariant === 'angular-webpack'
       ? [
           { name: 'package.json', ejs: 'package.json.ejs' },
@@ -1353,15 +1391,13 @@ async function renderFiles(
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
           { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
           { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
-          // #274: keep build artifacts (.mesh/, out-tsc/, compiled server.js) out of the tree.
-          { name: '.gitignore', ejs: '.gitignore.ejs' },
+          { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
-          // #274: keep build artifacts (.mesh/, dist/, compiled server.js) out of the tree.
-          { name: '.gitignore', ejs: '.gitignore.ejs' },
+          { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
         ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);
@@ -1370,7 +1406,9 @@ async function renderFiles(
       files.push({
         path: path.join(basePath, tpl.name),
         content: renderedContent,
-        overwrite: false, // user-owned: only generate on first init, not on regenerate
+        // Default user-owned: generated on first init, never on regenerate.
+        // See the ownership note on `rootTemplates` for the one exception.
+        overwrite: tpl.overwrite ?? false,
       });
     } else {
       // Diagnostic: warn if template missing
@@ -1512,7 +1550,8 @@ async function renderFiles(
     );
   }
 
-  // Generate public/demo.html (runtime demonstration page)
+  // Generate public/demo.html (runtime demonstration page) — optional, see
+  // OPTIONAL_PUBLIC_ASSETS.
   const demoHtmlTemplatePath = path.join(templateDir, 'public', 'demo.html.ejs');
   if (await fs.pathExists(demoHtmlTemplatePath)) {
     const demoHtmlContent = await renderTemplate(demoHtmlTemplatePath, {
@@ -1524,10 +1563,6 @@ async function renderFiles(
       content: demoHtmlContent,
       overwrite: true,
     });
-  } else {
-    console.warn(
-      `[unified-generator] WARNING: Missing template for public/demo.html: ${demoHtmlTemplatePath}`
-    );
   }
 
   if (await fs.pathExists(faviconTemplatePath)) {
@@ -1537,10 +1572,6 @@ async function renderFiles(
       content: faviconContent,
       overwrite: true,
     });
-  } else {
-    console.warn(
-      `[unified-generator] WARNING: Missing template for public/favicon.ico: ${faviconTemplatePath}`
-    );
   }
 
   // Jest static-asset mock — required by the moduleNameMapper in the generated jest config
