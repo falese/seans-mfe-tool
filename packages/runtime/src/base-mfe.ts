@@ -108,7 +108,17 @@ export interface LoadResult {
     mount: { start: Date; duration: number };
     enableRender: { start: Date; duration: number };
   };
-  error?: { message: string; phase: string; retryCount: number; retryable: boolean };
+  error?: {
+    message: string;
+    /**
+     * Which step failed. The subphase names are the atomic main operation
+     * (ADR-026); `before` / `after` / `error` are the lifecycle phases around
+     * it. A closed set, because the field exists to be branched on.
+     */
+    phase: 'entry' | 'mount' | 'enable-render' | 'before' | 'after' | 'error';
+    retryCount: number;
+    retryable: boolean;
+  };
 }
 
 /** Result from render capability */

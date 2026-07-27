@@ -56,7 +56,11 @@ Defined in: [packages/runtime/src/base-mfe.ts:111](https://github.com/falese/sea
 
 #### phase
 
-> **phase**: `string`
+> **phase**: `"error"` \| `"before"` \| `"after"` \| `"entry"` \| `"mount"` \| `"enable-render"`
+
+Which step failed. The subphase names are the atomic main operation
+(ADR-026); `before` / `after` / `error` are the lifecycle phases around
+it. A closed set, because the field exists to be branched on.
 
 #### retryable
 

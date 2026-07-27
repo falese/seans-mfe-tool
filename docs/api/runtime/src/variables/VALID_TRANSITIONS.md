@@ -8,6 +8,6 @@
 
 > `const` **VALID\_TRANSITIONS**: `Readonly`\<`Record`\<[`MFEState`](../type-aliases/MFEState.md), readonly [`MFEState`](../type-aliases/MFEState.md)[]\>\> = `MFE_LIFECYCLE_TRANSITIONS`
 
-Defined in: [packages/runtime/src/base-mfe.ts:195](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L195)
+Defined in: [packages/runtime/src/base-mfe.ts:205](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L205)
 
 Valid state transitions — the canonical table (ADR-042, ADR-080).

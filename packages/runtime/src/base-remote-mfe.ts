@@ -176,6 +176,11 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       mount: { start: new Date(), duration: 0 },
       enableRender: { start: new Date(), duration: 0 },
     };
+    // Which subphase is in flight, for the error result. Reporting every
+    // failure as `entry` — as this did — points whoever reads the telemetry at
+    // the network when the fault may be the shared scope or the manifest
+    // (ADR-026 validation criterion 5).
+    let phase: NonNullable<LoadResult['error']>['phase'] = 'entry';
 
     try {
       // Phase 1: Entry - Fetch Module Federation remote entry
@@ -199,6 +204,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       });
 
       // Phase 2: Mount - Initialize container and wire shared dependencies
+      phase = 'mount';
       const mountStart = Date.now();
       telemetry.mount = { start: new Date(), duration: 0 };
       this.emitTelemetry('load-mount', 'load', 'mount', 'start');
@@ -220,6 +226,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       });
 
       // Phase 3: Enable-render - Prepare MFE state for render phase
+      phase = 'enable-render';
       const enableRenderStart = Date.now();
       telemetry.enableRender = { start: new Date(), duration: 0 };
       this.emitTelemetry('load-enable-render', 'load', 'enable_render', 'start');
@@ -260,7 +267,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     } catch (error) {
       const err = error as Error;
       this.emitTelemetry('load-error', 'load', 'error', 'error', {
-        metadata: { error: err.message },
+        metadata: { error: err.message, phase },
       });
 
       return {
@@ -269,7 +276,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         duration: Date.now() - startTime,
         error: {
           message: err.message ?? String(err),
-          phase: 'entry',
+          phase,
           retryCount: 0,
           retryable: true,
         },

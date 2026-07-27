@@ -6,7 +6,7 @@
 
 # Interface: HealthResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:123](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L123)
+Defined in: [packages/runtime/src/base-mfe.ts:133](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L133)
 
 Result from health capability
 
@@ -16,7 +16,7 @@ Result from health capability
 
 > **checks**: `object`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L125)
+Defined in: [packages/runtime/src/base-mfe.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L135)
 
 #### message?
 
@@ -36,7 +36,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:125](https://github.com/falese/sea
 
 > **status**: `"healthy"` \| `"degraded"` \| `"unhealthy"`
 
-Defined in: [packages/runtime/src/base-mfe.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L124)
+Defined in: [packages/runtime/src/base-mfe.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L134)
 
 ***
 
@@ -44,4 +44,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:124](https://github.com/falese/sea
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/base-mfe.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L130)
+Defined in: [packages/runtime/src/base-mfe.ts:140](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L140)
