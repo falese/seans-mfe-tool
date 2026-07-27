@@ -1,5 +1,6 @@
 import { Hook } from '@oclif/core';
 import { randomUUID } from 'crypto';
+import { parseTraceparent } from '@seans-mfe/contracts';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -32,7 +33,13 @@ const hook: Hook<'postrun'> = async function(opts) {
   }
 
   const commandId = (opts.Command as { id?: string } | undefined)?.id ?? '(unknown)';
-  const correlationId = process.env.SEANS_MFE_CORRELATION_ID ?? randomUUID();
+  // Prefer the trace BaseCommand published (ADR-081): before this, the hook
+  // minted a correlation id of its own, so the daemon's view of a command could
+  // not be joined to that command's envelope or to anything it spawned.
+  const correlationId =
+    parseTraceparent(process.env.TRACEPARENT)?.traceId ??
+    process.env.SEANS_MFE_CORRELATION_ID ??
+    randomUUID();
 
   const message: Message = {
     direction: 'ACTION',

@@ -8,7 +8,7 @@
 
 > **formatTraceparent**(`context`): `string`
 
-Defined in: packages/contracts/src/observability.ts:144
+Defined in: [packages/contracts/src/observability.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L144)
 
 Serialize for the `traceparent` header or the `TRACEPARENT` env var.
 

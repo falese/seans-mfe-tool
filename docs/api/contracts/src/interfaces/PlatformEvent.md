@@ -6,7 +6,7 @@
 
 # Interface: PlatformEvent
 
-Defined in: packages/contracts/src/observability.ts:52
+Defined in: [packages/contracts/src/observability.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L52)
 
 One observability record.
 
@@ -21,7 +21,7 @@ join at the consumer.
 
 > `optional` **attributes**: [`Attributes`](../type-aliases/Attributes.md)
 
-Defined in: packages/contracts/src/observability.ts:69
+Defined in: [packages/contracts/src/observability.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L69)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: packages/contracts/src/observability.ts:69
 
 > `optional` **duration**: `number`
 
-Defined in: packages/contracts/src/observability.ts:64
+Defined in: [packages/contracts/src/observability.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L64)
 
 Milliseconds. Present on spans, absent on log events.
 
@@ -39,7 +39,7 @@ Milliseconds. Present on spans, absent on log events.
 
 > **name**: `string`
 
-Defined in: packages/contracts/src/observability.ts:60
+Defined in: [packages/contracts/src/observability.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L60)
 
 Operation name for a span; the message for a log event.
 
@@ -49,7 +49,7 @@ Operation name for a span; the message for a log event.
 
 > `optional` **parentSpanId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:58
+Defined in: [packages/contracts/src/observability.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L58)
 
 The enclosing span, when there is one.
 
@@ -59,7 +59,7 @@ The enclosing span, when there is one.
 
 > `optional` **severity**: [`Severity`](../type-aliases/Severity.md)
 
-Defined in: packages/contracts/src/observability.ts:68
+Defined in: [packages/contracts/src/observability.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L68)
 
 ***
 
@@ -67,7 +67,7 @@ Defined in: packages/contracts/src/observability.ts:68
 
 > **spanId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:56
+Defined in: [packages/contracts/src/observability.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L56)
 
 16 lowercase hex characters. Identifies this record's own unit of work.
 
@@ -77,7 +77,7 @@ Defined in: packages/contracts/src/observability.ts:56
 
 > **startTime**: `string`
 
-Defined in: packages/contracts/src/observability.ts:62
+Defined in: [packages/contracts/src/observability.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L62)
 
 ISO-8601.
 
@@ -87,7 +87,7 @@ ISO-8601.
 
 > **status**: [`EventStatus`](../type-aliases/EventStatus.md)
 
-Defined in: packages/contracts/src/observability.ts:65
+Defined in: [packages/contracts/src/observability.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L65)
 
 ***
 
@@ -95,7 +95,7 @@ Defined in: packages/contracts/src/observability.ts:65
 
 > `optional` **statusMessage**: `string`
 
-Defined in: packages/contracts/src/observability.ts:67
+Defined in: [packages/contracts/src/observability.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L67)
 
 Why the status is what it is — typically an error message.
 
@@ -105,6 +105,6 @@ Why the status is what it is — typically an error message.
 
 > **traceId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:54
+Defined in: [packages/contracts/src/observability.ts:54](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L54)
 
 32 lowercase hex characters. Shared by everything in one logical operation.

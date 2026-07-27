@@ -6,7 +6,7 @@
 
 # Interface: EndSpanOptions
 
-Defined in: packages/contracts/src/observability.ts:243
+Defined in: [packages/contracts/src/observability.ts:243](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L243)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/observability.ts:243
 
 > `optional` **attributes**: [`Attributes`](../type-aliases/Attributes.md)
 
-Defined in: packages/contracts/src/observability.ts:246
+Defined in: [packages/contracts/src/observability.ts:246](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L246)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/contracts/src/observability.ts:246
 
 > `optional` **error**: `unknown`
 
-Defined in: packages/contracts/src/observability.ts:245
+Defined in: [packages/contracts/src/observability.ts:245](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L245)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: packages/contracts/src/observability.ts:245
 
 > **status**: [`EventStatus`](../type-aliases/EventStatus.md)
 
-Defined in: packages/contracts/src/observability.ts:244
+Defined in: [packages/contracts/src/observability.ts:244](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L244)

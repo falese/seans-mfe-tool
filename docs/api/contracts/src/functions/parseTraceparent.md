@@ -8,7 +8,7 @@
 
 > **parseTraceparent**(`header`): [`TraceContext`](../interfaces/TraceContext.md) \| `undefined`
 
-Defined in: packages/contracts/src/observability.ts:156
+Defined in: [packages/contracts/src/observability.ts:156](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L156)
 
 Parse a `traceparent`, returning `undefined` for anything malformed.
 

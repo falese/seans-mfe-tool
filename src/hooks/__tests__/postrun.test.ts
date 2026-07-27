@@ -107,6 +107,9 @@ beforeEach(() => {
   delete process.env.SEANS_MFE_DAEMON_URL;
   delete process.env.SEANS_MFE_CMD_START;
   delete process.env.SEANS_MFE_CORRELATION_ID;
+  // The trace now takes precedence (ADR-081), so an ambient TRACEPARENT in the
+  // developer's shell would otherwise decide what this suite asserts.
+  delete process.env.TRACEPARENT;
 });
 
 afterEach(() => {
@@ -155,6 +158,71 @@ describe('postrun hook', () => {
     expect(msg.payload.actionType).toBe('cli.command.completed');
     expect(msg.metadata.correlationId).toBe('test-corr-id');
     expect(msg.payload.data.command).toBe('bff:init');
+
+    delete (globalThis as any).WebSocket;
+    jest.useRealTimers();
+  });
+
+  /**
+   * ADR-081: the hook used to mint a correlation id of its own, so the daemon's
+   * record of a command could not be joined to that command's envelope or to
+   * anything it spawned. It now rides the trace BaseCommand published.
+   */
+  test('rides the published trace id when one is set', async () => {
+    jest.useFakeTimers();
+    process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
+    process.env.SEANS_MFE_CMD_START = String(Date.now() - 100);
+    process.env.SEANS_MFE_CORRELATION_ID = 'legacy-id';
+    process.env.TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
+
+    (globalThis as any).WebSocket = createMockWsClass();
+
+    const hook = require('../postrun').default;
+    const hookPromise = hook.call(buildHookContext(), { Command: { id: 'mfe:validate' } });
+
+    await Promise.resolve();
+    lastMockWs!.triggerOpen();
+    await Promise.resolve();
+    lastMockWs!.triggerMessage(JSON.stringify({ type: 'connection_ack' }));
+    await hookPromise;
+    jest.runAllTimers();
+
+    const subscribe = lastMockWs!.sentFrames
+      .map((f: string) => JSON.parse(f))
+      .find((f: Record<string, unknown>) => f.type === 'subscribe');
+    const msg = JSON.parse((subscribe.payload.variables as { message: string }).message);
+
+    expect(msg.metadata.correlationId).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+
+    delete (globalThis as any).WebSocket;
+    jest.useRealTimers();
+  });
+
+  test('ignores a malformed TRACEPARENT rather than propagating garbage', async () => {
+    jest.useFakeTimers();
+    process.env.SEANS_MFE_DAEMON_URL = 'ws://localhost:9999/graphql';
+    process.env.SEANS_MFE_CMD_START = String(Date.now() - 100);
+    process.env.SEANS_MFE_CORRELATION_ID = 'legacy-id';
+    process.env.TRACEPARENT = 'not-a-traceparent';
+
+    (globalThis as any).WebSocket = createMockWsClass();
+
+    const hook = require('../postrun').default;
+    const hookPromise = hook.call(buildHookContext(), { Command: { id: 'mfe:validate' } });
+
+    await Promise.resolve();
+    lastMockWs!.triggerOpen();
+    await Promise.resolve();
+    lastMockWs!.triggerMessage(JSON.stringify({ type: 'connection_ack' }));
+    await hookPromise;
+    jest.runAllTimers();
+
+    const subscribe = lastMockWs!.sentFrames
+      .map((f: string) => JSON.parse(f))
+      .find((f: Record<string, unknown>) => f.type === 'subscribe');
+    const msg = JSON.parse((subscribe.payload.variables as { message: string }).message);
+
+    expect(msg.metadata.correlationId).toBe('legacy-id');
 
     delete (globalThis as any).WebSocket;
     jest.useRealTimers();

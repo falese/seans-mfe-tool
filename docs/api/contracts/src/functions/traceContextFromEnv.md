@@ -8,7 +8,7 @@
 
 > **traceContextFromEnv**(`env`): [`TraceContext`](../interfaces/TraceContext.md)
 
-Defined in: packages/contracts/src/observability.ts:181
+Defined in: [packages/contracts/src/observability.ts:181](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L181)
 
 The trace context this process should emit under.
 

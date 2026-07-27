@@ -6,7 +6,7 @@
 
 # Interface: TraceContext
 
-Defined in: packages/contracts/src/observability.ts:73
+Defined in: [packages/contracts/src/observability.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L73)
 
 The identity a record is emitted under, threaded through a call path.
 
@@ -16,7 +16,7 @@ The identity a record is emitted under, threaded through a call path.
 
 > `optional` **parentSpanId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:76
+Defined in: [packages/contracts/src/observability.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L76)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/contracts/src/observability.ts:76
 
 > `optional` **sampled**: `boolean`
 
-Defined in: packages/contracts/src/observability.ts:78
+Defined in: [packages/contracts/src/observability.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L78)
 
 Whether downstream should record. Absent means yes.
 
@@ -34,7 +34,7 @@ Whether downstream should record. Absent means yes.
 
 > **spanId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:75
+Defined in: [packages/contracts/src/observability.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L75)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: packages/contracts/src/observability.ts:75
 
 > **traceId**: `string`
 
-Defined in: packages/contracts/src/observability.ts:74
+Defined in: [packages/contracts/src/observability.ts:74](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L74)

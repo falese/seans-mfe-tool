@@ -8,7 +8,7 @@
 
 > **newSpanId**(): `string`
 
-Defined in: packages/contracts/src/observability.ts:129
+Defined in: [packages/contracts/src/observability.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L129)
 
 ## Returns
 

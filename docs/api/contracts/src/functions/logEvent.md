@@ -8,7 +8,7 @@
 
 > **logEvent**(`context`, `severity`, `name`, `attributes?`): [`PlatformEvent`](../interfaces/PlatformEvent.md)
 
-Defined in: packages/contracts/src/observability.ts:276
+Defined in: [packages/contracts/src/observability.ts:276](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/observability.ts#L276)
 
 A point-in-time record — what a log line becomes.
 

@@ -181,6 +181,24 @@ deliberate human-readable rendering.
 - **No sampling, batching, or export in this decision.** Emitters write; whoever
   consumes decides. Sampling belongs with the exporter, where the BFF already
   configures it (`sampling.probability`).
+
+- **A fire-and-forget hook sink is still truncated under `--json`.** `postrun`
+  hooks now run on that path — they did not, because `run()` exits once the
+  envelope is written and oclif fires `postrun` after the command returns. But
+  the daemon hook does not await its own emission ("never delay the CLI"), and
+  `process.exit` arrives before the socket does. Measured against a listener:
+
+  | | connections reaching the daemon |
+  | --- | --- |
+  | human mode | 2 |
+  | `--json` | 0 |
+
+  This is why the command span is emitted **synchronously to stderr** rather
+  than pushed anywhere: a sink that races the exit is a sink that loses the
+  events it was added to capture. Making the daemon push survive means either
+  awaiting it (up to the 2s connect timeout, bounded by the 60s offline cache)
+  or a bounded flush window before exit — a trade between CLI latency and
+  telemetry completeness that this ADR does not settle.
 - **Not a metrics decision.** Prometheus config already exists separately in the
   DSL (`PrometheusConfigSchema`) and is untouched.
 
