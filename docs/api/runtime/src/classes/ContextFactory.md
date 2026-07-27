@@ -6,7 +6,7 @@
 
 # Class: ContextFactory
 
-Defined in: [packages/runtime/src/context.ts:170](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L170)
+Defined in: [packages/runtime/src/context.ts:176](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L176)
 
 Context factory - creates a new context with required fields
 
@@ -26,7 +26,7 @@ Context factory - creates a new context with required fields
 
 > `static` **cloneForCapability**(`source`, `capability`, `inputs?`): [`Context`](../interfaces/Context.md)
 
-Defined in: [packages/runtime/src/context.ts:206](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L206)
+Defined in: [packages/runtime/src/context.ts:212](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L212)
 
 Clone context for a new capability while preserving user/auth
 
@@ -54,7 +54,7 @@ Clone context for a new capability while preserving user/auth
 
 > `static` **create**(`options`): [`Context`](../interfaces/Context.md)
 
-Defined in: [packages/runtime/src/context.ts:174](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L174)
+Defined in: [packages/runtime/src/context.ts:180](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L180)
 
 Create a new context for a capability invocation
 
@@ -96,7 +96,7 @@ Create a new context for a capability invocation
 
 > `static` **incrementRetry**(`context`): `void`
 
-Defined in: [packages/runtime/src/context.ts:243](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L243)
+Defined in: [packages/runtime/src/context.ts:249](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L249)
 
 Increment retry count
 
@@ -116,7 +116,7 @@ Increment retry count
 
 > `static` **recordError**(`context`, `error`): `void`
 
-Defined in: [packages/runtime/src/context.ts:235](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L235)
+Defined in: [packages/runtime/src/context.ts:241](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L241)
 
 Record error in context
 
@@ -140,7 +140,7 @@ Record error in context
 
 > `static` **setPhase**(`context`, `phase`): `void`
 
-Defined in: [packages/runtime/src/context.ts:228](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L228)
+Defined in: [packages/runtime/src/context.ts:234](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L234)
 
 Update context phase
 

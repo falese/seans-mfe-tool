@@ -22,12 +22,34 @@ import * as path from 'path';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
-/** Roots whose production code is bound by ADR-017. */
-const ROOTS = ['src', 'packages'];
+/**
+ * Roots bound by ADR-017.
+ *
+ * `examples` is in scope because generated MFEs are the platform's own output:
+ * a decision the platform will not follow in the code it emits is not a
+ * platform decision. `templates` is in scope for the same reason, one level up
+ * — it is where that output is decided.
+ */
+const ROOTS = ['src', 'packages', 'examples'];
 
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx']);
+/**
+ * `.ejs` carries the generated code. Scanning the rendered examples alone would
+ * miss a template regression until someone regenerated, and `check-mfe-drift`
+ * only diffs generator-owned files — so a raw throw reintroduced into
+ * `index.tsx.ejs` would reach every future MFE unseen.
+ */
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.ejs']);
 
-const EXCLUDED_SEGMENTS = ['__tests__', 'templates', 'node_modules', 'dist', 'fixtures'];
+const EXCLUDED_SEGMENTS = ['__tests__', 'node_modules', 'dist', 'fixtures', 'coverage'];
+
+/**
+ * The API generator emits a standalone Express app that does not depend on
+ * `@seans-mfe/contracts`, so the typed classes are not reachable from its
+ * output. ADR-063 has that whole axis parked behind #251, and
+ * `examples/meridian-station/DX-REPORT.md` §0.2 records that the generated API
+ * does not boot. Typing its throws is part of that work, not this rule.
+ */
+const EXCLUDED_PATHS = [path.join('src', 'codegen', 'templates', 'api')];
 
 /** `throw new Error(` — the exact construct ADR-017 forbids. */
 const RAW_THROW = /\bthrow\s+new\s+Error\s*\(/;
@@ -50,6 +72,7 @@ function walk(dir: string, out: string[] = []): string[] {
     }
     if (!SOURCE_EXTENSIONS.has(path.extname(entry.name))) continue;
     if (/\.(test|spec)\.tsx?$/.test(entry.name)) continue;
+    if (EXCLUDED_PATHS.some((p) => path.relative(REPO_ROOT, full).startsWith(p))) continue;
     out.push(full);
   }
   return out;

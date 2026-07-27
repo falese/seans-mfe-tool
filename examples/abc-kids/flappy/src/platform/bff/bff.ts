@@ -9,6 +9,8 @@
  *   const data = await query<GetUserQuery>(GET_USER, { id });
  */
 
+import { NetworkError, BusinessError } from '@seans-mfe-tool/runtime';
+
 const BFF_ENDPOINT =
   (typeof process !== 'undefined' && (process.env['BFF_URL'] || process.env['VITE_BFF_URL'])) ||
   'http://localhost:3001/graphql';
@@ -36,13 +38,19 @@ export async function query<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`BFF request failed: ${response.status} ${response.statusText}`);
+    throw new NetworkError(
+      `BFF request failed: ${response.status} ${response.statusText}`,
+      response.status
+    );
   }
 
   const json: BffResponse<T> = await response.json() as BffResponse<T>;
 
   if (json.errors?.length) {
-    throw new Error(json.errors.map((e) => e.message).join('\n'));
+    throw new BusinessError(
+      json.errors.map((e) => e.message).join('\n'),
+      'BFF_GRAPHQL_ERROR'
+    );
   }
 
   return json.data as T;

@@ -2,6 +2,7 @@
 
 import {
   RemoteMFE,
+  ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
@@ -137,7 +138,11 @@ export class abckidsmazerunnerMFE extends RemoteMFE {
         );
 
       default:
-        throw new Error(`[abckidsmazerunnerMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[abckidsmazerunnerMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 
