@@ -45,11 +45,25 @@ const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '
  * Paths whose change can land in code the generator seeds but does not own
  * (ADR-082).
  *
- * Three, deliberately: the templates themselves, the package generated MFEs
- * import from, and the package that reaches them through its re-export shims
+ * Four, deliberately: the templates themselves, the package generated MFEs
+ * import from, the package that reaches them through its re-export shims
  * (`packages/runtime/src/errors/index.ts` forwards the whole error hierarchy
  * from contracts, so a rename there changes what generated code imports with no
- * runtime file in the diff).
+ * runtime file in the diff), and the generator itself — which decides not only
+ * *what* is emitted but *who owns it*.
+ *
+ * That fourth path was missing until the first change to run through these
+ * directives fell straight through the gap: flipping `.gitignore` from
+ * `overwrite: false` to `true` (#341) made regeneration start **overwriting**
+ * a file in every MFE, and this section stayed silent. An ownership change is
+ * the more dangerous of the two edits — a template change alters content a
+ * developer can review in the diff, while an ownership change alters whether
+ * their own edits survive at all.
+ *
+ * Scoped to `unified-generator.ts` rather than all of `packages/codegen/src`:
+ * it is the only non-test file that *sets* the `overwrite` flag. `validate.ts`
+ * and `drift.ts` read it, and widening to the whole directory would put this
+ * comment on nearly every codegen PR.
  *
  * Widening this set is a decision rather than a tweak. Every path added puts
  * this comment on more pull requests, and a reminder that appears on all of
@@ -60,6 +74,7 @@ export const GENERATED_CONTRACT_PATHS: readonly RegExp[] = [
   /^packages\/codegen\/templates\//,
   /^packages\/runtime\/src\//,
   /^packages\/contracts\/src\//,
+  /^packages\/codegen\/src\/unified-generator\.ts$/,
 ];
 
 /** Touching this file *is* the declaration, so it suppresses the reminder. */

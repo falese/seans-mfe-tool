@@ -81,6 +81,12 @@ ADR quick index: `@docs/spec.md#adr-index`
   shims (`packages/runtime/src/errors/index.ts` forwards the whole error
   hierarchy), so a rename there changes generated code with no runtime file in
   the diff
+- `packages/codegen/src/unified-generator.ts` — decides not just *what* is
+  emitted but *who owns it*. Moving a file between the two rows of the table
+  below is the most breaking edit available: `overwrite: false → true` makes
+  regeneration start **overwriting** a file developers may have edited. This
+  path was missing from the list until #341 flipped `.gitignore` and nothing
+  said a word
 
 A change here lands in two places, and **only one of them is automatic**:
 
