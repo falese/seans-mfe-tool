@@ -6,7 +6,7 @@
 
 # Interface: LayoutHostLike
 
-Defined in: [packages/runtime/src/layout-manager.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L50)
+Defined in: [packages/runtime/src/layout-manager.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L51)
 
 ## Methods
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-manager.ts:50](https://github.com/fales
 
 > **appendChild**(`child`): `unknown`
 
-Defined in: [packages/runtime/src/layout-manager.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L51)
+Defined in: [packages/runtime/src/layout-manager.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L52)
 
 #### Parameters
 

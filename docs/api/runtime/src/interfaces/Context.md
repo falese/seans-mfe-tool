@@ -25,9 +25,11 @@ keep compiling via this index signature; new code should use `extensions`.
 
 > `optional` **capability**: `string`
 
-Defined in: [packages/runtime/src/context.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L78)
+Defined in: [packages/runtime/src/context.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L82)
 
-Current capability being executed
+Current capability being executed — one of the ten platform capabilities
+(single-sourced in @seans-mfe/contracts, ADR-080) or a domain capability
+name, which is why the union stays open.
 
 ***
 
@@ -35,7 +37,7 @@ Current capability being executed
 
 > `optional` **emit**: (`event`) => `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/context.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L100)
+Defined in: [packages/runtime/src/context.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L104)
 
 Telemetry emit function (injected by the engine, not handler state)
 
@@ -55,7 +57,7 @@ Telemetry emit function (injected by the engine, not handler state)
 
 > `optional` **error**: `Error`
 
-Defined in: [packages/runtime/src/context.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L83)
+Defined in: [packages/runtime/src/context.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L87)
 
 Error that triggered error phase
 
@@ -65,7 +67,7 @@ Error that triggered error phase
 
 > `optional` **extensions**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:109](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L109)
+Defined in: [packages/runtime/src/context.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L113)
 
 Handler-owned extension state, namespaced per handler. The shapes are
 declared by the owning modules (e.g. RetryState in retry-wrapper.ts,
@@ -147,7 +149,7 @@ Unique request identifier for tracing
 
 > `optional` **retryCount**: `number`
 
-Defined in: [packages/runtime/src/context.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L86)
+Defined in: [packages/runtime/src/context.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L90)
 
 Number of retry attempts for current capability
 
@@ -157,7 +159,7 @@ Number of retry attempts for current capability
 
 > `optional` **telemetry**: `object`
 
-Defined in: [packages/runtime/src/context.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L91)
+Defined in: [packages/runtime/src/context.ts:95](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L95)
 
 Telemetry data for observability
 

@@ -31,7 +31,7 @@ Construct a protocol envelope with consistent defaults
 
 #### error?
 
-`string`
+`string` \| `null`
 
 #### kind
 

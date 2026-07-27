@@ -6,7 +6,7 @@
 
 # Interface: DevServerHandle
 
-Defined in: [packages/contracts/src/framework-plugin.ts:84](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L84)
+Defined in: [packages/contracts/src/framework-plugin.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L89)
 
 Handle returned by startDevServer() for lifecycle control.
 
@@ -16,7 +16,7 @@ Handle returned by startDevServer() for lifecycle control.
 
 > **stop**: () => `Promise`\<`void`\>
 
-Defined in: [packages/contracts/src/framework-plugin.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L85)
+Defined in: [packages/contracts/src/framework-plugin.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L90)
 
 #### Returns
 
@@ -28,4 +28,4 @@ Defined in: [packages/contracts/src/framework-plugin.ts:85](https://github.com/f
 
 > **url**: `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L86)
+Defined in: [packages/contracts/src/framework-plugin.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L91)

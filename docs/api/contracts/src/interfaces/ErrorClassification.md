@@ -28,7 +28,7 @@ Defined in: [packages/contracts/src/error-classifier.ts:3](https://github.com/fa
 
 ### type
 
-> **type**: `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"` \| `"unknown"`
+> **type**: `"unknown"` \| `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"`
 
 Defined in: [packages/contracts/src/error-classifier.ts:2](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L2)
 

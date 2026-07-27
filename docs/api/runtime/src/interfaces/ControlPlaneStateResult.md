@@ -38,7 +38,7 @@ Correlation ID for tracing this update through the control plane
 
 ### error?
 
-> `optional` **error**: `string`
+> `optional` **error**: `string` \| `null`
 
 Defined in: [packages/runtime/src/base-mfe.ts:173](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L173)
 
@@ -48,7 +48,7 @@ Non-null when the update could not be delivered (not connected, timeout, etc.)
 
 ### resolution?
 
-> `optional` **resolution**: [`Resolution`](../../../contracts/src/interfaces/Resolution.md)
+> `optional` **resolution**: [`Resolution`](../../../contracts/src/interfaces/Resolution.md) \| `null`
 
 Defined in: [packages/runtime/src/base-mfe.ts:179](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L179)
 

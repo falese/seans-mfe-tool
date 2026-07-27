@@ -6,7 +6,7 @@
 
 # Class: ContextValidator
 
-Defined in: [packages/runtime/src/context.ts:247](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L247)
+Defined in: [packages/runtime/src/context.ts:251](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L251)
 
 Context validator - ensures context meets requirements
 
@@ -26,7 +26,7 @@ Context validator - ensures context meets requirements
 
 > `static` **validate**(`context`, `requirements`): `object`
 
-Defined in: [packages/runtime/src/context.ts:251](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L251)
+Defined in: [packages/runtime/src/context.ts:255](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L255)
 
 Validate that context has required fields for a capability
 
@@ -68,7 +68,7 @@ Validate that context has required fields for a capability
 
 > `static` **validateUserRole**(`context`, `requiredRoles`): `object`
 
-Defined in: [packages/runtime/src/context.ts:291](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L291)
+Defined in: [packages/runtime/src/context.ts:295](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L295)
 
 Validate that user has required role
 

@@ -33,7 +33,7 @@ Defined in: [packages/contracts/src/messages.ts:253](https://github.com/falese/s
 
 ### error
 
-> **error**: `string`
+> **error**: `string` \| `null`
 
 Defined in: [packages/contracts/src/messages.ts:254](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L254)
 
@@ -41,6 +41,6 @@ Defined in: [packages/contracts/src/messages.ts:254](https://github.com/falese/s
 
 ### resolution?
 
-> `optional` **resolution**: [`Resolution`](Resolution.md)
+> `optional` **resolution**: [`Resolution`](Resolution.md) \| `null`
 
 Defined in: [packages/contracts/src/messages.ts:255](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L255)

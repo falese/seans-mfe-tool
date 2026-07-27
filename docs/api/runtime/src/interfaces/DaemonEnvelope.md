@@ -51,7 +51,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:39](https://github.com/fal
 
 #### error?
 
-> `optional` **error**: `string`
+> `optional` **error**: `string` \| `null`
 
 ***
 

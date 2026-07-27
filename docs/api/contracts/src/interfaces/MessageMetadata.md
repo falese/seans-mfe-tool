@@ -32,7 +32,7 @@ UUID shared by the originating request and every downstream message.
 
 ### error
 
-> **error**: `string`
+> **error**: `string` \| `null`
 
 Defined in: [packages/contracts/src/messages.ts:226](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/messages.ts#L226)
 

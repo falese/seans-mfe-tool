@@ -6,7 +6,7 @@
 
 # Interface: LayoutManagerConfig
 
-Defined in: [packages/runtime/src/layout-manager.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L56)
+Defined in: [packages/runtime/src/layout-manager.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L57)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-manager.ts:56](https://github.com/fales
 
 > `optional` **adaptors**: `Record`\<`string`, [`ExperienceAdaptor`](ExperienceAdaptor.md)\>
 
-Defined in: [packages/runtime/src/layout-manager.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L70)
+Defined in: [packages/runtime/src/layout-manager.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L71)
 
 contentType → adaptor (the provider registry, keyed by handle kind).
  Merged over the built-in defaults.
@@ -25,7 +25,7 @@ contentType → adaptor (the provider registry, keyed by handle kind).
 
 > **container**: [`LayoutHostLike`](LayoutHostLike.md)
 
-Defined in: [packages/runtime/src/layout-manager.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L58)
+Defined in: [packages/runtime/src/layout-manager.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L59)
 
 Where experiences are mounted. The manager creates one child per slot.
 
@@ -35,7 +35,7 @@ Where experiences are mounted. The manager creates one child per slot.
 
 > `optional` **createSlotElement**: (`slotId`) => [`SlotElementLike`](SlotElementLike.md)
 
-Defined in: [packages/runtime/src/layout-manager.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L72)
+Defined in: [packages/runtime/src/layout-manager.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L73)
 
 Slot element factory — defaults to document.createElement('section').
 
@@ -55,7 +55,7 @@ Slot element factory — defaults to document.createElement('section').
 
 > `optional` **hostFramework**: `string`
 
-Defined in: [packages/runtime/src/layout-manager.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L67)
+Defined in: [packages/runtime/src/layout-manager.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L68)
 
 The host's framework (e.g. 'react'). Passed to adaptors for handle
 negotiation (ADR-056). Absent for a framework-free host — every MFE then
@@ -67,7 +67,7 @@ composes via its guaranteed imperative handle (isolation).
 
 > `optional` **onError**: (`message`) => `void`
 
-Defined in: [packages/runtime/src/layout-manager.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L87)
+Defined in: [packages/runtime/src/layout-manager.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L88)
 
 Error callback (adaptor mount failures, resolution errors, slot errors).
 
@@ -87,7 +87,7 @@ Error callback (adaptor mount failures, resolution errors, slot errors).
 
 > `optional` **onStatus**: (`status`) => `void`
 
-Defined in: [packages/runtime/src/layout-manager.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L85)
+Defined in: [packages/runtime/src/layout-manager.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L86)
 
 Status callback for shell chrome (connection indicator etc.).
 
@@ -107,7 +107,7 @@ Status callback for shell chrome (connection indicator etc.).
 
 > `optional` **providerValues**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/layout-manager.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L78)
+Defined in: [packages/runtime/src/layout-manager.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L79)
 
 Host-injected provider values delivered to every mounted MFE as
 `props.hostContext` (ADR-060 value-injection). The island re-provides its
@@ -119,7 +119,7 @@ own framework context from these.
 
 > `optional` **renderSlotFallback**: (`slot`, `info`) => `void`
 
-Defined in: [packages/runtime/src/layout-manager.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L83)
+Defined in: [packages/runtime/src/layout-manager.ts:84](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L84)
 
 Render the slot-scoped fallback shown when an experience fails (ADR-060).
 Defaults to neutral inline markup; override for branded fallbacks.
@@ -144,7 +144,7 @@ Defaults to neutral inline markup; override for branded fallbacks.
 
 > `optional` **session**: [`SessionContext`](../../../contracts/src/interfaces/SessionContext.md)
 
-Defined in: [packages/runtime/src/layout-manager.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L61)
+Defined in: [packages/runtime/src/layout-manager.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L62)
 
 Threaded onto every action so the registry resolves per user/app.
 
@@ -154,4 +154,4 @@ Threaded onto every action so the registry resolves per user/app.
 
 > **transport**: [`DaemonTransport`](DaemonTransport.md)
 
-Defined in: [packages/runtime/src/layout-manager.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L59)
+Defined in: [packages/runtime/src/layout-manager.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L60)

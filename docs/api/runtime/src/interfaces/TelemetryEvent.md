@@ -6,7 +6,7 @@
 
 # Interface: TelemetryEvent
 
-Defined in: [packages/runtime/src/context.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L122)
+Defined in: [packages/runtime/src/context.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L126)
 
 Telemetry event structure
 
@@ -16,7 +16,7 @@ Telemetry event structure
 
 > **capability**: `string`
 
-Defined in: [packages/runtime/src/context.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L124)
+Defined in: [packages/runtime/src/context.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L128)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/context.ts:124](https://github.com/falese/sean
 
 > `optional` **duration**: `number`
 
-Defined in: [packages/runtime/src/context.ts:127](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L127)
+Defined in: [packages/runtime/src/context.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L131)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/runtime/src/context.ts:127](https://github.com/falese/sean
 
 > `optional` **metadata**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L129)
+Defined in: [packages/runtime/src/context.ts:133](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L133)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/runtime/src/context.ts:129](https://github.com/falese/sean
 
 > **name**: `string`
 
-Defined in: [packages/runtime/src/context.ts:123](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L123)
+Defined in: [packages/runtime/src/context.ts:127](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L127)
 
 ***
 
@@ -48,15 +48,15 @@ Defined in: [packages/runtime/src/context.ts:123](https://github.com/falese/sean
 
 > **phase**: `string`
 
-Defined in: [packages/runtime/src/context.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L125)
+Defined in: [packages/runtime/src/context.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L129)
 
 ***
 
 ### status
 
-> **status**: `"error"` \| `"success"` \| `"start"` \| `"end"` \| `"failure"`
+> **status**: `"error"` \| `"success"` \| `"failure"` \| `"start"` \| `"end"`
 
-Defined in: [packages/runtime/src/context.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L128)
+Defined in: [packages/runtime/src/context.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L132)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [packages/runtime/src/context.ts:128](https://github.com/falese/sean
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/context.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L130)
+Defined in: [packages/runtime/src/context.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L134)
 
 ***
 
@@ -72,4 +72,4 @@ Defined in: [packages/runtime/src/context.ts:130](https://github.com/falese/sean
 
 > `optional` **user**: `string`
 
-Defined in: [packages/runtime/src/context.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L126)
+Defined in: [packages/runtime/src/context.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L130)

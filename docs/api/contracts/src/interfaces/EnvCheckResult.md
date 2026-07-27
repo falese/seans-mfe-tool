@@ -22,7 +22,7 @@ Defined in: [packages/contracts/src/framework-plugin.ts:22](https://github.com/f
 
 ### found
 
-> **found**: `string`
+> **found**: `string` \| `null`
 
 Defined in: [packages/contracts/src/framework-plugin.ts:20](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L20)
 

@@ -77,7 +77,7 @@ region and registers its element so the host routes later experiences
 
 ##### element
 
-[`SlotElementLike`](SlotElementLike.md)
+[`SlotElementLike`](SlotElementLike.md) | `null`
 
 #### Returns
 

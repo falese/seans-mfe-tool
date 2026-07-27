@@ -6,7 +6,7 @@
 
 # Class: DaemonChannel
 
-Defined in: [packages/runtime/src/daemon-channel.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L27)
+Defined in: [packages/runtime/src/daemon-channel.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L32)
 
 Platform-facing interface used in BaseMFEDependencies.
 Keeps the abstract base class decoupled from the concrete implementation.
@@ -21,7 +21,7 @@ Keeps the abstract base class decoupled from the concrete implementation.
 
 > **new DaemonChannel**(`transport`, `channelId`, `isConnected`): `DaemonChannel`
 
-Defined in: [packages/runtime/src/daemon-channel.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L28)
+Defined in: [packages/runtime/src/daemon-channel.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L33)
 
 #### Parameters
 
@@ -49,7 +49,7 @@ Defined in: [packages/runtime/src/daemon-channel.ts:28](https://github.com/fales
 
 > **get** **connected**(): `boolean`
 
-Defined in: [packages/runtime/src/daemon-channel.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L35)
+Defined in: [packages/runtime/src/daemon-channel.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L40)
 
 True when the host's single physical socket is open.
 
@@ -71,7 +71,7 @@ True when the underlying socket is open and ready to send frames.
 
 > **get** **id**(): `string`
 
-Defined in: [packages/runtime/src/daemon-channel.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L40)
+Defined in: [packages/runtime/src/daemon-channel.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L45)
 
 The channel's address (slot id, or nested path for recursive hosts).
 
@@ -85,7 +85,7 @@ The channel's address (slot id, or nested path for recursive hosts).
 
 > **child**(`subId`): `DaemonChannel`
 
-Defined in: [packages/runtime/src/daemon-channel.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L48)
+Defined in: [packages/runtime/src/daemon-channel.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L53)
 
 Open a nested channel for an MFE composed inside this one. The id composes
 into a path so the control plane reasons about nested slots uniformly.
@@ -106,7 +106,7 @@ into a path so the control plane reasons about nested slots uniformly.
 
 > **mutation**(`_query`, `variables`, `_timeoutMs?`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/daemon-channel.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L58)
+Defined in: [packages/runtime/src/daemon-channel.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/daemon-channel.ts#L63)
 
 `updateControlPlaneState` sends `sendMessage($m)` with `m` = a JSON-encoded
 action envelope. Decode it, stamp the channel id for per-slot attribution,

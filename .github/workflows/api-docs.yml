@@ -6,10 +6,24 @@
 # stale docs/api or DSL schema fails the job.
 name: API docs
 
+# Runs on PRs as well as main. Main-only meant the drift gate could not block
+# anything — it fired after merge, so a stale docs/api landed first and turned
+# main red afterwards. That is how 124 files of drift accumulated unnoticed
+# between 2026-07-03 and 2026-07-26 (the job was failing before the gate, and
+# nothing ran the gate on the way in). Same path filters on both triggers.
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'packages/contracts/src/**'
+      - 'packages/runtime/src/**'
+      - 'packages/dsl/src/**'
+      - 'typedoc.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/generate-dsl-schema.ts'
+      - '.github/workflows/api-docs.yml'
+  pull_request:
     paths:
       - 'packages/contracts/src/**'
       - 'packages/runtime/src/**'
@@ -33,6 +47,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # `npm ci` symlinks the file: workspace packages but never builds them,
+      # so packages/*/dist does not exist. TypeDoc reads source and does not
+      # care, but generate-dsl-schema.ts imports packages/dsl/src/schema.ts,
+      # which imports '@seans-mfe/contracts' — a bare specifier ts-node
+      # resolves through node_modules to ./dist/index.js, not through the
+      # tsconfig `paths` mapping (ts-node ignores paths at runtime without
+      # tsconfig-paths). Without this step the schema job dies with
+      # MODULE_NOT_FOUND. It has since packages/dsl/src/schema.ts gained its
+      # first contracts import in #266 (ADR-069) — 13 consecutive red runs.
+      - name: Build workspace packages (dist/ for bare-specifier resolution)
+        run: npm run build:packages
 
       - name: Generate API reference (TypeDoc -> docs/api)
         run: npm run build:docs

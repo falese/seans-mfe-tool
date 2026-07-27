@@ -17,5 +17,6 @@
   "excludeExternals": true,
   "hideGenerator": true,
   "gitRevision": "main",
+  "sourceLinkTemplate": "https://github.com/falese/seans-mfe-tool/blob/{gitRevision}/{path}#L{line}",
   "exclude": ["**/__tests__/**", "**/*.test.ts"]
 }

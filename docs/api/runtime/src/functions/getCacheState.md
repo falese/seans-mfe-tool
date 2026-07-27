@@ -6,7 +6,7 @@
 
 # Function: getCacheState()
 
-> **getCacheState**(`context`): [`CacheState`](../interfaces/CacheState.md)
+> **getCacheState**(`context`): [`CacheState`](../interfaces/CacheState.md) \| `undefined`
 
 Defined in: [packages/runtime/src/handlers/caching.ts:13](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/caching.ts#L13)
 
@@ -20,4 +20,4 @@ Typed accessor for the cache state this handler owns on a context.
 
 ## Returns
 
-[`CacheState`](../interfaces/CacheState.md)
+[`CacheState`](../interfaces/CacheState.md) \| `undefined`

@@ -6,9 +6,9 @@
 
 # Function: formatErrorResponse()
 
-> **formatErrorResponse**(`error`, `classification`): \{ `error`: \{ `code`: `string`; `field`: `any`; `message`: `string`; `type`: `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"` \| `"unknown"`; \}; \} \| \{ `error`: \{ `code`: `string`; `field?`: `undefined`; `message`: `string`; `type`: `string`; \}; \}
+> **formatErrorResponse**(`error`, `classification`): \{ `error`: \{ `code`: `string`; `field`: `string` \| `undefined`; `message`: `string`; `type`: `"unknown"` \| `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"`; \}; \} \| \{ `error`: \{ `code`: `string`; `field?`: `undefined`; `message`: `string`; `type`: `string`; \}; \}
 
-Defined in: [packages/contracts/src/error-classifier.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L63)
+Defined in: [packages/contracts/src/error-classifier.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/error-classifier.ts#L82)
 
 ## Parameters
 
@@ -22,4 +22,4 @@ Defined in: [packages/contracts/src/error-classifier.ts:63](https://github.com/f
 
 ## Returns
 
-\{ `error`: \{ `code`: `string`; `field`: `any`; `message`: `string`; `type`: `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"` \| `"unknown"`; \}; \} \| \{ `error`: \{ `code`: `string`; `field?`: `undefined`; `message`: `string`; `type`: `string`; \}; \}
+\{ `error`: \{ `code`: `string`; `field`: `string` \| `undefined`; `message`: `string`; `type`: `"unknown"` \| `"network"` \| `"validation"` \| `"business"` \| `"security"` \| `"system"` \| `"timeout"`; \}; \} \| \{ `error`: \{ `code`: `string`; `field?`: `undefined`; `message`: `string`; `type`: `string`; \}; \}

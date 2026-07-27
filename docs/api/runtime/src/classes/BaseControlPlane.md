@@ -119,7 +119,7 @@ Defined in: [packages/runtime/src/base-control-plane.ts:129](https://github.com/
 
 #### Get Signature
 
-> **get** **uptime**(): `number`
+> **get** **uptime**(): `number` \| `undefined`
 
 Defined in: [packages/runtime/src/base-control-plane.ts:233](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-control-plane.ts#L233)
 
@@ -127,7 +127,7 @@ Milliseconds since start() completed. Undefined when not running.
 
 ##### Returns
 
-`number`
+`number` \| `undefined`
 
 ## Methods
 

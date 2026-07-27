@@ -14,9 +14,20 @@ Classified build error with optional source location.
 
 ### category
 
-> **category**: `"unknown"` \| `"type"` \| `"syntax"` \| `"dependency"` \| `"config"` \| `"runtime"`
+> **category**: `"syntax"` \| `"type"` \| `"dependency"` \| `"config"` \| `"runtime"` \| `"unknown"`
 
 Defined in: [packages/contracts/src/framework-plugin.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L79)
+
+***
+
+### code?
+
+> `optional` **code**: `string`
+
+Defined in: [packages/contracts/src/framework-plugin.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L85)
+
+Compiler diagnostic code where the toolchain emits one (`TS2339`). Lets an
+agent look the failure up or match on it without parsing the message.
 
 ***
 
