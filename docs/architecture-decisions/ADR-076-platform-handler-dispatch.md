@@ -28,7 +28,7 @@ verified-by:
   - packages/runtime/src/handlers/__tests__/caching.test.ts
   - packages/runtime/src/handlers/__tests__/rate-limiting.test.ts
   - packages/runtime/src/handlers/__tests__/error-handling.test.ts
-tracked-by: ["#317"]
+tracked-by: []
 summary: >-
   Platform handlers are plain async functions of shape (context: Context) => Promise<unknown>,
   exported from packages/runtime/src/handlers/ and resolved by their literal export name from a

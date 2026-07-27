@@ -17,7 +17,7 @@ implemented-by:
   - packages/framework-react/src/plugin.ts
   - packages/framework-angular/src/plugin.ts
 verified-by: []
-tracked-by: ["#281"]
+tracked-by: []
 summary: >-
   Introduce an abstract `BaseFrameworkPlugin` class in core that defines the shape of
   framework-specific build, scaffold, and Docker concerns. Each framework is a concrete

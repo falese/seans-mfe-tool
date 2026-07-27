@@ -19,7 +19,7 @@ implemented-by:
 verified-by:
   - packages/dsl/src/__tests__/adr-validation.test.ts
   - check:adr
-tracked-by: ["#241"]
+tracked-by: []
 summary: >-
   ADR frontmatter becomes the single source of truth for the decision record; the `docs/spec.md` index and the PDR↔ADR map become generated artifacts under a diff gate; and a rule set in `adr:validate` makes stale cross-references, one-way supersessions, unratified-ADR citations in code, and free-text statuses unrepresentable rather than merely noticeable.
 rationale-summary: >-

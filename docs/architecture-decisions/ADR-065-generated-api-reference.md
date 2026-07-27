@@ -1,10 +1,7 @@
 ---
 id: 0065
 title: Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth
-status: Accepted
-impl:
-  stage: phased
-  refs: ["#264"]
+status: Implemented
 date: 2026-07-03
 deciders: [sean]
 area: Docs / tooling / packaging
@@ -15,8 +12,14 @@ supersedes: []
 superseded-by: []
 implemented-by:
   - scripts/generate-dsl-schema.ts
+  - typedoc.json
+  - tsconfig.typedoc.json
+  - .github/workflows/api-docs.yml
+  - docs/api/README.md
 verified-by:
   - build:schema:dsl:check
+  - build:docs:check
+tracked-by: ["#252"]
 long-form: true
 ---
 
@@ -74,7 +77,15 @@ cannot be regenerated offline, and an out-of-sync lockfile breaks `npm ci`).
 | 1 | ADR, `typedoc.json`, `tsconfig.typedoc.json`, `scripts/generate-dsl-schema.ts`, npm scripts, `api-docs.yml` workflow | #263 | ✅ Done |
 | 2 | Generate + review output; commit seeded `docs/api/` + `schemas/dsl/manifest.schema.json`; promote `typedoc`/`typedoc-plugin-markdown` to `devDependencies` with lockfile; drop the `--no-save` install from the workflow; arm the drift gates | #263 | ✅ Done (generated locally with registry access; 126 doc files + the DSL schema seeded) |
 | 3 | API Extractor `.api.md` public-API reports per package — turns the "no public API change" invariant asserted manually in #263 into a CI check. Deferred until per-package builds exist (ADR-064 / #252) | #252 | 📋 Deferred |
-| 4 | `oclif readme` command reference once README `<!-- commands -->` markers are added | #264 | 📋 Deferred |
+| 4 | `oclif readme` command reference once README `<!-- commands -->` markers are added | unfiled | 📋 Deferred |
+
+Phases 1 and 2 — the decision itself — are done and gated, so the status is
+`Implemented` rather than `Accepted, phased`: `docs/api/` is seeded and the
+`api-docs` workflow enforces the drift diff on every PR. Phases 3 and 4 are
+enhancements layered on the same config, not steps toward ratifying the
+decision, which is why they live outside `impl` (ADR-075 §7). Phase 3 is
+carried by `tracked-by: #252`; phase 4 has no tracker — it previously pointed
+at #264, which closed when phase 2 landed.
 
 ## Alternatives considered
 
