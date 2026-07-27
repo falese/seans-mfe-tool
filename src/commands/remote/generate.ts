@@ -2,12 +2,57 @@ import { Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
-import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
+import * as fsSync from 'fs';
+import {
+  generateAllFiles,
+  writeGeneratedFiles,
+  PLATFORM_MIGRATIONS,
+  findMigrationHits,
+} from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
+
+/**
+ * Warn when a file regeneration just declined to touch uses something the
+ * platform changed (ADR-082).
+ *
+ * Scoped to `skipped` — the developer-owned files the generator would have
+ * emitted. Hand-written app code the generator has never heard of is out of
+ * scope here and is covered by `mfe:validate`, which scans the whole tree.
+ */
+function reportPlatformMigrations(skipped: string[], cwd: string): void {
+  const findings: string[] = [];
+
+  for (const filePath of skipped) {
+    let text: string;
+    try {
+      text = fsSync.readFileSync(filePath, 'utf8');
+    } catch {
+      continue; // unreadable is not this reporter's problem
+    }
+    for (const migration of PLATFORM_MIGRATIONS) {
+      for (const hit of findMigrationHits(migration, { path: filePath, text })) {
+        findings.push(
+          `  ${path.relative(cwd, filePath)}:${hit.line}  ${migration.message} (${migration.adr})\n` +
+            `      fix: ${migration.fix}`,
+        );
+      }
+    }
+  }
+
+  if (findings.length === 0) return;
+
+  console.log(
+    chalk.yellow(`\n⚠ ${findings.length} of your file(s) use something the platform changed:`),
+  );
+  for (const finding of findings) console.log(chalk.yellow(finding));
+  console.log(
+    chalk.gray('  Not changed for you. Run `seans-mfe-tool mfe:validate` for the full picture.'),
+  );
+}
 
 export async function remoteGenerateCommand(
   options: RemoteGenerateOptions & { dryRun?: boolean } = {}
@@ -83,6 +128,12 @@ export async function remoteGenerateCommand(
       // These files are yours after the first generation — regeneration
       // never overwrites them (no flag does; see writeGeneratedFiles).
       console.log(chalk.gray('  Yours to edit — regeneration never overwrites these'));
+
+      // ...which is exactly why they need saying out loud when one of them uses
+      // something the platform has changed. This is the moment the gap is most
+      // visible: the platform has just re-stamped everything it owns, and these
+      // are the files it declined to touch (ADR-082).
+      reportPlatformMigrations(genResult.skipped, cwd);
     }
 
     if (genResult.errors.length > 0) {

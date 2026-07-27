@@ -15,6 +15,11 @@
  * It also carries the slot rule (ADR-073): every slot an MFE declares in
  * `providesSlots` should be registered by its app code. That check needs the
  * MFE's sources, so the reading happens here and the matching stays pure.
+ *
+ * And the platform-migrations rule (ADR-082): developer-owned files using
+ * something the platform changed are *warned* about, never rewritten.
+ * Establishing which files those are means asking the generator — it is the
+ * only authority on the `overwrite` split — so that happens here too.
  */
 
 import * as path from 'path';
@@ -27,6 +32,8 @@ import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 import {
   validateMfeConsistency,
   parseFederationSharedEntries,
+  generateAllFiles,
+  isError,
 } from '@seans-mfe/codegen';
 import type { SourceFile } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
@@ -35,7 +42,46 @@ import type { MfeValidateResult } from '../../oclif/results';
 export interface MfeValidateOptions {
   dir?: string;
   typecheck?: boolean;
+  /** Escalate ADR-082 migration warnings to errors before their `failsAt`. */
+  strict?: boolean;
 }
+
+/**
+ * Which of this MFE's files the generator seeds but does not own.
+ *
+ * Asks the generator rather than guessing: `overwrite: false` is its own
+ * classification, and `check-mfe-drift` already relies on it. Generating in
+ * memory costs roughly half a second and needs no writes.
+ *
+ * Anything the generator does not emit at all is developer-owned too — that is
+ * how hand-written app code is covered. On any failure the predicate returns
+ * false for everything, so a generator problem degrades to "no migration
+ * warnings" rather than to a wall of false positives.
+ */
+async function developerOwnedPredicate(
+  dir: string,
+  manifest: unknown,
+): Promise<(sourcePath: string) => boolean> {
+  try {
+    const { files } = await generateAllFiles(manifest as never, dir, { force: true });
+    const generatorOwned = new Set(
+      files.filter((f) => f.overwrite).map((f) => path.resolve(f.path)),
+    );
+    return (sourcePath: string) => !generatorOwned.has(path.resolve(sourcePath));
+  } catch {
+    return () => false;
+  }
+}
+
+/**
+ * The running platform version, for ADR-082 migration escalation. Read from the
+ * CLI's own package.json rather than per-MFE state, because there is none — see
+ * ADR-082 Boundaries.
+ */
+const PLATFORM_VERSION: string =
+  (fs.readJsonSync(path.resolve(__dirname, '..', '..', '..', 'package.json'), {
+    throws: false,
+  }) as { version?: string } | null)?.version ?? '0.0.0';
 
 const CONFIG_BY_BUNDLER: Record<string, string> = {
   rspack: 'rspack.config.js',
@@ -154,32 +200,61 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
   const sharedEntries = await readSharedEntries(dir, bundler);
   const sources = await collectSources(dir);
 
+  const developerOwned = await developerOwnedPredicate(dir, manifest);
+
   const { ok, checked, issues } = validateMfeConsistency({
     manifest,
     framework,
     packageDependencies,
     sharedEntries,
     sources,
+    developerOwned,
+    platformVersion: PLATFORM_VERSION,
   });
+
+  // --strict escalates ADR-082 warnings ahead of their declared failsAt, for a
+  // team that wants the stronger contract before the platform requires it.
+  // Locations come back absolute because the scan reads absolute paths. Relative
+  // to the MFE is what a developer can act on — `src/index.tsx:79`, not a path
+  // that depends on where the repo happens to live.
+  const located = issues.map((i) =>
+    i.location
+      ? { ...i, location: `${path.relative(dir, i.location.replace(/:(\d+)$/, ''))}:${i.location.match(/:(\d+)$/)?.[1] ?? ''}` }
+      : i,
+  );
+
+  const effectiveIssues = opts.strict
+    ? located.map((i) => ({ ...i, severity: 'error' as const }))
+    : located;
+  const effectiveOk = effectiveIssues.every((i) => !isError(i));
 
   const typecheck = opts.typecheck ? runTypecheck(dir, framework) : undefined;
 
+  void ok;
   const result: MfeValidateResult = {
     mfe: (manifest as { name?: string }).name ?? path.basename(dir),
     framework,
-    ok: ok && (typecheck ? typecheck.ok : true),
+    ok: effectiveOk && (typecheck ? typecheck.ok : true),
     checked,
-    issues,
+    issues: effectiveIssues,
     typecheck,
   };
 
   console.log(chalk.blue(`\nValidating ${result.mfe} (${framework})...\n`));
   for (const rule of checked) {
-    const ruleIssues = issues.filter((i) => i.rule === rule);
-    const status = ruleIssues.length === 0 ? chalk.green('✓') : chalk.red('✗');
+    const ruleIssues = effectiveIssues.filter((i) => i.rule === rule);
+    const failed = ruleIssues.some((i) => isError(i));
+    const status = ruleIssues.length === 0
+      ? chalk.green('✓')
+      : failed
+        ? chalk.red('✗')
+        : chalk.yellow('⚠');
     console.log(`  ${status} ${rule}`);
     for (const i of ruleIssues) {
-      console.log(chalk.red(`      - ${i.message}`));
+      const paint = isError(i) ? chalk.red : chalk.yellow;
+      const where = i.location ? ` ${chalk.gray(i.location)}` : '';
+      console.log(paint(`      - ${i.message}`) + where);
+      if (i.fix) console.log(chalk.gray(`        fix: ${i.fix}`));
     }
   }
   if (typecheck?.ran) {
@@ -191,16 +266,26 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
   console.log('');
 
   if (!result.ok) {
-    const failCount = issues.length + (typecheck && !typecheck.ok ? 1 : 0);
+    const failCount =
+      effectiveIssues.filter(isError).length + (typecheck && !typecheck.ok ? 1 : 0);
     console.log(chalk.red(`${result.mfe} is inconsistent: ${failCount} problem(s).`));
     throw new BusinessError(
       `MFE ${result.mfe} failed consistency validation with ${failCount} problem(s)`,
       'MFE_INCONSISTENT',
-      { mfe: result.mfe, issues, typecheck },
+      { mfe: result.mfe, issues: effectiveIssues, typecheck },
     );
   }
 
-  console.log(chalk.green(`${result.mfe} is consistent.`));
+  const warnings = effectiveIssues.filter((i) => !isError(i));
+  if (warnings.length > 0) {
+    console.log(
+      chalk.yellow(
+        `${result.mfe} is consistent, with ${warnings.length} platform-migration warning(s).`,
+      ),
+    );
+  } else {
+    console.log(chalk.green(`${result.mfe} is consistent.`));
+  }
   return result;
 }
 
@@ -221,6 +306,7 @@ export default class MfeValidate extends BaseCommand<MfeValidateResult> {
     '$ seans-mfe-tool mfe:validate ./examples/meridian-station/meridian-docking-simulation',
     '$ seans-mfe-tool mfe:validate --typecheck',
     '$ seans-mfe-tool mfe:validate --json',
+    '# Treat platform-migration warnings as failures (ADR-082)\n$ seans-mfe-tool mfe:validate --strict',
   ];
 
   static flags = {
@@ -229,10 +315,31 @@ export default class MfeValidate extends BaseCommand<MfeValidateResult> {
       description: 'Also run `tsc --noEmit` in the MFE directory',
       default: false,
     }),
+    strict: Flags.boolean({
+      description:
+        'Fail on platform-migration warnings instead of reporting them (ADR-082)',
+      default: false,
+    }),
   };
 
   protected async runCommand(): Promise<MfeValidateResult> {
     const { args, flags } = await this.parse(MfeValidate);
-    return mfeValidateCommand({ dir: args.dir, typecheck: flags.typecheck });
+    const result = await mfeValidateCommand({
+      dir: args.dir,
+      typecheck: flags.typecheck,
+      strict: flags.strict,
+    });
+
+    // Mirror migration findings into the envelope (ADR-018) so an MCP tool call
+    // or an agent sees them without parsing stdout.
+    for (const issue of result.issues) {
+      if ((issue.severity ?? 'error') === 'warning') {
+        this.warnings.push(
+          `${issue.location ?? result.mfe}: ${issue.message}${issue.fix ? ` — ${issue.fix}` : ''}`,
+        );
+      }
+    }
+
+    return result;
   }
 }

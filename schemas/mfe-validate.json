@@ -13,6 +13,10 @@
       "typecheck": {
         "type": "boolean",
         "description": "Also run `tsc --noEmit` in the MFE directory"
+      },
+      "strict": {
+        "type": "boolean",
+        "description": "Fail on platform-migration warnings instead of reporting them (ADR-082)"
       }
     },
     "required": [],
@@ -68,6 +72,22 @@
             },
             "actual": {
               "type": "string"
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning"
+              ],
+              "description": "`warning` reports without failing; absent means `error` (ADR-082)."
+            },
+            "location": {
+              "type": "string",
+              "description": "`path:line`, for issues found in a specific source file."
+            },
+            "fix": {
+              "type": "string",
+              "description": "What to do about it, for rules that can say."
             }
           },
           "additionalProperties": false

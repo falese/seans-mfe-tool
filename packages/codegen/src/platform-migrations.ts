@@ -1,0 +1,164 @@
+/**
+ * Platform migrations — what the platform changed in code it does not own
+ * (ADR-082).
+ *
+ * The generator splits its output in two: files it owns and re-stamps, and
+ * files it seeds once and then never touches, "even with `--force`". When a
+ * platform contract moves, regeneration fixes the first class and cannot reach
+ * the second — and until this existed, nothing reported that the second class
+ * had fallen behind. Carrying ADR-017 to the fleet left 19 developer-owned
+ * files stale while every gate stayed green.
+ *
+ * Each entry below is one such change. They are hand-written on purpose:
+ * deriving them from template diffs cannot tell a contract change from a
+ * comment reflow, and cannot produce the `fix` at all — which is the half a
+ * developer actually needs.
+ *
+ * Detection is by **usage**, not staleness. "Does this code use the thing that
+ * changed" reports exactly the people affected and goes quiet when they fix it.
+ * "Was this file seeded before the change" would flag anyone who legitimately
+ * rewrote their own file, for as long as the file existed.
+ *
+ * Pure: no I/O, no process access. The caller supplies the sources and the
+ * platform version.
+ */
+
+/** One line of developer-owned source that uses something the platform changed. */
+export interface MigrationHit {
+  /** 1-indexed, so it can be printed as `path:line`. */
+  line: number;
+  /** The offending line, trimmed — enough to recognise without opening the file. */
+  text: string;
+}
+
+export interface SourceLike {
+  path: string;
+  text: string;
+}
+
+export interface PlatformMigration {
+  /** Stable slug. Keys any suppression a consumer writes, so it must not churn. */
+  id: string;
+  /** Platform version that began warning about this. */
+  since: string;
+  /**
+   * Platform version at which the warning becomes an error. Omitted for a
+   * change that is advice rather than a deadline.
+   */
+  failsAt?: string;
+  /** What is wrong, in the developer's terms. */
+  message: string;
+  /** What to do instead — concrete enough to act on without reading the ADR. */
+  fix: string;
+  /** The decision this enforces. */
+  adr: string;
+  /** Lines matching this are hits. Applied per line, so a hit carries a number. */
+  pattern: RegExp;
+  /**
+   * Lines matching this are exempt even if `pattern` matched. For the cases
+   * where a single regex would either over- or under-match — see
+   * `validation-error-renamed`, where only the *type* import moved.
+   */
+  exempt?: RegExp;
+}
+
+// ---------------------------------------------------------------------------
+// The registry
+// ---------------------------------------------------------------------------
+
+export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
+  {
+    id: 'typed-errors',
+    since: '1.0.0',
+    failsAt: '2.0.0',
+    adr: 'ADR-017',
+    // Worded to avoid the literal construct, so this entry does not trip the
+    // ADR-017 guard that scans this very file. The suppression marker exists
+    // for prose that genuinely needs to quote it.
+    message:
+      'Throwing a raw `Error` — the platform classifies failures by error type, so this is reported as `unknown` and never retried',
+    fix: "Throw a typed error from '@seans-mfe-tool/runtime': ValidationError (bad input), BusinessError (precondition), NetworkError (transport, carries the status), SystemError (environment), SecurityError, TimeoutError",
+    // `new Error(...)` that is not thrown is a value, not a failure signal, so
+    // the throw keyword is part of the match.
+    pattern: /\bthrow\s+new\s+Error\s*\(/,
+  },
+  {
+    id: 'validation-error-renamed',
+    since: '1.0.0',
+    failsAt: '2.0.0',
+    adr: 'ADR-017',
+    message:
+      "`ValidationError` imported as a *type* from '@seans-mfe-tool/runtime' now refers to the thrown class; the per-field record it used to name is `ValidationIssue`",
+    fix: 'Rename the type import to ValidationIssue. If you meant the throwable class, import it as a value instead of a type — that name is unchanged.',
+    // Only the type position moved. `import { ValidationError }` (a value) is
+    // still correct and must not be flagged.
+    pattern: /import\s+type\s*\{[^}]*\bValidationError\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
+  },
+] as const;
+
+// ---------------------------------------------------------------------------
+// Version comparison
+// ---------------------------------------------------------------------------
+
+/**
+ * Compare two dotted versions numerically. Returns -1, 0 or 1.
+ *
+ * Deliberately not `semver`: `packages/codegen` does not depend on it and
+ * should not gain a dependency to compare three integers. Prerelease suffixes
+ * are ignored rather than ordered — a migration deadline is a release-line
+ * decision, and treating `2.0.0-rc.1` as `2.0.0` is the safe reading.
+ */
+export function compareVersions(a: string, b: string): number {
+  const parse = (v: string): number[] =>
+    v
+      .split('-')[0]
+      .split('.')
+      .map((part) => Number.parseInt(part, 10) || 0);
+
+  const left = parse(a);
+  const right = parse(b);
+
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const l = left[i] ?? 0;
+    const r = right[i] ?? 0;
+    if (l !== r) return l > r ? 1 : -1;
+  }
+  return 0;
+}
+
+/**
+ * Whether this migration is still advice or has become a requirement, for the
+ * platform version currently running.
+ *
+ * The comparison is against the running CLI, not per-MFE state — there is none
+ * to read (ADR-082 Boundaries). The effect is that the escalation arrives when
+ * someone upgrades the platform, which is when a breaking change lands anyway.
+ */
+export function severityFor(
+  migration: PlatformMigration,
+  platformVersion: string,
+): 'warning' | 'error' {
+  if (!migration.failsAt) return 'warning';
+  return compareVersions(platformVersion, migration.failsAt) >= 0 ? 'error' : 'warning';
+}
+
+// ---------------------------------------------------------------------------
+// Matching
+// ---------------------------------------------------------------------------
+
+/** Every line of `source` that uses what `migration` describes. */
+export function findMigrationHits(
+  migration: PlatformMigration,
+  source: SourceLike,
+): MigrationHit[] {
+  const hits: MigrationHit[] = [];
+  const lines = source.text.split(/\r?\n/);
+
+  lines.forEach((text, index) => {
+    if (!migration.pattern.test(text)) return;
+    if (migration.exempt?.test(text)) return;
+    hits.push({ line: index + 1, text: text.trim() });
+  });
+
+  return hits;
+}
