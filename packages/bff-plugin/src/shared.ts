@@ -30,11 +30,20 @@ export interface MeshTransform {
   filterSchema?: { filters: string[] };
   encapsulate?: { applyTo: { query: boolean; mutation: boolean } };
   namingConvention?: { typeNames: string; fieldNames: string };
+  /** How the demo-mode mock switch is expressed to Mesh (ADR-052). */
+  resolversComposition?: {
+    mode: string;
+    compositions: Array<{ resolver: string; composer: string }>;
+  };
   [key: string]: unknown;
 }
 
 export interface MeshPlugin {
-  responseCache?: { ttl: number };
+  /**
+   * `if` is a Mesh cache predicate. Demo mode sets it so a response cached from
+   * a live request is never served to a mock request, or vice versa (ADR-052).
+   */
+  responseCache?: { ttl: number; if?: string };
   rateLimit?: { config: Array<{ type: string; field: string; max: number; window: string }> };
   prometheus?: Record<string, unknown>;
   depthLimit?: { maxDepth: number };
@@ -168,7 +177,98 @@ export async function extractMeshConfig(manifestPath: string): Promise<ExtractMe
     serve: manifest.data.serve || { endpoint: '/graphql', playground: true }
   };
 
+  applyMockSwitch(meshConfig, manifest.data);
+
   return { meshConfig, manifest, manifestPath: absolutePath };
+}
+
+/**
+ * Where the composer lives relative to `.meshrc.yaml` on the standalone path.
+ *
+ * The `remote:generate` path nests the BFF under `src/platform/bff/`, so
+ * `meshrc.yaml.ejs` names `./src/platform/bff/mock-switch#mockSwitch`. A
+ * standalone BFF has no such nesting — `.meshrc.yaml`, the composer and the
+ * fixtures are siblings at the project root. Same decision, different layout.
+ */
+const MOCK_SWITCH_COMPOSER = './mock-switch#mockSwitch';
+
+/** The cache guard from ADR-052, kept identical to the one in `meshrc.yaml.ejs`. */
+const MOCK_SWITCH_CACHE_GUARD = "context.headers?.get?.('x-bff-mode') == null";
+
+/**
+ * Project the manifest's `mockSwitch` flag onto the Mesh config (ADR-052).
+ *
+ * `mockSwitch` is a DSL field, not a Mesh one: it expands into a
+ * `resolversComposition` transform over `Query.*` plus a guard on the response
+ * cache. Doing it here rather than in the caller means every route that reaches
+ * `.meshrc.yaml` through `extractMeshConfig` — `bff:validate`, `bff:build`,
+ * `bff:dev` — agrees on the expansion, and the raw flag never leaks into a file
+ * Mesh has to parse.
+ */
+export function applyMockSwitch(meshConfig: MeshConfig, data: DSLDataSection): void {
+  if (!data.mockSwitch?.enabled) return;
+
+  const transforms = meshConfig.transforms ? [...meshConfig.transforms] : [];
+  const alreadyDeclared = transforms.some((t) => 'resolversComposition' in t);
+
+  // A hand-authored composition wins: the manifest is the source of truth
+  // (ADR-012), and silently prepending a second one would give Mesh two
+  // wrappers over the same resolvers.
+  if (!alreadyDeclared) {
+    transforms.unshift({
+      resolversComposition: {
+        mode: 'bare',
+        compositions: [{ resolver: 'Query.*', composer: MOCK_SWITCH_COMPOSER }],
+      },
+    });
+  }
+  meshConfig.transforms = transforms;
+
+  // Without this, a response cached from a live request is served to a mock
+  // request and vice versa — the switch appears to not work at all.
+  meshConfig.plugins = meshConfig.plugins?.map((plugin) =>
+    plugin.responseCache
+      ? { ...plugin, responseCache: { ...plugin.responseCache, if: MOCK_SWITCH_CACHE_GUARD } }
+      : plugin,
+  );
+}
+
+/**
+ * Emit the two files the composer reference resolves to (ADR-052).
+ *
+ * `mock-switch.js` is generated and always refreshed; `mocks.json` is
+ * developer-owned and never overwritten — the fixtures are the whole point of
+ * demo mode, and clobbering them on every build would make the feature unusable.
+ *
+ * Returns the files it wrote, for the caller's `generatedFiles` list.
+ */
+export async function ensureMockSwitchFiles(targetDir: string): Promise<string[]> {
+  const templateDir = path.resolve(__dirname, '..', 'templates');
+  const written: string[] = [];
+
+  const composerTemplate = path.join(templateDir, 'mock-switch.js.ejs');
+  if (!await fs.pathExists(composerTemplate)) {
+    throw new SystemError(`Demo-mode template not found: ${composerTemplate}`);
+  }
+  await fs.writeFile(
+    path.join(targetDir, 'mock-switch.js'),
+    await fs.readFile(composerTemplate, 'utf8'),
+    'utf8',
+  );
+  written.push('mock-switch.js');
+
+  const fixturesPath = path.join(targetDir, 'mocks.json');
+  if (!await fs.pathExists(fixturesPath)) {
+    await fs.writeFile(
+      fixturesPath,
+      await fs.readFile(path.join(templateDir, 'mocks.json.ejs'), 'utf8'),
+      'utf8',
+    );
+    written.push('mocks.json');
+  }
+
+  console.log(chalk.green('✓ Generated demo-mode mock switch (ADR-052)'));
+  return written;
 }
 
 /**

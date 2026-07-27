@@ -3,11 +3,12 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import * as yaml from 'js-yaml';
 import { processTemplates } from '../../utils/templateProcessor';
 import { BaseCommand } from '@seans-mfe/oclif-base';
 import { SystemError, ValidationError } from '@seans-mfe/contracts';
-import { addMeshDependencies } from '../../shared';
-import type { BFFCommandOptions, TemplateSource, TemplateVars } from '../../shared';
+import { addMeshDependencies, ensureMockSwitchFiles } from '../../shared';
+import type { BFFCommandOptions, MFEManifest, TemplateSource, TemplateVars } from '../../shared';
 import type { BffInitResult, PlannedChange } from '../../types';
 import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '@seans-mfe/codegen';
 
@@ -17,6 +18,12 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
     const targetDir = isAddToExisting
       ? process.cwd()
       : path.resolve(process.cwd(), name);
+
+    // Demo mode is declared in the manifest, not by a flag — the `data:` block
+    // *is* the Mesh config (ADR-012), so the switch has exactly one home. A new
+    // standalone project scaffolds from the template with it off; `bff:build`
+    // picks it up the moment the developer turns it on (ADR-052, #199).
+    let mockSwitchEnabled = false;
 
     if (isAddToExisting) {
       console.log(chalk.blue('Adding BFF to existing project...'));
@@ -28,6 +35,8 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
           'exists',
         );
       }
+      const existing = yaml.load(await fs.readFile(manifestPath, 'utf8')) as MFEManifest | undefined;
+      mockSwitchEnabled = !!existing?.data?.mockSwitch?.enabled;
     } else {
       console.log(chalk.blue(`Creating BFF project "${name}"...`));
     }
@@ -89,6 +98,20 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
               { op: 'create' as const, target: 'mfe-manifest.yaml', detail: 'DSL config' },
               { op: 'create' as const, target: 'package.json', detail: 'Mesh dependencies' },
             ]),
+        ...(mockSwitchEnabled
+          ? [
+              {
+                op: 'create' as const,
+                target: 'mock-switch.js',
+                detail: 'demo-mode composer (ADR-052)',
+              },
+              {
+                op: 'create' as const,
+                target: 'mocks.json',
+                detail: 'demo-mode fixtures — kept if already present',
+              },
+            ]
+          : []),
       ];
       console.log(chalk.yellow('\n[DRY RUN] Would create:'));
       for (const c of plannedChanges) {
@@ -135,6 +158,8 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
 
     await processTemplates(targetDir, templateVars);
 
+    const demoModeFiles = mockSwitchEnabled ? await ensureMockSwitchFiles(targetDir) : [];
+
     if (isAddToExisting) {
       await addMeshDependencies(targetDir);
     }
@@ -159,6 +184,10 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log('  package.json        - Dependencies');
     }
     console.log('  specs/              - OpenAPI specifications');
+    if (mockSwitchEnabled) {
+      console.log('  mock-switch.js      - Demo-mode composer (ADR-052)');
+      console.log('  mocks.json          - Demo-mode fixtures (yours to edit)');
+    }
 
     console.log('\nNext steps:');
     if (!isAddToExisting) {
@@ -175,7 +204,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       name: name || path.basename(targetDir),
       port,
       sources: sources.map((s) => s.spec),
-      generatedFiles: ['server.ts', 'Dockerfile', 'docker-compose.yaml', 'specs/'],
+      generatedFiles: ['server.ts', 'Dockerfile', 'docker-compose.yaml', 'specs/', ...demoModeFiles],
       dryRun: false,
     };
 
