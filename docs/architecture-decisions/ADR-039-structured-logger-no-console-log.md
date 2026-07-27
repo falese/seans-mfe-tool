@@ -1,10 +1,7 @@
 ---
 id: 0039
 title: Structured logger — no console.log in production code
-status: Accepted
-impl:
-  stage: deferred
-  refs: ["#322"]
+status: Superseded
 date: 2026-04-18
 deciders: [sean]
 area: CLI / logging
@@ -12,7 +9,7 @@ enforcement: convention
 tags: [logging, observability, cli, production-code]
 relates-to: []
 supersedes: []
-superseded-by: []
+superseded-by: [81]
 implemented-by:
   - CLAUDE.md
 verified-by:

@@ -273,7 +273,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-036](./architecture-decisions/ADR-036-framework-plugins.md) | Framework plugins — abstract BaseFrameworkPlugin with concrete implementations | Build / codegen / deploy | Implemented |
 | [ADR-037](./architecture-decisions/ADR-037-tdd-always.md) | TDD-always — write the failing test before the code | Process | Accepted |
 | [ADR-038](./architecture-decisions/ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch discipline | Process | Accepted |
-| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted (impl deferred, #322) |
+| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded |
 | [ADR-040](./architecture-decisions/ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
 | [ADR-041](./architecture-decisions/ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
 | [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
@@ -315,6 +315,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-078](./architecture-decisions/ADR-078-control-plane-in-platform.md) | The control plane ships in the platform, and a composition environment is generated from a manifest | Control plane / codegen / packaging | Proposed (impl deferred, #139) |
 | [ADR-079](./architecture-decisions/ADR-079-single-execution-substitution-seam.md) | There is one seam for substituting handler execution, and it sits inside the lifecycle contract | Runtime / lifecycle / dependency injection | Implemented |
 | [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
+| [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 
 <!-- END GENERATED: adr-index -->
 

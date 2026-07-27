@@ -59,7 +59,19 @@ export type CommandResult<T = unknown> = {
   data?: T;
   error?: CommandError;
   warnings: string[];
-  telemetry: { durationMs: number; correlationId: string };
+  telemetry: {
+    durationMs: number;
+    correlationId: string;
+    /**
+     * W3C trace id for this invocation (ADR-081), tying the envelope to the
+     * events the command emitted and to anything it spawned.
+     *
+     * Optional because this envelope is a published contract (ADR-018) with
+     * generated schemas behind it: `correlationId` stays, and consumers that
+     * predate tracing keep working.
+     */
+    traceId?: string;
+  };
 };
 
 export type CommandError = {
@@ -104,7 +116,7 @@ export function exitCodeFor(type: string): number {
 export function formatSuccess<T>(
   data: T,
   warnings: string[] = [],
-  telemetry?: Partial<{ durationMs: number; correlationId: string }>,
+  telemetry?: Partial<{ durationMs: number; correlationId: string; traceId: string }>,
 ): CommandResult<T> {
   return {
     ok: true,
@@ -113,6 +125,10 @@ export function formatSuccess<T>(
     telemetry: {
       durationMs:    telemetry?.durationMs    ?? 0,
       correlationId: telemetry?.correlationId ?? randomUUID(),
+      // Omitted rather than defaulted: an envelope with no trace id says
+      // "untraced", which is honest. A minted-here id would say "traced" and
+      // correlate with nothing (ADR-081).
+      ...(telemetry?.traceId !== undefined && { traceId: telemetry.traceId }),
     },
   };
 }
@@ -121,6 +137,7 @@ export function formatError(
   err: unknown,
   correlationId: string,
   startTime?: number,
+  traceId?: string,
 ): CommandResult<never> {
   const error = err instanceof Error ? err : new Error(String(err));
   const classification = classifyError(error, { types: [] });
@@ -143,6 +160,7 @@ export function formatError(
     telemetry: {
       durationMs:    startTime ? Date.now() - startTime : 0,
       correlationId,
+      ...(traceId !== undefined && { traceId }),
     },
   };
 }

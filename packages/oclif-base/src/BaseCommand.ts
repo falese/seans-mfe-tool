@@ -7,7 +7,9 @@ import {
   classifyError,
   EXIT_CODES,
 } from '@seans-mfe/contracts';
-import type { CommandResult } from '@seans-mfe/contracts';
+import { traceContextFromEnv, formatTraceparent } from '@seans-mfe/contracts';
+import type { CommandResult, TraceContext } from '@seans-mfe/contracts';
+import { createLogger, type Logger } from './logger';
 import {
   suppressChalk,
   redirectStdoutToStderr,
@@ -34,6 +36,33 @@ export abstract class BaseCommand<T = unknown> extends Command {
 
   /** Commands push human-facing advisory messages here; envelope.warnings mirrors it. */
   protected warnings: string[] = [];
+
+  /**
+   * The trace this invocation belongs to (ADR-081). Adopted from `TRACEPARENT`
+   * when a caller set one — so a command run by CI, or an MCP child process
+   * (ADR-019), is a child of whatever spawned it — and minted fresh otherwise.
+   */
+  protected readonly trace: TraceContext = traceContextFromEnv(process.env);
+
+  /**
+   * Structured emitter for this command, on this command's trace.
+   *
+   * For platform events, not for the human-readable rendering a command does:
+   * `this.log()` remains the right call for that (ADR-081 §5).
+   */
+  protected readonly logger: Logger = createLogger({
+    context: this.trace,
+    attributes: { 'service.name': 'seans-mfe-tool' },
+  });
+
+  /**
+   * The `traceparent` a child process should inherit. Spread into a spawn's
+   * env — `{ ...process.env, ...this.childTraceEnv() }` — so work done in
+   * `mesh build` or `npm install` stays attributable to this command.
+   */
+  protected childTraceEnv(): { TRACEPARENT: string } {
+    return { TRACEPARENT: formatTraceparent(this.trace) };
+  }
 
   protected abstract runCommand(): Promise<T>;
 
@@ -83,12 +112,13 @@ export abstract class BaseCommand<T = unknown> extends Command {
         envelope: formatSuccess(result as T, this.warnings, {
           durationMs: Date.now() - startTime,
           correlationId,
+          traceId: this.trace.traceId,
         }),
         exit: EXIT_CODES.ok,
       };
     } catch (err) {
       if (!jsonMode) throw this.withTypedExitCode(err);
-      const envelope = formatError(err, correlationId, startTime);
+      const envelope = formatError(err, correlationId, startTime, this.trace.traceId);
       outcome = { envelope, exit: exitCodeFor(envelope.error?.type ?? 'unknown') };
     }
 

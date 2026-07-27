@@ -8,7 +8,7 @@
 
 > **formatSuccess**\<`T`\>(`data`, `warnings`, `telemetry?`): [`CommandResult`](../type-aliases/CommandResult.md)\<`T`\>
 
-Defined in: [packages/contracts/src/envelope.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L104)
+Defined in: [packages/contracts/src/envelope.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L116)
 
 ## Type Parameters
 
@@ -28,7 +28,7 @@ Defined in: [packages/contracts/src/envelope.ts:104](https://github.com/falese/s
 
 ### telemetry?
 
-`Partial`\<\{ `correlationId`: `string`; `durationMs`: `number`; \}\>
+`Partial`\<\{ `correlationId`: `string`; `durationMs`: `number`; `traceId`: `string`; \}\>
 
 ## Returns
 

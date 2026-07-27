@@ -489,7 +489,7 @@ DSL manifest for this MFE
 
 ### state
 
-> `protected` **state**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"` = `MFE_LIFECYCLE_INITIAL_STATE`
+> `protected` **state**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"` = `MFE_LIFECYCLE_INITIAL_STATE`
 
 Defined in: [packages/runtime/src/base-mfe.ts:300](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L300)
 
@@ -507,7 +507,7 @@ State transition history (for debugging)
 
 #### from
 
-> **from**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> **from**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 #### timestamp
 
@@ -515,7 +515,7 @@ State transition history (for debugging)
 
 #### to
 
-> **to**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> **to**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 ## Methods
 
@@ -531,7 +531,7 @@ Assert that current state matches expected state
 
 ##### expectedStates
 
-...(`"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`)[]
+...(`"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`)[]
 
 #### Returns
 
@@ -898,7 +898,7 @@ Execution context
 
 ### getState()
 
-> **getState**(): `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> **getState**(): `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 Defined in: [packages/runtime/src/base-mfe.ts:335](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L335)
 
@@ -906,7 +906,7 @@ Get current state
 
 #### Returns
 
-`"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+`"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 ***
 
@@ -1126,7 +1126,7 @@ Transition to a new state
 
 ##### newState
 
-`"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"error"` | `"destroyed"`
+`"error"` | `"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"destroyed"`
 
 #### Returns
 

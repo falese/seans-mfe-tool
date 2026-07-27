@@ -25,6 +25,10 @@
       "require": "./dist/messages.js",
       "types": "./dist/messages.d.ts"
     },
+    "./observability": {
+      "require": "./dist/observability.js",
+      "types": "./dist/observability.d.ts"
+    },
     "./presentation": {
       "require": "./dist/presentation.js",
       "types": "./dist/presentation.d.ts"

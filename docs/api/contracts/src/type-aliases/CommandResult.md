@@ -56,6 +56,17 @@ Defined in: [packages/contracts/src/envelope.ts:62](https://github.com/falese/se
 
 > **durationMs**: `number`
 
+#### traceId?
+
+> `optional` **traceId**: `string`
+
+W3C trace id for this invocation (ADR-081), tying the envelope to the
+events the command emitted and to anything it spawned.
+
+Optional because this envelope is a published contract (ADR-018) with
+generated schemas behind it: `correlationId` stays, and consumers that
+predate tracing keep working.
+
 ***
 
 ### warnings
