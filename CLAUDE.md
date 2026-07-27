@@ -25,7 +25,7 @@ Full spec: `@docs/spec.md`
 | Command | When to run |
 |---|---|
 | `npm run lint` | Before every commit |
-| `npm run typecheck` | Before every commit |
+| `npm run typecheck` | Before every commit — does **not** compile `packages/runtime`; only `npm run build` does (#341) |
 | `npm test` | After any `src/**/*` change |
 | `npm run test:ci` | If you touched `src/runtime/` (enforces 80% coverage) |
 | `npm run build` | Before pushing — catches broken oclif manifest |
@@ -45,7 +45,9 @@ Full spec: `@docs/spec.md`
 
 - **TDD always** — write a failing test first, then the code to pass it
 - Never write code without a corresponding test
-- `npm run typecheck` must be clean before any commit
+- `npm run typecheck` must be clean before any commit — but it **does not cover
+  `packages/runtime`**, which only `npm run build` compiles. Touching runtime
+  code and trusting `typecheck` is trusting the wrong gate (#341)
 - `npm run lint` must be clean before any commit
 - No `any` types — use `unknown` and narrow
 - No `console.log` in production code — use the structured logger
@@ -67,6 +69,42 @@ Full spec: `@docs/spec.md`
 - Reference the new ADR in the PR body
 
 ADR quick index: `@docs/spec.md#adr-index`
+
+## Platform changes that reach generated code
+
+**Before editing any of these, ask what an already-generated MFE does with it:**
+
+- `packages/codegen/templates/**`
+- `packages/runtime/src/**` — the only package generated code imports from
+- `packages/contracts/src/**` — reaches MFEs through the runtime's re-export
+  shims (`packages/runtime/src/errors/index.ts` forwards the whole error
+  hierarchy), so a rename there changes generated code with no runtime file in
+  the diff
+
+A change here lands in two places, and **only one of them is automatic**:
+
+| Where it lands | `overwrite` | What fixes it |
+|---|---|---|
+| Generator-owned — `platform/base-mfe/mfe.ts`, `platform/bff/bff.ts`, … | `true` | `npm run check:mfe-drift`, then commit the result |
+| Developer-owned — `src/index.tsx`, `App.tsx`, anything an MFE author wrote | `false` | **Nothing.** Declare a migration |
+
+`--force` does not change this: `unified-generator.ts` never touches a
+developer-owned file, *"even with `--force`"*. The measured cost of not knowing
+— carrying ADR-017 out to the fleet touched 48 files, regeneration reached 29,
+and the other 19 sat stale with `mfe:validate`, `check:mfe-consistency` and
+`check:mfe-drift` all green. A human found them by grepping
+(`docs/platform-design-review/breaking-change-regeneration-dx-report.md`).
+
+**So: add an entry to `PLATFORM_MIGRATIONS`
+(`packages/codegen/src/platform-migrations.ts`) in the same commit as the
+change** — ADR-082. Not a follow-up issue; the entry is part of the change. Give
+it a `fix` a developer can act on without reading the ADR, and a `failsAt`
+version. Detection is by *usage*, so the matcher describes what the old code
+does, not which files are old.
+
+Verify it fires: `seans-mfe-tool mfe:validate <an-affected-mfe>` names the file,
+line and fix. If the change genuinely cannot reach developer-owned code, say so
+in the PR body — the governance report asks either way, and takes an answer.
 
 ## Architecture constraints
 
@@ -102,6 +140,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 |---|---|
 | `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |
 | MFE consistency rules (pure, unit-tested) | `packages/codegen/src/validate.ts` |
+| Platform migration registry (ADR-082) | `packages/codegen/src/platform-migrations.ts` |
 | `mfe:validate` command (I/O wrapper) | `src/commands/mfe/validate.ts` |
 | Fleet consistency CI gate | `scripts/check-mfe-consistency.ts` |
 | Envelope types | `packages/contracts/src/envelope.ts` |
@@ -162,7 +201,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 Run in order — push only after all pass:
 
 1. `npm run lint`
-2. `npm run typecheck`
+2. `npm run typecheck` — note it skips `packages/runtime`, so gate 4 is the one
+   that type-checks runtime code (#341)
 3. `npm test` (or `npm run test:ci` if you touched runtime code)
 4. `npm run build`
 5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command flags/types)
@@ -177,13 +217,18 @@ Run in order — push only after all pass:
    `npm run check:mfe-drift` *writes* the regenerated files, which is the fix, not the
    check. Whitespace counts: a standalone EJS comment block emits its trailing newline,
    enough to drift all 21 examples (PR #335).
-9. `npm run build:docs && git diff --exit-code docs/api`
-   (if you touched `packages/contracts/src/**`, `packages/runtime/src/**`, or
-   `packages/dsl/src/**`)
-   `docs/api` is a committed, gated artifact (ADR-065): the API-docs workflow
-   regenerates it and fails on any diff. That gate runs on PRs, so a stale
-   `docs/api` blocks the merge — regenerate and commit it in the same PR as the
-   source change. TypeDoc output is deterministic, so a clean re-run means clean.
+9. `npm run check:mfe-consistency` (if you touched `packages/codegen/**`,
+   `packages/runtime/**` or an `examples/**` MFE) — CI-gated (#296). It checks
+   manifest ⇄ package.json ⇄ federation agreement, and since ADR-082 also
+   reports platform-migration warnings in developer-owned files. Those warnings
+   do not fail it; read the summary line rather than the exit code.
+10. `npm run build:docs && git diff --exit-code docs/api`
+    (if you touched `packages/contracts/src/**`, `packages/runtime/src/**`, or
+    `packages/dsl/src/**`)
+    `docs/api` is a committed, gated artifact (ADR-065): the API-docs workflow
+    regenerates it and fails on any diff. That gate runs on PRs, so a stale
+    `docs/api` blocks the merge — regenerate and commit it in the same PR as the
+    source change. TypeDoc output is deterministic, so a clean re-run means clean.
 
 ## Branch and commit discipline
 
@@ -215,6 +260,10 @@ Before opening the PR:
 - [ ] For significant/user-facing changes, a **local-test runbook comment** is posted on the PR (see above)
 - [ ] PR body links the issue (`Closes #N`) and references governing ADRs
 - [ ] New architectural decisions either cite an existing ADR or include a new ADR file in the PR
+- [ ] If the change touched a contract that reaches generated code
+      (templates, `packages/runtime/src/**`, `packages/contracts/src/**`):
+      either `PLATFORM_MIGRATIONS` has an entry for it, or the PR body says why
+      none is needed (ADR-082)
 - [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `pnpm-workspace.yaml`, `turbo.json`, `schemas/`)
 
 For the current session's active issue and spec context: `@docs/session-prompt.md`

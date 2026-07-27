@@ -15,8 +15,11 @@ implemented-by:
   - packages/codegen/src/platform-migrations.ts
   - packages/codegen/src/validate.ts
   - src/commands/mfe/validate.ts
+  - scripts/adr-governance-report.ts
+  - CLAUDE.md
 verified-by:
   - packages/codegen/src/__tests__/platform-migrations.test.ts
+  - scripts/__tests__/adr-governance-report.test.ts
   - check:mfe-consistency
 tracked-by: []
 summary: >-
@@ -152,6 +155,14 @@ entry is part of making a breaking change. Nothing enforces that. The
 alternative — deriving entries mechanically — was rejected in §1 for producing
 worse entries, so the honest position is that this is a convention with tooling
 behind it, not a guarantee.
+
+The convention is therefore written down where the change gets made: CLAUDE.md
+names the three trigger paths and requires the entry in the same commit, and
+`scripts/adr-governance-report.ts` repeats the ask on any pull request that
+touches them — suppressed when the diff already declares an entry, so a PR that
+did the right thing stays quiet. Both are prompts, not gates. A blocking check
+here would fire on comment reflows and typo fixes, and an escape hatch used
+every third PR stops being read.
 
 ## References
 
