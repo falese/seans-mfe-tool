@@ -39,7 +39,13 @@ import {
   type CapabilityMetadata,
   type TelemetryEvent,
 } from './base-mfe';
-import { buildMessage, isPlatformCapabilityManifestKey } from '@seans-mfe/contracts';
+import {
+  buildMessage,
+  isPlatformCapabilityManifestKey,
+  BusinessError,
+  SystemError,
+  ValidationError,
+} from '@seans-mfe/contracts';
 import type { ActionRecord } from '@seans-mfe/contracts';
 
 /**
@@ -56,8 +62,10 @@ function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined):
   const rawCorrelationId = inputs?.correlationId;
 
   if (typeof rawStateKey !== 'string' || rawStateKey.trim().length === 0) {
-    throw new Error(
-      'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string'
+    throw new ValidationError(
+      'updateControlPlaneState requires context.inputs.stateKey to be a non-empty string',
+      'context.inputs.stateKey',
+      'non-empty-string'
     );
   }
 
@@ -65,8 +73,10 @@ function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined):
     rawStateData !== undefined &&
     (typeof rawStateData !== 'object' || rawStateData === null || Array.isArray(rawStateData))
   ) {
-    throw new Error(
-      'updateControlPlaneState requires context.inputs.stateData to be an object when provided'
+    throw new ValidationError(
+      'updateControlPlaneState requires context.inputs.stateData to be an object when provided',
+      'context.inputs.stateData',
+      'object'
     );
   }
 
@@ -74,8 +84,10 @@ function validateStateUpdateInputs(inputs: Record<string, unknown> | undefined):
     rawCorrelationId !== undefined &&
     (typeof rawCorrelationId !== 'string' || rawCorrelationId.trim().length === 0)
   ) {
-    throw new Error(
-      'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided'
+    throw new ValidationError(
+      'updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided',
+      'context.inputs.correlationId',
+      'non-empty-string'
     );
   }
 
@@ -191,7 +203,11 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       // Get remote entry URL from context or manifest
       const remoteEntry = (context.inputs?.remoteEntry as string) || this.manifest.remoteEntry;
       if (!remoteEntry) {
-        throw new Error('Remote entry URL not provided in context.inputs or manifest');
+        throw new ValidationError(
+          'Remote entry URL not provided in context.inputs or manifest',
+          'context.inputs.remoteEntry',
+          'required'
+        );
       }
 
       // Fetch container (in real implementation, this would use Module Federation runtime)
@@ -304,11 +320,19 @@ export abstract class BaseRemoteMFE extends BaseMFE {
       const containerId = context.inputs?.containerId as string;
 
       if (!componentName) {
-        throw new Error('Component name not provided in context.inputs.component');
+        throw new ValidationError(
+          'Component name not provided in context.inputs.component',
+          'context.inputs.component',
+          'required'
+        );
       }
 
       if (!containerId) {
-        throw new Error('Container ID not provided in context.inputs.containerId');
+        throw new ValidationError(
+          'Container ID not provided in context.inputs.containerId',
+          'context.inputs.containerId',
+          'required'
+        );
       }
 
       this.emitTelemetry('render-start', 'render', 'render_start', 'start', {
@@ -317,14 +341,19 @@ export abstract class BaseRemoteMFE extends BaseMFE {
 
       // Validate component exists in available components
       if (!this.availableComponents.includes(componentName)) {
-        throw new Error(
-          `Component "${componentName}" not found in availableComponents: [${this.availableComponents.join(', ')}]`
+        throw new ValidationError(
+          `Component "${componentName}" not found in availableComponents: [${this.availableComponents.join(', ')}]`,
+          'context.inputs.component',
+          'one-of-availableComponents'
         );
       }
 
       // Validate container exists
       if (!this.container) {
-        throw new Error('Container not loaded. Call load() before render()');
+        throw new BusinessError(
+          'Container not loaded. Call load() before render()',
+          'CONTAINER_NOT_LOADED'
+        );
       }
 
       // Load component directly via loadDomainComponent (implemented by subclass)
@@ -481,7 +510,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
    * Called by doRender() instead of going through the Module Federation container API.
    */
   protected async loadDomainComponent(_name: string): Promise<unknown> {
-    throw new Error(
+    throw new SystemError(
       '[BaseRemoteMFE] loadDomainComponent() not implemented — subclass must override this method'
     );
   }

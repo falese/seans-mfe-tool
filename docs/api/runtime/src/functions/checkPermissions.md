@@ -8,7 +8,7 @@
 
 > **checkPermissions**(`context`, `requiredRoles`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/handlers/auth.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/auth.ts#L97)
+Defined in: [packages/runtime/src/handlers/auth.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/auth.ts#L98)
 
 Checks if context.user has required roles
 Emits telemetry for success/failure

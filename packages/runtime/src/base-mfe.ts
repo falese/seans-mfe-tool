@@ -15,6 +15,8 @@ import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 import {
   ValidationError as RuntimeValidationError,
+  BusinessError,
+  SystemError,
   MFE_LIFECYCLE_TRANSITIONS,
   MFE_LIFECYCLE_INITIAL_STATE,
   PLATFORM_CAPABILITY_SPECS,
@@ -261,7 +263,7 @@ async function runPipeline(middlewares: Middleware[], context: Context): Promise
   let lastIndex = -1;
   const dispatch = async (index: number): Promise<void> => {
     if (index <= lastIndex) {
-      throw new Error('Capability pipeline: next() called multiple times in one middleware');
+      throw new SystemError('Capability pipeline: next() called multiple times in one middleware');
     }
     lastIndex = index;
     const middleware = middlewares[index];
@@ -342,15 +344,14 @@ export abstract class BaseMFE {
    */
   protected assertState(...expectedStates: MFEState[]): void {
     if (!expectedStates.includes(this.state)) {
-      if (this.deps?.errorHandler) {
-        this.deps.errorHandler.handle(
-          new Error(`Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`),
-          {} as Context
-        );
-      }
-      throw new Error(
-        `Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`
+      const error = new BusinessError(
+        `Invalid state: expected ${expectedStates.join(' or ')}, got ${this.state}`,
+        'INVALID_STATE'
       );
+      if (this.deps?.errorHandler) {
+        this.deps.errorHandler.handle(error, {} as Context);
+      }
+      throw error;
     }
   }
   
@@ -365,16 +366,15 @@ export abstract class BaseMFE {
       : validTransitions.includes(newState);
 
     if (!isValid) {
-      if (this.deps?.errorHandler) {
-        this.deps.errorHandler.handle(
-          new Error(`Invalid state transition: ${this.state} → ${newState}. Valid transitions: ${validTransitions.join(', ')}`),
-          {} as Context
-        );
-      }
-      throw new Error(
+      const error = new BusinessError(
         `Invalid state transition: ${this.state} → ${newState}. ` +
-        `Valid transitions: ${validTransitions.join(', ')}`
+          `Valid transitions: ${validTransitions.join(', ')}`,
+        'INVALID_STATE_TRANSITION'
       );
+      if (this.deps?.errorHandler) {
+        this.deps.errorHandler.handle(error, {} as Context);
+      }
+      throw error;
     }
 
     const oldState = this.state;
@@ -544,7 +544,10 @@ export abstract class BaseMFE {
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {
     const handlerFn = PLATFORM_HANDLER_LIBRARY.get(name);
     if (!handlerFn) {
-      throw new Error(`Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`);
+      throw new BusinessError(
+        `Platform handler not implemented: platform.${name}. Expected method do${name.charAt(0).toUpperCase() + name.slice(1)} on MFE class.`,
+        'PLATFORM_HANDLER_NOT_FOUND'
+      );
     }
     await handlerFn(context);
   }
@@ -556,12 +559,13 @@ export abstract class BaseMFE {
   protected async invokeCustomHandler(name: string, context: Context): Promise<void> {
     const method = (this as unknown as Record<string, unknown>)[name];
     if (typeof method !== 'function') {
-      throw new Error(
+      throw new BusinessError(
         `Custom handler not found: ${name}. ` +
         `Either implement a method on your MFE class — ` +
         `\`private async ${name}(context: Context): Promise<void> { ... }\` — ` +
         `or declare a source module in the DSL manifest (ADR-040), e.g. ` +
-        `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`
+        `\`${name}: { handler: ${name}, source: './handlers/${name}' }\`.`,
+        'CUSTOM_HANDLER_NOT_FOUND'
       );
     }
     await (method as (context: Context) => Promise<void>).call(this, context);
@@ -690,8 +694,9 @@ export abstract class BaseMFE {
     const methodName = `do${name.charAt(0).toUpperCase()}${name.slice(1)}`;
     const method = (this as unknown as Record<string, unknown>)[methodName];
     if (typeof method !== 'function') {
-      throw new Error(
-        `Platform handler not implemented: platform.${name}. Expected method ${methodName} on MFE class.`
+      throw new BusinessError(
+        `Platform handler not implemented: platform.${name}. Expected method ${methodName} on MFE class.`,
+        'CAPABILITY_NOT_IMPLEMENTED'
       );
     }
   }

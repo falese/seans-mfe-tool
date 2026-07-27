@@ -6,7 +6,7 @@
 
 # Class: AngularRemoteMFE
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L55)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L56)
 
 AngularRemoteMFE class for Angular Module Federation remotes
 
@@ -24,7 +24,7 @@ re-renders destroy and re-bootstrap cleanly.
 
 > **new AngularRemoteMFE**(`manifest`, `deps`): `AngularRemoteMFE`
 
-Defined in: [packages/runtime/src/base-mfe.ts:310](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L310)
+Defined in: [packages/runtime/src/base-mfe.ts:312](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L312)
 
 #### Parameters
 
@@ -260,7 +260,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:310](https://github.com/falese/sea
 
 > `protected` **availableComponents**: `string`[] = `[]`
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L105)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L117)
 
 #### Inherited from
 
@@ -272,7 +272,7 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:105](https://github.com/fal
 
 > `protected` **container**: [`ModuleFederationContainer`](../../interfaces/ModuleFederationContainer.md) \| `null` = `null`
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L104)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L116)
 
 #### Inherited from
 
@@ -284,7 +284,7 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:104](https://github.com/fal
 
 > `protected` **currentComponentId**: `string` \| `null` = `null`
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:112](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L112)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L124)
 
 ID of the currently mounted component; used as actionRecord.componentId
 
@@ -298,7 +298,7 @@ ID of the currently mounted component; used as actionRecord.componentId
 
 > `protected` `readonly` **deps**: `BaseMFEDependencies`
 
-Defined in: [packages/runtime/src/base-mfe.ts:297](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L297)
+Defined in: [packages/runtime/src/base-mfe.ts:299](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L299)
 
 DI dependencies
 
@@ -312,7 +312,7 @@ DI dependencies
 
 > `protected` `readonly` **manifest**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:294](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L294)
+Defined in: [packages/runtime/src/base-mfe.ts:296](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L296)
 
 DSL manifest for this MFE
 
@@ -538,7 +538,7 @@ DSL manifest for this MFE
 
 > `protected` **mountedComponent**: \{ `component`: `string`; `element`: `unknown`; `props`: `Record`\<`string`, `unknown`\>; \} \| `null` = `null`
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L106)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L118)
 
 #### Inherited from
 
@@ -550,7 +550,7 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:106](https://github.com/fal
 
 > `protected` **state**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"` = `MFE_LIFECYCLE_INITIAL_STATE`
 
-Defined in: [packages/runtime/src/base-mfe.ts:300](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L300)
+Defined in: [packages/runtime/src/base-mfe.ts:302](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L302)
 
 Current lifecycle state
 
@@ -564,7 +564,7 @@ Current lifecycle state
 
 > `protected` **stateHistory**: `object`[] = `[]`
 
-Defined in: [packages/runtime/src/base-mfe.ts:303](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L303)
+Defined in: [packages/runtime/src/base-mfe.ts:305](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L305)
 
 State transition history (for debugging)
 
@@ -590,7 +590,7 @@ State transition history (for debugging)
 
 > `protected` **assertState**(...`expectedStates`): `void`
 
-Defined in: [packages/runtime/src/base-mfe.ts:343](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L343)
+Defined in: [packages/runtime/src/base-mfe.ts:345](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L345)
 
 Assert that current state matches expected state
 
@@ -618,7 +618,7 @@ Error if state doesn't match
 
 > **attachControlPlane**(`wsClient`): `void`
 
-Defined in: [packages/runtime/src/base-mfe.ts:324](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L324)
+Defined in: [packages/runtime/src/base-mfe.ts:326](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L326)
 
 Attach a daemon control-plane socket after construction (ADR-057).
 
@@ -648,7 +648,7 @@ it. Idempotent: re-attaching replaces the channel.
 
 > **authorizeAccess**(`context`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:769](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L769)
+Defined in: [packages/runtime/src/base-mfe.ts:774](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L774)
 
 AuthorizeAccess capability: Check authorization
 
@@ -672,7 +672,7 @@ AuthorizeAccess capability: Check authorization
 
 > **describe**(`context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:783](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L783)
+Defined in: [packages/runtime/src/base-mfe.ts:788](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L788)
 
 Describe capability: Return MFE metadata
 
@@ -696,7 +696,7 @@ Describe capability: Return MFE metadata
 
 > `protected` **doAuthorizeAccess**(`_context`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:497](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L497)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:526](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L526)
 
 Implement authorization logic for this MFE
 
@@ -720,7 +720,7 @@ Implement authorization logic for this MFE
 
 > `protected` **doDescribe**(`_context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:521](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L521)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:550](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L550)
 
 Implement describe logic for this MFE
 
@@ -744,7 +744,7 @@ Implement describe logic for this MFE
 
 > `protected` **doEmit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:538](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L538)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:567](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L567)
 
 Implement telemetry emission logic for this MFE
 
@@ -768,7 +768,7 @@ Implement telemetry emission logic for this MFE
 
 > `protected` **doHealth**(`_context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:502](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L502)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:531](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L531)
 
 Implement health check logic for this MFE
 
@@ -792,7 +792,7 @@ Implement health check logic for this MFE
 
 > `protected` **doLoad**(`context`): `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:172](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L172)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:184](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L184)
 
 Implement load logic for Module Federation remote
 
@@ -821,7 +821,7 @@ REQ-RUNTIME-001: Atomic operation with three phases:
 
 > `protected` **doQuery**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:901](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L901)
+Defined in: [packages/runtime/src/base-mfe.ts:906](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L906)
 
 Execute a GraphQL query against this MFE's BFF endpoint.
 
@@ -865,7 +865,7 @@ Override in concrete subclasses for typed, operation-specific queries:
 
 > `protected` **doRefresh**(`_context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:493](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L493)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:522](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L522)
 
 Implement refresh logic for this MFE
 
@@ -889,7 +889,7 @@ Implement refresh logic for this MFE
 
 > `protected` **doRender**(`context`): `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:297](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L297)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:313](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L313)
 
 Implement render logic for Module Federation remote
 
@@ -919,7 +919,7 @@ REQ-RUNTIME-004: Component-aware rendering with:
 
 > `protected` **doSchema**(`_context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:531](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L531)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:560](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L560)
 
 Implement schema retrieval logic for this MFE
 
@@ -943,7 +943,7 @@ Implement schema retrieval logic for this MFE
 
 > `protected` **doUpdateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:568](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L568)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:597](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L597)
 
 Push domain state to the daemon control plane for registry re-evaluation.
 
@@ -978,7 +978,7 @@ Subscription.messages channel the Renderer is already subscribed to.
 
 > **emit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:804](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L804)
+Defined in: [packages/runtime/src/base-mfe.ts:809](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L809)
 
 Emit capability: Emit telemetry/events
 
@@ -1002,7 +1002,7 @@ Emit capability: Emit telemetry/events
 
 > `protected` **emitTelemetry**(`name`, `capability`, `phase`, `status`, `extra?`): `void`
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L146)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:158](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L158)
 
 Emit a telemetry event with the standard shape shared by every checkpoint
 in doLoad()/doRender(): `metadata.mfe` is always set, extra metadata is
@@ -1089,7 +1089,7 @@ Execution context
 
 > `protected` **extractAvailableComponents**(): `string`[]
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:427](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L427)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:456](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L456)
 
 Extract available components from manifest.
 
@@ -1112,7 +1112,7 @@ Fallback: all non-platform capability names (domain capabilities).
 
 > `protected` **extractCapabilities**(): `CapabilityMetadata`[]
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:460](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L460)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:489](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L489)
 
 Extract capability metadata from manifest (REQ-RUNTIME-003)
 
@@ -1130,7 +1130,7 @@ Extract capability metadata from manifest (REQ-RUNTIME-003)
 
 > `protected` **fetchContainer**(`remoteEntry`): `Promise`\<[`ModuleFederationContainer`](../../interfaces/ModuleFederationContainer.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:402](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L402)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:431](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L431)
 
 Fetch Module Federation container from remote entry.
 
@@ -1158,7 +1158,7 @@ webpack/rspack federation runtimes are structurally compatible here.
 
 > `protected` **getSharedDependencies**(): `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L67)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L68)
 
 Get shared dependencies for Module Federation (Angular singletons).
 
@@ -1181,7 +1181,7 @@ must be available synchronously.
 
 > **getState**(): `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
-Defined in: [packages/runtime/src/base-mfe.ts:335](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L335)
+Defined in: [packages/runtime/src/base-mfe.ts:337](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L337)
 
 Get current state
 
@@ -1199,7 +1199,7 @@ Get current state
 
 > **health**(`context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:776](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L776)
+Defined in: [packages/runtime/src/base-mfe.ts:781](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L781)
 
 Health capability: Check MFE health status
 
@@ -1223,7 +1223,7 @@ Health capability: Check MFE health status
 
 > `protected` **invokeCustomHandler**(`name`, `context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:556](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L556)
+Defined in: [packages/runtime/src/base-mfe.ts:559](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L559)
 
 Invoke a custom handler from developer implementation
 
@@ -1319,7 +1319,7 @@ Error if platform handler not found
 
 > **load**(`context`): `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:748](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L748)
+Defined in: [packages/runtime/src/base-mfe.ts:753](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L753)
 
 Load capability: Initialize and prepare MFE for use
 
@@ -1343,7 +1343,7 @@ Load capability: Initialize and prepare MFE for use
 
 > `protected` **loadDomainComponent**(`_name`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:483](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L483)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:512](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L512)
 
 Override in subclass to load the named domain component.
 Called by doRender() instead of going through the Module Federation container API.
@@ -1368,7 +1368,7 @@ Called by doRender() instead of going through the Module Federation container AP
 
 > `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L96)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L97)
 
 Mount an Angular standalone component to the DOM via bootstrapApplication().
 
@@ -1409,7 +1409,7 @@ after the initial component is created.
 
 > **query**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:797](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L797)
+Defined in: [packages/runtime/src/base-mfe.ts:802](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L802)
 
 Query capability: Execute data query
 
@@ -1433,7 +1433,7 @@ Query capability: Execute data query
 
 > **refresh**(`context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:762](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L762)
+Defined in: [packages/runtime/src/base-mfe.ts:767](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L767)
 
 Refresh capability: Refresh MFE data/state
 
@@ -1457,7 +1457,7 @@ Refresh capability: Refresh MFE data/state
 
 > **render**(`context`): `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:755](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L755)
+Defined in: [packages/runtime/src/base-mfe.ts:760](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L760)
 
 Render capability: Render MFE UI into target container
 
@@ -1481,7 +1481,7 @@ Render capability: Render MFE UI into target container
 
 > **schema**(`context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:790](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L790)
+Defined in: [packages/runtime/src/base-mfe.ts:795](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L795)
 
 Schema capability: Return GraphQL/JSON schema
 
@@ -1505,7 +1505,7 @@ Schema capability: Return GraphQL/JSON schema
 
 > `protected` **transitionState**(`newState`): `void`
 
-Defined in: [packages/runtime/src/base-mfe.ts:361](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L361)
+Defined in: [packages/runtime/src/base-mfe.ts:362](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L362)
 
 Transition to a new state
 
@@ -1533,7 +1533,7 @@ Error if transition is invalid
 
 > **unmount**(`containerId`): `void`
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:213](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L213)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:214](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L214)
 
 Unmount a previously bootstrapped Angular application for the given container
 and release the ApplicationRef. Call from the shell's lifecycle cleanup.
@@ -1558,7 +1558,7 @@ and release the ApplicationRef. Call from the shell's lifecycle cleanup.
 
 > **updateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:829](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L829)
+Defined in: [packages/runtime/src/base-mfe.ts:834](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L834)
 
 UpdateControlPlaneState capability: Push domain state to the daemon so the
 Registry can re-evaluate what should be shown.

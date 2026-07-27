@@ -6,7 +6,7 @@
 
 # Interface: DaemonEnvelope
 
-Defined in: [packages/runtime/src/layout-transport.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L30)
+Defined in: [packages/runtime/src/layout-transport.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L32)
 
 The transport envelope delivered on the daemon's `messages` subscription.
 
@@ -23,7 +23,7 @@ component type (ADR-054 "Wire envelope vs logical message").
 
 > `optional` **direction**: `string`
 
-Defined in: [packages/runtime/src/layout-transport.ts:31](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L31)
+Defined in: [packages/runtime/src/layout-transport.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L33)
 
 ***
 
@@ -31,7 +31,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:31](https://github.com/fal
 
 > `optional` **kind**: `string`
 
-Defined in: [packages/runtime/src/layout-transport.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L32)
+Defined in: [packages/runtime/src/layout-transport.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L34)
 
 ***
 
@@ -39,7 +39,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:32](https://github.com/fal
 
 > `optional` **metadata**: `object`
 
-Defined in: [packages/runtime/src/layout-transport.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L39)
+Defined in: [packages/runtime/src/layout-transport.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L41)
 
 #### acknowledged?
 
@@ -59,7 +59,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:39](https://github.com/fal
 
 > `optional` **payload**: `object`
 
-Defined in: [packages/runtime/src/layout-transport.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L33)
+Defined in: [packages/runtime/src/layout-transport.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L35)
 
 #### Index Signature
 

@@ -6,7 +6,7 @@
 
 # Interface: ModuleFederationContainer
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L92)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L104)
 
 Module Federation container interface
 
@@ -16,7 +16,7 @@ Module Federation container interface
 
 > **get**(`module`): `Promise`\<() => `unknown`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L94)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L106)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:94](https://github.com/fale
 
 > **init**(`shared`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L93)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L105)
 
 #### Parameters
 

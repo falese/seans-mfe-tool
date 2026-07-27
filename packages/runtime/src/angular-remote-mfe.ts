@@ -23,6 +23,7 @@
 
 import { BaseRemoteMFE } from './base-remote-mfe';
 import { defaultFallbackHTML } from './error-boundary';
+import { SystemError } from '@seans-mfe/contracts';
 
 /**
  * Minimal Angular ApplicationRef surface the runtime depends on.
@@ -99,12 +100,12 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
     containerId: string
   ): Promise<unknown> {
     if (typeof document === 'undefined') {
-      throw new Error('[AngularRemoteMFE] mountComponent called outside a browser environment');
+      throw new SystemError('[AngularRemoteMFE] mountComponent called outside a browser environment');
     }
 
     const element = (document as Document).getElementById(containerId);
     if (!element) {
-      throw new Error(`[AngularRemoteMFE] DOM container #${containerId} not found`);
+      throw new SystemError(`[AngularRemoteMFE] DOM container #${containerId} not found`);
     }
 
     // Destroy any prior bootstrap for this container before re-bootstrapping.

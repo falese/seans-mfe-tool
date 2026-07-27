@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
@@ -448,9 +448,11 @@ export function validateManifestConfiguration(manifest: DSLManifest): void {
   if (allErrors.length > 0) {
     console.error('\n❌ Manifest Configuration Errors:');
     allErrors.forEach((error) => console.error(`  - ${error}`));
-    throw new Error(
+    throw new ValidationError(
       `Manifest validation failed with ${allErrors.length} error(s). ` +
-        `Please correct the plugin/transform configuration in your mfe-manifest.yaml.`
+        `Please correct the plugin/transform configuration in your mfe-manifest.yaml.`,
+      'data',
+      'valid-plugin-transform-config'
     );
   }
 

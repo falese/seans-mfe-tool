@@ -17,6 +17,7 @@
 
 import { createErrorBoundary, type FallbackType } from './error-boundary';
 import { BaseRemoteMFE } from './base-remote-mfe';
+import { SystemError } from '@seans-mfe/contracts';
 
 // Re-exported for consumers that imported the container type from this module.
 export type { ModuleFederationContainer } from './base-remote-mfe';
@@ -79,12 +80,12 @@ export class RemoteMFE extends BaseRemoteMFE {
     containerId: string
   ): Promise<unknown> {
     if (typeof document === 'undefined') {
-      throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
+      throw new SystemError('[RemoteMFE] mountComponent called outside a browser environment');
     }
 
     const element = (document as Document).getElementById(containerId);
     if (!element) {
-      throw new Error(`[RemoteMFE] DOM container #${containerId} not found`);
+      throw new SystemError(`[RemoteMFE] DOM container #${containerId} not found`);
     }
 
     // Reuse root if one already exists for this container
