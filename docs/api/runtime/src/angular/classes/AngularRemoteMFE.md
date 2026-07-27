@@ -6,7 +6,7 @@
 
 # Class: AngularRemoteMFE
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:54](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L54)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L55)
 
 AngularRemoteMFE class for Angular Module Federation remotes
 
@@ -1158,7 +1158,7 @@ webpack/rspack federation runtimes are structurally compatible here.
 
 > `protected` **getSharedDependencies**(): `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L66)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L67)
 
 Get shared dependencies for Module Federation (Angular singletons).
 
@@ -1368,7 +1368,7 @@ Called by doRender() instead of going through the Module Federation container AP
 
 > `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:95](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L95)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L96)
 
 Mount an Angular standalone component to the DOM via bootstrapApplication().
 
@@ -1533,7 +1533,7 @@ Error if transition is invalid
 
 > **unmount**(`containerId`): `void`
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:191](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L191)
+Defined in: [packages/runtime/src/angular-remote-mfe.ts:213](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L213)
 
 Unmount a previously bootstrapped Angular application for the given container
 and release the ApplicationRef. Call from the shell's lifecycle cleanup.

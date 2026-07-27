@@ -805,6 +805,112 @@ describe('RemoteMFE React adapter', () => {
     expect((result.error as Error).message).toMatch(/outside a browser environment/);
   });
 
+  /**
+   * #247 — an MFE that exposes `./ErrorBoundary` gets its own fallback, and a
+   * boundary catch is reported, since nothing else in the telemetry says the
+   * user is looking at a fallback rather than the component.
+   */
+  describe('render fallback (#247)', () => {
+    /** Reach the boundary React was handed and drive its catch path. */
+    function boundaryFrom(mfe: any): { Boundary: any; instance: any } {
+      const root = mfe.reactRoots.get('host');
+      const tree = root.render.mock.calls[0][0];
+      const Boundary = tree.type;
+      const instance = new Boundary({ children: tree.children });
+      return { Boundary, instance };
+    }
+
+    it('uses the MFE-provided fallback when the container exposes one', async () => {
+      installDocumentStub();
+      const MfeFallback = () => null;
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+      (mfe as any).container = { get: async () => () => ({ default: MfeFallback }) };
+
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+      const { instance } = boundaryFrom(mfe as any);
+      instance.state = { hasError: true, error: new Error('x') };
+      expect((instance.render() as any).type).toBe(MfeFallback);
+    });
+
+    it('falls back to the built-in boundary when the expose is absent', async () => {
+      installDocumentStub();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+      (mfe as any).container = {
+        get: async () => {
+          throw new Error('Module "./ErrorBoundary" does not exist in container.');
+        },
+      };
+
+      // A container that has never heard of ./ErrorBoundary must still mount.
+      const result = await (mfe as any).doRender(
+        makeContext({ component: 'Widget', containerId: 'host' })
+      );
+
+      expect(result.status).toBe('rendered');
+      const { instance } = boundaryFrom(mfe as any);
+      instance.state = { hasError: true };
+      expect((instance.render() as any).type).toBe('div');
+    });
+
+    it('emits render-fallback-applied with the fallback type on a catch', async () => {
+      installDocumentStub();
+      const capture = new TelemetryCapture();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry: capture }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+      (mfe as any).container = { get: async () => () => ({ default: () => null }) };
+
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+      capture.clear();
+
+      const { instance } = boundaryFrom(mfe as any);
+      instance.componentDidCatch(new Error('widget exploded'), { componentStack: '...' });
+
+      const [event] = capture.getEventsByType('render-fallback-applied');
+      expect(event).toBeDefined();
+      expect(event.status).toBe('error');
+      expect(event.metadata).toEqual(
+        expect.objectContaining({
+          mfe: 'test-react-remote',
+          error: 'widget exploded',
+          fallbackType: 'mfe-provided',
+        })
+      );
+    });
+
+    it('reports fallbackType "default" when the MFE ships no boundary', async () => {
+      installDocumentStub();
+      const capture = new TelemetryCapture();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry: capture }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+      (mfe as any).container = { get: async () => undefined };
+
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+      capture.clear();
+
+      const { instance } = boundaryFrom(mfe as any);
+      instance.componentDidCatch(new Error('boom'), {});
+
+      const [event] = capture.getEventsByType('render-fallback-applied');
+      expect(event.metadata).toEqual(
+        expect.objectContaining({ fallbackType: 'default', error: 'boom' })
+      );
+    });
+
+    it('emits nothing while the component renders successfully', async () => {
+      installDocumentStub();
+      const capture = new TelemetryCapture();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry: capture }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+      expect(capture.getEventsByType('render-fallback-applied')).toEqual([]);
+    });
+  });
+
   describe('unmount', () => {
     it('unmounts and removes the React root for a container', async () => {
       installDocumentStub();

@@ -22,6 +22,7 @@
  */
 
 import { BaseRemoteMFE } from './base-remote-mfe';
+import { defaultFallbackHTML } from './error-boundary';
 
 /**
  * Minimal Angular ApplicationRef surface the runtime depends on.
@@ -131,38 +132,59 @@ export class AngularRemoteMFE extends BaseRemoteMFE {
     const { createApplication } = await import('@angular/platform-browser');
     // @ts-ignore — @angular/core types not in root tsconfig; browser-only code
     const { NgZone } = await import('@angular/core');
-    const appRef: AngularApplicationRef = await createApplication({ providers: [] });
 
-    // Everything the component does must happen INSIDE the app's NgZone:
-    // manual bootstrap() runs from host code (outside any zone), and a
-    // component initialized out-of-zone never gets change detection when
-    // its async work (fetches in ngOnInit/ngOnChanges) settles.
-    const zone = appRef.injector.get(NgZone);
-    zone.run(() => appRef.bootstrap(Component, host as unknown as Element));
+    // React contains a render throw inside the remote's own root; Angular has
+    // no equivalent boundary here, so a throw out of createApplication,
+    // bootstrap or the first change-detection pass leaves the host element
+    // empty — the white screen ADR-044 exists to prevent. The fallback is
+    // markup rather than a component because at this point there is no
+    // component tree left to render into. Parity with the React path minus the
+    // MFE-provided variant: an Angular remote has no `./ErrorBoundary` expose
+    // to offer one (#247).
+    let appRef: AngularApplicationRef;
+    try {
+      appRef = await createApplication({ providers: [] });
 
-    // Apply props to the bootstrapped instance. bootstrap() has already run
-    // the first change-detection pass (ngOnInit saw defaults), so declared
-    // inputs must go through ComponentRef.setInput — it fires ngOnChanges,
-    // letting components react to registry-injected props (e.g. BerthTile's
-    // berthId). Props that are not @Input()s — helper callbacks like
-    // provideSlot — make setInput throw; those fall back to plain assignment,
-    // matching the previous behavior.
-    const root = appRef.components[0];
-    if (root && root.instance && props) {
-      zone.run(() => {
-        for (const [key, value] of Object.entries(props)) {
-          if (typeof root.setInput === 'function') {
-            try {
-              root.setInput(key, value);
-              continue;
-            } catch {
-              // Not a declared input — assign directly below.
+      // Everything the component does must happen INSIDE the app's NgZone:
+      // manual bootstrap() runs from host code (outside any zone), and a
+      // component initialized out-of-zone never gets change detection when
+      // its async work (fetches in ngOnInit/ngOnChanges) settles.
+      const zone = appRef.injector.get(NgZone);
+      zone.run(() => appRef.bootstrap(Component, host as unknown as Element));
+
+      // Apply props to the bootstrapped instance. bootstrap() has already run
+      // the first change-detection pass (ngOnInit saw defaults), so declared
+      // inputs must go through ComponentRef.setInput — it fires ngOnChanges,
+      // letting components react to registry-injected props (e.g. BerthTile's
+      // berthId). Props that are not @Input()s — helper callbacks like
+      // provideSlot — make setInput throw; those fall back to plain assignment,
+      // matching the previous behavior.
+      const root = appRef.components[0];
+      if (root && root.instance && props) {
+        zone.run(() => {
+          for (const [key, value] of Object.entries(props)) {
+            if (typeof root.setInput === 'function') {
+              try {
+                root.setInput(key, value);
+                continue;
+              } catch {
+                // Not a declared input — assign directly below.
+              }
             }
+            (root.instance as Record<string, unknown>)[key] = value;
           }
-          (root.instance as Record<string, unknown>)[key] = value;
-        }
-        appRef.tick();
+          appRef.tick();
+        });
+      }
+    } catch (error) {
+      element.innerHTML = defaultFallbackHTML(error);
+      this.emitTelemetry('render-fallback-applied', 'render', 'main', 'error', {
+        metadata: {
+          error: error instanceof Error ? error.message : String(error),
+          fallbackType: 'default',
+        },
       });
+      return element;
     }
 
     this.applicationRefs.set(containerId, appRef);

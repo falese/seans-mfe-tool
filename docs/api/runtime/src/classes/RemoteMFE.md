@@ -1357,7 +1357,7 @@ Called by doRender() instead of going through the Module Federation container AP
 
 > `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/remote-mfe.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L55)
+Defined in: [packages/runtime/src/remote-mfe.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L76)
 
 Mount React component to DOM using React 18 createRoot.
 Reuses an existing root for the containerId when re-rendering.
@@ -1514,7 +1514,7 @@ Error if transition is invalid
 
 > **unmount**(`containerId`): `void`
 
-Defined in: [packages/runtime/src/remote-mfe.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L102)
+Defined in: [packages/runtime/src/remote-mfe.ts:138](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L138)
 
 Unmount a previously rendered component and release the React root.
 Call from the shell's useEffect cleanup to avoid memory leaks.

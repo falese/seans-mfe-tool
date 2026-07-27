@@ -393,6 +393,73 @@ describe('AngularRemoteMFE', () => {
       expect(result.status).toBe('error');
       expect((result.error as Error).message).toMatch(/outside a browser environment/);
     });
+
+    /**
+     * #247 parity. Before this, a bootstrap throw propagated out of
+     * mountComponent leaving the host element empty — the white screen the
+     * React lane has been protected from since ADR-044.
+     */
+    describe('render fallback', () => {
+      const { createApplication } = jest.requireMock('@angular/platform-browser') as {
+        createApplication: jest.Mock;
+      };
+
+      it('shows the fallback and reports it when bootstrap throws', async () => {
+        const el = installDocumentStub();
+        const capture = new TelemetryCapture();
+        const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry: capture }, {
+          Greeter: class {},
+        });
+        await (mfe as any).doLoad(makeContext());
+        createApplication.mockRejectedValueOnce(new Error('zone.js missing'));
+
+        const result = await (mfe as any).doRender(
+          makeContext({ component: 'Greeter', containerId: 'host' })
+        );
+
+        // The render still succeeds — the user sees a message, not a blank box.
+        expect(result.status).toBe('rendered');
+        expect(el.innerHTML).toContain('role="alert"');
+        expect(el.innerHTML).toContain('zone.js missing');
+
+        const [event] = capture.getEventsByType('render-fallback-applied');
+        expect(event.metadata).toEqual(
+          expect.objectContaining({
+            mfe: 'test-angular-remote',
+            error: 'zone.js missing',
+            fallbackType: 'default',
+          })
+        );
+      });
+
+      it('does not register an ApplicationRef it could not bootstrap', async () => {
+        installDocumentStub();
+        const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry }, {
+          Greeter: class {},
+        });
+        await (mfe as any).doLoad(makeContext());
+        createApplication.mockRejectedValueOnce(new Error('boom'));
+
+        await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
+
+        // A later unmount must not try to destroy a half-built app.
+        expect((mfe as any).applicationRefs.has('host')).toBe(false);
+        expect(() => mfe.unmount('host')).not.toThrow();
+      });
+
+      it('stays quiet on a successful mount', async () => {
+        installDocumentStub();
+        const capture = new TelemetryCapture();
+        const mfe = new TestAngularRemoteMFE(buildManifest(), { telemetry: capture }, {
+          Greeter: class {},
+        });
+        await (mfe as any).doLoad(makeContext());
+
+        await (mfe as any).doRender(makeContext({ component: 'Greeter', containerId: 'host' }));
+
+        expect(capture.getEventsByType('render-fallback-applied')).toEqual([]);
+      });
+    });
   });
 
   describe('unmount', () => {
