@@ -10,6 +10,7 @@ import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
 import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
 import { validateFull } from './validator';
+import { SystemError, ValidationError } from '@seans-mfe/contracts';
 
 // =============================================================================
 // Constants
@@ -42,13 +43,13 @@ export function parseYAML(content: string): DSLManifest {
     const parsed = yaml.load(content);
     
     if (!parsed || typeof parsed !== 'object') {
-      throw new Error('Invalid YAML: expected an object');
+      throw new ValidationError('Invalid YAML: expected an object', 'manifest', 'object');
     }
     
     return parsed as DSLManifest;
   } catch (error) {
     if (error instanceof yaml.YAMLException) {
-      throw new Error(`YAML parse error: ${error.message}`);
+      throw new ValidationError(`YAML parse error: ${error.message}`, 'manifest', 'valid-yaml');
     }
     throw error;
   }
@@ -65,7 +66,7 @@ export async function parseManifestFile(manifestPath: string): Promise<DSLManife
   const absolutePath = path.resolve(process.cwd(), manifestPath);
 
   if (!await fs.pathExists(absolutePath)) {
-    throw new Error(`Manifest not found: ${absolutePath}`);
+    throw new SystemError(`Manifest not found: ${absolutePath}`);
   }
 
   const content = await fs.readFile(absolutePath, 'utf8');
@@ -128,7 +129,7 @@ export async function parseManifestFromDirectory(directory: string): Promise<{
   const manifestPath = await findManifest(directory);
   
   if (!manifestPath) {
-    throw new Error(
+    throw new SystemError(
       `No manifest found in ${directory}. ` +
       `Expected one of: ${MANIFEST_FILENAMES.join(', ')}`
     );

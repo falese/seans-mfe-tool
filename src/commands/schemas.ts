@@ -11,6 +11,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { BaseCommand } from '../oclif/BaseCommand';
+import { SystemError } from '@seans-mfe/contracts';
 
 export interface SchemaCatalog {
   cliVersion: string;
@@ -62,7 +63,7 @@ function resolveSchemaDir(): string {
   const devSchemas = path.resolve(__dirname, '..', '..', 'schemas');
   if (fs.existsSync(devSchemas)) return devSchemas;
 
-  throw new Error(`schemas/ directory not found. Run: npm run build:schemas`);
+  throw new SystemError(`schemas/ directory not found. Run: npm run build:schemas`);
 }
 
 export default class Schemas extends BaseCommand<SchemaCatalog> {

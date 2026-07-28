@@ -16,11 +16,11 @@ Whether `from → to` is an edge of the machine.
 
 ### from
 
-`"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"error"` | `"destroyed"`
+`"error"` | `"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"destroyed"`
 
 ### to
 
-`"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"error"` | `"destroyed"`
+`"error"` | `"uninitialized"` | `"loading"` | `"ready"` | `"rendering"` | `"destroyed"`
 
 ## Returns
 

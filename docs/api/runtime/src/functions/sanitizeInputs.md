@@ -8,7 +8,7 @@
 
 > **sanitizeInputs**(`context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/handlers/validation.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L34)
+Defined in: [packages/runtime/src/handlers/validation.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L35)
 
 ## Parameters
 

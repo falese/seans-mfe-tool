@@ -1,5 +1,6 @@
 
 import type { Context } from '../context';
+import { SecurityError } from '@seans-mfe/contracts';
 
 /**
  * Validates JWT in context and sets context.user
@@ -28,7 +29,7 @@ export async function validateJWT(context: Context): Promise<void> {
         timestamp: new Date(),
       });
     }
-    throw new Error('JWT token required');
+    throw new SecurityError('JWT token required');
   }
   if (!secret) {
     if (emit) {
@@ -41,7 +42,7 @@ export async function validateJWT(context: Context): Promise<void> {
         timestamp: new Date(),
       });
     }
-    throw new Error('JWT secret missing');
+    throw new SecurityError('JWT secret missing');
   }
   try {
     // Lazy require — keeps `jsonwebtoken` (and its `jws`/`crypto`/`stream`
@@ -83,7 +84,7 @@ export async function validateJWT(context: Context): Promise<void> {
         timestamp: new Date(),
       });
     }
-    throw new Error('Invalid JWT token: ' + (error as Error).message);
+    throw new SecurityError('Invalid JWT token: ' + (error as Error).message);
   }
 }
 
@@ -116,7 +117,9 @@ export async function checkPermissions(context: Context, requiredRoles: string[]
         timestamp: new Date(),
       });
     }
-    throw new Error(`Insufficient permissions: required=${requiredRoles.join(',')}, actual=${userRoles.join(',')}`);
+    throw new SecurityError(
+      `Insufficient permissions: required=${requiredRoles.join(',')}, actual=${userRoles.join(',')}`
+    );
   }
   if (emit) {
     await emit({

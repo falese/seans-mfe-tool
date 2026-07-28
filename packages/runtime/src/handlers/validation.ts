@@ -1,4 +1,5 @@
 import type { Context } from '../context';
+import { ValidationError as ThrownValidationError } from '@seans-mfe/contracts';
 import type { ValidationError } from '../context';
 
 /** Validation results these handlers own on the context. */
@@ -15,7 +16,7 @@ export function getValidationState(context: Context): ValidationState | undefine
 export async function validateInputs(context: Context): Promise<void> {
   // Example: validate required fields
   if (!context.inputs) {
-    throw new Error('Inputs required');
+    throw new ThrownValidationError('Inputs required', 'context.inputs', 'required');
   }
   // Add more validation logic as needed
   const emit = typeof context.emit === 'function' ? context.emit : undefined;

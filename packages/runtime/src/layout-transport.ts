@@ -5,6 +5,8 @@
  * dependency-free so the runtime ships no WS library.
  */
 
+import { NetworkError } from '@seans-mfe/contracts';
+
 // ── Daemon transport (graphql-transport-ws) ──────────────────
 
 export interface DaemonTransport {
@@ -119,7 +121,7 @@ export class GraphQLTransportWsDaemonTransport implements DaemonTransport {
 
   async send(envelope: Record<string, unknown>): Promise<void> {
     if (!this.socket || !this.acked) {
-      throw new Error('LayoutManager: daemon transport is not connected');
+      throw new NetworkError('LayoutManager: daemon transport is not connected', 0);
     }
     this.socket.send(JSON.stringify({
       id: `action-${Date.now()}-${Math.random().toString(36).slice(2)}`,

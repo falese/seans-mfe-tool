@@ -251,7 +251,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-014](./architecture-decisions/ADR-014-incremental-typescript-migration.md) | Incremental TypeScript Migration | Codebase | Implemented |
 | [ADR-015](./architecture-decisions/ADR-015-oclif-migration.md) | oclif as CLI framework — replace Commander | CLI | Implemented |
 | [ADR-016](./architecture-decisions/ADR-016-base-command-pattern.md) | BaseCommand pattern — every oclif command extends BaseCommand | CLI / contracts | Implemented |
-| [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Accepted (impl phased, #320) |
+| [ADR-017](./architecture-decisions/ADR-017-typed-error-hierarchy.md) | Typed error hierarchy — never throw raw Error | CLI / contracts | Implemented |
 | [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Implemented |
 | [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Implemented |
 | [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
@@ -273,7 +273,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-036](./architecture-decisions/ADR-036-framework-plugins.md) | Framework plugins — abstract BaseFrameworkPlugin with concrete implementations | Build / codegen / deploy | Implemented |
 | [ADR-037](./architecture-decisions/ADR-037-tdd-always.md) | TDD-always — write the failing test before the code | Process | Accepted |
 | [ADR-038](./architecture-decisions/ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch discipline | Process | Accepted |
-| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Accepted (impl deferred, #322) |
+| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded |
 | [ADR-040](./architecture-decisions/ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
 | [ADR-041](./architecture-decisions/ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
 | [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
@@ -299,7 +299,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Accepted (impl deferred, #250) |
 | [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
 | [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
-| [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Accepted (impl phased, #264) |
+| [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Implemented |
 | [ADR-066](./architecture-decisions/ADR-066-stable-slot-addressing-desired-state-placement.md) | Stable slot addressing and desired-state placement | Runtime / slots / addressing / control-plane | Implemented |
 | [ADR-067](./architecture-decisions/ADR-067-manifest-declared-slot-contract.md) | Manifest-declared slot contract: slots are declared in the DSL, code is generated from the declaration | DSL / codegen / slots / contract | Implemented |
 | [ADR-068](./architecture-decisions/ADR-068-provider-scoped-slot-addresses.md) | Provider-scoped slot addresses | Runtime / slots / addressing / ownership | Implemented |
@@ -315,6 +315,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-078](./architecture-decisions/ADR-078-control-plane-in-platform.md) | The control plane ships in the platform, and a composition environment is generated from a manifest | Control plane / codegen / packaging | Proposed (impl deferred, #139) |
 | [ADR-079](./architecture-decisions/ADR-079-single-execution-substitution-seam.md) | There is one seam for substituting handler execution, and it sits inside the lifecycle contract | Runtime / lifecycle / dependency injection | Implemented |
 | [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
+| [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 
 <!-- END GENERATED: adr-index -->
 

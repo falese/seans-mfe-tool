@@ -16,7 +16,9 @@ superseded-by: []
 implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
-verified-by: []
+  - packages/runtime/src/base-remote-mfe.ts
+verified-by:
+  - packages/runtime/src/__tests__/adr-026-load-atomicity.test.ts
 summary: >-
   Implement load as three sequential atomic subphases (entry → mount → enable-render) with
   per-subphase telemetry checkpoints and a LoadResult that carries metadata for shell validation
@@ -343,17 +345,41 @@ context.retryCount = 3;
 
 ## Validation Criteria
 
-- [ ] Entry phase fetches remote entry correctly
-- [ ] Mount phase initializes container with shared deps
-- [ ] Enable-render phase parses manifest and extracts components
-- [ ] LoadResult includes all required metadata
-- [ ] Atomicity: failure in any phase returns error status (no partial success)
-- [ ] Telemetry: subphase durations accurate and sum to total
-- [ ] Handlers: before/after/error phases execute in correct order
+- [x] Entry phase fetches remote entry correctly
+- [x] Mount phase initializes container with shared deps
+- [x] Enable-render phase parses manifest and extracts components
+- [x] LoadResult includes all required metadata
+- [x] Atomicity: failure in any phase returns error status (no partial success)
+- [x] Telemetry: subphase durations accurate and sum to total
+- [x] Handlers: before/after/error phases execute in correct order
 - [ ] Retry: transient errors retry correctly with exponential backoff
-- [ ] Shell: can validate LoadResult and proceed to render
+      — blocked, see the note below
+- [x] Shell: can validate LoadResult and proceed to render
 - [ ] All Gherkin scenarios pass (from runtime-load-render.feature)
+      — all but the retry scenario, which depends on the box above
 - [ ] 100% code coverage for load capability
+      — 94.96% statements / 85.24% branches on `base-remote-mfe.ts`
+
+### Why the remaining boxes are not ticked (#318)
+
+Eight criteria are now asserted in
+`packages/runtime/src/__tests__/adr-026-load-atomicity.test.ts`, against the
+real `doLoad` rather than the shared `MFETestHarness` — which replaces `doLoad`
+with a fixture, and is why these criteria could sit unverified while the load
+tests passed.
+
+Retry is the blocker for the other three. `withRetry` exists and is tested
+(`retry-wrapper.ts`, ADR-030), and `handleError` states plainly that retry is
+that wrapper's job and not the handler's. But nothing calls `withRetry`, and
+the configuration this ADR assumes — `errorHandling.retry.maxAttempts`,
+`backoffMs`, `exponential` — has no field anywhere in the DSL schema. Wiring it
+therefore means deciding where retry config lives in the manifest and what it
+applies to, which is a decision this ADR describes but never ratified. It needs
+its own ADR rather than an implementation that invents the field.
+
+The same gap explains `error.retryCount`, which is hardcoded to 0, and
+`error.retryable`, hardcoded to `true` — both are answers only a retry policy
+can give.
 
 ## Related Requirements
 

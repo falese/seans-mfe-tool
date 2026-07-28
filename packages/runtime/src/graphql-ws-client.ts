@@ -10,6 +10,7 @@
  */
 
 import { uuidv4 } from './util/uuid';
+import { NetworkError } from '@seans-mfe/contracts';
 
 /**
  * Minimal interface for the socket so tests can inject fakes without depending
@@ -85,7 +86,7 @@ export class GraphQLWebSocketClient implements DaemonWebSocketClient {
     timeoutMs = 4_000,
   ): Promise<boolean> {
     if (!this.connected) {
-      throw new Error('Daemon WebSocket not connected');
+      throw new NetworkError('Daemon WebSocket not connected', 0);
     }
 
     const id = uuidv4();

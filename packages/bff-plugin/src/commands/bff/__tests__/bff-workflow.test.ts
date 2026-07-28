@@ -55,6 +55,7 @@ interface BffManifest {
     }>;
     transforms?: Array<Record<string, unknown>>;
     plugins?: Array<Record<string, unknown>>;
+    mockSwitch?: { enabled: boolean };
     serve?: { endpoint: string; playground: boolean };
   };
   [key: string]: unknown;
@@ -317,6 +318,216 @@ describe('integration: BFF workflow', () => {
       // Nothing should have been written or shelled out.
       expect(await fs.pathExists(path.join(workspace, '.meshrc.yaml'))).toBe(false);
       expect(execSyncMock).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * ADR-052 demo mode on the standalone path (#199).
+   *
+   * The `remote:generate` path renders `.meshrc.yaml` from `meshrc.yaml.ejs`,
+   * which emits the `resolversComposition` over `Query.*` and the cache guard.
+   * The standalone path does not use that template at all: `.meshrc.yaml` comes
+   * from `extractMeshConfig` yaml-dumping the manifest's `data:` block. So the
+   * switch has to be honoured there too, and the two files the composer resolves
+   * to have to exist beside it.
+   */
+  describe('demo-mode mock switch on the standalone path (ADR-052)', () => {
+    interface MeshrcShape {
+      transforms?: Array<Record<string, unknown>>;
+      plugins?: Array<Record<string, unknown>>;
+      mockSwitch?: unknown;
+    }
+
+    async function makeMockSwitchManifest(
+      extra: Partial<BffManifest['data']> = {},
+    ): Promise<string> {
+      const manifest: BffManifest = {
+        name: 'demo_bff',
+        version: '1.0.0',
+        type: 'bff',
+        data: {
+          sources: [
+            { name: 'PetsAPI', handler: { openapi: { source: './specs/pets.yaml' } } },
+          ],
+          mockSwitch: { enabled: true },
+          serve: { endpoint: '/graphql', playground: true },
+          ...extra,
+        },
+      };
+      const manifestPath = path.join(workspace, 'mfe-manifest.yaml');
+      await writeYaml(manifestPath, manifest);
+      await fs.ensureDir(path.join(workspace, 'specs'));
+      await fs.writeFile(path.join(workspace, 'specs', 'pets.yaml'), MINIMAL_PETS_SPEC, 'utf8');
+      return manifestPath;
+    }
+
+    it('synthesises the resolversComposition transform into .meshrc.yaml', async () => {
+      const manifestPath = await makeMockSwitchManifest();
+
+      await bffBuildCommand({ manifest: manifestPath, cwd: workspace });
+
+      const meshrc = yaml.load(
+        await fs.readFile(path.join(workspace, '.meshrc.yaml'), 'utf8'),
+      ) as MeshrcShape;
+
+      const composition = meshrc.transforms?.find((t) => 'resolversComposition' in t) as
+        | { resolversComposition: { mode: string; compositions: Array<Record<string, string>> } }
+        | undefined;
+
+      expect(composition).toBeDefined();
+      expect(composition!.resolversComposition.mode).toBe('bare');
+      expect(composition!.resolversComposition.compositions).toEqual([
+        { resolver: 'Query.*', composer: './mock-switch#mockSwitch' },
+      ]);
+
+      // `mockSwitch` is our DSL field, not a Mesh one — it must not leak through.
+      expect(meshrc.mockSwitch).toBeUndefined();
+    });
+
+    it('emits mock-switch.js and mocks.json beside .meshrc.yaml', async () => {
+      const manifestPath = await makeMockSwitchManifest();
+
+      await bffBuildCommand({ manifest: manifestPath, cwd: workspace });
+
+      const composerPath = path.join(workspace, 'mock-switch.js');
+      const fixturesPath = path.join(workspace, 'mocks.json');
+
+      expect(await fs.pathExists(composerPath)).toBe(true);
+      expect(await fs.pathExists(fixturesPath)).toBe(true);
+
+      // The composer must export the symbol the meshrc reference names.
+      const composer = await fs.readFile(composerPath, 'utf8');
+      expect(composer).toContain('module.exports = { mockSwitch }');
+      expect(composer).toContain("require('./mocks.json')");
+
+      // Fixtures must be valid JSON so `require` cannot fail at Mesh build time.
+      const fixturesText = await fs.readFile(fixturesPath, 'utf8');
+      expect(() => JSON.parse(fixturesText)).not.toThrow();
+    });
+
+    it('never overwrites developer-owned fixtures, but does refresh the composer', async () => {
+      const manifestPath = await makeMockSwitchManifest();
+      const fixturesPath = path.join(workspace, 'mocks.json');
+      const composerPath = path.join(workspace, 'mock-switch.js');
+
+      await fs.writeFile(fixturesPath, '{"listPets":[{"id":7,"name":"Rex"}]}', 'utf8');
+      await fs.writeFile(composerPath, '// stale hand-edit\n', 'utf8');
+
+      await bffBuildCommand({ manifest: manifestPath, cwd: workspace });
+
+      // mocks.json is developer-owned — preserved verbatim.
+      expect(await fs.readFile(fixturesPath, 'utf8')).toBe(
+        '{"listPets":[{"id":7,"name":"Rex"}]}',
+      );
+      // mock-switch.js is generated — regenerated over the stale edit.
+      expect(await fs.readFile(composerPath, 'utf8')).toContain('module.exports = { mockSwitch }');
+    });
+
+    it('guards the response cache so mock and live are never cross-served', async () => {
+      const manifestPath = await makeMockSwitchManifest({
+        plugins: [{ responseCache: { ttl: 5000 } }],
+      });
+
+      await bffBuildCommand({ manifest: manifestPath, cwd: workspace });
+
+      const meshrc = yaml.load(
+        await fs.readFile(path.join(workspace, '.meshrc.yaml'), 'utf8'),
+      ) as MeshrcShape;
+
+      const cache = meshrc.plugins?.find((p) => 'responseCache' in p) as
+        | { responseCache: Record<string, unknown> }
+        | undefined;
+
+      expect(cache).toBeDefined();
+      expect(cache!.responseCache.ttl).toBe(5000);
+      expect(cache!.responseCache.if).toBe("context.headers?.get?.('x-bff-mode') == null");
+    });
+
+    it('leaves a manifest without the switch completely untouched', async () => {
+      const manifest: BffManifest = {
+        name: 'plain_bff',
+        version: '1.0.0',
+        type: 'bff',
+        data: {
+          sources: [
+            { name: 'PetsAPI', handler: { openapi: { source: './specs/pets.yaml' } } },
+          ],
+          plugins: [{ responseCache: { ttl: 5000 } }],
+          serve: { endpoint: '/graphql', playground: true },
+        },
+      };
+      const manifestPath = path.join(workspace, 'mfe-manifest.yaml');
+      await writeYaml(manifestPath, manifest);
+      await fs.ensureDir(path.join(workspace, 'specs'));
+      await fs.writeFile(path.join(workspace, 'specs', 'pets.yaml'), MINIMAL_PETS_SPEC, 'utf8');
+
+      await bffBuildCommand({ manifest: manifestPath, cwd: workspace });
+
+      const meshrc = yaml.load(
+        await fs.readFile(path.join(workspace, '.meshrc.yaml'), 'utf8'),
+      ) as MeshrcShape;
+
+      expect(meshrc.transforms).toBeUndefined();
+      const cache = meshrc.plugins?.find((p) => 'responseCache' in p) as
+        | { responseCache: Record<string, unknown> }
+        | undefined;
+      expect(cache!.responseCache.if).toBeUndefined();
+
+      expect(await fs.pathExists(path.join(workspace, 'mock-switch.js'))).toBe(false);
+      expect(await fs.pathExists(path.join(workspace, 'mocks.json'))).toBe(false);
+    });
+
+    it('scaffolds the demo-mode files when bff:init adds a BFF to an MFE that wants them', async () => {
+      // `bff:init` in add-to-existing mode derives the template name from the
+      // directory, and the name check rejects hyphens — so the project dir has
+      // to be underscore-named, unlike the hyphenated temp workspace.
+      const projectDir = path.join(workspace, 'demo_host_mfe');
+      await fs.ensureDir(path.join(projectDir, 'specs'));
+      await writeYaml(path.join(projectDir, 'mfe-manifest.yaml'), {
+        name: 'demo_host_mfe',
+        version: '1.0.0',
+        type: 'remote',
+        data: {
+          sources: [
+            { name: 'PetsAPI', handler: { openapi: { source: './specs/pets.yaml' } } },
+          ],
+          mockSwitch: { enabled: true },
+          serve: { endpoint: '/graphql', playground: true },
+        },
+      } satisfies BffManifest);
+      await fs.writeFile(path.join(projectDir, 'specs', 'pets.yaml'), MINIMAL_PETS_SPEC, 'utf8');
+      process.chdir(projectDir);
+
+      const result = await bffInitCommand(undefined, { port: 4403 });
+
+      expect(await fs.pathExists(path.join(projectDir, 'mock-switch.js'))).toBe(true);
+      expect(await fs.pathExists(path.join(projectDir, 'mocks.json'))).toBe(true);
+      expect(result.generatedFiles).toEqual(
+        expect.arrayContaining(['mock-switch.js', 'mocks.json']),
+      );
+    });
+
+    it('does not scaffold demo-mode files for an MFE that has not asked for them', async () => {
+      const projectDir = path.join(workspace, 'plain_host_mfe');
+      await fs.ensureDir(path.join(projectDir, 'specs'));
+      await writeYaml(path.join(projectDir, 'mfe-manifest.yaml'), {
+        name: 'plain_host_mfe',
+        version: '1.0.0',
+        type: 'remote',
+        data: {
+          sources: [
+            { name: 'PetsAPI', handler: { openapi: { source: './specs/pets.yaml' } } },
+          ],
+          serve: { endpoint: '/graphql', playground: true },
+        },
+      } satisfies BffManifest);
+      await fs.writeFile(path.join(projectDir, 'specs', 'pets.yaml'), MINIMAL_PETS_SPEC, 'utf8');
+      process.chdir(projectDir);
+
+      await bffInitCommand(undefined, { port: 4404 });
+
+      expect(await fs.pathExists(path.join(projectDir, 'mock-switch.js'))).toBe(false);
+      expect(await fs.pathExists(path.join(projectDir, 'mocks.json'))).toBe(false);
     });
   });
 

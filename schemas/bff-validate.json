@@ -174,6 +174,39 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "resolversComposition": {
+                        "type": "object",
+                        "required": [
+                          "mode",
+                          "compositions"
+                        ],
+                        "properties": {
+                          "mode": {
+                            "type": "string"
+                          },
+                          "compositions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "resolver",
+                                "composer"
+                              ],
+                              "properties": {
+                                "resolver": {
+                                  "type": "string"
+                                },
+                                "composer": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "How the demo-mode mock switch is expressed to Mesh (ADR-052)."
                       }
                     },
                     "additionalProperties": true
@@ -261,6 +294,39 @@
                     }
                   },
                   "additionalProperties": false
+                },
+                "resolversComposition": {
+                  "type": "object",
+                  "required": [
+                    "mode",
+                    "compositions"
+                  ],
+                  "properties": {
+                    "mode": {
+                      "type": "string"
+                    },
+                    "compositions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "resolver",
+                          "composer"
+                        ],
+                        "properties": {
+                          "resolver": {
+                            "type": "string"
+                          },
+                          "composer": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "How the demo-mode mock switch is expressed to Mesh (ADR-052)."
                 }
               },
               "additionalProperties": true
@@ -279,9 +345,13 @@
                   "properties": {
                     "ttl": {
                       "type": "number"
+                    },
+                    "if": {
+                      "type": "string"
                     }
                   },
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "description": "`if` is a Mesh cache predicate. Demo mode sets it so a response cached from\na live request is never served to a mock request, or vice versa (ADR-052)."
                 },
                 "rateLimit": {
                   "type": "object",
@@ -495,6 +565,39 @@
                               }
                             },
                             "additionalProperties": false
+                          },
+                          "resolversComposition": {
+                            "type": "object",
+                            "required": [
+                              "mode",
+                              "compositions"
+                            ],
+                            "properties": {
+                              "mode": {
+                                "type": "string"
+                              },
+                              "compositions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "resolver",
+                                    "composer"
+                                  ],
+                                  "properties": {
+                                    "resolver": {
+                                      "type": "string"
+                                    },
+                                    "composer": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "additionalProperties": false,
+                            "description": "How the demo-mode mock switch is expressed to Mesh (ADR-052)."
                           }
                         },
                         "additionalProperties": true
@@ -582,6 +685,39 @@
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "resolversComposition": {
+                      "type": "object",
+                      "required": [
+                        "mode",
+                        "compositions"
+                      ],
+                      "properties": {
+                        "mode": {
+                          "type": "string"
+                        },
+                        "compositions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "resolver",
+                              "composer"
+                            ],
+                            "properties": {
+                              "resolver": {
+                                "type": "string"
+                              },
+                              "composer": {
+                                "type": "string"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "How the demo-mode mock switch is expressed to Mesh (ADR-052)."
                     }
                   },
                   "additionalProperties": true
@@ -600,9 +736,13 @@
                       "properties": {
                         "ttl": {
                           "type": "number"
+                        },
+                        "if": {
+                          "type": "string"
                         }
                       },
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "description": "`if` is a Mesh cache predicate. Demo mode sets it so a response cached from\na live request is never served to a mock request, or vice versa (ADR-052)."
                     },
                     "rateLimit": {
                       "type": "object",

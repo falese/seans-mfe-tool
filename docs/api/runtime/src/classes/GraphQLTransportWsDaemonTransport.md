@@ -6,7 +6,7 @@
 
 # Class: GraphQLTransportWsDaemonTransport
 
-Defined in: [packages/runtime/src/layout-transport.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L60)
+Defined in: [packages/runtime/src/layout-transport.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L62)
 
 Self-contained graphql-transport-ws client for the daemon's `messages`
 subscription and `sendMessage` mutation, with bounded-backoff reconnect.
@@ -21,7 +21,7 @@ subscription and `sendMessage` mutation, with bounded-backoff reconnect.
 
 > **new GraphQLTransportWsDaemonTransport**(`url`, `createSocket`): `GraphQLTransportWsDaemonTransport`
 
-Defined in: [packages/runtime/src/layout-transport.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L66)
+Defined in: [packages/runtime/src/layout-transport.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L68)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [packages/runtime/src/layout-transport.ts:66](https://github.com/fal
 
 > **send**(`envelope`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-transport.ts:120](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L120)
+Defined in: [packages/runtime/src/layout-transport.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L122)
 
 Fire the sendMessage mutation with a JSON-encoded envelope.
 
@@ -67,7 +67,7 @@ Fire the sendMessage mutation with a JSON-encoded envelope.
 
 > **start**(`onMessage`, `onStatus?`): `void`
 
-Defined in: [packages/runtime/src/layout-transport.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L71)
+Defined in: [packages/runtime/src/layout-transport.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L73)
 
 Open the `messages` subscription; deliver each envelope to onMessage.
 
@@ -95,7 +95,7 @@ Open the `messages` subscription; deliver each envelope to onMessage.
 
 > **stop**(): `void`
 
-Defined in: [packages/runtime/src/layout-transport.ts:114](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L114)
+Defined in: [packages/runtime/src/layout-transport.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-transport.ts#L116)
 
 #### Returns
 

@@ -8,7 +8,7 @@
 
 > **CommandError** = `object`
 
-Defined in: [packages/contracts/src/envelope.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L65)
+Defined in: [packages/contracts/src/envelope.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L77)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [packages/contracts/src/envelope.ts:65](https://github.com/falese/se
 
 > **code**: `number`
 
-Defined in: [packages/contracts/src/envelope.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L67)
+Defined in: [packages/contracts/src/envelope.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L79)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/contracts/src/envelope.ts:67](https://github.com/falese/se
 
 > `optional` **details**: `unknown`
 
-Defined in: [packages/contracts/src/envelope.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L71)
+Defined in: [packages/contracts/src/envelope.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L83)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/contracts/src/envelope.ts:71](https://github.com/falese/se
 
 > **message**: `string`
 
-Defined in: [packages/contracts/src/envelope.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L68)
+Defined in: [packages/contracts/src/envelope.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L80)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/envelope.ts:68](https://github.com/falese/se
 
 > **retryable**: `boolean`
 
-Defined in: [packages/contracts/src/envelope.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L69)
+Defined in: [packages/contracts/src/envelope.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L81)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/contracts/src/envelope.ts:69](https://github.com/falese/se
 
 > **type**: `string`
 
-Defined in: [packages/contracts/src/envelope.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L66)
+Defined in: [packages/contracts/src/envelope.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L78)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [packages/contracts/src/envelope.ts:66](https://github.com/falese/se
 
 > **userFacing**: `boolean`
 
-Defined in: [packages/contracts/src/envelope.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L70)
+Defined in: [packages/contracts/src/envelope.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L82)

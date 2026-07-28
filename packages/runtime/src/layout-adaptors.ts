@@ -22,7 +22,7 @@ import type {
 // require("@seans-mfe/contracts") in the compiled runtime. That resolves in
 // every consumer: the CLI image (workspace node_modules) and generated MFEs
 // (contracts is staged as a file: dep of dist/runtime — #236, ADR-054/056).
-import { isImperativeMountHandle } from '@seans-mfe/contracts';
+import { isImperativeMountHandle, BusinessError, SystemError } from '@seans-mfe/contracts';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // ── Structural element types (testable without a DOM) ────────
@@ -193,7 +193,9 @@ async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promi
     });
   }
   const container = globalScope[scope];
-  if (!container) throw new Error(`Remote container "${scope}" not found after loading ${remoteEntryUrl}`);
+  if (!container) {
+    throw new SystemError(`Remote container "${scope}" not found after loading ${remoteEntryUrl}`);
+  }
   if (typeof __webpack_init_sharing__ === 'function') {
     await __webpack_init_sharing__('default');
   }
@@ -275,13 +277,14 @@ async function mountModuleFederation(
     // nonsense URL rather than a statement of what the rule is missing.
     const { remoteEntryUrl, scope, module } = output;
     if (!remoteEntryUrl || !scope || !module) {
-      throw new Error(
+      throw new BusinessError(
         `Cannot mount MFE for experience "${experience.id}": the placement rule is missing ` +
         [
           !remoteEntryUrl && 'remoteEntryUrl',
           !scope && 'scope',
           !module && 'module',
         ].filter(Boolean).join(', '),
+        'INCOMPLETE_PLACEMENT_RULE',
       );
     }
 
@@ -338,7 +341,7 @@ async function mountModuleFederation(
       };
     }
 
-    throw new Error(
+    throw new SystemError(
       `Remote module "${output.module}" exposes neither a presentation handle ` +
         `(handles/mount, ADR-056) nor a legacy bootstrap ({ mfe, mfeReady })`
     );

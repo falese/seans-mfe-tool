@@ -6,9 +6,9 @@
 
 # Function: formatError()
 
-> **formatError**(`err`, `correlationId`, `startTime?`): [`CommandResult`](../type-aliases/CommandResult.md)\<`never`\>
+> **formatError**(`err`, `correlationId`, `startTime?`, `traceId?`): [`CommandResult`](../type-aliases/CommandResult.md)\<`never`\>
 
-Defined in: [packages/contracts/src/envelope.ts:120](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L120)
+Defined in: [packages/contracts/src/envelope.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L136)
 
 ## Parameters
 
@@ -23,6 +23,10 @@ Defined in: [packages/contracts/src/envelope.ts:120](https://github.com/falese/s
 ### startTime?
 
 `number`
+
+### traceId?
+
+`string`
 
 ## Returns
 

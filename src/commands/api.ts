@@ -48,7 +48,11 @@ interface OpenAPISpec {
 function validateDatabaseType(dbType: string): boolean {
   const validDatabases = ['mongodb', 'mongo', 'sqlite', 'sql'];
   if (!validDatabases.includes(dbType.toLowerCase())) {
-    throw new Error(`Unsupported database type: ${dbType}. Valid options are: ${validDatabases.join(', ')}`);
+    throw new ValidationError(
+      `Unsupported database type: ${dbType}. Valid options are: ${validDatabases.join(', ')}`,
+      'database',
+      'enum'
+    );
   }
   return true;
 }
@@ -287,7 +291,7 @@ async function processTemplates(targetDir: string, vars: TemplateVars): Promise<
     await generateEnvironmentFiles(targetDir, vars);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to process templates: ${message}`);
+    throw new SystemError(`Failed to process templates: ${message}`);
   }
 }
 
@@ -388,7 +392,7 @@ async function mergePackageJson(targetDir: string, dbType: string, vars: Templat
     console.log(chalk.green('✓ Generated package.json'));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to process package.json: ${message}`);
+    throw new SystemError(`Failed to process package.json: ${message}`);
   }
 }
 

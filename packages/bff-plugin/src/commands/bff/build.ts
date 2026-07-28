@@ -3,7 +3,7 @@ import chalk = require('chalk');
 import { execSync } from 'child_process';
 import { BaseCommand } from '@seans-mfe/oclif-base';
 import { NetworkError } from '@seans-mfe/contracts';
-import { writeMeshConfig } from '../../shared';
+import { writeMeshConfig, ensureMockSwitchFiles } from '../../shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from '../../shared';
 import type { BffBuildResult, PlannedChange } from '../../types';
@@ -14,13 +14,28 @@ export async function bffBuildCommand(
   try {
     console.log(chalk.blue('Building BFF...'));
 
-    const { meshConfig } = await bffValidateCommand(options);
+    const { meshConfig, manifest } = await bffValidateCommand(options);
     const targetDir = options.cwd || process.cwd();
     const meshConfigPath = `${targetDir}/.meshrc.yaml`;
+    const mockSwitchEnabled = !!manifest.data?.mockSwitch?.enabled;
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = [
         { op: 'create', target: '.meshrc.yaml', detail: 'GraphQL Mesh configuration' },
+        ...(mockSwitchEnabled
+          ? [
+              {
+                op: 'create' as const,
+                target: 'mock-switch.js',
+                detail: 'demo-mode composer (ADR-052)',
+              },
+              {
+                op: 'create' as const,
+                target: 'mocks.json',
+                detail: 'demo-mode fixtures — kept if already present',
+              },
+            ]
+          : []),
         { op: 'spawn', target: 'npx mesh build', detail: 'generate .mesh/ runtime artifacts' },
       ];
       console.log(chalk.yellow('\n[DRY RUN] Would:'));
@@ -32,6 +47,10 @@ export async function bffBuildCommand(
 
     console.log(chalk.blue('\nExtracting Mesh configuration...'));
     await writeMeshConfig(meshConfig, targetDir);
+
+    // Before `mesh build`, never after: the config now names a composer, and
+    // Mesh resolves that reference at build time (ADR-052, #199).
+    const demoModeFiles = mockSwitchEnabled ? await ensureMockSwitchFiles(targetDir) : [];
 
     console.log(chalk.blue('\nRunning mesh build...'));
 
@@ -61,7 +80,11 @@ export async function bffBuildCommand(
     console.log('  .meshrc.yaml    - Mesh configuration');
     console.log('  .mesh/          - Generated Mesh runtime');
 
-    return { meshConfigPath, generatedFiles: ['.meshrc.yaml', '.mesh/'], dryRun: false };
+    return {
+      meshConfigPath,
+      generatedFiles: ['.meshrc.yaml', '.mesh/', ...demoModeFiles],
+      dryRun: false,
+    };
   } catch (error) {
     console.error(chalk.red('\n✗ BFF build failed:'));
     console.error(chalk.red((error as Error).message));

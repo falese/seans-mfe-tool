@@ -7,6 +7,7 @@
 
 import { Context } from './context';
 import { classifyError, ErrorHandlingConfig, ErrorClassification } from './error-classifier';
+import { BusinessError } from '@seans-mfe/contracts';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -261,7 +262,10 @@ async function invokeFallbackHandler<T>(
   // Invoke fallback handler
   const handler = getContextHandlers(context)?.[fallbackHandlerName];
   if (!handler) {
-    throw new Error(`Fallback handler '${fallbackHandlerName}' not found`);
+    throw new BusinessError(
+      `Fallback handler '${fallbackHandlerName}' not found`,
+      'FALLBACK_HANDLER_NOT_FOUND'
+    );
   }
 
   const result = await handler(context);

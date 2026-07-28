@@ -36,7 +36,7 @@ Path it is served on.
 
 ### enterState?
 
-> `readonly` `optional` **enterState**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> `readonly` `optional` **enterState**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 Defined in: [packages/contracts/src/platform-contract.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L142)
 
@@ -46,7 +46,7 @@ State entered before execution, e.g. `load` → `loading`.
 
 ### errorState?
 
-> `readonly` `optional` **errorState**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> `readonly` `optional` **errorState**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 Defined in: [packages/contracts/src/platform-contract.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L146)
 
@@ -56,7 +56,7 @@ State entered on failure.
 
 ### exitState?
 
-> `readonly` `optional` **exitState**: `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`
+> `readonly` `optional` **exitState**: `"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`
 
 Defined in: [packages/contracts/src/platform-contract.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L144)
 
@@ -98,7 +98,7 @@ Canonical camelCase name — the orchestrator method on `BaseMFE`.
 
 ### preStates
 
-> `readonly` **preStates**: readonly (`"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"error"` \| `"destroyed"`)[]
+> `readonly` **preStates**: readonly (`"error"` \| `"uninitialized"` \| `"loading"` \| `"ready"` \| `"rendering"` \| `"destroyed"`)[]
 
 Defined in: [packages/contracts/src/platform-contract.ts:140](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/platform-contract.ts#L140)
 

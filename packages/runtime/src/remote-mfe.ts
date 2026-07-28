@@ -15,8 +15,9 @@
  * - REQ-RUNTIME-012: Telemetry emission at all checkpoints
  */
 
-import { createErrorBoundary } from './error-boundary';
+import { createErrorBoundary, type FallbackType } from './error-boundary';
 import { BaseRemoteMFE } from './base-remote-mfe';
+import { SystemError } from '@seans-mfe/contracts';
 
 // Re-exported for consumers that imported the container type from this module.
 export type { ModuleFederationContainer } from './base-remote-mfe';
@@ -49,6 +50,27 @@ export class RemoteMFE extends BaseRemoteMFE {
   }
 
   /**
+   * Resolve an MFE-supplied fallback component from the federated container.
+   *
+   * `./ErrorBoundary` is an optional expose: most MFEs do not ship one, and a
+   * container that has never heard of it throws or returns nothing. That is
+   * the common case, not an error — a remote must not fail to mount because it
+   * declined to customise its failure state. Hence the swallow (#247).
+   */
+  private async resolveMfeFallback(): Promise<unknown> {
+    if (!this.container) return undefined;
+    try {
+      const factory = await this.container.get('./ErrorBoundary');
+      if (typeof factory !== 'function') return undefined;
+      const module = factory();
+      const resolved = (module as { default?: unknown })?.default ?? module;
+      return typeof resolved === 'function' ? resolved : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Mount React component to DOM using React 18 createRoot.
    * Reuses an existing root for the containerId when re-rendering.
    */
@@ -58,12 +80,12 @@ export class RemoteMFE extends BaseRemoteMFE {
     containerId: string
   ): Promise<unknown> {
     if (typeof document === 'undefined') {
-      throw new Error('[RemoteMFE] mountComponent called outside a browser environment');
+      throw new SystemError('[RemoteMFE] mountComponent called outside a browser environment');
     }
 
     const element = (document as Document).getElementById(containerId);
     if (!element) {
-      throw new Error(`[RemoteMFE] DOM container #${containerId} not found`);
+      throw new SystemError(`[RemoteMFE] DOM container #${containerId} not found`);
     }
 
     // Reuse root if one already exists for this container
@@ -83,9 +105,24 @@ export class RemoteMFE extends BaseRemoteMFE {
 
     // Contain render-time failures within the remote's own root so a crashing
     // remote shows a fallback instead of tearing down the mount (ADR-044).
-    const ErrorBoundary = createErrorBoundary(React, (error, info) => {
-      console.error('[RemoteMFE] render error in remote component', error, info);
-    });
+    const mfeFallback = await this.resolveMfeFallback();
+    const fallbackType: FallbackType = mfeFallback ? 'mfe-provided' : 'default';
+    const ErrorBoundary = createErrorBoundary(
+      React,
+      (error, info) => {
+        console.error('[RemoteMFE] render error in remote component', error, info);
+        // The mount itself succeeded, so nothing in the load/render telemetry
+        // records that the user is looking at a fallback. This event is the
+        // only signal that a remote is up but broken (#247).
+        this.emitTelemetry('render-fallback-applied', 'render', 'main', 'error', {
+          metadata: {
+            error: error instanceof Error ? error.message : String(error),
+            fallbackType,
+          },
+        });
+      },
+      mfeFallback,
+    );
     // Component arrives as `unknown` (the base class's framework-neutral
     // contract); by this point in the mount lifecycle it is guaranteed to be
     // a valid React component type, which is what this cast asserts.

@@ -1,10 +1,7 @@
 ---
 id: 0017
 title: Typed error hierarchy — never throw raw Error
-status: Accepted
-impl:
-  stage: phased
-  refs: ["#320"]
+status: Implemented
 date: 2026-04-18
 deciders: [sean]
 area: CLI / contracts
@@ -16,7 +13,11 @@ superseded-by: []
 implements-pdr: [3]
 implemented-by:
   - packages/contracts/src/errors
-verified-by: []
+  - packages/runtime/src/base-mfe.ts
+  - packages/runtime/src/base-remote-mfe.ts
+  - packages/dsl/src/parser.ts
+verified-by:
+  - src/__tests__/no-raw-error-throws.test.ts
 summary: >-
   All thrown errors must be instances of a domain-typed class from @seans-mfe/contracts —
   ValidationError, BusinessError, NetworkError, SystemError, TimeoutError, or SecurityError —

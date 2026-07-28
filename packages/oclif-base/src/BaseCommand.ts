@@ -7,7 +7,9 @@ import {
   classifyError,
   EXIT_CODES,
 } from '@seans-mfe/contracts';
-import type { CommandResult } from '@seans-mfe/contracts';
+import { traceContextFromEnv, formatTraceparent } from '@seans-mfe/contracts';
+import type { CommandResult, TraceContext } from '@seans-mfe/contracts';
+import { createLogger, type Logger } from './logger';
 import {
   suppressChalk,
   redirectStdoutToStderr,
@@ -34,6 +36,33 @@ export abstract class BaseCommand<T = unknown> extends Command {
 
   /** Commands push human-facing advisory messages here; envelope.warnings mirrors it. */
   protected warnings: string[] = [];
+
+  /**
+   * The trace this invocation belongs to (ADR-081). Adopted from `TRACEPARENT`
+   * when a caller set one — so a command run by CI, or an MCP child process
+   * (ADR-019), is a child of whatever spawned it — and minted fresh otherwise.
+   */
+  protected readonly trace: TraceContext = traceContextFromEnv(process.env);
+
+  /**
+   * Structured emitter for this command, on this command's trace.
+   *
+   * For platform events, not for the human-readable rendering a command does:
+   * `this.log()` remains the right call for that (ADR-081 §5).
+   */
+  protected readonly logger: Logger = createLogger({
+    context: this.trace,
+    attributes: { 'service.name': 'seans-mfe-tool' },
+  });
+
+  /**
+   * The `traceparent` a child process should inherit. Spread into a spawn's
+   * env — `{ ...process.env, ...this.childTraceEnv() }` — so work done in
+   * `mesh build` or `npm install` stays attributable to this command.
+   */
+  protected childTraceEnv(): { TRACEPARENT: string } {
+    return { TRACEPARENT: formatTraceparent(this.trace) };
+  }
 
   protected abstract runCommand(): Promise<T>;
 
@@ -70,36 +99,84 @@ export abstract class BaseCommand<T = unknown> extends Command {
       blockInteractivePrompts();
     }
 
+    // Publish the trace so `postrun` hooks — which receive only Command and
+    // argv, no instance — and any spawned child land on it (ADR-081).
+    process.env['TRACEPARENT'] = formatTraceparent(this.trace);
+
     // Exactly one envelope reaches stdout, so the writes below sit OUTSIDE the
     // try. Emitting the success envelope inside it meant any throw from the
     // write or from process.exit fell into the catch, which emitted a second
     // envelope — breaking the one-line contract this class exists to keep.
     let outcome: { envelope: CommandResult<T | never>; exit: number };
+    let result: T | undefined;
 
     try {
-      const result = await this.runCommand();
+      // The span covers runCommand only. Envelope serialisation and exit are
+      // this class's own bookkeeping, not the command's work.
+      result = await this.logger.span('cli.command', () => this.runCommand(), {
+        'cli.command': this.commandId(),
+      });
       if (!jsonMode) return;
       outcome = {
         envelope: formatSuccess(result as T, this.warnings, {
           durationMs: Date.now() - startTime,
           correlationId,
+          traceId: this.trace.traceId,
         }),
         exit: EXIT_CODES.ok,
       };
     } catch (err) {
       if (!jsonMode) throw this.withTypedExitCode(err);
-      const envelope = formatError(err, correlationId, startTime);
+      const envelope = formatError(err, correlationId, startTime, this.trace.traceId);
       outcome = { envelope, exit: exitCodeFor(envelope.error?.type ?? 'unknown') };
     }
 
     await new Promise<void>((resolve) =>
       writeJsonLine(JSON.stringify(outcome.envelope), resolve),
     );
+
+    // oclif fires postrun after the command returns — but the exit below means
+    // we never return, so under --json the hooks simply never ran. That
+    // silently disabled them on the MCP path (ADR-019 spawns each tool call as
+    // `<cmd> --json`) and in CI. Run them here instead; human mode still
+    // returns normally and lets oclif do it, so they fire exactly once either
+    // way.
+    await this.runPostrunHooks(result);
+
     // The --json envelope contract (ADR-018) requires a specific sysexits code;
     // oclif's default handler would pick its own. This is the one place
     // responsible for that translation.
     // eslint-disable-next-line no-process-exit
     process.exit(outcome.exit);
+  }
+
+  /** This command's oclif id, falling back to the class name for ad-hoc subclasses. */
+  private commandId(): string {
+    return (this.constructor as { id?: string }).id ?? this.constructor.name;
+  }
+
+  /**
+   * Fire `postrun` for the --json path.
+   *
+   * Swallows everything: a hook exists to observe the command, and an observer
+   * that can fail the thing it observes is worse than no observer. `config` is
+   * duck-typed because tests construct commands with a bare object.
+   */
+  private async runPostrunHooks(result: T | undefined): Promise<void> {
+    const config = this.config as unknown as
+      | { runHook?: (event: string, opts: Record<string, unknown>) => Promise<unknown> }
+      | undefined;
+    if (typeof config?.runHook !== 'function') return;
+
+    try {
+      await config.runHook('postrun', {
+        Command: this.constructor as unknown as Command.Class,
+        argv: this.argv,
+        ...(result !== undefined ? { result } : {}),
+      });
+    } catch {
+      // Never fail a command because its telemetry failed.
+    }
   }
 
   /**
