@@ -37,8 +37,8 @@ Full spec: `@docs/spec.md`
 | `seans-mfe-tool mfe:validate [dir] [--typecheck]` | Validate a single MFE dir (a.k.a. `mfe:doctor`); non-zero exit on any inconsistency |
 | `npm run format` | Before PR |
 | `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
-| `turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged) |
-| `turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
+| `npx turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged). `npx` because turbo is a devDependency, not global |
+| `npx turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
 | `npm run build && npm run docker:build:cli` | After any `src/runtime/**` change: recompile dist/ THEN rebuild CLI image (dist/ is gitignored but baked into the CLI Docker image) |
 
 ## Development rules
