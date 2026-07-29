@@ -104,16 +104,29 @@ Kept (developer-owned):
   Yours to edit — regeneration never overwrites these
 ```
 
-`package.json` is *not* touched — it still has no GraphQL Mesh dependencies,
-because `package.json` is developer-owned (`overwrite:false`) and adding a
-`data:` section doesn't change that. This is the ownership contract working
-as designed, not an oversight, but it means a developer's next step by hand
-is real work, not a formality: add the Mesh runtime deps (`express`,
-`graphql`, `cors`, `helmet`, `@graphql-mesh/serve-runtime`,
-`@graphql-tools/{delegate,utils,wrap}`, `tslib`) and, to fully typecheck,
-the `@graphql-mesh/cli`/`@graphql-mesh/openapi` devDependencies plus a
-`mesh build` to materialize `./.mesh`'s generated types. Regeneration gets
-you the BFF's shape; it does not and cannot finish installing it.
+`package.json` is *not* touched — but not because there's no template logic
+for it. `packages/codegen/templates/base-mfe/package.json.ejs` is fully
+BFF-aware: its `hasBff` branch renders the complete Mesh dependency set
+(`@graphql-mesh/serve-runtime`, `express`, `cors`, `helmet`,
+`@graphql-tools/{delegate,utils,wrap}`, `tslib`, `@seans-mfe-tool/runtime`,
+the right `scripts.dev`/`build`) and *every* `remote:generate` computes that
+content correctly, `data:` or not. Confirmed by rendering it in isolation
+without writing to disk — the in-memory result already has the full Mesh
+`dependencies` block. The reason it never reaches disk is a write-time
+policy, not a rendering gap: `writeGeneratedFiles`
+(`packages/codegen/src/unified-generator.ts:854-860`) skips *any* file that
+already exists and is marked `overwrite:false`, and `package.json` is marked
+that way deliberately (an MFE author edits it — extra deps, custom scripts,
+version pins — as a matter of course). So the platform computes the exactly
+correct `package.json` on every run and then discards it, because rewriting
+a file a developer may have hand-edited is treated as a bigger decision than
+regenerating one nobody else touches. The CLI's "Kept (developer-owned)"
+list is literally this skip set (`genResult.skipped` in
+`src/commands/remote/generate.ts`). Practical effect: a developer's next
+step by hand is real work, not a formality — add the Mesh runtime deps
+listed above and, to fully typecheck, the `@graphql-mesh/cli`/
+`@graphql-mesh/openapi` devDependencies plus a `mesh build` to materialize
+`./.mesh`'s generated types.
 
 Confirm the fresh generation is itself drift-free:
 
