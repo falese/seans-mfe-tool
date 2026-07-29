@@ -1,10 +1,12 @@
 # Core Ideas Demo Runbook
 
-A repeatable, scratch-directory walkthrough of four use cases that together
+A repeatable, scratch-directory walkthrough of five use cases that together
 show the platform's core ideas in action: manifest-driven codegen, the
-generator/developer ownership split, idempotent regeneration, and ADR-082
-migration surfacing. Every command below was actually run against this repo
-while writing this doc — output is trimmed but not paraphrased.
+generator/developer ownership split, idempotent regeneration, ADR-082
+migration surfacing, and — honestly, warts included — what it takes to bring
+a pre-existing, non-standardized MFE under the platform's contract. Every
+command below was actually run against this repo while writing this doc —
+output is trimmed but not paraphrased.
 
 Nothing here is committed to the repo. It runs entirely in a scratch
 directory and ends with cleanup, so it's safe to run again from a clean
@@ -240,10 +242,152 @@ stated boundary, not a bug.)
 
 Revert the `throw new SystemError(...)` line back before moving on.
 
+## Use case 5 — true up a non-standardized MFE
+
+Everything so far starts from a manifest. This one doesn't: a pre-existing,
+hand-written React remote, plain webpack + `ModuleFederationPlugin`, no
+`mfe-manifest.yaml`, never touched by this CLI. There is no
+`remote:adopt`/`mfe:import` command — searched the whole `src/commands/**`
+tree while preparing this and confirmed none exists, and no ADR or doc
+proposes one. ADR-082 says as much directly: *"This does not migrate
+anything. It reports."* "Truing up" an existing MFE means composing the
+primitives every other use case already used: write the manifest by hand,
+`remote:generate`, close what `mfe:validate` reports. This section is that
+loop end to end, including the two places it doesn't go smoothly.
+
+Start from a legacy remote with no manifest:
+
+```
+legacy-widget/
+  package.json          # react ^18.0.0, webpack devDeps, no @seans-mfe-tool/runtime
+  webpack.config.js      # ModuleFederationPlugin: name legacy_widget, exposes ./App
+  public/index.html      # hand-written
+  src/App.tsx
+  src/index.tsx
+```
+
+```bash
+node /path/to/seans-mfe-tool/bin/run.js mfe:validate legacy-widget
+```
+
+```
+ValidationError: Invalid or missing mfe-manifest.yaml in .../legacy-widget:
+No manifest found in .../legacy-widget. Expected one of: mfe-manifest.yaml,
+mfe-manifest.yml, .mfe-manifest.yaml, .mfe-manifest.yml
+exit=64
+```
+
+**What correct looks like:** a clear, specific error and a stable exit code
+(64 = validation), not a crash — the platform has an opinion about MFEs it
+doesn't recognize, and states it plainly.
+
+Hand-write the minimal manifest that describes what already exists:
+
+```yaml
+name: legacy-widget
+version: 0.3.1
+type: remote
+language: typescript
+framework: react
+description: Hand-written MFE, adopted into the manifest system
+endpoint: http://localhost:3099
+remoteEntry: http://localhost:3099/remoteEntry.js
+capabilities: []
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+```
+
+`framework: react` is doing real work here, not documentation. `deriveBuiltinVariant`
+picks the framework from `manifest.framework`, falling back to Angular if
+`bundler: webpack` is set without it (`unified-generator.ts`) — so a
+same-shaped manifest with `bundler: webpack` instead of `framework: react`
+would silently generate this MFE as Angular. Then regenerate:
+
+```bash
+cd legacy-widget
+node /path/to/seans-mfe-tool/bin/run.js remote:generate
+```
+
+```
+✓ Generated files:
+  src/remote.tsx, src/platform/base-mfe/{mfe.ts,bootstrap.ts,mfe.test.ts,types.ts},
+  rspack.config.js, tsconfig.json, .gitignore, .dockerignore,
+  public/{index.html,demo.html,favicon.ico}, __mocks__/fileMock.js
+
+Kept (developer-owned):
+  package.json
+  src/App.tsx
+  src/index.tsx
+```
+
+**Two things worth stopping on, not glossing over:**
+
+1. **The hand-written `public/index.html` is gone**, replaced by the
+   platform's template. `public/index.html` is generator-owned
+   (`overwrite:true`) — the ownership split protects `App.tsx`/`index.tsx`/
+   `package.json`, but it was never scoped to "anything that already
+   existed." Anything generator-owned in a directory that predates the
+   manifest gets silently re-stamped on the first `remote:generate`, same as
+   it would on the hundredth.
+2. **`webpack.config.js` is untouched — and a brand-new `rspack.config.js`
+   now sits next to it.** The generator doesn't detect, read, or reconcile
+   an existing bundler config; the react/rspack variant is hard-wired
+   (`unified-generator.ts`'s variant selection branches only on
+   `angular-webpack` vs. everything else, which always means rspack). Two
+   competing federation configs — one hand-written, one generated — now
+   coexist, and nothing warns about it.
+
+`mfe:validate legacy-widget` at this point reports 13 problems — all in the
+developer-owned files the generator correctly declined to touch:
+`react-pinned` (react `^18.0.0` vs. platform `~18.2.0`), `manifest-package-sync`
+and `shared-declared` (the newly generated `rspack.config.js` shares MUI/emotion
+by platform default, none of which the hand-written `package.json` or
+`webpack.config.js` ever declared), and `runtime-declared`
+(`@seans-mfe-tool/runtime` missing). This is the actual "truing up" work, and
+it's manual by design — the same "generator seeds once, developer finishes"
+contract every other use case in this runbook already demonstrated.
+
+Closing it means accepting what `framework: react` already implied: the
+generated `rspack.config.js` is the build going forward, not the old
+`webpack.config.js`. Delete `webpack.config.js` and its now-unused devDeps,
+pin `react`/`react-dom` to `~18.2.0`, add `@seans-mfe-tool/runtime` and the
+MUI/emotion deps the generated federation config already shares, and update
+`scripts.dev`/`scripts.build` to call `rspack` instead of `webpack`:
+
+```bash
+node /path/to/seans-mfe-tool/bin/run.js mfe:validate legacy-widget
+```
+
+```
+  ✓ react-pinned
+  ✓ manifest-package-sync
+  ✓ shared-declared
+  ✓ shared-version-sync
+  ✓ runtime-declared
+  ✓ platform-migrations
+
+legacy-widget is consistent.
+```
+
+**What correct looks like:** clean, and `check:mfe-drift:check` against the
+same directory reports no drift — this MFE is now indistinguishable, to
+every gate in the platform, from one that was `remote:init`-scaffolded from
+day one. Nothing here required new tooling; it required reading what
+`mfe:validate` reported and doing the work it named. That the platform
+doesn't pretend to do this automatically is consistent with ADR-082's stated
+position — it reports, it doesn't rewrite code it doesn't own — but it's a
+real gap that only shows up when you actually try this: there's no
+`--dry-run`-style preview of *which* generator-owned files in an
+already-populated directory are about to be silently replaced, and nothing
+flags a second bundler config appearing next to a first. Worth a follow-up
+issue, not fixed in this pass.
+
 ## Cleanup
 
 ```bash
-rm -rf "$SCRATCH"
+rm -rf "$SCRATCH"   # covers demo-widget (use cases 1-4) and legacy-widget (use case 5)
 ```
 
 Nothing in this walkthrough touches the repository itself — `git status` at

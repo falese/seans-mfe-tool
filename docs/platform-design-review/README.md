@@ -65,7 +65,7 @@ finding, done independently of the formal 16-issue program above:
 | Doc | What it gives you |
 |---|---|
 | [Gate Self-Verification Audit](./gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
-| [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, and ADR-082 migration surfacing — across four use cases |
+| [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, ADR-082 migration surfacing, and truing up a pre-existing non-standardized MFE — across five use cases |
 
 ## How the pieces fit
 
