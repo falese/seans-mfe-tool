@@ -3,8 +3,26 @@ name: Tests
 on:
   push:
     branches: [main, develop]
+  # The `branches:` filter on a pull_request event matches the **base**, not the
+  # head. Stacked PRs never target main — each is based on the branch below it —
+  # so `[main, develop]` silently skipped every job in this file for them. Not
+  # "pending", not "failed": zero check runs.
+  #
+  # Measured on a four-deep stack: the bottom PR had 16 check runs, the top two
+  # had none, and the only gate covering them was api-docs.yml, which has no
+  # base filter. A React import leaked into the runtime barrel and shipped
+  # through that blind spot — found by a human running `docker compose build`,
+  # not by CI.
+  #
+  # `claude/**` rather than dropping the filter: it covers the branch naming
+  # CLAUDE.md mandates without opening the suite to every fork branch.
+  #
+  # Note for whoever merges a stack: retargeting does NOT re-trigger this
+  # workflow. `pull_request` defaults to opened/synchronize/reopened, and a base
+  # change fires `edited`. After the PR below merges, push or re-run manually to
+  # get CI on the new base.
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'claude/**']
 
 jobs:
   test:
