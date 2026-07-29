@@ -57,6 +57,16 @@ R3 (lifecycle diagram fix) lands in [`runtime-class-hierarchy.md`](../runtime-cl
 R6 (ADR status reconciliation) lands in the [ADR register erratum](../architecture-decisions/README.md#status-reconciliation-erratum).
 The code/CI remediations R2/R5/R7 are tracked as separate issues+PRs ([#229](https://github.com/falese/seans-mfe-tool/issues/229), [#231](https://github.com/falese/seans-mfe-tool/issues/231), [#230](https://github.com/falese/seans-mfe-tool/issues/230)).
 
+### Follow-ups (not part of epic #211)
+
+Continuations of the [Breaking-Change Regeneration DX Report](./breaking-change-regeneration-dx-report.md)'s
+finding, done independently of the formal 16-issue program above:
+
+| Doc | What it gives you |
+|---|---|
+| [Gate Self-Verification Audit](./gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
+| [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, and ADR-082 migration surfacing — across four use cases |
+
 ## How the pieces fit
 
 ```

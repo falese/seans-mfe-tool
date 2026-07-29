@@ -1,0 +1,251 @@
+# Core Ideas Demo Runbook
+
+A repeatable, scratch-directory walkthrough of four use cases that together
+show the platform's core ideas in action: manifest-driven codegen, the
+generator/developer ownership split, idempotent regeneration, and ADR-082
+migration surfacing. Every command below was actually run against this repo
+while writing this doc — output is trimmed but not paraphrased.
+
+Nothing here is committed to the repo. It runs entirely in a scratch
+directory and ends with cleanup, so it's safe to run again from a clean
+checkout at any time.
+
+## Setup
+
+```bash
+cd seans-mfe-tool
+npm run build                 # dist/, oclif manifest, dist/runtime
+SCRATCH=$(mktemp -d)
+```
+
+The CLI is invoked as `node bin/run.js <command>` throughout (the published
+Node entry point) rather than installed globally, so this works from any
+checkout without a global install.
+
+---
+
+## Use case 1 — scaffold a new MFE, no BFF
+
+```bash
+cd "$SCRATCH"
+node /path/to/seans-mfe-tool/bin/run.js remote:init demo-widget --framework react --skip-install --no-interactive
+```
+
+**What correct looks like:** `demo-widget/mfe-manifest.yaml` is written with
+no `data:` key at all — `remote:init`'s `createMinimalManifest()` never
+populates it, so a scaffold has no BFF by construction, not because a flag
+suppressed one.
+
+```bash
+cd demo-widget
+node /path/to/seans-mfe-tool/bin/run.js remote:generate
+```
+
+**What correct looks like:** 16 files generated — `src/remote.tsx`,
+`src/platform/base-mfe/*`, `package.json`, bundler config, `src/App.tsx`,
+`src/index.tsx`, `public/*` — and no `server.ts`, no `.meshrc.yaml`, no
+`src/platform/bff/`. Confirm:
+
+```bash
+node /path/to/seans-mfe-tool/bin/run.js mfe:validate . --json
+# {"ok":true,"data":{...,"issues":[]},...}
+```
+
+## Use case 2 — add a data source, regenerate
+
+Add a `data.sources` entry (shape borrowed from
+`examples/meridian-station/meridian-concourse/mfe-manifest.yaml`), pointing
+at a trivial local OpenAPI spec:
+
+```bash
+mkdir specs
+cat > specs/widget-api.yaml <<'EOF'
+openapi: 3.0.0
+info: { title: Widget API, version: 1.0.0 }
+paths:
+  /widgets:
+    get:
+      operationId: GetWidgets
+      responses:
+        '200': { description: OK }
+EOF
+
+cat >> mfe-manifest.yaml <<'EOF'
+
+data:
+  sources:
+    - name: WidgetAPI
+      handler:
+        openapi:
+          source: ./specs/widget-api.yaml
+  serve:
+    endpoint: /graphql
+    playground: true
+EOF
+
+node /path/to/seans-mfe-tool/bin/run.js remote:generate
+```
+
+**What correct looks like:** the BFF layer materializes wholesale in one run —
+`.meshrc.yaml`, `src/platform/bff/{bff.ts,bff.test.ts,mesh-context.js}`,
+`server.ts`, `Dockerfile`, `docker-compose.yaml`, `README.md` all appear as
+newly **Generated**. The CLI's own output names the ownership split directly:
+
+```
+Kept (developer-owned):
+  tsconfig.json
+  package.json
+  rspack.config.js
+  src/App.tsx
+  src/index.tsx
+  __mocks__/fileMock.js
+  Yours to edit — regeneration never overwrites these
+```
+
+`package.json` is *not* touched — it still has no GraphQL Mesh dependencies,
+because `package.json` is developer-owned (`overwrite:false`) and adding a
+`data:` section doesn't change that. This is the ownership contract working
+as designed, not an oversight, but it means a developer's next step by hand
+is real work, not a formality: add the Mesh runtime deps (`express`,
+`graphql`, `cors`, `helmet`, `@graphql-mesh/serve-runtime`,
+`@graphql-tools/{delegate,utils,wrap}`, `tslib`) and, to fully typecheck,
+the `@graphql-mesh/cli`/`@graphql-mesh/openapi` devDependencies plus a
+`mesh build` to materialize `./.mesh`'s generated types. Regeneration gets
+you the BFF's shape; it does not and cannot finish installing it.
+
+Confirm the fresh generation is itself drift-free:
+
+```bash
+cd ..  # repo root
+npm run check:mfe-drift:check -- "$SCRATCH/demo-widget"
+# OK    .../demo-widget
+# 1 MFE(s) checked — no generator-owned drift.
+```
+
+## Use case 3 — add a new platform feature via manifest, regenerate
+
+Add a `providesSlots` entry:
+
+```bash
+cd "$SCRATCH/demo-widget"
+cat >> mfe-manifest.yaml <<'EOF'
+
+providesSlots:
+  - id: main
+    description: Primary widget region
+EOF
+node /path/to/seans-mfe-tool/bin/run.js remote:generate
+```
+
+**What correct looks like:** `src/slots.tsx` appears, generator-owned, and
+includes a template-literal union type derived straight from the manifest
+(ADR-072):
+
+```ts
+export type DeclaredSlotId = 'main';
+```
+
+Wire it into developer-owned `src/App.tsx`:
+
+```tsx
+import { DeclaredSlot } from './slots';
+// ...
+<DeclaredSlot id="main">
+  <p>Primary widget region content.</p>
+</DeclaredSlot>
+```
+
+`node /path/to/seans-mfe-tool/bin/run.js mfe:validate . --typecheck --json`
+reports `typecheck: {ran:true, ok:true}` — a manifest-declared feature is a
+type, not a convention. Now typo the id:
+
+```tsx
+<DeclaredSlot id="mian">
+```
+
+```
+✗ typecheck
+    src/App.tsx(8,21): error TS2322: Type '"mian"' is not assignable to type '"main"'.
+```
+
+**What correct looks like:** a stale slot reference is a compile error at the
+exact call site, not a runtime throw discovered later. Revert the typo before
+continuing.
+
+(To reproduce `--typecheck` exactly, `npm install` in the scratch MFE first,
+pointing `@seans-mfe-tool/runtime` at a `file:` dependency on the repo's
+built `dist/runtime` — it isn't published to a registry. If you added
+`data:` in use case 2 and haven't finished installing the Mesh deps per that
+section's note, temporarily move `server.ts` aside before running
+`--typecheck` so its unrelated missing-dependency errors don't obscure this
+one; move it back afterward.)
+
+## Use case 4 — modify a platform feature, regenerate
+
+Two halves: what regeneration *can* propagate automatically, and what it
+*can't* — surfaced instead as an ADR-082 warning.
+
+### 4a — a generator-owned file changes; regeneration propagates it
+
+```bash
+cd /path/to/seans-mfe-tool
+# edit packages/codegen/templates/base-mfe/mfe.ts.ejs: add one JSDoc line
+#   * @see docs/some-doc.md — example propagation probe
+cd "$SCRATCH/demo-widget"
+node /path/to/seans-mfe-tool/bin/run.js remote:generate
+grep '@see' src/platform/base-mfe/mfe.ts
+```
+
+**What correct looks like:** the new line appears in `demo-widget`'s
+generated `mfe.ts` immediately, with no edit to `demo-widget` itself — this
+is ADR-043's idempotent-regeneration property: the template is the source of
+truth, `overwrite:true` files are re-stamped every run, and every MFE built
+from that template inherits the change on its next `remote:generate`. Revert
+the template edit afterward — it was only a probe.
+
+### 4b — a developer-owned file uses something the platform changed; ADR-082 surfaces it
+
+Reintroduce a pre-ADR-017 pattern into `src/index.tsx` (developer-owned):
+
+```ts
+throw new Error('Root element not found');   // was: throw new SystemError(...)
+```
+
+```bash
+node /path/to/seans-mfe-tool/bin/run.js mfe:validate .
+```
+
+```
+  ⚠ platform-migrations
+      - Throwing a raw `Error` — the platform classifies failures by error
+        type, so this is reported as `unknown` and never retried (ADR-017)
+        src/index.tsx:64
+        fix: Throw a typed error from '@seans-mfe-tool/runtime': ValidationError
+        (bad input), BusinessError (precondition), NetworkError (transport,
+        carries the status), SystemError (environment), SecurityError, TimeoutError
+
+demo-widget is consistent, with 1 platform-migration warning(s).
+```
+
+**What correct looks like:** file, line, and a concrete fix, at generation
+time and at validate time — contrast this with the original incident this
+platform is built on (`breaking-change-regeneration-dx-report.md`): before
+ADR-082, this exact pattern was invisible to every gate in the box. Now,
+because `typed-errors` is a *declared* entry in
+`packages/codegen/src/platform-migrations.ts`, it surfaces automatically.
+(See `gate-self-verification-audit.md` for what happens when a breaking
+change reaches developer-owned code *without* a declared entry — the same
+code, with the registry entry removed, is invisible again. That's ADR-082's
+stated boundary, not a bug.)
+
+Revert the `throw new SystemError(...)` line back before moving on.
+
+## Cleanup
+
+```bash
+rm -rf "$SCRATCH"
+```
+
+Nothing in this walkthrough touches the repository itself — `git status` at
+the repo root should be unchanged by running it (aside from any template
+edit you made and reverted in step 4a).
