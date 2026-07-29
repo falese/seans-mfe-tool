@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # abc-kids-hockey
 # Static MFE - build with rspack, serve with nginx
 # Build context: examples/abc-kids/hockey/
@@ -23,7 +24,8 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 COPY package.json ./
 RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
     npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
-RUN npm install --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install --no-audit --no-fund
 
 # Copy runtime as a real directory so module resolution stays within /app.
 RUN mkdir -p node_modules/@seans-mfe-tool && \

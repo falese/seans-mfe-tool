@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # abc-kids control-plane registry (ported from falese/daemon component-system).
 # Resolution rules + MFE registrations: answers the daemon's resolve calls and
 # accepts registrations on :4000 (register-games.sh posts here).
@@ -9,7 +10,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --omit=dev --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install --omit=dev --no-audit --no-fund
 
 # Copy source code. Glob, not a named file: the registry was split into
 # simple-registry.js + slot-target.js (ADR-073 §5), and a single-file COPY
