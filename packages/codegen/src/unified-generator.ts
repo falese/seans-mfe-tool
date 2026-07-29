@@ -577,6 +577,100 @@ export function resolveClientDependencies(
 }
 
 /**
+ * Which optional Mesh plugins/transforms a manifest's `data:`/`performance:`
+ * config implies (ADR-027). Single-sourced here so `extractManifestVars`
+ * (which decides what `package.json.ejs` renders) and `resolveBffDependencies`
+ * (which reports what an already-existing, skipped package.json is missing)
+ * can't drift against each other.
+ */
+export function resolveNeededMeshPluginsAndTransforms(manifest: DSLManifest): {
+  neededPlugins: string[];
+  neededTransforms: string[];
+} {
+  const performanceConfig = manifest.performance || {};
+  const observabilityConfig = performanceConfig.observability || {};
+
+  const neededPlugins = new Set<string>();
+  if (performanceConfig.caching?.enabled !== false) neededPlugins.add('responseCache');
+  if (observabilityConfig.prometheus?.enabled !== false) neededPlugins.add('prometheus');
+  if (observabilityConfig.opentelemetry?.enabled) neededPlugins.add('opentelemetry');
+
+  const neededTransforms = new Set<string>();
+  neededTransforms.add('namingConvention'); // Always include
+  if (performanceConfig.rateLimit?.enabled) neededTransforms.add('rateLimit');
+  if (performanceConfig.filterSchema?.enabled) neededTransforms.add('filterSchema');
+  if (manifest.transforms && manifest.transforms.length > 0) neededTransforms.add('resolversComposition');
+  // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
+  if (manifest.data?.mockSwitch?.enabled) neededTransforms.add('resolversComposition');
+
+  return { neededPlugins: Array.from(neededPlugins), neededTransforms: Array.from(neededTransforms) };
+}
+
+/**
+ * The `package.json.ejs` dependency/devDependency entries a manifest's
+ * `data:` section implies (ADR-027) — mirrors that template's
+ * `hasBff` branch exactly. `null` when the manifest has no `data:`.
+ *
+ * `package.json` is developer-owned (`overwrite:false`), so once it exists on
+ * disk `writeGeneratedFiles` always skips it — the platform re-computes the
+ * correct content on every `remote:generate` and then discards it rather than
+ * rewrite a file a developer may have hand-edited. This function lets a
+ * caller report exactly what's missing instead of silently discarding it.
+ */
+export function resolveBffDependencies(
+  manifest: DSLManifest
+): { dependencies: Record<string, string>; devDependencies: Record<string, string> } | null {
+  if (!manifest.data) return null;
+
+  const { neededPlugins, neededTransforms } = resolveNeededMeshPluginsAndTransforms(manifest);
+  const v = DEPENDENCY_VERSIONS;
+
+  const dependencies: Record<string, string> = {
+    '@graphql-mesh/serve-runtime': v.graphqlMesh.serveRuntime,
+    '@graphql-tools/delegate': v.graphqlTools.delegate,
+    '@graphql-tools/utils': v.graphqlTools.utils,
+    '@graphql-tools/wrap': v.graphqlTools.wrap,
+  };
+  if (neededPlugins.includes('responseCache')) {
+    dependencies['@graphql-mesh/plugin-response-cache'] = v.meshPlugins.responseCache;
+  }
+  if (neededPlugins.includes('prometheus')) {
+    dependencies['@graphql-mesh/plugin-prometheus'] = v.meshPlugins.prometheus;
+  }
+  if (neededPlugins.includes('opentelemetry')) {
+    dependencies['@graphql-mesh/plugin-opentelemetry'] = v.meshPlugins.opentelemetry;
+  }
+  if (neededTransforms.includes('namingConvention')) {
+    dependencies['@graphql-mesh/transform-naming-convention'] = v.meshTransforms.namingConvention;
+  }
+  if (neededTransforms.includes('rateLimit')) {
+    dependencies['@graphql-mesh/transform-rate-limit'] = v.meshTransforms.rateLimit;
+  }
+  if (neededTransforms.includes('filterSchema')) {
+    dependencies['@graphql-mesh/transform-filter-schema'] = v.meshTransforms.filterSchema;
+  }
+  if (neededTransforms.includes('resolversComposition')) {
+    dependencies['@graphql-mesh/transform-resolvers-composition'] = v.meshTransforms.resolversComposition;
+  }
+  dependencies.express = v.core.express;
+  dependencies.graphql = v.core.graphql;
+  dependencies.cors = v.core.cors;
+  dependencies.helmet = v.core.helmet;
+  dependencies.tslib = v.core.tslib;
+
+  const devDependencies: Record<string, string> = {
+    '@graphql-mesh/cli': v.graphqlMesh.cli,
+    '@graphql-mesh/openapi': v.graphqlMesh.openapi,
+    '@types/cors': v.types.cors,
+    '@types/express': v.types.express,
+    'ts-node': v.buildTools.tsNode,
+    concurrently: v.buildTools.concurrently,
+  };
+
+  return { dependencies, devDependencies };
+}
+
+/**
  * Module-federation `shared` deps for a React MFE (#294): framework singletons
  * plus the design-system — NOT arbitrary runtime libs, which are usually wrong
  * to force into a single shared instance.
@@ -665,35 +759,11 @@ export function extractManifestVars(
   const performanceConfig = manifest.performance || {};
   const observabilityConfig = performanceConfig.observability || {};
 
-  // Determine which plugins are needed based on manifest config
-  const neededPlugins = new Set<string>();
-  if (performanceConfig.caching?.enabled !== false) {
-    neededPlugins.add('responseCache');
-  }
-  if (observabilityConfig.prometheus?.enabled !== false) {
-    neededPlugins.add('prometheus');
-  }
-  if (observabilityConfig.opentelemetry?.enabled) {
-    neededPlugins.add('opentelemetry');
-  }
-
-  // Determine which transforms are needed
-  const neededTransforms = new Set<string>();
-  neededTransforms.add('namingConvention'); // Always include
-  if (performanceConfig.rateLimit?.enabled) {
-    neededTransforms.add('rateLimit');
-  }
-  if (performanceConfig.filterSchema?.enabled) {
-    neededTransforms.add('filterSchema');
-  }
-  if (manifest.transforms && manifest.transforms.length > 0) {
-    neededTransforms.add('resolversComposition');
-  }
+  // Which plugins/transforms are needed — single-sourced with
+  // `resolveBffDependencies` so the two can't drift (see that function's doc).
+  const { neededPlugins, neededTransforms } = resolveNeededMeshPluginsAndTransforms(manifest);
   // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
   const mockSwitchEnabled = !!manifest.data?.mockSwitch?.enabled;
-  if (mockSwitchEnabled) {
-    neededTransforms.add('resolversComposition');
-  }
 
   // Variant selection is injected by the caller (ADR-061). The CLI resolves it
   // via the framework plugin (ADR-036, #176) so third-party frameworks work;
@@ -742,8 +812,8 @@ export function extractManifestVars(
     })(),
 
     // NEW: Track which plugins/transforms are needed (ADR-027)
-    neededPlugins: Array.from(neededPlugins),
-    neededTransforms: Array.from(neededTransforms),
+    neededPlugins,
+    neededTransforms,
 
     // NEW: Plugin/transform configs (ADR-027)
     meshPlugins: {

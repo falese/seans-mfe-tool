@@ -8,12 +8,13 @@ import {
   writeGeneratedFiles,
   PLATFORM_MIGRATIONS,
   findMigrationHits,
+  resolveBffDependencies,
 } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
-import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
+import type { RemoteGenerateOptions, DSLManifest } from '@seans-mfe/dsl';
 
 /**
  * What the writer will actually do to this file (#340).
@@ -87,6 +88,52 @@ function reportPlatformMigrations(skipped: string[], cwd: string): void {
   for (const finding of findings) console.log(chalk.yellow(finding));
   console.log(
     chalk.gray('  Not changed for you. Run `seans-mfe-tool mfe:validate` for the full picture.'),
+  );
+}
+
+/**
+ * Warn when `data:` implies package.json dependencies an already-existing,
+ * skipped package.json doesn't have yet.
+ *
+ * `package.json.ejs` already renders the correct Mesh dependency set on every
+ * run — `resolveBffDependencies` mirrors that same template logic — but
+ * `package.json` is developer-owned, so `writeGeneratedFiles` skips it
+ * whenever it already exists, discarding that correctly-rendered content
+ * (see the platform-design-review demo runbook's use case 2). This is the one
+ * moment that's visible without re-deriving the list by hand.
+ */
+function reportMissingBffDependencies(manifest: DSLManifest, skipped: string[], cwd: string): void {
+  const expected = resolveBffDependencies(manifest);
+  if (!expected) return;
+
+  const pkgPath = skipped.find((f) => path.basename(f) === 'package.json');
+  if (!pkgPath) return;
+
+  let pkg: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  try {
+    pkg = JSON.parse(fsSync.readFileSync(pkgPath, 'utf8'));
+  } catch {
+    return; // unreadable/invalid package.json is not this reporter's problem
+  }
+
+  const missing: string[] = [];
+  for (const [name, version] of Object.entries(expected.dependencies)) {
+    if (pkg.dependencies?.[name] === undefined) missing.push(`  dependencies."${name}": "${version}"`);
+  }
+  for (const [name, version] of Object.entries(expected.devDependencies)) {
+    if (pkg.devDependencies?.[name] === undefined) missing.push(`  devDependencies."${name}": "${version}"`);
+  }
+
+  if (missing.length === 0) return;
+
+  console.log(
+    chalk.yellow(
+      `\n⚠ ${path.relative(cwd, pkgPath)} is missing ${missing.length} dependenc${missing.length === 1 ? 'y' : 'ies'} the BFF needs:`,
+    ),
+  );
+  for (const line of missing) console.log(chalk.yellow(line));
+  console.log(
+    chalk.gray('  package.json is developer-owned, so `data:` did not add these for you — add them by hand, then npm install.'),
   );
 }
 
@@ -169,6 +216,7 @@ export async function remoteGenerateCommand(
       // visible: the platform has just re-stamped everything it owns, and these
       // are the files it declined to touch (ADR-082).
       reportPlatformMigrations(genResult.skipped, cwd);
+      reportMissingBffDependencies(manifest, genResult.skipped, cwd);
     }
 
     if (genResult.errors.length > 0) {

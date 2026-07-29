@@ -110,23 +110,39 @@ BFF-aware: its `hasBff` branch renders the complete Mesh dependency set
 (`@graphql-mesh/serve-runtime`, `express`, `cors`, `helmet`,
 `@graphql-tools/{delegate,utils,wrap}`, `tslib`, `@seans-mfe-tool/runtime`,
 the right `scripts.dev`/`build`) and *every* `remote:generate` computes that
-content correctly, `data:` or not. Confirmed by rendering it in isolation
-without writing to disk — the in-memory result already has the full Mesh
-`dependencies` block. The reason it never reaches disk is a write-time
-policy, not a rendering gap: `writeGeneratedFiles`
-(`packages/codegen/src/unified-generator.ts:854-860`) skips *any* file that
-already exists and is marked `overwrite:false`, and `package.json` is marked
-that way deliberately (an MFE author edits it — extra deps, custom scripts,
-version pins — as a matter of course). So the platform computes the exactly
-correct `package.json` on every run and then discards it, because rewriting
-a file a developer may have hand-edited is treated as a bigger decision than
-regenerating one nobody else touches. The CLI's "Kept (developer-owned)"
-list is literally this skip set (`genResult.skipped` in
-`src/commands/remote/generate.ts`). Practical effect: a developer's next
-step by hand is real work, not a formality — add the Mesh runtime deps
-listed above and, to fully typecheck, the `@graphql-mesh/cli`/
-`@graphql-mesh/openapi` devDependencies plus a `mesh build` to materialize
-`./.mesh`'s generated types.
+content correctly, `data:` or not. The reason it never reaches disk is a
+write-time policy, not a rendering gap: `writeGeneratedFiles`
+(`packages/codegen/src/unified-generator.ts`) skips *any* file that already
+exists and is marked `overwrite:false`, and `package.json` is marked that way
+deliberately (an MFE author edits it — extra deps, custom scripts, version
+pins — as a matter of course). So the platform computes the exactly correct
+`package.json` on every run and then used to discard it silently.
+
+It no longer does so silently. Right below the "Kept (developer-owned)" list,
+the same run now prints:
+
+```
+⚠ package.json is missing 18 dependencies the BFF needs:
+  dependencies."@graphql-mesh/serve-runtime": "^1.2.4"
+  dependencies."@graphql-tools/delegate": "^10.2.4"
+  ...
+  devDependencies."@graphql-mesh/cli": "^0.100.21"
+  devDependencies."concurrently": "^8.2.0"
+  package.json is developer-owned, so `data:` did not add these for you — add them by hand, then npm install.
+```
+
+`resolveBffDependencies` (`packages/codegen/src/unified-generator.ts`) mirrors
+`package.json.ejs`'s `hasBff` branch exactly — same dependency names, same
+versions, same conditional plugin/transform inclusion — so this list can never
+drift from what the template would have written. `reportMissingBffDependencies`
+(`src/commands/remote/generate.ts`) diffs it against whatever's already in the
+skipped `package.json` on disk, so it only reports what's genuinely
+missing — add the packages it names and the warning goes quiet, the same "goes
+quiet when they fix it" shape as ADR-082's `platform-migrations` warning right
+above it in the same output. To fully typecheck you'll still need the
+`@graphql-mesh/cli`/`@graphql-mesh/openapi` devDependencies (both are in the
+printed list) plus a `mesh build` to materialize `./.mesh`'s generated types —
+the warning tells you what to add, not how to finish standing up the BFF.
 
 Confirm the fresh generation is itself drift-free:
 
