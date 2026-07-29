@@ -13,8 +13,8 @@
 const domainCapabilities = capabilities.filter(cap => !platformCapabilityNames.includes(cap.method));
 const domainTypeImports = domainCapabilities.map(cap => cap.returnTypeBase);
 %>
+import { RemoteMFE } from '@seans-mfe-tool/runtime/react';
 import {
-  RemoteMFE,
   ValidationError,
   type Context,
   type LoadResult,

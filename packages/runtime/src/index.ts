@@ -26,12 +26,19 @@ export { ContextFactory, ContextValidator } from './context';
 export { BaseMFE, VALID_TRANSITIONS } from './base-mfe';
 export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult, MFEState } from './base-mfe';
 
-// RemoteMFE concrete implementation (REQ-RUNTIME-001, REQ-RUNTIME-004)
-export { RemoteMFE } from './remote-mfe';
-export type { ModuleFederationContainer } from './remote-mfe';
-
-// AngularRemoteMFE is available via the ./angular subpath (ADR-035).
-// Import as: import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular'
+// The framework-specialized abstracts (ADR-056 layer 5) live behind their own
+// subpaths, never here. This barrel is polyglot: an Angular MFE imports typed
+// errors or the slot contract from it and must not receive React in the bundle
+// as a side effect.
+//
+//   import { RemoteMFE }        from '@seans-mfe-tool/runtime/react'
+//   import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular'
+//
+// `RemoteMFE` was re-exported here until #341. Because every consumer imported
+// it as `import type` — erased at compile time — nothing noticed until the
+// first *value* import from this barrel reached an Angular MFE, which then
+// failed to bundle on `Can't resolve 'react'`. Enforced by the barrel
+// reachability test in `__tests__/boundary.test.ts`.
 
 // Daemon WebSocket client (used to wire up the control-plane connection)
 export { GraphQLWebSocketClient } from './graphql-ws-client';

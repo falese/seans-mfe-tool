@@ -16,7 +16,6 @@
 - [GraphQLTransportWsDaemonTransport](classes/GraphQLTransportWsDaemonTransport.md)
 - [GraphQLWebSocketClient](classes/GraphQLWebSocketClient.md)
 - [LayoutManager](classes/LayoutManager.md)
-- [RemoteMFE](classes/RemoteMFE.md)
 
 ## Interfaces
 
@@ -39,7 +38,6 @@
 - [LayoutHostLike](interfaces/LayoutHostLike.md)
 - [LayoutManagerConfig](interfaces/LayoutManagerConfig.md)
 - [LoadResult](interfaces/LoadResult.md)
-- [ModuleFederationContainer](interfaces/ModuleFederationContainer.md)
 - [MountableLifecycle](interfaces/MountableLifecycle.md)
 - [QueryInput](interfaces/QueryInput.md)
 - [QueryResult](interfaces/QueryResult.md)

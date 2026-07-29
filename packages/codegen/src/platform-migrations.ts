@@ -94,6 +94,21 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     // still correct and must not be flagged.
     pattern: /import\s+type\s*\{[^}]*\bValidationError\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
   },
+  {
+    id: 'remote-mfe-subpath',
+    since: '1.0.0',
+    failsAt: '2.0.0',
+    adr: 'ADR-056',
+    message:
+      "`RemoteMFE` has moved off the main runtime barrel to the '/react' subpath, so the barrel no longer pulls React into every bundle",
+    fix: "Import it from '@seans-mfe-tool/runtime/react'. Everything else on the barrel is unchanged, so a second import line is usually the whole edit. Angular MFEs keep using '@seans-mfe-tool/runtime/angular'.",
+    // Value imports only. A type-only import erased at compile time and never
+    // emitted a require, so it was never broken — flagging it would report
+    // code that works.
+    pattern:
+      /import\s*\{[^}]*\bRemoteMFE\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
+    exempt: /import\s+type\s*\{/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

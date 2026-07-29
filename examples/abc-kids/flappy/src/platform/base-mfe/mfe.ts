@@ -1,7 +1,7 @@
 
 
+import { RemoteMFE } from '@seans-mfe-tool/runtime/react';
 import {
-  RemoteMFE,
   ValidationError,
   type Context,
   type LoadResult,

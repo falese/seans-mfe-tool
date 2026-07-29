@@ -270,7 +270,7 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:117](https://github.com/fal
 
 ### container
 
-> `protected` **container**: [`ModuleFederationContainer`](../../interfaces/ModuleFederationContainer.md) \| `null` = `null`
+> `protected` **container**: [`ModuleFederationContainer`](../../react/interfaces/ModuleFederationContainer.md) \| `null` = `null`
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L116)
 
@@ -1128,7 +1128,7 @@ Extract capability metadata from manifest (REQ-RUNTIME-003)
 
 ### fetchContainer()
 
-> `protected` **fetchContainer**(`remoteEntry`): `Promise`\<[`ModuleFederationContainer`](../../interfaces/ModuleFederationContainer.md)\>
+> `protected` **fetchContainer**(`remoteEntry`): `Promise`\<[`ModuleFederationContainer`](../../react/interfaces/ModuleFederationContainer.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:431](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L431)
 
@@ -1146,7 +1146,7 @@ webpack/rspack federation runtimes are structurally compatible here.
 
 #### Returns
 
-`Promise`\<[`ModuleFederationContainer`](../../interfaces/ModuleFederationContainer.md)\>
+`Promise`\<[`ModuleFederationContainer`](../../react/interfaces/ModuleFederationContainer.md)\>
 
 #### Inherited from
 

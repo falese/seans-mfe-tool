@@ -16,10 +16,26 @@ import { join, relative, resolve } from 'node:path';
 
 const ROOT = resolve(__dirname, '..', '..', '..', '..');
 
-// `from '<framework>'` or `require('<framework>')`, robust to multiline import
-// bodies (the `from '…'` clause is always on one line).
+// `from '<framework>'`, `import('<framework>')` or `require('<framework>')`,
+// robust to multiline import bodies (the `from '…'` clause is always on one
+// line).
+//
+// The `\s*` before the quote is load-bearing and was missing until #341. Every
+// real import writes a space there — `from 'react'`, not `from'react'` — so the
+// pattern matched only `require('react')`, a form this codebase does not use.
+// The gate could not fail. Proof, if it is ever doubted: the leak it exists to
+// stop shipped anyway, and was found by an `ng build` in a generated MFE.
+//
+// Dynamic `import()` is included for the same reason. `remote-mfe.ts` reaches
+// React exclusively through `await import('react')`, so a scan without it is
+// blind to the one file in this package that actually imports a framework.
+// Bundlers resolve dynamic specifiers statically, so "it is lazy" is not a
+// defence — webpack still has to find the module at build time.
+//
+// `react-dom[^'"]*` rather than `react-dom`: the real specifier is
+// `react-dom/client`.
 const FRAMEWORK_IMPORT =
-  /(?:from|require\(\s*)['"](react|react-dom|@angular\/[^'"]+|vue|svelte|@emotion\/[^'"]+|@mui\/[^'"]+)['"]/;
+  /(?:\bfrom\b|\bimport\s*\(|\brequire\s*\()\s*['"](react|react-dom[^'"]*|@angular\/[^'"]+|vue|svelte|@emotion\/[^'"]+|@mui\/[^'"]+)['"]/;
 
 // Directories that must stay framework-neutral (scanned recursively).
 const NEUTRAL_DIRS = ['packages/contracts/src'];
@@ -75,6 +91,88 @@ describe('ADR-056 boundary: neutral core + contract carry zero framework imports
       expect(match ? `${rel}: imports "${match[1]}"` : null).toBeNull();
     });
   }
+});
+
+// ── Barrel reachability ──────────────────────────────────────
+//
+// The per-file scan above is necessary and was not sufficient. It asks "does
+// this file import React", and `RemoteMFE` is *allowed* to — it is layer 5,
+// the abstract that produces the native handle. What nothing asked was whether
+// the **barrel** reaches it, and it did: `index.ts` re-exported `RemoteMFE`, so
+// any value import from '@seans-mfe-tool/runtime' pulled React into the bundle.
+//
+// A type-only import erases at compile time, which is why this hid for so long.
+// It surfaced the day a template gained its first *value* import from the
+// barrel: three Angular MFEs, which have no React installed, stopped bundling
+// with `Can't resolve 'react'` pointing at a runtime file none of their code
+// mentions.
+//
+// So the rule this encodes: **the barrel is polyglot**. Framework-specialized
+// abstracts live behind their own subpath ('/react', '/angular') and are
+// reachable only by consumers that opted in. Adding a framework-carrying
+// re-export to index.ts fails here rather than in someone's `ng build`.
+
+/** Resolve a relative specifier the way tsc would, or null if not local. */
+function resolveLocal(spec: string, fromFile: string): string | null {
+  if (!spec.startsWith('.')) return null;
+  const base = resolve(join(fromFile, '..'), spec);
+  for (const candidate of [`${base}.ts`, `${base}.tsx`, join(base, 'index.ts')]) {
+    try {
+      if (statSync(candidate).isFile()) return candidate;
+    } catch {
+      /* not this one */
+    }
+  }
+  return null;
+}
+
+/** Every module reachable from `entry` through relative imports, plus how. */
+function reachableFrom(entry: string): Map<string, string[]> {
+  const seen = new Map<string, string[]>();
+  const walk = (file: string, path: string[]): void => {
+    if (seen.has(file)) return;
+    seen.set(file, path);
+    const src = readFileSync(file, 'utf8');
+    for (const m of src.matchAll(/(?:\bfrom\b|\bimport\s*\(|\brequire\s*\()\s*['"]([^'"]+)['"]/g)) {
+      const next = resolveLocal(m[1], file);
+      if (next) walk(next, [...path, file]);
+    }
+  };
+  walk(entry, []);
+  return seen;
+}
+
+describe('ADR-056 boundary: the runtime barrel stays polyglot', () => {
+  const barrel = join(ROOT, 'packages/runtime/src/index.ts');
+
+  it('reaches a non-trivial module graph, so a passing result means something', () => {
+    expect(reachableFrom(barrel).size).toBeGreaterThan(5);
+  });
+
+  it('reaches no module that imports a UI framework', () => {
+    const offenders: string[] = [];
+    for (const [file, path] of reachableFrom(barrel)) {
+      const match = readFileSync(file, 'utf8').match(FRAMEWORK_IMPORT);
+      if (!match) continue;
+      const trail = [...path, file].map((f) => relative(ROOT, f)).join('\n    → ');
+      offenders.push(`imports "${match[1]}" via:\n    → ${trail}`);
+    }
+    // Printed as a trail rather than a filename: the failure is the *path*,
+    // and the fix is to cut one edge of it, not to edit the leaf.
+    expect(offenders.join('\n\n') || null).toBeNull();
+  });
+
+  it('still exposes the framework abstracts on their own subpaths', () => {
+    // The quarantine only works if the specialized entry points exist — this
+    // fails if someone "fixes" the test above by deleting the export outright.
+    for (const [subpath, expected] of [
+      ['react.ts', 'RemoteMFE'],
+      ['angular.ts', 'AngularRemoteMFE'],
+    ]) {
+      const src = readFileSync(join(ROOT, 'packages/runtime/src', subpath), 'utf8');
+      expect(src).toContain(expected);
+    }
+  });
 });
 
 // ── Contracts/runtime type boundary ──────────────────────────

@@ -1,8 +1,8 @@
-[**seans-mfe-tool API reference**](../../../README.md)
+[**seans-mfe-tool API reference**](../../../../README.md)
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [runtime/src](../README.md) / ModuleFederationContainer
+[seans-mfe-tool API reference](../../../../README.md) / [runtime/src/react](../README.md) / ModuleFederationContainer
 
 # Interface: ModuleFederationContainer
 
