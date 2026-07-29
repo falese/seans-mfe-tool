@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, CircularProgress, Chip, ToggleButton, Togg
 import CloseIcon from '@mui/icons-material/Close';
 import PetsIcon from '@mui/icons-material/Pets';
 import { GameMeta } from '../App';
+import { ValidationError, BusinessError } from '@seans-mfe-tool/runtime';
 
 // Minimal type for a pet returned by the PetStore BFF
 interface Pet { id: string; name: string; status?: string; }
@@ -68,7 +69,7 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
         } else if (game.id === 'multiplication-quiz') {
           remote = await import('abcKidsMultiplicationQuiz/Component');
         } else {
-          throw new Error(`Unknown game: ${game.id}`);
+          throw new ValidationError(`Unknown game: ${game.id}`, 'game.id', 'one-of-known-games');
         }
 
         const { mfe, mfeReady } = remote;
@@ -82,7 +83,7 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
 
         // Re-entry guard: if load failed or another render is in progress, bail
         if (mfe.getState() !== 'ready') {
-          throw new Error(`MFE not ready — state: ${mfe.getState()}`);
+          throw new BusinessError(`MFE not ready — state: ${mfe.getState()}`, 'MFE_NOT_READY');
         }
 
         await mfe.render({

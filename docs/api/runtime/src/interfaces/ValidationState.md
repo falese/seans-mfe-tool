@@ -14,7 +14,7 @@ Validation results these handlers own on the context.
 
 ### errors?
 
-> `optional` **errors**: [`ValidationError`](ValidationError.md)[]
+> `optional` **errors**: [`ValidationIssue`](ValidationIssue.md)[]
 
 Defined in: [packages/runtime/src/handlers/validation.ts:8](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L8)
 

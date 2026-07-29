@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { SystemError } from '@seans-mfe-tool/runtime';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import App from './App';
 
@@ -29,7 +30,7 @@ const kidsTheme = createTheme({
 });
 
 const container = document.getElementById('root');
-if (!container) throw new Error('Root element not found');
+if (!container) throw new SystemError('Root element not found');
 
 createRoot(container).render(
   <React.StrictMode>

@@ -2,6 +2,7 @@
 
 import {
   RemoteMFE,
+  ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
@@ -137,7 +138,11 @@ export class abckidscolormixerMFE extends RemoteMFE {
         );
 
       default:
-        throw new Error(`[abckidscolormixerMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[abckidscolormixerMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 

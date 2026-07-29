@@ -1,6 +1,7 @@
 
 
 import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+import { ValidationError } from '@seans-mfe-tool/runtime';
 import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
 
 import type { DockingBoardOutputs, BerthTileOutputs, TrafficLogOutputs } from './types';
@@ -111,7 +112,11 @@ export class meridiandockingcontrolMFE extends AngularRemoteMFE {
         );
 
       default:
-        throw new Error(`[meridiandockingcontrolMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[meridiandockingcontrolMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 

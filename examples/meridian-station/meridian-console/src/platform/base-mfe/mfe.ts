@@ -2,6 +2,7 @@
 
 import {
   RemoteMFE,
+  ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
@@ -123,7 +124,11 @@ export class meridianconsoleMFE extends RemoteMFE {
         );
 
       default:
-        throw new Error(`[meridianconsoleMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[meridianconsoleMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 

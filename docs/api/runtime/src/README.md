@@ -49,7 +49,7 @@
 - [SlotErrorInfo](interfaces/SlotErrorInfo.md)
 - [TelemetryEvent](interfaces/TelemetryEvent.md)
 - [UserContext](interfaces/UserContext.md)
-- [ValidationError](interfaces/ValidationError.md)
+- [ValidationIssue](interfaces/ValidationIssue.md)
 - [ValidationState](interfaces/ValidationState.md)
 - [WebSocketLike](interfaces/WebSocketLike.md)
 
@@ -85,6 +85,12 @@
 
 ## References
 
+### BusinessError
+
+Re-exports [BusinessError](../../contracts/src/classes/BusinessError.md)
+
+***
+
 ### createSlotAddressRegistry
 
 Re-exports [createSlotAddressRegistry](../../contracts/src/functions/createSlotAddressRegistry.md)
@@ -103,6 +109,12 @@ Re-exports [ImperativeMountHandle](../../contracts/src/interfaces/ImperativeMoun
 
 ***
 
+### NetworkError
+
+Re-exports [NetworkError](../../contracts/src/classes/NetworkError.md)
+
+***
+
 ### ProvidedSlotDeclaration
 
 Re-exports [ProvidedSlotDeclaration](../../contracts/src/interfaces/ProvidedSlotDeclaration.md)
@@ -112,6 +124,12 @@ Re-exports [ProvidedSlotDeclaration](../../contracts/src/interfaces/ProvidedSlot
 ### ProvideSlotFn
 
 Re-exports [ProvideSlotFn](../../contracts/src/type-aliases/ProvideSlotFn.md)
+
+***
+
+### SecurityError
+
+Re-exports [SecurityError](../../contracts/src/classes/SecurityError.md)
 
 ***
 
@@ -145,6 +163,24 @@ Re-exports [SlotTargetResult](../../contracts/src/type-aliases/SlotTargetResult.
 
 ***
 
+### SystemError
+
+Re-exports [SystemError](../../contracts/src/classes/SystemError.md)
+
+***
+
+### TimeoutError
+
+Re-exports [TimeoutError](../../contracts/src/classes/TimeoutError.md)
+
+***
+
 ### toProvidedSlotAddress
 
 Re-exports [toProvidedSlotAddress](../../contracts/src/functions/toProvidedSlotAddress.md)
+
+***
+
+### ValidationError
+
+Re-exports [ValidationError](../../contracts/src/classes/ValidationError.md)

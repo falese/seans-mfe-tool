@@ -15,6 +15,7 @@ const domainTypeImports = domainCapabilities.map(cap => cap.returnTypeBase);
 %>
 import {
   RemoteMFE,
+  ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
@@ -142,7 +143,11 @@ export class <%= className %> extends RemoteMFE {
         );
 <% }); %>
       default:
-        throw new Error(`[<%= className %>] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[<%= className %>] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 <% domainCapabilities.forEach(function(cap) { %>

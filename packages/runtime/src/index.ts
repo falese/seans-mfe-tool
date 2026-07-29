@@ -6,7 +6,20 @@
  */
 
 // Context (REQ-RUNTIME-002)
-export type { Context, UserContext, TelemetryEvent, ValidationError, QueryInput } from './context';
+export type { Context, UserContext, TelemetryEvent, ValidationIssue, QueryInput } from './context';
+
+// Typed error hierarchy (ADR-017). Re-exported here because generated MFEs
+// import from this package and nothing else: without it, generated code has no
+// way to throw anything but a raw Error, and `classifyError` reads the class to
+// decide retryability (ADR-030).
+export {
+  ValidationError,
+  BusinessError,
+  NetworkError,
+  SystemError,
+  TimeoutError,
+  SecurityError,
+} from './errors';
 export { ContextFactory, ContextValidator } from './context';
 
 // BaseMFE and result types (REQ-RUNTIME-001)

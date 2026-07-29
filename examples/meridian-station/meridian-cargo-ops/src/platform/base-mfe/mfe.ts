@@ -1,6 +1,7 @@
 
 
 import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+import { ValidationError } from '@seans-mfe-tool/runtime';
 import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
 
 import type { CargoManifestOutputs, HazardSummaryOutputs } from './types';
@@ -104,7 +105,11 @@ export class meridiancargoopsMFE extends AngularRemoteMFE {
         );
 
       default:
-        throw new Error(`[meridiancargoopsMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[meridiancargoopsMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 

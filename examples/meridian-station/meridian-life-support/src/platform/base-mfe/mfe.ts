@@ -1,6 +1,7 @@
 
 
 import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+import { ValidationError } from '@seans-mfe-tool/runtime';
 import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
 
 import type { TelemetryDashboardOutputs, ModuleStatusOutputs, AlertsFeedOutputs } from './types';
@@ -111,7 +112,11 @@ export class meridianlifesupportMFE extends AngularRemoteMFE {
         );
 
       default:
-        throw new Error(`[meridianlifesupportMFE] loadDomainComponent: unknown component "${name}"`);
+        throw new ValidationError(
+          `[meridianlifesupportMFE] loadDomainComponent: unknown component "${name}"`,
+          'context.inputs.component',
+          'one-of-availableComponents'
+        );
     }
   }
 

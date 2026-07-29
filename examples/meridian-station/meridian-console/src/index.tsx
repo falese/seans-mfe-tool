@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SystemError } from '@seans-mfe-tool/runtime';
 import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { StationConsole } from './features/StationConsole/StationConsole';
 
@@ -65,7 +66,7 @@ const StandaloneApp: React.FC = () => {
 
 const container = document.getElementById('root');
 if (!container) {
-  throw new Error('Root element not found');
+  throw new SystemError('Root element not found');
 }
 
 const root = createRoot(container);
