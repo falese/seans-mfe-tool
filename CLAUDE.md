@@ -37,8 +37,9 @@ Full spec: `@docs/spec.md`
 | `seans-mfe-tool mfe:validate [dir] [--typecheck]` | Validate a single MFE dir (a.k.a. `mfe:doctor`); non-zero exit on any inconsistency |
 | `npm run format` | Before PR |
 | `bun bin/dev.ts <cmd>` | Dev entry (no transpile) |
-| `npx turbo run docker:build:examples` | Build CLI image + all abc-kids MFE images (full chain; skips if inputs unchanged). `npx` because turbo is a devDependency, not global |
-| `npx turbo run docker:build:examples --force` | Force-rebuild everything (use in CI or after deleting images) |
+| `examples/abc-kids/scripts/build-games.sh` | **Build the abc-kids fleet.** Sequential, with a shared base image so the fleet costs ONE npm install. `SKIP_CLI=1` if the CLI image is current |
+| `examples/meridian-station/scripts/build-station.sh` | **Build the meridian fleet.** Same shape: sequential, `SKIP_CLI=1` to skip the CLI rebuild |
+| `npx turbo run docker:build:examples[:meridian]` | Caching wrapper over the *raw* `docker compose build` — which builds **13 services in parallel** and OOMs on a normal laptop, surfacing as an unrelated `npm install` exit 1 in whichever service loses. Prefer the scripts above; reach for this only when you want turbo's input-hash skipping. `npx` because turbo is a devDependency, not global |
 | `npm run build && npm run docker:build:cli` | After any `src/runtime/**` change: recompile dist/ THEN rebuild CLI image (dist/ is gitignored but baked into the CLI Docker image) |
 
 ## Development rules
