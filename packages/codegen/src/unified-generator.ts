@@ -578,10 +578,8 @@ export function resolveClientDependencies(
 
 /**
  * Which optional Mesh plugins/transforms a manifest's `data:`/`performance:`
- * config implies (ADR-027). Single-sourced here so `extractManifestVars`
- * (which decides what `package.json.ejs` renders) and `resolveBffDependencies`
- * (which reports what an already-existing, skipped package.json is missing)
- * can't drift against each other.
+ * config implies (ADR-027). Feeds `extractManifestVars`, which decides what
+ * `package.json.ejs` and the BFF templates render.
  */
 export function resolveNeededMeshPluginsAndTransforms(manifest: DSLManifest): {
   neededPlugins: string[];
@@ -604,70 +602,6 @@ export function resolveNeededMeshPluginsAndTransforms(manifest: DSLManifest): {
   if (manifest.data?.mockSwitch?.enabled) neededTransforms.add('resolversComposition');
 
   return { neededPlugins: Array.from(neededPlugins), neededTransforms: Array.from(neededTransforms) };
-}
-
-/**
- * The `package.json.ejs` dependency/devDependency entries a manifest's
- * `data:` section implies (ADR-027) — mirrors that template's
- * `hasBff` branch exactly. `null` when the manifest has no `data:`.
- *
- * `package.json` is developer-owned (`overwrite:false`), so once it exists on
- * disk `writeGeneratedFiles` always skips it — the platform re-computes the
- * correct content on every `remote:generate` and then discards it rather than
- * rewrite a file a developer may have hand-edited. This function lets a
- * caller report exactly what's missing instead of silently discarding it.
- */
-export function resolveBffDependencies(
-  manifest: DSLManifest
-): { dependencies: Record<string, string>; devDependencies: Record<string, string> } | null {
-  if (!manifest.data) return null;
-
-  const { neededPlugins, neededTransforms } = resolveNeededMeshPluginsAndTransforms(manifest);
-  const v = DEPENDENCY_VERSIONS;
-
-  const dependencies: Record<string, string> = {
-    '@graphql-mesh/serve-runtime': v.graphqlMesh.serveRuntime,
-    '@graphql-tools/delegate': v.graphqlTools.delegate,
-    '@graphql-tools/utils': v.graphqlTools.utils,
-    '@graphql-tools/wrap': v.graphqlTools.wrap,
-  };
-  if (neededPlugins.includes('responseCache')) {
-    dependencies['@graphql-mesh/plugin-response-cache'] = v.meshPlugins.responseCache;
-  }
-  if (neededPlugins.includes('prometheus')) {
-    dependencies['@graphql-mesh/plugin-prometheus'] = v.meshPlugins.prometheus;
-  }
-  if (neededPlugins.includes('opentelemetry')) {
-    dependencies['@graphql-mesh/plugin-opentelemetry'] = v.meshPlugins.opentelemetry;
-  }
-  if (neededTransforms.includes('namingConvention')) {
-    dependencies['@graphql-mesh/transform-naming-convention'] = v.meshTransforms.namingConvention;
-  }
-  if (neededTransforms.includes('rateLimit')) {
-    dependencies['@graphql-mesh/transform-rate-limit'] = v.meshTransforms.rateLimit;
-  }
-  if (neededTransforms.includes('filterSchema')) {
-    dependencies['@graphql-mesh/transform-filter-schema'] = v.meshTransforms.filterSchema;
-  }
-  if (neededTransforms.includes('resolversComposition')) {
-    dependencies['@graphql-mesh/transform-resolvers-composition'] = v.meshTransforms.resolversComposition;
-  }
-  dependencies.express = v.core.express;
-  dependencies.graphql = v.core.graphql;
-  dependencies.cors = v.core.cors;
-  dependencies.helmet = v.core.helmet;
-  dependencies.tslib = v.core.tslib;
-
-  const devDependencies: Record<string, string> = {
-    '@graphql-mesh/cli': v.graphqlMesh.cli,
-    '@graphql-mesh/openapi': v.graphqlMesh.openapi,
-    '@types/cors': v.types.cors,
-    '@types/express': v.types.express,
-    'ts-node': v.buildTools.tsNode,
-    concurrently: v.buildTools.concurrently,
-  };
-
-  return { dependencies, devDependencies };
 }
 
 /**

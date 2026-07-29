@@ -122,27 +122,38 @@ It no longer does so silently. Right below the "Kept (developer-owned)" list,
 the same run now prints:
 
 ```
-⚠ package.json is missing 18 dependencies the BFF needs:
-  dependencies."@graphql-mesh/serve-runtime": "^1.2.4"
-  dependencies."@graphql-tools/delegate": "^10.2.4"
+⚠ package.json is out of date with what the template would generate (18 dependencies):
+  missing    dependencies."@graphql-mesh/serve-runtime": "^1.2.4"
+  missing    dependencies."@graphql-tools/delegate": "^10.2.4"
   ...
-  devDependencies."@graphql-mesh/cli": "^0.100.21"
-  devDependencies."concurrently": "^8.2.0"
-  package.json is developer-owned, so `data:` did not add these for you — add them by hand, then npm install.
+  missing    devDependencies."@graphql-mesh/cli": "^0.100.21"
+  missing    devDependencies."concurrently": "^8.2.0"
+  package.json is developer-owned, so this was not applied for you — update by hand, then npm install.
 ```
 
-`resolveBffDependencies` (`packages/codegen/src/unified-generator.ts`) mirrors
-`package.json.ejs`'s `hasBff` branch exactly — same dependency names, same
-versions, same conditional plugin/transform inclusion — so this list can never
-drift from what the template would have written. `reportMissingBffDependencies`
-(`src/commands/remote/generate.ts`) diffs it against whatever's already in the
-skipped `package.json` on disk, so it only reports what's genuinely
-missing — add the packages it names and the warning goes quiet, the same "goes
-quiet when they fix it" shape as ADR-082's `platform-migrations` warning right
-above it in the same output. To fully typecheck you'll still need the
-`@graphql-mesh/cli`/`@graphql-mesh/openapi` devDependencies (both are in the
-printed list) plus a `mesh build` to materialize `./.mesh`'s generated types —
-the warning tells you what to add, not how to finish standing up the BFF.
+This is deliberately **generic**, not BFF-specific: `reportPackageDependencyDrift`
+(`src/commands/remote/generate.ts`) doesn't re-derive an expected dependency
+list by hand at all. `generateAllFiles` already renders `package.json.ejs`'s
+full output before `writeGeneratedFiles` decides to skip it — that render is
+`allFiles`, sitting right there — so the reporter diffs that real render
+against the real on-disk content via `diffPackageDependencies`
+(`packages/codegen/src/package-dependency-diff.ts`), for `dependencies` and
+`devDependencies` alike. It reports two kinds of finding, not just one:
+`missing` (the template wants a package that isn't declared at all) and
+`mismatched` (declared, but at a different version than the template would
+write — e.g. a stale `react` pin). Because it reads the template's own
+output, it's automatically correct for *anything* the template controls —
+framework version pins, design-system deps, build tooling, Angular's package
+set — not only the Mesh/BFF deps this use case happens to add; a `data:`
+manifest just makes for a large, legible example. Nothing the developer added
+on their own (an extra `lodash`, say) is ever flagged — only packages the
+render actually asks for. Add what's listed and the warning goes quiet, the
+same "goes quiet when they fix it" shape as ADR-082's `platform-migrations`
+warning right above it in the same output. To fully typecheck you'll still
+need the `@graphql-mesh/cli`/`@graphql-mesh/openapi` devDependencies (both in
+the printed list) plus a `mesh build` to materialize `./.mesh`'s generated
+types — the warning tells you what to add, not how to finish standing up the
+BFF.
 
 Confirm the fresh generation is itself drift-free:
 

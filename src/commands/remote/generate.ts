@@ -8,13 +8,14 @@ import {
   writeGeneratedFiles,
   PLATFORM_MIGRATIONS,
   findMigrationHits,
-  resolveBffDependencies,
+  diffPackageDependencies,
 } from '@seans-mfe/codegen';
+import type { GeneratedFile } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
-import type { RemoteGenerateOptions, DSLManifest } from '@seans-mfe/dsl';
+import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
 /**
  * What the writer will actually do to this file (#340).
@@ -92,48 +93,60 @@ function reportPlatformMigrations(skipped: string[], cwd: string): void {
 }
 
 /**
- * Warn when `data:` implies package.json dependencies an already-existing,
- * skipped package.json doesn't have yet.
+ * Warn when the on-disk, skipped `package.json` disagrees with what
+ * `package.json.ejs` would render right now — for every dependency the
+ * template controls, not one category of it.
  *
- * `package.json.ejs` already renders the correct Mesh dependency set on every
- * run — `resolveBffDependencies` mirrors that same template logic — but
- * `package.json` is developer-owned, so `writeGeneratedFiles` skips it
- * whenever it already exists, discarding that correctly-rendered content
- * (see the platform-design-review demo runbook's use case 2). This is the one
- * moment that's visible without re-deriving the list by hand.
+ * `package.json` is developer-owned, so `writeGeneratedFiles` always skips it
+ * once it exists — the platform computes the exactly correct content on
+ * every `remote:generate` and silently discards it. `allFiles` already holds
+ * that render (it's `writeGeneratedFiles`'s input), so this diffs the real
+ * render against the real disk content instead of re-deriving an expected
+ * dependency list by hand — generic across framework version pins,
+ * design-system deps, BFF/Mesh deps, and build tooling alike, and it can
+ * never drift from the template because it reads the template's own output.
+ * See the platform-design-review demo runbook's use case 2.
  */
-function reportMissingBffDependencies(manifest: DSLManifest, skipped: string[], cwd: string): void {
-  const expected = resolveBffDependencies(manifest);
-  if (!expected) return;
-
+function reportPackageDependencyDrift(allFiles: GeneratedFile[], skipped: string[], cwd: string): void {
   const pkgPath = skipped.find((f) => path.basename(f) === 'package.json');
   if (!pkgPath) return;
 
-  let pkg: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  const rendered = allFiles.find((f) => f.path === pkgPath);
+  if (!rendered) return;
+
+  let currentText: string;
   try {
-    pkg = JSON.parse(fsSync.readFileSync(pkgPath, 'utf8'));
+    currentText = fsSync.readFileSync(pkgPath, 'utf8');
   } catch {
-    return; // unreadable/invalid package.json is not this reporter's problem
+    return; // unreadable package.json is not this reporter's problem
   }
 
-  const missing: string[] = [];
-  for (const [name, version] of Object.entries(expected.dependencies)) {
-    if (pkg.dependencies?.[name] === undefined) missing.push(`  dependencies."${name}": "${version}"`);
-  }
-  for (const [name, version] of Object.entries(expected.devDependencies)) {
-    if (pkg.devDependencies?.[name] === undefined) missing.push(`  devDependencies."${name}": "${version}"`);
+  let diffs: ReturnType<typeof diffPackageDependencies>;
+  try {
+    diffs = diffPackageDependencies(rendered.content, currentText);
+  } catch {
+    return; // malformed JSON on either side is not this reporter's problem
   }
 
-  if (missing.length === 0) return;
+  if (diffs.length === 0) return;
+
+  const missing = diffs.filter((d) => d.actual === undefined);
+  const mismatched = diffs.filter((d) => d.actual !== undefined);
 
   console.log(
     chalk.yellow(
-      `\n⚠ ${path.relative(cwd, pkgPath)} is missing ${missing.length} dependenc${missing.length === 1 ? 'y' : 'ies'} the BFF needs:`,
+      `\n⚠ ${path.relative(cwd, pkgPath)} is out of date with what the template would generate ` +
+        `(${diffs.length} ${diffs.length === 1 ? 'dependency' : 'dependencies'}):`,
     ),
   );
-  for (const line of missing) console.log(chalk.yellow(line));
+  for (const d of missing) {
+    console.log(chalk.yellow(`  missing    ${d.section}."${d.name}": "${d.expected}"`));
+  }
+  for (const d of mismatched) {
+    console.log(chalk.yellow(`  mismatched ${d.section}."${d.name}": "${d.actual}" → "${d.expected}"`));
+  }
   console.log(
-    chalk.gray('  package.json is developer-owned, so `data:` did not add these for you — add them by hand, then npm install.'),
+    chalk.gray('  package.json is developer-owned, so this was not applied for you — update by hand, then npm install.'),
   );
 }
 
@@ -216,7 +229,7 @@ export async function remoteGenerateCommand(
       // visible: the platform has just re-stamped everything it owns, and these
       // are the files it declined to touch (ADR-082).
       reportPlatformMigrations(genResult.skipped, cwd);
-      reportMissingBffDependencies(manifest, genResult.skipped, cwd);
+      reportPackageDependencyDrift(allFiles, genResult.skipped, cwd);
     }
 
     if (genResult.errors.length > 0) {
