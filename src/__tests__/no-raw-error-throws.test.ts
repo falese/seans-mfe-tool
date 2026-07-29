@@ -54,6 +54,21 @@ const EXCLUDED_PATHS = [path.join('src', 'codegen', 'templates', 'api')];
 /** `throw new Error(` — the exact construct ADR-017 forbids. */
 const RAW_THROW = /\bthrow\s+new\s+Error\s*\(/;
 
+/**
+ * A line may name the forbidden construct without being one — the migrations
+ * registry (ADR-082) quotes it in the message it shows developers, and prose
+ * about a rule is not a violation of it.
+ *
+ * Reuses the repo's existing marker rather than inventing a second convention:
+ * `adr-lint-ignore: <rule>` is what `packages/dsl/src/adr-validation.ts`
+ * already recognises. Same spelling, same intent, one thing to learn.
+ *
+ * Honoured on the offending line **or the one above it**, following the
+ * `eslint-disable-next-line` idiom — a long message wraps, and demanding the
+ * marker share a line with the text would fight the formatter.
+ */
+const SUPPRESSION = /adr-lint-ignore:\s*no-raw-error-throws/;
+
 function walk(dir: string, out: string[] = []): string[] {
   let entries: fs.Dirent[];
   try {
@@ -93,7 +108,8 @@ function findViolations(): Violation[] {
   for (const file of sourceFiles()) {
     const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
     lines.forEach((text, index) => {
-      if (RAW_THROW.test(text)) {
+      const suppressed = SUPPRESSION.test(text) || SUPPRESSION.test(lines[index - 1] ?? '');
+      if (RAW_THROW.test(text) && !suppressed) {
         violations.push({
           file: path.relative(REPO_ROOT, file),
           line: index + 1,
@@ -136,5 +152,22 @@ describe('ADR-017: typed errors only', () => {
     expect(RAW_THROW.test('  throw  new  Error (msg)')).toBe(true);
     expect(RAW_THROW.test("throw new ValidationError('boom', 'f', 'c');")).toBe(false);
     expect(RAW_THROW.test('const e = new Error("not a throw");')).toBe(false);
+  });
+
+  it('lets a line opt out when it only quotes the construct', () => {
+    // The registry has to print `throw new Error()` to tell a developer what is
+    // wrong; without an escape hatch this rule would forbid describing itself.
+    const quoted =
+      "  message: 'Raw `throw new Error()` is not typed', // adr-lint-ignore: no-raw-error-throws";
+    expect(RAW_THROW.test(quoted)).toBe(true);
+    expect(SUPPRESSION.test(quoted)).toBe(true);
+  });
+
+  it('honours the marker on the preceding line, since long messages wrap', () => {
+    expect(SUPPRESSION.test('  // adr-lint-ignore: no-raw-error-throws — quoting it')).toBe(true);
+  });
+
+  it('does not accept a marker for a different rule', () => {
+    expect(SUPPRESSION.test('// adr-lint-ignore: code-cites-ratified-adr')).toBe(false);
   });
 });

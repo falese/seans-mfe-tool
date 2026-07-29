@@ -50,10 +50,16 @@ async function main(): Promise<void> {
 
   const dirs = [...new Set(roots.flatMap(findManifestDirs))].sort();
   const failed: string[] = [];
+  /** MFEs with ADR-082 migration warnings — advisory, so they do not fail. */
+  const warned: Array<{ dir: string; count: number }> = [];
 
   for (const dir of dirs) {
     try {
-      await mfeValidateCommand({ dir });
+      const result = await mfeValidateCommand({ dir });
+      const warnings = result.issues.filter((i) => i.severity === 'warning');
+      if (warnings.length > 0) {
+        warned.push({ dir: path.relative(REPO_ROOT, dir), count: warnings.length });
+      }
     } catch {
       // mfeValidateCommand already prints the per-rule detail; record the dir.
       failed.push(path.relative(REPO_ROOT, dir));
@@ -67,6 +73,21 @@ async function main(): Promise<void> {
         `\n\nRun: npx ts-node src/commands/mfe/validate.ts <dir>  (or seans-mfe-tool mfe:validate <dir>)`,
     );
     process.exit(1);
+  }
+
+  // Say it in the summary, not only inline. A reader who scrolls to the last
+  // line is the reader this exists for — reporting "all consistent" over a
+  // fleet with known-stale developer code is the blindness ADR-082 was written
+  // to end, and it would be perverse to reproduce it here.
+  if (warned.length > 0) {
+    const total = warned.reduce((n, w) => n + w.count, 0);
+    console.log(
+      `\n${dirs.length} MFE(s) checked — all internally consistent, ` +
+        `with ${total} platform-migration warning(s) in ${warned.length} MFE(s):\n` +
+        warned.map((w) => `  ⚠ ${w.dir} (${w.count})`).join('\n') +
+        `\n\nThese do not fail the gate. Run: seans-mfe-tool mfe:validate <dir>  (--strict to enforce)`,
+    );
+    return;
   }
 
   console.log(`\n${dirs.length} MFE(s) checked — all internally consistent.`);

@@ -146,6 +146,12 @@ export interface MfeValidateResult {
     package?: string;
     expected?: string;
     actual?: string;
+    /** `warning` reports without failing; absent means `error` (ADR-082). */
+    severity?: 'error' | 'warning';
+    /** `path:line`, for issues found in a specific source file. */
+    location?: string;
+    /** What to do about it, for rules that can say. */
+    fix?: string;
   }>;
   typecheck?: {
     ran: boolean;

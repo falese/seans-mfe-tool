@@ -42,6 +42,74 @@ export const COMMENT_MARKER = '<!-- adr-governance-report -->';
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.ejs', '.mjs', '.cjs']);
 
 /**
+ * Paths whose change can land in code the generator seeds but does not own
+ * (ADR-082).
+ *
+ * Three, deliberately: the templates themselves, the package generated MFEs
+ * import from, and the package that reaches them through its re-export shims
+ * (`packages/runtime/src/errors/index.ts` forwards the whole error hierarchy
+ * from contracts, so a rename there changes what generated code imports with no
+ * runtime file in the diff).
+ *
+ * Widening this set is a decision rather than a tweak. Every path added puts
+ * this comment on more pull requests, and a reminder that appears on all of
+ * them is one nobody reads — at which point the registry goes unmaintained
+ * exactly as if the section did not exist.
+ */
+export const GENERATED_CONTRACT_PATHS: readonly RegExp[] = [
+  /^packages\/codegen\/templates\//,
+  /^packages\/runtime\/src\//,
+  /^packages\/contracts\/src\//,
+];
+
+/** Touching this file *is* the declaration, so it suppresses the reminder. */
+export const MIGRATION_REGISTRY = 'packages/codegen/src/platform-migrations.ts';
+
+const IS_TEST_FILE = /(^|\/)__tests__\/|\.test\.[jt]sx?$/;
+
+/**
+ * The reminder that a change reaching generated code needs a declared
+ * migration — or an explicit note that it does not (ADR-082).
+ *
+ * Advisory, matching the report's existing posture (ADR-075 §7 keeps live
+ * GitHub state in a comment rather than the correctness path, and reports
+ * one-way citations rather than failing them). A blocking gate here would fire
+ * on comment reflows and typo fixes, and an escape hatch used every third PR
+ * stops being read.
+ *
+ * Pure, and pure on purpose: the rest of `main` interleaves git and fs reads
+ * with formatting, which is why none of it has ever been tested. This takes the
+ * file list and returns lines.
+ */
+export function generatedContractSection(files: string[]): string[] {
+  // A PR that already declares an entry did the thing this asks for.
+  if (files.includes(MIGRATION_REGISTRY)) return [];
+
+  const hits = files.filter(
+    (file) => GENERATED_CONTRACT_PATHS.some((p) => p.test(file)) && !IS_TEST_FILE.test(file)
+  );
+  if (hits.length === 0) return [];
+
+  const rest = hits.length - 1;
+  const named = `\`${hits[0]}\`${rest > 0 ? ` (+${rest} more)` : ''}`;
+
+  return [
+    '### ⚠️ This PR changes contracts that reach generated code',
+    '',
+    named,
+    '',
+    'Regeneration re-stamps the files the generator owns (`npm run check:mfe-drift`). ' +
+      'It **cannot reach developer-owned files** — `src/index.tsx`, `App.tsx`, anything ' +
+      'an MFE author wrote — even with `--force`. Carrying ADR-017 out to the fleet ' +
+      'reached 29 of 48 files and left 19 stale with every gate green.',
+    '',
+    `If this change affects code an MFE author wrote, declare an entry in \`${MIGRATION_REGISTRY}\` ` +
+      '(ADR-082) in this PR — or say here why none is needed.',
+    '',
+  ];
+}
+
+/**
  * Strip Markdown blockquotes before scanning an issue body for citations.
  *
  * A blockquote is commentary *about* an issue, not a claim the issue makes.
@@ -237,6 +305,10 @@ function main(): void {
     out.push('No ADRs changed and no ADR citations in the changed code.', '');
   }
 
+  // Before the advisory one-way block, since this one is about the diff in
+  // front of the reviewer rather than the state of the backlog.
+  out.push(...generatedContractSection(files));
+
   if (oneWay.length > 0) {
     out.push('<details>');
     out.push(
@@ -276,4 +348,9 @@ function main(): void {
   console.log(out.join('\n'));
 }
 
-main();
+// Only when run as a script. `main` reads `process.argv[2]` and shells out to
+// git, so an unguarded call makes the module untestable — importing it would
+// run a report over whatever the test runner happened to put in argv.
+if (require.main === module) {
+  main();
+}

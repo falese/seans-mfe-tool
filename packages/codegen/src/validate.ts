@@ -15,6 +15,11 @@
 import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
 import type { DSLManifest } from '@seans-mfe/dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
+import {
+  PLATFORM_MIGRATIONS,
+  findMigrationHits,
+  severityFor,
+} from './platform-migrations';
 
 const RUNTIME_PACKAGE = '@seans-mfe-tool/runtime';
 
@@ -37,6 +42,14 @@ export interface MfeValidationInput {
    * skipped when they are absent rather than reporting false positives.
    */
   sources?: SourceFile[];
+  /**
+   * Predicate identifying files the generator seeds but does not own
+   * (`overwrite: false`), plus anything it never emits. Only these are scanned
+   * for platform migrations — see the rule below. Absent skips the rule.
+   */
+  developerOwned?: (sourcePath: string) => boolean;
+  /** Running platform version, for migration `failsAt` escalation (ADR-082). */
+  platformVersion?: string;
 }
 
 export type ValidationRule =
@@ -45,7 +58,18 @@ export type ValidationRule =
   | 'shared-declared'
   | 'shared-version-sync'
   | 'runtime-declared'
-  | 'slots-implemented';
+  | 'slots-implemented'
+  | 'platform-migrations';
+
+/**
+ * `error` fails validation; `warning` reports and does not.
+ *
+ * Introduced for ADR-082: regeneration cannot reach developer-owned files, so
+ * the platform needs a way to say "this is yours, and something it uses has
+ * changed" without failing anyone's build. Optional, and absent means `error`,
+ * so every rule written before this behaves exactly as it did.
+ */
+export type ValidationSeverity = 'error' | 'warning';
 
 export interface ValidationIssue {
   rule: ValidationRule;
@@ -53,9 +77,21 @@ export interface ValidationIssue {
   expected?: string;
   actual?: string;
   package?: string;
+  /** Defaults to `error` when absent. */
+  severity?: ValidationSeverity;
+  /** `path:line` for issues found in a specific source file. */
+  location?: string;
+  /** What to do about it, for rules that can say. */
+  fix?: string;
+}
+
+/** An issue fails validation unless it explicitly says it is only a warning. */
+export function isError(issue: ValidationIssue): boolean {
+  return (issue.severity ?? 'error') === 'error';
 }
 
 export interface MfeValidationResult {
+  /** False only when at least one issue is an `error` — warnings do not fail. */
   ok: boolean;
   /** Rules that were evaluated (framework-dependent). */
   checked: ValidationRule[];
@@ -85,7 +121,8 @@ export function parseFederationSharedEntries(configSource: string): SharedEntry[
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
-  const { manifest, framework, packageDependencies, sharedEntries, sources } = input;
+  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion } =
+    input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
 
@@ -191,5 +228,28 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     }
   }
 
-  return { ok: issues.length === 0, checked, issues };
+  // Developer-owned code using something the platform changed (ADR-082).
+  // Skipped when the caller supplies no ownership split: without it every
+  // generator-owned file would be scanned too, duplicating check:mfe-drift and
+  // reporting files regeneration has already fixed.
+  if (sources && developerOwned) {
+    checked.push('platform-migrations');
+    const version = platformVersion ?? '0.0.0';
+    for (const source of sources.filter((s) => developerOwned(s.path))) {
+      for (const migration of PLATFORM_MIGRATIONS) {
+        for (const hit of findMigrationHits(migration, source)) {
+          issues.push({
+            rule: 'platform-migrations',
+            severity: severityFor(migration, version),
+            package: migration.id,
+            location: `${source.path}:${hit.line}`,
+            message: `${migration.message} (${migration.adr})`,
+            fix: migration.fix,
+          });
+        }
+      }
+    }
+  }
+
+  return { ok: issues.every((i) => !isError(i)), checked, issues };
 }

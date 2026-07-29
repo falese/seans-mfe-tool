@@ -316,6 +316,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-079](./architecture-decisions/ADR-079-single-execution-substitution-seam.md) | There is one seam for substituting handler execution, and it sits inside the lifecycle contract | Runtime / lifecycle / dependency injection | Implemented |
 | [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
+| [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
 
 <!-- END GENERATED: adr-index -->
 
