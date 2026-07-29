@@ -79,6 +79,42 @@ describe('.gitignore ownership (#341)', () => {
     });
   });
 
+  describe.each(['react', 'angular'])('.dockerignore for the %s variant', (framework) => {
+    // A missing .dockerignore is not a cosmetic gap. Without it, `COPY . .`
+    // drags the host's node_modules into the image on top of the runtime the
+    // Dockerfile staged there, and the build dies on
+    //   cannot replace to directory .../@seans-mfe-tool/runtime with file
+    // — because npm leaves a symlink where the image has a real directory.
+    // Exactly one MFE in the fleet lacked the file, and that is the one that
+    // failed. Generating it removes the possibility.
+    let files: Array<{ path: string; content: string; overwrite: boolean }>;
+
+    beforeAll(async () => {
+      files = (await generate(framework)) as never;
+    });
+
+    const dockerignore = () => files.find((f) => f.path.endsWith('.dockerignore'));
+
+    it('is emitted at all', () => {
+      expect(dockerignore()).toBeDefined();
+    });
+
+    it('is generator-owned, so check:mfe-drift notices it going missing', () => {
+      expect(dockerignore()!.overwrite).toBe(true);
+    });
+
+    it('excludes node_modules — the entry that prevents the COPY clash', () => {
+      expect(dockerignore()!.content).toMatch(/^node_modules$/m);
+    });
+
+    it('excludes the build artifacts the platform itself produces', () => {
+      const content = dockerignore()!.content;
+      for (const artifact of ['dist', '.mesh', 'server.js']) {
+        expect(content).toMatch(new RegExp(`^${artifact.replace('.', '\\.')}$`, 'm'));
+      }
+    });
+  });
+
   it('still ignores the build artifacts #274 added it for', async () => {
     const files = (await generate('react')) as never as Array<{
       path: string;

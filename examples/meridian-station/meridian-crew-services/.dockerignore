@@ -1,6 +1,20 @@
+# Keep the build context free of anything the image builds for itself.
+#
+# node_modules is the load-bearing entry. The Dockerfile stages the platform
+# runtime into node_modules/@seans-mfe-tool/runtime as a real directory; npm
+# leaves a symlink there on the host. Without this line `COPY . .` tries to
+# replace the directory with the symlink and the build fails with
+# "cannot replace to directory ... with file".
 node_modules
+
+# Build output — regenerated inside the image, never copied in.
 dist
-.mesh
 .angular
-bff.log
+out-tsc
+
+# GraphQL Mesh artifacts (rebuilt by `mesh build`)
+.mesh
+
+# Compiled BFF server
 server.js
+bff.log

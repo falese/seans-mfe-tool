@@ -1368,13 +1368,19 @@ async function renderFiles(
   // and never touched again — because an MFE author edits `package.json`,
   // the bundler config and the tsconfigs as a matter of course.
   //
-  // `.gitignore` is the exception (#341): every line of it names a build
-  // artifact the *platform* produces (`.mesh/`, `dist/`, `out-tsc/`, the
+  // The two ignore files are the exception (#341): every line of them names a
+  // build artifact the *platform* produces (`.mesh/`, `dist/`, `out-tsc/`, the
   // compiled `server.js` — #274), so the platform is the thing that knows when
-  // that list changes. Owning it also brings it under `check:mfe-drift`, which
-  // only compares generator-owned files — until now whether an MFE had a
+  // that list changes. Owning them also brings them under `check:mfe-drift`,
+  // which only compares generator-owned files — until now whether an MFE had a
   // `.gitignore` at all depended on whether anyone had run `remote:generate`
   // in it (7 of 8 meridian, 0 of 13 abc-kids).
+  //
+  // `.dockerignore` was worse: emitted by nothing, hand-maintained in four
+  // divergent shapes, and absent from exactly one MFE — which is the one whose
+  // image build failed, on `COPY . .` trying to replace the staged runtime
+  // directory with the host's node_modules symlink. A file every MFE needs and
+  // nothing generates will eventually be missing from one of them.
   //
   // The accepted cost: regeneration now overwrites it, so a customised
   // `.gitignore` outside this repo loses its edits. ADR-082 cannot warn about
@@ -1392,12 +1398,14 @@ async function renderFiles(
           { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
           { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
+          { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
+          { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ];
   for (const tpl of rootTemplates) {
     const templatePath = path.join(templateDir, tpl.ejs);
