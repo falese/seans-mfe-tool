@@ -16,6 +16,42 @@ import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
 /**
+ * What the writer will actually do to this file (#340).
+ *
+ * Mirrors `writeGeneratedFiles`, which decides from **existence and ownership
+ * together**, not ownership alone:
+ *
+ * | exists | overwrite | outcome |
+ * |---|---|---|
+ * | no | either | written — `create` |
+ * | yes | `true` | re-stamped — `overwrite` |
+ * | yes | `false` | left alone — `skip` |
+ *
+ * Deriving this from `overwrite` alone made the dry run announce `create` for
+ * developer-owned files that exist and would not be touched, and `overwrite`
+ * for generated files that do not exist yet. A plan that misdescribes the run
+ * is worse than no plan, because it is read instead of the run.
+ *
+ * Kept in step with the writer by
+ * `src/commands/__tests__/remote-generate-dry-run.test.ts`, which exercises
+ * real files rather than a stubbed `fs` — the defect was a missing existence
+ * check, so stubbing existence would test nothing.
+ */
+function plannedOp(file: { path: string; overwrite: boolean }): PlannedChange['op'] {
+  if (!fsSync.existsSync(file.path)) return 'create';
+  return file.overwrite ? 'overwrite' : 'skip';
+}
+
+const DRY_RUN_LABEL: Record<PlannedChange['op'], string> = {
+  create: '(new)',
+  overwrite: '(overwrite)',
+  // Named for the reason, not the mechanism — "skip" alone reads like the tool
+  // declining to do its job rather than respecting ownership.
+  skip: '(skip — yours)',
+  spawn: '(spawn)',
+};
+
+/**
  * Warn when a file regeneration just declined to touch uses something the
  * platform changed (ADR-082).
  *
@@ -86,7 +122,7 @@ export async function remoteGenerateCommand(
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
-        op: file.overwrite ? 'overwrite' : 'create',
+        op: plannedOp(file),
         target: path.relative(cwd, file.path),
       }));
       if (preservedCapabilities.length > 0) {
@@ -98,8 +134,7 @@ export async function remoteGenerateCommand(
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
       for (const file of allFiles) {
         const relativePath = path.relative(cwd, file.path);
-        const status = file.overwrite ? '(overwrite)' : '(new)';
-        console.log(`  ${relativePath} ${chalk.gray(status)}`);
+        console.log(`  ${relativePath} ${chalk.gray(DRY_RUN_LABEL[plannedOp(file)])}`);
       }
       return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, dryRun: true, plannedChanges };
     }

@@ -54,8 +54,12 @@ async function cleanupRuntimeFiles() {
         '@seans-mfe/contracts': 'file:/seans-mfe-tool/packages/contracts',
       },
       bundledDependencies: ['@seans-mfe/contracts'],
+      // The framework abstracts each get a subpath so the '.' barrel stays
+      // polyglot (ADR-056 layer 5, #341). An Angular MFE resolving '.' must not
+      // pull React into its bundle.
       exports: {
         '.':         { require: './index.js',  import: './index.js',  default: './index.js',  types: './index.d.ts'   },
+        './react':   { require: './react.js',  import: './react.js',  default: './react.js',  types: './react.d.ts'   },
         './angular': { require: './angular.js', import: './angular.js', default: './angular.js', types: './angular.d.ts' },
         './package.json': './package.json'
       }

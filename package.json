@@ -34,7 +34,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "dev": "bun bin/dev.ts",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
-    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "typecheck": "tsc -p tsconfig.typecheck.json && tsc -p packages/runtime/tsconfig.typecheck.json",
     "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
     "docs:check-links": "node scripts/check-doc-links.js",
     "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",

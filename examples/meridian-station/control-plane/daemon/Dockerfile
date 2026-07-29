@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # abc-kids control-plane daemon (ported from falese/daemon component-system).
 # Node control plane: forwards renderer actions to the registry and relays the
 # resolved experience back. Listens on 3004 (3001–3003 belong to the MFEs).
@@ -9,7 +10,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --omit=dev --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install --omit=dev --no-audit --no-fund
 
 # Copy source code
 COPY simple-daemon.js ./

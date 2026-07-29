@@ -40,6 +40,19 @@ describe('generatedContractSection', () => {
       expect(render(['packages/runtime/src/index.ts'])).toContain('packages/runtime/src/index.ts');
     });
 
+    it('on a change to the generator logic that decides file ownership', () => {
+      // Found by the first change that went through these directives: flipping
+      // `.gitignore` from overwrite:false to true made regeneration start
+      // OVERWRITING a file in every MFE, and this section stayed silent
+      // because the list covered what generated code contains and imports but
+      // not what decides its ownership. That is the more dangerous edit of the
+      // two — a template change alters content the developer can review, while
+      // an ownership change alters whether their edits survive at all.
+      expect(render(['packages/codegen/src/unified-generator.ts'])).toContain(
+        'packages/codegen/src/unified-generator.ts',
+      );
+    });
+
     it('on a contracts change, which reaches MFEs through the runtime barrel', () => {
       // `packages/runtime/src/errors/index.ts` is a pure re-export shim, so a
       // rename in contracts changes what generated code imports without any
@@ -102,7 +115,19 @@ describe('generatedContractSection', () => {
         generatedContractSection([
           'packages/dsl/src/slot-validation.ts',
           'packages/oclif-base/src/BaseCommand.ts',
-          'packages/codegen/src/unified-generator.ts',
+        ]),
+      ).toEqual([]);
+    });
+
+    it('on the rest of packages/codegen, which does not decide what is emitted', () => {
+      // Only the emitter is a trigger. `validate.ts` and `drift.ts` read the
+      // ownership flag rather than setting it, and widening to all of
+      // packages/codegen/src would put this comment on nearly every codegen PR.
+      expect(
+        generatedContractSection([
+          'packages/codegen/src/validate.ts',
+          'packages/codegen/src/drift.ts',
+          'packages/codegen/src/slot-types.ts',
         ]),
       ).toEqual([]);
     });
@@ -120,10 +145,10 @@ describe('generatedContractSection', () => {
       }
     });
 
-    it('are the three the ADR names, and no more', () => {
+    it('are the four that reach generated code, and no more', () => {
       // Widening this set is a decision, not a tweak: every added path is a
       // comment on more PRs, and the section is only useful while it is rare.
-      expect(GENERATED_CONTRACT_PATHS).toHaveLength(3);
+      expect(GENERATED_CONTRACT_PATHS).toHaveLength(4);
     });
   });
 

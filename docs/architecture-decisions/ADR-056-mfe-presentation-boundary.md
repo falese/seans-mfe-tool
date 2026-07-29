@@ -277,6 +277,79 @@ keep rendering as imperative islands; only the *owner* of composition moves
 from BaseMFE to the host provider. The generated `remote.tsx` gains an
 exported imperative `mount` handle alongside the bootstrap.
 
+## The barrel is part of the waist
+
+> **Added after ratification.** The decision above was ratified in June 2026;
+> this section was appended in July after a defect showed the boundary leaking
+> through the package's export surface. `CLAUDE.md` says not to edit an existing
+> ADR — the judgement here follows ADR-075 §7: the export surface *is* this
+> decision's waist, so recording it inside this ADR beats fragmenting one idea
+> across two documents. No prose above was rewritten. A reader should know this
+> section postdates the rest.
+
+The layering above quarantines framework knowledge in the specialized
+abstracts, which are *allowed* to import React or Angular because they produce
+the native handle. That remains correct. What went unsaid is that **the
+quarantine is only as good as the package's export surface**, and
+`packages/runtime/src/index.ts` re-exported `RemoteMFE` — so the barrel every
+generated MFE imports reached `react` transitively.
+
+The leak was invisible while every consumer wrote `import type`, which erases
+at compile time and emits no require. It became visible the day a template
+gained its first *value* import from the barrel (#342, typed errors): three
+Angular MFEs failed to bundle with `Can't resolve 'react-dom/client'`,
+naming a runtime file none of their code mentions, for a framework they do not
+use, triggered by importing an error class.
+
+So, stated rather than implied:
+
+1. **The barrel carries the neutral core only.** Any MFE, in any framework, can
+   import any value from `@seans-mfe-tool/runtime` without receiving a
+   framework in its bundle.
+2. **Each framework abstract lives behind its own subpath** — `/react`,
+   `/angular`. `/angular` always did; `/react` did not, and that asymmetry was
+   the defect. A consumer opts into a framework by importing its entry point,
+   never as a side effect. Adding a framework adds a subpath, consistent with
+   ADR-036.
+3. **`await import()` is not a quarantine.** `remote-mfe.ts` reaches React only
+   through dynamic import, annotated browser-only. Bundlers resolve dynamic
+   specifiers statically in order to emit a chunk, so runtime laziness buys
+   nothing at build time.
+
+### The scan that could not fail
+
+The gate this ADR cites as *"the bright line made machine-checked"* was:
+
+```js
+/(?:from|require\(\s*)['"](react|…)['"]/
+```
+
+No `\s*` before the quote and no `import(` alternative — so it matched
+`require('react')` and nothing else. Not `from 'react'`. Not
+`await import('react')`. Neither form of `require` appears in this codebase.
+The scan had never been able to fail, and was cited as evidence throughout.
+
+Repaired, and joined by a **reachability walk over the barrel's module graph**,
+which is the check that would have caught this: the per-file scan asks "does
+this file import React", and `RemoteMFE` is supposed to. The walk reports the
+import trail rather than the leaf, because the fix is to cut an edge of the
+path.
+
+Both live in `packages/runtime/src/__tests__/boundary.test.ts`.
+
+### Cost
+
+Moving `RemoteMFE` off the barrel is a **breaking change** to the platform's
+primary public API: any MFE outside this repo importing it as a value needs
+`/react` appended. A `PLATFORM_MIGRATIONS` entry (`remote-mfe-subpath`,
+ADR-082) reports it with the fix, matching value imports only — a type-only
+import never emitted a require and was never broken.
+
+The alternative, re-exporting the error classes from `/angular` so the Angular
+templates could route around the barrel, was rejected: it leaves the barrel
+framework-coupled, and the next value import hits the same wall from a
+different direction.
+
 ## References
 
 - ADR-036 (framework plugins — posture extended to runtime), ADR-041 (BaseMFE

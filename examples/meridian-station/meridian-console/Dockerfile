@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # meridian-console — static React MFE (no BFF); nginx serves dist/ on 5001.
 # Pattern: examples/abc-kids/hockey/Dockerfile.
 # Build tools stage — provides the seans-mfe-tool CLI and pre-compiled runtime
@@ -16,7 +17,8 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 COPY package.json ./
 RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
     npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install --legacy-peer-deps --no-audit --no-fund
 RUN mkdir -p node_modules/@seans-mfe-tool && \
     cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 

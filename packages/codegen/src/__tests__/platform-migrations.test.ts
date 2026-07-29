@@ -151,6 +151,43 @@ describe('validation-error-renamed', () => {
   });
 });
 
+describe('remote-mfe-subpath', () => {
+  const entry = byId('remote-mfe-subpath');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/index.tsx', text }).length;
+
+  it('catches RemoteMFE imported as a value from the bare barrel', () => {
+    expect(hits("import { RemoteMFE } from '@seans-mfe-tool/runtime';")).toBe(1);
+  });
+
+  it('catches it alongside other named imports', () => {
+    expect(
+      hits("import { RemoteMFE, ValidationError } from '@seans-mfe-tool/runtime';"),
+    ).toBe(1);
+  });
+
+  it('leaves the new subpath alone', () => {
+    expect(hits("import { RemoteMFE } from '@seans-mfe-tool/runtime/react';")).toBe(0);
+  });
+
+  it('leaves the Angular abstract alone — it was never on the barrel', () => {
+    expect(
+      hits("import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';"),
+    ).toBe(0);
+  });
+
+  it('does not fire on a type-only import, which never pulled React in', () => {
+    // The whole defect is that value imports emit a require and type imports
+    // do not. Flagging `import type` would report code that was never broken.
+    expect(hits("import type { RemoteMFE } from '@seans-mfe-tool/runtime';")).toBe(0);
+  });
+
+  it('does not fire on prose or a subclass declaration', () => {
+    expect(hits(' * @extends RemoteMFE — capabilities are inherited')).toBe(0);
+    expect(hits('export class FlappyMFE extends RemoteMFE {')).toBe(0);
+  });
+});
+
 describe('findMigrationHits over real generated shapes', () => {
   it('is silent on the current index.tsx template output', () => {
     const current = [

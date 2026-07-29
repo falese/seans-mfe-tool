@@ -1,12 +1,29 @@
-[**seans-mfe-tool API reference**](../../../README.md)
+[**seans-mfe-tool API reference**](../../../../README.md)
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [runtime/src](../README.md) / RemoteMFE
+[seans-mfe-tool API reference](../../../../README.md) / [runtime/src/react](../README.md) / RemoteMFE
 
 # Class: RemoteMFE
 
 Defined in: [packages/runtime/src/remote-mfe.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L37)
+
+React entry point — the framework-specialized abstract (ADR-056 layer 5).
+
+`RemoteMFE` produces a React native handle and therefore imports React, which
+ADR-056 has always permitted for this layer. What it does not permit is that
+import reaching consumers who did not ask for it, and re-exporting the class
+from the main barrel did exactly that: any *value* import from
+'@seans-mfe-tool/runtime' pulled React into the bundle, including in Angular
+MFEs that have no React installed.
+
+The symmetry with `./angular` is the point. Each framework abstract sits
+behind its own subpath; the barrel stays polyglot and carries only the
+neutral core. A consumer opts into a framework by importing its entry point,
+never by accident.
+
+Mirrors `angular.ts` exactly — if you add something here, ask whether the
+Angular entry needs the counterpart.
 
 ## Extends
 
@@ -626,7 +643,7 @@ it. Idempotent: re-attaching replaces the channel.
 
 ##### wsClient
 
-[`DaemonWebSocketClient`](../interfaces/DaemonWebSocketClient.md)
+[`DaemonWebSocketClient`](../../interfaces/DaemonWebSocketClient.md)
 
 #### Returns
 
@@ -650,7 +667,7 @@ AuthorizeAccess capability: Check authorization
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -664,7 +681,7 @@ AuthorizeAccess capability: Check authorization
 
 ### describe()
 
-> **describe**(`context`): `Promise`\<[`DescribeResult`](../interfaces/DescribeResult.md)\>
+> **describe**(`context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:788](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L788)
 
@@ -674,11 +691,11 @@ Describe capability: Return MFE metadata
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`DescribeResult`](../interfaces/DescribeResult.md)\>
+`Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
 #### Inherited from
 
@@ -698,7 +715,7 @@ Implement authorization logic for this MFE
 
 ##### \_context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -712,7 +729,7 @@ Implement authorization logic for this MFE
 
 ### doDescribe()
 
-> `protected` **doDescribe**(`_context`): `Promise`\<[`DescribeResult`](../interfaces/DescribeResult.md)\>
+> `protected` **doDescribe**(`_context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:550](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L550)
 
@@ -722,11 +739,11 @@ Implement describe logic for this MFE
 
 ##### \_context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`DescribeResult`](../interfaces/DescribeResult.md)\>
+`Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
 #### Inherited from
 
@@ -736,7 +753,7 @@ Implement describe logic for this MFE
 
 ### doEmit()
 
-> `protected` **doEmit**(`context`): `Promise`\<[`EmitResult`](../interfaces/EmitResult.md)\>
+> `protected` **doEmit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:567](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L567)
 
@@ -746,11 +763,11 @@ Implement telemetry emission logic for this MFE
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`EmitResult`](../interfaces/EmitResult.md)\>
+`Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
 #### Inherited from
 
@@ -760,7 +777,7 @@ Implement telemetry emission logic for this MFE
 
 ### doHealth()
 
-> `protected` **doHealth**(`_context`): `Promise`\<[`HealthResult`](../interfaces/HealthResult.md)\>
+> `protected` **doHealth**(`_context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:531](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L531)
 
@@ -770,11 +787,11 @@ Implement health check logic for this MFE
 
 ##### \_context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`HealthResult`](../interfaces/HealthResult.md)\>
+`Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
 #### Inherited from
 
@@ -784,7 +801,7 @@ Implement health check logic for this MFE
 
 ### doLoad()
 
-> `protected` **doLoad**(`context`): `Promise`\<[`LoadResult`](../interfaces/LoadResult.md)\>
+> `protected` **doLoad**(`context`): `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:184](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L184)
 
@@ -799,11 +816,11 @@ REQ-RUNTIME-001: Atomic operation with three phases:
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`LoadResult`](../interfaces/LoadResult.md)\>
+`Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
 #### Inherited from
 
@@ -813,7 +830,7 @@ REQ-RUNTIME-001: Atomic operation with three phases:
 
 ### doQuery()
 
-> `protected` **doQuery**(`context`): `Promise`\<[`QueryResult`](../interfaces/QueryResult.md)\>
+> `protected` **doQuery**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:906](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L906)
 
@@ -843,11 +860,11 @@ Override in concrete subclasses for typed, operation-specific queries:
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`QueryResult`](../interfaces/QueryResult.md)\>
+`Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
 #### Inherited from
 
@@ -867,7 +884,7 @@ Implement refresh logic for this MFE
 
 ##### \_context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -881,7 +898,7 @@ Implement refresh logic for this MFE
 
 ### doRender()
 
-> `protected` **doRender**(`context`): `Promise`\<[`RenderResult`](../interfaces/RenderResult.md)\>
+> `protected` **doRender**(`context`): `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:313](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L313)
 
@@ -897,11 +914,11 @@ REQ-RUNTIME-004: Component-aware rendering with:
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`RenderResult`](../interfaces/RenderResult.md)\>
+`Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
 #### Inherited from
 
@@ -911,7 +928,7 @@ REQ-RUNTIME-004: Component-aware rendering with:
 
 ### doSchema()
 
-> `protected` **doSchema**(`_context`): `Promise`\<[`SchemaResult`](../interfaces/SchemaResult.md)\>
+> `protected` **doSchema**(`_context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:560](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L560)
 
@@ -921,11 +938,11 @@ Implement schema retrieval logic for this MFE
 
 ##### \_context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`SchemaResult`](../interfaces/SchemaResult.md)\>
+`Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
 #### Inherited from
 
@@ -935,7 +952,7 @@ Implement schema retrieval logic for this MFE
 
 ### doUpdateControlPlaneState()
 
-> `protected` **doUpdateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../interfaces/ControlPlaneStateResult.md)\>
+> `protected` **doUpdateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:597](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L597)
 
@@ -956,11 +973,11 @@ Subscription.messages channel the Renderer is already subscribed to.
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`ControlPlaneStateResult`](../interfaces/ControlPlaneStateResult.md)\>
+`Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
 #### Inherited from
 
@@ -970,7 +987,7 @@ Subscription.messages channel the Renderer is already subscribed to.
 
 ### emit()
 
-> **emit**(`context`): `Promise`\<[`EmitResult`](../interfaces/EmitResult.md)\>
+> **emit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:809](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L809)
 
@@ -980,11 +997,11 @@ Emit capability: Emit telemetry/events
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`EmitResult`](../interfaces/EmitResult.md)\>
+`Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
 #### Inherited from
 
@@ -1065,7 +1082,7 @@ Lifecycle phase (before, main, after, error)
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 Execution context
 
@@ -1186,7 +1203,7 @@ Get current state
 
 ### health()
 
-> **health**(`context`): `Promise`\<[`HealthResult`](../interfaces/HealthResult.md)\>
+> **health**(`context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:781](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L781)
 
@@ -1196,11 +1213,11 @@ Health capability: Check MFE health status
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`HealthResult`](../interfaces/HealthResult.md)\>
+`Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
 #### Inherited from
 
@@ -1224,7 +1241,7 @@ Invoke a custom handler from developer implementation
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -1259,7 +1276,7 @@ REQ-057: Custom handlers resolved from developer class
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -1288,7 +1305,7 @@ built map (PLATFORM_HANDLER_LIBRARY), so resolution is a single lookup.
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -1306,7 +1323,7 @@ Error if platform handler not found
 
 ### load()
 
-> **load**(`context`): `Promise`\<[`LoadResult`](../interfaces/LoadResult.md)\>
+> **load**(`context`): `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:753](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L753)
 
@@ -1316,11 +1333,11 @@ Load capability: Initialize and prepare MFE for use
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`LoadResult`](../interfaces/LoadResult.md)\>
+`Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
 #### Inherited from
 
@@ -1388,7 +1405,7 @@ Reuses an existing root for the containerId when re-rendering.
 
 ### query()
 
-> **query**(`context`): `Promise`\<[`QueryResult`](../interfaces/QueryResult.md)\>
+> **query**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:802](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L802)
 
@@ -1398,11 +1415,11 @@ Query capability: Execute data query
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`QueryResult`](../interfaces/QueryResult.md)\>
+`Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
 #### Inherited from
 
@@ -1422,7 +1439,7 @@ Refresh capability: Refresh MFE data/state
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
@@ -1436,7 +1453,7 @@ Refresh capability: Refresh MFE data/state
 
 ### render()
 
-> **render**(`context`): `Promise`\<[`RenderResult`](../interfaces/RenderResult.md)\>
+> **render**(`context`): `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:760](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L760)
 
@@ -1446,11 +1463,11 @@ Render capability: Render MFE UI into target container
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`RenderResult`](../interfaces/RenderResult.md)\>
+`Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
 #### Inherited from
 
@@ -1460,7 +1477,7 @@ Render capability: Render MFE UI into target container
 
 ### schema()
 
-> **schema**(`context`): `Promise`\<[`SchemaResult`](../interfaces/SchemaResult.md)\>
+> **schema**(`context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:795](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L795)
 
@@ -1470,11 +1487,11 @@ Schema capability: Return GraphQL/JSON schema
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`SchemaResult`](../interfaces/SchemaResult.md)\>
+`Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
 #### Inherited from
 
@@ -1537,7 +1554,7 @@ Call from the shell's useEffect cleanup to avoid memory leaks.
 
 ### updateControlPlaneState()
 
-> **updateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../interfaces/ControlPlaneStateResult.md)\>
+> **updateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
 Defined in: [packages/runtime/src/base-mfe.ts:834](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L834)
 
@@ -1565,11 +1582,11 @@ Available from 'ready' or 'rendering' — an MFE can push state mid-render.
 
 ##### context
 
-[`Context`](../interfaces/Context.md)
+[`Context`](../../interfaces/Context.md)
 
 #### Returns
 
-`Promise`\<[`ControlPlaneStateResult`](../interfaces/ControlPlaneStateResult.md)\>
+`Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
 #### Inherited from
 

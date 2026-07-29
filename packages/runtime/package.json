@@ -10,6 +10,10 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./react": {
+      "types": "./src/react.ts",
+      "default": "./src/react.ts"
+    },
     "./angular": {
       "types": "./src/angular.ts",
       "default": "./src/angular.ts"
