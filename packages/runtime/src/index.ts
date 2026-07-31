@@ -26,6 +26,11 @@ export { ContextFactory, ContextValidator } from './context';
 export { BaseMFE, VALID_TRANSITIONS } from './base-mfe';
 export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult, MFEState } from './base-mfe';
 
+// Sugar over the inherited updateControlPlaneState capability — fills in the
+// Context boilerplate every real call site otherwise hand-rolls.
+export { pushControlPlaneState } from './control-plane-state';
+export type { ControlPlaneStatePusher, PushControlPlaneStateOptions } from './control-plane-state';
+
 // The framework-specialized abstracts (ADR-056 layer 5) live behind their own
 // subpaths, never here. This barrel is polyglot: an Angular MFE imports typed
 // errors or the slot contract from it and must not receive React in the bundle

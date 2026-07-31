@@ -73,6 +73,40 @@ const cp = mfe as unknown as ControlPlane; // narrow view of an inherited capabi
 void cp.updateControlPlaneState({ requestId: ..., inputs: { stateKey } });
 ```
 
+That narrow-cast-plus-hand-rolled-`Context` pattern is exactly the kind of
+mechanical boilerplate worth extracting, and every real call site
+(`StationConsole.tsx`, `GameMenu.tsx`) reconstructs it independently. As of
+this pass, `@seans-mfe-tool/runtime` exports `pushControlPlaneState(mfe,
+stateKey, stateData, options?)` — thin sugar
+(`packages/runtime/src/control-plane-state.ts`) that fills in
+`requestId`/`timestamp` via the same `ContextFactory` the rest of the
+runtime already uses, and accepts a structural `{ updateControlPlaneState }`
+shape so call sites never need the narrow cast either:
+
+```tsx
+import { pushControlPlaneState } from '@seans-mfe-tool/runtime';
+import { mfe } from '../../platform/base-mfe/bootstrap';
+void pushControlPlaneState(mfe, stateKey, stateData);
+```
+
+Deliberately scoped thin: `stateKey` stays a free-form string, not a
+manifest-declared, compile-time-checked union the way `DeclaredSlotId` is
+(ADR-072) — that's a materially bigger decision (new DSL section, codegen,
+a validation rule) reserved for if mistyped state keys turn out to be a real,
+recurring problem, not built speculatively here. Verified live against a
+real generated MFE instance, imported from the public package export:
+
+```
+=== AFTER: with the new sugar ===
+result: {"acknowledged":false,"correlationId":"req_1785461934092_cep08juvd","error":"Daemon WebSocket not connected"}
+```
+
+(No daemon attached in the scratch run — the graceful "not connected" result
+is the correct behavior of the underlying capability either way, sugar or
+not.) `StationConsole.tsx`/`GameMenu.tsx` themselves weren't migrated to it —
+that's a developer-owned-file edit across real examples, a separate call
+from building the helper.
+
 So the honest shape of "extend vs. consume" is: **the class hierarchy is
 extended exactly once, by codegen, in a file you don't edit. Your code
 consumes the resulting instance's inherited public API.** The demo below
