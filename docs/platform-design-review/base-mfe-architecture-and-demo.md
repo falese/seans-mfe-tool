@@ -365,7 +365,9 @@ positives before merging). It's additive only: no codegen output changes for
 anyone, so no `PLATFORM_MIGRATIONS` entry and no ADR were needed — it just
 makes an existing, previously-invisible failure mode visible at design time.
 See use case 6 below for it catching (and a developer fixing) exactly this
-failure on a live MFE.
+failure on a live MFE. Tracked in
+[#350](https://github.com/falese/seans-mfe-tool/issues/350) (filed
+retroactively for traceability — the fix landed on this branch first).
 
 ### Finding 2 — the telemetry DI seam is real on `BaseMFE` but unreachable from generated code as generated
 
@@ -426,8 +428,9 @@ exists rather than inventing a new one. This is a template-only change
 (`packages/codegen/templates/base-mfe/{mfe.ts.ejs,bootstrap.ts.ejs}`), not a
 `packages/runtime` change, and it's exactly the kind of decision this
 project's own governance rules ask to be raised before building, not after —
-so raising it here rather than building it. Happy to scope and build this in
-a follow-up if you want it.
+so raising it here rather than building it. Tracked in
+[#349](https://github.com/falese/seans-mfe-tool/issues/349). Happy to scope
+and build this in a follow-up if you want it.
 
 ---
 
