@@ -15,6 +15,7 @@
 import { findUnreferencedSlots, type SourceFile } from '@falese/smt-dsl';
 import type { DSLManifest, LifecycleHook } from '@falese/smt-dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
+import { findLaneLockedDependencies } from './lockfile';
 import {
   PLATFORM_MIGRATIONS,
   findMigrationHits,
@@ -50,6 +51,12 @@ export interface MfeValidationInput {
   developerOwned?: (sourcePath: string) => boolean;
   /** Running platform version, for migration `failsAt` escalation (ADR-082). */
   platformVersion?: string;
+  /**
+   * The MFE's package-lock.json, verbatim, for the lane-independence rule
+   * (ADR-084 §5). Optional — an MFE that ships no lock has nothing to pin, and
+   * the rule is skipped rather than reported.
+   */
+  lockfileText?: string;
 }
 
 export type ValidationRule =
@@ -60,7 +67,8 @@ export type ValidationRule =
   | 'runtime-declared'
   | 'slots-implemented'
   | 'platform-migrations'
-  | 'lifecycle-hook-handler-resolvable';
+  | 'lifecycle-hook-handler-resolvable'
+  | 'lockfile-lane-independent';
 
 /**
  * `error` fails validation; `warning` reports and does not.
@@ -182,7 +190,7 @@ function normalizeHandlers(handler: string | string[]): string[] {
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
-  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion } =
+  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion, lockfileText } =
     input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
@@ -324,6 +332,27 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           });
         }
       }
+    }
+  }
+
+  // A lockfile that names a delivery lane (ADR-084 §5). `npm ci` fetches from
+  // the lock's `resolved` URL and ignores the .npmrc scoped registry, so a lock
+  // built in one lane fails in the other. Reported as a warning: the MFE is
+  // internally consistent and builds fine in the lane it was locked in — what
+  // is wrong is that it stopped being portable.
+  if (lockfileText) {
+    checked.push('lockfile-lane-independent');
+    for (const hit of findLaneLockedDependencies(lockfileText)) {
+      issues.push({
+        rule: 'lockfile-lane-independent',
+        severity: 'warning',
+        package: hit.name,
+        location: 'package-lock.json',
+        message:
+          `"${hit.name}" is locked to ${hit.resolved}, which pins this MFE to one delivery lane — ` +
+          '`npm ci` reads that URL and ignores the registry your .npmrc selects (ADR-084)',
+        fix: 'Remove the "resolved" field from this entry in package-lock.json, keeping "integrity". npm then resolves it through @falese:registry, and integrity still verifies the tarball.',
+      });
     }
   }
 

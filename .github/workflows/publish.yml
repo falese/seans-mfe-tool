@@ -1,0 +1,73 @@
+# Publish the platform packages to GitHub Packages (ADR-084 §2, #252).
+#
+# The hosted lane. The offline lane needs nothing from CI — its mirror is built
+# by `npm run build` and baked into the CLI image, so a failure here never
+# blocks anyone's build; it only means the hosted registry is behind.
+#
+# Tag-triggered, not push-to-main: a publish is a release decision, and npm
+# refuses to overwrite a version that already exists. Pushing every merge would
+# fail on the second commit that did not bump a version.
+name: Publish packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  # Required to publish to npm.pkg.github.com; GITHUB_TOKEN carries it.
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # Points npm at GitHub Packages and writes the auth line for the
+          # scope. ADR-083 put every package under @falese, so one scope covers
+          # all of them.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@falese'
+          cache: npm
+
+      - run: npm ci
+
+      # Publishing source that was never compiled is the failure mode worth
+      # guarding: `files` ships dist/, so an unbuilt tree publishes an empty
+      # package rather than failing loudly.
+      - name: Build
+        run: npm run build
+
+      - name: Verify the tree is releasable
+        run: |
+          npm run lint
+          npm run typecheck
+          npm test
+
+      # Published individually rather than by workspace glob: the four are
+      # independent packages, and a failure on one should name which.
+      # --no-git-checks is not used; a dirty tree here means the build wrote
+      # something that is not committed, which is worth stopping for.
+      - name: Publish
+        run: |
+          set -euo pipefail
+          for pkg in contracts runtime framework-react framework-angular; do
+            echo "── publishing @falese/smt-$pkg"
+            # A version already on the registry is not an error worth failing
+            # the release for — it means this package did not change since the
+            # last tag. Anything else is.
+            npm publish --workspace "packages/$pkg" --access restricted 2>&1 | tee /tmp/pub.log || {
+              grep -q "cannot publish over the previously published versions" /tmp/pub.log \
+                || grep -q "You cannot publish over" /tmp/pub.log \
+                || exit 1
+              echo "   already published at this version — skipping"
+            }
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
