@@ -175,4 +175,104 @@ describe('validateMfeConsistency', () => {
     const res = validateMfeConsistency(input);
     expect(res.checked).not.toContain('slots-implemented');
   });
+
+  // Codegen always keys the generated stub method / handler-registry.ts DI
+  // entry by the hook's own YAML key. The runtime always resolves a hook by
+  // its `handler:` field. Nothing enforces the two agree — every real example
+  // in the fleet just happens to keep them identical. #339-adjacent finding
+  // from the base-mfe demo (docs/platform-design-review/base-mfe-architecture-and-demo.md).
+  describe('lifecycle-hook-handler-resolvable', () => {
+    function withHook(hookKey: string, hookConfig: Record<string, unknown>): DSLManifest {
+      const manifest = reactManifest();
+      (manifest as unknown as { capabilities: unknown[] }).capabilities = [
+        {
+          Load: {
+            type: 'platform',
+            lifecycle: { before: [{ [hookKey]: hookConfig }] },
+          },
+        },
+      ];
+      return manifest;
+    }
+
+    it('passes when handler matches the hook key', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: 'onLoadBegin' });
+      const res = validateMfeConsistency(input);
+      expect(res.checked).toContain('lifecycle-hook-handler-resolvable');
+      expect(res.issues.map((i) => i.rule)).not.toContain('lifecycle-hook-handler-resolvable');
+    });
+
+    it('flags a handler that does not match the hook key — codegen names the stub after the key', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: 'validateWidgetConfig' });
+      const res = validateMfeConsistency(input);
+      expect(res.ok).toBe(false);
+      const found = res.issues.filter((i) => i.rule === 'lifecycle-hook-handler-resolvable');
+      expect(found).toHaveLength(1);
+      expect(found[0].expected).toBe('onLoadBegin');
+      expect(found[0].actual).toBe('validateWidgetConfig');
+    });
+
+    it('flags the mismatch even when source: is declared — handler-registry.ts is keyed by the hook key too', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', {
+        handler: 'validateWidgetConfig',
+        source: './handlers/validateWidgetConfig',
+      });
+      const res = validateMfeConsistency(input);
+      const found = res.issues.filter((i) => i.rule === 'lifecycle-hook-handler-resolvable');
+      expect(found).toHaveLength(1);
+    });
+
+    it('does not flag a platform.* handler — resolved from the static library, never codegen-named', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: 'platform.auth' });
+      const res = validateMfeConsistency(input);
+      expect(res.issues.map((i) => i.rule)).not.toContain('lifecycle-hook-handler-resolvable');
+    });
+
+    it('does not flag a custom.-prefixed handler whose last segment matches the hook key', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: 'custom.onLoadBegin' });
+      const res = validateMfeConsistency(input);
+      expect(res.issues.map((i) => i.rule)).not.toContain('lifecycle-hook-handler-resolvable');
+    });
+
+    it('flags a custom.-prefixed handler whose last segment does not match the hook key', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: 'custom.somethingElse' });
+      const res = validateMfeConsistency(input);
+      const found = res.issues.filter((i) => i.rule === 'lifecycle-hook-handler-resolvable');
+      expect(found).toHaveLength(1);
+    });
+
+    it('checks every entry when handler is an array (REQ-045)', () => {
+      const input = consistentInput();
+      input.manifest = withHook('onLoadBegin', { handler: ['onLoadBegin', 'somethingElse'] });
+      const res = validateMfeConsistency(input);
+      const found = res.issues.filter((i) => i.rule === 'lifecycle-hook-handler-resolvable');
+      expect(found).toHaveLength(1);
+      expect(found[0].actual).toBe('somethingElse');
+    });
+
+    it('does not error on a manifest with no capabilities at all', () => {
+      const input = consistentInput();
+      input.manifest = reactManifest();
+      const res = validateMfeConsistency(input);
+      expect(res.checked).toContain('lifecycle-hook-handler-resolvable');
+      expect(res.issues.map((i) => i.rule)).not.toContain('lifecycle-hook-handler-resolvable');
+    });
+
+    it('does not error on a capability with no lifecycle', () => {
+      const input = consistentInput();
+      const manifest = reactManifest();
+      (manifest as unknown as { capabilities: unknown[] }).capabilities = [
+        { AnalyzeUsage: { type: 'domain' } },
+      ];
+      input.manifest = manifest;
+      const res = validateMfeConsistency(input);
+      expect(res.issues.map((i) => i.rule)).not.toContain('lifecycle-hook-handler-resolvable');
+    });
+  });
 });

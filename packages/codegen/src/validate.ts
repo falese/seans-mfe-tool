@@ -13,7 +13,7 @@
  */
 
 import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest, LifecycleHook } from '@seans-mfe/dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
 import {
   PLATFORM_MIGRATIONS,
@@ -59,7 +59,8 @@ export type ValidationRule =
   | 'shared-version-sync'
   | 'runtime-declared'
   | 'slots-implemented'
-  | 'platform-migrations';
+  | 'platform-migrations'
+  | 'lifecycle-hook-handler-resolvable';
 
 /**
  * `error` fails validation; `warning` reports and does not.
@@ -115,6 +116,66 @@ export function parseFederationSharedEntries(configSource: string): SharedEntry[
     entries.push({ name: m[2], requiredVersion: m[3] });
   }
   return entries;
+}
+
+/** One `handler:` value that will never resolve at runtime, and why. */
+export interface UnresolvableHookHandler {
+  capability: string;
+  hookName: string;
+  phase: 'before' | 'main' | 'after' | 'error';
+  handler: string;
+}
+
+const LIFECYCLE_PHASES = ['before', 'main', 'after', 'error'] as const;
+
+/**
+ * Lifecycle hooks whose `handler:` cannot resolve at runtime, given how
+ * codegen names things.
+ *
+ * Codegen always keys the generated artifact by the hook's own YAML key: a
+ * stub method named after it (no `source:`), or a `handler-registry.ts` DI
+ * entry named after it (`source:` present, ADR-040 — its own worked example
+ * imports `{ <hookName> }`). The runtime always resolves a hook by its
+ * `handler:` field (`BaseMFE.executeHook` → `invokeHandler(hookConfig.handler, ...)`),
+ * stripping a dotted prefix down to the last segment first (so
+ * `custom.onLoadBegin` resolves the same as `onLoadBegin`) — except
+ * `platform.*`, which never goes through codegen-generated names at all; it
+ * resolves from the static platform handler library.
+ *
+ * Every real example manifest keeps `handler:` and the hook's key identical,
+ * which is why this has never surfaced: the two names are only ever
+ * different by mistake, and nothing has ever said so out loud.
+ */
+export function findUnresolvableLifecycleHooks(manifest: DSLManifest): UnresolvableHookHandler[] {
+  const found: UnresolvableHookHandler[] = [];
+
+  for (const capabilityEntry of manifest.capabilities ?? []) {
+    for (const [capabilityName, capabilityConfig] of Object.entries(capabilityEntry)) {
+      const lifecycle = capabilityConfig?.lifecycle;
+      if (!lifecycle) continue;
+
+      for (const phase of LIFECYCLE_PHASES) {
+        for (const hookEntry of lifecycle[phase] ?? []) {
+          for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
+            const handlers = normalizeHandlers((hookConfig as LifecycleHook).handler);
+            for (const handler of handlers) {
+              if (handler.startsWith('platform.')) continue; // static library, not codegen-named
+              const lastSegment = handler.includes('.') ? handler.split('.').pop()! : handler;
+              if (lastSegment !== hookName) {
+                found.push({ capability: capabilityName, hookName, phase, handler });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return found;
+}
+
+function normalizeHandlers(handler: string | string[]): string[] {
+  return Array.isArray(handler) ? handler : [handler];
 }
 
 /**
@@ -204,6 +265,21 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
       rule: 'runtime-declared',
       package: RUNTIME_PACKAGE,
       message: `${RUNTIME_PACKAGE} must be declared as a dependency`,
+    });
+  }
+
+  // Every lifecycle hook's `handler:` must resolve to what codegen actually
+  // names (see findUnresolvableLifecycleHooks). Unconditional — reads only
+  // the manifest, no file IO required.
+  checked.push('lifecycle-hook-handler-resolvable');
+  for (const hit of findUnresolvableLifecycleHooks(manifest)) {
+    issues.push({
+      rule: 'lifecycle-hook-handler-resolvable',
+      package: hit.hookName,
+      expected: hit.hookName,
+      actual: hit.handler,
+      message: `lifecycle hook "${hit.hookName}" (capability "${hit.capability}", ${hit.phase} phase) declares handler "${hit.handler}", but codegen names the generated stub/registry entry after the hook's own key "${hit.hookName}" — "${hit.handler}" will never resolve at runtime`,
+      fix: `Set handler: ${hit.hookName} to match the hook's key (or rename the hook's key to "${hit.handler}")`,
     });
   }
 

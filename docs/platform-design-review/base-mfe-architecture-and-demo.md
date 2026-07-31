@@ -229,27 +229,121 @@ worth naming explicitly so "can I extend it directly" has an honest answer:
 technically yes, architecturally you'd be opting out of everything else the
 platform checks for you.
 
+### 6 — heal an already-running MFE
+
+Every use case so far starts from a fresh scaffold. This one starts from an
+MFE that's already generated and "running" — carrying the exact silent bug
+Finding 1 describes — and walks the real remediation loop: discover, fix the
+manifest, **regenerate the existing directory in place** (no
+`remote:init` from scratch), confirm.
+
+A fresh `usage-tracker` MFE, generated once, with the typo already in its
+manifest (`handler: validateWidgetConfig` under a hook keyed `onLoadBegin`).
+Nothing about this differs from a real MFE someone already deployed with a
+copy-paste mistake — `remote:generate` ran clean, no error, no warning at
+generation time:
+
+```bash
+node bin/run.js remote:generate
+# ✓ Generation complete! — nothing looked wrong
+```
+
+Run it, and the failure is there but easy to miss — a `console.error`
+fallback buried in normal load output, load still reports `status: loaded`:
+
+```
+[Telemetry] {
+  "name": "lifecycle-error", "phase": "before", "status": "error",
+  "metadata": { "hook": "onLoadBegin", "handler": "validateWidgetConfig",
+    "severity": "warn",
+    "error": { "message": "Custom handler not found: validateWidgetConfig. ..." } }
+}
+[usagetrackerMFE][doLoad] ready — components=[ 'AnalyzeUsage' ] duration=1ms
+[usagetrackerMFE] bootstrap load() complete — status: loaded — components: [ 'AnalyzeUsage' ]
+```
+
+**Discover it the way you actually should — before ever running it:**
+
+```bash
+node bin/run.js mfe:validate .
+```
+
+```
+  ✗ lifecycle-hook-handler-resolvable
+      - lifecycle hook "onLoadBegin" (capability "Load", before phase)
+        declares handler "validateWidgetConfig", but codegen names the
+        generated stub/registry entry after the hook's own key
+        "onLoadBegin" — "validateWidgetConfig" will never resolve at runtime
+        fix: Set handler: onLoadBegin to match the hook's key (or rename
+        the hook's key to "validateWidgetConfig")
+
+usage-tracker is inconsistent: 1 problem(s).
+```
+
+**Fix the one-line manifest typo and regenerate the existing directory —
+not a rebuild:**
+
+```yaml
+# mfe-manifest.yaml — one line changed
+-              handler: validateWidgetConfig
++              handler: onLoadBegin
+```
+
+```bash
+node bin/run.js remote:generate
+node bin/run.js mfe:validate .
+```
+
+```
+  ✓ lifecycle-hook-handler-resolvable
+usage-tracker is consistent.
+```
+
+**Confirm the fix has a real runtime effect, not just a green check** — the
+hook actually fires now, where before it silently didn't:
+
+```
+[usagetrackerMFE][before][onLoadBegin] { requestId: '...', capability: 'load', phase: 'before' }
+[usagetrackerMFE][doLoad] loading remoteEntry=http://localhost:3001/remoteEntry.js
+[usagetrackerMFE][doLoad] ready — components=[ 'AnalyzeUsage' ] duration=1ms
+```
+
+**What correct looks like:** the entire remediation touched one line of a
+manifest and one `remote:generate` run — no `remote:init`, no directory
+recreated, no developer-owned file touched. `mfe.ts` is `overwrite: true`,
+so the regenerated stub method's name updated automatically the moment the
+manifest was consistent with itself; the fix propagated the same way any
+platform-owned regeneration does (ADR-043). This is the same idempotent
+regeneration property use case 4a demonstrated for a template change,
+exercised here for a manifest fix on an MFE that was never re-scaffolded.
+
 ---
 
 ## Two findings from actually running this
 
-### Finding 1 — a lifecycle hook's generated method name and its runtime lookup name can silently disagree
+### Finding 1 — a lifecycle hook's generated method name and its runtime lookup name can silently disagree (fixed)
 
 The manifest's lifecycle-hook entry has two names in play: the YAML key
 (`onLoadBegin` above) and the `handler:` field
 (`packages/dsl/src/schema.ts`'s `LifecycleHookSchema` requires `handler`,
 nothing constrains it to equal the parent key). Codegen names the generated
-stub method after the **key** (`packages/codegen/src/unified-generator.ts`:
-`lifecycleHooks.push({ name: hookName, ... })` where `hookName` comes from
-`Object.entries(hookEntry)`). The runtime resolves a `custom.*` handler by
-the **`handler:` field** (`packages/runtime/src/base-mfe.ts`'s
-`executeLifecycle`/`invokeCustomHandler`, which looks for
-`(this as any)[hookConfig.handler]`).
+stub method — and, separately, the `handler-registry.ts` DI entry for a
+`source:`-backed hook (ADR-040) — after the **key**
+(`packages/codegen/src/unified-generator.ts`: `lifecycleHooks.push({ name: hookName, ... })`
+where `hookName` comes from `Object.entries(hookEntry)`; `handlerSources.push({ localName: hookName, ... })`
+for the `source:` case — ADR-040's own worked example documents this as
+`import { <hookName> } from ...`). The runtime resolves a hook by the
+**`handler:` field**, always — same code path for both the DI-registry case
+and the same-class-method case
+(`packages/runtime/src/base-mfe.ts`'s `executeHook` → `invokeHandler(hookConfig.handler, ...)`,
+which strips a dotted prefix to its last segment before falling back to
+`(this as any)[lastSegment]`). One root cause, both of ADR-040's documented
+paths affected identically.
 
 Every real example in this codebase keeps the two identical
-(`onLoadBegin: { handler: onLoadBegin }`), so this has never surfaced. Setting
+(`onLoadBegin: { handler: onLoadBegin }`), so this had never surfaced. Setting
 them to different values (as this demo did on the first pass, before
-correcting it) reproduces it directly:
+correcting it) reproduced it directly:
 
 ```
 "error": {
@@ -258,14 +352,20 @@ correcting it) reproduces it directly:
 }
 ```
 
-The failure is non-fatal by default (reported as a `warn`-severity telemetry
-event, load still completes) — which is exactly why it's easy to ship
-unnoticed: the hook's logic silently never runs, and nothing in
-`mfe:validate`'s seven rules checks handler/key agreement. Worth a follow-up
-issue: either codegen should name the generated method after `handler:`
-instead of the key, or `mfe:validate`/`check:adr`-style tooling should flag a
-declared hook whose `handler:` doesn't resolve to a method the generated
-class will actually have.
+The failure was non-fatal by default (reported as a `warn`-severity telemetry
+event via a `console.error` fallback when nothing else is watching, load
+still completes) — which is exactly why it's easy to ship unnoticed: the
+hook's logic silently never runs, and nothing in `mfe:validate`'s seven rules
+checked handler/key agreement.
+
+**Fixed in this pass** — a new `mfe:validate` rule,
+`lifecycle-hook-handler-resolvable` (`packages/codegen/src/validate.ts`,
+TDD'd, 24 tests, verified against the real 21-MFE fleet with zero false
+positives before merging). It's additive only: no codegen output changes for
+anyone, so no `PLATFORM_MIGRATIONS` entry and no ADR were needed — it just
+makes an existing, previously-invisible failure mode visible at design time.
+See use case 6 below for it catching (and a developer fixing) exactly this
+failure on a live MFE.
 
 ### Finding 2 — the telemetry DI seam is real on `BaseMFE` but unreachable from generated code as generated
 
@@ -333,10 +433,19 @@ a follow-up if you want it.
 
 ## Verification
 
-- `npm run lint`, `npm run typecheck`, `npm test` — unaffected; this session's
-  demo work touched no repo source, only `docs/runtime-class-hierarchy.md`
-  (corrected paths/layers/`doQuery` description) and this new doc.
-- The scratch MFE's own generated tests pass out of the box:
-  `npx jest` → `2 passed, 2 total` (`mfe.test.ts`, `AnalyzeUsage.test.tsx`).
-- Re-running the driver script end to end exits `0` with every step's output
-  matching what's quoted above — safe to run again from a clean checkout.
+- `npm run lint`, `npm run typecheck` — clean.
+- `npm run test:ci` — 148 suites, 2650 tests, including the 24 new tests for
+  `lifecycle-hook-handler-resolvable` (`packages/codegen/src/__tests__/validate.test.ts`).
+- `npm run build`, `npm run check:mfe-consistency` — clean; the new rule
+  reports `✓ lifecycle-hook-handler-resolvable` across all 21 real fleet
+  MFEs (zero false positives) and `npm run check:adr` stays clean.
+- `git diff --exit-code schemas/` — clean; the new rule needed no schema
+  regeneration.
+- The scratch MFEs' own generated tests pass out of the box:
+  `npx jest` → `2 passed, 2 total` (`mfe.test.ts`, the domain capability
+  test).
+- Re-running the driver scripts end to end exits `0` with every step's
+  output matching what's quoted above — safe to run again from a clean
+  checkout. Use case 6's remediation loop was run for real, in order:
+  broken manifest → clean generate (no warning) → `mfe:validate` catches it →
+  one-line fix → regenerate in place → `mfe:validate` clean → hook fires live.
