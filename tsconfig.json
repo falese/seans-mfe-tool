@@ -17,6 +17,8 @@
     "jsx": "react-jsx",
     "types": ["node", "jest"],
     "paths": {
+      "@falese/smt-runtime": ["./packages/runtime/src/index.ts"],
+      "@falese/smt-runtime/*": ["./packages/runtime/src/*"],
       "@falese/smt-contracts": ["./packages/contracts/src/index.ts"],
       "@falese/smt-contracts/*": ["./packages/contracts/src/*"],
       "@falese/smt-dsl": ["./packages/dsl/src/index.ts"],

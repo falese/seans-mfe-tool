@@ -176,6 +176,13 @@ module.exports = {
     '^@falese/smt-framework-react$': '<rootDir>/packages/framework-react/src/index.ts',
     '^@falese/smt-framework-react/(.*)$': '<rootDir>/packages/framework-react/src/$1',
     '^@falese/smt-framework-angular$': '<rootDir>/packages/framework-angular/src/index.ts',
-    '^@falese/smt-framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1'
+    '^@falese/smt-framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1',
+    // The runtime was the one package with no mapping: it resolved through the
+    // workspace symlink to whatever `main` named, which was src/index.ts. Now
+    // that `main` points at dist (ADR-084, so `npm pack` ships compiled output),
+    // an unmapped import would silently read the last build instead of the
+    // working tree. Mapped here like every sibling so tests always see source.
+    '^@falese/smt-runtime$': '<rootDir>/packages/runtime/src/index.ts',
+    '^@falese/smt-runtime/(.*)$': '<rootDir>/packages/runtime/src/$1'
   }
 };
