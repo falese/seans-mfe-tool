@@ -1,7 +1,6 @@
 {
   "name": "@falese/smt-runtime",
   "version": "0.1.0",
-  "private": true,
   "description": "Runtime: BaseMFE/RemoteMFE lifecycle classes consumed by generated MFEs",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -19,5 +18,13 @@
       "default": "./src/angular.ts"
     },
     "./package.json": "./package.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falese/seans-mfe-tool.git",
+    "directory": "packages/runtime"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
