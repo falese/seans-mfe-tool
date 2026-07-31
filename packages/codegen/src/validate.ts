@@ -57,6 +57,11 @@ export interface MfeValidationInput {
    * the rule is skipped rather than reported.
    */
   lockfileText?: string;
+  /**
+   * The MFE's root tsconfig.json, verbatim, for the compile-contract rule
+   * (ADR-085). Optional — an MFE without one is skipped rather than reported.
+   */
+  tsconfigText?: string;
 }
 
 export type ValidationRule =
@@ -68,7 +73,8 @@ export type ValidationRule =
   | 'slots-implemented'
   | 'platform-migrations'
   | 'lifecycle-hook-handler-resolvable'
-  | 'lockfile-lane-independent';
+  | 'lockfile-lane-independent'
+  | 'compile-contract-inherited';
 
 /**
  * `error` fails validation; `warning` reports and does not.
@@ -190,7 +196,7 @@ function normalizeHandlers(handler: string | string[]): string[] {
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
-  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion, lockfileText } =
+  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion, lockfileText, tsconfigText } =
     input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
@@ -352,6 +358,36 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           `"${hit.name}" is locked to ${hit.resolved}, which pins this MFE to one delivery lane — ` +
           '`npm ci` reads that URL and ignores the registry your .npmrc selects (ADR-084)',
         fix: 'Remove the "resolved" field from this entry in package-lock.json, keeping "integrity". npm then resolves it through @falese:registry, and integrity still verifies the tarball.',
+      });
+    }
+  }
+
+  // A tsconfig.json that states its own module system instead of inheriting the
+  // platform contract (ADR-085). Detected here rather than as a platform
+  // migration because migrations only scan files under `src/` with a source
+  // extension — nothing at the MFE root can ever reach one.
+  //
+  // A warning: the MFE compiles fine as it stands. What it has lost is the
+  // ability to receive a compiler setting the platform needs, which is how the
+  // fleet ended up running two incompatible module systems unnoticed.
+  //
+  // React only, matching ADR-085's scope: the Angular variant carries its own
+  // multi-tsconfig split with a documented Mesh constraint on the root module,
+  // and gets no platform file to extend — flagging it would be reporting a
+  // decision the ADR deliberately deferred.
+  if (tsconfigText && framework === 'react') {
+    checked.push('compile-contract-inherited');
+    const inherits = /"extends"\s*:\s*"\.\/tsconfig\.platform\.json"/.test(tsconfigText);
+    const declaresOwnModuleSystem = /"moduleResolution"\s*:/.test(tsconfigText);
+    if (!inherits && declaresOwnModuleSystem) {
+      issues.push({
+        rule: 'compile-contract-inherited',
+        severity: 'warning',
+        package: 'tsconfig.json',
+        location: 'tsconfig.json',
+        message:
+          'tsconfig.json declares its own module system instead of extending tsconfig.platform.json, so a compiler setting the platform changes cannot reach this MFE (ADR-085)',
+        fix: 'Run `remote:generate` to emit tsconfig.platform.json, add "extends": "./tsconfig.platform.json" to tsconfig.json, and delete the options it now inherits (target, module, moduleResolution, jsx, lib, strict, esModuleInterop, skipLibCheck, resolveJsonModule, forceConsistentCasingInFileNames). include/exclude/paths/outDir stay yours.',
       });
     }
   }

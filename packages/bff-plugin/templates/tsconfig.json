@@ -1,18 +1,10 @@
 {
+  "//": "Yours to edit — the generator seeds this once and never overwrites it. The compiler settings the platform's own emitted code depends on live in tsconfig.platform.json (ADR-085), which this extends; for a BFF MFE that pins module to commonjs, because server.ts runs in Node. `extends` is a merge, so anything you set here wins.",
+  "extends": "./tsconfig.platform.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "declaration": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "jsx": "react-jsx",
-    "lib": ["ES2022"]
+    "declaration": true
   },
   "include": ["*.ts", "src/**/*.ts"],
   "exclude": ["node_modules", "dist", ".mesh"]

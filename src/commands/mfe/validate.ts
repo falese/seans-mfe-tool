@@ -209,6 +209,7 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
   // Optional by design: an MFE that ships no lock has no lane to be pinned to,
   // so the rule is skipped rather than reported (ADR-084 §5).
   const lockfileText = await readOptionalFile(path.join(dir, 'package-lock.json'));
+  const tsconfigText = await readOptionalFile(path.join(dir, 'tsconfig.json'));
 
   const { ok, checked, issues } = validateMfeConsistency({
     manifest,
@@ -219,6 +220,7 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
     developerOwned,
     platformVersion: PLATFORM_VERSION,
     lockfileText,
+    tsconfigText,
   });
 
   // --strict escalates ADR-082 warnings ahead of their declared failsAt, for a

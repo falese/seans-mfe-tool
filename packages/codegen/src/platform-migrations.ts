@@ -124,6 +124,14 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     ),
     exempt: /import\s+type\s*\{/,
   },
+  // Two things ADR-084/085 change in developer-owned files have no entry here,
+  // for the same structural reason: migrations are matched line-by-line against
+  // files under `src/` with a source extension (see collectSources), so nothing
+  // at the MFE root — package.json, tsconfig.json, package-lock.json — can ever
+  // be seen by one. Both are detected instead by rules in validateMfeConsistency,
+  // which is fed those files directly: `manifest-package-sync` for the framework
+  // dependency, `compile-contract-inherited` for the tsconfig extends.
+  //
   // No entry for the framework-runtime dependency ADR-084 adds to generated
   // MFEs, deliberately. Migrations are matched only against developer-owned
   // files (see validate.ts), and the import that would signal it lives in

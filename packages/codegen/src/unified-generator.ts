@@ -1429,6 +1429,12 @@ async function renderFiles(
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
+          // The compile contract (ADR-085). Generator-owned, and emitted for BFF
+          // MFEs too — the BFF plugin owns only the developer-owned tsconfig.json
+          // that extends this. Derived from `hasBff`, so a BFF MFE gets commonjs
+          // for its Node server.ts and a browser-only one gets bundler
+          // resolution, which is what the fleet had already settled into by hand.
+          { name: 'tsconfig.platform.json', ejs: 'tsconfig.platform.json.ejs', overwrite: true },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
           { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },

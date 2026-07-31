@@ -620,10 +620,20 @@ describe('unified-generator', () => {
       const { files } = await generateAllFiles(noDataManifest as any, basePath, { force: true });
       const tsconfig = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
       expect(tsconfig).toBeDefined();
-      expect(tsconfig!.content).toContain('"jsx": "react-jsx"');
-      expect(tsconfig!.content).toContain('"DOM"');
-      expect(tsconfig!.content).toContain('tsx');
+      // Still the developer's file, and still the one naming what to compile.
       expect(tsconfig!.overwrite).toBe(false);
+      expect(tsconfig!.content).toContain('tsx');
+      // The compiler contract moved to the inherited half (ADR-085); asserting
+      // it here again would just re-test tsconfig.platform.json by proxy.
+      expect(tsconfig!.content).toContain('"extends": "./tsconfig.platform.json"');
+
+      const platform = files.find(
+        (f) => f.path === path.join(basePath, 'tsconfig.platform.json'),
+      );
+      expect(platform).toBeDefined();
+      expect(platform!.overwrite).toBe(true);
+      expect(platform!.content).toContain('"jsx": "react-jsx"');
+      expect(platform!.content).toContain('"DOM"');
     });
   });
 

@@ -255,7 +255,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Implemented |
 | [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Implemented |
 | [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
-| [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @falese/smt-* vs @falese/* | Packages | Superseded |
+| [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Superseded |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
 | [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Implemented |
 | [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
@@ -288,14 +288,14 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-051](./architecture-decisions/ADR-051-angular-19-upgrade.md) | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
 | [ADR-052](./architecture-decisions/ADR-052-bff-demo-mode-mock-switch.md) | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
 | [ADR-053](./architecture-decisions/ADR-053-remote-mfe-doquery.md) | RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient for all MFE+BFF combinations | Runtime / query / BFF | Implemented |
-| [ADR-054](./architecture-decisions/ADR-054-control-plane-message-protocol.md) | Control-Plane Message Protocol as a Shared Contract in @falese/smt-contracts | Contracts / daemon / control-plane | Implemented |
+| [ADR-054](./architecture-decisions/ADR-054-control-plane-message-protocol.md) | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
 | [ADR-055](./architecture-decisions/ADR-055-layout-manager-daemon-driven-shells.md) | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
 | [ADR-056](./architecture-decisions/ADR-056-mfe-presentation-boundary.md) | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented |
 | [ADR-057](./architecture-decisions/ADR-057-virtualized-daemon-socket.md) | Virtualized daemon socket: per-slot control-plane channels over one host connection | Runtime / control-plane / channels | Implemented |
 | [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented |
 | [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Implemented |
 | [ADR-060](./architecture-decisions/ADR-060-contextualized-vm-composition.md) | Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution | Runtime / composition / resilience / context | Implemented |
-| [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@falese/smt-dsl` and `@falese/smt-codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
+| [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
 | [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Accepted (impl deferred, #250) |
 | [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
 | [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
@@ -307,18 +307,19 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-070](./architecture-decisions/ADR-070-control-plane-owned-data-fetch-lifecycle.md) | Experience-scoped federated supergraph (control-plane-composed data over participant MFE BFFs) | Runtime / control-plane / data / federation / lifecycle | Accepted (impl phased, #282, #284, #285, #286, #287, #288) |
 | [ADR-071](./architecture-decisions/ADR-071-manifest-driven-client-dependencies.md) | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Implemented |
 | [ADR-072](./architecture-decisions/ADR-072-slot-registration-api.md) | The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest | Codegen / slots / app-code API / typing | Implemented |
-| [ADR-073](./architecture-decisions/ADR-073-slot-contract-in-contracts-design-time-validation.md) | Slot contract logic moves to `@falese/smt-contracts`; placement targets become validatable | Contracts / CLI / slots / design-time validation | Implemented |
+| [ADR-073](./architecture-decisions/ADR-073-slot-contract-in-contracts-design-time-validation.md) | Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable | Contracts / CLI / slots / design-time validation | Implemented |
 | [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
 | [ADR-075](./architecture-decisions/ADR-075-adr-library-under-drift-control.md) | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
 | [ADR-076](./architecture-decisions/ADR-076-platform-handler-dispatch.md) | Platform handlers dispatch by exported function name from a static library, not a registry class | Runtime handlers | Implemented |
 | [ADR-077](./architecture-decisions/ADR-077-two-headed-giant-re-derived.md) | The two-headed giant's implementation plan is re-derived from measured friction, not from the April spec | Developer model / DX / agent contract | Accepted (impl phased, #139) |
 | [ADR-078](./architecture-decisions/ADR-078-control-plane-in-platform.md) | The control plane ships in the platform, and a composition environment is generated from a manifest | Control plane / codegen / packaging | Proposed (impl deferred, #139) |
 | [ADR-079](./architecture-decisions/ADR-079-single-execution-substitution-seam.md) | There is one seam for substituting handler execution, and it sits inside the lifecycle contract | Runtime / lifecycle / dependency injection | Implemented |
-| [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@falese/smt-contracts` | Contracts / DSL / runtime / codegen | Implemented |
+| [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 | [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
 | [ADR-083](./architecture-decisions/ADR-083-falese-smt-namespace.md) | Platform packages consolidate on the @falese/smt-* namespace | Packages / namespace / distribution | Accepted (impl phased, #252) |
 | [ADR-084](./architecture-decisions/ADR-084-platform-packages-delivered-by-registry.md) | Platform packages are delivered by registry — GitHub Packages hosted, static mirror offline | Runtime / packaging / distribution | Accepted (impl phased, #252) |
+| [ADR-085](./architecture-decisions/ADR-085-platform-owned-compile-contract.md) | The TypeScript compile contract is generator-owned and inherited, not copied into each MFE | Codegen / ownership / compiler configuration | Accepted (impl phased, #252) |
 
 <!-- END GENERATED: adr-index -->
 
