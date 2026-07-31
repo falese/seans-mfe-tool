@@ -5,7 +5,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "react.js",
+    "react.d.ts",
+    "angular.js",
+    "angular.d.ts"
   ],
   "exports": {
     ".": {

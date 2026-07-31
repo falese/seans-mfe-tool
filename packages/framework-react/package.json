@@ -15,7 +15,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "runtime.js",
+    "runtime.d.ts"
   ],
   "scripts": {
     "build": "tsc",
