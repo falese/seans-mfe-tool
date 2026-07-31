@@ -14,6 +14,7 @@
     "declarationMap": true,
     "allowJs": true,
     "moduleResolution": "node",
+    "jsx": "react-jsx",
     "types": ["node", "jest"],
     "paths": {
       "@seans-mfe/contracts": ["./packages/contracts/src/index.ts"],

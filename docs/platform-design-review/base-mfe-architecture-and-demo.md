@@ -107,6 +107,53 @@ not.) `StationConsole.tsx`/`GameMenu.tsx` themselves weren't migrated to it —
 that's a developer-owned-file edit across real examples, a separate call
 from building the helper.
 
+**A hook version exists too**, `useControlPlaneState(mfe)`
+(`packages/framework-react/src/runtime/useControlPlaneState.ts`), for
+components that push state from an event handler or effect rather than a
+one-off call site — same contract, but the returned push function has a
+stable identity across re-renders (a plain `React.useCallback` keyed on
+`mfe`), so it's safe to drop straight into a `useEffect` dependency array
+without the effect re-firing every render:
+
+```tsx
+import { useControlPlaneState } from '@seans-mfe/framework-react/runtime';
+
+function StationConsole({ mfe }: { mfe: ControlPlane }) {
+  const pushState = useControlPlaneState(mfe);
+
+  React.useEffect(() => {
+    void pushState('analysis.complete', { resultId });
+  }, [pushState, resultId]); // pushState never re-triggers this on its own
+}
+```
+
+This lives in `packages/framework-react`, not `@seans-mfe-tool/runtime`: the
+runtime's neutral barrel and its `/react` subpath both deliberately avoid a
+static `react` import (ADR-056 boundary; `react` isn't a real dependency
+anywhere reachable from `packages/runtime`), whereas `framework-react`
+already has `react` as a real (dev/peer) dependency and an established hook
+precedent (`useMfe`). Same posture as `DeclaredSlot`: zero dependency on
+`@seans-mfe-tool/runtime` itself — it duplicates the few lines of `Context`
+construction locally rather than importing `ContextFactory`. One caveat
+worth being explicit about: generated MFEs do not currently depend on
+`@seans-mfe/framework-react` at all (the same is true of `DeclaredSlot`,
+which codegen instead duplicates into a template), so this hook is
+reachable from host-shell code today but not yet from a generated feature
+component's own `package.json` without adding that dependency by hand.
+Verified live — rendered with real `react-dom`, called against a fake `mfe`,
+across a forced re-render:
+
+```
+=== HOOK CALL RESULT ===
+{"acknowledged":false,"correlationId":"req_1785463525387_n88ejl2zg","error":"Daemon WebSocket not connected"}
+=== STABLE ACROSS RE-RENDER === true
+```
+
+Angular does not get an equivalent: `pushControlPlaneState` is already a
+plain function, and Angular has no rules-of-hooks stability problem for a
+plain function call to solve — there's nothing this hook adds for Angular
+call sites that the plain function doesn't already give them.
+
 So the honest shape of "extend vs. consume" is: **the class hierarchy is
 extended exactly once, by codegen, in a file you don't edit. Your code
 consumes the resulting instance's inherited public API.** The demo below

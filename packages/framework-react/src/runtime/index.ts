@@ -8,3 +8,9 @@ export { MfeHost, useMfe } from './MfeHost';
 export type { MfeHostProps, MfeHandleInput, UseMfeOptions } from './MfeHost';
 export { DeclaredSlot } from './DeclaredSlot';
 export type { DeclaredSlotProps, SlotContractLike } from './DeclaredSlot';
+export { useControlPlaneState } from './useControlPlaneState';
+export type {
+  ControlPlaneStateContextLike,
+  ControlPlaneStatePusherLike,
+  UseControlPlaneStateOptions,
+} from './useControlPlaneState';

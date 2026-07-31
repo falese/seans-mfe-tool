@@ -1,10 +1,14 @@
 /**
+ * @jest-environment jsdom
+ *
  * React composition provider tests (ADR-056).
  *
- * CI-only: needs react + @testing-library/react + jsdom, which are not
- * installed in every environment. The shell's jsdom suite is the integration
- * cover; this pins the provider unit behavior (mounts the imperative handle,
- * tears it down on unmount, surfaces a missing handle).
+ * Needs react + @testing-library/react + jsdom — devDependencies of
+ * @seans-mfe/framework-react — and the root testMatch to include .tsx (both
+ * true as of this pass; before, this file silently never ran under `npm
+ * test`, since testMatch only matched `*.test.[jt]s`). This pins the
+ * provider unit behavior (mounts the imperative handle, tears it down on
+ * unmount, surfaces a missing handle).
  */
 import * as React from 'react';
 import { render, act, cleanup } from '@testing-library/react';
