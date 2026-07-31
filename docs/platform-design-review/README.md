@@ -66,6 +66,7 @@ finding, done independently of the formal 16-issue program above:
 |---|---|
 | [Gate Self-Verification Audit](./gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
 | [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, ADR-082 migration surfacing, and truing up a pre-existing non-standardized MFE — across five use cases |
+| [Base-Class System: Architecture and a Live Demo](./base-mfe-architecture-and-demo.md) | The `BaseMFE → BaseRemoteMFE → RemoteMFE → generated class` hierarchy explained as a system (the ADR-056 polyglot-VM boundary, the capability pipeline, composition-over-inheritance as the real extension pattern) plus a live run: generate → inherited-vs-stub → lifecycle in action → the ownership guardrail caught on camera → whether direct subclassing is possible. Surfaces two real findings (a lifecycle-hook name mismatch, and why the telemetry DI seam is unreachable from generated code today) and a scoped, not-yet-built recommendation for dev-mode logging |
 
 ## How the pieces fit
 
