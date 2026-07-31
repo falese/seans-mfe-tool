@@ -185,7 +185,11 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 ## Resolved decisions — do not relitigate
 
 - **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship as oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase.
-- **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
+- **Namespace: `@falese/smt-*`** for platform packages, `@falese/smt-plugin-*` for
+  official oclif plugins (ADR-083, supersedes ADR-021). GitHub Packages pins the
+  scope to the repo owner, so `@seans-mfe/*` cannot be published and third parties
+  cannot publish into `@falese/*` at all. **The rename is phased — the tree still
+  carries `@seans-mfe/*` until it lands; ADR-083 is the decision of record.**
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
 - **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-034).

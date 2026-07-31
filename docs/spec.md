@@ -255,7 +255,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-018](./architecture-decisions/ADR-018-command-result-envelope.md) | CommandResult\<T\> JSON envelope — single stdout line under --json | CLI / contracts | Implemented |
 | [ADR-019](./architecture-decisions/ADR-019-mcp-child-process-isolation.md) | MCP child-process isolation — spawn seans-mfe-tool per tool call | MCP | Implemented |
 | [ADR-020](./architecture-decisions/ADR-020-bun-node-split.md) | Bun for dev entry, Node for published entry — permanent split | CLI dev workflow | Implemented |
-| [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
+| [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Superseded |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
 | [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Implemented |
 | [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
@@ -317,6 +317,8 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 | [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
+| [ADR-083](./architecture-decisions/ADR-083-falese-smt-namespace.md) | Platform packages consolidate on the @falese/smt-* namespace | Packages / namespace / distribution | Accepted (impl phased, #252) |
+| [ADR-084](./architecture-decisions/ADR-084-platform-packages-delivered-by-registry.md) | Platform packages are delivered by registry — GitHub Packages hosted, static mirror offline | Runtime / packaging / distribution | Accepted (impl phased, #252) |
 
 <!-- END GENERATED: adr-index -->
 
