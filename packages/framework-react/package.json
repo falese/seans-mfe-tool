@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/framework-react",
+  "name": "@falese/smt-framework-react",
   "version": "0.1.0",
   "description": "React + rspack framework plugin for seans-mfe-tool (ADR-071)",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts"
+    "@falese/smt-contracts": "file:../contracts"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

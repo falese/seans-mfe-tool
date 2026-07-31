@@ -1,2 +1,2 @@
-// Shim — re-exports from @seans-mfe/oclif-base for one release cycle.
-export { BaseCommand } from '@seans-mfe/oclif-base';
+// Shim — re-exports from @falese/smt-oclif-base for one release cycle.
+export { BaseCommand } from '@falese/smt-oclif-base';

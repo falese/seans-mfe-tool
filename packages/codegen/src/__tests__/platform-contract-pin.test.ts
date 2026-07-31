@@ -1,6 +1,6 @@
 /**
  * Cross-package pin (ADR-080): codegen classifies manifest capabilities as
- * platform vs domain from the canonical set in `@seans-mfe/contracts`, not
+ * platform vs domain from the canonical set in `@falese/smt-contracts`, not
  * from a hand-written list.
  *
  * Codegen had its own nine-entry map and its EJS templates had two more inline
@@ -17,9 +17,9 @@ import {
   PLATFORM_CAPABILITIES,
   PLATFORM_CAPABILITY_SPECS,
   type PlatformCapability,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 import { generateAllFiles, extractManifestVars } from '../unified-generator';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
 /** A manifest declaring every platform capability plus one domain capability. */
 function manifestWithEveryPlatformCapability(

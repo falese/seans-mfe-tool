@@ -1,5 +1,5 @@
 import { generateAllFiles } from '../unified-generator';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 import * as fs from 'fs-extra';
 import path from 'path';
 

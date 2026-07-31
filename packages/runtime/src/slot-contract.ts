@@ -1,11 +1,11 @@
 /**
- * Slot contract logic — re-exported from `@seans-mfe/contracts` (ADR-073).
+ * Slot contract logic — re-exported from `@falese/smt-contracts` (ADR-073).
  *
  * The implementation moved so that design-time tooling (the `mfe:validate` and
  * `slots:validate` CLI commands) can share one matcher with the runtime instead
  * of copying the grammar — the drift ADR-069 eliminated. This module stays put
  * because every generated MFE imports `createSlotContract` from
- * `@seans-mfe-tool/runtime`; keeping the specifier stable means a pure
+ * `@falese/smt-runtime`; keeping the specifier stable means a pure
  * relocation regenerates no MFE and produces no drift-gate churn.
  *
  * Add nothing here. New slot-contract surface belongs in
@@ -15,7 +15,7 @@ export {
   createSlotContract,
   createSlotAddressRegistry,
   toProvidedSlotAddress,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 export type {
   ProvidedSlotDeclaration,
   ProvideSlotFn,
@@ -24,4 +24,4 @@ export type {
   SlotProviderDeclarations,
   SlotTargetRejection,
   SlotTargetResult,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';

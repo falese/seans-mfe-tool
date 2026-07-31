@@ -220,17 +220,17 @@ function isBaseControlPlane(value: unknown): value is BaseControlPlane {
 A minimal skeleton:
 
 ```typescript
-import { BaseControlPlane } from '@seans-mfe-tool/runtime';
+import { BaseControlPlane } from '@falese/smt-runtime';
 import type {
   ControlPlaneConfig,
   ControlPlaneHealth,
-} from '@seans-mfe-tool/runtime';
+} from '@falese/smt-runtime';
 import type {
   MfeRegistration,
   Resolution,
   ActionRecord,
-} from '@seans-mfe/contracts';
-import type { DaemonTransport } from '@seans-mfe-tool/runtime';
+} from '@falese/smt-contracts';
+import type { DaemonTransport } from '@falese/smt-runtime';
 
 interface NodeControlPlaneConfig extends ControlPlaneConfig {
   daemonUrl: string;
@@ -265,5 +265,5 @@ class NodeControlPlane extends BaseControlPlane {
 ```
 
 Concrete implementations live in their own repos (`Falese/daemon`, Rust daemon repo)
-and import `BaseControlPlane` from the published `@seans-mfe-tool/runtime` package —
+and import `BaseControlPlane` from the published `@falese/smt-runtime` package —
 the same way MFE implementations import `BaseMFE`.

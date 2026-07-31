@@ -61,8 +61,8 @@ describe('provided-slots codegen (ADR-067)', () => {
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
     // Layer split (ADR-067): the generated file mirrors manifest data and
-    // binds it; matching/guard logic lives once in @seans-mfe-tool/runtime.
-    expect(content).toContain("from '@seans-mfe-tool/runtime'");
+    // binds it; matching/guard logic lives once in @falese/smt-runtime.
+    expect(content).toContain("from '@falese/smt-runtime'");
     expect(content).toContain('createSlotContract(PROVIDED_SLOTS)');
     expect(content).not.toContain('toMatcher');
     expect(content).not.toContain('new RegExp');

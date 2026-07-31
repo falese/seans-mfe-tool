@@ -1,6 +1,6 @@
-// Shim — re-exports from @seans-mfe/contracts for one release cycle.
+// Shim — re-exports from @falese/smt-contracts for one release cycle.
 export {
   classifyError,
   formatErrorResponse,
-} from '@seans-mfe/contracts';
-export type { ErrorClassification, ErrorHandlingConfig } from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
+export type { ErrorClassification, ErrorHandlingConfig } from '@falese/smt-contracts';

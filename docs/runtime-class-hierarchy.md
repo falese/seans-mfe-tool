@@ -19,9 +19,9 @@ BaseMFE          (abstract — packages/runtime/src/base-mfe.ts)
   └── BaseRemoteMFE  (abstract, Module Federation lifecycle, framework-neutral
        |               — packages/runtime/src/base-remote-mfe.ts)
        ├── RemoteMFE        (concrete, React — packages/runtime/src/remote-mfe.ts,
-       |                     imported from '@seans-mfe-tool/runtime/react')
+       |                     imported from '@falese/smt-runtime/react')
        └── AngularRemoteMFE (concrete, Angular — packages/runtime/src/angular-remote-mfe.ts,
-                             imported from '@seans-mfe-tool/runtime/angular')
+                             imported from '@falese/smt-runtime/angular')
               └── YourMFE  (generated — src/platform/base-mfe/mfe.ts)
 ```
 
@@ -43,7 +43,7 @@ language or deployment model. It owns:
   `authorizeAccess`, `health`, `describe`, `schema`, `query`, `emit`,
   `updateControlPlaneState`. The capability list itself, the manifest-key
   spellings, and the per-capability state-machine edges are single-sourced in
-  `@seans-mfe/contracts` (ADR-080) — `BaseMFE` reads them, it doesn't declare
+  `@falese/smt-contracts` (ADR-080) — `BaseMFE` reads them, it doesn't declare
   them.
 - **The state machine** — six states
   (`uninitialized`, `loading`, `ready`, `rendering`, `error`, `destroyed`)
@@ -67,7 +67,7 @@ language or deployment model. It owns:
   the same middleware onion:
   `stateGuard(preStates) → stateTransition(enterState) → errorBoundary(lifecycle(before) → lifecycle(main) → doX() → lifecycle(after) → stateTransition(exitState))`.
   `preStates`/`enterState`/`exitState` per capability also come from
-  `@seans-mfe/contracts` (ADR-080), not from per-method logic here.
+  `@falese/smt-contracts` (ADR-080), not from per-method logic here.
 - **Handler resolution** — `platform.*` lifecycle-hook names resolve through
   a static map over the platform handler library
   (`packages/runtime/src/handlers/`); `custom.*` names resolve through
@@ -133,9 +133,9 @@ Nothing else about "how do I put pixels on the screen" belongs here.
 ## Layer 3 — `RemoteMFE` (concrete, React)
 
 `RemoteMFE extends BaseRemoteMFE`, imported from
-**`@seans-mfe-tool/runtime/react`** — not the bare package. That subpath
+**`@falese/smt-runtime/react`** — not the bare package. That subpath
 split isn't stylistic: until it existed, the polyglot barrel
-(`@seans-mfe-tool/runtime`) re-exported `RemoteMFE` directly, so any *value*
+(`@falese/smt-runtime`) re-exported `RemoteMFE` directly, so any *value*
 import from the barrel silently pulled React into the bundle. It stayed
 invisible while every consumer used `import type` (erased at compile time)
 until a template's first real value import broke three Angular MFEs with
@@ -143,7 +143,7 @@ until a template's first real value import broke three Angular MFEs with
 barrel carries only the framework-neutral core; each framework-specific
 class lives behind its own subpath, so importing a framework is always an
 explicit choice, never a side effect. `AngularRemoteMFE` is the equivalent
-concrete class behind `@seans-mfe-tool/runtime/angular`.
+concrete class behind `@falese/smt-runtime/angular`.
 
 `RemoteMFE` supplies exactly the 3 abstract members Layer 2 left open:
 `getSharedDependencies()` returns the Module Federation shared-scope
@@ -261,7 +261,7 @@ touches it directly.
 ```
 Question                                              Answer
 ────────────────────────────────────────────────────  ─────────────────────────────────────────
-Where is the state machine?                           @seans-mfe/contracts (ADR-080), re-exported by BaseMFE
+Where is the state machine?                           @falese/smt-contracts (ADR-080), re-exported by BaseMFE
 Where is the capability execution pipeline?            BaseMFE.executeCapability()
 Where is the lifecycle hook engine?                    BaseMFE
 Where does Module Federation loading happen?           BaseRemoteMFE.doLoad()
@@ -288,11 +288,11 @@ How is updateControlPlaneState() different from emit?  emit() → observers (no 
 |---|---|
 | `packages/runtime/src/base-mfe.ts` | `BaseMFE` abstract class, capability pipeline, state machine re-export |
 | `packages/runtime/src/base-remote-mfe.ts` | `BaseRemoteMFE` — framework-neutral Module Federation lifecycle |
-| `packages/runtime/src/remote-mfe.ts` | `RemoteMFE` — React-specific concrete class (`@seans-mfe-tool/runtime/react`) |
-| `packages/runtime/src/angular-remote-mfe.ts` | `AngularRemoteMFE` — Angular-specific concrete class (`@seans-mfe-tool/runtime/angular`) |
+| `packages/runtime/src/remote-mfe.ts` | `RemoteMFE` — React-specific concrete class (`@falese/smt-runtime/react`) |
+| `packages/runtime/src/angular-remote-mfe.ts` | `AngularRemoteMFE` — Angular-specific concrete class (`@falese/smt-runtime/angular`) |
 | `packages/runtime/src/context.ts` | `Context`/`TelemetryEvent` objects passed through all phases |
 | `packages/runtime/src/handlers/` | Platform handler library (auth, caching, telemetry, etc.) |
-| `packages/runtime/src/index.ts` | Public exports for `@seans-mfe-tool/runtime` (framework-neutral core only) |
+| `packages/runtime/src/index.ts` | Public exports for `@falese/smt-runtime` (framework-neutral core only) |
 | `packages/contracts/src/platform-contract.ts` | The 10 capabilities + state machine, single-sourced (ADR-080) |
 | `packages/codegen/templates/base-mfe/mfe.ts.ejs` | Template that generates Layer 4 (React variant) |
 | `packages/codegen/templates/base-mfe-angular/mfe.ts.ejs` | Template that generates Layer 4 (Angular variant) |

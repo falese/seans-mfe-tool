@@ -1,7 +1,7 @@
 /**
  * The platform event emitter (ADR-081).
  *
- * ADR-039 asked for "the structured logger from `@seans-mfe/oclif-base`". This
+ * ADR-039 asked for "the structured logger from `@falese/smt-oclif-base`". This
  * is it — but emitting the platform-wide `PlatformEvent` schema rather than a
  * CLI-local log format, so a warning from codegen and a span from a command
  * land in the same vocabulary and under the same trace.
@@ -23,7 +23,7 @@ import {
   type PlatformEvent,
   type Severity,
   type TraceContext,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 /** `silent` is not a severity — it is the absence of all of them. */
 export type LogLevel = Severity | 'silent';

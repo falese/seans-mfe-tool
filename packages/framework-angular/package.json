@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/framework-angular",
+  "name": "@falese/smt-framework-angular",
   "version": "0.1.0",
   "description": "Angular + webpack framework plugin for seans-mfe-tool (ADR-071)",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts"
+    "@falese/smt-contracts": "file:../contracts"
   },
   "peerDependencies": {
     "@angular/core": "^17.0.0"

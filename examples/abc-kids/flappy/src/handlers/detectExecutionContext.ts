@@ -14,7 +14,7 @@
  *   - true  → loaded inside a shell
  *   - false → loaded standalone (e.g. /demo.html on the MFE's own port)
  */
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 export async function detectExecutionContext(context: Context): Promise<void> {
   // Server-side / Node — neither shell nor standalone applies. Default to

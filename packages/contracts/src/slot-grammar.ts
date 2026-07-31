@@ -7,9 +7,9 @@
  * describe a position, and addresses are assigned names, never measured
  * ordinals (ADR-066).
  *
- * Consumed by both ends of the contract: `@seans-mfe/dsl` validates
+ * Consumed by both ends of the contract: `@falese/smt-dsl` validates
  * `providesSlots` declarations against `SLOT_ID_SEGMENT` at design time, and
- * the runtime matcher (`@seans-mfe-tool/runtime` slot-contract) compiles
+ * the runtime matcher (`@falese/smt-runtime` slot-contract) compiles
  * declarations with `isSlotParamSegment` / `SLOT_PARAM_VALUE_SOURCE` at run
  * time. Keeping both on one definition means a grammar change is one edit —
  * never a silent split between what can be declared and what can match. The
@@ -17,7 +17,7 @@
  * regression-tests the agreement.
  *
  * This module is pure data (regex sources + one predicate) and must stay
- * dependency-free: `@seans-mfe/contracts` is zero-dependency by invariant
+ * dependency-free: `@falese/smt-contracts` is zero-dependency by invariant
  * (ADR-061).
  */
 

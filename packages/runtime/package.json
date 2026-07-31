@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe-tool/runtime",
+  "name": "@falese/smt-runtime",
   "version": "0.1.0",
   "private": true,
   "description": "Runtime: BaseMFE/RemoteMFE lifecycle classes consumed by generated MFEs",

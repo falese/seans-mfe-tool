@@ -1,4 +1,4 @@
-import type { RenderedExperience } from '@seans-mfe/contracts';
+import type { RenderedExperience } from '@falese/smt-contracts';
 import {
   moduleFederationAdaptor,
   type SlotElementLike,

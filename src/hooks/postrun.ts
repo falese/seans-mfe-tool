@@ -1,10 +1,10 @@
 import { Hook } from '@oclif/core';
 import { randomUUID } from 'crypto';
-import { parseTraceparent } from '@seans-mfe/contracts';
+import { parseTraceparent } from '@falese/smt-contracts';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import type { Message } from '@seans-mfe/contracts';
+import type { Message } from '@falese/smt-contracts';
 
 const OFFLINE_CACHE_PATH = path.join(os.homedir(), '.cache', 'seans-mfe', 'daemon-offline');
 const OFFLINE_TTL_MS = 60_000;

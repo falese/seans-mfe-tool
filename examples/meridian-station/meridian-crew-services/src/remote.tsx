@@ -2,7 +2,7 @@
  * Remote Entry Point — domain capabilities + the ADR-056 presentation handle.
  * Generated from mfe-manifest.yaml
  */
-import { createImperativeHandle, type ImperativeMountHandle } from '@seans-mfe-tool/runtime';
+import { createImperativeHandle, type ImperativeMountHandle } from '@falese/smt-runtime';
 import { mfe, mfeReady } from './platform/base-mfe/bootstrap';
 import { CrewRoster } from './features/CrewRoster/CrewRoster';
 import { PayStatus } from './features/PayStatus/PayStatus';

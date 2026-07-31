@@ -12,7 +12,7 @@
  * tests pin.
  */
 import { createLogger, type Logger } from '../logger';
-import { traceContextFromEnv, type PlatformEvent } from '@seans-mfe/contracts';
+import { traceContextFromEnv, type PlatformEvent } from '@falese/smt-contracts';
 
 /** Capture process.stderr.write without touching console. */
 function captureStderr(): { lines: () => string[]; restore: () => void } {

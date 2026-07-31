@@ -135,7 +135,7 @@ developer-owned code is reported as a warning, provided it's declared in
   ⚠ platform-migrations
       - Throwing a raw `Error` — the platform classifies failures by error type,
         so this is reported as `unknown` and never retried (ADR-017) src/index.tsx:69
-        fix: Throw a typed error from '@seans-mfe-tool/runtime': ValidationError...
+        fix: Throw a typed error from '@falese/smt-runtime': ValidationError...
 
 meridian-console is consistent, with 1 platform-migration warning(s).
 exit=0   (warning, not failure — by design; --strict would escalate)

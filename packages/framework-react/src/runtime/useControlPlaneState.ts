@@ -1,11 +1,11 @@
 /**
  * useControlPlaneState — React hook wrapper over
- * `pushControlPlaneState` (`@seans-mfe-tool/runtime`), for components that
+ * `pushControlPlaneState` (`@falese/smt-runtime`), for components that
  * push control-plane state from an event handler or effect rather than a
  * one-off call site.
  *
  * Same posture as DeclaredSlot: this module needs no dependency on
- * `@seans-mfe-tool/runtime` (structural typing over the two fields the
+ * `@falese/smt-runtime` (structural typing over the two fields the
  * capability's `Context` requires — `requestId`/`timestamp` — plus
  * `inputs`), so it duplicates that tiny bit of construction logic locally
  * instead of importing `ContextFactory`/`Context` from the runtime package.

@@ -29,9 +29,9 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { execFileSync } from 'child_process';
-import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
-import { writeManifest, generateEndpoints } from '@seans-mfe/dsl';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import { generateAllFiles, writeGeneratedFiles } from '@falese/smt-codegen';
+import { writeManifest, generateEndpoints } from '@falese/smt-dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 import { mfeValidateCommand } from '../src/commands/mfe/validate';
 
 interface Lane {
@@ -83,17 +83,17 @@ async function checkLane(lane: Lane): Promise<void> {
     const { files } = await generateAllFiles(manifest, dir, { force: true });
     await writeGeneratedFiles(files, { force: true });
 
-    // `@seans-mfe-tool/runtime` isn't published to npm yet (ADR-064) — real
+    // `@falese/smt-runtime` isn't published to npm yet (ADR-064) — real
     // Dockerfiles stage it via `npm pkg set ... file:.../dist/runtime`
     // (`scripts/copy-runtime-files.js`). Mirror that here so a plain
     // `npm install` in the scratch dir resolves the same way a real build does.
     const pkgJsonPath = path.join(dir, 'package.json');
     const pkgJson = await fs.readJson(pkgJsonPath);
-    if (pkgJson.devDependencies?.['@seans-mfe-tool/runtime']) {
-      pkgJson.devDependencies['@seans-mfe-tool/runtime'] = `file:${DIST_RUNTIME}`;
+    if (pkgJson.devDependencies?.['@falese/smt-runtime']) {
+      pkgJson.devDependencies['@falese/smt-runtime'] = `file:${DIST_RUNTIME}`;
     }
-    if (pkgJson.dependencies?.['@seans-mfe-tool/runtime']) {
-      pkgJson.dependencies['@seans-mfe-tool/runtime'] = `file:${DIST_RUNTIME}`;
+    if (pkgJson.dependencies?.['@falese/smt-runtime']) {
+      pkgJson.dependencies['@falese/smt-runtime'] = `file:${DIST_RUNTIME}`;
     }
     await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
 

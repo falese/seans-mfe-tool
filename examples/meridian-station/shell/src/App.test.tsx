@@ -10,7 +10,7 @@ const start = jest.fn();
 const stop = jest.fn().mockResolvedValue(undefined);
 let capturedConfig: { onStatus?: (s: string) => void } = {};
 
-jest.mock('@seans-mfe-tool/runtime', () => ({
+jest.mock('@falese/smt-runtime', () => ({
   LayoutManager: jest.fn().mockImplementation((config) => {
     capturedConfig = config;
     return { start, stop };

@@ -5,7 +5,7 @@
  * add thin sugar over `register()`. Refs #265.
  */
 import { createSlotContract, toProvidedSlotAddress } from '../slot-contract';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 
 const contract = createSlotContract([
   { id: 'main', description: 'Primary content region' },
@@ -88,8 +88,8 @@ describe('createSlotContract — register', () => {
 describe('toProvidedSlotAddress', () => {
   it('scopes a declared slot id by the stable provider MFE id', () => {
     expect(toProvidedSlotAddress('abc-kids-home', 'main')).toBe('abc-kids-home/main');
-    expect(toProvidedSlotAddress('@seans-mfe/home', 'card.SKU-42')).toBe(
-      '@seans-mfe/home/card.SKU-42'
+    expect(toProvidedSlotAddress('@falese/smt-home', 'card.SKU-42')).toBe(
+      '@falese/smt-home/card.SKU-42'
     );
   });
 

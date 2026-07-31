@@ -2,7 +2,7 @@
 ✔ Browser application bundle generation complete.
 ✔ Browser application bundle generation complete.
 
-./src/platform/base-mfe/mfe.ts:2:0-67 - Error: Module not found: Error: Can't resolve '@seans-mfe-tool/runtime/angular' in '/project/src/platform/base-mfe'
+./src/platform/base-mfe/mfe.ts:2:0-67 - Error: Module not found: Error: Can't resolve '@falese/smt-runtime/angular' in '/project/src/platform/base-mfe'
 
 Error: [96msrc/app/app.component.ts[0m:[93m22[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'number' is not assignable to type 'string'.
 
@@ -28,15 +28,15 @@ Error: [96msrc/platform/base-mfe/bootstrap.ts[0m:[93m157[0m:[93m4[0m - [9
 [7m   [0m [91m   ~~~~[0m
 
 
-Error: [96msrc/platform/base-mfe/mfe.ts[0m:[93m3[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module '@seans-mfe-tool/runtime/angular' or its corresponding type declarations.
+Error: [96msrc/platform/base-mfe/mfe.ts[0m:[93m3[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module '@falese/smt-runtime/angular' or its corresponding type declarations.
 
-[7m3[0m import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+[7m3[0m import { AngularRemoteMFE } from '@falese/smt-runtime/angular';
 [7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 
-Error: [96msrc/platform/base-mfe/mfe.ts[0m:[93m4[0m:[93m68[0m - [91merror[0m[90m TS2307: [0mCannot find module '@seans-mfe-tool/runtime' or its corresponding type declarations.
+Error: [96msrc/platform/base-mfe/mfe.ts[0m:[93m4[0m:[93m68[0m - [91merror[0m[90m TS2307: [0mCannot find module '@falese/smt-runtime' or its corresponding type declarations.
 
-[7m4[0m import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
+[7m4[0m import type { Context, LoadResult, RenderResult, QueryResult} from '@falese/smt-runtime';
 [7m [0m [91m                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 

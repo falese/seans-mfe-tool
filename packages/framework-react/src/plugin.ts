@@ -12,7 +12,7 @@ import {
   type BuildResult,
   type DevServerHandle,
   parseBuildOutput,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 function semverSatisfies(found: string, required: string): boolean {
   const match = found.match(/(\d+)/);
@@ -70,7 +70,7 @@ export class ReactRspackPlugin extends BaseFrameworkPlugin {
   }
 
   getRuntimeImport(): string {
-    return '@seans-mfe-tool/runtime';
+    return '@falese/smt-runtime';
   }
 
   getRuntimeClassName(): string {

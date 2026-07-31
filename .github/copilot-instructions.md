@@ -69,7 +69,7 @@ protected abstract runCommand(): Promise<T>;
 
 ## Typed errors
 
-Never `throw new Error(...)` in command code. Use typed errors from `@seans-mfe/contracts`:
+Never `throw new Error(...)` in command code. Use typed errors from `@falese/smt-contracts`:
 
 | Error class | Exit code | When to use |
 |---|---|---|
@@ -135,9 +135,9 @@ Templates live at `src/codegen/templates/`. Compiled templates are copied to `di
 
 ---
 
-## Runtime platform (`@seans-mfe-tool/runtime`)
+## Runtime platform (`@falese/smt-runtime`)
 
-**Package:** `packages/runtime/` → published as `@seans-mfe-tool/runtime`  
+**Package:** `packages/runtime/` → published as `@falese/smt-runtime`  
 **Dist:** `dist/runtime/` (compiled, installable via `file:` in Docker)
 
 ### Class hierarchy
@@ -166,8 +166,8 @@ BaseMFE (abstract)
 ### Import paths
 
 ```typescript
-import { BaseMFE, RemoteMFE } from '@seans-mfe-tool/runtime';
-import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+import { BaseMFE, RemoteMFE } from '@falese/smt-runtime';
+import { AngularRemoteMFE } from '@falese/smt-runtime/angular';
 ```
 
 ---

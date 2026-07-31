@@ -16,7 +16,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    // @seans-mfe-tool/runtime is not imported by the shell directly.
+    // @falese/smt-runtime is not imported by the shell directly.
     // Each remote (flappy, hockey, multiplication-quiz) resolves it via a
     // file: dep in their own node_modules.
     modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],

@@ -1,7 +1,7 @@
 /**
  * Slot contract logic (ADR-067) — framework-free, DOM-free, published once.
  *
- * Lives in `@seans-mfe/contracts` as of ADR-073, not in the runtime package.
+ * Lives in `@falese/smt-contracts` as of ADR-073, not in the runtime package.
  * Design-time tooling (the `mfe:validate` / `slots:validate` CLI commands, and
  * third-party rule authoring) has to match slot ids too, and runtime is private
  * and heavyweight — the CLI cannot reach it. Re-implementing the matcher for
@@ -10,7 +10,7 @@
  * owns the grammar and `ValidationError`, and this module is pure regex plus a
  * factory, so the ADR-061 zero-dependency invariant holds.
  * `packages/runtime/src/slot-contract.ts` re-exports it, keeping the
- * `@seans-mfe-tool/runtime` specifier that every generated MFE imports.
+ * `@falese/smt-runtime` specifier that every generated MFE imports.
  *
  * The three-layer split: the *manifest* declares slot identity (data), this
  * module owns matching and the declare-before-register guard (logic), and
@@ -83,7 +83,7 @@ export interface SlotContract {
 }
 
 /** Compile one declared id into a matcher: literals escaped, `{param}` → one
- *  segment value. Grammar single-sourced in @seans-mfe/contracts (ADR-069). */
+ *  segment value. Grammar single-sourced in @falese/smt-contracts (ADR-069). */
 function toMatcher(declaredId: string): RegExp {
   const source = declaredId
     .split('.')

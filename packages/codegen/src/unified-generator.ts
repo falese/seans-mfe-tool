@@ -7,8 +7,8 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
-import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
+import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@falese/smt-dsl';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@falese/smt-contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
@@ -123,7 +123,7 @@ export const DEPENDENCY_VERSIONS = {
     reactDom: '~18.2.0',
   },
 
-  // Platform runtime contract (@seans-mfe-tool/runtime).
+  // Platform runtime contract (@falese/smt-runtime).
   // Not published to npm yet (ADR-064); generated projects stage dist/runtime
   // (Dockerfile copies it as a real directory, #274). Single-sourced here so
   // the React and Angular templates can't drift on the declared spec.
@@ -789,7 +789,7 @@ export function extractManifestVars(
     hasBff: !!manifest.data,
 
     // The ten platform capability names, from the canonical definition in
-    // @seans-mfe/contracts (ADR-080). Templates classify a manifest capability
+    // @falese/smt-contracts (ADR-080). Templates classify a manifest capability
     // as platform vs domain against this instead of an inline literal array —
     // four such arrays existed and two of them were a capability short.
     platformCapabilityNames: [...PLATFORM_CAPABILITIES],
@@ -991,7 +991,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
   const vars = extractManifestVars(manifest, variant);
   // --- Platform contract-driven capability and lifecycle aggregation ---
   // Keyed by the PascalCase manifest spelling, derived from the canonical
-  // capability set in @seans-mfe/contracts (ADR-080). This map was previously
+  // capability set in @falese/smt-contracts (ADR-080). This map was previously
   // written out by hand and omitted UpdateControlPlaneState, so a manifest
   // declaring it was generated as a domain capability.
   const platformCapabilities: Record<

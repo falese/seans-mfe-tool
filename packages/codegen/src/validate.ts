@@ -12,8 +12,8 @@
  * the rules pure makes them unit-testable in the platform, not per example.
  */
 
-import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
-import type { DSLManifest, LifecycleHook } from '@seans-mfe/dsl';
+import { findUnreferencedSlots, type SourceFile } from '@falese/smt-dsl';
+import type { DSLManifest, LifecycleHook } from '@falese/smt-dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
 import {
   PLATFORM_MIGRATIONS,
@@ -21,7 +21,7 @@ import {
   severityFor,
 } from './platform-migrations';
 
-const RUNTIME_PACKAGE = '@seans-mfe-tool/runtime';
+const RUNTIME_PACKAGE = '@falese/smt-runtime';
 
 /** A framework singleton the bundler shares; parsed from the federation config. */
 export interface SharedEntry {
@@ -289,7 +289,7 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
   //
   // Skipped when the MFE declares no slots, or when the caller supplied no
   // sources — a scan over nothing would report every declaration as missing.
-  // Matching is delegated to @seans-mfe/dsl so the needle logic (literal prefix
+  // Matching is delegated to @falese/smt-dsl so the needle logic (literal prefix
   // before the first {param}) has one implementation.
   const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
     .providesSlots;

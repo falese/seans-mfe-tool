@@ -23,17 +23,17 @@ The plugin system separates _what to build_ (the framework/bundler combination) 
 
 | Concept | Convention | Example |
 |---|---|---|
-| npm package | `@seans-mfe/framework-<name>` | `@seans-mfe/framework-vue` |
+| npm package | `@falese/smt-framework-<name>` | `@falese/smt-framework-vue` |
 | Plugin `id` | `<framework>-<bundler>` | `vue-vite` |
 | Named export | `frameworkPlugin` | `export const frameworkPlugin = new VueVitePlugin()` |
 
-`loadFrameworkPlugin('vue')` resolves `@seans-mfe/framework-vue` and reads the `frameworkPlugin` export.
+`loadFrameworkPlugin('vue')` resolves `@falese/smt-framework-vue` and reads the `frameworkPlugin` export.
 
 ---
 
 ## Implementing `BaseFrameworkPlugin`
 
-Import the abstract class from `@seans-mfe/contracts`:
+Import the abstract class from `@falese/smt-contracts`:
 
 ```ts
 import {
@@ -43,7 +43,7 @@ import {
   type DockerStrategy,
   type BuildResult,
   type DevServerHandle,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 ```
 
 Your class must implement every abstract member. Here is the full contract with the expected return type for each method:
@@ -77,7 +77,7 @@ getTemplateDir(): string
 getTemplateVars(manifest: unknown): Record<string, unknown>
 // Extra variables merged into EJS rendering context.
 
-getRuntimeImport(): string     // e.g. '@seans-mfe-tool/runtime'
+getRuntimeImport(): string     // e.g. '@falese/smt-runtime'
 getRuntimeClassName(): string  // e.g. 'RemoteMFE'
 getSourceExtension(): string   // e.g. '.tsx'
 getTestExtension(): string     // e.g. '.test.tsx'
@@ -106,7 +106,7 @@ getDockerStrategy(manifest: unknown): DockerStrategy
 // Describe the multi-stage Docker build.
 // DockerStrategy: { builderImage, runtimeImage, buildCommands, artifactPaths, cmd,
 //                   needsCliBuilder, healthcheck? }
-// Set needsCliBuilder:true if your MFE uses @seans-mfe-tool/runtime (virtually all do).
+// Set needsCliBuilder:true if your MFE uses @falese/smt-runtime (virtually all do).
 ```
 
 ---
@@ -124,7 +124,7 @@ import {
   type DockerStrategy,
   type BuildResult,
   type DevServerHandle,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 export class VueVitePlugin extends BaseFrameworkPlugin {
   readonly id = 'vue-vite';
@@ -146,7 +146,7 @@ export class VueVitePlugin extends BaseFrameworkPlugin {
     return { framework: 'vue', bundler: 'vite', templateVariant: 'vue-vite' };
   }
 
-  getRuntimeImport() { return '@seans-mfe-tool/runtime'; }
+  getRuntimeImport() { return '@falese/smt-runtime'; }
   getRuntimeClassName() { return 'RemoteMFE'; }
   getSourceExtension() { return '.vue'; }
   getTestExtension() { return '.test.ts'; }
@@ -212,7 +212,7 @@ export const frameworkPlugin = new VueVitePlugin();
 ## Package structure
 
 ```
-@seans-mfe/framework-vue/
+@falese/smt-framework-vue/
 ├── src/
 │   ├── plugin.ts          # VueVitePlugin class + frameworkPlugin export
 │   └── index.ts           # re-exports plugin.ts
@@ -226,13 +226,13 @@ export const frameworkPlugin = new VueVitePlugin();
 
 ```json
 {
-  "name": "@seans-mfe/framework-vue",
+  "name": "@falese/smt-framework-vue",
   "main": "./dist/index.js",
   "exports": {
     ".": { "require": "./dist/index.js", "import": "./dist/index.mjs" }
   },
   "peerDependencies": {
-    "@seans-mfe/contracts": ">=0.1.0"
+    "@falese/smt-contracts": ">=0.1.0"
   }
 }
 ```
@@ -281,10 +281,10 @@ Available template variables (always present):
 
 1. Build the package: `tsc`
 2. `npm publish --access public`
-3. Users install: `npm install @seans-mfe/framework-vue`
+3. Users install: `npm install @falese/smt-framework-vue`
 4. Users run: `seans-mfe-tool remote:init my-mfe --framework vue`
 
-`loadFrameworkPlugin('vue')` will resolve `@seans-mfe/framework-vue` automatically.
+`loadFrameworkPlugin('vue')` will resolve `@falese/smt-framework-vue` automatically.
 
 ---
 

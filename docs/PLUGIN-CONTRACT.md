@@ -28,23 +28,23 @@ A plugin is an npm package that satisfies the oclif plugin interface.
     "seans-mfe-tool": "^1"              // declare compatible CLI major
   },
   "dependencies": {
-    "@seans-mfe/oclif-base": "*",       // BaseCommand with JSON envelope
-    "@seans-mfe/contracts": "*"         // typed errors, CommandResult
+    "@falese/smt-oclif-base": "*",       // BaseCommand with JSON envelope
+    "@falese/smt-contracts": "*"         // typed errors, CommandResult
   }
 }
 ```
 
-`@seans-mfe/oclif-base` and `@seans-mfe/contracts` are **regular dependencies**,
+`@falese/smt-oclif-base` and `@falese/smt-contracts` are **regular dependencies**,
 not peer dependencies — the plugin must own its own copy.
 
 ---
 
 ## 2. Command requirements
 
-Every command **must** extend `BaseCommand` from `@seans-mfe/oclif-base`:
+Every command **must** extend `BaseCommand` from `@falese/smt-oclif-base`:
 
 ```ts
-import { BaseCommand } from '@seans-mfe/oclif-base';
+import { BaseCommand } from '@falese/smt-oclif-base';
 
 export default class MyCommand extends BaseCommand<MyResult> {
   static description = 'Does a thing.';
@@ -100,7 +100,7 @@ build         ❌  (reserved for core or will conflict)
 
 ## 4. Error conventions
 
-Only throw typed errors from `@seans-mfe/contracts`:
+Only throw typed errors from `@falese/smt-contracts`:
 
 | Error class | Situation | Exit code |
 |-------------|-----------|-----------|
@@ -115,7 +115,7 @@ Unknown errors (any `Error` not in the above list) classify as `unknown` and
 exit 70.  **Never** throw a plain `new Error(...)` from command code.
 
 ```ts
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+import { ValidationError, BusinessError } from '@falese/smt-contracts';
 
 if (!name) {
   throw new ValidationError('Name is required', 'name', 'required');
@@ -159,9 +159,9 @@ loader will warn when the peer version is incompatible.
 
 ### Stability guarantees
 
-- `@seans-mfe/contracts` follows semver strictly — no breaking changes within
+- `@falese/smt-contracts` follows semver strictly — no breaking changes within
   a major.
-- `@seans-mfe/oclif-base` follows semver strictly.
+- `@falese/smt-oclif-base` follows semver strictly.
 - The core CLI's internal modules (`src/`) are **not** part of the public API
   and may change without notice.
 

@@ -1,4 +1,4 @@
-// Copied from src/utils/templateProcessor.js — future home: @seans-mfe/codegen
+// Copied from src/utils/templateProcessor.js — future home: @falese/smt-codegen
 const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');

@@ -194,22 +194,22 @@ To create issues:
 
 ## ⏳ Deferred / Pending Prerequisites
 
-### npm Publish: `@seans-mfe/contracts` + `@seans-mfe/oclif-base`
+### npm Publish: `@falese/smt-contracts` + `@falese/smt-oclif-base`
 
 **Blocker for:** MERGE-PLAN.md Phase 1 success criteria  
 **Tracking:** [`MERGE-PLAN.md`](MERGE-PLAN.md)
 
 Phase 1 success criteria (all must be true before Phase 2 / monorepo merge):
 
-- [ ] `@seans-mfe/contracts` published to npm with stable semver
-- [ ] `@seans-mfe/oclif-base` published to npm with stable semver
+- [ ] `@falese/smt-contracts` published to npm with stable semver
+- [ ] `@falese/smt-oclif-base` published to npm with stable semver
 - [ ] ~~`@falese/daemon-plugin` passes `plugins link` + `--json` envelope test~~ — **void.** PDR-008
       brings the control plane into the platform and retires `@falese/daemon`; the daemon is no
       longer a plugin to certify.
 - [ ] `@falese/coder-plugin` passes MCP federation test
 - [ ] Remaining repos have green CI running `turbo run test build`
 
-Also pending and higher-leverage than it looks: **`@seans-mfe/runtime` is unpublished**
+Also pending and higher-leverage than it looks: **`@falese/smt-runtime` is unpublished**
 (ADR-064, #252). The Meridian DX report names the `dist/runtime` staging workaround as the cause
 of "every one of this build's environment-specific detours" — it is the single most-cited source
 of friction in the reference-app builds.

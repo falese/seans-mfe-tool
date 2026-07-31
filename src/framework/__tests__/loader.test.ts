@@ -2,7 +2,7 @@
  * loadFrameworkPlugin() — resolution utility tests (ADR-036, #169).
  */
 
-import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
+import { BaseFrameworkPlugin, ValidationError } from '@falese/smt-contracts';
 import { loadFrameworkPlugin } from '../loader';
 
 describe('loadFrameworkPlugin', () => {
@@ -39,7 +39,7 @@ describe('loadFrameworkPlugin', () => {
       fail('expected to throw');
     } catch (err) {
       expect(err).toBeInstanceOf(ValidationError);
-      expect((err as ValidationError).message).toMatch(/@seans-mfe\/framework-svelte/);
+      expect((err as ValidationError).message).toMatch(/@falese\/smt-framework-svelte/);
     }
   });
 

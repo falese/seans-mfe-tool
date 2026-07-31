@@ -3,7 +3,7 @@
  * sugar over the framework-free slot contract. Written once here; never generated.
  *
  * The contract logic (matching, declare-before-register guard) lives in
- * `@seans-mfe-tool/runtime` (`createSlotContract`); this directive only wires it
+ * `@falese/smt-runtime` (`createSlotContract`); this directive only wires it
  * to Angular's element lifecycle: assert on init, register the host element on
  * view init, re-register on input changes (releasing the old id first), release
  * on destroy. Re-registration on remount is safe — the host
@@ -34,7 +34,7 @@ import {
   type SimpleChanges,
 } from '@angular/core';
 
-/** Structural view of `SlotContract` from `@seans-mfe-tool/runtime`. */
+/** Structural view of `SlotContract` from `@falese/smt-runtime`. */
 export interface SlotContractLike {
   assertDeclared(id: string): void;
   register<E>(

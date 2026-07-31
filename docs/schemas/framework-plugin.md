@@ -14,7 +14,7 @@ Every framework/bundler combination is delivered as a plugin that extends
 `BaseMFE.load()` orchestrating `this.doLoad()`.
 
 Adding support for a new framework means publishing a package (e.g.
-`@seans-mfe/framework-vue`) that extends `BaseFrameworkPlugin`. No core code changes
+`@falese/smt-framework-vue`) that extends `BaseFrameworkPlugin`. No core code changes
 are required.
 
 **Concrete implementations:**
@@ -85,7 +85,7 @@ abstract class BaseFrameworkPlugin {
 |---|---|---|
 | `getTemplateDir()` | `string` | Absolute path to the EJS template directory for this plugin. |
 | `getTemplateVars(manifest)` | `Record<string, unknown>` | Framework-specific template variables merged with base codegen vars. |
-| `getRuntimeImport()` | `string` | Import path for the runtime class in generated MFE code (e.g. `'@seans-mfe/runtime/react'`). |
+| `getRuntimeImport()` | `string` | Import path for the runtime class in generated MFE code (e.g. `'@falese/smt-runtime/react'`). |
 | `getRuntimeClassName()` | `string` | Class name for the generated MFE (e.g. `'RemoteMFE'`). |
 | `getSourceExtension()` | `string` | Source file extension (e.g. `'.tsx'`, `'.ts'`). |
 | `getTestExtension()` | `string` | Test file extension (e.g. `'.test.tsx'`). |
@@ -236,4 +236,4 @@ function isFrameworkPlugin(value: unknown): value is BaseFrameworkPlugin {
 ## Authoring a new plugin
 
 See `docs/framework-plugin-authoring.md` for the step-by-step guide to publishing a
-`@seans-mfe/framework-<name>` package.
+`@falese/smt-framework-<name>` package.

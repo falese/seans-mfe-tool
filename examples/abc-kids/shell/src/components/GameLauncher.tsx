@@ -3,7 +3,7 @@ import { Box, Typography, IconButton, CircularProgress, Chip, ToggleButton, Togg
 import CloseIcon from '@mui/icons-material/Close';
 import PetsIcon from '@mui/icons-material/Pets';
 import { GameMeta } from '../App';
-import { ValidationError, BusinessError } from '@seans-mfe-tool/runtime';
+import { ValidationError, BusinessError } from '@falese/smt-runtime';
 
 // Minimal type for a pet returned by the PetStore BFF
 interface Pet { id: string; name: string; status?: string; }

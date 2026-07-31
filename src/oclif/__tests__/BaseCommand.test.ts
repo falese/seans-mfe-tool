@@ -14,7 +14,7 @@ class TestCommand extends BaseCommand<{ ok: boolean }> {
 }
 
 describe('BaseCommand', () => {
-  it('re-exports BaseCommand from @seans-mfe/oclif-base via the shim', () => {
+  it('re-exports BaseCommand from @falese/smt-oclif-base via the shim', () => {
     expect(BaseCommand).toBeDefined()
     expect(typeof BaseCommand).toBe('function')
   })

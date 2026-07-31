@@ -168,12 +168,12 @@ describe('unified-generator', () => {
     expect(rspackConfig?.content).not.toContain("requiredVersion: '^18.2.0'");
   });
 
-  it('single-sources the @seans-mfe-tool/runtime dependency spec', async () => {
+  it('single-sources the @falese/smt-runtime dependency spec', async () => {
     const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
     const pkg = files.find(f => f.path === path.join(basePath, 'package.json'));
 
     expect(pkg).toBeDefined();
-    expect(JSON.parse(pkg!.content).devDependencies['@seans-mfe-tool/runtime']).toBe(
+    expect(JSON.parse(pkg!.content).devDependencies['@falese/smt-runtime']).toBe(
       DEPENDENCY_VERSIONS.runtime.package,
     );
   });
@@ -491,14 +491,14 @@ describe('unified-generator', () => {
     });
 
     it('README documents the unpublished-runtime staging workaround (DX punch list #7)', async () => {
-      // Generated package.json pins @seans-mfe-tool/runtime, which is not on
+      // Generated package.json pins @falese/smt-runtime, which is not on
       // npm yet (ADR-064) — a plain `npm install` 404s with no hint. Until the
       // runtime ships, the README must carry the staging workaround.
       const { files } = await generateAllFiles(manifest as any, basePath, { force: true });
       const readme = files.find((f) => f.path === path.join(basePath, 'README.md'));
       expect(readme).toBeDefined();
-      expect(readme!.content).toContain('@seans-mfe-tool/runtime` is not published yet');
-      expect(readme!.content).toContain('dist/runtime node_modules/@seans-mfe-tool/runtime');
+      expect(readme!.content).toContain('@falese/smt-runtime` is not published yet');
+      expect(readme!.content).toContain('dist/runtime node_modules/@falese/smt-runtime');
       // Must warn against file:/symlink staging — resolution escapes the project.
       expect(readme!.content).toMatch(/real directory/i);
     });
@@ -575,7 +575,7 @@ describe('unified-generator', () => {
       // '@angular/platform-browser' in dist/runtime". The proven pattern
       // (abc-kids' hand-patched Dockerfiles) copies a real directory.
       expect(dockerfile!.content).toContain(
-        "cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime"
+        "cp -r /seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime"
       );
       expect(dockerfile!.content).not.toContain("file:/seans-mfe-tool/dist/runtime");
     });

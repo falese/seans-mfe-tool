@@ -10,7 +10,7 @@ import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator
 import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
 import { generateJWTSecret } from '../utils/securityUtils';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { ValidationError, NetworkError, SystemError } from '@seans-mfe/contracts';
+import { ValidationError, NetworkError, SystemError } from '@falese/smt-contracts';
 import type { ApiResult, PlannedChange } from '../oclif/results';
 
 interface ApiOptions {

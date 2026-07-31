@@ -41,7 +41,7 @@ If you only read one section, read this one.
    - **Data** (generated): your manifest's slot list, mirrored into a tiny
      generated file. Data is JSON-shaped — any language can read it.
    - **Logic** (published once): matching and the "declare it before you
-     register it" guard live in `@seans-mfe-tool/runtime`, framework-free
+     register it" guard live in `@falese/smt-runtime`, framework-free
      and DOM-free. One implementation, one place to fix.
    - **Sugar** (thin, per framework): React uses `DeclaredSlot`; Angular uses
      the standalone `[smtDeclaredSlot]` directive. Both wire the same contract
@@ -65,7 +65,7 @@ If you only read one section, read this one.
 flowchart TD
   M["mfe-manifest.yaml\nprovidesSlots (DATA · declared once)"]
   M -- "codegen mirrors it" --> G["generated src/slots.tsx or slots.ts\nPROVIDED_SLOTS + slotContract"]
-  L["@seans-mfe-tool/runtime\ncreateSlotContract (LOGIC · published once)"]
+  L["@falese/smt-runtime\ncreateSlotContract (LOGIC · published once)"]
   G -- "binds data to logic" --> L
   S["DeclaredSlot / smtDeclaredSlot\n(SUGAR · thin, per framework)"] -- "assert + register via" --> L
   S -- "provideSlot(id, element)" --> H["host LayoutManager\ndesired-state binding (ADR-066)"]
@@ -121,8 +121,8 @@ or `src/slots.ts` for Angular — **data plus thin framework binding**:
 `createSlotContract()`, plus `DeclaredSlot` or `DeclaredSlotDirective`, plus
 `DeclaredSlotId` — a type union of the declared ids (ADR-072), so using a slot
 the manifest no longer declares is a **compile error**, not a runtime throw.
-The matching and guard *logic* lives once in `@seans-mfe/contracts` and is
-re-exported from `@seans-mfe-tool/runtime` (ADR-073), so a fix there never
+The matching and guard *logic* lives once in `@falese/smt-contracts` and is
+re-exported from `@falese/smt-runtime` (ADR-073), so a fix there never
 requires regenerating MFEs, and design-time tooling shares the same matcher. The file is always regenerated —
 it is contract, not scaffold — so the code can never claim a slot the
 manifest doesn't declare:

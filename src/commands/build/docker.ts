@@ -12,9 +12,9 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin } from '../../framework/loader';
-import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
-import { ValidationError } from '@seans-mfe/contracts';
-import type { DockerStrategy } from '@seans-mfe/contracts';
+import { findManifest, parseManifestFile } from '@falese/smt-dsl';
+import { ValidationError } from '@falese/smt-contracts';
+import type { DockerStrategy } from '@falese/smt-contracts';
 import type { BuildDockerResult } from '../../oclif/results';
 
 export interface BuildDockerOptions {

@@ -51,7 +51,7 @@ jobs:
       # `npm ci` symlinks the file: workspace packages but never builds them,
       # so packages/*/dist does not exist. TypeDoc reads source and does not
       # care, but generate-dsl-schema.ts imports packages/dsl/src/schema.ts,
-      # which imports '@seans-mfe/contracts' — a bare specifier ts-node
+      # which imports '@falese/smt-contracts' — a bare specifier ts-node
       # resolves through node_modules to ./dist/index.js, not through the
       # tsconfig `paths` mapping (ts-node ignores paths at runtime without
       # tsconfig-paths). Without this step the schema job dies with

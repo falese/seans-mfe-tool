@@ -10,7 +10,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:179](https://github.com/falese/sea
 
 Result from updateControlPlaneState capability.
 
-Mirrors ControlPlaneStateResult in @seans-mfe/contracts, with `error`
+Mirrors ControlPlaneStateResult in @falese/smt-contracts, with `error`
 optional so implementors of doUpdateControlPlaneState may omit it (the wire
 form always sets it). The `resolution` shape IS the contracts `Resolution`.
 

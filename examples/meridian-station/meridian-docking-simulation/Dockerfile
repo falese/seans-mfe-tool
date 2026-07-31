@@ -24,12 +24,12 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 # and framework imports inside the runtime — @angular/platform-browser,
 # react — would fail to resolve during ng build / rspack.
 COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@falese/smt-runtime'] 2>/dev/null || true
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm install --legacy-peer-deps --no-audit --no-fund
 RUN mkdir -p node_modules/@seans-mfe-tool && \
-    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime
 
 # Copy source files
 COPY . .
@@ -47,12 +47,12 @@ RUN npx mesh build
 # Compile TypeScript server entry point.
 RUN npm run build:server
 
-# Strip @seans-mfe-tool/runtime from package.json before the production stage.
+# Strip @falese/smt-runtime from package.json before the production stage.
 # remote:generate (called inside npm run build) rewrites package.json and may
 # put the runtime back as a file: reference pointing to /seans-mfe-tool which
 # doesn't exist in the production image — causing npm install to 404.
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@falese/smt-runtime'] 2>/dev/null || true
 
 # Production image
 FROM node:20-slim AS production

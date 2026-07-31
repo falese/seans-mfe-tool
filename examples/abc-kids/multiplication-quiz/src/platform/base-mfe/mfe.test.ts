@@ -1,6 +1,6 @@
 
 import { abckidsmultiplicationquizMFE } from './mfe';
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 describe('abckidsmultiplicationquizMFE', () => {
   let mfe: abckidsmultiplicationquizMFE;

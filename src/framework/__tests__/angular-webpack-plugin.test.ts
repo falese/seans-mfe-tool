@@ -2,8 +2,8 @@
  * AngularWebpackPlugin — concrete plugin tests (ADR-036, #171).
  */
 
-import { BaseFrameworkPlugin } from '@seans-mfe/contracts';
-import { AngularWebpackPlugin } from '@seans-mfe/framework-angular';
+import { BaseFrameworkPlugin } from '@falese/smt-contracts';
+import { AngularWebpackPlugin } from '@falese/smt-framework-angular';
 
 describe('AngularWebpackPlugin', () => {
   const plugin = new AngularWebpackPlugin();
@@ -48,7 +48,7 @@ describe('AngularWebpackPlugin', () => {
     });
 
     it('returns AngularRemoteMFE runtime class', () => {
-      expect(plugin.getRuntimeImport()).toBe('@seans-mfe-tool/runtime/angular');
+      expect(plugin.getRuntimeImport()).toBe('@falese/smt-runtime/angular');
       expect(plugin.getRuntimeClassName()).toBe('AngularRemoteMFE');
     });
 

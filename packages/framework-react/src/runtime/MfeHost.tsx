@@ -20,7 +20,7 @@ import {
   type ImperativeMountHandle,
   type ImperativeUnmount,
   type PresentationHandles,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 /** Accept either the full handle bundle or just the imperative handle. */
 export type MfeHandleInput = PresentationHandles | ImperativeMountHandle;

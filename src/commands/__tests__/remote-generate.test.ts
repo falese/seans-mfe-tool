@@ -29,14 +29,14 @@ jest.mock('path', () => ({
 }));
 
 // Mock DSL modules
-jest.mock('@seans-mfe/dsl', () => ({
+jest.mock('@falese/smt-dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
   formatErrorsForCLI: jest.fn((errors) => errors.map((e: any) => e.message).join('\n'))
 }));
 
 
-jest.mock('@seans-mfe/codegen', () => {
-  const actual = jest.requireActual('@seans-mfe/codegen');
+jest.mock('@falese/smt-codegen', () => {
+  const actual = jest.requireActual('@falese/smt-codegen');
   return {
     ...actual,
     generateAllFiles: jest.fn(),
@@ -49,9 +49,9 @@ let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
 import { remoteGenerateCommand } from '../remote-generate';
-import { parseAndValidateDirectory } from '@seans-mfe/dsl';
+import { parseAndValidateDirectory } from '@falese/smt-dsl';
 
-import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
+import { generateAllFiles, writeGeneratedFiles } from '@falese/smt-codegen';
 
 const mockParseAndValidate = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerateAllFiles = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;

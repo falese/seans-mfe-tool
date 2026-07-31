@@ -1,6 +1,6 @@
 
 import { meridianconcourseMFE } from './mfe';
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 describe('meridianconcourseMFE', () => {
   let mfe: meridianconcourseMFE;

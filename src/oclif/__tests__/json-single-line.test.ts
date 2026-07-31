@@ -13,7 +13,7 @@
  *
  * Unlike the end-to-end json-contract.test.ts (which needs the full CLI dist and
  * is excluded from the unit test run), this test only needs the built
- * `@seans-mfe/oclif-base` package — which the CI test job builds — so it runs as
+ * `@falese/smt-oclif-base` package — which the CI test job builds — so it runs as
  * part of the normal suite and guards the invariant against silent drift.
  *
  * Refs #230, #219 (CA-2)
@@ -43,7 +43,7 @@ function nonEmptyLines(s: string): string[] {
 describe('--json single-line stdout conformance (CA-2)', () => {
   it('writeJsonLine emits exactly one newline-terminated line on real stdout', () => {
     const { stdout, status } = runInChild(
-      `const { writeJsonLine } = require('@seans-mfe/oclif-base');
+      `const { writeJsonLine } = require('@falese/smt-oclif-base');
        writeJsonLine('{"ok":true,"marker":"CA2"}');`,
     );
     expect(status).toBe(0);
@@ -54,7 +54,7 @@ describe('--json single-line stdout conformance (CA-2)', () => {
 
   it('after redirect, console/stdout writes go to stderr; envelope is the only stdout line', () => {
     const { stdout, stderr, status } = runInChild(
-      `const { redirectStdoutToStderr, writeJsonLine } = require('@seans-mfe/oclif-base');
+      `const { redirectStdoutToStderr, writeJsonLine } = require('@falese/smt-oclif-base');
        redirectStdoutToStderr();
        console.log('human-progress-line');
        process.stdout.write('raw-stdout-write');
@@ -73,7 +73,7 @@ describe('--json single-line stdout conformance (CA-2)', () => {
 
   it('suppressChalk strips ANSI colour codes even when colour is forced', () => {
     const { stdout, status } = runInChild(
-      `const { suppressChalk } = require('@seans-mfe/oclif-base');
+      `const { suppressChalk } = require('@falese/smt-oclif-base');
        const chalk = require('chalk');
        suppressChalk();
        process.stdout.write(chalk.red('plain'));`,

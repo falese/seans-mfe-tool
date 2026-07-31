@@ -19,7 +19,7 @@ import type {
   ControlPlaneConfig,
   ControlPlaneHealth,
 } from './base-control-plane';
-import type { MfeRegistration, Resolution, ActionRecord } from '@seans-mfe/contracts';
+import type { MfeRegistration, Resolution, ActionRecord } from '@falese/smt-contracts';
 import type { DaemonTransport } from './layout-manager';
 
 // ── Test double ──────────────────────────────────────────────────────────────

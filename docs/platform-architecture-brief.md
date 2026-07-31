@@ -210,7 +210,7 @@ These are trades made on purpose. The two things you give up are exactly the thi
 
 ## The Path Forward
 
-**What is built.** The runtime plumbing is in place: the LayoutManager (`src/runtime/layout-manager.ts`) with `providerValues` threading, `reportError` sink, slot-scoped fallback, `data-slot-state` markers, and `SLOT_ERROR` escalation with bounded retry. The neutral capability contract (`BaseMFE`, the ten `do*()` methods, the state machine) is in `packages/runtime`. The `BaseControlPlane` abstraction (`packages/runtime`) provides the host integration point. The `@seans-mfe/contracts` package carries the protocol types, the presentation handle shape, and the `hostContext` injection contract.
+**What is built.** The runtime plumbing is in place: the LayoutManager (`src/runtime/layout-manager.ts`) with `providerValues` threading, `reportError` sink, slot-scoped fallback, `data-slot-state` markers, and `SLOT_ERROR` escalation with bounded retry. The neutral capability contract (`BaseMFE`, the ten `do*()` methods, the state machine) is in `packages/runtime`. The `BaseControlPlane` abstraction (`packages/runtime`) provides the host integration point. The `@falese/smt-contracts` package carries the protocol types, the presentation handle shape, and the `hostContext` injection contract.
 
 **What is next.** Two tracked follow-ups are outstanding:
 
@@ -223,7 +223,7 @@ These are trades made on purpose. The two things you give up are exactly the thi
    `props.hostContext` and re-provide it inside each framework root without
    manual author work.
 
-**What is not built, by design.** The "native in-tree handle" — a React-specific shared-reconciler integration where a React MFE runs inside the host's React tree — has types reserved in `@seans-mfe/contracts` (`NativeComponentHandle`, `selectHandle`) as a latent optional. It is not implemented, and it is not the platform's integration strategy. Value-injection is the strategy. The latent types exist in case a narrow, explicitly scoped exception is ever needed; they will never be the default path.
+**What is not built, by design.** The "native in-tree handle" — a React-specific shared-reconciler integration where a React MFE runs inside the host's React tree — has types reserved in `@falese/smt-contracts` (`NativeComponentHandle`, `selectHandle`) as a latent optional. It is not implemented, and it is not the platform's integration strategy. Value-injection is the strategy. The latent types exist in case a narrow, explicitly scoped exception is ever needed; they will never be the default path.
 
 The alignment sessions this week should be read against this background. Decisions about slot vocabulary, about how `hostContext` is structured, about how teams adopt the new template conventions — these all sit inside the model described here. The questions that do not fit the model (for example: "can we have the shell's React error boundaries catch MFE errors?") are not questions to be answered by finding the right API — they are questions to be answered by understanding the trade in section 7, and then deciding whether the trade is the right one for this platform.
 

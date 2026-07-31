@@ -2,12 +2,12 @@ import { Args, Flags } from '@oclif/core';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk = require('chalk');
-import { createMinimalManifest, writeManifest, generateEndpoints } from '@seans-mfe/dsl';
+import { createMinimalManifest, writeManifest, generateEndpoints } from '@falese/smt-dsl';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { BusinessError, SystemError } from '@seans-mfe/contracts';
+import { BusinessError, SystemError } from '@falese/smt-contracts';
 import { loadFrameworkPlugin } from '../../framework/loader';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
-import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
+import type { RemoteInitOptions, DSLManifest } from '@falese/smt-dsl';
 
 export async function remoteInitCommand(
   name: string,
@@ -110,7 +110,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
   static flags = {
     ...BaseCommand.baseFlags,
     framework: Flags.string({
-      description: 'Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.',
+      description: 'Framework to use (default: react). Install @falese/smt-framework-<name> for third-party frameworks.',
       default: 'react',
     }),
     port: Flags.string({

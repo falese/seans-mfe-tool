@@ -24,7 +24,7 @@ export interface ErrorHandlingConfig {
 }
 
 /**
- * The shape a typed error from @seans-mfe/contracts (or a duck-typed
+ * The shape a typed error from @falese/smt-contracts (or a duck-typed
  * equivalent) may carry. `type` is the only field classifyError requires;
  * the rest vary by error class (e.g. only ValidationError sets `field`).
  */

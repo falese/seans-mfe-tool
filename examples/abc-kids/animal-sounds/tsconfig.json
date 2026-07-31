@@ -12,8 +12,8 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@seans-mfe-tool/runtime": ["../../../src/runtime/index.ts"],
-      "@seans-mfe-tool/runtime/*": ["../../../src/runtime/*"]
+      "@falese/smt-runtime": ["../../../src/runtime/index.ts"],
+      "@falese/smt-runtime/*": ["../../../src/runtime/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

@@ -60,7 +60,7 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@falese/smt-runtime": "file:../../../dist/runtime"
   },
   "jest": {
     "preset": "ts-jest",

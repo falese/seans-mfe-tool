@@ -45,8 +45,8 @@ import {
   BusinessError,
   SystemError,
   ValidationError,
-} from '@seans-mfe/contracts';
-import type { ActionRecord } from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
+import type { ActionRecord } from '@falese/smt-contracts';
 
 /**
  * Validate and narrow the inputs required by updateControlPlaneState.
@@ -471,7 +471,7 @@ export abstract class BaseRemoteMFE extends BaseMFE {
     // Fallback: collect domain capability names — everything that is not a
     // platform capability in either the camelCase or the PascalCase spelling a
     // manifest may use as an entry key. Both spellings come from the canonical
-    // definition in @seans-mfe/contracts (ADR-080).
+    // definition in @falese/smt-contracts (ADR-080).
     const domainComponents: string[] = [];
     for (const capEntry of this.manifest.capabilities) {
       for (const name of Object.keys(capEntry)) {

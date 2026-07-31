@@ -10,12 +10,12 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { mfeValidateCommand } from '../validate';
-import { DEPENDENCY_VERSIONS } from '@seans-mfe/codegen';
-import { BusinessError } from '@seans-mfe/contracts';
+import { DEPENDENCY_VERSIONS } from '@falese/smt-codegen';
+import { BusinessError } from '@falese/smt-contracts';
 
 const REACT = DEPENDENCY_VERSIONS.react.react;
 const REACT_DOM = DEPENDENCY_VERSIONS.react.reactDom;
-const RUNTIME = '@seans-mfe-tool/runtime';
+const RUNTIME = '@falese/smt-runtime';
 
 interface Fixture {
   packageDeps?: Record<string, string>;

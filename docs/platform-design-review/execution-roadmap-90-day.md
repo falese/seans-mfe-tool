@@ -75,7 +75,7 @@ This roadmap sequences the closure of every documented gap into three 30-day pha
 | Security / threat-model overview (ADR-044/046, auth, JWT) | G25 | Security owner | M | BFF doc |
 | Testing-strategy doc (Jest + Playwright + coverage gates) | G30 | QA owner | S | — |
 | Glossary | G31 | Docs owner | XS | TOC |
-| Versioning/upgrade guide for `@seans-mfe/contracts` | G28 | Packages owner | S | MERGE-PLAN |
+| Versioning/upgrade guide for `@falese/smt-contracts` | G28 | Packages owner | S | MERGE-PLAN |
 | Governance checklist + review rubric operationalized | #225, G32 | Docs owner | S | #225 (done) |
 | Documentation KPI framework instrumented | #226 | Docs owner | S | gap matrix |
 | Reconcile MERGE-PLAN + lifecycle-issue status; known-issues page (#199, #208, #209) | G20, G22, G23, G24, G34 | Docs owner | S | — |

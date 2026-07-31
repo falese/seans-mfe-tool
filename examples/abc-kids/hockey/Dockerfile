@@ -18,18 +18,18 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
     ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 # Install dependencies.
-# @seans-mfe-tool/runtime is removed from package.json before npm install;
+# @falese/smt-runtime is removed from package.json before npm install;
 # we then copy it as a real directory (not a symlink) into node_modules so
 # that rspack/webpack module resolution stays within /app/node_modules.
 COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@falese/smt-runtime'] 2>/dev/null || true
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm install --no-audit --no-fund
 
 # Copy runtime as a real directory so module resolution stays within /app.
 RUN mkdir -p node_modules/@seans-mfe-tool && \
-    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime
 
 # Copy source
 COPY . .

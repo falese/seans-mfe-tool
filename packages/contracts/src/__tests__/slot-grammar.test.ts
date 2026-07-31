@@ -1,8 +1,8 @@
 /**
  * Slot-id grammar (ADR-066/067, single-sourced here per ADR-069): the one
  * definition of what a declared slot-id segment may look like, consumed by
- * design-time validation (@seans-mfe/dsl) and the runtime matcher
- * (@seans-mfe-tool/runtime). Refs #265.
+ * design-time validation (@falese/smt-dsl) and the runtime matcher
+ * (@falese/smt-runtime). Refs #265.
  */
 import {
   SLOT_ID_SEGMENT,

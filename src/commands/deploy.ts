@@ -5,7 +5,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
+import { ValidationError, BusinessError, SystemError, TimeoutError } from '@falese/smt-contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
 
 interface DeployOptions {

@@ -5,7 +5,7 @@
  * ADR-056 has always permitted for this layer. What it does not permit is that
  * import reaching consumers who did not ask for it, and re-exporting the class
  * from the main barrel did exactly that: any *value* import from
- * '@seans-mfe-tool/runtime' pulled React into the bundle, including in Angular
+ * '@falese/smt-runtime' pulled React into the bundle, including in Angular
  * MFEs that have no React installed.
  *
  * The symmetry with `./angular` is the point. Each framework abstract sits

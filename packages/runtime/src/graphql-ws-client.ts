@@ -10,7 +10,7 @@
  */
 
 import { uuidv4 } from './util/uuid';
-import { NetworkError } from '@seans-mfe/contracts';
+import { NetworkError } from '@falese/smt-contracts';
 
 /**
  * Minimal interface for the socket so tests can inject fakes without depending

@@ -15,7 +15,7 @@
 
 import { RemoteMFE } from '../remote-mfe';
 import type { Context, TelemetryEvent, TelemetryService } from '../base-mfe';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
 /**
  * Simple telemetry service that logs to console

@@ -1,5 +1,5 @@
 import { resolveNeededMeshPluginsAndTransforms } from '../unified-generator';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
 const baseManifest: DSLManifest = {
   name: 'demo-widget',

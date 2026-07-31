@@ -163,19 +163,19 @@ module.exports = {
   // Handle module mocks
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
-    '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
-    '^@seans-mfe/dsl$': '<rootDir>/packages/dsl/src/index.ts',
-    '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
-    '^@seans-mfe/codegen$': '<rootDir>/packages/codegen/src/index.ts',
-    '^@seans-mfe/codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',
-    '^@falese/bff-plugin$': '<rootDir>/packages/bff-plugin/src/index.ts',
-    '^@falese/bff-plugin/(.*)$': '<rootDir>/packages/bff-plugin/src/$1',
-    '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
-    '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
-    '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',
-    '^@seans-mfe/framework-react/(.*)$': '<rootDir>/packages/framework-react/src/$1',
-    '^@seans-mfe/framework-angular$': '<rootDir>/packages/framework-angular/src/index.ts',
-    '^@seans-mfe/framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1'
+    '^@falese/smt-contracts$': '<rootDir>/packages/contracts/src/index.ts',
+    '^@falese/smt-contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
+    '^@falese/smt-dsl$': '<rootDir>/packages/dsl/src/index.ts',
+    '^@falese/smt-dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
+    '^@falese/smt-codegen$': '<rootDir>/packages/codegen/src/index.ts',
+    '^@falese/smt-codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',
+    '^@falese/smt-plugin-bff$': '<rootDir>/packages/bff-plugin/src/index.ts',
+    '^@falese/smt-plugin-bff/(.*)$': '<rootDir>/packages/bff-plugin/src/$1',
+    '^@falese/smt-oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
+    '^@falese/smt-oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
+    '^@falese/smt-framework-react$': '<rootDir>/packages/framework-react/src/index.ts',
+    '^@falese/smt-framework-react/(.*)$': '<rootDir>/packages/framework-react/src/$1',
+    '^@falese/smt-framework-angular$': '<rootDir>/packages/framework-angular/src/index.ts',
+    '^@falese/smt-framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1'
   }
 };

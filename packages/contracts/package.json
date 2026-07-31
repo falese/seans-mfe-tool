@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/contracts",
+  "name": "@falese/smt-contracts",
   "version": "0.1.0",
   "description": "The seans-mfe platform contract: platform capabilities and MFE lifecycle machine, control-plane message protocol, slot contract and grammar, presentation boundary, framework-plugin base, typed errors, error classifier, and CommandResult envelope. Zero runtime dependencies.",
   "main": "./dist/index.js",

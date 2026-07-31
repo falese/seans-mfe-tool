@@ -16,14 +16,14 @@ import chalk = require('chalk');
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+import { ValidationError, BusinessError } from '@falese/smt-contracts';
 import {
   parseManifestFile,
   validatePlacementRules,
   type PlacementFinding,
   type PlacementRuleDocument,
-} from '@seans-mfe/dsl';
-import type { SlotProviderDeclarations } from '@seans-mfe/contracts';
+} from '@falese/smt-dsl';
+import type { SlotProviderDeclarations } from '@falese/smt-contracts';
 
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage']);
 

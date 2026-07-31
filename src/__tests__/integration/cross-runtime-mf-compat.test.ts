@@ -10,7 +10,7 @@
  */
 
 import { loadFrameworkPlugin } from '../../framework/loader';
-import type { SharedDep } from '@seans-mfe/contracts';
+import type { SharedDep } from '@falese/smt-contracts';
 
 describe('cross-runtime MF compatibility (React rspack ↔ Angular webpack)', () => {
   const react = loadFrameworkPlugin('react');
@@ -94,7 +94,7 @@ describe('cross-runtime MF compatibility (React rspack ↔ Angular webpack)', ()
   });
 
   it('both plugins require needsCliBuilder (runtime is distributed via CLI image)', () => {
-    // Both React and Angular MFEs use @seans-mfe-tool/runtime, which is
+    // Both React and Angular MFEs use @falese/smt-runtime, which is
     // distributed via the seans-mfe-tool-cli Docker image rather than npm.
     expect(react.getDockerStrategy(null).needsCliBuilder).toBe(true);
     expect(angular.getDockerStrategy(null).needsCliBuilder).toBe(true);

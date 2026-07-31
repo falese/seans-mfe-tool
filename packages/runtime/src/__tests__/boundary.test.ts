@@ -45,7 +45,7 @@ const NEUTRAL_DIRS = ['packages/contracts/src'];
 // DaemonChannel, the imperative-handle port, and BaseRemoteMFE (the neutral
 // Module Federation lifecycle shared by both framework adapters, ADR-036). The
 // contract shapes these depend on now live in the scanned NEUTRAL_DIRS
-// (@seans-mfe/contracts); the inlined src/runtime/contracts.ts mirror was
+// (@falese/smt-contracts); the inlined src/runtime/contracts.ts mirror was
 // deleted in #236. RemoteMFE / AngularRemoteMFE (layer 5) are intentionally
 // excluded: they produce the native handle and are allowed to import React /
 // Angular.
@@ -99,7 +99,7 @@ describe('ADR-056 boundary: neutral core + contract carry zero framework imports
 // this file import React", and `RemoteMFE` is *allowed* to — it is layer 5,
 // the abstract that produces the native handle. What nothing asked was whether
 // the **barrel** reaches it, and it did: `index.ts` re-exported `RemoteMFE`, so
-// any value import from '@seans-mfe-tool/runtime' pulled React into the bundle.
+// any value import from '@falese/smt-runtime' pulled React into the bundle.
 //
 // A type-only import erases at compile time, which is why this hid for so long.
 // It surfaced the day a template gained its first *value* import from the
@@ -180,7 +180,7 @@ describe('ADR-056 boundary: the runtime barrel stays polyglot', () => {
 // The rule: everything that crosses the daemon socket is a contracts type;
 // everything internal to the MFE lifecycle engine is a runtime type. A
 // runtime source file must therefore not RE-DECLARE a type whose name is
-// exported by @seans-mfe/contracts — import it (or extend it) instead.
+// exported by @falese/smt-contracts — import it (or extend it) instead.
 // This is the type-level companion to the framework-import scan above.
 
 /**

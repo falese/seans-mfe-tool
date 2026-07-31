@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/oclif-base",
+  "name": "@falese/smt-oclif-base",
   "version": "0.1.0",
   "description": "BaseCommand, JSON output helpers, and envelope glue for seans-mfe-tool and its plugins",
   "main": "./dist/index.js",
@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo 'No tests in @seans-mfe/oclif-base yet' && exit 0",
+    "test": "echo 'No tests in @falese/smt-oclif-base yet' && exit 0",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
@@ -23,7 +23,7 @@
     "@oclif/core": "^4"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts",
+    "@falese/smt-contracts": "file:../contracts",
     "chalk": "^4.1.2"
   },
   "devDependencies": {

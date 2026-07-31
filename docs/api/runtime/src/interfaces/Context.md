@@ -28,7 +28,7 @@ keep compiling via this index signature; new code should use `extensions`.
 Defined in: [packages/runtime/src/context.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L82)
 
 Current capability being executed — one of the ten platform capabilities
-(single-sourced in @seans-mfe/contracts, ADR-080) or a domain capability
+(single-sourced in @falese/smt-contracts, ADR-080) or a domain capability
 name, which is why the union stays open.
 
 ***

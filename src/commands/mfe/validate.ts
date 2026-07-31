@@ -7,7 +7,7 @@
  * manifest-driven deps) but that hand-edits silently break — the class of drift
  * behind the meridian-docking-simulation regression (PR #292).
  *
- * The consistency rules are pure functions in `@seans-mfe/codegen`
+ * The consistency rules are pure functions in `@falese/smt-codegen`
  * (`validateMfeConsistency`, unit-tested); this command is the thin I/O shell:
  * read files, parse the config, run an optional `tsc --noEmit`, and throw a
  * typed error (non-zero exit) on any inconsistency.
@@ -28,15 +28,15 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { parseAndValidateDirectory } from '@seans-mfe/dsl';
+import { parseAndValidateDirectory } from '@falese/smt-dsl';
 import {
   validateMfeConsistency,
   parseFederationSharedEntries,
   generateAllFiles,
   isError,
-} from '@seans-mfe/codegen';
-import type { SourceFile } from '@seans-mfe/dsl';
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+} from '@falese/smt-codegen';
+import type { SourceFile } from '@falese/smt-dsl';
+import { ValidationError, BusinessError } from '@falese/smt-contracts';
 import type { MfeValidateResult } from '../../oclif/results';
 
 export interface MfeValidateOptions {

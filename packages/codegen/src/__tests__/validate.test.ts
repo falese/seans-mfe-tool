@@ -1,8 +1,8 @@
 import { validateMfeConsistency, parseFederationSharedEntries } from '../validate';
 import { DEPENDENCY_VERSIONS } from '../unified-generator';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
-const RUNTIME = '@seans-mfe-tool/runtime';
+const RUNTIME = '@falese/smt-runtime';
 
 function reactManifest(deps: Record<string, unknown> = {}): DSLManifest {
   return {

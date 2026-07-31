@@ -108,7 +108,7 @@ Kept (developer-owned):
 for it. `packages/codegen/templates/base-mfe/package.json.ejs` is fully
 BFF-aware: its `hasBff` branch renders the complete Mesh dependency set
 (`@graphql-mesh/serve-runtime`, `express`, `cors`, `helmet`,
-`@graphql-tools/{delegate,utils,wrap}`, `tslib`, `@seans-mfe-tool/runtime`,
+`@graphql-tools/{delegate,utils,wrap}`, `tslib`, `@falese/smt-runtime`,
 the right `scripts.dev`/`build`) and *every* `remote:generate` computes that
 content correctly, `data:` or not. The reason it never reaches disk is a
 write-time policy, not a rendering gap: `writeGeneratedFiles`
@@ -215,7 +215,7 @@ exact call site, not a runtime throw discovered later. Revert the typo before
 continuing.
 
 (To reproduce `--typecheck` exactly, `npm install` in the scratch MFE first,
-pointing `@seans-mfe-tool/runtime` at a `file:` dependency on the repo's
+pointing `@falese/smt-runtime` at a `file:` dependency on the repo's
 built `dist/runtime` — it isn't published to a registry. If you added
 `data:` in use case 2 and haven't finished installing the Mesh deps per that
 section's note, temporarily move `server.ts` aside before running
@@ -262,7 +262,7 @@ node /path/to/seans-mfe-tool/bin/run.js mfe:validate .
       - Throwing a raw `Error` — the platform classifies failures by error
         type, so this is reported as `unknown` and never retried (ADR-017)
         src/index.tsx:64
-        fix: Throw a typed error from '@seans-mfe-tool/runtime': ValidationError
+        fix: Throw a typed error from '@falese/smt-runtime': ValidationError
         (bad input), BusinessError (precondition), NetworkError (transport,
         carries the status), SystemError (environment), SecurityError, TimeoutError
 
@@ -299,7 +299,7 @@ Start from a legacy remote with no manifest:
 
 ```
 legacy-widget/
-  package.json          # react ^18.0.0, webpack devDeps, no @seans-mfe-tool/runtime
+  package.json          # react ^18.0.0, webpack devDeps, no @falese/smt-runtime
   webpack.config.js      # ModuleFederationPlugin: name legacy_widget, exposes ./App
   public/index.html      # hand-written
   src/App.tsx
@@ -385,14 +385,14 @@ developer-owned files the generator correctly declined to touch:
 and `shared-declared` (the newly generated `rspack.config.js` shares MUI/emotion
 by platform default, none of which the hand-written `package.json` or
 `webpack.config.js` ever declared), and `runtime-declared`
-(`@seans-mfe-tool/runtime` missing). This is the actual "truing up" work, and
+(`@falese/smt-runtime` missing). This is the actual "truing up" work, and
 it's manual by design — the same "generator seeds once, developer finishes"
 contract every other use case in this runbook already demonstrated.
 
 Closing it means accepting what `framework: react` already implied: the
 generated `rspack.config.js` is the build going forward, not the old
 `webpack.config.js`. Delete `webpack.config.js` and its now-unused devDeps,
-pin `react`/`react-dom` to `~18.2.0`, add `@seans-mfe-tool/runtime` and the
+pin `react`/`react-dom` to `~18.2.0`, add `@falese/smt-runtime` and the
 MUI/emotion deps the generated federation config already shares, and update
 `scripts.dev`/`scripts.build` to call `rspack` instead of `webpack`:
 

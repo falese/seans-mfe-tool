@@ -21,7 +21,7 @@ from the original list.
 
 | Epic item | State on `main` (2026-07-26) |
 |---|---|
-| **#140** zero-dep `@seans-mfe/codegen` | **Done.** ADR-061, `Implemented`. "Zero-dep" was deliberately relaxed: only `@seans-mfe/contracts` stays dependency-free; codegen owns `ejs`/`fs-extra`/`js-yaml` and ships its templates. |
+| **#140** zero-dep `@falese/smt-codegen` | **Done.** ADR-061, `Implemented`. "Zero-dep" was deliberately relaxed: only `@falese/smt-contracts` stays dependency-free; codegen owns `ejs`/`fs-extra`/`js-yaml` and ships its templates. |
 | **#149** rspack alias depth + broken `dsl-mfe` | **Moot.** `examples/dsl-mfe` was deleted under #239, not repaired. |
 | **#148** structured build errors | **Contract done, implementation absent.** `BuildError { file, line, column, category, suggestion }` exists and `build:prod` plumbs it into `envelope.error.details`. But both framework plugins emit exactly one error — `{ message: <entire raw stderr>, category: 'unknown' }`. No output parser exists anywhere in the repo. |
 | **#145** audit log + `// GENERATED` markers | **Withdrawn — solved by a different mechanism.** See §2. |

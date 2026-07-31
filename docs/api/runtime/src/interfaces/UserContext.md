@@ -11,7 +11,7 @@ Defined in: [packages/runtime/src/context.ts:30](https://github.com/falese/seans
 User authentication and authorization context.
 
 Extends the wire-level ControlPlaneUser (the principal a session acts as,
-@seans-mfe/contracts) with the fields the lifecycle engine needs locally:
+@falese/smt-contracts) with the fields the lifecycle engine needs locally:
 a mandatory username, mandatory roles, and optional fine-grained
 permissions. Anything that crosses the daemon socket uses the contracts
 base; the runtime works with this richer view.

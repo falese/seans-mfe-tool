@@ -66,6 +66,18 @@ export interface PlatformMigration {
 // The registry
 // ---------------------------------------------------------------------------
 
+/**
+ * The runtime barrel, under either scope.
+ *
+ * ADR-083 renamed the package from `@seans-mfe-tool/runtime` to
+ * `@falese/smt-runtime`. Migrations below describe things that moved *within*
+ * the barrel, and those moves are orthogonal to the rename — a developer can
+ * adopt the new scope and still be on the old barrel layout. Matching one name
+ * only would let exactly that combination through, so both are matched here and
+ * the `fix` text names the new one.
+ */
+const RUNTIME_BARREL = String.raw`['"](?:@seans-mfe-tool/runtime|@falese/smt-runtime)['"]`;
+
 export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
   {
     id: 'typed-errors',
@@ -77,7 +89,7 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     // for prose that genuinely needs to quote it.
     message:
       'Throwing a raw `Error` — the platform classifies failures by error type, so this is reported as `unknown` and never retried',
-    fix: "Throw a typed error from '@seans-mfe-tool/runtime': ValidationError (bad input), BusinessError (precondition), NetworkError (transport, carries the status), SystemError (environment), SecurityError, TimeoutError",
+    fix: "Throw a typed error from '@falese/smt-runtime': ValidationError (bad input), BusinessError (precondition), NetworkError (transport, carries the status), SystemError (environment), SecurityError, TimeoutError",
     // `new Error(...)` that is not thrown is a value, not a failure signal, so
     // the throw keyword is part of the match.
     pattern: /\bthrow\s+new\s+Error\s*\(/,
@@ -88,11 +100,13 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     failsAt: '2.0.0',
     adr: 'ADR-017',
     message:
-      "`ValidationError` imported as a *type* from '@seans-mfe-tool/runtime' now refers to the thrown class; the per-field record it used to name is `ValidationIssue`",
+      "`ValidationError` imported as a *type* from '@falese/smt-runtime' now refers to the thrown class; the per-field record it used to name is `ValidationIssue`",
     fix: 'Rename the type import to ValidationIssue. If you meant the throwable class, import it as a value instead of a type — that name is unchanged.',
     // Only the type position moved. `import { ValidationError }` (a value) is
     // still correct and must not be flagged.
-    pattern: /import\s+type\s*\{[^}]*\bValidationError\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
+    pattern: new RegExp(
+      String.raw`import\s+type\s*\{[^}]*\bValidationError\b[^}]*\}\s*from\s*` + RUNTIME_BARREL,
+    ),
   },
   {
     id: 'remote-mfe-subpath',
@@ -101,13 +115,27 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     adr: 'ADR-056',
     message:
       "`RemoteMFE` has moved off the main runtime barrel to the '/react' subpath, so the barrel no longer pulls React into every bundle",
-    fix: "Import it from '@seans-mfe-tool/runtime/react'. Everything else on the barrel is unchanged, so a second import line is usually the whole edit. Angular MFEs keep using '@seans-mfe-tool/runtime/angular'.",
+    fix: "Import it from '@falese/smt-runtime/react'. Everything else on the barrel is unchanged, so a second import line is usually the whole edit. Angular MFEs keep using '@falese/smt-runtime/angular'.",
     // Value imports only. A type-only import erased at compile time and never
     // emitted a require, so it was never broken — flagging it would report
     // code that works.
-    pattern:
-      /import\s*\{[^}]*\bRemoteMFE\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
+    pattern: new RegExp(
+      String.raw`import\s*\{[^}]*\bRemoteMFE\b[^}]*\}\s*from\s*` + RUNTIME_BARREL,
+    ),
     exempt: /import\s+type\s*\{/,
+  },
+  {
+    id: 'package-scope-renamed',
+    since: '1.0.0',
+    failsAt: '2.0.0',
+    adr: 'ADR-083',
+    message:
+      "The platform packages publish as '@falese/smt-*' now; '@seans-mfe/*' and '@seans-mfe-tool/*' resolve nowhere, so `npm install` fails rather than falling back",
+    fix: "Rename the specifier — '@seans-mfe-tool/runtime' becomes '@falese/smt-runtime', '@seans-mfe/contracts' becomes '@falese/smt-contracts', and so on — then update the matching entry in this MFE's package.json dependencies. The package's exports are unchanged, so the import list itself does not move.",
+    // Any reference to either retired scope, in an import or a package.json
+    // dependency line. Deliberately broader than an import statement: a stale
+    // dependency entry breaks the install before any import is reached.
+    pattern: /@seans-mfe(?:-tool)?\//,
   },
 ] as const;
 

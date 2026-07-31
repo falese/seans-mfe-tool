@@ -9,7 +9,7 @@
  *   const data = await query<GetUserQuery>(GET_USER, { id });
  */
 
-import { NetworkError, BusinessError } from '@seans-mfe-tool/runtime';
+import { NetworkError, BusinessError } from '@falese/smt-runtime';
 
 const BFF_ENDPOINT =
   (typeof process !== 'undefined' && (process.env['BFF_URL'] || process.env['VITE_BFF_URL'])) ||

@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import * as path from 'path';
 import chalk = require('chalk');
-import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
+import { parseAndValidateDirectory, formatErrorsForCLI } from '@falese/smt-dsl';
 import * as fsSync from 'fs';
 import {
   generateAllFiles,
@@ -9,13 +9,13 @@ import {
   PLATFORM_MIGRATIONS,
   findMigrationHits,
   diffPackageDependencies,
-} from '@seans-mfe/codegen';
-import type { GeneratedFile } from '@seans-mfe/codegen';
+} from '@falese/smt-codegen';
+import type { GeneratedFile } from '@falese/smt-codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
-import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
+import type { RemoteGenerateOptions } from '@falese/smt-dsl';
 
 /**
  * What the writer will actually do to this file (#340).

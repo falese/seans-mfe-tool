@@ -10,7 +10,7 @@ import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
 import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
 import { validateFull } from './validator';
-import { SystemError, ValidationError } from '@seans-mfe/contracts';
+import { SystemError, ValidationError } from '@falese/smt-contracts';
 
 // =============================================================================
 // Constants
@@ -79,7 +79,7 @@ function warnUnknownPluginValues(manifest: DSLManifest): void {
   if (manifest.framework && !(KNOWN_FRAMEWORKS as readonly string[]).includes(manifest.framework)) {
     process.stderr.write(
       `[seans-mfe-tool] Warning: unknown framework "${manifest.framework}". ` +
-      `Install the plugin: npm install @seans-mfe/framework-${manifest.framework}\n`,
+      `Install the plugin: npm install @falese/smt-framework-${manifest.framework}\n`,
     );
   }
   if (manifest.bundler && !(KNOWN_BUNDLERS as readonly string[]).includes(manifest.bundler)) {

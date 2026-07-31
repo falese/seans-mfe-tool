@@ -44,7 +44,7 @@ const EXCLUDED_SEGMENTS = ['__tests__', 'node_modules', 'dist', 'fixtures', 'cov
 
 /**
  * The API generator emits a standalone Express app that does not depend on
- * `@seans-mfe/contracts`, so the typed classes are not reachable from its
+ * `@falese/smt-contracts`, so the typed classes are not reachable from its
  * output. ADR-063 has that whole axis parked behind #251, and
  * `examples/meridian-station/DX-REPORT.md` §0.2 records that the generated API
  * does not boot. Typing its throws is part of that work, not this rule.
@@ -139,7 +139,7 @@ describe('ADR-017: typed errors only', () => {
     expect(
       report &&
         `Raw Error throws found. Use ValidationError / BusinessError / NetworkError /\n` +
-          `SystemError / TimeoutError / SecurityError from @seans-mfe/contracts (ADR-017):\n${report}`,
+          `SystemError / TimeoutError / SecurityError from @falese/smt-contracts (ADR-017):\n${report}`,
     ).toBe('');
   });
 

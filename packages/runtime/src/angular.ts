@@ -1,7 +1,7 @@
 /**
- * Angular subpath entry for @seans-mfe-tool/runtime
+ * Angular subpath entry for @falese/smt-runtime
  *
- * Import as: import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular'
+ * Import as: import { AngularRemoteMFE } from '@falese/smt-runtime/angular'
  *
  * This subpath is intentionally separate from the main index so that React/rspack
  * consumers (RemoteMFE) never pull in @angular/platform-browser (ADR-035).

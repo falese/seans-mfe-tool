@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { spawn } from 'child_process';
-import { BaseCommand } from '@seans-mfe/oclif-base';
+import { BaseCommand } from '@falese/smt-oclif-base';
 import { writeMeshConfig } from '../../shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from '../../shared';

@@ -15,12 +15,12 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 # node_modules — module resolution must never leave the project (a file:
 # symlink would resolve Angular/React imports from outside it).
 COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@falese/smt-runtime'] 2>/dev/null || true
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm install --legacy-peer-deps --no-audit --no-fund
 RUN mkdir -p node_modules/@seans-mfe-tool && \
-    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime
 
 COPY . .
 

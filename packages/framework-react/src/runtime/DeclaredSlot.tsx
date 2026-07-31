@@ -3,7 +3,7 @@
  * over the framework-free slot contract. Written once here; never generated.
  *
  * The contract logic (matching, declare-before-register guard) lives in
- * `@seans-mfe-tool/runtime` (`createSlotContract`); this component only wires
+ * `@falese/smt-runtime` (`createSlotContract`); this component only wires
  * it to React's lifecycle: assert on render, register the element via a
  * stable ref callback. Re-registration on remount is safe — the host re-binds
  * the address's desired experience instead of destroying it (ADR-066).
@@ -20,7 +20,7 @@
  */
 import * as React from 'react';
 
-/** Structural view of `SlotContract` from `@seans-mfe-tool/runtime`. */
+/** Structural view of `SlotContract` from `@falese/smt-runtime`. */
 export interface SlotContractLike {
   assertDeclared(id: string): void;
   register<E>(

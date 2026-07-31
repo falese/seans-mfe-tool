@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SystemError } from '@seans-mfe-tool/runtime';
+import { SystemError } from '@falese/smt-runtime';
 import styled from 'styled-components';
 import { DockingSimulation } from './features/DockingSimulation/DockingSimulation';
 import { ShipControl } from './features/ShipControl/ShipControl';

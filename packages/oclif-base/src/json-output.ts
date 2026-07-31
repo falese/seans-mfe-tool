@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { SystemError } from '@seans-mfe/contracts';
+import { SystemError } from '@falese/smt-contracts';
 
 // ---------------------------------------------------------------------------
 // Chalk / color suppression

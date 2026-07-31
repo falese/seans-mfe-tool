@@ -5,12 +5,12 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import * as yaml from 'js-yaml';
 import { processTemplates } from '../../utils/templateProcessor';
-import { BaseCommand } from '@seans-mfe/oclif-base';
-import { SystemError, ValidationError } from '@seans-mfe/contracts';
+import { BaseCommand } from '@falese/smt-oclif-base';
+import { SystemError, ValidationError } from '@falese/smt-contracts';
 import { addMeshDependencies, ensureMockSwitchFiles } from '../../shared';
 import type { BFFCommandOptions, MFEManifest, TemplateSource, TemplateVars } from '../../shared';
 import type { BffInitResult, PlannedChange } from '../../types';
-import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '@seans-mfe/codegen';
+import { DEPENDENCY_VERSIONS, DEFAULT_MESH_PLUGINS, DEFAULT_MESH_TRANSFORMS } from '@falese/smt-codegen';
 
 export async function bffInitCommand(name: string | undefined, options: BFFCommandOptions & { dryRun?: boolean } = {}): Promise<BffInitResult> {
   try {

@@ -16,7 +16,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { TimeoutError, SystemError } from '@seans-mfe/contracts';
+import { TimeoutError, SystemError } from '@falese/smt-contracts';
 
 jest.mock('fs-extra');
 jest.mock('child_process');

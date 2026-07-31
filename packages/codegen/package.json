@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/codegen",
+  "name": "@falese/smt-codegen",
   "version": "0.1.0",
   "description": "Manifest -> files MFE generator (plan/render/emit) for the seans-mfe platform; framework variant injected, ships EJS templates",
   "main": "./dist/index.js",
@@ -22,8 +22,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts",
-    "@seans-mfe/dsl": "file:../dsl",
+    "@falese/smt-contracts": "file:../contracts",
+    "@falese/smt-dsl": "file:../dsl",
     "ejs": "^3.1.10",
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0"

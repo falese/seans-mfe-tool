@@ -14,7 +14,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 
 export const ADR_DIR = path.join('docs', 'architecture-decisions');
 

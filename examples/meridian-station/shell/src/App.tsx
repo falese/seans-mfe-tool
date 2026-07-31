@@ -2,7 +2,7 @@
  * Meridian Station shell — a 100% generic, daemon-driven layout host (ADR-055).
  *
  * The shell knows NOTHING about which MFEs exist. It hosts a LayoutManager
- * from @seans-mfe-tool/runtime and stays empty until the daemon control plane
+ * from @falese/smt-runtime and stays empty until the daemon control plane
  * publishes EXPERIENCE components; each experience is mounted into a layout
  * slot by the adaptor for its contentType (module-federation experiences load
  * any framework's remote — React, Angular — through the shared BaseMFE
@@ -19,8 +19,8 @@ import {
   LayoutManager,
   type TransportStatus,
   type WebSocketLike,
-} from '@seans-mfe-tool/runtime';
-import type { SessionContext } from '@seans-mfe/contracts';
+} from '@falese/smt-runtime';
+import type { SessionContext } from '@falese/smt-contracts';
 
 // Replaced at build time by rspack DefinePlugin; the declaration keeps the
 // shell free of @types/node.

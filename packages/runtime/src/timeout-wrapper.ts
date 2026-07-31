@@ -5,7 +5,7 @@
  * Following ADR-029: Timeout Protection with AbortSignal
  */
 
-import { TimeoutError } from '@seans-mfe/contracts';
+import { TimeoutError } from '@falese/smt-contracts';
 import { Context } from './context';
 
 export interface TimeoutOptions {

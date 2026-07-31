@@ -6,7 +6,7 @@
  * under the search roots and fails if any is internally inconsistent
  * (manifest ⇄ package.json ⇄ federation `shared`, react/react-dom pins, runtime
  * dependency). This is the CI wiring the issue calls for — the *logic* lives in
- * and is unit-tested by the platform (`@seans-mfe/codegen` + the command core),
+ * and is unit-tested by the platform (`@falese/smt-codegen` + the command core),
  * not sprinkled across examples.
  *
  * Complements #295's drift gate: that gate owns generator-owned files; this one

@@ -8,7 +8,7 @@
 
 > **pushControlPlaneState**(`mfe`, `stateKey`, `stateData`, `options`): `Promise`\<[`ControlPlaneStateResult`](../interfaces/ControlPlaneStateResult.md)\>
 
-Defined in: packages/runtime/src/control-plane-state.ts:40
+Defined in: [packages/runtime/src/control-plane-state.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/control-plane-state.ts#L40)
 
 Push domain state to the daemon so the registry can re-evaluate placement
 rules — the inherited `updateControlPlaneState` capability, with the

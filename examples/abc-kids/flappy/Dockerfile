@@ -19,13 +19,13 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
     ln -sf /seans-mfe-tool/bin/run.js /usr/local/bin/seans-mfe-tool
 
 # Install dependencies.
-# Override @seans-mfe-tool/runtime to the pre-compiled dist package so
+# Override @falese/smt-runtime to the pre-compiled dist package so
 # TypeScript sees resolved .d.ts files only — no source traversal.
 # Delete from dependencies first (old generated package.json puts it there),
 # then set in devDependencies so production --omit=dev install skips it.
 COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime'
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg set devDependencies['@falese/smt-runtime']='file:/seans-mfe-tool/dist/runtime'
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm install --legacy-peer-deps --no-audit --no-fund
 
@@ -45,12 +45,12 @@ RUN npx mesh build
 # Compile TypeScript server entry point.
 RUN npm run build:server
 
-# Strip @seans-mfe-tool/runtime from package.json before the production stage.
+# Strip @falese/smt-runtime from package.json before the production stage.
 # remote:generate (called inside npm run build) rewrites package.json and may
 # put the runtime back as a file: reference pointing to /seans-mfe-tool which
 # doesn't exist in the production image — causing npm install to 404.
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+RUN npm pkg delete dependencies['@falese/smt-runtime'] 2>/dev/null || true && \
+    npm pkg delete devDependencies['@falese/smt-runtime'] 2>/dev/null || true
 
 # Production image
 FROM node:20-slim AS production

@@ -86,12 +86,12 @@ response-cache condition, and cites the ADRs it implements. Reading generated
 config that teaches you the architecture is a rare treat. 😍
 
 - 🐛/😕 `npm install` fails on a fresh machine: the generated package.json
-  depends on `@seans-mfe-tool/runtime@^0.1.0` (in devDependencies), which is
+  depends on `@falese/smt-runtime@^0.1.0` (in devDependencies), which is
   not published (known deferral, ADR-064 / #252). The docker path stages
   `dist/runtime` into node_modules, but a host-side consumer hits a hard E404
   with no hint of the workaround.
 - 👍 Workaround (same as the example Dockerfiles): install without the dep,
-  then `cp -r <repo>/dist/runtime node_modules/@seans-mfe-tool/runtime`.
+  then `cp -r <repo>/dist/runtime node_modules/@falese/smt-runtime`.
 
 **The headline result:** `npx mesh build` + `ts-node server.ts` against the
 live spike API worked first try. The generated schema shows the whole pitch
@@ -220,7 +220,7 @@ done. 😍
 
 Copied from abc-kids and adapted in ~15 line-level edits. Notes:
 
-- 😕 abc-kids' shell package.json still points `@seans-mfe-tool/runtime` at
+- 😕 abc-kids' shell package.json still points `@falese/smt-runtime` at
   `file:../../../src/runtime` — a directory that no longer exists after the
   `packages/runtime` promotion (#240). It only works in docker, where the
   Dockerfile rewrites the dep to the staged `dist/runtime`. Meridian points
@@ -425,7 +425,7 @@ runtime trio as #277; BFF endpoint as #278; MCP cwd as #279:
 4. ✅ API by-id controllers call `findByPk(req.params.id)` regardless of the declared path param name. → lookups on the declared param; `findByPk`/`findById` reserved for params literally named `id`/`_id`.
 5. ✅ API list controllers pass `limit`/`offset` into the `where` clause — SQL error on any paginated request. → filters restricted to real model attributes (`rawAttributes`/`schema.paths`).
 6. ✅ API `npm run db:seed` points sequelize-cli at `seeders/`; generator writes `seeds/`; two other seed stubs disconnected. → unified `seed.js` connects and runs the generated `./seeds` set; `db:seed` wired to it for both databases.
-7. ⏳ Generated MFE devDependencies pin unpublished `@seans-mfe-tool/runtime` — host-side `npm install` fails (known deferral, ADR-064 / #252). *Mitigated in this PR:* the generated README now documents the staging workaround (point the dep at `file:<checkout>/dist/runtime`, install, replace the symlink with a real directory copy); the pin itself waits on the publish decision.
+7. ⏳ Generated MFE devDependencies pin unpublished `@falese/smt-runtime` — host-side `npm install` fails (known deferral, ADR-064 / #252). *Mitigated in this PR:* the generated README now documents the staging workaround (point the dep at `file:<checkout>/dist/runtime`, install, replace the symlink with a real directory copy); the pin itself waits on the publish decision.
 8. ✅ Angular template `tsconfig.app.json.ejs` puts a `"//"` comment key inside `compilerOptions` — every fresh Angular MFE fails to compile (TS5023). → JSONC line comment instead (Refs #274).
 9. ✅ Seed derivation from spec examples produced type-violating rows (floats in `integer` fields, suffixed strings in keys) — GraphQL rejected them at the BFF. → `SeedGenerator.generateVariation` is now type-aware: integer fields vary by whole steps, numbers keep 2-decimal floats, strings suffix only beyond the base row.
 10. ✅ *(by design)* `mcp serve` space form shows topic help and exits 0; only `mcp:serve` starts the server. Colon topics are the locked oclif convention for this CLI (CLAUDE.md resolved decisions) — the space form showing topic help IS oclif's standard behavior, same as `git remote` printing usage. Not a bug; noted here so nobody re-trips on it.

@@ -80,7 +80,7 @@ Codegen emits a manifest-bound slot helper for both supported frameworks:
 - Angular: `src/slots.ts` with standalone `DeclaredSlotDirective`
   (`[smtDeclaredSlot]`).
 
-The grammar is defined once in `@seans-mfe/contracts` and consumed by both
+The grammar is defined once in `@falese/smt-contracts` and consumed by both
 the DSL validator and runtime matcher (ADR-069). See
 [The Slot Contract](../slot-contract.md).
 

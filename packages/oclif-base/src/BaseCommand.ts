@@ -6,9 +6,9 @@ import {
   exitCodeFor,
   classifyError,
   EXIT_CODES,
-} from '@seans-mfe/contracts';
-import { traceContextFromEnv, formatTraceparent } from '@seans-mfe/contracts';
-import type { CommandResult, TraceContext } from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
+import { traceContextFromEnv, formatTraceparent } from '@falese/smt-contracts';
+import type { CommandResult, TraceContext } from '@falese/smt-contracts';
 import { createLogger, type Logger } from './logger';
 import {
   suppressChalk,

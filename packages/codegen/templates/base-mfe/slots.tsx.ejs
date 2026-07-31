@@ -4,14 +4,14 @@
  *
  * Three-layer split (ADR-067): this file is the DATA layer — the manifest
  * mirrored into code and bound to the framework-free contract logic in
- * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
+ * @falese/smt-runtime. Matching and the declare-before-register guard
  * live there, once; the DeclaredSlot below is thin sugar with no logic of
  * its own. Ids are assigned names, never positions (ADR-066); renaming one
  * is a manifest diff — a contract change, not an incidental string edit.
  */
 import React, { useCallback } from 'react';
-import { createSlotContract } from '@seans-mfe-tool/runtime';
-import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
+import { createSlotContract } from '@falese/smt-runtime';
+import type { ProvidedSlotDeclaration } from '@falese/smt-runtime';
 
 /** The manifest's providesSlots section, mirrored into code. */
 export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [

@@ -50,7 +50,7 @@ quarantine mechanically — it isn't a convention, it's checked.
 same pipeline, not through per-method logic.** `BaseMFE.executeCapability()`
 is a fixed middleware onion — `stateGuard → stateTransition → errorBoundary(lifecycle-before → lifecycle-main(doX) → lifecycle-after)` —
 and *what varies per capability* (which states are legal to call it from,
-what state it enters/exits) is data read from `@seans-mfe/contracts`
+what state it enters/exits) is data read from `@falese/smt-contracts`
 (ADR-080), not fifteen slightly-different hand-written methods. This is why
 the state machine can't be quietly bypassed by one capability implementation
 forgetting a check: there's only one place the check lives.
@@ -76,7 +76,7 @@ void cp.updateControlPlaneState({ requestId: ..., inputs: { stateKey } });
 That narrow-cast-plus-hand-rolled-`Context` pattern is exactly the kind of
 mechanical boilerplate worth extracting, and every real call site
 (`StationConsole.tsx`, `GameMenu.tsx`) reconstructs it independently. As of
-this pass, `@seans-mfe-tool/runtime` exports `pushControlPlaneState(mfe,
+this pass, `@falese/smt-runtime` exports `pushControlPlaneState(mfe,
 stateKey, stateData, options?)` — thin sugar
 (`packages/runtime/src/control-plane-state.ts`) that fills in
 `requestId`/`timestamp` via the same `ContextFactory` the rest of the
@@ -84,7 +84,7 @@ runtime already uses, and accepts a structural `{ updateControlPlaneState }`
 shape so call sites never need the narrow cast either:
 
 ```tsx
-import { pushControlPlaneState } from '@seans-mfe-tool/runtime';
+import { pushControlPlaneState } from '@falese/smt-runtime';
 import { mfe } from '../../platform/base-mfe/bootstrap';
 void pushControlPlaneState(mfe, stateKey, stateData);
 ```
@@ -116,7 +116,7 @@ stable identity across re-renders (a plain `React.useCallback` keyed on
 without the effect re-firing every render:
 
 ```tsx
-import { useControlPlaneState } from '@seans-mfe/framework-react/runtime';
+import { useControlPlaneState } from '@falese/smt-framework-react/runtime';
 
 function StationConsole({ mfe }: { mfe: ControlPlane }) {
   const pushState = useControlPlaneState(mfe);
@@ -127,16 +127,16 @@ function StationConsole({ mfe }: { mfe: ControlPlane }) {
 }
 ```
 
-This lives in `packages/framework-react`, not `@seans-mfe-tool/runtime`: the
+This lives in `packages/framework-react`, not `@falese/smt-runtime`: the
 runtime's neutral barrel and its `/react` subpath both deliberately avoid a
 static `react` import (ADR-056 boundary; `react` isn't a real dependency
 anywhere reachable from `packages/runtime`), whereas `framework-react`
 already has `react` as a real (dev/peer) dependency and an established hook
 precedent (`useMfe`). Same posture as `DeclaredSlot`: zero dependency on
-`@seans-mfe-tool/runtime` itself — it duplicates the few lines of `Context`
+`@falese/smt-runtime` itself — it duplicates the few lines of `Context`
 construction locally rather than importing `ContextFactory`. One caveat
 worth being explicit about: generated MFEs do not currently depend on
-`@seans-mfe/framework-react` at all (the same is true of `DeclaredSlot`,
+`@falese/smt-framework-react` at all (the same is true of `DeclaredSlot`,
 which codegen instead duplicates into a template), so this hook is
 reachable from host-shell code today but not yet from a generated feature
 component's own `package.json` without adding that dependency by hand.
@@ -218,7 +218,7 @@ nothing else in the file is yours to fill in.
 
 ### 3 — the lifecycle, live
 
-Installed dependencies (`@seans-mfe-tool/runtime` pointed at this repo's
+Installed dependencies (`@falese/smt-runtime` pointed at this repo's
 built `dist/runtime` via a `file:` reference — it isn't published to a
 registry) and ran a small driver script against the generated class through
 a minimal jsdom DOM. Real output, trimmed:
@@ -280,7 +280,7 @@ work — pointed at exactly what it's for:
 
 ```
 ⚠ package.json is out of date with what the template would generate (1 dependency):
-  mismatched devDependencies."@seans-mfe-tool/runtime": "file:/home/.../dist/runtime" → "^0.1.0"
+  mismatched devDependencies."@falese/smt-runtime": "file:/home/.../dist/runtime" → "^0.1.0"
 ```
 
 (That's the demo's own `file:` override for local testing, correctly flagged
@@ -498,7 +498,7 @@ lifecycle checkpoint, for free, using zero new logging code.
 **Recommendation, not yet built:** rather than adding new dev-mode logging
 to `BaseMFE` (which would be new surface, and CLAUDE.md's "no `console.log`
 in production code, use the structured logger" rule doesn't actually apply
-cleanly here — the structured logger lives in `@seans-mfe/oclif-base`, a
+cleanly here — the structured logger lives in `@falese/smt-oclif-base`, a
 Node/CLI-only package that must never enter a browser bundle, confirmed
 during this session's research), the smaller and more consistent fix is in
 **codegen**: have the generated constructor accept and forward an optional

@@ -116,8 +116,8 @@ in the PR body — the governance report asks either way, and takes an answer.
 
 ## Architecture constraints
 
-- **BaseCommand pattern:** every oclif command extends `BaseCommand` from `@seans-mfe/oclif-base`; implement `runCommand()` not `run()`
-- **Typed errors:** never `throw new Error()` — use `ValidationError` / `BusinessError` / `NetworkError` / `SystemError` / `TimeoutError` / `SecurityError` from `@seans-mfe/contracts`
+- **BaseCommand pattern:** every oclif command extends `BaseCommand` from `@falese/smt-oclif-base`; implement `runCommand()` not `run()`
+- **Typed errors:** never `throw new Error()` — use `ValidationError` / `BusinessError` / `NetworkError` / `SystemError` / `TimeoutError` / `SecurityError` from `@falese/smt-contracts`
 - **JSON envelope:** under `--json`, stdout emits exactly ONE `CommandResult<T>` line; everything else goes to stderr
 - **MCP child-process per tool call:** spawn `seans-mfe-tool <cmd> --json`, parse stdout — isolates `process.exit` and cwd mutations
 - **Bun for dev, Node for publish:** `bin/dev.ts` runs under Bun; `bin/run.js` is the pure-Node published entry
@@ -138,7 +138,7 @@ in the PR body — the governance report asks either way, and takes an answer.
 | Lifecycle engine — timeout (ADR-029) + error classification/retry (ADR-030) | ✅ Done (`timeout-wrapper.ts`, `error-classifier.ts`, `retry-wrapper.ts`; status reconciled in the ADR-075 pass) |
 | Lifecycle engine — parallel exec (ADR-028), conditional/Jexl (ADR-031), inter-hook (ADR-032) | 📋 Proposed (issues not yet created) |
 | ADR library drift control (ADR-075) | ✅ Done — `npm run check:adr`; frontmatter is the source of truth |
-| npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
+| npm publish `@falese/smt-contracts` + `@falese/smt-oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
 
 See `docs/PROJECT-STATUS.md` for priority order and blockers.
 
@@ -184,16 +184,16 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 
 ## Resolved decisions — do not relitigate
 
-- **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship as oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase.
+- **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship as oclif plugins depending on `@falese/smt-contracts`. Monorepo merge is a later phase.
 - **Namespace: `@falese/smt-*`** for platform packages, `@falese/smt-plugin-*` for
   official oclif plugins (ADR-083, supersedes ADR-021). GitHub Packages pins the
-  scope to the repo owner, so `@seans-mfe/*` cannot be published and third parties
+  scope to the repo owner, so `@falese/smt-*` cannot be published and third parties
   cannot publish into `@falese/*` at all. **The rename is phased — the tree still
-  carries `@seans-mfe/*` until it lands; ADR-083 is the decision of record.**
+  carries `@falese/smt-*` until it lands; ADR-083 is the decision of record.**
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
 - **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-034).
-- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
+- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@falese/smt-framework-<name>`.
 - **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-036, #181).
 
 ## Backlog priority
@@ -205,7 +205,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
 6. Lifecycle engine enhancements — ADR-028 / ADR-031 / ADR-032 (issues not yet created) 📋
    (ADR-029 timeout and ADR-030 error classification already shipped)
-7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
+7. npm publish `@falese/smt-contracts` + `@falese/smt-oclif-base` ⏳
 8. Monorepo consolidation (docs/MERGE-PLAN.md Phase 2) ⏳
 
 ## Verification gates before push
@@ -222,7 +222,7 @@ Run in order — push only after all pass:
    (the index and PDR map are generated from frontmatter — ADR-075 §1)
 8. `npm run check:mfe-drift:check` (if you touched `packages/codegen/**` — templates included)
    ⚠️ Run `npm run build:packages` **first** if you changed generator *code*.
-   The script resolves `@seans-mfe/codegen` to `packages/codegen/dist`, so it
+   The script resolves `@falese/smt-codegen` to `packages/codegen/dist`, so it
    silently checks the last build. Templates are read from disk and do show up
    immediately, which is why this trap stays hidden until you change logic.
    Regenerates every `examples/**` MFE in memory and fails if any generator-owned file

@@ -36,8 +36,8 @@ export type { ControlPlaneStatePusher, PushControlPlaneStateOptions } from './co
 // errors or the slot contract from it and must not receive React in the bundle
 // as a side effect.
 //
-//   import { RemoteMFE }        from '@seans-mfe-tool/runtime/react'
-//   import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular'
+//   import { RemoteMFE }        from '@falese/smt-runtime/react'
+//   import { AngularRemoteMFE } from '@falese/smt-runtime/angular'
 //
 // `RemoteMFE` was re-exported here until #341. Because every consumer imported
 // it as `import type` — erased at compile time — nothing noticed until the
@@ -94,7 +94,7 @@ export type { MountableLifecycle, ImperativeHandleOptions } from './imperative-h
 // The sealed-port handle type (ADR-056) — re-exported so generated remotes
 // can annotate their `handles` export without reaching into contracts
 // through the staged runtime's bundled copy (non-portable, TS2742).
-export type { ImperativeMountHandle } from '@seans-mfe/contracts';
+export type { ImperativeMountHandle } from '@falese/smt-contracts';
 
 // Virtualized daemon socket (ADR-057) — per-slot control-plane channels over
 // the host's single connection, injected into composed MFEs as deps.wsClient.

@@ -1,6 +1,6 @@
 /**
  * Cross-package grammar contract (ADR-066/067): the slot-id grammar is
- * single-sourced in @seans-mfe/contracts (slot-grammar.ts, ADR-069) and
+ * single-sourced in @falese/smt-contracts (slot-grammar.ts, ADR-069) and
  * consumed by both the DSL's `providesSlots` validation and the runtime
  * matcher. This suite pins the two CONSUMERS to each other behaviorally —
  * the dsl composes the segment rule into whole-id validation while the
@@ -8,7 +8,7 @@
  * still drift even over one grammar. Any divergence fails here instead of
  * silently splitting what can be declared from what can match. Refs #265.
  */
-import { ProvidedSlotSchema } from '@seans-mfe/dsl';
+import { ProvidedSlotSchema } from '@falese/smt-dsl';
 import { createSlotContract } from '../slot-contract';
 
 const dslAccepts = (id: string): boolean => ProvidedSlotSchema.safeParse({ id }).success;

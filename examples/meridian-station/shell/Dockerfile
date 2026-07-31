@@ -1,5 +1,5 @@
 # meridian-shell — daemon-driven layout host (ADR-055)
-# Build context: this directory. The shell imports @seans-mfe-tool/runtime
+# Build context: this directory. The shell imports @falese/smt-runtime
 # (LayoutManager), which is provided by the pre-built CLI image — the same
 # pattern the MFE Dockerfiles use. Build seans-mfe-tool-cli:latest first:
 #   npm run build && npm run docker:build:cli   (repo root)
@@ -16,9 +16,9 @@ WORKDIR /app
 COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
 
 COPY package.json ./
-# Point @seans-mfe-tool/runtime at the pre-compiled dist package (the local
+# Point @falese/smt-runtime at the pre-compiled dist package (the local
 # checkout uses file:../../../dist/runtime instead — see package.json).
-RUN npm pkg set devDependencies['@seans-mfe-tool/runtime']='file:/seans-mfe-tool/dist/runtime' && \
+RUN npm pkg set devDependencies['@falese/smt-runtime']='file:/seans-mfe-tool/dist/runtime' && \
     npm install --no-audit --no-fund
 COPY . .
 

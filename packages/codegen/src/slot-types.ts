@@ -14,7 +14,7 @@
  * express "any string without a dot"; `assertDeclared()` remains the backstop
  * for that residue.
  */
-import { isSlotParamSegment } from '@seans-mfe/contracts';
+import { isSlotParamSegment } from '@falese/smt-contracts';
 
 /** The manifest shape this module needs — `providesSlots[]` entries. */
 export interface DeclaredSlotIdSource {

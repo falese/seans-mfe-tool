@@ -7,9 +7,9 @@
  * an unbindable placement is silent at runtime because ADR-066 parks it and
  * waits for a slot that never arrives.
  *
- * The matcher below mirrors createSlotContract in @seans-mfe/contracts. It is a
+ * The matcher below mirrors createSlotContract in @falese/smt-contracts. It is a
  * copy, not a call: this registry is a standalone dockerized service and
- * @seans-mfe/contracts is not published yet (docs/MERGE-PLAN.md Phase 1).
+ * @falese/smt-contracts is not published yet (docs/MERGE-PLAN.md Phase 1).
  * Switch to the package when it is. The behavioural pin lives in
  * slot-target.test.js — the same idiom ADR-069 used for the grammar.
  */

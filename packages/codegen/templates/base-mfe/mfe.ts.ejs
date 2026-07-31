@@ -8,18 +8,18 @@
 */%>
 <%
 // Determine which domain capability output types need to be imported from ./types.
-// platformCapabilityNames comes from @seans-mfe/contracts via the render model
+// platformCapabilityNames comes from @falese/smt-contracts via the render model
 // (ADR-080) — never re-list the capabilities here.
 const domainCapabilities = capabilities.filter(cap => !platformCapabilityNames.includes(cap.method));
 const domainTypeImports = domainCapabilities.map(cap => cap.returnTypeBase);
 %>
-import { RemoteMFE } from '@seans-mfe-tool/runtime/react';
+import { RemoteMFE } from '@falese/smt-runtime/react';
 import {
   ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
-} from '@seans-mfe-tool/runtime';
+} from '@falese/smt-runtime';
 <% if (domainTypeImports.length > 0) { %>
 import type { <%= domainTypeImports.join(', ') %> } from './types';
 <% } %>

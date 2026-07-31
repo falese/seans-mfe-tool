@@ -9,7 +9,7 @@
  * MFE type determines generated code CONTENT in doCapability() methods.
  */
 
-import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@seans-mfe/dsl';
+import type { DSLManifest, LifecycleHook, LifecycleHookEntry } from '@falese/smt-dsl';
 import { Context, UserContext, TelemetryEvent } from './context';
 import type { QueryInput } from './context';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
@@ -20,8 +20,8 @@ import {
   MFE_LIFECYCLE_TRANSITIONS,
   MFE_LIFECYCLE_INITIAL_STATE,
   PLATFORM_CAPABILITY_SPECS,
-} from '@seans-mfe/contracts';
-import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
+import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@falese/smt-contracts';
 import * as platformHandlerLibrary from './handlers';
 
 // Re-export for convenience
@@ -100,7 +100,7 @@ export interface LoadResult {
   container?: unknown;
   mesh?: unknown;
   worker?: unknown;
-  manifest?: import('@seans-mfe/dsl').DSLManifest;
+  manifest?: import('@falese/smt-dsl').DSLManifest;
   availableComponents?: string[];
   capabilities?: CapabilityMetadata[];
   timestamp: Date;
@@ -172,7 +172,7 @@ export interface EmitResult {
 /**
  * Result from updateControlPlaneState capability.
  *
- * Mirrors ControlPlaneStateResult in @seans-mfe/contracts, with `error`
+ * Mirrors ControlPlaneStateResult in @falese/smt-contracts, with `error`
  * optional so implementors of doUpdateControlPlaneState may omit it (the wire
  * form always sets it). The `resolution` shape IS the contracts `Resolution`.
  */
@@ -197,7 +197,7 @@ export interface ControlPlaneStateResult {
 
 /**
  * MFE lifecycle state. The states and their legal edges are defined once in
- * `@seans-mfe/contracts` (ADR-080); this is the runtime's name for the same
+ * `@falese/smt-contracts` (ADR-080); this is the runtime's name for the same
  * type, kept because generated MFEs and the runtime's public surface refer to
  * it as `MFEState`.
  */
@@ -214,7 +214,7 @@ export const VALID_TRANSITIONS: Readonly<Record<MFEState, readonly MFEState[]>> 
 /**
  * How each capability interacts with the lifecycle state machine (ADR-042):
  * allowed pre-states, and the enter/exit/error transitions it drives. That is
- * per-capability contract data, so it lives in `@seans-mfe/contracts`
+ * per-capability contract data, so it lives in `@falese/smt-contracts`
  * alongside the state machine itself (ADR-080) rather than being re-declared
  * here. Everything else about capability orchestration (before → main → doX →
  * after, error phase on failure) is identical across the 10 platform

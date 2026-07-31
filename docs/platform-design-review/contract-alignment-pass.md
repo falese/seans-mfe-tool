@@ -174,11 +174,11 @@ export const VALID_TRANSITIONS: Record<MFEState, MFEState[]> = {
 
 ## Finding CA-7 — Runtime package path / name drift (S3)
 
-**Documented.** README, `spec.md`, and `CLAUDE.md` refer to the runtime as `packages/runtime/` and import path `@seans-mfe-tool/runtime`.
+**Documented.** README, `spec.md`, and `CLAUDE.md` refer to the runtime as `packages/runtime/` and import path `@falese/smt-runtime`.
 
 **Implemented.** The runtime source lives in **`src/runtime/`** (e.g. `src/runtime/base-mfe.ts`, `remote-mfe.ts`); there is no `packages/runtime/` directory. Runtime files are copied into the build output by `scripts/copy-runtime-files.js` (referenced in the `build` script).
 
-**Authoritative behavior.** Author against `src/runtime/`; the published `@seans-mfe-tool/runtime` entry is produced by the copy step at build time.
+**Authoritative behavior.** Author against `src/runtime/`; the published `@falese/smt-runtime` entry is produced by the copy step at build time.
 
 **Remediation.** Note the source-vs-published distinction in the runtime doc and the IA ownership map; verify the published import path in `architecture-runtime-platform.md`. Tracking: G15 (cross-reference accuracy).
 
