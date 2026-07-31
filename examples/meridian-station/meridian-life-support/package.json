@@ -35,7 +35,8 @@
     "@angular/platform-browser": "^19.2.16",
     "rxjs": "^7.8.0",
     "zone.js": "~0.14.0",
-    "@graphql-mesh/transform-hoist-field": "^0.105.19"
+    "@graphql-mesh/transform-hoist-field": "^0.105.19",
+    "@falese/smt-framework-angular": "^0.1.0"
   },
   "devDependencies": {
     "@graphql-mesh/cli": "^0.100.21",

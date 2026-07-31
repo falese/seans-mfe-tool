@@ -16,6 +16,9 @@ import { BusinessError } from '@falese/smt-contracts';
 const REACT = DEPENDENCY_VERSIONS.react.react;
 const REACT_DOM = DEPENDENCY_VERSIONS.react.reactDom;
 const RUNTIME = '@falese/smt-runtime';
+// slots.tsx binds the published DeclaredSlot rather than copying it (ADR-084),
+// so a React MFE's manifest now implies this dependency too.
+const FRAMEWORK_REACT = '@falese/smt-framework-react';
 
 interface Fixture {
   packageDeps?: Record<string, string>;
@@ -50,6 +53,7 @@ async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
       'react-dom': REACT_DOM,
       'styled-components': '^6.1.0',
       [RUNTIME]: DEPENDENCY_VERSIONS.runtime.package,
+      [FRAMEWORK_REACT]: DEPENDENCY_VERSIONS.runtime.package,
     },
   });
   const sharedReact = fx.sharedReactVersion ?? REACT;

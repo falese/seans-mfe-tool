@@ -35,7 +35,8 @@
     "@mui/system": "^5.14.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@graphql-mesh/transform-hoist-field": "^0.105.19"
+    "@graphql-mesh/transform-hoist-field": "^0.105.19",
+    "@falese/smt-framework-react": "^0.1.0"
   },
   "devDependencies": {
     "@graphql-mesh/cli": "^0.100.21",

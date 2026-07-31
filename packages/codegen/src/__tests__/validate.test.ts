@@ -3,6 +3,9 @@ import { DEPENDENCY_VERSIONS } from '../unified-generator';
 import type { DSLManifest } from '@falese/smt-dsl';
 
 const RUNTIME = '@falese/smt-runtime';
+// A React MFE's slots.tsx binds the published DeclaredSlot, so the framework
+// package is a real dependency now (ADR-084) and manifest-package-sync expects it.
+const FRAMEWORK_REACT = '@falese/smt-framework-react';
 
 function reactManifest(deps: Record<string, unknown> = {}): DSLManifest {
   return {
@@ -23,6 +26,7 @@ function consistentInput(): Parameters<typeof validateMfeConsistency>[0] {
       'react-dom': DEPENDENCY_VERSIONS.react.reactDom,
       'styled-components': '^6.1.0',
       [RUNTIME]: DEPENDENCY_VERSIONS.runtime.package,
+      [FRAMEWORK_REACT]: DEPENDENCY_VERSIONS.runtime.package,
     },
     sharedEntries: [
       { name: 'react', requiredVersion: DEPENDENCY_VERSIONS.react.react },

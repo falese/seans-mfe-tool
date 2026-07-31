@@ -13,10 +13,13 @@
  * is accepted structurally so this package needs no dependency on the runtime
  * package: `createSlotContract(...)` satisfies `SlotContractLike`.
  *
- * Mirrored by the generated template
- * packages/codegen/templates/base-mfe/slots.tsx.ejs (same component with the
- * contract pre-bound — generated MFEs do not depend on framework-react). A
- * change to ref-callback or registration semantics must land in both.
+ * This is the only copy. Generated MFEs depend on this package (ADR-084) and
+ * bind it in their `slots.tsx` — `<BaseDeclaredSlot {...props} contract={slotContract} />`
+ * — so a change to ref-callback or registration semantics lands everywhere by
+ * being made here. It used to be duplicated into
+ * packages/codegen/templates/base-mfe/slots.tsx.ejs, kept in step by a comment
+ * no gate enforced, because this package could not be installed by a generated
+ * MFE at all.
  */
 import * as React from 'react';
 

@@ -17,7 +17,8 @@
     "@mui/material": "^5.14.0",
     "@mui/system": "^5.14.0",
     "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0"
+    "@emotion/styled": "^11.11.0",
+    "@falese/smt-framework-react": "^0.1.0"
   },
   "devDependencies": {
     "@falese/smt-runtime": "^0.1.0",
@@ -41,12 +42,19 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["@testing-library/jest-dom"],
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-dom"
+    ],
     "moduleNameMapper": {
       "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js"
     },
     "transform": {
-      "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     }
   },
   "overrides": {

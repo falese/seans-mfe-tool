@@ -559,6 +559,20 @@ export function resolveRuntimeExtraDeps(
 }
 
 /**
+ * The framework runtime package a generated MFE imports its slot sugar from
+ * (ADR-084).
+ *
+ * Only the frameworks the platform publishes a package for. `FrameworkSchema`
+ * is deliberately open (ADR-036) — an unknown framework warns rather than
+ * failing — so an unrecognised value adds nothing here instead of inventing a
+ * package name that would not install.
+ */
+const FRAMEWORK_RUNTIME_PACKAGES: Readonly<Record<string, string>> = {
+  react: '@falese/smt-framework-react',
+  angular: '@falese/smt-framework-angular',
+};
+
+/**
  * The full set of client-side dependencies for a React MFE's package.json,
  * derived from the manifest: framework singletons + design-system + extras.
  */
@@ -570,6 +584,14 @@ export function resolveClientDependencies(
   if (framework === 'react') {
     deps['react'] = DEPENDENCY_VERSIONS.react.react;
     deps['react-dom'] = DEPENDENCY_VERSIONS.react.reactDom;
+  }
+  // The framework runtime carries the slot sugar the generated slots file binds
+  // to. Pinned to the same range as the runtime: both are published from this
+  // repo at one version (ADR-083), so letting them skew would be a packaging
+  // bug, not a supported combination.
+  const frameworkPackage = FRAMEWORK_RUNTIME_PACKAGES[framework];
+  if (frameworkPackage) {
+    deps[frameworkPackage] = DEPENDENCY_VERSIONS.runtime.package;
   }
   Object.assign(deps, resolveDesignSystemDeps(manifest, framework));
   Object.assign(deps, resolveRuntimeExtraDeps(manifest, framework));

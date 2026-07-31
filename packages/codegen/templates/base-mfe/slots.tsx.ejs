@@ -9,9 +9,13 @@
  * its own. Ids are assigned names, never positions (ADR-066); renaming one
  * is a manifest diff — a contract change, not an incidental string edit.
  */
-import React, { useCallback } from 'react';
+import type * as React from 'react';
 import { createSlotContract } from '@falese/smt-runtime';
 import type { ProvidedSlotDeclaration } from '@falese/smt-runtime';
+import {
+  DeclaredSlot as BaseDeclaredSlot,
+  type DeclaredSlotProps as BaseDeclaredSlotProps,
+} from '@falese/smt-framework-react/runtime';
 
 /** The manifest's providesSlots section, mirrored into code. */
 export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
@@ -34,19 +38,15 @@ export const slotContract = createSlotContract(PROVIDED_SLOTS);
  */
 export type DeclaredSlotId = <%- declaredSlotIdUnion %>;
 
-export interface DeclaredSlotProps extends React.HTMLAttributes<HTMLElement> {
+/**
+ * Props for this MFE's slot component: the published component's props, minus
+ * the two this file supplies — `contract` (pre-bound below) and `id`, which is
+ * narrowed from `string` to this manifest's own ids.
+ */
+export type DeclaredSlotProps = Omit<BaseDeclaredSlotProps, 'id' | 'contract'> & {
   /** The slot id to register — must be one this manifest declares. */
   id: DeclaredSlotId;
-  /**
-   * The host-supplied registration callback (ADR-058), delivered to this MFE
-   * through its render props by the LayoutManager adaptor. Optional so the
-   * component renders inert in standalone/dev mode — undeclared ids still
-   * fail fast either way.
-   */
-  provideSlot?: (slotId: string, element: HTMLElement | null) => void;
-  /** Element to render as the region. Defaults to `div`. */
-  as?: keyof JSX.IntrinsicElements;
-}
+};
 
 /**
  * A named region this MFE contributes to the host layout. Registration rides
@@ -58,34 +58,14 @@ export interface DeclaredSlotProps extends React.HTMLAttributes<HTMLElement> {
  * reach for this component so every region carries the same
  * `data-declared-slot` contract instead of a hand-rolled ref callback.
  *
- * Keep in lock-step with packages/framework-react/src/runtime/DeclaredSlot.tsx:
- * this is the same component with the contract pre-bound instead of passed as
- * a prop (generated MFEs depend on the runtime package, not framework-react).
- * A change to ref-callback or registration semantics must land in both.
+ * A binding, not a copy: the component lives once in
+ * `@falese/smt-framework-react` and is imported (ADR-084). It used to be
+ * duplicated here — identical but for one identifier — because that package
+ * could not be installed by a generated MFE, and the two copies were kept in
+ * step by a comment nothing enforced. Registration semantics now change in one
+ * place. What stays generated is the part that genuinely varies per manifest:
+ * the contract and the `DeclaredSlotId` union.
  */
-export function DeclaredSlot({
-  id,
-  provideSlot,
-  as,
-  children,
-  ...rest
-}: DeclaredSlotProps): React.ReactElement {
-  slotContract.assertDeclared(id);
-
-  const register = useCallback(
-    (element: HTMLElement | null) => slotContract.register(provideSlot, id, element),
-    [id, provideSlot]
-  );
-
-  // Narrowed to one concrete tag so `ref` resolves to a single element type
-  // rather than the union of every intrinsic element (which has no common
-  // callable ref signature). The runtime tag is still whatever `as` supplied;
-  // `register` takes HTMLElement, a supertype of every tag's instance type.
-  const Element = (as ?? 'div') as 'div';
-
-  return (
-    <Element {...rest} ref={register} data-declared-slot={id}>
-      {children}
-    </Element>
-  );
+export function DeclaredSlot(props: DeclaredSlotProps): React.ReactElement {
+  return <BaseDeclaredSlot {...props} contract={slotContract} />;
 }

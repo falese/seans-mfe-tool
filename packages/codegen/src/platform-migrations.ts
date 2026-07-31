@@ -124,6 +124,14 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     ),
     exempt: /import\s+type\s*\{/,
   },
+  // No entry for the framework-runtime dependency ADR-084 adds to generated
+  // MFEs, deliberately. Migrations are matched only against developer-owned
+  // files (see validate.ts), and the import that would signal it lives in
+  // generator-owned `slots.tsx` — so such an entry could never fire. The
+  // condition is already detected, and *failed* rather than warned, by
+  // `manifest-package-sync`: it derives the implied dependencies from the
+  // manifest and reports any the package.json is missing. A warning here would
+  // be unreachable at best and permanent noise at worst.
   {
     id: 'package-scope-renamed',
     since: '1.0.0',

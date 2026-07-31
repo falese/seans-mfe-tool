@@ -47,8 +47,10 @@ describe('provided-slots codegen (ADR-067)', () => {
     expect(slots?.content).toContain('"card.{sku}"');
     expect(slots?.content).toContain("Primary content region — the game's canvas");
     expect(slots?.content).toContain('DeclaredSlot');
-    expect(slots?.content).toContain('provideSlot');
-    expect(slots?.content).toContain('data-declared-slot');
+    // provideSlot and data-declared-slot are the imported component's business
+    // now (ADR-084) — this file binds it rather than restating them.
+    expect(slots?.content).toContain("from '@falese/smt-framework-react/runtime'");
+    expect(slots?.content).toContain('contract={slotContract}');
     expect(slots?.content).toContain('ADR-067');
   });
 
@@ -108,13 +110,31 @@ describe('provided-slots codegen (ADR-067)', () => {
   });
 
   // ADR-072 §3: the sugar lost to the hand-rolled primitive partly because it
-  // could not express what real providers needed (inline style, semantic elements).
-  it('accepts standard element props and an `as` element override', async () => {
+  // could not express what real providers needed (inline style, semantic
+  // elements). Those props now come from the published component's own type;
+  // what this file must not do is drop them, so it re-exposes the full prop set
+  // minus only the two it supplies itself.
+  it('keeps the published element props available, minus the two it binds', async () => {
     const manifest = { ...baseManifest, providesSlots: [{ id: 'main' }] };
     const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
-    expect(content).toContain('extends React.HTMLAttributes<HTMLElement>');
-    expect(content).toContain('as?: keyof JSX.IntrinsicElements');
+    expect(content).toContain("Omit<BaseDeclaredSlotProps, 'id' | 'contract'>");
+    expect(content).toContain('id: DeclaredSlotId;');
+  });
+
+  // The whole point of ADR-084: the component exists once. A regenerated MFE
+  // that still carried its own copy would silently miss any fix made upstream.
+  it('binds the published component instead of duplicating its body', async () => {
+    const manifest = { ...baseManifest, providesSlots: [{ id: 'main' }] };
+    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
+
+    expect(content).toContain('<BaseDeclaredSlot {...props} contract={slotContract} />');
+    // The duplicated implementation's tells: a local ref callback and the
+    // element it rendered. Their presence would mean the copy came back.
+    expect(content).not.toContain('useCallback');
+    expect(content).not.toContain('slotContract.register(');
+    expect(content).not.toContain('data-declared-slot={id}');
   });
 });
