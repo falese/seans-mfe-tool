@@ -280,3 +280,50 @@ describe('validateMfeConsistency', () => {
     });
   });
 });
+
+// ADR-084 §4: a generated manifest declares plain semver, permanently — that is
+// what lets .npmrc choose the delivery lane instead of the manifest naming one.
+// The rule originally checked only that the runtime was *declared*, so an MFE
+// could point it at the retired dist/runtime staging path and pass every gate.
+// The whole meridian fleet was doing exactly that, unnoticed.
+describe('runtime-declared — the form of the specifier, not just its presence', () => {
+  it('accepts a semver range', () => {
+    const input = consistentInput();
+    input.packageDependencies[RUNTIME] = '^0.1.0';
+    const res = validateMfeConsistency(input);
+    expect(res.issues.filter((i) => i.rule === 'runtime-declared')).toEqual([]);
+  });
+
+  it('rejects a file: path to the retired staging directory', () => {
+    const input = consistentInput();
+    input.packageDependencies[RUNTIME] = 'file:../../../dist/runtime';
+    const res = validateMfeConsistency(input);
+    const hit = res.issues.find((i) => i.rule === 'runtime-declared');
+    expect(hit).toBeDefined();
+    expect(hit!.message).toMatch(/file:/);
+  });
+
+  it('rejects any file: specifier, not only that one path', () => {
+    const input = consistentInput();
+    input.packageDependencies[RUNTIME] = 'file:../elsewhere';
+    expect(
+      validateMfeConsistency(input).issues.some((i) => i.rule === 'runtime-declared')
+    ).toBe(true);
+  });
+
+  it('still reports a missing runtime', () => {
+    const input = consistentInput();
+    delete input.packageDependencies[RUNTIME];
+    expect(
+      validateMfeConsistency(input).issues.some((i) => i.rule === 'runtime-declared')
+    ).toBe(true);
+  });
+
+  it('applies the same rule to the framework package', () => {
+    const input = consistentInput();
+    input.packageDependencies['@falese/smt-framework-react'] = 'file:../../../packages/framework-react';
+    expect(
+      validateMfeConsistency(input).issues.some((i) => i.rule === 'runtime-declared')
+    ).toBe(true);
+  });
+});

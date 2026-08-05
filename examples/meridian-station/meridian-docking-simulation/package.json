@@ -46,7 +46,7 @@
     "@types/styled-components": "^5.1.26",
     "ts-node": "^10.9.1",
     "concurrently": "^8.2.0",
-    "@falese/smt-runtime": "file:../../../dist/runtime",
+    "@falese/smt-runtime": "^0.1.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.0.28",

@@ -272,13 +272,32 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     }
   }
 
-  // The runtime must be declared.
+  // The runtime must be declared — and as a semver range, not a path.
+  //
+  // ADR-084 §4: the manifest states a plain range so `.npmrc` decides the
+  // delivery lane. A `file:` specifier names a lane inside the manifest, which
+  // is the staging model that ADR replaced; it also only resolves from one
+  // checkout layout, so it silently breaks anywhere else. Checking presence
+  // alone let the entire meridian fleet sit on `file:../../../dist/runtime`
+  // through every gate.
   checked.push('runtime-declared');
   if (packageDependencies[RUNTIME_PACKAGE] === undefined) {
     issues.push({
       rule: 'runtime-declared',
       package: RUNTIME_PACKAGE,
       message: `${RUNTIME_PACKAGE} must be declared as a dependency`,
+    });
+  }
+  for (const [name, spec] of Object.entries(packageDependencies)) {
+    if (!name.startsWith('@falese/smt-')) continue;
+    if (!spec.startsWith('file:')) continue;
+    issues.push({
+      rule: 'runtime-declared',
+      package: name,
+      expected: 'a semver range, e.g. ^0.1.0',
+      actual: spec,
+      message: `"${name}" is declared as "${spec}" — a path specifier pins this MFE to one checkout layout and one delivery lane, which is the staging model ADR-084 replaced`,
+      fix: `Change it to a semver range (e.g. "^0.1.0") and let .npmrc choose the registry: GitHub Packages when hosted, the CLI image's mirror when offline.`,
     });
   }
 

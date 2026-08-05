@@ -118,9 +118,14 @@ most breaking edit the generator can make, and it would destroy real work: the
 `.mesh` and test `exclude` entries, and local `paths`. Nothing an author has
 written is overwritten by this decision.
 
-It does not typecheck anything new. BFF MFEs restrict `include` to `*.ts`,
-which means their `.tsx` React components are not typechecked at all today.
-That is a real gap, and a separate one.
+~~It does not typecheck anything new.~~ **Closed in the same series.** BFF MFEs
+restricted `include` to `*.ts`, so their `.tsx` React components — 28 files
+across four MFEs — were never typechecked at all. `include` now carries
+`src/**/*.tsx`, and all 28 were compiled against the installed packages to
+confirm the gap had not been hiding anything: zero type errors. The only
+diagnostic that surfaced is a pre-existing `Cannot find module './.mesh'` in
+`server.ts`, a `mesh build` artifact absent from a fresh checkout, present with
+or without this change.
 
 ## Consequences
 

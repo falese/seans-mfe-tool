@@ -101,3 +101,20 @@ describe('the compile contract (ADR-085)', () => {
     }
   });
 });
+
+// A BFF MFE's tsconfig restricted include to "*.ts", so its React components
+// were never typechecked — 28 .tsx files across four MFEs, invisible to every
+// gate because tsc was simply never handed them. The BFF's own server.ts is
+// plain .ts and was always covered; only the UI half was missing.
+describe('a BFF MFE typechecks its React components too', () => {
+  it('includes src/**/*.tsx in the BFF tsconfig template', () => {
+    const tpl = require('fs').readFileSync(
+      require('path').resolve(__dirname, '../../../bff-plugin/templates/tsconfig.json'),
+      'utf8'
+    ) as string;
+    const include = (JSON.parse(tpl) as { include: string[] }).include;
+    expect(include).toContain('src/**/*.tsx');
+    // The server half must stay covered — it is the reason this file exists.
+    expect(include).toContain('*.ts');
+  });
+});

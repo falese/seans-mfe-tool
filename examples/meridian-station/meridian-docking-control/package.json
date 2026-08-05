@@ -58,7 +58,7 @@
     "jest": "^29.7.0",
     "jest-preset-angular": "^14.0.0",
     "supertest": "^6.3.3",
-    "@falese/smt-runtime": "file:../../../dist/runtime"
+    "@falese/smt-runtime": "^0.1.0"
   },
   "overrides": {
     "fast-uri": "^3.1.2",
