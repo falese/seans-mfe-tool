@@ -3,10 +3,6 @@
   "//generated": "Snapshot taken when ADR-000 landed. Deliberately NOT regenerated — a self-regenerating backlog would silently absorb new gaps, which is the defect this exists to close.",
   "adrs": [
     {
-      "adr": 1,
-      "title": "Lifecycle Re-Entrancy Guard in BaseMFE"
-    },
-    {
       "adr": 2,
       "title": "Lifecycle Hook Execution Model"
     },
