@@ -92,8 +92,17 @@ export type AdrImpl = z.infer<typeof AdrImplSchema>;
  * js-yaml resolves a zero-padded `0074` to the number 74, so both forms are
  * accepted and normalized to a number. `normalizeAdrId` is the only place that
  * conversion happens.
+ *
+ * Non-negative rather than positive, because **zero is a real id**: ADR-000 is
+ * the root decision every other ADR must satisfy, so it sorts before them all.
+ * Under `.positive()` an unquoted `id: 0000` — which js-yaml resolves to `0` —
+ * failed to parse, and the only workaround was quoting that one ADR's id.
+ * Negatives are still rejected; this opens the door by exactly one number.
  */
-export const AdrIdSchema = z.union([z.number().int().positive(), z.string().regex(/^\d{1,4}$/)]);
+export const AdrIdSchema = z.union([
+  z.number().int().nonnegative(),
+  z.string().regex(/^\d{1,4}$/),
+]);
 
 export const AdrFrontmatterSchema = z.object({
   id: AdrIdSchema,

@@ -545,3 +545,86 @@ describe('validateAdrLibrary', () => {
     );
   });
 });
+
+/**
+ * ADR-000: a decision that claims code enforcement must name the checker that
+ * proves it.
+ *
+ * The defect this closes, measured at the time: 74 ADRs declared
+ * `enforcement: code` and 49 named no `verified-by` at all. The field was
+ * schema-backed and already validated to *resolve* when present — it was
+ * simply optional, so "enforced by code" was a claim nobody could falsify.
+ */
+describe('enforced-claims-a-gate (ADR-000)', () => {
+  const backlog = new Set<number>();
+
+  it('reports an ADR claiming code enforcement with no verified-by', () => {
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).toContain('enforced-claims-a-gate');
+  });
+
+  it('is satisfied by naming a gate', () => {
+    const result = validateAdrLibrary({
+      documents: [
+        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
+      ],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+  });
+
+  it('applies to `tooling` as well — a build step is still a checker', () => {
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { enforcement: 'tooling', 'verified-by': [] })],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).toContain('enforced-claims-a-gate');
+  });
+
+  it('leaves `convention` alone — it claims humans enforce it, and says so', () => {
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { enforcement: 'convention', 'verified-by': [] })],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+  });
+
+  it('grandfathers an id on the backlog', () => {
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      parseFailures: [],
+      conformanceBacklog: new Set([10]),
+    });
+    expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+  });
+
+  // The ratchet. A backlog entry that has since gained a gate is stale, and a
+  // stale entry is a hole someone could later regress into without the gate
+  // noticing. The list may only shrink.
+  it('reports a backlog entry that no longer needs to be there', () => {
+    const result = validateAdrLibrary({
+      documents: [
+        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
+      ],
+      parseFailures: [],
+      conformanceBacklog: new Set([10]),
+    });
+    const issue = result.issues.find((i) => i.rule === 'enforced-claims-a-gate');
+    expect(issue?.message).toMatch(/backlog/i);
+  });
+
+  it('skips entirely when no backlog is supplied, like every other data-fed rule', () => {
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      parseFailures: [],
+    });
+    expect(result.checked).not.toContain('enforced-claims-a-gate');
+  });
+});

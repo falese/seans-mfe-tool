@@ -15,7 +15,10 @@ supersedes: []
 superseded-by: []
 implements-pdr: [2]
 implemented-by: []
-verified-by: []
+verified-by:
+  - packages/codegen/src/__tests__/lockfile-lane-independence.test.ts
+  - packages/codegen/src/__tests__/validate.test.ts
+  - scripts/__tests__/published-package-resolution.test.ts
 long-form: true
 summary: >-
   The four MFE-facing platform packages become published artifacts resolved by npm install —

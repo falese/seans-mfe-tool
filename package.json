@@ -41,7 +41,8 @@
     "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
     "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build",
     "build:registry-mirror": "ts-node scripts/build-registry-mirror.ts",
-    "registry:serve": "node scripts/serve-registry-mirror.js"
+    "registry:serve": "node scripts/serve-registry-mirror.js",
+    "check:adr-conformance": "jest --testPathPattern __conformance__"
   },
   "keywords": [
     "module-federation",

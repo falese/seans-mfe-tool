@@ -139,6 +139,25 @@ async function readScriptNames(root: string): Promise<Set<string>> {
   return new Set(Object.keys(pkg.scripts ?? {}));
 }
 
+/**
+ * Ids grandfathered out of `enforced-claims-a-gate` (ADR-000).
+ *
+ * A missing or unreadable file yields an empty set rather than throwing: that
+ * makes every ADR claiming automation fail the rule, which is the safe
+ * direction — a lost backlog should surface loudly, not silently disable the
+ * gate it exists to bound.
+ */
+async function readConformanceBacklog(root: string): Promise<Set<number>> {
+  const file = path.join(root, 'docs', 'architecture-decisions', 'conformance-backlog.json');
+  if (!(await fs.pathExists(file))) return new Set();
+  try {
+    const parsed = (await fs.readJson(file)) as { adrs?: { adr: number }[] };
+    return new Set((parsed.adrs ?? []).map((entry) => entry.adr));
+  } catch {
+    return new Set();
+  }
+}
+
 /** ADR ids listed in the `docs/spec.md` index table. */
 async function readIndexIds(root: string): Promise<number[] | undefined> {
   const file = path.join(root, SPEC_FILE);
@@ -154,6 +173,7 @@ export async function adrValidateCommand(
   const root = await resolveAdrRoot(opts.root);
 
   const { documents, parseFailures } = await readAdrs(root);
+  const backlog = await readConformanceBacklog(root);
   const sourceRoots = opts.includeExamples
     ? [...DEFAULT_SOURCE_ROOTS, 'examples']
     : DEFAULT_SOURCE_ROOTS;
@@ -165,6 +185,7 @@ export async function adrValidateCommand(
     sources: await collectSources(root, sourceRoots),
     indexIds: await readIndexIds(root),
     scriptNames: await readScriptNames(root),
+    conformanceBacklog: backlog,
   });
 
   const result: AdrValidateResult = {
@@ -185,6 +206,17 @@ export async function adrValidateCommand(
       console.log(chalk.red(`      - ${where}`));
       console.log(chalk.gray(`        ${issue.message}`));
     }
+  }
+
+  // ADR-000: the backlog is debt, and debt that is not counted out loud stops
+  // being debt and becomes furniture.
+  if (backlog.size > 0) {
+    console.log(
+      chalk.yellow(
+        `\n  ${backlog.size} ADR(s) still claim automated enforcement without naming a checker ` +
+          '(docs/architecture-decisions/conformance-backlog.json — this list may only shrink).'
+      )
+    );
   }
   console.log('');
 

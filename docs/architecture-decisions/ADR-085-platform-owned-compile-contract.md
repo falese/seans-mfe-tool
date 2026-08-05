@@ -15,7 +15,9 @@ supersedes: []
 superseded-by: []
 implements-pdr: [1]
 implemented-by: []
-verified-by: []
+verified-by:
+  - packages/codegen/src/__tests__/compile-contract.test.ts
+  - check:mfe-consistency
 long-form: true
 summary: >-
   Generated React MFEs get a generator-owned tsconfig.platform.json carrying the compiler
