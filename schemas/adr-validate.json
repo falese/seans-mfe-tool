@@ -48,6 +48,7 @@
             "implemented-by-exists",
             "code-cites-ratified-adr",
             "register-complete",
+            "enforced-claims-a-gate",
             "accepted-work-is-tracked",
             "implemented-claims-evidence",
             "finished-work-says-so"
@@ -75,6 +76,7 @@
                 "implemented-by-exists",
                 "code-cites-ratified-adr",
                 "register-complete",
+                "enforced-claims-a-gate",
                 "accepted-work-is-tracked",
                 "implemented-claims-evidence",
                 "finished-work-says-so"

@@ -370,6 +370,14 @@ jobs:
         # graph. `npm run check:adr -- --include-examples` reports them.
         run: npm run check:adr
 
+      - name: ADR conformance packs
+        # ADR-000: a decision claiming `enforcement: code` names a checker, and
+        # this runs the checkers. Separate from `npm test` so "does the codebase
+        # still obey its own decisions?" is answerable on its own, and so a
+        # conformance failure is legible as that rather than as a unit-test
+        # failure somewhere in a 2700-test run.
+        run: npm run check:adr-conformance
+
       - name: ADR index and PDR map are generated from frontmatter
         # The spec.md index and the PDR↔ADR map are views of ADR frontmatter
         # (ADR-075 §1), not second copies of it. Same generate-and-diff idiom as

@@ -1,0 +1,190 @@
+{
+  "//": "ADR-000 conformance backlog — decisions that claim automated enforcement but do not yet name the checker that proves it. This list is a RATCHET: check:adr fails on any addition, and fails on any entry that has since gained a verified-by. It may only shrink.",
+  "//generated": "Snapshot taken when ADR-000 landed. Deliberately NOT regenerated — a self-regenerating backlog would silently absorb new gaps, which is the defect this exists to close.",
+  "adrs": [
+    {
+      "adr": 1,
+      "title": "Lifecycle Re-Entrancy Guard in BaseMFE"
+    },
+    {
+      "adr": 2,
+      "title": "Lifecycle Hook Execution Model"
+    },
+    {
+      "adr": 3,
+      "title": "No Custom Lifecycle Phases"
+    },
+    {
+      "adr": 4,
+      "title": "Handler Array Support"
+    },
+    {
+      "adr": 5,
+      "title": "Handler Discovery Convention"
+    },
+    {
+      "adr": 6,
+      "title": "Unified Type System"
+    },
+    {
+      "adr": 7,
+      "title": "Authorization Expression Grammar"
+    },
+    {
+      "adr": 8,
+      "title": "Data Type Metadata"
+    },
+    {
+      "adr": 10,
+      "title": "Data Lifecycle Alignment"
+    },
+    {
+      "adr": 11,
+      "title": "GeneratedFrom Traceability"
+    },
+    {
+      "adr": 12,
+      "title": "GraphQL Mesh for BFF Layer with DSL-Embedded Configuration"
+    },
+    {
+      "adr": 13,
+      "title": "Generated MFE Test Templates"
+    },
+    {
+      "adr": 15,
+      "title": "oclif as CLI framework — replace Commander"
+    },
+    {
+      "adr": 16,
+      "title": "BaseCommand pattern — every oclif command extends BaseCommand"
+    },
+    {
+      "adr": 19,
+      "title": "MCP child-process isolation — spawn seans-mfe-tool per tool call"
+    },
+    {
+      "adr": 20,
+      "title": "Bun for dev entry, Node for published entry — permanent split"
+    },
+    {
+      "adr": 25,
+      "title": "Platform Handler Interface & Execution Model"
+    },
+    {
+      "adr": 27,
+      "title": "GraphQL Mesh v0.100.x with Production Plugins & Transforms"
+    },
+    {
+      "adr": 28,
+      "title": "Parallel Handler Execution with Context Isolation"
+    },
+    {
+      "adr": 30,
+      "title": "Error Classification with Hybrid Detection"
+    },
+    {
+      "adr": 31,
+      "title": "Conditional Execution with Jexl Expression Engine"
+    },
+    {
+      "adr": 32,
+      "title": "Inter-Hook Communication with TypeScript Code Generation"
+    },
+    {
+      "adr": 35,
+      "title": "Docker Build Orchestration via Turborepo Task Graph"
+    },
+    {
+      "adr": 36,
+      "title": "Framework plugins — abstract BaseFrameworkPlugin with concrete implementations"
+    },
+    {
+      "adr": 40,
+      "title": "Manifest-Declared Handler Sources"
+    },
+    {
+      "adr": 42,
+      "title": "MFE Lifecycle State Machine"
+    },
+    {
+      "adr": 45,
+      "title": "Package Manager and Local Runtime Pinning"
+    },
+    {
+      "adr": 46,
+      "title": "Environment Configuration and Secret Validation"
+    },
+    {
+      "adr": 48,
+      "title": "Dependency Update and Vulnerability Response Policy"
+    },
+    {
+      "adr": 49,
+      "title": "Release, Versioning, and Publish Automation"
+    },
+    {
+      "adr": 51,
+      "title": "Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs"
+    },
+    {
+      "adr": 54,
+      "title": "Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts"
+    },
+    {
+      "adr": 55,
+      "title": "LayoutManager — Daemon-Driven Slot Composition for Generic Shells"
+    },
+    {
+      "adr": 57,
+      "title": "Virtualized daemon socket: per-slot control-plane channels over one host connect"
+    },
+    {
+      "adr": 58,
+      "title": "Slot-provider MFEs: MFEs contribute named slots to the host layout"
+    },
+    {
+      "adr": 60,
+      "title": "Contextualized VM composition: value-injection, slot-scoped self-healing, and co"
+    },
+    {
+      "adr": 61,
+      "title": "`@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework var"
+    },
+    {
+      "adr": 62,
+      "title": "`deploy` is a dev-convenience wrapper; production deployment returns as a plugin"
+    },
+    {
+      "adr": 63,
+      "title": "API-backend generation is a plugin axis, not a wrapper around one OSS codegen"
+    },
+    {
+      "adr": 64,
+      "title": "The runtime's future is a semver-published package, not a staged `dist/runtime` "
+    },
+    {
+      "adr": 68,
+      "title": "Provider-scoped slot addresses"
+    },
+    {
+      "adr": 69,
+      "title": "Slot grammar single-sourced in contracts"
+    },
+    {
+      "adr": 70,
+      "title": "Experience-scoped federated supergraph (control-plane-composed data over partici"
+    },
+    {
+      "adr": 72,
+      "title": "The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest"
+    },
+    {
+      "adr": 74,
+      "title": "The MFE Registration Is a Build Artifact — Register on Build, Not by Hand"
+    },
+    {
+      "adr": 78,
+      "title": "The control plane ships in the platform, and a composition environment is genera"
+    }
+  ]
+}

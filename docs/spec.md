@@ -235,6 +235,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
+| [ADR-000](./architecture-decisions/ADR-000-decisions-name-their-checker.md) | A decision claiming automated enforcement must name the checker that proves it | Governance / ADR library / conformance | Implemented |
 | [ADR-001](./architecture-decisions/ADR-001-lifecycle-reentrancy-guard.md) | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Implemented |
 | [ADR-002](./architecture-decisions/ADR-002-lifecycle-hook-execution-model.md) | Lifecycle Hook Execution Model | Runtime lifecycle | Implemented |
 | [ADR-003](./architecture-decisions/ADR-003-no-custom-lifecycle-phases.md) | No Custom Lifecycle Phases | Runtime lifecycle | Implemented |

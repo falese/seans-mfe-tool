@@ -38,6 +38,7 @@ export type AdrValidationRule =
   | 'code-cites-ratified-adr'
   | 'register-complete'
   // ADR-075 §6 — the implementation lifecycle.
+  | 'enforced-claims-a-gate'
   | 'accepted-work-is-tracked'
   | 'implemented-claims-evidence'
   | 'finished-work-says-so';
@@ -75,6 +76,15 @@ export interface AdrValidationInput {
    * can be resolved (ADR-075 §6). Omit to skip that half of the check.
    */
   scriptNames?: ReadonlySet<string>;
+  /**
+   * ADR ids grandfathered out of `enforced-claims-a-gate` (ADR-000) — the
+   * decisions that predate the rule and have not yet been given a checker.
+   *
+   * Omit to skip the rule, matching every other data-fed rule here: without the
+   * list there is no way to tell a genuine gap from a known one. The set is a
+   * ratchet, so the rule also reports an id that no longer needs to be on it.
+   */
+  conformanceBacklog?: ReadonlySet<number>;
 }
 
 export interface AdrValidationResult {
@@ -446,6 +456,50 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
           `verified-by names "${claim}", which is neither an npm script nor a file in the repo`,
         actual: claim,
       });
+    }
+  }
+
+  // 9b. enforced-claims-a-gate (ADR-000) — `enforcement: code` is a claim about
+  //     the codebase, and a claim nobody can falsify is decoration. The field
+  //     that would carry the proof already existed and was already resolved
+  //     when present; it was merely optional, which is how 49 of 74 ADRs came
+  //     to assert enforcement while naming nothing.
+  //
+  //     `convention` is deliberately exempt: it says humans enforce this, which
+  //     is honest, and demanding a gate for it would push authors to mislabel.
+  if (input.conformanceBacklog) {
+    checked.push('enforced-claims-a-gate');
+    const backlog = input.conformanceBacklog;
+
+    for (const document of input.documents) {
+      const fm = document.frontmatter;
+      const id = normalizeAdrId(fm.id);
+      const claimsAutomation = fm.enforcement === 'code' || fm.enforcement === 'tooling';
+      const namesAGate = fm['verified-by'].length > 0;
+      const grandfathered = backlog.has(id);
+
+      if (claimsAutomation && !namesAGate && !grandfathered) {
+        issues.push({
+          rule: 'enforced-claims-a-gate',
+          file: document.path,
+          message:
+            `enforcement is \`${fm.enforcement}\` but verified-by is empty — name the gate that proves this decision holds, ` +
+            'or write a conformance pack for it (ADR-000)',
+          expected: 'verified-by: [<npm script or test path>]',
+        });
+      }
+
+      // The ratchet: an entry that has since gained a gate is stale, and a
+      // stale entry is a hole a future regression could slip through unseen.
+      if (grandfathered && namesAGate) {
+        issues.push({
+          rule: 'enforced-claims-a-gate',
+          file: document.path,
+          message:
+            `ADR-${formatAdrId(id)} names a gate but is still listed in the conformance backlog — remove it, the list may only shrink (ADR-000)`,
+          actual: 'listed in conformance-backlog.json',
+        });
+      }
     }
   }
 
