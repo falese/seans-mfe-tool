@@ -57,6 +57,7 @@
 
 - [Attributes](type-aliases/Attributes.md)
 - [AttributeValue](type-aliases/AttributeValue.md)
+- [ChildStdio](type-aliases/ChildStdio.md)
 - [CommandError](type-aliases/CommandError.md)
 - [CommandResult](type-aliases/CommandResult.md)
 - [EventStatus](type-aliases/EventStatus.md)
@@ -78,6 +79,7 @@
 
 - [EXIT\_CODES](variables/EXIT_CODES.md)
 - [EXPERIENCE\_CONTENT\_TYPES](variables/EXPERIENCE_CONTENT_TYPES.md)
+- [JSON\_MODE\_ENV](variables/JSON_MODE_ENV.md)
 - [MFE\_LIFECYCLE\_INITIAL\_STATE](variables/MFE_LIFECYCLE_INITIAL_STATE.md)
 - [MFE\_LIFECYCLE\_STATES](variables/MFE_LIFECYCLE_STATES.md)
 - [MFE\_LIFECYCLE\_TERMINAL\_STATE](variables/MFE_LIFECYCLE_TERMINAL_STATE.md)
@@ -96,6 +98,7 @@
 - [assertPresentationHandles](functions/assertPresentationHandles.md)
 - [buildMessage](functions/buildMessage.md)
 - [childContext](functions/childContext.md)
+- [childStdio](functions/childStdio.md)
 - [classifyError](functions/classifyError.md)
 - [createSlotAddressRegistry](functions/createSlotAddressRegistry.md)
 - [createSlotContract](functions/createSlotContract.md)

@@ -2,6 +2,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { spawn } from 'child_process';
 import { BaseCommand } from '@falese/smt-oclif-base';
+import { childStdio } from '@falese/smt-contracts';
 import { writeMeshConfig } from '../../shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from '../../shared';
@@ -21,7 +22,7 @@ export async function bffDevCommand(options: BFFCommandOptions = {}): Promise<Bf
 
     const meshDev = spawn('npx', ['mesh', 'dev'], {
       cwd: targetDir,
-      stdio: 'inherit',
+      stdio: childStdio(),
       shell: true,
     });
 

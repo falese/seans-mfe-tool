@@ -12,6 +12,7 @@ import {
   type BuildResult,
   type DevServerHandle,
   parseBuildOutput,
+  childStdio,
 } from '@falese/smt-contracts';
 
 function semverSatisfies(found: string, required: string): boolean {
@@ -107,7 +108,7 @@ export class ReactRspackPlugin extends BaseFrameworkPlugin {
     const { spawn } = await import('child_process');
     const proc = spawn('npx', ['rspack', 'serve', '--port', String(opts.port)], {
       cwd: opts.cwd,
-      stdio: 'inherit',
+      stdio: childStdio(),
       shell: true,
     });
     return {

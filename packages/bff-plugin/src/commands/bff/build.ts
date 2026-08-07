@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { execSync } from 'child_process';
 import { BaseCommand } from '@falese/smt-oclif-base';
-import { NetworkError } from '@falese/smt-contracts';
+import { NetworkError, childStdio } from '@falese/smt-contracts';
 import { writeMeshConfig, ensureMockSwitchFiles } from '../../shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from '../../shared';
@@ -55,7 +55,7 @@ export async function bffBuildCommand(
     console.log(chalk.blue('\nRunning mesh build...'));
 
     try {
-      execSync('npx mesh build', { cwd: targetDir, stdio: 'inherit', env: { ...process.env } });
+      execSync('npx mesh build', { cwd: targetDir, stdio: childStdio(), env: { ...process.env } });
     } catch (meshError: unknown) {
       const err = meshError as { message?: string; code?: string };
       if (err.message?.includes('mesh') || err.code === 'ENOENT') {
@@ -63,9 +63,9 @@ export async function bffBuildCommand(
         try {
           execSync('npm install @graphql-mesh/cli @graphql-mesh/openapi', {
             cwd: targetDir,
-            stdio: 'inherit',
+            stdio: childStdio(),
           });
-          execSync('npx mesh build', { cwd: targetDir, stdio: 'inherit' });
+          execSync('npx mesh build', { cwd: targetDir, stdio: childStdio() });
         } catch (installErr: unknown) {
           const detail = installErr instanceof Error ? installErr.message : String(installErr);
           throw new NetworkError(`Failed to install or run @graphql-mesh/cli: ${detail}`, 1);

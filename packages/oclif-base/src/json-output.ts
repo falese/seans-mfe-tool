@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { SystemError } from '@falese/smt-contracts';
+import { SystemError, JSON_MODE_ENV } from '@falese/smt-contracts';
 
 // ---------------------------------------------------------------------------
 // Chalk / color suppression
@@ -27,6 +27,12 @@ let _originalStdoutWrite: typeof process.stdout.write | undefined;
 
 export function redirectStdoutToStderr(): void {
   if (_originalStdoutWrite) return;
+
+  // Patching process.stdout.write covers this process only — a child given
+  // `stdio: 'inherit'` writes to the real fd 1 and is untouched by any of the
+  // below. Publish the mode so `childStdio()` can point that child's stdout at
+  // fd 2 instead, and so the marker survives into grandchildren (ADR-018).
+  process.env[JSON_MODE_ENV] = '1';
 
   _originalStdoutWrite = process.stdout.write.bind(process.stdout);
 

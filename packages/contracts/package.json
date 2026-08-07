@@ -21,6 +21,10 @@
       "require": "./dist/envelope.js",
       "types": "./dist/envelope.d.ts"
     },
+    "./child-stdio": {
+      "require": "./dist/child-stdio.js",
+      "types": "./dist/child-stdio.d.ts"
+    },
     "./messages": {
       "require": "./dist/messages.js",
       "types": "./dist/messages.d.ts"
