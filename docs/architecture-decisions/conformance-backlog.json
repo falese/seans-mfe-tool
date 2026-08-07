@@ -51,10 +51,6 @@
       "title": "oclif as CLI framework — replace Commander"
     },
     {
-      "adr": 20,
-      "title": "Bun for dev entry, Node for published entry — permanent split"
-    },
-    {
       "adr": 25,
       "title": "Platform Handler Interface & Execution Model"
     },
