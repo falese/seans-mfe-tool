@@ -13,7 +13,8 @@ superseded-by: []
 implemented-by:
   - bin/dev.ts
   - bin/run.js
-verified-by: []
+verified-by:
+  - scripts/__conformance__/ADR-020.conformance.test.ts
 summary: >-
   bin/dev.ts runs under Bun for zero-transpile development iteration; bin/run.js is the
   pure-Node published entry that loads compiled dist/ — these two entry points are a permanent

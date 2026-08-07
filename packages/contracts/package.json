@@ -6,56 +6,69 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./errors": {
+      "types": "./dist/errors/index.d.ts",
       "require": "./dist/errors/index.js",
-      "types": "./dist/errors/index.d.ts"
+      "default": "./dist/errors/index.js"
     },
     "./error-classifier": {
+      "types": "./dist/error-classifier.d.ts",
       "require": "./dist/error-classifier.js",
-      "types": "./dist/error-classifier.d.ts"
+      "default": "./dist/error-classifier.js"
     },
     "./envelope": {
+      "types": "./dist/envelope.d.ts",
       "require": "./dist/envelope.js",
-      "types": "./dist/envelope.d.ts"
+      "default": "./dist/envelope.js"
     },
     "./child-stdio": {
+      "types": "./dist/child-stdio.d.ts",
       "require": "./dist/child-stdio.js",
-      "types": "./dist/child-stdio.d.ts"
+      "default": "./dist/child-stdio.js"
     },
     "./messages": {
+      "types": "./dist/messages.d.ts",
       "require": "./dist/messages.js",
-      "types": "./dist/messages.d.ts"
+      "default": "./dist/messages.js"
     },
     "./observability": {
+      "types": "./dist/observability.d.ts",
       "require": "./dist/observability.js",
-      "types": "./dist/observability.d.ts"
+      "default": "./dist/observability.js"
     },
     "./presentation": {
+      "types": "./dist/presentation.d.ts",
       "require": "./dist/presentation.js",
-      "types": "./dist/presentation.d.ts"
+      "default": "./dist/presentation.js"
     },
     "./framework-plugin": {
+      "types": "./dist/framework-plugin.d.ts",
       "require": "./dist/framework-plugin.js",
-      "types": "./dist/framework-plugin.d.ts"
+      "default": "./dist/framework-plugin.js"
     },
     "./platform-contract": {
+      "types": "./dist/platform-contract.d.ts",
       "require": "./dist/platform-contract.js",
-      "types": "./dist/platform-contract.d.ts"
+      "default": "./dist/platform-contract.js"
     },
     "./slot-grammar": {
+      "types": "./dist/slot-grammar.d.ts",
       "require": "./dist/slot-grammar.js",
-      "types": "./dist/slot-grammar.d.ts"
+      "default": "./dist/slot-grammar.js"
     },
     "./slot-contract": {
+      "types": "./dist/slot-contract.d.ts",
       "require": "./dist/slot-contract.js",
-      "types": "./dist/slot-contract.d.ts"
+      "default": "./dist/slot-contract.js"
     },
     "./build-output-parser": {
+      "types": "./dist/build-output-parser.d.ts",
       "require": "./dist/build-output-parser.js",
-      "types": "./dist/build-output-parser.d.ts"
+      "default": "./dist/build-output-parser.js"
     }
   },
   "files": [

@@ -6,16 +6,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./schema": {
+      "types": "./dist/schema.d.ts",
       "require": "./dist/schema.js",
-      "types": "./dist/schema.d.ts"
+      "default": "./dist/schema.js"
     },
     "./parser": {
+      "types": "./dist/parser.d.ts",
       "require": "./dist/parser.js",
-      "types": "./dist/parser.d.ts"
+      "default": "./dist/parser.js"
     }
   },
   "files": [
