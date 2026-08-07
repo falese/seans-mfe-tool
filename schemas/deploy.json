@@ -10,6 +10,10 @@
         "type": "string",
         "description": "Application name"
       },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Preview changes without writing them"
+      },
       "type": {
         "type": "string",
         "enum": [
@@ -28,10 +32,6 @@
         "type": "string",
         "description": "Port number for development deployment",
         "default": "8080"
-      },
-      "dry-run": {
-        "type": "boolean",
-        "description": "Preview deployment without executing"
       }
     },
     "required": [

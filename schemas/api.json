@@ -10,6 +10,10 @@
         "type": "string",
         "description": "API name"
       },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Preview changes without writing them"
+      },
       "port": {
         "type": "string",
         "description": "Port number for the API",
@@ -30,10 +34,6 @@
         ],
         "description": "Database type to use",
         "default": "sqlite"
-      },
-      "dry-run": {
-        "type": "boolean",
-        "description": "Preview changes without writing"
       }
     },
     "required": [

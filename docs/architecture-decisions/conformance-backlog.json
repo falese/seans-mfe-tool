@@ -51,10 +51,6 @@
       "title": "oclif as CLI framework — replace Commander"
     },
     {
-      "adr": 16,
-      "title": "BaseCommand pattern — every oclif command extends BaseCommand"
-    },
-    {
       "adr": 19,
       "title": "MCP child-process isolation — spawn seans-mfe-tool per tool call"
     },

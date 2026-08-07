@@ -109,6 +109,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     framework: Flags.string({
       description: 'Framework to use (default: react). Install @falese/smt-framework-<name> for third-party frameworks.',
       default: 'react',
@@ -128,11 +129,6 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     force: Flags.boolean({
       char: 'f',
       description: 'Overwrite existing files',
-      default: false,
-    }),
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Preview changes without writing',
       default: false,
     }),
   }

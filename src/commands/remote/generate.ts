@@ -276,11 +276,7 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Show what would be generated without writing',
-      default: false,
-    }),
+    ...BaseCommand.mutatingFlags,
     force: Flags.boolean({
       char: 'f',
       description:

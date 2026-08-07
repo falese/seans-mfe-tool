@@ -750,6 +750,7 @@ export default class Api extends BaseCommand<ApiResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     port: Flags.string({
       char: 'p',
       description: 'Port number for the API',
@@ -765,11 +766,6 @@ export default class Api extends BaseCommand<ApiResult> {
       description: 'Database type to use',
       options: ['mongodb', 'mongo', 'sqlite', 'sql'],
       default: 'sqlite',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'D',
-      description: 'Preview changes without writing',
-      default: false,
     }),
   }
 

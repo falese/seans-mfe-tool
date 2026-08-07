@@ -24,6 +24,7 @@ export default class RemoteInitAngular extends BaseCommand<RemoteInitResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     port: Flags.string({
       char: 'p',
       description: 'Port number for the remote MFE',
@@ -39,11 +40,6 @@ export default class RemoteInitAngular extends BaseCommand<RemoteInitResult> {
     force: Flags.boolean({
       char: 'f',
       description: 'Overwrite existing files',
-      default: false,
-    }),
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Preview changes without writing',
       default: false,
     }),
   }

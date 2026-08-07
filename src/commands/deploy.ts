@@ -329,6 +329,7 @@ export default class Deploy extends BaseCommand<DeployResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     type: Flags.string({
       char: 't',
       description: 'Application type (shell, remote, or api)',
@@ -344,11 +345,6 @@ export default class Deploy extends BaseCommand<DeployResult> {
       char: 'p',
       description: 'Port number for development deployment',
       default: '8080',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'D',
-      description: 'Preview deployment without executing',
-      default: false,
     }),
   }
 

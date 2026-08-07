@@ -135,11 +135,7 @@ export default class RemoteGenerateCapability extends BaseCommand<RemoteGenerate
 
   static flags = {
     ...BaseCommand.baseFlags,
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Show what would be generated without writing',
-      default: false,
-    }),
+    ...BaseCommand.mutatingFlags,
     force: Flags.boolean({
       char: 'f',
       description: 'Overwrite existing files',

@@ -10,6 +10,10 @@
         "type": "string",
         "description": "Remote MFE name"
       },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Preview changes without writing them"
+      },
       "framework": {
         "type": "string",
         "description": "Framework to use (default: react). Install @falese/smt-framework-<name> for third-party frameworks.",
@@ -30,10 +34,6 @@
       "force": {
         "type": "boolean",
         "description": "Overwrite existing files"
-      },
-      "dry-run": {
-        "type": "boolean",
-        "description": "Preview changes without writing"
       }
     },
     "required": [
