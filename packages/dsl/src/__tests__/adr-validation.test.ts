@@ -578,6 +578,39 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
     expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
   });
 
+  it('rejects a prose document as the gate', () => {
+    // ADR-018 claimed `enforcement: code` and named docs/cli-contract.md. The
+    // path resolved, the field was non-empty, and the rule passed it — while
+    // the thing named cannot execute, cannot fail, and cannot notice drift.
+    // Found when a bug shipped straight through it: commands were leaking
+    // grandchild output onto stdout, breaking ADR-018's one-line invariant,
+    // with its "gate" green the whole time because it is a paragraph.
+    const result = validateAdrLibrary({
+      documents: [
+        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['docs/cli-contract.md'] }),
+      ],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).toContain('enforced-claims-a-gate');
+  });
+
+  it('accepts a doc alongside a real gate', () => {
+    // Pointing at the prose that explains the contract is useful. It just
+    // cannot be the only thing named.
+    const result = validateAdrLibrary({
+      documents: [
+        adr(10, 'Ten', {
+          enforcement: 'code',
+          'verified-by': ['docs/cli-contract.md', 'src/oclif/__tests__/json-contract.test.ts'],
+        }),
+      ],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+  });
+
   it('applies to `tooling` as well — a build step is still a checker', () => {
     const result = validateAdrLibrary({
       documents: [adr(10, 'Ten', { enforcement: 'tooling', 'verified-by': [] })],

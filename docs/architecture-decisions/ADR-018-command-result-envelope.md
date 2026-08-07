@@ -13,7 +13,10 @@ superseded-by: []
 implements-pdr: [3]
 implemented-by:
   - packages/contracts/src/envelope.ts
+  - packages/contracts/src/child-stdio.ts
 verified-by:
+  - src/oclif/__conformance__/ADR-018.conformance.test.ts
+  - src/oclif/__tests__/json-contract.test.ts
   - docs/cli-contract.md
 summary: >-
   Under --json, every command emits exactly one CommandResult<T> JSON object to stdout; all

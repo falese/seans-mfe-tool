@@ -475,17 +475,26 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
       const fm = document.frontmatter;
       const id = normalizeAdrId(fm.id);
       const claimsAutomation = fm.enforcement === 'code' || fm.enforcement === 'tooling';
-      const namesAGate = fm['verified-by'].length > 0;
+      // A gate has to be able to run. `docs/cli-contract.md` resolved, was
+      // non-empty, and satisfied this rule for ADR-018 — while a document
+      // cannot execute, cannot fail, and cannot notice drift. It was still
+      // green while a bug shipped through the very invariant it describes.
+      // Prose is welcome alongside a gate; it just cannot be the gate.
+      const namesAGate = fm['verified-by'].some((entry) => !entry.endsWith('.md'));
       const grandfathered = backlog.has(id);
 
       if (claimsAutomation && !namesAGate && !grandfathered) {
+        const prose = fm['verified-by'].length > 0;
         issues.push({
           rule: 'enforced-claims-a-gate',
           file: document.path,
-          message:
-            `enforcement is \`${fm.enforcement}\` but verified-by is empty — name the gate that proves this decision holds, ` +
-            'or write a conformance pack for it (ADR-000)',
+          message: prose
+            ? `enforcement is \`${fm.enforcement}\` but verified-by names only documentation — a document cannot fail, ` +
+              'so it cannot be the gate (ADR-000)'
+            : `enforcement is \`${fm.enforcement}\` but verified-by is empty — name the gate that proves this decision holds, ` +
+              'or write a conformance pack for it (ADR-000)',
           expected: 'verified-by: [<npm script or test path>]',
+          ...(prose ? { actual: fm['verified-by'].join(', ') } : {}),
         });
       }
 
