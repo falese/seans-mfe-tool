@@ -42,7 +42,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/agent-plans/oclif-migrati
 | `--dry-run` normalized across all mutating commands                               | all mutating commands                             |
 | Integration test: JSON contract round-trip with ajv                               | `src/oclif/__tests__/json-contract.test.ts`       |
 | Plugin contract + starter skeleton                                                | `PLUGIN-CONTRACT.md`, `examples/plugin-skeleton/` |
-| pnpm workspaces + Turborepo build graph                                           | `pnpm-workspace.yaml`, `turbo.json`               |
+| npm workspaces + Turborepo build graph                                            | `package.json` (`workspaces`), `turbo.json`       |
 | Merge plan: phased path to monorepo                                               | `MERGE-PLAN.md`                                   |
 
 ### Code Generation & DSL (pre-#90 era)

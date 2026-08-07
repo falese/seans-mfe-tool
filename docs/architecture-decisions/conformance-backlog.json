@@ -99,10 +99,6 @@
       "title": "MFE Lifecycle State Machine"
     },
     {
-      "adr": 45,
-      "title": "Package Manager and Local Runtime Pinning"
-    },
-    {
       "adr": 46,
       "title": "Environment Configuration and Secret Validation"
     },

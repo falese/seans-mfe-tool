@@ -86,7 +86,9 @@ Move all three repos into a single git repository under `apps/` and `packages/`.
 3. Import `Falese/coder` history into `apps/coder/` using `git subtree add`.
 4. Move shared packages to `packages/`: contracts, oclif-base, and add
    `packages/telemetry`, `packages/config` as needs emerge.
-5. Update all workspace cross-references to `workspace:*` (pnpm).
+5. Update all workspace cross-references to `workspace:*`. ADR-045 makes npm
+   authoritative, so this is npm's `workspace:` protocol — the pnpm phrasing
+   here predates that decision.
 6. Run `turbo run test build` — fix failures until green.
 7. Tag `v2.0.0-monorepo` and freeze the individual repos (archive them).
 
@@ -117,8 +119,9 @@ releases across all packages and apps.
 
 - Each PR that touches a package adds a Changesets file (`.changeset/*.md`)
   describing the semver impact.
-- Release workflow: `pnpm changeset version` bumps packages; `pnpm changeset publish`
+- Release workflow: `npx changeset version` bumps packages; `npx changeset publish`
   publishes affected packages in dependency order (turbo handles build order).
+  Written as pnpm before ADR-045 settled npm as the authoritative manager.
 - `@falese/*` plugins release independently from `@falese/smt-*` packages.
 - Individual repo releases deprecated; `Falese/daemon` and `Falese/coder`
   become archived read-only mirrors.
