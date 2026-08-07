@@ -38,7 +38,7 @@ The CLI runtime, command dispatch, and agent-callable interface. Includes:
 - `src/mcp/` — MCP server with federated tool registry (local + oclif plugins + remote sources)
 - `schemas/*.json` — auto-generated command schemas (inputs + outputs)
 - `PLUGIN-CONTRACT.md` + `examples/plugin-skeleton/` — third-party plugin integration
-- `pnpm-workspace.yaml` + `turbo.json` — workspace build graph
+- `package.json` (`workspaces`) + `turbo.json` — workspace build graph (npm is authoritative, ADR-045)
 - `MERGE-PLAN.md` — phased path to monorepo with Falese/daemon and Falese/coder
 
 **Status**: ✅ Complete (Epic A #90–99, Epic B #100–108, Epic C #109–115, closed April 2026)

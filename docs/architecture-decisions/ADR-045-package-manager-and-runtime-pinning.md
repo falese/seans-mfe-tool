@@ -1,7 +1,7 @@
 ---
 id: 0045
 title: Package Manager and Local Runtime Pinning
-status: Proposed
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Tooling / package manager / runtime
@@ -10,8 +10,11 @@ tags: [tooling, package-manager, node, reproducibility, gap]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - .nvmrc
+  - package.json
+verified-by:
+  - scripts/__conformance__/ADR-045.conformance.test.ts
 summary: >-
   Standardize the contributor toolchain on a single package manager and an explicit local Node
   runtime pin so workspace installs, builds, and release tasks are reproducible outside CI.
