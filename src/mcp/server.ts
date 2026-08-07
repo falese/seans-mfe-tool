@@ -46,6 +46,53 @@ function positionalsOf(tool?: McpToolDefinition): string[] | undefined {
   return Array.isArray(positional) ? (positional as string[]) : undefined;
 }
 
+/**
+ * Find the `CommandResult<T>` envelope in a child's stdout.
+ *
+ * ADR-018 promises exactly one envelope line on stdout under `--json`, and
+ * BaseCommand keeps that promise for everything it can see: `this.log()` and
+ * `console.log` are redirected to stderr. What it cannot see is a *grandchild*.
+ * `execSync(..., { stdio: 'inherit' })` hands the spawned process the real fd 1,
+ * and no amount of patching `process.stdout.write` in the CLI's own process
+ * affects a file descriptor another process is already writing to.
+ *
+ * So `deploy` returned docker's build log ahead of its envelope, `JSON.parse`
+ * over the whole buffer threw, and a container that was already running was
+ * reported to the agent as `system` error 69. Commands are being fixed to stop
+ * leaking (ADR-018), but the parser has to be the side that holds: it is one
+ * function, it faces every command including third-party plugin ones, and it is
+ * where ADR-019 puts the responsibility — "maps CommandResult.success to the MCP
+ * tool response".
+ *
+ * Walks back from the end because the envelope is written last, immediately
+ * before the command exits. Still `JSON.parse` and no regex, per ADR-019: line
+ * splitting is done with `split`, and a line either parses whole or is skipped —
+ * nothing is pattern-matched out of the middle of the stream.
+ *
+ * Returns undefined when no line is an envelope, which is a genuine contract
+ * failure and must stay one — tolerating noise is not the same as inventing
+ * success.
+ */
+function findEnvelope(stdout: string): CommandResult<unknown> | undefined {
+  // Progress output (npm, docker) redraws with a bare \r and no newline, so a
+  // leak can end up on the same "line" as the envelope unless both count.
+  const lines = stdout.split('\n').flatMap((line) => line.split('\r'));
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    try {
+      const value: unknown = JSON.parse(line);
+      if (value !== null && typeof value === 'object' && 'ok' in value) {
+        return value as CommandResult<unknown>;
+      }
+    } catch {
+      // Not the envelope — keep walking back.
+    }
+  }
+  return undefined;
+}
+
 export async function executeToolCall(
   toolName:  string,
   input:     Record<string, unknown>,
@@ -112,21 +159,22 @@ export async function executeToolCall(
         return;
       }
 
-      try {
-        const envelope = JSON.parse(line) as CommandResult<unknown>;
-        resolve({
-          ok:    envelope.ok,
-          data:  envelope.data,
-          error: envelope.error as ToolCallResult['error'],
-          stderr,
-        });
-      } catch {
+      const envelope = findEnvelope(stdout);
+      if (!envelope) {
         resolve({
           ok:    false,
           error: { type: 'system', code: 69, message: `Failed to parse command output: ${line.slice(0, 200)}` },
           stderr,
         });
+        return;
       }
+
+      resolve({
+        ok:    envelope.ok,
+        data:  envelope.data,
+        error: envelope.error as ToolCallResult['error'],
+        stderr,
+      });
     });
 
     child.on('error', (err) => {
