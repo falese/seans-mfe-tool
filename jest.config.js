@@ -12,7 +12,15 @@ module.exports = {
     // The CI-gate scripts carry real logic (diff scanning, report formatting)
     // and lived without any coverage until ADR-082 gave one of them a rule to
     // enforce. They are not under a `src/`, so they need their own pattern.
-    '**/scripts/__tests__/**/*.test.[jt]s'
+    '**/scripts/__tests__/**/*.test.[jt]s',
+    // ADR-000 conformance packs living outside a `src/` tree. Repo-shape
+    // decisions (toolchain pinning, workspace layout) have no package to sit
+    // in. Without this line such a pack is written, named in the ADR's
+    // verified-by, and never executed — a decision that looks checked and is
+    // not, which is precisely what ADR-000 exists to prevent. The
+    // conformance-harness pack asserts every pack on disk is reachable from
+    // here, so this cannot silently regress.
+    '**/scripts/__conformance__/**/*.test.[jt]s'
   ],
   
   // Transform configuration - ts-jest for TS, babel-jest for JS
