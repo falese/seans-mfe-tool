@@ -10,8 +10,14 @@
  * The matcher below mirrors createSlotContract in @falese/smt-contracts. It is a
  * copy, not a call: this registry is a standalone dockerized service and
  * @falese/smt-contracts is not published yet (docs/MERGE-PLAN.md Phase 1).
- * Switch to the package when it is. The behavioural pin lives in
- * slot-target.test.js — the same idiom ADR-069 used for the grammar.
+ * Switch to the package when it is.
+ *
+ * The behavioural pin is scripts/__conformance__/ADR-069.conformance.test.ts,
+ * which drives this module and createSlotContract over the same ids and
+ * requires identical answers. It also fails if a third copy of the grammar
+ * appears without being pinned. This comment previously named a
+ * slot-target.test.js that was never written — the copy was sanctioned on a
+ * guarantee that did not exist.
  */
 
 /** `{param}` matches exactly one segment: the value charset excludes '.' and '/'. */

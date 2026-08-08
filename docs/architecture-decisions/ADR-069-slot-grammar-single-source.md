@@ -13,7 +13,8 @@ superseded-by: []
 implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/slot-grammar.ts
-verified-by: []
+verified-by:
+  - scripts/__conformance__/ADR-069.conformance.test.ts
 long-form: true
 ---
 

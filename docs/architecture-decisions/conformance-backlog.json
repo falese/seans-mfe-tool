@@ -147,10 +147,6 @@
       "title": "Provider-scoped slot addresses"
     },
     {
-      "adr": 69,
-      "title": "Slot grammar single-sourced in contracts"
-    },
-    {
       "adr": 70,
       "title": "Experience-scoped federated supergraph (control-plane-composed data over partici"
     },
