@@ -12,7 +12,8 @@ supersedes: []
 superseded-by: []
 implemented-by:
   - packages/bff-plugin/templates/mfe-manifest.yaml.ejs
-verified-by: []
+verified-by:
+  - scripts/__conformance__/ADR-011.conformance.test.ts
 summary: >-
   The DSL data section includes a generatedFrom field that records the source API specifications
   and versions that the data types were derived from, enabling impact analysis and regeneration

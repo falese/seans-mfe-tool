@@ -35,10 +35,6 @@
       "title": "Data Lifecycle Alignment"
     },
     {
-      "adr": 11,
-      "title": "GeneratedFrom Traceability"
-    },
-    {
       "adr": 12,
       "title": "GraphQL Mesh for BFF Layer with DSL-Embedded Configuration"
     },
