@@ -127,10 +127,6 @@
       "title": "Contextualized VM composition: value-injection, slot-scoped self-healing, and co"
     },
     {
-      "adr": 61,
-      "title": "`@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework var"
-    },
-    {
       "adr": 62,
       "title": "`deploy` is a dev-convenience wrapper; production deployment returns as a plugin"
     },

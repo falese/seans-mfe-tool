@@ -41,6 +41,7 @@ import * as path from 'path';
 import { parseAndValidateDirectory } from '@falese/smt-dsl';
 import type { DSLManifest } from '@falese/smt-dsl';
 import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from '@falese/smt-codegen';
+import { resolveFrameworkVariant } from '../src/framework/loader';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');
@@ -101,10 +102,19 @@ async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[
   if (!result.valid || !result.manifest) {
     throw new Error(`invalid manifest in ${path.relative(REPO_ROOT, dir)}`);
   }
-  const { files } = await generateAllFiles(result.manifest, dir);
+  // Resolve the variant rather than letting codegen derive it (ADR-061 §3).
+  // This script's non---check mode WRITES what it generates, so an MFE on a
+  // third-party framework would have been reported as fully drifted and then
+  // overwritten with React output — the repair tool corrupting the thing it
+  // repairs.
+  const frameworkVariant = resolveFrameworkVariant(result.manifest);
+
+  const { files } = await generateAllFiles(result.manifest, dir, { frameworkVariant });
   const { drift } = diffGeneratedOwned(files, readCurrent);
 
-  const { files: maximalFiles } = await generateAllFiles(maximalManifest(result.manifest), dir);
+  const { files: maximalFiles } = await generateAllFiles(maximalManifest(result.manifest), dir, {
+    frameworkVariant,
+  });
   const orphaned = findOrphanedGeneratedFiles(files, maximalFiles, readCurrent);
 
   const allDrift = [...drift, ...orphaned];
