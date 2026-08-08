@@ -151,10 +151,6 @@
       "title": "Experience-scoped federated supergraph (control-plane-composed data over partici"
     },
     {
-      "adr": 72,
-      "title": "The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest"
-    },
-    {
       "adr": 74,
       "title": "The MFE Registration Is a Build Artifact — Register on Build, Not by Hand"
     },

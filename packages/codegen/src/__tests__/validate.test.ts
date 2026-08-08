@@ -165,6 +165,42 @@ describe('validateMfeConsistency', () => {
     expect(slotIssues[0].package).toBe('ghost');
   });
 
+  it('does not count a generator-owned file as an implementation', () => {
+    // The rule went vacuous the moment an MFE was built. `bootstrap.ts` embeds
+    // the whole manifest as JSON, so every declared id appears in it verbatim
+    // and every slot looked referenced. Measured on the real fleet: adding a
+    // slot no component registers was reported correctly, then went silent
+    // after `check:mfe-drift` regenerated bootstrap.ts — which is what a build
+    // does. collectSources hand-excluded slots.tsx for exactly this reason;
+    // ownership (ADR-043) is the general form of that exclusion.
+    const input = consistentInput();
+    (input.manifest as unknown as { providesSlots: unknown }).providesSlots = [{ id: 'ghost' }];
+    input.sources = [
+      { path: 'src/platform/base-mfe/bootstrap.ts', text: 'const manifest = { "id": "ghost" }' },
+      { path: 'src/App.tsx', text: 'nothing registers it' },
+    ];
+    input.developerOwned = (p: string) => !p.includes('platform/base-mfe/');
+
+    const res = validateMfeConsistency(input);
+    const slotIssues = res.issues.filter((i) => i.rule === 'slots-implemented');
+    expect(slotIssues.map((i) => i.package)).toEqual(['ghost']);
+  });
+
+  it('falls back to every source when ownership cannot be determined', () => {
+    // developerOwnedPredicate answers "nothing is developer-owned" when
+    // generateAllFiles throws. Filtering on that would empty the scan and
+    // report every declared slot as unimplemented — a false-positive storm on
+    // an MFE whose only real problem is that codegen could not run. The rule
+    // reports nothing rather than everything.
+    const input = consistentInput();
+    (input.manifest as unknown as { providesSlots: unknown }).providesSlots = [{ id: 'main' }];
+    input.sources = [{ path: 'src/App.tsx', text: '<DeclaredSlot id="main" />' }];
+    input.developerOwned = () => false;
+
+    const res = validateMfeConsistency(input);
+    expect(res.issues.map((i) => i.rule)).not.toContain('slots-implemented');
+  });
+
   it('skips the slot rule entirely when the manifest declares no slots', () => {
     const input = consistentInput();
     input.sources = [{ path: 'src/App.tsx', text: '' }];

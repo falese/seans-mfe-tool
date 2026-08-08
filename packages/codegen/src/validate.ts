@@ -328,12 +328,31 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     .providesSlots;
   if (providesSlots?.length && sources) {
     checked.push('slots-implemented');
-    for (const finding of findUnreferencedSlots(providesSlots, sources)) {
-      issues.push({
-        rule: 'slots-implemented',
-        package: finding.slotId,
-        message: finding.message,
-      });
+
+    // Only app code counts as an implementation. Generator-owned files mirror
+    // the manifest by construction — `bootstrap.ts` embeds the whole thing as
+    // JSON — so every declared id appears in them verbatim and every slot looks
+    // registered. That made the rule vacuous on any MFE that had been built:
+    // adding a slot no component registers was reported correctly, then went
+    // silent as soon as regeneration ran. `collectSources` hand-excluded
+    // `slots.tsx` for precisely this reason and could not know about the rest;
+    // file ownership (ADR-043) is the general form of that exclusion.
+    //
+    // The empty-result fallback is not defensive padding: `developerOwned`
+    // answers "nothing is developer-owned" when codegen could not run at all,
+    // and filtering on that would report every declared slot as missing. For
+    // this rule the safe direction is to say nothing, not everything.
+    const authored = developerOwned ? sources.filter((s) => developerOwned(s.path)) : sources;
+    const ownershipUnusable = authored.length === 0 && sources.length > 0;
+
+    if (!ownershipUnusable) {
+      for (const finding of findUnreferencedSlots(providesSlots, authored)) {
+        issues.push({
+          rule: 'slots-implemented',
+          package: finding.slotId,
+          message: finding.message,
+        });
+      }
     }
   }
 
