@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/compose:build.json",
+  "title": "compose:build",
+  "description": "Compile a project's control-plane.yaml into the registry rules payload",
+  "input": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "Project directory, its control-plane/ directory, or the control-plane.yaml itself",
+        "default": "."
+      },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Compile and report without writing the payload"
+      }
+    },
+    "required": [],
+    "x-positional": [
+      "project"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "documentPath",
+      "payloadPath",
+      "project",
+      "namespace",
+      "mfes",
+      "routes",
+      "findings",
+      "written",
+      "changed",
+      "ok"
+    ],
+    "properties": {
+      "documentPath": {
+        "type": "string"
+      },
+      "payloadPath": {
+        "type": "string"
+      },
+      "project": {
+        "type": "string"
+      },
+      "namespace": {
+        "type": "string"
+      },
+      "mfes": {
+        "type": "number"
+      },
+      "routes": {
+        "type": "number"
+      },
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "rule",
+            "stateKey",
+            "message",
+            "fatal"
+          ],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "enum": [
+                "namespace-escape",
+                "unknown-capability",
+                "ambiguous-capability",
+                "unknown-mfe",
+                "unbound-placeholder",
+                "undeclared-slot"
+              ]
+            },
+            "stateKey": {
+              "type": "string",
+              "description": "The state key the offending route produces, for locating it in the source."
+            },
+            "message": {
+              "type": "string"
+            },
+            "fatal": {
+              "type": "boolean",
+              "description": "Advisory findings must not fail a build; everything structural does."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "written": {
+        "type": "boolean",
+        "description": "False when --dry-run, or when the payload was already current."
+      },
+      "changed": {
+        "type": "boolean"
+      },
+      "ok": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

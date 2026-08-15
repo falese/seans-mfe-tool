@@ -1,0 +1,100 @@
+{
+  "$id": "https://github.com/falese/seans-mfe-tool/schemas/dsl/control-plane.schema.json",
+  "title": "seans-mfe-tool control-plane composition",
+  "description": "Project-scoped composition document (control-plane.yaml) compiled into the registry payload by `seans-mfe-tool control-plane:build`. Generated from packages/dsl/src/control-plane-schema.ts (zod) by scripts/generate-dsl-schema.ts — do not hand-edit.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "namespace": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "mfes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "routes": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "minLength": 1
+          },
+          "forEach": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "place": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "capability": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "into": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "props": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "capability"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "when",
+          "place"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "project",
+    "namespace",
+    "mfes",
+    "routes"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,104 @@
+project: meridian-station
+namespace: meridian
+mfes:
+  - meridian-console
+  - meridian-docking-control
+  - meridian-life-support
+  - meridian-cargo-ops
+  - meridian-crew-services
+  - meridian-concourse
+  - meridian-docking-simulation
+routes:
+  - when: meridian.root
+    place:
+      - capability: StationConsole
+        into: root
+        props:
+          berths:
+            - b1
+            - b2
+            - b3
+            - b4
+            - b5
+            - b6
+          domains:
+            - id: docking
+              title: Docking Control
+              emoji: 🛰️
+              color: '#3b6ff5'
+              blurb: Berths, traffic, assignments
+            - id: docking-simulation
+              title: Docking Simulator
+              emoji: 🎮
+              color: '#ff6b9d'
+              blurb: First-person 3D docking gameplay
+            - id: life-support
+              title: Life Support
+              emoji: 🫁
+              color: '#2e9e6b'
+              blurb: Telemetry, environment, alerts
+            - id: cargo
+              title: Cargo Operations
+              emoji: 📦
+              color: '#c77b21'
+              blurb: Manifests, hazards, valuations
+            - id: crew
+              title: Crew Services
+              emoji: 🧑‍🚀
+              color: '#8455d6'
+              blurb: Roster, certifications, pay
+            - id: concourse
+              title: Concourse
+              emoji: 🍜
+              color: '#d64570'
+              blurb: Vendors, stalls, settlements
+  - when: meridian.open.docking
+    place:
+      - capability: DockingBoard
+        into: meridian-console/main
+      - capability: TrafficLog
+        into: meridian-console/status
+  - when: meridian.berth.{id}
+    forEach:
+      id:
+        - b1
+        - b2
+        - b3
+        - b4
+        - b5
+        - b6
+    place:
+      - capability: BerthTile
+        into: meridian-console/berth.{id}
+        props:
+          berthId: '{id}'
+  - when: meridian.open.life-support
+    place:
+      - capability: TelemetryDashboard
+        into: meridian-console/main
+      - capability: AlertsFeed
+        into: meridian-console/status
+  - when: meridian.status.life-support
+    place:
+      - capability: ModuleStatus
+        into: meridian-console/status
+  - when: meridian.open.cargo
+    place:
+      - capability: CargoManifest
+        into: meridian-console/main
+      - capability: HazardSummary
+        into: meridian-console/status
+  - when: meridian.open.crew
+    place:
+      - capability: CrewRoster
+        into: meridian-console/main
+      - capability: PayStatus
+        into: meridian-console/status
+  - when: meridian.open.concourse
+    place:
+      - capability: MarketDirectory
+        into: meridian-console/main
+  - when: meridian.open.docking-simulation
+    place:
+      - capability: DockingSimulation
+        into: meridian-console/main

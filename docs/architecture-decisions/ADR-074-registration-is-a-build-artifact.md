@@ -1,13 +1,17 @@
 ---
 id: 0074
 title: The MFE Registration Is a Build Artifact — Register on Build, Not by Hand
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#139"]
 date: 2026-07-25
 deciders: [sean]
 area: Codegen / control-plane / registration / module-federation / drift
 enforcement: code
 supersedes: []
 superseded-by: []
+relates-to: [83]
 implements-pdr: [5]
 tags: [codegen, module-federation, control-plane, registration, drift, manifest]
 summary: The `registration` half of a control-plane rule document is generated from `mfe-manifest.yaml` at build time instead of being hand-authored. Every one of its nine fields is already a restatement of the manifest, so hand-maintaining it can only introduce drift. `routes` stay hand-authored — placement is an operator decision and is not derivable. The Module-Federation `exposes` key stays fixed at `./App` (#272); this ADR records that convention, which until now existed only as a template comment.

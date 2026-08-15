@@ -94,6 +94,9 @@
       },
       "adr": {
         "description": "ADR library governance \u2014 validate metadata and report lifecycle state (ADR-075)"
+      },
+      "compose": {
+        "description": "Composition tooling \u2014 compile a project's control-plane.yaml into the registry payload (ADR-083)"
       }
     },
     "hooks": {

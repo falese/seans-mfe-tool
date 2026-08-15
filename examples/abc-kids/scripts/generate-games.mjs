@@ -13,7 +13,8 @@
  *
  * Also generates the home/launcher MFE (port 3015, ADR-058) and regenerates:
  *   docker-compose.games.yaml   (one service per game + home, ports 3005-3015)
- *   control-plane/rules.json    (placement rules as data — reviewable and
+ *   control-plane/control-plane.yaml (composition source — compiled into
+ *                               control-plane/rules.json by compose:build, ADR-083;
  *                                checkable by slots:validate, ADR-073)
  *   scripts/register-games.sh   (thin loop that POSTs rules.json — ADR-054/055/057/058)
  *   scripts/home.sh             (composes the home into the empty shell)
@@ -21,6 +22,7 @@
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dump as yamlDump } from 'js-yaml';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TEMPLATE = join(ROOT, 'hockey');
@@ -1184,70 +1186,73 @@ const all = [
   ...EXISTING,
   ...GAMES.map((g) => ({ id: g.id, port: g.port, scope: 'abc_kids_' + underscore(g.id), name: 'abc-kids-' + g.id })),
 ];
-// ── Placement rules (ADR-073) ────────────────────────────────────────────────
-// Rules are emitted as DATA (control-plane/rules.json), not as inline JSON
-// inside curl heredocs. As an artifact they are reviewable in a diff and
-// checkable in CI — `slots:validate` verifies every resolve.props.slot against
-// the fleet's declared providesSlots before anything is deployed. The register
-// script became a thin loop over the file.
+// ── Composition (ADR-083) ────────────────────────────────────────────────────
+// Composition is emitted as a DSL document, not as inline JSON inside curl
+// heredocs. As an artifact it is reviewable in a diff and checkable in CI —
+// `compose:validate --check` verifies capabilities, slot addresses and
+// namespace scoping before anything is deployed. The register script is a thin
+// loop over the compiled payload.
 
-// The Angular quiz is a hand-built MFE (not in GAMES); it registers with the
-// same slot/route grammar so the shell composes it identically (ADR-067 parity).
+// The Angular quiz is a hand-built MFE (not in GAMES); it composes with the
+// same slot/route grammar so the shell places it identically (ADR-067 parity).
+// It carries no `module` override: #272 standardized the Module-Federation
+// expose key on './App' for EVERY framework template, and this script used to
+// pin './Component' here — a value the built container has not exposed since
+// #272 landed, so `container.get('./Component')` would have failed at mount.
+// Nothing caught it because the registration was hand-written data. It is now
+// derived from the manifest instead (ADR-074), which is why the override is
+// gone rather than corrected.
 const QUIZ = {
   id: 'multiplication-quiz', port: 3003, scope: 'abc_kids_multiplication_quiz',
-  name: 'abc-kids-multiplication-quiz', module: './Component',
+  name: 'abc-kids-multiplication-quiz',
 };
 const registered = [...all.slice(0, 2), QUIZ, ...all.slice(2)];
 
-const rules = registered.map((m) => ({
-  registration: {
-    name: m.name, version: '1.0.0', type: 'remote',
-    baseUrl: 'http://localhost:' + m.port,
-    capabilities: ['load', 'render'],
-    contentType: 'module-federation',
-    remoteEntryUrl: 'http://localhost:' + m.port + '/remoteEntry.js',
-    // No pinned `component`: the daemon synthesizes the experience as
-    // `moduleFederation.component || capability`, so omitting it lets each
-    // route's resolved capability select the mounted component (ADR-056).
-    moduleFederation: { scope: m.scope, module: m.module || './App' },
-  },
-  // Provided addresses are scoped by the stable home MFE id (ADR-068).
+// This script emits COMPOSITION (control-plane.yaml), not the registry payload.
+// `rules.json` is compiled from it by `seans-mfe-tool compose:build`
+// (ADR-083) and must not be written here — two generators for one file is the
+// drift ADR-074 exists to remove. Registration is not emitted at all: all nine
+// of its fields come from each MFE's mfe-manifest.yaml at compile time.
+const composition = {
+  project: 'abc-kids',
+  namespace: 'abc',
+  mfes: [...registered.map((m) => m.name), 'abc-kids-home'],
   routes: [
-    { when: { stateKey: 'abc.play.' + m.id }, resolve: { capability: 'PlayGame', props: { slot: 'abc-kids-home/main' } } },
-    { when: { stateKey: 'abc.show.' + m.id }, resolve: { capability: 'ShowCover', props: { slot: 'abc-kids-home/info' } } },
-    { when: { stateKey: 'abc.info.' + m.id }, resolve: { capability: 'GetGameInfo', props: { slot: 'abc-kids-home/info' } } },
+    // Every game exposes the same three capabilities, so the placement is one
+    // route per verb with the game bound by forEach — not 3 x N copies.
+    // `from` is required: all N games declare PlayGame, so the capability alone
+    // cannot say which MFE serves it (ADR-083 section 3).
+    {
+      when: 'abc.play.{game}',
+      forEach: { game: registered.map((m) => m.id) },
+      place: [{ from: 'abc-kids-{game}', capability: 'PlayGame', into: 'abc-kids-home/main' }],
+    },
+    {
+      when: 'abc.show.{game}',
+      forEach: { game: registered.map((m) => m.id) },
+      place: [{ from: 'abc-kids-{game}', capability: 'ShowCover', into: 'abc-kids-home/info' }],
+    },
+    {
+      when: 'abc.info.{game}',
+      forEach: { game: registered.map((m) => m.id) },
+      place: [{ from: 'abc-kids-{game}', capability: 'GetGameInfo', into: 'abc-kids-home/info' }],
+    },
+    // Home / launcher (ADR-058): the root rule resolves GameMenu and embeds the
+    // catalog in its props, so the registry "returns all MFEs" with no daemon
+    // or registry code — only a rule. `root` is host-owned and unqualified; no
+    // MFE manifest declares it.
+    {
+      when: 'abc.root',
+      place: [{ capability: 'GameMenu', into: 'root', props: { games: CATALOG } }],
+    },
   ],
-}));
-
-// Home / launcher MFE (ADR-058): the root rule (when stateKey abc.root) resolves
-// GameMenu and embeds the full catalog in the resolution props — so the registry
-// "returns all MFEs" with NO daemon/registry code, only a rule. The home renders
-// a tile per game and provides the 'main' + 'info' slots the games mount into.
-// `root` is host-owned and unqualified — no MFE manifest declares it.
-rules.push({
-  registration: {
-    name: 'abc-kids-home', version: '1.0.0', type: 'remote',
-    baseUrl: 'http://localhost:' + HOME.port,
-    capabilities: ['load', 'render'],
-    contentType: 'module-federation',
-    remoteEntryUrl: 'http://localhost:' + HOME.port + '/remoteEntry.js',
-    moduleFederation: { scope: 'abc_kids_home', module: './App' },
-    // The home is this fleet's only slot provider. Carrying its declarations in
-    // the registration gives the registry the slot vocabulary it needs to reject
-    // a placement aimed at an id nobody declares (ADR-073 §5); in a real
-    // deployment this rides describe() rather than a generator.
-    providesSlots: [
-      { id: 'main', description: 'Primary game region' },
-      { id: 'info', description: 'Contextual game information region' },
-    ],
-  },
-  routes: [
-    { when: { stateKey: 'abc.root' }, resolve: { capability: 'GameMenu', props: { slot: 'root', games: CATALOG } } },
-  ],
-});
+};
 
 mkdirSync(join(ROOT, 'control-plane'), { recursive: true });
-writeFileSync(join(ROOT, 'control-plane', 'rules.json'), JSON.stringify(rules, null, 2) + '\n');
+writeFileSync(
+  join(ROOT, 'control-plane', 'control-plane.yaml'),
+  yamlDump(composition, { lineWidth: 100, noRefs: true })
+);
 
 const reg = ['#!/usr/bin/env bash',
   '# Generated by scripts/generate-games.mjs — registers every ABC Kids game',

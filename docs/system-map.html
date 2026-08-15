@@ -19,7 +19,7 @@
     <span class="meta"><span class="meta-n">2</span> halves — build time, run time</span>
     <span class="meta"><span class="meta-n">10</span> things every feature must be able to do</span>
     <span class="meta"><span class="meta-n">21</span> reference features across 2 demo products</span>
-    <span class="meta"><span class="meta-n">82</span> recorded architecture decisions</span>
+    <span class="meta"><span class="meta-n">83</span> recorded architecture decisions</span>
   </div>
 </header>
 
@@ -245,7 +245,7 @@
         <h3>The command centre</h3>
         <p class="part-what">One set of commands does everything above — start a feature, build it, check it, package it, deploy it. The identical commands are also published as tools that AI assistants can call directly.</p>
         <p class="part-why"><span>Why it matters</span> Humans and AI assistants drive the platform through exactly the same door, so anything an assistant does is reproducible by a person, and vice versa. Two features in the reference product were built this way.</p>
-        <p class="paths">src/commands/ (17 commands) · src/mcp/</p>
+        <p class="paths">src/commands/ (19 commands) · src/mcp/</p>
       </article>
 
     </div>
@@ -338,12 +338,12 @@
 
             <rect class="card l-intent" x="262" y="372" width="230" height="112" rx="9"></rect>
             <text class="c-title s" x="280" y="398">Placement rules</text>
-            <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Held as data,</tspan><tspan x="280" y="452">outside every feature.</tspan></text>
-            <text class="paths-t paths" x="280" y="472">examples/*/control-plane/rules.json</text>
+            <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Written in their</tspan><tspan x="280" y="452">own file, outside every feature.</tspan></text>
+            <text class="paths-t paths" x="280" y="472">control-plane.yaml (compiled to rules.json)</text>
 
             <rect class="card l-intent" x="262" y="500" width="230" height="112" rx="9"></rect>
             <text class="c-title s" x="280" y="526">Recorded decisions</text>
-            <text class="c-desc"><tspan x="280" y="548">82 architecture decisions and 11</tspan><tspan x="280" y="564">product decisions, each written</tspan><tspan x="280" y="580">down before it was built.</tspan></text>
+            <text class="c-desc"><tspan x="280" y="548">83 architecture decisions and 11</tspan><tspan x="280" y="564">product decisions, each written</tspan><tspan x="280" y="580">down before it was built.</tspan></text>
             <text class="paths-t paths" x="280" y="600">docs/architecture-decisions/</text>
           </g>
 
@@ -461,7 +461,7 @@
             <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
             <text class="c-tag l-people-t" x="44" y="678">THE COMMAND CENTRE · one door for humans and machines</text>
             <text class="c-desc">
-              <tspan x="44" y="702">Every action on this map is one command. The same 17 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
+              <tspan x="44" y="702">Every action on this map is one command. The same 19 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
               <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two features in the spaceport product were built this way.</tspan>
             </text>
             <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
@@ -539,7 +539,7 @@
       <li>
         <span class="tag tag-fact">fact</span>
         <h3>Decisions are managed as an asset, with the same rigour as code.</h3>
-        <p>82 architecture decisions and 11 product decisions, each with structured metadata, a generated index,
+        <p>83 architecture decisions and 11 product decisions, each with structured metadata, a generated index,
         a consistency checker and a status command. Project rules require stopping and asking a human when no
         decision covers a choice. For an incoming team, this is the fastest available route to understanding
         <em>why</em> the system looks the way it does.</p>
@@ -618,8 +618,8 @@
   <footer class="foot">
     <p>Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>, branch
     <span class="mono">claude/business-system-visualization-izrto5</span>. Counts are as measured:
-    82 architecture decisions, 11 product decisions, 17 commands, 8 shared packages, 44 code templates,
-    201 test files, 21 reference features.</p>
+    83 architecture decisions, 11 product decisions, 19 commands, 8 shared packages, 44 code templates,
+    154 test suites, 21 reference features.</p>
     <p>Toggle <em>Show repository paths</em> above to trace any box on the detailed map back to the code.</p>
   </footer>
 

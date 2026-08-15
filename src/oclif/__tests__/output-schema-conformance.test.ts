@@ -64,6 +64,12 @@ const INVOCATIONS: Record<string, Invocation> = {
       '--manifests', ABC_KIDS,
     ],
   },
+  // Read-only: compiles the composition in memory and compares it with the
+  // committed payload. --check makes it assert the fleet is current, so this
+  // doubles as a guard that abc-kids' rules.json has not drifted (ADR-083).
+  'compose:validate': { args: ['compose:validate', ABC_KIDS, '--check'] },
+  // --dry-run so the success path reports without rewriting rules.json.
+  'compose:build':    { args: ['compose:build', ABC_KIDS, '--dry-run'] },
   deploy:        { args: ['deploy', 'probe', '--type', 'remote', '--dry-run'] },
   'remote:init': { args: ['remote:init', 'probe-mfe', '--dry-run', '--skip-install'] },
 

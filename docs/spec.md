@@ -308,7 +308,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-071](./architecture-decisions/ADR-071-manifest-driven-client-dependencies.md) | Manifest-Driven Client Dependencies and Federation Shared | Codegen / dependencies / module-federation | Implemented |
 | [ADR-072](./architecture-decisions/ADR-072-slot-registration-api.md) | The sanctioned slot registration API: `DeclaredSlot`, typed by the manifest | Codegen / slots / app-code API / typing | Implemented |
 | [ADR-073](./architecture-decisions/ADR-073-slot-contract-in-contracts-design-time-validation.md) | Slot contract logic moves to `@seans-mfe/contracts`; placement targets become validatable | Contracts / CLI / slots / design-time validation | Implemented |
-| [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Proposed |
+| [ADR-074](./architecture-decisions/ADR-074-registration-is-a-build-artifact.md) | The MFE Registration Is a Build Artifact — Register on Build, Not by Hand | Codegen / control-plane / registration / module-federation / drift | Accepted (impl phased, #139) |
 | [ADR-075](./architecture-decisions/ADR-075-adr-library-under-drift-control.md) | The ADR Library Is Itself Under Drift Control | Governance / docs / tooling | Implemented |
 | [ADR-076](./architecture-decisions/ADR-076-platform-handler-dispatch.md) | Platform handlers dispatch by exported function name from a static library, not a registry class | Runtime handlers | Implemented |
 | [ADR-077](./architecture-decisions/ADR-077-two-headed-giant-re-derived.md) | The two-headed giant's implementation plan is re-derived from measured friction, not from the April spec | Developer model / DX / agent contract | Accepted (impl phased, #139) |
@@ -317,6 +317,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-080](./architecture-decisions/ADR-080-platform-contract-single-source.md) | The ten platform capabilities and the MFE lifecycle machine are defined once, in `@seans-mfe/contracts` | Contracts / DSL / runtime / codegen | Implemented |
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 | [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
+| [ADR-083](./architecture-decisions/ADR-083-control-plane-composition-dsl.md) | Composition is authored in a project-scoped DSL, not hand-written registry JSON | Control plane / DSL / codegen / composition | Accepted (impl phased, #139) |
 
 <!-- END GENERATED: adr-index -->
 

@@ -20,11 +20,11 @@ this package is the concrete implementation of it.
 **Here:** the engine. The rule evaluator, the registration store, the slot-target
 matcher, the transport.
 
-**Not here:** the rules. Each fleet keeps its own `control-plane/rules.json` —
-`examples/abc-kids/control-plane/rules.json`,
-`examples/meridian-station/control-plane/rules.json`. Placement is the deploying
+**Not here:** the rules. Each fleet authors its own composition in
+`control-plane/control-plane.yaml` and compiles it to `control-plane/rules.json`
+with `seans-mfe-tool compose:build` (ADR-083). Placement is the deploying
 project's decision; only the engine that evaluates it is the platform's
-(ADR-078 §4).
+(ADR-078 §4). The compiled `rules.json` is a generated artifact — edit the YAML.
 
 ## Why these are not workspace packages
 

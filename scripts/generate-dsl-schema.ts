@@ -17,10 +17,32 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
 import { DSLManifestSchema } from '../packages/dsl/src/schema';
+import { ControlPlaneDocumentSchema } from '../packages/dsl/src/control-plane-schema';
 
 const OUT_DIR = path.resolve(__dirname, '..', 'schemas', 'dsl');
 const OUT_FILE = path.join(OUT_DIR, 'manifest.schema.json');
+const CONTROL_PLANE_OUT_FILE = path.join(OUT_DIR, 'control-plane.schema.json');
 const CHECK_MODE = process.argv.includes('--check');
+
+/** Generate, then either write or diff. Returns false when --check found staleness. */
+function emit(outFile: string, rendered: string): boolean {
+  if (CHECK_MODE) {
+    const existing = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8') : null;
+    if (existing !== rendered) {
+      process.stderr.write(
+        `${path.relative(process.cwd(), outFile)} is stale — run \`npm run build:schema:dsl\` and commit the result.\n`
+      );
+      return false;
+    }
+    process.stdout.write(`${path.relative(process.cwd(), outFile)} is up to date.\n`);
+    return true;
+  }
+
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.writeFileSync(outFile, rendered);
+  process.stdout.write(`Wrote ${path.relative(process.cwd(), outFile)}\n`);
+  return true;
+}
 
 function main(): void {
   const jsonSchema = z.toJSONSchema(DSLManifestSchema, {
@@ -43,21 +65,32 @@ function main(): void {
 
   const rendered = JSON.stringify(document, null, 2) + '\n';
 
-  if (CHECK_MODE) {
-    const existing = fs.existsSync(OUT_FILE) ? fs.readFileSync(OUT_FILE, 'utf8') : null;
-    if (existing !== rendered) {
-      process.stderr.write(
-        `schemas/dsl/manifest.schema.json is stale — run \`npm run build:schema:dsl\` and commit the result.\n`
-      );
-      process.exit(1);
-    }
-    process.stdout.write('schemas/dsl/manifest.schema.json is up to date.\n');
-    return;
-  }
+  // The project-scoped composition document (ADR-083). Same generation
+  // contract as the manifest schema above: zod is the source of truth, the
+  // JSON Schema is the editor-facing artifact, and neither is hand-edited.
+  const controlPlaneDocument = {
+    $id: 'https://github.com/falese/seans-mfe-tool/schemas/dsl/control-plane.schema.json',
+    title: 'seans-mfe-tool control-plane composition',
+    description:
+      'Project-scoped composition document (control-plane.yaml) compiled into the ' +
+      'registry payload by `seans-mfe-tool control-plane:build`. Generated from ' +
+      'packages/dsl/src/control-plane-schema.ts (zod) by scripts/generate-dsl-schema.ts — ' +
+      'do not hand-edit.',
+    ...z.toJSONSchema(ControlPlaneDocumentSchema, {
+      target: 'draft-2020-12',
+      unrepresentable: 'any',
+    }),
+  };
+  const controlPlaneRendered = JSON.stringify(controlPlaneDocument, null, 2) + '\n';
 
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(OUT_FILE, rendered);
-  process.stdout.write(`Wrote ${path.relative(process.cwd(), OUT_FILE)}\n`);
+  const ok = [
+    emit(OUT_FILE, rendered),
+    emit(CONTROL_PLANE_OUT_FILE, controlPlaneRendered),
+    // Both are emitted before exiting so --check reports every stale file in
+    // one run rather than making the caller rediscover them one at a time.
+  ].every(Boolean);
+
+  if (!ok) process.exit(1);
 }
 
 main();
