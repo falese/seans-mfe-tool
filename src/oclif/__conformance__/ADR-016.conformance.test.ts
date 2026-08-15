@@ -21,13 +21,19 @@
  * Each check has been proven able to fail: point a command at oclif's `Command`
  * (1), rename a `runCommand` to `run` (2), redeclare `json` locally (3), restore
  * a hand-rolled `--dry-run` (4).
+ *
+ * Refs #252
  */
 import * as fs from 'fs';
 import { BaseCommand } from '@falese/smt-oclif-base';
-import { loadCommands } from '../command-discovery';
+import { loadShippedCommands } from '../command-discovery';
 import type { LoadedCommand } from '../command-discovery';
 
-const commands: LoadedCommand[] = loadCommands();
+// The set the binary ships, not the set under `src/`. Scoped to `src/commands`
+// this sweep could not see the four `bff:*` commands `oclif.plugins` ships, and
+// two of them had kept the hand-rolled `--dry-run` with `char: 'd'` that the
+// last check in this file exists to forbid — while `api -d` is `--database`.
+const commands: LoadedCommand[] = loadShippedCommands();
 
 /** The class body as written, for the rules that are about source shape. */
 const sourceOf = (c: LoadedCommand): string => fs.readFileSync(c.absPath, 'utf8');

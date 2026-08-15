@@ -46,9 +46,12 @@ Packs live in `__conformance__/` beside the code they check and run via
   own globs.
 - **Prose could be a gate.** `verified-by` was satisfied by any resolving path, so a `.md`
   counted. One ADR was affected (018); the rule now requires at least one non-`.md` entry.
-- **The backlog is a ratchet.** `check:adr` fails on any addition *and* on any entry that
-  has since gained a `verified-by`. Deliberately not regenerated — a self-regenerating
-  backlog would absorb new gaps silently, which is the defect ADR-000 closes.
+- **The backlog is a ratchet.** `check:adr` fails on any entry that has since gained a
+  `verified-by`; `check:backlog-ratchet` fails on any addition, diffing the file against
+  the base revision in git — the addition direction claimed a checker for a while before
+  it had one, which is the one thing ADR-000 forbids. An unreadable baseline fails too: a
+  gate that passes while comparing nothing is the defect, not the fix. Deliberately not
+  regenerated — a self-regenerating backlog would absorb new gaps silently.
 - **The rule demanded gates from decisions with no code.** It read `enforcement` and
   never `status`, so it was asking for checkers from superseded, deferred and unbuilt
   decisions — 14 of 37. Now scoped to `status: Implemented`. Verified not to be a

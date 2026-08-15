@@ -97,15 +97,11 @@ export default class BffBuild extends BaseCommand<BffBuildResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     manifest: Flags.string({
       char: 'm',
       description: 'Path to mfe-manifest.yaml',
       default: 'mfe-manifest.yaml',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Preview what would be built without executing',
-      default: false,
     }),
   };
 

@@ -13,10 +13,13 @@ superseded-by: []
 implements-pdr: [3]
 implemented-by:
   - packages/dsl/src/adr-validation.ts
+  - scripts/check-backlog-ratchet.ts
   - docs/architecture-decisions/conformance-backlog.json
 verified-by:
   - packages/dsl/src/__tests__/adr-validation.test.ts
   - packages/dsl/src/__tests__/adr-schema.test.ts
+  - check:backlog-ratchet
+  - scripts/__tests__/check-backlog-ratchet.test.ts
 long-form: true
 summary: >-
   An ADR declaring enforcement of code or tooling must name a verified-by gate — an npm script,
@@ -107,9 +110,15 @@ repository already invented once and never repeated.
 `docs/architecture-decisions/conformance-backlog.json` lists the `Implemented`
 decisions that predate this rule — 50 at the outset, pruned to 23 once §1's
 status scope removed the entries that were never governed. Listed ids are
-exempt. The rule **fails on any addition**, and also fails on any listed id that
-has *since* gained a `verified-by` — a stale entry is a hole a future regression
-could slip through unnoticed. The list may only shrink.
+exempt. `check:adr` fails on any listed id that has *since* gained a
+`verified-by` — a stale entry is a hole a future regression could slip through
+unnoticed. `check:backlog-ratchet` owns the other direction and **fails on any
+addition**, comparing the file against the base revision in git rather than
+against a committed copy, which would be as editable as the original. The list
+may only shrink.
+
+A baseline the gate cannot read is a failure, not a skip: a check that passes
+while comparing nothing is precisely what this decision exists to catch.
 
 It is deliberately not regenerated. A self-regenerating backlog would silently
 absorb every new gap, which is the exact defect this decision exists to close.

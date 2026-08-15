@@ -94,6 +94,24 @@ export interface AdrValidationResult {
   issues: AdrValidationIssue[];
 }
 
+/**
+ * Backlog ids present now that the baseline does not have (ADR-000 §3).
+ *
+ * The other half of the ratchet, and the half that was missing: ADR-000 says the
+ * rule "fails on any addition", but nothing compared the list against anything,
+ * so appending an id was a silent way to exempt a decision from
+ * `enforced-claims-a-gate`. Comparison needs a *previous* list, which is state
+ * this pure module has no way to reach — `scripts/check-backlog-ratchet.ts`
+ * reads it from git and hands both sides here.
+ */
+export function backlogAdditions(
+  current: Iterable<number>,
+  baseline: Iterable<number>
+): number[] {
+  const known = new Set(baseline);
+  return [...new Set(current)].filter((id) => !known.has(id)).sort((a, b) => a - b);
+}
+
 // ── shared matching ─────────────────────────────────────────────────────────
 
 /** Any `ADR-NNN` mention, for existence and citation checks. */

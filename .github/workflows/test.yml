@@ -253,6 +253,13 @@ jobs:
       - name: Build workspace packages
         run: npm run build:packages
 
+      - name: The conformance backlog may only shrink (ADR-000 §3)
+        # Runs here rather than in `quality` because it needs the base revision
+        # to compare against, and this is the job checked out with full history.
+        # The gate fails when it cannot read that revision, so a future move to a
+        # shallow checkout breaks the build instead of silently passing.
+        run: npm run check:backlog-ratchet -- "origin/${{ github.base_ref }}"
+
       - name: Render the governance summary
         # `fetch-depth: 0` above already gives full history, so the base ref is
         # present — no extra fetch, and no `|| true` swallowing a real failure.

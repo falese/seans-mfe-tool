@@ -1,5 +1,5 @@
 {
-  "//": "ADR-000 conformance backlog — Implemented decisions that claim automated enforcement but do not yet name the checker that proves it. Only status: Implemented is governed (ADR-000 §1): a decision with no code shipped has no codebase to enforce, and a superseded one is its successor’s problem. This list is a RATCHET: check:adr fails on any addition, and fails on any entry that has since gained a verified-by. It may only shrink.",
+  "//": "ADR-000 conformance backlog — Implemented decisions that claim automated enforcement but do not yet name the checker that proves it. Only status: Implemented is governed (ADR-000 §1): a decision with no code shipped has no codebase to enforce, and a superseded one is its successor’s problem. This list is a RATCHET: check:backlog-ratchet fails on any addition (comparing this file against the base revision in git), and check:adr fails on any entry that has since gained a verified-by. It may only shrink.",
   "//generated": "Snapshot taken when ADR-000 landed. Deliberately NOT regenerated — a self-regenerating backlog would silently absorb new gaps, which is the defect this exists to close.",
   "adrs": [
     {
