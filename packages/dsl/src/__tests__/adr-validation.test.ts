@@ -560,7 +560,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
 
   it('reports an ADR claiming code enforcement with no verified-by', () => {
     const result = validateAdrLibrary({
-      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': [] })],
       parseFailures: [],
       conformanceBacklog: backlog,
     });
@@ -570,12 +570,43 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
   it('is satisfied by naming a gate', () => {
     const result = validateAdrLibrary({
       documents: [
-        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
+        adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
       ],
       parseFailures: [],
       conformanceBacklog: backlog,
     });
     expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+  });
+
+  it.each(['Proposed', 'Accepted', 'Deferred', 'Superseded', 'Withdrawn'])(
+    'asks nothing of a %s decision — there is no code to enforce yet, or any more',
+    (status) => {
+      // `enforcement: code` is a claim about the codebase. Before a decision is
+      // Implemented there is no codebase to claim about, and after supersession
+      // the successor owns it. The rule was demanding a gate from all of them:
+      // 14 of the 37 remaining backlog entries were non-Implemented, including
+      // ADR-025 (Superseded by ADR-076) and three lifecycle-engine ADRs whose
+      // own PROJECT-STATUS row reads "not yet created". Writing packs for those
+      // would mean testing code that does not exist.
+      const result = validateAdrLibrary({
+        documents: [adr(10, 'Ten', { status, enforcement: 'code', 'verified-by': [] })],
+        parseFailures: [],
+        conformanceBacklog: backlog,
+      });
+      expect(rulesHit(result.issues)).not.toContain('enforced-claims-a-gate');
+    }
+  );
+
+  it('asks for a gate the moment a decision becomes Implemented', () => {
+    // The other half, and the reason the exemption is safe: an ADR that ships
+    // its code must ship its checker in the same change. Nothing can idle in
+    // Proposed to dodge the rule and then quietly flip.
+    const result = validateAdrLibrary({
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': [] })],
+      parseFailures: [],
+      conformanceBacklog: backlog,
+    });
+    expect(rulesHit(result.issues)).toContain('enforced-claims-a-gate');
   });
 
   it('rejects a prose document as the gate', () => {
@@ -587,7 +618,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
     // with its "gate" green the whole time because it is a paragraph.
     const result = validateAdrLibrary({
       documents: [
-        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['docs/cli-contract.md'] }),
+        adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': ['docs/cli-contract.md'] }),
       ],
       parseFailures: [],
       conformanceBacklog: backlog,
@@ -613,7 +644,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
 
   it('applies to `tooling` as well — a build step is still a checker', () => {
     const result = validateAdrLibrary({
-      documents: [adr(10, 'Ten', { enforcement: 'tooling', 'verified-by': [] })],
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'tooling', 'verified-by': [] })],
       parseFailures: [],
       conformanceBacklog: backlog,
     });
@@ -622,7 +653,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
 
   it('leaves `convention` alone — it claims humans enforce it, and says so', () => {
     const result = validateAdrLibrary({
-      documents: [adr(10, 'Ten', { enforcement: 'convention', 'verified-by': [] })],
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'convention', 'verified-by': [] })],
       parseFailures: [],
       conformanceBacklog: backlog,
     });
@@ -631,7 +662,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
 
   it('grandfathers an id on the backlog', () => {
     const result = validateAdrLibrary({
-      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': [] })],
       parseFailures: [],
       conformanceBacklog: new Set([10]),
     });
@@ -644,7 +675,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
   it('reports a backlog entry that no longer needs to be there', () => {
     const result = validateAdrLibrary({
       documents: [
-        adr(10, 'Ten', { enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
+        adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': ['npm run check:adr'] }),
       ],
       parseFailures: [],
       conformanceBacklog: new Set([10]),
@@ -655,7 +686,7 @@ describe('enforced-claims-a-gate (ADR-000)', () => {
 
   it('skips entirely when no backlog is supplied, like every other data-fed rule', () => {
     const result = validateAdrLibrary({
-      documents: [adr(10, 'Ten', { enforcement: 'code', 'verified-by': [] })],
+      documents: [adr(10, 'Ten', { status: 'Implemented', enforcement: 'code', 'verified-by': [] })],
       parseFailures: [],
     });
     expect(result.checked).not.toContain('enforced-claims-a-gate');

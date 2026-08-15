@@ -5,8 +5,19 @@ decision claiming `enforcement: code` to name the checker that proves it. Applyi
 grandfathered decisions turned out not to be paperwork: **every ADR examined so far had
 drifted, and five had shipped defects.**
 
-Backlog: **50 → 41**. Packs live in `__conformance__/` beside the code they check and run
-via `npm run check:adr-conformance`.
+Backlog: **50 → 23**, by two different routes that should not be conflated:
+
+- **50 → 37 is work** — twelve packs written, and the defects below fixed.
+- **37 → 23 is scope correction, not progress.** ADR-000 §1 originally demanded a
+  checker from any ADR claiming `enforcement: code`, regardless of status. Fourteen
+  of the remaining entries were never `Implemented` — one superseded, one deferred,
+  eight proposed, four accepted-but-unbuilt — so a pack for them would have tested
+  code that does not exist. The rule now attaches at `status: Implemented`. The
+  backlog got smaller because it had been counting the wrong things, and saying so
+  is the point: a debt number that flatters itself is worse than no number.
+
+Packs live in `__conformance__/` beside the code they check and run via
+`npm run check:adr-conformance`.
 
 ## What each pack found
 
@@ -20,6 +31,10 @@ via `npm run check:adr-conformance`.
 | **045** Package manager / runtime pinning | npm authoritative; a checked-in Node pin; no stray pnpm metadata | Two of three "must"s false. No `.nvmrc`/`.node-version`/`.tool-versions` and no `engines` — CI said 20, Docker said 20, a new contributor was told nothing. `pnpm-workspace.yaml` still present, listing `packages/*` **and** `.` against npm's `packages/*`. | `.nvmrc` = 20; `pnpm-workspace.yaml` removed |
 | **053** `RemoteMFE.doQuery` | Override removed; `BaseMFE.doQuery` is inherited | Held, but unverified — including that the template does not reintroduce it | Pack only |
 | **056** Presentation boundary | Bright line, machine-checked | Held, and `boundary.test.ts` already proved it — the ADR simply never named it | `verified-by` only |
+| **061** dsl/codegen as packages | "supported only through injection, which the CLI always does" | The CLI did not always do it. `mfe:validate` and `check-mfe-drift` called `generateAllFiles` with no variant, falling through to `deriveBuiltinVariant` — which can only answer `react-rspack` or `angular-webpack`. Latent until someone adds a third-party framework, and `check-mfe-drift`'s non-`--check` mode **writes** what it generates, so it would have overwritten such an MFE with React output. | Resolve the variant at both callers |
+| **069** Slot grammar single-sourced | Tooling "can import the grammar from contracts instead of copying a regex" | Held inside the packages. The control-plane registry copies it — twice — sanctioned by a comment ending *"the behavioural pin lives in `slot-target.test.js`"*. **That file never existed**, and `/examples/` is jest-ignored so it would not have run. The copies had not yet drifted; the guarantee was simply absent. | Behavioural pin + a check that no copy goes unpinned |
+| **072** `DeclaredSlot` API | "A slot rename is caught by `tsc` in every consuming MFE" | Caught in the compiler, by nobody in review — root `tsconfig.json` excludes `examples`. Renaming a slot and leaving stale app code passed `typecheck`, `test`, `check:mfe-drift:check` and `check:mfe-consistency`. Separately, `slots-implemented` went **vacuous on first build**: `bootstrap.ts` embeds the manifest as JSON, so every declared id always looked referenced. | Static id check; ownership filter on the slot scan |
+| **011** GeneratedFrom traceability | Optional lineage array in `data:` | Nothing wrong. Schema, published JSON schema, template and round-trip all correct. Recorded instead: the field is written and never read, and `version` is documented but never generated. | Pack only |
 
 ## Fixes to the mechanism itself
 
@@ -34,6 +49,11 @@ via `npm run check:adr-conformance`.
 - **The backlog is a ratchet.** `check:adr` fails on any addition *and* on any entry that
   has since gained a `verified-by`. Deliberately not regenerated — a self-regenerating
   backlog would absorb new gaps silently, which is the defect ADR-000 closes.
+- **The rule demanded gates from decisions with no code.** It read `enforcement` and
+  never `status`, so it was asking for checkers from superseded, deferred and unbuilt
+  decisions — 14 of 37. Now scoped to `status: Implemented`. Verified not to be a
+  loophole: flipping a pruned `Proposed` ADR to `Implemented` fails immediately,
+  because the list only shrinks and it is no longer on it.
 
 ## Discipline
 

@@ -67,12 +67,28 @@ the ADR library exists to prevent.
 
 ## Decision
 
-### 1. `enforcement: code` or `tooling` requires a `verified-by`
+### 1. An `Implemented` decision claiming `code` or `tooling` requires a `verified-by`
 
 The `enforced-claims-a-gate` rule fails an ADR that claims automated enforcement
 and names no checker. `enforcement: convention` is deliberately exempt: it
 states that humans enforce the decision, which is honest, and demanding a gate
 for it would only push authors to mislabel their ADRs to get past the linter.
+
+**The obligation attaches at `status: Implemented`, and only there.**
+`enforcement: code` is a claim about the codebase; before a decision is
+implemented there is no codebase to make the claim about, and once it is
+superseded the successor owns the enforcement. The rule shipped without this
+scope and immediately over-reported: of the 37 backlog entries remaining after
+the first eight packs, **14 were not `Implemented`** — including ADR-025,
+superseded by ADR-076, and ADR-028/031/032, lifecycle-engine work whose own
+status row reads "issues not yet created". A pack for those would be a test of
+code that does not exist, and the count implied roughly half again as much real
+debt as there was.
+
+The exemption is one-way and cannot be gamed. An ADR that flips to
+`Implemented` is by then off the backlog — the list only shrinks — so the rule
+bites at that moment and the checker must ship with the code. Nothing can idle
+in `Proposed` to dodge it.
 
 ### 2. A checker may be an existing gate or a purpose-written pack
 
@@ -88,11 +104,12 @@ repository already invented once and never repeated.
 
 ### 3. The backlog is a ratchet
 
-`docs/architecture-decisions/conformance-backlog.json` lists the 50 decisions
-that predate this rule. Listed ids are exempt. The rule **fails on any
-addition**, and also fails on any listed id that has *since* gained a
-`verified-by` — a stale entry is a hole a future regression could slip through
-unnoticed. The list may only shrink.
+`docs/architecture-decisions/conformance-backlog.json` lists the `Implemented`
+decisions that predate this rule — 50 at the outset, pruned to 23 once §1's
+status scope removed the entries that were never governed. Listed ids are
+exempt. The rule **fails on any addition**, and also fails on any listed id that
+has *since* gained a `verified-by` — a stale entry is a hole a future regression
+could slip through unnoticed. The list may only shrink.
 
 It is deliberately not regenerated. A self-regenerating backlog would silently
 absorb every new gap, which is the exact defect this decision exists to close.

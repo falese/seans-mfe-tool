@@ -474,7 +474,27 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
     for (const document of input.documents) {
       const fm = document.frontmatter;
       const id = normalizeAdrId(fm.id);
-      const claimsAutomation = fm.enforcement === 'code' || fm.enforcement === 'tooling';
+      // The obligation attaches at `Implemented`, and only there. `enforcement:
+      // code` is a claim about the codebase; before a decision is implemented
+      // there is no codebase to claim about, and after supersession the
+      // successor owns it. Demanding a gate anyway was asking for packs that
+      // test code which does not exist: three of the lifecycle-engine decisions
+      // are still Proposed with no issues filed, and one was superseded.
+      // Fourteen of the thirty-seven entries left on the backlog were in that
+      // position, which made the number report roughly half again as much real
+      // debt as there was.
+      //
+      // The specific ids are deliberately not named here — `code-cites-ratified-adr`
+      // forbids source citing a Proposed decision, and it caught this comment
+      // doing exactly that on the first run.
+      //
+      // Safe because it is one-way: an ADR that flips to Implemented is not on
+      // the backlog (the list only shrinks), so the rule bites immediately and
+      // the checker has to ship with the code. Nothing can idle in `Proposed`
+      // to dodge this.
+      const claimsAutomation =
+        fm.status === 'Implemented' &&
+        (fm.enforcement === 'code' || fm.enforcement === 'tooling');
       // A gate has to be able to run. `docs/cli-contract.md` resolved, was
       // non-empty, and satisfied this rule for ADR-018 — while a document
       // cannot execute, cannot fail, and cannot notice drift. It was still
