@@ -760,6 +760,17 @@ export function extractManifestVars(
     angularExtraDependencyLines: (() => {
       if (variant.framework !== 'angular') return '';
       const extras = {
+        // The published directive the generated slots.ts binds (ADR-072 §4,
+        // ADR-084). React reaches this through `clientDependencyLines`, which
+        // is built from `resolveClientDependencies` — the same function
+        // `manifest-package-sync` uses to compute what a manifest implies.
+        // Angular's package.json is a separate template that never received
+        // it, so the rule required a dependency the generator never emitted
+        // and every fresh Angular scaffold failed `mfe:validate`. Taken from
+        // the same table rather than restated, so the two cannot disagree.
+        ...(FRAMEWORK_RUNTIME_PACKAGES.angular
+          ? { [FRAMEWORK_RUNTIME_PACKAGES.angular]: DEPENDENCY_VERSIONS.runtime.package }
+          : {}),
         ...resolveDesignSystemDeps(manifest, 'angular'),
         ...resolveRuntimeExtraDeps(manifest, 'angular'),
       };
