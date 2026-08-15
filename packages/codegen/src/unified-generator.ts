@@ -1434,6 +1434,7 @@ async function renderFiles(
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
           { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
           { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
+          { name: '.npmrc', ejs: '.npmrc.ejs' },
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
           { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ]
@@ -1447,6 +1448,7 @@ async function renderFiles(
           // resolution, which is what the fleet had already settled into by hand.
           { name: 'tsconfig.platform.json', ejs: 'tsconfig.platform.json.ejs', overwrite: true },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
+          { name: '.npmrc', ejs: '.npmrc.ejs' },
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
           { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ];

@@ -28,7 +28,8 @@
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
+import * as http from 'http';
 import { generateAllFiles, writeGeneratedFiles } from '@falese/smt-codegen';
 import { writeManifest, generateEndpoints } from '@falese/smt-dsl';
 import type { DSLManifest } from '@falese/smt-dsl';
@@ -46,7 +47,8 @@ const LANES: Lane[] = [
 ];
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const DIST_RUNTIME = path.join(REPO_ROOT, 'dist', 'runtime');
+const MIRROR_DIR = path.join(REPO_ROOT, 'dist', 'registry');
+const MIRROR_URL = process.env.SMT_MIRROR_URL ?? 'http://127.0.0.1:4873';
 
 const KEEP = process.argv.includes('--keep');
 const requested = process.argv.slice(2).filter((a) => !a.startsWith('--'));
@@ -83,24 +85,25 @@ async function checkLane(lane: Lane): Promise<void> {
     const { files } = await generateAllFiles(manifest, dir, { force: true });
     await writeGeneratedFiles(files, { force: true });
 
-    // `@falese/smt-runtime` isn't published to npm yet (ADR-064) — real
-    // Dockerfiles stage it via `npm pkg set ... file:.../dist/runtime`
-    // (`scripts/copy-runtime-files.js`). Mirror that here so a plain
-    // `npm install` in the scratch dir resolves the same way a real build does.
-    const pkgJsonPath = path.join(dir, 'package.json');
-    const pkgJson = await fs.readJson(pkgJsonPath);
-    if (pkgJson.devDependencies?.['@falese/smt-runtime']) {
-      pkgJson.devDependencies['@falese/smt-runtime'] = `file:${DIST_RUNTIME}`;
-    }
-    if (pkgJson.dependencies?.['@falese/smt-runtime']) {
-      pkgJson.dependencies['@falese/smt-runtime'] = `file:${DIST_RUNTIME}`;
-    }
-    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-
-    console.log(`[${lane.framework}] npm install ...`);
+    // Install through the OFFLINE lane (ADR-084 §3), not by rewriting the
+    // manifest.
+    //
+    // This used to overwrite `@falese/smt-runtime` with `file:${DIST_RUNTIME}`,
+    // citing ADR-064 staging — the model ADR-084 replaced. That made the gate
+    // set up exactly the state its own `runtime-declared` rule rejects, so the
+    // probe failed validation on a defect the harness had introduced.
+    //
+    // Pointing the scope at the mirror instead means the gate exercises the
+    // real thing: plain semver in package.json, the lane chosen by
+    // configuration. The env var is deliberate — npm resolves
+    // CLI flag > env > project .npmrc > ~/.npmrc, and generated MFEs now ship
+    // a project .npmrc on the hosted lane, which a user-level override would
+    // lose to.
+    console.log(`[${lane.framework}] npm install (offline lane: ${MIRROR_URL}) ...`);
     execFileSync('npm', ['install', '--no-audit', '--no-fund'], {
       cwd: dir,
       stdio: 'inherit',
+      env: { ...process.env, 'npm_config_@falese:registry': MIRROR_URL },
     });
 
     console.log(`[${lane.framework}] mfe:validate --typecheck ...`);
@@ -115,9 +118,29 @@ async function checkLane(lane: Lane): Promise<void> {
   }
 }
 
+/** Poll until the mirror answers, so the first install does not race startup. */
+async function waitForMirror(url: string): Promise<void> {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const up = await new Promise<boolean>((resolve) => {
+      const req = http.get(url, (res) => {
+        res.resume();
+        resolve(true);
+      });
+      req.on('error', () => resolve(false));
+      req.setTimeout(500, () => {
+        req.destroy();
+        resolve(false);
+      });
+    });
+    if (up) return;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  throw new Error(`registry mirror did not come up at ${url}`);
+}
+
 async function main(): Promise<void> {
-  if (!(await fs.pathExists(DIST_RUNTIME))) {
-    console.error(`dist/runtime not found at ${DIST_RUNTIME} — run \`npm run build\` first.`);
+  if (!(await fs.pathExists(MIRROR_DIR))) {
+    console.error(`registry mirror not found at ${MIRROR_DIR} — run \`npm run build\` first.`);
     process.exit(1);
   }
   if (lanes.length === 0) {
@@ -125,14 +148,33 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Serve the offline mirror for the duration of the run (ADR-084 §3), in a
+  // SEPARATE PROCESS.
+  //
+  // It cannot be an in-process server: the lanes install with `execFileSync`,
+  // which blocks this process's event loop, so an in-process listener would
+  // never answer npm's requests. The first version of this did exactly that and
+  // hung until npm gave up — a deadlock that looks identical to a slow install.
+  const mirror = spawn(
+    process.execPath,
+    [path.join(REPO_ROOT, 'scripts', 'serve-registry-mirror.js')],
+    { stdio: 'inherit', env: { ...process.env, SMT_MIRROR_PORT: new URL(MIRROR_URL).port } }
+  );
+  await waitForMirror(MIRROR_URL);
+  console.log(`registry mirror serving on ${MIRROR_URL}`);
+
   const failures: string[] = [];
-  for (const lane of lanes) {
-    try {
-      await checkLane(lane);
-    } catch (err) {
-      failures.push(lane.framework);
-      console.error(`[${lane.framework}] FAILED: ${(err as Error).message}`);
+  try {
+    for (const lane of lanes) {
+      try {
+        await checkLane(lane);
+      } catch (err) {
+        failures.push(lane.framework);
+        console.error(`[${lane.framework}] FAILED: ${(err as Error).message}`);
+      }
     }
+  } finally {
+    mirror.kill();
   }
 
   if (failures.length > 0) {

@@ -72,6 +72,26 @@ as source.
 Published to `npm.pkg.github.com` on tag, never to npmjs.com. Consumers select it
 with `@falese:registry` in `.npmrc` plus a `NODE_AUTH_TOKEN`.
 
+**A generated MFE ships that `.npmrc`, and it is the committed default.** This was
+described here and not emitted: for the first weeks of this decision every
+generated MFE declared `@falese/*` dependencies with nothing to resolve them, so
+`npm install` in a fresh scaffold went to npmjs.org and 404'd. The fresh-scaffold
+gate is what surfaced it; the demo did not, because it ran inside the CLI image
+where the packages were already installed.
+
+The file carries the registry and never a token — it is committed, and a token in
+a committed file is a leak. Auth resolves from `~/.npmrc` or `NODE_AUTH_TOKEN`,
+which is ordinary npm practice.
+
+Hosted is the committed default because the alternative is worse *as an artifact*:
+the offline lane's URL is `http://127.0.0.1:4873`, and a localhost address baked
+into every MFE repository is not merely inconvenient, it is false for anyone who
+clones it. An auth requirement is at least true.
+
+The file is developer-owned (`overwrite: false`). Which registry an organisation
+resolves from is an operator decision — a proxy, an internal mirror, Artifactory —
+and regeneration must not overwrite that choice.
+
 ### 3. Offline lane — a static mirror
 
 `npm pack` tarballs plus synthesized packuments, baked into the CLI image, which
@@ -79,7 +99,40 @@ generated MFE Dockerfiles already mount via `COPY --from=cli-builder`. npm's
 install protocol is two GETs — a packument at `/@falese%2fname` and a tarball at
 `/@falese/name/-/name-x.y.z.tgz` — so a static file server satisfies it and no
 registry daemon is required. ADR-033 builds the tool for an agent working in a
-sandbox with no live npm registry; this keeps that true.
+sandbox with no live npm registry; this keeps that true — and that promise is
+precisely why the hosted lane cannot be the *only* lane: a token is the one thing
+an agent in a sandbox cannot obtain for itself.
+
+**The offline lane is selected by environment, never by a second `.npmrc`.**
+
+    npm_config_@falese:registry=http://127.0.0.1:4873 npm ci
+
+npm resolves configuration CLI flag > environment > project `.npmrc` >
+`~/.npmrc` > global. Now that a generated MFE ships a project `.npmrc`, an
+override written to the user or global file **loses to it silently** — the
+install would go to GitHub Packages and fail on a missing token, with nothing
+pointing at the cause. The environment variable is the only override that
+outranks the committed file, so it is the one this decision specifies.
+
+`check:template-typecheck` installs its probes through this lane, so the gate
+exercises it rather than asserting it works.
+
+### 3a. Existing MFEs need the `.npmrc` added by hand
+
+`PLATFORM_MIGRATIONS` (ADR-082) cannot carry this one, and the reason is worth
+stating rather than filing an entry that never fires: the registry detects by
+*usage*, scanning developer-owned files under `src/` with source extensions.
+`.npmrc` is a root file and its defect is an **absence**, so there is nothing to
+match on. An entry here would look like coverage and provide none.
+
+The 21 MFEs in `examples/**` were given the file directly in the same change.
+Anyone with an MFE outside this repository adds it once; the ADR-084 §5 lockfile
+rule already fails loudly if the lane is pinned the old way, so the failure mode
+is visible rather than silent.
+
+The lasting fix is a `mfe:validate` rule reporting an MFE that declares
+`@falese/*` dependencies with no `.npmrc` to resolve them — a warning, not an
+error, on the ADR-082 pattern for developer-owned files. Not built here.
 
 ### 4. A generated manifest declares plain semver, permanently
 
