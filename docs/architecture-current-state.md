@@ -194,7 +194,7 @@ graph TB
     end
 
     subgraph "Build Artifacts"
-        RuntimePkg["dist/runtime/<br/>@seans-mfe-tool/runtime"]
+        RuntimePkg["dist/runtime/<br/>@falese/smt-runtime"]
     end
 
     %% Connections
@@ -380,7 +380,7 @@ graph TB
 **📐 [See Detailed Architecture →](./architecture-runtime-platform.md)**
 
 **Location**: `src/runtime/`
-**Output**: `dist/runtime/` → `@seans-mfe-tool/runtime` npm package
+**Output**: `dist/runtime/` → `@falese/smt-runtime` npm package
 
 #### Overview
 
@@ -557,7 +557,7 @@ sequenceDiagram
 
     CLI-->>Dev: ✓ Project ready
 
-    Note over Output,Runtime: Generated project imports<br/>@seans-mfe-tool/runtime
+    Note over Output,Runtime: Generated project imports<br/>@falese/smt-runtime
 ```
 
 ## Data Flow: BFF Integration

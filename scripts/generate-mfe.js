@@ -3,7 +3,7 @@
  * Standalone MFE codegen runner.
  *
  * Invokes the same logic as `seans-mfe-tool remote:generate` without the oclif CLI
- * framework or workspace packages (@seans-mfe/contracts, @seans-mfe/oclif-base).
+ * framework or workspace packages (@falese/smt-contracts, @falese/smt-oclif-base).
  * Used by Docker builds so the CLI can regenerate platform files from mfe-manifest.yaml
  * on every build without needing a fully-installed workspace.
  *

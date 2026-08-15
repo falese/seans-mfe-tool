@@ -6,7 +6,7 @@
  * back to an RFC4122 v4 string sourced from Math.random for older runtimes;
  * suitable for telemetry / envelope IDs, NOT for cryptographic use.
  *
- * Defined in @seans-mfe-tool/runtime to keep generated MFEs free of Node-only
+ * Defined in @falese/smt-runtime to keep generated MFEs free of Node-only
  * imports (`crypto`) that would otherwise need browser stubs at bundle time.
  */
 export function uuidv4(): string {

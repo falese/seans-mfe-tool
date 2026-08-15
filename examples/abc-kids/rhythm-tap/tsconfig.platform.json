@@ -1,0 +1,16 @@
+{
+  "//": "GENERATED — do not edit. The platform's compile contract for abc-kids-rhythm-tap (ADR-085). These are the settings the platform's own emitted code needs in order to compile; regeneration rewrites this file. Put YOUR settings in tsconfig.json, which extends this one and is never overwritten — extends is a merge, so anything you set there wins.",
+  "//module": "esnext + bundler because this MFE is browser-only: rspack does the resolving, and bundler reads the exports map the platform packages publish (ADR-084, ADR-085 §2).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"],
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

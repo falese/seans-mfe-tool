@@ -2,7 +2,7 @@
 /**
  * ADR library drift gate (ADR-075).
  *
- * CI wiring for `adr:validate`. The rules live in `@seans-mfe/dsl`
+ * CI wiring for `adr:validate`. The rules live in `@falese/smt-dsl`
  * (`validateAdrLibrary`, unit-tested) and the IO in the command core
  * (`adrValidateCommand`); this is the wrapper that runs it over the repo and
  * sets an exit code — the same shape as `scripts/check-mfe-consistency.ts`,

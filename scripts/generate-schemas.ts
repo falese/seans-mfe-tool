@@ -36,7 +36,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { Config } from '@oclif/core';
-import { EXIT_CODES as EXIT_CODE_MAP } from '@seans-mfe/contracts';
+import { EXIT_CODES as EXIT_CODE_MAP } from '@falese/smt-contracts';
 import {
   deriveInputSchema,
   selectCatalogCommands,
@@ -68,7 +68,7 @@ function schemaFilename(commandName: string): string {
  */
 function sourceFileFor(command: RegistryCommand): string | undefined {
   const rel = command.id.split(':').join('/') + '.ts';
-  const roots = command.pluginName === '@falese/bff-plugin'
+  const roots = command.pluginName === '@falese/smt-plugin-bff'
     ? [path.join(REPO_ROOT, 'packages/bff-plugin/src/commands')]
     : [path.join(REPO_ROOT, 'src/commands')];
 

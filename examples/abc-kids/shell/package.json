@@ -1,7 +1,7 @@
 {
   "name": "abc-kids-shell",
   "version": "1.0.0",
-  "description": "ABC Kids \u2014 MFE Shell (host)",
+  "description": "ABC Kids — MFE Shell (host)",
   "scripts": {
     "dev": "rspack serve",
     "build": "rspack build",
@@ -49,6 +49,6 @@
     "serve": "^14.2.1",
     "ts-jest": "^29.4.11",
     "typescript": "^5.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@falese/smt-runtime": "^0.1.0"
   }
 }

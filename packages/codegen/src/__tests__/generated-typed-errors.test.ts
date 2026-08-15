@@ -62,7 +62,7 @@ describe('generated code throws typed errors (ADR-017)', () => {
       // The status is the whole point — without it the classifier has nothing
       // to distinguish a 503 from a 400.
       expect(bff).toContain('response.status');
-      expect(bff).toMatch(/import \{[^}]*NetworkError[^}]*\} from '@seans-mfe-tool\/runtime'/);
+      expect(bff).toMatch(/import \{[^}]*NetworkError[^}]*\} from '@falese\/smt-runtime'/);
     });
 
     it('throws BusinessError for GraphQL errors, which are not a transport fault', () => {
@@ -88,7 +88,7 @@ describe('generated code throws typed errors (ADR-017)', () => {
 
     it('imports the class from the runtime barrel, the only package it depends on', () => {
       expect(emitted('platform/base-mfe/mfe.ts')).toMatch(
-        /import \{[\s\S]*?ValidationError[\s\S]*?\} from '@seans-mfe-tool\/runtime'/,
+        /import \{[\s\S]*?ValidationError[\s\S]*?\} from '@falese\/smt-runtime'/,
       );
     });
   });

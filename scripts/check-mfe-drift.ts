@@ -38,9 +38,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseAndValidateDirectory } from '@seans-mfe/dsl';
-import type { DSLManifest } from '@seans-mfe/dsl';
-import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from '@seans-mfe/codegen';
+import { parseAndValidateDirectory } from '@falese/smt-dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
+import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from '@falese/smt-codegen';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');

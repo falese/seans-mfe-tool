@@ -5,7 +5,7 @@
  * dependency-free so the runtime ships no WS library.
  */
 
-import { NetworkError } from '@seans-mfe/contracts';
+import { NetworkError } from '@falese/smt-contracts';
 
 // ── Daemon transport (graphql-transport-ws) ──────────────────
 

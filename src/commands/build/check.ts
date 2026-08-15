@@ -9,9 +9,9 @@ import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin } from '../../framework/loader';
-import { parseManifestFile, findManifest } from '@seans-mfe/dsl';
-import { ValidationError } from '@seans-mfe/contracts';
-import type { EnvCheckResult } from '@seans-mfe/contracts';
+import { parseManifestFile, findManifest } from '@falese/smt-dsl';
+import { ValidationError } from '@falese/smt-contracts';
+import type { EnvCheckResult } from '@falese/smt-contracts';
 
 interface BuildCheckResult {
   plugin: string;

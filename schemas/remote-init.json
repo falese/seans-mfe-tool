@@ -12,7 +12,7 @@
       },
       "framework": {
         "type": "string",
-        "description": "Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.",
+        "description": "Framework to use (default: react). Install @falese/smt-framework-<name> for third-party frameworks.",
         "default": "react"
       },
       "port": {

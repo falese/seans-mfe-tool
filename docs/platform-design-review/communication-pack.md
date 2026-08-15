@@ -98,7 +98,7 @@ Every architectural decision is an ADR and every product decision a PDR — the 
 A team integrates once against the platform contract. Scaffolding, lifecycle wiring, and the BFF layer are generated, so the integration-correctness burden is on one tested pipeline, not each team.
 
 **Q: What if we pick a framework you don't support?**
-Author a framework plugin (`@seans-mfe/framework-<name>`) extending `BaseFrameworkPlugin`. The path is designed and proven for React and Angular; a worked third-framework example is on the 90-day roadmap.
+Author a framework plugin (`@falese/smt-framework-<name>`) extending `BaseFrameworkPlugin`. The path is designed and proven for React and Angular; a worked third-framework example is on the 90-day roadmap.
 
 ---
 

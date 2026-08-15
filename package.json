@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular",
-    "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
+    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular packages/runtime",
+    "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas && npm run build:registry-mirror",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
     "build:docs": "typedoc",
@@ -39,7 +39,9 @@
     "docs:check-links": "node scripts/check-doc-links.js",
     "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",
     "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
-    "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build"
+    "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build",
+    "build:registry-mirror": "ts-node scripts/build-registry-mirror.ts",
+    "registry:serve": "node scripts/serve-registry-mirror.js"
   },
   "keywords": [
     "module-federation",
@@ -77,7 +79,7 @@
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins",
-      "@falese/bff-plugin"
+      "@falese/smt-plugin-bff"
     ],
     "topics": {
       "coder": {
@@ -90,10 +92,10 @@
         "description": "MFE consistency checks (mfe:validate)"
       },
       "slots": {
-        "description": "Slot contract tooling \u2014 validate registry placement targets (ADR-073)"
+        "description": "Slot contract tooling — validate registry placement targets (ADR-073)"
       },
       "adr": {
-        "description": "ADR library governance \u2014 validate metadata and report lifecycle state (ADR-075)"
+        "description": "ADR library governance — validate metadata and report lifecycle state (ADR-075)"
       }
     },
     "hooks": {
@@ -109,12 +111,12 @@
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
     "@babel/types": "^7.22.1",
-    "@falese/bff-plugin": "file:packages/bff-plugin",
+    "@falese/smt-plugin-bff": "file:packages/bff-plugin",
     "@oclif/core": "^4.10.5",
     "@oclif/plugin-help": "^6.2.44",
     "@oclif/plugin-plugins": "^5.4.61",
-    "@seans-mfe/contracts": "file:packages/contracts",
-    "@seans-mfe/oclif-base": "file:packages/oclif-base",
+    "@falese/smt-contracts": "file:packages/contracts",
+    "@falese/smt-oclif-base": "file:packages/oclif-base",
     "chalk": "^4.1.2",
     "diff": "^5.1.0",
     "ejs": "^3.1.10",

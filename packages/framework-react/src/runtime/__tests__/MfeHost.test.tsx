@@ -4,7 +4,7 @@
  * React composition provider tests (ADR-056).
  *
  * Needs react + @testing-library/react + jsdom — devDependencies of
- * @seans-mfe/framework-react — and the root testMatch to include .tsx (both
+ * @falese/smt-framework-react — and the root testMatch to include .tsx (both
  * true as of this pass; before, this file silently never ran under `npm
  * test`, since testMatch only matched `*.test.[jt]s`). This pins the
  * provider unit behavior (mounts the imperative handle, tears it down on
@@ -13,7 +13,7 @@
 import * as React from 'react';
 import { render, act, cleanup } from '@testing-library/react';
 import { MfeHost } from '../MfeHost';
-import type { ImperativeMountHandle, PresentationHandles } from '@seans-mfe/contracts';
+import type { ImperativeMountHandle, PresentationHandles } from '@falese/smt-contracts';
 
 afterEach(() => cleanup());
 

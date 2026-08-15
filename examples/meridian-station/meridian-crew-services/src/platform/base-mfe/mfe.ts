@@ -1,12 +1,12 @@
 
 
-import { RemoteMFE } from '@seans-mfe-tool/runtime/react';
+import { RemoteMFE } from '@falese/smt-runtime/react';
 import {
   ValidationError,
   type Context,
   type LoadResult,
   type RenderResult,
-} from '@seans-mfe-tool/runtime';
+} from '@falese/smt-runtime';
 
 import type { CrewRosterOutputs, PayStatusOutputs } from './types';
 

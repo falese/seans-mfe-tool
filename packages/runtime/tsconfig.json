@@ -1,0 +1,25 @@
+{
+  "//": "Package-local build, matching every other package in packages/*: emits ./dist so `npm pack` ships compiled output with the package's own package.json (ADR-084). Distinct from tsconfig.build.json, which emits the repo-root dist/runtime staging artifact that ADR-084 phase 6 removes; both exist only during that transition.",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "moduleResolution": "node",
+    "ignoreDeprecations": "5.0",
+    "typeRoots": ["../../node_modules/@types"],
+    "types": ["node"],
+    "paths": {}
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**", "**/*.test.ts"]
+}

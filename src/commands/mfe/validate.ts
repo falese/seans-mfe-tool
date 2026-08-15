@@ -7,7 +7,7 @@
  * manifest-driven deps) but that hand-edits silently break — the class of drift
  * behind the meridian-docking-simulation regression (PR #292).
  *
- * The consistency rules are pure functions in `@seans-mfe/codegen`
+ * The consistency rules are pure functions in `@falese/smt-codegen`
  * (`validateMfeConsistency`, unit-tested); this command is the thin I/O shell:
  * read files, parse the config, run an optional `tsc --noEmit`, and throw a
  * typed error (non-zero exit) on any inconsistency.
@@ -28,15 +28,15 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { parseAndValidateDirectory } from '@seans-mfe/dsl';
+import { parseAndValidateDirectory } from '@falese/smt-dsl';
 import {
   validateMfeConsistency,
   parseFederationSharedEntries,
   generateAllFiles,
   isError,
-} from '@seans-mfe/codegen';
-import type { SourceFile } from '@seans-mfe/dsl';
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
+} from '@falese/smt-codegen';
+import type { SourceFile } from '@falese/smt-dsl';
+import { ValidationError, BusinessError } from '@falese/smt-contracts';
 import type { MfeValidateResult } from '../../oclif/results';
 
 export interface MfeValidateOptions {
@@ -121,6 +121,11 @@ async function collectSources(dir: string): Promise<SourceFile[]> {
   return sources;
 }
 
+/** File contents, or undefined when absent — an absent file is not an error here. */
+async function readOptionalFile(file: string): Promise<string | undefined> {
+  return (await fs.pathExists(file)) ? fs.readFile(file, 'utf8') : undefined;
+}
+
 async function readMergedDependencies(dir: string): Promise<Record<string, string>> {
   const pkgPath = path.join(dir, 'package.json');
   if (!(await fs.pathExists(pkgPath))) {
@@ -201,6 +206,10 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
   const sources = await collectSources(dir);
 
   const developerOwned = await developerOwnedPredicate(dir, manifest);
+  // Optional by design: an MFE that ships no lock has no lane to be pinned to,
+  // so the rule is skipped rather than reported (ADR-084 §5).
+  const lockfileText = await readOptionalFile(path.join(dir, 'package-lock.json'));
+  const tsconfigText = await readOptionalFile(path.join(dir, 'tsconfig.json'));
 
   const { ok, checked, issues } = validateMfeConsistency({
     manifest,
@@ -210,6 +219,8 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
     sources,
     developerOwned,
     platformVersion: PLATFORM_VERSION,
+    lockfileText,
+    tsconfigText,
   });
 
   // --strict escalates ADR-082 warnings ahead of their declared failsAt, for a
@@ -217,11 +228,17 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
   // Locations come back absolute because the scan reads absolute paths. Relative
   // to the MFE is what a developer can act on — `src/index.tsx:79`, not a path
   // that depends on where the repo happens to live.
-  const located = issues.map((i) =>
-    i.location
-      ? { ...i, location: `${path.relative(dir, i.location.replace(/:(\d+)$/, ''))}:${i.location.match(/:(\d+)$/)?.[1] ?? ''}` }
-      : i,
-  );
+  const located = issues.map((i) => {
+    if (!i.location) return i;
+    const line = i.location.match(/:(\d+)$/)?.[1];
+    const file = i.location.replace(/:(\d+)$/, '');
+    // Only source scans yield absolute paths. A rule that already names a file
+    // relative to the MFE (lockfile-lane-independent says "package-lock.json")
+    // must be left alone — relativising it against `dir` would resolve it
+    // against the process cwd and emit a ../../.. path to the wrong file.
+    const rel = path.isAbsolute(file) ? path.relative(dir, file) : file;
+    return { ...i, location: line ? `${rel}:${line}` : rel };
+  });
 
   const effectiveIssues = opts.strict
     ? located.map((i) => ({ ...i, severity: 'error' as const }))

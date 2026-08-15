@@ -1,5 +1,5 @@
 import type { Context } from '../context';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 import type { ValidationIssue } from '../context';
 
 /** Validation results these handlers own on the context. */

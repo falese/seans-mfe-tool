@@ -262,7 +262,7 @@ Shared context. In-tree. Framework-native.
 Zero core changes required. The CLI resolves the framework plugin at runtime.
 
 ```typescript
-// @seans-mfe/framework-vue — a new package, not a core PR
+// @falese/smt-framework-vue — a new package, not a core PR
 class VueVitePlugin extends BaseFrameworkPlugin {
   readonly framework = 'vue';
   readonly bundler   = 'vite';
@@ -282,7 +282,7 @@ class VueVitePlugin extends BaseFrameworkPlugin {
 
 <div class="highlight">
 
-Want Vite support? Publish `@seans-mfe/framework-vue-vite`. Done.
+Want Vite support? Publish `@falese/smt-framework-vue-vite`. Done.
 
 </div>
 
@@ -290,7 +290,7 @@ Want Vite support? Publish `@seans-mfe/framework-vue-vite`. Done.
 
 # Types are not documentation. Types are the platform.
 
-`@seans-mfe/contracts` is the shared vocabulary across every layer.
+`@falese/smt-contracts` is the shared vocabulary across every layer.
 
 | Contract | Source of truth | Used by |
 |---|---|---|
@@ -375,7 +375,7 @@ MFE (any framework)
         ├── ImperativeMountHandle   ← guaranteed polyglot floor
         └── NativeComponentHandle[] ← opt-in framework-native upgrade
 
-@seans-mfe/contracts            ← shared type vocabulary for all of the above
+@falese/smt-contracts            ← shared type vocabulary for all of the above
 
 BaseFrameworkPlugin             ← build-time: scaffold · codegen · build · docker
 ```

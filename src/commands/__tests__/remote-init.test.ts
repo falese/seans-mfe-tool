@@ -117,7 +117,7 @@ describe('remote:init Command', () => {
     it('unknown framework reaches loadFrameworkPlugin and throws ValidationError (ADR-036, #185)', async () => {
       // The --framework flag no longer has a hardcoded options list; any string is accepted by oclif.
       // loadFrameworkPlugin throws ValidationError when the plugin is not installed.
-      const { ValidationError } = await import('@seans-mfe/contracts');
+      const { ValidationError } = await import('@falese/smt-contracts');
       await expect(
         remoteInitCommand('test-vue', { skipInstall: true, framework: 'vue' }),
       ).rejects.toBeInstanceOf(ValidationError);

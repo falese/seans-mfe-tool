@@ -1,13 +1,13 @@
 /**
- * Packaging pin: `@seans-mfe/contracts` must actually export what it contains.
+ * Packaging pin: `@falese/smt-contracts` must actually export what it contains.
  *
  * Two surfaces have to agree with the source tree, and neither is exercised by
- * ordinary tests — jest's `moduleNameMapper` rewrites `@seans-mfe/contracts/*`
+ * ordinary tests — jest's `moduleNameMapper` rewrites `@falese/smt-contracts/*`
  * straight to source, so a subpath missing from `package.json#exports` resolves
  * fine here and throws ERR_PACKAGE_PATH_NOT_EXPORTED for a real consumer:
  *
- *   1. `src/index.ts`  — the barrel, for `import { X } from '@seans-mfe/contracts'`
- *   2. `package.json#exports` — for `import { X } from '@seans-mfe/contracts/slot-contract'`
+ *   1. `src/index.ts`  — the barrel, for `import { X } from '@falese/smt-contracts'`
+ *   2. `package.json#exports` — for `import { X } from '@falese/smt-contracts/slot-contract'`
  *
  * When this was written, (2) listed 6 of 10 modules: build-output-parser,
  * presentation, framework-plugin, slot-grammar, and slot-contract had no
@@ -50,7 +50,7 @@ function publicModules(): string[] {
 
 const MODULES = publicModules();
 
-describe('@seans-mfe/contracts packaging', () => {
+describe('@falese/smt-contracts packaging', () => {
   it('has public modules to check (guards against a silently empty sweep)', () => {
     expect(MODULES.length).toBeGreaterThanOrEqual(10);
     expect(MODULES).toContain('platform-contract');

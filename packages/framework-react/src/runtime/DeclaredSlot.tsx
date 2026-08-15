@@ -3,7 +3,7 @@
  * over the framework-free slot contract. Written once here; never generated.
  *
  * The contract logic (matching, declare-before-register guard) lives in
- * `@seans-mfe-tool/runtime` (`createSlotContract`); this component only wires
+ * `@falese/smt-runtime` (`createSlotContract`); this component only wires
  * it to React's lifecycle: assert on render, register the element via a
  * stable ref callback. Re-registration on remount is safe — the host re-binds
  * the address's desired experience instead of destroying it (ADR-066).
@@ -13,14 +13,17 @@
  * is accepted structurally so this package needs no dependency on the runtime
  * package: `createSlotContract(...)` satisfies `SlotContractLike`.
  *
- * Mirrored by the generated template
- * packages/codegen/templates/base-mfe/slots.tsx.ejs (same component with the
- * contract pre-bound — generated MFEs do not depend on framework-react). A
- * change to ref-callback or registration semantics must land in both.
+ * This is the only copy. Generated MFEs depend on this package (ADR-084) and
+ * bind it in their `slots.tsx` — `<BaseDeclaredSlot {...props} contract={slotContract} />`
+ * — so a change to ref-callback or registration semantics lands everywhere by
+ * being made here. It used to be duplicated into
+ * packages/codegen/templates/base-mfe/slots.tsx.ejs, kept in step by a comment
+ * no gate enforced, because this package could not be installed by a generated
+ * MFE at all.
  */
 import * as React from 'react';
 
-/** Structural view of `SlotContract` from `@seans-mfe-tool/runtime`. */
+/** Structural view of `SlotContract` from `@falese/smt-runtime`. */
 export interface SlotContractLike {
   assertDeclared(id: string): void;
   register<E>(

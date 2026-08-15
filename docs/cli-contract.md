@@ -135,7 +135,7 @@ on either the parsed `error.type` (string) or `$?` (number).
 ## 4. Error model
 
 Errors are never raw `Error`. Command code throws one of the typed errors from
-`@seans-mfe/contracts` (`packages/contracts/src/errors/`): `ValidationError`,
+`@falese/smt-contracts` (`packages/contracts/src/errors/`): `ValidationError`,
 `BusinessError`, `NetworkError`, `SystemError`, `TimeoutError`, `SecurityError`
 (ADR-017). `classifyError()` (`error-classifier.ts`) maps the thrown error to a `type`,
 and `retryable` / `userFacing` flags, which `formatError()` copies into the envelope

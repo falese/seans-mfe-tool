@@ -1,6 +1,6 @@
 /**
  * Cross-package pin (ADR-080): the runtime's lifecycle machine and capability
- * surface are the canonical definition in `@seans-mfe/contracts`, not a copy
+ * surface are the canonical definition in `@falese/smt-contracts`, not a copy
  * of it.
  *
  * `base-mfe.ts` used to carry its own `MFEState` union, its own
@@ -17,10 +17,10 @@ import {
   MFE_LIFECYCLE_STATES,
   MFE_LIFECYCLE_TRANSITIONS,
   MFE_LIFECYCLE_INITIAL_STATE,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 import { BaseMFE, VALID_TRANSITIONS, type MFEState } from '../base-mfe';
 import type { Context } from '../context';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
 const manifest = {
   name: 'pin-test',

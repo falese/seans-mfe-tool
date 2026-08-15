@@ -224,5 +224,5 @@ import {
   SystemError,
   TimeoutError,
   SecurityError,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 ```

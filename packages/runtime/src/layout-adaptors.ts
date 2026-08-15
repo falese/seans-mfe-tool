@@ -17,12 +17,12 @@ import type {
   PresentationHandles,
   RenderedExperience,
   SessionContext,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 // isImperativeMountHandle is a *value*, so this emits a
-// require("@seans-mfe/contracts") in the compiled runtime. That resolves in
+// require("@falese/smt-contracts") in the compiled runtime. That resolves in
 // every consumer: the CLI image (workspace node_modules) and generated MFEs
 // (contracts is staged as a file: dep of dist/runtime — #236, ADR-054/056).
-import { isImperativeMountHandle, BusinessError, SystemError } from '@seans-mfe/contracts';
+import { isImperativeMountHandle, BusinessError, SystemError } from '@falese/smt-contracts';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // ── Structural element types (testable without a DOM) ────────

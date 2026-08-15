@@ -14,10 +14,16 @@ FROM node:20-alpine
 
 WORKDIR /seans-mfe-tool
 # Install prod deps — workspace packages (packages/*) must be present so npm
-# links @seans-mfe/oclif-base, @seans-mfe/contracts, etc. into node_modules.
+# links @falese/smt-oclif-base, @falese/smt-contracts, etc. into node_modules.
 COPY package.json oclif.manifest.json ./
 COPY packages/ ./packages/
 RUN npm install --omit=dev --no-audit --no-fund
-# Copy pre-built CLI output (requires npm run build locally first)
+# Copy pre-built CLI output (requires npm run build locally first).
+#
+# This also carries dist/registry — the offline npm mirror (ADR-084 §3), which
+# is why `npm run build` must have run: the mirror is packed from freshly
+# compiled packages. An MFE build stage mounts this image and points
+# @falese:registry at the mirror, so `npm ci` resolves the platform packages
+# with no network and no manifest rewriting.
 COPY bin/ ./bin/
 COPY dist/ ./dist/

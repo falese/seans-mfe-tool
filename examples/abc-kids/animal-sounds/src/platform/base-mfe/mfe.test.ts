@@ -1,6 +1,6 @@
 
 import { abckidsanimalsoundsMFE } from './mfe';
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 describe('abckidsanimalsoundsMFE', () => {
   let mfe: abckidsanimalsoundsMFE;

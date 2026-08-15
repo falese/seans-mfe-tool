@@ -19,8 +19,8 @@ jest.mock('../json-output', () => ({
 }));
 
 import type { Config } from '@oclif/core';
-import { ValidationError, NetworkError, EXIT_CODES } from '@seans-mfe/contracts';
-import type { CommandResult } from '@seans-mfe/contracts';
+import { ValidationError, NetworkError, EXIT_CODES } from '@falese/smt-contracts';
+import type { CommandResult } from '@falese/smt-contracts';
 import { BaseCommand } from '../BaseCommand';
 import { writeJsonLine } from '../json-output';
 

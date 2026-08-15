@@ -12,16 +12,17 @@
  * the rules pure makes them unit-testable in the platform, not per example.
  */
 
-import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
-import type { DSLManifest, LifecycleHook } from '@seans-mfe/dsl';
+import { findUnreferencedSlots, type SourceFile } from '@falese/smt-dsl';
+import type { DSLManifest, LifecycleHook } from '@falese/smt-dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
+import { findLaneLockedDependencies } from './lockfile';
 import {
   PLATFORM_MIGRATIONS,
   findMigrationHits,
   severityFor,
 } from './platform-migrations';
 
-const RUNTIME_PACKAGE = '@seans-mfe-tool/runtime';
+const RUNTIME_PACKAGE = '@falese/smt-runtime';
 
 /** A framework singleton the bundler shares; parsed from the federation config. */
 export interface SharedEntry {
@@ -50,6 +51,17 @@ export interface MfeValidationInput {
   developerOwned?: (sourcePath: string) => boolean;
   /** Running platform version, for migration `failsAt` escalation (ADR-082). */
   platformVersion?: string;
+  /**
+   * The MFE's package-lock.json, verbatim, for the lane-independence rule
+   * (ADR-084 §5). Optional — an MFE that ships no lock has nothing to pin, and
+   * the rule is skipped rather than reported.
+   */
+  lockfileText?: string;
+  /**
+   * The MFE's root tsconfig.json, verbatim, for the compile-contract rule
+   * (ADR-085). Optional — an MFE without one is skipped rather than reported.
+   */
+  tsconfigText?: string;
 }
 
 export type ValidationRule =
@@ -60,7 +72,9 @@ export type ValidationRule =
   | 'runtime-declared'
   | 'slots-implemented'
   | 'platform-migrations'
-  | 'lifecycle-hook-handler-resolvable';
+  | 'lifecycle-hook-handler-resolvable'
+  | 'lockfile-lane-independent'
+  | 'compile-contract-inherited';
 
 /**
  * `error` fails validation; `warning` reports and does not.
@@ -182,7 +196,7 @@ function normalizeHandlers(handler: string | string[]): string[] {
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
-  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion } =
+  const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion, lockfileText, tsconfigText } =
     input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
@@ -258,13 +272,32 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     }
   }
 
-  // The runtime must be declared.
+  // The runtime must be declared — and as a semver range, not a path.
+  //
+  // ADR-084 §4: the manifest states a plain range so `.npmrc` decides the
+  // delivery lane. A `file:` specifier names a lane inside the manifest, which
+  // is the staging model that ADR replaced; it also only resolves from one
+  // checkout layout, so it silently breaks anywhere else. Checking presence
+  // alone let the entire meridian fleet sit on `file:../../../dist/runtime`
+  // through every gate.
   checked.push('runtime-declared');
   if (packageDependencies[RUNTIME_PACKAGE] === undefined) {
     issues.push({
       rule: 'runtime-declared',
       package: RUNTIME_PACKAGE,
       message: `${RUNTIME_PACKAGE} must be declared as a dependency`,
+    });
+  }
+  for (const [name, spec] of Object.entries(packageDependencies)) {
+    if (!name.startsWith('@falese/smt-')) continue;
+    if (!spec.startsWith('file:')) continue;
+    issues.push({
+      rule: 'runtime-declared',
+      package: name,
+      expected: 'a semver range, e.g. ^0.1.0',
+      actual: spec,
+      message: `"${name}" is declared as "${spec}" — a path specifier pins this MFE to one checkout layout and one delivery lane, which is the staging model ADR-084 replaced`,
+      fix: `Change it to a semver range (e.g. "^0.1.0") and let .npmrc choose the registry: GitHub Packages when hosted, the CLI image's mirror when offline.`,
     });
   }
 
@@ -289,7 +322,7 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
   //
   // Skipped when the MFE declares no slots, or when the caller supplied no
   // sources — a scan over nothing would report every declaration as missing.
-  // Matching is delegated to @seans-mfe/dsl so the needle logic (literal prefix
+  // Matching is delegated to @falese/smt-dsl so the needle logic (literal prefix
   // before the first {param}) has one implementation.
   const providesSlots = (manifest as { providesSlots?: { id: string; description?: string }[] })
     .providesSlots;
@@ -324,6 +357,57 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           });
         }
       }
+    }
+  }
+
+  // A lockfile that names a delivery lane (ADR-084 §5). `npm ci` fetches from
+  // the lock's `resolved` URL and ignores the .npmrc scoped registry, so a lock
+  // built in one lane fails in the other. Reported as a warning: the MFE is
+  // internally consistent and builds fine in the lane it was locked in — what
+  // is wrong is that it stopped being portable.
+  if (lockfileText) {
+    checked.push('lockfile-lane-independent');
+    for (const hit of findLaneLockedDependencies(lockfileText)) {
+      issues.push({
+        rule: 'lockfile-lane-independent',
+        severity: 'warning',
+        package: hit.name,
+        location: 'package-lock.json',
+        message:
+          `"${hit.name}" is locked to ${hit.resolved}, which pins this MFE to one delivery lane — ` +
+          '`npm ci` reads that URL and ignores the registry your .npmrc selects (ADR-084)',
+        fix: 'Remove the "resolved" field from this entry in package-lock.json, keeping "integrity". npm then resolves it through @falese:registry, and integrity still verifies the tarball.',
+      });
+    }
+  }
+
+  // A tsconfig.json that states its own module system instead of inheriting the
+  // platform contract (ADR-085). Detected here rather than as a platform
+  // migration because migrations only scan files under `src/` with a source
+  // extension — nothing at the MFE root can ever reach one.
+  //
+  // A warning: the MFE compiles fine as it stands. What it has lost is the
+  // ability to receive a compiler setting the platform needs, which is how the
+  // fleet ended up running two incompatible module systems unnoticed.
+  //
+  // React only, matching ADR-085's scope: the Angular variant carries its own
+  // multi-tsconfig split with a documented Mesh constraint on the root module,
+  // and gets no platform file to extend — flagging it would be reporting a
+  // decision the ADR deliberately deferred.
+  if (tsconfigText && framework === 'react') {
+    checked.push('compile-contract-inherited');
+    const inherits = /"extends"\s*:\s*"\.\/tsconfig\.platform\.json"/.test(tsconfigText);
+    const declaresOwnModuleSystem = /"moduleResolution"\s*:/.test(tsconfigText);
+    if (!inherits && declaresOwnModuleSystem) {
+      issues.push({
+        rule: 'compile-contract-inherited',
+        severity: 'warning',
+        package: 'tsconfig.json',
+        location: 'tsconfig.json',
+        message:
+          'tsconfig.json declares its own module system instead of extending tsconfig.platform.json, so a compiler setting the platform changes cannot reach this MFE (ADR-085)',
+        fix: 'Run `remote:generate` to emit tsconfig.platform.json, add "extends": "./tsconfig.platform.json" to tsconfig.json, and delete the options it now inherits (target, module, moduleResolution, jsx, lib, strict, esModuleInterop, skipLibCheck, resolveJsonModule, forceConsistentCasingInFileNames). include/exclude/paths/outDir stay yours.',
+      });
     }
   }
 

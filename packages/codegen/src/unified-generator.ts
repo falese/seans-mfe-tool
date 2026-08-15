@@ -7,8 +7,8 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import ejs from 'ejs';
-import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
+import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@falese/smt-dsl';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@falese/smt-contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
 
 /**
@@ -123,7 +123,7 @@ export const DEPENDENCY_VERSIONS = {
     reactDom: '~18.2.0',
   },
 
-  // Platform runtime contract (@seans-mfe-tool/runtime).
+  // Platform runtime contract (@falese/smt-runtime).
   // Not published to npm yet (ADR-064); generated projects stage dist/runtime
   // (Dockerfile copies it as a real directory, #274). Single-sourced here so
   // the React and Angular templates can't drift on the declared spec.
@@ -559,6 +559,20 @@ export function resolveRuntimeExtraDeps(
 }
 
 /**
+ * The framework runtime package a generated MFE imports its slot sugar from
+ * (ADR-084).
+ *
+ * Only the frameworks the platform publishes a package for. `FrameworkSchema`
+ * is deliberately open (ADR-036) — an unknown framework warns rather than
+ * failing — so an unrecognised value adds nothing here instead of inventing a
+ * package name that would not install.
+ */
+const FRAMEWORK_RUNTIME_PACKAGES: Readonly<Record<string, string>> = {
+  react: '@falese/smt-framework-react',
+  angular: '@falese/smt-framework-angular',
+};
+
+/**
  * The full set of client-side dependencies for a React MFE's package.json,
  * derived from the manifest: framework singletons + design-system + extras.
  */
@@ -570,6 +584,14 @@ export function resolveClientDependencies(
   if (framework === 'react') {
     deps['react'] = DEPENDENCY_VERSIONS.react.react;
     deps['react-dom'] = DEPENDENCY_VERSIONS.react.reactDom;
+  }
+  // The framework runtime carries the slot sugar the generated slots file binds
+  // to. Pinned to the same range as the runtime: both are published from this
+  // repo at one version (ADR-083), so letting them skew would be a packaging
+  // bug, not a supported combination.
+  const frameworkPackage = FRAMEWORK_RUNTIME_PACKAGES[framework];
+  if (frameworkPackage) {
+    deps[frameworkPackage] = DEPENDENCY_VERSIONS.runtime.package;
   }
   Object.assign(deps, resolveDesignSystemDeps(manifest, framework));
   Object.assign(deps, resolveRuntimeExtraDeps(manifest, framework));
@@ -738,6 +760,17 @@ export function extractManifestVars(
     angularExtraDependencyLines: (() => {
       if (variant.framework !== 'angular') return '';
       const extras = {
+        // The published directive the generated slots.ts binds (ADR-072 §4,
+        // ADR-084). React reaches this through `clientDependencyLines`, which
+        // is built from `resolveClientDependencies` — the same function
+        // `manifest-package-sync` uses to compute what a manifest implies.
+        // Angular's package.json is a separate template that never received
+        // it, so the rule required a dependency the generator never emitted
+        // and every fresh Angular scaffold failed `mfe:validate`. Taken from
+        // the same table rather than restated, so the two cannot disagree.
+        ...(FRAMEWORK_RUNTIME_PACKAGES.angular
+          ? { [FRAMEWORK_RUNTIME_PACKAGES.angular]: DEPENDENCY_VERSIONS.runtime.package }
+          : {}),
         ...resolveDesignSystemDeps(manifest, 'angular'),
         ...resolveRuntimeExtraDeps(manifest, 'angular'),
       };
@@ -789,7 +822,7 @@ export function extractManifestVars(
     hasBff: !!manifest.data,
 
     // The ten platform capability names, from the canonical definition in
-    // @seans-mfe/contracts (ADR-080). Templates classify a manifest capability
+    // @falese/smt-contracts (ADR-080). Templates classify a manifest capability
     // as platform vs domain against this instead of an inline literal array —
     // four such arrays existed and two of them were a capability short.
     platformCapabilityNames: [...PLATFORM_CAPABILITIES],
@@ -991,7 +1024,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
   const vars = extractManifestVars(manifest, variant);
   // --- Platform contract-driven capability and lifecycle aggregation ---
   // Keyed by the PascalCase manifest spelling, derived from the canonical
-  // capability set in @seans-mfe/contracts (ADR-080). This map was previously
+  // capability set in @falese/smt-contracts (ADR-080). This map was previously
   // written out by hand and omitted UpdateControlPlaneState, so a manifest
   // declaring it was generated as a domain capability.
   const platformCapabilities: Record<
@@ -1401,13 +1434,21 @@ async function renderFiles(
           { name: 'tsconfig.spec.json', ejs: 'tsconfig.spec.json.ejs' },
           { name: 'jest.config.js', ejs: 'jest.config.js.ejs' },
           { name: 'setup.jest.ts', ejs: 'setup.jest.ts.ejs' },
+          { name: '.npmrc', ejs: '.npmrc.ejs' },
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
           { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ]
       : [
           { name: 'package.json', ejs: 'package.json.ejs' },
           { name: 'rspack.config.js', ejs: 'rspack.config.js.ejs' },
+          // The compile contract (ADR-085). Generator-owned, and emitted for BFF
+          // MFEs too — the BFF plugin owns only the developer-owned tsconfig.json
+          // that extends this. Derived from `hasBff`, so a BFF MFE gets commonjs
+          // for its Node server.ts and a browser-only one gets bundler
+          // resolution, which is what the fleet had already settled into by hand.
+          { name: 'tsconfig.platform.json', ejs: 'tsconfig.platform.json.ejs', overwrite: true },
           ...(!vars.hasBff ? [{ name: 'tsconfig.json', ejs: 'tsconfig.json.ejs' }] : []),
+          { name: '.npmrc', ejs: '.npmrc.ejs' },
           { name: '.gitignore', ejs: '.gitignore.ejs', overwrite: true },
           { name: '.dockerignore', ejs: '.dockerignore.ejs', overwrite: true },
         ];

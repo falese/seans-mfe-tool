@@ -8,7 +8,7 @@
  * frontmatter has a shape something can rely on.
  *
  * This is that shape. It lives beside the manifest schema for the ADR-061
- * reason: `@seans-mfe/dsl` is where the platform's parse-time contracts live,
+ * reason: `@falese/smt-dsl` is where the platform's parse-time contracts live,
  * and ADR metadata is parsed at design time by CLI tooling with no runtime
  * dependency.
  *

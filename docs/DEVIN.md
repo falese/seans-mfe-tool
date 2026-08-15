@@ -4,7 +4,7 @@ Guidance for Devin sessions working on `seans-mfe-tool`.
 
 ## What this project is
 
-**seans-mfe-tool** is a platform for delivering domain features as independently deployable units, in any framework, language, or federation pattern. The CLI generates, manages, and orchestrates domain-capability MFEs from a DSL manifest. The runtime platform (`@seans-mfe-tool/runtime`) provides a lifecycle contract that makes domain capabilities composable in a shell regardless of how they were built.
+**seans-mfe-tool** is a platform for delivering domain features as independently deployable units, in any framework, language, or federation pattern. The CLI generates, manages, and orchestrates domain-capability MFEs from a DSL manifest. The runtime platform (`@falese/smt-runtime`) provides a lifecycle contract that makes domain capabilities composable in a shell regardless of how they were built.
 
 Federation (Module Federation, native ESM, iframe, web components) is one of several delivery mechanisms — not the purpose of the platform. The `framework` and `bundler` fields in the DSL manifest select the codegen template variant; adding a new framework means adding a new template variant, not changing the generator logic.
 
@@ -44,7 +44,7 @@ seans-mfe-tool mcp:serve               # Start MCP server (tool registry)
 ## Architecture constraints — do not violate
 
 - **BaseCommand**: Every oclif command extends `BaseCommand` from `packages/oclif-base/src/BaseCommand.ts`. Subclasses implement `runCommand()`, NOT `run()`.
-- **Typed errors**: Never `throw new Error(...)`. Use typed errors from `@seans-mfe/contracts` — `ValidationError` (exit 64), `BusinessError` (65), `NetworkError` (66), `SystemError` (69), `TimeoutError` (124), `SecurityError` (77).
+- **Typed errors**: Never `throw new Error(...)`. Use typed errors from `@falese/smt-contracts` — `ValidationError` (exit 64), `BusinessError` (65), `NetworkError` (66), `SystemError` (69), `TimeoutError` (124), `SecurityError` (77).
 - **JSON envelope**: Under `--json`, stdout emits exactly ONE line: `{ ok: true; data: T }` or `{ ok: false; error: {...} }`. All other output goes to stderr.
 - **MCP**: Child-process per tool call. Spawn `seans-mfe-tool <cmd> --json`, parse stdout envelope. Never persistent server with shared state.
 - **Bun for dev, Node for published entry**: `bin/dev.ts` runs under Bun. `bin/run.js` is pure-Node.
@@ -106,7 +106,7 @@ Files prefixed with `_` (e.g., `_shared.ts`) are skipped by oclif discovery — 
 | Runtime platform (REQ-RUNTIME-001–012) | 🟡 In progress |
 | BaseMFE boilerplate codegen from DSL | 🟡 In progress |
 | Lifecycle engine enhancements (ADR-028–067) | 📋 Planned |
-| npm publish of `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending |
+| npm publish of `@falese/smt-contracts` + `@falese/smt-oclif-base` | ⏳ Pending |
 
 ---
 
@@ -160,7 +160,7 @@ Stop and surface the question rather than guessing:
 
 ## Locked decisions — do not relitigate
 
-- **Plugin-first, not merge-first.** Shared packages ship as oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase.
-- **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
+- **Plugin-first, not merge-first.** Shared packages ship as oclif plugins depending on `@falese/smt-contracts`. Monorepo merge is a later phase.
+- **Namespace: `@falese/smt-*`** for shared packages; `@falese/*` for third-party plugins.
 - **MCP uses child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`, parse stdout envelope.
 - **Bun for dev, Node for the published npm package.**

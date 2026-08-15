@@ -83,7 +83,7 @@ seans-mfe-tool/
 
 1. **Promote the runtime to a real package.** `src/runtime/` is already a workspace member (`pnpm-workspace.yaml` lists `src/runtime`) but lives under `src/`, which reads like CLI code. Move it to `packages/runtime/` so the four first-class packages (contracts, oclif-base, runtime, codegen) are visibly the platform, and `src/` is unambiguously "the CLI".
 
-2. **Delete the inlined contract mirror.** `src/runtime/contracts.ts` is a hand-maintained copy of `@seans-mfe/contracts` (its own header admits it "must stay STRUCTURALLY compatible… until published"). This is the single largest source of correctness risk — PR #235 exists *only* to fix drift in it. Publish or `file:`-link `@seans-mfe/contracts` and import it for real. (See §3 for how Fable does this without breaking Docker staging.)
+2. **Delete the inlined contract mirror.** `src/runtime/contracts.ts` is a hand-maintained copy of `@falese/smt-contracts` (its own header admits it "must stay STRUCTURALLY compatible… until published"). This is the single largest source of correctness risk — PR #235 exists *only* to fix drift in it. Publish or `file:`-link `@falese/smt-contracts` and import it for real. (See §3 for how Fable does this without breaking Docker staging.)
 
 3. **Collapse the two runtime front-ends.** `remote-mfe.ts` (790) and `angular-remote-mfe.ts` (796) share almost their entire method surface (`init`, `get`, `sendAction`, `extractCapabilities`, `getSharedDependencies`, `unmount`, mount/error-boundary). Factor a `BaseRemoteMFE` holding the framework-neutral logic; each framework file becomes a thin `mountComponent()`/`getSharedDependencies()` adapter (this is exactly the framework-plugin model the project already committed to in ADR-036).
 
@@ -127,9 +127,9 @@ Also merged during execution (not in the original triage, appeared mid-session f
 ### 2.3 Issues — the real backlog, grouped and prioritized
 
 **P0 — pay down the structural debt (do these before more features):**
-- **#140** Extract `@seans-mfe/codegen` as a zero-dep package → enables §1.3.4 and unblocks the generator split.
-- **#126–130** Finish the `@falese/bff-plugin` migration and **remove the shims** → deletes a whole class of duplicated BFF code.
-- (New) **Delete `src/runtime/contracts.ts`; depend on published/linked `@seans-mfe/contracts`** → kills the drift source (§1.3.2). *File this as a tracked issue.*
+- **#140** Extract `@falese/smt-codegen` as a zero-dep package → enables §1.3.4 and unblocks the generator split.
+- **#126–130** Finish the `@falese/smt-plugin-bff` migration and **remove the shims** → deletes a whole class of duplicated BFF code.
+- (New) **Delete `src/runtime/contracts.ts`; depend on published/linked `@falese/smt-contracts`** → kills the drift source (§1.3.2). *File this as a tracked issue.*
 - (New) **`BaseRemoteMFE` collapse** (§1.3.3). *File this.*
 
 **P1 — the "two-headed / DX" epic (#139), coherent and worth finishing:**
@@ -176,13 +176,13 @@ Paste the block below to Fable. It is scoped, ordered, and has explicit invarian
 >
 > **Where the 65% comes from (do these in order, one PR each, tests green between):**
 >
-> 1. **Kill the contract mirror (correctness + LOC).** Delete `src/runtime/contracts.ts`. Make `@seans-mfe/contracts` a real dependency (publish, or `file:`/workspace link, and stage it into the MFE `node_modules` the same way `dist/runtime` is staged — see `scripts/copy-runtime-files.js` and `scripts/remove-dist-shims.js`). All barrel-reachable runtime modules import the real package. This removes a whole duplicated type set and the drift class that PR #235 had to hand-fix.
+> 1. **Kill the contract mirror (correctness + LOC).** Delete `src/runtime/contracts.ts`. Make `@falese/smt-contracts` a real dependency (publish, or `file:`/workspace link, and stage it into the MFE `node_modules` the same way `dist/runtime` is staged — see `scripts/copy-runtime-files.js` and `scripts/remove-dist-shims.js`). All barrel-reachable runtime modules import the real package. This removes a whole duplicated type set and the drift class that PR #235 had to hand-fix.
 >
 > 2. **Collapse the two runtime front-ends.** `remote-mfe.ts` and `angular-remote-mfe.ts` (~1,600 LOC) share nearly their whole method surface. Extract `BaseRemoteMFE` with all framework-neutral logic (`init`, `get`, `sendAction`, `extractCapabilities`/`extractAvailableComponents`, `getSharedDependencies`, `unmount`, error-boundary/telemetry). Each framework file shrinks to a thin adapter overriding only `mountComponent()` and the shared-deps map — exactly the ADR-036 framework-plugin model. Target: ~60% off those two files.
 >
 > 3. **Split the generator God file.** `codegen/UnifiedGenerator/unified-generator.ts` (1,214 LOC) → three small units: `plan(manifest) → RenderModel`, `render(model) → files` (pure EJS), `emit(files)`. Push per-framework/per-capability differences into template metadata/data, not `if` branches. Keep every generated artifact byte-identical (snapshot-test the abc-kids output before and after).
 >
-> 4. **Finish the BFF-plugin migration and delete the shims.** Land the `@falese/bff-plugin` extraction (issues #126–130) so `bff:init/dev/build/validate` live in the plugin; delete the in-tree shim commands and `_shared.ts` duplication.
+> 4. **Finish the BFF-plugin migration and delete the shims.** Land the `@falese/smt-plugin-bff` extraction (issues #126–130) so `bff:init/dev/build/validate` live in the plugin; delete the in-tree shim commands and `_shared.ts` duplication.
 >
 > 5. **Slim the big command files.** `commands/deploy.ts` (822) and `commands/api.ts` (755) — extract shared helpers, remove dead branches, and lean on `BaseCommand` for flag/envelope/error plumbing instead of re-implementing it per command.
 >

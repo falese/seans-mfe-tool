@@ -124,7 +124,7 @@ This model decomposes SMT into **seven architecture pillars**. Each pillar is do
 
 **Key decisions.** ADR-036 (abstract `BaseFrameworkPlugin` + concrete `ReactRspackPlugin` / `AngularWebpackPlugin`), ADR-034 (predecessor; codegen variants), ADR-022 (plugin-first architecture).
 
-**Operational value.** Adding a framework = publish `@seans-mfe/framework-<name>` + a template variant — no change to dispatch logic; open `framework`/`bundler` fields keep the manifest stable; mirrors the proven `BaseMFE` pattern.
+**Operational value.** Adding a framework = publish `@falese/smt-framework-<name>` + a template variant — no change to dispatch logic; open `framework`/`bundler` fields keep the manifest stable; mirrors the proven `BaseMFE` pattern.
 
 **Risks & failure modes.**
 - Only React and Angular plugins exist; the extension path is designed but not yet proven for a third framework.

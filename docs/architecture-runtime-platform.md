@@ -236,7 +236,7 @@ await cp.stop();
 
 ### The message protocol (ADR-054)
 
-One typed wire contract, codified in `@seans-mfe/contracts/messages`:
+One typed wire contract, codified in `@falese/smt-contracts/messages`:
 
 - **Up (`ACTION`)** — `ActionRecord { componentId, actionType, data, stateKey?,
   context: SessionContext }`.
@@ -394,7 +394,7 @@ packages/runtime/src/
 ├── base-control-plane.ts  # abstract control plane (ADR-059)
 ├── daemon-channel.ts      # virtualized per-slot socket (ADR-057)
 ├── imperative-handle.ts   # the MFE side of the presentation boundary (ADR-056)
-├── contracts.ts           # inlined mirror of @seans-mfe/contracts (self-contained)
+├── contracts.ts           # inlined mirror of @falese/smt-contracts (self-contained)
 ├── handlers/              # auth, telemetry, validation, error-handling, caching, rate-limiting
 └── __tests__/             # incl. boundary.test.ts (the machine-checked bright line)
 
@@ -439,7 +439,7 @@ examples/abc-kids/
 - ADR-040 — Manifest-declared handler sources
 
 **Runtime composition (the control plane + waist)**
-- ADR-054 — Control-plane message protocol (`@seans-mfe/contracts/messages`)
+- ADR-054 — Control-plane message protocol (`@falese/smt-contracts/messages`)
 - ADR-055 — LayoutManager — daemon-driven slot composition
 - ADR-056 — MFE presentation boundary (polyglot VM; imperative floor + native handle)
 - ADR-057 — Virtualized daemon socket (`DaemonChannel`)

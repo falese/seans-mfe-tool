@@ -12,7 +12,7 @@
  * Refs #106 (B7), #113 (C5)
  */
 
-import { SystemError } from '@seans-mfe/contracts';
+import { SystemError } from '@falese/smt-contracts';
 import { loadLocalTools } from './sources/local';
 import { loadPluginTools } from './sources/plugin';
 import { loadRemoteTools } from './sources/remote';

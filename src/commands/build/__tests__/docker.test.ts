@@ -4,11 +4,11 @@
 
 import { buildDockerCommand, generateDockerfile } from '../docker';
 import { loadFrameworkPlugin } from '../../../framework/loader';
-import { ValidationError } from '@seans-mfe/contracts';
-import type { DockerStrategy } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
+import type { DockerStrategy } from '@falese/smt-contracts';
 
 jest.mock('../../../framework/loader');
-jest.mock('@seans-mfe/dsl', () => ({
+jest.mock('@falese/smt-dsl', () => ({
   findManifest: jest.fn().mockResolvedValue(null),
   parseManifestFile: jest.fn(),
 }));

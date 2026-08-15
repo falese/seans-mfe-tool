@@ -126,24 +126,30 @@ describe('validation-error-renamed', () => {
     findMigrationHits(entry, { path: 'src/thing.ts', text }).length;
 
   it('catches the record type imported under its old name', () => {
+    expect(hits("import type { ValidationError } from '@falese/smt-runtime';")).toBe(1);
+  });
+
+  // ADR-083 renamed the scope; this move is orthogonal to it, so an MFE still
+  // on the old package name has to be caught too.
+  it('catches it under the pre-ADR-083 package name as well', () => {
     expect(hits("import type { ValidationError } from '@seans-mfe-tool/runtime';")).toBe(1);
   });
 
   it('catches it alongside other type imports', () => {
     expect(
-      hits("import type { Context, ValidationError, LoadResult } from '@seans-mfe-tool/runtime';"),
+      hits("import type { Context, ValidationError, LoadResult } from '@falese/smt-runtime';"),
     ).toBe(1);
   });
 
   it('leaves the thrown class alone — that name is still correct', () => {
     // The class is a value import and did not move. Only the type record was
     // renamed, so flagging every ValidationError would be wrong.
-    expect(hits("import { ValidationError } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits("import { ValidationError } from '@falese/smt-runtime';")).toBe(0);
     expect(hits("throw new ValidationError('bad', 'field', 'required');")).toBe(0);
   });
 
   it('leaves the new name alone', () => {
-    expect(hits("import type { ValidationIssue } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits("import type { ValidationIssue } from '@falese/smt-runtime';")).toBe(0);
   });
 
   it('ignores a same-named type from somewhere else entirely', () => {
@@ -157,29 +163,35 @@ describe('remote-mfe-subpath', () => {
     findMigrationHits(entry, { path: 'src/index.tsx', text }).length;
 
   it('catches RemoteMFE imported as a value from the bare barrel', () => {
+    expect(hits("import { RemoteMFE } from '@falese/smt-runtime';")).toBe(1);
+  });
+
+  // The subpath move and the ADR-083 scope rename are independent: adopting the
+  // new package name does not fix the barrel import, so both must be caught.
+  it('catches it under the pre-ADR-083 package name as well', () => {
     expect(hits("import { RemoteMFE } from '@seans-mfe-tool/runtime';")).toBe(1);
   });
 
   it('catches it alongside other named imports', () => {
     expect(
-      hits("import { RemoteMFE, ValidationError } from '@seans-mfe-tool/runtime';"),
+      hits("import { RemoteMFE, ValidationError } from '@falese/smt-runtime';"),
     ).toBe(1);
   });
 
   it('leaves the new subpath alone', () => {
-    expect(hits("import { RemoteMFE } from '@seans-mfe-tool/runtime/react';")).toBe(0);
+    expect(hits("import { RemoteMFE } from '@falese/smt-runtime/react';")).toBe(0);
   });
 
   it('leaves the Angular abstract alone — it was never on the barrel', () => {
     expect(
-      hits("import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';"),
+      hits("import { AngularRemoteMFE } from '@falese/smt-runtime/angular';"),
     ).toBe(0);
   });
 
   it('does not fire on a type-only import, which never pulled React in', () => {
     // The whole defect is that value imports emit a require and type imports
     // do not. Flagging `import type` would report code that was never broken.
-    expect(hits("import type { RemoteMFE } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits("import type { RemoteMFE } from '@falese/smt-runtime';")).toBe(0);
   });
 
   it('does not fire on prose or a subclass declaration', () => {
@@ -188,11 +200,40 @@ describe('remote-mfe-subpath', () => {
   });
 });
 
+describe('package-scope-renamed (ADR-083)', () => {
+  const entry = byId('package-scope-renamed');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/index.tsx', text }).length;
+
+  it('catches both retired scopes in an import', () => {
+    expect(hits("import { RemoteMFE } from '@seans-mfe-tool/runtime';")).toBe(1);
+    expect(hits("import { ValidationError } from '@seans-mfe/contracts';")).toBe(1);
+  });
+
+  // Broader than an import statement on purpose: a stale dependency entry
+  // breaks `npm install` before any import is reached.
+  it('catches a stale package.json dependency line', () => {
+    expect(hits('    "@seans-mfe-tool/runtime": "^0.1.0",')).toBe(1);
+  });
+
+  it('is silent once the specifier is renamed', () => {
+    expect(hits("import { RemoteMFE } from '@falese/smt-runtime/react';")).toBe(0);
+    expect(hits('    "@falese/smt-contracts": "^0.1.0",')).toBe(0);
+  });
+
+  it('does not fire on the unrelated CLI name or its image paths', () => {
+    // ADR-083 leaves the binary and its container paths alone; only the npm
+    // scope moved. Matching those would flag every Dockerfile in the fleet.
+    expect(hits('FROM seans-mfe-tool-cli:latest AS cli-builder')).toBe(0);
+    expect(hits('COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool')).toBe(0);
+  });
+});
+
 describe('findMigrationHits over real generated shapes', () => {
   it('is silent on the current index.tsx template output', () => {
     const current = [
       "import { createRoot } from 'react-dom/client';",
-      "import { SystemError } from '@seans-mfe-tool/runtime';",
+      "import { SystemError } from '@falese/smt-runtime';",
       '',
       "const container = document.getElementById('root');",
       'if (!container) {',

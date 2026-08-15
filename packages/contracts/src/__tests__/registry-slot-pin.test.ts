@@ -3,7 +3,7 @@
  *
  * Each fleet's `control-plane/registry/slot-target.js` carries a copy of the
  * matcher rather than calling `createSlotAddressRegistry`, because those
- * registries are standalone dockerized services and `@seans-mfe/contracts` is
+ * registries are standalone dockerized services and `@falese/smt-contracts` is
  * not published yet (docs/MERGE-PLAN.md Phase 1). A copy that drifts is worse
  * than no copy: the registry would accept placements the runtime rejects, or
  * reject ones it accepts.
@@ -66,7 +66,7 @@ const ADDRESSES = [
 ];
 
 describe('demo registry slot matcher pin (ADR-073 §5)', () => {
-  it.each(ADDRESSES)('agrees with @seans-mfe/contracts on "%s"', (address) => {
+  it.each(ADDRESSES)('agrees with @falese/smt-contracts on "%s"', (address) => {
     const expected = shared.validateTarget(address);
     const actual = validateSlotTarget(address, copyVocabulary);
 

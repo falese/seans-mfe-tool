@@ -16,8 +16,8 @@ merge at this stage would:
   CLI (short-lived tool)
 - Require agreeing on a single lint/TS/test baseline before any new feature
   ships
-- Make the npm publish surface of `@seans-mfe/contracts` and
-  `@seans-mfe/oclif-base` dependent on a monorepo migration landing
+- Make the npm publish surface of `@falese/smt-contracts` and
+  `@falese/smt-oclif-base` dependent on a monorepo migration landing
 
 The plugin-first path (this repo) is reversible: if the monorepo never
 happens, the federated plugin model still works forever.  The merge can be
@@ -35,22 +35,22 @@ Three repos remain independent; the CLI acts as the integration hub.
 | Package | Repo | Publish target |
 |---------|------|----------------|
 | `seans-mfe-tool` (CLI) | this repo | npm (binary) |
-| `@seans-mfe/contracts` | this repo (`packages/contracts/`) | npm (library) |
-| `@seans-mfe/oclif-base` | this repo (`packages/oclif-base/`) | npm (library) |
+| `@falese/smt-contracts` | this repo (`packages/contracts/`) | npm (library) |
+| `@falese/smt-oclif-base` | this repo (`packages/oclif-base/`) | npm (library) |
 | `@falese/daemon-plugin` | `Falese/daemon` | npm (oclif plugin) |
 | `@falese/coder-plugin` | `Falese/coder` | npm (oclif plugin) or `@falese/coder-mcp` (Bun-native MCP server) |
 
 ### Integration model
 
-1. `Falese/daemon` and `Falese/coder` add `@seans-mfe/contracts` as a dep and
-   implement commands that extend `BaseCommand` from `@seans-mfe/oclif-base`.
+1. `Falese/daemon` and `Falese/coder` add `@falese/smt-contracts` as a dep and
+   implement commands that extend `BaseCommand` from `@falese/smt-oclif-base`.
 2. End users install plugins: `seans-mfe-tool plugins install @falese/daemon-plugin`.
 3. Agents use `seans-mfe-tool mcp serve` which federates tools from all sources.
 
 ### Phase 1 success criteria
 
-- [ ] `@seans-mfe/contracts` published to npm with stable semver
-- [ ] `@seans-mfe/oclif-base` published to npm with stable semver
+- [ ] `@falese/smt-contracts` published to npm with stable semver
+- [ ] `@falese/smt-oclif-base` published to npm with stable semver
 - [ ] `@falese/daemon-plugin` passes `plugins link` + `--json` envelope test
 - [ ] `@falese/coder-plugin` (or `@falese/coder-mcp`) passes MCP federation test
 - [ ] All three repos have green CI running `turbo run test build`
@@ -63,7 +63,7 @@ Move all three repos into a single git repository under `apps/` and `packages/`.
 
 ### Prerequisites (must all be true before starting)
 
-- [ ] **Contract stability**: `@seans-mfe/contracts` has had no breaking changes
+- [ ] **Contract stability**: `@falese/smt-contracts` has had no breaking changes
   (major bumps) for ≥ 30 calendar days.
 - [ ] **Shared lint baseline agreed**: ESLint config (`eslint.config.js`),
   Prettier config, and commit-lint rules are identical across all three repos.
@@ -119,7 +119,7 @@ releases across all packages and apps.
   describing the semver impact.
 - Release workflow: `pnpm changeset version` bumps packages; `pnpm changeset publish`
   publishes affected packages in dependency order (turbo handles build order).
-- `@falese/*` plugins release independently from `@seans-mfe/*` packages.
+- `@falese/*` plugins release independently from `@falese/smt-*` packages.
 - Individual repo releases deprecated; `Falese/daemon` and `Falese/coder`
   become archived read-only mirrors.
 - Issue tracking consolidates into this monorepo.

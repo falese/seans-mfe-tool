@@ -23,7 +23,7 @@
 import { BaseRemoteMFE, type ModuleFederationContainer } from '../base-remote-mfe';
 import type { Context, LoadResult } from '../base-mfe';
 import type { TelemetryEvent, TelemetryService } from '../base-mfe';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 
 class TelemetryLog implements TelemetryService {
   public readonly events: TelemetryEvent[] = [];

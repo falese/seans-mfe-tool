@@ -11,7 +11,7 @@
  * test stays green. The actual framework mount (createRoot, etc.) happens
  * inside the MFE's doRender, behind this port.
  */
-import type { ImperativeMountHandle, MountElement } from '@seans-mfe/contracts';
+import type { ImperativeMountHandle, MountElement } from '@falese/smt-contracts';
 
 /**
  * The neutral subset of BaseMFE that an imperative handle drives. Structural,

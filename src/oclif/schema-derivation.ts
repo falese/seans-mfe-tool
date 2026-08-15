@@ -74,8 +74,16 @@ export interface InputSchema {
  */
 const TRANSPORT_OWNED = new Set(['json', 'interactive', 'cwd']);
 
-/** Plugins whose commands belong in the catalog. Everything else is infrastructure. */
-const FIRST_PARTY = [/^seans-mfe-tool$/, /^@seans-mfe\//, /^@falese\//];
+/**
+ * Plugins whose commands belong in the catalog. Everything else is
+ * infrastructure.
+ *
+ * `@falese/` covers every platform package and official plugin since ADR-083;
+ * the retired `@seans-mfe/` scope is deliberately absent rather than kept as a
+ * fallback, because GitHub Packages cannot serve it — nothing can be installed
+ * under that name for the match to find.
+ */
+const FIRST_PARTY = [/^seans-mfe-tool$/, /^@falese\//];
 
 /**
  * Commands deliberately kept out of the agent-facing catalog.

@@ -5,13 +5,13 @@
  * Built-in plugins (react, angular) are resolved from the known
  * packages/ directory so they work both in development (ts source)
  * and after npm link / global install (compiled dist/).
- * Third-party plugins fall back to require('@seans-mfe/framework-<name>').
+ * Third-party plugins fall back to require('@falese/smt-framework-<name>').
  */
 
 import * as path from 'path';
-import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
-import type { DSLManifest } from '@seans-mfe/dsl';
-import type { FrameworkVariant } from '@seans-mfe/codegen';
+import { BaseFrameworkPlugin, ValidationError } from '@falese/smt-contracts';
+import type { DSLManifest } from '@falese/smt-dsl';
+import type { FrameworkVariant } from '@falese/smt-codegen';
 
 /** Built-in framework names and their package directory names. */
 const BUILTIN_FRAMEWORKS: Record<string, string> = {
@@ -44,14 +44,14 @@ function isFrameworkPlugin(obj: unknown): obj is BaseFrameworkPlugin {
  *
  * Resolution order:
  * 1. Built-in: resolve from packages/<dir> relative to project root
- * 2. External: require('@seans-mfe/framework-<name>')
+ * 2. External: require('@falese/smt-framework-<name>')
  *
  * @param framework - Framework name matching a manifest `framework` field (e.g. 'react', 'angular').
  * @returns The singleton plugin instance.
  * @throws ValidationError if the plugin is not found or exports an invalid instance.
  */
 export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
-  const packageName = `@seans-mfe/framework-${framework}`;
+  const packageName = `@falese/smt-framework-${framework}`;
 
   // 1. Try built-in resolution (works with npm link and global installs)
   const builtinDir = BUILTIN_FRAMEWORKS[framework];

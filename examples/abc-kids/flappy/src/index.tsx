@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SystemError } from '@seans-mfe-tool/runtime';
+import { SystemError } from '@falese/smt-runtime';
 import { Tabs, Tab, Box, Container, Typography } from '@mui/material';
 import { PlayGame } from './features/PlayGame/PlayGame';
 import { ShowCover } from './features/ShowCover/ShowCover';

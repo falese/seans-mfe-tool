@@ -159,7 +159,7 @@ seans-mfe-tool api <name> [--spec openapi.yaml] [--database sqlite|mongodb] [--p
 seans-mfe-tool deploy <name> --type <shell|remote|api> [options]
 ```
 
-### Plugins (`@seans-mfe/*` core, `@falese/*` third-party — ADR-021, ADR-022)
+### Plugins (`@falese/smt-*` core, `@falese/*` third-party — ADR-021, ADR-022)
 
 ```bash
 seans-mfe-tool plugins install daemon            # shortname → @seans-mfe scope
@@ -222,11 +222,11 @@ rather than failing validation, and fail loudly only at `loadFrameworkPlugin()`.
 
 ## Runtime package
 
-The runtime ships as **`@seans-mfe-tool/runtime`** (`packages/runtime/`).
+The runtime ships as **`@falese/smt-runtime`** (`packages/runtime/`).
 
 ```typescript
-import { BaseMFE, RemoteMFE } from '@seans-mfe-tool/runtime';
-import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
+import { BaseMFE, RemoteMFE } from '@falese/smt-runtime';
+import { AngularRemoteMFE } from '@falese/smt-runtime/angular';
 ```
 
 Class hierarchy is intentionally shallow (ADR-041):
@@ -292,12 +292,12 @@ See the [ABC Kids quick start](./examples/abc-kids/README.md), the
 ## Extending the platform
 
 - **New UI framework (Vue, Svelte, Solid, …):** publish
-  `@seans-mfe/framework-<name>` extending `BaseFrameworkPlugin` and add a
+  `@falese/smt-framework-<name>` extending `BaseFrameworkPlugin` and add a
   template variant. See the
   [Framework Plugin Authoring Guide](./docs/framework-plugin-authoring.md)
   (ADR-036) and `packages/framework-react/` / `packages/framework-angular/`.
 - **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./docs/PLUGIN-CONTRACT.md)
-  and the `@falese/bff-plugin` package under `packages/bff-plugin/` as a worked
+  and the `@falese/smt-plugin-bff` package under `packages/bff-plugin/` as a worked
   example of an out-of-tree oclif plugin.
 - **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./docs/MERGE-PLAN.md).
 

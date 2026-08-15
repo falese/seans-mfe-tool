@@ -11,7 +11,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { SystemError } from '@seans-mfe/contracts';
+import { SystemError } from '@falese/smt-contracts';
 
 export interface SchemaCatalog {
   cliVersion: string;

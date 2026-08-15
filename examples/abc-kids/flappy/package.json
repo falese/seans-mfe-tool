@@ -34,7 +34,8 @@
     "@mui/material": "^5.14.0",
     "@mui/system": "^5.14.0",
     "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0"
+    "@emotion/styled": "^11.11.0",
+    "@falese/smt-framework-react": "^0.1.0"
   },
   "devDependencies": {
     "@graphql-mesh/cli": "^0.100.21",
@@ -43,7 +44,7 @@
     "@types/express": "^4.17.21",
     "ts-node": "^10.9.1",
     "concurrently": "^8.2.0",
-    "@seans-mfe-tool/runtime": "^0.1.0",
+    "@falese/smt-runtime": "^0.1.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.0.28",
@@ -64,12 +65,19 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["@testing-library/jest-dom"],
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-dom"
+    ],
     "moduleNameMapper": {
       "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js"
     },
     "transform": {
-      "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     }
   },
   "overrides": {

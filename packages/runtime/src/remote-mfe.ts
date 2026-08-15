@@ -17,7 +17,7 @@
 
 import { createErrorBoundary, type FallbackType } from './error-boundary';
 import { BaseRemoteMFE } from './base-remote-mfe';
-import { SystemError } from '@seans-mfe/contracts';
+import { SystemError } from '@falese/smt-contracts';
 
 // Re-exported for consumers that imported the container type from this module.
 export type { ModuleFederationContainer } from './base-remote-mfe';

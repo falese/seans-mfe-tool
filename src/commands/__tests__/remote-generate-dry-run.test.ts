@@ -32,13 +32,13 @@ jest.mock('chalk', () => ({
   cyan: (s: string) => s,
 }));
 
-jest.mock('@seans-mfe/dsl', () => ({
+jest.mock('@falese/smt-dsl', () => ({
   parseAndValidateDirectory: jest.fn(),
   formatErrorsForCLI: jest.fn(() => ''),
 }));
 
-jest.mock('@seans-mfe/codegen', () => {
-  const actual = jest.requireActual('@seans-mfe/codegen');
+jest.mock('@falese/smt-codegen', () => {
+  const actual = jest.requireActual('@falese/smt-codegen');
   return { ...actual, generateAllFiles: jest.fn(), writeGeneratedFiles: jest.fn() };
 });
 
@@ -47,8 +47,8 @@ jest.mock('../../framework/loader', () => ({
 }));
 
 import { remoteGenerateCommand } from '../remote-generate';
-import { parseAndValidateDirectory } from '@seans-mfe/dsl';
-import { generateAllFiles } from '@seans-mfe/codegen';
+import { parseAndValidateDirectory } from '@falese/smt-dsl';
+import { generateAllFiles } from '@falese/smt-codegen';
 
 const mockParse = parseAndValidateDirectory as jest.MockedFunction<typeof parseAndValidateDirectory>;
 const mockGenerate = generateAllFiles as jest.MockedFunction<typeof generateAllFiles>;

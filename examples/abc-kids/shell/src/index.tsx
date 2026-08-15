@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { SystemError } from '@seans-mfe-tool/runtime';
+import { SystemError } from '@falese/smt-runtime';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import App from './App';
 

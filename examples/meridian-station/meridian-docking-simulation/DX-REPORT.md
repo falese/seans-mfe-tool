@@ -76,7 +76,7 @@
 ### Blockers Encountered
 1. **@testing-library/react compatibility**: React 19 peer dep mismatch; resolved with `--legacy-peer-deps`
 2. **MUI material imports**: Generated code included MUI by default; removed and replaced with styled-components
-3. **@seans-mfe/contracts exports**: Runtime package has export map issues when consumed locally; doesn't block dev server
+3. **@falese/smt-contracts exports**: Runtime package has export map issues when consumed locally; doesn't block dev server
 
 ### Path Forward
 - Dev server (`npm run dev`) should start despite rspack warnings
@@ -148,7 +148,7 @@
 
 ### Recommendations for Future MFEs
 1. Remove MUI from template defaults; use styled-components or pass
-2. Document `@seans-mfe-tool/runtime` file: path pattern for local dev
+2. Document `@falese/smt-runtime` file: path pattern for local dev
 3. Add lint rule: no `any` types in game logic (we used strict TypeScript)
 4. Consider Zustand for game state if complexity grows (prepared but not needed yet)
 

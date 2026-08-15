@@ -22,7 +22,7 @@ npm run build
 npm start
 ```
 
-> **Heads-up: `@seans-mfe-tool/runtime` is not published yet** (ADR-064).
+> **Heads-up: `@falese/smt-runtime` is not published yet** (ADR-064).
 > A plain `npm install` fails resolving it. Until the runtime ships to npm,
 > stage it from a local checkout of
 > [seans-mfe-tool](https://github.com/falese/seans-mfe-tool):
@@ -31,11 +31,11 @@ npm start
 > # 1. Build the runtime once in your checkout
 > (cd /path/to/seans-mfe-tool && npm ci && npm run build)
 > # 2. Point the dep at it, install, then replace the symlink with a real copy
-> npm pkg set 'devDependencies[@seans-mfe-tool/runtime]=file:/path/to/seans-mfe-tool/dist/runtime'
+> npm pkg set 'devDependencies[@falese/smt-runtime]=file:/path/to/seans-mfe-tool/dist/runtime'
 > npm install --legacy-peer-deps
-> rm -rf node_modules/@seans-mfe-tool/runtime
+> rm -rf node_modules/@falese/smt-runtime
 > mkdir -p node_modules/@seans-mfe-tool
-> cp -r /path/to/seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
+> cp -r /path/to/seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime
 > ```
 >
 > The final copy must be a **real directory**, not a `file:` symlink — a

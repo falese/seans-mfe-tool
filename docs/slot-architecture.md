@@ -25,8 +25,8 @@ has rendered anything.
 ```mermaid
 flowchart TD
   M["mfe-manifest.yaml<br/>providesSlots: [{ id, description? }]"]
-  G["@seans-mfe/contracts<br/>slot-grammar.ts (ADR-069)"]
-  S["@seans-mfe/dsl<br/>ProvidedSlotSchema (zod)"]
+  G["@falese/smt-contracts<br/>slot-grammar.ts (ADR-069)"]
+  S["@falese/smt-dsl<br/>ProvidedSlotSchema (zod)"]
   OK(["accepted<br/>main · main-content · berth.{id} · section.{key}.footer"])
   NO(["rejected at parse time"])
 

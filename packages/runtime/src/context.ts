@@ -16,13 +16,13 @@
  * Related ADRs: ADR-002, ADR-013
  */
 
-import type { ControlPlaneUser, PlatformCapability } from '@seans-mfe/contracts';
+import type { ControlPlaneUser, PlatformCapability } from '@falese/smt-contracts';
 
 /**
  * User authentication and authorization context.
  *
  * Extends the wire-level ControlPlaneUser (the principal a session acts as,
- * @seans-mfe/contracts) with the fields the lifecycle engine needs locally:
+ * @falese/smt-contracts) with the fields the lifecycle engine needs locally:
  * a mandatory username, mandatory roles, and optional fine-grained
  * permissions. Anything that crosses the daemon socket uses the contracts
  * base; the runtime works with this richer view.
@@ -76,7 +76,7 @@ export interface Context {
   
   /**
    * Current capability being executed — one of the ten platform capabilities
-   * (single-sourced in @seans-mfe/contracts, ADR-080) or a domain capability
+   * (single-sourced in @falese/smt-contracts, ADR-080) or a domain capability
    * name, which is why the union stays open.
    */
   capability?: PlatformCapability | string;
@@ -159,7 +159,7 @@ export interface QueryInput {
  *
  * Named `ValidationIssue`, not `ValidationError`: this is a *result record*
  * describing what was wrong with one field, not something thrown. The old name
- * collided with the `ValidationError` class in `@seans-mfe/contracts` on the
+ * collided with the `ValidationError` class in `@falese/smt-contracts` on the
  * runtime barrel, which is why generated code had no way to reach the thrown
  * classes at all (ADR-017).
  */

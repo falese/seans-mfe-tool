@@ -1,5 +1,5 @@
 import { generateAllFiles, extractManifestVars, DEPENDENCY_VERSIONS } from '../unified-generator';
-import type { DSLManifest } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@falese/smt-dsl';
 import * as fs from 'fs-extra';
 import path from 'path';
 
@@ -59,7 +59,7 @@ describe('unified-generator angular-webpack variant', () => {
     expect(webpack!.content).toContain(`requiredVersion: '${DEPENDENCY_VERSIONS.angular.platformBrowser}'`);
 
     expect(pkg).toBeDefined();
-    expect(JSON.parse(pkg!.content).devDependencies['@seans-mfe-tool/runtime']).toBe(
+    expect(JSON.parse(pkg!.content).devDependencies['@falese/smt-runtime']).toBe(
       DEPENDENCY_VERSIONS.runtime.package,
     );
   });

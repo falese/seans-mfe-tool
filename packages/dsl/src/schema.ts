@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { SLOT_ID_SEGMENT, PLATFORM_WRAPPER_METHODS } from '@seans-mfe/contracts';
+import { SLOT_ID_SEGMENT, PLATFORM_WRAPPER_METHODS } from '@falese/smt-contracts';
 
 // =============================================================================
 // Enums and Constants
@@ -50,11 +50,11 @@ export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
 
 /**
  * Platform capabilities that all MFEs must implement. Single-sourced in
- * `@seans-mfe/contracts` (ADR-080) — this list previously omitted
+ * `@falese/smt-contracts` (ADR-080) — this list previously omitted
  * `updateControlPlaneState`, which the runtime had already shipped.
  */
-export { PLATFORM_CAPABILITIES } from '@seans-mfe/contracts';
-export type { PlatformCapability } from '@seans-mfe/contracts';
+export { PLATFORM_CAPABILITIES } from '@falese/smt-contracts';
+export type { PlatformCapability } from '@falese/smt-contracts';
 
 // =============================================================================
 // Input/Output Schemas
@@ -86,7 +86,7 @@ export type DSLOutput = z.infer<typeof DSLOutputSchema>;
 /**
  * Platform wrapper methods forbidden as handler references — a hook naming one
  * would re-enter the orchestrator it runs inside. Derived from the canonical
- * capability set in `@seans-mfe/contracts` (ADR-080), so a new capability is
+ * capability set in `@falese/smt-contracts` (ADR-080), so a new capability is
  * forbidden here the moment it is defined there.
  */
 export { PLATFORM_WRAPPER_METHODS };
@@ -381,7 +381,7 @@ export type Dependencies = z.infer<typeof DependenciesSchema>;
  * the ADR-066 domain-key rule) or a literal containing at least one letter.
  * Purely numeric segments are rejected: a number describes a position, and
  * addresses must be assigned names, never measured ordinals (ADR-066).
- * The grammar is single-sourced in @seans-mfe/contracts (ADR-069); the
+ * The grammar is single-sourced in @falese/smt-contracts (ADR-069); the
  * runtime matcher compiles from the same definition.
  */
 

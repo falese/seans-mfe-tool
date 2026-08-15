@@ -6,16 +6,16 @@
  * Refs #102 (B3), #107 (B8 adds MutatingResult mixin)
  */
 
-import type { BuildError } from '@seans-mfe/contracts';
+import type { BuildError } from '@falese/smt-contracts';
 
-// BFF result types live in @falese/bff-plugin (migrated in plugin extraction epic)
+// BFF result types live in @falese/smt-plugin-bff (migrated in plugin extraction epic)
 export type {
   BffInitResult,
   BffBuildResult,
   BffDevResult,
   BffValidateResult,
   BffValidationIssue,
-} from '@falese/bff-plugin';
+} from '@falese/smt-plugin-bff';
 
 // ---------------------------------------------------------------------------
 // Shared mixin

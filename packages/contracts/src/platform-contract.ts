@@ -18,7 +18,7 @@
  * the capability order here follows its reference table.
  *
  * Pure data plus three predicates, and it must stay that way:
- * `@seans-mfe/contracts` is zero-dependency by invariant (ADR-061), which is
+ * `@falese/smt-contracts` is zero-dependency by invariant (ADR-061), which is
  * what lets the DSL (zod), the runtime (staged into generated MFEs), and
  * codegen (a build-time package) all depend on it without pulling each other
  * in. Nothing here imports anything.

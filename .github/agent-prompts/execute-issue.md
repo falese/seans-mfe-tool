@@ -95,7 +95,7 @@ Closes #$ISSUE
 - Do not skip hooks (`--no-verify`, `--no-gpg-sign`).
 - Do not add dependencies beyond what the issue enumerates. If a dep is required and not listed, stop and ask.
 - If a test fails in a way that reveals an unrelated pre-existing bug: do NOT fix it here. Open a follow-up issue and link it from the PR body.
-- Never `throw new Error(...)` in command code — use typed errors from `@seans-mfe/contracts`.
+- Never `throw new Error(...)` in command code — use typed errors from `@falese/smt-contracts`.
 - Never implement `run()` directly in an oclif command — implement `runCommand()` and let `BaseCommand.run()` own the envelope.
 
 ## When to stop and ask the user

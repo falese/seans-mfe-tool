@@ -4,11 +4,11 @@
 
 import { buildProdCommand } from '../prod';
 import { loadFrameworkPlugin } from '../../../framework/loader';
-import { ValidationError, BusinessError } from '@seans-mfe/contracts';
-import type { BuildResult } from '@seans-mfe/contracts';
+import { ValidationError, BusinessError } from '@falese/smt-contracts';
+import type { BuildResult } from '@falese/smt-contracts';
 
 jest.mock('../../../framework/loader');
-jest.mock('@seans-mfe/dsl', () => ({
+jest.mock('@falese/smt-dsl', () => ({
   findManifest: jest.fn().mockResolvedValue(null),
   parseManifestFile: jest.fn(),
 }));

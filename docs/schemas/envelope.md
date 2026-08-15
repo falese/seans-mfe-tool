@@ -137,6 +137,6 @@ package can be bundled into browser shells without a Node-specific polyfill.
 
 ## Isomorphic note
 
-`@seans-mfe/contracts` is consumed by browser shells (the control-plane protocol). The
+`@falese/smt-contracts` is consumed by browser shells (the control-plane protocol). The
 `envelope.ts` module is specifically written to be bundleable with rspack/webpack
 without `crypto` polyfills. Do not add Node-only imports to `envelope.ts`.

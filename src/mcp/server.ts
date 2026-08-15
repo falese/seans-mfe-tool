@@ -16,7 +16,7 @@
 import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import { loadToolRegistry, buildArgv, McpToolDefinition } from './tool-registry';
-import type { CommandResult } from '@seans-mfe/contracts';
+import type { CommandResult } from '@falese/smt-contracts';
 
 export interface McpServerOptions {
   schemasDir:  string;

@@ -9,7 +9,7 @@
  *
  * This is the thin I/O shell — read the ADRs, read `docs/spec.md`'s index, scan
  * sources for `ADR-NNN` citations, resolve declared implementation paths — over
- * the pure rules in `@seans-mfe/dsl`. Same split as `mfe:validate`/`slots:validate`,
+ * the pure rules in `@falese/smt-dsl`. Same split as `mfe:validate`/`slots:validate`,
  * for the same reason (ADR-073 §3): the rules are unit-tested in the platform and
  * the CI wrapper calls one implementation rather than re-deriving it.
  */
@@ -19,7 +19,7 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { BusinessError } from '@seans-mfe/contracts';
+import { BusinessError } from '@falese/smt-contracts';
 import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 import {
   parseAdrDocument,
@@ -28,8 +28,8 @@ import {
   type AdrParseFailure,
   type AdrValidationIssue,
   type AdrValidationRule,
-} from '@seans-mfe/dsl';
-import type { SourceFile } from '@seans-mfe/dsl';
+} from '@falese/smt-dsl';
+import type { SourceFile } from '@falese/smt-dsl';
 
 const SPEC_FILE = path.join('docs', 'spec.md');
 

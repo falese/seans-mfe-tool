@@ -1,7 +1,7 @@
 /**
  * adr:status command-core tests.
  *
- * The rules in `@seans-mfe/dsl` are covered by `adr-validation.test.ts`, but the
+ * The rules in `@falese/smt-dsl` are covered by `adr-validation.test.ts`, but the
  * *reporting* logic — the `outstanding` predicate, the status filter, the
  * empty-set messaging, and root resolution — lives here in the command shell and
  * had no coverage. Three presentation defects reached `main` as a result:
@@ -14,7 +14,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { adrStatusCommand } from '../status';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 
 const ADR_DIR = path.join('docs', 'architecture-decisions');
 

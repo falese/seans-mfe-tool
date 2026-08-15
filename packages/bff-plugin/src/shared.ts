@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk = require('chalk');
 import * as yaml from 'js-yaml';
-import { ValidationError, SystemError } from '@seans-mfe/contracts';
+import { ValidationError, SystemError } from '@falese/smt-contracts';
 
 // ============================================================================
 // Type Definitions
@@ -58,7 +58,7 @@ export interface MeshServe {
 
 /**
  * The plugin's copy of the manifest's `data:` block. It fell behind the
- * canonical `DataConfigSchema` in `@seans-mfe/dsl`: `mockSwitch` (ADR-052) and
+ * canonical `DataConfigSchema` in `@falese/smt-dsl`: `mockSwitch` (ADR-052) and
  * `generatedFrom` (ADR-011) were added there and never mirrored here, so
  * `bff:validate` returned a manifest its own published schema rejected.
  *

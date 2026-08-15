@@ -11,7 +11,7 @@
  * on input changes (release the old id first), release on destroy.
  */
 import type { ElementRef, SimpleChange, SimpleChanges } from '@angular/core';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 
 // @angular/core 17 ships ESM-only (fesm2022), which jest's CJS runtime cannot
 // require. The directive is tested as a plain class — Angular's runtime is not

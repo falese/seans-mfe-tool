@@ -1,6 +1,6 @@
 
 import type { Context } from '../context';
-import { SecurityError } from '@seans-mfe/contracts';
+import { SecurityError } from '@falese/smt-contracts';
 
 /**
  * Validates JWT in context and sets context.user

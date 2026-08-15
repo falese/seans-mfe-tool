@@ -14,7 +14,7 @@
  *
  * Both are pure functions over already-read inputs: the CLI supplies the IO, so
  * the logic is unit-testable without a filesystem and reusable by any tooling.
- * Matching goes through `createSlotAddressRegistry` in `@seans-mfe/contracts`,
+ * Matching goes through `createSlotAddressRegistry` in `@falese/smt-contracts`,
  * so design time and run time can never disagree about what an id means.
  */
 import {
@@ -23,7 +23,7 @@ import {
   type ProvidedSlotDeclaration,
   type SlotProviderDeclarations,
   type SlotTargetRejection,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 // ── 1. Declared-but-unreferenced (intra-MFE) ────────────────────────────────
 

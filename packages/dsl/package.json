@@ -1,5 +1,5 @@
 {
-  "name": "@seans-mfe/dsl",
+  "name": "@falese/smt-dsl",
   "version": "0.1.0",
   "description": "MFE DSL manifest schema, parser, and validator (Zod) for the seans-mfe platform",
   "main": "./dist/index.js",
@@ -29,7 +29,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts",
+    "@falese/smt-contracts": "file:../contracts",
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
     "zod": "^4.1.13"

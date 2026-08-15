@@ -21,8 +21,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFileSync } from 'child_process';
-import { parseAdrDocument, formatAdrId, normalizeAdrId, SUPPRESSION } from '@seans-mfe/dsl';
-import type { AdrDocument, AdrStatus } from '@seans-mfe/dsl';
+import { parseAdrDocument, formatAdrId, normalizeAdrId, SUPPRESSION } from '@falese/smt-dsl';
+import type { AdrDocument, AdrStatus } from '@falese/smt-dsl';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const ADR_DIR = path.join(REPO_ROOT, 'docs', 'architecture-decisions');

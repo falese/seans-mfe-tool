@@ -15,7 +15,7 @@ here that do not exist in the implementation.
 |---|---|
 | Docs drift from code | Types are the docs; prose follows types |
 | Runtime surprises | Every boundary is validated (Zod at ingress, TypeScript at build time) |
-| Cross-team integration | A published `@seans-mfe/contracts` package is the shared vocabulary |
+| Cross-team integration | A published `@falese/smt-contracts` package is the shared vocabulary |
 | Framework diversity | Open-string fields (`framework`, `bundler`) accept unknown values; guards reject structurally invalid payloads |
 
 ## Two domains

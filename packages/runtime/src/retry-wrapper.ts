@@ -7,7 +7,7 @@
 
 import { Context } from './context';
 import { classifyError, ErrorHandlingConfig, ErrorClassification } from './error-classifier';
-import { BusinessError } from '@seans-mfe/contracts';
+import { BusinessError } from '@falese/smt-contracts';
 
 export interface RetryConfig {
   maxRetries: number;

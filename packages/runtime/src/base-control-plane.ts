@@ -30,7 +30,7 @@ import type {
   Resolution,
   ActionRecord,
   SessionContext,
-} from '@seans-mfe/contracts';
+} from '@falese/smt-contracts';
 
 // ── Supporting types ────────────────────────────────────────────────────────
 

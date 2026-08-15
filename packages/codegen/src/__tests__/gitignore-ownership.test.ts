@@ -83,7 +83,7 @@ describe('.gitignore ownership (#341)', () => {
     // A missing .dockerignore is not a cosmetic gap. Without it, `COPY . .`
     // drags the host's node_modules into the image on top of the runtime the
     // Dockerfile staged there, and the build dies on
-    //   cannot replace to directory .../@seans-mfe-tool/runtime with file
+    //   cannot replace to directory .../@falese/smt-runtime with file
     // — because npm leaves a symlink where the image has a real directory.
     // Exactly one MFE in the fleet lacked the file, and that is the one that
     // failed. Generating it removes the possibility.

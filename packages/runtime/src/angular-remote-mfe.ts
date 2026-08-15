@@ -23,7 +23,7 @@
 
 import { BaseRemoteMFE } from './base-remote-mfe';
 import { defaultFallbackHTML } from './error-boundary';
-import { SystemError } from '@seans-mfe/contracts';
+import { SystemError } from '@falese/smt-contracts';
 
 /**
  * Minimal Angular ApplicationRef surface the runtime depends on.

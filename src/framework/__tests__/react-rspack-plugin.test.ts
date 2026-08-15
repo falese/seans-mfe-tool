@@ -2,8 +2,8 @@
  * ReactRspackPlugin — concrete plugin tests (ADR-036, #170).
  */
 
-import { BaseFrameworkPlugin } from '@seans-mfe/contracts';
-import { ReactRspackPlugin } from '@seans-mfe/framework-react';
+import { BaseFrameworkPlugin } from '@falese/smt-contracts';
+import { ReactRspackPlugin } from '@falese/smt-framework-react';
 
 describe('ReactRspackPlugin', () => {
   const plugin = new ReactRspackPlugin();
@@ -45,7 +45,7 @@ describe('ReactRspackPlugin', () => {
     });
 
     it('returns RemoteMFE runtime class', () => {
-      expect(plugin.getRuntimeImport()).toBe('@seans-mfe-tool/runtime');
+      expect(plugin.getRuntimeImport()).toBe('@falese/smt-runtime');
       expect(plugin.getRuntimeClassName()).toBe('RemoteMFE');
     });
 

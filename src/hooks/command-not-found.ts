@@ -6,7 +6,7 @@ import { Hook } from '@oclif/core';
  * Otherwise: falls through to oclif's default "command not found" display.
  *
  * Pre-B1 stub: the envelope shape is inlined here. B2 will import from
- * @seans-mfe/contracts and use the typed CommandResult classifier.
+ * @falese/smt-contracts and use the typed CommandResult classifier.
  */
 const hook: Hook<'command_not_found'> = async function(opts) {
   const isJson = process.argv.includes('--json');

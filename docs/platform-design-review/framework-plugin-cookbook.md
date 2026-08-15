@@ -4,7 +4,7 @@
 **Relationship:** This is the *recipe* companion to the reference [`framework-plugin-authoring.md`](../framework-plugin-authoring.md). The authoring guide explains the interface section-by-section; this cookbook gives task-oriented recipes, the compatibility matrix, and failure-mode guidance an operator/author hits in practice.
 **Grounding:** ADR-036 (framework plugins), `packages/contracts/src/framework-plugin.ts` (the shape), `src/framework/loader.ts` (resolution).
 
-> **Core principle (ADR-036).** *Core owns the shape; plugins own the how.* Adding a framework is publishing `@seans-mfe/framework-<name>` that extends `BaseFrameworkPlugin` — never editing the core to special-case a framework.
+> **Core principle (ADR-036).** *Core owns the shape; plugins own the how.* Adding a framework is publishing `@falese/smt-framework-<name>` that extends `BaseFrameworkPlugin` — never editing the core to special-case a framework.
 
 ---
 
@@ -32,18 +32,18 @@
 
 ## Recipe 1 — Add a new framework plugin (e.g. `vue-vite`)
 
-1. **Scaffold the package** `@seans-mfe/framework-vue` (mirror `examples/plugin-skeleton/` and the `vue-vite` skeleton in the authoring guide §"Skeleton").
+1. **Scaffold the package** `@falese/smt-framework-vue` (mirror `examples/plugin-skeleton/` and the `vue-vite` skeleton in the authoring guide §"Skeleton").
 2. **Implement identity:** `framework = 'vue'`, `bundler = 'vite'`, `defaultPort`, `directoryStructure`.
 3. **Wire codegen:** point `getTemplateDir()` at your EJS templates; return runtime import/class names so generated MFE code extends the right base.
 4. **Implement build lifecycle:** `checkEnvironment` (verify the toolchain), `startDevServer`, `buildProduction` (return a structured `BuildResult` / `BuildError` with source locations), `getDockerStrategy`.
 5. **Export** `frameworkPlugin` (or `default`) from the package entry — the loader reads `mod.frameworkPlugin ?? mod.default` (`loader.ts:64`, `:77`).
-6. **Publish** `@seans-mfe/framework-vue`. No core change is required.
+6. **Publish** `@falese/smt-framework-vue`. No core change is required.
 
 ### How resolution finds your plugin
 
 `loadFrameworkPlugin(framework)` (`loader.ts:51`):
 1. **Built-in:** known dirs (`react`, `angular`) resolve from `packages/<dir>` relative to project root (`:61–64`).
-2. **External:** otherwise `require('@seans-mfe/framework-<name>')` (`:52`, `:75–77`).
+2. **External:** otherwise `require('@falese/smt-framework-<name>')` (`:52`, `:75–77`).
 3. **Invalid/missing:** throws `ValidationError` (`:80`, `:93`) — the CLI surfaces it as a validation envelope (exit 64).
 
 So once published and installed, `--framework vue` (or `framework: vue` in the manifest) just works.
@@ -79,10 +79,10 @@ Use `'cli-builder'` for anything generated/owned by the platform (runtime files,
 
 | Framework | Bundler | Plugin package | Status | Notes |
 |---|---|---|---|---|
-| React | rspack | `@seans-mfe/framework-react` | ✅ Shipped | Reference implementation |
-| Angular | webpack / @angular-builders | `@seans-mfe/framework-angular` | ✅ Shipped | `--legacy-peer-deps` in examples CI |
-| Vue | vite | `@seans-mfe/framework-vue` | 📋 Example/planned | Cookbook Recipe 1; roadmap G10 |
-| (other) | (other) | `@seans-mfe/framework-<name>` | Author-provided | Open schema; warns if unknown until plugin ships |
+| React | rspack | `@falese/smt-framework-react` | ✅ Shipped | Reference implementation |
+| Angular | webpack / @angular-builders | `@falese/smt-framework-angular` | ✅ Shipped | `--legacy-peer-deps` in examples CI |
+| Vue | vite | `@falese/smt-framework-vue` | 📋 Example/planned | Cookbook Recipe 1; roadmap G10 |
+| (other) | (other) | `@falese/smt-framework-<name>` | Author-provided | Open schema; warns if unknown until plugin ships |
 
 **Compatibility notes**
 - The runtime **lifecycle contract is framework-agnostic** — a new framework is a new template variant + plugin, never a new lifecycle (CLAUDE.md "resolved decisions").
@@ -95,7 +95,7 @@ Use `'cli-builder'` for anything generated/owned by the platform (runtime files,
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `ValidationError: framework plugin not found` | Package not installed, or wrong name | Install `@seans-mfe/framework-<name>`; name must match the manifest `framework` |
+| `ValidationError: framework plugin not found` | Package not installed, or wrong name | Install `@falese/smt-framework-<name>`; name must match the manifest `framework` |
 | Plugin loads but exports nothing usable | Entry doesn't export `frameworkPlugin`/`default`, or not a `BaseFrameworkPlugin` instance | Export an instance; the brand `__frameworkPluginBrand` (`:105`) is the validity check |
 | stderr warning about unknown framework | Open-schema value with no plugin yet | Ship/install the plugin; warning then clears |
 | Docker build can't find runtime files | Used `from: 'context'` for platform-owned files, or stale CLI image | Use `from: 'cli-builder'`; rebuild the CLI image |

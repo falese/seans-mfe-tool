@@ -13,7 +13,7 @@ import * as fs from 'fs-extra';
 import { execSync } from 'child_process';
 import SwaggerParser from '@apidevtools/swagger-parser';
 
-import { ValidationError, NetworkError, SystemError } from '@seans-mfe/contracts';
+import { ValidationError, NetworkError, SystemError } from '@falese/smt-contracts';
 import { DatabaseGenerator } from '../../codegen/APIGenerator/DatabaseGenerator';
 import { ControllerGenerator } from '../../codegen/APIGenerator/ControllerGenerator';
 import * as RouteGenerator from '../../codegen/APIGenerator/RouteGenerator';

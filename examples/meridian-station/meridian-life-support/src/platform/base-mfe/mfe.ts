@@ -1,8 +1,8 @@
 
 
-import { AngularRemoteMFE } from '@seans-mfe-tool/runtime/angular';
-import { ValidationError } from '@seans-mfe-tool/runtime';
-import type { Context, LoadResult, RenderResult, QueryResult} from '@seans-mfe-tool/runtime';
+import { AngularRemoteMFE } from '@falese/smt-runtime/angular';
+import { ValidationError } from '@falese/smt-runtime';
+import type { Context, LoadResult, RenderResult, QueryResult} from '@falese/smt-runtime';
 
 import type { TelemetryDashboardOutputs, ModuleStatusOutputs, AlertsFeedOutputs } from './types';
 

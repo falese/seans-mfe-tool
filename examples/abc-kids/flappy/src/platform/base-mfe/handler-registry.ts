@@ -1,6 +1,6 @@
 
 import { detectExecutionContext } from '../../handlers/detectExecutionContext';
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 /**
  * Handler functions sourced from external modules per the DSL manifest.

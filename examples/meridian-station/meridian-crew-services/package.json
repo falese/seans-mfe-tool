@@ -35,7 +35,8 @@
     "@mui/system": "^5.14.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@graphql-mesh/transform-hoist-field": "^0.105.19"
+    "@graphql-mesh/transform-hoist-field": "^0.105.19",
+    "@falese/smt-framework-react": "^0.1.0"
   },
   "devDependencies": {
     "@graphql-mesh/cli": "^0.100.21",
@@ -60,7 +61,7 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@falese/smt-runtime": "^0.1.0"
   },
   "jest": {
     "preset": "ts-jest",

@@ -12,7 +12,7 @@ One failed field from a validation handler.
 
 Named `ValidationIssue`, not `ValidationError`: this is a *result record*
 describing what was wrong with one field, not something thrown. The old name
-collided with the `ValidationError` class in `@seans-mfe/contracts` on the
+collided with the `ValidationError` class in `@falese/smt-contracts` on the
 runtime barrel, which is why generated code had no way to reach the thrown
 classes at all (ADR-017).
 

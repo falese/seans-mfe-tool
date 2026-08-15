@@ -14,8 +14,8 @@
  * logic is unit-testable without a browser.
  */
 
-import { buildMessage } from '@seans-mfe/contracts';
-import type { ActionRecord, RenderedExperience, SessionContext } from '@seans-mfe/contracts';
+import { buildMessage } from '@falese/smt-contracts';
+import type { ActionRecord, RenderedExperience, SessionContext } from '@falese/smt-contracts';
 import { DaemonChannel } from './daemon-channel';
 import { uuidv4 } from './util/uuid';
 import type { DaemonEnvelope, DaemonTransport, TransportStatus } from './layout-transport';

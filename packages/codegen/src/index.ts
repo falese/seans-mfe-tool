@@ -1,5 +1,5 @@
 /**
- * @seans-mfe/codegen — the manifest -> files MFE generator.
+ * @falese/smt-codegen — the manifest -> files MFE generator.
  *
  * Public surface: generateAllFiles / writeGeneratedFiles (plan -> render ->
  * emit), extractManifestVars, the injected FrameworkVariant + its built-in
@@ -10,5 +10,6 @@ export * from './unified-generator';
 export * from './drift';
 export * from './slot-types';
 export * from './validate';
+export * from './lockfile';
 export * from './platform-migrations';
 export * from './package-dependency-diff';

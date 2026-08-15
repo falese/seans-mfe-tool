@@ -45,8 +45,8 @@ npm ci && npm run build
 #    not a file: symlink — Angular resolution escapes the project otherwise)
 cd examples/meridian-station/<mfe>
 npm install --legacy-peer-deps --no-audit --no-fund
-rm -rf node_modules/@seans-mfe-tool/runtime
-cp -r ../../../dist/runtime node_modules/@seans-mfe-tool/runtime
+rm -rf node_modules/@falese/smt-runtime
+cp -r ../../../dist/runtime node_modules/@falese/smt-runtime
 npx rspack build            # React MFEs (console, crew-services, concourse, shell)
 npx ng build --configuration production   # Angular MFEs
 

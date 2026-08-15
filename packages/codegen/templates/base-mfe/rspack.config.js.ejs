@@ -19,7 +19,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    // @seans-mfe-tool/runtime is resolved as a workspace dependency via the
+    // @falese/smt-runtime is resolved as a workspace dependency via the
     // monorepo's npm workspaces (declared at the repo root). rspack walks up
     // node_modules and picks it up via the symlink created on `npm install`.
     // node_modules order: app-local first, then upward (workspace root).

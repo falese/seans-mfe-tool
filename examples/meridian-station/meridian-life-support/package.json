@@ -35,7 +35,8 @@
     "@angular/platform-browser": "^19.2.16",
     "rxjs": "^7.8.0",
     "zone.js": "~0.14.0",
-    "@graphql-mesh/transform-hoist-field": "^0.105.19"
+    "@graphql-mesh/transform-hoist-field": "^0.105.19",
+    "@falese/smt-framework-angular": "^0.1.0"
   },
   "devDependencies": {
     "@graphql-mesh/cli": "^0.100.21",
@@ -57,7 +58,7 @@
     "jest": "^29.7.0",
     "jest-preset-angular": "^14.0.0",
     "supertest": "^6.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@falese/smt-runtime": "^0.1.0"
   },
   "overrides": {
     "fast-uri": "^3.1.2",

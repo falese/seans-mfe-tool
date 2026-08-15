@@ -1,7 +1,7 @@
 ---
 id: 0021
 title: Package namespace strategy — @seans-mfe/* vs @falese/*
-status: Accepted
+status: Superseded
 date: 2026-04-18
 deciders: [sean]
 area: Packages
@@ -9,7 +9,7 @@ enforcement: convention
 tags: [packages, namespace, oclif, monorepo, plugin-architecture]
 relates-to: []
 supersedes: []
-superseded-by: []
+superseded-by: [83]
 implements-pdr: [2, 4]
 implemented-by:
   - CLAUDE.md

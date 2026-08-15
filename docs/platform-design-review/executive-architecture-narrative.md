@@ -50,7 +50,7 @@ These are deliberate variation points. Changing one is a template-variant or plu
 
 | Choice | Current implementation | How it varies |
 |---|---|---|
-| **UI framework** | React, Angular | New framework = publish `@seans-mfe/framework-<name>` extending `BaseFrameworkPlugin` (ADR-036) |
+| **UI framework** | React, Angular | New framework = publish `@falese/smt-framework-<name>` extending `BaseFrameworkPlugin` (ADR-036) |
 | **Bundler** | rspack (React), webpack/`@angular-builders` (Angular) | `bundler` is an open manifest field, resolved by the framework plugin |
 | **Delivery mechanism** | Module Federation | ESM / iframe / web components are template variants, not new capabilities |
 | **BFF data sources** | GraphQL Mesh over OpenAPI/REST | Per-MFE; demo-mode mock switch (ADR-052) |
@@ -85,7 +85,7 @@ SMT is **production-shaped in its foundations and actively maturing in its runti
 
 **Planned / not yet started:**
 - Lifecycle-engine enhancements (parallel execution, timeout protection, error classification, conditional execution, inter-hook communication — ADR-028–032) — ADRs written, issues not yet created.
-- npm publication of `@seans-mfe/contracts` and `@seans-mfe/oclif-base`; monorepo consolidation (MERGE-PLAN.md).
+- npm publication of `@falese/smt-contracts` and `@falese/smt-oclif-base`; monorepo consolidation (MERGE-PLAN.md).
 
 **Key risks for an adopter to weigh:**
 - *Runtime handler coverage* is incomplete — validate the specific capabilities your shell relies on against current status before committing.

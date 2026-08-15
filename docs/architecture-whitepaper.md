@@ -109,7 +109,7 @@ flowchart TB
         BMFE --- PH
     end
 
-    subgraph CONTRACTS["@seans-mfe/contracts"]
+    subgraph CONTRACTS["@falese/smt-contracts"]
         direction LR
         TYPES["Types · Errors\nEnvelope · Messages\nPresentation"]
     end
@@ -700,7 +700,7 @@ Types are not documentation attached to the platform — types **are** the platf
 
 ```mermaid
 flowchart LR
-    subgraph CONTRACTS["@seans-mfe/contracts"]
+    subgraph CONTRACTS["@falese/smt-contracts"]
         ENV["envelope.ts\nCommandResult~T~\nCommandError\nEXIT_CODES"]
         ERR["errors/\nValidationError\nBusinessError\nNetworkError\nSystemError\nTimeoutError\nSecurityError"]
         MSG["messages.ts\nActionRecord\nResolution\nMfeRegistration\nRenderedExperience\nSessionContext"]
@@ -778,7 +778,7 @@ flowchart TB
 
 ### 10.1 Why plugins, not hardcoded variants
 
-Adding Angular support to a hardcoded system means changing the CLI core. Adding Angular support to the plugin system means publishing `@seans-mfe/framework-angular`. The CLI core never changes.
+Adding Angular support to a hardcoded system means changing the CLI core. Adding Angular support to the plugin system means publishing `@falese/smt-framework-angular`. The CLI core never changes.
 
 ```mermaid
 flowchart LR
@@ -798,9 +798,9 @@ flowchart LR
     end
 
     subgraph PLUGINS["Published Plugins"]
-        REACT["@seans-mfe/framework-react\nReactRspackPlugin"]
-        ANG["@seans-mfe/framework-angular\nAngularWebpackPlugin"]
-        FUTURE["@seans-mfe/framework-vue\n(future)"]
+        REACT["@falese/smt-framework-react\nReactRspackPlugin"]
+        ANG["@falese/smt-framework-angular\nAngularWebpackPlugin"]
+        FUTURE["@falese/smt-framework-vue\n(future)"]
     end
 
     COMMANDS --> LOADER
@@ -906,14 +906,14 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph OPEN["Open extension points"]
-        FW["Framework plugins\n@seans-mfe/framework-*\nExtend BaseFrameworkPlugin"]
+        FW["Framework plugins\n@falese/smt-framework-*\nExtend BaseFrameworkPlugin"]
         CP_IMPL["Control plane implementations\nNodeControlPlane · RustControlPlane\nExtend BaseControlPlane"]
         ADAPT["Custom adaptors\nControlPlaneConfig.adaptors\nMerged over built-in defaults"]
         CAP["Domain capability packages\n@acme/capabilities-commerce\nPublish MFEs as npm packages"]
     end
 
     subgraph CLOSED["Closed / stable core"]
-        CONTRACTS["@seans-mfe/contracts\nShared type vocabulary"]
+        CONTRACTS["@falese/smt-contracts\nShared type vocabulary"]
         LIFECYCLE["BaseMFE lifecycle FSM\nFixed state transitions"]
         ENVELOPE["CLI --json envelope\nCommandResult shape"]
         NEG["selectHandle() negotiation\nPure · deterministic"]
@@ -958,7 +958,7 @@ All architectural decisions are recorded in `docs/architecture-decisions/`. Key 
 | ADR-030 | Error classification with typed error classes + exit codes | Errors are structured, not stringly typed |
 | ADR-034 | Framework-agnostic codegen — framework/bundler are manifest fields | Adding a framework = adding a template variant |
 | ADR-036 | Open-string `framework`/`bundler` fields (not enums) | Unknown frameworks warn but don't fail |
-| ADR-054 | Control-plane message protocol in `@seans-mfe/contracts` | Daemon and shell share a typed wire contract |
+| ADR-054 | Control-plane message protocol in `@falese/smt-contracts` | Daemon and shell share a typed wire contract |
 | ADR-055 | LayoutManager — daemon-driven slot composition | Shell stays empty; daemon drives what renders |
 | ADR-056 | Presentation handle thin waist (imperative floor + native upgrade) | Polyglot composition without framework coupling |
 | ADR-057 | DaemonChannel — per-slot virtual WebSocket over one connection | MFEs get isolated control-plane channels without multiplying connections |

@@ -28,8 +28,8 @@ jest.mock('../json-output', () => ({
 }));
 
 import type { Config } from '@oclif/core';
-import { ValidationError } from '@seans-mfe/contracts';
-import type { CommandResult, PlatformEvent } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
+import type { CommandResult, PlatformEvent } from '@falese/smt-contracts';
 import { BaseCommand } from '../BaseCommand';
 import { writeJsonLine } from '../json-output';
 

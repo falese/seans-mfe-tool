@@ -4,23 +4,15 @@
  *
  * Three-layer split (ADR-067): this file is the DATA layer — the manifest
  * mirrored into code and bound to the framework-free contract logic in
- * @seans-mfe-tool/runtime. Matching and the declare-before-register guard
+ * @falese/smt-runtime. Matching and the declare-before-register guard
  * live there, once; the DeclaredSlotDirective below is thin sugar with no
  * logic of its own. Ids are assigned names, never positions (ADR-066);
  * renaming one is a manifest diff — a contract change, not a string edit.
  */
-import {
-  Directive,
-  ElementRef,
-  Input,
-  type AfterViewInit,
-  type OnChanges,
-  type OnDestroy,
-  type OnInit,
-  type SimpleChanges,
-} from '@angular/core';
-import { createSlotContract } from '@seans-mfe-tool/runtime';
-import type { ProvidedSlotDeclaration } from '@seans-mfe-tool/runtime';
+import { Directive, Input } from '@angular/core';
+import { createSlotContract } from '@falese/smt-runtime';
+import type { ProvidedSlotDeclaration } from '@falese/smt-runtime';
+import { DeclaredSlotDirective as BaseDeclaredSlotDirective } from '@falese/smt-framework-angular/runtime';
 
 /** The manifest's providesSlots section, mirrored into code. */
 export const PROVIDED_SLOTS: readonly ProvidedSlotDeclaration[] = [
@@ -60,78 +52,31 @@ export type DeclaredSlotId = <%- declaredSlotIdUnion %>;
  * public as the framework-adaptor escape hatch, but feature code should reach
  * for this directive so every region registers the same way.
  *
- * Keep in lock-step with packages/framework-angular/src/runtime/declared-slot.directive.ts:
- * this is the same directive with the contract pre-bound instead of passed as an
- * @Input (generated MFEs depend on the runtime package, not framework-angular).
- * A change to lifecycle or registration semantics must land in both.
+ * A binding, not a copy: the directive lives once in
+ * `@falese/smt-framework-angular` and is extended here (ADR-084), exactly as the
+ * React template binds `DeclaredSlot`. This file used to inline the whole class
+ * — lifecycle hooks, release/re-register bookkeeping and all — under a comment
+ * asking the next editor to keep it in lock-step with the published copy by
+ * hand. Nothing enforced that. What stays generated is the part that genuinely
+ * varies per manifest: the contract, pre-bound below, and the `DeclaredSlotId`
+ * union that narrows `id` from `string` to this manifest's own slots.
  */
 @Directive({
   selector: '[smtDeclaredSlot]',
   standalone: true,
 })
-export class DeclaredSlotDirective implements OnInit, AfterViewInit, OnChanges, OnDestroy {
-  /** The slot id to register — must be one this manifest declares (ADR-072). */
-  @Input('smtDeclaredSlot') id!: DeclaredSlotId;
-
+export class DeclaredSlotDirective extends BaseDeclaredSlotDirective {
   /**
-   * The host-supplied registration callback (ADR-058), delivered to this MFE
-   * through its render props by the LayoutManager adaptor. Optional so the
-   * directive renders inert in standalone/dev mode — undeclared ids still fail
-   * fast either way.
+   * Narrowed from the base's `string` to the ids this manifest declares, so a
+   * manifest rename is a compile error at every use site (ADR-072).
+   *
+   * Redeclaring the input is safe here because the generated Angular tsconfig
+   * sets `useDefineForClassFields: false` — under define semantics this would
+   * be TS2612, an uninitialised redeclaration overwriting the base property
+   * with `undefined` at construction.
    */
-  @Input() provideSlot?: ProvideSlotFn;
+  @Input('smtDeclaredSlot') override id!: DeclaredSlotId;
 
-  /**
-   * What is currently registered with the host, captured at registration time
-   * so a later input change releases exactly what was registered (old id, old
-   * callback) before re-registering — the Angular equivalent of React's
-   * ref-callback release/re-attach on dependency change.
-   */
-  private registeredWith?: { id: DeclaredSlotId; provideSlot?: ProvideSlotFn };
-  private viewReady = false;
-
-  constructor(private readonly elementRef: ElementRef<HTMLElement>) {}
-
-  ngOnInit(): void {
-    // Fail fast on an undeclared id, before the host ever composes into it.
-    slotContract.assertDeclared(this.id);
-  }
-
-  ngAfterViewInit(): void {
-    this.viewReady = true;
-    this.registerNow();
-  }
-
-  /**
-   * React to post-registration input changes: a new `id` (dynamic binding) or a
-   * late-arriving `provideSlot` releases the previous registration and
-   * re-registers under the current inputs. Before the view exists this is a
-   * no-op — ngAfterViewInit performs the first registration.
-   */
-  ngOnChanges(changes: SimpleChanges): void {
-    if (!this.viewReady) return;
-    const relevant = ['id', 'provideSlot'].some(
-      (key) => key in changes && !changes[key].firstChange
-    );
-    if (!relevant) return;
-    this.releaseNow();
-    slotContract.assertDeclared(this.id);
-    this.registerNow();
-  }
-
-  ngOnDestroy(): void {
-    this.releaseNow();
-  }
-
-  private registerNow(): void {
-    slotContract.register(this.provideSlot, this.id, this.elementRef.nativeElement);
-    this.registeredWith = { id: this.id, provideSlot: this.provideSlot };
-  }
-
-  private releaseNow(): void {
-    if (!this.registeredWith) return;
-    const { id, provideSlot } = this.registeredWith;
-    this.registeredWith = undefined;
-    slotContract.register(provideSlot, id, null);
-  }
+  /** Pre-bound, so provider components pass only `id` and `provideSlot`. */
+  override contract = slotContract;
 }

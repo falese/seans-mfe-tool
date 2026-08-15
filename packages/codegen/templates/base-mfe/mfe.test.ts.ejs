@@ -3,7 +3,7 @@
   All template variables are substituted by CLI codegen from DSL manifest
 */%>
 import { <%= className %> } from './mfe';
-import type { Context } from '@seans-mfe-tool/runtime';
+import type { Context } from '@falese/smt-runtime';
 
 describe('<%= className %>', () => {
   let mfe: <%= className %>;
@@ -42,7 +42,7 @@ describe('<%= className %>', () => {
   // Domain capability smoke tests
   // ---------------------------------------------------------------------------
 <%
-   // platformCapabilityNames comes from @seans-mfe/contracts via the render
+   // platformCapabilityNames comes from @falese/smt-contracts via the render
    // model (ADR-080). The literal this replaced omitted
    // updateControlPlaneState, so a manifest declaring it got a
    // domain-capability smoke test. Keep this comment INSIDE the scriptlet — a

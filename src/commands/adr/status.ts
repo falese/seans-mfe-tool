@@ -16,13 +16,13 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { ValidationError } from '@seans-mfe/contracts';
+import { ValidationError } from '@falese/smt-contracts';
 import {
   parseAdrDocument,
   formatAdrId,
   normalizeAdrId,
   type AdrStatus as AdrStatusValue,
-} from '@seans-mfe/dsl';
+} from '@falese/smt-dsl';
 import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 
 /** Display order — the lifecycle path, not alphabetical. */

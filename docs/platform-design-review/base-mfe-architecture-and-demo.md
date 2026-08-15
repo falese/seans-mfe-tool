@@ -50,7 +50,7 @@ quarantine mechanically — it isn't a convention, it's checked.
 same pipeline, not through per-method logic.** `BaseMFE.executeCapability()`
 is a fixed middleware onion — `stateGuard → stateTransition → errorBoundary(lifecycle-before → lifecycle-main(doX) → lifecycle-after)` —
 and *what varies per capability* (which states are legal to call it from,
-what state it enters/exits) is data read from `@seans-mfe/contracts`
+what state it enters/exits) is data read from `@falese/smt-contracts`
 (ADR-080), not fifteen slightly-different hand-written methods. This is why
 the state machine can't be quietly bypassed by one capability implementation
 forgetting a check: there's only one place the check lives.
@@ -76,7 +76,7 @@ void cp.updateControlPlaneState({ requestId: ..., inputs: { stateKey } });
 That narrow-cast-plus-hand-rolled-`Context` pattern is exactly the kind of
 mechanical boilerplate worth extracting, and every real call site
 (`StationConsole.tsx`, `GameMenu.tsx`) reconstructs it independently. As of
-this pass, `@seans-mfe-tool/runtime` exports `pushControlPlaneState(mfe,
+this pass, `@falese/smt-runtime` exports `pushControlPlaneState(mfe,
 stateKey, stateData, options?)` — thin sugar
 (`packages/runtime/src/control-plane-state.ts`) that fills in
 `requestId`/`timestamp` via the same `ContextFactory` the rest of the
@@ -84,7 +84,7 @@ runtime already uses, and accepts a structural `{ updateControlPlaneState }`
 shape so call sites never need the narrow cast either:
 
 ```tsx
-import { pushControlPlaneState } from '@seans-mfe-tool/runtime';
+import { pushControlPlaneState } from '@falese/smt-runtime';
 import { mfe } from '../../platform/base-mfe/bootstrap';
 void pushControlPlaneState(mfe, stateKey, stateData);
 ```
@@ -116,7 +116,7 @@ stable identity across re-renders (a plain `React.useCallback` keyed on
 without the effect re-firing every render:
 
 ```tsx
-import { useControlPlaneState } from '@seans-mfe/framework-react/runtime';
+import { useControlPlaneState } from '@falese/smt-framework-react/runtime';
 
 function StationConsole({ mfe }: { mfe: ControlPlane }) {
   const pushState = useControlPlaneState(mfe);
@@ -127,19 +127,24 @@ function StationConsole({ mfe }: { mfe: ControlPlane }) {
 }
 ```
 
-This lives in `packages/framework-react`, not `@seans-mfe-tool/runtime`: the
+This lives in `packages/framework-react`, not `@falese/smt-runtime`: the
 runtime's neutral barrel and its `/react` subpath both deliberately avoid a
 static `react` import (ADR-056 boundary; `react` isn't a real dependency
 anywhere reachable from `packages/runtime`), whereas `framework-react`
 already has `react` as a real (dev/peer) dependency and an established hook
 precedent (`useMfe`). Same posture as `DeclaredSlot`: zero dependency on
-`@seans-mfe-tool/runtime` itself — it duplicates the few lines of `Context`
-construction locally rather than importing `ContextFactory`. One caveat
-worth being explicit about: generated MFEs do not currently depend on
-`@seans-mfe/framework-react` at all (the same is true of `DeclaredSlot`,
-which codegen instead duplicates into a template), so this hook is
-reachable from host-shell code today but not yet from a generated feature
-component's own `package.json` without adding that dependency by hand.
+`@falese/smt-runtime` itself — it duplicates the few lines of `Context`
+construction locally rather than importing `ContextFactory`.
+
+> **Superseded caveat.** This section originally warned that generated MFEs
+> did not depend on `@falese/smt-framework-react` at all — so the hook was
+> reachable from a host shell but not from a generated feature component
+> without adding the dependency by hand. That was true, and it was the
+> symptom that led to ADR-084: the package was not merely undeclared, it was
+> *impossible to install*. Generated MFEs now declare it, and `DeclaredSlot`
+> is imported rather than duplicated into a template. See
+> [§ Re-run against the packaged platform](#re-run-against-the-packaged-platform).
+
 Verified live — rendered with real `react-dom`, called against a fake `mfe`,
 across a forced re-render:
 
@@ -167,6 +172,12 @@ tests this claim directly rather than just asserting it.
 cd seans-mfe-tool && npm run build
 SCRATCH=$(mktemp -d) && cd "$SCRATCH"
 ```
+
+> **Re-run after the ADR-083/084 packaging change** — see
+> [§ Re-run against the packaged platform](#re-run-against-the-packaged-platform)
+> at the end. The steps below still hold; what changed is that a generated MFE
+> now *installs* the platform packages instead of having them staged into it,
+> and the re-run caught a regression that no gate did.
 
 ### 1 — generate, selecting React
 
@@ -218,7 +229,7 @@ nothing else in the file is yours to fill in.
 
 ### 3 — the lifecycle, live
 
-Installed dependencies (`@seans-mfe-tool/runtime` pointed at this repo's
+Installed dependencies (`@falese/smt-runtime` pointed at this repo's
 built `dist/runtime` via a `file:` reference — it isn't published to a
 registry) and ran a small driver script against the generated class through
 a minimal jsdom DOM. Real output, trimmed:
@@ -280,7 +291,7 @@ work — pointed at exactly what it's for:
 
 ```
 ⚠ package.json is out of date with what the template would generate (1 dependency):
-  mismatched devDependencies."@seans-mfe-tool/runtime": "file:/home/.../dist/runtime" → "^0.1.0"
+  mismatched devDependencies."@falese/smt-runtime": "file:/home/.../dist/runtime" → "^0.1.0"
 ```
 
 (That's the demo's own `file:` override for local testing, correctly flagged
@@ -498,7 +509,7 @@ lifecycle checkpoint, for free, using zero new logging code.
 **Recommendation, not yet built:** rather than adding new dev-mode logging
 to `BaseMFE` (which would be new surface, and CLAUDE.md's "no `console.log`
 in production code, use the structured logger" rule doesn't actually apply
-cleanly here — the structured logger lives in `@seans-mfe/oclif-base`, a
+cleanly here — the structured logger lives in `@falese/smt-oclif-base`, a
 Node/CLI-only package that must never enter a browser bundle, confirmed
 during this session's research), the smaller and more consistent fix is in
 **codegen**: have the generated constructor accept and forward an optional
@@ -533,3 +544,113 @@ and build this in a follow-up if you want it.
   checkout. Use case 6's remediation loop was run for real, in order:
   broken manifest → clean generate (no warning) → `mfe:validate` catches it →
   one-line fix → regenerate in place → `mfe:validate` clean → hook fires live.
+
+---
+
+## Re-run against the packaged platform
+
+Re-walked end to end after ADR-083 (the `@falese/smt-*` rename) and ADR-084
+(packages delivered by registry instead of staged). Every line below was run;
+nothing is predicted.
+
+### What changed for a generated MFE
+
+`remote:generate` now emits a `package.json` that **declares the platform as
+ordinary dependencies**:
+
+```
+    @falese/smt-framework-react ^0.1.0
+    @falese/smt-runtime         ^0.1.0
+```
+
+and an `.npmrc` picks where they come from — GitHub Packages when hosted, the
+CLI image's mirror when offline. `npm install` resolves them like any other
+dependency. Nothing rewrites the manifest, which is what the Dockerfiles used
+to do twice per build.
+
+`src/slots.tsx` is now a **binding, not a copy**:
+
+```tsx
+export type DeclaredSlotId = 'main' | `summary.${string}`;
+export type DeclaredSlotProps = Omit<BaseDeclaredSlotProps, 'id' | 'contract'> & {
+  id: DeclaredSlotId;
+};
+export function DeclaredSlot(props: DeclaredSlotProps): React.ReactElement {
+  return <BaseDeclaredSlot {...props} contract={slotContract} />;
+}
+```
+
+The ADR-072 guarantee survives the collapse — checked by compiling a typo:
+
+```
+src/slotcheck.tsx(4,40): error TS2322: Type '"mian"' is not assignable to type 'DeclaredSlotId'.
+```
+
+`id="main"` and the keyed `` id={`summary.${w}`} `` both compile. So the
+manifest still types the slot ids; what went away is the duplicated component
+body, not the safety.
+
+### The architecture, read off the installed package
+
+Walking the prototype chain of `RemoteMFE` as *installed from the registry*
+(not linked from source):
+
+```
+  layer 0 RemoteMFE        capabilities: (none — adds mechanics, not contract)
+  layer 1 BaseRemoteMFE    capabilities: (none — adds mechanics, not contract)
+  layer 2 BaseMFE          capabilities: authorizeAccess describe emit health load
+                                         query refresh render schema updateControlPlaneState
+```
+
+All ten capabilities are defined once, on `BaseMFE`. The two layers between it
+and the generated class add Module Federation mechanics and React mounting
+without touching the contract — the claim the top of this document makes, now
+verified against the shipped artifact rather than the source tree.
+
+`pushControlPlaneState` and `useControlPlaneState` are both importable from a
+generated MFE now. That was the open question left at the end of the previous
+pass: the hook lived in a package generated MFEs could not depend on. They can.
+
+### Finding 3 — the demo caught a regression three gates did not
+
+Re-running this is what surfaced it, and it is the strongest argument for the
+exercise.
+
+Moving the runtime's compiled output under `dist/` (so `npm pack` would ship
+JavaScript instead of 70 TypeScript files) broke every generated MFE's
+compile. Generated MFEs use `moduleResolution: "node"`, which **ignores the
+`exports` map** and resolves a subpath as a literal path in the package. The
+old staged `dist/runtime` was flat — `react.js` sat at the package root — so
+`@falese/smt-runtime/react` resolved. After the move it did not exist.
+
+The failure was silent and total:
+
+```
+src/platform/base-mfe/bootstrap.ts(74,4): error TS2339: Property 'load' does not exist on type 'widgetanalyzerMFE'.
+src/platform/base-mfe/mfe.test.ts(28,23): error TS2339: Property 'render' does not exist on type 'widgetanalyzerMFE'.
+… 10 errors
+```
+
+`RemoteMFE` did not resolve, so the generated class extended nothing and every
+inherited capability vanished. `framework-react` had the identical defect on
+its `/runtime` subpath — the one the new `slots.tsx` binds.
+
+**Why nothing caught it.** `npm test` resolves these packages through jest's
+`moduleNameMapper`, straight to source. `npm run typecheck` uses `tsconfig`
+paths, also to source. `check:mfe-drift` compares generated bytes, and the
+generated bytes were correct — the *package* was wrong. All three deliberately
+bypass the published layout, which is the only thing a consumer ever sees.
+
+Fixed with root-level forwarders (`react.js`, `angular.js`, `runtime.js` and
+their `.d.ts`) listed in `files`; modern resolvers keep using `exports` and
+never read them. `scripts/__tests__/published-package-resolution.test.ts` now
+asserts on the shipped file list and on exports/forwarder agreement, so the two
+routes into one module cannot drift.
+
+After the fix, the same freshly generated MFE — installed from the mirror,
+not linked — typechecks at **0 errors**, down from ten.
+
+The lesson generalises past this bug: a monorepo's own gates are all configured
+to resolve source, so none of them can see the artifact it publishes. Walking a
+demo as an outside consumer is not ceremony; it exercised the one code path
+every gate is configured to skip.

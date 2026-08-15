@@ -25,4 +25,4 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
 # Runtime as a real directory inside the shared node_modules (same pattern as
 # the hand-built MFE Dockerfiles): module resolution never leaves the pack.
 RUN mkdir -p node_modules/@seans-mfe-tool && \
-    cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
+    cp -r /seans-mfe-tool/dist/runtime node_modules/@falese/smt-runtime

@@ -1,8 +1,8 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { execSync } from 'child_process';
-import { BaseCommand } from '@seans-mfe/oclif-base';
-import { NetworkError } from '@seans-mfe/contracts';
+import { BaseCommand } from '@falese/smt-oclif-base';
+import { NetworkError } from '@falese/smt-contracts';
 import { writeMeshConfig, ensureMockSwitchFiles } from '../../shared';
 import { bffValidateCommand } from './validate';
 import type { BFFCommandOptions } from '../../shared';
