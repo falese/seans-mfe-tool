@@ -11,6 +11,9 @@
     "angular.js",
     "angular.d.ts"
   ],
+  "dependencies": {
+    "@falese/smt-contracts": "^0.1.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -22,6 +22,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import * as fs from 'fs-extra';
+import { findMissingEntrypoints } from './package-entrypoints';
 
 /** Packages a generated MFE resolves. Order is irrelevant; each is independent. */
 const PUBLISHED_PACKAGES = [
@@ -66,13 +67,48 @@ function packPackage(dir: string): PackedPackage {
     stdio: ['ignore', 'ignore', 'inherit'],
   });
 
+  const tarballPath = path.join(destDir, tarballName);
+  assertEntrypointsShipped(name, manifest, tarballPath);
+
   return {
     name,
     version,
     manifest,
-    tarballPath: path.join(destDir, tarballName),
+    tarballPath,
     tarballName,
   };
+}
+
+/**
+ * Refuse to mirror a package whose manifest names files it does not ship.
+ *
+ * `files` and `main`/`types`/`exports` are independent lists, so a package
+ * whose compiled output was never built packs happily and breaks at the
+ * consumer's `tsc` instead — which is how a runtime tarball carrying only its
+ * Node10 forwarders, and no `dist/` for them to forward to, reached CI. Failing
+ * here fails the build that produced the tarball, in the lane every consumer
+ * installs through.
+ */
+function assertEntrypointsShipped(
+  name: string,
+  manifest: Record<string, unknown>,
+  tarballPath: string
+): void {
+  const listing = execFileSync('tar', ['-tzf', tarballPath], { encoding: 'utf8' });
+  const entries = listing
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => line.replace(/^package\//, ''));
+
+  const missing = findMissingEntrypoints(manifest, entries);
+  if (missing.length === 0) return;
+
+  const detail = missing.map((m) => `    ${m.field} -> ${m.target}`).join('\n');
+  throw new Error(
+    `${name} would publish entrypoints it does not ship:\n${detail}\n` +
+      `  Its "files" list packed no such path. Build the package before mirroring ` +
+      `(\`npm run build:packages\`), or correct the manifest.`
+  );
 }
 
 /**
@@ -123,7 +159,16 @@ if (require.main === module) {
   // Matches the .npmrc a generated MFE carries in the offline lane. A tarball
   // URL is absolute, so this has to agree with wherever the mirror is served.
   const registryUrl = process.env.SMT_MIRROR_URL ?? 'http://127.0.0.1:4873';
-  const packed = buildRegistryMirror(registryUrl);
+
+  let packed: PackedPackage[];
+  try {
+    packed = buildRegistryMirror(registryUrl);
+  } catch (err) {
+    // An unshipped entrypoint is a packaging mistake with a stated fix; a stack
+    // trace buries it under ts-node frames.
+    console.error(`build-registry-mirror failed: ${(err as Error).message}`);
+    process.exit(1);
+  }
 
   for (const p of packed) {
     console.log(`  ✓ ${p.name}@${p.version}`);
