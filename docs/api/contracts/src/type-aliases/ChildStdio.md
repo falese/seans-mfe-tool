@@ -8,6 +8,6 @@
 
 > **ChildStdio** = \[`number`, `number`, `number`\]
 
-Defined in: packages/contracts/src/child-stdio.ts:48
+Defined in: [packages/contracts/src/child-stdio.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/child-stdio.ts#L48)
 
 `[stdin, stdout, stderr]` as file descriptors, accepted by both `spawn` and `execSync`.

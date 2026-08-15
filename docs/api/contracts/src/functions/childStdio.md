@@ -8,7 +8,7 @@
 
 > **childStdio**(`env`): [`ChildStdio`](../type-aliases/ChildStdio.md)
 
-Defined in: packages/contracts/src/child-stdio.ts:57
+Defined in: [packages/contracts/src/child-stdio.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/child-stdio.ts#L57)
 
 The stdio triple a child process should be given.
 

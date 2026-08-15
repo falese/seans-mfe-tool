@@ -8,7 +8,7 @@
 
 > `const` **JSON\_MODE\_ENV**: `"SMT_JSON_MODE"` = `'SMT_JSON_MODE'`
 
-Defined in: packages/contracts/src/child-stdio.ts:45
+Defined in: [packages/contracts/src/child-stdio.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/child-stdio.ts#L45)
 
 Marker for "an ancestor process is emitting a JSON envelope on stdout".
 
