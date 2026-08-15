@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneStatePusher
 
-Defined in: packages/runtime/src/control-plane-state.ts:26
+Defined in: [packages/runtime/src/control-plane-state.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/control-plane-state.ts#L26)
 
 The neutral subset of BaseMFE this module needs — structural, so callers
 never have to import a concrete MFE class or cast to a narrow local type.
@@ -17,7 +17,7 @@ never have to import a concrete MFE class or cast to a narrow local type.
 
 > **updateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](ControlPlaneStateResult.md)\>
 
-Defined in: packages/runtime/src/control-plane-state.ts:27
+Defined in: [packages/runtime/src/control-plane-state.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/control-plane-state.ts#L27)
 
 #### Parameters
 
