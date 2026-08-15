@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1
-# abc-kids control-plane registry (ported from falese/daemon component-system).
+# Platform control-plane registry (PDR-008, ADR-078) — fleet-agnostic.
 # Resolution rules + MFE registrations: answers the daemon's resolve calls and
-# accepts registrations on :4000 (register-games.sh posts here).
+# accepts registrations on :4000 (each fleet's register-*.sh posts here).
+#
+# Build context is this directory, so a fleet's compose file points at
+# ../../packages/control-plane/registry rather than carrying its own copy.
 FROM node:20-slim
 
 WORKDIR /app

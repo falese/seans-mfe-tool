@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/compose:validate.json",
+  "title": "compose:validate",
+  "description": "Validate a project's control-plane.yaml, and optionally its compiled payload",
+  "input": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "Project directory, its control-plane/ directory, or the control-plane.yaml itself",
+        "default": "."
+      },
+      "check": {
+        "type": "boolean",
+        "description": "Also fail if the committed rules.json is not what the document compiles to"
+      }
+    },
+    "required": [],
+    "x-positional": [
+      "project"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "documentPath",
+      "payloadPath",
+      "project",
+      "namespace",
+      "mfes",
+      "routes",
+      "findings",
+      "payloadCurrent",
+      "ok"
+    ],
+    "properties": {
+      "documentPath": {
+        "type": "string"
+      },
+      "payloadPath": {
+        "type": "string"
+      },
+      "project": {
+        "type": "string"
+      },
+      "namespace": {
+        "type": "string"
+      },
+      "mfes": {
+        "type": "number"
+      },
+      "routes": {
+        "type": "number"
+      },
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "rule",
+            "stateKey",
+            "message",
+            "fatal"
+          ],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "enum": [
+                "namespace-escape",
+                "unknown-capability",
+                "ambiguous-capability",
+                "unknown-mfe",
+                "unbound-placeholder",
+                "undeclared-slot"
+              ]
+            },
+            "stateKey": {
+              "type": "string",
+              "description": "The state key the offending route produces, for locating it in the source."
+            },
+            "message": {
+              "type": "string"
+            },
+            "fatal": {
+              "type": "boolean",
+              "description": "Advisory findings must not fail a build; everything structural does."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "payloadCurrent": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Only meaningful with --check: whether the committed payload matches the document."
+      },
+      "ok": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

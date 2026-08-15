@@ -1,8 +1,8 @@
 /**
  * Control-plane message protocol contract tests (ADR-053).
  *
- * These tests pin the wire protocol shared between the daemon control plane
- * (falese/daemon) and the MFE runtime: envelope shape, resolution shape,
+ * These tests pin the wire protocol shared between the in-platform daemon
+ * control plane (PDR-008) and the MFE runtime: envelope shape, resolution shape,
  * rendered-experience shape, session context, and the runtime guards that
  * non-TypeScript implementations rely on to validate payloads.
  */

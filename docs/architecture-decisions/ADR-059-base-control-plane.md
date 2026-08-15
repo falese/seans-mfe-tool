@@ -30,9 +30,9 @@ every level:
 | Framework plugins | `BaseFrameworkPlugin` | `ReactRspackPlugin`, `AngularWebpackPlugin` |
 
 The **control plane** — daemon + registry + LayoutManager + slots + adaptors +
-DaemonChannels — has no equivalent abstraction. The Node daemon (`Falese/daemon`) and
-the Rust daemon are independent implementations of the same concept, but nothing
-codifies that concept as a typed contract.
+DaemonChannels — has no equivalent abstraction. The Node daemon (then `Falese/daemon`,
+now owned by this repo per ADR-078) and the Rust daemon are independent implementations
+of the same concept, but nothing codifies that concept as a typed contract.
 
 Without a base class, the control plane cannot:
 - Be swapped (Node ↔ Rust ↔ future implementations) without host-side changes.

@@ -34,6 +34,12 @@ long-form: true
 
 # ADR-054: Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts
 
+> **Consumer changed after ratification.** [ADR-078](./ADR-078-control-plane-in-platform.md)
+> brings the control plane into the platform and retires `falese/daemon`. The protocol below is
+> unchanged, but its consumer is now in-repo: read "the daemon repo" as
+> `packages/control-plane`. A breaking `messages.ts` change still needs a new ADR — it just no
+> longer needs a cross-repo release.
+
 ## Context
 
 PLATFORM-CONTRACT.md v3.2 defines the daemon as a **state-change router and render

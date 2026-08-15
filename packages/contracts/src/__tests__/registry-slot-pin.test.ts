@@ -1,22 +1,24 @@
 /**
  * Behavioural pin: the demo registry's slot matcher vs. the real one (ADR-073 §5).
  *
- * Each fleet's `control-plane/registry/slot-target.js` carries a copy of the
- * matcher rather than calling `createSlotAddressRegistry`, because those
- * registries are standalone dockerized services and `@seans-mfe/contracts` is
- * not published yet (docs/MERGE-PLAN.md Phase 1). A copy that drifts is worse
- * than no copy: the registry would accept placements the runtime rejects, or
- * reject ones it accepts.
+ * `packages/control-plane/registry/slot-target.js` carries a copy of the matcher
+ * rather than calling `createSlotAddressRegistry`, because the registry is a
+ * standalone dockerized service and `@seans-mfe/contracts` is not published yet
+ * (docs/MERGE-PLAN.md Phase 1). A copy that drifts is worse than no copy: the
+ * registry would accept placements the runtime rejects, or reject ones it accepts.
  *
  * This is the same idiom ADR-069 used to pin the grammar across packages, and
  * it should be deleted the moment the registry can import the package.
+ *
+ * There is now exactly one copy to pin: ADR-078 §1 promoted the registry out of
+ * the two per-fleet duplicates into `packages/control-plane`.
  */
 import * as path from 'path';
 import { createSlotAddressRegistry } from '../slot-contract';
 
 const registryModulePath = path.join(
   __dirname,
-  '../../../../examples/meridian-station/control-plane/registry/slot-target.js'
+  '../../../control-plane/registry/slot-target.js'
 );
 
 type RegistryProblem = { fatal: boolean; reason: string; message: string } | null;

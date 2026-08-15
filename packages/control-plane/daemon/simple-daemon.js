@@ -1,6 +1,14 @@
-// Vendored from falese/daemon component-system/daemon (ported 2026-07-13, PR #266).
-// This is a demo-scoped copy for the abc-kids fleet — the canonical implementation
-// lives in falese/daemon; reconcile against upstream when it changes.
+// The component daemon — part of the platform's control plane.
+//
+// This repository owns the canonical control plane (PDR-008, ADR-078).
+// falese/daemon is retired; there is no upstream and nothing to reconcile
+// against. This file is the single source of truth: it was promoted here
+// from two byte-identical copies under examples/*/control-plane (ADR-078
+// §1, #139), and both reference fleets now build their images from it.
+//
+// Placement rules are NOT owned here. Each fleet keeps its own
+// control-plane/rules.json — composition is the deploying project's
+// decision, the engine that evaluates it is the platform's.
 // ========================
 // COMPONENT DAEMON (Node.js)
 // ========================

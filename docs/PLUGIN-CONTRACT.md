@@ -83,7 +83,7 @@ All other output (chalk, progress spinners, human-readable logs) goes to
 
 | Topic | Owner | Plugin package |
 |-------|-------|----------------|
-| `daemon` | Falese | `@falese/daemon-plugin` |
+| `daemon` | core | built-in — the control plane ships with the platform (PDR-008, ADR-078); `@falese/daemon-plugin` is retired |
 | `coder` | Falese | `@falese/coder-plugin` |
 | `mfe` | core | built-in |
 | `bff` | core | built-in |

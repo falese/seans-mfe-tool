@@ -1,7 +1,11 @@
 # syntax=docker/dockerfile:1
-# abc-kids control-plane daemon (ported from falese/daemon component-system).
+# Platform control-plane daemon (PDR-008, ADR-078) — fleet-agnostic.
 # Node control plane: forwards renderer actions to the registry and relays the
-# resolved experience back. Listens on 3004 (3001–3003 belong to the MFEs).
+# resolved experience back. Defaults to 3004; each fleet overrides DAEMON_PORT
+# (abc-kids keeps 3004, meridian uses 4504).
+#
+# Build context is this directory, so a fleet's compose file points at
+# ../../packages/control-plane/daemon rather than carrying its own copy.
 FROM node:20-slim
 
 WORKDIR /app

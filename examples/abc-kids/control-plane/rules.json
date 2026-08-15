@@ -119,7 +119,7 @@
       "remoteEntryUrl": "http://localhost:3003/remoteEntry.js",
       "moduleFederation": {
         "scope": "abc_kids_multiplication_quiz",
-        "module": "./Component"
+        "module": "./App"
       }
     },
     "routes": [

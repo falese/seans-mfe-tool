@@ -84,7 +84,7 @@
         "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
       },
       "daemon": {
-        "description": "Control-plane daemon commands (requires @falese/daemon-plugin)"
+        "description": "Control-plane daemon commands (in-platform control plane — PDR-008/ADR-078)"
       },
       "mfe": {
         "description": "MFE consistency checks (mfe:validate)"
@@ -94,6 +94,9 @@
       },
       "adr": {
         "description": "ADR library governance \u2014 validate metadata and report lifecycle state (ADR-075)"
+      },
+      "compose": {
+        "description": "Composition tooling \u2014 compile a project's control-plane.yaml into the registry payload (ADR-083)"
       }
     },
     "hooks": {

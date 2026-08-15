@@ -233,7 +233,8 @@ right now*; convergence makes the gap between them safe.
 | Design-time checks (unreferenced slots, placement targets) | `packages/dsl/src/slot-validation.ts` |
 | `DeclaredSlotId` derivation | `packages/codegen/src/slot-types.ts` |
 | CLI gates | `packages/codegen/src/validate.ts` (`slots-implemented` rule), `src/commands/slots/validate.ts` |
-| Placement rules as data | `examples/*/control-plane/rules.json` |
+| Placement rules (authored) | `examples/*/control-plane/control-plane.yaml` (ADR-083) |
+| Placement rules (compiled for the registry) | `examples/*/control-plane/rules.json` — generated, never hand-edited |
 | React sugar for shells/hand-written MFEs (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
 | Angular sugar for shells/hand-written MFEs (`DeclaredSlotDirective`) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
 | Generated React slot template | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |

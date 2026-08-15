@@ -264,6 +264,7 @@ class NodeControlPlane extends BaseControlPlane {
 }
 ```
 
-Concrete implementations live in their own repos (`Falese/daemon`, Rust daemon repo)
-and import `BaseControlPlane` from the published `@seans-mfe-tool/runtime` package —
-the same way MFE implementations import `BaseMFE`.
+The concrete implementation ships with the platform (PDR-008, ADR-078): the registry
+and daemon are `packages/control-plane`, and both reference fleets build their images
+from it. Implementations import `BaseControlPlane` from the published
+`@seans-mfe-tool/runtime` package — the same way MFE implementations import `BaseMFE`.

@@ -16,6 +16,11 @@ export * from './slot-validation';
 // Same pure-core / thin-command split as the slot checks above.
 export * from './adr-schema';
 export * from './adr-validation';
+// Control-plane composition (ADR-083): the project-scoped document a deploying
+// project authors, and the compiler that turns it plus the fleet's manifests
+// into the registry payload. Same pure-core / thin-command split again.
+export * from './control-plane-schema';
+export * from './control-plane-compiler';
 
 // Parser functions
 export {

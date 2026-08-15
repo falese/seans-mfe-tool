@@ -58,7 +58,25 @@ const EXIT_CODES = [...new Set(Object.values(EXIT_CODE_MAP))].sort((a, b) => a -
 // Build and write
 // ---------------------------------------------------------------------------
 
+/**
+ * `topic:command` -> `topic-command.json`.
+ *
+ * The mapping has to survive the round trip: the JSON contract tests, the
+ * command-conformance tests and both MCP tool sources all recover a command id
+ * by turning every `-` in the filename back into a `:`. So a hyphen anywhere in
+ * a command id is silently ambiguous — a `control-plane:build` command lands in
+ * `control-plane-build.json` and comes back as `control:plane:build`, which
+ * matches no command and fails three unrelated suites with no mention of the
+ * cause. Fail here instead, where the fix is obvious.
+ */
 function schemaFilename(commandName: string): string {
+  if (commandName.includes('-')) {
+    throw new Error(
+      `Command id "${commandName}" contains a hyphen. Schema filenames encode ':' as '-', ` +
+        `and consumers decode every '-' back to ':', so a hyphenated id cannot round-trip. ` +
+        `Rename the topic or command to a single word (see the 'compose' topic).`
+    );
+  }
   return commandName.replace(/:/g, '-') + '.json';
 }
 
