@@ -1,0 +1,993 @@
+<title>The SMT Platform Map</title>
+
+<header class="masthead">
+  <p class="eyebrow">Business system map · seans-mfe-tool</p>
+  <h1>What this platform actually does</h1>
+  <p class="standfirst">
+    This repository is not a product that customers log into. It is the <strong>machinery that lets many
+    teams build one product together</strong> — each team shipping its own piece of the screen, on its own
+    schedule, in whatever technology it prefers, without any of them having to coordinate a release.
+  </p>
+  <p class="standfirst">
+    There are two halves to it. A <strong>factory</strong> that turns a short written brief into a complete,
+    ready-to-ship feature. And a <strong>control tower</strong> that decides, while a person is using the
+    product, which of those features should appear, where, and for whom. Everything else on this page
+    is detail underneath those two ideas.
+  </p>
+
+  <div class="meta-row">
+    <span class="meta"><span class="meta-n">2</span> halves — build time, run time</span>
+    <span class="meta"><span class="meta-n">10</span> things every feature must be able to do</span>
+    <span class="meta"><span class="meta-n">21</span> reference features across 2 demo products</span>
+    <span class="meta"><span class="meta-n">82</span> recorded architecture decisions</span>
+  </div>
+</header>
+
+<main>
+
+  <section class="band">
+    <h2 class="section-title">The executive overview</h2>
+    <p class="lede">
+      Read it top to bottom. The top row happens once, when a team builds something. The bottom row happens
+      every time a person clicks. The strip in the middle is the agreement that connects the two — and it is
+      the whole reason this platform exists.
+    </p>
+
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 1180 660" role="img" class="diagram"
+             aria-label="Build time: a team writes a feature brief, the factory builds it, and out comes a self-contained feature. Every feature is built to one house standard. At run time, a person acts, the control tower decides which feature to show, the screen assembles itself, and business data arrives in one common shape.">
+          <defs>
+            <marker id="ex-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+          </defs>
+
+          <!-- ================= BUILD TIME ================= -->
+          <text class="phase" x="24" y="30">BUILD TIME · once, when a team ships something new</text>
+
+          <g class="layer" data-layer="intent">
+            <rect class="card l-intent" x="24" y="48" width="330" height="136" rx="10"></rect>
+            <text class="c-tag l-intent-t" x="48" y="76">THE BRIEF</text>
+            <text class="c-title" x="48" y="100">A team writes down one capability</text>
+            <text class="c-desc" x="48">
+              <tspan x="48" y="124">One short file says what the feature does,</tspan>
+              <tspan x="48" y="141">what data it needs, and which places on a</tspan>
+              <tspan x="48" y="158">screen it is willing to fill.</tspan>
+            </text>
+          </g>
+
+          <g class="layer" data-layer="build">
+            <rect class="card l-build" x="394" y="48" width="330" height="136" rx="10"></rect>
+            <text class="c-tag l-build-t" x="418" y="76">THE FACTORY</text>
+            <text class="c-title" x="418" y="100">The platform builds it</text>
+            <text class="c-desc" x="418">
+              <tspan x="418" y="124">The brief becomes working software: screens,</tspan>
+              <tspan x="418" y="141">a data feed, packaging, tests — in whichever</tspan>
+              <tspan x="418" y="158">technology that team chose.</tspan>
+            </text>
+          </g>
+
+          <g class="layer" data-layer="build">
+            <rect class="card l-build" x="764" y="48" width="392" height="136" rx="10"></rect>
+            <text class="c-tag l-build-t" x="788" y="76">THE OUTPUT</text>
+            <text class="c-title" x="788" y="100">A feature that stands on its own</text>
+            <text class="c-desc" x="788">
+              <tspan x="788" y="124">It is released by its own team, on its own schedule.</tspan>
+              <tspan x="788" y="141">Nothing else has to be rebuilt or re-released when</tspan>
+              <tspan x="788" y="158">it changes — which is the point of the whole exercise.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="354" y1="116" x2="386" y2="116" marker-end="url(#ex-arrow)"></line>
+          <line class="flow" x1="724" y1="116" x2="756" y2="116" marker-end="url(#ex-arrow)"></line>
+
+          <line class="flow" x1="960" y1="184" x2="960" y2="226" marker-end="url(#ex-arrow)"></line>
+          <text class="flow-label" x="972" y="211">built to one common standard</text>
+
+          <!-- ================= THE STANDARD ================= -->
+          <g class="layer" data-layer="contract">
+            <rect class="hinge l-contract" x="24" y="234" width="1132" height="152" rx="12"></rect>
+            <text class="c-tag l-contract-t" x="48" y="264">THE HOUSE STANDARD · what every feature promises, whoever built it</text>
+
+            <rect class="chip l-contract" x="48" y="282" width="348" height="82" rx="8"></rect>
+            <text class="chip-title" x="68" y="310">It says what it can do</text>
+            <text class="c-desc"><tspan x="68" y="332">Describes its own capabilities, its</tspan><tspan x="68" y="349">data shape and who may use it.</tspan></text>
+
+            <rect class="chip l-contract" x="416" y="282" width="348" height="82" rx="8"></rect>
+            <text class="chip-title" x="436" y="310">It behaves predictably</text>
+            <text class="c-desc"><tspan x="436" y="332">Starts, shows, refreshes, reports its</tspan><tspan x="436" y="349">own health, fails in a known way.</tspan></text>
+
+            <rect class="chip l-contract" x="784" y="282" width="348" height="82" rx="8"></rect>
+            <text class="chip-title" x="804" y="310">It fits anywhere</text>
+            <text class="c-desc"><tspan x="804" y="332">Slots into any labelled space on any</tspan><tspan x="804" y="349">screen, without knowing whose.</tspan></text>
+          </g>
+
+          <!-- ================= RUN TIME ================= -->
+          <text class="phase" x="24" y="440">RUN TIME · every single time a person uses the product</text>
+
+          <g class="layer" data-layer="people">
+            <rect class="card l-people" x="24" y="458" width="250" height="150" rx="10"></rect>
+            <text class="c-tag l-people-t" x="48" y="486">A PERSON</text>
+            <text class="c-title" x="48" y="510">Someone does something</text>
+            <text class="c-desc">
+              <tspan x="48" y="534">Opens a page, picks a berth,</tspan>
+              <tspan x="48" y="551">starts a game. One action goes</tspan>
+              <tspan x="48" y="568">up to the control tower.</tspan>
+            </text>
+          </g>
+
+          <g class="layer" data-layer="runtime">
+            <rect class="card l-runtime" x="314" y="458" width="290" height="150" rx="10"></rect>
+            <text class="c-tag l-runtime-t" x="338" y="486">THE CONTROL TOWER</text>
+            <text class="c-title" x="338" y="510">It decides what should happen</text>
+            <text class="c-desc">
+              <tspan x="338" y="534">Business rules — held outside the</tspan>
+              <tspan x="338" y="551">features, changeable without a</tspan>
+              <tspan x="338" y="568">release — pick the right feature</tspan>
+              <tspan x="338" y="585">for this person, right now.</tspan>
+            </text>
+          </g>
+
+          <g class="layer" data-layer="runtime">
+            <rect class="card l-runtime" x="644" y="458" width="250" height="150" rx="10"></rect>
+            <text class="c-tag l-runtime-t" x="668" y="486">THE SCREEN</text>
+            <text class="c-title" x="668" y="510">It assembles itself</text>
+            <text class="c-desc">
+              <tspan x="668" y="534">The product shell holds only</tspan>
+              <tspan x="668" y="551">empty labelled spaces. Features</tspan>
+              <tspan x="668" y="568">arrive and fill them. If one</tspan>
+              <tspan x="668" y="585">breaks, the rest stay up.</tspan>
+            </text>
+          </g>
+
+          <g class="layer" data-layer="data">
+            <rect class="card l-data" x="934" y="458" width="222" height="150" rx="10"></rect>
+            <text class="c-tag l-data-t" x="958" y="486">THE BUSINESS</text>
+            <text class="c-title" x="958" y="510">Existing systems</text>
+            <text class="c-desc">
+              <tspan x="958" y="534">The real databases and</tspan>
+              <tspan x="958" y="551">APIs the company already</tspan>
+              <tspan x="958" y="568">runs — each speaking its</tspan>
+              <tspan x="958" y="585">own awkward dialect.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="274" y1="533" x2="306" y2="533" marker-end="url(#ex-arrow)"></line>
+          <line class="flow" x1="604" y1="533" x2="636" y2="533" marker-end="url(#ex-arrow)"></line>
+
+          <line class="flow" x1="459" y1="458" x2="459" y2="394" marker-end="url(#ex-arrow)"></line>
+          <text class="flow-label" x="471" y="428">which feature, for whom?</text>
+
+          <line class="flow" x1="769" y1="386" x2="769" y2="450" marker-end="url(#ex-arrow)"></line>
+          <text class="flow-label" x="781" y="422">the feature, ready to show</text>
+
+          <line class="flow" x1="1045" y1="458" x2="1045" y2="394" marker-end="url(#ex-arrow)"></line>
+          <text class="flow-label" x="1057" y="428">answers, in one</text>
+          <text class="flow-label" x="1057" y="442">common shape</text>
+        </svg>
+      </div>
+      <figcaption>
+        The middle strip is the hinge. Because every feature makes the same three promises, the factory can
+        build them independently and the control tower can compose them without knowing anything about how
+        any of them was made.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="band">
+    <h2 class="section-title">The eight parts, and what each is for</h2>
+    <p class="lede">
+      Grouped by what they <em>do for the business</em>, not by where the files sit. Four of these are
+      foundational — shared by everything. Four are the working machinery that sits on top.
+    </p>
+
+    <div class="grid">
+
+      <article class="part" data-layer="intent">
+        <p class="part-kind">Design intent</p>
+        <h3>The feature brief</h3>
+        <p class="part-what">A single short document per feature, written by the team that owns it, declaring what the feature does, what data it needs, and which spaces on a screen it can fill.</p>
+        <p class="part-why"><span>Why it matters</span> It is the only source of truth. Everything downstream — the code, the data feed, the packaging, the validation — is derived from it, so the document and the running software cannot quietly disagree.</p>
+        <p class="paths">packages/dsl/ · mfe-manifest.yaml · schemas/dsl/</p>
+      </article>
+
+      <article class="part" data-layer="build">
+        <p class="part-kind">Build machinery</p>
+        <h3>The feature factory</h3>
+        <p class="part-what">Reads a brief and writes out a complete, runnable feature — user interface, wiring, data access, container packaging and tests.</p>
+        <p class="part-why"><span>Why it matters</span> New teams start from a working, compliant feature instead of a blank page. It is also how a platform-wide improvement reaches everyone: change the factory, re-stamp the fleet.</p>
+        <p class="paths">packages/codegen/ · 44 templates · src/commands/remote/</p>
+      </article>
+
+      <article class="part" data-layer="build">
+        <p class="part-kind">Build machinery</p>
+        <h3>Technology adapters</h3>
+        <p class="part-what">Small plug-ins that teach the factory a new front-end technology. Two ship today; adding a third is a new plug-in, not a change to the factory.</p>
+        <p class="part-why"><span>Why it matters</span> This is what makes "any team, any technology" real rather than aspirational — and it means a technology choice made today does not become a platform-wide migration tomorrow.</p>
+        <p class="paths">packages/framework-react/ · packages/framework-angular/</p>
+      </article>
+
+      <article class="part" data-layer="contract">
+        <p class="part-kind">Foundational</p>
+        <h3>The house standard</h3>
+        <p class="part-what">Ten things every feature must be able to do — start up, show itself, refresh, check its permissions, report its health, describe itself, answer a data question, raise an event, and report state upward — plus strict rules about the order they may happen in.</p>
+        <p class="part-why"><span>Why it matters</span> This is the platform. It is the reason a feature built by one team in one technology can be operated by a system that knows nothing about either.</p>
+        <p class="paths">packages/contracts/ · packages/runtime/</p>
+      </article>
+
+      <article class="part" data-layer="contract">
+        <p class="part-kind">Foundational</p>
+        <h3>Named spaces on a screen</h3>
+        <p class="part-what">Every feature publishes the spaces it offers by name — "main", "status", "berth 4" — and business rules target those names. Names are declared in the brief, never inferred from screen position.</p>
+        <p class="part-why"><span>Why it matters</span> A layout redesign does not break the rules that decide what goes where. It also lets one feature appear six times on one screen, each instance independent.</p>
+        <p class="paths">docs/slot-contract.md · packages/contracts/src/slot-grammar.ts</p>
+      </article>
+
+      <article class="part" data-layer="runtime">
+        <p class="part-kind">Working machinery</p>
+        <h3>The control tower</h3>
+        <p class="part-what">Three cooperating roles: a <em>rule book</em> that turns "this person did this" into "show that feature", a <em>router</em> that carries the request and the answer, and a <em>placer</em> that puts the result into the right named space and keeps it healthy.</p>
+        <p class="part-why"><span>Why it matters</span> Business rules about what appears where live outside the features, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
+        <p class="paths">packages/runtime/src/layout-manager.ts · examples/*/control-plane/</p>
+      </article>
+
+      <article class="part" data-layer="data">
+        <p class="part-kind">Working machinery</p>
+        <h3>The translation layer</h3>
+        <p class="part-what">Each feature gets its own small data service that fronts the company's real systems and hands back one clean, consistent shape — no matter how inconsistent the sources are underneath.</p>
+        <p class="part-why"><span>Why it matters</span> Legacy dialects stop leaking into feature teams' work. The reference product deliberately fronts three systems that name the same thing three different ways, to prove the point.</p>
+        <p class="paths">packages/bff-plugin/ · src/commands/api.ts · examples/meridian-station/apis/</p>
+      </article>
+
+      <article class="part" data-layer="people">
+        <p class="part-kind">Foundational</p>
+        <h3>The command centre</h3>
+        <p class="part-what">One set of commands does everything above — start a feature, build it, check it, package it, deploy it. The identical commands are also published as tools that AI assistants can call directly.</p>
+        <p class="part-why"><span>Why it matters</span> Humans and AI assistants drive the platform through exactly the same door, so anything an assistant does is reproducible by a person, and vice versa. Two features in the reference product were built this way.</p>
+        <p class="paths">src/commands/ (17 commands) · src/mcp/</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">The detailed system map</h2>
+        <p class="lede">
+          Same story, one level down. Reads left to right: who uses it, what they declare, what gets built,
+          the standard everything inherits, how it is composed on screen, and where real data comes from.
+        </p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="paths-toggle">
+        <span>Show repository paths</span>
+      </label>
+    </div>
+
+    <div class="legend" id="legend">
+      <button type="button" class="lg" data-focus="people"><i class="sw l-people"></i>People &amp; entry points</button>
+      <button type="button" class="lg" data-focus="intent"><i class="sw l-intent"></i>Design intent</button>
+      <button type="button" class="lg" data-focus="build"><i class="sw l-build"></i>Build machinery</button>
+      <button type="button" class="lg" data-focus="contract"><i class="sw l-contract"></i>Shared standard</button>
+      <button type="button" class="lg" data-focus="runtime"><i class="sw l-runtime"></i>Run-time composition</button>
+      <button type="button" class="lg" data-focus="data"><i class="sw l-data"></i>Data &amp; external systems</button>
+      <button type="button" class="lg lg-reset" data-focus="">Show all</button>
+    </div>
+
+    <figure class="fig fig-wide">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 1640 900" role="img" class="diagram" id="map"
+             aria-label="Six columns read left to right: who uses it; what they declare; what gets built; the shared standard every feature inherits; how features are composed on screen at run time; and where data comes from. Two full-width strips below carry the command centre and the governance safety net.">
+          <defs>
+            <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+          </defs>
+
+          <!-- spine -->
+          <line class="flow" x1="214" y1="60" x2="254" y2="60" marker-end="url(#m-arrow)"></line>
+          <text class="flow-label" x="238" y="46" text-anchor="middle">describes</text>
+          <line class="flow" x1="492" y1="60" x2="532" y2="60" marker-end="url(#m-arrow)"></line>
+          <text class="flow-label" x="516" y="46" text-anchor="middle">generates</text>
+          <line class="flow" x1="770" y1="60" x2="810" y2="60" marker-end="url(#m-arrow)"></line>
+          <text class="flow-label" x="794" y="46" text-anchor="middle">inherits</text>
+          <line class="flow" x1="1048" y1="60" x2="1088" y2="60" marker-end="url(#m-arrow)"></line>
+          <text class="flow-label" x="1072" y="46" text-anchor="middle">composed by</text>
+          <line class="flow" x1="1326" y1="60" x2="1366" y2="60" marker-end="url(#m-arrow)"></line>
+          <text class="flow-label" x="1350" y="46" text-anchor="middle">asks &amp; answers</text>
+
+          <!-- ============ B1 PEOPLE ============ -->
+          <g class="layer" data-layer="people">
+            <text class="band-head l-people-t" x="24" y="92">WHO USES IT</text>
+            <line class="band-rule l-people-s" x1="24" y1="100" x2="214" y2="100"></line>
+
+            <rect class="card l-people" x="24" y="116" width="190" height="112" rx="9"></rect>
+            <text class="c-title s" x="42" y="142">Feature teams</text>
+            <text class="c-desc"><tspan x="42" y="164">Each owns one business</tspan><tspan x="42" y="180">capability end to end and</tspan><tspan x="42" y="196">releases on its own clock.</tspan></text>
+
+            <rect class="card l-people" x="24" y="244" width="190" height="112" rx="9"></rect>
+            <text class="c-title s" x="42" y="270">AI assistants</text>
+            <text class="c-desc"><tspan x="42" y="292">Drive the same commands</tspan><tspan x="42" y="308">as people, through a tool</tspan><tspan x="42" y="324">interface built for them.</tspan></text>
+            <text class="paths-t paths" x="42" y="344">src/mcp/</text>
+
+            <rect class="card l-people" x="24" y="372" width="190" height="112" rx="9"></rect>
+            <text class="c-title s" x="42" y="398">Product operators</text>
+            <text class="c-desc"><tspan x="42" y="420">Decide which features a</tspan><tspan x="42" y="436">given product shows, by</tspan><tspan x="42" y="452">editing rules, not code.</tspan></text>
+
+            <rect class="card l-people" x="24" y="500" width="190" height="112" rx="9"></rect>
+            <text class="c-title s" x="42" y="526">Customers &amp; staff</text>
+            <text class="c-desc"><tspan x="42" y="548">Never see any of this.</tspan><tspan x="42" y="564">They see one product</tspan><tspan x="42" y="580">that behaves as one.</tspan></text>
+          </g>
+
+          <!-- ============ B2 INTENT ============ -->
+          <g class="layer" data-layer="intent">
+            <text class="band-head l-intent-t" x="262" y="92">WHAT THEY DECLARE</text>
+            <line class="band-rule l-intent-s" x1="262" y1="100" x2="492" y2="100"></line>
+
+            <rect class="card l-intent" x="262" y="116" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="280" y="142">The feature brief</text>
+            <text class="c-desc"><tspan x="280" y="164">One file per feature: what it does,</tspan><tspan x="280" y="180">what data it needs, what technology</tspan><tspan x="280" y="196">it is written in.</tspan></text>
+            <text class="paths-t paths" x="280" y="216">mfe-manifest.yaml · packages/dsl/</text>
+
+            <rect class="card l-intent" x="262" y="244" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="280" y="270">Offered spaces</text>
+            <text class="c-desc"><tspan x="280" y="292">The named places this feature is</tspan><tspan x="280" y="308">willing to let other features</tspan><tspan x="280" y="324">appear inside.</tspan></text>
+            <text class="paths-t paths" x="280" y="344">providesSlots · docs/slot-contract.md</text>
+
+            <rect class="card l-intent" x="262" y="372" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="280" y="398">Placement rules</text>
+            <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Held as data,</tspan><tspan x="280" y="452">outside every feature.</tspan></text>
+            <text class="paths-t paths" x="280" y="472">examples/*/control-plane/rules.json</text>
+
+            <rect class="card l-intent" x="262" y="500" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="280" y="526">Recorded decisions</text>
+            <text class="c-desc"><tspan x="280" y="548">82 architecture decisions and 11</tspan><tspan x="280" y="564">product decisions, each written</tspan><tspan x="280" y="580">down before it was built.</tspan></text>
+            <text class="paths-t paths" x="280" y="600">docs/architecture-decisions/</text>
+          </g>
+
+          <!-- ============ B3 BUILD ============ -->
+          <g class="layer" data-layer="build">
+            <text class="band-head l-build-t" x="540" y="92">WHAT GETS BUILT</text>
+            <line class="band-rule l-build-s" x1="540" y1="100" x2="770" y2="100"></line>
+
+            <rect class="card l-build" x="540" y="116" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="558" y="142">The feature factory</text>
+            <text class="c-desc"><tspan x="558" y="164">Turns a brief into a complete,</tspan><tspan x="558" y="180">running feature. Owns some files</tspan><tspan x="558" y="196">outright; seeds others once.</tspan></text>
+            <text class="paths-t paths" x="558" y="216">packages/codegen/</text>
+
+            <rect class="card l-build" x="540" y="244" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="558" y="270">Technology adapters</text>
+            <text class="c-desc"><tspan x="558" y="292">Teach the factory a front-end</tspan><tspan x="558" y="308">technology. Two today; a third</tspan><tspan x="558" y="324">is a plug-in, not a rewrite.</tspan></text>
+            <text class="paths-t paths" x="558" y="344">packages/framework-{react,angular}/</text>
+
+            <rect class="card l-build" x="540" y="372" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="558" y="398">Data feed builder</text>
+            <text class="c-desc"><tspan x="558" y="420">Builds each feature's private</tspan><tspan x="558" y="436">translation service from the</tspan><tspan x="558" y="452">data section of its brief.</tspan></text>
+            <text class="paths-t paths" x="558" y="472">packages/bff-plugin/</text>
+
+            <rect class="card l-build" x="540" y="500" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="558" y="526">Backend generator</text>
+            <text class="c-desc"><tspan x="558" y="548">Given an interface description,</tspan><tspan x="558" y="564">scaffolds a whole working service</tspan><tspan x="558" y="580">with its own database.</tspan></text>
+            <text class="paths-t paths" x="558" y="600">src/commands/api.ts</text>
+          </g>
+
+          <!-- ============ B4 STANDARD ============ -->
+          <g class="layer" data-layer="contract">
+            <text class="band-head l-contract-t" x="818" y="92">THE SHARED STANDARD · foundational</text>
+            <line class="band-rule l-contract-s" x1="818" y1="100" x2="1048" y2="100"></line>
+
+            <rect class="card l-contract" x="818" y="116" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="836" y="142">Ten standard abilities</text>
+            <text class="c-desc"><tspan x="836" y="164">Start, show, refresh, authorise,</tspan><tspan x="836" y="180">report health, describe itself,</tspan><tspan x="836" y="196">answer, raise events, report state.</tspan></text>
+            <text class="paths-t paths" x="836" y="216">packages/runtime/src/base-mfe.ts</text>
+
+            <rect class="card l-contract" x="818" y="244" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="836" y="270">Behaviour guardrails</text>
+            <text class="c-desc"><tspan x="836" y="292">A feature cannot show before it</tspan><tspan x="836" y="308">has started. Timeouts, retries and</tspan><tspan x="836" y="324">typed failures are built in.</tspan></text>
+            <text class="paths-t paths" x="836" y="344">timeout-wrapper · retry-wrapper</text>
+
+            <rect class="card l-contract" x="818" y="372" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="836" y="398">Space naming rules</text>
+            <text class="c-desc"><tspan x="836" y="420">One grammar for naming screen</tspan><tspan x="836" y="436">spaces, shared by the briefs, the</tspan><tspan x="836" y="452">factory, the rules and the tower.</tspan></text>
+            <text class="paths-t paths" x="836" y="472">contracts/src/slot-grammar.ts</text>
+
+            <rect class="card l-contract" x="818" y="500" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="836" y="526">The message protocol</text>
+            <text class="c-desc"><tspan x="836" y="548">Actions travel up, ready-made</tspan><tspan x="836" y="564">experiences travel down. Nothing</tspan><tspan x="836" y="580">else crosses the boundary.</tspan></text>
+            <text class="paths-t paths" x="836" y="600">packages/contracts/src/messages.ts</text>
+          </g>
+
+          <!-- ============ B5 RUNTIME ============ -->
+          <g class="layer" data-layer="runtime">
+            <text class="band-head l-runtime-t" x="1096" y="92">HOW IT IS COMPOSED</text>
+            <line class="band-rule l-runtime-s" x1="1096" y1="100" x2="1326" y2="100"></line>
+
+            <rect class="card l-runtime" x="1096" y="116" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="1114" y="142">The rule book</text>
+            <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and</tspan><tspan x="1114" y="180">this person, which feature, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
+            <text class="paths-t paths" x="1114" y="216">control-plane/registry/</text>
+
+            <rect class="card l-runtime" x="1096" y="244" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="1114" y="270">The router</text>
+            <text class="c-desc"><tspan x="1114" y="292">Carries actions up and answers</tspan><tspan x="1114" y="308">down over a live connection.</tspan><tspan x="1114" y="324">Knows nothing about content.</tspan></text>
+            <text class="paths-t paths" x="1114" y="344">control-plane/daemon/</text>
+
+            <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="1114" y="398">The placer</text>
+            <text class="c-desc"><tspan x="1114" y="420">Puts each arriving feature into its</tspan><tspan x="1114" y="436">named space, waits for spaces not</tspan><tspan x="1114" y="452">yet open, and heals failures.</tspan></text>
+            <text class="paths-t paths" x="1114" y="472">runtime/src/layout-manager.ts</text>
+
+            <rect class="card l-runtime" x="1096" y="500" width="230" height="112" rx="9"></rect>
+            <text class="c-title s" x="1114" y="526">The empty shell</text>
+            <text class="c-desc"><tspan x="1114" y="548">The product frame. Contains no</tspan><tspan x="1114" y="564">features at all — only spaces and</tspan><tspan x="1114" y="580">a connection to the tower.</tspan></text>
+            <text class="paths-t paths" x="1114" y="600">examples/*/shell/</text>
+          </g>
+
+          <!-- ============ B6 DATA ============ -->
+          <g class="layer" data-layer="data">
+            <text class="band-head l-data-t" x="1374" y="92">WHERE DATA COMES FROM</text>
+            <line class="band-rule l-data-s" x1="1374" y1="100" x2="1616" y2="100"></line>
+
+            <rect class="card l-data" x="1374" y="116" width="242" height="112" rx="9"></rect>
+            <text class="c-title s" x="1392" y="142">Per-feature translator</text>
+            <text class="c-desc"><tspan x="1392" y="164">One small service per feature.</tspan><tspan x="1392" y="180">Fronts the real systems and</tspan><tspan x="1392" y="196">returns one clean shape.</tspan></text>
+            <text class="paths-t paths" x="1392" y="216">generated from manifest data:</text>
+
+            <rect class="card l-data" x="1374" y="244" width="242" height="112" rx="9"></rect>
+            <text class="c-title s" x="1392" y="270">Company systems</text>
+            <text class="c-desc"><tspan x="1392" y="292">Existing APIs and databases,</tspan><tspan x="1392" y="308">each with its own naming,</tspan><tspan x="1392" y="324">paging and identifiers.</tspan></text>
+            <text class="paths-t paths" x="1392" y="344">examples/meridian-station/apis/</text>
+
+            <rect class="card l-data" x="1374" y="372" width="242" height="112" rx="9"></rect>
+            <text class="c-title s" x="1392" y="398">Packaging &amp; delivery</text>
+            <text class="c-desc"><tspan x="1392" y="420">Every feature and service ships</tspan><tspan x="1392" y="436">as its own container image, so</tspan><tspan x="1392" y="452">releases stay independent.</tspan></text>
+            <text class="paths-t paths" x="1392" y="472">Dockerfile.cli · docker-compose.yaml</text>
+
+            <rect class="card l-data" x="1374" y="500" width="242" height="112" rx="9"></rect>
+            <text class="c-title s" x="1392" y="526">Two reference products</text>
+            <text class="c-desc"><tspan x="1392" y="548">A children's game arcade and an</tspan><tspan x="1392" y="564">orbital spaceport — 21 features</tspan><tspan x="1392" y="580">built with the real toolchain.</tspan></text>
+            <text class="paths-t paths" x="1392" y="600">examples/{abc-kids,meridian-station}</text>
+          </g>
+
+          <!-- ============ STRIP A: COMMAND CENTRE ============ -->
+          <line class="flow dash" x1="380" y1="648" x2="380" y2="616" marker-end="url(#m-arrow)"></line>
+          <line class="flow dash" x1="660" y1="648" x2="660" y2="616" marker-end="url(#m-arrow)"></line>
+          <line class="flow dash" x1="940" y1="648" x2="940" y2="616" marker-end="url(#m-arrow)"></line>
+          <line class="flow dash" x1="1220" y1="648" x2="1220" y2="616" marker-end="url(#m-arrow)"></line>
+
+          <g class="layer" data-layer="people">
+            <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
+            <text class="c-tag l-people-t" x="44" y="678">THE COMMAND CENTRE · one door for humans and machines</text>
+            <text class="c-desc">
+              <tspan x="44" y="702">Every action on this map is one command. The same 17 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
+              <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two features in the spaceport product were built this way.</tspan>
+            </text>
+            <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
+          </g>
+
+          <!-- ============ STRIP B: GOVERNANCE ============ -->
+          <g class="layer" data-layer="contract">
+            <rect class="strip l-contract" x="24" y="762" width="1592" height="114" rx="10"></rect>
+            <text class="c-tag l-contract-t" x="44" y="790">THE SAFETY NET · what keeps 21 independently-released features honest</text>
+            <text class="c-desc">
+              <tspan x="44" y="814">Automated checks re-derive every reference feature from its brief and fail if the shipped code has drifted; separate checks confirm each brief</tspan>
+              <tspan x="44" y="834">agrees with its packaging, that recorded decisions stay consistent, and that published documentation matches the code.</tspan>
+              <tspan x="44" y="854">A fourth check exists because of a real incident: when the platform changes something inside files it does not own, it warns the teams who own them.</tspan>
+            </text>
+            <text class="paths-t paths" x="1596" y="854" text-anchor="end">scripts/check-mfe-drift · check-mfe-consistency · check-adr · platform-migrations.ts</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        Nothing crosses from the right half to the left half except through the shared standard. That is the
+        deliberate constraint that lets teams, technologies and release schedules stay independent.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="band">
+    <h2 class="section-title">What you should know about this system</h2>
+    <p class="lede">
+      Nine things worth knowing before making a decision about this platform. Each is marked
+      <span class="tag tag-fact">fact</span> where the repository states it directly, or
+      <span class="tag tag-inf">inference</span> where it is a reasonable reading of the evidence.
+    </p>
+
+    <ol class="obs">
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>This is two systems that happen to live in one repository.</h3>
+        <p>A build-time factory and a run-time platform. They share a vocabulary but almost nothing else, and
+        they can be adopted separately — you could use the factory without the control tower. Budgeting,
+        staffing and roadmapping should probably treat them as two products.</p>
+      </li>
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>Everything funnels through one small, dependency-free foundation.</h3>
+        <p>A single package holds the shared standard, and it depends on nothing at all. Every other part of
+        the platform depends on <em>it</em>. That is excellent discipline — and it means this is the highest-leverage
+        and highest-blast-radius area in the codebase. A change here reaches all 21 reference features and
+        anything built from them.</p>
+      </li>
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>The control tower that runs the product is not in this repository.</h3>
+        <p>Both demo products ship a copy explicitly labelled "demo-scoped" and "dev-grade", with the canonical
+        version living in a separate repository (<span class="mono">falese/daemon</span>). The most operationally
+        critical component at run time is therefore an external dependency, kept in sync by hand.
+        <strong>This is the single largest supply-chain question on the map.</strong></p>
+      </li>
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>There is a documented failure mode in how platform changes reach teams.</h3>
+        <p>The factory owns some files and re-stamps them; it deliberately never touches others, because teams
+        edit those. When the platform changed, 29 files were fixed automatically and 19 were left silently
+        stale — with every automated check still passing. A human found them by hand. A warning system now
+        exists specifically for this, and adding an entry to it is a required part of any platform change.
+        <strong>This is the sharpest complexity point in the system, and the team knows it.</strong></p>
+      </li>
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>AI assistants are treated as first-class operators, not an add-on.</h3>
+        <p>Every command is published as a tool an assistant can call, each in an isolated process. Two of the
+        six features in the spaceport reference product were built through that interface rather than by a
+        person typing, and the comparison was written up. Few platforms this size have actually tested that claim.</p>
+      </li>
+      <li>
+        <span class="tag tag-fact">fact</span>
+        <h3>Decisions are managed as an asset, with the same rigour as code.</h3>
+        <p>82 architecture decisions and 11 product decisions, each with structured metadata, a generated index,
+        a consistency checker and a status command. Project rules require stopping and asking a human when no
+        decision covers a choice. For an incoming team, this is the fastest available route to understanding
+        <em>why</em> the system looks the way it does.</p>
+      </li>
+      <li>
+        <span class="tag tag-inf">inference</span>
+        <h3>Permission-checking is a designed hole, not a finished capability.</h3>
+        <p>Checking access is one of the ten standard abilities, and there is a working identity-token validator
+        used on the data side. But the shipped default that generated features inherit approves everything. The
+        <em>place</em> for authorisation is properly designed; the <em>policy</em> is left to whoever adopts the platform.
+        Anyone planning a production rollout should treat this as work not yet done.</p>
+      </li>
+      <li>
+        <span class="tag tag-inf">inference</span>
+        <h3>The demo products are the real test suite.</h3>
+        <p>Beyond 201 test files, both reference products are rebuilt from their briefs on every change and
+        compared byte for byte. The second product exists specifically to model messy reality — three backend
+        systems that name the same thing three different ways, with deliberate gaps in the data. That is a
+        maturity signal: the platform is being tested against inconvenient truth, not a clean demo.</p>
+      </li>
+      <li>
+        <span class="tag tag-inf">inference</span>
+        <h3>Maturity is uneven, and honestly reported.</h3>
+        <p>The build side is described as complete; the run-time platform is still in progress; the shared
+        packages are not yet published for outside use; and packaging deploys to a local development container
+        rather than a production environment. The project's own status page warns that it drifts and points to
+        generated sources instead. <strong>Read this as a strong internal platform approaching, but not yet at,
+        external readiness.</strong></p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="band">
+    <h2 class="section-title">Where the repository was ambiguous</h2>
+    <p class="lede">Places where the evidence ran out and a judgement was made, so you can check it.</p>
+
+    <div class="amb">
+      <div class="amb-item">
+        <h3>There is no end customer here</h3>
+        <p>"Customers &amp; staff" appear on the map, but this repository contains no product they would use —
+        only the machinery, plus two demo products. The customer is drawn because the run-time story is
+        meaningless without one.</p>
+      </div>
+      <div class="amb-item">
+        <h3>"Control tower" is a composite</h3>
+        <p>Three separate things — a rule book, a router and a placer — are drawn as one idea in the executive
+        view. They are genuinely separate components with separate failure modes; the detailed map splits them.</p>
+      </div>
+      <div class="amb-item">
+        <h3>Production deployment is unclear</h3>
+        <p>The packaging command targets a local development container, and the demo control plane keeps state
+        in memory only. How any of this runs in a real production environment is not described anywhere in
+        the repository, so nothing on the map claims to.</p>
+      </div>
+      <div class="amb-item">
+        <h3>Two demo products, two different builders</h3>
+        <p>The older product was assembled with a bespoke script; the newer one with the real toolchain, and it
+        says so. Where the two disagree, the newer product was treated as the accurate picture of how the
+        platform is meant to be used.</p>
+      </div>
+      <div class="amb-item">
+        <h3>"Business capability" is the platform's word, not mine</h3>
+        <p>The repository's own framing is that a feature equals one domain capability owned by one team. That
+        is an aspiration expressed in documentation as much as an observable property of the code — the demo
+        features are games and spaceport screens, not, say, Payments or Claims.</p>
+      </div>
+      <div class="amb-item">
+        <h3>Count of "parts" is a judgement</h3>
+        <p>Eight groupings were chosen for comprehension. The repository has eight shared packages, but they do
+        not map one-to-one: the shared standard on this page spans two packages, and the command centre spans
+        several directories.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>, branch
+    <span class="mono">claude/business-system-visualization-izrto5</span>. Counts are as measured:
+    82 architecture decisions, 11 product decisions, 17 commands, 8 shared packages, 44 code templates,
+    201 test files, 21 reference features.</p>
+    <p>Toggle <em>Show repository paths</em> above to trace any box on the detailed map back to the code.</p>
+  </footer>
+
+</main>
+
+<style>
+  :root {
+    --paper:    #F5F7F9;
+    --surface:  #FFFFFF;
+    --surface-2:#EDF1F5;
+    --ink:      #131C26;
+    --ink-2:    #33424F;
+    --muted:    #5A6B79;
+    --rule:     #DCE3EA;
+    --rule-2:   #C6D0DA;
+
+    --l-people:   #55697C;
+    --l-intent:   #5A46C0;
+    --l-build:    #1467C6;
+    --l-contract: #0A8272;
+    --l-runtime:  #AE6B14;
+    --l-data:     #8C3A85;
+
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --tint: 9%;
+    --shadow: 0 1px 2px rgba(19,28,38,.05), 0 6px 20px -12px rgba(19,28,38,.22);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:    #0E141A;
+      --surface:  #161E27;
+      --surface-2:#1D2731;
+      --ink:      #E7EDF3;
+      --ink-2:    #C0CCD8;
+      --muted:    #93A3B1;
+      --rule:     #2A3440;
+      --rule-2:   #3A4855;
+
+      --l-people:   #A0B3C6;
+      --l-intent:   #A99CF7;
+      --l-build:    #6CB2F7;
+      --l-contract: #3FC9B2;
+      --l-runtime:  #E4A94F;
+      --l-data:     #DE93D5;
+
+      --tint: 14%;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:    #0E141A;
+    --surface:  #161E27;
+    --surface-2:#1D2731;
+    --ink:      #E7EDF3;
+    --ink-2:    #C0CCD8;
+    --muted:    #93A3B1;
+    --rule:     #2A3440;
+    --rule-2:   #3A4855;
+
+    --l-people:   #A0B3C6;
+    --l-intent:   #A99CF7;
+    --l-build:    #6CB2F7;
+    --l-contract: #3FC9B2;
+    --l-runtime:  #E4A94F;
+    --l-data:     #DE93D5;
+
+    --tint: 14%;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main, .masthead { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- masthead ---------- */
+  .masthead { padding-top: 72px; padding-bottom: 8px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.04; letter-spacing: -.028em; font-weight: 700;
+    margin: 0 0 26px; max-width: 16ch; text-wrap: balance;
+  }
+  .standfirst { max-width: 66ch; font-size: 19px; color: var(--ink-2); margin: 0 0 16px; }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin: 32px 0 8px; padding-top: 26px; border-top: 1px solid var(--rule);
+  }
+  .meta {
+    font-family: var(--display); font-size: 13px; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 7px 15px;
+  }
+  .meta-n { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 5px; }
+
+  /* ---------- sections ---------- */
+  .band { padding: 64px 0 8px; }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .section-title {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(25px, 3vw, 33px); letter-spacing: -.02em;
+    margin: 0 0 14px; text-wrap: balance;
+  }
+  .lede { max-width: 68ch; color: var(--ink-2); margin: 0 0 30px; }
+  .lede em { font-style: italic; }
+
+  /* ---------- switch ---------- */
+  .switch {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--display); font-size: 13px; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 9px 14px; cursor: pointer;
+    margin-bottom: 30px; user-select: none;
+  }
+  .switch:hover { border-color: var(--rule-2); color: var(--ink); }
+  .switch input { accent-color: var(--l-build); width: 15px; height: 15px; margin: 0; cursor: pointer; }
+  .switch input:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+  .lg {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--display); font-size: 12.5px; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .lg:hover { border-color: var(--rule-2); color: var(--ink); }
+  .lg:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+  .lg[aria-pressed="true"] { border-color: currentColor; color: var(--ink); font-weight: 600; }
+  .lg-reset { color: var(--muted); font-style: italic; }
+  .sw { width: 11px; height: 11px; border-radius: 3px; display: block; }
+  .sw.l-people   { background: var(--l-people); }
+  .sw.l-intent   { background: var(--l-intent); }
+  .sw.l-build    { background: var(--l-build); }
+  .sw.l-contract { background: var(--l-contract); }
+  .sw.l-runtime  { background: var(--l-runtime); }
+  .sw.l-data     { background: var(--l-data); }
+
+  /* ---------- figures ---------- */
+  .fig { margin: 0 0 12px; }
+  /* the detailed map needs more room than the reading column allows */
+  .fig-wide {
+    width: min(calc(100vw - 32px), 1620px);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+  .fig-wide figcaption { max-width: 74ch; }
+  .fig-scroll {
+    overflow-x: auto; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 14px;
+    padding: 18px; box-shadow: var(--shadow);
+  }
+  .diagram { display: block; width: 100%; min-width: 860px; height: auto; color: var(--muted); }
+  #map { min-width: 1180px; }
+  figcaption {
+    font-size: 15px; color: var(--muted); max-width: 74ch;
+    margin: 16px 0 0; padding-left: 14px; border-left: 2px solid var(--rule-2);
+  }
+
+  /* ---------- svg typography ---------- */
+  .phase {
+    font-family: var(--display); font-size: 12px; font-weight: 700;
+    letter-spacing: .11em; fill: var(--muted);
+  }
+  .band-head {
+    font-family: var(--display); font-size: 11.5px; font-weight: 700;
+    letter-spacing: .1em;
+  }
+  .band-rule { stroke-width: 2; }
+  .c-tag { font-family: var(--display); font-size: 10.5px; font-weight: 700; letter-spacing: .12em; }
+  .c-title { font-family: var(--display); font-size: 16px; font-weight: 700; fill: var(--ink); letter-spacing: -.008em; }
+  .c-title.s { font-size: 14px; }
+  .chip-title { font-family: var(--display); font-size: 14.5px; font-weight: 700; fill: var(--ink); }
+  .c-desc { font-family: var(--display); font-size: 11.5px; fill: var(--ink-2); }
+  .flow-label { font-family: var(--display); font-size: 11px; font-style: italic; fill: var(--muted); }
+  .paths-t { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .flow { stroke: var(--rule-2); stroke-width: 1.6; }
+  .flow.dash { stroke-dasharray: 4 4; }
+  .arrowhead { fill: var(--rule-2); }
+
+  .card, .hinge, .chip, .strip { stroke-width: 1.4; }
+  .hinge { stroke-width: 2; }
+
+  .l-people   { fill: color-mix(in srgb, var(--l-people) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-people) 48%, var(--surface)); }
+  .l-intent   { fill: color-mix(in srgb, var(--l-intent) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-intent) 48%, var(--surface)); }
+  .l-build    { fill: color-mix(in srgb, var(--l-build) var(--tint), var(--surface));    stroke: color-mix(in srgb, var(--l-build) 48%, var(--surface)); }
+  .l-contract { fill: color-mix(in srgb, var(--l-contract) var(--tint), var(--surface)); stroke: color-mix(in srgb, var(--l-contract) 48%, var(--surface)); }
+  .l-runtime  { fill: color-mix(in srgb, var(--l-runtime) var(--tint), var(--surface));  stroke: color-mix(in srgb, var(--l-runtime) 48%, var(--surface)); }
+  .l-data     { fill: color-mix(in srgb, var(--l-data) var(--tint), var(--surface));     stroke: color-mix(in srgb, var(--l-data) 48%, var(--surface)); }
+
+  .chip.l-contract { fill: var(--surface); }
+
+  .l-people-t   { fill: var(--l-people); }
+  .l-intent-t   { fill: var(--l-intent); }
+  .l-build-t    { fill: var(--l-build); }
+  .l-contract-t { fill: var(--l-contract); }
+  .l-runtime-t  { fill: var(--l-runtime); }
+  .l-data-t     { fill: var(--l-data); }
+
+  .l-people-s   { stroke: var(--l-people); }
+  .l-intent-s   { stroke: var(--l-intent); }
+  .l-build-s    { stroke: var(--l-build); }
+  .l-contract-s { stroke: var(--l-contract); }
+  .l-runtime-s  { stroke: var(--l-runtime); }
+  .l-data-s     { stroke: var(--l-data); }
+
+  .layer { transition: opacity .22s ease; }
+  svg[data-focus] .layer { opacity: .14; }
+  svg[data-focus="people"]   .layer[data-layer="people"],
+  svg[data-focus="intent"]   .layer[data-layer="intent"],
+  svg[data-focus="build"]    .layer[data-layer="build"],
+  svg[data-focus="contract"] .layer[data-layer="contract"],
+  svg[data-focus="runtime"]  .layer[data-layer="runtime"],
+  svg[data-focus="data"]     .layer[data-layer="data"] { opacity: 1; }
+
+  .paths { display: none; }
+  body.show-paths p.paths { display: block; }
+  body.show-paths text.paths { display: inline; }
+
+  /* ---------- parts grid ---------- */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .part {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 22px 24px 20px;
+    border-top: 3px solid var(--rule-2);
+  }
+  .part[data-layer="people"]   { border-top-color: var(--l-people); }
+  .part[data-layer="intent"]   { border-top-color: var(--l-intent); }
+  .part[data-layer="build"]    { border-top-color: var(--l-build); }
+  .part[data-layer="contract"] { border-top-color: var(--l-contract); }
+  .part[data-layer="runtime"]  { border-top-color: var(--l-runtime); }
+  .part[data-layer="data"]     { border-top-color: var(--l-data); }
+  .part-kind {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; margin: 0 0 8px;
+  }
+  .part[data-layer="people"]   .part-kind { color: var(--l-people); }
+  .part[data-layer="intent"]   .part-kind { color: var(--l-intent); }
+  .part[data-layer="build"]    .part-kind { color: var(--l-build); }
+  .part[data-layer="contract"] .part-kind { color: var(--l-contract); }
+  .part[data-layer="runtime"]  .part-kind { color: var(--l-runtime); }
+  .part[data-layer="data"]     .part-kind { color: var(--l-data); }
+  .part h3 {
+    font-family: var(--display); font-size: 20px; font-weight: 700;
+    letter-spacing: -.015em; margin: 0 0 10px;
+  }
+  .part-what { font-size: 15.5px; color: var(--ink-2); margin: 0 0 12px; }
+  .part-why {
+    font-size: 14.5px; color: var(--muted); margin: 0;
+    padding-top: 12px; border-top: 1px solid var(--rule);
+  }
+  .part-why span {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink); display: block; margin-bottom: 4px;
+  }
+  .part .paths {
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule-2);
+    word-break: break-word;
+  }
+
+  /* ---------- observations ---------- */
+  .obs { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .obs li {
+    counter-increment: o; position: relative;
+    padding: 22px 0 22px 62px; border-top: 1px solid var(--rule);
+  }
+  .obs li::before {
+    content: counter(o, decimal-leading-zero);
+    position: absolute; left: 0; top: 24px;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .obs h3 {
+    font-family: var(--display); font-size: 19.5px; font-weight: 700;
+    letter-spacing: -.015em; margin: 8px 0 8px; text-wrap: balance;
+  }
+  .obs p { margin: 0; max-width: 74ch; color: var(--ink-2); font-size: 16px; }
+  .obs p strong { color: var(--ink); }
+
+  .tag {
+    display: inline-block; font-family: var(--mono);
+    font-size: 10px; letter-spacing: .11em; text-transform: uppercase;
+    border-radius: 4px; padding: 3px 8px; vertical-align: 2px;
+  }
+  .tag-fact { color: var(--l-contract); background: color-mix(in srgb, var(--l-contract) 13%, transparent); }
+  .tag-inf  { color: var(--l-runtime);  background: color-mix(in srgb, var(--l-runtime) 15%, transparent); }
+
+  /* ---------- ambiguities ---------- */
+  .amb { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .amb-item { background: var(--surface-2); border-radius: 10px; padding: 20px 22px; }
+  .amb-item h3 {
+    font-family: var(--display); font-size: 16.5px; font-weight: 700;
+    margin: 0 0 8px; letter-spacing: -.01em;
+  }
+  .amb-item p { margin: 0; font-size: 15px; color: var(--ink-2); }
+
+  /* ---------- footer ---------- */
+  .foot {
+    margin-top: 64px; padding: 30px 0 72px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px; color: var(--muted);
+  }
+  .foot p { margin: 0 0 8px; max-width: 78ch; }
+  .mono { font-family: var(--mono); font-size: .9em; color: var(--ink-2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 640px) {
+    .masthead { padding-top: 48px; }
+    body { font-size: 16px; }
+    .obs li { padding-left: 0; }
+    .obs li::before { position: static; display: block; margin-bottom: 4px; }
+  }
+</style>
+
+<script>
+  (function () {
+    var map = document.getElementById('map');
+    var legend = document.getElementById('legend');
+
+    legend.addEventListener('click', function (e) {
+      var btn = e.target.closest('.lg');
+      if (!btn) return;
+      var focus = btn.getAttribute('data-focus');
+      var active = map.getAttribute('data-focus');
+
+      if (!focus || focus === active) {
+        map.removeAttribute('data-focus');
+      } else {
+        map.setAttribute('data-focus', focus);
+      }
+
+      var now = map.getAttribute('data-focus');
+      legend.querySelectorAll('.lg').forEach(function (b) {
+        var f = b.getAttribute('data-focus');
+        b.setAttribute('aria-pressed', String(!!f && f === now));
+      });
+    });
+
+    document.getElementById('paths-toggle').addEventListener('change', function (e) {
+      document.body.classList.toggle('show-paths', e.target.checked);
+    });
+  })();
+</script>
