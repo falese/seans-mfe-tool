@@ -10,5 +10,6 @@ export * from './unified-generator';
 export * from './drift';
 export * from './slot-types';
 export * from './validate';
+export * from './lockfile';
 export * from './platform-migrations';
 export * from './package-dependency-diff';

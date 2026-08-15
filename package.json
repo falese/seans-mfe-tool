@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular",
+    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular packages/runtime",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas && npm run build:registry-mirror",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",

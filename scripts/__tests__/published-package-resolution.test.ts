@@ -16,9 +16,11 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 
-const RUNTIME_DIR = path.resolve(__dirname, '..', '..', 'packages', 'runtime');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const RUNTIME_DIR = path.join(REPO_ROOT, 'packages', 'runtime');
 const pkg = fs.readJsonSync(path.join(RUNTIME_DIR, 'package.json')) as {
   files: string[];
+  dependencies?: Record<string, string>;
   exports: Record<string, { types?: string; default?: string }>;
 };
 
@@ -52,6 +54,26 @@ describe('@falese/smt-runtime resolves under Node10 (ADR-084)', () => {
 
   it('ships dist, so the forwarders have something to forward to', () => {
     expect(pkg.files).toContain('dist');
+  });
+
+  it('is compiled by build:packages, so that dist exists to be packed', () => {
+    // `files` listing `dist` is a promise no build step kept: runtime was the
+    // one package missing from this list, so every tarball shipped forwarders
+    // pointing at a directory that was never compiled. tsconfig.build.json does
+    // not close it — that emits the repo-root dist/runtime staging artifact,
+    // not the package's own dist.
+    const scripts = (
+      fs.readJsonSync(path.join(REPO_ROOT, 'package.json')) as { scripts: Record<string, string> }
+    ).scripts;
+
+    expect(scripts['build:packages']).toContain('packages/runtime');
+  });
+
+  it('declares the contracts package its compiled output requires', () => {
+    // The runtime re-exports contracts types and requires it at runtime, so an
+    // installed MFE that does not happen to declare contracts itself resolves
+    // neither. A dependency is what makes that npm's job rather than luck.
+    expect(pkg.dependencies?.['@falese/smt-contracts']).toBeDefined();
   });
 });
 

@@ -30,7 +30,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { execFileSync, spawn } from 'child_process';
 import * as http from 'http';
-import { generateAllFiles, writeGeneratedFiles } from '@falese/smt-codegen';
+import { generateAllFiles, writeGeneratedFiles, normalizeLockfile } from '@falese/smt-codegen';
 import { writeManifest, generateEndpoints } from '@falese/smt-dsl';
 import type { DSLManifest } from '@falese/smt-dsl';
 import { mfeValidateCommand } from '../src/commands/mfe/validate';
@@ -106,6 +106,14 @@ async function checkLane(lane: Lane): Promise<void> {
       env: { ...process.env, 'npm_config_@falese:registry': MIRROR_URL },
     });
 
+    // Installing through the mirror locks every @falese/* entry to the mirror's
+    // own tarball URL — the lane pin ADR-084 §5 forbids, and the defect the
+    // sibling `lockfile-lane-independent` rule exists to catch. Applying the
+    // same normalisation ADR-084 §5 requires of a generated MFE keeps the gate
+    // modelling a lockfile a consumer could actually ship, instead of
+    // manufacturing the one it must not.
+    await normalizeLane(dir);
+
     console.log(`[${lane.framework}] mfe:validate --typecheck ...`);
     await mfeValidateCommand({ dir, typecheck: true });
     console.log(`[${lane.framework}] OK`);
@@ -116,6 +124,18 @@ async function checkLane(lane: Lane): Promise<void> {
       await fs.remove(dir);
     }
   }
+}
+
+/** Strip the mirror's `resolved` URLs from the probe's lockfile (ADR-084 §5). */
+async function normalizeLane(dir: string): Promise<void> {
+  const lockPath = path.join(dir, 'package-lock.json');
+  if (!(await fs.pathExists(lockPath))) return;
+
+  const normalized = normalizeLockfile(await fs.readFile(lockPath, 'utf8'));
+  if (normalized === null) return;
+
+  await fs.writeFile(lockPath, normalized);
+  console.log(`[lockfile] stripped lane-specific "resolved" URLs from @falese/* entries`);
 }
 
 /** Poll until the mirror answers, so the first install does not race startup. */
