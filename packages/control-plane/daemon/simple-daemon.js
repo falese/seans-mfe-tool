@@ -1,11 +1,14 @@
-// The component daemon. This repository owns the canonical control plane
-// (PDR-008, ADR-078) — falese/daemon is retired and is NOT a source of truth for
-// this file. Do not "reconcile against upstream"; there is no upstream.
+// The component daemon — part of the platform's control plane.
 //
-// Known gap: abc-kids and meridian-station still carry byte-identical copies of
-// this file. Promoting them to a single `packages/control-plane` that both fleets
-// consume is ADR-078 §1, tracked by #139. Until then, a change here must be made
-// in both copies — check with `diff` before committing.
+// This repository owns the canonical control plane (PDR-008, ADR-078).
+// falese/daemon is retired; there is no upstream and nothing to reconcile
+// against. This file is the single source of truth: it was promoted here
+// from two byte-identical copies under examples/*/control-plane (ADR-078
+// §1, #139), and both reference fleets now build their images from it.
+//
+// Placement rules are NOT owned here. Each fleet keeps its own
+// control-plane/rules.json — composition is the deploying project's
+// decision, the engine that evaluates it is the platform's.
 // ========================
 // COMPONENT DAEMON (Node.js)
 // ========================

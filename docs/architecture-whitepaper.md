@@ -135,7 +135,7 @@ flowchart TB
 |---|---|---|
 | Host shell | `src/runtime/base-control-plane.ts` | Single entry point; owns daemon + LayoutManager lifecycle |
 | Runtime orchestration | `src/runtime/layout-manager.ts` | Daemon-driven slot composition; mounts MFEs via adaptors |
-| Control plane | `examples/*/control-plane/` → `packages/control-plane` (#139) | Daemon process + capability registry; resolves actions → experiences. Ships with the platform (PDR-008, ADR-078) |
+| Control plane | `packages/control-plane/` | Daemon process + capability registry; resolves actions → experiences. Ships with the platform (PDR-008, ADR-078) |
 | MFE runtime | `src/runtime/base-mfe.ts` | Lifecycle contract every MFE implements (load/render/health) |
 | Contracts | `packages/contracts/` | Shared type vocabulary across all layers |
 | Framework plugin | `packages/framework-react/` · `packages/framework-angular/` | Build-time codegen + dev server + Docker strategy |

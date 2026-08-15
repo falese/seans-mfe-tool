@@ -11,9 +11,13 @@ services:
   # part of the fleet bring-up, not bundled with the shell. registry :4000,
   # daemon :3004. The daemon reaches the registry by service name; the shell's
   # browser reaches the daemon at ws://localhost:3004/graphql.
+  #
+  # The build context reaches OUT of this example into packages/control-plane:
+  # the registry and daemon are platform code, shared with meridian-station, and
+  # this fleet owns only its control-plane/rules.json (ADR-078 §1).
   registry:
     build:
-      context: ./control-plane/registry
+      context: ../../packages/control-plane/registry
       dockerfile: Dockerfile
     image: abc-kids-control-registry:latest
     ports:
@@ -27,7 +31,7 @@ services:
 
   daemon:
     build:
-      context: ./control-plane/daemon
+      context: ../../packages/control-plane/daemon
       dockerfile: Dockerfile
     image: abc-kids-control-daemon:latest
     environment:

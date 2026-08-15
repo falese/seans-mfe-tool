@@ -10,8 +10,22 @@
 #   echo "127.0.0.1 harbormaster-api stellar-ledger-api station-os-api" | sudo tee -a /etc/hosts
 set -uo pipefail
 STATION="$(cd "$(dirname "$0")/.." && pwd)"
+# The registry and daemon are platform code shared with abc-kids, not this
+# fleet's own (packages/control-plane, ADR-078 §1). Only rules.json is local.
+CONTROL_PLANE="$(cd "$STATION/../../packages/control-plane" && pwd)"
 LOGS=${LOGS:-/tmp/meridian-logs}
 mkdir -p "$LOGS"
+
+# The control plane runs as a container in compose; this no-docker path runs it
+# straight from source, so it needs its own deps. They are deliberately not part
+# of the root workspace install (see packages/control-plane/README.md).
+for svc in registry daemon; do
+  if [ ! -d "$CONTROL_PLANE/$svc/node_modules" ]; then
+    echo "── Installing control-plane/$svc deps (first run) ──"
+    ( cd "$CONTROL_PLANE/$svc" && npm ci --omit=dev --no-audit --no-fund ) || {
+      echo "control-plane/$svc install failed" >&2; exit 1; }
+  fi
+done
 
 free_port() {
   local pid
@@ -31,11 +45,12 @@ done
 
 echo "── Control plane ───────────────────────────────────────"
 free_port 4500
-( cd "$STATION" && PORT=4500 nohup node control-plane/registry/simple-registry.js > "$LOGS/registry.log" 2>&1 & )
+( cd "$CONTROL_PLANE/registry" && PORT=4500 \
+    nohup node simple-registry.js > "$LOGS/registry.log" 2>&1 & )
 sleep 2
 free_port 4504
-( cd "$STATION" && DAEMON_PORT=4504 REGISTRY_HOST=localhost REGISTRY_PORT=4500 \
-    nohup node control-plane/daemon/simple-daemon.js > "$LOGS/daemon.log" 2>&1 & )
+( cd "$CONTROL_PLANE/daemon" && DAEMON_PORT=4504 REGISTRY_HOST=localhost REGISTRY_PORT=4500 \
+    nohup node simple-daemon.js > "$LOGS/daemon.log" 2>&1 & )
 echo "  registry → :4500 · daemon → :4504"
 
 echo "── MFEs ────────────────────────────────────────────────"

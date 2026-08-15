@@ -3,7 +3,7 @@ id: 0078
 title: The control plane ships in the platform, and a composition environment is generated from a manifest
 status: Accepted
 impl:
-  stage: deferred
+  stage: phased
   refs: ["#139"]
 date: 2026-07-26
 deciders: [sean]
@@ -14,8 +14,12 @@ relates-to: [22, 54, 55, 57, 59, 60, 66, 73, 74, 77]
 supersedes: []
 superseded-by: []
 implements-pdr: [5]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/control-plane/registry/simple-registry.js
+  - packages/control-plane/daemon/simple-daemon.js
+  - packages/control-plane/README.md
+verified-by:
+  - packages/contracts/src/__tests__/registry-slot-pin.test.ts
 tracked-by: ["#139"]
 summary: >-
   The registry and daemon move from a vendored copy inside each reference app into
@@ -72,7 +76,13 @@ on PR #153 — which was closed, not merged. That condition can never be met as 
 
 ## Decision
 
-### 1. The registry and daemon become `packages/control-plane`
+### 1. The registry and daemon become `packages/control-plane` — **landed**
+
+> **Shipped.** `packages/control-plane/{registry,daemon}` exists; both reference fleets build
+> their images from it via a `../../packages/control-plane/...` compose context, and the two
+> copies are deleted. Each fleet keeps only its own `control-plane/rules.json`. §2–§4 below
+> remain open under #139, which is why this ADR is `Accepted (impl phased)` and not
+> `Implemented`.
 
 Promoted from the vendored copies, not rewritten. `packages/runtime/src/base-control-plane.ts`
 (ADR-059) already owns the abstract shape; this package provides the concrete registry and daemon

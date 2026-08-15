@@ -23,15 +23,17 @@
 # registry restart, then scripts/console.sh, and open http://localhost:5000.
 
 services:
+  # Registry and daemon are platform code (packages/control-plane, ADR-078 §1),
+  # shared with abc-kids. This fleet owns only its control-plane/rules.json.
   registry:
-    build: ./control-plane/registry
+    build: ../../packages/control-plane/registry
     environment:
       PORT: 4500
     ports:
       - "4500:4500"
 
   daemon:
-    build: ./control-plane/daemon
+    build: ../../packages/control-plane/daemon
     depends_on:
       - registry
     environment:

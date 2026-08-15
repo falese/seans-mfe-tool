@@ -229,7 +229,7 @@
         <h3>The control tower</h3>
         <p class="part-what">Three cooperating roles: a <em>rule book</em> that turns "this person did this" into "show that feature", a <em>router</em> that carries the request and the answer, and a <em>placer</em> that puts the result into the right named space and keeps it healthy.</p>
         <p class="part-why"><span>Why it matters</span> Business rules about what appears where live outside the features, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
-        <p class="paths">packages/runtime/src/layout-manager.ts · examples/*/control-plane/</p>
+        <p class="paths">packages/runtime/src/layout-manager.ts · packages/control-plane/</p>
       </article>
 
       <article class="part" data-layer="data">
@@ -407,12 +407,12 @@
             <rect class="card l-runtime" x="1096" y="116" width="230" height="112" rx="9"></rect>
             <text class="c-title s" x="1114" y="142">The rule book</text>
             <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and</tspan><tspan x="1114" y="180">this person, which feature, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
-            <text class="paths-t paths" x="1114" y="216">control-plane/registry/</text>
+            <text class="paths-t paths" x="1114" y="216">packages/control-plane/registry/</text>
 
             <rect class="card l-runtime" x="1096" y="244" width="230" height="112" rx="9"></rect>
             <text class="c-title s" x="1114" y="270">The router</text>
             <text class="c-desc"><tspan x="1114" y="292">Carries actions up and answers</tspan><tspan x="1114" y="308">down over a live connection.</tspan><tspan x="1114" y="324">Knows nothing about content.</tspan></text>
-            <text class="paths-t paths" x="1114" y="344">control-plane/daemon/</text>
+            <text class="paths-t paths" x="1114" y="344">packages/control-plane/daemon/</text>
 
             <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
             <text class="c-title s" x="1114" y="398">The placer</text>
@@ -513,13 +513,12 @@
       </li>
       <li>
         <span class="tag tag-fact">fact</span>
-        <h3>The control tower is owned here, but it is stored twice.</h3>
-        <p>Ownership is settled: the platform owns the control tower outright, and the external repository that
-        once held it is retired. What is not yet settled is where it lives <em>inside</em> the repository — both
-        demo products carry their own byte-for-byte identical copy, so a fix has to be made twice. Promoting it
-        to a single shared component is an approved, tracked piece of work.
-        <strong>Until that lands, this is the one place where the platform does not follow its own rule about
-        single sources of truth.</strong></p>
+        <h3>The control tower is owned here, and now stored once.</h3>
+        <p>The platform owns the control tower outright; the external repository that once held it is retired.
+        Until recently each demo product carried its own byte-for-byte identical copy, so a fix had to be made
+        twice — that duplication is gone, and both products now draw from one shared component.
+        <strong>What remains unfinished is durability: the control tower still keeps everything in memory, so a
+        restart forgets which features exist.</strong></p>
       </li>
       <li>
         <span class="tag tag-fact">fact</span>

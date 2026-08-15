@@ -129,10 +129,14 @@ manifest validation errors (#141), and wiring ADR-030's dead pattern branch.
 
 ### `platform:init` — composition environment as a generated artifact (#329)
 
-ADR-078 (Accepted, impl deferred to #139) + PDR-008 (Accepted). `@falese/daemon` is **retired**:
-this repo owns the canonical control plane today. What remains is the packaging — moving the two
-byte-identical copies in the reference apps into `packages/control-plane`, making persistence a
-manifest field, and generating the shell plus its control plane in one command. Absorbs #144.
+ADR-078 (Accepted, impl phased under #139) + PDR-008 (Accepted). `@falese/daemon` is **retired**
+and this repo owns the canonical control plane.
+
+**§1 done:** the registry and daemon are `packages/control-plane`, consumed by both reference
+fleets; the two byte-identical copies are gone and each fleet keeps only its `rules.json`.
+
+**Still open:** persistence as a manifest field (§2), `platform:init` generating the shell plus
+its control plane in one command (§3), and generated registration blocks (§4). Absorbs #144.
 
 ### One fleet-description engine (#330)
 

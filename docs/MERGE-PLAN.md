@@ -3,8 +3,8 @@
 > **The daemon half of this plan is void (PDR-008, ADR-078).** The control plane
 > is part of the platform: this repository owns the canonical registry and daemon,
 > and `Falese/daemon` is retired — there is nothing left to absorb, publish, or
-> reconcile. The implementation lives in `examples/*/control-plane/` today and
-> moves to `packages/control-plane` under #139. Every `@falese/daemon-plugin` and
+> reconcile. The implementation is `packages/control-plane/`, consumed by both
+> reference fleets (ADR-078 §1). Every `@falese/daemon-plugin` and
 > `Falese/daemon` line below is struck through and kept only for the record.
 > **Coder is unaffected** and remains the live half of this plan.
 

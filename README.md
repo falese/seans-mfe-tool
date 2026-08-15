@@ -173,9 +173,10 @@ Reserved topics (available once the plugin is installed):
 
 > **The control plane is not a plugin.** The registry and daemon ship with the
 > platform and this repository owns the canonical implementation (PDR-008,
-> ADR-078); `@falese/daemon` is retired. The implementation currently lives in
-> `examples/*/control-plane/` and moves to `packages/control-plane` under #139.
-> The `daemon:*` topic is reserved for that in-platform control plane.
+> ADR-078); `@falese/daemon` is retired. It lives in
+> [`packages/control-plane/`](./packages/control-plane/README.md) and both
+> reference fleets build their images from it. The `daemon:*` topic is reserved
+> for that in-platform control plane.
 
 ---
 

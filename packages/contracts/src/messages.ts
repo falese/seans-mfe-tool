@@ -3,9 +3,9 @@
  * Renderer ⇄ Daemon ⇄ Registry ⇄ MFE (PLATFORM-CONTRACT.md v3.2, ADR-053).
  *
  * This module is the single source of truth for the protocol. The control plane
- * that speaks it ships in this repo (PDR-008, ADR-078; consolidating into
- * `packages/control-plane` under #139); non-TypeScript implementations validate
- * payloads with the runtime guards exported below.
+ * that speaks it ships in this repo as `packages/control-plane` (PDR-008,
+ * ADR-078); non-TypeScript implementations validate payloads with the runtime
+ * guards exported below.
  *
  * Design notes
  * ────────────

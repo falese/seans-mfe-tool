@@ -172,7 +172,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Slot id grammar (single source, ADR-069) | `packages/contracts/src/slot-grammar.ts` |
 | Angular slot sugar (`[smtDeclaredSlot]` directive) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
 | Generated Angular slot template | `packages/codegen/templates/base-mfe-angular/slots.ts.ejs` |
-| Example control plane (vendored daemon + registry images) | `examples/abc-kids/control-plane/` |
+| Control plane (canonical registry + daemon images) | `packages/control-plane/` |
 | Slot contract explainer (ADR-066–069 in plain language) | `docs/slot-contract.md` |
 | Slot architecture diagrams (design/build/rule-authoring/runtime) | `docs/slot-architecture.md` |
 | Query capability explainer (`mfe.query()` vs BFF connector, endpoint resolution) | `docs/query-capability.md` |
@@ -184,7 +184,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 
 ## Resolved decisions — do not relitigate
 
-- **Plugin-first, not merge-first — except the control plane.** `Falese/coder` ships as an oclif plugin depending on `@seans-mfe/contracts`; monorepo merge is a later phase. **The control plane is not a plugin and not external:** this repo owns the canonical registry and daemon (PDR-008, ADR-078), `@falese/daemon` is retired, and nothing here reconciles against it. The implementation is in `examples/*/control-plane/` (two byte-identical copies) and moves to `packages/control-plane` under #139.
+- **Plugin-first, not merge-first — except the control plane.** `Falese/coder` ships as an oclif plugin depending on `@seans-mfe/contracts`; monorepo merge is a later phase. **The control plane is not a plugin and not external:** this repo owns the canonical registry and daemon (PDR-008, ADR-078), `@falese/daemon` is retired, and nothing here reconciles against it. The implementation is `packages/control-plane/` (ADR-078 §1); both reference fleets build their registry/daemon images from it, and each fleet owns only its `control-plane/rules.json`.
 - **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.

@@ -31,8 +31,9 @@ docker compose up -d --build
 
 ## 2. The control plane comes up with the fleet
 
-The registry and node daemon live under `control-plane/{registry,daemon}/` — the
-platform's own control plane, not a third-party dependency — and run as their own
+The registry and node daemon are the platform's own control plane, shared with
+meridian-station and built straight out of `packages/control-plane/` (ADR-078 §1).
+This example owns only its `control-plane/rules.json`. They run as their own
 images, **part of the `docker compose up` above, not bundled with the shell**:
 
 ```bash

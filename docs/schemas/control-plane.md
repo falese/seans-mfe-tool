@@ -265,6 +265,6 @@ class NodeControlPlane extends BaseControlPlane {
 ```
 
 The concrete implementation ships with the platform (PDR-008, ADR-078): the registry
-and daemon live under `examples/*/control-plane/` and move to `packages/control-plane`
-under #139. Implementations import `BaseControlPlane` from the published
+and daemon are `packages/control-plane`, and both reference fleets build their images
+from it. Implementations import `BaseControlPlane` from the published
 `@seans-mfe-tool/runtime` package — the same way MFE implementations import `BaseMFE`.

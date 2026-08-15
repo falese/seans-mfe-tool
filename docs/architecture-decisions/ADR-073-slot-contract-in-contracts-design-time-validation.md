@@ -190,10 +190,11 @@ the runtime rejects — so `packages/contracts/src/__tests__/registry-slot-pin.t
 pins the two against each other across every branch, the same idiom ADR-069 used
 for the grammar. Delete the copy and the pin when contracts is published.
 
-These are the platform's own registry copies, not vendored from anywhere: ADR-078
-retires `falese/daemon` and makes this repo the canonical owner, so there is no
-upstream to carry the change to. The remaining duplication (two byte-identical
-copies) is closed by `packages/control-plane` under #139.
+This is the platform's own registry, not vendored from anywhere: ADR-078 retires
+`falese/daemon` and makes this repo the canonical owner, so there is no upstream
+to carry the change to. ADR-078 §1 has since promoted it to
+`packages/control-plane/registry/`, so there is now exactly one copy to keep in
+step — read the plural below as historical.
 
 ### 6. The schema artifact gets a gate
 

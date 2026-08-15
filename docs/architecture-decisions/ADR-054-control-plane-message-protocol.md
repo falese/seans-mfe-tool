@@ -37,8 +37,8 @@ long-form: true
 > **Consumer changed after ratification.** [ADR-078](./ADR-078-control-plane-in-platform.md)
 > brings the control plane into the platform and retires `falese/daemon`. The protocol below is
 > unchanged, but its consumer is now in-repo: read "the daemon repo" as
-> `examples/<app>/control-plane/` (moving to `packages/control-plane`, #139). A breaking
-> `messages.ts` change still needs a new ADR — it just no longer needs a cross-repo release.
+> `packages/control-plane`. A breaking `messages.ts` change still needs a new ADR — it just no
+> longer needs a cross-repo release.
 
 ## Context
 
