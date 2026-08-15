@@ -162,14 +162,20 @@ seans-mfe-tool deploy <name> --type <shell|remote|api> [options]
 ### Plugins (`@seans-mfe/*` core, `@falese/*` third-party — ADR-021, ADR-022)
 
 ```bash
-seans-mfe-tool plugins install daemon            # shortname → @seans-mfe scope
-seans-mfe-tool plugins install @falese/daemon-plugin
+seans-mfe-tool plugins install coder             # shortname → @seans-mfe scope
+seans-mfe-tool plugins install @falese/coder-plugin
 seans-mfe-tool plugins                           # list installed
-seans-mfe-tool plugins uninstall daemon
+seans-mfe-tool plugins uninstall coder
 ```
 
 Reserved topics (available once the plugin is installed):
-`daemon:*` (`@falese/daemon-plugin`), `coder:*` (`@falese/coder-plugin`).
+`coder:*` (`@falese/coder-plugin`).
+
+> **The control plane is not a plugin.** The registry and daemon ship with the
+> platform and this repository owns the canonical implementation (PDR-008,
+> ADR-078); `@falese/daemon` is retired. The implementation currently lives in
+> `examples/*/control-plane/` and moves to `packages/control-plane` under #139.
+> The `daemon:*` topic is reserved for that in-platform control plane.
 
 ---
 

@@ -7,7 +7,7 @@ services:
   seans-mfe-tool-cli:
     image: seans-mfe-tool-cli:latest
 
-  # Control plane (ported from falese/daemon into this example, ADR-054/055) —
+  # Control plane (ships with the platform — PDR-008/ADR-078; ADR-054/055) —
   # part of the fleet bring-up, not bundled with the shell. registry :4000,
   # daemon :3004. The daemon reaches the registry by service name; the shell's
   # browser reaches the daemon at ws://localhost:3004/graphql.

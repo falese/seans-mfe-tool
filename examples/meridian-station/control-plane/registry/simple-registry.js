@@ -1,6 +1,11 @@
-// Vendored from falese/daemon component-system/registry (ported 2026-07-13, PR #266).
-// This is a demo-scoped copy for the abc-kids fleet — the canonical implementation
-// lives in falese/daemon; reconcile against upstream when it changes.
+// The component registry. This repository owns the canonical control plane
+// (PDR-008, ADR-078) — falese/daemon is retired and is NOT a source of truth for
+// this file. Do not "reconcile against upstream"; there is no upstream.
+//
+// Known gap: abc-kids and meridian-station still carry byte-identical copies of
+// this file. Promoting them to a single `packages/control-plane` that both fleets
+// consume is ADR-078 §1, tracked by #139. Until then, a change here must be made
+// in both copies — check with `diff` before committing.
 // ========================
 // COMPONENT REGISTRY
 // ========================

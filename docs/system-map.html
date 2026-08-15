@@ -513,11 +513,13 @@
       </li>
       <li>
         <span class="tag tag-fact">fact</span>
-        <h3>The control tower that runs the product is not in this repository.</h3>
-        <p>Both demo products ship a copy explicitly labelled "demo-scoped" and "dev-grade", with the canonical
-        version living in a separate repository (<span class="mono">falese/daemon</span>). The most operationally
-        critical component at run time is therefore an external dependency, kept in sync by hand.
-        <strong>This is the single largest supply-chain question on the map.</strong></p>
+        <h3>The control tower is owned here, but it is stored twice.</h3>
+        <p>Ownership is settled: the platform owns the control tower outright, and the external repository that
+        once held it is retired. What is not yet settled is where it lives <em>inside</em> the repository — both
+        demo products carry their own byte-for-byte identical copy, so a fix has to be made twice. Promoting it
+        to a single shared component is an approved, tracked piece of work.
+        <strong>Until that lands, this is the one place where the platform does not follow its own rule about
+        single sources of truth.</strong></p>
       </li>
       <li>
         <span class="tag tag-fact">fact</span>

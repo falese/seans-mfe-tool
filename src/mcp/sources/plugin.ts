@@ -88,7 +88,7 @@ function deriveTopicPrefix(plugin: OclifPlugin): string {
   if (topics.length > 0) return topics[0];
 
   // Fall back to the last segment of the package name
-  // @falese/daemon-plugin → daemon
+  // @falese/coder-plugin → coder
   const nameParts = plugin.name.split('/');
   const lastPart = nameParts[nameParts.length - 1];
   return lastPart.replace(/-plugin$/, '');

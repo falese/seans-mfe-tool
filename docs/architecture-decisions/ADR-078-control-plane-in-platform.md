@@ -1,7 +1,7 @@
 ---
 id: 0078
 title: The control plane ships in the platform, and a composition environment is generated from a manifest
-status: Proposed
+status: Accepted
 impl:
   stage: deferred
   refs: ["#139"]
@@ -10,7 +10,7 @@ deciders: [sean]
 area: Control plane / codegen / packaging
 enforcement: code
 tags: [control-plane, registry, daemon, codegen, packaging, persistence, drift]
-relates-to: [54, 55, 57, 59, 60, 66, 73, 74, 77]
+relates-to: [22, 54, 55, 57, 59, 60, 66, 73, 74, 77]
 supersedes: []
 superseded-by: []
 implements-pdr: [5]

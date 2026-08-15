@@ -84,7 +84,7 @@
         "description": "AI-assisted coding commands (requires @falese/coder-plugin)"
       },
       "daemon": {
-        "description": "Control-plane daemon commands (requires @falese/daemon-plugin)"
+        "description": "Control-plane daemon commands (in-platform control plane — PDR-008/ADR-078)"
       },
       "mfe": {
         "description": "MFE consistency checks (mfe:validate)"

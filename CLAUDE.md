@@ -184,7 +184,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 
 ## Resolved decisions — do not relitigate
 
-- **Plugin-first, not merge-first.** `Falese/daemon` and `Falese/coder` ship as oclif plugins depending on `@seans-mfe/contracts`. Monorepo merge is a later phase.
+- **Plugin-first, not merge-first — except the control plane.** `Falese/coder` ships as an oclif plugin depending on `@seans-mfe/contracts`; monorepo merge is a later phase. **The control plane is not a plugin and not external:** this repo owns the canonical registry and daemon (PDR-008, ADR-078), `@falese/daemon` is retired, and nothing here reconciles against it. The implementation is in `examples/*/control-plane/` (two byte-identical copies) and moves to `packages/control-plane` under #139.
 - **Namespace: `@seans-mfe/*`** for shared packages; `@falese/*` for third-party plugins.
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.

@@ -12,6 +12,13 @@ summary: Independent tools (CLI, daemon, coder) ship as oclif plugins depending 
 
 # PDR-004: Plugin-first federated ecosystem (not monorepo-first)
 
+> **Narrowed after ratification.** [PDR-008](./PDR-008-control-plane-is-platform.md) and
+> [ADR-078](../architecture-decisions/ADR-078-control-plane-in-platform.md) take the control plane
+> out of this decision: the registry and daemon ship **inside this repository**, which owns the
+> canonical implementation, and `Falese/daemon` is retired. Plugin-first remains the stance for
+> everything that *extends* the platform — frameworks, BFF, API generation, deploy targets, coder.
+> Read the daemon references below as historical.
+
 ## Problem space
 
 The platform is more than one tool. The CLI (`seans-mfe-tool`), the daemon

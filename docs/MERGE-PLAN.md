@@ -1,8 +1,15 @@
 # Merge Plan — Phased Path to a Unified Platform Monorepo
 
-This document describes how `Falese/daemon`, `Falese/coder`, and this CLI repo
-converge into a single monorepo.  Each phase has concrete prerequisites; none
-can be skipped.
+> **The daemon half of this plan is void (PDR-008, ADR-078).** The control plane
+> is part of the platform: this repository owns the canonical registry and daemon,
+> and `Falese/daemon` is retired — there is nothing left to absorb, publish, or
+> reconcile. The implementation lives in `examples/*/control-plane/` today and
+> moves to `packages/control-plane` under #139. Every `@falese/daemon-plugin` and
+> `Falese/daemon` line below is struck through and kept only for the record.
+> **Coder is unaffected** and remains the live half of this plan.
+
+This document describes how `Falese/coder` and this CLI repo converge into a
+single monorepo.  Each phase has concrete prerequisites; none can be skipped.
 
 ---
 
@@ -37,23 +44,25 @@ Three repos remain independent; the CLI acts as the integration hub.
 | `seans-mfe-tool` (CLI) | this repo | npm (binary) |
 | `@seans-mfe/contracts` | this repo (`packages/contracts/`) | npm (library) |
 | `@seans-mfe/oclif-base` | this repo (`packages/oclif-base/`) | npm (library) |
-| `@falese/daemon-plugin` | `Falese/daemon` | npm (oclif plugin) |
+| ~~`@falese/daemon-plugin`~~ | ~~`Falese/daemon`~~ | **void** — control plane ships in this repo (PDR-008/ADR-078) |
 | `@falese/coder-plugin` | `Falese/coder` | npm (oclif plugin) or `@falese/coder-mcp` (Bun-native MCP server) |
 
 ### Integration model
 
-1. `Falese/daemon` and `Falese/coder` add `@seans-mfe/contracts` as a dep and
-   implement commands that extend `BaseCommand` from `@seans-mfe/oclif-base`.
-2. End users install plugins: `seans-mfe-tool plugins install @falese/daemon-plugin`.
+1. `Falese/coder` adds `@seans-mfe/contracts` as a dep and implements commands
+   that extend `BaseCommand` from `@seans-mfe/oclif-base`.
+2. End users install plugins: `seans-mfe-tool plugins install @falese/coder-plugin`.
+   The control plane needs no install — it ships with the platform.
 3. Agents use `seans-mfe-tool mcp serve` which federates tools from all sources.
 
 ### Phase 1 success criteria
 
 - [ ] `@seans-mfe/contracts` published to npm with stable semver
 - [ ] `@seans-mfe/oclif-base` published to npm with stable semver
-- [ ] `@falese/daemon-plugin` passes `plugins link` + `--json` envelope test
+- [ ] ~~`@falese/daemon-plugin` passes `plugins link` + `--json` envelope test~~ —
+      **void** (PDR-008/ADR-078): the control plane is not a plugin
 - [ ] `@falese/coder-plugin` (or `@falese/coder-mcp`) passes MCP federation test
-- [ ] All three repos have green CI running `turbo run test build`
+- [ ] Both repos have green CI running `turbo run test build`
 
 ---
 
@@ -68,12 +77,12 @@ Move all three repos into a single git repository under `apps/` and `packages/`.
 - [ ] **Shared lint baseline agreed**: ESLint config (`eslint.config.js`),
   Prettier config, and commit-lint rules are identical across all three repos.
 - [ ] **Shared TS baseline agreed**: `tsconfig.base.json` with target, module,
-  strict, lib agreed and adopted by all three repos.
+  strict, lib agreed and adopted by both repos.
 - [ ] **Shared Jest baseline agreed**: jest.config base with coverage thresholds
   and test-match patterns agreed and adopted.
 - [ ] **E2E test in CI**: at least one green E2E test that:
-  - Installs `@falese/daemon-plugin` into the CLI
-  - Runs a daemon command via `seans-mfe-tool daemon:start --json`
+  - Installs `@falese/coder-plugin` into the CLI
+  - Runs a coder command via `seans-mfe-tool coder:<cmd> --json`
   - Asserts the `CommandResult` envelope shape
 - [ ] **Changelog entries**: each repo has at least two release cycles with
   correct CHANGELOG.md entries (demonstrates the release process works).
@@ -81,14 +90,15 @@ Move all three repos into a single git repository under `apps/` and `packages/`.
 ### Migration steps
 
 1. Create `apps/` and move this CLI repo to `apps/cli/`.
-2. Import `Falese/daemon` history into `apps/daemon/` using `git subtree add`
-   (preserves commit history).
-3. Import `Falese/coder` history into `apps/coder/` using `git subtree add`.
-4. Move shared packages to `packages/`: contracts, oclif-base, and add
+2. Import `Falese/coder` history into `apps/coder/` using `git subtree add`
+   (preserves commit history). There is no daemon import — the control plane is
+   already here (PDR-008/ADR-078); its promotion to `packages/control-plane` is
+   #139, independent of this plan.
+3. Move shared packages to `packages/`: contracts, oclif-base, and add
    `packages/telemetry`, `packages/config` as needs emerge.
-5. Update all workspace cross-references to `workspace:*` (pnpm).
-6. Run `turbo run test build` — fix failures until green.
-7. Tag `v2.0.0-monorepo` and freeze the individual repos (archive them).
+4. Update all workspace cross-references to `workspace:*` (pnpm).
+5. Run `turbo run test build` — fix failures until green.
+6. Tag `v2.0.0-monorepo` and freeze the individual repos (archive them).
 
 ### Shared config files that must align before Phase 2
 
@@ -120,8 +130,8 @@ releases across all packages and apps.
 - Release workflow: `pnpm changeset version` bumps packages; `pnpm changeset publish`
   publishes affected packages in dependency order (turbo handles build order).
 - `@falese/*` plugins release independently from `@seans-mfe/*` packages.
-- Individual repo releases deprecated; `Falese/daemon` and `Falese/coder`
-  become archived read-only mirrors.
+- Individual repo releases deprecated; `Falese/coder` becomes an archived
+  read-only mirror. `Falese/daemon` is already retired (PDR-008/ADR-078).
 - Issue tracking consolidates into this monorepo.
 - Single `seans-mfe` platform brand surfaces in all package descriptions.
 

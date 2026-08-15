@@ -129,10 +129,10 @@ manifest validation errors (#141), and wiring ADR-030's dead pattern branch.
 
 ### `platform:init` — composition environment as a generated artifact (#329)
 
-ADR-078 (Proposed) + PDR-008 (Accepted). Brings the registry and daemon into
-`packages/control-plane` — they are currently byte-identical vendored copies in both reference
-apps — makes persistence a manifest field, and generates the shell plus its control plane in one
-command. Absorbs #144. Retires `@falese/daemon`.
+ADR-078 (Accepted, impl deferred to #139) + PDR-008 (Accepted). `@falese/daemon` is **retired**:
+this repo owns the canonical control plane today. What remains is the packaging — moving the two
+byte-identical copies in the reference apps into `packages/control-plane`, making persistence a
+manifest field, and generating the shell plus its control plane in one command. Absorbs #144.
 
 ### One fleet-description engine (#330)
 
@@ -216,7 +216,8 @@ of friction in the reference-app builds.
 
 ### Monorepo Consolidation
 
-**Phase 2** of `MERGE-PLAN.md` — absorb `Falese/daemon` and `Falese/coder` into a single repo.  
+**Phase 2** of `MERGE-PLAN.md` — absorb `Falese/coder` into a single repo. (`Falese/daemon` is
+retired, not absorbed — the control plane already ships here, PDR-008/ADR-078.)  
 **Prerequisite:** All Phase 1 criteria met + contract stability ≥30 days.
 
 ### Deferred Feature Work

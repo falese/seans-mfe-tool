@@ -2,8 +2,8 @@
 
 The shell in this example is a **100% generic layout host**: it knows nothing
 about flappy, hockey, the Angular multiplication quiz, or any other MFE.
-Composition arrives entirely from the registry + daemon control plane ported
-into this example from `falese/daemon`. This runbook drives the full loop:
+Composition arrives entirely from the registry + daemon control plane that ships
+with the platform (PDR-008, ADR-078). This runbook drives the full loop:
 
 ```
 shell (3000, empty) ──action──► daemon (3004) ──forward──► registry (4000)
@@ -31,9 +31,9 @@ docker compose up -d --build
 
 ## 2. The control plane comes up with the fleet
 
-The registry and node daemon are ported into this example under
-`control-plane/{registry,daemon}/` (from falese/daemon) and run as their own
-images — **part of the `docker compose up` above, not bundled with the shell**:
+The registry and node daemon live under `control-plane/{registry,daemon}/` — the
+platform's own control plane, not a third-party dependency — and run as their own
+images, **part of the `docker compose up` above, not bundled with the shell**:
 
 ```bash
 # already started by step 1; to (re)build or restart just the control plane:

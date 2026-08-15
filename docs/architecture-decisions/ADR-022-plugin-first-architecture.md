@@ -7,7 +7,7 @@ deciders: [sean]
 area: Architecture
 enforcement: convention
 tags: [plugin-architecture, oclif, monorepo, daemon, coder]
-relates-to: []
+relates-to: [78]
 supersedes: []
 superseded-by: []
 implements-pdr: [4]
@@ -25,6 +25,12 @@ long-form: false
 ---
 
 # ADR-022: Plugin-first architecture — falese/daemon and falese/coder as oclif plugins
+
+> **Narrowed after ratification.** [ADR-078](./ADR-078-control-plane-in-platform.md) removes the
+> daemon from this decision: the control plane is part of the platform and its canonical
+> implementation lives in **this** repository. `falese/daemon` is retired and is not a source of
+> truth for anything here. Everything below still holds for **coder** and for the plugin model in
+> general — read every mention of the daemon as historical.
 
 ## Context
 
