@@ -16,6 +16,18 @@
  * generator-owned files. Any hand-edit to that platform-contract code (the class
  * of silent drift behind the meridian-docking-simulation regression) fails CI.
  *
+ * It also checks the opposite direction: a manifest that *shrank* (e.g. a
+ * `data:` section removed) can leave generator-owned files on disk that the
+ * current manifest no longer generates at all — invisible to a same-set diff
+ * because they never enter it. Found live in `examples/abc-kids/*`: 12 MFEs
+ * with no `data:` still carried a root `server.ts` from before it was
+ * removed. `findOrphanedGeneratedFiles` (`packages/codegen/src/drift.ts`)
+ * catches this by also generating the manifest with `data` forced present, to
+ * learn every generator-owned path this manifest's shape could ever produce,
+ * and flagging any that exist on disk but not in the real generation.
+ * Orphans are reported, never auto-deleted — same "warn, don't rewrite"
+ * posture as ADR-082.
+ *
  * Usage:
  *   npm run check:mfe-drift            # regenerate generator-owned files in place
  *   npm run check:mfe-drift -- --check # diff only; exit 1 on drift (CI)
@@ -27,7 +39,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
-import { generateAllFiles, diffGeneratedOwned } from '@seans-mfe/codegen';
+import type { DSLManifest } from '@seans-mfe/dsl';
+import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from '@seans-mfe/codegen';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');
@@ -58,11 +71,30 @@ function findManifestDirs(root: string): string[] {
 
 interface Drift {
   file: string;
-  reason: 'missing' | 'stale';
+  reason: 'missing' | 'stale' | 'orphaned';
 }
 
 const readCurrent = (p: string): string | null =>
   fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
+
+/**
+ * A manifest with every optional field that gates generator-owned output
+ * forced present, so `generateAllFiles` produces the full universe of
+ * generator-owned paths this manifest's shape could ever imply — not just
+ * what it implies today. Currently that's just `data` (the BFF gate); extend
+ * here if another optional section starts owning files of its own.
+ */
+function maximalManifest(manifest: DSLManifest): DSLManifest {
+  if (manifest.data) return manifest;
+  return {
+    ...manifest,
+    data: {
+      sources: [
+        { name: 'orphanProbe', handler: { openapi: { source: 'https://example.com/openapi.yaml' } } },
+      ],
+    },
+  };
+}
 
 async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[] }> {
   const result = await parseAndValidateDirectory(dir);
@@ -72,9 +104,14 @@ async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[
   const { files } = await generateAllFiles(result.manifest, dir);
   const { drift } = diffGeneratedOwned(files, readCurrent);
 
+  const { files: maximalFiles } = await generateAllFiles(maximalManifest(result.manifest), dir);
+  const orphaned = findOrphanedGeneratedFiles(files, maximalFiles, readCurrent);
+
+  const allDrift = [...drift, ...orphaned];
+
   if (CHECK_MODE) {
     return {
-      drift: drift.map((d) => ({ file: path.relative(REPO_ROOT, d.file), reason: d.reason })),
+      drift: allDrift.map((d) => ({ file: path.relative(REPO_ROOT, d.file), reason: d.reason })),
       written: [],
     };
   }
@@ -87,7 +124,10 @@ async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[
     fs.writeFileSync(target.path, target.content);
     written.push(path.relative(REPO_ROOT, target.path));
   }
-  return { drift: [], written };
+  return {
+    drift: orphaned.map((d) => ({ file: path.relative(REPO_ROOT, d.file), reason: d.reason })),
+    written,
+  };
 }
 
 async function main(): Promise<void> {
@@ -112,12 +152,20 @@ async function main(): Promise<void> {
         } else {
           console.log(`OK    ${rel}`);
         }
-      } else if (written.length > 0) {
-        totalWritten += written.length;
-        console.log(`regenerated ${written.length} file(s) in ${rel}`);
-        for (const w of written) console.log(`  ${w}`);
       } else {
-        console.log(`OK    ${rel}`);
+        if (written.length > 0) {
+          totalWritten += written.length;
+          console.log(`regenerated ${written.length} file(s) in ${rel}`);
+          for (const w of written) console.log(`  ${w}`);
+        }
+        if (drift.length > 0) {
+          totalDrift += drift.length;
+          console.log(`ORPHANED (not removed — remove by hand) in ${rel}`);
+          for (const d of drift) console.log(`  ${d.file}`);
+        }
+        if (written.length === 0 && drift.length === 0) {
+          console.log(`OK    ${rel}`);
+        }
       }
     } catch (err) {
       console.error(`ERROR ${rel}: ${(err as Error).message}`);
@@ -134,6 +182,9 @@ async function main(): Promise<void> {
   }
   if (!CHECK_MODE) {
     console.log(`\n${totalWritten === 0 ? 'No drift — nothing to regenerate.' : `Regenerated ${totalWritten} file(s).`}`);
+    if (totalDrift > 0) {
+      console.log(`${totalDrift} orphaned generator-owned file(s) found — not removed automatically, remove by hand.`);
+    }
   } else {
     console.log(`\n${mfeDirs.length} MFE(s) checked — no generator-owned drift.`);
   }

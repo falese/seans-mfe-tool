@@ -7,8 +7,8 @@ module.exports = {
   
   // Test patterns - support both JS and TS
   testMatch: [
-    '**/src/**/__tests__/**/*.test.[jt]s',
-    '**/src/**/*.test.[jt]s',
+    '**/src/**/__tests__/**/*.test.[jt]s?(x)',
+    '**/src/**/*.test.[jt]s?(x)',
     // The CI-gate scripts carry real logic (diff scanning, report formatting)
     // and lived without any coverage until ADR-082 gave one of them a rule to
     // enforce. They are not under a `src/`, so they need their own pattern.

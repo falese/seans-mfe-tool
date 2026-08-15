@@ -14,11 +14,24 @@
  *
  * `diffGeneratedOwned` is pure: it takes the generated files plus a reader for
  * the current on-disk content, so it can be unit-tested without touching disk.
+ *
+ * `findOrphanedGeneratedFiles` closes a direction ADR-043's invariant implies
+ * but `diffGeneratedOwned` alone cannot see: a manifest can *shrink* (e.g. a
+ * `data:` section removed) so that a path the generator used to own is no
+ * longer in the current generation at all. `diffGeneratedOwned` only ever
+ * looks at paths the current generation still produces, so a file like that
+ * simply never enters its comparison — it isn't "stale", it's invisible.
+ * Found live in `examples/abc-kids/*`: 12 MFEs with no `data:` in their
+ * manifest still carried a root `server.ts` referencing a `./.mesh` build
+ * output that no longer exists, left behind from before `data:` was removed.
+ * The caller supplies a second, "maximal" generation of the same manifest
+ * (e.g. with `data` forced present) so this stays pure and manifest-shape
+ * agnostic rather than hard-coding which fields gate which files.
  */
 
 import type { GeneratedFile } from './unified-generator';
 
-export type DriftReason = 'missing' | 'stale';
+export type DriftReason = 'missing' | 'stale' | 'orphaned';
 
 export interface DriftEntry {
   file: string;
@@ -56,4 +69,37 @@ export function diffGeneratedOwned(
   }
 
   return { ownedCount: owned.length, drift };
+}
+
+/**
+ * Generator-owned paths that a *broader* generation of the same manifest
+ * would own but the *current* generation does not — and that are still
+ * present on disk. These are left over from a manifest that used to imply
+ * them (most commonly: `data:` removed after a BFF was once generated).
+ *
+ * @param realFiles     the current, real generation for this manifest
+ * @param maximalFiles  a generation of the same manifest with the
+ *                       manifest-shape fields that gate optional
+ *                       generator-owned output (e.g. `data`) forced present,
+ *                       so it includes every generator-owned path the real
+ *                       generation *could* have produced
+ * @param readCurrent   returns the current on-disk content for a path, or
+ *                       `null` if the file does not exist
+ */
+export function findOrphanedGeneratedFiles(
+  realFiles: GeneratedFile[],
+  maximalFiles: GeneratedFile[],
+  readCurrent: (path: string) => string | null,
+): DriftEntry[] {
+  const realOwnedPaths = new Set(realFiles.filter((f) => f.overwrite).map((f) => f.path));
+  const maximalOwned = maximalFiles.filter((f) => f.overwrite);
+
+  const orphaned: DriftEntry[] = [];
+  for (const f of maximalOwned) {
+    if (realOwnedPaths.has(f.path)) continue;
+    if (readCurrent(f.path) !== null) {
+      orphaned.push({ file: f.path, reason: 'orphaned' });
+    }
+  }
+  return orphaned;
 }

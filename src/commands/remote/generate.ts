@@ -8,7 +8,9 @@ import {
   writeGeneratedFiles,
   PLATFORM_MIGRATIONS,
   findMigrationHits,
+  diffPackageDependencies,
 } from '@seans-mfe/codegen';
+import type { GeneratedFile } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
@@ -87,6 +89,64 @@ function reportPlatformMigrations(skipped: string[], cwd: string): void {
   for (const finding of findings) console.log(chalk.yellow(finding));
   console.log(
     chalk.gray('  Not changed for you. Run `seans-mfe-tool mfe:validate` for the full picture.'),
+  );
+}
+
+/**
+ * Warn when the on-disk, skipped `package.json` disagrees with what
+ * `package.json.ejs` would render right now — for every dependency the
+ * template controls, not one category of it.
+ *
+ * `package.json` is developer-owned, so `writeGeneratedFiles` always skips it
+ * once it exists — the platform computes the exactly correct content on
+ * every `remote:generate` and silently discards it. `allFiles` already holds
+ * that render (it's `writeGeneratedFiles`'s input), so this diffs the real
+ * render against the real disk content instead of re-deriving an expected
+ * dependency list by hand — generic across framework version pins,
+ * design-system deps, BFF/Mesh deps, and build tooling alike, and it can
+ * never drift from the template because it reads the template's own output.
+ * See the platform-design-review demo runbook's use case 2.
+ */
+function reportPackageDependencyDrift(allFiles: GeneratedFile[], skipped: string[], cwd: string): void {
+  const pkgPath = skipped.find((f) => path.basename(f) === 'package.json');
+  if (!pkgPath) return;
+
+  const rendered = allFiles.find((f) => f.path === pkgPath);
+  if (!rendered) return;
+
+  let currentText: string;
+  try {
+    currentText = fsSync.readFileSync(pkgPath, 'utf8');
+  } catch {
+    return; // unreadable package.json is not this reporter's problem
+  }
+
+  let diffs: ReturnType<typeof diffPackageDependencies>;
+  try {
+    diffs = diffPackageDependencies(rendered.content, currentText);
+  } catch {
+    return; // malformed JSON on either side is not this reporter's problem
+  }
+
+  if (diffs.length === 0) return;
+
+  const missing = diffs.filter((d) => d.actual === undefined);
+  const mismatched = diffs.filter((d) => d.actual !== undefined);
+
+  console.log(
+    chalk.yellow(
+      `\n⚠ ${path.relative(cwd, pkgPath)} is out of date with what the template would generate ` +
+        `(${diffs.length} ${diffs.length === 1 ? 'dependency' : 'dependencies'}):`,
+    ),
+  );
+  for (const d of missing) {
+    console.log(chalk.yellow(`  missing    ${d.section}."${d.name}": "${d.expected}"`));
+  }
+  for (const d of mismatched) {
+    console.log(chalk.yellow(`  mismatched ${d.section}."${d.name}": "${d.actual}" → "${d.expected}"`));
+  }
+  console.log(
+    chalk.gray('  package.json is developer-owned, so this was not applied for you — update by hand, then npm install.'),
   );
 }
 
@@ -169,6 +229,7 @@ export async function remoteGenerateCommand(
       // visible: the platform has just re-stamped everything it owns, and these
       // are the files it declined to touch (ADR-082).
       reportPlatformMigrations(genResult.skipped, cwd);
+      reportPackageDependencyDrift(allFiles, genResult.skipped, cwd);
     }
 
     if (genResult.errors.length > 0) {

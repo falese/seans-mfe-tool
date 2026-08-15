@@ -57,6 +57,17 @@ R3 (lifecycle diagram fix) lands in [`runtime-class-hierarchy.md`](../runtime-cl
 R6 (ADR status reconciliation) lands in the [ADR register erratum](../architecture-decisions/README.md#status-reconciliation-erratum).
 The code/CI remediations R2/R5/R7 are tracked as separate issues+PRs ([#229](https://github.com/falese/seans-mfe-tool/issues/229), [#231](https://github.com/falese/seans-mfe-tool/issues/231), [#230](https://github.com/falese/seans-mfe-tool/issues/230)).
 
+### Follow-ups (not part of epic #211)
+
+Continuations of the [Breaking-Change Regeneration DX Report](./breaking-change-regeneration-dx-report.md)'s
+finding, done independently of the formal 16-issue program above:
+
+| Doc | What it gives you |
+|---|---|
+| [Gate Self-Verification Audit](./gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
+| [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, ADR-082 migration surfacing, and truing up a pre-existing non-standardized MFE — across five use cases |
+| [Base-Class System: Architecture and a Live Demo](./base-mfe-architecture-and-demo.md) | The `BaseMFE → BaseRemoteMFE → RemoteMFE → generated class` hierarchy explained as a system (the ADR-056 polyglot-VM boundary, the capability pipeline, composition-over-inheritance as the real extension pattern) plus a live run across six use cases: generate → inherited-vs-stub → lifecycle in action → the ownership guardrail caught on camera → whether direct subclassing is possible → healing an already-running MFE end to end. Surfaces two real findings: a lifecycle-hook name mismatch (fixed in this pass — a new `mfe:validate` rule, `lifecycle-hook-handler-resolvable`, TDD'd and verified against the real 21-MFE fleet) and why the telemetry DI seam is unreachable from generated code today (documented, not yet built — a scoped codegen recommendation) |
+
 ## How the pieces fit
 
 ```

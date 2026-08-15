@@ -1,9 +1,11 @@
 /**
+ * @jest-environment jsdom
+ *
  * DeclaredSlot tests (ADR-067, three-layer split).
  *
- * CI-only: needs react + @testing-library/react + jsdom, which are not
- * installed in every environment (same posture as MfeHost.test.tsx). The
- * contract *logic* is fully covered framework-free in
+ * Needs react + @testing-library/react + jsdom (same posture as
+ * MfeHost.test.tsx — see its header for what changed to make that true).
+ * The contract *logic* is fully covered framework-free in
  * packages/runtime/src/__tests__/slot-contract.test.ts; this pins the sugar:
  * assert on render, register through a stable ref, inert without a host.
  */
