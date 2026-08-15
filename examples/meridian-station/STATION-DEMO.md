@@ -82,6 +82,15 @@ on mount and six independent control-plane round trips fill it.
 - Docking Board: b1 shows `₢ 8,500.00 DISPUTED` (live two-source join).
 - Cargo Manifest: line `DCK-004027/2` reads *"valuation pending — finance"* —
   the deliberate gap, not a bug.
+- Docking Simulator: the seventh card fails to open, and that is the intended
+  lesson. Neither path above serves port 5007, so clicking it exercises slot
+  error handling — the shell reports `Slot "meridian-console/main" failed:
+  meridian-docking-simulation.DockingSimulation (mount): Failed to load
+  remoteEntry` and every other slot keeps working. Serve it yourself
+  (`cd meridian-docking-simulation && npx rspack build && npx serve dist -p 5007
+  --cors`) if you want the HUD. That the card shows at all is a separate
+  shortcut — the card list is a literal in `control-plane/rules.json` rather
+  than a consequence of what is composable (#355).
 - Daemon log chain per action: `DAE-220 ACTION_RECEIVED → DAE-250
   RESOLUTION_RECEIVED → DAE-253 EXPERIENCE_RELAYED`.
 
