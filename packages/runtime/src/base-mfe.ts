@@ -409,35 +409,44 @@ export abstract class BaseMFE {
       return;
     }
     this._lifecycleStack.push({capability, phase});
-    // DI: allow manifest parsing override
-    const capabilityConfig = this.deps?.manifestParser
-      ? this.deps.manifestParser.parse(this.manifest)[capability]
-      : this.findCapabilityConfig(capability);
-    if (!capabilityConfig?.lifecycle) {
+    // The pop is in `finally` because this method can exit by throwing, not
+    // just by returning: ADR-002/REQ-042 makes a main-phase handler failure
+    // propagate out of executeHookEntry below. A bare pop after the loop was
+    // skipped on that path, stranding the pair — and a stranded pair is worse
+    // than the recursion the guard prevents, because every later call to this
+    // lifecycle then matches the guard and is silently skipped. The MFE keeps
+    // serving with its hooks dead, reporting only a log line that reads like
+    // the guard working correctly.
+    try {
+      // DI: allow manifest parsing override
+      const capabilityConfig = this.deps?.manifestParser
+        ? this.deps.manifestParser.parse(this.manifest)[capability]
+        : this.findCapabilityConfig(capability);
+      if (!capabilityConfig?.lifecycle) {
+        return; // No lifecycle hooks defined
+      }
+
+      const hooks = capabilityConfig.lifecycle[phase];
+      if (!hooks || hooks.length === 0) {
+        return; // No hooks for this phase
+      }
+
+      // Update context with phase and capability
+      context.phase = phase;
+      context.capability = capability;
+
+      // Hooks run sequentially through executeHookEntry -> executeHook, which is
+      // where ADR-002 lives: handler arrays (REQ-045), `contained` containment
+      // and `mandatory` (REQ-042), main-phase propagation, and telemetry on every
+      // failure. Substituting execution happens BELOW this, at
+      // `deps.customHandlers` in invokeHandler, so a substitute cannot sidestep
+      // any of it (ADR-079).
+      for (const hookEntry of hooks) {
+        await this.executeHookEntry(hookEntry, context, phase);
+      }
+    } finally {
       this._lifecycleStack.pop();
-      return; // No lifecycle hooks defined
     }
-
-    const hooks = capabilityConfig.lifecycle[phase];
-    if (!hooks || hooks.length === 0) {
-      this._lifecycleStack.pop();
-      return; // No hooks for this phase
-    }
-
-    // Update context with phase and capability
-    context.phase = phase;
-    context.capability = capability;
-
-    // Hooks run sequentially through executeHookEntry -> executeHook, which is
-    // where ADR-002 lives: handler arrays (REQ-045), `contained` containment
-    // and `mandatory` (REQ-042), main-phase propagation, and telemetry on every
-    // failure. Substituting execution happens BELOW this, at
-    // `deps.customHandlers` in invokeHandler, so a substitute cannot sidestep
-    // any of it (ADR-079).
-    for (const hookEntry of hooks) {
-      await this.executeHookEntry(hookEntry, context, phase);
-    }
-    this._lifecycleStack.pop();
   }
   
   /**

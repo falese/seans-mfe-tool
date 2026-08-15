@@ -15,7 +15,8 @@ implemented-by:
   - packages/codegen/src/slot-types.ts
   - packages/framework-react/src/runtime/DeclaredSlot.tsx
   - packages/framework-angular/src/runtime/declared-slot.directive.ts
-verified-by: []
+verified-by:
+  - scripts/__conformance__/ADR-072.conformance.test.ts
 long-form: true
 ---
 

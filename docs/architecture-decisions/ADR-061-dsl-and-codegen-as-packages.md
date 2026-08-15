@@ -14,7 +14,8 @@ implements-pdr: [1]
 implemented-by:
   - packages/dsl/src/index.ts
   - packages/codegen/src/index.ts
-verified-by: []
+verified-by:
+  - scripts/__conformance__/ADR-061.conformance.test.ts
 long-form: true
 ---
 

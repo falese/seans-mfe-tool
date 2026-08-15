@@ -6,14 +6,14 @@
   "input": {
     "type": "object",
     "properties": {
+      "dry-run": {
+        "type": "boolean",
+        "description": "Preview changes without writing them"
+      },
       "manifest": {
         "type": "string",
         "description": "Path to mfe-manifest.yaml",
         "default": "mfe-manifest.yaml"
-      },
-      "dry-run": {
-        "type": "boolean",
-        "description": "Preview what would be built without executing"
       }
     },
     "required": [],

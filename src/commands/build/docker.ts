@@ -13,7 +13,7 @@ import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@falese/smt-dsl';
-import { ValidationError } from '@falese/smt-contracts';
+import { ValidationError, childStdio } from '@falese/smt-contracts';
 import type { DockerStrategy } from '@falese/smt-contracts';
 import type { BuildDockerResult } from '../../oclif/results';
 
@@ -137,7 +137,7 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
 
   if (opts.build) {
     console.log(chalk.blue(`\nRunning: docker build -t ${tag} ${cwd}\n`));
-    execSync(`docker build -t ${tag} ${cwd}`, { stdio: 'inherit' });
+    execSync(`docker build -t ${tag} ${cwd}`, { stdio: childStdio() });
     console.log(chalk.green(`✓ Image built: ${tag}`));
     built = true;
   }

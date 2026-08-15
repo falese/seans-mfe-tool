@@ -13,7 +13,8 @@ superseded-by: []
 implements-pdr: [3]
 implemented-by:
   - packages/oclif-base/src/BaseCommand.ts
-verified-by: []
+verified-by:
+  - src/oclif/__conformance__/ADR-016.conformance.test.ts
 summary: >-
   Every oclif command must extend BaseCommand from @seans-mfe/oclif-base and implement
   runCommand() instead of run(), which provides automatic JSON envelope output, structured error

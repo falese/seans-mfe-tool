@@ -1,0 +1,98 @@
+{
+  "//": "ADR-000 conformance backlog — Implemented decisions that claim automated enforcement but do not yet name the checker that proves it. Only status: Implemented is governed (ADR-000 §1): a decision with no code shipped has no codebase to enforce, and a superseded one is its successor’s problem. This list is a RATCHET: check:backlog-ratchet fails on any addition (comparing this file against the base revision in git), and check:adr fails on any entry that has since gained a verified-by. It may only shrink.",
+  "//generated": "Snapshot taken when ADR-000 landed. Deliberately NOT regenerated — a self-regenerating backlog would silently absorb new gaps, which is the defect this exists to close.",
+  "adrs": [
+    {
+      "adr": 2,
+      "title": "Lifecycle Hook Execution Model"
+    },
+    {
+      "adr": 3,
+      "title": "No Custom Lifecycle Phases"
+    },
+    {
+      "adr": 4,
+      "title": "Handler Array Support"
+    },
+    {
+      "adr": 5,
+      "title": "Handler Discovery Convention"
+    },
+    {
+      "adr": 6,
+      "title": "Unified Type System"
+    },
+    {
+      "adr": 8,
+      "title": "Data Type Metadata"
+    },
+    {
+      "adr": 10,
+      "title": "Data Lifecycle Alignment"
+    },
+    {
+      "adr": 12,
+      "title": "GraphQL Mesh for BFF Layer with DSL-Embedded Configuration"
+    },
+    {
+      "adr": 13,
+      "title": "Generated MFE Test Templates"
+    },
+    {
+      "adr": 15,
+      "title": "oclif as CLI framework — replace Commander"
+    },
+    {
+      "adr": 27,
+      "title": "GraphQL Mesh v0.100.x with Production Plugins & Transforms"
+    },
+    {
+      "adr": 30,
+      "title": "Error Classification with Hybrid Detection"
+    },
+    {
+      "adr": 35,
+      "title": "Docker Build Orchestration via Turborepo Task Graph"
+    },
+    {
+      "adr": 36,
+      "title": "Framework plugins — abstract BaseFrameworkPlugin with concrete implementations"
+    },
+    {
+      "adr": 40,
+      "title": "Manifest-Declared Handler Sources"
+    },
+    {
+      "adr": 42,
+      "title": "MFE Lifecycle State Machine"
+    },
+    {
+      "adr": 51,
+      "title": "Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs"
+    },
+    {
+      "adr": 54,
+      "title": "Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts"
+    },
+    {
+      "adr": 55,
+      "title": "LayoutManager — Daemon-Driven Slot Composition for Generic Shells"
+    },
+    {
+      "adr": 57,
+      "title": "Virtualized daemon socket: per-slot control-plane channels over one host connect"
+    },
+    {
+      "adr": 58,
+      "title": "Slot-provider MFEs: MFEs contribute named slots to the host layout"
+    },
+    {
+      "adr": 60,
+      "title": "Contextualized VM composition: value-injection, slot-scoped self-healing, and co"
+    },
+    {
+      "adr": 68,
+      "title": "Provider-scoped slot addresses"
+    }
+  ]
+}

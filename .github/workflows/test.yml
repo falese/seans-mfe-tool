@@ -253,6 +253,13 @@ jobs:
       - name: Build workspace packages
         run: npm run build:packages
 
+      - name: The conformance backlog may only shrink (ADR-000 §3)
+        # Runs here rather than in `quality` because it needs the base revision
+        # to compare against, and this is the job checked out with full history.
+        # The gate fails when it cannot read that revision, so a future move to a
+        # shallow checkout breaks the build instead of silently passing.
+        run: npm run check:backlog-ratchet -- "origin/${{ github.base_ref }}"
+
       - name: Render the governance summary
         # `fetch-depth: 0` above already gives full history, so the base ref is
         # present — no extra fetch, and no `|| true` swallowing a real failure.
@@ -369,6 +376,14 @@ jobs:
         # pre-reflow numbers in generated output that fell out of the generation
         # graph. `npm run check:adr -- --include-examples` reports them.
         run: npm run check:adr
+
+      - name: ADR conformance packs
+        # ADR-000: a decision claiming `enforcement: code` names a checker, and
+        # this runs the checkers. Separate from `npm test` so "does the codebase
+        # still obey its own decisions?" is answerable on its own, and so a
+        # conformance failure is legible as that rather than as a unit-test
+        # failure somewhere in a 2700-test run.
+        run: npm run check:adr-conformance
 
       - name: ADR index and PDR map are generated from frontmatter
         # The spec.md index and the PDR↔ADR map are views of ADR frontmatter

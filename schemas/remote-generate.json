@@ -8,7 +8,7 @@
     "properties": {
       "dry-run": {
         "type": "boolean",
-        "description": "Show what would be generated without writing"
+        "description": "Preview changes without writing them"
       },
       "force": {
         "type": "boolean",

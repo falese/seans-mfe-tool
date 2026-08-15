@@ -235,6 +235,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
+| [ADR-000](./architecture-decisions/ADR-000-decisions-name-their-checker.md) | A decision claiming automated enforcement must name the checker that proves it | Governance / ADR library / conformance | Implemented |
 | [ADR-001](./architecture-decisions/ADR-001-lifecycle-reentrancy-guard.md) | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Implemented |
 | [ADR-002](./architecture-decisions/ADR-002-lifecycle-hook-execution-model.md) | Lifecycle Hook Execution Model | Runtime lifecycle | Implemented |
 | [ADR-003](./architecture-decisions/ADR-003-no-custom-lifecycle-phases.md) | No Custom Lifecycle Phases | Runtime lifecycle | Implemented |
@@ -279,7 +280,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
 | [ADR-043](./architecture-decisions/ADR-043-manifest-driven-codegen.md) | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Implemented |
 | [ADR-044](./architecture-decisions/ADR-044-production-container-hardening.md) | Production Container Hardening for Generated MFEs | Docker / deploy / security | Implemented |
-| [ADR-045](./architecture-decisions/ADR-045-package-manager-and-runtime-pinning.md) | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Proposed |
+| [ADR-045](./architecture-decisions/ADR-045-package-manager-and-runtime-pinning.md) | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Implemented |
 | [ADR-046](./architecture-decisions/ADR-046-environment-configuration-and-secret-validation.md) | Environment Configuration and Secret Validation | Configuration / security | Proposed |
 | [ADR-047](./architecture-decisions/ADR-047-codeowners-and-review-routing.md) | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |

@@ -5,7 +5,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import * as os from 'os';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { ValidationError, BusinessError, SystemError, TimeoutError } from '@falese/smt-contracts';
+import { ValidationError, BusinessError, SystemError, TimeoutError, childStdio } from '@falese/smt-contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
 
 interface DeployOptions {
@@ -171,7 +171,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
       execSync(
         `docker build -t ${imageTag} --target development ${tempDir}`,
         {
-          stdio: 'inherit',
+          stdio: childStdio(),
           env: { ...process.env, DOCKER_BUILDKIT: '1' }
         }
       );
@@ -201,7 +201,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
         -v ${projectDir}/public:/app/public \
         --env-file .env.development \
         ${imageTag}`,
-      { stdio: 'inherit' }
+      { stdio: childStdio() }
     );
 
     // Wait for container to be ready
@@ -217,7 +217,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     // Stream logs if requested
     if (options.logs) {
       console.log(chalk.blue('\nStreaming container logs...'));
-      execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
+      execSync(`docker logs -f ${containerName}`, { stdio: childStdio() });
     }
 
   } catch (error: unknown) {
@@ -329,6 +329,7 @@ export default class Deploy extends BaseCommand<DeployResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     type: Flags.string({
       char: 't',
       description: 'Application type (shell, remote, or api)',
@@ -344,11 +345,6 @@ export default class Deploy extends BaseCommand<DeployResult> {
       char: 'p',
       description: 'Port number for development deployment',
       default: '8080',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'D',
-      description: 'Preview deployment without executing',
-      default: false,
     }),
   }
 

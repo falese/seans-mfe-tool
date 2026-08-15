@@ -659,7 +659,7 @@ it. Idempotent: re-attaching replaces the channel.
 
 > **authorizeAccess**(`context`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:774](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L774)
+Defined in: [packages/runtime/src/base-mfe.ts:783](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L783)
 
 AuthorizeAccess capability: Check authorization
 
@@ -683,7 +683,7 @@ AuthorizeAccess capability: Check authorization
 
 > **describe**(`context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:788](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L788)
+Defined in: [packages/runtime/src/base-mfe.ts:797](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L797)
 
 Describe capability: Return MFE metadata
 
@@ -832,7 +832,7 @@ REQ-RUNTIME-001: Atomic operation with three phases:
 
 > `protected` **doQuery**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:906](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L906)
+Defined in: [packages/runtime/src/base-mfe.ts:915](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L915)
 
 Execute a GraphQL query against this MFE's BFF endpoint.
 
@@ -989,7 +989,7 @@ Subscription.messages channel the Renderer is already subscribed to.
 
 > **emit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:809](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L809)
+Defined in: [packages/runtime/src/base-mfe.ts:818](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L818)
 
 Emit capability: Emit telemetry/events
 
@@ -1205,7 +1205,7 @@ Get current state
 
 > **health**(`context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:781](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L781)
+Defined in: [packages/runtime/src/base-mfe.ts:790](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L790)
 
 Health capability: Check MFE health status
 
@@ -1229,7 +1229,7 @@ Health capability: Check MFE health status
 
 > `protected` **invokeCustomHandler**(`name`, `context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:559](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L559)
+Defined in: [packages/runtime/src/base-mfe.ts:568](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L568)
 
 Invoke a custom handler from developer implementation
 
@@ -1261,7 +1261,7 @@ Error if custom handler not found
 
 > `protected` **invokeHandler**(`handlerName`, `context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:510](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L510)
+Defined in: [packages/runtime/src/base-mfe.ts:519](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L519)
 
 Invoke a handler by name (platform.* or custom.*)
 
@@ -1292,7 +1292,7 @@ REQ-057: Custom handlers resolved from developer class
 
 > `protected` **invokePlatformHandler**(`name`, `context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:544](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L544)
+Defined in: [packages/runtime/src/base-mfe.ts:553](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L553)
 
 Invoke a platform handler from the standard library — a flat, statically
 built map (PLATFORM_HANDLER_LIBRARY), so resolution is a single lookup.
@@ -1325,7 +1325,7 @@ Error if platform handler not found
 
 > **load**(`context`): `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:753](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L753)
+Defined in: [packages/runtime/src/base-mfe.ts:762](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L762)
 
 Load capability: Initialize and prepare MFE for use
 
@@ -1407,7 +1407,7 @@ Reuses an existing root for the containerId when re-rendering.
 
 > **query**(`context`): `Promise`\<[`QueryResult`](../../interfaces/QueryResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:802](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L802)
+Defined in: [packages/runtime/src/base-mfe.ts:811](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L811)
 
 Query capability: Execute data query
 
@@ -1431,7 +1431,7 @@ Query capability: Execute data query
 
 > **refresh**(`context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:767](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L767)
+Defined in: [packages/runtime/src/base-mfe.ts:776](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L776)
 
 Refresh capability: Refresh MFE data/state
 
@@ -1455,7 +1455,7 @@ Refresh capability: Refresh MFE data/state
 
 > **render**(`context`): `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:760](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L760)
+Defined in: [packages/runtime/src/base-mfe.ts:769](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L769)
 
 Render capability: Render MFE UI into target container
 
@@ -1479,7 +1479,7 @@ Render capability: Render MFE UI into target container
 
 > **schema**(`context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:795](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L795)
+Defined in: [packages/runtime/src/base-mfe.ts:804](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L804)
 
 Schema capability: Return GraphQL/JSON schema
 
@@ -1556,7 +1556,7 @@ Call from the shell's useEffect cleanup to avoid memory leaks.
 
 > **updateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
-Defined in: [packages/runtime/src/base-mfe.ts:834](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L834)
+Defined in: [packages/runtime/src/base-mfe.ts:843](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L843)
 
 UpdateControlPlaneState capability: Push domain state to the daemon so the
 Registry can re-evaluate what should be shown.

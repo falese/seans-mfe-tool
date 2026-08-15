@@ -38,6 +38,7 @@ import {
 import type { SourceFile } from '@falese/smt-dsl';
 import { ValidationError, BusinessError } from '@falese/smt-contracts';
 import type { MfeValidateResult } from '../../oclif/results';
+import { resolveFrameworkVariant } from '../../framework/loader';
 
 export interface MfeValidateOptions {
   dir?: string;
@@ -63,7 +64,14 @@ async function developerOwnedPredicate(
   manifest: unknown,
 ): Promise<(sourcePath: string) => boolean> {
   try {
-    const { files } = await generateAllFiles(manifest as never, dir, { force: true });
+    // The variant must be resolved, not derived (ADR-061 §3). Falling through
+    // to deriveBuiltinVariant answers react-rspack for a third-party framework,
+    // which would emit a different file set and so misclassify ownership —
+    // sending platform-migrations and slots-implemented at the wrong files.
+    const { files } = await generateAllFiles(manifest as never, dir, {
+      force: true,
+      frameworkVariant: resolveFrameworkVariant(manifest as never),
+    });
     const generatorOwned = new Set(
       files.filter((f) => f.overwrite).map((f) => path.resolve(f.path)),
     );

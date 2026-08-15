@@ -10,7 +10,7 @@ import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator
 import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
 import { generateJWTSecret } from '../utils/securityUtils';
 import { BaseCommand } from '../oclif/BaseCommand';
-import { ValidationError, NetworkError, SystemError } from '@falese/smt-contracts';
+import { ValidationError, NetworkError, SystemError, childStdio } from '@falese/smt-contracts';
 import type { ApiResult, PlannedChange } from '../oclif/results';
 
 interface ApiOptions {
@@ -644,7 +644,7 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
     console.log(chalk.blue('\nInstalling dependencies...'));
     execSync('npm install', {
       cwd: targetDir,
-      stdio: 'inherit',
+      stdio: childStdio(),
       env: {
         ...process.env,
         ADBLOCK: '1',
@@ -750,6 +750,7 @@ export default class Api extends BaseCommand<ApiResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     port: Flags.string({
       char: 'p',
       description: 'Port number for the API',
@@ -765,11 +766,6 @@ export default class Api extends BaseCommand<ApiResult> {
       description: 'Database type to use',
       options: ['mongodb', 'mongo', 'sqlite', 'sql'],
       default: 'sqlite',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'D',
-      description: 'Preview changes without writing',
-      default: false,
     }),
   }
 

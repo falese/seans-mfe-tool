@@ -25,6 +25,7 @@ const {
 // Get references to mocked modules
 const yaml = require('js-yaml');
 const childProcess = require('child_process');
+const { childStdio } = require('@falese/smt-contracts');
 
 // Create spawn mock directly
 const mockSpawnProcess = {
@@ -470,7 +471,7 @@ describe('BFF Commands', () => {
       await bffDevCommand({});
 
       expect(childProcess.spawn).toHaveBeenCalledWith('npx', ['mesh', 'dev'], expect.objectContaining({
-        stdio: 'inherit',
+        stdio: childStdio(),
         shell: true
       }));
     });
@@ -622,7 +623,7 @@ describe('BFF Commands', () => {
         await bffInitCommand('my-bff', {});
 
         expect(mockExec.execSync).toHaveBeenCalledWith('npm install', expect.objectContaining({
-          stdio: 'inherit'
+          stdio: childStdio()
         }));
       });
 

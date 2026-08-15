@@ -13,7 +13,7 @@ import * as fs from 'fs-extra';
 import { execSync } from 'child_process';
 import SwaggerParser from '@apidevtools/swagger-parser';
 
-import { ValidationError, NetworkError, SystemError } from '@falese/smt-contracts';
+import { ValidationError, NetworkError, SystemError, childStdio } from '@falese/smt-contracts';
 import { DatabaseGenerator } from '../../codegen/APIGenerator/DatabaseGenerator';
 import { ControllerGenerator } from '../../codegen/APIGenerator/ControllerGenerator';
 import * as RouteGenerator from '../../codegen/APIGenerator/RouteGenerator';
@@ -386,7 +386,7 @@ describe('createApiCommand', () => {
     expect(RouteGenerator.generateRoutes).toHaveBeenCalled();
     expect(mockExec).toHaveBeenCalledWith(
       'npm install',
-      expect.objectContaining({ cwd: expect.any(String), stdio: 'inherit' }),
+      expect.objectContaining({ cwd: expect.any(String), stdio: childStdio() }),
     );
     expect(result.name).toBe('catalog');
     expect(result.database).toBe('mongodb');

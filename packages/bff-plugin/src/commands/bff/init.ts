@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 import * as yaml from 'js-yaml';
 import { processTemplates } from '../../utils/templateProcessor';
 import { BaseCommand } from '@falese/smt-oclif-base';
-import { SystemError, ValidationError } from '@falese/smt-contracts';
+import { SystemError, ValidationError, childStdio } from '@falese/smt-contracts';
 import { addMeshDependencies, ensureMockSwitchFiles } from '../../shared';
 import type { BFFCommandOptions, MFEManifest, TemplateSource, TemplateVars } from '../../shared';
 import type { BffInitResult, PlannedChange } from '../../types';
@@ -168,7 +168,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
       console.log(chalk.blue('\nInstalling dependencies...'));
       execSync('npm install', {
         cwd: targetDir,
-        stdio: 'inherit',
+        stdio: childStdio(),
         env: { ...process.env, ADBLOCK: '1', DISABLE_OPENCOLLECTIVE: '1' }
       });
     }
@@ -230,6 +230,7 @@ export default class BffInit extends BaseCommand<BffInitResult> {
 
   static flags = {
     ...BaseCommand.baseFlags,
+    ...BaseCommand.mutatingFlags,
     port: Flags.string({
       char: 'p',
       description: 'Port number for the BFF server',
@@ -248,11 +249,6 @@ export default class BffInit extends BaseCommand<BffInitResult> {
       char: 'v',
       description: 'Project version',
       default: '1.0.0',
-    }),
-    'dry-run': Flags.boolean({
-      char: 'd',
-      description: 'Preview changes without writing',
-      default: false,
     }),
   }
 

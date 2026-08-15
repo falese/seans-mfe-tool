@@ -38,6 +38,7 @@ export type AdrValidationRule =
   | 'code-cites-ratified-adr'
   | 'register-complete'
   // ADR-075 §6 — the implementation lifecycle.
+  | 'enforced-claims-a-gate'
   | 'accepted-work-is-tracked'
   | 'implemented-claims-evidence'
   | 'finished-work-says-so';
@@ -75,6 +76,15 @@ export interface AdrValidationInput {
    * can be resolved (ADR-075 §6). Omit to skip that half of the check.
    */
   scriptNames?: ReadonlySet<string>;
+  /**
+   * ADR ids grandfathered out of `enforced-claims-a-gate` (ADR-000) — the
+   * decisions that predate the rule and have not yet been given a checker.
+   *
+   * Omit to skip the rule, matching every other data-fed rule here: without the
+   * list there is no way to tell a genuine gap from a known one. The set is a
+   * ratchet, so the rule also reports an id that no longer needs to be on it.
+   */
+  conformanceBacklog?: ReadonlySet<number>;
 }
 
 export interface AdrValidationResult {
@@ -82,6 +92,24 @@ export interface AdrValidationResult {
   /** Rules that were evaluated; the rest lacked inputs and were skipped. */
   checked: AdrValidationRule[];
   issues: AdrValidationIssue[];
+}
+
+/**
+ * Backlog ids present now that the baseline does not have (ADR-000 §3).
+ *
+ * The other half of the ratchet, and the half that was missing: ADR-000 says the
+ * rule "fails on any addition", but nothing compared the list against anything,
+ * so appending an id was a silent way to exempt a decision from
+ * `enforced-claims-a-gate`. Comparison needs a *previous* list, which is state
+ * this pure module has no way to reach — `scripts/check-backlog-ratchet.ts`
+ * reads it from git and hands both sides here.
+ */
+export function backlogAdditions(
+  current: Iterable<number>,
+  baseline: Iterable<number>
+): number[] {
+  const known = new Set(baseline);
+  return [...new Set(current)].filter((id) => !known.has(id)).sort((a, b) => a - b);
 }
 
 // ── shared matching ─────────────────────────────────────────────────────────
@@ -446,6 +474,79 @@ export function validateAdrLibrary(input: AdrValidationInput): AdrValidationResu
           `verified-by names "${claim}", which is neither an npm script nor a file in the repo`,
         actual: claim,
       });
+    }
+  }
+
+  // 9b. enforced-claims-a-gate (ADR-000) — `enforcement: code` is a claim about
+  //     the codebase, and a claim nobody can falsify is decoration. The field
+  //     that would carry the proof already existed and was already resolved
+  //     when present; it was merely optional, which is how 49 of 74 ADRs came
+  //     to assert enforcement while naming nothing.
+  //
+  //     `convention` is deliberately exempt: it says humans enforce this, which
+  //     is honest, and demanding a gate for it would push authors to mislabel.
+  if (input.conformanceBacklog) {
+    checked.push('enforced-claims-a-gate');
+    const backlog = input.conformanceBacklog;
+
+    for (const document of input.documents) {
+      const fm = document.frontmatter;
+      const id = normalizeAdrId(fm.id);
+      // The obligation attaches at `Implemented`, and only there. `enforcement:
+      // code` is a claim about the codebase; before a decision is implemented
+      // there is no codebase to claim about, and after supersession the
+      // successor owns it. Demanding a gate anyway was asking for packs that
+      // test code which does not exist: three of the lifecycle-engine decisions
+      // are still Proposed with no issues filed, and one was superseded.
+      // Fourteen of the thirty-seven entries left on the backlog were in that
+      // position, which made the number report roughly half again as much real
+      // debt as there was.
+      //
+      // The specific ids are deliberately not named here — `code-cites-ratified-adr`
+      // forbids source citing a Proposed decision, and it caught this comment
+      // doing exactly that on the first run.
+      //
+      // Safe because it is one-way: an ADR that flips to Implemented is not on
+      // the backlog (the list only shrinks), so the rule bites immediately and
+      // the checker has to ship with the code. Nothing can idle in `Proposed`
+      // to dodge this.
+      const claimsAutomation =
+        fm.status === 'Implemented' &&
+        (fm.enforcement === 'code' || fm.enforcement === 'tooling');
+      // A gate has to be able to run. `docs/cli-contract.md` resolved, was
+      // non-empty, and satisfied this rule for ADR-018 — while a document
+      // cannot execute, cannot fail, and cannot notice drift. It was still
+      // green while a bug shipped through the very invariant it describes.
+      // Prose is welcome alongside a gate; it just cannot be the gate.
+      const namesAGate = fm['verified-by'].some((entry) => !entry.endsWith('.md'));
+      const grandfathered = backlog.has(id);
+
+      if (claimsAutomation && !namesAGate && !grandfathered) {
+        const prose = fm['verified-by'].length > 0;
+        issues.push({
+          rule: 'enforced-claims-a-gate',
+          file: document.path,
+          message: prose
+            ? `enforcement is \`${fm.enforcement}\` but verified-by names only documentation — a document cannot fail, ` +
+              'so it cannot be the gate (ADR-000)'
+            : `enforcement is \`${fm.enforcement}\` but verified-by is empty — name the gate that proves this decision holds, ` +
+              'or write a conformance pack for it (ADR-000)',
+          expected: 'verified-by: [<npm script or test path>]',
+          ...(prose ? { actual: fm['verified-by'].join(', ') } : {}),
+        });
+      }
+
+      // The ratchet: an entry that has since gained a gate is stale, and a
+      // stale entry is a hole a future regression could slip through unseen.
+      if (grandfathered && namesAGate) {
+        issues.push({
+          rule: 'enforced-claims-a-gate',
+          file: document.path,
+          message:
+            `ADR-${formatAdrId(id)} names a gate but is still listed in the conformance backlog — remove it, the list may only shrink (ADR-000)`,
+          actual: 'listed in conformance-backlog.json',
+        });
+      }
     }
   }
 

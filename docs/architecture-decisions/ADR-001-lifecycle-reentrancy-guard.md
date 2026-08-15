@@ -13,7 +13,8 @@ superseded-by: []
 implements-pdr: [1]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
-verified-by: []
+verified-by:
+  - packages/runtime/src/__conformance__/ADR-001.conformance.test.ts
 summary: >-
   Introduce a re-entrancy guard in BaseMFE that tracks executing {capability, phase} pairs and
   aborts on re-entry to prevent infinite recursion from misconfigured lifecycle hooks.

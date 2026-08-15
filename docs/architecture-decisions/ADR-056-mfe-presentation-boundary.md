@@ -13,7 +13,9 @@ superseded-by: [60]
 implements-pdr: [5]
 implemented-by:
   - packages/contracts/src/presentation.ts
-verified-by: []
+verified-by:
+  - packages/runtime/src/__tests__/boundary.test.ts
+  - packages/contracts/src/__tests__/presentation.test.ts
 tracked-by: []
 summary: >-
   An MFE is a sealed, framework-opaque virtual machine composed like a Helm chart — never

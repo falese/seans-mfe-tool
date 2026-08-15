@@ -10,6 +10,10 @@
         "type": "string",
         "description": "BFF project name (optional — omit to add to existing project)"
       },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Preview changes without writing them"
+      },
       "port": {
         "type": "string",
         "description": "Port number for the BFF server",
@@ -30,10 +34,6 @@
         "type": "string",
         "description": "Project version",
         "default": "1.0.0"
-      },
-      "dry-run": {
-        "type": "boolean",
-        "description": "Preview changes without writing"
       }
     },
     "required": [],

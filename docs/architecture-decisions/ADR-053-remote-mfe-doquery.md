@@ -12,7 +12,8 @@ supersedes: []
 superseded-by: []
 implemented-by:
   - packages/runtime/src/remote-mfe.ts
-verified-by: []
+verified-by:
+  - packages/runtime/src/__conformance__/ADR-053.conformance.test.ts
 summary: >-
   The RemoteMFE.doQuery override that threw "Query not supported for remote MFE type" is
   removed. BaseMFE.doQuery already handles URL resolution (inputs.bffUrl, manifest, env,

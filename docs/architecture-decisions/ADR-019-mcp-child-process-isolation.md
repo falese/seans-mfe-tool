@@ -14,7 +14,9 @@ implements-pdr: [3]
 implemented-by:
   - src/commands/mcp/serve.ts
   - src/mcp/tool-registry.ts
-verified-by: []
+  - src/mcp/server.ts
+verified-by:
+  - src/mcp/__conformance__/ADR-019.conformance.test.ts
 summary: >-
   Each MCP tool call spawns seans-mfe-tool <cmd> --json as a child process, parses stdout as
   CommandResult<T>, and maps it to the MCP tool response — never calling command logic

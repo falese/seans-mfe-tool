@@ -34,6 +34,31 @@ export abstract class BaseCommand<T = unknown> extends Command {
     }),
   };
 
+  /**
+   * The shared `--dry-run` ADR-016 called for, for commands that mutate.
+   *
+   * Opt-in rather than part of `baseFlags`, because a dry run means nothing on
+   * `mfe:validate` or `adr:status` — a flag offered where it does nothing is
+   * its own kind of lie. Mutating commands spread it:
+   *
+   *   static flags = { ...BaseCommand.baseFlags, ...BaseCommand.mutatingFlags, … }
+   *
+   * Deliberately no `char`. Six commands used to declare this by hand and the
+   * copies had already drifted: `-D` on api/deploy, `-d` on the four remote:*
+   * commands — while `-d` on api is `--database`, which takes a value. Someone
+   * who learned `-d` meant "preview, don't write" and typed it on `api` did not
+   * get a dry run; the flag ate the next token and the command ran for real.
+   * Any single choice of char breaks one group or the other, and a short form
+   * that means "preview" on one mutating command and "here comes a value" on
+   * another is the hazard itself. `--dry-run` is short enough to type in full.
+   */
+  static mutatingFlags = {
+    'dry-run': Flags.boolean({
+      description: 'Preview changes without writing them',
+      default: false,
+    }),
+  };
+
   /** Commands push human-facing advisory messages here; envelope.warnings mirrors it. */
   protected warnings: string[] = [];
 

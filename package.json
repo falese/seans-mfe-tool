@@ -20,6 +20,7 @@
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "check:template-typecheck": "ts-node scripts/check-template-typecheck.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
+    "check:backlog-ratchet": "ts-node scripts/check-backlog-ratchet.ts",
     "build:adr-index": "ts-node scripts/generate-adr-index.ts",
     "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",
     "build:watch": "tsc --watch",
@@ -41,7 +42,8 @@
     "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
     "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build",
     "build:registry-mirror": "ts-node scripts/build-registry-mirror.ts",
-    "registry:serve": "node scripts/serve-registry-mirror.js"
+    "registry:serve": "node scripts/serve-registry-mirror.js",
+    "check:adr-conformance": "jest --testPathPattern __conformance__"
   },
   "keywords": [
     "module-federation",
