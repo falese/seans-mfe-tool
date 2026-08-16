@@ -15,7 +15,7 @@ constant; the delivery mechanism is a template variant.
 >
 > **New here?** Start with the [**system map**](https://falese.github.io/seans-mfe-tool/system-map.html)
 > — an interactive explanation of why the platform exists, how it lets many teams
-> build one product, and what happens to a single feature end to end.
+> build one product, and what happens to a single capability end to end.
 
 ---
 
@@ -313,8 +313,9 @@ one gets the depth it needs and no more:
 | **Engineering** | Where is each concept implemented? Toggle **Show technical implementation** to reveal repository paths throughout the page. |
 
 It opens with the business problem — many teams changing one product — rather than with
-the architecture, then works down through the factory/control-tower mental model, an
-interactive **Follow a feature** walkthrough of two real capabilities in `examples/`, the
+the architecture, then works down through the six-step model (capability definition →
+build system → platform standard → composition rules → runtime → customer experience), an
+interactive **Follow one capability** walkthrough of two real capabilities in `examples/`, the
 platform's capability map, the detailed architecture diagram, and finally what the
 architecture *enables* and what it *trades off*. Claims are labelled `fact` or
 `inference` so the evidence behind each one is checkable.

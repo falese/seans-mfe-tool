@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="Why this platform exists, how it lets many teams build one product together, and what happens to a single feature as it moves through it — with the detailed architecture underneath.">
+<meta name="description" content="Why this platform exists, how it lets many teams build one product together, and what happens to a single capability from definition to customer experience — with the detailed architecture underneath.">
 <title>The SMT Platform Map — many teams, one product</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%231467C6%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2720.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2717%27%20width%3D%2721%27%20height%3D%274%27%20rx%3D%272%27%20fill%3D%27%238FC4FF%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2724%27%20width%3D%2721%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E">
 <style>
@@ -246,7 +246,7 @@
   }
   .diagram { display: block; width: 100%; height: auto; color: var(--muted); }
   #why-diagram { min-width: 900px; }
-  #model-diagram { min-width: 900px; }
+  #model-diagram { min-width: 1100px; }
   #exec-diagram { min-width: 860px; }
   #map { min-width: 1180px; }
   figcaption {
@@ -279,8 +279,8 @@
   .flow.dash { stroke-dasharray: 4 4; }
   .arrowhead { fill: var(--rule-2); }
 
-  .card, .hinge, .chip, .strip, .panel, .outcome { stroke-width: 1.4; }
-  .hinge { stroke-width: 2; }
+  .card, .standard-box, .chip, .strip, .panel, .outcome { stroke-width: 1.4; }
+  .standard-box { stroke-width: 2; }
 
   .l-people   { fill: color-mix(in srgb, var(--l-people) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-people) 48%, var(--surface)); }
   .l-intent   { fill: color-mix(in srgb, var(--l-intent) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-intent) 48%, var(--surface)); }
@@ -378,7 +378,7 @@
   .promise .paths { margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule-2);
     font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-word; }
 
-  /* ---------- follow a feature ---------- */
+  /* ---------- follow one capability ---------- */
   .picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 8px; }
   .pick {
     display: block; text-align: left; cursor: pointer;
@@ -440,7 +440,7 @@
     margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--rule-2);
     font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-word;
   }
-  /* only the selected feature's concrete example is shown */
+  /* only the selected capability's concrete example is shown */
   .track[data-feature="berth"] .concrete[data-feature="letterpop"],
   .track[data-feature="letterpop"] .concrete[data-feature="berth"] { display: none; }
 
@@ -607,11 +607,11 @@
   <div class="navbar-in">
     <p class="nav-brand">Platform map</p>
     <ol class="nav-steps">
-      <li><a href="#why"><span class="nav-n">1</span>Why</a></li>
-      <li><a href="#model"><span class="nav-n">2</span>What</a></li>
-      <li><a href="#feature"><span class="nav-n">3</span>One feature</a></li>
-      <li><a href="#capabilities"><span class="nav-n">4</span>Capabilities</a></li>
-      <li><a href="#architecture"><span class="nav-n">5</span>Under the hood</a></li>
+      <li><a href="#why"><span class="nav-n">1</span>Why it exists</a></li>
+      <li><a href="#model"><span class="nav-n">2</span>How it works</a></li>
+      <li><a href="#feature"><span class="nav-n">3</span>One capability</a></li>
+      <li><a href="#capabilities"><span class="nav-n">4</span>What it provides</a></li>
+      <li><a href="#architecture"><span class="nav-n">5</span>Architecture</a></li>
       <li><a href="#judgement"><span class="nav-n">6</span>Trade-offs</a></li>
     </ol>
     <label class="switch nav-switch" for="tech-toggle">
@@ -627,11 +627,11 @@
   <h1>A platform that lets many teams build one product together.</h1>
   <p class="standfirst">
     Teams build and release their own capabilities independently. The platform supplies the
-    <strong>standards and controls</strong> that make those separately-built capabilities behave
-    like one coherent product.
+    <strong>platform standard</strong> they all follow and the <strong>composition rules</strong> that
+    decide where each capability appears — so separately-built capabilities work together as one product.
   </p>
   <p class="standfirst">
-    Nobody logs into this repository. It is the machinery underneath a product — and its whole
+    Nobody logs into this repository. It is the platform behind a product — and its whole
     purpose is to remove the trade-off between <strong>letting teams move fast</strong> and
     <strong>giving customers one consistent experience</strong>.
   </p>
@@ -659,7 +659,7 @@
     <figure class="fig">
       <div class="fig-scroll">
         <svg viewBox="0 0 1180 470" role="img" class="diagram" id="why-diagram"
-             aria-label="Two panels side by side. On the left, without a shared standard: three teams each build a capability, and the capabilities connect to each other in crossing one-off integrations, producing a product that feels like three products. On the right, with the platform standard: the same three teams build the same three capabilities, each connecting downward into one common standard, which produces one product.">
+             aria-label="Two panels side by side. On the left, without a platform standard: three teams each build a capability, and the capabilities connect to each other in crossing one-off integrations, producing a product that feels like three products. On the right, with the platform standard: the same three teams build the same three capabilities, each connecting downward into the platform standard, which produces one product.">
           <defs>
             <marker id="w-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
@@ -674,7 +674,7 @@
 
           <!-- ============ LEFT: WITHOUT ============ -->
           <rect class="panel panel-warn" x="24" y="24" width="548" height="422" rx="14"></rect>
-          <text class="c-tag l-warn-t" x="48" y="58">WITHOUT A SHARED STANDARD</text>
+          <text class="c-tag l-warn-t" x="48" y="58">WITHOUT A PLATFORM STANDARD</text>
           <text class="c-desc" x="48" y="80">Every team answers the same questions again, its own way.</text>
 
           <rect class="card l-people" x="48"  y="100" width="152" height="40" rx="8"></rect>
@@ -737,8 +737,8 @@
           <line class="straight" x1="882"  y1="212" x2="882"  y2="232" marker-end="url(#w-straight)"></line>
           <line class="straight" x1="1056" y1="212" x2="1056" y2="232" marker-end="url(#w-straight)"></line>
 
-          <rect class="hinge l-contract" x="632" y="238" width="500" height="76" rx="10"></rect>
-          <text class="c-tag l-contract-t" x="656" y="262">ONE COMMON STANDARD</text>
+          <rect class="standard-box l-contract" x="632" y="238" width="500" height="76" rx="10"></rect>
+          <text class="c-tag l-contract-t" x="656" y="262">THE PLATFORM STANDARD</text>
           <text class="c-desc">
             <tspan x="656" y="284">The same way of behaving, the same way of naming a place on a</tspan>
             <tspan x="656" y="301">screen, the same shape of answer — agreed once, inherited by all.</tspan>
@@ -774,23 +774,24 @@
         </ul>
       </div>
       <div class="vs-col vs-good">
-        <p class="vs-kind">With it — what the standard supplies</p>
+        <p class="vs-kind">With it — what the platform standard supplies</p>
         <h3>The decisions a team no longer has to make</h3>
         <ul>
           <li><strong>How to behave.</strong> Ten abilities every capability has, in a defined order, with defined failures.</li>
           <li><strong>How to be placed.</strong> One grammar for naming a space on a screen, shared by everyone.</li>
-          <li><strong>How to be built.</strong> One command turns a written description into a running capability.</li>
+          <li><strong>How to be built.</strong> One command turns a capability definition into running software.</li>
           <li><strong>How to be released.</strong> Each capability ships as its own unit; nothing else rebuilds.</li>
           <li><strong>How data looks.</strong> One clean shape out, however messy the systems underneath are.</li>
-          <li><strong>Where it appears.</strong> Decided by rules held outside the capability, changeable without a release.</li>
+          <li><strong>Where it appears.</strong> Decided by composition rules held outside the capability, changeable without a release.</li>
         </ul>
       </div>
     </div>
 
     <p class="vs-note">
-      <strong>The point is not that teams are the problem.</strong> Teams building independently is the
-      goal. The platform exists so that independence costs the customer nothing — autonomy in
-      <em>what</em> a team builds, agreement on <em>how</em> it plugs in.
+      <strong>Many teams. One platform standard. One product.</strong> The point is not that teams are
+      the problem — teams building independently is the goal. Teams do not have to build everything the
+      same way; they have to agree on the standard that lets their capabilities work together. Autonomy
+      in <em>what</em> a team builds, agreement on <em>how</em> it connects.
     </p>
   </section>
 
@@ -817,7 +818,7 @@
 
         <article class="promise">
           <span class="promise-n">Promise 02</span>
-          <h3>Shared standards</h3>
+          <h3>One platform standard</h3>
           <p>
             Every capability, whoever built it, offers the same ten abilities in the same order, names
             screen spaces with the same grammar, and fails in the same describable ways.
@@ -831,7 +832,7 @@
           <p>
             A team does not need to clear its implementation choices with every other team, and does
             not need a shared release train. Where a capability appears can be changed by editing
-            rules rather than shipping code.
+            composition rules rather than shipping code.
           </p>
           <p class="paths">examples/*/control-plane/control-plane.yaml · packages/control-plane/</p>
         </article>
@@ -840,8 +841,9 @@
           <span class="promise-n">Promise 04</span>
           <h3>One customer experience</h3>
           <p>
-            The customer sees a single product. The shell holds only empty labelled spaces; capabilities
-            arrive and fill them, and if one fails the rest of the screen stays up.
+            The customer sees a single product. The host publishes named, empty spaces; the runtime
+            places each capability into the space the composition rules select. If one capability fails,
+            the rest of the screen keeps working.
           </p>
           <p class="paths">examples/*/shell/ · packages/runtime/src/layout-manager.ts</p>
         </article>
@@ -851,130 +853,151 @@
 
   <!-- ============================================================ 2 · MODEL -->
   <section class="band" id="model">
-    <p class="kicker">2 · The core idea</p>
-    <h2 class="section-title wide">One intent, five steps, one experience</h2>
+    <p class="kicker">2 · How it works</p>
+    <h2 class="section-title wide">From capability definition to customer experience, in six steps</h2>
     <p class="lede">
-      If you remember one diagram from this page, make it this one. A team writes down what it wants.
-      A <strong>factory</strong> turns that into working software. A <strong>house standard</strong> makes
-      the result predictable to everything else. A <strong>control tower</strong> decides when and where it
-      appears. The customer just sees a product.
+      If you remember one diagram from this page, make it this one. The <strong>capability definition</strong>
+      describes what a team is building. The <strong>build system</strong> creates it. The
+      <strong>platform standard</strong> makes it predictable to everything else. <strong>Composition
+      rules</strong> determine where and when it appears. The <strong>runtime</strong> brings capabilities
+      together into one customer experience.
     </p>
 
     <figure class="fig">
       <div class="fig-scroll">
-        <svg viewBox="0 0 1180 300" role="img" class="diagram" id="model-diagram"
-             aria-label="Five stages left to right. Intent, then the factory — both at build time. Then the house standard, the hinge between the two halves. Then the control tower and the customer experience — both at run time.">
+        <svg viewBox="0 0 1260 310" role="img" class="diagram" id="model-diagram"
+             aria-label="Six steps left to right. The capability definition, then the build system — both at build time. Then the platform standard, which both halves agree to. Then composition rules, the runtime, and the customer experience — all at run time.">
           <defs>
             <marker id="mm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
               <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
             </marker>
           </defs>
 
-          <text class="phase" x="24"  y="30">BUILD TIME · once, when a team ships something</text>
-          <line class="band-rule l-build-s" x1="24" y1="42" x2="460" y2="42"></line>
+          <text class="phase" x="24"  y="30">BUILD TIME · once, when a team builds a capability</text>
+          <line class="band-rule l-build-s" x1="24" y1="42" x2="412" y2="42"></line>
 
-          <text class="phase" x="488" y="30">THE HINGE</text>
-          <line class="band-rule l-contract-s" x1="488" y1="42" x2="692" y2="42"></line>
+          <text class="phase" x="436" y="30">THE PLATFORM CONTRACT</text>
+          <line class="band-rule l-contract-s" x1="436" y1="42" x2="618" y2="42"></line>
 
-          <text class="phase" x="720" y="30">RUN TIME · every time a person uses the product</text>
-          <line class="band-rule l-runtime-s" x1="720" y1="42" x2="1156" y2="42"></line>
+          <text class="phase" x="642" y="30">RUN TIME · every time a person uses the product</text>
+          <line class="band-rule l-runtime-s" x1="642" y1="42" x2="1236" y2="42"></line>
 
           <g class="layer" data-layer="intent">
-            <rect class="card l-intent" x="24" y="66" width="204" height="182" rx="10"></rect>
-            <text class="c-tag l-intent-t" x="44" y="94">1 · INTENT</text>
-            <text class="c-title" x="44" y="120">The brief</text>
+            <rect class="card l-intent" x="24" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-intent-t" x="40" y="94">STEP 1</text>
+            <text class="c-title s" x="40" y="120">Capability</text>
+            <text class="c-title s" x="40" y="138">definition</text>
             <text class="c-desc">
-              <tspan x="44" y="148">A team writes down one</tspan>
-              <tspan x="44" y="165">capability: what it does,</tspan>
-              <tspan x="44" y="182">what data it needs, and</tspan>
-              <tspan x="44" y="199">where it may appear.</tspan>
-              <tspan x="44" y="223">Source of truth for what</tspan>
-              <tspan x="44" y="240">the feature is meant to be.</tspan>
+              <tspan x="40" y="166">A team describes one</tspan>
+              <tspan x="40" y="183">capability: what it does,</tspan>
+              <tspan x="40" y="200">what data it needs, and</tspan>
+              <tspan x="40" y="217">where it can appear.</tspan>
+              <tspan x="40" y="241">The source of truth for</tspan>
+              <tspan x="40" y="258">what it should do.</tspan>
             </text>
           </g>
 
-          <line class="flow" x1="232" y1="157" x2="252" y2="157" marker-end="url(#mm-arrow)"></line>
+          <line class="flow" x1="210" y1="170" x2="226" y2="170" marker-end="url(#mm-arrow)"></line>
 
           <g class="layer" data-layer="build">
-            <rect class="card l-build" x="256" y="66" width="204" height="182" rx="10"></rect>
-            <text class="c-tag l-build-t" x="276" y="94">2 · THE FACTORY</text>
-            <text class="c-title" x="276" y="120">It gets built</text>
+            <rect class="card l-build" x="230" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-build-t" x="246" y="94">STEP 2</text>
+            <text class="c-title s" x="246" y="120">Build system</text>
             <text class="c-desc">
-              <tspan x="276" y="148">The platform turns the</tspan>
-              <tspan x="276" y="165">brief into working software</tspan>
-              <tspan x="276" y="182">— screens, a data feed,</tspan>
-              <tspan x="276" y="199">packaging and tests.</tspan>
-              <tspan x="276" y="223">In whichever technology</tspan>
-              <tspan x="276" y="240">that team chose.</tspan>
+              <tspan x="246" y="166">Turns the definition</tspan>
+              <tspan x="246" y="183">into working software:</tspan>
+              <tspan x="246" y="200">interface, data access,</tspan>
+              <tspan x="246" y="217">packaging and tests.</tspan>
+              <tspan x="246" y="241">In the technology the</tspan>
+              <tspan x="246" y="258">team chose.</tspan>
             </text>
           </g>
 
-          <line class="flow" x1="464" y1="157" x2="484" y2="157" marker-end="url(#mm-arrow)"></line>
+          <line class="flow" x1="416" y1="170" x2="432" y2="170" marker-end="url(#mm-arrow)"></line>
 
           <g class="layer" data-layer="contract">
-            <rect class="hinge l-contract" x="488" y="66" width="204" height="182" rx="10"></rect>
-            <text class="c-tag l-contract-t" x="508" y="94">3 · THE STANDARD</text>
-            <text class="c-title" x="508" y="120">The house rules</text>
+            <rect class="standard-box l-contract" x="436" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-contract-t" x="452" y="94">STEP 3</text>
+            <text class="c-title s" x="452" y="120">Platform</text>
+            <text class="c-title s" x="452" y="138">standard</text>
             <text class="c-desc">
-              <tspan x="508" y="148">Ten things every capability</tspan>
-              <tspan x="508" y="165">can do, one grammar for</tspan>
-              <tspan x="508" y="182">naming screen spaces, one</tspan>
-              <tspan x="508" y="199">way of failing.</tspan>
-              <tspan x="508" y="223">This is what makes the two</tspan>
-              <tspan x="508" y="240">halves fit together.</tspan>
+              <tspan x="452" y="166">The expectations every</tspan>
+              <tspan x="452" y="183">capability meets: ten</tspan>
+              <tspan x="452" y="200">abilities, one naming</tspan>
+              <tspan x="452" y="217">grammar, one way to fail.</tspan>
+              <tspan x="452" y="241">Agreed once, inherited</tspan>
+              <tspan x="452" y="258">by every capability.</tspan>
             </text>
           </g>
 
-          <line class="flow" x1="696" y1="157" x2="716" y2="157" marker-end="url(#mm-arrow)"></line>
+          <line class="flow" x1="622" y1="170" x2="638" y2="170" marker-end="url(#mm-arrow)"></line>
 
           <g class="layer" data-layer="runtime">
-            <rect class="card l-runtime" x="720" y="66" width="204" height="182" rx="10"></rect>
-            <text class="c-tag l-runtime-t" x="740" y="94">4 · THE CONTROL TOWER</text>
-            <text class="c-title" x="740" y="120">It gets placed</text>
+            <rect class="card l-runtime" x="642" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-runtime-t" x="658" y="94">STEP 4</text>
+            <text class="c-title s" x="658" y="120">Composition</text>
+            <text class="c-title s" x="658" y="138">rules</text>
             <text class="c-desc">
-              <tspan x="740" y="148">Business rules decide which</tspan>
-              <tspan x="740" y="165">capability appears, where,</tspan>
-              <tspan x="740" y="182">and for whom.</tspan>
-              <tspan x="740" y="206">They live outside every</tspan>
-              <tspan x="740" y="223">capability, so they can</tspan>
-              <tspan x="740" y="240">change without a release.</tspan>
+              <tspan x="658" y="166">Decide which capability</tspan>
+              <tspan x="658" y="183">appears, where, when,</tspan>
+              <tspan x="658" y="200">and under what</tspan>
+              <tspan x="658" y="217">conditions.</tspan>
+              <tspan x="658" y="241">Held outside every</tspan>
+              <tspan x="658" y="258">capability.</tspan>
             </text>
           </g>
 
-          <line class="flow" x1="928" y1="157" x2="948" y2="157" marker-end="url(#mm-arrow)"></line>
+          <line class="flow" x1="828" y1="170" x2="844" y2="170" marker-end="url(#mm-arrow)"></line>
+
+          <g class="layer" data-layer="runtime">
+            <rect class="card l-runtime" x="848" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-runtime-t" x="864" y="94">STEP 5</text>
+            <text class="c-title s" x="864" y="120">Runtime</text>
+            <text class="c-desc">
+              <tspan x="864" y="166">Brings capabilities</tspan>
+              <tspan x="864" y="183">together into the</tspan>
+              <tspan x="864" y="200">product while a person</tspan>
+              <tspan x="864" y="217">is using it.</tspan>
+              <tspan x="864" y="241">Applies the rules to</tspan>
+              <tspan x="864" y="258">what is on screen.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="1034" y1="170" x2="1050" y2="170" marker-end="url(#mm-arrow)"></line>
 
           <g class="layer" data-layer="people">
-            <rect class="card l-people" x="952" y="66" width="204" height="182" rx="10"></rect>
-            <text class="c-tag l-people-t" x="972" y="94">5 · THE POINT</text>
-            <text class="c-title" x="972" y="120">One product</text>
+            <rect class="card l-people" x="1054" y="66" width="182" height="214" rx="10"></rect>
+            <text class="c-tag l-people-t" x="1070" y="94">STEP 6</text>
+            <text class="c-title s" x="1070" y="120">Customer</text>
+            <text class="c-title s" x="1070" y="138">experience</text>
             <text class="c-desc">
-              <tspan x="972" y="148">The customer sees a single,</tspan>
-              <tspan x="972" y="165">coherent product.</tspan>
-              <tspan x="972" y="189">Several teams shipped it</tspan>
-              <tspan x="972" y="206">separately, on separate</tspan>
-              <tspan x="972" y="223">days — and nobody outside</tspan>
-              <tspan x="972" y="240">can tell.</tspan>
+              <tspan x="1070" y="166">One coherent product.</tspan>
+              <tspan x="1070" y="190">Several teams built it</tspan>
+              <tspan x="1070" y="207">separately, on separate</tspan>
+              <tspan x="1070" y="224">days. Nobody outside</tspan>
+              <tspan x="1070" y="241">can tell.</tspan>
             </text>
           </g>
         </svg>
       </div>
       <figcaption>
-        The house standard is deliberately in the middle. Everything to its left is built once, by one
-        team. Everything to its right happens on every click, for every customer. Neither side needs to
-        know anything about the other.
+        The platform standard sits in the middle deliberately. Everything to its left happens once, when
+        a team builds a capability. Everything to its right happens every time a person uses the product.
+        Neither side needs to know anything about the other — and that agreement is the platform contract.
       </figcaption>
     </figure>
 
-    <h3 class="sub">The same idea, drawn across the two halves</h3>
+    <h3 class="sub">The same six steps, split into build time and run time</h3>
     <p class="lede">
-      Read it top to bottom. The top row happens once, when a team builds something. The bottom row
-      happens every time a person clicks. The strip in the middle is the agreement that connects the two.
+      Read it top to bottom. The top row happens once, when a team builds a capability. The bottom row
+      happens every time a person uses the product. The strip in the middle is the platform standard that
+      both halves rely on.
     </p>
 
     <figure class="fig">
       <div class="fig-scroll">
         <svg viewBox="0 0 1180 660" role="img" class="diagram" id="exec-diagram"
-             aria-label="Build time: a team writes a feature brief, the factory builds it, and out comes a self-contained feature. Every feature is built to one house standard. At run time, a person acts, the control tower decides which feature to show, the screen assembles itself, and business data arrives in one common shape.">
+             aria-label="Build time: a team writes a capability definition, the build system creates the capability, and out comes a self-contained, independently released capability. Every capability is built to the platform standard. At run time, a person acts, composition rules select which capability to show, the runtime composes it into the screen, and business data arrives in one common shape.">
           <defs>
             <marker id="ex-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
@@ -982,34 +1005,34 @@
           </defs>
 
           <!-- ================= BUILD TIME ================= -->
-          <text class="phase" x="24" y="30">BUILD TIME · once, when a team ships something new</text>
+          <text class="phase" x="24" y="30">BUILD TIME · once, when a team builds a capability</text>
 
           <g class="layer" data-layer="intent">
             <rect class="card l-intent" x="24" y="48" width="330" height="136" rx="10"></rect>
-            <text class="c-tag l-intent-t" x="48" y="76">THE BRIEF</text>
-            <text class="c-title" x="48" y="100">A team writes down one capability</text>
+            <text class="c-tag l-intent-t" x="48" y="76">THE DEFINITION</text>
+            <text class="c-title" x="48" y="100">A team defines one capability</text>
             <text class="c-desc" x="48">
-              <tspan x="48" y="124">One short file says what the feature does,</tspan>
-              <tspan x="48" y="141">what data it needs, and which places on a</tspan>
-              <tspan x="48" y="158">screen it is willing to fill.</tspan>
+              <tspan x="48" y="124">One short file states what the capability does,</tspan>
+              <tspan x="48" y="141">what data it needs, and which named spaces</tspan>
+              <tspan x="48" y="158">on a screen it can appear in.</tspan>
             </text>
           </g>
 
           <g class="layer" data-layer="build">
             <rect class="card l-build" x="394" y="48" width="330" height="136" rx="10"></rect>
-            <text class="c-tag l-build-t" x="418" y="76">THE FACTORY</text>
-            <text class="c-title" x="418" y="100">The platform builds it</text>
+            <text class="c-tag l-build-t" x="418" y="76">THE BUILD SYSTEM</text>
+            <text class="c-title" x="418" y="100">The build system creates it</text>
             <text class="c-desc" x="418">
-              <tspan x="418" y="124">The brief becomes working software: screens,</tspan>
-              <tspan x="418" y="141">a data feed, packaging, tests — in whichever</tspan>
-              <tspan x="418" y="158">technology that team chose.</tspan>
+              <tspan x="418" y="124">The definition becomes working software:</tspan>
+              <tspan x="418" y="141">interface, data access, packaging and tests —</tspan>
+              <tspan x="418" y="158">in the technology that team chose.</tspan>
             </text>
           </g>
 
           <g class="layer" data-layer="build">
             <rect class="card l-build" x="764" y="48" width="392" height="136" rx="10"></rect>
             <text class="c-tag l-build-t" x="788" y="76">THE OUTPUT</text>
-            <text class="c-title" x="788" y="100">A feature that stands on its own</text>
+            <text class="c-title" x="788" y="100">A capability that stands on its own</text>
             <text class="c-desc" x="788">
               <tspan x="788" y="124">It is released by its own team, on its own schedule.</tspan>
               <tspan x="788" y="141">Nothing else has to be rebuilt or re-released when</tspan>
@@ -1021,24 +1044,24 @@
           <line class="flow" x1="724" y1="116" x2="756" y2="116" marker-end="url(#ex-arrow)"></line>
 
           <line class="flow" x1="960" y1="184" x2="960" y2="226" marker-end="url(#ex-arrow)"></line>
-          <text class="flow-label" x="972" y="211">built to one common standard</text>
+          <text class="flow-label" x="972" y="211">built to the platform standard</text>
 
           <!-- ================= THE STANDARD ================= -->
           <g class="layer" data-layer="contract">
-            <rect class="hinge l-contract" x="24" y="234" width="1132" height="152" rx="12"></rect>
-            <text class="c-tag l-contract-t" x="48" y="264">THE HOUSE STANDARD · what every feature promises, whoever built it</text>
+            <rect class="standard-box l-contract" x="24" y="234" width="1132" height="152" rx="12"></rect>
+            <text class="c-tag l-contract-t" x="48" y="264">THE PLATFORM STANDARD · what every capability provides, whoever built it</text>
 
             <rect class="chip l-contract" x="48" y="282" width="348" height="82" rx="8"></rect>
             <text class="chip-title" x="68" y="310">It says what it can do</text>
-            <text class="c-desc"><tspan x="68" y="332">Describes its own capabilities, its</tspan><tspan x="68" y="349">data shape and who may use it.</tspan></text>
+            <text class="c-desc"><tspan x="68" y="332">Describes what it offers, its data</tspan><tspan x="68" y="349">shape and who may use it.</tspan></text>
 
             <rect class="chip l-contract" x="416" y="282" width="348" height="82" rx="8"></rect>
             <text class="chip-title" x="436" y="310">It behaves predictably</text>
             <text class="c-desc"><tspan x="436" y="332">Starts, shows, refreshes, reports its</tspan><tspan x="436" y="349">own health, fails in a known way.</tspan></text>
 
             <rect class="chip l-contract" x="784" y="282" width="348" height="82" rx="8"></rect>
-            <text class="chip-title" x="804" y="310">It fits anywhere</text>
-            <text class="c-desc"><tspan x="804" y="332">Slots into any labelled space on any</tspan><tspan x="804" y="349">screen, without knowing whose.</tspan></text>
+            <text class="chip-title" x="804" y="310">It can be placed anywhere</text>
+            <text class="c-desc"><tspan x="804" y="332">Fits any named space on any screen,</tspan><tspan x="804" y="349">without knowing whose.</tspan></text>
           </g>
 
           <!-- ================= RUN TIME ================= -->
@@ -1050,32 +1073,32 @@
             <text class="c-title" x="48" y="510">Someone does something</text>
             <text class="c-desc">
               <tspan x="48" y="534">Opens a page, picks a berth,</tspan>
-              <tspan x="48" y="551">starts a game. One action goes</tspan>
-              <tspan x="48" y="568">up to the control tower.</tspan>
+              <tspan x="48" y="551">starts a game. That action is</tspan>
+              <tspan x="48" y="568">sent to the composition rules.</tspan>
             </text>
           </g>
 
           <g class="layer" data-layer="runtime">
             <rect class="card l-runtime" x="314" y="458" width="290" height="150" rx="10"></rect>
-            <text class="c-tag l-runtime-t" x="338" y="486">THE CONTROL TOWER</text>
-            <text class="c-title" x="338" y="510">It decides what should happen</text>
+            <text class="c-tag l-runtime-t" x="338" y="486">COMPOSITION RULES</text>
+            <text class="c-title" x="338" y="510">They decide what appears</text>
             <text class="c-desc">
-              <tspan x="338" y="534">Business rules — held outside the</tspan>
-              <tspan x="338" y="551">features, changeable without a</tspan>
-              <tspan x="338" y="568">release — pick the right feature</tspan>
-              <tspan x="338" y="585">for this person, right now.</tspan>
+              <tspan x="338" y="534">Rules held outside the</tspan>
+              <tspan x="338" y="551">capabilities — changeable without</tspan>
+              <tspan x="338" y="568">a release — select the right</tspan>
+              <tspan x="338" y="585">capability for this person, now.</tspan>
             </text>
           </g>
 
           <g class="layer" data-layer="runtime">
             <rect class="card l-runtime" x="644" y="458" width="250" height="150" rx="10"></rect>
-            <text class="c-tag l-runtime-t" x="668" y="486">THE SCREEN</text>
-            <text class="c-title" x="668" y="510">It assembles itself</text>
+            <text class="c-tag l-runtime-t" x="668" y="486">THE RUNTIME</text>
+            <text class="c-title" x="668" y="510">It composes the experience</text>
             <text class="c-desc">
-              <tspan x="668" y="534">The product shell holds only</tspan>
-              <tspan x="668" y="551">empty labelled spaces. Features</tspan>
-              <tspan x="668" y="568">arrive and fill them. If one</tspan>
-              <tspan x="668" y="585">breaks, the rest stay up.</tspan>
+              <tspan x="668" y="534">The host publishes empty named</tspan>
+              <tspan x="668" y="551">spaces. The runtime places each</tspan>
+              <tspan x="668" y="568">capability into its space. If one</tspan>
+              <tspan x="668" y="585">fails, the rest keep working.</tspan>
             </text>
           </g>
 
@@ -1086,8 +1109,8 @@
             <text class="c-desc">
               <tspan x="958" y="534">The real databases and</tspan>
               <tspan x="958" y="551">APIs the company already</tspan>
-              <tspan x="958" y="568">runs — each speaking its</tspan>
-              <tspan x="958" y="585">own awkward dialect.</tspan>
+              <tspan x="958" y="568">runs — each with its own</tspan>
+              <tspan x="958" y="585">naming and conventions.</tspan>
             </text>
           </g>
 
@@ -1095,10 +1118,10 @@
           <line class="flow" x1="604" y1="533" x2="636" y2="533" marker-end="url(#ex-arrow)"></line>
 
           <line class="flow" x1="459" y1="458" x2="459" y2="394" marker-end="url(#ex-arrow)"></line>
-          <text class="flow-label" x="471" y="428">which feature, for whom?</text>
+          <text class="flow-label" x="471" y="428">which capability, for whom?</text>
 
           <line class="flow" x1="769" y1="386" x2="769" y2="450" marker-end="url(#ex-arrow)"></line>
-          <text class="flow-label" x="781" y="422">the feature, ready to show</text>
+          <text class="flow-label" x="781" y="422">the capability, ready to place</text>
 
           <line class="flow" x1="1045" y1="458" x2="1045" y2="394" marker-end="url(#ex-arrow)"></line>
           <text class="flow-label" x="1057" y="428">answers, in one</text>
@@ -1106,25 +1129,25 @@
         </svg>
       </div>
       <figcaption>
-        The middle strip is the hinge. Because every feature makes the same three promises, the factory can
-        build them independently and the control tower can compose them without knowing anything about how
-        any of them was made.
+        The middle strip is the platform contract. Because every capability provides the same three things,
+        the build system can create them independently and the runtime can compose them without knowing
+        anything about how any of them was made.
       </figcaption>
     </figure>
   </section>
 
-  <!-- ============================================================ 3 · ONE FEATURE -->
+  <!-- ======================================================= 3 · ONE CAPABILITY -->
   <section class="band band-alt" id="feature">
     <div class="inner">
-      <p class="kicker">3 · Follow one feature</p>
-      <h2 class="section-title wide">What actually happens to a single capability</h2>
+      <p class="kicker">3 · Follow one capability</p>
+      <h2 class="section-title wide">What happens to a single capability, end to end</h2>
       <p class="lede">
-        Nine steps, from someone wanting something to a customer seeing it. Both examples below are real
-        capabilities in this repository, built with the real toolchain. Pick one — the steps stay the same,
-        only the specifics change. That is the whole claim of the platform, demonstrated.
+        Nine steps, from a business need to a customer seeing it. Both examples below are real capabilities
+        in this repository, built with the real toolchain. Pick one — the steps stay the same, only the
+        specifics change. That is the platform's whole claim, demonstrated.
       </p>
 
-      <div class="picker" role="group" aria-label="Choose a feature to follow">
+      <div class="picker" role="group" aria-label="Choose a capability to follow">
         <button type="button" class="pick" data-feature="berth" aria-pressed="true">
           <b>A berth tile</b>
           <span>Meridian Station · Angular · operations</span>
@@ -1140,9 +1163,9 @@
 
         <li class="stage" data-phase="intent">
           <div class="stage-n" aria-hidden="true">1</div>
-          <p class="stage-phase">Intent</p>
-          <h3>Someone needs something</h3>
-          <p>This is where a team decides what a capability should do for the business. No technology yet — just a need and an owner.</p>
+          <p class="stage-phase">Business need</p>
+          <h3>A team identifies a business need</h3>
+          <p>A team decides what a capability should do for the business. No technology yet — a need and an owner.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
             <p>Station operators need all six docking berths visible at a glance on one console, without opening six screens.</p>
@@ -1157,63 +1180,63 @@
 
         <li class="stage" data-phase="intent">
           <div class="stage-n" aria-hidden="true">2</div>
-          <p class="stage-phase">Definition</p>
-          <h3>The team writes it down, once</h3>
-          <p>One short file describes the capability: what it offers, what data it needs, what technology it is written in, and which spaces it is willing to fill. <strong>This file is the source of truth for feature intent</strong> — not for live data, not for what is deployed, not for what a customer currently sees.</p>
+          <p class="stage-phase">Capability definition</p>
+          <h3>The team writes the capability definition</h3>
+          <p>One short file describes the capability: what it offers, what data it needs, what technology it is written in, and which named spaces it can appear in. <strong>This file is the source of truth for what the capability is meant to do</strong> — not for live data, not for what is deployed, not for what a customer currently sees.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>One brief declares three capabilities — a full docking board, a single berth tile, and a traffic log — plus the two backend systems it reads from. It says the team writes Angular.</p>
+            <p>One definition declares three capabilities — a full docking board, a single berth tile, and a traffic log — plus the two backend systems it reads from. It states that the team writes Angular.</p>
             <p class="paths">examples/meridian-station/meridian-docking-control/mfe-manifest.yaml</p>
           </div>
           <div class="concrete" data-feature="letterpop">
             <span class="lbl">For Letter Pop</span>
-            <p>One brief declares three capabilities — play the game, show its cover card, and return its metadata. It says the team writes React.</p>
+            <p>One definition declares three capabilities — play the game, show its cover card, and return its metadata. It states that the team writes React.</p>
             <p class="paths">examples/abc-kids/letter-pop/mfe-manifest.yaml</p>
           </div>
         </li>
 
         <li class="stage" data-phase="build">
           <div class="stage-n" aria-hidden="true">3</div>
-          <p class="stage-phase">Build time</p>
-          <h3>The factory turns intent into software</h3>
-          <p>The platform reads the brief and writes out a complete, runnable capability: the application shell, the lifecycle wiring, its own data service, container packaging and tests. The team starts from something that already works and already complies.</p>
+          <p class="stage-phase">Build system</p>
+          <h3>The build system creates it</h3>
+          <p>The build system reads the definition and produces a complete, runnable capability: the application, the lifecycle wiring, its own data service, container packaging and tests. The team starts from something that already works and already meets the platform standard.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>One command produces the Angular application, its lifecycle wrapper, and its own data service — including the translations that hide one backend's underscore naming and another's wrapper envelopes. The mess stops at the data service.</p>
+            <p>One command produces the Angular application, its lifecycle wrapper, and its own data service — including the translations for one backend's underscore naming and another's wrapper envelopes. The data service isolates those differences from the capability.</p>
             <p class="paths">packages/codegen/ (44 templates) · seans-mfe-tool remote:generate</p>
           </div>
           <div class="concrete" data-feature="letterpop">
             <span class="lbl">For Letter Pop</span>
-            <p>The same command, a different technology adapter: a React application, the same lifecycle wrapper, the same packaging shape. The factory did not need changing to support both.</p>
+            <p>The same command, a different technology adapter: a React application, the same lifecycle wrapper, the same packaging shape. The build system did not need changing to support both.</p>
             <p class="paths">packages/codegen/ · packages/framework-react/</p>
           </div>
         </li>
 
         <li class="stage" data-phase="build">
           <div class="stage-n" aria-hidden="true">4</div>
-          <p class="stage-phase">Build time</p>
-          <h3>The team writes the part only it can write</h3>
-          <p>The actual business logic — the thing that makes this capability worth having. The factory owns the platform plumbing and re-stamps it; it never overwrites what the team wrote.</p>
+          <p class="stage-phase">Team implementation</p>
+          <h3>The team implements its business logic</h3>
+          <p>The team owns the business logic specific to its capability — the thing that makes it worth having. The build system manages the shared platform code and applies it consistently across every capability; it never overwrites what the team wrote.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>The docking team writes the tile component itself: what a berth looks like, what "occupied" means, when to show a warning. Nobody else has an opinion about it.</p>
+            <p>The docking team implements the tile itself: what a berth looks like, what "occupied" means, when to show a warning. No other team has a say in it.</p>
             <p class="paths">.../meridian-docking-control/src/features/BerthTile/BerthTile.component.ts</p>
           </div>
           <div class="concrete" data-feature="letterpop">
             <span class="lbl">For Letter Pop</span>
-            <p>The team writes the game. None of the game leaks into the platform, and none of the platform's opinions leak into the game.</p>
+            <p>The team implements the game. None of the game reaches the platform, and none of the platform's decisions reach the game.</p>
             <p class="paths">examples/abc-kids/letter-pop/src/features/</p>
           </div>
         </li>
 
         <li class="stage" data-phase="contract">
           <div class="stage-n" aria-hidden="true">5</div>
-          <p class="stage-phase">The house standard</p>
-          <h3>It inherits the common standard</h3>
+          <p class="stage-phase">Platform standard</p>
+          <h3>It meets the platform standard</h3>
           <p>The generated wrapper makes the capability predictable to the rest of the platform: it can be started, shown, refreshed, health-checked, described and queried — in a defined order, with defined failures — by a system that knows nothing about how it was built.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>An Angular capability that the runtime drives exactly the way it drives a React one. The platform never learns the word "Angular".</p>
+            <p>An Angular capability that the runtime drives exactly the way it drives a React one. The platform never needs to know it is Angular.</p>
             <p class="paths">packages/runtime/src/base-mfe.ts · .../src/platform/base-mfe/mfe.ts</p>
           </div>
           <div class="concrete" data-feature="letterpop">
@@ -1226,7 +1249,7 @@
         <li class="stage" data-phase="build">
           <div class="stage-n" aria-hidden="true">6</div>
           <p class="stage-phase">Release</p>
-          <h3>It ships on its own</h3>
+          <h3>It is released independently</h3>
           <p>The capability is packaged and released as its own unit, on its own schedule. Adding it or changing it does not rebuild anything else in the product.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
@@ -1242,12 +1265,12 @@
 
         <li class="stage" data-phase="runtime">
           <div class="stage-n" aria-hidden="true">7</div>
-          <p class="stage-phase">Run time</p>
-          <h3>The control tower is told when to use it</h3>
-          <p>A rule — written outside every capability, in the product's own composition document — says which capability appears, in which named space, under which conditions. Change the rule, change the product; no team ships code.</p>
+          <p class="stage-phase">Composition rules</p>
+          <h3>Composition rules decide where and when it appears</h3>
+          <p>A rule — held outside every capability, in the product's own composition document — states which capability appears, in which named space, under which conditions. Change the rule, change the product; no team ships code.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>One rule covers all six berths: when the console asks for a berth, place a berth tile in the space named after that berth, and tell it which berth it is.</p>
+            <p>One rule covers all six berths: when the console asks for a berth, place a berth tile in the space named after that berth, and pass it the berth identifier.</p>
             <p class="paths">examples/meridian-station/control-plane/control-plane.yaml → rules.json (generated)</p>
           </div>
           <div class="concrete" data-feature="letterpop">
@@ -1259,25 +1282,25 @@
 
         <li class="stage" data-phase="runtime">
           <div class="stage-n" aria-hidden="true">8</div>
-          <p class="stage-phase">Run time</p>
-          <h3>The screen assembles itself</h3>
-          <p>The screen is not built by anyone. A host publishes empty named spaces; the control tower resolves which capability belongs in each; a placer inserts them as they arrive, waits for spaces not yet open, and keeps the rest of the screen alive if one fails.</p>
+          <p class="stage-phase">Runtime</p>
+          <h3>The runtime composes it into the product</h3>
+          <p>No one builds the screen directly. A host publishes empty named spaces; the composition rules resolve which capability belongs in each; the runtime places them as they arrive, waits for spaces that are not open yet, and keeps the rest of the screen working if one capability fails.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>The station console publishes three kinds of space — a main work area, a status rail, and one space per berth. Six tiles arrive from one capability and fill six of them independently.</p>
+            <p>The station console publishes three kinds of space — a main work area, a status rail, and one space per berth. Six tiles from one capability fill six of those spaces independently.</p>
             <p class="paths">.../meridian-console/mfe-manifest.yaml (providesSlots) · packages/runtime/src/layout-manager.ts</p>
           </div>
           <div class="concrete" data-feature="letterpop">
             <span class="lbl">For Letter Pop</span>
-            <p>The arcade home page publishes two spaces — main and information. The game goes to one, its cover art to the other.</p>
+            <p>The arcade home page publishes two named spaces — main and information. The runtime places the game in one and its cover art in the other.</p>
             <p class="paths">examples/abc-kids/home/mfe-manifest.yaml (providesSlots) · packages/runtime/src/layout-manager.ts</p>
           </div>
         </li>
 
         <li class="stage" data-phase="people">
           <div class="stage-n" aria-hidden="true">9</div>
-          <p class="stage-phase">The customer</p>
-          <h3>A person sees one product</h3>
+          <p class="stage-phase">Customer experience</p>
+          <h3>The customer sees one product</h3>
           <p>None of the above is visible. The customer sees a single, coherent product — and could not tell you how many teams, technologies or releases were involved.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
@@ -1297,85 +1320,85 @@
 
   <!-- ============================================================ 4 · CAPABILITIES -->
   <section class="band" id="capabilities">
-    <p class="kicker">4 · What the platform does</p>
-    <h2 class="section-title wide">Ten capabilities, grouped by what they do — not where the files sit</h2>
+    <p class="kicker">4 · What the platform provides</p>
+    <h2 class="section-title wide">Eleven things the platform is responsible for</h2>
     <p class="lede">
-      This is the platform's job list. Four of these are foundational — shared by everything and depended
-      on by everything else. The rest is the working machinery on top. None of these is a folder; several
-      span packages, and several packages contribute to more than one.
+      The platform's job list, grouped by what each part does rather than where its files sit. Four are
+      foundational — shared by everything and depended on by everything else. None of these is a folder;
+      several span packages, and several packages contribute to more than one.
     </p>
 
     <div class="grid">
 
       <article class="part" data-layer="intent">
-        <p class="part-kind">Design intent · foundational</p>
-        <h3>Feature definition</h3>
+        <p class="part-kind">Definition · foundational</p>
+        <h3>Capability definition</h3>
         <p class="part-what">A single short document per capability, written by the team that owns it, declaring what it does, what data it needs, and which spaces on a screen it can fill.</p>
-        <p class="part-why"><span>Why it matters</span> It is the source of truth for <em>feature intent</em>. The code, the data feed, the packaging and the validation are all derived from it, so the description and the shipped software cannot quietly disagree. It is deliberately <em>not</em> the source of truth for runtime state, live data or what is currently deployed.</p>
+        <p class="part-why"><span>Why it matters</span> It is the source of truth for <em>what the capability is meant to do</em>. The code, the data service, the packaging and the validation are all derived from it, so the description and the shipped software cannot quietly disagree. It is deliberately <em>not</em> the source of truth for runtime state, live data or what is currently deployed.</p>
         <p class="paths">packages/dsl/ · mfe-manifest.yaml (21 in the repository) · schemas/dsl/</p>
       </article>
 
       <article class="part" data-layer="build">
-        <p class="part-kind">Build machinery</p>
-        <h3>Generation &amp; build</h3>
+        <p class="part-kind">Build</p>
+        <h3>Build system</h3>
         <p class="part-what">Reads a definition and writes out a complete, runnable capability — user interface, wiring, data access, container packaging and tests.</p>
-        <p class="part-why"><span>Why it matters</span> New teams start from a working, compliant capability instead of a blank page. It is also how a platform-wide improvement reaches everyone: change the factory, re-stamp the fleet, and a drift check proves nothing was missed.</p>
+        <p class="part-why"><span>Why it matters</span> New teams start from a working, compliant capability instead of a blank page. It is also how a platform-wide improvement reaches everyone: change the build system, regenerate every capability, and a drift check proves nothing was missed.</p>
         <p class="paths">packages/codegen/ · 44 templates · src/commands/remote/</p>
       </article>
 
       <article class="part" data-layer="build">
-        <p class="part-kind">Build machinery</p>
+        <p class="part-kind">Build</p>
         <h3>Technology adapters</h3>
-        <p class="part-what">Small plug-ins that teach the factory a new front-end technology. Two ship today; adding a third is a new plug-in, not a change to the factory.</p>
+        <p class="part-what">Small plug-ins that teach the build system a new front-end technology. Two ship today; adding a third is a new plug-in, not a change to the build system.</p>
         <p class="part-why"><span>Why it matters</span> This is what makes "any team, any technology" real rather than aspirational — and it means a technology choice made today does not become a platform-wide migration tomorrow. The framework field is deliberately an open string, not a fixed list.</p>
         <p class="paths">packages/framework-react/ · packages/framework-angular/ · src/framework/loader.ts</p>
       </article>
 
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
-        <h3>The house standard</h3>
+        <h3>The platform standard</h3>
         <p class="part-what">Ten things every capability must be able to do — start up, show itself, refresh, check access, report health, describe itself, publish its data shape, answer a data question, raise an event, and report state upward — plus strict rules about the order they may happen in.</p>
-        <p class="part-why"><span>Why it matters</span> This <em>is</em> the platform. It is the reason a capability built by one team in one technology can be operated by a system that knows nothing about either.</p>
+        <p class="part-why"><span>Why it matters</span> This is the agreement — the platform contract — that lets a capability built by one team in one technology be operated by a system that knows nothing about either. In the code it is the <em>platform contract</em>: ten platform capabilities on a shared base class.</p>
         <p class="paths">packages/contracts/ · packages/runtime/src/base-mfe.ts</p>
       </article>
 
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
-        <h3>Placement contract</h3>
-        <p class="part-what">Every host publishes the spaces it offers by name — "main", "status", "berth 4" — and business rules target those names. Names are declared in the definition, never inferred from screen position.</p>
+        <h3>Named spaces</h3>
+        <p class="part-what">Every host publishes the spaces it offers by name — "main", "status", "berth 4" — and composition rules target those names. Names are declared in the capability definition, never inferred from screen position.</p>
         <p class="part-why"><span>Why it matters</span> A layout redesign does not break the rules that decide what goes where. It also lets one capability appear six times on one screen, each instance independent and independently addressable.</p>
         <p class="paths">docs/slot-contract.md · packages/contracts/src/slot-grammar.ts · slot-contract.ts</p>
       </article>
 
       <article class="part" data-layer="runtime">
-        <p class="part-kind">Working machinery</p>
+        <p class="part-kind">Run time</p>
         <h3>Runtime composition</h3>
-        <p class="part-what">Three cooperating roles: a <em>rule book</em> that turns "this person did this" into "show that capability", a <em>router</em> that carries the request and the answer, and a <em>placer</em> that puts the result into the right named space and keeps it healthy.</p>
-        <p class="part-why"><span>Why it matters</span> Business rules about what appears where live outside the capabilities, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
+        <p class="part-what">Three cooperating parts: a <em>rules service</em> that resolves "this person did this" into "show that capability", a <em>message channel</em> that carries the request and the answer, and a <em>layout manager</em> that places the result into the right named space and keeps it healthy. In the code these are the control plane's registry and daemon, plus the runtime's layout manager.</p>
+        <p class="part-why"><span>Why it matters</span> Decisions about what appears where live outside the capabilities, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
         <p class="paths">packages/control-plane/ (registry + daemon) · packages/runtime/src/layout-manager.ts</p>
       </article>
 
       <article class="part" data-layer="intent">
-        <p class="part-kind">Working machinery</p>
-        <h3>Composition authoring</h3>
-        <p class="part-what">Each product has one composition document — a readable list of "when this happens, place that capability there". It is compiled into the payload the control tower actually reads; the payload is never hand-edited.</p>
+        <p class="part-kind">Run time</p>
+        <h3>Composition rules</h3>
+        <p class="part-what">Each product has one composition document — a readable list of "when this happens, place that capability there". It is compiled into the payload the runtime reads; the payload is never hand-edited.</p>
         <p class="part-why"><span>Why it matters</span> Product placement becomes an editable business document rather than code spread across teams. A single rule can cover thirteen games or six berths, and a check fails the build if the compiled payload and the document disagree.</p>
         <p class="paths">examples/*/control-plane/control-plane.yaml · packages/dsl/src/control-plane-compiler.ts</p>
       </article>
 
       <article class="part" data-layer="data">
-        <p class="part-kind">Working machinery</p>
+        <p class="part-kind">Run time</p>
         <h3>Data &amp; integration</h3>
         <p class="part-what">Each capability gets its own small data service that fronts the company's real systems and hands back one clean, consistent shape — no matter how inconsistent the sources are underneath.</p>
-        <p class="part-why"><span>Why it matters</span> Legacy dialects stop leaking into feature teams' work. The reference product deliberately fronts systems that name the same thing different ways and wrap their answers differently, to prove the translation actually happens.</p>
+        <p class="part-why"><span>Why it matters</span> The data service isolates differences between the underlying systems from the capability, so those differences never reach the team building it. The reference product deliberately fronts systems that name the same thing different ways and wrap their answers differently, to prove the translation actually happens.</p>
         <p class="paths">packages/bff-plugin/ · src/commands/api.ts · examples/meridian-station/*/specs/</p>
       </article>
 
       <article class="part" data-layer="data">
-        <p class="part-kind">Working machinery · partly complete</p>
+        <p class="part-kind">Run time · partly complete</p>
         <h3>Access &amp; identity</h3>
         <p class="part-what">A place in the standard for every capability to check whether the current person may use it, a signature-verifying token handler in the runtime, and request identity carried into every data call.</p>
-        <p class="part-why"><span>Why it matters</span> The <em>seam</em> for authorisation is designed and present at every boundary. The <em>policy</em> is not: the check that generated capabilities inherit approves everyone, and the data layer decodes the caller's token for identity without verifying it. Anyone planning a production rollout should read this as designed-but-unfinished.</p>
+        <p class="part-why"><span>Why it matters</span> The <em>place</em> for authorisation is designed and present at every boundary. The <em>policy</em> is not: the check that generated capabilities inherit approves everyone, and the data layer decodes the caller's token for identity without verifying it. Anyone planning a production rollout should read this as designed-but-unfinished.</p>
         <p class="paths">packages/runtime/src/handlers/auth.ts · doAuthorizeAccess() · platform/bff/mesh-context.js</p>
       </article>
 
@@ -1390,7 +1413,7 @@
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
         <h3>Governance &amp; drift control</h3>
-        <p class="part-what">Automated checks that re-derive every reference capability from its definition and fail if the shipped code has drifted; that confirm each definition agrees with its packaging; that keep recorded decisions and published documentation consistent with the code; and that warn teams when a platform change reaches files the platform does not own.</p>
+        <p class="part-what">Automated checks that regenerate every reference capability from its definition and fail if the shipped code has drifted; that confirm each definition agrees with its packaging; that keep recorded decisions and published documentation consistent with the code; and that warn teams when a platform change reaches files the platform does not own.</p>
         <p class="part-why"><span>Why it matters</span> This is what keeps 21 independently-released capabilities honest without a release train. It is also the platform's answer to a real incident — see the trade-offs section.</p>
         <p class="paths">scripts/check-mfe-drift · check-mfe-consistency · check-adr · packages/codegen/src/platform-migrations.ts</p>
       </article>
@@ -1401,15 +1424,16 @@
   <!-- ============================================================ 5 · ARCHITECTURE -->
   <section class="band band-alt" id="architecture">
     <div class="inner">
-      <p class="kicker">5 · How it works under the hood</p>
+      <p class="kicker">5 · Detailed architecture</p>
       <div class="section-head">
         <div>
           <h2 class="section-title wide">The detailed system map</h2>
           <p class="lede">
-            Everything above, one level down — for architects and engineers. Same story, same grouping
-            by purpose rather than folder. Reads left to right: who uses it, what they declare, what gets
-            built, the standard everything inherits, how it is composed on screen, and where real data
-            comes from. Use the legend to isolate one layer at a time.
+            Everything above, one level down — for architects and engineers. Same story, same grouping by
+            purpose rather than folder, and this is where the repository's own names appear. Reads left to
+            right: who uses it, what they declare, what gets built, the platform standard everything
+            inherits, how capabilities are composed at run time, and where real data comes from. Use the
+            legend to isolate one layer at a time.
           </p>
         </div>
         <label class="switch" for="paths-toggle">
@@ -1420,10 +1444,10 @@
 
       <div class="legend" id="legend">
         <button type="button" class="lg" data-focus="people" aria-pressed="false"><i class="sw l-people"></i>People &amp; entry points</button>
-        <button type="button" class="lg" data-focus="intent" aria-pressed="false"><i class="sw l-intent"></i>Design intent</button>
-        <button type="button" class="lg" data-focus="build" aria-pressed="false"><i class="sw l-build"></i>Build machinery</button>
-        <button type="button" class="lg" data-focus="contract" aria-pressed="false"><i class="sw l-contract"></i>Shared standard</button>
-        <button type="button" class="lg" data-focus="runtime" aria-pressed="false"><i class="sw l-runtime"></i>Run-time composition</button>
+        <button type="button" class="lg" data-focus="intent" aria-pressed="false"><i class="sw l-intent"></i>Definitions &amp; rules</button>
+        <button type="button" class="lg" data-focus="build" aria-pressed="false"><i class="sw l-build"></i>Build system</button>
+        <button type="button" class="lg" data-focus="contract" aria-pressed="false"><i class="sw l-contract"></i>Platform standard</button>
+        <button type="button" class="lg" data-focus="runtime" aria-pressed="false"><i class="sw l-runtime"></i>Runtime composition</button>
         <button type="button" class="lg" data-focus="data" aria-pressed="false"><i class="sw l-data"></i>Data &amp; external systems</button>
         <button type="button" class="lg lg-reset" data-focus="">Show all</button>
       </div>
@@ -1431,7 +1455,7 @@
       <figure class="fig fig-wide">
         <div class="fig-scroll">
           <svg viewBox="0 0 1640 900" role="img" class="diagram" id="map"
-               aria-label="Six columns read left to right: who uses it; what they declare; what gets built; the shared standard every feature inherits; how features are composed on screen at run time; and where data comes from. Two full-width strips below carry the command centre and the governance safety net.">
+               aria-label="Six columns read left to right: who uses it; what they declare; what gets built; the platform standard every capability inherits; how capabilities are composed at run time; and where data comes from. Two full-width strips below carry the operator interface and the governance checks.">
             <defs>
               <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
@@ -1456,7 +1480,7 @@
               <line class="band-rule l-people-s" x1="24" y1="100" x2="214" y2="100"></line>
 
               <rect class="card l-people" x="24" y="116" width="190" height="112" rx="9"></rect>
-              <text class="c-title s" x="42" y="142">Feature teams</text>
+              <text class="c-title s" x="42" y="142">Capability teams</text>
               <text class="c-desc"><tspan x="42" y="164">Each owns one business</tspan><tspan x="42" y="180">capability end to end and</tspan><tspan x="42" y="196">releases on its own clock.</tspan></text>
 
               <rect class="card l-people" x="24" y="244" width="190" height="112" rx="9"></rect>
@@ -1466,7 +1490,7 @@
 
               <rect class="card l-people" x="24" y="372" width="190" height="112" rx="9"></rect>
               <text class="c-title s" x="42" y="398">Product operators</text>
-              <text class="c-desc"><tspan x="42" y="420">Decide which features a</tspan><tspan x="42" y="436">given product shows, by</tspan><tspan x="42" y="452">editing rules, not code.</tspan></text>
+              <text class="c-desc"><tspan x="42" y="420">Decide which capabilities a</tspan><tspan x="42" y="436">product shows, by editing</tspan><tspan x="42" y="452">composition rules, not code.</tspan></text>
 
               <rect class="card l-people" x="24" y="500" width="190" height="112" rx="9"></rect>
               <text class="c-title s" x="42" y="526">Customers &amp; staff</text>
@@ -1479,18 +1503,18 @@
               <line class="band-rule l-intent-s" x1="262" y1="100" x2="492" y2="100"></line>
 
               <rect class="card l-intent" x="262" y="116" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="280" y="142">The feature brief</text>
-              <text class="c-desc"><tspan x="280" y="164">One file per feature: what it does,</tspan><tspan x="280" y="180">what data it needs, what technology</tspan><tspan x="280" y="196">it is written in.</tspan></text>
+              <text class="c-title s" x="280" y="142">Capability definition</text>
+              <text class="c-desc"><tspan x="280" y="164">One file per capability: what it does,</tspan><tspan x="280" y="180">what data it needs, what technology</tspan><tspan x="280" y="196">it is written in.</tspan></text>
               <text class="paths-t paths" x="280" y="216">mfe-manifest.yaml · packages/dsl/</text>
 
               <rect class="card l-intent" x="262" y="244" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="280" y="270">Offered spaces</text>
-              <text class="c-desc"><tspan x="280" y="292">The named places this feature is</tspan><tspan x="280" y="308">willing to let other features</tspan><tspan x="280" y="324">appear inside.</tspan></text>
+              <text class="c-title s" x="280" y="270">Named spaces offered</text>
+              <text class="c-desc"><tspan x="280" y="292">The named places this capability</tspan><tspan x="280" y="308">offers for other capabilities</tspan><tspan x="280" y="324">to appear in.</tspan></text>
               <text class="paths-t paths" x="280" y="344">providesSlots · slot-contract.md</text>
 
               <rect class="card l-intent" x="262" y="372" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="280" y="398">Placement rules</text>
-              <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Written in their</tspan><tspan x="280" y="452">own file, outside every feature.</tspan></text>
+              <text class="c-title s" x="280" y="398">Composition rules</text>
+              <text class="c-desc"><tspan x="280" y="420">"When this happens, place that</tspan><tspan x="280" y="436">capability there." Held in their</tspan><tspan x="280" y="452">own file, outside every capability.</tspan></text>
               <text class="paths-t paths" x="280" y="472">control-plane.yaml → rules.json</text>
 
               <rect class="card l-intent" x="262" y="500" width="230" height="112" rx="9"></rect>
@@ -1505,18 +1529,18 @@
               <line class="band-rule l-build-s" x1="540" y1="100" x2="770" y2="100"></line>
 
               <rect class="card l-build" x="540" y="116" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="558" y="142">The feature factory</text>
-              <text class="c-desc"><tspan x="558" y="164">Turns a brief into a complete,</tspan><tspan x="558" y="180">running feature. Owns some files</tspan><tspan x="558" y="196">outright; seeds others once.</tspan></text>
+              <text class="c-title s" x="558" y="142">The build system</text>
+              <text class="c-desc"><tspan x="558" y="164">Turns a definition into a complete,</tspan><tspan x="558" y="180">running capability. Owns some files</tspan><tspan x="558" y="196">outright; seeds others once.</tspan></text>
               <text class="paths-t paths" x="558" y="216">packages/codegen/</text>
 
               <rect class="card l-build" x="540" y="244" width="230" height="112" rx="9"></rect>
               <text class="c-title s" x="558" y="270">Technology adapters</text>
-              <text class="c-desc"><tspan x="558" y="292">Teach the factory a front-end</tspan><tspan x="558" y="308">technology. Two today; a third</tspan><tspan x="558" y="324">is a plug-in, not a rewrite.</tspan></text>
-              <text class="paths-t paths" x="558" y="344">packages/framework-{react,angular}/</text>
+              <text class="c-desc"><tspan x="558" y="292">Teach the build system a front-end</tspan><tspan x="558" y="308">technology. Two today; a third</tspan><tspan x="558" y="324">is a plug-in, not a rewrite.</tspan></text>
+              <text class="paths-t paths" x="558" y="344">packages/framework-*/</text>
 
               <rect class="card l-build" x="540" y="372" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="558" y="398">Data feed builder</text>
-              <text class="c-desc"><tspan x="558" y="420">Builds each feature's private</tspan><tspan x="558" y="436">translation service from the</tspan><tspan x="558" y="452">data section of its brief.</tspan></text>
+              <text class="c-title s" x="558" y="398">Data service builder</text>
+              <text class="c-desc"><tspan x="558" y="420">Builds each capability's own data</tspan><tspan x="558" y="436">service from the data section of</tspan><tspan x="558" y="452">its definition.</tspan></text>
               <text class="paths-t paths" x="558" y="472">packages/bff-plugin/</text>
 
               <rect class="card l-build" x="540" y="500" width="230" height="112" rx="9"></rect>
@@ -1527,7 +1551,7 @@
 
             <!-- ============ B4 STANDARD ============ -->
             <g class="layer" data-layer="contract">
-              <text class="band-head l-contract-t" x="818" y="92">THE SHARED STANDARD · foundational</text>
+              <text class="band-head l-contract-t" x="818" y="92">THE PLATFORM STANDARD</text>
               <line class="band-rule l-contract-s" x1="818" y1="100" x2="1048" y2="100"></line>
 
               <rect class="card l-contract" x="818" y="116" width="230" height="112" rx="9"></rect>
@@ -1537,12 +1561,12 @@
 
               <rect class="card l-contract" x="818" y="244" width="230" height="112" rx="9"></rect>
               <text class="c-title s" x="836" y="270">Behaviour guardrails</text>
-              <text class="c-desc"><tspan x="836" y="292">A feature cannot show before it</tspan><tspan x="836" y="308">has started. Timeouts, retries and</tspan><tspan x="836" y="324">typed failures are built in.</tspan></text>
+              <text class="c-desc"><tspan x="836" y="292">A capability cannot render before</tspan><tspan x="836" y="308">it has loaded. Timeouts, retries</tspan><tspan x="836" y="324">and typed failures are built in.</tspan></text>
               <text class="paths-t paths" x="836" y="344">timeout-wrapper · retry-wrapper</text>
 
               <rect class="card l-contract" x="818" y="372" width="230" height="112" rx="9"></rect>
               <text class="c-title s" x="836" y="398">Space naming rules</text>
-              <text class="c-desc"><tspan x="836" y="420">One grammar for naming screen</tspan><tspan x="836" y="436">spaces, shared by the briefs, the</tspan><tspan x="836" y="452">factory, the rules and the tower.</tspan></text>
+              <text class="c-desc"><tspan x="836" y="420">One grammar for naming screen</tspan><tspan x="836" y="436">spaces, shared by definitions, the</tspan><tspan x="836" y="452">build system, rules and runtime.</tspan></text>
               <text class="paths-t paths" x="836" y="472">contracts/src/slot-grammar.ts</text>
 
               <rect class="card l-contract" x="818" y="500" width="230" height="112" rx="9"></rect>
@@ -1553,27 +1577,27 @@
 
             <!-- ============ B5 RUNTIME ============ -->
             <g class="layer" data-layer="runtime">
-              <text class="band-head l-runtime-t" x="1096" y="92">HOW IT IS COMPOSED</text>
+              <text class="band-head l-runtime-t" x="1096" y="92">RUNTIME COMPOSITION</text>
               <line class="band-rule l-runtime-s" x1="1096" y1="100" x2="1326" y2="100"></line>
 
               <rect class="card l-runtime" x="1096" y="116" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="1114" y="142">The rule book</text>
-              <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and</tspan><tspan x="1114" y="180">this person, which feature, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
+              <text class="c-title s" x="1114" y="142">The rules service</text>
+              <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and this</tspan><tspan x="1114" y="180">person, which capability, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
               <text class="paths-t paths" x="1114" y="216">packages/control-plane/registry/</text>
 
               <rect class="card l-runtime" x="1096" y="244" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="1114" y="270">The router</text>
+              <text class="c-title s" x="1114" y="270">The message channel</text>
               <text class="c-desc"><tspan x="1114" y="292">Carries actions up and answers</tspan><tspan x="1114" y="308">down over a live connection.</tspan><tspan x="1114" y="324">Knows nothing about content.</tspan></text>
               <text class="paths-t paths" x="1114" y="344">packages/control-plane/daemon/</text>
 
               <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="1114" y="398">The placer</text>
-              <text class="c-desc"><tspan x="1114" y="420">Puts each arriving feature into its</tspan><tspan x="1114" y="436">named space, waits for spaces not</tspan><tspan x="1114" y="452">yet open, and heals failures.</tspan></text>
+              <text class="c-title s" x="1114" y="398">The layout manager</text>
+              <text class="c-desc"><tspan x="1114" y="420">Places each arriving capability in</tspan><tspan x="1114" y="436">its named space, waits for spaces</tspan><tspan x="1114" y="452">not yet open, and heals failures.</tspan></text>
               <text class="paths-t paths" x="1114" y="472">runtime/src/layout-manager.ts</text>
 
               <rect class="card l-runtime" x="1096" y="500" width="230" height="112" rx="9"></rect>
-              <text class="c-title s" x="1114" y="526">The empty shell</text>
-              <text class="c-desc"><tspan x="1114" y="548">The product frame. Contains no</tspan><tspan x="1114" y="564">features at all — only spaces and</tspan><tspan x="1114" y="580">a connection to the tower.</tspan></text>
+              <text class="c-title s" x="1114" y="526">The product host</text>
+              <text class="c-desc"><tspan x="1114" y="548">The product frame. Contains no</tspan><tspan x="1114" y="564">capabilities — only named spaces</tspan><tspan x="1114" y="580">and a connection to the rules.</tspan></text>
               <text class="paths-t paths" x="1114" y="600">examples/*/shell/</text>
             </g>
 
@@ -1583,8 +1607,8 @@
               <line class="band-rule l-data-s" x1="1374" y1="100" x2="1616" y2="100"></line>
 
               <rect class="card l-data" x="1374" y="116" width="242" height="112" rx="9"></rect>
-              <text class="c-title s" x="1392" y="142">Per-feature translator</text>
-              <text class="c-desc"><tspan x="1392" y="164">One small service per feature.</tspan><tspan x="1392" y="180">Fronts the real systems and</tspan><tspan x="1392" y="196">returns one clean shape.</tspan></text>
+              <text class="c-title s" x="1392" y="142">Per-capability data service</text>
+              <text class="c-desc"><tspan x="1392" y="164">One small service per capability.</tspan><tspan x="1392" y="180">Fronts the real systems and</tspan><tspan x="1392" y="196">returns one clean shape.</tspan></text>
               <text class="paths-t paths" x="1392" y="216">generated from manifest data:</text>
 
               <rect class="card l-data" x="1374" y="244" width="242" height="112" rx="9"></rect>
@@ -1594,16 +1618,16 @@
 
               <rect class="card l-data" x="1374" y="372" width="242" height="112" rx="9"></rect>
               <text class="c-title s" x="1392" y="398">Packaging &amp; delivery</text>
-              <text class="c-desc"><tspan x="1392" y="420">Every feature and service ships</tspan><tspan x="1392" y="436">as its own container image, so</tspan><tspan x="1392" y="452">releases stay independent.</tspan></text>
+              <text class="c-desc"><tspan x="1392" y="420">Every capability and service ships</tspan><tspan x="1392" y="436">as its own container image, so</tspan><tspan x="1392" y="452">releases stay independent.</tspan></text>
               <text class="paths-t paths" x="1392" y="472">Dockerfile.cli · docker-compose.yaml</text>
 
               <rect class="card l-data" x="1374" y="500" width="242" height="112" rx="9"></rect>
               <text class="c-title s" x="1392" y="526">Two reference products</text>
-              <text class="c-desc"><tspan x="1392" y="548">A children's game arcade and an</tspan><tspan x="1392" y="564">orbital spaceport — 21 features</tspan><tspan x="1392" y="580">built with the real toolchain.</tspan></text>
+              <text class="c-desc"><tspan x="1392" y="548">A children's game arcade and an</tspan><tspan x="1392" y="564">orbital spaceport — 21 capabilities</tspan><tspan x="1392" y="580">built with the real toolchain.</tspan></text>
               <text class="paths-t paths" x="1392" y="600">examples/{abc-kids,meridian-station}</text>
             </g>
 
-            <!-- ============ STRIP A: COMMAND CENTRE ============ -->
+            <!-- ============ STRIP A: OPERATOR INTERFACE ============ -->
             <line class="flow dash" x1="380" y1="648" x2="380" y2="616" marker-end="url(#m-arrow)"></line>
             <line class="flow dash" x1="660" y1="648" x2="660" y2="616" marker-end="url(#m-arrow)"></line>
             <line class="flow dash" x1="940" y1="648" x2="940" y2="616" marker-end="url(#m-arrow)"></line>
@@ -1611,21 +1635,21 @@
 
             <g class="layer" data-layer="people">
               <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
-              <text class="c-tag l-people-t" x="44" y="678">THE COMMAND CENTRE · one door for humans and machines</text>
+              <text class="c-tag l-people-t" x="44" y="678">THE OPERATOR INTERFACE · one entry point for people and AI assistants</text>
               <text class="c-desc">
                 <tspan x="44" y="702">Every action on this map is one command. The same 19 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
-                <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two features in the spaceport product were built this way.</tspan>
+                <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two capabilities in the spaceport product were built this way.</tspan>
               </text>
               <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
             </g>
 
-            <!-- ============ STRIP B: GOVERNANCE ============ -->
+            <!-- ============ STRIP B: GOVERNANCE CHECKS ============ -->
             <g class="layer" data-layer="contract">
               <rect class="strip l-contract" x="24" y="762" width="1592" height="114" rx="10"></rect>
-              <text class="c-tag l-contract-t" x="44" y="790">THE SAFETY NET · what keeps 21 independently-released features honest</text>
+              <text class="c-tag l-contract-t" x="44" y="790">GOVERNANCE CHECKS · what keeps 21 independently-released capabilities consistent</text>
               <text class="c-desc">
-                <tspan x="44" y="814">Automated checks re-derive every reference feature from its brief and fail if the shipped code has drifted; separate checks confirm each brief</tspan>
-                <tspan x="44" y="834">agrees with its packaging, that recorded decisions stay consistent, and that published documentation matches the code.</tspan>
+                <tspan x="44" y="814">Automated checks regenerate every reference capability from its definition and fail if the shipped code has drifted; separate checks confirm</tspan>
+                <tspan x="44" y="834">each definition agrees with its packaging, that recorded decisions stay consistent, and that published documentation matches the code.</tspan>
                 <tspan x="44" y="854">A fourth check exists because of a real incident: when the platform changes something inside files it does not own, it warns the teams who own them.</tspan>
               </text>
               <text class="paths-t paths" x="1596" y="854" text-anchor="end">scripts/check-mfe-drift · check-mfe-consistency · check-adr · platform-migrations.ts</text>
@@ -1633,8 +1657,8 @@
           </svg>
         </div>
         <figcaption>
-          Nothing crosses from the right half to the left half except through the shared standard. That is the
-          deliberate constraint that lets teams, technologies and release schedules stay independent.
+          Nothing crosses from the right half to the left half except through the platform standard. That is
+          the deliberate constraint that lets teams, technologies and release schedules stay independent.
         </figcaption>
       </figure>
       <p class="scrollhint">Wide diagram — scroll horizontally inside the panel on smaller screens.</p>
@@ -1648,8 +1672,8 @@
     <p class="lede">
       Every concept on this page is a real thing in the repository. Turn on
       <strong>Show technical implementation</strong> in the bar at the top and repository paths appear
-      throughout — inside the diagram, on every capability card, and at every step of the feature
-      walkthrough. The table below is the short version: concept on the left, code on the right.
+      throughout — inside the diagrams, on every card, and at every step of the walkthrough. The table
+      below is the short version: the plain-English term on the left, the code on the right.
     </p>
 
     <div class="trace-wrap">
@@ -1661,12 +1685,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td>The feature brief</td><td class="p">packages/dsl/ · <code>mfe-manifest.yaml</code> · schemas/dsl/manifest.schema.json</td></tr>
-          <tr><td>The factory</td><td class="p">packages/codegen/ · packages/codegen/templates/ · src/commands/remote/</td></tr>
+          <tr><td>Capability definition</td><td class="p">packages/dsl/ · <code>mfe-manifest.yaml</code> · schemas/dsl/manifest.schema.json</td></tr>
+          <tr><td>Build system</td><td class="p">packages/codegen/ · packages/codegen/templates/ · src/commands/remote/</td></tr>
           <tr><td>Technology adapters</td><td class="p">packages/framework-react/ · packages/framework-angular/ · src/framework/loader.ts</td></tr>
-          <tr><td>The house standard</td><td class="p">packages/contracts/ · packages/runtime/src/base-mfe.ts</td></tr>
-          <tr><td>Named screen spaces</td><td class="p">packages/contracts/src/slot-grammar.ts · slot-contract.ts · docs/slot-contract.md</td></tr>
-          <tr><td>The control tower</td><td class="p">packages/control-plane/registry/ · packages/control-plane/daemon/ · packages/runtime/src/layout-manager.ts</td></tr>
+          <tr><td>Platform standard</td><td class="p">packages/contracts/ · packages/runtime/src/base-mfe.ts</td></tr>
+          <tr><td>Named spaces</td><td class="p">packages/contracts/src/slot-grammar.ts · slot-contract.ts · docs/slot-contract.md</td></tr>
+          <tr><td>Runtime composition</td><td class="p">packages/control-plane/registry/ · packages/control-plane/daemon/ · packages/runtime/src/layout-manager.ts</td></tr>
           <tr><td>Composition rules</td><td class="p">examples/*/control-plane/control-plane.yaml → rules.json · packages/dsl/src/control-plane-compiler.ts</td></tr>
           <tr><td>Data translation</td><td class="p">packages/bff-plugin/ · <code>src/platform/bff/</code> in each generated capability</td></tr>
           <tr><td>Access &amp; identity</td><td class="p">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> · platform/bff/mesh-context.js</td></tr>
@@ -1677,12 +1701,22 @@
         </tbody>
       </table>
     </div>
+
+    <p class="vs-note">
+      <strong>Where the plain-English term and the repository term differ, both are true.</strong>
+      This page says <em>platform standard</em>; the code calls its ten-capability core the
+      <em>platform contract</em> (<span class="mono">BaseMFE</span>, ADR-041). This page says
+      <em>build system</em>; the package is <span class="mono">packages/codegen</span>. This page says
+      <em>composition rules</em> and <em>runtime composition</em>; the running components are the
+      <em>control plane</em> — a registry and a daemon — plus the runtime's layout manager. The executive
+      terms describe what each part does; the repository terms are what you will type.
+    </p>
   </section>
 
   <!-- ============================================================ ENABLES -->
   <section class="band band-alt" id="enables">
     <div class="inner">
-      <p class="kicker">The payoff</p>
+      <p class="kicker">What this enables</p>
       <h2 class="section-title wide">What this architecture enables</h2>
       <p class="lede">
         Seven things this platform makes possible that are hard without it. Each is marked
@@ -1710,17 +1744,17 @@
         <li>
           <span class="tag tag-fact">fact</span>
           <h3>Platform decisions are made once, not re-invented per team.</h3>
-          <p>Lifecycle order, timeout behaviour, retry policy, error classification, slot naming and message
+          <p>Lifecycle order, timeout behaviour, retry policy, error classification, space naming and message
           shape all live in one dependency-free foundation package that every other part depends on. A team
           adopting the platform inherits all of it and decides none of it.</p>
           <p class="paths">packages/contracts/ · packages/runtime/</p>
         </li>
         <li>
           <span class="tag tag-fact">fact</span>
-          <h3>Product placement can change without touching feature implementation.</h3>
-          <p>Each product's composition is a separate readable document compiled into the payload the control
-          tower reads. Moving a capability, adding a berth or adding a game is an edit to that document — one
-          rule already covers thirteen games and another covers six berths.</p>
+          <h3>Where a capability appears can change without touching how it is built.</h3>
+          <p>Each product's composition is a separate readable document, compiled into the payload the runtime
+          reads. Moving a capability, adding a berth or adding a game is an edit to that document — one rule
+          already covers thirteen games and another covers six berths.</p>
           <p class="paths">examples/*/control-plane/control-plane.yaml · <code>compose:build</code></p>
         </li>
         <li>
@@ -1729,12 +1763,12 @@
           <p>React and Angular capabilities are driven identically by the runtime, and the technology field
           in a definition is deliberately an open string rather than a fixed list — an unknown value warns
           rather than fails. Supporting a third technology is a new plug-in package, not a change to the
-          factory or the standard.</p>
+          build system or the platform standard.</p>
           <p class="paths">packages/framework-{react,angular}/ · FrameworkSchema (open string)</p>
         </li>
         <li>
           <span class="tag tag-fact">fact</span>
-          <h3>Humans and AI assistants operate the platform through the same door.</h3>
+          <h3>People and AI assistants operate the platform through the same interface.</h3>
           <p>All 19 published commands are exposed as assistant-callable tools generated from the same
           schemas, each call isolated in its own process. Two capabilities in the spaceport product were
           built through that interface rather than by a person typing, and the comparison was written up.</p>
@@ -1755,7 +1789,7 @@
 
   <!-- ============================================================ 6 · TRADE-OFFS -->
   <section class="band" id="judgement">
-    <p class="kicker">6 · The honest part</p>
+    <p class="kicker">6 · Trade-offs</p>
     <h2 class="section-title wide">What this architecture trades off</h2>
     <p class="lede">
       Every one of the benefits above is bought with something. These five costs are visible in the
@@ -1768,10 +1802,10 @@
         <span class="tag tag-cost">trade-off</span>
         <span class="tag tag-fact">fact</span>
         <h3>A platform-wide change can reach code the platform does not own — silently.</h3>
-        <p>The factory owns some files and re-stamps them; it deliberately never touches others, because
-        teams edit those. When one platform-wide change landed, 48 files needed updating: regeneration
-        reached 29, and 19 were left stale <strong>with every automated check still passing</strong>. A
-        human found them by grepping.</p>
+        <p>The build system owns some files and regenerates them; it deliberately never touches others,
+        because teams edit those. When one platform-wide change landed, 48 files needed updating:
+        regeneration reached 29, and 19 were left stale <strong>with every automated check still
+        passing</strong>. A human found them by searching the code by hand.</p>
         <p>A warning registry now exists specifically for this, and adding an entry is a required part of
         any platform change. But the underlying cost is structural: <strong>the platform can improve
         faster than it can safely propagate.</strong> This is the sharpest complexity point in the system.</p>
@@ -1780,7 +1814,7 @@
       <li>
         <span class="tag tag-cost">trade-off</span>
         <span class="tag tag-fact">fact</span>
-        <h3>Governance is not optional — it is load-bearing machinery.</h3>
+        <h3>Governance is not optional — it is a permanent, staffed cost.</h3>
         <p>Keeping 21 independently-released capabilities coherent without a release train requires a
         standing investment: drift checks, consistency checks, decision-record consistency checks,
         generated-documentation checks, composition validation, and a schema regeneration gate. Several
@@ -1793,7 +1827,7 @@
       <li>
         <span class="tag tag-cost">trade-off</span>
         <span class="tag tag-fact">fact</span>
-        <h3>Everything funnels through one foundation — high leverage, high blast radius.</h3>
+        <h3>Everything depends on one foundation — high leverage, wide blast radius.</h3>
         <p>A single dependency-free package holds the shared standard, and every other part of the platform
         depends on it. That is excellent discipline, and it is also the reason a rename inside it can change
         generated code in 21 capabilities with no runtime file anywhere in the diff — the project's own
@@ -1807,11 +1841,11 @@
         <span class="tag tag-fact">fact</span>
         <h3>Run-time composition means run-time coordination — and a shared point of dependence.</h3>
         <p>Because placement is decided while a person is using the product, every screen depends on the
-        control tower being reachable and correct. In the reference implementation the registry keeps its
+        rules service being reachable and correct. In the reference implementation the registry keeps its
         state in memory with a time-based eviction, so a restart forgets which capabilities exist.
-        Debugging also crosses boundaries: a problem may live in a capability, in a rule, in the placer,
-        or in the connection between them.</p>
-        <p><strong>Durability and production operation of the control tower are unfinished work</strong>,
+        Debugging also crosses boundaries: a problem may live in a capability, in a composition rule, in
+        the layout manager, or in the connection between them.</p>
+        <p><strong>Durability and production operation of the control plane are unfinished work</strong>,
         not solved problems.</p>
         <p class="paths">packages/control-plane/registry/simple-registry.js</p>
       </li>
@@ -1822,7 +1856,7 @@
         <p>Checking access is one of the ten standard abilities, and a signature-verifying token handler
         exists in the runtime. But the check that generated capabilities inherit approves everyone, and the
         data layer decodes the caller's token to extract an identity without verifying its signature.</p>
-        <p>The reading here is that the <em>place</em> for authorisation is properly designed and the
+        <p>The reading here is that the <em>place</em> for authorisation is designed correctly and the
         <em>policy</em> is deliberately left to whoever adopts the platform. <strong>That is an inference
         from the code, not a statement the repository makes.</strong> Either way, a production rollout
         should treat authorisation as work not yet done.</p>
@@ -1835,8 +1869,8 @@
       <li>
         <span class="tag tag-fact">fact</span>
         <h3>This is two systems that happen to live in one repository.</h3>
-        <p>A build-time factory and a run-time platform. They share a vocabulary but almost nothing else,
-        and they can be adopted separately — you could use the factory without the control tower. Budgeting,
+        <p>A build system and a run-time platform. They share a vocabulary but almost nothing else, and they
+        can be adopted separately — you could use the build system without runtime composition. Budgeting,
         staffing and roadmapping should probably treat them as two products.</p>
       </li>
       <li>
@@ -1869,7 +1903,7 @@
         <div class="metric"><b>8</b><span>recorded product decisions</span></div>
         <div class="metric"><b>9</b><span>shared packages</span></div>
         <div class="metric"><b>19</b><span>commands, each also an AI-assistant tool</span></div>
-        <div class="metric"><b>44</b><span>code templates in the factory</span></div>
+        <div class="metric"><b>44</b><span>code templates in the build system</span></div>
         <div class="metric"><b>10</b><span>abilities every capability must have</span></div>
         <div class="metric"><b>220</b><span>test files</span></div>
       </div>
@@ -1890,14 +1924,14 @@
         <div class="amb-item">
           <h3>There is no end customer here</h3>
           <p>"Customers &amp; staff" appear on the map, but this repository contains no product they would use —
-          only the machinery, plus two demo products. The customer is drawn because the run-time story is
+          only the platform, plus two demo products. The customer is drawn because the run-time story is
           meaningless without one.</p>
         </div>
         <div class="amb-item">
-          <h3>"Control tower" is a composite</h3>
-          <p>Three separate things — a rule book, a router and a placer — are drawn as one idea in the
-          executive views. They are genuinely separate components with separate failure modes; the detailed
-          map splits them.</p>
+          <h3>"Runtime composition" is three things</h3>
+          <p>A rules service, a message channel and a layout manager are drawn as one idea in the executive
+          views. They are genuinely separate components with separate failure modes; the detailed map splits
+          them, and the repository calls the first two the control plane.</p>
         </div>
         <div class="amb-item">
           <h3>Production deployment is unclear</h3>
@@ -1913,15 +1947,15 @@
         </div>
         <div class="amb-item">
           <h3>"Business capability" is the platform's word</h3>
-          <p>The repository's own framing is that a capability equals one domain capability owned by one
+          <p>The repository's own framing is that one capability equals one business domain owned by one
           team. That is an aspiration expressed in documentation as much as an observable property of the
           code — the demo capabilities are games and spaceport screens, not, say, Payments or Claims.</p>
         </div>
         <div class="amb-item">
-          <h3>The count of "capabilities" is a judgement</h3>
-          <p>Ten groupings were chosen for comprehension. The repository has nine shared packages, but they
-          do not map one-to-one: the house standard spans two packages, and the operator interface spans
-          several directories.</p>
+          <h3>The count of platform responsibilities is a judgement</h3>
+          <p>Eleven groupings were chosen for comprehension. The repository has nine shared packages, but
+          they do not map one-to-one: the platform standard spans two packages, and the operator interface
+          spans several directories.</p>
         </div>
       </div>
     </div>
@@ -1987,7 +2021,7 @@
       pathsToggle.addEventListener('change', function (e) { setPaths(e.target.checked); });
     }
 
-    // ---------- follow a feature ----------
+    // ---------- follow one capability ----------
     var track = document.getElementById('track');
     var status = document.getElementById('pick-status');
     var picks = document.querySelectorAll('.pick');
