@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Published documentation for seans-mfe-tool — a platform that lets many teams build one product together.">
+<title>seans-mfe-tool — published documentation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%231467C6%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2720.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2717%27%20width%3D%2721%27%20height%3D%274%27%20rx%3D%272%27%20fill%3D%27%238FC4FF%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2724%27%20width%3D%2721%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --paper:#F5F7F9; --surface:#FFFFFF; --ink:#131C26; --ink-2:#33424F;
+    --muted:#5A6B79; --rule:#DCE3EA; --rule-2:#C6D0DA; --accent:#1467C6;
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --shadow: 0 1px 2px rgba(19,28,38,.05), 0 6px 20px -12px rgba(19,28,38,.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0E141A; --surface:#161E27; --ink:#E7EDF3; --ink-2:#C0CCD8;
+      --muted:#93A3B1; --rule:#2A3440; --rule-2:#3A4855; --accent:#6CB2F7;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0E141A; --surface:#161E27; --ink:#E7EDF3; --ink-2:#C0CCD8;
+    --muted:#93A3B1; --rule:#2A3440; --rule-2:#3A4855; --accent:#6CB2F7;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 72px 24px 96px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display); font-size: clamp(34px, 5.5vw, 52px);
+    line-height: 1.06; letter-spacing: -.028em; font-weight: 700;
+    margin: 0 0 22px; max-width: 18ch; text-wrap: balance;
+  }
+  .standfirst { max-width: 62ch; font-size: 19px; color: var(--ink-2); margin: 0 0 40px; }
+  h2 {
+    font-family: var(--display); font-size: 15px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    margin: 44px 0 16px; padding-top: 22px; border-top: 1px solid var(--rule);
+  }
+  .cards { display: grid; gap: 14px; }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 22px 24px; box-shadow: var(--shadow);
+    transition: border-color .15s ease;
+  }
+  a.card:hover { border-color: var(--accent); }
+  a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  a.card b {
+    display: block; font-family: var(--display); font-size: 21px; font-weight: 700;
+    letter-spacing: -.018em; margin-bottom: 8px; color: var(--ink);
+  }
+  a.card span { display: block; font-size: 15.5px; color: var(--ink-2); }
+  a.card em {
+    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent); font-style: normal; margin-top: 12px;
+  }
+  ul.links { list-style: none; margin: 0; padding: 0; }
+  ul.links li { margin: 0 0 10px; }
+  ul.links a { color: var(--accent); }
+  ul.links span { color: var(--muted); font-size: 15px; }
+  footer {
+    margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--rule);
+    font-size: 14px; color: var(--muted);
+  }
+  .mono { font-family: var(--mono); font-size: .9em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">seans-mfe-tool · published documentation</p>
+  <h1>A platform that lets many teams build one product together.</h1>
+  <p class="standfirst">
+    Teams build and release their own capabilities independently. The platform supplies the standards
+    and controls that make those separately-built capabilities behave like one coherent product.
+  </p>
+
+  <h2>Start here</h2>
+  <div class="cards">
+    <a class="card" href="system-map.html">
+      <b>The system map</b>
+      <span>
+        Why the platform exists, how it lets many teams work independently, and what happens to a single
+        feature as it moves through the system — with the detailed architecture underneath, and a toggle
+        that reveals where every concept is implemented.
+      </span>
+      <em>Interactive · about a minute for the main story</em>
+    </a>
+    <a class="card" href="slides/platform-architecture.html">
+      <b>Platform architecture deck</b>
+      <span>The slide version of the architecture story, generated from Markdown.</span>
+      <em>Slides · PDF also published</em>
+    </a>
+  </div>
+
+  <h2>Reference documentation (in the repository)</h2>
+  <ul class="links">
+    <li><a href="https://github.com/falese/seans-mfe-tool">Repository</a> <span>— source, issues and the full documentation tree</span></li>
+    <li><a href="https://github.com/falese/seans-mfe-tool/blob/main/docs/spec.md">Specification</a> <span>— requirements and the ADR index</span></li>
+    <li><a href="https://github.com/falese/seans-mfe-tool/tree/main/docs/architecture-decisions">Architecture decisions</a> <span>— the recorded &ldquo;why&rdquo;</span></li>
+    <li><a href="https://github.com/falese/seans-mfe-tool/blob/main/docs/getting-started.md">Getting started</a> <span>— building your first capability</span></li>
+    <li><a href="https://github.com/falese/seans-mfe-tool/blob/main/docs/slot-contract.md">Slot contract</a> <span>— how capabilities are placed on a screen</span></li>
+  </ul>
+
+  <footer>
+    <p>
+      Published from <span class="mono">docs/</span> on the default branch by the
+      <span class="mono">Publish docs site</span> GitHub Actions workflow.
+    </p>
+  </footer>
+</div>
+</body>
+</html>

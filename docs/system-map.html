@@ -1,41 +1,979 @@
-<title>The SMT Platform Map</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Why this platform exists, how it lets many teams build one product together, and what happens to a single feature as it moves through it — with the detailed architecture underneath.">
+<title>The SMT Platform Map — many teams, one product</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%231467C6%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2720.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2717%27%20width%3D%2721%27%20height%3D%274%27%20rx%3D%272%27%20fill%3D%27%238FC4FF%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2724%27%20width%3D%2721%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --paper:    #F5F7F9;
+    --surface:  #FFFFFF;
+    --surface-2:#EDF1F5;
+    --ink:      #131C26;
+    --ink-2:    #33424F;
+    --muted:    #5A6B79;
+    --rule:     #DCE3EA;
+    --rule-2:   #C6D0DA;
+
+    --l-people:   #55697C;
+    --l-intent:   #5A46C0;
+    --l-build:    #1467C6;
+    --l-contract: #0A8272;
+    --l-runtime:  #AE6B14;
+    --l-data:     #8C3A85;
+
+    --l-warn:     #B0451F;
+    --l-good:     #0A8272;
+
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --tint: 9%;
+    --shadow: 0 1px 2px rgba(19,28,38,.05), 0 6px 20px -12px rgba(19,28,38,.22);
+    --nav-h: 58px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:    #0E141A;
+      --surface:  #161E27;
+      --surface-2:#1D2731;
+      --ink:      #E7EDF3;
+      --ink-2:    #C0CCD8;
+      --muted:    #93A3B1;
+      --rule:     #2A3440;
+      --rule-2:   #3A4855;
+
+      --l-people:   #A0B3C6;
+      --l-intent:   #A99CF7;
+      --l-build:    #6CB2F7;
+      --l-contract: #3FC9B2;
+      --l-runtime:  #E4A94F;
+      --l-data:     #DE93D5;
+
+      --l-warn:     #F0916A;
+      --l-good:     #3FC9B2;
+
+      --tint: 14%;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:    #0E141A;
+    --surface:  #161E27;
+    --surface-2:#1D2731;
+    --ink:      #E7EDF3;
+    --ink-2:    #C0CCD8;
+    --muted:    #93A3B1;
+    --rule:     #2A3440;
+    --rule-2:   #3A4855;
+
+    --l-people:   #A0B3C6;
+    --l-intent:   #A99CF7;
+    --l-build:    #6CB2F7;
+    --l-contract: #3FC9B2;
+    --l-runtime:  #E4A94F;
+    --l-data:     #DE93D5;
+
+    --l-warn:     #F0916A;
+    --l-good:     #3FC9B2;
+
+    --tint: 14%;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main, .masthead, .navbar-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  .skip {
+    position: absolute; left: -9999px; top: 0; z-index: 100;
+    background: var(--surface); color: var(--ink);
+    font-family: var(--display); font-size: 14px;
+    padding: 12px 18px; border: 1px solid var(--rule-2); border-radius: 0 0 8px 0;
+  }
+  .skip:focus { left: 0; }
+
+  /* ---------- sticky wayfinding ---------- */
+  .navbar {
+    position: sticky; top: 0; z-index: 40;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .navbar-in {
+    display: flex; align-items: center; gap: 18px;
+    min-height: var(--nav-h); flex-wrap: wrap;
+  }
+  .nav-brand {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--muted); margin: 0; white-space: nowrap;
+  }
+  .nav-steps {
+    display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;
+    flex: 1 1 auto; flex-wrap: wrap; overflow-x: auto;
+  }
+  .nav-steps a {
+    display: inline-block; text-decoration: none;
+    font-family: var(--display); font-size: 12.5px; color: var(--muted);
+    padding: 6px 11px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .nav-steps a:hover { color: var(--ink); background: var(--surface); }
+  .nav-steps a:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+  .nav-steps a[aria-current="true"] {
+    color: var(--ink); font-weight: 600;
+    background: var(--surface); border-color: var(--rule-2);
+  }
+  .nav-n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-right: 5px; }
+  .nav-progress { height: 2px; background: transparent; }
+  .nav-progress span { display: block; height: 2px; width: 0; background: var(--l-build); }
+
+  /* ---------- switch ---------- */
+  .switch {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--display); font-size: 13px; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 9px 14px; cursor: pointer;
+    user-select: none;
+  }
+  .switch:hover { border-color: var(--rule-2); color: var(--ink); }
+  .switch input { accent-color: var(--l-build); width: 15px; height: 15px; margin: 0; cursor: pointer; }
+  .switch input:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+  .nav-switch { padding: 6px 12px; font-size: 12.5px; white-space: nowrap; }
+
+  /* ---------- masthead ---------- */
+  .masthead { padding-top: 64px; padding-bottom: 8px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(36px, 5.6vw, 60px);
+    line-height: 1.05; letter-spacing: -.028em; font-weight: 700;
+    margin: 0 0 26px; max-width: 19ch; text-wrap: balance;
+  }
+  .standfirst { max-width: 66ch; font-size: 19px; color: var(--ink-2); margin: 0 0 16px; }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  .readnote {
+    margin: 30px 0 0; padding: 16px 20px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    font-family: var(--display); font-size: 14.5px; color: var(--ink-2);
+    max-width: 68ch;
+  }
+  .readnote strong { color: var(--ink); }
+
+  /* ---------- sections ---------- */
+  .band { padding: 66px 0 8px; scroll-margin-top: calc(var(--nav-h) + 16px); }
+  .band-alt {
+    background: var(--surface-2);
+    margin-top: 66px; padding: 58px 0 34px;
+  }
+  .band-alt > .inner { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .kicker {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 10px;
+  }
+  .section-title {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(25px, 3vw, 34px); letter-spacing: -.02em;
+    margin: 0 0 14px; text-wrap: balance; max-width: 22ch;
+  }
+  .section-title.wide { max-width: 30ch; }
+  .lede { max-width: 68ch; color: var(--ink-2); margin: 0 0 30px; }
+  .lede em { font-style: italic; }
+  h3.sub {
+    font-family: var(--display); font-weight: 700; font-size: 20px;
+    letter-spacing: -.015em; margin: 42px 0 10px;
+  }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+  .lg {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--display); font-size: 12.5px; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .lg:hover { border-color: var(--rule-2); color: var(--ink); }
+  .lg:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+  .lg[aria-pressed="true"] { border-color: currentColor; color: var(--ink); font-weight: 600; }
+  .lg-reset { color: var(--muted); font-style: italic; }
+  .sw { width: 11px; height: 11px; border-radius: 3px; display: block; }
+  .sw.l-people   { background: var(--l-people); }
+  .sw.l-intent   { background: var(--l-intent); }
+  .sw.l-build    { background: var(--l-build); }
+  .sw.l-contract { background: var(--l-contract); }
+  .sw.l-runtime  { background: var(--l-runtime); }
+  .sw.l-data     { background: var(--l-data); }
+
+  /* ---------- figures ---------- */
+  .fig { margin: 0 0 12px; }
+  .fig-wide {
+    width: min(calc(100vw - 32px), 1620px);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+  .fig-wide figcaption { max-width: 74ch; }
+  .fig-scroll {
+    overflow-x: auto; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 14px;
+    padding: 18px; box-shadow: var(--shadow);
+  }
+  .diagram { display: block; width: 100%; height: auto; color: var(--muted); }
+  #why-diagram { min-width: 900px; }
+  #model-diagram { min-width: 900px; }
+  #exec-diagram { min-width: 860px; }
+  #map { min-width: 1180px; }
+  figcaption {
+    font-size: 15px; color: var(--muted); max-width: 74ch;
+    margin: 16px 0 0; padding-left: 14px; border-left: 2px solid var(--rule-2);
+  }
+  .scrollhint {
+    font-family: var(--display); font-size: 12.5px; color: var(--muted);
+    margin: 10px 0 0;
+  }
+
+  /* ---------- svg typography ---------- */
+  .phase {
+    font-family: var(--display); font-size: 12px; font-weight: 700;
+    letter-spacing: .11em; fill: var(--muted);
+  }
+  .band-head {
+    font-family: var(--display); font-size: 11.5px; font-weight: 700;
+    letter-spacing: .1em;
+  }
+  .band-rule { stroke-width: 2; }
+  .c-tag { font-family: var(--display); font-size: 10.5px; font-weight: 700; letter-spacing: .12em; }
+  .c-title { font-family: var(--display); font-size: 16px; font-weight: 700; fill: var(--ink); letter-spacing: -.008em; }
+  .c-title.s { font-size: 14px; }
+  .chip-title { font-family: var(--display); font-size: 14.5px; font-weight: 700; fill: var(--ink); }
+  .c-desc { font-family: var(--display); font-size: 11.5px; fill: var(--ink-2); }
+  .flow-label { font-family: var(--display); font-size: 11px; font-style: italic; fill: var(--muted); }
+  .paths-t { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .flow { stroke: var(--rule-2); stroke-width: 1.6; fill: none; }
+  .flow.dash { stroke-dasharray: 4 4; }
+  .arrowhead { fill: var(--rule-2); }
+
+  .card, .hinge, .chip, .strip, .panel, .outcome { stroke-width: 1.4; }
+  .hinge { stroke-width: 2; }
+
+  .l-people   { fill: color-mix(in srgb, var(--l-people) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-people) 48%, var(--surface)); }
+  .l-intent   { fill: color-mix(in srgb, var(--l-intent) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-intent) 48%, var(--surface)); }
+  .l-build    { fill: color-mix(in srgb, var(--l-build) var(--tint), var(--surface));    stroke: color-mix(in srgb, var(--l-build) 48%, var(--surface)); }
+  .l-contract { fill: color-mix(in srgb, var(--l-contract) var(--tint), var(--surface)); stroke: color-mix(in srgb, var(--l-contract) 48%, var(--surface)); }
+  .l-runtime  { fill: color-mix(in srgb, var(--l-runtime) var(--tint), var(--surface));  stroke: color-mix(in srgb, var(--l-runtime) 48%, var(--surface)); }
+  .l-data     { fill: color-mix(in srgb, var(--l-data) var(--tint), var(--surface));     stroke: color-mix(in srgb, var(--l-data) 48%, var(--surface)); }
+  .l-warn     { fill: color-mix(in srgb, var(--l-warn) var(--tint), var(--surface));     stroke: color-mix(in srgb, var(--l-warn) 46%, var(--surface)); }
+  .l-good     { fill: color-mix(in srgb, var(--l-good) var(--tint), var(--surface));     stroke: color-mix(in srgb, var(--l-good) 46%, var(--surface)); }
+
+  .panel-warn { fill: color-mix(in srgb, var(--l-warn) 4%, var(--surface)); stroke: color-mix(in srgb, var(--l-warn) 28%, var(--surface)); }
+  .panel-good { fill: color-mix(in srgb, var(--l-good) 4%, var(--surface)); stroke: color-mix(in srgb, var(--l-good) 28%, var(--surface)); }
+  .tangle { stroke: color-mix(in srgb, var(--l-warn) 55%, var(--surface)); stroke-width: 1.6; fill: none; }
+  .tangle-head { fill: color-mix(in srgb, var(--l-warn) 55%, var(--surface)); }
+  .straight { stroke: color-mix(in srgb, var(--l-good) 55%, var(--surface)); stroke-width: 1.8; fill: none; }
+  .straight-head { fill: color-mix(in srgb, var(--l-good) 55%, var(--surface)); }
+
+  .chip.l-contract { fill: var(--surface); }
+  .chip.l-good { fill: var(--surface); }
+
+  .l-people-t   { fill: var(--l-people); }
+  .l-intent-t   { fill: var(--l-intent); }
+  .l-build-t    { fill: var(--l-build); }
+  .l-contract-t { fill: var(--l-contract); }
+  .l-runtime-t  { fill: var(--l-runtime); }
+  .l-data-t     { fill: var(--l-data); }
+  .l-warn-t     { fill: var(--l-warn); }
+  .l-good-t     { fill: var(--l-good); }
+
+  .l-people-s   { stroke: var(--l-people); }
+  .l-intent-s   { stroke: var(--l-intent); }
+  .l-build-s    { stroke: var(--l-build); }
+  .l-contract-s { stroke: var(--l-contract); }
+  .l-runtime-s  { stroke: var(--l-runtime); }
+  .l-data-s     { stroke: var(--l-data); }
+
+  .layer { transition: opacity .22s ease; }
+  svg[data-focus] .layer { opacity: .14; }
+  svg[data-focus="people"]   .layer[data-layer="people"],
+  svg[data-focus="intent"]   .layer[data-layer="intent"],
+  svg[data-focus="build"]    .layer[data-layer="build"],
+  svg[data-focus="contract"] .layer[data-layer="contract"],
+  svg[data-focus="runtime"]  .layer[data-layer="runtime"],
+  svg[data-focus="data"]     .layer[data-layer="data"] { opacity: 1; }
+
+  /* ---------- technical disclosure ---------- */
+  .paths { display: none; }
+  body.show-paths p.paths,
+  body.show-paths .paths-block { display: block; }
+  body.show-paths text.paths { display: inline; }
+  .paths-block { display: none; }
+
+  /* ---------- why: two-column consequence lists ---------- */
+  .versus { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-top: 26px; }
+  .vs-col {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 22px 24px 20px; border-top: 3px solid var(--rule-2);
+  }
+  .vs-col.vs-warn { border-top-color: var(--l-warn); }
+  .vs-col.vs-good { border-top-color: var(--l-good); }
+  .vs-col h3 {
+    font-family: var(--display); font-size: 18px; font-weight: 700;
+    margin: 0 0 4px; letter-spacing: -.015em;
+  }
+  .vs-kind {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; margin: 0 0 10px;
+  }
+  .vs-warn .vs-kind { color: var(--l-warn); }
+  .vs-good .vs-kind { color: var(--l-good); }
+  .vs-col ul { margin: 0; padding-left: 20px; }
+  .vs-col li { font-size: 15.5px; color: var(--ink-2); margin: 0 0 8px; }
+  .vs-col li strong { color: var(--ink); font-weight: 600; }
+  .vs-note {
+    margin: 30px 0 0; font-size: 16.5px; color: var(--ink-2);
+    max-width: 70ch; padding-left: 16px; border-left: 3px solid var(--l-contract);
+  }
+  .vs-note strong { color: var(--ink); }
+
+  /* ---------- promises ---------- */
+  .promises { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .promise {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 24px 24px 22px;
+  }
+  .promise-n {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    color: var(--muted); margin: 0 0 12px; display: block;
+  }
+  .promise h3 {
+    font-family: var(--display); font-size: 19px; font-weight: 700;
+    letter-spacing: -.015em; margin: 0 0 10px; text-wrap: balance;
+  }
+  .promise p { margin: 0; font-size: 15.5px; color: var(--ink-2); }
+  .promise .paths { margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule-2);
+    font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-word; }
+
+  /* ---------- follow a feature ---------- */
+  .picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 8px; }
+  .pick {
+    display: block; text-align: left; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+    padding: 14px 18px; font-family: var(--display); color: var(--ink-2);
+    max-width: 340px; transition: border-color .15s ease;
+  }
+  .pick:hover { border-color: var(--rule-2); }
+  .pick:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
+  .pick b { display: block; font-size: 16px; color: var(--ink); margin-bottom: 3px; }
+  .pick span { display: block; font-size: 13px; color: var(--muted); }
+  .pick[aria-pressed="true"] {
+    border-color: var(--l-intent); box-shadow: inset 0 0 0 1px var(--l-intent);
+  }
+  .pick[aria-pressed="true"]::after {
+    content: "following this one"; display: block; margin-top: 8px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--l-intent);
+  }
+
+  .track { list-style: none; margin: 34px 0 0; padding: 0; position: relative; }
+  .track::before {
+    content: ""; position: absolute; left: 19px; top: 12px; bottom: 12px;
+    width: 2px; background: var(--rule);
+  }
+  .stage { position: relative; padding: 0 0 20px 62px; }
+  .stage-n {
+    position: absolute; left: 0; top: 2px; width: 40px; height: 40px;
+    border-radius: 50%; background: var(--surface); border: 2px solid var(--rule-2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .stage[data-phase="build"]   .stage-n { border-color: var(--l-build); color: var(--l-build); }
+  .stage[data-phase="intent"]  .stage-n { border-color: var(--l-intent); color: var(--l-intent); }
+  .stage[data-phase="contract"] .stage-n { border-color: var(--l-contract); color: var(--l-contract); }
+  .stage[data-phase="runtime"] .stage-n { border-color: var(--l-runtime); color: var(--l-runtime); }
+  .stage[data-phase="people"]  .stage-n { border-color: var(--l-people); color: var(--l-people); }
+  .stage-phase {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
+  }
+  .stage h3 {
+    font-family: var(--display); font-size: 20px; font-weight: 700;
+    letter-spacing: -.015em; margin: 0 0 8px; text-wrap: balance;
+  }
+  .stage > p { margin: 0 0 12px; font-size: 16px; color: var(--ink-2); max-width: 66ch; }
+  .concrete {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-left: 3px solid var(--l-intent);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; max-width: 66ch;
+  }
+  .concrete p { margin: 0; font-size: 15px; color: var(--ink-2); }
+  .concrete .lbl {
+    display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  }
+  .concrete .paths {
+    margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--rule-2);
+    font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-word;
+  }
+  /* only the selected feature's concrete example is shown */
+  .track[data-feature="berth"] .concrete[data-feature="letterpop"],
+  .track[data-feature="letterpop"] .concrete[data-feature="berth"] { display: none; }
+
+  /* ---------- parts / capability grid ---------- */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .part {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 22px 24px 20px;
+    border-top: 3px solid var(--rule-2);
+  }
+  .part[data-layer="people"]   { border-top-color: var(--l-people); }
+  .part[data-layer="intent"]   { border-top-color: var(--l-intent); }
+  .part[data-layer="build"]    { border-top-color: var(--l-build); }
+  .part[data-layer="contract"] { border-top-color: var(--l-contract); }
+  .part[data-layer="runtime"]  { border-top-color: var(--l-runtime); }
+  .part[data-layer="data"]     { border-top-color: var(--l-data); }
+  .part-kind {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; margin: 0 0 8px;
+  }
+  .part[data-layer="people"]   .part-kind { color: var(--l-people); }
+  .part[data-layer="intent"]   .part-kind { color: var(--l-intent); }
+  .part[data-layer="build"]    .part-kind { color: var(--l-build); }
+  .part[data-layer="contract"] .part-kind { color: var(--l-contract); }
+  .part[data-layer="runtime"]  .part-kind { color: var(--l-runtime); }
+  .part[data-layer="data"]     .part-kind { color: var(--l-data); }
+  .part h3 {
+    font-family: var(--display); font-size: 20px; font-weight: 700;
+    letter-spacing: -.015em; margin: 0 0 10px;
+  }
+  .part-what { font-size: 15.5px; color: var(--ink-2); margin: 0 0 12px; }
+  .part-why {
+    font-size: 14.5px; color: var(--muted); margin: 0;
+    padding-top: 12px; border-top: 1px solid var(--rule);
+  }
+  .part-why span {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink); display: block; margin-bottom: 4px;
+  }
+  .part .paths {
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule-2);
+    word-break: break-word;
+  }
+
+  /* ---------- statement lists ---------- */
+  .obs { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .obs li {
+    counter-increment: o; position: relative;
+    padding: 22px 0 22px 62px; border-top: 1px solid var(--rule);
+  }
+  .obs li::before {
+    content: counter(o, decimal-leading-zero);
+    position: absolute; left: 0; top: 24px;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .obs h3 {
+    font-family: var(--display); font-size: 19.5px; font-weight: 700;
+    letter-spacing: -.015em; margin: 8px 0 8px; text-wrap: balance;
+  }
+  .obs p { margin: 0 0 8px; max-width: 74ch; color: var(--ink-2); font-size: 16px; }
+  .obs p:last-child { margin-bottom: 0; }
+  .obs p strong { color: var(--ink); }
+  .obs .paths {
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    max-width: 74ch; word-break: break-word;
+  }
+
+  .tag {
+    display: inline-block; font-family: var(--mono);
+    font-size: 10px; letter-spacing: .11em; text-transform: uppercase;
+    border-radius: 4px; padding: 3px 8px; vertical-align: 2px;
+  }
+  .tag-fact { color: var(--l-contract); background: color-mix(in srgb, var(--l-contract) 13%, transparent); }
+  .tag-inf  { color: var(--l-runtime);  background: color-mix(in srgb, var(--l-runtime) 15%, transparent); }
+  .tag-cost { color: var(--l-warn);     background: color-mix(in srgb, var(--l-warn) 13%, transparent); }
+
+  /* ---------- metrics ---------- */
+  .metrics {
+    display: grid; gap: 12px; margin: 0 0 34px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .metric {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .metric b {
+    display: block; font-family: var(--display); font-size: 28px; font-weight: 700;
+    letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums;
+    line-height: 1.1; margin-bottom: 4px;
+  }
+  .metric span { font-family: var(--display); font-size: 13px; color: var(--muted); }
+
+  /* ---------- ambiguities ---------- */
+  .amb { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .amb-item { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px 22px; }
+  .amb-item h3 {
+    font-family: var(--display); font-size: 16.5px; font-weight: 700;
+    margin: 0 0 8px; letter-spacing: -.01em;
+  }
+  .amb-item p { margin: 0; font-size: 15px; color: var(--ink-2); }
+
+  /* ---------- traceability table ---------- */
+  .trace-wrap { overflow-x: auto; }
+  table.trace {
+    border-collapse: collapse; width: 100%; min-width: 560px;
+    font-family: var(--display); font-size: 14.5px;
+  }
+  table.trace th, table.trace td {
+    text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  table.trace th {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--rule-2);
+  }
+  table.trace td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  table.trace td.p { font-family: var(--mono); font-size: 12px; color: var(--ink-2); word-break: break-word; }
+
+  /* ---------- footer ---------- */
+  .foot {
+    margin-top: 64px; padding: 30px 0 72px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px; color: var(--muted);
+  }
+  .foot p { margin: 0 0 8px; max-width: 78ch; }
+  .mono { font-family: var(--mono); font-size: .9em; color: var(--ink-2); }
+  .foot a { color: var(--ink-2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 860px) {
+    .nav-switch { order: 3; }
+  }
+
+  @media (max-width: 640px) {
+    .masthead { padding-top: 40px; }
+    body { font-size: 16px; }
+    .obs li { padding-left: 0; }
+    .obs li::before { position: static; display: block; margin-bottom: 4px; }
+    .stage { padding-left: 52px; }
+    .stage-n { width: 34px; height: 34px; }
+    .track::before { left: 16px; }
+    .nav-brand { display: none; }
+  }
+
+  @media print {
+    .navbar, .skip { display: none; }
+    .fig-scroll { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to main content</a>
+
+<nav class="navbar" aria-label="Page sections">
+  <div class="navbar-in">
+    <p class="nav-brand">Platform map</p>
+    <ol class="nav-steps">
+      <li><a href="#why"><span class="nav-n">1</span>Why</a></li>
+      <li><a href="#model"><span class="nav-n">2</span>What</a></li>
+      <li><a href="#feature"><span class="nav-n">3</span>One feature</a></li>
+      <li><a href="#capabilities"><span class="nav-n">4</span>Capabilities</a></li>
+      <li><a href="#architecture"><span class="nav-n">5</span>Under the hood</a></li>
+      <li><a href="#judgement"><span class="nav-n">6</span>Trade-offs</a></li>
+    </ol>
+    <label class="switch nav-switch" for="tech-toggle">
+      <input type="checkbox" id="tech-toggle">
+      <span>Show technical implementation</span>
+    </label>
+  </div>
+  <div class="nav-progress" aria-hidden="true"><span id="nav-bar"></span></div>
+</nav>
 
 <header class="masthead">
   <p class="eyebrow">Business system map · seans-mfe-tool</p>
-  <h1>What this platform actually does</h1>
+  <h1>A platform that lets many teams build one product together.</h1>
   <p class="standfirst">
-    This repository is not a product that customers log into. It is the <strong>machinery that lets many
-    teams build one product together</strong> — each team shipping its own piece of the screen, on its own
-    schedule, in whatever technology it prefers, without any of them having to coordinate a release.
+    Teams build and release their own capabilities independently. The platform supplies the
+    <strong>standards and controls</strong> that make those separately-built capabilities behave
+    like one coherent product.
   </p>
   <p class="standfirst">
-    There are two halves to it. A <strong>factory</strong> that turns a short written brief into a complete,
-    ready-to-ship feature. And a <strong>control tower</strong> that decides, while a person is using the
-    product, which of those features should appear, where, and for whom. Everything else on this page
-    is detail underneath those two ideas.
+    Nobody logs into this repository. It is the machinery underneath a product — and its whole
+    purpose is to remove the trade-off between <strong>letting teams move fast</strong> and
+    <strong>giving customers one consistent experience</strong>.
   </p>
 
-  <div class="meta-row">
-    <span class="meta"><span class="meta-n">2</span> halves — build time, run time</span>
-    <span class="meta"><span class="meta-n">10</span> things every feature must be able to do</span>
-    <span class="meta"><span class="meta-n">21</span> reference features across 2 demo products</span>
-    <span class="meta"><span class="meta-n">83</span> recorded architecture decisions</span>
-  </div>
+  <p class="readnote">
+    <strong>Read the first three sections and you have the whole story</strong> — about a minute.
+    Nothing below needs to be clicked to be understood; the controls only add depth.
+    Engineers: turn on <em>Show technical implementation</em> in the bar above to reveal
+    repository paths throughout.
+  </p>
 </header>
 
-<main>
+<main id="main">
 
-  <section class="band">
-    <h2 class="section-title">The executive overview</h2>
+  <!-- ============================================================ 1 · WHY -->
+  <section class="band" id="why">
+    <p class="kicker">1 · Why it exists</p>
+    <h2 class="section-title wide">The problem is not the teams. It is what happens between them.</h2>
     <p class="lede">
-      Read it top to bottom. The top row happens once, when a team builds something. The bottom row happens
-      every time a person clicks. The strip in the middle is the agreement that connects the two — and it is
-      the whole reason this platform exists.
+      One digital product, many teams changing it. Every team needs to move on its own schedule —
+      and the moment they do, each one starts making the same decisions again, separately, in its own way.
+      The platform does not take autonomy away. It removes the part of autonomy nobody wanted.
     </p>
 
     <figure class="fig">
       <div class="fig-scroll">
-        <svg viewBox="0 0 1180 660" role="img" class="diagram"
+        <svg viewBox="0 0 1180 470" role="img" class="diagram" id="why-diagram"
+             aria-label="Two panels side by side. On the left, without a shared standard: three teams each build a capability, and the capabilities connect to each other in crossing one-off integrations, producing a product that feels like three products. On the right, with the platform standard: the same three teams build the same three capabilities, each connecting downward into one common standard, which produces one product.">
+          <defs>
+            <marker id="w-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+            <marker id="w-tangle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="tangle-head" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+            <marker id="w-straight" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="straight-head" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+          </defs>
+
+          <!-- ============ LEFT: WITHOUT ============ -->
+          <rect class="panel panel-warn" x="24" y="24" width="548" height="422" rx="14"></rect>
+          <text class="c-tag l-warn-t" x="48" y="58">WITHOUT A SHARED STANDARD</text>
+          <text class="c-desc" x="48" y="80">Every team answers the same questions again, its own way.</text>
+
+          <rect class="card l-people" x="48"  y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="124" y="126" text-anchor="middle">Team A</text>
+          <rect class="card l-people" x="222" y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="298" y="126" text-anchor="middle">Team B</text>
+          <rect class="card l-people" x="396" y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="472" y="126" text-anchor="middle">Team C</text>
+
+          <line class="flow" x1="124" y1="142" x2="124" y2="158" marker-end="url(#w-arrow)"></line>
+          <line class="flow" x1="298" y1="142" x2="298" y2="158" marker-end="url(#w-arrow)"></line>
+          <line class="flow" x1="472" y1="142" x2="472" y2="158" marker-end="url(#w-arrow)"></line>
+
+          <rect class="card l-warn" x="48"  y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="124" y="193" text-anchor="middle">Capability</text>
+          <rect class="card l-warn" x="222" y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="298" y="193" text-anchor="middle">Capability</text>
+          <rect class="card l-warn" x="396" y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="472" y="193" text-anchor="middle">Capability</text>
+
+          <!-- crossing one-off integrations -->
+          <path class="tangle" d="M124,212 C124,248 420,248 420,284" marker-end="url(#w-tangle)"></path>
+          <path class="tangle" d="M298,212 C298,250 160,250 160,284" marker-end="url(#w-tangle)"></path>
+          <path class="tangle" d="M472,212 C472,254 290,254 290,284" marker-end="url(#w-tangle)"></path>
+
+          <text class="flow-label" x="298" y="308" text-anchor="middle">every pair is its own integration — agreed twice, maintained forever</text>
+
+          <rect class="outcome l-warn" x="48" y="324" width="500" height="98" rx="10"></rect>
+          <text class="c-tag l-warn-t" x="72" y="352">THE RESULT</text>
+          <text class="c-title" x="72" y="378">A product that feels like three products</text>
+          <text class="c-desc">
+            <tspan x="72" y="400">It works. But changing one part means checking all of them, and the</tspan>
+            <tspan x="72" y="416">customer can tell where one team stopped and the next one started.</tspan>
+          </text>
+
+          <!-- ============ RIGHT: WITH ============ -->
+          <rect class="panel panel-good" x="608" y="24" width="548" height="422" rx="14"></rect>
+          <text class="c-tag l-good-t" x="632" y="58">WITH THE PLATFORM STANDARD</text>
+          <text class="c-desc" x="632" y="80">Every team answers only the question that is theirs.</text>
+
+          <rect class="card l-people" x="632"  y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="708" y="126" text-anchor="middle">Team A</text>
+          <rect class="card l-people" x="806"  y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="882" y="126" text-anchor="middle">Team B</text>
+          <rect class="card l-people" x="980"  y="100" width="152" height="40" rx="8"></rect>
+          <text class="c-title s" x="1056" y="126" text-anchor="middle">Team C</text>
+
+          <line class="flow" x1="708"  y1="142" x2="708"  y2="158" marker-end="url(#w-arrow)"></line>
+          <line class="flow" x1="882"  y1="142" x2="882"  y2="158" marker-end="url(#w-arrow)"></line>
+          <line class="flow" x1="1056" y1="142" x2="1056" y2="158" marker-end="url(#w-arrow)"></line>
+
+          <rect class="card l-good" x="632"  y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="708" y="193" text-anchor="middle">Capability</text>
+          <rect class="card l-good" x="806"  y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="882" y="193" text-anchor="middle">Capability</text>
+          <rect class="card l-good" x="980"  y="164" width="152" height="48" rx="8"></rect>
+          <text class="c-title s" x="1056" y="193" text-anchor="middle">Capability</text>
+
+          <line class="straight" x1="708"  y1="212" x2="708"  y2="232" marker-end="url(#w-straight)"></line>
+          <line class="straight" x1="882"  y1="212" x2="882"  y2="232" marker-end="url(#w-straight)"></line>
+          <line class="straight" x1="1056" y1="212" x2="1056" y2="232" marker-end="url(#w-straight)"></line>
+
+          <rect class="hinge l-contract" x="632" y="238" width="500" height="76" rx="10"></rect>
+          <text class="c-tag l-contract-t" x="656" y="262">ONE COMMON STANDARD</text>
+          <text class="c-desc">
+            <tspan x="656" y="284">The same way of behaving, the same way of naming a place on a</tspan>
+            <tspan x="656" y="301">screen, the same shape of answer — agreed once, inherited by all.</tspan>
+          </text>
+
+          <line class="straight" x1="882" y1="314" x2="882" y2="330" marker-end="url(#w-straight)"></line>
+
+          <rect class="outcome l-good" x="632" y="336" width="500" height="86" rx="10"></rect>
+          <text class="c-tag l-good-t" x="656" y="366">THE RESULT</text>
+          <text class="c-title" x="656" y="392">One product</text>
+          <text class="c-desc">
+            <tspan x="656" y="414">Independent teams, independent releases, one coherent experience.</tspan>
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        Both sides have the same three teams building the same three capabilities. The only difference
+        is what sits between them — and that difference is the entire platform.
+      </figcaption>
+    </figure>
+
+    <div class="versus">
+      <div class="vs-col vs-warn">
+        <p class="vs-kind">Without it — what the friction actually is</p>
+        <h3>Six costs that grow with every team you add</h3>
+        <ul>
+          <li><strong>Different approaches.</strong> Each team invents its own way to start up, fail, refresh and report health.</li>
+          <li><strong>Repeated decisions.</strong> The same packaging, data-shaping and error questions get re-answered per team.</li>
+          <li><strong>Integration friction.</strong> Connecting two capabilities is a bespoke negotiation, every time.</li>
+          <li><strong>Release coordination.</strong> Shipping anything means agreeing a date with everyone else.</li>
+          <li><strong>Inconsistent experience.</strong> The seams between teams become visible to the customer.</li>
+          <li><strong>Growing complexity.</strong> The cost is not linear — it grows with the number of pairs of teams.</li>
+        </ul>
+      </div>
+      <div class="vs-col vs-good">
+        <p class="vs-kind">With it — what the standard supplies</p>
+        <h3>The decisions a team no longer has to make</h3>
+        <ul>
+          <li><strong>How to behave.</strong> Ten abilities every capability has, in a defined order, with defined failures.</li>
+          <li><strong>How to be placed.</strong> One grammar for naming a space on a screen, shared by everyone.</li>
+          <li><strong>How to be built.</strong> One command turns a written description into a running capability.</li>
+          <li><strong>How to be released.</strong> Each capability ships as its own unit; nothing else rebuilds.</li>
+          <li><strong>How data looks.</strong> One clean shape out, however messy the systems underneath are.</li>
+          <li><strong>Where it appears.</strong> Decided by rules held outside the capability, changeable without a release.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="vs-note">
+      <strong>The point is not that teams are the problem.</strong> Teams building independently is the
+      goal. The platform exists so that independence costs the customer nothing — autonomy in
+      <em>what</em> a team builds, agreement on <em>how</em> it plugs in.
+    </p>
+  </section>
+
+  <!-- ============================================================ PROMISES -->
+  <section class="band band-alt" id="promises">
+    <div class="inner">
+      <p class="kicker">The value proposition</p>
+      <h2 class="section-title wide">Four promises</h2>
+      <p class="lede">
+        Everything on the rest of this page exists to keep one of these four promises.
+      </p>
+
+      <div class="promises">
+        <article class="promise">
+          <span class="promise-n">Promise 01</span>
+          <h3>Team autonomy</h3>
+          <p>
+            A team owns one capability end to end — what it does, what technology it is written in,
+            and when it ships. Two front-end technologies are supported today by the same platform,
+            and both reference products release capability by capability.
+          </p>
+          <p class="paths">packages/framework-react/ · packages/framework-angular/ · examples/*/docker-compose.yaml</p>
+        </article>
+
+        <article class="promise">
+          <span class="promise-n">Promise 02</span>
+          <h3>Shared standards</h3>
+          <p>
+            Every capability, whoever built it, offers the same ten abilities in the same order, names
+            screen spaces with the same grammar, and fails in the same describable ways.
+          </p>
+          <p class="paths">packages/contracts/ · packages/runtime/src/base-mfe.ts · slot-grammar.ts</p>
+        </article>
+
+        <article class="promise">
+          <span class="promise-n">Promise 03</span>
+          <h3>Faster change</h3>
+          <p>
+            A team does not need to clear its implementation choices with every other team, and does
+            not need a shared release train. Where a capability appears can be changed by editing
+            rules rather than shipping code.
+          </p>
+          <p class="paths">examples/*/control-plane/control-plane.yaml · packages/control-plane/</p>
+        </article>
+
+        <article class="promise">
+          <span class="promise-n">Promise 04</span>
+          <h3>One customer experience</h3>
+          <p>
+            The customer sees a single product. The shell holds only empty labelled spaces; capabilities
+            arrive and fill them, and if one fails the rest of the screen stays up.
+          </p>
+          <p class="paths">examples/*/shell/ · packages/runtime/src/layout-manager.ts</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 2 · MODEL -->
+  <section class="band" id="model">
+    <p class="kicker">2 · The core idea</p>
+    <h2 class="section-title wide">One intent, five steps, one experience</h2>
+    <p class="lede">
+      If you remember one diagram from this page, make it this one. A team writes down what it wants.
+      A <strong>factory</strong> turns that into working software. A <strong>house standard</strong> makes
+      the result predictable to everything else. A <strong>control tower</strong> decides when and where it
+      appears. The customer just sees a product.
+    </p>
+
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 1180 300" role="img" class="diagram" id="model-diagram"
+             aria-label="Five stages left to right. Intent, then the factory — both at build time. Then the house standard, the hinge between the two halves. Then the control tower and the customer experience — both at run time.">
+          <defs>
+            <marker id="mm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
+            </marker>
+          </defs>
+
+          <text class="phase" x="24"  y="30">BUILD TIME · once, when a team ships something</text>
+          <line class="band-rule l-build-s" x1="24" y1="42" x2="460" y2="42"></line>
+
+          <text class="phase" x="488" y="30">THE HINGE</text>
+          <line class="band-rule l-contract-s" x1="488" y1="42" x2="692" y2="42"></line>
+
+          <text class="phase" x="720" y="30">RUN TIME · every time a person uses the product</text>
+          <line class="band-rule l-runtime-s" x1="720" y1="42" x2="1156" y2="42"></line>
+
+          <g class="layer" data-layer="intent">
+            <rect class="card l-intent" x="24" y="66" width="204" height="182" rx="10"></rect>
+            <text class="c-tag l-intent-t" x="44" y="94">1 · INTENT</text>
+            <text class="c-title" x="44" y="120">The brief</text>
+            <text class="c-desc">
+              <tspan x="44" y="148">A team writes down one</tspan>
+              <tspan x="44" y="165">capability: what it does,</tspan>
+              <tspan x="44" y="182">what data it needs, and</tspan>
+              <tspan x="44" y="199">where it may appear.</tspan>
+              <tspan x="44" y="223">Source of truth for what</tspan>
+              <tspan x="44" y="240">the feature is meant to be.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="232" y1="157" x2="252" y2="157" marker-end="url(#mm-arrow)"></line>
+
+          <g class="layer" data-layer="build">
+            <rect class="card l-build" x="256" y="66" width="204" height="182" rx="10"></rect>
+            <text class="c-tag l-build-t" x="276" y="94">2 · THE FACTORY</text>
+            <text class="c-title" x="276" y="120">It gets built</text>
+            <text class="c-desc">
+              <tspan x="276" y="148">The platform turns the</tspan>
+              <tspan x="276" y="165">brief into working software</tspan>
+              <tspan x="276" y="182">— screens, a data feed,</tspan>
+              <tspan x="276" y="199">packaging and tests.</tspan>
+              <tspan x="276" y="223">In whichever technology</tspan>
+              <tspan x="276" y="240">that team chose.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="464" y1="157" x2="484" y2="157" marker-end="url(#mm-arrow)"></line>
+
+          <g class="layer" data-layer="contract">
+            <rect class="hinge l-contract" x="488" y="66" width="204" height="182" rx="10"></rect>
+            <text class="c-tag l-contract-t" x="508" y="94">3 · THE STANDARD</text>
+            <text class="c-title" x="508" y="120">The house rules</text>
+            <text class="c-desc">
+              <tspan x="508" y="148">Ten things every capability</tspan>
+              <tspan x="508" y="165">can do, one grammar for</tspan>
+              <tspan x="508" y="182">naming screen spaces, one</tspan>
+              <tspan x="508" y="199">way of failing.</tspan>
+              <tspan x="508" y="223">This is what makes the two</tspan>
+              <tspan x="508" y="240">halves fit together.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="696" y1="157" x2="716" y2="157" marker-end="url(#mm-arrow)"></line>
+
+          <g class="layer" data-layer="runtime">
+            <rect class="card l-runtime" x="720" y="66" width="204" height="182" rx="10"></rect>
+            <text class="c-tag l-runtime-t" x="740" y="94">4 · THE CONTROL TOWER</text>
+            <text class="c-title" x="740" y="120">It gets placed</text>
+            <text class="c-desc">
+              <tspan x="740" y="148">Business rules decide which</tspan>
+              <tspan x="740" y="165">capability appears, where,</tspan>
+              <tspan x="740" y="182">and for whom.</tspan>
+              <tspan x="740" y="206">They live outside every</tspan>
+              <tspan x="740" y="223">capability, so they can</tspan>
+              <tspan x="740" y="240">change without a release.</tspan>
+            </text>
+          </g>
+
+          <line class="flow" x1="928" y1="157" x2="948" y2="157" marker-end="url(#mm-arrow)"></line>
+
+          <g class="layer" data-layer="people">
+            <rect class="card l-people" x="952" y="66" width="204" height="182" rx="10"></rect>
+            <text class="c-tag l-people-t" x="972" y="94">5 · THE POINT</text>
+            <text class="c-title" x="972" y="120">One product</text>
+            <text class="c-desc">
+              <tspan x="972" y="148">The customer sees a single,</tspan>
+              <tspan x="972" y="165">coherent product.</tspan>
+              <tspan x="972" y="189">Several teams shipped it</tspan>
+              <tspan x="972" y="206">separately, on separate</tspan>
+              <tspan x="972" y="223">days — and nobody outside</tspan>
+              <tspan x="972" y="240">can tell.</tspan>
+            </text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        The house standard is deliberately in the middle. Everything to its left is built once, by one
+        team. Everything to its right happens on every click, for every customer. Neither side needs to
+        know anything about the other.
+      </figcaption>
+    </figure>
+
+    <h3 class="sub">The same idea, drawn across the two halves</h3>
+    <p class="lede">
+      Read it top to bottom. The top row happens once, when a team builds something. The bottom row
+      happens every time a person clicks. The strip in the middle is the agreement that connects the two.
+    </p>
+
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 1180 660" role="img" class="diagram" id="exec-diagram"
              aria-label="Build time: a team writes a feature brief, the factory builds it, and out comes a self-contained feature. Every feature is built to one house standard. At run time, a person acts, the control tower decides which feature to show, the screen assembles itself, and business data arrives in one common shape.">
           <defs>
             <marker id="ex-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -175,28 +1113,213 @@
     </figure>
   </section>
 
-  <section class="band">
-    <h2 class="section-title">The eight parts, and what each is for</h2>
+  <!-- ============================================================ 3 · ONE FEATURE -->
+  <section class="band band-alt" id="feature">
+    <div class="inner">
+      <p class="kicker">3 · Follow one feature</p>
+      <h2 class="section-title wide">What actually happens to a single capability</h2>
+      <p class="lede">
+        Nine steps, from someone wanting something to a customer seeing it. Both examples below are real
+        capabilities in this repository, built with the real toolchain. Pick one — the steps stay the same,
+        only the specifics change. That is the whole claim of the platform, demonstrated.
+      </p>
+
+      <div class="picker" role="group" aria-label="Choose a feature to follow">
+        <button type="button" class="pick" data-feature="berth" aria-pressed="true">
+          <b>A berth tile</b>
+          <span>Meridian Station · Angular · operations</span>
+        </button>
+        <button type="button" class="pick" data-feature="letterpop" aria-pressed="false">
+          <b>A game called Letter&nbsp;Pop</b>
+          <span>ABC Kids · React · one of thirteen games</span>
+        </button>
+      </div>
+      <p class="scrollhint" id="pick-status" role="status">Following: a berth tile (Meridian Station, Angular).</p>
+
+      <ol class="track" id="track" data-feature="berth">
+
+        <li class="stage" data-phase="intent">
+          <div class="stage-n" aria-hidden="true">1</div>
+          <p class="stage-phase">Intent</p>
+          <h3>Someone needs something</h3>
+          <p>This is where a team decides what a capability should do for the business. No technology yet — just a need and an owner.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>Station operators need all six docking berths visible at a glance on one console, without opening six screens.</p>
+            <p class="paths">examples/meridian-station/README.md · STATION-DEMO.md</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>The arcade needs another game — and the team that builds it should not have to touch the arcade, or any of the other twelve games.</p>
+            <p class="paths">examples/abc-kids/README.md</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="intent">
+          <div class="stage-n" aria-hidden="true">2</div>
+          <p class="stage-phase">Definition</p>
+          <h3>The team writes it down, once</h3>
+          <p>One short file describes the capability: what it offers, what data it needs, what technology it is written in, and which spaces it is willing to fill. <strong>This file is the source of truth for feature intent</strong> — not for live data, not for what is deployed, not for what a customer currently sees.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>One brief declares three capabilities — a full docking board, a single berth tile, and a traffic log — plus the two backend systems it reads from. It says the team writes Angular.</p>
+            <p class="paths">examples/meridian-station/meridian-docking-control/mfe-manifest.yaml</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>One brief declares three capabilities — play the game, show its cover card, and return its metadata. It says the team writes React.</p>
+            <p class="paths">examples/abc-kids/letter-pop/mfe-manifest.yaml</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="build">
+          <div class="stage-n" aria-hidden="true">3</div>
+          <p class="stage-phase">Build time</p>
+          <h3>The factory turns intent into software</h3>
+          <p>The platform reads the brief and writes out a complete, runnable capability: the application shell, the lifecycle wiring, its own data service, container packaging and tests. The team starts from something that already works and already complies.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>One command produces the Angular application, its lifecycle wrapper, and its own data service — including the translations that hide one backend's underscore naming and another's wrapper envelopes. The mess stops at the data service.</p>
+            <p class="paths">packages/codegen/ (44 templates) · seans-mfe-tool remote:generate</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>The same command, a different technology adapter: a React application, the same lifecycle wrapper, the same packaging shape. The factory did not need changing to support both.</p>
+            <p class="paths">packages/codegen/ · packages/framework-react/</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="build">
+          <div class="stage-n" aria-hidden="true">4</div>
+          <p class="stage-phase">Build time</p>
+          <h3>The team writes the part only it can write</h3>
+          <p>The actual business logic — the thing that makes this capability worth having. The factory owns the platform plumbing and re-stamps it; it never overwrites what the team wrote.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>The docking team writes the tile component itself: what a berth looks like, what "occupied" means, when to show a warning. Nobody else has an opinion about it.</p>
+            <p class="paths">.../meridian-docking-control/src/features/BerthTile/BerthTile.component.ts</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>The team writes the game. None of the game leaks into the platform, and none of the platform's opinions leak into the game.</p>
+            <p class="paths">examples/abc-kids/letter-pop/src/features/</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="contract">
+          <div class="stage-n" aria-hidden="true">5</div>
+          <p class="stage-phase">The house standard</p>
+          <h3>It inherits the common standard</h3>
+          <p>The generated wrapper makes the capability predictable to the rest of the platform: it can be started, shown, refreshed, health-checked, described and queried — in a defined order, with defined failures — by a system that knows nothing about how it was built.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>An Angular capability that the runtime drives exactly the way it drives a React one. The platform never learns the word "Angular".</p>
+            <p class="paths">packages/runtime/src/base-mfe.ts · .../src/platform/base-mfe/mfe.ts</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>The same base class, a different technology. This is the step that lets an arcade load a React game and a station console load an Angular tile through the identical mechanism.</p>
+            <p class="paths">packages/runtime/src/base-mfe.ts · remote-mfe.ts</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="build">
+          <div class="stage-n" aria-hidden="true">6</div>
+          <p class="stage-phase">Release</p>
+          <h3>It ships on its own</h3>
+          <p>The capability is packaged and released as its own unit, on its own schedule. Adding it or changing it does not rebuild anything else in the product.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>Its own container image, its own address. The docking team ships when the docking team is ready.</p>
+            <p class="paths">.../meridian-docking-control/Dockerfile · examples/meridian-station/docker-compose.yaml</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>Its own container image, its own address. Adding a fourteenth game does not touch the other thirteen.</p>
+            <p class="paths">examples/abc-kids/letter-pop/Dockerfile · examples/abc-kids/docker-compose.yaml</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="runtime">
+          <div class="stage-n" aria-hidden="true">7</div>
+          <p class="stage-phase">Run time</p>
+          <h3>The control tower is told when to use it</h3>
+          <p>A rule — written outside every capability, in the product's own composition document — says which capability appears, in which named space, under which conditions. Change the rule, change the product; no team ships code.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>One rule covers all six berths: when the console asks for a berth, place a berth tile in the space named after that berth, and tell it which berth it is.</p>
+            <p class="paths">examples/meridian-station/control-plane/control-plane.yaml → rules.json (generated)</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>One rule covers all thirteen games: when the arcade opens a game, place that game's play capability into the arcade's main space, and its cover into the information space.</p>
+            <p class="paths">examples/abc-kids/control-plane/control-plane.yaml → rules.json (generated)</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="runtime">
+          <div class="stage-n" aria-hidden="true">8</div>
+          <p class="stage-phase">Run time</p>
+          <h3>The screen assembles itself</h3>
+          <p>The screen is not built by anyone. A host publishes empty named spaces; the control tower resolves which capability belongs in each; a placer inserts them as they arrive, waits for spaces not yet open, and keeps the rest of the screen alive if one fails.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>The station console publishes three kinds of space — a main work area, a status rail, and one space per berth. Six tiles arrive from one capability and fill six of them independently.</p>
+            <p class="paths">.../meridian-console/mfe-manifest.yaml (providesSlots) · packages/runtime/src/layout-manager.ts</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>The arcade home page publishes two spaces — main and information. The game goes to one, its cover art to the other.</p>
+            <p class="paths">examples/abc-kids/home/mfe-manifest.yaml (providesSlots) · packages/runtime/src/layout-manager.ts</p>
+          </div>
+        </li>
+
+        <li class="stage" data-phase="people">
+          <div class="stage-n" aria-hidden="true">9</div>
+          <p class="stage-phase">The customer</p>
+          <h3>A person sees one product</h3>
+          <p>None of the above is visible. The customer sees a single, coherent product — and could not tell you how many teams, technologies or releases were involved.</p>
+          <div class="concrete" data-feature="berth">
+            <span class="lbl">For the berth tile</span>
+            <p>An operator sees one station console: a berth strip, a docking board, a traffic log, life support, cargo and crew — from six independently released capabilities.</p>
+            <p class="paths">examples/meridian-station/shell/</p>
+          </div>
+          <div class="concrete" data-feature="letterpop">
+            <span class="lbl">For Letter Pop</span>
+            <p>A child sees one arcade with thirteen games. Thirteen independent releases, one experience.</p>
+            <p class="paths">examples/abc-kids/shell/</p>
+          </div>
+        </li>
+
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================ 4 · CAPABILITIES -->
+  <section class="band" id="capabilities">
+    <p class="kicker">4 · What the platform does</p>
+    <h2 class="section-title wide">Ten capabilities, grouped by what they do — not where the files sit</h2>
     <p class="lede">
-      Grouped by what they <em>do for the business</em>, not by where the files sit. Four of these are
-      foundational — shared by everything. Four are the working machinery that sits on top.
+      This is the platform's job list. Four of these are foundational — shared by everything and depended
+      on by everything else. The rest is the working machinery on top. None of these is a folder; several
+      span packages, and several packages contribute to more than one.
     </p>
 
     <div class="grid">
 
       <article class="part" data-layer="intent">
-        <p class="part-kind">Design intent</p>
-        <h3>The feature brief</h3>
-        <p class="part-what">A single short document per feature, written by the team that owns it, declaring what the feature does, what data it needs, and which spaces on a screen it can fill.</p>
-        <p class="part-why"><span>Why it matters</span> It is the only source of truth. Everything downstream — the code, the data feed, the packaging, the validation — is derived from it, so the document and the running software cannot quietly disagree.</p>
-        <p class="paths">packages/dsl/ · mfe-manifest.yaml · schemas/dsl/</p>
+        <p class="part-kind">Design intent · foundational</p>
+        <h3>Feature definition</h3>
+        <p class="part-what">A single short document per capability, written by the team that owns it, declaring what it does, what data it needs, and which spaces on a screen it can fill.</p>
+        <p class="part-why"><span>Why it matters</span> It is the source of truth for <em>feature intent</em>. The code, the data feed, the packaging and the validation are all derived from it, so the description and the shipped software cannot quietly disagree. It is deliberately <em>not</em> the source of truth for runtime state, live data or what is currently deployed.</p>
+        <p class="paths">packages/dsl/ · mfe-manifest.yaml (21 in the repository) · schemas/dsl/</p>
       </article>
 
       <article class="part" data-layer="build">
         <p class="part-kind">Build machinery</p>
-        <h3>The feature factory</h3>
-        <p class="part-what">Reads a brief and writes out a complete, runnable feature — user interface, wiring, data access, container packaging and tests.</p>
-        <p class="part-why"><span>Why it matters</span> New teams start from a working, compliant feature instead of a blank page. It is also how a platform-wide improvement reaches everyone: change the factory, re-stamp the fleet.</p>
+        <h3>Generation &amp; build</h3>
+        <p class="part-what">Reads a definition and writes out a complete, runnable capability — user interface, wiring, data access, container packaging and tests.</p>
+        <p class="part-why"><span>Why it matters</span> New teams start from a working, compliant capability instead of a blank page. It is also how a platform-wide improvement reaches everyone: change the factory, re-stamp the fleet, and a drift check proves nothing was missed.</p>
         <p class="paths">packages/codegen/ · 44 templates · src/commands/remote/</p>
       </article>
 
@@ -204,791 +1327,724 @@
         <p class="part-kind">Build machinery</p>
         <h3>Technology adapters</h3>
         <p class="part-what">Small plug-ins that teach the factory a new front-end technology. Two ship today; adding a third is a new plug-in, not a change to the factory.</p>
-        <p class="part-why"><span>Why it matters</span> This is what makes "any team, any technology" real rather than aspirational — and it means a technology choice made today does not become a platform-wide migration tomorrow.</p>
-        <p class="paths">packages/framework-react/ · packages/framework-angular/</p>
+        <p class="part-why"><span>Why it matters</span> This is what makes "any team, any technology" real rather than aspirational — and it means a technology choice made today does not become a platform-wide migration tomorrow. The framework field is deliberately an open string, not a fixed list.</p>
+        <p class="paths">packages/framework-react/ · packages/framework-angular/ · src/framework/loader.ts</p>
       </article>
 
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
         <h3>The house standard</h3>
-        <p class="part-what">Ten things every feature must be able to do — start up, show itself, refresh, check its permissions, report its health, describe itself, answer a data question, raise an event, and report state upward — plus strict rules about the order they may happen in.</p>
-        <p class="part-why"><span>Why it matters</span> This is the platform. It is the reason a feature built by one team in one technology can be operated by a system that knows nothing about either.</p>
-        <p class="paths">packages/contracts/ · packages/runtime/</p>
+        <p class="part-what">Ten things every capability must be able to do — start up, show itself, refresh, check access, report health, describe itself, publish its data shape, answer a data question, raise an event, and report state upward — plus strict rules about the order they may happen in.</p>
+        <p class="part-why"><span>Why it matters</span> This <em>is</em> the platform. It is the reason a capability built by one team in one technology can be operated by a system that knows nothing about either.</p>
+        <p class="paths">packages/contracts/ · packages/runtime/src/base-mfe.ts</p>
       </article>
 
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
-        <h3>Named spaces on a screen</h3>
-        <p class="part-what">Every feature publishes the spaces it offers by name — "main", "status", "berth 4" — and business rules target those names. Names are declared in the brief, never inferred from screen position.</p>
-        <p class="part-why"><span>Why it matters</span> A layout redesign does not break the rules that decide what goes where. It also lets one feature appear six times on one screen, each instance independent.</p>
-        <p class="paths">docs/slot-contract.md · packages/contracts/src/slot-grammar.ts</p>
+        <h3>Placement contract</h3>
+        <p class="part-what">Every host publishes the spaces it offers by name — "main", "status", "berth 4" — and business rules target those names. Names are declared in the definition, never inferred from screen position.</p>
+        <p class="part-why"><span>Why it matters</span> A layout redesign does not break the rules that decide what goes where. It also lets one capability appear six times on one screen, each instance independent and independently addressable.</p>
+        <p class="paths">docs/slot-contract.md · packages/contracts/src/slot-grammar.ts · slot-contract.ts</p>
       </article>
 
       <article class="part" data-layer="runtime">
         <p class="part-kind">Working machinery</p>
-        <h3>The control tower</h3>
-        <p class="part-what">Three cooperating roles: a <em>rule book</em> that turns "this person did this" into "show that feature", a <em>router</em> that carries the request and the answer, and a <em>placer</em> that puts the result into the right named space and keeps it healthy.</p>
-        <p class="part-why"><span>Why it matters</span> Business rules about what appears where live outside the features, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
-        <p class="paths">packages/runtime/src/layout-manager.ts · packages/control-plane/</p>
+        <h3>Runtime composition</h3>
+        <p class="part-what">Three cooperating roles: a <em>rule book</em> that turns "this person did this" into "show that capability", a <em>router</em> that carries the request and the answer, and a <em>placer</em> that puts the result into the right named space and keeps it healthy.</p>
+        <p class="part-why"><span>Why it matters</span> Business rules about what appears where live outside the capabilities, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
+        <p class="paths">packages/control-plane/ (registry + daemon) · packages/runtime/src/layout-manager.ts</p>
+      </article>
+
+      <article class="part" data-layer="intent">
+        <p class="part-kind">Working machinery</p>
+        <h3>Composition authoring</h3>
+        <p class="part-what">Each product has one composition document — a readable list of "when this happens, place that capability there". It is compiled into the payload the control tower actually reads; the payload is never hand-edited.</p>
+        <p class="part-why"><span>Why it matters</span> Product placement becomes an editable business document rather than code spread across teams. A single rule can cover thirteen games or six berths, and a check fails the build if the compiled payload and the document disagree.</p>
+        <p class="paths">examples/*/control-plane/control-plane.yaml · packages/dsl/src/control-plane-compiler.ts</p>
       </article>
 
       <article class="part" data-layer="data">
         <p class="part-kind">Working machinery</p>
-        <h3>The translation layer</h3>
-        <p class="part-what">Each feature gets its own small data service that fronts the company's real systems and hands back one clean, consistent shape — no matter how inconsistent the sources are underneath.</p>
-        <p class="part-why"><span>Why it matters</span> Legacy dialects stop leaking into feature teams' work. The reference product deliberately fronts three systems that name the same thing three different ways, to prove the point.</p>
-        <p class="paths">packages/bff-plugin/ · src/commands/api.ts · examples/meridian-station/apis/</p>
+        <h3>Data &amp; integration</h3>
+        <p class="part-what">Each capability gets its own small data service that fronts the company's real systems and hands back one clean, consistent shape — no matter how inconsistent the sources are underneath.</p>
+        <p class="part-why"><span>Why it matters</span> Legacy dialects stop leaking into feature teams' work. The reference product deliberately fronts systems that name the same thing different ways and wrap their answers differently, to prove the translation actually happens.</p>
+        <p class="paths">packages/bff-plugin/ · src/commands/api.ts · examples/meridian-station/*/specs/</p>
+      </article>
+
+      <article class="part" data-layer="data">
+        <p class="part-kind">Working machinery · partly complete</p>
+        <h3>Access &amp; identity</h3>
+        <p class="part-what">A place in the standard for every capability to check whether the current person may use it, a signature-verifying token handler in the runtime, and request identity carried into every data call.</p>
+        <p class="part-why"><span>Why it matters</span> The <em>seam</em> for authorisation is designed and present at every boundary. The <em>policy</em> is not: the check that generated capabilities inherit approves everyone, and the data layer decodes the caller's token for identity without verifying it. Anyone planning a production rollout should read this as designed-but-unfinished.</p>
+        <p class="paths">packages/runtime/src/handlers/auth.ts · doAuthorizeAccess() · platform/bff/mesh-context.js</p>
       </article>
 
       <article class="part" data-layer="people">
         <p class="part-kind">Foundational</p>
-        <h3>The command centre</h3>
-        <p class="part-what">One set of commands does everything above — start a feature, build it, check it, package it, deploy it. The identical commands are also published as tools that AI assistants can call directly.</p>
-        <p class="part-why"><span>Why it matters</span> Humans and AI assistants drive the platform through exactly the same door, so anything an assistant does is reproducible by a person, and vice versa. Two features in the reference product were built this way.</p>
-        <p class="paths">src/commands/ (19 commands) · src/mcp/</p>
+        <h3>Operator interface</h3>
+        <p class="part-what">One set of commands does everything above — start a capability, build it, check it, package it, deploy it, compile a composition. The identical commands are also published as tools that AI assistants can call directly.</p>
+        <p class="part-why"><span>Why it matters</span> Humans and AI assistants drive the platform through exactly the same door, so anything an assistant does is reproducible by a person, and vice versa. Each assistant call runs in its own isolated process.</p>
+        <p class="paths">src/commands/ (19 published commands) · src/mcp/ · schemas/</p>
+      </article>
+
+      <article class="part" data-layer="contract">
+        <p class="part-kind">Foundational</p>
+        <h3>Governance &amp; drift control</h3>
+        <p class="part-what">Automated checks that re-derive every reference capability from its definition and fail if the shipped code has drifted; that confirm each definition agrees with its packaging; that keep recorded decisions and published documentation consistent with the code; and that warn teams when a platform change reaches files the platform does not own.</p>
+        <p class="part-why"><span>Why it matters</span> This is what keeps 21 independently-released capabilities honest without a release train. It is also the platform's answer to a real incident — see the trade-offs section.</p>
+        <p class="paths">scripts/check-mfe-drift · check-mfe-consistency · check-adr · packages/codegen/src/platform-migrations.ts</p>
       </article>
 
     </div>
   </section>
 
-  <section class="band">
-    <div class="section-head">
-      <div>
-        <h2 class="section-title">The detailed system map</h2>
-        <p class="lede">
-          Same story, one level down. Reads left to right: who uses it, what they declare, what gets built,
-          the standard everything inherits, how it is composed on screen, and where real data comes from.
-        </p>
+  <!-- ============================================================ 5 · ARCHITECTURE -->
+  <section class="band band-alt" id="architecture">
+    <div class="inner">
+      <p class="kicker">5 · How it works under the hood</p>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title wide">The detailed system map</h2>
+          <p class="lede">
+            Everything above, one level down — for architects and engineers. Same story, same grouping
+            by purpose rather than folder. Reads left to right: who uses it, what they declare, what gets
+            built, the standard everything inherits, how it is composed on screen, and where real data
+            comes from. Use the legend to isolate one layer at a time.
+          </p>
+        </div>
+        <label class="switch" for="paths-toggle">
+          <input type="checkbox" id="paths-toggle">
+          <span>Show repository paths</span>
+        </label>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="paths-toggle">
-        <span>Show repository paths</span>
-      </label>
-    </div>
 
-    <div class="legend" id="legend">
-      <button type="button" class="lg" data-focus="people"><i class="sw l-people"></i>People &amp; entry points</button>
-      <button type="button" class="lg" data-focus="intent"><i class="sw l-intent"></i>Design intent</button>
-      <button type="button" class="lg" data-focus="build"><i class="sw l-build"></i>Build machinery</button>
-      <button type="button" class="lg" data-focus="contract"><i class="sw l-contract"></i>Shared standard</button>
-      <button type="button" class="lg" data-focus="runtime"><i class="sw l-runtime"></i>Run-time composition</button>
-      <button type="button" class="lg" data-focus="data"><i class="sw l-data"></i>Data &amp; external systems</button>
-      <button type="button" class="lg lg-reset" data-focus="">Show all</button>
-    </div>
-
-    <figure class="fig fig-wide">
-      <div class="fig-scroll">
-        <svg viewBox="0 0 1640 900" role="img" class="diagram" id="map"
-             aria-label="Six columns read left to right: who uses it; what they declare; what gets built; the shared standard every feature inherits; how features are composed on screen at run time; and where data comes from. Two full-width strips below carry the command centre and the governance safety net.">
-          <defs>
-            <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
-            </marker>
-          </defs>
-
-          <!-- spine -->
-          <line class="flow" x1="214" y1="60" x2="254" y2="60" marker-end="url(#m-arrow)"></line>
-          <text class="flow-label" x="238" y="46" text-anchor="middle">describes</text>
-          <line class="flow" x1="492" y1="60" x2="532" y2="60" marker-end="url(#m-arrow)"></line>
-          <text class="flow-label" x="516" y="46" text-anchor="middle">generates</text>
-          <line class="flow" x1="770" y1="60" x2="810" y2="60" marker-end="url(#m-arrow)"></line>
-          <text class="flow-label" x="794" y="46" text-anchor="middle">inherits</text>
-          <line class="flow" x1="1048" y1="60" x2="1088" y2="60" marker-end="url(#m-arrow)"></line>
-          <text class="flow-label" x="1072" y="46" text-anchor="middle">composed by</text>
-          <line class="flow" x1="1326" y1="60" x2="1366" y2="60" marker-end="url(#m-arrow)"></line>
-          <text class="flow-label" x="1350" y="46" text-anchor="middle">asks &amp; answers</text>
-
-          <!-- ============ B1 PEOPLE ============ -->
-          <g class="layer" data-layer="people">
-            <text class="band-head l-people-t" x="24" y="92">WHO USES IT</text>
-            <line class="band-rule l-people-s" x1="24" y1="100" x2="214" y2="100"></line>
-
-            <rect class="card l-people" x="24" y="116" width="190" height="112" rx="9"></rect>
-            <text class="c-title s" x="42" y="142">Feature teams</text>
-            <text class="c-desc"><tspan x="42" y="164">Each owns one business</tspan><tspan x="42" y="180">capability end to end and</tspan><tspan x="42" y="196">releases on its own clock.</tspan></text>
-
-            <rect class="card l-people" x="24" y="244" width="190" height="112" rx="9"></rect>
-            <text class="c-title s" x="42" y="270">AI assistants</text>
-            <text class="c-desc"><tspan x="42" y="292">Drive the same commands</tspan><tspan x="42" y="308">as people, through a tool</tspan><tspan x="42" y="324">interface built for them.</tspan></text>
-            <text class="paths-t paths" x="42" y="344">src/mcp/</text>
-
-            <rect class="card l-people" x="24" y="372" width="190" height="112" rx="9"></rect>
-            <text class="c-title s" x="42" y="398">Product operators</text>
-            <text class="c-desc"><tspan x="42" y="420">Decide which features a</tspan><tspan x="42" y="436">given product shows, by</tspan><tspan x="42" y="452">editing rules, not code.</tspan></text>
-
-            <rect class="card l-people" x="24" y="500" width="190" height="112" rx="9"></rect>
-            <text class="c-title s" x="42" y="526">Customers &amp; staff</text>
-            <text class="c-desc"><tspan x="42" y="548">Never see any of this.</tspan><tspan x="42" y="564">They see one product</tspan><tspan x="42" y="580">that behaves as one.</tspan></text>
-          </g>
-
-          <!-- ============ B2 INTENT ============ -->
-          <g class="layer" data-layer="intent">
-            <text class="band-head l-intent-t" x="262" y="92">WHAT THEY DECLARE</text>
-            <line class="band-rule l-intent-s" x1="262" y1="100" x2="492" y2="100"></line>
-
-            <rect class="card l-intent" x="262" y="116" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="280" y="142">The feature brief</text>
-            <text class="c-desc"><tspan x="280" y="164">One file per feature: what it does,</tspan><tspan x="280" y="180">what data it needs, what technology</tspan><tspan x="280" y="196">it is written in.</tspan></text>
-            <text class="paths-t paths" x="280" y="216">mfe-manifest.yaml · packages/dsl/</text>
-
-            <rect class="card l-intent" x="262" y="244" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="280" y="270">Offered spaces</text>
-            <text class="c-desc"><tspan x="280" y="292">The named places this feature is</tspan><tspan x="280" y="308">willing to let other features</tspan><tspan x="280" y="324">appear inside.</tspan></text>
-            <text class="paths-t paths" x="280" y="344">providesSlots · docs/slot-contract.md</text>
-
-            <rect class="card l-intent" x="262" y="372" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="280" y="398">Placement rules</text>
-            <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Written in their</tspan><tspan x="280" y="452">own file, outside every feature.</tspan></text>
-            <text class="paths-t paths" x="280" y="472">control-plane.yaml (compiled to rules.json)</text>
-
-            <rect class="card l-intent" x="262" y="500" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="280" y="526">Recorded decisions</text>
-            <text class="c-desc"><tspan x="280" y="548">83 architecture decisions and 11</tspan><tspan x="280" y="564">product decisions, each written</tspan><tspan x="280" y="580">down before it was built.</tspan></text>
-            <text class="paths-t paths" x="280" y="600">docs/architecture-decisions/</text>
-          </g>
-
-          <!-- ============ B3 BUILD ============ -->
-          <g class="layer" data-layer="build">
-            <text class="band-head l-build-t" x="540" y="92">WHAT GETS BUILT</text>
-            <line class="band-rule l-build-s" x1="540" y1="100" x2="770" y2="100"></line>
-
-            <rect class="card l-build" x="540" y="116" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="558" y="142">The feature factory</text>
-            <text class="c-desc"><tspan x="558" y="164">Turns a brief into a complete,</tspan><tspan x="558" y="180">running feature. Owns some files</tspan><tspan x="558" y="196">outright; seeds others once.</tspan></text>
-            <text class="paths-t paths" x="558" y="216">packages/codegen/</text>
-
-            <rect class="card l-build" x="540" y="244" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="558" y="270">Technology adapters</text>
-            <text class="c-desc"><tspan x="558" y="292">Teach the factory a front-end</tspan><tspan x="558" y="308">technology. Two today; a third</tspan><tspan x="558" y="324">is a plug-in, not a rewrite.</tspan></text>
-            <text class="paths-t paths" x="558" y="344">packages/framework-{react,angular}/</text>
-
-            <rect class="card l-build" x="540" y="372" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="558" y="398">Data feed builder</text>
-            <text class="c-desc"><tspan x="558" y="420">Builds each feature's private</tspan><tspan x="558" y="436">translation service from the</tspan><tspan x="558" y="452">data section of its brief.</tspan></text>
-            <text class="paths-t paths" x="558" y="472">packages/bff-plugin/</text>
-
-            <rect class="card l-build" x="540" y="500" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="558" y="526">Backend generator</text>
-            <text class="c-desc"><tspan x="558" y="548">Given an interface description,</tspan><tspan x="558" y="564">scaffolds a whole working service</tspan><tspan x="558" y="580">with its own database.</tspan></text>
-            <text class="paths-t paths" x="558" y="600">src/commands/api.ts</text>
-          </g>
-
-          <!-- ============ B4 STANDARD ============ -->
-          <g class="layer" data-layer="contract">
-            <text class="band-head l-contract-t" x="818" y="92">THE SHARED STANDARD · foundational</text>
-            <line class="band-rule l-contract-s" x1="818" y1="100" x2="1048" y2="100"></line>
-
-            <rect class="card l-contract" x="818" y="116" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="836" y="142">Ten standard abilities</text>
-            <text class="c-desc"><tspan x="836" y="164">Start, show, refresh, authorise,</tspan><tspan x="836" y="180">report health, describe itself,</tspan><tspan x="836" y="196">answer, raise events, report state.</tspan></text>
-            <text class="paths-t paths" x="836" y="216">packages/runtime/src/base-mfe.ts</text>
-
-            <rect class="card l-contract" x="818" y="244" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="836" y="270">Behaviour guardrails</text>
-            <text class="c-desc"><tspan x="836" y="292">A feature cannot show before it</tspan><tspan x="836" y="308">has started. Timeouts, retries and</tspan><tspan x="836" y="324">typed failures are built in.</tspan></text>
-            <text class="paths-t paths" x="836" y="344">timeout-wrapper · retry-wrapper</text>
-
-            <rect class="card l-contract" x="818" y="372" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="836" y="398">Space naming rules</text>
-            <text class="c-desc"><tspan x="836" y="420">One grammar for naming screen</tspan><tspan x="836" y="436">spaces, shared by the briefs, the</tspan><tspan x="836" y="452">factory, the rules and the tower.</tspan></text>
-            <text class="paths-t paths" x="836" y="472">contracts/src/slot-grammar.ts</text>
-
-            <rect class="card l-contract" x="818" y="500" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="836" y="526">The message protocol</text>
-            <text class="c-desc"><tspan x="836" y="548">Actions travel up, ready-made</tspan><tspan x="836" y="564">experiences travel down. Nothing</tspan><tspan x="836" y="580">else crosses the boundary.</tspan></text>
-            <text class="paths-t paths" x="836" y="600">packages/contracts/src/messages.ts</text>
-          </g>
-
-          <!-- ============ B5 RUNTIME ============ -->
-          <g class="layer" data-layer="runtime">
-            <text class="band-head l-runtime-t" x="1096" y="92">HOW IT IS COMPOSED</text>
-            <line class="band-rule l-runtime-s" x1="1096" y1="100" x2="1326" y2="100"></line>
-
-            <rect class="card l-runtime" x="1096" y="116" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="1114" y="142">The rule book</text>
-            <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and</tspan><tspan x="1114" y="180">this person, which feature, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
-            <text class="paths-t paths" x="1114" y="216">packages/control-plane/registry/</text>
-
-            <rect class="card l-runtime" x="1096" y="244" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="1114" y="270">The router</text>
-            <text class="c-desc"><tspan x="1114" y="292">Carries actions up and answers</tspan><tspan x="1114" y="308">down over a live connection.</tspan><tspan x="1114" y="324">Knows nothing about content.</tspan></text>
-            <text class="paths-t paths" x="1114" y="344">packages/control-plane/daemon/</text>
-
-            <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="1114" y="398">The placer</text>
-            <text class="c-desc"><tspan x="1114" y="420">Puts each arriving feature into its</tspan><tspan x="1114" y="436">named space, waits for spaces not</tspan><tspan x="1114" y="452">yet open, and heals failures.</tspan></text>
-            <text class="paths-t paths" x="1114" y="472">runtime/src/layout-manager.ts</text>
-
-            <rect class="card l-runtime" x="1096" y="500" width="230" height="112" rx="9"></rect>
-            <text class="c-title s" x="1114" y="526">The empty shell</text>
-            <text class="c-desc"><tspan x="1114" y="548">The product frame. Contains no</tspan><tspan x="1114" y="564">features at all — only spaces and</tspan><tspan x="1114" y="580">a connection to the tower.</tspan></text>
-            <text class="paths-t paths" x="1114" y="600">examples/*/shell/</text>
-          </g>
-
-          <!-- ============ B6 DATA ============ -->
-          <g class="layer" data-layer="data">
-            <text class="band-head l-data-t" x="1374" y="92">WHERE DATA COMES FROM</text>
-            <line class="band-rule l-data-s" x1="1374" y1="100" x2="1616" y2="100"></line>
-
-            <rect class="card l-data" x="1374" y="116" width="242" height="112" rx="9"></rect>
-            <text class="c-title s" x="1392" y="142">Per-feature translator</text>
-            <text class="c-desc"><tspan x="1392" y="164">One small service per feature.</tspan><tspan x="1392" y="180">Fronts the real systems and</tspan><tspan x="1392" y="196">returns one clean shape.</tspan></text>
-            <text class="paths-t paths" x="1392" y="216">generated from manifest data:</text>
-
-            <rect class="card l-data" x="1374" y="244" width="242" height="112" rx="9"></rect>
-            <text class="c-title s" x="1392" y="270">Company systems</text>
-            <text class="c-desc"><tspan x="1392" y="292">Existing APIs and databases,</tspan><tspan x="1392" y="308">each with its own naming,</tspan><tspan x="1392" y="324">paging and identifiers.</tspan></text>
-            <text class="paths-t paths" x="1392" y="344">examples/meridian-station/apis/</text>
-
-            <rect class="card l-data" x="1374" y="372" width="242" height="112" rx="9"></rect>
-            <text class="c-title s" x="1392" y="398">Packaging &amp; delivery</text>
-            <text class="c-desc"><tspan x="1392" y="420">Every feature and service ships</tspan><tspan x="1392" y="436">as its own container image, so</tspan><tspan x="1392" y="452">releases stay independent.</tspan></text>
-            <text class="paths-t paths" x="1392" y="472">Dockerfile.cli · docker-compose.yaml</text>
-
-            <rect class="card l-data" x="1374" y="500" width="242" height="112" rx="9"></rect>
-            <text class="c-title s" x="1392" y="526">Two reference products</text>
-            <text class="c-desc"><tspan x="1392" y="548">A children's game arcade and an</tspan><tspan x="1392" y="564">orbital spaceport — 21 features</tspan><tspan x="1392" y="580">built with the real toolchain.</tspan></text>
-            <text class="paths-t paths" x="1392" y="600">examples/{abc-kids,meridian-station}</text>
-          </g>
-
-          <!-- ============ STRIP A: COMMAND CENTRE ============ -->
-          <line class="flow dash" x1="380" y1="648" x2="380" y2="616" marker-end="url(#m-arrow)"></line>
-          <line class="flow dash" x1="660" y1="648" x2="660" y2="616" marker-end="url(#m-arrow)"></line>
-          <line class="flow dash" x1="940" y1="648" x2="940" y2="616" marker-end="url(#m-arrow)"></line>
-          <line class="flow dash" x1="1220" y1="648" x2="1220" y2="616" marker-end="url(#m-arrow)"></line>
-
-          <g class="layer" data-layer="people">
-            <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
-            <text class="c-tag l-people-t" x="44" y="678">THE COMMAND CENTRE · one door for humans and machines</text>
-            <text class="c-desc">
-              <tspan x="44" y="702">Every action on this map is one command. The same 19 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
-              <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two features in the spaceport product were built this way.</tspan>
-            </text>
-            <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
-          </g>
-
-          <!-- ============ STRIP B: GOVERNANCE ============ -->
-          <g class="layer" data-layer="contract">
-            <rect class="strip l-contract" x="24" y="762" width="1592" height="114" rx="10"></rect>
-            <text class="c-tag l-contract-t" x="44" y="790">THE SAFETY NET · what keeps 21 independently-released features honest</text>
-            <text class="c-desc">
-              <tspan x="44" y="814">Automated checks re-derive every reference feature from its brief and fail if the shipped code has drifted; separate checks confirm each brief</tspan>
-              <tspan x="44" y="834">agrees with its packaging, that recorded decisions stay consistent, and that published documentation matches the code.</tspan>
-              <tspan x="44" y="854">A fourth check exists because of a real incident: when the platform changes something inside files it does not own, it warns the teams who own them.</tspan>
-            </text>
-            <text class="paths-t paths" x="1596" y="854" text-anchor="end">scripts/check-mfe-drift · check-mfe-consistency · check-adr · platform-migrations.ts</text>
-          </g>
-        </svg>
+      <div class="legend" id="legend">
+        <button type="button" class="lg" data-focus="people" aria-pressed="false"><i class="sw l-people"></i>People &amp; entry points</button>
+        <button type="button" class="lg" data-focus="intent" aria-pressed="false"><i class="sw l-intent"></i>Design intent</button>
+        <button type="button" class="lg" data-focus="build" aria-pressed="false"><i class="sw l-build"></i>Build machinery</button>
+        <button type="button" class="lg" data-focus="contract" aria-pressed="false"><i class="sw l-contract"></i>Shared standard</button>
+        <button type="button" class="lg" data-focus="runtime" aria-pressed="false"><i class="sw l-runtime"></i>Run-time composition</button>
+        <button type="button" class="lg" data-focus="data" aria-pressed="false"><i class="sw l-data"></i>Data &amp; external systems</button>
+        <button type="button" class="lg lg-reset" data-focus="">Show all</button>
       </div>
-      <figcaption>
-        Nothing crosses from the right half to the left half except through the shared standard. That is the
-        deliberate constraint that lets teams, technologies and release schedules stay independent.
-      </figcaption>
-    </figure>
+
+      <figure class="fig fig-wide">
+        <div class="fig-scroll">
+          <svg viewBox="0 0 1640 900" role="img" class="diagram" id="map"
+               aria-label="Six columns read left to right: who uses it; what they declare; what gets built; the shared standard every feature inherits; how features are composed on screen at run time; and where data comes from. Two full-width strips below carry the command centre and the governance safety net.">
+            <defs>
+              <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path class="arrowhead" d="M 0 0 L 10 5 L 0 10 z"></path>
+              </marker>
+            </defs>
+
+            <!-- spine -->
+            <line class="flow" x1="214" y1="60" x2="254" y2="60" marker-end="url(#m-arrow)"></line>
+            <text class="flow-label" x="238" y="46" text-anchor="middle">describes</text>
+            <line class="flow" x1="492" y1="60" x2="532" y2="60" marker-end="url(#m-arrow)"></line>
+            <text class="flow-label" x="516" y="46" text-anchor="middle">generates</text>
+            <line class="flow" x1="770" y1="60" x2="810" y2="60" marker-end="url(#m-arrow)"></line>
+            <text class="flow-label" x="794" y="46" text-anchor="middle">inherits</text>
+            <line class="flow" x1="1048" y1="60" x2="1088" y2="60" marker-end="url(#m-arrow)"></line>
+            <text class="flow-label" x="1072" y="46" text-anchor="middle">composed by</text>
+            <line class="flow" x1="1326" y1="60" x2="1366" y2="60" marker-end="url(#m-arrow)"></line>
+            <text class="flow-label" x="1350" y="46" text-anchor="middle">asks &amp; answers</text>
+
+            <!-- ============ B1 PEOPLE ============ -->
+            <g class="layer" data-layer="people">
+              <text class="band-head l-people-t" x="24" y="92">WHO USES IT</text>
+              <line class="band-rule l-people-s" x1="24" y1="100" x2="214" y2="100"></line>
+
+              <rect class="card l-people" x="24" y="116" width="190" height="112" rx="9"></rect>
+              <text class="c-title s" x="42" y="142">Feature teams</text>
+              <text class="c-desc"><tspan x="42" y="164">Each owns one business</tspan><tspan x="42" y="180">capability end to end and</tspan><tspan x="42" y="196">releases on its own clock.</tspan></text>
+
+              <rect class="card l-people" x="24" y="244" width="190" height="112" rx="9"></rect>
+              <text class="c-title s" x="42" y="270">AI assistants</text>
+              <text class="c-desc"><tspan x="42" y="292">Drive the same commands</tspan><tspan x="42" y="308">as people, through a tool</tspan><tspan x="42" y="324">interface built for them.</tspan></text>
+              <text class="paths-t paths" x="42" y="344">src/mcp/</text>
+
+              <rect class="card l-people" x="24" y="372" width="190" height="112" rx="9"></rect>
+              <text class="c-title s" x="42" y="398">Product operators</text>
+              <text class="c-desc"><tspan x="42" y="420">Decide which features a</tspan><tspan x="42" y="436">given product shows, by</tspan><tspan x="42" y="452">editing rules, not code.</tspan></text>
+
+              <rect class="card l-people" x="24" y="500" width="190" height="112" rx="9"></rect>
+              <text class="c-title s" x="42" y="526">Customers &amp; staff</text>
+              <text class="c-desc"><tspan x="42" y="548">Never see any of this.</tspan><tspan x="42" y="564">They see one product</tspan><tspan x="42" y="580">that behaves as one.</tspan></text>
+            </g>
+
+            <!-- ============ B2 INTENT ============ -->
+            <g class="layer" data-layer="intent">
+              <text class="band-head l-intent-t" x="262" y="92">WHAT THEY DECLARE</text>
+              <line class="band-rule l-intent-s" x1="262" y1="100" x2="492" y2="100"></line>
+
+              <rect class="card l-intent" x="262" y="116" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="280" y="142">The feature brief</text>
+              <text class="c-desc"><tspan x="280" y="164">One file per feature: what it does,</tspan><tspan x="280" y="180">what data it needs, what technology</tspan><tspan x="280" y="196">it is written in.</tspan></text>
+              <text class="paths-t paths" x="280" y="216">mfe-manifest.yaml · packages/dsl/</text>
+
+              <rect class="card l-intent" x="262" y="244" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="280" y="270">Offered spaces</text>
+              <text class="c-desc"><tspan x="280" y="292">The named places this feature is</tspan><tspan x="280" y="308">willing to let other features</tspan><tspan x="280" y="324">appear inside.</tspan></text>
+              <text class="paths-t paths" x="280" y="344">providesSlots · slot-contract.md</text>
+
+              <rect class="card l-intent" x="262" y="372" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="280" y="398">Placement rules</text>
+              <text class="c-desc"><tspan x="280" y="420">"When this happens, show that</tspan><tspan x="280" y="436">feature, there." Written in their</tspan><tspan x="280" y="452">own file, outside every feature.</tspan></text>
+              <text class="paths-t paths" x="280" y="472">control-plane.yaml → rules.json</text>
+
+              <rect class="card l-intent" x="262" y="500" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="280" y="526">Recorded decisions</text>
+              <text class="c-desc"><tspan x="280" y="548">83 architecture decisions and 8</tspan><tspan x="280" y="564">product decisions, each written</tspan><tspan x="280" y="580">down before it was built.</tspan></text>
+              <text class="paths-t paths" x="280" y="600">docs/architecture-decisions/</text>
+            </g>
+
+            <!-- ============ B3 BUILD ============ -->
+            <g class="layer" data-layer="build">
+              <text class="band-head l-build-t" x="540" y="92">WHAT GETS BUILT</text>
+              <line class="band-rule l-build-s" x1="540" y1="100" x2="770" y2="100"></line>
+
+              <rect class="card l-build" x="540" y="116" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="558" y="142">The feature factory</text>
+              <text class="c-desc"><tspan x="558" y="164">Turns a brief into a complete,</tspan><tspan x="558" y="180">running feature. Owns some files</tspan><tspan x="558" y="196">outright; seeds others once.</tspan></text>
+              <text class="paths-t paths" x="558" y="216">packages/codegen/</text>
+
+              <rect class="card l-build" x="540" y="244" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="558" y="270">Technology adapters</text>
+              <text class="c-desc"><tspan x="558" y="292">Teach the factory a front-end</tspan><tspan x="558" y="308">technology. Two today; a third</tspan><tspan x="558" y="324">is a plug-in, not a rewrite.</tspan></text>
+              <text class="paths-t paths" x="558" y="344">packages/framework-{react,angular}/</text>
+
+              <rect class="card l-build" x="540" y="372" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="558" y="398">Data feed builder</text>
+              <text class="c-desc"><tspan x="558" y="420">Builds each feature's private</tspan><tspan x="558" y="436">translation service from the</tspan><tspan x="558" y="452">data section of its brief.</tspan></text>
+              <text class="paths-t paths" x="558" y="472">packages/bff-plugin/</text>
+
+              <rect class="card l-build" x="540" y="500" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="558" y="526">Backend generator</text>
+              <text class="c-desc"><tspan x="558" y="548">Given an interface description,</tspan><tspan x="558" y="564">scaffolds a whole working service</tspan><tspan x="558" y="580">with its own database.</tspan></text>
+              <text class="paths-t paths" x="558" y="600">src/commands/api.ts</text>
+            </g>
+
+            <!-- ============ B4 STANDARD ============ -->
+            <g class="layer" data-layer="contract">
+              <text class="band-head l-contract-t" x="818" y="92">THE SHARED STANDARD · foundational</text>
+              <line class="band-rule l-contract-s" x1="818" y1="100" x2="1048" y2="100"></line>
+
+              <rect class="card l-contract" x="818" y="116" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="836" y="142">Ten standard abilities</text>
+              <text class="c-desc"><tspan x="836" y="164">Start, show, refresh, authorise,</tspan><tspan x="836" y="180">report health, describe itself,</tspan><tspan x="836" y="196">answer, raise events, report state.</tspan></text>
+              <text class="paths-t paths" x="836" y="216">packages/runtime/src/base-mfe.ts</text>
+
+              <rect class="card l-contract" x="818" y="244" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="836" y="270">Behaviour guardrails</text>
+              <text class="c-desc"><tspan x="836" y="292">A feature cannot show before it</tspan><tspan x="836" y="308">has started. Timeouts, retries and</tspan><tspan x="836" y="324">typed failures are built in.</tspan></text>
+              <text class="paths-t paths" x="836" y="344">timeout-wrapper · retry-wrapper</text>
+
+              <rect class="card l-contract" x="818" y="372" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="836" y="398">Space naming rules</text>
+              <text class="c-desc"><tspan x="836" y="420">One grammar for naming screen</tspan><tspan x="836" y="436">spaces, shared by the briefs, the</tspan><tspan x="836" y="452">factory, the rules and the tower.</tspan></text>
+              <text class="paths-t paths" x="836" y="472">contracts/src/slot-grammar.ts</text>
+
+              <rect class="card l-contract" x="818" y="500" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="836" y="526">The message protocol</text>
+              <text class="c-desc"><tspan x="836" y="548">Actions travel up, ready-made</tspan><tspan x="836" y="564">experiences travel down. Nothing</tspan><tspan x="836" y="580">else crosses the boundary.</tspan></text>
+              <text class="paths-t paths" x="836" y="600">packages/contracts/src/messages.ts</text>
+            </g>
+
+            <!-- ============ B5 RUNTIME ============ -->
+            <g class="layer" data-layer="runtime">
+              <text class="band-head l-runtime-t" x="1096" y="92">HOW IT IS COMPOSED</text>
+              <line class="band-rule l-runtime-s" x1="1096" y1="100" x2="1326" y2="100"></line>
+
+              <rect class="card l-runtime" x="1096" y="116" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="1114" y="142">The rule book</text>
+              <text class="c-desc"><tspan x="1114" y="164">Answers "given this action and</tspan><tspan x="1114" y="180">this person, which feature, doing</tspan><tspan x="1114" y="196">what, with what inputs?"</tspan></text>
+              <text class="paths-t paths" x="1114" y="216">packages/control-plane/registry/</text>
+
+              <rect class="card l-runtime" x="1096" y="244" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="1114" y="270">The router</text>
+              <text class="c-desc"><tspan x="1114" y="292">Carries actions up and answers</tspan><tspan x="1114" y="308">down over a live connection.</tspan><tspan x="1114" y="324">Knows nothing about content.</tspan></text>
+              <text class="paths-t paths" x="1114" y="344">packages/control-plane/daemon/</text>
+
+              <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="1114" y="398">The placer</text>
+              <text class="c-desc"><tspan x="1114" y="420">Puts each arriving feature into its</tspan><tspan x="1114" y="436">named space, waits for spaces not</tspan><tspan x="1114" y="452">yet open, and heals failures.</tspan></text>
+              <text class="paths-t paths" x="1114" y="472">runtime/src/layout-manager.ts</text>
+
+              <rect class="card l-runtime" x="1096" y="500" width="230" height="112" rx="9"></rect>
+              <text class="c-title s" x="1114" y="526">The empty shell</text>
+              <text class="c-desc"><tspan x="1114" y="548">The product frame. Contains no</tspan><tspan x="1114" y="564">features at all — only spaces and</tspan><tspan x="1114" y="580">a connection to the tower.</tspan></text>
+              <text class="paths-t paths" x="1114" y="600">examples/*/shell/</text>
+            </g>
+
+            <!-- ============ B6 DATA ============ -->
+            <g class="layer" data-layer="data">
+              <text class="band-head l-data-t" x="1374" y="92">WHERE DATA COMES FROM</text>
+              <line class="band-rule l-data-s" x1="1374" y1="100" x2="1616" y2="100"></line>
+
+              <rect class="card l-data" x="1374" y="116" width="242" height="112" rx="9"></rect>
+              <text class="c-title s" x="1392" y="142">Per-feature translator</text>
+              <text class="c-desc"><tspan x="1392" y="164">One small service per feature.</tspan><tspan x="1392" y="180">Fronts the real systems and</tspan><tspan x="1392" y="196">returns one clean shape.</tspan></text>
+              <text class="paths-t paths" x="1392" y="216">generated from manifest data:</text>
+
+              <rect class="card l-data" x="1374" y="244" width="242" height="112" rx="9"></rect>
+              <text class="c-title s" x="1392" y="270">Company systems</text>
+              <text class="c-desc"><tspan x="1392" y="292">Existing APIs and databases,</tspan><tspan x="1392" y="308">each with its own naming,</tspan><tspan x="1392" y="324">paging and identifiers.</tspan></text>
+              <text class="paths-t paths" x="1392" y="344">examples/meridian-station/apis/</text>
+
+              <rect class="card l-data" x="1374" y="372" width="242" height="112" rx="9"></rect>
+              <text class="c-title s" x="1392" y="398">Packaging &amp; delivery</text>
+              <text class="c-desc"><tspan x="1392" y="420">Every feature and service ships</tspan><tspan x="1392" y="436">as its own container image, so</tspan><tspan x="1392" y="452">releases stay independent.</tspan></text>
+              <text class="paths-t paths" x="1392" y="472">Dockerfile.cli · docker-compose.yaml</text>
+
+              <rect class="card l-data" x="1374" y="500" width="242" height="112" rx="9"></rect>
+              <text class="c-title s" x="1392" y="526">Two reference products</text>
+              <text class="c-desc"><tspan x="1392" y="548">A children's game arcade and an</tspan><tspan x="1392" y="564">orbital spaceport — 21 features</tspan><tspan x="1392" y="580">built with the real toolchain.</tspan></text>
+              <text class="paths-t paths" x="1392" y="600">examples/{abc-kids,meridian-station}</text>
+            </g>
+
+            <!-- ============ STRIP A: COMMAND CENTRE ============ -->
+            <line class="flow dash" x1="380" y1="648" x2="380" y2="616" marker-end="url(#m-arrow)"></line>
+            <line class="flow dash" x1="660" y1="648" x2="660" y2="616" marker-end="url(#m-arrow)"></line>
+            <line class="flow dash" x1="940" y1="648" x2="940" y2="616" marker-end="url(#m-arrow)"></line>
+            <line class="flow dash" x1="1220" y1="648" x2="1220" y2="616" marker-end="url(#m-arrow)"></line>
+
+            <g class="layer" data-layer="people">
+              <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
+              <text class="c-tag l-people-t" x="44" y="678">THE COMMAND CENTRE · one door for humans and machines</text>
+              <text class="c-desc">
+                <tspan x="44" y="702">Every action on this map is one command. The same 19 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
+                <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two features in the spaceport product were built this way.</tspan>
+              </text>
+              <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
+            </g>
+
+            <!-- ============ STRIP B: GOVERNANCE ============ -->
+            <g class="layer" data-layer="contract">
+              <rect class="strip l-contract" x="24" y="762" width="1592" height="114" rx="10"></rect>
+              <text class="c-tag l-contract-t" x="44" y="790">THE SAFETY NET · what keeps 21 independently-released features honest</text>
+              <text class="c-desc">
+                <tspan x="44" y="814">Automated checks re-derive every reference feature from its brief and fail if the shipped code has drifted; separate checks confirm each brief</tspan>
+                <tspan x="44" y="834">agrees with its packaging, that recorded decisions stay consistent, and that published documentation matches the code.</tspan>
+                <tspan x="44" y="854">A fourth check exists because of a real incident: when the platform changes something inside files it does not own, it warns the teams who own them.</tspan>
+              </text>
+              <text class="paths-t paths" x="1596" y="854" text-anchor="end">scripts/check-mfe-drift · check-mfe-consistency · check-adr · platform-migrations.ts</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>
+          Nothing crosses from the right half to the left half except through the shared standard. That is the
+          deliberate constraint that lets teams, technologies and release schedules stay independent.
+        </figcaption>
+      </figure>
+      <p class="scrollhint">Wide diagram — scroll horizontally inside the panel on smaller screens.</p>
+    </div>
   </section>
 
-  <section class="band">
-    <h2 class="section-title">What you should know about this system</h2>
+  <!-- ============================================================ TRACEABILITY -->
+  <section class="band" id="traceability">
+    <p class="kicker">Technical traceability</p>
+    <h2 class="section-title wide">Where each idea is implemented</h2>
     <p class="lede">
-      Nine things worth knowing before making a decision about this platform. Each is marked
-      <span class="tag tag-fact">fact</span> where the repository states it directly, or
-      <span class="tag tag-inf">inference</span> where it is a reasonable reading of the evidence.
+      Every concept on this page is a real thing in the repository. Turn on
+      <strong>Show technical implementation</strong> in the bar at the top and repository paths appear
+      throughout — inside the diagram, on every capability card, and at every step of the feature
+      walkthrough. The table below is the short version: concept on the left, code on the right.
+    </p>
+
+    <div class="trace-wrap">
+      <table class="trace">
+        <thead>
+          <tr>
+            <th scope="col">Concept on this page</th>
+            <th scope="col">Where it lives</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>The feature brief</td><td class="p">packages/dsl/ · <code>mfe-manifest.yaml</code> · schemas/dsl/manifest.schema.json</td></tr>
+          <tr><td>The factory</td><td class="p">packages/codegen/ · packages/codegen/templates/ · src/commands/remote/</td></tr>
+          <tr><td>Technology adapters</td><td class="p">packages/framework-react/ · packages/framework-angular/ · src/framework/loader.ts</td></tr>
+          <tr><td>The house standard</td><td class="p">packages/contracts/ · packages/runtime/src/base-mfe.ts</td></tr>
+          <tr><td>Named screen spaces</td><td class="p">packages/contracts/src/slot-grammar.ts · slot-contract.ts · docs/slot-contract.md</td></tr>
+          <tr><td>The control tower</td><td class="p">packages/control-plane/registry/ · packages/control-plane/daemon/ · packages/runtime/src/layout-manager.ts</td></tr>
+          <tr><td>Composition rules</td><td class="p">examples/*/control-plane/control-plane.yaml → rules.json · packages/dsl/src/control-plane-compiler.ts</td></tr>
+          <tr><td>Data translation</td><td class="p">packages/bff-plugin/ · <code>src/platform/bff/</code> in each generated capability</td></tr>
+          <tr><td>Access &amp; identity</td><td class="p">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> · platform/bff/mesh-context.js</td></tr>
+          <tr><td>Operator interface</td><td class="p">src/commands/ · src/mcp/ · schemas/ (19 command schemas)</td></tr>
+          <tr><td>Governance checks</td><td class="p">scripts/check-mfe-drift.ts · check-mfe-consistency.ts · check-adr-consistency.ts · packages/codegen/src/platform-migrations.ts</td></tr>
+          <tr><td>Reference products</td><td class="p">examples/abc-kids/ · examples/meridian-station/</td></tr>
+          <tr><td>Recorded decisions</td><td class="p">docs/architecture-decisions/ · docs/product-decisions/ · docs/spec.md#adr-index</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================================================ ENABLES -->
+  <section class="band band-alt" id="enables">
+    <div class="inner">
+      <p class="kicker">The payoff</p>
+      <h2 class="section-title wide">What this architecture enables</h2>
+      <p class="lede">
+        Seven things this platform makes possible that are hard without it. Each is marked
+        <span class="tag tag-fact">fact</span> where the repository demonstrates it directly, or
+        <span class="tag tag-inf">inference</span> where it is a reasonable reading of the evidence.
+      </p>
+
+      <ol class="obs">
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Teams can work independently while still adhering to shared standards.</h3>
+          <p>21 reference capabilities across two products, each with its own definition, its own container
+          image and its own address. Every one of them inherits the same lifecycle from the same base class,
+          and a drift check re-derives all 21 from their definitions on every change.</p>
+          <p class="paths">examples/*/mfe-manifest.yaml · scripts/check-mfe-drift.ts</p>
+        </li>
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Capabilities compose into one product experience without knowing about each other.</h3>
+          <p>A host publishes named spaces; capabilities declare which spaces they can fill; rules held
+          outside both decide what goes where. A capability is never wired to another capability — only to
+          a name. One capability fills six berth spaces on one screen, each instance independent.</p>
+          <p class="paths">providesSlots in each manifest · packages/runtime/src/layout-manager.ts</p>
+        </li>
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Platform decisions are made once, not re-invented per team.</h3>
+          <p>Lifecycle order, timeout behaviour, retry policy, error classification, slot naming and message
+          shape all live in one dependency-free foundation package that every other part depends on. A team
+          adopting the platform inherits all of it and decides none of it.</p>
+          <p class="paths">packages/contracts/ · packages/runtime/</p>
+        </li>
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Product placement can change without touching feature implementation.</h3>
+          <p>Each product's composition is a separate readable document compiled into the payload the control
+          tower reads. Moving a capability, adding a berth or adding a game is an edit to that document — one
+          rule already covers thirteen games and another covers six berths.</p>
+          <p class="paths">examples/*/control-plane/control-plane.yaml · <code>compose:build</code></p>
+        </li>
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Different implementation technologies participate through one contract.</h3>
+          <p>React and Angular capabilities are driven identically by the runtime, and the technology field
+          in a definition is deliberately an open string rather than a fixed list — an unknown value warns
+          rather than fails. Supporting a third technology is a new plug-in package, not a change to the
+          factory or the standard.</p>
+          <p class="paths">packages/framework-{react,angular}/ · FrameworkSchema (open string)</p>
+        </li>
+        <li>
+          <span class="tag tag-fact">fact</span>
+          <h3>Humans and AI assistants operate the platform through the same door.</h3>
+          <p>All 19 published commands are exposed as assistant-callable tools generated from the same
+          schemas, each call isolated in its own process. Two capabilities in the spaceport product were
+          built through that interface rather than by a person typing, and the comparison was written up.</p>
+          <p class="paths">src/mcp/ · schemas/ · examples/meridian-station/DX-REPORT.md</p>
+        </li>
+        <li>
+          <span class="tag tag-inf">inference</span>
+          <h3>A new team can be productive without reading the platform's source.</h3>
+          <p>The route in is: write a definition, run one command, fill in the business logic, add a rule.
+          Everything else is inherited, and validation tells a team when it has broken a rule.
+          <strong>This is an inference</strong> — the repository shows the mechanism and 21 worked examples,
+          but contains no evidence about onboarding time for teams outside the project.</p>
+          <p class="paths">docs/getting-started.md · <code>mfe:validate</code></p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================ 6 · TRADE-OFFS -->
+  <section class="band" id="judgement">
+    <p class="kicker">6 · The honest part</p>
+    <h2 class="section-title wide">What this architecture trades off</h2>
+    <p class="lede">
+      Every one of the benefits above is bought with something. These five costs are visible in the
+      repository itself — several of them documented by the team that built it, which is a maturity signal
+      rather than a criticism. Anyone deciding whether to adopt this should price them in.
     </p>
 
     <ol class="obs">
       <li>
+        <span class="tag tag-cost">trade-off</span>
+        <span class="tag tag-fact">fact</span>
+        <h3>A platform-wide change can reach code the platform does not own — silently.</h3>
+        <p>The factory owns some files and re-stamps them; it deliberately never touches others, because
+        teams edit those. When one platform-wide change landed, 48 files needed updating: regeneration
+        reached 29, and 19 were left stale <strong>with every automated check still passing</strong>. A
+        human found them by grepping.</p>
+        <p>A warning registry now exists specifically for this, and adding an entry is a required part of
+        any platform change. But the underlying cost is structural: <strong>the platform can improve
+        faster than it can safely propagate.</strong> This is the sharpest complexity point in the system.</p>
+        <p class="paths">packages/codegen/src/platform-migrations.ts · docs/platform-design-review/breaking-change-regeneration-dx-report.md</p>
+      </li>
+      <li>
+        <span class="tag tag-cost">trade-off</span>
+        <span class="tag tag-fact">fact</span>
+        <h3>Governance is not optional — it is load-bearing machinery.</h3>
+        <p>Keeping 21 independently-released capabilities coherent without a release train requires a
+        standing investment: drift checks, consistency checks, decision-record consistency checks,
+        generated-documentation checks, composition validation, and a schema regeneration gate. Several
+        of these must be run in a specific order, and at least one silently checks a stale build if the
+        packages were not rebuilt first.</p>
+        <p><strong>An organisation adopting this inherits the checks as well as the platform.</strong>
+        Without them, the independence the platform grants becomes the fragmentation it was built to prevent.</p>
+        <p class="paths">CLAUDE.md "Verification gates before push" · scripts/check-*.ts</p>
+      </li>
+      <li>
+        <span class="tag tag-cost">trade-off</span>
+        <span class="tag tag-fact">fact</span>
+        <h3>Everything funnels through one foundation — high leverage, high blast radius.</h3>
+        <p>A single dependency-free package holds the shared standard, and every other part of the platform
+        depends on it. That is excellent discipline, and it is also the reason a rename inside it can change
+        generated code in 21 capabilities with no runtime file anywhere in the diff — the project's own
+        memory file flags exactly this.</p>
+        <p>The benefit and the risk are the same property. There is no version of this platform where the
+        contract is both universal and cheap to change.</p>
+        <p class="paths">packages/contracts/ · CLAUDE.md "Platform changes that reach generated code"</p>
+      </li>
+      <li>
+        <span class="tag tag-cost">trade-off</span>
+        <span class="tag tag-fact">fact</span>
+        <h3>Run-time composition means run-time coordination — and a shared point of dependence.</h3>
+        <p>Because placement is decided while a person is using the product, every screen depends on the
+        control tower being reachable and correct. In the reference implementation the registry keeps its
+        state in memory with a time-based eviction, so a restart forgets which capabilities exist.
+        Debugging also crosses boundaries: a problem may live in a capability, in a rule, in the placer,
+        or in the connection between them.</p>
+        <p><strong>Durability and production operation of the control tower are unfinished work</strong>,
+        not solved problems.</p>
+        <p class="paths">packages/control-plane/registry/simple-registry.js</p>
+      </li>
+      <li>
+        <span class="tag tag-cost">trade-off</span>
+        <span class="tag tag-inf">inference</span>
+        <h3>The standard has a designed hole where authorisation policy belongs.</h3>
+        <p>Checking access is one of the ten standard abilities, and a signature-verifying token handler
+        exists in the runtime. But the check that generated capabilities inherit approves everyone, and the
+        data layer decodes the caller's token to extract an identity without verifying its signature.</p>
+        <p>The reading here is that the <em>place</em> for authorisation is properly designed and the
+        <em>policy</em> is deliberately left to whoever adopts the platform. <strong>That is an inference
+        from the code, not a statement the repository makes.</strong> Either way, a production rollout
+        should treat authorisation as work not yet done.</p>
+        <p class="paths">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> → true · platform/bff/mesh-context.js</p>
+      </li>
+    </ol>
+
+    <h3 class="sub">Two more things worth knowing before deciding</h3>
+    <ol class="obs">
+      <li>
         <span class="tag tag-fact">fact</span>
         <h3>This is two systems that happen to live in one repository.</h3>
-        <p>A build-time factory and a run-time platform. They share a vocabulary but almost nothing else, and
-        they can be adopted separately — you could use the factory without the control tower. Budgeting,
+        <p>A build-time factory and a run-time platform. They share a vocabulary but almost nothing else,
+        and they can be adopted separately — you could use the factory without the control tower. Budgeting,
         staffing and roadmapping should probably treat them as two products.</p>
-      </li>
-      <li>
-        <span class="tag tag-fact">fact</span>
-        <h3>Everything funnels through one small, dependency-free foundation.</h3>
-        <p>A single package holds the shared standard, and it depends on nothing at all. Every other part of
-        the platform depends on <em>it</em>. That is excellent discipline — and it means this is the highest-leverage
-        and highest-blast-radius area in the codebase. A change here reaches all 21 reference features and
-        anything built from them.</p>
-      </li>
-      <li>
-        <span class="tag tag-fact">fact</span>
-        <h3>The control tower is owned here, and now stored once.</h3>
-        <p>The platform owns the control tower outright; the external repository that once held it is retired.
-        Until recently each demo product carried its own byte-for-byte identical copy, so a fix had to be made
-        twice — that duplication is gone, and both products now draw from one shared component.
-        <strong>What remains unfinished is durability: the control tower still keeps everything in memory, so a
-        restart forgets which features exist.</strong></p>
-      </li>
-      <li>
-        <span class="tag tag-fact">fact</span>
-        <h3>There is a documented failure mode in how platform changes reach teams.</h3>
-        <p>The factory owns some files and re-stamps them; it deliberately never touches others, because teams
-        edit those. When the platform changed, 29 files were fixed automatically and 19 were left silently
-        stale — with every automated check still passing. A human found them by hand. A warning system now
-        exists specifically for this, and adding an entry to it is a required part of any platform change.
-        <strong>This is the sharpest complexity point in the system, and the team knows it.</strong></p>
-      </li>
-      <li>
-        <span class="tag tag-fact">fact</span>
-        <h3>AI assistants are treated as first-class operators, not an add-on.</h3>
-        <p>Every command is published as a tool an assistant can call, each in an isolated process. Two of the
-        six features in the spaceport reference product were built through that interface rather than by a
-        person typing, and the comparison was written up. Few platforms this size have actually tested that claim.</p>
-      </li>
-      <li>
-        <span class="tag tag-fact">fact</span>
-        <h3>Decisions are managed as an asset, with the same rigour as code.</h3>
-        <p>83 architecture decisions and 11 product decisions, each with structured metadata, a generated index,
-        a consistency checker and a status command. Project rules require stopping and asking a human when no
-        decision covers a choice. For an incoming team, this is the fastest available route to understanding
-        <em>why</em> the system looks the way it does.</p>
-      </li>
-      <li>
-        <span class="tag tag-inf">inference</span>
-        <h3>Permission-checking is a designed hole, not a finished capability.</h3>
-        <p>Checking access is one of the ten standard abilities, and there is a working identity-token validator
-        used on the data side. But the shipped default that generated features inherit approves everything. The
-        <em>place</em> for authorisation is properly designed; the <em>policy</em> is left to whoever adopts the platform.
-        Anyone planning a production rollout should treat this as work not yet done.</p>
-      </li>
-      <li>
-        <span class="tag tag-inf">inference</span>
-        <h3>The demo products are the real test suite.</h3>
-        <p>Beyond 201 test files, both reference products are rebuilt from their briefs on every change and
-        compared byte for byte. The second product exists specifically to model messy reality — three backend
-        systems that name the same thing three different ways, with deliberate gaps in the data. That is a
-        maturity signal: the platform is being tested against inconvenient truth, not a clean demo.</p>
       </li>
       <li>
         <span class="tag tag-inf">inference</span>
         <h3>Maturity is uneven, and honestly reported.</h3>
         <p>The build side is described as complete; the run-time platform is still in progress; the shared
-        packages are not yet published for outside use; and packaging deploys to a local development container
-        rather than a production environment. The project's own status page warns that it drifts and points to
-        generated sources instead. <strong>Read this as a strong internal platform approaching, but not yet at,
-        external readiness.</strong></p>
+        packages are not yet published for outside use; and packaging targets a local development container
+        rather than a production environment. The project's own status page warns that it drifts and points
+        to generated sources instead. <strong>Read this as a strong internal platform approaching, but not
+        yet at, external readiness.</strong></p>
+        <p class="paths">docs/PROJECT-STATUS.md · docs/MERGE-PLAN.md</p>
       </li>
     </ol>
   </section>
 
-  <section class="band">
-    <h2 class="section-title">Where the repository was ambiguous</h2>
-    <p class="lede">Places where the evidence ran out and a judgement was made, so you can check it.</p>
+  <!-- ============================================================ EVIDENCE -->
+  <section class="band band-alt" id="evidence">
+    <div class="inner">
+      <p class="kicker">Evidence &amp; reference implementation</p>
+      <h2 class="section-title wide">The repository at a glance</h2>
+      <p class="lede">
+        None of these numbers is the value proposition — they are the evidence that the story above is
+        built rather than described. Counts measured from the repository at the commit this page was
+        generated from.
+      </p>
 
-    <div class="amb">
-      <div class="amb-item">
-        <h3>There is no end customer here</h3>
-        <p>"Customers &amp; staff" appear on the map, but this repository contains no product they would use —
-        only the machinery, plus two demo products. The customer is drawn because the run-time story is
-        meaningless without one.</p>
+      <div class="metrics">
+        <div class="metric"><b>21</b><span>reference capabilities, across 2 complete demo products</span></div>
+        <div class="metric"><b>83</b><span>recorded architecture decisions</span></div>
+        <div class="metric"><b>8</b><span>recorded product decisions</span></div>
+        <div class="metric"><b>9</b><span>shared packages</span></div>
+        <div class="metric"><b>19</b><span>commands, each also an AI-assistant tool</span></div>
+        <div class="metric"><b>44</b><span>code templates in the factory</span></div>
+        <div class="metric"><b>10</b><span>abilities every capability must have</span></div>
+        <div class="metric"><b>220</b><span>test files</span></div>
       </div>
-      <div class="amb-item">
-        <h3>"Control tower" is a composite</h3>
-        <p>Three separate things — a rule book, a router and a placer — are drawn as one idea in the executive
-        view. They are genuinely separate components with separate failure modes; the detailed map splits them.</p>
-      </div>
-      <div class="amb-item">
-        <h3>Production deployment is unclear</h3>
-        <p>The packaging command targets a local development container, and the demo control plane keeps state
-        in memory only. How any of this runs in a real production environment is not described anywhere in
-        the repository, so nothing on the map claims to.</p>
-      </div>
-      <div class="amb-item">
-        <h3>Two demo products, two different builders</h3>
-        <p>The older product was assembled with a bespoke script; the newer one with the real toolchain, and it
-        says so. Where the two disagree, the newer product was treated as the accurate picture of how the
-        platform is meant to be used.</p>
-      </div>
-      <div class="amb-item">
-        <h3>"Business capability" is the platform's word, not mine</h3>
-        <p>The repository's own framing is that a feature equals one domain capability owned by one team. That
-        is an aspiration expressed in documentation as much as an observable property of the code — the demo
-        features are games and spaceport screens, not, say, Payments or Claims.</p>
-      </div>
-      <div class="amb-item">
-        <h3>Count of "parts" is a judgement</h3>
-        <p>Eight groupings were chosen for comprehension. The repository has eight shared packages, but they do
-        not map one-to-one: the shared standard on this page spans two packages, and the command centre spans
-        several directories.</p>
+
+      <h3 class="sub">Why the demo products matter more than the counts</h3>
+      <p class="lede">
+        Both reference products are rebuilt from their definitions on every change and compared byte for
+        byte against what is committed. The second product exists specifically to model messy reality —
+        backend systems that name the same thing different ways and wrap their answers differently, with
+        deliberate gaps in the data. <span class="tag tag-inf">inference</span> That is a maturity signal:
+        the platform is being tested against inconvenient truth, not a clean demo.
+      </p>
+
+      <h3 class="sub">Where the repository was ambiguous</h3>
+      <p class="lede">Places where the evidence ran out and a judgement was made, so you can check it.</p>
+
+      <div class="amb">
+        <div class="amb-item">
+          <h3>There is no end customer here</h3>
+          <p>"Customers &amp; staff" appear on the map, but this repository contains no product they would use —
+          only the machinery, plus two demo products. The customer is drawn because the run-time story is
+          meaningless without one.</p>
+        </div>
+        <div class="amb-item">
+          <h3>"Control tower" is a composite</h3>
+          <p>Three separate things — a rule book, a router and a placer — are drawn as one idea in the
+          executive views. They are genuinely separate components with separate failure modes; the detailed
+          map splits them.</p>
+        </div>
+        <div class="amb-item">
+          <h3>Production deployment is unclear</h3>
+          <p>The packaging command targets a local development container, and the demo control plane keeps
+          state in memory only. How any of this runs in a real production environment is not described
+          anywhere in the repository, so nothing on this page claims to.</p>
+        </div>
+        <div class="amb-item">
+          <h3>Two demo products, two different builders</h3>
+          <p>The older product was assembled with a bespoke script; the newer one with the real toolchain,
+          and it says so. Where the two disagree, the newer product was treated as the accurate picture of
+          how the platform is meant to be used.</p>
+        </div>
+        <div class="amb-item">
+          <h3>"Business capability" is the platform's word</h3>
+          <p>The repository's own framing is that a capability equals one domain capability owned by one
+          team. That is an aspiration expressed in documentation as much as an observable property of the
+          code — the demo capabilities are games and spaceport screens, not, say, Payments or Claims.</p>
+        </div>
+        <div class="amb-item">
+          <h3>The count of "capabilities" is a judgement</h3>
+          <p>Ten groupings were chosen for comprehension. The repository has nine shared packages, but they
+          do not map one-to-one: the house standard spans two packages, and the operator interface spans
+          several directories.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <footer class="foot">
-    <p>Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>, branch
-    <span class="mono">claude/business-system-visualization-izrto5</span>. Counts are as measured:
-    83 architecture decisions, 11 product decisions, 19 commands, 8 shared packages, 44 code templates,
-    154 test suites, 21 reference features.</p>
-    <p>Toggle <em>Show repository paths</em> above to trace any box on the detailed map back to the code.</p>
+    <p>
+      Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>. Counts as measured:
+      83 architecture decisions, 8 product decisions, 19 published commands, 9 shared packages,
+      44 code templates, 220 test files, 21 reference capabilities across 2 demo products.
+    </p>
+    <p>
+      Turn on <em>Show technical implementation</em> in the bar at the top to trace any concept on this
+      page back to the code. Source: <span class="mono">docs/system-map.html</span>.
+    </p>
   </footer>
 
 </main>
 
-<style>
-  :root {
-    --paper:    #F5F7F9;
-    --surface:  #FFFFFF;
-    --surface-2:#EDF1F5;
-    --ink:      #131C26;
-    --ink-2:    #33424F;
-    --muted:    #5A6B79;
-    --rule:     #DCE3EA;
-    --rule-2:   #C6D0DA;
-
-    --l-people:   #55697C;
-    --l-intent:   #5A46C0;
-    --l-build:    #1467C6;
-    --l-contract: #0A8272;
-    --l-runtime:  #AE6B14;
-    --l-data:     #8C3A85;
-
-    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-
-    --tint: 9%;
-    --shadow: 0 1px 2px rgba(19,28,38,.05), 0 6px 20px -12px rgba(19,28,38,.22);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:    #0E141A;
-      --surface:  #161E27;
-      --surface-2:#1D2731;
-      --ink:      #E7EDF3;
-      --ink-2:    #C0CCD8;
-      --muted:    #93A3B1;
-      --rule:     #2A3440;
-      --rule-2:   #3A4855;
-
-      --l-people:   #A0B3C6;
-      --l-intent:   #A99CF7;
-      --l-build:    #6CB2F7;
-      --l-contract: #3FC9B2;
-      --l-runtime:  #E4A94F;
-      --l-data:     #DE93D5;
-
-      --tint: 14%;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --paper:    #0E141A;
-    --surface:  #161E27;
-    --surface-2:#1D2731;
-    --ink:      #E7EDF3;
-    --ink-2:    #C0CCD8;
-    --muted:    #93A3B1;
-    --rule:     #2A3440;
-    --rule-2:   #3A4855;
-
-    --l-people:   #A0B3C6;
-    --l-intent:   #A99CF7;
-    --l-build:    #6CB2F7;
-    --l-contract: #3FC9B2;
-    --l-runtime:  #E4A94F;
-    --l-data:     #DE93D5;
-
-    --tint: 14%;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--body);
-    font-size: 17px;
-    line-height: 1.62;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  main, .masthead { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
-
-  /* ---------- masthead ---------- */
-  .masthead { padding-top: 72px; padding-bottom: 8px; }
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--muted); margin: 0 0 18px;
-  }
-  h1 {
-    font-family: var(--display);
-    font-size: clamp(38px, 6vw, 62px);
-    line-height: 1.04; letter-spacing: -.028em; font-weight: 700;
-    margin: 0 0 26px; max-width: 16ch; text-wrap: balance;
-  }
-  .standfirst { max-width: 66ch; font-size: 19px; color: var(--ink-2); margin: 0 0 16px; }
-  .standfirst strong { color: var(--ink); font-weight: 600; }
-
-  .meta-row {
-    display: flex; flex-wrap: wrap; gap: 10px;
-    margin: 32px 0 8px; padding-top: 26px; border-top: 1px solid var(--rule);
-  }
-  .meta {
-    font-family: var(--display); font-size: 13px; color: var(--muted);
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 999px; padding: 7px 15px;
-  }
-  .meta-n { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 5px; }
-
-  /* ---------- sections ---------- */
-  .band { padding: 64px 0 8px; }
-  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
-  .section-title {
-    font-family: var(--display); font-weight: 700;
-    font-size: clamp(25px, 3vw, 33px); letter-spacing: -.02em;
-    margin: 0 0 14px; text-wrap: balance;
-  }
-  .lede { max-width: 68ch; color: var(--ink-2); margin: 0 0 30px; }
-  .lede em { font-style: italic; }
-
-  /* ---------- switch ---------- */
-  .switch {
-    display: inline-flex; align-items: center; gap: 9px;
-    font-family: var(--display); font-size: 13px; color: var(--muted);
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 8px; padding: 9px 14px; cursor: pointer;
-    margin-bottom: 30px; user-select: none;
-  }
-  .switch:hover { border-color: var(--rule-2); color: var(--ink); }
-  .switch input { accent-color: var(--l-build); width: 15px; height: 15px; margin: 0; cursor: pointer; }
-  .switch input:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
-
-  /* ---------- legend ---------- */
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
-  .lg {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--display); font-size: 12.5px; color: var(--ink-2);
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 999px; padding: 7px 14px; cursor: pointer;
-    transition: border-color .15s ease, color .15s ease;
-  }
-  .lg:hover { border-color: var(--rule-2); color: var(--ink); }
-  .lg:focus-visible { outline: 2px solid var(--l-build); outline-offset: 2px; }
-  .lg[aria-pressed="true"] { border-color: currentColor; color: var(--ink); font-weight: 600; }
-  .lg-reset { color: var(--muted); font-style: italic; }
-  .sw { width: 11px; height: 11px; border-radius: 3px; display: block; }
-  .sw.l-people   { background: var(--l-people); }
-  .sw.l-intent   { background: var(--l-intent); }
-  .sw.l-build    { background: var(--l-build); }
-  .sw.l-contract { background: var(--l-contract); }
-  .sw.l-runtime  { background: var(--l-runtime); }
-  .sw.l-data     { background: var(--l-data); }
-
-  /* ---------- figures ---------- */
-  .fig { margin: 0 0 12px; }
-  /* the detailed map needs more room than the reading column allows */
-  .fig-wide {
-    width: min(calc(100vw - 32px), 1620px);
-    margin-left: 50%;
-    transform: translateX(-50%);
-  }
-  .fig-wide figcaption { max-width: 74ch; }
-  .fig-scroll {
-    overflow-x: auto; background: var(--surface);
-    border: 1px solid var(--rule); border-radius: 14px;
-    padding: 18px; box-shadow: var(--shadow);
-  }
-  .diagram { display: block; width: 100%; min-width: 860px; height: auto; color: var(--muted); }
-  #map { min-width: 1180px; }
-  figcaption {
-    font-size: 15px; color: var(--muted); max-width: 74ch;
-    margin: 16px 0 0; padding-left: 14px; border-left: 2px solid var(--rule-2);
-  }
-
-  /* ---------- svg typography ---------- */
-  .phase {
-    font-family: var(--display); font-size: 12px; font-weight: 700;
-    letter-spacing: .11em; fill: var(--muted);
-  }
-  .band-head {
-    font-family: var(--display); font-size: 11.5px; font-weight: 700;
-    letter-spacing: .1em;
-  }
-  .band-rule { stroke-width: 2; }
-  .c-tag { font-family: var(--display); font-size: 10.5px; font-weight: 700; letter-spacing: .12em; }
-  .c-title { font-family: var(--display); font-size: 16px; font-weight: 700; fill: var(--ink); letter-spacing: -.008em; }
-  .c-title.s { font-size: 14px; }
-  .chip-title { font-family: var(--display); font-size: 14.5px; font-weight: 700; fill: var(--ink); }
-  .c-desc { font-family: var(--display); font-size: 11.5px; fill: var(--ink-2); }
-  .flow-label { font-family: var(--display); font-size: 11px; font-style: italic; fill: var(--muted); }
-  .paths-t { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
-  .flow { stroke: var(--rule-2); stroke-width: 1.6; }
-  .flow.dash { stroke-dasharray: 4 4; }
-  .arrowhead { fill: var(--rule-2); }
-
-  .card, .hinge, .chip, .strip { stroke-width: 1.4; }
-  .hinge { stroke-width: 2; }
-
-  .l-people   { fill: color-mix(in srgb, var(--l-people) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-people) 48%, var(--surface)); }
-  .l-intent   { fill: color-mix(in srgb, var(--l-intent) var(--tint), var(--surface));   stroke: color-mix(in srgb, var(--l-intent) 48%, var(--surface)); }
-  .l-build    { fill: color-mix(in srgb, var(--l-build) var(--tint), var(--surface));    stroke: color-mix(in srgb, var(--l-build) 48%, var(--surface)); }
-  .l-contract { fill: color-mix(in srgb, var(--l-contract) var(--tint), var(--surface)); stroke: color-mix(in srgb, var(--l-contract) 48%, var(--surface)); }
-  .l-runtime  { fill: color-mix(in srgb, var(--l-runtime) var(--tint), var(--surface));  stroke: color-mix(in srgb, var(--l-runtime) 48%, var(--surface)); }
-  .l-data     { fill: color-mix(in srgb, var(--l-data) var(--tint), var(--surface));     stroke: color-mix(in srgb, var(--l-data) 48%, var(--surface)); }
-
-  .chip.l-contract { fill: var(--surface); }
-
-  .l-people-t   { fill: var(--l-people); }
-  .l-intent-t   { fill: var(--l-intent); }
-  .l-build-t    { fill: var(--l-build); }
-  .l-contract-t { fill: var(--l-contract); }
-  .l-runtime-t  { fill: var(--l-runtime); }
-  .l-data-t     { fill: var(--l-data); }
-
-  .l-people-s   { stroke: var(--l-people); }
-  .l-intent-s   { stroke: var(--l-intent); }
-  .l-build-s    { stroke: var(--l-build); }
-  .l-contract-s { stroke: var(--l-contract); }
-  .l-runtime-s  { stroke: var(--l-runtime); }
-  .l-data-s     { stroke: var(--l-data); }
-
-  .layer { transition: opacity .22s ease; }
-  svg[data-focus] .layer { opacity: .14; }
-  svg[data-focus="people"]   .layer[data-layer="people"],
-  svg[data-focus="intent"]   .layer[data-layer="intent"],
-  svg[data-focus="build"]    .layer[data-layer="build"],
-  svg[data-focus="contract"] .layer[data-layer="contract"],
-  svg[data-focus="runtime"]  .layer[data-layer="runtime"],
-  svg[data-focus="data"]     .layer[data-layer="data"] { opacity: 1; }
-
-  .paths { display: none; }
-  body.show-paths p.paths { display: block; }
-  body.show-paths text.paths { display: inline; }
-
-  /* ---------- parts grid ---------- */
-  .grid {
-    display: grid; gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  }
-  .part {
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 12px; padding: 22px 24px 20px;
-    border-top: 3px solid var(--rule-2);
-  }
-  .part[data-layer="people"]   { border-top-color: var(--l-people); }
-  .part[data-layer="intent"]   { border-top-color: var(--l-intent); }
-  .part[data-layer="build"]    { border-top-color: var(--l-build); }
-  .part[data-layer="contract"] { border-top-color: var(--l-contract); }
-  .part[data-layer="runtime"]  { border-top-color: var(--l-runtime); }
-  .part[data-layer="data"]     { border-top-color: var(--l-data); }
-  .part-kind {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
-    text-transform: uppercase; margin: 0 0 8px;
-  }
-  .part[data-layer="people"]   .part-kind { color: var(--l-people); }
-  .part[data-layer="intent"]   .part-kind { color: var(--l-intent); }
-  .part[data-layer="build"]    .part-kind { color: var(--l-build); }
-  .part[data-layer="contract"] .part-kind { color: var(--l-contract); }
-  .part[data-layer="runtime"]  .part-kind { color: var(--l-runtime); }
-  .part[data-layer="data"]     .part-kind { color: var(--l-data); }
-  .part h3 {
-    font-family: var(--display); font-size: 20px; font-weight: 700;
-    letter-spacing: -.015em; margin: 0 0 10px;
-  }
-  .part-what { font-size: 15.5px; color: var(--ink-2); margin: 0 0 12px; }
-  .part-why {
-    font-size: 14.5px; color: var(--muted); margin: 0;
-    padding-top: 12px; border-top: 1px solid var(--rule);
-  }
-  .part-why span {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--ink); display: block; margin-bottom: 4px;
-  }
-  .part .paths {
-    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
-    margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule-2);
-    word-break: break-word;
-  }
-
-  /* ---------- observations ---------- */
-  .obs { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 2px; }
-  .obs li {
-    counter-increment: o; position: relative;
-    padding: 22px 0 22px 62px; border-top: 1px solid var(--rule);
-  }
-  .obs li::before {
-    content: counter(o, decimal-leading-zero);
-    position: absolute; left: 0; top: 24px;
-    font-family: var(--mono); font-size: 13px; color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-  .obs h3 {
-    font-family: var(--display); font-size: 19.5px; font-weight: 700;
-    letter-spacing: -.015em; margin: 8px 0 8px; text-wrap: balance;
-  }
-  .obs p { margin: 0; max-width: 74ch; color: var(--ink-2); font-size: 16px; }
-  .obs p strong { color: var(--ink); }
-
-  .tag {
-    display: inline-block; font-family: var(--mono);
-    font-size: 10px; letter-spacing: .11em; text-transform: uppercase;
-    border-radius: 4px; padding: 3px 8px; vertical-align: 2px;
-  }
-  .tag-fact { color: var(--l-contract); background: color-mix(in srgb, var(--l-contract) 13%, transparent); }
-  .tag-inf  { color: var(--l-runtime);  background: color-mix(in srgb, var(--l-runtime) 15%, transparent); }
-
-  /* ---------- ambiguities ---------- */
-  .amb { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-  .amb-item { background: var(--surface-2); border-radius: 10px; padding: 20px 22px; }
-  .amb-item h3 {
-    font-family: var(--display); font-size: 16.5px; font-weight: 700;
-    margin: 0 0 8px; letter-spacing: -.01em;
-  }
-  .amb-item p { margin: 0; font-size: 15px; color: var(--ink-2); }
-
-  /* ---------- footer ---------- */
-  .foot {
-    margin-top: 64px; padding: 30px 0 72px;
-    border-top: 1px solid var(--rule);
-    font-size: 14px; color: var(--muted);
-  }
-  .foot p { margin: 0 0 8px; max-width: 78ch; }
-  .mono { font-family: var(--mono); font-size: .9em; color: var(--ink-2); }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
-
-  @media (max-width: 640px) {
-    .masthead { padding-top: 48px; }
-    body { font-size: 16px; }
-    .obs li { padding-left: 0; }
-    .obs li::before { position: static; display: block; margin-bottom: 4px; }
-  }
-</style>
-
 <script>
   (function () {
+    'use strict';
+
+    // ---------- detailed map: layer focus ----------
     var map = document.getElementById('map');
     var legend = document.getElementById('legend');
 
-    legend.addEventListener('click', function (e) {
-      var btn = e.target.closest('.lg');
-      if (!btn) return;
-      var focus = btn.getAttribute('data-focus');
-      var active = map.getAttribute('data-focus');
+    if (map && legend) {
+      legend.addEventListener('click', function (e) {
+        var btn = e.target.closest('.lg');
+        if (!btn) return;
+        var focus = btn.getAttribute('data-focus');
+        var active = map.getAttribute('data-focus');
 
-      if (!focus || focus === active) {
-        map.removeAttribute('data-focus');
-      } else {
-        map.setAttribute('data-focus', focus);
-      }
+        if (!focus || focus === active) {
+          map.removeAttribute('data-focus');
+        } else {
+          map.setAttribute('data-focus', focus);
+        }
 
-      var now = map.getAttribute('data-focus');
-      legend.querySelectorAll('.lg').forEach(function (b) {
-        var f = b.getAttribute('data-focus');
-        b.setAttribute('aria-pressed', String(!!f && f === now));
+        var now = map.getAttribute('data-focus');
+        Array.prototype.forEach.call(legend.querySelectorAll('.lg'), function (b) {
+          var f = b.getAttribute('data-focus');
+          b.setAttribute('aria-pressed', String(!!f && f === now));
+        });
+      });
+    }
+
+    // ---------- technical disclosure: two switches, one state ----------
+    var techToggle = document.getElementById('tech-toggle');
+    var pathsToggle = document.getElementById('paths-toggle');
+
+    function setPaths(on) {
+      document.body.classList.toggle('show-paths', on);
+      if (techToggle) techToggle.checked = on;
+      if (pathsToggle) pathsToggle.checked = on;
+    }
+
+    if (techToggle) {
+      techToggle.addEventListener('change', function (e) { setPaths(e.target.checked); });
+    }
+    if (pathsToggle) {
+      pathsToggle.addEventListener('change', function (e) { setPaths(e.target.checked); });
+    }
+
+    // ---------- follow a feature ----------
+    var track = document.getElementById('track');
+    var status = document.getElementById('pick-status');
+    var picks = document.querySelectorAll('.pick');
+    var labels = {
+      berth: 'a berth tile (Meridian Station, Angular)',
+      letterpop: 'Letter Pop (ABC Kids, React)'
+    };
+
+    Array.prototype.forEach.call(picks, function (btn) {
+      btn.addEventListener('click', function () {
+        var feature = btn.getAttribute('data-feature');
+        if (!track || !feature) return;
+        track.setAttribute('data-feature', feature);
+        Array.prototype.forEach.call(picks, function (b) {
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        if (status) status.textContent = 'Following: ' + (labels[feature] || feature) + '.';
       });
     });
 
-    document.getElementById('paths-toggle').addEventListener('change', function (e) {
-      document.body.classList.toggle('show-paths', e.target.checked);
-    });
+    // ---------- wayfinding: current section + progress ----------
+    var links = Array.prototype.slice.call(document.querySelectorAll('.nav-steps a'));
+    var bar = document.getElementById('nav-bar');
+    var sections = links
+      .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+      .filter(Boolean);
+
+    function markCurrent(id) {
+      links.forEach(function (a) {
+        a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + id));
+      });
+    }
+
+    if ('IntersectionObserver' in window && sections.length) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) markCurrent(entry.target.id);
+        });
+      }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+      sections.forEach(function (s) { io.observe(s); });
+    }
+
+    var ticking = false;
+    function updateProgress() {
+      if (!bar) return;
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - window.innerHeight;
+      var pct = max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0;
+      bar.style.width = pct + '%';
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; window.requestAnimationFrame(updateProgress); }
+    }, { passive: true });
+    updateProgress();
   })();
 </script>
+
+</body>
+</html>

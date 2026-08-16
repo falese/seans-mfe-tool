@@ -1,0 +1,107 @@
+# Publishes the documentation site to GitHub Pages.
+#
+# This is the single Pages publisher for the repository. `slides.yml` builds the
+# slide deck and uploads it as a workflow artifact for review on PRs; this
+# workflow rebuilds the deck and publishes it alongside the system map, so there
+# is exactly one job that owns the deployed site. Two workflows deploying to
+# Pages would each overwrite the other's whole site.
+#
+# Published layout (site root = https://falese.github.io/seans-mfe-tool/):
+#
+#   /                              docs/index.html          — landing page
+#   /system-map.html               docs/system-map.html     — the system map
+#   /slides/platform-architecture.html|.pdf                 — the deck
+#
+# Every published page is self-contained: no external CSS, JS, fonts or images,
+# and every in-site link is relative. Nothing here assumes the site is served
+# from `/`, so the project-pages `/seans-mfe-tool/` prefix needs no base path.
+name: Publish docs site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/index.html'
+      - 'docs/system-map.html'
+      - 'docs/slides/**'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths:
+      - 'docs/index.html'
+      - 'docs/system-map.html'
+      - 'docs/slides/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; don't cancel a deploy midway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          mkdir -p _site/slides
+          cp docs/index.html      _site/index.html
+          cp docs/system-map.html _site/system-map.html
+          # 404 falls back to the landing page rather than GitHub's default.
+          cp docs/index.html      _site/404.html
+
+      - name: Install Marp CLI
+        run: npm install -g @marp-team/marp-cli
+
+      - name: Build slides (HTML + PDF)
+        run: |
+          set -euo pipefail
+          marp docs/slides/platform-architecture.md \
+            --output _site/slides/platform-architecture.html \
+            --html
+          marp docs/slides/platform-architecture.md \
+            --output _site/slides/platform-architecture.pdf \
+            --allow-local-files
+
+      # Fails the build on a broken in-site link or a reference to an external
+      # host, either of which would 404 (or be blocked) once published.
+      - name: Verify the assembled site
+        run: node scripts/check-site.js _site
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+
+      - name: Upload preview artifact
+        if: github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site-preview
+          path: _site/
+          retention-days: 14
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
