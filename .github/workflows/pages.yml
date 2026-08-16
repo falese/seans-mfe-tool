@@ -9,8 +9,14 @@
 # Published layout (site root = https://falese.github.io/seans-mfe-tool/):
 #
 #   /                              docs/index.html          — landing page
+#   /404.html                      docs/index.html          — fallback
 #   /system-map.html               docs/system-map.html     — the system map
 #   /slides/platform-architecture.html|.pdf                 — the deck
+#
+# The system map is the point of this site and does not depend on the deck: the
+# Marp steps are non-fatal, and scripts/assemble-site.js removes the deck card
+# from the landing page if the deck was not produced. A failed deck build is a
+# warning and a slightly smaller site, never a missing system map.
 #
 # Every published page is self-contained: no external CSS, JS, fonts or images,
 # and every in-site link is relative. Nothing here assumes the site is served
@@ -53,27 +59,34 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Assemble the site
-        run: |
-          set -euo pipefail
-          mkdir -p _site/slides
-          cp docs/index.html      _site/index.html
-          cp docs/system-map.html _site/system-map.html
-          # 404 falls back to the landing page rather than GitHub's default.
-          cp docs/index.html      _site/404.html
-
+      # The deck needs a third-party CLI and a headless browser — the most
+      # failure-prone steps here. Both are non-fatal: if the deck cannot be
+      # built, the assemble step below drops its card from the landing page and
+      # the system map publishes anyway. The map never waits on the deck.
       - name: Install Marp CLI
+        id: marp-install
+        continue-on-error: true
         run: npm install -g @marp-team/marp-cli
 
       - name: Build slides (HTML + PDF)
+        id: slides
+        if: steps.marp-install.outcome == 'success'
+        continue-on-error: true
         run: |
           set -euo pipefail
+          mkdir -p _site/slides
           marp docs/slides/platform-architecture.md \
             --output _site/slides/platform-architecture.html \
             --html
           marp docs/slides/platform-architecture.md \
             --output _site/slides/platform-architecture.pdf \
             --allow-local-files
+
+      # Copies the map and landing page unconditionally, and keeps the deck
+      # card only if the deck actually exists — so the published site can never
+      # contain a link to a page that was not built.
+      - name: Assemble the site
+        run: node scripts/assemble-site.js _site
 
       # Fails the build on a broken in-site link or a reference to an external
       # host, either of which would 404 (or be blocked) once published.

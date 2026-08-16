@@ -15,7 +15,7 @@ constant; the delivery mechanism is a template variant.
 >
 > **New here?** Start with the [**system map**](https://falese.github.io/seans-mfe-tool/system-map.html)
 > — an interactive explanation of why the platform exists, how it lets many teams
-> build one product, and what happens to a single feature end to end.
+> build one product, and what happens to a single capability end to end.
 
 ---
 
@@ -313,8 +313,9 @@ one gets the depth it needs and no more:
 | **Engineering** | Where is each concept implemented? Toggle **Show technical implementation** to reveal repository paths throughout the page. |
 
 It opens with the business problem — many teams changing one product — rather than with
-the architecture, then works down through the factory/control-tower mental model, an
-interactive **Follow a feature** walkthrough of two real capabilities in `examples/`, the
+the architecture, then works down through the six-step model (capability definition →
+build system → platform standard → composition rules → runtime → customer experience), an
+interactive **Follow one capability** walkthrough of two real capabilities in `examples/`, the
 platform's capability map, the detailed architecture diagram, and finally what the
 architecture *enables* and what it *trades off*. Claims are labelled `fact` or
 `inference` so the evidence behind each one is checkable.
@@ -344,16 +345,25 @@ assembles a `_site/` directory, verifies it, and deploys:
 
 ```
 /                                    docs/index.html         — landing page
+/404.html                            docs/index.html         — fallback for a bad URL
 /system-map.html                     docs/system-map.html    — the system map
 /slides/platform-architecture.html   built from docs/slides/ — the architecture deck
 /slides/platform-architecture.pdf
 ```
 
-Three things this deliberately does *not* do:
+Four things this deliberately does *not* do:
 
 - **No build step for the map.** `docs/system-map.html` is copied verbatim. It is
   self-contained by design, so there is no bundler, no base-path rewriting, and nothing
-  to keep in sync. (The slide deck still needs Marp, which the workflow installs.)
+  to keep in sync.
+- **The map never waits on the deck.** The deck needs Marp and a headless browser — the
+  most failure-prone steps in the pipeline — so both are non-fatal. If the deck cannot be
+  built, [`scripts/assemble-site.js`](./scripts/assemble-site.js) removes its card from
+  the landing page and the site publishes without it, with a workflow warning. A failed
+  deck build costs you the deck, never the system map, and never leaves a link to a page
+  that was not published. (The card is delimited in `docs/index.html` by
+  `<!-- deck-card:start -->` / `<!-- deck-card:end -->`; the script errors out if those
+  markers go missing rather than publishing a dangling link.)
 - **No root-relative paths.** The site is served from `/seans-mfe-tool/`, not `/`, so
   every in-site link is relative. [`scripts/check-site.js`](./scripts/check-site.js) runs
   in the workflow and fails the build on any root-relative link, unresolvable in-site
@@ -361,6 +371,17 @@ Three things this deliberately does *not* do:
 - **No second Pages publisher.** [`slides.yml`](./.github/workflows/slides.yml) builds
   the deck and keeps it as a workflow artifact for PR review, but does not deploy — two
   workflows uploading a Pages artifact would each overwrite the other's whole site.
+
+To reproduce either outcome locally:
+
+```bash
+# deck present
+mkdir -p _site/slides && echo '<html><title>deck</title></html>' > _site/slides/platform-architecture.html
+node scripts/assemble-site.js _site && node scripts/check-site.js _site
+
+# deck build failed
+rm -rf _site && node scripts/assemble-site.js _site && node scripts/check-site.js _site
+```
 
 Pull requests touching the site build and verify it, and upload a `docs-site-preview`
 artifact instead of deploying.
