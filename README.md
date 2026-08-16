@@ -12,6 +12,10 @@ constant; the delivery mechanism is a template variant.
 > **Full specification:** [`docs/spec.md`](./docs/spec.md) ·
 > **Architecture decisions:** [`docs/architecture-decisions/`](./docs/architecture-decisions/) ·
 > **Project memory:** [`CLAUDE.md`](./CLAUDE.md)
+>
+> **New here?** Start with the [**system map**](https://falese.github.io/seans-mfe-tool/system-map.html)
+> — an interactive explanation of why the platform exists, how it lets many teams
+> build one product, and what happens to a single feature end to end.
 
 ---
 
@@ -293,6 +297,77 @@ npx turbo run docker:build:examples
 See the [ABC Kids quick start](./examples/abc-kids/README.md), the
 [control-plane walkthrough](./examples/abc-kids/DAEMON-DEMO.md), and the
 [slot contract](./docs/slot-contract.md).
+
+---
+
+## The system map
+
+[`docs/system-map.html`](./docs/system-map.html) is a single self-contained page that
+explains the platform to three audiences at once, using progressive disclosure so each
+one gets the depth it needs and no more:
+
+| Audience | What it answers |
+|---|---|
+| **Executive / product** | What is this? Why does it exist? What value does it create? |
+| **Product / architecture** | How does the platform deliver that value, what are its capabilities, and how does one feature move through it end to end? |
+| **Engineering** | Where is each concept implemented? Toggle **Show technical implementation** to reveal repository paths throughout the page. |
+
+It opens with the business problem — many teams changing one product — rather than with
+the architecture, then works down through the factory/control-tower mental model, an
+interactive **Follow a feature** walkthrough of two real capabilities in `examples/`, the
+platform's capability map, the detailed architecture diagram, and finally what the
+architecture *enables* and what it *trades off*. Claims are labelled `fact` or
+`inference` so the evidence behind each one is checkable.
+
+### Viewing it
+
+**Published:** <https://falese.github.io/seans-mfe-tool/system-map.html>
+
+**Locally** — the page is a single file with no external CSS, JavaScript, fonts or
+images, so opening it directly works:
+
+```bash
+open docs/system-map.html          # macOS (xdg-open on Linux)
+```
+
+To exercise it exactly as GitHub Pages serves it, run a static server over `docs/`:
+
+```bash
+npx http-server docs -p 8080 -c-1   # then http://localhost:8080/system-map.html
+```
+
+### How deployment works
+
+The [`Publish docs site`](./.github/workflows/pages.yml) workflow is the repository's
+**single** GitHub Pages publisher. On a push to `main` that touches the site sources it
+assembles a `_site/` directory, verifies it, and deploys:
+
+```
+/                                    docs/index.html         — landing page
+/system-map.html                     docs/system-map.html    — the system map
+/slides/platform-architecture.html   built from docs/slides/ — the architecture deck
+/slides/platform-architecture.pdf
+```
+
+Three things this deliberately does *not* do:
+
+- **No build step for the map.** `docs/system-map.html` is copied verbatim. It is
+  self-contained by design, so there is no bundler, no base-path rewriting, and nothing
+  to keep in sync. (The slide deck still needs Marp, which the workflow installs.)
+- **No root-relative paths.** The site is served from `/seans-mfe-tool/`, not `/`, so
+  every in-site link is relative. [`scripts/check-site.js`](./scripts/check-site.js) runs
+  in the workflow and fails the build on any root-relative link, unresolvable in-site
+  link, or externally-loaded asset.
+- **No second Pages publisher.** [`slides.yml`](./.github/workflows/slides.yml) builds
+  the deck and keeps it as a workflow artifact for PR review, but does not deploy — two
+  workflows uploading a Pages artifact would each overwrite the other's whole site.
+
+Pull requests touching the site build and verify it, and upload a `docs-site-preview`
+artifact instead of deploying.
+
+> **One-time repository setting:** GitHub Pages must be set to build from **GitHub
+> Actions** — *Settings → Pages → Build and deployment → Source: GitHub Actions*. This
+> cannot be set from a workflow.
 
 ---
 
