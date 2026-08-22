@@ -27,6 +27,7 @@
     "build:adr-index": "ts-node scripts/generate-adr-index.ts",
     "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",
     "build:watch": "tsc --watch",
+    "pretest": "node scripts/ensure-build.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
