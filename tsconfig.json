@@ -30,6 +30,8 @@
       "@seans-mfe/framework-react": ["./packages/framework-react/src/index.ts"],
       "@seans-mfe/framework-react/*": ["./packages/framework-react/src/*"],
       "@seans-mfe/framework-angular": ["./packages/framework-angular/src/index.ts"],
+      "@seans-mfe/plugin-api": ["./packages/plugin-api/src/index.ts"],
+      "@seans-mfe/plugin-api/*": ["./packages/plugin-api/src/*"],
       "@seans-mfe/framework-angular/*": ["./packages/framework-angular/src/*"]
     }
   },

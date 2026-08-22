@@ -35,7 +35,7 @@ function isCommandFile(relPath: string): boolean {
   if (base.includes('.test.') || base.startsWith('_')) return false;
   if (relPath.includes('__tests__')) return false;
   // A6/A7 migration shims: flat files that re-export a nested command.
-  return !['remote-init.ts', 'remote-generate.ts', 'remote-init-angular.ts', 'create-api.ts'].includes(base);
+  return !['remote-init.ts', 'remote-generate.ts', 'remote-init-angular.ts'].includes(base);
 }
 
 function walk(dir: string, prefix = ''): string[] {

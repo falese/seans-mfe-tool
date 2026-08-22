@@ -5,13 +5,14 @@ import chalk from 'chalk';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPI } from 'openapi-types';
 import { execSync } from 'child_process';
-import { DatabaseGenerator } from '../codegen/APIGenerator/DatabaseGenerator';
-import { ControllerGenerator } from '../codegen/APIGenerator/ControllerGenerator';
-import { generateRoutes } from '../codegen/APIGenerator/RouteGenerator';
-import { generateJWTSecret } from '../utils/securityUtils';
-import { BaseCommand } from '../oclif/BaseCommand';
+import { DatabaseGenerator } from '../APIGenerator/DatabaseGenerator';
+import { ControllerGenerator } from '../APIGenerator/ControllerGenerator';
+import { generateRoutes } from '../APIGenerator/RouteGenerator';
+import { generateJWTSecret } from '../securityUtils';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { ValidationError, NetworkError, SystemError } from '@seans-mfe/contracts';
-import type { ApiResult, PlannedChange } from '../oclif/results';
+import type { ApiResult } from '../types';
+import type { PlannedChange } from '@seans-mfe/contracts';
 
 interface ApiOptions {
   spec: string;
@@ -557,8 +558,10 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
   try {
     console.log(chalk.blue(`Creating API "${name}"...`));
 
-    const projectRoot = path.resolve(__dirname, '..');
-    const baseTemplateDir = path.join(projectRoot, 'codegen/templates/api/base');
+    // Templates ship beside the compiled output, at the package root, so this
+    // resolves the same from src/commands (ts-jest) and dist/commands (built).
+    const packageRoot = path.resolve(__dirname, '..', '..');
+    const baseTemplateDir = path.join(packageRoot, 'templates/api/base');
     const targetDir = path.resolve(process.cwd(), name);
 
     const dbType = options.database?.toLowerCase() || 'sqlite';
@@ -584,13 +587,15 @@ async function createApiCommand(name: string, options: ApiOptions & { dryRun?: b
     const spec = dereferencedSpec as unknown as OpenAPISpec;
 
     await fs.ensureDir(targetDir);
-    // The built templates dir accumulates tsc byproducts (.d.ts/.map for
-    // template .js files) — never ship build artifacts into a scaffold.
+    // Retained guard: templates now live at the package root, outside `src`, so
+    // tsc no longer compiles them into .d.ts/.map byproducts the way it did
+    // when they sat under src/codegen. Cheap insurance against a scaffold ever
+    // shipping build artifacts again.
     const withoutBuildArtifacts = (src: string): boolean =>
       !/\.(d\.ts|d\.ts\.map|js\.map)$/.test(src);
     await fs.copy(baseTemplateDir, targetDir, { filter: withoutBuildArtifacts });
 
-    const dbTemplateDir = path.join(projectRoot, `codegen/templates/api/${dbType}`);
+    const dbTemplateDir = path.join(packageRoot, `templates/api/${dbType}`);
     if (await fs.pathExists(dbTemplateDir)) {
       await fs.copy(dbTemplateDir, targetDir, { overwrite: true, filter: withoutBuildArtifacts });
     }

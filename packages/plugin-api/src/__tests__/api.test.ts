@@ -14,18 +14,18 @@ import { execSync } from 'child_process';
 import SwaggerParser from '@apidevtools/swagger-parser';
 
 import { ValidationError, NetworkError, SystemError } from '@seans-mfe/contracts';
-import { DatabaseGenerator } from '../../codegen/APIGenerator/DatabaseGenerator';
-import { ControllerGenerator } from '../../codegen/APIGenerator/ControllerGenerator';
-import * as RouteGenerator from '../../codegen/APIGenerator/RouteGenerator';
-import * as securityUtils from '../../utils/securityUtils';
+import { DatabaseGenerator } from '../APIGenerator/DatabaseGenerator';
+import { ControllerGenerator } from '../APIGenerator/ControllerGenerator';
+import * as RouteGenerator from '../APIGenerator/RouteGenerator';
+import * as securityUtils from '../securityUtils';
 
 jest.mock('fs-extra');
 jest.mock('child_process');
 jest.mock('@apidevtools/swagger-parser');
-jest.mock('../../codegen/APIGenerator/DatabaseGenerator');
-jest.mock('../../codegen/APIGenerator/ControllerGenerator');
-jest.mock('../../codegen/APIGenerator/RouteGenerator');
-jest.mock('../../utils/securityUtils');
+jest.mock('../APIGenerator/DatabaseGenerator');
+jest.mock('../APIGenerator/ControllerGenerator');
+jest.mock('../APIGenerator/RouteGenerator');
+jest.mock('../securityUtils');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockExec = execSync as jest.MockedFunction<typeof execSync>;
@@ -40,7 +40,7 @@ import ApiCommand, {
   processTemplates,
   generateDatabaseInit,
   logSuccessInfo,
-} from '../api';
+} from '../commands/api';
 
 function defaultOpenApiSpec() {
   return {
@@ -468,7 +468,7 @@ describe('createApiCommand', () => {
   it('does NOT copy a db-specific template when its directory is absent', async () => {
     (mockFs.pathExists as unknown as jest.Mock).mockImplementation(async (p: string) => {
       // The db-specific template dir is missing; everything else exists.
-      if (String(p).endsWith('codegen/templates/api/sqlite')) return false;
+      if (String(p).endsWith('templates/api/sqlite')) return false;
       return true;
     });
 

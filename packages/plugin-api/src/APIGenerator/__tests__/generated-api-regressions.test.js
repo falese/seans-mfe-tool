@@ -170,7 +170,7 @@ describe('generated API regressions (Meridian Phase 0)', () => {
   });
 
   describe('static API templates', () => {
-    const templatesDir = path.join(__dirname, '..', '..', 'templates', 'api');
+    const templatesDir = path.join(__dirname, '..', '..', '..', 'templates', 'api');
 
     it('sqlite database module exposes connect/disconnect used by src/index.js', async () => {
       const content = await fs.readFile(
@@ -220,19 +220,6 @@ describe('generated API regressions (Meridian Phase 0)', () => {
         expect(content).toContain("require('./seeds')");
         expect(content).toContain('database.connect()');
       }
-    });
-  });
-
-  describe('Angular MFE template', () => {
-    it('tsconfig.app.json has no "//" pseudo-comment key inside compilerOptions', async () => {
-      const tsconfigPath = path.join(
-        __dirname, '..', '..', '..', '..', 'packages', 'codegen', 'templates',
-        'base-mfe-angular', 'tsconfig.app.json.ejs'
-      );
-      const content = await fs.readFile(tsconfigPath, 'utf8');
-      // "//" keys are rejected by Angular's tsconfig parser (TS5023);
-      // JSONC line comments are the supported way to annotate.
-      expect(content).not.toMatch(/"\/\/"\s*:/);
     });
   });
 });

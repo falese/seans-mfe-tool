@@ -41,15 +41,12 @@ export interface DeployResult extends MutatingResult {
 }
 
 // ---------------------------------------------------------------------------
-// api (create-api)
+// api
 // ---------------------------------------------------------------------------
 
-export interface ApiResult extends MutatingResult {
-  name: string;
-  database: string;
-  port: number;
-  generatedFiles: string[];
-}
+// The api result type lives in @seans-mfe/plugin-api (ADR-063), re-exported
+// here so callers keep one import site — same as the BFF types above.
+export type { ApiResult } from '@seans-mfe/plugin-api';
 
 // ---------------------------------------------------------------------------
 // remote:init

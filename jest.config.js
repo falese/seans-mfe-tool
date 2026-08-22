@@ -50,7 +50,7 @@ module.exports = {
     'src/commands/*.{js,ts}',
     'src/utils/**/*.{js,ts}',
     'src/codegen/UnifiedGenerator/**/*.{js,ts}',
-    'src/codegen/APIGenerator/**/*.{js,ts}',
+    'packages/plugin-api/src/**/*.{js,ts}',
     // Include DSL/runtime for TDD Guardian phase.
     // Runtime is now the packages/runtime package (ADR-064); collected here so
     // its per-file coverage gates keep enforcing.

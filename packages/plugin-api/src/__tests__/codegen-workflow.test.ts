@@ -9,7 +9,7 @@
  * (mocked via child_process.execSync) — every other layer (SwaggerParser,
  * DatabaseGenerator, ControllerGenerator, RouteGenerator, templateProcessor)
  * runs against the real filesystem. Templates live at
- * src/codegen/templates/api which the api command resolves through
+ * packages/plugin-api/templates/api which the api command resolves through
  * __dirname-relative paths.
  */
 
@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { execSync } from 'child_process';
 
-import { createApiCommand } from '../../commands/api';
+import { createApiCommand } from '../commands/api';
 
 const execSyncMock = execSync as jest.MockedFunction<typeof execSync>;
 

@@ -9,7 +9,7 @@ const {
 } = require('./test-utils');
 
 const SwaggerParser = require('@apidevtools/swagger-parser');
-const { createApiCommand } = require('../create-api');
+const { createApiCommand } = require('../commands/api');
 
 // Mock external modules
 jest.mock('@apidevtools/swagger-parser', () => ({
@@ -252,7 +252,7 @@ describe('Create API Command', () => {
 });
 describe('template copy hygiene (DX punch list #12)', () => {
   const mockFs = require('fs-extra');
-  const { createApiCommand } = require('../create-api');
+  const { createApiCommand } = require('../commands/api');
 
   it('filters tsc byproducts out of the scaffold copy', async () => {
     await createApiCommand('test-api', { port: '3001', database: 'sqlite', spec: 'api.yaml' });

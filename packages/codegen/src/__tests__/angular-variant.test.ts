@@ -374,3 +374,25 @@ describe('unified-generator react-rspack regression (no framework/bundler set)',
     expect(paths).not.toContain(path.join(basePath, 'src', 'main.ts'));
   });
 });
+
+/**
+ * Rehomed from the API generator's regression suite, where it had been filed
+ * under a `describe('Angular MFE template')` block inside
+ * `generated-api-regressions.test.js`. It asserts about
+ * `packages/codegen/templates/base-mfe-angular`, so it belongs here; the
+ * misplacement only became visible when the API generator moved to its own
+ * package (ADR-063) and the test started reaching across a package boundary.
+ */
+describe('Angular MFE template', () => {
+  it('tsconfig.app.json has no "//" pseudo-comment key inside compilerOptions', async () => {
+    const fs = await import('fs-extra');
+    const path = await import('path');
+    const tsconfigPath = path.join(
+      __dirname, '..', '..', 'templates', 'base-mfe-angular', 'tsconfig.app.json.ejs',
+    );
+    const content = await fs.readFile(tsconfigPath, 'utf8');
+    // "//" keys are rejected by Angular's tsconfig parser (TS5023); JSONC line
+    // comments are the supported way to annotate.
+    expect(content).not.toMatch(/"\/\/"\s*:/);
+  });
+});

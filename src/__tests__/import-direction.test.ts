@@ -40,6 +40,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'framework-react': ['contracts'],
   'framework-angular': ['contracts'],
   'bff-plugin': ['contracts', 'codegen', 'oclif-base'],
+  'plugin-api': ['contracts', 'oclif-base'],
 };
 
 /** First-party scopes. `@seans-mfe-tool/runtime` is the runtime's published name. */
