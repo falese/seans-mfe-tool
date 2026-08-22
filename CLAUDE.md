@@ -283,6 +283,6 @@ Before opening the PR:
       (templates, `packages/runtime/src/**`, `packages/contracts/src/**`):
       either `PLATFORM_MIGRATIONS` has an entry for it, or the PR body says why
       none is needed (ADR-082)
-- [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `pnpm-workspace.yaml`, `turbo.json`, `schemas/`)
+- [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `package.json` `workspaces`, `turbo.json`, `schemas/`)
 
 For the current session's active issue and spec context: `@docs/session-prompt.md`
