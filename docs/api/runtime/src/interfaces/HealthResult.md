@@ -6,7 +6,7 @@
 
 # Interface: HealthResult
 
-Defined in: packages/runtime/src/capability-results.ts:64
+Defined in: [packages/runtime/src/capability-results.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L64)
 
 Result from health capability
 
@@ -16,7 +16,7 @@ Result from health capability
 
 > **checks**: `object`[]
 
-Defined in: packages/runtime/src/capability-results.ts:66
+Defined in: [packages/runtime/src/capability-results.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L66)
 
 #### message?
 
@@ -36,7 +36,7 @@ Defined in: packages/runtime/src/capability-results.ts:66
 
 > **status**: `"healthy"` \| `"degraded"` \| `"unhealthy"`
 
-Defined in: packages/runtime/src/capability-results.ts:65
+Defined in: [packages/runtime/src/capability-results.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L65)
 
 ***
 
@@ -44,4 +44,4 @@ Defined in: packages/runtime/src/capability-results.ts:65
 
 > **timestamp**: `Date`
 
-Defined in: packages/runtime/src/capability-results.ts:71
+Defined in: [packages/runtime/src/capability-results.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L71)

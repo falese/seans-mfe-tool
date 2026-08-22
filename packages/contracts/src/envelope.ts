@@ -54,6 +54,34 @@ function randomUUID(): string {
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * The `--dry-run` mixin: what a mutating command reports it WOULD do.
+ *
+ * Every mutating command carries it (ADR-018 / the CLI contract), so it is
+ * part of the envelope's vocabulary rather than any one command's result. It
+ * lives here because `@seans-mfe/contracts` is the one package the CLI and
+ * every plugin already depend on — PLUGIN-CONTRACT §1 requires it as a regular
+ * dependency — which makes this the only place all three can share one
+ * definition.
+ *
+ * It was previously declared in `src/oclif/results.ts` AND copied into
+ * `@falese/bff-plugin/src/types.ts` under the comment "duplicated here so the
+ * plugin is self-contained". Extracting a second plugin would have made three
+ * copies of a contract type, which is precisely the shape ADR-080 exists to
+ * make unrepresentable.
+ */
+export interface PlannedChange {
+  op: 'create' | 'overwrite' | 'skip' | 'spawn';
+  target: string;
+  detail?: string;
+}
+
+/** Mixin added to every mutating command result. */
+export interface MutatingResult {
+  dryRun: boolean;
+  plannedChanges?: PlannedChange[];
+}
+
 export type CommandResult<T = unknown> = {
   ok: boolean;
   data?: T;

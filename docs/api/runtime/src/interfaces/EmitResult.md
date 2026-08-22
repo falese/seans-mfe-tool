@@ -6,7 +6,7 @@
 
 # Interface: EmitResult
 
-Defined in: packages/runtime/src/capability-results.ts:96
+Defined in: [packages/runtime/src/capability-results.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L96)
 
 Result from emit capability
 
@@ -16,7 +16,7 @@ Result from emit capability
 
 > **emitted**: `boolean`
 
-Defined in: packages/runtime/src/capability-results.ts:97
+Defined in: [packages/runtime/src/capability-results.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L97)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: packages/runtime/src/capability-results.ts:97
 
 > `optional` **eventId**: `string`
 
-Defined in: packages/runtime/src/capability-results.ts:98
+Defined in: [packages/runtime/src/capability-results.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L98)

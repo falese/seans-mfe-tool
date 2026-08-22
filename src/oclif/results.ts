@@ -21,17 +21,11 @@ export type {
 // Shared mixin
 // ---------------------------------------------------------------------------
 
-/** Mixin added to every mutating command result (B8). */
-export interface MutatingResult {
-  dryRun: boolean;
-  plannedChanges?: PlannedChange[];
-}
-
-export interface PlannedChange {
-  op: 'create' | 'overwrite' | 'skip' | 'spawn';
-  target: string;
-  detail?: string;
-}
+// The dry-run mixin is part of the envelope vocabulary, not any one command's
+// result, so it is defined once in @seans-mfe/contracts and re-exported here
+// for the commands that already import it from this module (ADR-080).
+export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
+import type { MutatingResult } from '@seans-mfe/contracts';
 
 // ---------------------------------------------------------------------------
 // deploy

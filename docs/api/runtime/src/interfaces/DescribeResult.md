@@ -6,7 +6,7 @@
 
 # Interface: DescribeResult
 
-Defined in: packages/runtime/src/capability-results.ts:75
+Defined in: [packages/runtime/src/capability-results.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L75)
 
 Result from describe capability
 
@@ -16,7 +16,7 @@ Result from describe capability
 
 > **capabilities**: `string`[]
 
-Defined in: packages/runtime/src/capability-results.ts:79
+Defined in: [packages/runtime/src/capability-results.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L79)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/runtime/src/capability-results.ts:79
 
 > **manifest**: `object`
 
-Defined in: packages/runtime/src/capability-results.ts:80
+Defined in: [packages/runtime/src/capability-results.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L80)
 
 #### authorization?
 
@@ -244,7 +244,7 @@ Defined in: packages/runtime/src/capability-results.ts:80
 
 > **name**: `string`
 
-Defined in: packages/runtime/src/capability-results.ts:76
+Defined in: [packages/runtime/src/capability-results.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L76)
 
 ***
 
@@ -252,7 +252,7 @@ Defined in: packages/runtime/src/capability-results.ts:76
 
 > **type**: `string`
 
-Defined in: packages/runtime/src/capability-results.ts:78
+Defined in: [packages/runtime/src/capability-results.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L78)
 
 ***
 
@@ -260,4 +260,4 @@ Defined in: packages/runtime/src/capability-results.ts:78
 
 > **version**: `string`
 
-Defined in: packages/runtime/src/capability-results.ts:77
+Defined in: [packages/runtime/src/capability-results.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L77)

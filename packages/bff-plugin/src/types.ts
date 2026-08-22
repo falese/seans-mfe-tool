@@ -7,21 +7,10 @@
 import type { MeshConfig, MFEManifest } from './shared';
 
 // ---------------------------------------------------------------------------
-// MutatingResult mixin — duplicated here so the plugin is self-contained.
-// The canonical definition lives in src/oclif/results.ts; these are
-// structurally identical and therefore compatible at the TypeScript level.
-// ---------------------------------------------------------------------------
-
-export interface MutatingResult {
-  dryRun: boolean;
-  plannedChanges?: PlannedChange[];
-}
-
-export interface PlannedChange {
-  op: 'create' | 'overwrite' | 'skip' | 'spawn';
-  target: string;
-  detail?: string;
-}
+// The dry-run mixin comes from @seans-mfe/contracts — one definition shared
+// by the CLI and every plugin (ADR-080). It used to be copied here.
+export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
+import type { MutatingResult } from '@seans-mfe/contracts';
 
 // ---------------------------------------------------------------------------
 // bff:init
