@@ -28,168 +28,21 @@ import * as platformHandlerLibrary from './handlers';
 export type { Context, UserContext, TelemetryEvent };
 export type { DaemonWebSocketClient };
 
-// =============================================================================
-// Dependency Injection Interfaces
-// =============================================================================
+// The DI seam (ADR-079), the capability result types (ADR-041), and the
+// capability descriptor/middleware machinery moved to focused modules. They are
+// re-exported here so this module's public surface — and the runtime barrel
+// that generated MFEs import from — is unchanged by the move.
+export * from './mfe-dependencies';
+export * from './capability-results';
+export * from './capability-pipeline';
+import type { BaseMFEDependencies, CapabilityLifecycleConfig } from './mfe-dependencies';
+import type {
+  LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult,
+  QueryResult, EmitResult, ControlPlaneStateResult,
+} from './capability-results';
+import { runPipeline, CAPABILITY_DESCRIPTORS, PLATFORM_HANDLER_LIBRARY } from './capability-pipeline';
+import type { Middleware } from './capability-pipeline';
 
-export interface PlatformHandlerMap {
-  [key: string]: (context: Context) => Promise<unknown>;
-}
-
-export interface CustomHandlerMap {
-  [key: string]: (context: Context) => Promise<unknown>;
-}
-
-export interface TelemetryService {
-  emit(event: TelemetryEvent): void;
-}
-
-export interface StateValidator {
-  isValidTransition(from: MFEState, to: MFEState): boolean;
-}
-
-/**
- * The slice of a capability's manifest entry the lifecycle engine reads:
- * the per-phase hook lists. Everything else on the entry is opaque.
- */
-export interface CapabilityLifecycleConfig {
-  lifecycle?: {
-    before?: LifecycleHookEntry[];
-    main?: LifecycleHookEntry[];
-    after?: LifecycleHookEntry[];
-    error?: LifecycleHookEntry[];
-  };
-  [key: string]: unknown;
-}
-
-export interface ManifestParser {
-  parse(manifest: DSLManifest): Record<string, CapabilityLifecycleConfig | null | undefined>;
-}
-
-export interface ErrorHandler {
-  handle(error: Error, context: Context): void;
-}
-
-export interface BaseMFEDependencies {
-  platformHandlers?: PlatformHandlerMap;
-  customHandlers?: CustomHandlerMap;
-  telemetry?: TelemetryService;
-  stateValidator?: StateValidator;
-  manifestParser?: ManifestParser;
-  errorHandler?: ErrorHandler;
-  /** graphql-transport-ws connection to the daemon, shared with the Renderer's messages subscription */
-  wsClient?: DaemonWebSocketClient;
-  /** BFF GraphQL endpoint URL used by the default doQuery() implementation */
-  bffUrl?: string;
-}
-
-// =============================================================================
-// Result Types
-// =============================================================================
-
-/** Metadata for a single capability declared in the manifest */
-export interface CapabilityMetadata {
-  name: string;
-  type: 'platform' | 'domain';
-  description?: string;
-}
-
-/** Result from load capability */
-export interface LoadResult {
-  status: 'loaded' | 'error';
-  container?: unknown;
-  mesh?: unknown;
-  worker?: unknown;
-  manifest?: import('@seans-mfe/dsl').DSLManifest;
-  availableComponents?: string[];
-  capabilities?: CapabilityMetadata[];
-  timestamp: Date;
-  duration?: number;
-  telemetry?: {
-    entry: { start: Date; duration: number };
-    mount: { start: Date; duration: number };
-    enableRender: { start: Date; duration: number };
-  };
-  error?: {
-    message: string;
-    /**
-     * Which step failed. The subphase names are the atomic main operation
-     * (ADR-026); `before` / `after` / `error` are the lifecycle phases around
-     * it. A closed set, because the field exists to be branched on.
-     */
-    phase: 'entry' | 'mount' | 'enable-render' | 'before' | 'after' | 'error';
-    retryCount: number;
-    retryable: boolean;
-  };
-}
-
-/** Result from render capability */
-export interface RenderResult {
-  status: 'rendered' | 'error';
-  element?: unknown;    // DOM element or React component
-  timestamp: Date;
-  [key: string]: unknown;
-}
-
-/** Result from health capability */
-export interface HealthResult {
-  status: 'healthy' | 'degraded' | 'unhealthy';
-  checks: Array<{
-    name: string;
-    status: 'pass' | 'fail';
-    message?: string;
-  }>;
-  timestamp: Date;
-}
-
-/** Result from describe capability */
-export interface DescribeResult {
-  name: string;
-  version: string;
-  type: string;
-  capabilities: string[];
-  manifest: DSLManifest;
-}
-
-/** Result from schema capability */
-export interface SchemaResult {
-  schema: string;  // GraphQL schema or JSON schema
-  format: 'graphql' | 'json' | 'openapi';
-}
-
-/** Result from query capability */
-export interface QueryResult {
-  data: unknown;
-  errors?: Array<{ message: string; path?: string[] }>;
-}
-
-/** Result from emit capability */
-export interface EmitResult {
-  emitted: boolean;
-  eventId?: string;
-}
-
-/**
- * Result from updateControlPlaneState capability.
- *
- * Mirrors ControlPlaneStateResult in @seans-mfe/contracts, with `error`
- * optional so implementors of doUpdateControlPlaneState may omit it (the wire
- * form always sets it). The `resolution` shape IS the contracts `Resolution`.
- */
-export interface ControlPlaneStateResult {
-  /** Whether the daemon acknowledged the state update */
-  acknowledged: boolean;
-  /** Correlation ID for tracing this update through the control plane */
-  correlationId: string;
-  /** Non-null when the update could not be delivered (not connected, timeout, etc.) */
-  error?: string | null;
-  /**
-   * Populated when the registry immediately resolved a new component based
-   * on the state update. In practice this may arrive asynchronously via the
-   * daemon's Subscription.messages channel instead.
-   */
-  resolution?: Resolution | null;
-}
 
 // =============================================================================
 // State Machine Types (REQ-056)
@@ -206,72 +59,6 @@ export type MFEState = MfeLifecycleState;
 /** Valid state transitions — the canonical table (ADR-042, ADR-080). */
 export const VALID_TRANSITIONS: Readonly<Record<MFEState, readonly MFEState[]>> =
   MFE_LIFECYCLE_TRANSITIONS;
-
-// =============================================================================
-// Capability Descriptors (REQ-054)
-// =============================================================================
-
-/**
- * How each capability interacts with the lifecycle state machine (ADR-042):
- * allowed pre-states, and the enter/exit/error transitions it drives. That is
- * per-capability contract data, so it lives in `@seans-mfe/contracts`
- * alongside the state machine itself (ADR-080) rather than being re-declared
- * here. Everything else about capability orchestration (before → main → doX →
- * after, error phase on failure) is identical across the 10 platform
- * capabilities and lives once in BaseMFE.executeCapability().
- */
-type CapabilityDescriptor = Pick<
-  PlatformCapabilitySpec,
-  'preStates' | 'enterState' | 'exitState' | 'errorState'
->;
-
-const CAPABILITY_DESCRIPTORS: Readonly<Record<string, CapabilityDescriptor>> =
-  PLATFORM_CAPABILITY_SPECS;
-
-// =============================================================================
-// Platform Handler Library (REQ-058)
-// =============================================================================
-
-type PlatformHandlerFn = (context: Context) => Promise<unknown>;
-
-/**
- * The platform handler library, resolved once at module load from the static
- * './handlers' barrel (flat namespace — `export *` per category module).
- * Replaces the former per-invocation dynamic import: resolution is O(1) and
- * the full set of resolvable names is visible here at startup.
- */
-const PLATFORM_HANDLER_LIBRARY: ReadonlyMap<string, PlatformHandlerFn> = new Map(
-  Object.entries(platformHandlerLibrary as unknown as Record<string, unknown>)
-    .filter(([, value]) => typeof value === 'function')
-    .map(([name, value]) => [name, value as PlatformHandlerFn])
-);
-
-// =============================================================================
-// Capability Middleware Pipeline
-// =============================================================================
-
-/**
- * One stage of the capability execution pipeline. A middleware does its work,
- * then calls next() to run the rest of the chain — or catches errors thrown
- * by it (the error boundary). This is the koa/express onion, minus the
- * framework: the lifecycle engine's execution model expressed as data.
- */
-type Middleware = (context: Context, next: () => Promise<void>) => Promise<void>;
-
-/** Run a middleware chain in order. Guards against a stage calling next() twice. */
-async function runPipeline(middlewares: Middleware[], context: Context): Promise<void> {
-  let lastIndex = -1;
-  const dispatch = async (index: number): Promise<void> => {
-    if (index <= lastIndex) {
-      throw new SystemError('Capability pipeline: next() called multiple times in one middleware');
-    }
-    lastIndex = index;
-    const middleware = middlewares[index];
-    if (!middleware) return;
-    await middleware(context, () => dispatch(index + 1));
-  };
-  await dispatch(0);
-}
 
 // =============================================================================
 // BaseMFE Abstract Class
@@ -403,7 +190,17 @@ export abstract class BaseMFE {
     phase: 'before' | 'main' | 'after' | 'error',
     context: Context
   ): Promise<void> {
-    // Guard: Prevent re-entrant execution for same capability/phase
+    // WHY (ADR-001): a manifest may map a lifecycle hook to a wrapper method
+    // that itself invokes the capability the hook is attached to. That is a
+    // cycle the manifest author cannot see, and it does not fail politely — it
+    // recurses until the process dies of OOM. The guard is a last-resort net at
+    // the platform level, deliberately placed where every phase passes through:
+    // no manifest can opt out of it, because no manifest reaches the hook loop
+    // without going through here first.
+    //
+    // It SKIPS rather than throws. The re-entrant call is the bug, but the
+    // outer call is usually legitimate work a user is waiting on, and killing
+    // that too would turn one authoring mistake into a broken capability.
     if (this._lifecycleStack.some(e => e.capability === capability && e.phase === phase)) {
       console.error(`Re-entrant lifecycle detected for capability="${capability}" phase="${phase}"; skipping`);
       return;
@@ -506,6 +303,16 @@ export abstract class BaseMFE {
    * 
    * REQ-058: Platform handlers resolved from standard library
    * REQ-057: Custom handlers resolved from developer class
+   *
+   * WHY (ADR-079): this is THE seam. `deps.customHandlers` is consulted here,
+   * inside the hook loop, which means a substituted handler still runs under
+   * every guarantee ADR-002 makes — containment, main-phase propagation,
+   * telemetry on failure. BaseMFE once had a second seam,
+   * `deps.lifecycleExecutor`, wrapped around the whole phase loop; anything
+   * injected there skipped all of it silently. It was deleted rather than
+   * documented. Substituting execution means providing a handler, not
+   * replacing the engine — so a new injection point that can bypass
+   * `executeHook` does not belong in this class.
    */
   protected async invokeHandler(handlerName: string, context: Context): Promise<void> {
     if (handlerName.startsWith('platform.')) {
@@ -539,6 +346,15 @@ export abstract class BaseMFE {
   /**
    * Invoke a platform handler from the standard library — a flat, statically
    * built map (PLATFORM_HANDLER_LIBRARY), so resolution is a single lookup.
+   *
+   * WHY (ADR-076, superseding ADR-025): platform handlers are plain exported
+   * async functions of shape (context) => Promise<unknown>, resolved by their
+   * literal export name. The earlier design gave each one a class implementing
+   * a PlatformHandler interface, registered into a PlatformHandlerRegistry —
+   * ceremony that bought nothing, because ADR-002's before/main/after/error
+   * model already decides when a handler runs. Adding a handler is now
+   * exporting a function from ./handlers; nothing registers it anywhere.
+   *
    * @throws Error if platform handler not found
    */
   protected async invokePlatformHandler(name: string, context: Context): Promise<void> {

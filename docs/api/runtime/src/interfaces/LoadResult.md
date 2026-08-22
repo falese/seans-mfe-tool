@@ -6,7 +6,7 @@
 
 # Interface: LoadResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L98)
+Defined in: packages/runtime/src/capability-results.ts:27
 
 Result from load capability
 
@@ -16,7 +16,7 @@ Result from load capability
 
 > `optional` **availableComponents**: `string`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L104)
+Defined in: packages/runtime/src/capability-results.ts:33
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:104](https://github.com/falese/sea
 
 > `optional` **capabilities**: `CapabilityMetadata`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L105)
+Defined in: packages/runtime/src/capability-results.ts:34
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:105](https://github.com/falese/sea
 
 > `optional` **container**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L100)
+Defined in: packages/runtime/src/capability-results.ts:29
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:100](https://github.com/falese/sea
 
 > `optional` **duration**: `number`
 
-Defined in: [packages/runtime/src/base-mfe.ts:107](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L107)
+Defined in: packages/runtime/src/capability-results.ts:36
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:107](https://github.com/falese/sea
 
 > `optional` **error**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L113)
+Defined in: packages/runtime/src/capability-results.ts:42
 
 #### message
 
@@ -76,7 +76,7 @@ it. A closed set, because the field exists to be branched on.
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L103)
+Defined in: packages/runtime/src/capability-results.ts:32
 
 #### authorization?
 
@@ -296,7 +296,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:103](https://github.com/falese/sea
 
 > `optional` **mesh**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L101)
+Defined in: packages/runtime/src/capability-results.ts:30
 
 ***
 
@@ -304,7 +304,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:101](https://github.com/falese/sea
 
 > **status**: `"error"` \| `"loaded"`
 
-Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L99)
+Defined in: packages/runtime/src/capability-results.ts:28
 
 ***
 
@@ -312,7 +312,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 > `optional` **telemetry**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:108](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L108)
+Defined in: packages/runtime/src/capability-results.ts:37
 
 #### enableRender
 
@@ -356,7 +356,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:108](https://github.com/falese/sea
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/base-mfe.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L106)
+Defined in: packages/runtime/src/capability-results.ts:35
 
 ***
 
@@ -364,4 +364,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:106](https://github.com/falese/sea
 
 > `optional` **worker**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L102)
+Defined in: packages/runtime/src/capability-results.ts:31

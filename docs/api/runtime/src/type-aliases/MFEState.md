@@ -8,7 +8,7 @@
 
 > **MFEState** = [`MfeLifecycleState`](../../../contracts/src/type-aliases/MfeLifecycleState.md)
 
-Defined in: [packages/runtime/src/base-mfe.ts:204](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L204)
+Defined in: [packages/runtime/src/base-mfe.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L57)
 
 MFE lifecycle state. The states and their legal edges are defined once in
 `@seans-mfe/contracts` (ADR-080); this is the runtime's name for the same

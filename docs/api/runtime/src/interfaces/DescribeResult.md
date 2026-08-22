@@ -6,7 +6,7 @@
 
 # Interface: DescribeResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:146](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L146)
+Defined in: packages/runtime/src/capability-results.ts:75
 
 Result from describe capability
 
@@ -16,7 +16,7 @@ Result from describe capability
 
 > **capabilities**: `string`[]
 
-Defined in: [packages/runtime/src/base-mfe.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L150)
+Defined in: packages/runtime/src/capability-results.ts:79
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:150](https://github.com/falese/sea
 
 > **manifest**: `object`
 
-Defined in: [packages/runtime/src/base-mfe.ts:151](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L151)
+Defined in: packages/runtime/src/capability-results.ts:80
 
 #### authorization?
 
@@ -244,7 +244,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:151](https://github.com/falese/sea
 
 > **name**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:147](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L147)
+Defined in: packages/runtime/src/capability-results.ts:76
 
 ***
 
@@ -252,7 +252,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:147](https://github.com/falese/sea
 
 > **type**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L149)
+Defined in: packages/runtime/src/capability-results.ts:78
 
 ***
 
@@ -260,4 +260,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:149](https://github.com/falese/sea
 
 > **version**: `string`
 
-Defined in: [packages/runtime/src/base-mfe.ts:148](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L148)
+Defined in: packages/runtime/src/capability-results.ts:77

@@ -6,7 +6,7 @@
 
 # Interface: RenderResult
 
-Defined in: [packages/runtime/src/base-mfe.ts:127](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L127)
+Defined in: packages/runtime/src/capability-results.ts:56
 
 Result from render capability
 
@@ -20,7 +20,7 @@ Result from render capability
 
 > `optional` **element**: `unknown`
 
-Defined in: [packages/runtime/src/base-mfe.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L129)
+Defined in: packages/runtime/src/capability-results.ts:58
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/runtime/src/base-mfe.ts:129](https://github.com/falese/sea
 
 > **status**: `"error"` \| `"rendered"`
 
-Defined in: [packages/runtime/src/base-mfe.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L128)
+Defined in: packages/runtime/src/capability-results.ts:57
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [packages/runtime/src/base-mfe.ts:128](https://github.com/falese/sea
 
 > **timestamp**: `Date`
 
-Defined in: [packages/runtime/src/base-mfe.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L130)
+Defined in: packages/runtime/src/capability-results.ts:59
