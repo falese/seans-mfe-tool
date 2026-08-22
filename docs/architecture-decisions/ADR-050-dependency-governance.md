@@ -13,11 +13,12 @@ superseded-by: []
 implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
+  - packages/codegen/src/catalog.ts
 verified-by:
   - check:mfe-consistency
 summary: >-
   Three rules govern generated MFE `package.json` files. (1) All version strings come from the
-  `DEPENDENCY_VERSIONS` constant in `unified-generator.ts` — no hardcoded versions in templates.
+  `DEPENDENCY_VERSIONS` constant in `catalog.ts` — no hardcoded versions in templates.
   (2) Mesh/BFF deps are only emitted when the manifest declares a `data:` section (`hasBff`).
   (3) A targeted `overrides` block forces safe transitive versions to close known vulnerability
   chains without a blanket `npm audit fix --force`.
@@ -74,7 +75,7 @@ Pinning strategy:
 
 ### 2. `hasBff` gate — BFF deps only when manifest declares `data:`
 
-`extractManifestVars` in `unified-generator.ts` computes:
+`extractManifestVars` in `render-model.ts` computes:
 
 ```typescript
 const hasBff = !!manifest.data;

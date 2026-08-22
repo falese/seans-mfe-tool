@@ -14,6 +14,7 @@ implements-pdr: [1]
 implemented-by:
   - packages/dsl/src/schema.ts
   - packages/codegen/src/unified-generator.ts
+  - packages/codegen/src/render-model.ts
 verified-by: []
 summary: >-
   Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare
