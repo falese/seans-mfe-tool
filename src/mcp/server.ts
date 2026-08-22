@@ -181,7 +181,6 @@ export async function startMcpServer(options: McpServerOptions): Promise<void> {
 
   // This is the process's own stdio loop ending (parent disconnected) —
   // there is no caller above it to throw to.
-  // eslint-disable-next-line no-process-exit
   process.stdin.on('end', () => { process.exit(0); });
 }
 

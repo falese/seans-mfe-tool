@@ -31,9 +31,7 @@ async function main() {
       }),
     });
 
-    // eslint-disable-next-line no-console
     console.log(`[perf] capability invocation — budget p95 < ${BUDGET_P95_MS}ms`);
-    // eslint-disable-next-line no-console
     console.log(formatStats('GET /api/capability/*', stats, { rps }));
 
     ensure(errors.length === 0, `request errors: ${errors.length} (first: ${JSON.stringify(errors[0])})`);
@@ -43,7 +41,6 @@ async function main() {
         `(users=${USERS}, total=${REQUESTS})`
     );
 
-    // eslint-disable-next-line no-console
     console.log('[perf] OK — capability invocation budget met');
   } finally {
     await stop();
@@ -51,7 +48,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('[perf] scenario crashed', err && err.stack ? err.stack : err);
   process.exit(2);
 });
