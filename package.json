@@ -8,7 +8,8 @@
   },
   "main": "bin/run.js",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/plugin-skeleton"
   ],
   "scripts": {
     "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular",
