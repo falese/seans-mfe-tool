@@ -2,12 +2,16 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "packages/contracts/src/index.ts",
+    "packages/dsl/src/index.ts",
+    "packages/codegen/src/index.ts",
     "packages/runtime/src/index.ts",
     "packages/runtime/src/react.ts",
     "packages/runtime/src/angular.ts"
   ],
   "tsconfig": "tsconfig.typedoc.json",
-  "plugin": ["typedoc-plugin-markdown"],
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
   "out": "docs/api",
   "cleanOutputDir": true,
   "readme": "none",
@@ -19,5 +23,8 @@
   "hideGenerator": true,
   "gitRevision": "main",
   "sourceLinkTemplate": "https://github.com/falese/seans-mfe-tool/blob/{gitRevision}/{path}#L{line}",
-  "exclude": ["**/__tests__/**", "**/*.test.ts"]
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts"
+  ]
 }

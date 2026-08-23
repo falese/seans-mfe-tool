@@ -25,6 +25,8 @@
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "check:template-typecheck": "ts-node scripts/check-template-typecheck.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
+    "build:system-map": "ts-node scripts/generate-system-map.ts",
+    "build:system-map:check": "ts-node scripts/generate-system-map.ts --check",
     "build:adr-index": "ts-node scripts/generate-adr-index.ts",
     "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",
     "build:watch": "tsc --watch",

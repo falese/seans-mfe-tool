@@ -35,6 +35,7 @@ Full spec: `@docs/spec.md`
 | `npm run check:mfe-drift` | The fix for the above — regenerates and **writes** the drifted files, for you to commit |
 | `npm run clean` | Remove every build artifact — all `dist/`, `oclif.manifest.json`, `tsconfig.tsbuildinfo`, `coverage/`. Reach for it the moment a gate's result stops making sense: `tsc -b` is incremental, oclif reads a manifest, and several gates resolve packages to their **compiled** output, so a stale artifact reads as working code. `--dry-run` lists without removing |
 | `npm run check:template-typecheck` | After any `packages/runtime/**` or template change — scaffolds a real MFE per framework lane, `npm install`s it, and typechecks it. The only gate that proves the **runtime barrel** still satisfies generated code. ⚠️ Resolves `@seans-mfe-tool/runtime` to `dist/runtime`, so run `npm run build` first or it checks the last build |
+| `npm run build:system-map` | After anything that changes a count the system map asserts — a package, an ADR, a template, an example MFE. `docs/system-map.html` is the executive-facing page and its counts are **generated**; `build:system-map:check` fails when the committed page disagrees with the repository. Three of its eight counts had already drifted before this existed |
 | `npm run build:docs` | After any `packages/{contracts,runtime,dsl}/src/**` change — regenerates the committed `docs/api` reference (ADR-065); the API-docs workflow gates it on PRs, so commit the result |
 | `seans-mfe-tool compose:build <project>` | After editing a project's `control-plane.yaml` — recompiles `control-plane/rules.json` (ADR-083). The payload is generated; never hand-edit it |
 | `seans-mfe-tool compose:validate <project> --check` | Validate composition and fail if the committed `rules.json` is stale; CI-gated |
@@ -263,7 +264,11 @@ Run in order — push only after all pass:
     `control-plane.yaml`, a manifest's identity/capabilities/`providesSlots`, or the
     compiler) — CI-gated. `rules.json` is generated from the composition document
     (ADR-083); the check fails when the committed payload no longer matches.
-12. `npm run build:docs && git diff --exit-code docs/api`
+12. `npm run build:system-map:check` (if you added or removed a package, ADR, PDR,
+    template, example MFE, command schema, or test file) — the system map's counts
+    are generated from the repository (ADR-075's pattern applied to the page a
+    reader is least able to check). `npm run build:system-map` writes them.
+13. `npm run build:docs && git diff --exit-code docs/api`
     (if you touched `packages/contracts/src/**`, `packages/runtime/src/**`, or
     `packages/dsl/src/**`)
     `docs/api` is a committed, gated artifact (ADR-065): the API-docs workflow
