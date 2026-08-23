@@ -23,7 +23,7 @@ import {
   normalizeAdrId,
   type AdrStatus as AdrStatusValue,
 } from '../../adr-index';
-import { ADR_DIR, resolveAdrRoot } from './_adr-root';
+import { ADR_DIR, resolveAdrRoot } from '../../adr-root';
 
 /** Display order — the lifecycle path, not alphabetical. */
 const STATUS_ORDER: readonly AdrStatusValue[] = [

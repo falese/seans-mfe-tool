@@ -20,7 +20,7 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '@seans-mfe/oclif-base';
 import { BusinessError } from '@seans-mfe/contracts';
-import { ADR_DIR, resolveAdrRoot } from './_adr-root';
+import { ADR_DIR, resolveAdrRoot } from '../../adr-root';
 import {
   parseAdrDocument,
   validateAdrLibrary,
