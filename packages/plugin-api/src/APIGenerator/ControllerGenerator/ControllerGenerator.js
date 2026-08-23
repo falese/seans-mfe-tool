@@ -18,7 +18,7 @@ class ControllerGenerator {
     
     console.log('Available paths:', Object.keys(spec.paths));
 
-    const dbAdapter = DatabaseAdapter.create(dbType);
+    const dbAdapter = DatabaseAdapter.create(dbType, spec?.components?.schemas);
     await this.generateControllers(controllersDir, spec, dbAdapter);
   }
 
@@ -33,7 +33,15 @@ class ControllerGenerator {
         const normalizedName = NameGenerator.toCamelCase(resourcePath);
         console.log('Normalized name:', normalizedName);
         
-        const modelName = NameGenerator.toModelName(resourcePath);
+        // Resolve against the spec's schemas, not the path alone: models are
+        // generated from components.schemas, so a resource whose response type
+        // is named differently from its path (/leaderboard ->
+        // LeaderboardEntry) would otherwise reference a model that does not
+        // exist.
+        const modelName = NameGenerator.resolveModelName(
+          resourcePath,
+          spec?.components?.schemas,
+        );
         console.log('Model name:', modelName);
         
         const controllerContent = await this.generateControllerContent(normalizedName, modelName, pathGroup, dbAdapter);

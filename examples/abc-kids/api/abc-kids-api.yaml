@@ -1,0 +1,248 @@
+openapi: 3.0.0
+info:
+  title: ABC Kids Play API
+  version: 1.0.0
+  description: >-
+    Player profiles, scores and per-game progression for the ABC Kids fleet.
+
+    This is the bottom of the stack the fleet demonstrates: a real database
+    behind a real REST service, which each game's GraphQL BFF reads through.
+    Before it existed, every BFF pointed at a sample Pet Store spec, so the
+    end-to-end story stopped at fixtures (ADR-052 demo mode) with nothing live
+    to contrast them against.
+
+servers:
+  - url: http://abc-kids-api:3101
+    description: In-cluster service name (docker compose)
+  - url: http://localhost:3101
+    description: Local development
+
+paths:
+  /players:
+    get:
+      summary: List players
+      operationId: listPlayers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        '200':
+          description: Players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+    post:
+      summary: Create a player
+      operationId: createPlayer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPlayer'
+      responses:
+        '201':
+          description: Player created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+
+  /players/{playerId}:
+    get:
+      summary: Get a player by id
+      operationId: getPlayer
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '404':
+          description: No such player
+
+  /scores:
+    get:
+      summary: List recorded scores, most recent first
+      operationId: listScores
+      parameters:
+        - name: gameId
+          in: query
+          description: Restrict to one game, e.g. flappy
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'
+    post:
+      summary: Record a score
+      operationId: createScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewScore'
+      responses:
+        '201':
+          description: Score recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Score'
+
+  /leaderboard:
+    get:
+      summary: Best score per player across every game
+      description: >-
+        The cross-game view. A single game's BFF can answer "how did this player
+        do at flappy"; only a query that spans games can answer "who is ahead
+        overall", which is what makes the BFF layer a composition point rather
+        than a passthrough.
+      operationId: getLeaderboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Ranked players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
+
+  /progression/{playerId}:
+    get:
+      summary: Per-game progression for one player
+      operationId: getProgression
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Progression rows, one per game played
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Progression'
+
+components:
+  schemas:
+    Player:
+      type: object
+      required: [id, displayName]
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        avatar:
+          type: string
+          description: Emoji or asset key the shell renders
+        createdAt:
+          type: string
+          format: date-time
+
+    NewPlayer:
+      type: object
+      required: [displayName]
+      properties:
+        displayName:
+          type: string
+        avatar:
+          type: string
+
+    Score:
+      type: object
+      required: [id, playerId, gameId, points]
+      properties:
+        id:
+          type: string
+        playerId:
+          type: string
+        gameId:
+          type: string
+          description: The MFE that recorded it, e.g. flappy
+        points:
+          type: integer
+        achievedAt:
+          type: string
+          format: date-time
+
+    NewScore:
+      type: object
+      required: [playerId, gameId, points]
+      properties:
+        playerId:
+          type: string
+        gameId:
+          type: string
+        points:
+          type: integer
+
+    LeaderboardEntry:
+      type: object
+      required: [playerId, displayName, bestPoints]
+      properties:
+        playerId:
+          type: string
+        displayName:
+          type: string
+        avatar:
+          type: string
+        bestPoints:
+          type: integer
+        bestGameId:
+          type: string
+        gamesPlayed:
+          type: integer
+
+    Progression:
+      type: object
+      required: [playerId, gameId, level]
+      properties:
+        playerId:
+          type: string
+        gameId:
+          type: string
+        level:
+          type: integer
+        starsEarned:
+          type: integer
+        lastPlayedAt:
+          type: string
+          format: date-time

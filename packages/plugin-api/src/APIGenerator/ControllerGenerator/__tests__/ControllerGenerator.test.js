@@ -32,6 +32,7 @@ describe('ControllerGenerator', () => {
     // Setup NameGenerator mocks
     NameGenerator.toCamelCase = jest.fn(name => name);
     NameGenerator.toModelName = jest.fn(name => name.charAt(0).toUpperCase() + name.slice(1));
+    NameGenerator.resolveModelName = jest.fn((name) => name.charAt(0).toUpperCase() + name.slice(1));
     NameGenerator.generateControllerMethodName = jest.fn((method, resource) => `${method}${resource}`);
     
     // Setup generator mocks
@@ -61,7 +62,12 @@ describe('ControllerGenerator', () => {
     it('should create database adapter with correct type', async () => {
       await ControllerGenerator.generate('mongodb', '/controllers', simpleSpec);
       
-      expect(DatabaseAdapter.create).toHaveBeenCalledWith('mongodb');
+      // The adapter receives the spec's schemas so model names resolve against
+      // the models actually generated, not against the URL path.
+      expect(DatabaseAdapter.create).toHaveBeenCalledWith(
+        'mongodb',
+        simpleSpec.components.schemas,
+      );
     });
 
     it('should call generateControllers with correct arguments', async () => {
@@ -524,10 +530,13 @@ describe('ControllerGenerator', () => {
       expect(NameGenerator.toCamelCase).toHaveBeenCalledWith('users');
     });
 
-    it('should generate model names using NameGenerator', async () => {
+    it('should resolve model names against the spec schemas', async () => {
       await ControllerGenerator.generateControllers('/controllers', simpleSpec, mockDbAdapter);
-      
-      expect(NameGenerator.toModelName).toHaveBeenCalledWith('users');
+
+      expect(NameGenerator.resolveModelName).toHaveBeenCalledWith(
+        'users',
+        simpleSpec.components.schemas,
+      );
     });
 
     it('should write controller file with correct path', async () => {

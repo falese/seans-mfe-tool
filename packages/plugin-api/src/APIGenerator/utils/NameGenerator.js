@@ -53,6 +53,35 @@ class NameGenerator {
     return this.toPascalCase(singular);
   }
 
+  /**
+   * The model a controller for `resourcePath` should actually query.
+   *
+   * `toModelName` derives a name from the PATH; models are generated from
+   * `components.schemas`. When those disagree the controller references a model
+   * that was never registered and every request 500s with "Cannot read
+   * properties of undefined". `/leaderboard` returning `LeaderboardEntry` is
+   * the case that exposed it; `/pets` returning `Pet` is why it stayed hidden.
+   *
+   * Exact match wins. Otherwise the first schema that EXTENDS the derived name
+   * (`Leaderboard` -> `LeaderboardEntry`) is used, since that is the generator's
+   * own convention for a resource's response type. `New*` request-body schemas
+   * are never candidates — they describe input, not the persisted row.
+   */
+  static resolveModelName(resourcePath, schemas) {
+    const derived = this.toModelName(resourcePath);
+    const names = Object.keys(schemas || {});
+    if (names.length === 0) return derived;
+
+    if (names.includes(derived)) return derived;
+
+    const extension = names
+      .filter((name) => !name.startsWith('New'))
+      .filter((name) => name !== derived && name.startsWith(derived))
+      .sort((a, b) => a.length - b.length)[0];
+
+    return extension || derived;
+  }
+
   // Returns plural PascalCase for mongoose model registration
   static toMongooseName(resourceName) {
     const singular = this.toSingular(resourceName);

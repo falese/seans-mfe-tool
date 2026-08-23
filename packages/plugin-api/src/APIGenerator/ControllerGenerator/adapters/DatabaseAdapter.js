@@ -1,27 +1,47 @@
 const { NameGenerator } = require('../../utils/NameGenerator');
 
 class DatabaseAdapter {
-  static create(dbType) {
+  /**
+   * @param {string} dbType
+   * @param {object} [schemas] `components.schemas` from the spec. Supplying it
+   *   lets model names resolve against the models that are actually generated
+   *   rather than against the URL path — see getModelName.
+   */
+  static create(dbType, schemas) {
     switch (dbType?.toLowerCase()) {
       case 'mongodb':
       case 'mongo':
-        return new MongoDBAdapter();
+        return new MongoDBAdapter(schemas);
       case 'sqlite':
       case 'sql':
-        return new SQLiteAdapter();
+        return new SQLiteAdapter(schemas);
       default:
         throw new Error(`Unsupported database type: ${dbType}`);
     }
   }
 
+  constructor(schemas) {
+    this.schemas = schemas;
+  }
+
+  /**
+   * The model this resource's generated queries should reference.
+   *
+   * Every emitted query body (`db.X.findAll`, `Model.X.create`, …) goes through
+   * here, which is why resolution has to happen at this level: ControllerGenerator
+   * computing a name and passing it down does nothing, because each helper
+   * re-derives its own.
+   *
+   * With schemas available the name resolves against the models that are
+   * actually generated; without them it falls back to the original path
+   * derivation, so callers that never pass schemas behave exactly as before.
+   */
   getModelName(resourcePath) {
     if (!resourcePath) {
       throw new Error('Resource path is required to generate model name');
     }
-    // Extract resource name from path
     const resource = String(resourcePath).split('/')[1] || resourcePath;
-    const singular = NameGenerator.toSingular(resource);
-    return NameGenerator.toPascalCase(singular);
+    return NameGenerator.resolveModelName(`/${resource}`, this.schemas);
   }
 
   getImportStatement() {
