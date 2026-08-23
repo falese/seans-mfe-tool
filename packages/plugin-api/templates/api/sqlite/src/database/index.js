@@ -23,6 +23,23 @@ async function connectDatabase() {
   try {
     await sequelize.authenticate();
     logger.info('Database connection established successfully');
+
+    // Create the schema outside production.
+    //
+    // Without this a fresh start is healthy and useless: the connection opens,
+    // /health returns 200, and every data endpoint answers 500 "no such table".
+    // The sync has to run on the instance the MODELS are registered on —
+    // models/index.js constructs its own Sequelize — because syncing the bare
+    // instance above defines nothing. Required lazily so this module stays
+    // importable by tooling that has no models.
+    //
+    // Production migrates explicitly (`npm run db:migrate`); sync({ alter })
+    // must never touch a production schema.
+    if (env !== 'production') {
+      const models = require('../models');
+      await models.sequelize.sync();
+      logger.info('Database schema synchronized', { env });
+    }
   } catch (error) {
     logger.error('Unable to connect to the database:', error);
     process.exit(1);

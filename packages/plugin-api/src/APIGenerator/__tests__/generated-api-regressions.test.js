@@ -212,6 +212,22 @@ describe('generated API regressions (Meridian Phase 0)', () => {
       expect(content).not.toContain("require('./database/seed')");
     });
 
+    it('sqlite connectDatabase creates the schema, so a fresh start has tables', async () => {
+      // A generated API used to start healthy against an empty database:
+      // `database.connect()` only called authenticate(), and the init.js that
+      // does sync() was never required by index.js — dead code. Every data
+      // endpoint answered 500 "no such table: Players" on first run.
+      const content = await fs.readFile(
+        path.join(templatesDir, 'sqlite', 'src', 'database', 'index.js'), 'utf8'
+      );
+      expect(content).toMatch(/sync\(/);
+      // It must sync the instance the MODELS are registered on; syncing the
+      // module's own bare Sequelize creates nothing.
+      expect(content).toMatch(/require\('\.\.\/models'\)/);
+      // Never against a production database.
+      expect(content).toMatch(/production/);
+    });
+
     it('seed.js connects and runs the generated ./seeds runner in every variant', async () => {
       for (const variant of ['base', 'sqlite', 'mongodb']) {
         const content = await fs.readFile(

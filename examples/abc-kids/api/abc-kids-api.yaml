@@ -167,7 +167,11 @@ components:
       required: [id, displayName]
       properties:
         id:
-          type: string
+          # Integer, not string: the generator lets the database own `id` as an
+          # autoincrement primary key, and responses return a number. Declaring
+          # a string here would make the spec lie about its own payloads.
+          type: integer
+          readOnly: true
         displayName:
           type: string
         avatar:
@@ -191,7 +195,8 @@ components:
       required: [id, playerId, gameId, points]
       properties:
         id:
-          type: string
+          type: integer
+          readOnly: true
         playerId:
           type: string
         gameId:
