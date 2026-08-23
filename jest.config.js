@@ -112,7 +112,7 @@ module.exports = {
       statements: 95
     },
     // Phase 1.1: command-layer coverage targets
-    'src/commands/api.ts': {
+    'packages/plugin-api/src/commands/api.ts': {
       branches: 85,
       functions: 90,
       lines: 90,
