@@ -6,7 +6,7 @@
 
 # Interface: ValidationError
 
-Defined in: [packages/dsl/src/schema.ts:490](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L490)
+Defined in: [packages/dsl/src/schema.ts:502](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L502)
 
 Validation error
 
@@ -16,7 +16,7 @@ Validation error
 
 > `optional` **code**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L493)
+Defined in: [packages/dsl/src/schema.ts:505](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L505)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe
 
 > **message**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:492](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L492)
+Defined in: [packages/dsl/src/schema.ts:504](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L504)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/dsl/src/schema.ts:492](https://github.com/falese/seans-mfe
 
 > **path**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:491](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L491)
+Defined in: [packages/dsl/src/schema.ts:503](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L503)

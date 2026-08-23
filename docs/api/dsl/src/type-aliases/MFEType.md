@@ -8,4 +8,4 @@
 
 > **MFEType** = `z.infer`\<*typeof* [`MFETypeSchema`](../variables/MFETypeSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L21)
+Defined in: [packages/dsl/src/schema.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L33)

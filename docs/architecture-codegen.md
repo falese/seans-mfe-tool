@@ -79,7 +79,7 @@ Adding a framework is a **new template variant + plugin**, never a new lifecycle
 ADR-036). Core owns the abstract shape (`BaseFrameworkPlugin`); the plugin owns the *how*
 (bundler, templates, build commands). The generator only knows the variant id and asks the
 plugin to resolve specifics. See the
-[Framework Plugin Cookbook](./platform-design-review/framework-plugin-cookbook.md) for
+[Framework Plugin Cookbook](./archive/platform-design-review/framework-plugin-cookbook.md) for
 authoring recipes.
 
 Template directories (`src/codegen/templates/`):
@@ -121,6 +121,6 @@ codegen" a safe, idempotent loop.
 
 - [DSL Architecture](./architecture-dsl.md) — the input contract.
 - [BFF Architecture](./architecture-bff.md) — BFF artifacts emitted here.
-- [Framework Plugin Cookbook](./platform-design-review/framework-plugin-cookbook.md)
+- [Framework Plugin Cookbook](./archive/platform-design-review/framework-plugin-cookbook.md)
 - [Architecture: current state](./architecture-current-state.md)
 </content>

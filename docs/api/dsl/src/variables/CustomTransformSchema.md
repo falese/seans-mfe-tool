@@ -8,6 +8,6 @@
 
 > `const` **CustomTransformSchema**: `ZodString`
 
-Defined in: [packages/dsl/src/schema.ts:360](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L360)
+Defined in: [packages/dsl/src/schema.ts:372](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L372)
 
 Custom transform configuration (resolvers composition)

@@ -317,5 +317,5 @@ but any consumer branching on `=== 1` is affected.
 - ADR-018 / ADR-017 — the envelope and error taxonomy this ADR enforces but does not change.
 - ADR-078 — the control plane and `platform:init` half of the split.
 - PDR-003 — AI-native, agent-operable tooling.
-- `docs/platform-design-review/two-headed-giant-re-derivation.md` — the full evidence review.
+- `docs/archive/platform-design-review/two-headed-giant-re-derivation.md` — the full evidence review.
 - #139 — the epic being re-scoped.

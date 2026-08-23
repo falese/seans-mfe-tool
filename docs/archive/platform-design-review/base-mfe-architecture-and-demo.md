@@ -1,6 +1,6 @@
 # The Base-Class System: Architecture and a Live Demo
 
-A companion to [`docs/runtime-class-hierarchy.md`](../runtime-class-hierarchy.md)
+A companion to [`docs/runtime-class-hierarchy.md`](../../runtime-class-hierarchy.md)
 (which was stale — corrected in this same change — and stays the quick-reference
 doc) and the [core-ideas demo runbook](./core-ideas-demo-runbook.md) (which covers
 codegen/manifest workflows; this one is scoped to the runtime base class an
@@ -305,7 +305,7 @@ through. The class hierarchy enforces the *capability contract*; it does not
 and cannot enforce that you got there via the manifest pipeline. That
 enforcement is a separate, deliberate layer (`mfe:validate`,
 `check:mfe-drift`, both covered in
-[`gate-self-verification-audit.md`](./gate-self-verification-audit.md)) —
+[`gate-self-verification-audit.md`](../../gate-self-verification-audit.md)) —
 worth naming explicitly so "can I extend it directly" has an honest answer:
 technically yes, architecturally you'd be opting out of everything else the
 platform checks for you.

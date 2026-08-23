@@ -6,7 +6,7 @@
 
 # Interface: GenerateAllFilesResult
 
-Defined in: [packages/codegen/src/unified-generator.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L103)
+Defined in: [packages/codegen/src/unified-generator.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L124)
 
 Generate all files (features, platform, BFF, configs) for a manifest
 
@@ -16,7 +16,7 @@ Generate all files (features, platform, BFF, configs) for a manifest
 
 > **files**: [`GeneratedFile`](GeneratedFile.md)[]
 
-Defined in: [packages/codegen/src/unified-generator.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L104)
+Defined in: [packages/codegen/src/unified-generator.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L125)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/codegen/src/unified-generator.ts:104](https://github.com/f
 
 > **preservedCapabilities**: `string`[]
 
-Defined in: [packages/codegen/src/unified-generator.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L105)
+Defined in: [packages/codegen/src/unified-generator.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L126)

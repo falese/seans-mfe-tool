@@ -8,4 +8,4 @@
 
 > **CachingConfig** = `z.infer`\<*typeof* [`CachingConfigSchema`](../variables/CachingConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:289](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L289)
+Defined in: [packages/dsl/src/schema.ts:301](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L301)

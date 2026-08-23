@@ -16,7 +16,7 @@ the fleet?**
 
 Legend: 😍 delight · 👍 fine · 😕 friction · 🐛 bug
 
-Companion report: [`examples/meridian-station/DX-REPORT.md`](../../examples/meridian-station/DX-REPORT.md),
+Companion report: [`examples/meridian-station/DX-REPORT.md`](../../../examples/meridian-station/DX-REPORT.md),
 written while *building* a fleet. This one is about *changing* one.
 
 ---

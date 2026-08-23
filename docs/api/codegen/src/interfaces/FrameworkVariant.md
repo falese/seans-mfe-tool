@@ -6,7 +6,7 @@
 
 # Interface: FrameworkVariant
 
-Defined in: [packages/codegen/src/unified-generator.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L65)
+Defined in: [packages/codegen/src/unified-generator.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L86)
 
 The resolved codegen variant a caller injects (ADR-061). The CLI derives it
 from the framework plugin (loadFrameworkPlugin) so third-party frameworks
@@ -20,7 +20,7 @@ computed purely from the manifest with no framework-loader dependency.
 
 > **bundler**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:67](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L67)
+Defined in: [packages/codegen/src/unified-generator.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L88)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/codegen/src/unified-generator.ts:67](https://github.com/fa
 
 > **framework**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L66)
+Defined in: [packages/codegen/src/unified-generator.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L87)
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [packages/codegen/src/unified-generator.ts:66](https://github.com/fa
 
 > **templateVariant**: `"react-rspack"` \| `"angular-webpack"`
 
-Defined in: [packages/codegen/src/unified-generator.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L68)
+Defined in: [packages/codegen/src/unified-generator.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L89)

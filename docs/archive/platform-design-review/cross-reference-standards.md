@@ -14,7 +14,7 @@ Purpose: make every internal reference resolvable, every claim traceable to a si
    - From `docs/platform-design-review/X.md` up to a root doc: `../PROJECT-STATUS.md`.
 2. **Link only to files that exist.** A planned doc is **not** hyperlinked — write it as plain text with a tracking tag, e.g. `Code Generation Architecture _(Coming Soon — G01)_`. (A link to a non-existent file is a defect, not a placeholder.)
 3. **No links into `docs/archive/`** from active docs. Reference archived material as plain text with its path, e.g. ``design archived at `docs/archive/.../file.md` ``.
-4. **Cite decisions by ID on first mention** in a doc, then link once: `ADR-036` → `[ADR-036](../architecture-decisions/ADR-036-<slug>.md)`. Subsequent mentions use the bare ID.
+4. **Cite decisions by ID on first mention** in a doc, then link once: `ADR-036` → `[ADR-036](../../architecture-decisions/ADR-036-<slug>.md)`. Subsequent mentions use the bare ID.
 5. **Cite code by path + line range**, not by link: `src/runtime/base-mfe.ts:872–886`. Line-anchored URLs rot; path+range is greppable and stable enough for review.
 6. **Anchor links** use the GitHub-slug of the heading (`#5-naming--cross-reference-standards`). Verify anchors after renaming headings.
 

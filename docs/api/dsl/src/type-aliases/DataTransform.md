@@ -8,4 +8,4 @@
 
 > **DataTransform** = `z.infer`\<*typeof* [`DataTransformSchema`](../variables/DataTransformSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:192](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L192)
+Defined in: [packages/dsl/src/schema.ts:204](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L204)

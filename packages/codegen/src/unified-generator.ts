@@ -1,7 +1,28 @@
 /**
- * Unified MFE Codegen Generator
- * Consolidates feature/component and platform/BFF codegen
- * Implements ADR-014, REQ-REMOTE-003, ADR-027
+ * The generation pipeline: validate -> plan -> render -> emit.
+ *
+ * `generateAllFiles` is the whole story. Validate the manifest (ADR-027), plan
+ * a RenderModel from it, render that model into GeneratedFiles, and hand them
+ * to `writeGeneratedFiles` to emit. The phases are separated so each can be
+ * reasoned about alone: plan is pure, render picks templates, only emit touches
+ * disk.
+ *
+ * WHY THE `overwrite` FLAG ON EVERY GeneratedFile IS THE MOST IMPORTANT LINE
+ * IN THIS PACKAGE: it decides ownership. `overwrite: true` files are
+ * generator-owned — regenerated on every run, held byte-identical by
+ * `check:mfe-drift`. `overwrite: false` files are seeded once and then belong
+ * to the developer, and are never rewritten, not even with `--force`.
+ *
+ * Moving a file between those two settings is the most breaking edit available
+ * here, and it is invisible in a diff. It is also why a platform change that
+ * reaches developer-owned code ships with a PLATFORM_MIGRATIONS entry in the
+ * same commit (ADR-082): the platform reports what it cannot fix. The measured
+ * cost of not doing that was 48 files needing a change, regeneration reaching
+ * 29, and the other 19 sitting stale with every gate green.
+ *
+ * Framework differences are template-variant data, never branches in this file
+ * (ADR-036, ADR-061) — the variant is injected by the caller, which is what
+ * lets a third-party framework plugin work without editing the generator.
  */
 
 import * as path from 'path';

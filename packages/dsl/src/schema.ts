@@ -1,10 +1,22 @@
 /**
- * DSL Schema Definitions using Zod
- * Following ADR-014: Incremental TypeScript migration
- * Reference: docs/dsl-schema-reference.md v3.2
- * 
- * This file defines both validation schemas AND TypeScript types.
- * Types are inferred from Zod schemas - single source of truth.
+ * The manifest language — everything an `mfe-manifest.yaml` is allowed to say.
+ *
+ * Zod schemas here are the single source of truth twice over: they validate the
+ * manifest at parse time, and the TypeScript types are inferred from them, so a
+ * field cannot exist in the types without existing in the validator. The
+ * committed JSON Schema is generated from these too (ADR-065).
+ *
+ * WHY THIS IS THE CENTRE OF THE PLATFORM: the manifest is the only input to
+ * code generation (ADR-043). A capability, its lifecycle hooks, its data
+ * sources, its slots and its framework all come from here, and the generator
+ * branches on nothing else. That is what makes a generated MFE reproducible —
+ * regenerate from the same manifest and you get the same bytes, which is
+ * exactly what `check:mfe-drift` asserts across 21 examples.
+ *
+ * It also means a field added here reaches every generated MFE. `framework` and
+ * `bundler` are deliberately open strings rather than enums (ADR-036): an
+ * unknown value warns on stderr instead of failing, so shipping a new framework
+ * plugin does not require a schema change here.
  */
 
 import { z } from 'zod';

@@ -106,7 +106,7 @@ developer-owned file, *"even with `--force`"*. The measured cost of not knowing
 — carrying ADR-017 out to the fleet touched 48 files, regeneration reached 29,
 and the other 19 sat stale with `mfe:validate`, `check:mfe-consistency` and
 `check:mfe-drift` all green. A human found them by grepping
-(`docs/platform-design-review/breaking-change-regeneration-dx-report.md`).
+(`docs/archive/platform-design-review/breaking-change-regeneration-dx-report.md`).
 
 **So: add an entry to `PLATFORM_MIGRATIONS`
 (`packages/codegen/src/platform-migrations.ts`) in the same commit as the

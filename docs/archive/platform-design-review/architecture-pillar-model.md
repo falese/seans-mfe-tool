@@ -1,7 +1,7 @@
 # Architecture Pillar Model — 7 Pillars
 
 **Part of:** [Platform Design Review](./README.md) · DOCS-P1 (#213)
-**Grounded in:** ADR-018, ADR-019, ADR-036, ADR-041, ADR-042, ADR-043 (and the ADR register in [`docs/architecture-decisions/README.md`](../architecture-decisions/README.md))
+**Grounded in:** ADR-018, ADR-019, ADR-036, ADR-041, ADR-042, ADR-043 (and the ADR register in [`docs/architecture-decisions/README.md`](../../architecture-decisions/README.md))
 
 This model decomposes SMT into **seven architecture pillars**. Each pillar is documented with a fixed set of fields so it can be reviewed, scored, and upgraded independently:
 

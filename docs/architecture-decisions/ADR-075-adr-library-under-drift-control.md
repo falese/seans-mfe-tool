@@ -55,7 +55,7 @@ predictable result:
    namespace, and ADR-062 supersedes the inline production-deploy codegen — each
    recorded in prose on the superseding side only. A reader arriving at ADR-056
    or ADR-058 from the index gets no hint that part of it is dead.
-   `docs/platform-design-review/cross-reference-standards.md` §3 already makes
+   `docs/archive/platform-design-review/cross-reference-standards.md` §3 already makes
    bidirectionality normative ("an ADR that supersedes another links both ways").
    Nothing enforced it.
 
@@ -310,6 +310,6 @@ correctly never mirrored. The report says what it found; a human decides.
   section above qualifies its §1 coverage claim.
 - ADR-073 — the pure-rules + thin-command split this reuses, and the <!-- adr-lint-ignore: reference-gloss-matches -->
   documented-heuristic precedent for `reference-gloss-matches`.
-- `docs/platform-design-review/cross-reference-standards.md` §3–§4 — the
+- `docs/archive/platform-design-review/cross-reference-standards.md` §3–§4 — the
   normative standard this implements: bidirectional supersession links and the
   Tier 2 reference check.

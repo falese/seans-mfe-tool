@@ -1,3 +1,25 @@
+/**
+ * The base every command extends — and the reason `run()` is off limits.
+ *
+ * A command author writes `runCommand()` and returns a typed result. This class
+ * owns everything around it: the single-line `CommandResult<T>` envelope on
+ * stdout under `--json` (ADR-018), the redirect that sends every other write to
+ * stderr so nothing can corrupt that line, typed-error to exit-code mapping
+ * (ADR-017), and the telemetry span.
+ *
+ * WHY IT IS SHAPED THIS WAY: the platform's second consumer is an agent, not a
+ * person. A human reads "error: could not find manifest" and adapts;
+ * a program needs exit code 64 and `{"ok":false,"error":{"type":"validation"}}`.
+ * Every one of those guarantees lives in `run()`, so a command that overrides
+ * `run()`, or calls `process.exit()`, silently opts out of all of them while
+ * still looking correct to a human at a terminal. That is why lint makes
+ * `process.exit` an error in command code, and why the conformance sweep
+ * asserts no command owns a `run` property.
+ *
+ * The rules are stated for plugin authors in docs/PLUGIN-CONTRACT.md and
+ * demonstrated in examples/plugin-skeleton.
+ */
+
 import { Command, Flags } from '@oclif/core';
 import { randomUUID } from 'crypto';
 import {

@@ -15,7 +15,7 @@ A structured architecture + documentation review of **seans-mfe-tool**, delivere
 | [AI-Native Readiness Scorecard](./ai-native-readiness-scorecard.md) | #214 | Evidence-based AI-native analysis; weighted 81/100 scorecard; maturity model. **Two scores are corrected by the re-derivation below — see its §4.** |
 | [The Two-Headed Giant, Re-Derived](./two-headed-giant-re-derivation.md) | #139 | Epic #139 reconciled against three months of shipped work and two DX field reports; the epic split; corrections to D3/D6 of the scorecard |
 | [Breaking-Change Regeneration DX Report](./breaking-change-regeneration-dx-report.md) | #320 | Field report from carrying ADR-017 out to 21 MFEs: what the drift gate caught, what regeneration could not reach, and the 19 files a human had to edit |
-| Project status + architecture currency refresh | #216 | Reconciled [`PROJECT-STATUS.md`](../PROJECT-STATUS.md) + [`architecture-current-state.md`](../architecture-current-state.md) |
+| Project status + architecture currency refresh | #216 | Reconciled [`PROJECT-STATUS.md`](../../PROJECT-STATUS.md) + [`architecture-current-state.md`](../../architecture-current-state.md) |
 
 ### Phase 2 — Analysis (what's *missing* / *misaligned*)
 
@@ -46,15 +46,15 @@ live under `docs/` (next to the architecture docs they extend), not in this fold
 
 | Doc | Remediation | What it gives you |
 |---|---|---|
-| [CLI Contract](../cli-contract.md) | R1 | Canonical envelope, `--json` stdout/stderr rules, exit-code table |
-| [Code Generation Architecture](../architecture-codegen.md) | R4 (G01) | UnifiedGenerator pipeline, template variants, ownership-marker contract |
-| [DSL & Type System](../architecture-dsl.md) | R4 (G02) | Manifest field reference, open vs closed fields, capabilities/hooks |
-| [BFF Layer Architecture](../architecture-bff.md) | R4 (G03) | Mesh composition, demo mode, `query()` URL resolution |
-| [API Generator Architecture](../architecture-api-generator.md) | R4 (G04) | OpenAPI → routes/controllers/db, SQLite + MongoDB paths |
-| [Getting Started](../getting-started.md) | R8 | Zero-to-running-MFE path + onboarding baseline |
+| [CLI Contract](../../cli-contract.md) | R1 | Canonical envelope, `--json` stdout/stderr rules, exit-code table |
+| [Code Generation Architecture](../../architecture-codegen.md) | R4 (G01) | UnifiedGenerator pipeline, template variants, ownership-marker contract |
+| [DSL & Type System](../../architecture-dsl.md) | R4 (G02) | Manifest field reference, open vs closed fields, capabilities/hooks |
+| [BFF Layer Architecture](../../architecture-bff.md) | R4 (G03) | Mesh composition, demo mode, `query()` URL resolution |
+| [API Generator Architecture](../../architecture-api-generator.md) | R4 (G04) | OpenAPI → routes/controllers/db, SQLite + MongoDB paths |
+| [Getting Started](../../getting-started.md) | R8 | Zero-to-running-MFE path + onboarding baseline |
 
-R3 (lifecycle diagram fix) lands in [`runtime-class-hierarchy.md`](../runtime-class-hierarchy.md);
-R6 (ADR status reconciliation) lands in the [ADR register erratum](../architecture-decisions/README.md#status-reconciliation-erratum).
+R3 (lifecycle diagram fix) lands in [`runtime-class-hierarchy.md`](../../runtime-class-hierarchy.md);
+R6 (ADR status reconciliation) lands in the [ADR register erratum](../../architecture-decisions/README.md#status-reconciliation-erratum).
 The code/CI remediations R2/R5/R7 are tracked as separate issues+PRs ([#229](https://github.com/falese/seans-mfe-tool/issues/229), [#231](https://github.com/falese/seans-mfe-tool/issues/231), [#230](https://github.com/falese/seans-mfe-tool/issues/230)).
 
 ### Follow-ups (not part of epic #211)
@@ -64,7 +64,7 @@ finding, done independently of the formal 16-issue program above:
 
 | Doc | What it gives you |
 |---|---|
-| [Gate Self-Verification Audit](./gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
+| [Gate Self-Verification Audit](../../gate-self-verification-audit.md) | The other 9 verification gates, audited the same way the DX report audited two: a controlled break per gate, the real (not predicted) result, and a fix for the one live gap found (`check:mfe-drift` missing orphaned generator-owned files after a manifest shrinks) |
 | [Core Ideas Demo Runbook](./core-ideas-demo-runbook.md) | A repeatable, scratch-directory walkthrough of the platform's core ideas — manifest-driven codegen, the generator/developer ownership split, idempotent regeneration, ADR-082 migration surfacing, and truing up a pre-existing non-standardized MFE — across five use cases |
 | [Base-Class System: Architecture and a Live Demo](./base-mfe-architecture-and-demo.md) | The `BaseMFE → BaseRemoteMFE → RemoteMFE → generated class` hierarchy explained as a system (the ADR-056 polyglot-VM boundary, the capability pipeline, composition-over-inheritance as the real extension pattern) plus a live run across six use cases: generate → inherited-vs-stub → lifecycle in action → the ownership guardrail caught on camera → whether direct subclassing is possible → healing an already-running MFE end to end. Surfaces two real findings: a lifecycle-hook name mismatch (fixed in this pass — a new `mfe:validate` rule, `lifecycle-hook-handler-resolvable`, TDD'd and verified against the real 21-MFE fleet) and why the telemetry DI seam is unreachable from generated code today (documented, not yet built — a scoped codegen recommendation) |
 
@@ -86,7 +86,7 @@ Phase 1 (foundation) ──> Phase 2 (gaps + IA + contract drift) ──> Phase 
 
 ## Scope & honesty
 
-These documents *summarize and assess*; the canonical sources remain [`PROJECT-STATUS.md`](../PROJECT-STATUS.md), the ADRs in [`docs/architecture-decisions/`](../architecture-decisions/README.md), and the code. Where docs and code disagreed, the [Contract Alignment Pass](./contract-alignment-pass.md) records the code as authoritative and tracks the fix.
+These documents *summarize and assess*; the canonical sources remain [`PROJECT-STATUS.md`](../../PROJECT-STATUS.md), the ADRs in [`docs/architecture-decisions/`](../../architecture-decisions/README.md), and the code. Where docs and code disagreed, the [Contract Alignment Pass](./contract-alignment-pass.md) records the code as authoritative and tracks the fix.
 
 ## Status
 

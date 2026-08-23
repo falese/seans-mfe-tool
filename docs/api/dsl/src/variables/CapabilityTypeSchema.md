@@ -8,6 +8,6 @@
 
 > `const` **CapabilityTypeSchema**: `ZodEnum`\<\{ `domain`: `"domain"`; `platform`: `"platform"`; \}\>
 
-Defined in: [packages/dsl/src/schema.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L48)
+Defined in: [packages/dsl/src/schema.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L60)
 
 Capability type discrimination

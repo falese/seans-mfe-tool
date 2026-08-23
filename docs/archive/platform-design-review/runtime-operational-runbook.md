@@ -4,7 +4,7 @@
 **Audience:** Operators and integrators running MFEs in a shell — diagnosing why a unit won't load, render, or respond.
 **Grounding:** ADR-041 (lifecycle state machine), ADR-042 (hook execution semantics), `src/runtime/base-mfe.ts`. Contract specifics are in the [Contract Alignment Pass](./contract-alignment-pass.md).
 
-This is operator-grade: every symptom maps to a cause in code (with `file:line`) and a concrete action. It does not restate the architecture — see [`architecture-runtime-platform.md`](../architecture-runtime-platform.md) for that.
+This is operator-grade: every symptom maps to a cause in code (with `file:line`) and a concrete action. It does not restate the architecture — see [`architecture-runtime-platform.md`](../../architecture-runtime-platform.md) for that.
 
 ---
 

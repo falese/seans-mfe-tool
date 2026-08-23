@@ -3,7 +3,7 @@
 **Audience:** Enterprise stakeholders (engineering leadership, platform architects, technical decision-makers)
 **Length:** ~2 pages
 **Part of:** [Platform Design Review](./README.md) · DOCS-P1 (#212)
-**Grounded in:** ADR-033, ADR-041, ADR-043 · [`README.md`](../../README.md) · [`docs/spec.md`](../spec.md)
+**Grounded in:** ADR-033, ADR-041, ADR-043 · [`README.md`](../../README.md) · [`docs/spec.md`](../../spec.md)
 
 ---
 
@@ -72,7 +72,7 @@ The discipline that keeps these replaceable is the same abstract-base → concre
 
 ## Risk and maturity statement (grounded in project status)
 
-SMT is **production-shaped in its foundations and actively maturing in its runtime**. This narrative does not overstate readiness; see [`docs/PROJECT-STATUS.md`](../PROJECT-STATUS.md) for the authoritative status.
+SMT is **production-shaped in its foundations and actively maturing in its runtime**. This narrative does not overstate readiness; see [`docs/PROJECT-STATUS.md`](../../PROJECT-STATUS.md) for the authoritative status.
 
 **Mature / shipped:**
 - CLI platform (oclif migration, JSON envelope, typed errors, MCP server) — shipped.
@@ -100,5 +100,5 @@ SMT is **production-shaped in its foundations and actively maturing in its runti
 
 - The seven architecture pillars, scored: [Architecture Pillar Model](./architecture-pillar-model.md)
 - AI-native design analysis: [AI-Native Readiness Scorecard](./ai-native-readiness-scorecard.md)
-- Authoritative status: [`docs/PROJECT-STATUS.md`](../PROJECT-STATUS.md)
+- Authoritative status: [`docs/PROJECT-STATUS.md`](../../PROJECT-STATUS.md)
 - Stakeholder talk track, memo, and FAQ: [Communication Pack](./communication-pack.md)

@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:497](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L497)
+Defined in: [packages/dsl/src/schema.ts:509](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L509)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:499](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L499)
+Defined in: [packages/dsl/src/schema.ts:511](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L511)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:499](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:500](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L500)
+Defined in: [packages/dsl/src/schema.ts:512](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L512)
 
 #### authorization?
 
@@ -244,4 +244,4 @@ Defined in: [packages/dsl/src/schema.ts:500](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:498](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L498)
+Defined in: [packages/dsl/src/schema.ts:510](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L510)

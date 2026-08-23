@@ -2,7 +2,7 @@
 
 **Part of:** [Platform Design Review](./README.md) · DOCS-P3 (#224, incorporating the #215 skeleton)
 **Audience:** Executives, prospective adopting teams, partner/stakeholder reviewers
-**Source of truth:** This pack *summarizes* — it never overrides [`PROJECT-STATUS.md`](../PROJECT-STATUS.md), the [Executive Narrative](./executive-architecture-narrative.md), or the [AI-Native Scorecard](./ai-native-readiness-scorecard.md).
+**Source of truth:** This pack *summarizes* — it never overrides [`PROJECT-STATUS.md`](../../PROJECT-STATUS.md), the [Executive Narrative](./executive-architecture-narrative.md), or the [AI-Native Scorecard](./ai-native-readiness-scorecard.md).
 
 Contents:
 1. One-pager (stakeholder leave-behind)
@@ -89,7 +89,7 @@ No. Framework and bundler are manifest fields resolved by a plugin (ADR-036). Re
 The CLI is designed so an autonomous agent can operate it as a first-class user: one JSON envelope per command, typed errors mapped to exit codes, non-interactive mode, and an MCP server. See the [Scorecard](./ai-native-readiness-scorecard.md).
 
 **Q: Is it production-ready?**
-The foundations are; the runtime platform is maturing. Adopt the contract now and check the specific runtime capabilities you depend on in [`PROJECT-STATUS.md`](../PROJECT-STATUS.md). We do not overstate readiness.
+The foundations are; the runtime platform is maturing. Adopt the contract now and check the specific runtime capabilities you depend on in [`PROJECT-STATUS.md`](../../PROJECT-STATUS.md). We do not overstate readiness.
 
 **Q: How do we trust the architecture?**
 Every architectural decision is an ADR and every product decision a PDR — the "why" is auditable, not tribal.
@@ -155,4 +155,4 @@ The honest evidence ledger behind the messaging. "Proves" = shipped and demonstr
 | Subsystem reference docs (codegen/DSL/BFF) | "Coming Soon" → authored in [roadmap](./execution-roadmap-90-day.md) Phase 2 (G01–G04) |
 | Marketplace of domain-capability packages | North-star, not yet built (CLAUDE.md) |
 
-**Rule of thumb for spokespeople:** if a capability is in the right-hand table, say "designed / in progress" — never "done." The [`PROJECT-STATUS.md`](../PROJECT-STATUS.md) date is the arbiter.
+**Rule of thumb for spokespeople:** if a capability is in the right-hand table, say "designed / in progress" — never "done." The [`PROJECT-STATUS.md`](../../PROJECT-STATUS.md) date is the arbiter.

@@ -1,7 +1,7 @@
 # Framework Plugin Cookbook
 
 **Part of:** [Platform Design Review](./README.md) · DOCS-P2 (#221)
-**Relationship:** This is the *recipe* companion to the reference [`framework-plugin-authoring.md`](../framework-plugin-authoring.md). The authoring guide explains the interface section-by-section; this cookbook gives task-oriented recipes, the compatibility matrix, and failure-mode guidance an operator/author hits in practice.
+**Relationship:** This is the *recipe* companion to the reference [`framework-plugin-authoring.md`](../../framework-plugin-authoring.md). The authoring guide explains the interface section-by-section; this cookbook gives task-oriented recipes, the compatibility matrix, and failure-mode guidance an operator/author hits in practice.
 **Grounding:** ADR-036 (framework plugins), `packages/contracts/src/framework-plugin.ts` (the shape), `src/framework/loader.ts` (resolution).
 
 > **Core principle (ADR-036).** *Core owns the shape; plugins own the how.* Adding a framework is publishing `@seans-mfe/framework-<name>` that extends `BaseFrameworkPlugin` — never editing the core to special-case a framework.
