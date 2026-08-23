@@ -1,5 +1,5 @@
 {
-  "name": "@falese/bff-plugin",
+  "name": "@seans-mfe/plugin-bff",
   "version": "0.1.0",
   "description": "BFF commands plugin for seans-mfe-tool (bff:init, bff:validate, bff:build, bff:dev)",
   "main": "./dist/index.js",

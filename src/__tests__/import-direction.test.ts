@@ -39,7 +39,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'oclif-base': ['contracts'],
   'framework-react': ['contracts'],
   'framework-angular': ['contracts'],
-  'bff-plugin': ['contracts', 'codegen', 'oclif-base'],
+  'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
 };
@@ -51,7 +51,7 @@ const FIRST_PARTY = /^@(?:seans-mfe|seans-mfe-tool|falese)\/([a-z-]+)/;
 function resolvePackage(specifier: string): string | undefined {
   const m = FIRST_PARTY.exec(specifier);
   if (!m) return undefined;
-  // @falese/bff-plugin and @seans-mfe/bff-plugin both live at packages/bff-plugin.
+  // @seans-mfe/plugin-bff and @seans-mfe/bff-plugin both live at packages/plugin-bff.
   return m[1];
 }
 

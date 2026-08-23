@@ -18,7 +18,7 @@ dependency — which makes this the only place all three can share one
 definition.
 
 It was previously declared in `src/oclif/results.ts` AND copied into
-`@falese/bff-plugin/src/types.ts` under the comment "duplicated here so the
+`@seans-mfe/plugin-bff/src/types.ts` under the comment "duplicated here so the
 plugin is self-contained". Extracting a second plugin would have made three
 copies of a contract type, which is precisely the shape ADR-080 exists to
 make unrepresentable.

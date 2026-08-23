@@ -277,7 +277,7 @@ async function renderFiles(
   // Platform/BFF directories and template paths
   const platformDir = path.join(basePath, 'src', 'platform', 'base-mfe');
   const bffDir = path.join(basePath, 'src', 'platform', 'bff');
-  const bffTemplateDir = path.resolve(__dirname, '../../../packages/bff-plugin/templates');
+  const bffTemplateDir = path.resolve(__dirname, '../../../packages/plugin-bff/templates');
 
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test
@@ -527,7 +527,7 @@ async function renderFiles(
   // Variant-aware: angular-webpack emits webpack.config.js + tsconfig pair;
   // react-rspack keeps the existing package.json + rspack.config.js shape.
   // tsconfig.json is only emitted here for non-BFF React MFEs — when a BFF
-  // is present the BFF plugin already owns it (packages/bff-plugin/templates/tsconfig.json).
+  // is present the BFF plugin already owns it (packages/plugin-bff/templates/tsconfig.json).
   //
   // Ownership is per-entry. These are developer-owned by default — seeded once
   // and never touched again — because an MFE author edits `package.json`,

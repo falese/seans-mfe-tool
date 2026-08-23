@@ -12,12 +12,12 @@ supersedes: []
 superseded-by: []
 implements-pdr: [1]
 implemented-by:
-  - packages/bff-plugin/templates/mock-switch.js.ejs
-  - packages/bff-plugin/templates/mocks.json.ejs
-  - packages/bff-plugin/src/shared.ts
+  - packages/plugin-bff/templates/mock-switch.js.ejs
+  - packages/plugin-bff/templates/mocks.json.ejs
+  - packages/plugin-bff/src/shared.ts
   - packages/codegen/src/unified-generator.ts
 verified-by:
-  - packages/bff-plugin/src/commands/bff/__tests__/bff-workflow.test.ts
+  - packages/plugin-bff/src/commands/bff/__tests__/bff-workflow.test.ts
 tracked-by: ["#289", "#301"]
 summary: >-
   Generated BFFs gain an opt-in "demo mode" — they serve live upstream data by default but

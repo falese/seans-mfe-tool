@@ -74,8 +74,8 @@ follows the same oclif-plugin shape:
   **in-repo plugins by listing them in the root `oclif.plugins`** (a `file:`
   workspace dependency).
 
-`@falese/bff-plugin` is the first in-repo application: `bff:init/dev/build/validate`
-live in `packages/bff-plugin/src/commands/bff/` (D4, #126–130). One consequence
+`@seans-mfe/plugin-bff` is the first in-repo application: `bff:init/dev/build/validate`
+live in `packages/plugin-bff/src/commands/bff/` (D4, #126–130). One consequence
 of in-repo plugins: **the plugin must be built** (`tsc` + `oclif manifest`) for
 its commands to resolve — even in dev, where the core CLI runs from source via
 `bun bin/dev.ts`, oclif loads a linked plugin from its `dist/commands`. Building

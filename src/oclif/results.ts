@@ -8,14 +8,14 @@
 
 import type { BuildError } from '@seans-mfe/contracts';
 
-// BFF result types live in @falese/bff-plugin (migrated in plugin extraction epic)
+// BFF result types live in @seans-mfe/plugin-bff (migrated in plugin extraction epic)
 export type {
   BffInitResult,
   BffBuildResult,
   BffDevResult,
   BffValidateResult,
   BffValidationIssue,
-} from '@falese/bff-plugin';
+} from '@seans-mfe/plugin-bff';
 
 // ---------------------------------------------------------------------------
 // Shared mixin

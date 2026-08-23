@@ -51,7 +51,7 @@ childProcess.spawn = jest.fn(() => {
 });
 
 // Now require the bff command logic AFTER all mocks are set up.
-// After D4 (#126–130) these live in @falese/bff-plugin alongside this test.
+// After D4 (#126–130) these live in @seans-mfe/plugin-bff alongside this test.
 const { extractMeshConfig, writeMeshConfig, addMeshDependencies } = require('../../../shared');
 const { bffInitCommand } = require('../init');
 const { bffBuildCommand } = require('../build');
@@ -629,7 +629,7 @@ describe('BFF Commands', () => {
       it('should throw error if template directory not found', async () => {
         // The plugin's template dir is resolved relative to the command file
         // (…/templates). Match the trailing segment so this stays robust to the
-        // package layout (ADR-061/D4 moved it into @falese/bff-plugin).
+        // package layout (ADR-061/D4 moved it into @seans-mfe/plugin-bff).
         mockFs.pathExists.mockImplementation(async (p) => {
           if (/[\\/]templates$/.test(p)) return false;
           return true;

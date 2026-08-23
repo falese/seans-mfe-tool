@@ -85,7 +85,7 @@ worse than a gap:
 
 Three stale numbers in *code* were repointed in the same pass: `ADR-048`→`ADR-014`
 (`src/utils/manifestValidator.js`), `ADR-045`→`ADR-011`
-(`packages/bff-plugin/templates/mfe-manifest.yaml.ejs` — a template, so every
+(`packages/plugin-bff/templates/mfe-manifest.yaml.ejs` — a template, so every
 generated MFE had inherited it), and `packages/runtime/src/base-mfe.ts` no longer
 calls the shipped retry/timeout stages "proposed".
 

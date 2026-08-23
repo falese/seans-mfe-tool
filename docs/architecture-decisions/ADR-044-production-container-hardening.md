@@ -12,7 +12,7 @@ supersedes: []
 superseded-by: []
 implements-pdr: [1]
 implemented-by:
-  - packages/bff-plugin/templates/Dockerfile.ejs
+  - packages/plugin-bff/templates/Dockerfile.ejs
   - packages/runtime/src/error-boundary.ts
 verified-by:
   - packages/runtime/src/__tests__/error-boundary.test.ts
