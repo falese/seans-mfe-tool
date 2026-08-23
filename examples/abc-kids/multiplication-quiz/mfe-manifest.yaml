@@ -62,12 +62,16 @@ capabilities:
 
 data:
   sources:
-    - name: PetStoreAPI
+    # The fleet's own API, not a sample spec. This BFF reads live players,
+    # scores and progression from abc-kids-api, which is backed by a real
+    # database. The spec is a copy of api/abc-kids-api.yaml, which must live
+    # inside this MFE because its Docker build context is this directory;
+    # a test pins the copies to the canonical file (ADR-063).
+    - name: AbcKidsPlayAPI
       handler:
         openapi:
-          source: ./specs/petstore.yaml
+          source: ./specs/abc-kids-api.yaml
           operationHeaders:
-            Authorization: 'Bearer {context.jwt}'
             X-Request-ID: '{context.requestId}'
   mockSwitch:
     enabled: true
