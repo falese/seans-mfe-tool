@@ -13,7 +13,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { adrStatusCommand } from '../status';
+import { adrStatusCommand } from '../commands/adr/status';
 import { ValidationError } from '@seans-mfe/contracts';
 
 const ADR_DIR = path.join('docs', 'architecture-decisions');

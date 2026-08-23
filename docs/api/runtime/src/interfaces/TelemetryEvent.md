@@ -54,7 +54,7 @@ Defined in: [packages/runtime/src/context.ts:129](https://github.com/falese/sean
 
 ### status
 
-> **status**: `"error"` \| `"success"` \| `"failure"` \| `"start"` \| `"end"`
+> **status**: `"error"` \| `"success"` \| `"start"` \| `"end"` \| `"failure"`
 
 Defined in: [packages/runtime/src/context.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L132)
 

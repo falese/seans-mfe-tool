@@ -14,8 +14,10 @@ export * from './slot-validation';
 // ADR library drift control (ADR-075): the frontmatter schema that makes the
 // decision record machine-readable, and the rules that keep it from rotting.
 // Same pure-core / thin-command split as the slot checks above.
-export * from './adr-schema';
-export * from './adr-validation';
+// ADR schema and governance rules moved to @seans-mfe/plugin-adr (ADR-063's
+// sibling reasoning, ADR-075's subject): this package defines the MFE manifest
+// language, and ADR frontmatter is a different domain that only ADR tooling
+// ever imported.
 // Control-plane composition (ADR-083): the project-scoped document a deploying
 // project authors, and the compiler that turns it plus the fleet's manifests
 // into the registry payload. Same pure-core / thin-command split again.

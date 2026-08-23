@@ -15,14 +15,14 @@ import * as path from 'path';
 import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
-import { BaseCommand } from '../../oclif/BaseCommand';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { ValidationError } from '@seans-mfe/contracts';
 import {
   parseAdrDocument,
   formatAdrId,
   normalizeAdrId,
   type AdrStatus as AdrStatusValue,
-} from '@seans-mfe/dsl';
+} from '../../adr-index';
 import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 
 /** Display order — the lifecycle path, not alphabetical. */

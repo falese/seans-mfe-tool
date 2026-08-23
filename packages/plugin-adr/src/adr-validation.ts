@@ -26,7 +26,17 @@ import {
   type AdrDocument,
   type AdrParseFailure,
 } from './adr-schema';
-import type { SourceFile } from './slot-validation';
+/**
+ * A file handed to the scanner. Structural, not a shared protocol — the DSL's
+ * slot validator declares the same two fields for the same reason, and
+ * TypeScript's structural typing means either side's value satisfies the
+ * other. Depending on @seans-mfe/dsl for `{ path, text }` would buy a whole
+ * package edge for two fields.
+ */
+export interface SourceFile {
+  path: string;
+  text: string;
+}
 
 export type AdrValidationRule =
   | 'frontmatter-valid'

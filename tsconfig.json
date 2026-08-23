@@ -32,6 +32,8 @@
       "@seans-mfe/framework-angular": ["./packages/framework-angular/src/index.ts"],
       "@seans-mfe/plugin-api": ["./packages/plugin-api/src/index.ts"],
       "@seans-mfe/plugin-api/*": ["./packages/plugin-api/src/*"],
+      "@seans-mfe/plugin-adr": ["./packages/plugin-adr/src/index.ts"],
+      "@seans-mfe/plugin-adr/*": ["./packages/plugin-adr/src/*"],
       "@seans-mfe/framework-angular/*": ["./packages/framework-angular/src/*"]
     }
   },

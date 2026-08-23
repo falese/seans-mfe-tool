@@ -12,12 +12,12 @@ supersedes: []
 superseded-by: []
 implements-pdr: [7]
 implemented-by:
-  - packages/dsl/src/adr-schema.ts
-  - packages/dsl/src/adr-validation.ts
-  - src/commands/adr/validate.ts
+  - packages/plugin-adr/src/adr-schema.ts
+  - packages/plugin-adr/src/adr-validation.ts
+  - packages/plugin-adr/src/commands/adr/validate.ts
   - scripts/check-adr-consistency.ts
 verified-by:
-  - packages/dsl/src/__tests__/adr-validation.test.ts
+  - packages/plugin-adr/src/__tests__/adr-validation.test.ts
   - check:adr
 tracked-by: []
 summary: >-

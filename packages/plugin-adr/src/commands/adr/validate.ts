@@ -18,7 +18,7 @@ import * as path from 'path';
 import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
-import { BaseCommand } from '../../oclif/BaseCommand';
+import { BaseCommand } from '@seans-mfe/oclif-base';
 import { BusinessError } from '@seans-mfe/contracts';
 import { ADR_DIR, resolveAdrRoot } from './_adr-root';
 import {
@@ -28,8 +28,8 @@ import {
   type AdrParseFailure,
   type AdrValidationIssue,
   type AdrValidationRule,
-} from '@seans-mfe/dsl';
-import type { SourceFile } from '@seans-mfe/dsl';
+} from '../../adr-index';
+import type { SourceFile } from '../../adr-index';
 
 const SPEC_FILE = path.join('docs', 'spec.md');
 

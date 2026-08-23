@@ -32,8 +32,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseAdrDocument, formatAdrId, normalizeAdrId } from '@seans-mfe/dsl';
-import type { AdrDocument } from '@seans-mfe/dsl';
+import { parseAdrDocument, formatAdrId, normalizeAdrId } from '@seans-mfe/plugin-adr';
+import type { AdrDocument } from '@seans-mfe/plugin-adr';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');

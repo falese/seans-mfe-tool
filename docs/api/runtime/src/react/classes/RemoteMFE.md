@@ -1036,7 +1036,7 @@ No-ops when no telemetry service is injected.
 
 ##### status
 
-`"error"` | `"success"` | `"failure"` | `"start"` | `"end"`
+`"error"` | `"success"` | `"start"` | `"end"` | `"failure"`
 
 ##### extra?
 
