@@ -1,3 +1,24 @@
 {
-  "_comment": "Demo-mode fixtures (ADR-052). Key by GraphQL Query field name; value is what that field returns when mock mode is active. Example: \"findPetsByStatus\": [{ \"id\": 1001, \"name\": \"Demo Pet\", \"status\": \"available\" }]. This file is developer-owned and is NOT overwritten on regeneration."
+  "_comment": "Demo-mode fixtures (ADR-052). Keyed by GraphQL Query field name, which comes from the spec's operationId. Deliberately NOT the seeded database rows — the point of demo mode is that a reviewer can tell mock from live at a glance, so these players are fictional and the points differ. Only Query fields are wrapped by mock-switch.js; createPlayer/createScore are mutations and always go live. Developer-owned: regeneration does not overwrite this file.",
+
+  "listPlayers": [
+    { "id": 9101, "displayName": "Demo Counter", "avatar": "🧮", "createdAt": "2026-01-01T00:00:00Z" },
+    { "id": 9102, "displayName": "Demo Adder",   "avatar": "➗", "createdAt": "2026-01-01T00:00:00Z" }
+  ],
+
+  "getPlayer": { "id": 9101, "displayName": "Demo Counter", "avatar": "🧮", "createdAt": "2026-01-01T00:00:00Z" },
+
+  "listScores": [
+    { "id": 9201, "playerId": "9101", "gameId": "multiplication-quiz", "points": 120, "achievedAt": "2026-01-01T00:00:00Z" },
+    { "id": 9202, "playerId": "9102", "gameId": "multiplication-quiz", "points": 240, "achievedAt": "2026-01-01T00:00:00Z" }
+  ],
+
+  "getLeaderboard": [
+    { "playerId": "9102", "displayName": "Demo Adder",   "avatar": "➗", "bestPoints": 240, "bestGameId": "multiplication-quiz", "gamesPlayed": 1 },
+    { "playerId": "9101", "displayName": "Demo Counter", "avatar": "🧮", "bestPoints": 120, "bestGameId": "multiplication-quiz", "gamesPlayed": 1 }
+  ],
+
+  "getProgression": [
+    { "playerId": "9101", "gameId": "multiplication-quiz", "level": 2, "starsEarned": 3, "lastPlayedAt": "2026-01-01T00:00:00Z" }
+  ]
 }
