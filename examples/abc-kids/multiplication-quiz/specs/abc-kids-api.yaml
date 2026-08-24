@@ -12,9 +12,9 @@ info:
     to contrast them against.
 
 servers:
-  - url: http://abc-kids-api:3101
+  - url: http://abc-kids-api:3101/api
     description: In-cluster service name (docker compose)
-  - url: http://localhost:3101
+  - url: http://localhost:3101/api
     description: Local development
 
 paths:
