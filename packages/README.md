@@ -16,7 +16,9 @@ The list is a reading order, not an alphabetical one. Each entry assumes the one
 | 4 | **codegen** | Manifest → files. One pipeline: validate → plan → render → emit. Owns which files a generated MFE gets and, through `overwrite`, which ones it owns forever. | `src/unified-generator.ts` |
 | 5 | **oclif-base** | `BaseCommand` — the JSON envelope, the stdout/stderr split, typed exit codes. Every CLI command and every plugin command extends it. | `src/BaseCommand.ts` |
 | 6 | **framework-react**, **framework-angular** | Framework adapters. Build, scaffold and Docker behaviour per framework, plus the slot sugar generated code imports. Adding a framework means adding one of these. | `src/plugin.ts` |
-| 7 | **bff-plugin** | The BFF commands (`bff:init/validate/build/dev`) as an oclif plugin. The worked example for [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md). | `src/commands/` |
+| 7 | **plugin-bff** | The BFF commands (`bff:init/validate/build/dev`) as an oclif plugin. The worked example for [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md). | `src/commands/` |
+| 8 | **plugin-api** | OpenAPI → Express + Sequelize backend generation (`api:*`), as a plugin rather than a third of `src/` (ADR-063). The largest single thing that is *not* the CLI. | `src/commands/api.ts` |
+| 9 | **plugin-adr** | The decision-record tooling (`adr:*`) and the governance gates behind `check:adr` / `build:adr-index` (ADR-075). Governs the repo; is not part of the platform contract. | `src/commands/` |
 | — | **control-plane** | **Not a TypeScript library and not a workspace member.** Two Dockerised JavaScript services — `daemon/` and `registry/` — each with its own `package.json` and `Dockerfile`. It is under `packages/` because it ships with the platform (PDR-008, ADR-078), not because it compiles with the rest. | `README.md` |
 
 ## The layering is one-way
@@ -28,7 +30,9 @@ contracts ───────────────────────�
     │   │   └────── dsl
     │   └────────── runtime      → contracts, dsl
     └────────────── codegen      → contracts, dsl
-                    bff-plugin   → contracts, codegen, oclif-base
+                    plugin-bff   → contracts, codegen, oclif-base
+                    plugin-api   → contracts, oclif-base
+                    plugin-adr   → contracts, oclif-base
 ```
 
 `contracts` depending on nothing is the invariant the rest rests on (ADR-061, ADR-080): it is
@@ -44,7 +48,7 @@ between packages means editing that list on purpose.
 
 They load by different mechanisms, and conflating them is the most likely early stumble:
 
-- **oclif command plugins** (`bff-plugin`) add *commands* to the CLI. Registered in the root
+- **oclif command plugins** (`plugin-bff`, `plugin-api`, `plugin-adr`) add *commands* to the CLI. Registered in the root
   `package.json` under `oclif.plugins`, resolved by oclif at startup. Contract:
   [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md).
 - **framework plugins** (`framework-react`, `framework-angular`) add *build and scaffold
@@ -55,3 +59,16 @@ They load by different mechanisms, and conflating them is the most likely early 
 ## Namespaces
 
 `@seans-mfe/*` is first-party; `@falese/*` is third-party (ADR-021).
+
+One package does not follow that rule: **`runtime` publishes as `@seans-mfe-tool/runtime`**,
+not `@seans-mfe/runtime` as ADR-021's own table lists it. It is the one name that is hard to
+change — every generated MFE imports it and every example's `package.json` declares it — so
+renaming it is a platform migration (ADR-082), not a rename. Tracked in
+[#362](https://github.com/falese/seans-mfe-tool/issues/362); recorded here so the next reader
+finds the discrepancy explained rather than surprising.
+
+The rows above are checked against `ls packages/` by
+[`src/__tests__/packages-readme-covers-disk.test.ts`](../src/__tests__/packages-readme-covers-disk.test.ts).
+This file is the entry point to the reading order, which makes it the worst place in the repo
+for a stale name — it went stale about three plugin extractions in the same pull request that
+made them, and a reviewer reading the README first and `ls` second is what found it.
