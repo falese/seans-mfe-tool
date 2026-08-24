@@ -380,6 +380,16 @@ jobs:
         # graph. `npm run check:adr -- --include-examples` reports them.
         run: npm run check:adr
 
+      - name: System map counts match the repository
+        # docs/system-map.html is the executive-facing page, and its counts are
+        # generated (ADR-075's pattern applied to the page a reader is least
+        # able to check for themselves). The gate existed but was wired into no
+        # workflow, so the drift it exists to prevent recurred on the very
+        # branch that added it: a commit added a test file and left the page
+        # claiming the old total, with every required check green. A gate
+        # nothing runs is a comment.
+        run: npm run build:system-map:check
+
       - name: ADR index and PDR map are generated from frontmatter
         # The spec.md index and the PDR↔ADR map are views of ADR frontmatter
         # (ADR-075 §1), not second copies of it. Same generate-and-diff idiom as
