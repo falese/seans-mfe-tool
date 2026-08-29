@@ -1,0 +1,31 @@
+{
+  "seed": 42,
+  "pairs": 500,
+  "seed_pairs": 63,
+  "synth_pairs": 437,
+  "distinct_completions": 458,
+  "distinct_domains": 58,
+  "prompt_tok": {
+    "mean": 31,
+    "p50": 31,
+    "p95": 45
+  },
+  "completion_tok": {
+    "mean": 194.8,
+    "p50": 149,
+    "p95": 561
+  },
+  "near_dup_rate": 0,
+  "dropped": {
+    "invalid": 0,
+    "exact_dup": 0,
+    "diversity_capped": 0,
+    "over_tok": 0
+  },
+  "targets": {
+    "total": 500,
+    "prompt_mean_lt": 200,
+    "completion_mean_lt": 400,
+    "dup_rate_lt": 0.05
+  }
+}
