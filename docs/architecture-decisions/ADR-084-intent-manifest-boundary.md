@@ -7,7 +7,7 @@ deciders: [sean]
 area: Codegen / generation / AI
 enforcement: convention
 tags: [generative, ai, intent, manifest, codegen, drift, reproducibility]
-relates-to: [43, 82, 74, 83]
+relates-to: [43, 82, 74, 83, 85, 87]
 supersedes: []
 superseded-by: []
 implements-pdr: [9]
@@ -80,9 +80,10 @@ mistake, so a bad generation never reaches a running shell.
 
 - This ADR does **not** touch the `overwrite:true/false` seam, the templates, or the
   runtime contract — it constrains only what a *generator* is allowed to produce.
-- It does **not** sanction model authorship of developer-owned feature files (the
-  `overwrite:false` side codegen seeds once and never rewrites). Whether the model may
-  fill domain logic there is a separate future decision, deliberately left open.
+- It does **not** itself sanction model authorship of developer-owned feature files (the
+  `overwrite:false` side codegen seeds once and never rewrites). That lane is taken up
+  separately by ADR-087, which lets coder's source adaptor fill it — a different
+  decision, because those files are the ones the drift gate never compares.
 - It does **not** specify *how* intent is compiled or *what model* runs — that is
   ADR-085. It fixes only the target of generation.
 
@@ -105,5 +106,7 @@ mistake, so a bad generation never reaches a running shell.
   never rewrites that code; the stochastic seam must respect the same ownership.
 - ADR-074, ADR-083 — registration derivation and composition DSL, downstream of the
   seam and unaffected.
-- ADR-085 — how intent is compiled (the model and its plugin seam).
+- ADR-085 — how intent is compiled (coder as an external local model service).
+- ADR-087 — the developer-owned lane this boundary leaves open, taken up with coder's
+  source adaptor.
 - PDR-009 — the product decision this implements.

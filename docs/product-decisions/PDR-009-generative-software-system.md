@@ -42,8 +42,9 @@ composition, CI. The bet has three commitments:
    reproducibility. (How: ADR-084.)
 2. **The model is a tunable open weight, hosted in coder.** Generation runs on weights
    the platform can fine-tune on its own corpus of intent→manifest→MFE examples,
-   ending the per-token credit cost of continuous generation. Coder stays external and
-   plugin-hosted; this repo owns only the seam it plugs into. (How: ADR-085.)
+   ending the per-token credit cost of continuous generation. Coder stays an external
+   service (a local Bun/MLX binary the host wraps, not an in-process plugin); this repo
+   owns only the seam it plugs into. (How: ADR-085.)
 3. **The loop is continuous.** Generated manifests are accepted only when the existing
    CI gates pass — CI is the acceptance oracle for stochastic output — and, once the
    registry persists (#139), the same loop deploys. (How: ADR-086.)
@@ -84,8 +85,9 @@ composition, CI. The bet has three commitments:
 
 ## Implemented by
 
-- ADRs: ADR-084 (intent→manifest boundary), ADR-085 (coder intent-compiler seam),
-  ADR-086 (continuous generation loop).
+- ADRs: ADR-084 (intent→manifest boundary), ADR-085 (coder as an external local model
+  service), ADR-086 (continuous generation loop), ADR-087 (coder's source adaptor fills
+  the developer-owned lane — the second, non-overlapping generation lane).
 - Composes: PDR-006 (scaling thesis), PDR-003 (AI-native tooling, manifest-as-boundary),
   PDR-001 (generate, don't hand-write), PDR-004/PDR-008 (coder stays a plugin).
 - Open dependencies: #139 (registry persistence) for the CD half; coder-repo tuning

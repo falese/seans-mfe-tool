@@ -1,13 +1,13 @@
 ---
 id: 0085
-title: Intent-compilation is a resolved plugin capability; coder is its tunable open-weight implementation, external
+title: Intent-compilation invokes coder as an external local model service; coder is the tunable open-weight implementation
 status: Proposed
 date: 2026-08-29
 deciders: [sean]
-area: AI / plugins / coder / generation
+area: AI / coder / generation
 enforcement: convention
-tags: [generative, ai, intent, coder, plugin, open-weights, mcp, seam]
-relates-to: [36, 22, 78, 21, 19]
+tags: [generative, ai, intent, coder, open-weights, subprocess, seam, mlx]
+relates-to: [19, 22, 78, 21, 87]
 supersedes: []
 superseded-by: []
 implements-pdr: [9]
@@ -15,98 +15,105 @@ implemented-by: []
 verified-by: []
 tracked-by: []
 summary: >-
-  Intent-compilation (refined business intent + repo context → candidate DSL) is
-  resolved as a plugin capability the same way framework support is (ADR-036): the host
-  CLI owns a typed contract and a command surface under the reserved `coder:*` topic,
-  and an installed plugin provides the implementation. Coder is that implementation — a
-  tunable open-weight model — and stays external and plugin-hosted (ADR-022, PDR-008),
-  so no model, weights, or training code enters this repo; only the seam does. The
-  tuning corpus is the platform's own intent/manifest/generated-MFE examples.
+  Intent-compilation (refined business intent + repo context → candidate DSL, and per
+  ADR-087 domain source) is performed by coder, invoked out-of-process — the coder CLI
+  (`coder generate --adaptor <name>`) or its local SSE `serve` endpoint — behind a typed
+  contract, isolated the way tool calls already are (ADR-019). coder is a standalone Bun
+  binary running a local open weight (Qwen2.5-Coder-7B + LoRA via MLX), not an in-process
+  oclif plugin; the host exposes a thin `coder:*` wrapper command that shells out to it.
+  No model, weights, or training code enters this repo; the tuning corpus is the
+  platform's own `examples/**` intent/manifest/source examples, packaged as coder adaptors.
 rationale-summary: >-
-  The platform already has a proven pattern for "the same operation, different resolved
-  backend" — framework plugins (`loadFrameworkPlugin`) and MCP child-process isolation.
-  Intent-compilation is another axis of the same shape, so it should reuse the pattern
-  rather than hardcode a model or fork the CLI. Keeping coder external preserves the
-  resolved plugin-first decision and its independent release cadence, and lets the
-  weights be tuned and swapped without a platform release.
+  Validating coder before ratification showed it is a Bun + commander CLI with a local
+  MLX inference server and git-installed LoRA adaptors — it has no oclif surface, no
+  `@seans-mfe/contracts` dependency, and cannot be loaded in-process by the Node CLI.
+  So the integration is the child-process/service model the platform already uses for
+  isolated tool execution (ADR-019), not the in-process framework-plugin resolution the
+  first draft of this ADR wrongly borrowed. Keeping coder an external service preserves
+  its independent cadence and lets the weights be tuned and swapped with no platform release.
 long-form: true
 ---
 
-# ADR-085: Intent-compilation is a resolved plugin capability; coder is its tunable open-weight implementation, external
+# ADR-085: Intent-compilation invokes coder as an external local model service; coder is the tunable open-weight implementation
 
 ## Context
 
 ADR-084 fixes *what* generation produces (a validated manifest) but not *who* compiles
-the intent or *what model* runs. PDR-009 asks for that compiler to be a **tunable open
-weight**, hosted in **coder**, to end the per-token credit cost of continuous
+the intent or *what runs the model*. PDR-009 asks for that compiler to be a **tunable
+open weight**, hosted in **coder**, to end the per-token credit cost of continuous
 generation.
 
-Two resolved decisions constrain the answer. Coder is deliberately **external and
-plugin-hosted**: ADR-022 and PDR-004 ship it as an oclif plugin depending on published
-contracts, and ADR-078/PDR-008 — while retiring the daemon into the platform —
-explicitly keep *coder a plugin*. And the platform already has the right pattern for
-"one operation, a resolved backend": framework support is resolved through
-`loadFrameworkPlugin` (`src/framework/loader.ts`, ADR-036), and AI/tool operations run
-as isolated child processes over the MCP contract (ADR-019). Intent-compilation is a
-new axis of exactly this shape, so it should reuse the pattern, not hardcode a model or
-pull an LLM into this repo's tree (the `inner-voice` scope-bleed that RESTRUCTURE-PLAN
-already moved out).
+The first draft of this ADR assumed coder ships as an in-process oclif plugin under the
+`coder:*` topic, resolved the way framework plugins are (ADR-036), following ADR-022's
+premise that *"falese/coder ships as an oclif plugin"*. **Validating the actual coder
+repository before ratification falsified that.** coder is a standalone **Bun + commander
+CLI** with a local **SSE `serve`** mode and **git-installed LoRA adaptors**; it has no
+`oclif` section, no `coder:*` topic, and **no `@seans-mfe/contracts` dependency**. It
+runs a local open weight — **Qwen2.5-Coder-7B-Instruct-4bit + LoRA via MLX**,
+memory-gated — and its stated integration is *"CLI invokable in any shell"*. A Node
+oclif process cannot load it in-process at all. So the integration model has to be the
+one the platform already uses for isolated execution: out-of-process (ADR-019).
 
 ## Decision
 
-### 1. Intent-compilation is a typed, host-owned contract
+### 1. coder is invoked out-of-process behind a typed contract
 
-This repo defines the seam: a typed contract taking a refined business intent plus repo
-context (available capabilities, fleet manifests, the DSL schema) and returning a
-**candidate DSL document** for ADR-084's pipeline to validate. The contract lives with
-the platform's other published contracts (`@seans-mfe/contracts`, ADR-021), so any
-implementation depends on it rather than reaching into the CLI.
+Intent-compilation calls coder either as a subprocess (`coder generate --adaptor <name>
+--context <files>`) or against its local `serve` SSE endpoint (`POST` a
+`{ prompt, system, messages }` body). The host owns a **typed contract** — refined
+intent plus repo context (available capabilities, fleet manifests, the DSL schema) in,
+a **candidate artifact** out — living with the platform's published contracts
+(`@seans-mfe/contracts`, ADR-021) so the boundary is stable and the coder binary is a
+replaceable implementation behind it.
 
-### 2. The host exposes a command surface; a plugin provides the implementation
+### 2. The host surface is a thin `coder:*` wrapper, not coder itself
 
-The operation is invoked through the reserved `coder:*` topic (ADR-015) and resolved
-the way frameworks are — the host CLI loads an installed plugin and calls it; no model
-is bundled in core. The command follows the AI-native profile (`--json`, typed errors,
-`CommandResult<T>`; PDR-003) so it is agent-drivable end to end.
+`seans-mfe-tool` exposes the operation as a `coder:*` command (topic reserved in
+ADR-015) that shells out to the coder service and returns a `CommandResult<T>` in the
+AI-native profile (PDR-003). coder stays a **separate repo and service** (ADR-022 /
+PDR-008 keep it external); the wrapper — and the contract — are the only new surface in
+this repo. This narrows ADR-022's "coder as an oclif plugin" premise to "coder as an
+external service the host wraps", which the real repo requires.
 
-### 3. Coder is the implementation, external and tunable
+### 3. coder is the tunable open weight; the corpus is packaged as adaptors
 
-`@falese/coder` provides the compiler behind that contract, running a tunable open
-weight. It stays a separate repo and plugin (ADR-022, PDR-008); the weights are tuned
-and swapped there without a platform release. The **tuning corpus** is the platform's
-own material — the intent/manifest/generated-MFE triples already present across
-`examples/**` — which this repo can package and publish for training without hosting
-the training itself.
+Fine-tuning happens in coder: `coder train` produces a LoRA **adaptor** (a git-installed
+directory with a manifest, weights, and eval), swappable without a platform release. The
+tuning corpus is the platform's own material — the `examples/**` intent/manifest/source
+triples — packaged as coder adaptors: an **intent→manifest** adaptor for ADR-084's lane
+and a **source** adaptor for ADR-087's developer-owned lane. No weights or training code
+land in this repo.
 
 ## Boundaries
 
-- **No model, weights, or training code lands in this repo.** This ADR defines the
-  contract and the host command; the model and its fine-tuning are coder-repo work
-  against this contract.
-- It does not choose a base model, a serving runtime, or a tuning method — those are
-  coder's, downstream of the contract.
-- It does not widen coder's role beyond intent-compilation; the existing `coder:refactor`
-  surface is unaffected.
+- **No model, weights, or training code enters this repo.** Only the contract and the
+  `coder:*` wrapper do; the model, its serving, and its tuning are coder's.
+- This ADR does not choose the base model, quantization, or tuning method — those are
+  coder's (today Qwen2.5-Coder-7B / 4-bit / LoRA, recorded as observed, not mandated).
+- It does not itself supply a manifest-targeted adaptor: coder's existing adaptors emit
+  **source**, so ADR-084's lane needs a **net-new intent→manifest adaptor**. That
+  training is coder-repo work against this contract, tracked as a dependency of PDR-009.
 
 ## Consequences
 
-- **Better:** reuses a proven resolution pattern instead of inventing one; keeps the
-  stochastic model out of the deterministic core repo; preserves coder's independent
-  cadence and the plugin-first decision; makes the credit-cost escape (open weights) a
-  swap behind a stable contract.
-- **Worse / the cost accepted:** the end-to-end value depends on work in a repo this
-  decision does not own, and on the contract being right before coder builds against
-  it — a cross-repo coordination cost (the known negative of ADR-022's plugin-first
-  stance). The tuning corpus must be curated and kept representative or the tuned model
-  regresses silently.
+- **Better:** the integration matches what coder actually is, reusing the platform's
+  existing isolated-execution model (ADR-019) rather than an in-process plugin it cannot
+  support; coder keeps its independent cadence; the credit-cost escape (local open
+  weights) is proven, not hypothetical.
+- **Worse / the cost accepted:** an out-of-process local model service is an operational
+  dependency (a running `serve`, an ~18GB memory gate, MLX/Apple-Silicon assumptions)
+  the platform must tolerate or degrade around. And the loop's manifest lane is blocked
+  on an adaptor that does not yet exist — coder's current strength is source, not
+  manifests — so ADR-084's half needs new training before it runs end to end.
 
 ## References
 
-- ADR-036 — framework plugins resolved via `loadFrameworkPlugin`; the resolution
-  pattern this mirrors for intent-compilation.
-- ADR-022 — plugin-first architecture keeping coder an external oclif plugin.
-- ADR-078 — control plane moves into the platform but coder stays a plugin.
-- ADR-021 — `@seans-mfe/*` (platform) vs `@falese/*` (third-party plugin) namespaces.
-- ADR-019 — MCP child-process isolation, the AI-operation invocation model.
-- ADR-084 — the boundary that makes the compiler's output a manifest, not code.
+- ADR-019 — child-process isolation for tool execution; the out-of-process model this
+  integration follows instead of in-process plugin loading.
+- ADR-022 — plugin-first architecture; its "coder as an oclif plugin" premise is
+  narrowed here to an external service, per the validated repo.
+- ADR-078 — the control plane moves into the platform but coder stays external.
+- ADR-021 — `@seans-mfe/*` (platform) vs `@falese/*` (third-party) namespaces; the
+  contract lives on the platform side.
+- ADR-087 — the developer-owned source lane coder's react-ts adaptor already serves.
 - PDR-009 — the product decision this implements.
