@@ -72,6 +72,40 @@ Copy `train.jsonl`, `valid.jsonl`, `eval.jsonl` into
 `coder/adaptors/intent-manifest/data/` (spec §1). The adaptor's eval suite uses the same
 oracle this corpus is gated by — `@seans-mfe/dsl` `validateFull` / `parseAndValidateDirectory`.
 
+## Gate coverage — do these manifests pass the platform gates?
+
+Two layers, verified:
+
+1. **Manifest validator** (`validateFull` = Zod schema + `validateSemantics`: unique cap/
+   source names, PascalCase caps, kebab-case name, transforms/plugins split). This is the
+   gate that applies to a manifest, and the adaptor's eval oracle. **All 660 pass** (the
+   generator drops anything that doesn't; `dropped.invalid` is 0). `npm run lint` is ESLint
+   on `src/` and never touches these YAML files.
+
+2. **End-to-end generation** — the real question, since the emitted manifest must feed
+   `remote:generate` and satisfy the MFE consistency gates (`validateMfeConsistency`, the
+   rules behind `mfe:validate` / `check:mfe-consistency`). A representative sample of each
+   shape was generated with the actual codegen and checked:
+
+   | Shape | `validateMfeConsistency` |
+   |---|---|
+   | plain react remote, plain angular remote | ✅ 0 issues |
+   | `feature` type, `service` type | ✅ 0 issues |
+   | data tiers A / B / C / D | ✅ 0 issues |
+   | slot-provider | ⚠️ `slots-implemented` only (see below) |
+
+   Notably the synthetic manifests **omit `dependencies`** and codegen still fills a
+   self-consistent `package.json` + federation `shared`, so `manifest-package-sync` /
+   `react-pinned` / federation rules pass. `feature`/`service` types generate cleanly.
+
+   **The slot exception is by design, not a manifest defect.** A `providesSlots` MFE must
+   register each slot in **developer-owned** source via `DeclaredSlot` (ADR-072/073); the
+   generator stubs the slot contract but does not implement it, so a freshly generated
+   slot-provider fails `slots-implemented` until a developer writes that code — and this hits
+   the **real seed MFEs identically** (`abc-kids-home` fails the same rule when generated
+   fresh). The synthetic slot manifests are exactly on par with the committed seeds; they
+   fail *only* that rule and nothing else.
+
 ## Honest limits
 
 - The **synthetic majority (597/660) is templated.** A refinement pass gave it mixed
