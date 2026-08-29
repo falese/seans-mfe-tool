@@ -90,5 +90,6 @@ composition, CI. The bet has three commitments:
   the developer-owned lane — the second, non-overlapping generation lane).
 - Composes: PDR-006 (scaling thesis), PDR-003 (AI-native tooling, manifest-as-boundary),
   PDR-001 (generate, don't hand-write), PDR-004/PDR-008 (coder stays a plugin).
-- Open dependencies: #139 (registry persistence) for the CD half; coder-repo tuning
-  against ADR-085's contract.
+- Open dependencies: #364 (build the intent→manifest coder adaptor — the build target
+  for ADR-084's lane, specified in `docs/coder-intent-manifest-adaptor-spec.md`); #139
+  (registry persistence) for the CD half; coder-repo tuning against ADR-085's contract.

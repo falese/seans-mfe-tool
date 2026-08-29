@@ -13,7 +13,7 @@ superseded-by: []
 implements-pdr: [9]
 implemented-by: []
 verified-by: []
-tracked-by: []
+tracked-by: ["#364"]
 summary: >-
   A model that generates from a business intent emits a validated DSL document
   (`mfe-manifest.yaml` / `control-plane.yaml`), never source code. The intent→manifest
@@ -110,3 +110,4 @@ mistake, so a bad generation never reaches a running shell.
 - ADR-087 — the developer-owned lane this boundary leaves open, taken up with coder's
   source adaptor.
 - PDR-009 — the product decision this implements.
+- #364 — the intent→manifest adaptor build that realizes this lane.

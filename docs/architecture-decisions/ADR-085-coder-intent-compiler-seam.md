@@ -13,7 +13,7 @@ superseded-by: []
 implements-pdr: [9]
 implemented-by: []
 verified-by: []
-tracked-by: []
+tracked-by: ["#364"]
 summary: >-
   Intent-compilation (refined business intent + repo context → candidate DSL, and per
   ADR-087 domain source) is performed by coder, invoked out-of-process — the coder CLI
@@ -117,3 +117,5 @@ land in this repo.
   contract lives on the platform side.
 - ADR-087 — the developer-owned source lane coder's react-ts adaptor already serves.
 - PDR-009 — the product decision this implements.
+- #364 — the intent→manifest adaptor build tracked against this seam, specified in
+  `docs/coder-intent-manifest-adaptor-spec.md`.
