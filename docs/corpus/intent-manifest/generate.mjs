@@ -164,21 +164,96 @@ function buildManifest(dom, fw, lang, type, variantIx) {
   return m;
 }
 
-// ── Intent authoring (templated; realism guardrail: describe the domain, not fields) ──
-// Framework hints avoid asserting the MFE `type` (which varies) — they signal framework only,
-// so the model can learn to condition on framework when present and default otherwise.
-const FW_HINTS = { react: [" Build it in React.", " We're a React shop.", "", ""], angular: [" The Angular team owns this.", " Build it on Angular.", " It's for the Angular stack."] };
+// ── Intent authoring (mixed voice; realism guardrail: describe the domain + a business
+//    "why", never the manifest fields — no `type`, no capability names). Per-domain `noun`
+//    (clean singular phrase) + `why` (business context) are hand-authored; templates span
+//    registers (PM one-liner, user story, Slack ask, stakeholder request). A framework
+//    signal appears ~30% of the time (never asserting `type`). ─────────────────────────
+const EXTRAS = {
+  "orders-dashboard": { noun: "orders dashboard", why: "the fulfilment team can see what's open and chase what's stuck without pinging the warehouse" },
+  "checkout-cart": { noun: "checkout summary", why: "shoppers see exactly what they'll pay before they commit and drop off less" },
+  "product-catalog": { noun: "product catalog", why: "buyers find the right item fast instead of scrolling forever" },
+  "invoice-review": { noun: "invoice review queue", why: "finance clears approvals in one place instead of chasing email threads" },
+  "expense-report": { noun: "expense submission flow", why: "staff file expenses in a minute and actually get reimbursed on time" },
+  "budget-tracker": { noun: "budget tracker", why: "each department sees where they stand against plan before month-end surprises" },
+  "patient-intake": { noun: "patient intake flow", why: "front-desk staff capture details once and triage the urgent cases first" },
+  "appointment-scheduler": { noun: "appointment scheduler", why: "patients book themselves and no-shows drop" },
+  "shipment-tracker": { noun: "shipment tracker", why: "customers stop calling to ask where their order is" },
+  "warehouse-inventory": { noun: "warehouse inventory view", why: "the floor knows what's in stock and reorders before shelves go empty" },
+  "route-planner": { noun: "delivery route planner", why: "dispatch builds efficient routes instead of eyeballing a map" },
+  "flight-status": { noun: "flight status board", why: "travelers and gate staff see delays the moment they happen" },
+  "hotel-booking": { noun: "hotel booking flow", why: "guests compare options and confirm without a phone call" },
+  "media-library": { noun: "media asset library", why: "editors find and reuse assets instead of re-shooting them" },
+  "video-player": { noun: "video player", why: "viewers watch smoothly and jump straight to the part they want" },
+  "employee-directory": { noun: "employee directory", why: "people find the right colleague without asking around" },
+  "timeoff-requests": { noun: "time-off request flow", why: "staff request leave and managers approve it without a spreadsheet" },
+  "sensor-telemetry": { noun: "sensor telemetry view", why: "operators catch a bad reading before it becomes an outage" },
+  "device-fleet": { noun: "device fleet console", why: "the team spots unhealthy devices across the whole fleet at a glance" },
+  "course-catalog": { noun: "course catalog", why: "learners find and enrol in the right course on their own" },
+  "quiz-runner": { noun: "quiz experience", why: "students get instant feedback instead of waiting for grading" },
+  "property-listings": { noun: "property listings browser", why: "buyers filter to the handful that fit and skip the rest" },
+  "menu-ordering": { noun: "menu ordering flow", why: "diners build their order without flagging down a server" },
+  "kitchen-display": { noun: "kitchen display", why: "the line sees new tickets instantly and nothing gets missed" },
+  "workout-tracker": { noun: "workout tracker", why: "members log sessions and see progress, so they stick with it" },
+  "energy-usage": { noun: "energy usage dashboard", why: "households see what's driving the bill and cut it" },
+  "grid-alerts": { noun: "grid-alert monitor", why: "the on-call crew catches regional faults before customers notice" },
+  "support-inbox": { noun: "support inbox", why: "agents triage what matters first and reply faster" },
+  "chat-widget": { noun: "chat widget", why: "customers get help in the moment instead of opening a ticket" },
+  "notification-center": { noun: "notification center", why: "people see everything that needs them in one place, not five" },
+  "analytics-overview": { noun: "analytics overview", why: "the team sees the headline numbers without pulling a report" },
+  "funnel-explorer": { noun: "funnel explorer", why: "growth sees exactly where users drop off and fixes it" },
+  "map-tracker": { noun: "live map view", why: "dispatch watches assets move in real time instead of calling for updates" },
+  "poll-widget": { noun: "live poll widget", why: "an audience weighs in and sees results update as they vote" },
+  "onboarding-wizard": { noun: "onboarding wizard", why: "new users reach their first win without hand-holding" },
+  "settings-panel": { noun: "settings panel", why: "people tune their own preferences without a support request" },
+  "billing-portal": { noun: "billing portal", why: "customers manage their plan and grab invoices themselves" },
+  "job-board": { noun: "internal job board", why: "employees find and apply to open roles without emailing HR" },
+  "incident-board": { noun: "incident status board", why: "everyone sees what's on fire and who's on it, live" },
+  "deploy-status": { noun: "deploy status view", why: "engineers watch a release move through the pipeline without pinging CI" },
+  "feature-flags": { noun: "feature-flag panel", why: "teams flip features and target cohorts without a deploy" },
+  "survey-builder": { noun: "survey builder", why: "researchers assemble and preview a survey before it goes out" },
+  "wallet-overview": { noun: "wallet overview", why: "users see balances and recent activity across accounts in one glance" },
+  "loan-application": { noun: "loan application flow", why: "applicants apply in minutes and know where they stand" },
+  "asset-inspector": { noun: "asset inspection log", why: "field techs record inspections on the spot and nothing slips" },
+  "reservation-desk": { noun: "reservation desk", why: "the front desk manages the day's bookings without double-booking" },
+  "loyalty-rewards": { noun: "loyalty rewards view", why: "customers see their points and redeem them, so they come back" },
+  "content-scheduler": { noun: "content calendar", why: "editors plan the publishing schedule without a shared spreadsheet" },
+  "claims-desk": { noun: "claims desk", why: "adjusters work the queue and settle claims faster" },
+  "policy-manager": { noun: "policy manager", why: "agents keep policies current and never miss a renewal" },
+  "donor-portal": { noun: "donor portal", why: "supporters see their impact and give again" },
+  "grant-tracker": { noun: "grant tracker", why: "the programs team knows where every application stands" },
+  "lab-results": { noun: "lab results viewer", why: "clinicians read results against normal ranges at a glance" },
+  "prescription-refills": { noun: "prescription refill flow", why: "patients request refills without calling the pharmacy" },
+  "fleet-maintenance": { noun: "fleet maintenance planner", why: "the depot schedules service before a vehicle breaks down" },
+  "gate-boarding": { noun: "gate boarding view", why: "gate agents manage boarding and standby without paper lists" },
+  "classroom-roster": { noun: "class roster", why: "teachers take attendance in seconds" },
+  "moderation-queue": { noun: "moderation queue", why: "reviewers clear flagged content quickly and consistently" },
+};
+const REACT_HINTS = [" Build it in React.", " We're a React shop.", " React, please."];
+const ANGULAR_HINTS = [" The Angular team owns this.", " Build it on Angular.", " It's for the Angular stack."];
+const art = (n) => (/^[aeiou]/i.test(n) ? "an" : "a");
+const cap1 = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 function authorIntent(dom, fw) {
-  const verbs = dom.caps.map((c) => c.v);
-  const capList = verbs.length === 1 ? verbs[0] : `${verbs.slice(0, -1).join(", ")} and ${verbs[verbs.length - 1]}`;
-  const article = /^[aeiou]/i.test(dom.h) ? "an" : "a";
-  const hint = fw.framework === "angular" ? pick(FW_HINTS.angular) : pick(FW_HINTS.react);
+  const x = EXTRAS[dom.k];
+  const { noun, why } = x;
+  const team = dom.owner.replace(/-/g, " ");
+  const persona = pick(["Product", `The ${team}`, "A stakeholder", "Leadership", "The team lead"]);
+  const capPara = rand() < 0.5 ? pick(dom.caps).v : null;
+  const fwHint = rand() < 0.3 ? (fw.framework === "angular" ? pick(ANGULAR_HINTS) : pick(REACT_HINTS)) : "";
   const templates = [
-    `We need ${article} ${dom.h.toLowerCase()} where users can ${capList}.${hint}`,
-    `Product wants ${article} ${dom.h.toLowerCase()} — somewhere people ${capList}. Ship it as an independently deployable piece.${hint}`,
-    `Build ${article} ${dom.h.toLowerCase()} for the platform: users should be able to ${capList}.${hint}`,
-    `Give me ${article} ${dom.h.toLowerCase()} so the team can ${capList}.${hint}`,
-    `We're adding ${article} ${dom.h.toLowerCase()} — the goal is to let people ${capList}.${hint}`,
+    `${persona} wants ${art(noun)} ${noun} — ${why}.${fwHint}`,
+    `As the ${team}, we need ${art(noun)} ${noun} so ${why}.${fwHint}`,
+    `Can we get ${art(noun)} ${noun}? ${cap1(why)}.${fwHint}`,
+    `${persona} is asking for ${art(noun)} ${noun}. The goal: ${why}.${fwHint}`,
+    `${cap1(noun)} — ${why}.${fwHint}`,
+    `We're building ${art(noun)} ${noun}: ${why}.${fwHint}`,
+    `${persona} raised a request for ${art(noun)} ${noun} — ${why}.${fwHint}`,
+    `Teams keep struggling without ${art(noun)} ${noun}; ${why}.${fwHint}`,
+    capPara
+      ? `We need ${art(noun)} ${noun} where people can ${capPara}; ${why}.${fwHint}`
+      : `We need ${art(noun)} ${noun} — ${why}.${fwHint}`,
+    `${cap1(why)} — that's the point of the ${noun} we want to ship.${fwHint}`,
   ];
   return pick(templates).trim();
 }
@@ -191,6 +266,8 @@ let dropInvalid = 0;
 let dropDup = 0;
 let dropCap = 0;
 let dropTok = 0;
+let leakCount = 0; // synthetic intents that leak a capability name (must stay 0)
+let fwSignalCount = 0; // synthetic intents carrying a framework signal
 
 function completionOf(obj) {
   return yaml.dump(obj, { lineWidth: 100, noRefs: true }).trimEnd();
@@ -231,7 +308,11 @@ outer: for (let variantIx = 0; variantIx < 8; variantIx++) {
           if (!r.valid) { dropInvalid++; continue; }
           const completion = completionOf(m);
           const prompt = authorIntent(dom, fw);
-          if (tryAdd(prompt, completion, "synth")) diversityCount.set(divKey, seen + 1);
+          if (tryAdd(prompt, completion, "synth")) {
+            diversityCount.set(divKey, seen + 1);
+            if (dom.caps.some((c) => new RegExp(`\\b${c.n}\\b`).test(prompt))) leakCount++;
+            if (/\b(react|angular)\b/i.test(prompt)) fwSignalCount++;
+          }
         }
       }
     }
@@ -260,6 +341,7 @@ const distinctCompletions = new Set(pairs.map((p) => sig(p.completion))).size;
 const stats = {
   seed: SEED, pairs: pairs.length, seed_pairs: seedCount, synth_pairs: pairs.length - seedCount,
   distinct_completions: distinctCompletions, distinct_domains: DOMAINS.length,
+  synth_realism: { leak_violations: leakCount, framework_signal_frac: +(fwSignalCount / (pairs.length - seedCount)).toFixed(2) },
   prompt_tok: { mean: +mean(promptToks).toFixed(1), p50: pct(promptToks, 0.5), p95: pct(promptToks, 0.95) },
   completion_tok: { mean: +mean(compToks).toFixed(1), p50: pct(compToks, 0.5), p95: pct(compToks, 0.95) },
   near_dup_rate: +dupRate.toFixed(4),
@@ -293,5 +375,6 @@ if (pairs.length < TARGET_TOTAL) fail.push(`only ${pairs.length} pairs (< ${TARG
 if (stats.prompt_tok.mean >= MAX_PROMPT_TOK) fail.push(`prompt mean ${stats.prompt_tok.mean} >= ${MAX_PROMPT_TOK}`);
 if (stats.completion_tok.mean >= MAX_COMPLETION_TOK) fail.push(`completion mean ${stats.completion_tok.mean} >= ${MAX_COMPLETION_TOK}`);
 if (dupRate >= 0.05) fail.push(`near-dup rate ${(dupRate * 100).toFixed(1)}% >= 5%`);
+if (leakCount > 0) fail.push(`${leakCount} synthetic intents leak a capability name`);
 if (fail.length) { console.error("\nCORPUS GATE FAILED:\n - " + fail.join("\n - ")); process.exit(1); }
 console.log(`\nOK: ${pairs.length} pairs (${seedCount} seed + ${pairs.length - seedCount} synth), all schema-valid.`);

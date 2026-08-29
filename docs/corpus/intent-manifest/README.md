@@ -38,6 +38,12 @@ Two lanes:
    construction. Synthetic manifests use lean platform caps (lifecycle is optional) to
    stay compact. A diversity cap (one pair per `caps|framework|language|type` key) forces
    spread over domains rather than near-identical repeats.
+   Synthetic **intents** are composed from a per-domain `noun` + business `why`
+   (hand-authored in `EXTRAS`) and a bank of mixed-voice templates (PM one-liner, user
+   story, Slack ask, stakeholder request). The realism guardrail is **enforced**: the
+   generator counts and fails on any intent that leaks a capability name, never states the
+   MFE `type`, and carries a framework signal on ~30% (reported as `synth_realism` in
+   `stats.json`).
 
 Regenerate (after `npm run build:packages`):
 
@@ -58,12 +64,14 @@ oracle this corpus is gated by — `@seans-mfe/dsl` `validateFull` / `parseAndVa
 
 ## Honest limits
 
-- The **synthetic majority (437/500) is templated** — its intent realism is below the
-  hand-authored 63-pair seed. It exists to reach coder's ≥500 bar; the first quality
-  improvement is an LLM pass rewriting synthetic intents into more natural, varied asks
-  (and adding under-represented shapes — `data:` BFF and slot-provider manifests, which
-  the synthetic lane deliberately does **not** invent to avoid fabricating mesh configs;
-  those patterns are represented only by the real seeds today).
+- The **synthetic majority (437/500) is templated.** A refinement pass gave it mixed
+  voice, per-domain business context, and a leak-guarded guardrail, so it reads far more
+  naturally than raw Mad-Libs — but it is still generated from ~10 templates, not authored
+  per example. The next lift is a per-example LLM rewrite for maximum phrasing diversity.
+- **Under-represented shapes:** the synthetic lane deliberately does **not** invent `data:`
+  BFF or slot-provider manifests (to avoid fabricating mesh configs / slot grammars); those
+  patterns are represented only by the real seeds today. Adding validator-gated pairs for
+  them is a good follow-up.
 - Synthetic manifests omit `dependencies` and use minimal lifecycle — valid, but simpler
   than a hand-written MFE. Coder's own `data deduplicate|validate` can be run over
   `pairs.jsonl` as a second pass before training.

@@ -5,10 +5,14 @@
   "synth_pairs": 437,
   "distinct_completions": 458,
   "distinct_domains": 58,
+  "synth_realism": {
+    "leak_violations": 0,
+    "framework_signal_frac": 0.3
+  },
   "prompt_tok": {
-    "mean": 31,
-    "p50": 31,
-    "p95": 45
+    "mean": 29.5,
+    "p50": 29,
+    "p95": 39
   },
   "completion_tok": {
     "mean": 194.8,
