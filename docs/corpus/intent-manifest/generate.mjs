@@ -26,7 +26,10 @@ const ROOT = join(HERE, "..", "..", "..");
 const OUT = HERE;
 
 // ── Targets (coder `data stats` bar) ────────────────────────────────────────
-const TARGET_TOTAL = 500;
+const TARGET_TOTAL = 500; // plain (non-data, non-slot) target
+const DATA_TARGET = 120; // data-BFF pairs, spread across 4 complexity tiers
+const SLOT_TARGET = 40; // slot-provider pairs
+const FINAL_TARGET = TARGET_TOTAL + DATA_TARGET + SLOT_TARGET;
 const MAX_PROMPT_TOK = 200; // mean target
 const MAX_COMPLETION_TOK = 400; // mean target
 const HARD_TOK_CAP = 2048; // coder data validate hard cap
@@ -258,6 +261,95 @@ function authorIntent(dom, fw) {
   return pick(templates).trim();
 }
 
+// ── Data-BFF shapes (ADR-012): synthesize valid `data:` blocks across 4 tiers ─────────
+// `source` is just a string, so plausible spec paths validate without real files. Keep
+// transform/plugin keys on the correct side of the KNOWN_TRANSFORMS/KNOWN_PLUGINS split.
+const SECONDARY = [
+  { name: "AuthApi", slug: "auth" }, { name: "BillingApi", slug: "billing" },
+  { name: "EventsApi", slug: "events" }, { name: "RegistryApi", slug: "registry" },
+  { name: "ProfilesApi", slug: "profiles" }, { name: "LedgerApi", slug: "ledger" },
+];
+const pascal = (s) => s.split(/[-_]/).map(cap1).join("");
+const AUTH_HEADERS = { Authorization: "Bearer {context.jwt}", "X-Request-ID": "{context.requestId}" };
+const src = (s, headers, transforms) => {
+  const openapi = { source: `./specs/${s.slug}.yaml` };
+  if (headers) openapi.operationHeaders = AUTH_HEADERS;
+  const o = { name: s.name, handler: { openapi } };
+  if (transforms) o.transforms = transforms;
+  return o;
+};
+function buildDataBlock(dom, tier, secondary) {
+  const base = dom.k.split("-")[0];
+  const primary = { name: `${pascal(base)}Api`, slug: base };
+  if (tier === "A") return { sources: [src(primary, false)] };
+  if (tier === "B") return { sources: [src(primary, true)], serve: { endpoint: "/graphql", playground: true }, mockSwitch: { enabled: true } };
+  if (tier === "C") return {
+    sources: [src(primary, true), src(secondary, true, [{ prefix: { value: `${secondary.name}_` } }])],
+    serve: { endpoint: "/graphql", playground: true },
+    mockSwitch: { enabled: true },
+    generatedFrom: [{ openapi: `./specs/${primary.slug}.yaml`, version: "1.0.0" }, { openapi: `./specs/${secondary.slug}.yaml`, version: "1.0.0" }],
+  };
+  return { // tier D
+    sources: [src(primary, true), src(secondary, true)],
+    transforms: [
+      { filterSchema: { filters: ["Query.!*_internal"] } },
+      { rename: { renames: [{ from: { type: "Query", field: `get${pascal(base)}` }, to: { type: "Query", field: base } }] } },
+    ],
+    plugins: [{ useResponseCache: { ttl: 60000 } }, { prometheus: { endpoint: "/metrics" } }],
+    serve: { endpoint: "/graphql", playground: true },
+    mockSwitch: { enabled: true },
+  };
+}
+function buildDataManifest(dom, fw, lang, tier, secondary) {
+  const m = buildManifest(dom, fw, lang, "remote", 0);
+  m.data = buildDataBlock(dom, tier, secondary);
+  return m;
+}
+const DATA_SINGLE = (base) => [`reading from the ${base} service`, `backed by the ${base} API`, `pulling live data from the ${base} backend`];
+const DATA_MULTI = (a, b) => [`stitching the ${a} and ${b} services behind one view`, `joining ${a} and ${b} into a single graph`, `pulling from ${a} and reconciling it against ${b}`];
+function authorDataIntent(dom, fw, tier, secondary) {
+  const base = dom.k.split("-")[0];
+  const { noun, why } = EXTRAS[dom.k];
+  const multi = tier === "C" || tier === "D";
+  const clause = multi ? pick(DATA_MULTI(base, secondary.slug)) : pick(DATA_SINGLE(base));
+  const extras = [];
+  if (tier !== "A") extras.push("with a mock mode for demos");
+  if (tier === "D") extras.push("and cache the hot queries");
+  const tail = extras.length ? `, ${extras.join(" ")}` : "";
+  const fwHint = rand() < 0.3 ? (fw.framework === "angular" ? pick(ANGULAR_HINTS) : pick(REACT_HINTS)) : "";
+  return pick([
+    `We need ${art(noun)} ${noun} ${clause}${tail} — ${why}.${fwHint}`,
+    `${cap1(clause)}${tail}: that's the ${noun} we want, so ${why}.${fwHint}`,
+    `Can we get ${art(noun)} ${noun}? It should be ${clause}${tail}. ${cap1(why)}.${fwHint}`,
+    `Product wants ${art(noun)} ${noun} ${clause}${tail}; ${why}.${fwHint}`,
+  ]).trim();
+}
+
+// ── Slot-provider shapes (ADR-067): synthesize valid providesSlots ─────────────────────
+const SLOT_SETS = [
+  [{ id: "header.primary", description: "Primary header region" }, { id: "sidebar.nav", description: "Left navigation" }],
+  [{ id: "toolbar.actions", description: "Toolbar action area" }, { id: "panel.{region}", description: "Named content region" }],
+  [{ id: "workspace.main", description: "Main workspace surface" }, { id: "workspace.aside", description: "Secondary aside" }, { id: "footer.status", description: "Status bar" }],
+  [{ id: "dashboard.{widget}", description: "Widget mount point" }],
+];
+function buildSlotManifest(dom, fw, lang, setIx) {
+  const m = buildManifest(dom, fw, lang, "remote", 0);
+  m.providesSlots = SLOT_SETS[setIx];
+  return m;
+}
+const SLOT_NOUNS = ["host screen", "shell", "workspace host", "container view", "operator console"];
+function authorSlotIntent(dom, fw) {
+  const { why } = EXTRAS[dom.k];
+  const host = pick(SLOT_NOUNS);
+  const fwHint = rand() < 0.3 ? (fw.framework === "angular" ? pick(ANGULAR_HINTS) : pick(REACT_HINTS)) : "";
+  return pick([
+    `We need ${art(host)} ${host} that lays out the workspace and exposes the regions other apps mount into — ${why}.${fwHint}`,
+    `Build ${art(host)} ${host} that hosts the other apps: it owns the layout and offers named regions for them to plug into.${fwHint}`,
+    `A ${host} that other MFEs mount into — it provides the slots the rest of the experience fills. ${cap1(why)}.${fwHint}`,
+    `Product wants ${art(host)} ${host} as the composition surface: it exposes regions where other teams' widgets slot in.${fwHint}`,
+  ]).trim();
+}
+
 // ── Collect pairs ───────────────────────────────────────────────────────────
 const pairs = [];
 const seenExact = new Set();
@@ -268,6 +360,9 @@ let dropCap = 0;
 let dropTok = 0;
 let leakCount = 0; // synthetic intents that leak a capability name (must stay 0)
 let fwSignalCount = 0; // synthetic intents carrying a framework signal
+let dataCount = 0; // data-BFF pairs
+let slotCount = 0; // slot-provider pairs
+let dataSignalCount = 0; // data intents that signal a backend/join
 
 function completionOf(obj) {
   return yaml.dump(obj, { lineWidth: 100, noRefs: true }).trimEnd();
@@ -319,6 +414,57 @@ outer: for (let variantIx = 0; variantIx < 8; variantIx++) {
   }
 }
 
+// 3) Data-BFF lane — validator-gated `data:` blocks, ~even across the 4 tiers.
+const DATA_TIERS = ["A", "B", "C", "D"];
+const perTierCap = Math.ceil(DATA_TARGET / DATA_TIERS.length);
+for (const tier of DATA_TIERS) {
+  let tierCount = 0;
+  for (const dom of DOMAINS) {
+    for (const fw of FRAMEWORKS) {
+      if (pairs.length >= TARGET_TOTAL + DATA_TARGET || tierCount >= perTierCap) break;
+      const divKey = `${dom.k}|data|${tier}|${fw.framework}`;
+      if ((diversityCount.get(divKey) ?? 0) >= 1) { dropCap++; continue; }
+      const secondary = pick(SECONDARY);
+      const m = buildDataManifest(dom, fw, fw.langs[0], tier, secondary);
+      const r = validateFull(m);
+      if (!r.valid) { dropInvalid++; continue; }
+      const prompt = authorDataIntent(dom, fw, tier, secondary);
+      if (tryAdd(prompt, completionOf(m), "data")) {
+        diversityCount.set(divKey, 1);
+        dataCount++; tierCount++;
+        if (dom.caps.some((c) => new RegExp(`\\b${c.n}\\b`).test(prompt))) leakCount++;
+        if (/\b(react|angular)\b/i.test(prompt)) fwSignalCount++;
+        if (/\b(api|service|services|graphql|backend|cache|mock|data)\b/i.test(prompt)) dataSignalCount++;
+      }
+    }
+    if (tierCount >= perTierCap) break;
+  }
+}
+
+// 4) Slot-provider lane — validator-gated providesSlots, ~even across the sets.
+const perSetCap = Math.ceil(SLOT_TARGET / SLOT_SETS.length);
+for (let setIx = 0; setIx < SLOT_SETS.length; setIx++) {
+  let setCount = 0;
+  for (const dom of DOMAINS) {
+    for (const fw of FRAMEWORKS) {
+      if (pairs.length >= FINAL_TARGET || setCount >= perSetCap) break;
+      const divKey = `${dom.k}|slot|${setIx}|${fw.framework}`;
+      if ((diversityCount.get(divKey) ?? 0) >= 1) { dropCap++; continue; }
+      const m = buildSlotManifest(dom, fw, fw.langs[0], setIx);
+      const r = validateFull(m);
+      if (!r.valid) { dropInvalid++; continue; }
+      const prompt = authorSlotIntent(dom, fw);
+      if (tryAdd(prompt, completionOf(m), "slot")) {
+        diversityCount.set(divKey, 1);
+        slotCount++; setCount++;
+        if (dom.caps.some((c) => new RegExp(`\\b${c.n}\\b`).test(prompt))) leakCount++;
+        if (/\b(react|angular)\b/i.test(prompt)) fwSignalCount++;
+      }
+    }
+    if (setCount >= perSetCap) break;
+  }
+}
+
 // ── Stats ───────────────────────────────────────────────────────────────────
 const promptToks = pairs.map((p) => tok(p.prompt));
 const compToks = pairs.map((p) => tok(p.completion));
@@ -341,12 +487,17 @@ const distinctCompletions = new Set(pairs.map((p) => sig(p.completion))).size;
 const stats = {
   seed: SEED, pairs: pairs.length, seed_pairs: seedCount, synth_pairs: pairs.length - seedCount,
   distinct_completions: distinctCompletions, distinct_domains: DOMAINS.length,
-  synth_realism: { leak_violations: leakCount, framework_signal_frac: +(fwSignalCount / (pairs.length - seedCount)).toFixed(2) },
+  shape_pairs: { plain: pairs.length - seedCount - dataCount - slotCount, data: dataCount, slot: slotCount, seed: seedCount },
+  synth_realism: {
+    leak_violations: leakCount,
+    framework_signal_frac: +(fwSignalCount / (pairs.length - seedCount)).toFixed(2),
+    data_signal_frac: +(dataSignalCount / Math.max(1, dataCount)).toFixed(2),
+  },
   prompt_tok: { mean: +mean(promptToks).toFixed(1), p50: pct(promptToks, 0.5), p95: pct(promptToks, 0.95) },
   completion_tok: { mean: +mean(compToks).toFixed(1), p50: pct(compToks, 0.5), p95: pct(compToks, 0.95) },
   near_dup_rate: +dupRate.toFixed(4),
   dropped: { invalid: dropInvalid, exact_dup: dropDup, diversity_capped: dropCap, over_tok: dropTok },
-  targets: { total: TARGET_TOTAL, prompt_mean_lt: MAX_PROMPT_TOK, completion_mean_lt: MAX_COMPLETION_TOK, dup_rate_lt: 0.05 },
+  targets: { total: FINAL_TARGET, data: DATA_TARGET, slot: SLOT_TARGET, prompt_mean_lt: MAX_PROMPT_TOK, completion_mean_lt: MAX_COMPLETION_TOK, dup_rate_lt: 0.05 },
 };
 
 // ── Write outputs ────────────────────────────────────────────────────────────
@@ -371,7 +522,9 @@ writeFileSync(join(OUT, "stats.json"), JSON.stringify(stats, null, 2) + "\n");
 // ── Report + gate ─────────────────────────────────────────────────────────────
 console.log(JSON.stringify(stats, null, 2));
 const fail = [];
-if (pairs.length < TARGET_TOTAL) fail.push(`only ${pairs.length} pairs (< ${TARGET_TOTAL})`);
+if (pairs.length < FINAL_TARGET) fail.push(`only ${pairs.length} pairs (< ${FINAL_TARGET})`);
+if (dataCount < DATA_TARGET) fail.push(`only ${dataCount} data pairs (< ${DATA_TARGET})`);
+if (slotCount < SLOT_TARGET) fail.push(`only ${slotCount} slot pairs (< ${SLOT_TARGET})`);
 if (stats.prompt_tok.mean >= MAX_PROMPT_TOK) fail.push(`prompt mean ${stats.prompt_tok.mean} >= ${MAX_PROMPT_TOK}`);
 if (stats.completion_tok.mean >= MAX_COMPLETION_TOK) fail.push(`completion mean ${stats.completion_tok.mean} >= ${MAX_COMPLETION_TOK}`);
 if (dupRate >= 0.05) fail.push(`near-dup rate ${(dupRate * 100).toFixed(1)}% >= 5%`);

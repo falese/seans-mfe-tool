@@ -94,11 +94,12 @@ aborts on divergence (`TrainingDivergedError`) and bumps the manifest patch vers
 
 ## 4. Data generation — the load-bearing step
 
-> **A first corpus already exists:** `docs/corpus/intent-manifest/` — a 500-pair, 100%
+> **A first corpus already exists:** `docs/corpus/intent-manifest/` — a 660-pair, 100%
 > schema-valid dataset (`pairs.jsonl` + `train`/`valid`/`eval` splits) produced by
-> `generate.mjs`, with a hand-authored realism-guarded seed (`seed-intents.json`) and a
-> validator-gated synthetic tail. Copy its `train/valid/eval.jsonl` into the adaptor's
-> `data/`. Its README documents the realism guardrail and the known soft spot (the
+> `generate.mjs`: a hand-authored realism-guarded seed (`seed-intents.json`), a mixed-voice
+> synthetic tail, and dedicated **data-BFF** (~120, four tiers) and **slot-provider** (~40)
+> lanes — every candidate validator-gated. Copy its `train/valid/eval.jsonl` into the
+> adaptor's `data/`. Its README documents the realism guardrail and the known soft spot (the
 > synthetic majority is templated). The rest of this section is the method behind it.
 
 **Record format** (coder's `JsonlRecord`, the `mlx_lm.lora` format): one JSON object per line,
