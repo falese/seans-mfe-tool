@@ -318,6 +318,9 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 | [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
 | [ADR-083](./architecture-decisions/ADR-083-control-plane-composition-dsl.md) | Composition is authored in a project-scoped DSL, not hand-written registry JSON | Control plane / DSL / codegen / composition | Accepted (impl phased, #139) |
+| [ADR-084](./architecture-decisions/ADR-084-intent-manifest-boundary.md) | Generation targets the manifest, not source — the intent→manifest step is the one stochastic seam | Codegen / generation / AI | Proposed |
+| [ADR-085](./architecture-decisions/ADR-085-coder-intent-compiler-seam.md) | Intent-compilation is a resolved plugin capability; coder is its tunable open-weight implementation, external | AI / plugins / coder / generation | Proposed |
+| [ADR-086](./architecture-decisions/ADR-086-continuous-generation-loop.md) | The generation loop closes on the existing CI gates; continuous deployment waits on registry persistence | CI-CD / control plane / generation | Proposed |
 
 <!-- END GENERATED: adr-index -->
 
