@@ -208,7 +208,9 @@ test("generated manifest is DSL-valid", () => {
 **Success criterion:** validator pass-rate, expressed as **lift ≥ +0.15** over the base model —
 `eval_pass_rate − baseline_pass_rate` (coder's stated minimum acceptable lift). Record the
 baseline first (`coder adaptor eval intent-manifest --baseline`, no weights), then the tuned run.
-`@seans-mfe/dsl` must be resolvable from the eval sandbox (workspace link or published package).
+`@seans-mfe/dsl` must be resolvable from the eval sandbox. Under ADR-088 the eval oracle lives
+in the first-party in-repo `@seans-mfe/coder-plugin`, so it imports `@seans-mfe/dsl` directly as
+a workspace dependency — no publish or shell-out needed.
 
 ## 7. Invocation and the platform seam
 

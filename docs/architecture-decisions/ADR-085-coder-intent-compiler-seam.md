@@ -7,7 +7,7 @@ deciders: [sean]
 area: AI / coder / generation
 enforcement: convention
 tags: [generative, ai, intent, coder, open-weights, subprocess, seam, mlx]
-relates-to: [19, 22, 78, 21, 87]
+relates-to: [19, 22, 78, 21, 87, 88]
 supersedes: []
 superseded-by: []
 implements-pdr: [9]
@@ -116,6 +116,8 @@ land in this repo.
 - ADR-021 — `@seans-mfe/*` (platform) vs `@falese/*` (third-party) namespaces; the
   contract lives on the platform side.
 - ADR-087 — the developer-owned source lane coder's react-ts adaptor already serves.
+- ADR-088 — makes this seam's `coder:*` wrapper a concrete first-party in-repo package and
+  resolves its eval-oracle coupling with a direct `@seans-mfe/dsl` dependency.
 - PDR-009 — the product decision this implements.
 - #364 — the intent→manifest adaptor build tracked against this seam, specified in
   `docs/coder-intent-manifest-adaptor-spec.md`.

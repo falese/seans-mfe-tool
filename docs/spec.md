@@ -322,6 +322,7 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-085](./architecture-decisions/ADR-085-coder-intent-compiler-seam.md) | Intent-compilation invokes coder as an external local model service; coder is the tunable open-weight implementation | AI / coder / generation | Proposed |
 | [ADR-086](./architecture-decisions/ADR-086-continuous-generation-loop.md) | The generation loop closes on the existing CI gates; continuous deployment waits on registry persistence | CI-CD / control plane / generation | Proposed |
 | [ADR-087](./architecture-decisions/ADR-087-hybrid-authoring-developer-owned-lane.md) | Coder's source adaptor fills developer-owned feature files; the generator-owned lane stays deterministic | Codegen / generation / AI | Proposed |
+| [ADR-088](./architecture-decisions/ADR-088-coder-plugin-first-party-seam.md) | The coder-facing seam is a first-party in-repo plugin; coder's model engine stays external | Architecture / plugins / AI | Proposed |
 
 <!-- END GENERATED: adr-index -->
 
