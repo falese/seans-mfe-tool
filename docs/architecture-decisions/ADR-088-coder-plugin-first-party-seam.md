@@ -13,7 +13,7 @@ superseded-by: []
 implements-pdr: [4, 9]
 implemented-by: []
 verified-by: []
-tracked-by: ["#364"]
+tracked-by: ["#364", "#365"]
 summary: >-
   The coder-facing surface — the `coder:*` commands, the intent-compilation contract, and the
   DSL eval oracle — becomes a first-party in-repo workspace package, `@seans-mfe/coder-plugin`
@@ -108,3 +108,4 @@ shell-out, no duplicated schema. This is the concrete coupling ADR-085 left unre
 - ADR-078 — the control plane moved into the platform but coder stayed external; the engine still does.
 - PDR-004 — plugin-first federated ecosystem; PDR-009 — the generative software system.
 - #364 — the intent→manifest adaptor whose eval oracle this seam hosts.
+- #365 — the build target: scaffold `@seans-mfe/coder-plugin` per this decision.
