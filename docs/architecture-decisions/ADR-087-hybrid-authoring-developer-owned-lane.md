@@ -1,7 +1,7 @@
 ---
 id: 0087
 title: Coder's source adaptor fills developer-owned feature files; the generator-owned lane stays deterministic
-status: Proposed
+status: Accepted
 date: 2026-08-29
 deciders: [sean]
 area: Codegen / generation / AI
@@ -10,8 +10,11 @@ tags: [generative, ai, coder, codegen, ownership, drift, hybrid, adaptor]
 relates-to: [84, 82, 85, 86]
 supersedes: []
 superseded-by: []
+impl:
+  stage: phased
+  refs: []
 implements-pdr: [9]
-implemented-by: []
+implemented-by: [packages/codegen/src/unified-generator.ts]
 verified-by: []
 tracked-by: []
 summary: >-
