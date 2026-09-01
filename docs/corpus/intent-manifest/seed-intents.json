@@ -1,0 +1,108 @@
+{
+  "_comment": "Hand-authored, realism-guarded business intents keyed by manifest path. Each value is a list of product-ask phrasings that do NOT restate manifest fields (no 'type: remote', 'framework: react', capability names, or lifecycle). The generator (generate.mjs) pairs each intent with the manifest file's verbatim text as the completion. These are the high-realism core; the synthetic tail is generated. Style note: a few intents carry a light framework/context hint (e.g. 'the Angular ops team') on purpose, so the model can learn to condition when a signal is present and default otherwise.",
+  "examples/abc-kids/animal-sounds/mfe-manifest.yaml": [
+    "Little kids should hear an animal noise and tap the animal that made it — a quick, playful guessing round with a friendly cover tile so it shows up on the ABC Kids launcher.",
+    "We want an audio-matching mini-game for toddlers: play a sound, they pick the right critter. It needs a title/cover card and the little blurb the home grid reads to list it.",
+    "Add an 'animal sounds' game to the kids fleet — one playable round, a cover screen, and enough metadata for the launcher to show its name and age range."
+  ],
+  "examples/abc-kids/color-mixer/mfe-manifest.yaml": [
+    "A kids' game where children mix two paints to hit a target color — playable round, a cover card for the launcher, and the usual game-info blurb.",
+    "Product wants a color-mixing activity for preschoolers: combine two swatches to match a goal color. Ship it as its own tile on the ABC Kids home screen.",
+    "Give me a paint-mixing mini-game — the play experience plus a cover and metadata so it slots into the kids launcher grid."
+  ],
+  "examples/abc-kids/counting-stars/mfe-manifest.yaml": [
+    "Toddlers tap exactly the right number of stars to match a number — a simple counting game with a cover tile and launcher metadata.",
+    "We need an early-numeracy game: show a number, kids tap that many stars. Needs the playable round, a cover card, and a blurb for the home grid.",
+    "Add a counting game to the kids fleet where you tap the correct quantity of stars; include the cover and game-info bits the launcher needs."
+  ],
+  "examples/abc-kids/flappy/mfe-manifest.yaml": [
+    "A tap-to-flap arcade game for kids — avoid the pipes, keep score — with a cover tile and a little backend to persist high scores.",
+    "Product wants a Flappy-style game on the kids launcher: playable round, cover screen, game info, and a small data service so scores survive a refresh.",
+    "Give me an arcade flapping game with score-keeping backed by a lightweight API, plus the cover and metadata for the ABC Kids home grid."
+  ],
+  "examples/abc-kids/hockey/mfe-manifest.yaml": [
+    "A kids' air-hockey game — move a paddle, score against the AI — playable, with a cover tile and launcher metadata.",
+    "We want a simple hockey arcade game for the fleet: paddle control, goals against a computer opponent, a cover card, and the home-grid blurb.",
+    "Add an ice-hockey mini-game where kids score on an AI keeper; include the play round, cover, and game info for the launcher."
+  ],
+  "examples/abc-kids/home/mfe-manifest.yaml": [
+    "The ABC Kids home launcher itself — a screen that lists every game as a tile and lets a child pick one to play, and it hosts the region where a chosen game mounts.",
+    "We need the kids' launcher shell: a menu of the available games that also provides the slot the selected game renders into.",
+    "Build the home screen for the kids fleet — a game picker that presents each title and exposes a place for a game to load."
+  ],
+  "examples/abc-kids/letter-pop/mfe-manifest.yaml": [
+    "Kids pop balloons in alphabetical order — an alphabet game with a playable round, a cover tile, and launcher metadata.",
+    "We want an ABC game where children tap balloons in A-B-C sequence; needs the cover card and the blurb the home grid reads.",
+    "Add a 'letter pop' game to the fleet: pop letters in order, plus the cover and game-info the launcher needs to list it."
+  ],
+  "examples/abc-kids/maze-runner/mfe-manifest.yaml": [
+    "A kids' maze game — steer to the flag through a maze — playable, with a cover tile and launcher metadata.",
+    "Product wants a logic maze for children: navigate to the exit, with a cover card and the home-grid blurb.",
+    "Add a maze-navigation mini-game where kids reach a goal flag; include the play round, cover, and game info."
+  ],
+  "examples/abc-kids/memory-match/mfe-manifest.yaml": [
+    "A card-flipping memory game for kids — find every matching pair — with a cover tile and launcher metadata.",
+    "We need a concentration/memory game: flip cards, match pairs. Needs the playable round, a cover card, and the launcher blurb.",
+    "Add a memory-match game to the fleet where children pair up cards; include the cover and game-info the home grid uses."
+  ],
+  "examples/abc-kids/multiplication-quiz/mfe-manifest.yaml": [
+    "A times-tables quiz for kids where a cat and a dog take turns asking questions — playable, with a cover tile and a small backend for the question set. The Angular team owns this one.",
+    "We want a multiplication practice game with two animal characters trading questions, built on Angular, backed by a light data service and listed on the kids launcher.",
+    "Add a multiplication quiz to the fleet — character-driven questions, a cover card, launcher metadata, and a small API for the problems; ship it as an Angular remote."
+  ],
+  "examples/abc-kids/rhythm-tap/mfe-manifest.yaml": [
+    "A rhythm-memory game for kids — watch a drum pattern, then tap it back — playable, with a cover tile and launcher metadata.",
+    "Product wants a 'repeat the beat' game: show a pattern, child drums it back. Needs the cover card and the home-grid blurb.",
+    "Add a rhythm-tap game where kids mimic a sequence; include the play round, cover, and game info for the launcher."
+  ],
+  "examples/abc-kids/rocket-math/mfe-manifest.yaml": [
+    "A kids' addition game — solve sums to fuel a rocket for launch — playable, with a cover tile and launcher metadata.",
+    "We need a space-themed math game: answer addition problems to power a rocket. Needs the playable round, a cover card, and the launcher blurb.",
+    "Add a 'rocket math' game where correct sums fuel a launch; include the cover and game-info the home grid needs."
+  ],
+  "examples/abc-kids/shape-sorter/mfe-manifest.yaml": [
+    "A shape-recognition game for kids — match the shape to the word — playable, with a cover tile and launcher metadata.",
+    "Product wants a shapes game where children pick the shape that matches a prompt word, with a cover card and the home-grid blurb.",
+    "Add a shape-sorting mini-game to the fleet; include the play round, cover, and game info for the launcher."
+  ],
+  "examples/abc-kids/word-builder/mfe-manifest.yaml": [
+    "A spelling game for kids — tap letters in order to spell a word — playable, with a cover tile and launcher metadata.",
+    "We need a word-building game: children tap letters in sequence to complete a word. Needs the cover card and the launcher blurb.",
+    "Add a spelling mini-game where kids assemble words letter by letter; include the cover and game-info the home grid uses."
+  ],
+  "examples/meridian-station/meridian-cargo-ops/mfe-manifest.yaml": [
+    "The station's cargo operations view for the ops crew — a manifest of inbound cargo joined with its valuations, plus a summary of any hazardous freight on station. It reads from the harbormaster and the finance ledger, which are two different systems. Angular.",
+    "We need a cargo ops panel for Meridian: show the cargo manifest with values pulled together from customs and finance, and a hazard-class rollup. The two source systems need stitching behind one view.",
+    "Build the Angular cargo-operations remote — a valued manifest that reconciles harbormaster lines with ledger valuations, and a hazardous-cargo summary — for the station console."
+  ],
+  "examples/meridian-station/meridian-concourse/mfe-manifest.yaml": [
+    "The station concourse — a marketplace directory of vendors and stalls with their settlements and inbound supplies, backed by its own data layer, for the console.",
+    "We want a concourse view for Meridian: browse the vendor directory, stalls, settlement status and incoming supply, pulling from the marketplace services.",
+    "Build a marketplace directory remote for the station showing vendors and stalls with settlement and supply data behind it."
+  ],
+  "examples/meridian-station/meridian-console/mfe-manifest.yaml": [
+    "The station operator's home console — the top-level screen every other station app mounts into; it lays out the console and provides the regions the other remotes fill.",
+    "We need the Meridian console shell: the operator's home screen that also acts as the host, exposing the slots the station's apps render into.",
+    "Build the station console launcher — the operator landing screen and slot provider that composes the rest of the Meridian fleet."
+  ],
+  "examples/meridian-station/meridian-crew-services/mfe-manifest.yaml": [
+    "A crew services panel for the station — the crew roster with certifications and each person's pay status — backed by its own data layer, for the console.",
+    "We want a crew view for Meridian: roster, certification tracking, and pay status, reading from the crew systems.",
+    "Build a crew-services remote showing the roster with certs and pay standing for the station operator."
+  ],
+  "examples/meridian-station/meridian-docking-control/mfe-manifest.yaml": [
+    "Docking and traffic control for the station — a berth board of every berth, individual berth tiles, and a running traffic log — on Angular, with a backend feeding the live state.",
+    "We need a docking-control panel for Meridian: berth availability board, per-berth detail, and a traffic log of arrivals and departures. Angular, data-backed.",
+    "Build the Angular docking & traffic remote — berth board, berth tiles, and traffic log — for the station console."
+  ],
+  "examples/meridian-station/meridian-docking-simulation/mfe-manifest.yaml": [
+    "A first-person 3D docking simulator for the station — fly a spacecraft into a berth — with ship controls and the simulation itself, backed by a data service.",
+    "We want an immersive docking game for Meridian: 3D first-person spacecraft handling and a docking scenario, with a backend for the run.",
+    "Build a 3D docking-simulation remote — piloting controls and the docking gameplay — for the station console."
+  ],
+  "examples/meridian-station/meridian-life-support/mfe-manifest.yaml": [
+    "A life-support monitoring panel for the station — a telemetry dashboard, per-module status, and an alerts feed — on Angular, fed by a live data layer.",
+    "We need a life-support view for Meridian: environmental telemetry, module health, and active alerts, streaming from the station's data service. Angular.",
+    "Build the Angular life-support remote — telemetry dashboard, module status, and alerts — for the station console."
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "seed": 42,
+  "pairs": 660,
+  "seed_pairs": 63,
+  "synth_pairs": 597,
+  "distinct_completions": 618,
+  "distinct_domains": 58,
+  "shape_pairs": {
+    "plain": 437,
+    "data": 120,
+    "slot": 40,
+    "seed": 63
+  },
+  "synth_realism": {
+    "leak_violations": 0,
+    "framework_signal_frac": 0.28,
+    "data_signal_frac": 1
+  },
+  "prompt_tok": {
+    "mean": 33,
+    "p50": 31,
+    "p95": 52
+  },
+  "completion_tok": {
+    "mean": 209.3,
+    "p50": 153,
+    "p95": 463
+  },
+  "near_dup_rate": 0,
+  "dropped": {
+    "invalid": 0,
+    "exact_dup": 0,
+    "diversity_capped": 0,
+    "over_tok": 0
+  },
+  "targets": {
+    "total": 660,
+    "data": 120,
+    "slot": 40,
+    "prompt_mean_lt": 200,
+    "completion_mean_lt": 400,
+    "dup_rate_lt": 0.05
+  }
+}
