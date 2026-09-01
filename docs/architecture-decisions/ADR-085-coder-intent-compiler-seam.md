@@ -1,7 +1,7 @@
 ---
 id: 0085
 title: Intent-compilation invokes coder as an external local model service; coder is the tunable open-weight implementation
-status: Proposed
+status: Accepted
 date: 2026-08-29
 deciders: [sean]
 area: AI / coder / generation
@@ -10,8 +10,11 @@ tags: [generative, ai, intent, coder, open-weights, subprocess, seam, mlx]
 relates-to: [19, 22, 78, 21, 87, 88]
 supersedes: []
 superseded-by: []
+impl:
+  stage: phased
+  refs: ["#364"]
 implements-pdr: [9]
-implemented-by: []
+implemented-by: [packages/plugin-coder/src/types.ts, packages/plugin-coder/src/coder-service.ts, packages/plugin-coder/src/commands/coder/compile.ts]
 verified-by: []
 tracked-by: ["#364"]
 summary: >-

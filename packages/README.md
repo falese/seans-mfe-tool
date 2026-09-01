@@ -19,6 +19,7 @@ The list is a reading order, not an alphabetical one. Each entry assumes the one
 | 7 | **plugin-bff** | The BFF commands (`bff:init/validate/build/dev`) as an oclif plugin. The worked example for [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md). | `src/commands/` |
 | 8 | **plugin-api** | OpenAPI → Express + Sequelize backend generation (`api:*`), as a plugin rather than a third of `src/` (ADR-063). The largest single thing that is *not* the CLI. | `src/commands/api.ts` |
 | 9 | **plugin-adr** | The decision-record tooling (`adr:*`) and the governance gates behind `check:adr` / `build:adr-index` (ADR-075). Governs the repo; is not part of the platform contract. | `src/commands/` |
+| 10 | **plugin-coder** | The coder seam (`coder:compile`): the intent-compilation contract and the DSL eval oracle, wrapping the external coder model service out-of-process (ADR-085/ADR-088). The model engine stays external `@falese/coder`. | `src/commands/coder/compile.ts` |
 | — | **control-plane** | **Not a TypeScript library and not a workspace member.** Two Dockerised JavaScript services — `daemon/` and `registry/` — each with its own `package.json` and `Dockerfile`. It is under `packages/` because it ships with the platform (PDR-008, ADR-078), not because it compiles with the rest. | `README.md` |
 
 ## The layering is one-way
@@ -33,6 +34,7 @@ contracts ───────────────────────�
                     plugin-bff   → contracts, codegen, oclif-base
                     plugin-api   → contracts, oclif-base
                     plugin-adr   → contracts, oclif-base
+                    plugin-coder → contracts, dsl, oclif-base
 ```
 
 `contracts` depending on nothing is the invariant the rest rests on (ADR-061, ADR-080): it is
@@ -48,7 +50,7 @@ between packages means editing that list on purpose.
 
 They load by different mechanisms, and conflating them is the most likely early stumble:
 
-- **oclif command plugins** (`plugin-bff`, `plugin-api`, `plugin-adr`) add *commands* to the CLI. Registered in the root
+- **oclif command plugins** (`plugin-bff`, `plugin-api`, `plugin-adr`, `plugin-coder`) add *commands* to the CLI. Registered in the root
   `package.json` under `oclif.plugins`, resolved by oclif at startup. Contract:
   [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md).
 - **framework plugins** (`framework-react`, `framework-angular`) add *build and scaffold

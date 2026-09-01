@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/coder:compile.json",
+  "title": "coder:compile",
+  "description": "Compile a business intent into a DSL mfe-manifest.yaml via the external coder service (ADR-085/ADR-088)",
+  "input": {
+    "type": "object",
+    "properties": {
+      "intent": {
+        "type": "string",
+        "description": "The refined natural-language business intent to compile"
+      },
+      "adaptor": {
+        "type": "string",
+        "description": "coder adaptor to select",
+        "default": "intent-manifest"
+      },
+      "system": {
+        "type": "string",
+        "description": "Path to the DSL-grammar system prompt passed to coder (--system)"
+      },
+      "model": {
+        "type": "string",
+        "description": "MLX model dir/id to pass through to coder (--model)"
+      },
+      "context": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Context file forwarded to coder (--context); repeatable"
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "Use a running `coder serve` SSE endpoint instead of a subprocess"
+      },
+      "out": {
+        "type": "string",
+        "description": "Write the validated manifest to this path"
+      },
+      "allow-invalid": {
+        "type": "boolean",
+        "description": "Return an invalid candidate instead of failing closed (debug/eval)"
+      }
+    },
+    "required": [
+      "intent"
+    ],
+    "x-positional": [
+      "intent"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "candidate",
+      "validation",
+      "valid",
+      "durationMs"
+    ],
+    "properties": {
+      "candidate": {
+        "type": "object",
+        "required": [
+          "yaml",
+          "adaptor"
+        ],
+        "properties": {
+          "yaml": {
+            "type": "string",
+            "description": "The `mfe-manifest.yaml` text as produced by coder (code fences removed)."
+          },
+          "adaptor": {
+            "type": "string",
+            "description": "The adaptor that produced it."
+          },
+          "model": {
+            "type": "string",
+            "description": "The model coder ran, when known."
+          }
+        },
+        "additionalProperties": false
+      },
+      "validation": {
+        "type": "object",
+        "required": [
+          "valid",
+          "errors"
+        ],
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "message"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "manifest": {
+            "type": "object",
+            "required": [
+              "name",
+              "version",
+              "type",
+              "language",
+              "capabilities"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "tool",
+                  "agent",
+                  "feature",
+                  "service",
+                  "remote",
+                  "shell",
+                  "bff"
+                ]
+              },
+              "language": {
+                "type": "string",
+                "enum": [
+                  "javascript",
+                  "typescript",
+                  "python",
+                  "go",
+                  "rust",
+                  "java"
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "framework": {
+                "type": "string"
+              },
+              "bundler": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "owner": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "category": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "remoteEntry": {
+                "type": "string"
+              },
+              "discovery": {
+                "type": "string"
+              },
+              "dependencies": {
+                "type": "object",
+                "properties": {
+                  "runtime": {
+                    "type": "object"
+                  },
+                  "design-system": {
+                    "type": "object"
+                  },
+                  "mfes": {
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "sources"
+                ],
+                "properties": {
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "handler"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "handler": {
+                          "type": "object",
+                          "required": [
+                            "openapi"
+                          ],
+                          "properties": {
+                            "openapi": {
+                              "type": "object",
+                              "required": [
+                                "source"
+                              ],
+                              "properties": {
+                                "source": {
+                                  "type": "string"
+                                },
+                                "operationHeaders": {
+                                  "type": "object"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "transforms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "transforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "plugins": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "serve": {
+                    "type": "object",
+                    "required": [
+                      "endpoint",
+                      "playground"
+                    ],
+                    "properties": {
+                      "endpoint": {
+                        "type": "string"
+                      },
+                      "playground": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "mockSwitch": {
+                    "type": "object",
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "generatedFrom": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "openapi": {
+                          "type": "string"
+                        },
+                        "service": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "providesSlots": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "performance": {
+                "type": "object",
+                "properties": {
+                  "caching": {
+                    "type": "object",
+                    "required": [
+                      "enabled",
+                      "ttl"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "ttl": {
+                        "type": "number"
+                      },
+                      "strategies": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "type",
+                            "field",
+                            "ttl"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "field": {
+                              "type": "string"
+                            },
+                            "ttl": {
+                              "type": "number"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "observability": {
+                    "type": "object",
+                    "properties": {
+                      "prometheus": {
+                        "type": "object",
+                        "required": [
+                          "enabled",
+                          "port",
+                          "endpoint"
+                        ],
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "port": {
+                            "type": "number"
+                          },
+                          "endpoint": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "opentelemetry": {
+                        "type": "object",
+                        "required": [
+                          "enabled"
+                        ],
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "serviceName": {
+                            "type": "string"
+                          },
+                          "sampling": {
+                            "type": "object",
+                            "required": [
+                              "probability"
+                            ],
+                            "properties": {
+                              "probability": {
+                                "type": "number"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "exporters": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "type",
+                                "endpoint"
+                              ],
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "endpoint": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "rateLimit": {
+                    "type": "object",
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "config": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "type",
+                            "field",
+                            "max",
+                            "ttl"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "field": {
+                              "type": "string"
+                            },
+                            "max": {
+                              "type": "number"
+                            },
+                            "ttl": {
+                              "type": "number"
+                            },
+                            "identifyContext": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "filterSchema": {
+                    "type": "object",
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "transforms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "authorization": {}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "valid": {
+        "type": "boolean"
+      },
+      "outPath": {
+        "type": "string",
+        "description": "Where the manifest was written, when `--out` was given."
+      },
+      "durationMs": {
+        "type": "number",
+        "description": "Wall-clock time spent compiling (spawn/serve round-trip), in ms."
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

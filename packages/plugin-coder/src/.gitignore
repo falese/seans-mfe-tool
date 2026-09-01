@@ -1,0 +1,6 @@
+# Compiled output accidentally generated in src/ (outDir should be dist/).
+# This package ships only TypeScript sources — no hand-written .js.
+*.js
+*.d.ts
+*.d.ts.map
+!*.test.js

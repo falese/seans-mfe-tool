@@ -1,7 +1,7 @@
 ---
 id: 0084
 title: Generation targets the manifest, not source — the intent→manifest step is the one stochastic seam
-status: Proposed
+status: Accepted
 date: 2026-08-29
 deciders: [sean]
 area: Codegen / generation / AI
@@ -10,8 +10,11 @@ tags: [generative, ai, intent, manifest, codegen, drift, reproducibility]
 relates-to: [43, 82, 74, 83, 85, 87]
 supersedes: []
 superseded-by: []
+impl:
+  stage: phased
+  refs: ["#364"]
 implements-pdr: [9]
-implemented-by: []
+implemented-by: [packages/plugin-coder/src/oracle.ts, packages/plugin-coder/src/commands/coder/compile.ts]
 verified-by: []
 tracked-by: ["#364"]
 summary: >-
