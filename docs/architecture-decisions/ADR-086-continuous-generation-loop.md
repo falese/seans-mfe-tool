@@ -1,7 +1,7 @@
 ---
 id: 0086
 title: The generation loop closes on the existing CI gates; continuous deployment waits on registry persistence
-status: Proposed
+status: Accepted
 date: 2026-08-29
 deciders: [sean]
 area: CI-CD / control plane / generation
@@ -10,6 +10,9 @@ tags: [generative, ci-cd, control-plane, deployment, drift, registry, persistenc
 relates-to: [78, 83, 62, 84]
 supersedes: []
 superseded-by: []
+impl:
+  stage: deferred
+  refs: ["#139"]
 implements-pdr: [9]
 implemented-by: []
 verified-by: []

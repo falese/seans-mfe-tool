@@ -42,6 +42,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
+  'plugin-coder': ['contracts', 'dsl', 'oclif-base'],
 };
 
 /** First-party scopes. `@seans-mfe-tool/runtime` is the runtime's published name. */

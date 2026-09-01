@@ -1,7 +1,7 @@
 ---
 id: 0088
 title: The coder-facing seam is a first-party in-repo plugin; coder's model engine stays external
-status: Proposed
+status: Implemented
 date: 2026-08-29
 deciders: [sean]
 area: Architecture / plugins / AI
@@ -11,7 +11,7 @@ relates-to: [22, 85, 21, 19, 78, 87]
 supersedes: []
 superseded-by: []
 implements-pdr: [4, 9]
-implemented-by: []
+implemented-by: [packages/plugin-coder/src/index.ts, packages/plugin-coder/src/oracle.ts, packages/plugin-coder/src/commands/coder/compile.ts]
 verified-by: []
 tracked-by: ["#364", "#365"]
 summary: >-

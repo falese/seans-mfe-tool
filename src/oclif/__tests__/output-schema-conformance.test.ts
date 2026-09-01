@@ -100,6 +100,7 @@ const NO_FIXTURE: Record<string, string> = {
   'build:dev': 'starts a long-lived dev server and only returns once it is listening',
   'bff:dev': 'starts a long-lived mesh server',
   'build:prod': 'needs an installed bundler in the target project (a full npm install per run)',
+  'coder:compile': 'shells out to the external coder MLX model service (ADR-085/ADR-088) — an ~18GB Apple-Silicon dependency absent from CI',
 };
 
 function runCli(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {
