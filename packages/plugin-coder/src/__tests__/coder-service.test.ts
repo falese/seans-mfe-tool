@@ -40,13 +40,42 @@ describe('buildGenerateArgs', () => {
 });
 
 describe('parseServeBody', () => {
-  it('returns a plain body unchanged', () => {
+  it('returns a plain (non-SSE) body unchanged', () => {
     expect(parseServeBody('name: x\n')).toBe('name: x\n');
   });
 
-  it('concatenates SSE data chunks and drops the [DONE] sentinel', () => {
-    const sse = 'data: name: x\ndata: version: 1.0.0\ndata: [DONE]\n';
-    expect(parseServeBody(sse)).toBe('name: xversion: 1.0.0');
+  it("reconstructs the final-channel text from coder's SSE token envelopes", () => {
+    // coder serve emits `data: {"type":"token","channel":"final","text":"…"}`
+    // per chunk, a `done` frame, then `data: [DONE]` (src/serve/server.ts).
+    const sse = [
+      'data: {"type":"token","channel":"final","text":"name: x\\n"}',
+      '',
+      'data: {"type":"token","channel":"final","text":"version: 1.0.0"}',
+      '',
+      'data: {"type":"done","ttft":10,"tokensPerSec":25,"totalTokens":2}',
+      '',
+      'data: [DONE]',
+      '',
+    ].join('\n');
+    expect(parseServeBody(sse)).toBe('name: x\nversion: 1.0.0');
+  });
+
+  it('excludes the thought channel — reasoning must not reach the manifest', () => {
+    const sse = [
+      'data: {"type":"token","channel":"thought","text":"let me think about the shape"}',
+      'data: {"type":"token","channel":"final","text":"name: x"}',
+      'data: [DONE]',
+    ].join('\n');
+    expect(parseServeBody(sse)).toBe('name: x');
+  });
+
+  it('ignores error and other control frames', () => {
+    const sse = [
+      'data: {"type":"token","channel":"final","text":"name: x"}',
+      'data: {"type":"error","message":"boom"}',
+      'data: [DONE]',
+    ].join('\n');
+    expect(parseServeBody(sse)).toBe('name: x');
   });
 });
 

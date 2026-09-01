@@ -80,24 +80,56 @@ export function makeSubprocessRunner(bin: string = DEFAULT_CODER_BIN): CoderRunn
 /** SSE line-protocol prefix coder's `serve` emits per chunk. */
 const SSE_DATA_PREFIX = 'data:';
 
+/** One SSE frame from coder's `serve` stream (src/serve/server.ts). */
+interface ServeTokenFrame {
+  type: 'token';
+  /** Reasoning models stream two voices; only `final` is the answer. */
+  channel: 'thought' | 'final';
+  text: string;
+}
+
+function asFinalToken(frame: unknown): ServeTokenFrame | undefined {
+  if (typeof frame !== 'object' || frame === null) return undefined;
+  const f = frame as Record<string, unknown>;
+  if (f.type !== 'token' || f.channel !== 'final' || typeof f.text !== 'string') {
+    return undefined;
+  }
+  return { type: 'token', channel: 'final', text: f.text };
+}
+
 /**
- * Reduce a coder `serve` response body to its text. Handles both a plain body
- * and Server-Sent-Events framing (concatenating `data:` chunk payloads, ignoring
- * the `[DONE]` sentinel).
+ * Reduce a coder `serve` response to the generated manifest text.
+ *
+ * `serve` emits one JSON envelope per `data:` line (`src/serve/server.ts`):
+ *   `{"type":"token","channel":"thought"|"final","text":"…"}`  — streamed tokens
+ *   `{"type":"done", …}` / `{"type":"error","message":"…"}`     — control frames
+ * terminated by `data: [DONE]`. Only the **final** channel is the answer — the
+ * `thought` channel is a reasoning model's chain-of-thought and must never reach
+ * the manifest — so we parse each envelope and concatenate `final` token text,
+ * dropping control frames and `[DONE]`. A non-SSE body (no `data:` frames, e.g.
+ * a buffered response) is returned unchanged.
  */
 export function parseServeBody(body: string): string {
   if (!body.includes(SSE_DATA_PREFIX)) {
     return body;
   }
-  const chunks: string[] = [];
+  let text = '';
   for (const line of body.split(/\r?\n/)) {
     const trimmed = line.trimStart();
     if (!trimmed.startsWith(SSE_DATA_PREFIX)) continue;
     const payload = trimmed.slice(SSE_DATA_PREFIX.length).trim();
-    if (payload === '[DONE]' || payload.length === 0) continue;
-    chunks.push(payload);
+    if (payload.length === 0 || payload === '[DONE]') continue;
+
+    let frame: unknown;
+    try {
+      frame = JSON.parse(payload);
+    } catch {
+      continue; // not an envelope — ignore stray control noise
+    }
+    const token = asFinalToken(frame);
+    if (token) text += token.text;
   }
-  return chunks.join('');
+  return text;
 }
 
 /** Serve transport: POST the prompt to a running `coder serve` endpoint. */
