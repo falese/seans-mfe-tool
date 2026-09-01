@@ -7,6 +7,8 @@
   },
   "include": [
     "packages/contracts/src/**/*",
+    "packages/dsl/src/**/*",
+    "packages/codegen/src/**/*",
     "packages/runtime/src/**/*"
   ],
   "exclude": [

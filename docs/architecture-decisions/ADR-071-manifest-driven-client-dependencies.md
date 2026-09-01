@@ -13,6 +13,7 @@ superseded-by: []
 implements-pdr: [1]
 implemented-by:
   - packages/codegen/src/unified-generator.ts
+  - packages/codegen/src/dependencies.ts
 verified-by:
   - check:mfe-consistency
 summary: >-

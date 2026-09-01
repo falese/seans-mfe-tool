@@ -149,7 +149,6 @@ module.exports = { start };
 if (require.main === module) {
   const port = parseInt(process.env.PERF_PORT || '4399', 10);
   start({ port }).then(({ url }) => {
-    // eslint-disable-next-line no-console
     console.log(`[perf server] listening on ${url}`);
   });
 }

@@ -84,11 +84,11 @@ priority first:
 
 This order is authoritative (Contract Alignment finding CA-4). For operator troubleshooting
 of the resolution ladder, see the
-[Runtime Operational Runbook](./platform-design-review/runtime-operational-runbook.md).
+[Runtime Operational Runbook](./archive/platform-design-review/runtime-operational-runbook.md).
 
 ## Related
 
 - [DSL Architecture](./architecture-dsl.md) — the `data:` section schema.
 - [Code Generation Architecture](./architecture-codegen.md) — where BFF artifacts are emitted.
-- [Runtime Operational Runbook](./platform-design-review/runtime-operational-runbook.md) — `query()` diagnostics.
+- [Runtime Operational Runbook](./archive/platform-design-review/runtime-operational-runbook.md) — `query()` diagnostics.
 </content>

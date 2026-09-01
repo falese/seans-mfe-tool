@@ -97,11 +97,8 @@ async function main() {
     const maxRss = samples.length ? Math.max(...samples) : null;
     const meanRss = samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : null;
 
-    // eslint-disable-next-line no-console
     console.log(`[perf] memory under load — budget max RSS < ${BUDGET_MAX_RSS_MB} MiB`);
-    // eslint-disable-next-line no-console
     console.log(formatStats('GET /api/capability/*', loadResult.stats, { rps: loadResult.rps }));
-    // eslint-disable-next-line no-console
     console.log(
       `  ${'RSS samples'.padEnd(28)} count=${samples.length}  max=${
         maxRss !== null ? maxRss.toFixed(1) : 'n/a'
@@ -118,7 +115,6 @@ async function main() {
       `max RSS=${maxRss.toFixed(1)} MiB exceeds budget ${BUDGET_MAX_RSS_MB} MiB`
     );
 
-    // eslint-disable-next-line no-console
     console.log('[perf] OK — memory budget met');
   } finally {
     child.kill('SIGTERM');
@@ -127,7 +123,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('[perf] scenario crashed', err && err.stack ? err.stack : err);
   process.exit(2);
 });

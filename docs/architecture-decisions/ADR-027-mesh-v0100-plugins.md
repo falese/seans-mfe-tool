@@ -11,7 +11,7 @@ relates-to: []
 supersedes: []
 superseded-by: []
 implemented-by:
-  - packages/bff-plugin/templates/server.ts.ejs
+  - packages/plugin-bff/templates/server.ts.ejs
 verified-by: []
 summary: >-
   Lock BFF templates to GraphQL Mesh v0.100.x, adopt the createBuiltMeshHTTPHandler() runtime

@@ -1809,7 +1809,7 @@
         <p>A warning registry now exists specifically for this, and adding an entry is a required part of
         any platform change. But the underlying cost is structural: <strong>the platform can improve
         faster than it can safely propagate.</strong> This is the sharpest complexity point in the system.</p>
-        <p class="paths">packages/codegen/src/platform-migrations.ts · docs/platform-design-review/breaking-change-regeneration-dx-report.md</p>
+        <p class="paths">packages/codegen/src/platform-migrations.ts · docs/archive/platform-design-review/breaking-change-regeneration-dx-report.md</p>
       </li>
       <li>
         <span class="tag tag-cost">trade-off</span>
@@ -1897,16 +1897,35 @@
         generated from.
       </p>
 
+      <!-- BEGIN GENERATED: repo-metrics -->
       <div class="metrics">
         <div class="metric"><b>21</b><span>reference capabilities, across 2 complete demo products</span></div>
         <div class="metric"><b>83</b><span>recorded architecture decisions</span></div>
         <div class="metric"><b>8</b><span>recorded product decisions</span></div>
-        <div class="metric"><b>9</b><span>shared packages</span></div>
+        <div class="metric"><b>10</b><span>shared packages</span></div>
         <div class="metric"><b>19</b><span>commands, each also an AI-assistant tool</span></div>
-        <div class="metric"><b>44</b><span>code templates in the build system</span></div>
+        <div class="metric"><b>56</b><span>code templates in the build system</span></div>
         <div class="metric"><b>10</b><span>abilities every capability must have</span></div>
-        <div class="metric"><b>220</b><span>test files</span></div>
+        <div class="metric"><b>238</b><span>test files</span></div>
       </div>
+      <!-- END GENERATED: repo-metrics -->
+
+      <h3 class="sub">Where the decisions stand</h3>
+      <p class="lede">
+        Architecture decisions are recorded, and each one carries its own status. This is that
+        register rolled up — generated from the decision files themselves, so it cannot drift from
+        them. "Open" means a decision is written down and not yet ratified, or ratified and not yet
+        built; those are the ones worth asking about.
+      </p>
+      <!-- BEGIN GENERATED: decision-status -->
+      <div class="metrics">
+        <div class="metric"><b>59</b><span>Implemented — decided and built</span></div>
+        <div class="metric"><b>13</b><span>Accepted — decided, build outstanding</span></div>
+        <div class="metric"><b>8</b><span>Proposed — written down, not yet agreed</span></div>
+        <div class="metric"><b>1</b><span>Deferred — postponed on purpose</span></div>
+        <div class="metric"><b>2</b><span>Superseded — replaced by a later decision</span></div>
+      </div>
+      <!-- END GENERATED: decision-status -->
 
       <h3 class="sub">Why the demo products matter more than the counts</h3>
       <p class="lede">

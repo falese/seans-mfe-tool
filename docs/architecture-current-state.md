@@ -1,14 +1,14 @@
 # seans-mfe-tool - Current Architecture (Updated June 2026)
 
 > **Currency note (June 2026, DOCS-P1 #216).** Reconciled as part of the
-> [Platform Design Review](./platform-design-review/README.md). Resolved a
+> [Platform Design Review](./archive/platform-design-review/README.md). Resolved a
 > contradictory "Last Updated" footer (previously December 2025 vs. an April
 > 2026 title) and added the now-shipped Framework Plugin System (ADR-036)
 > subsystem. The previously `_(Coming Soon)_` subsystem docs are now authored —
 > [Code Generation](./architecture-codegen.md), [DSL](./architecture-dsl.md),
 > [BFF](./architecture-bff.md), and [API Generator](./architecture-api-generator.md)
 > (gaps G01–G04 closed; see the
-> [Documentation Gap Matrix](./platform-design-review/documentation-gap-matrix.md)).
+> [Documentation Gap Matrix](./archive/platform-design-review/documentation-gap-matrix.md)).
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ This document provides the high-level system architecture. For detailed subsyste
 
 ### 🖥️ **CLI Platform** (oclif + JSON Agent Interface + Unification)
 
-**[→ oclif Migration Plan](./agent-plans/oclif-migration.md)**
+**[→ oclif Migration Plan](./archive/agent-plans/oclif-migration.md)**
 
 The CLI runtime, command dispatch, and agent-callable interface. Includes:
 
@@ -38,7 +38,7 @@ The CLI runtime, command dispatch, and agent-callable interface. Includes:
 - `src/mcp/` — MCP server with federated tool registry (local + oclif plugins + remote sources)
 - `schemas/*.json` — auto-generated command schemas (inputs + outputs)
 - `PLUGIN-CONTRACT.md` + `examples/plugin-skeleton/` — third-party plugin integration
-- `pnpm-workspace.yaml` + `turbo.json` — workspace build graph
+- `package.json` (`workspaces`) + `turbo.json` — workspace build graph
 - `MERGE-PLAN.md` — phased path to monorepo with Falese/coder (the daemon half is void: the control plane ships in this repo, PDR-008/ADR-078)
 
 **Status**: ✅ Complete (Epic A #90–99, Epic B #100–108, Epic C #109–115, closed April 2026)

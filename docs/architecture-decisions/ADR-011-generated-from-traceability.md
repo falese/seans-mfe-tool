@@ -11,7 +11,7 @@ relates-to: []
 supersedes: []
 superseded-by: []
 implemented-by:
-  - packages/bff-plugin/templates/mfe-manifest.yaml.ejs
+  - packages/plugin-bff/templates/mfe-manifest.yaml.ejs
 verified-by: []
 summary: >-
   The DSL data section includes a generatedFrom field that records the source API specifications

@@ -50,7 +50,7 @@ module.exports = {
     'src/commands/*.{js,ts}',
     'src/utils/**/*.{js,ts}',
     'src/codegen/UnifiedGenerator/**/*.{js,ts}',
-    'src/codegen/APIGenerator/**/*.{js,ts}',
+    'packages/plugin-api/src/**/*.{js,ts}',
     // Include DSL/runtime for TDD Guardian phase.
     // Runtime is now the packages/runtime package (ADR-064); collected here so
     // its per-file coverage gates keep enforcing.
@@ -112,7 +112,7 @@ module.exports = {
       statements: 95
     },
     // Phase 1.1: command-layer coverage targets
-    'src/commands/api.ts': {
+    'packages/plugin-api/src/commands/api.ts': {
       branches: 85,
       functions: 90,
       lines: 90,
@@ -169,8 +169,8 @@ module.exports = {
     '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
     '^@seans-mfe/codegen$': '<rootDir>/packages/codegen/src/index.ts',
     '^@seans-mfe/codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',
-    '^@falese/bff-plugin$': '<rootDir>/packages/bff-plugin/src/index.ts',
-    '^@falese/bff-plugin/(.*)$': '<rootDir>/packages/bff-plugin/src/$1',
+    '^@seans-mfe/plugin-bff$': '<rootDir>/packages/plugin-bff/src/index.ts',
+    '^@seans-mfe/plugin-bff/(.*)$': '<rootDir>/packages/plugin-bff/src/$1',
     '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
     '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
     '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',

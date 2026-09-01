@@ -1,0 +1,44 @@
+{
+  "name": "@falese/plugin-skeleton",
+  "version": "0.1.0",
+  "description": "Starter oclif plugin for seans-mfe-tool \u2014 copy this directory to begin",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "tsc && npx oclif manifest",
+    "clean": "rm -rf dist oclif.manifest.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "oclif": {
+    "commands": "./dist/commands",
+    "bin": "seans-mfe-tool",
+    "topics": {
+      "greet": {
+        "description": "Example topic shipped by the starter plugin"
+      }
+    }
+  },
+  "peerDependencies": {
+    "@oclif/core": "^4",
+    "seans-mfe-tool": "^1"
+  },
+  "peerDependenciesMeta": {
+    "seans-mfe-tool": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../../packages/contracts",
+    "@seans-mfe/oclif-base": "file:../../packages/oclif-base"
+  },
+  "devDependencies": {
+    "@oclif/core": "^4.10.5",
+    "oclif": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}

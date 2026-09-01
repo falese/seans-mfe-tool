@@ -35,7 +35,7 @@ function isCommandFile(relPath: string): boolean {
   if (base.includes('.test.') || base.startsWith('_')) return false;
   if (relPath.includes('__tests__')) return false;
   // A6/A7 migration shims: flat files that re-export a nested command.
-  return !['remote-init.ts', 'remote-generate.ts', 'remote-init-angular.ts', 'create-api.ts'].includes(base);
+  return !['remote-init.ts', 'remote-generate.ts', 'remote-init-angular.ts'].includes(base);
 }
 
 function walk(dir: string, prefix = ''): string[] {
@@ -70,17 +70,43 @@ interface LoadedCommand {
   cls: CommandClass;
 }
 
-const commands: LoadedCommand[] = walk(COMMANDS_DIR)
-  .sort()
-  .map((relPath) => {
-    const mod = require(path.join(COMMANDS_DIR, relPath)) as { default?: unknown };
-    return { id: toCommandId(relPath), relPath, cls: mod.default as CommandClass };
-  })
-  .filter((c) => typeof c.cls === 'function');
+/**
+ * Command roots the sweep covers: the CLI's own, plus every workspace plugin's.
+ *
+ * This used to be `src/commands` alone, which meant ADR-077 §2's whole point —
+ * that the agent profile is enforced by a registry sweep rather than by
+ * convention — silently did not apply to plugin commands. `bff:*` had never
+ * been swept; extracting `api` and `adr:*` would have quietly removed three
+ * more. A conformance test that shrinks as the codebase modularises is not a
+ * conformance test.
+ */
+function commandRoots(): string[] {
+  const roots = [COMMANDS_DIR];
+  const packagesDir = path.join(REPO_ROOT, 'packages');
+  for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const candidate = path.join(packagesDir, entry.name, 'src', 'commands');
+    if (fs.existsSync(candidate)) roots.push(candidate);
+  }
+  return roots;
+}
+
+const commands: LoadedCommand[] = commandRoots()
+  .flatMap((root) =>
+    walk(root)
+      .sort()
+      .map((relPath) => {
+        const mod = require(path.join(root, relPath)) as { default?: unknown };
+        return { id: toCommandId(relPath), relPath, cls: mod.default as CommandClass };
+      }),
+  )
+  .filter((c) => typeof c.cls === 'function')
+  .sort((a, b) => a.id.localeCompare(b.id));
 
 describe('command registry sweep', () => {
   it('discovers the command tree', () => {
-    expect(commands.length).toBeGreaterThanOrEqual(16);
+    // CLI commands plus every workspace plugin's (bff, api, adr).
+    expect(commands.length).toBeGreaterThanOrEqual(20);
   });
 
   it.each(commands.map((c) => [c.id, c] as const))(

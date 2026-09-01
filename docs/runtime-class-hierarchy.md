@@ -3,7 +3,7 @@
 This document explains the class hierarchy every TypeScript/React MFE is
 built on, why each layer exists, and what you are expected to implement
 versus what you get for free. It complements
-[`docs/platform-design-review/base-mfe-architecture-and-demo.md`](./platform-design-review/base-mfe-architecture-and-demo.md),
+[`docs/archive/platform-design-review/base-mfe-architecture-and-demo.md`](./archive/platform-design-review/base-mfe-architecture-and-demo.md),
 which walks a real generated MFE through this hierarchy end to end.
 
 ---
@@ -299,4 +299,4 @@ How is updateControlPlaneState() different from emit?  emit() → observers (no 
 | `examples/meridian-station/meridian-console/src/platform/base-mfe/mfe.ts` | A real generated Layer 4 example |
 | `docs/PLATFORM-CONTRACT.md` | Full capability reference (language-neutral) |
 | `docs/architecture-decisions/ADR-056-mfe-presentation-boundary.md` | The framework-quarantine boundary this hierarchy enforces |
-| `docs/platform-design-review/base-mfe-architecture-and-demo.md` | A real generated MFE walked through this hierarchy, live |
+| `docs/archive/platform-design-review/base-mfe-architecture-and-demo.md` | A real generated MFE walked through this hierarchy, live |

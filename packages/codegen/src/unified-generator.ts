@@ -1,7 +1,28 @@
 /**
- * Unified MFE Codegen Generator
- * Consolidates feature/component and platform/BFF codegen
- * Implements ADR-014, REQ-REMOTE-003, ADR-027
+ * The generation pipeline: validate -> plan -> render -> emit.
+ *
+ * `generateAllFiles` is the whole story. Validate the manifest (ADR-027), plan
+ * a RenderModel from it, render that model into GeneratedFiles, and hand them
+ * to `writeGeneratedFiles` to emit. The phases are separated so each can be
+ * reasoned about alone: plan is pure, render picks templates, only emit touches
+ * disk.
+ *
+ * WHY THE `overwrite` FLAG ON EVERY GeneratedFile IS THE MOST IMPORTANT LINE
+ * IN THIS PACKAGE: it decides ownership. `overwrite: true` files are
+ * generator-owned — regenerated on every run, held byte-identical by
+ * `check:mfe-drift`. `overwrite: false` files are seeded once and then belong
+ * to the developer, and are never rewritten, not even with `--force`.
+ *
+ * Moving a file between those two settings is the most breaking edit available
+ * here, and it is invisible in a diff. It is also why a platform change that
+ * reaches developer-owned code ships with a PLATFORM_MIGRATIONS entry in the
+ * same commit (ADR-082): the platform reports what it cannot fix. The measured
+ * cost of not doing that was 48 files needing a change, regeneration reaching
+ * 29, and the other 19 sitting stale with every gate green.
+ *
+ * Framework differences are template-variant data, never branches in this file
+ * (ADR-036, ADR-061) — the variant is injected by the caller, which is what
+ * lets a third-party framework plugin work without editing the generator.
  */
 
 import * as path from 'path';
@@ -10,6 +31,50 @@ import ejs from 'ejs';
 import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
 import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
+// Constant data moved to ./catalog (ADR-050 DEPENDENCY_VERSIONS, ADR-027 Mesh
+// tables, #341 optional assets). Re-exported here so the module's public
+// surface — and `export * from './unified-generator'` in the barrel — is
+// unchanged by the move.
+export {
+  OPTIONAL_PUBLIC_ASSETS,
+  DEPENDENCY_VERSIONS,
+  DEFAULT_MESH_PLUGINS,
+  DEFAULT_MESH_TRANSFORMS,
+  KNOWN_MESH_PLUGINS,
+  KNOWN_MESH_TRANSFORMS,
+} from './catalog';
+import {
+  OPTIONAL_PUBLIC_ASSETS,
+  DEPENDENCY_VERSIONS,
+  DEFAULT_MESH_PLUGINS,
+  DEFAULT_MESH_TRANSFORMS,
+  KNOWN_MESH_PLUGINS,
+  KNOWN_MESH_TRANSFORMS,
+} from './catalog';
+
+// Extracted to focused modules; re-exported so this module's public surface,
+// and the barrel's `export * from './unified-generator'`, are unchanged.
+export * from './manifest-validation';
+export * from './dependencies';
+import { validateManifestConfiguration } from './manifest-validation';
+import {
+  resolveDesignSystemDeps,
+  resolveRuntimeExtraDeps,
+  resolveClientDependencies,
+  resolveNeededMeshPluginsAndTransforms,
+  resolveReactSharedDeps,
+  renderJsonDependencyLines,
+  renderSharedEntries,
+} from './dependencies';
+
+export * from './render-model';
+export * from './template-io';
+import { extractManifestVars, parseHandlerSource } from './render-model';
+import type { RenderCapability, RenderLifecycleHook, RenderHandlerSource } from './render-model';
+import { renderTemplate, capabilityImplemented, writeGeneratedFiles } from './template-io';
+
+
+
 
 /**
  * The resolved codegen variant a caller injects (ADR-061). The CLI derives it
@@ -31,26 +96,6 @@ export interface FrameworkVariant {
  * selects Angular). Keeps the generator independently runnable/testable
  * without importing the framework loader (ADR-036, ADR-061).
  */
-/**
- * Public assets a template variant may legitimately not ship (#341).
- *
- * Absence is a variant's choice, not a defect, so it is emitted silently rather
- * than warned about. `base-mfe-angular` ships neither: an Angular MFE is served
- * through the Angular builder and has no standalone demo page. Warning anyway
- * printed two lines per Angular MFE on every run — eight across the fleet,
- * landing in the middle of `check:mfe-drift` output a reader is meant to be
- * studying carefully.
- *
- * The set is deliberately short. Everything not in it — `index.html`,
- * `App.tsx`, `index.tsx`, `mfe.ts` — still warns when its template is missing,
- * because there the absence really is a broken variant. Silencing the
- * diagnostic wholesale would trade a noisy gate for a silent one.
- *
- * Follows the same rule as slot emission below, which probes the variant's
- * `templateDir` for a `slots.*.ejs` instead of hardcoding framework names, so
- * a new framework adds support by shipping a template (ADR-036).
- */
-export const OPTIONAL_PUBLIC_ASSETS: readonly string[] = ['demo.html', 'favicon.ico'];
 
 export function deriveBuiltinVariant(manifest: DSLManifest): FrameworkVariant {
   const framework = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
@@ -69,853 +114,7 @@ export interface GeneratedFile {
 // Dependency Version Constants (ADR-027)
 // =============================================================================
 
-/**
- * Centralized dependency versions for template generation
- * Following e2e2 dependency resolution (2025-12-06)
- * Based on GraphQL Mesh v0.100.x stable releases
- */
-export const DEPENDENCY_VERSIONS = {
-  // GraphQL Mesh (BFF Layer)
-  graphqlMesh: {
-    cli: '^0.100.21',
-    openapi: '^0.109.26',
-    serveRuntime: '^1.2.4',
-  },
 
-  // GraphQL Tools (Peer Dependencies)
-  graphqlTools: {
-    delegate: '^10.2.4',
-    utils: '^9.2.1',
-    wrap: '^10.0.5',
-  },
-
-  // Mesh Plugins (Production Features)
-  meshPlugins: {
-    responseCache: '^0.104.20',
-    prometheus: '^2.1.8',
-    opentelemetry: '^1.3.67',
-  },
-
-  // Mesh Transforms (Schema Manipulation)
-  // NOTE: these track the Mesh v0.10x line — NOT ^1.0.0. A legacy 1.0.0 is
-  // published for several of these but predates and is incompatible with
-  // @graphql-mesh/cli@0.100.x (verified in the demo-mode trial, ADR-052).
-  meshTransforms: {
-    namingConvention: '^0.105.19',
-    rateLimit: '^0.105.38',
-    filterSchema: '^0.104.37',
-    resolversComposition: '^0.104.36',
-    cache: '^0.105.37',
-  },
-
-  // Core Dependencies
-  core: {
-    graphql: '^16.8.1',
-    express: '^4.18.2',
-    cors: '^2.8.5',
-    helmet: '^8.1.0',
-    tslib: '^2.6.0',
-  },
-
-  // React (Module Federation - Singleton)
-  react: {
-    react: '~18.2.0',
-    reactDom: '~18.2.0',
-  },
-
-  // Platform runtime contract (@seans-mfe-tool/runtime).
-  // Not published to npm yet (ADR-064); generated projects stage dist/runtime
-  // (Dockerfile copies it as a real directory, #274). Single-sourced here so
-  // the React and Angular templates can't drift on the declared spec.
-  runtime: {
-    package: '^0.1.0',
-  },
-
-  // MUI (Design System)
-  mui: {
-    material: '^5.14.0',
-    system: '^5.14.0',
-    emotionReact: '^11.11.1',
-    emotionStyled: '^11.11.0',
-  },
-
-  // Build Tools
-  buildTools: {
-    rspackCli: '^1.7.0',
-    rspackCore: '^1.7.0',
-    typescript: '^5.3.3',
-    tsNode: '^10.9.1',
-    concurrently: '^8.2.0',
-    serve: '^14.2.1',
-    tsJest: '^29.2.0',
-    jestEnvJsdom: '^29.7.0',
-    typesJest: '^29.5.0',
-    jest: '^29.7.0',
-    eslint: '^8.55.0',
-    supertest: '^6.3.3',
-  },
-
-  // Type definitions (shared across React and Angular templates)
-  types: {
-    cors: '^2.8.17',
-    express: '^4.17.21',
-    node: '^20.10.0',
-    react: '^18.0.28',
-    reactDom: '^18.0.11',
-  },
-
-  // React Testing Library
-  testingLibrary: {
-    react: '^14.0.0',
-    jestDom: '^6.4.0',
-    userEvent: '^14.5.0',
-  },
-
-  // Angular 19+ (Module Federation - Singleton + strictVersion)
-  // Upgraded from ^17.0.0 to ^19.2.16 to resolve five HIGH severity XSS CVEs:
-  //   GHSA-58c5-g7wp-6w37, GHSA-v4hv-rgfq-gp49, GHSA-g93w-mfhg-p222,
-  //   GHSA-prjf-86w9-mfqv (all @angular/common, fixed in 19.2.16+)
-  //   GHSA-jrmj-c5cx-3cw6 (@angular/core + @angular/compiler, fixed in 18.2.15+)
-  // See ADR-051.
-  angular: {
-    core: '^19.2.16',
-    common: '^19.2.16',
-    compiler: '^19.2.16',
-    compilerCli: '^19.2.16',
-    platformBrowser: '^19.2.16',
-    forms: '^19.2.16',
-    rxjs: '^7.8.0',
-    // ADR-051 recorded this as "~0.14.0 — unchanged, compatible with Angular
-    // 19", but @angular/core@19.2.16's own peerDependencies require
-    // zone.js@~0.15.0 (verified via `npm view @angular/core@19.2.16
-    // peerDependencies`) — the claim was wrong from the start, and every
-    // fresh Angular MFE install failed with ERESOLVE until this was caught by
-    // the #281 fresh-scaffold typecheck gate, which actually runs `npm
-    // install`. See `scripts/check-template-typecheck.ts`.
-    zoneJs: '~0.15.0',
-  },
-
-  // Angular CLI builder toolchain (angular-webpack variant).
-  // Versions track Angular major: @angular-builders/custom-webpack@19.0.1 and
-  // @angular-architects/module-federation@19.0.3 for Angular 19 compatibility.
-  // TypeScript bumped from ~5.2.0 to ~5.7.0 — Angular 19 requires >=5.5 <5.9.
-  angularBuild: {
-    cli: '^19.2.16',
-    buildAngular: '^19.2.16',
-    customWebpack: '^19.0.1',
-    moduleFederation: '^19.0.3',
-    typescript: '~5.7.0',
-  },
-
-  // Jest preset (standalone webpack removed — use Angular's bundled copy).
-  webpackTools: {
-    jestPresetAngular: '^14.0.0',
-    typesJest: '^29.5.0',
-  },
-
-  // npm overrides — force safe versions of packages with known vulnerabilities.
-  // Applied selectively: BFF projects get fast-uri; non-BFF projects get uuid.
-  //
-  // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high, BFF chain)
-  //   graphql-jit → fast-json-stringify → fast-uri@^2; both fjs@5 and @6 pin ^2.
-  //
-  // uuid: GHSA-w5hq-g745-h8pq (moderate, dev-only React chain)
-  //   @rspack/cli → @rspack/dev-server → webpack-dev-server → sockjs → uuid@<11.1.1
-  // npm overrides — force safe versions of transitively-pulled packages with
-  // known CVEs. These are deliberate and minimal; `npm audit fix --force` is
-  // prohibited (it downgrades and introduces its own regression surface).
-  overrides: {
-    // fast-uri: GHSA-q3j6-qgpj-74h6 + GHSA-v39h-62p7-jpjc (high) — BFF Mesh chain.
-    fastUri: '^3.1.2',
-    // uuid: GHSA-w5hq-g745-h8pq (moderate) — rspack/webpack-dev-server → sockjs → uuid.
-    uuid: '^11.1.1',
-    // tar: node-tar CVEs (GHSA-34x7-hfp2-rc4v, GHSA-8qq5-rm4j-mr97, GHSA-qj8w-gfj5-8c6v)
-    // — @angular/cli → node-gyp → tar in the Angular build toolchain.
-    tar: '^7.5.11',
-    // serialize-javascript: GHSA-5c6j-r48x-rmvq (high RCE) + GHSA-qj8w-gfj5-8c6v (DoS)
-    // — terser-webpack-plugin → serialize-javascript in the Angular build toolchain.
-    serializeJavascript: '^7.0.5',
-    // webpack-dev-server: GHSA-79cf-xcqc-c78w (moderate, cross-origin source exposure)
-    // — Angular dev-server uses wds 5.x; 5.2.4 is the patched release.
-    webpackDevServer: '^5.2.4',
-  },
-};
-
-/**
- * Plugin configuration defaults
- */
-export const DEFAULT_MESH_PLUGINS = {
-  // Always include (performance critical)
-  responseCache: {
-    ttl: 300000, // 5 minutes
-  },
-
-  // Production observability (standard tier)
-  prometheus: {},
-
-  // Optional (advanced tier)
-  opentelemetry: {
-    enabled: false,
-    sampling: { probability: 0.1 },
-  },
-};
-
-/**
- * Transform configuration defaults
- */
-export const DEFAULT_MESH_TRANSFORMS = {
-  // Always include (API consistency)
-  namingConvention: {
-    typeNames: 'pascalCase',
-    fieldNames: 'camelCase',
-  },
-
-  // Optional (advanced tier)
-  rateLimit: {
-    enabled: false,
-  },
-
-  filterSchema: {
-    enabled: false,
-  },
-};
-
-// =============================================================================
-// Validation Layer (ADR-027)
-// =============================================================================
-
-/**
- * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
- * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
- * See ADR-014 for migration strategy.
- */
-
-/**
- * Known GraphQL Mesh plugins (production-ready)
- * Source: @graphql-mesh/plugin-* packages
- * Used to validate manifest plugin configurations and prevent misclassification
- */
-export const KNOWN_MESH_PLUGINS = new Set([
-  'responseCache',
-  'prometheus',
-  'opentelemetry',
-  'newrelic',
-  'statsd',
-  'liveQuery',
-  'defer-stream',
-  'meshHttp',
-  'snapshot',
-  'mock',
-  'operationFieldPermissions',
-  'jwtAuth',
-  'hmac',
-]);
-
-/**
- * Known GraphQL Mesh transforms
- * Source: @graphql-mesh/transform-* packages
- * Used to validate manifest transform configurations and prevent misclassification
- */
-export const KNOWN_MESH_TRANSFORMS = new Set([
-  'namingConvention',
-  'rateLimit',
-  'filterSchema',
-  'resolversComposition',
-  'cache',
-  'prefix',
-  'rename',
-  'encapsulate',
-  'federation',
-  'extend',
-  'replace',
-  'typeMerging',
-  'mock',
-  'bare',
-  'type-merging',
-]);
-
-/**
- * Validation result for plugin/transform classification
- */
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-  warnings: string[];
-  classification: {
-    plugins: string[];
-    transforms: string[];
-    unknown: string[];
-  };
-}
-
-/**
- * Validate and classify plugins from manifest
- * Enforces separation between plugins and transforms
- * Supports both object format {pluginName: config} and array format [{pluginName: config}]
- */
-export function validateManifestPlugins(manifest: DSLManifest): ValidationResult {
-  const result: ValidationResult = {
-    valid: true,
-    errors: [],
-    warnings: [],
-    classification: {
-      plugins: [],
-      transforms: [],
-      unknown: [],
-    },
-  };
-
-  // Check if manifest has plugins section (can be array or object). Not a
-  // field DSLManifest declares at the top level (plugins live under
-  // manifest.data.plugins per ADR-027) — this defends against pre-Zod-parse
-  // YAML that misplaces it, hence the unknown-narrowed read rather than a
-  // typed property access.
-  const manifestPlugins = (manifest as unknown as Record<string, unknown>).plugins;
-  if (!manifestPlugins) return result;
-
-  // Handle both array and object formats
-  const pluginEntries = Array.isArray(manifestPlugins)
-    ? manifestPlugins.map((p) => (typeof p === 'string' ? p : Object.keys(p as object)[0]))
-    : Object.keys(manifestPlugins as object);
-
-  for (const pluginName of pluginEntries) {
-    if (KNOWN_MESH_PLUGINS.has(pluginName)) {
-      result.classification.plugins.push(pluginName);
-    } else if (KNOWN_MESH_TRANSFORMS.has(pluginName)) {
-      // This is a transform, not a plugin!
-      result.errors.push(
-        `"${pluginName}" is a transform, not a plugin. Move it to the "transforms" section.`
-      );
-      result.classification.transforms.push(pluginName);
-      result.valid = false;
-    } else {
-      result.warnings.push(
-        `Unknown plugin "${pluginName}". Ensure it's a valid @graphql-mesh/plugin-* package.`
-      );
-      result.classification.unknown.push(pluginName);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Validate and classify transforms from manifest
- * Supports both object format {transformName: config} and array format [{transformName: config}]
- */
-export function validateManifestTransforms(manifest: DSLManifest): ValidationResult {
-  const result: ValidationResult = {
-    valid: true,
-    errors: [],
-    warnings: [],
-    classification: {
-      plugins: [],
-      transforms: [],
-      unknown: [],
-    },
-  };
-
-  // Check if manifest has transforms section (can be array or object). Same
-  // unknown-narrowed defensive read as validateManifestPlugins above — this
-  // classification predates DSLManifestSchema's current `transforms: string[]`
-  // shape and still needs to tolerate a pre-Zod-parse {name: config} form.
-  const manifestTransforms = (manifest as unknown as Record<string, unknown>).transforms;
-  if (!manifestTransforms) return result;
-
-  // Handle both array and object formats
-  const transformEntries = Array.isArray(manifestTransforms)
-    ? manifestTransforms.map((t) => (typeof t === 'string' ? t : Object.keys(t as object)[0]))
-    : Object.keys(manifestTransforms as object);
-
-  for (const transformName of transformEntries) {
-    if (KNOWN_MESH_TRANSFORMS.has(transformName)) {
-      result.classification.transforms.push(transformName);
-    } else if (KNOWN_MESH_PLUGINS.has(transformName)) {
-      // This is a plugin, not a transform!
-      result.errors.push(
-        `"${transformName}" is a plugin, not a transform. Move it to the "plugins" section.`
-      );
-      result.classification.plugins.push(transformName);
-      result.valid = false;
-    } else {
-      result.warnings.push(
-        `Unknown transform "${transformName}". Ensure it's a valid @graphql-mesh/transform-* package.`
-      );
-      result.classification.unknown.push(transformName);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Comprehensive validation of manifest plugin/transform configuration
- * Throws error if validation fails (protect code generation)
- */
-export function validateManifestConfiguration(manifest: DSLManifest): void {
-  const pluginValidation = validateManifestPlugins(manifest);
-  const transformValidation = validateManifestTransforms(manifest);
-
-  const allErrors = [...pluginValidation.errors, ...transformValidation.errors];
-  const allWarnings = [...pluginValidation.warnings, ...transformValidation.warnings];
-
-  // Log warnings (non-fatal)
-  if (allWarnings.length > 0) {
-    console.warn('\n⚠️  Manifest Configuration Warnings:');
-    allWarnings.forEach((warning) => console.warn(`  - ${warning}`));
-  }
-
-  // Throw on errors (fatal - prevent bad generation)
-  if (allErrors.length > 0) {
-    console.error('\n❌ Manifest Configuration Errors:');
-    allErrors.forEach((error) => console.error(`  - ${error}`));
-    throw new ValidationError(
-      `Manifest validation failed with ${allErrors.length} error(s). ` +
-        `Please correct the plugin/transform configuration in your mfe-manifest.yaml.`,
-      'data',
-      'valid-plugin-transform-config'
-    );
-  }
-
-  // Log success for visibility
-  const totalPlugins = pluginValidation.classification.plugins.length;
-  const totalTransforms = transformValidation.classification.transforms.length;
-  console.log(
-    `✅ Manifest validation passed: ${totalPlugins} plugin(s), ${totalTransforms} transform(s)`
-  );
-}
-
-// =============================
-// Shared Utilities
-// =============================
-
-// Framework packages are single-sourced from platform defaults (#293), never
-// re-emitted from manifest.dependencies.runtime — so they're stripped when we
-// derive the "extra" runtime deps a manifest declares (babylon, zustand, …).
-const REACT_FRAMEWORK_PACKAGES = new Set(['react', 'react-dom']);
-const ANGULAR_FRAMEWORK_PACKAGES = new Set([
-  '@angular/core',
-  '@angular/common',
-  '@angular/compiler',
-  '@angular/compiler-cli',
-  '@angular/forms',
-  '@angular/platform-browser',
-  '@angular/platform-browser-dynamic',
-  'rxjs',
-  'zone.js',
-]);
-
-/**
- * Resolve a React MFE's design-system dependencies (#294).
- *
- * The manifest is the source of truth:
- * - nothing declared            → the platform default (MUI + emotion peers);
- * - a declaration containing MUI → MUI stack, declared versions winning, so a
- *   bare `@mui/material: ^5.x` still ships the emotion peers it needs;
- * - a non-MUI declaration        → used verbatim (e.g. styled-components), so an
- *   MFE that opts out of MUI stops force-pulling it.
- */
-export function resolveDesignSystemDeps(
-  manifest: DSLManifest,
-  framework: string
-): Record<string, string> {
-  const declared = (manifest.dependencies?.['design-system'] || {}) as Record<string, string>;
-  if (framework !== 'react') {
-    return { ...declared };
-  }
-  const keys = Object.keys(declared);
-  const hasMui = keys.some((k) => k.startsWith('@mui/'));
-  if (keys.length === 0 || hasMui) {
-    return {
-      '@mui/material': DEPENDENCY_VERSIONS.mui.material,
-      '@mui/system': DEPENDENCY_VERSIONS.mui.system,
-      '@emotion/react': DEPENDENCY_VERSIONS.mui.emotionReact,
-      '@emotion/styled': DEPENDENCY_VERSIONS.mui.emotionStyled,
-      // Declared versions (and any extra keys) win over the defaults.
-      ...declared,
-    };
-  }
-  return { ...declared };
-}
-
-/**
- * Non-framework runtime dependencies declared in the manifest (#294) — the libs
- * that previously had to be hand-added to package.json and then drifted.
- */
-export function resolveRuntimeExtraDeps(
-  manifest: DSLManifest,
-  framework: string
-): Record<string, string> {
-  const runtime = (manifest.dependencies?.runtime || {}) as Record<string, string>;
-  const frameworkPackages =
-    framework === 'angular' ? ANGULAR_FRAMEWORK_PACKAGES : REACT_FRAMEWORK_PACKAGES;
-  const out: Record<string, string> = {};
-  for (const [name, version] of Object.entries(runtime)) {
-    if (!frameworkPackages.has(name) && typeof version === 'string') {
-      out[name] = version;
-    }
-  }
-  return out;
-}
-
-/**
- * The full set of client-side dependencies for a React MFE's package.json,
- * derived from the manifest: framework singletons + design-system + extras.
- */
-export function resolveClientDependencies(
-  manifest: DSLManifest,
-  framework: string
-): Record<string, string> {
-  const deps: Record<string, string> = {};
-  if (framework === 'react') {
-    deps['react'] = DEPENDENCY_VERSIONS.react.react;
-    deps['react-dom'] = DEPENDENCY_VERSIONS.react.reactDom;
-  }
-  Object.assign(deps, resolveDesignSystemDeps(manifest, framework));
-  Object.assign(deps, resolveRuntimeExtraDeps(manifest, framework));
-  return deps;
-}
-
-/**
- * Which optional Mesh plugins/transforms a manifest's `data:`/`performance:`
- * config implies (ADR-027). Feeds `extractManifestVars`, which decides what
- * `package.json.ejs` and the BFF templates render.
- */
-export function resolveNeededMeshPluginsAndTransforms(manifest: DSLManifest): {
-  neededPlugins: string[];
-  neededTransforms: string[];
-} {
-  const performanceConfig = manifest.performance || {};
-  const observabilityConfig = performanceConfig.observability || {};
-
-  const neededPlugins = new Set<string>();
-  if (performanceConfig.caching?.enabled !== false) neededPlugins.add('responseCache');
-  if (observabilityConfig.prometheus?.enabled !== false) neededPlugins.add('prometheus');
-  if (observabilityConfig.opentelemetry?.enabled) neededPlugins.add('opentelemetry');
-
-  const neededTransforms = new Set<string>();
-  neededTransforms.add('namingConvention'); // Always include
-  if (performanceConfig.rateLimit?.enabled) neededTransforms.add('rateLimit');
-  if (performanceConfig.filterSchema?.enabled) neededTransforms.add('filterSchema');
-  if (manifest.transforms && manifest.transforms.length > 0) neededTransforms.add('resolversComposition');
-  // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
-  if (manifest.data?.mockSwitch?.enabled) neededTransforms.add('resolversComposition');
-
-  return { neededPlugins: Array.from(neededPlugins), neededTransforms: Array.from(neededTransforms) };
-}
-
-/**
- * Module-federation `shared` deps for a React MFE (#294): framework singletons
- * plus the design-system — NOT arbitrary runtime libs, which are usually wrong
- * to force into a single shared instance.
- */
-export function resolveReactSharedDeps(manifest: DSLManifest): Record<string, string> {
-  return {
-    react: DEPENDENCY_VERSIONS.react.react,
-    'react-dom': DEPENDENCY_VERSIONS.react.reactDom,
-    ...resolveDesignSystemDeps(manifest, 'react'),
-  };
-}
-
-const JS_IDENTIFIER = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
-
-/** Render `name: version` JSON dependency lines (no trailing comma). */
-function renderJsonDependencyLines(deps: Record<string, string>, indent: string): string {
-  return Object.entries(deps)
-    .map(([name, version]) => `${indent}"${name}": "${version}"`)
-    .join(',\n');
-}
-
-/** Render module-federation `shared` entries (no trailing comma). */
-function renderSharedEntries(deps: Record<string, string>, indent: string): string {
-  return Object.entries(deps)
-    .map(([name, version]) => {
-      const key = JS_IDENTIFIER.test(name) ? name : `'${name}'`;
-      return (
-        `${indent}${key}: {\n` +
-        `${indent}  singleton: true,\n` +
-        `${indent}  requiredVersion: '${version}',\n` +
-        `${indent}  eager: true\n` +
-        `${indent}}`
-      );
-    })
-    .join(',\n');
-}
-
-/**
- * Extract manifest variables for template rendering
- */
-/** One capability row in the render model. */
-export interface RenderCapability {
-  method: string;
-  config: CapabilityConfig;
-  returnTypeBase: string;
-  stubBody: string;
-}
-
-/** One lifecycle hook stub in the render model. */
-export interface RenderLifecycleHook {
-  name: string;
-  description: string;
-  phase: string;
-}
-
-/** One manifest-declared handler import (ADR-040). */
-export interface RenderHandlerSource {
-  localName: string;
-  module: string;
-  exportName: string;
-}
-
-export function extractManifestVars(
-  manifest: DSLManifest,
-  variant: FrameworkVariant = deriveBuiltinVariant(manifest)
-) {
-  const className = manifest.name.replace(/[^a-zA-Z0-9]/g, '') + 'MFE';
-  const inputTypeName = className + 'Inputs';
-  const outputTypeName = className + 'Outputs';
-  const port = manifest.endpoint ? Number(manifest.endpoint.split(':').pop()) : 3001;
-  const muiVersion =
-    manifest.dependencies?.['design-system']?.['@mui/material'] || DEPENDENCY_VERSIONS.mui.material;
-
-  // Filter out empty/invalid remote entries from YAML parsing issues. Schema
-  // types mfes as Record<string, string>, but this defends against
-  // pre-Zod-parse YAML where an entry can still be an object.
-  const rawRemotes = (manifest.dependencies?.mfes ?? {}) as unknown as Record<string, unknown>;
-  const remotes: Record<string, unknown> = {};
-  for (const [name, config] of Object.entries(rawRemotes)) {
-    if (name && name.trim() && config && typeof config === 'object') {
-      remotes[name] = config;
-    }
-  }
-
-  // Extract performance/observability config from manifest (ADR-027)
-  const performanceConfig = manifest.performance || {};
-  const observabilityConfig = performanceConfig.observability || {};
-
-  // Which plugins/transforms are needed — single-sourced with
-  // `resolveBffDependencies` so the two can't drift (see that function's doc).
-  const { neededPlugins, neededTransforms } = resolveNeededMeshPluginsAndTransforms(manifest);
-  // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
-  const mockSwitchEnabled = !!manifest.data?.mockSwitch?.enabled;
-
-  // Variant selection is injected by the caller (ADR-061). The CLI resolves it
-  // via the framework plugin (ADR-036, #176) so third-party frameworks work;
-  // the default is the built-in trio derived purely from the manifest.
-  return {
-    name: manifest.name,
-    version: manifest.version,
-    description: manifest.description,
-    port,
-    muiVersion,
-    remotes,
-    className,
-    inputTypeName,
-    outputTypeName,
-    manifest,
-    // Typed rather than bare `[]`: under strict these infer as never[], and
-    // planRenderModel then cannot assign the real values back into them.
-    capabilities: [] as RenderCapability[], // will be overwritten in generateAllFiles
-    lifecycleHooks: [] as RenderLifecycleHook[], // will be overwritten in generateAllFiles
-    handlerSources: [] as RenderHandlerSource[], // ADR-040 — overwritten in generateAllFiles
-
-    // Codegen variant selection — injected (ADR-061), read back by generateAllFiles.
-    framework: variant.framework as 'react' | 'angular',
-    bundler: variant.bundler as 'rspack' | 'webpack',
-    templateVariant: variant.templateVariant,
-
-    // NEW: Dependency versions for templates (ADR-027)
-    dependencyVersions: DEPENDENCY_VERSIONS,
-
-    // Manifest-driven client dependencies + federation shared (#294). Preformatted
-    // here (not in EJS) so ordering/formatting is deterministic for the
-    // generate-and-diff drift gate (#295).
-    clientDependencyLines: renderJsonDependencyLines(
-      resolveClientDependencies(manifest, variant.framework),
-      '    '
-    ),
-    rspackSharedEntries: renderSharedEntries(resolveReactSharedDeps(manifest), '        '),
-    angularExtraDependencyLines: (() => {
-      if (variant.framework !== 'angular') return '';
-      const extras = {
-        ...resolveDesignSystemDeps(manifest, 'angular'),
-        ...resolveRuntimeExtraDeps(manifest, 'angular'),
-      };
-      const lines = renderJsonDependencyLines(extras, '    ');
-      return lines ? ',\n' + lines : '';
-    })(),
-
-    // NEW: Track which plugins/transforms are needed (ADR-027)
-    neededPlugins,
-    neededTransforms,
-
-    // NEW: Plugin/transform configs (ADR-027)
-    meshPlugins: {
-      responseCache:
-        performanceConfig.caching?.enabled !== false ? DEFAULT_MESH_PLUGINS.responseCache : null,
-      prometheus:
-        observabilityConfig.prometheus?.enabled !== false
-          ? {
-              ...DEFAULT_MESH_PLUGINS.prometheus,
-              ...observabilityConfig.prometheus,
-            }
-          : null,
-      opentelemetry: observabilityConfig.opentelemetry?.enabled
-        ? {
-            ...DEFAULT_MESH_PLUGINS.opentelemetry,
-            ...observabilityConfig.opentelemetry,
-          }
-        : null,
-    },
-
-    meshTransforms: {
-      namingConvention: DEFAULT_MESH_TRANSFORMS.namingConvention,
-      rateLimit: performanceConfig.rateLimit?.enabled ? performanceConfig.rateLimit : null,
-      filterSchema: performanceConfig.filterSchema?.enabled ? performanceConfig.filterSchema : null,
-      // Demo-mode mock switch (ADR-052) — emits a resolversComposition over Query.*
-      mockSwitch: mockSwitchEnabled,
-      customTransforms: manifest.transforms || [],
-    },
-
-    // BFF endpoint for the client-side connector template (bff.ts.ejs).
-    // The MFE and its BFF are ONE deployable unit served from the manifest's
-    // endpoint origin (server.ts hosts remoteEntry.js and /graphql together),
-    // so the connector must carry the absolute URL: a relative path would
-    // resolve against the SHELL's origin once the MFE is composed remotely.
-    bffEndpoint: resolveBffEndpoint(manifest),
-
-    // True when the manifest declares a data: section — gates doQuery() generation
-    // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
-    hasBff: !!manifest.data,
-
-    // The ten platform capability names, from the canonical definition in
-    // @seans-mfe/contracts (ADR-080). Templates classify a manifest capability
-    // as platform vs domain against this instead of an inline literal array —
-    // four such arrays existed and two of them were a capability short.
-    platformCapabilityNames: [...PLATFORM_CAPABILITIES],
-  };
-}
-
-/**
- * Render an EJS template file with variables
- */
-export async function renderTemplate(
-  templatePath: string,
-  vars: Record<string, unknown>
-): Promise<string> {
-  const template = await fs.readFile(templatePath, 'utf8');
-  return ejs.render(template, vars);
-}
-
-/**
- * Detect whether a domain capability is already realized in code.
- *
- * `remote:generate` should scaffold a capability's feature stub only when it
- * has not been implemented yet, and otherwise leave the file untouched. The
- * signal is the presence of an exported symbol matching the capability name in
- * its own feature file:
- *   - React:   `export const <Name>` / `function` / `class` / `default <Name>`
- *   - Angular: `export class <Name>Component`
- *
- * Note: the generated stub already exports `<Name>`, so a capability counts as
- * "implemented" from the moment its file exists — which is the intended
- * hands-off behavior (features are user-owned once created). A missing file
- * means the capability has not been generated yet → returns false.
- */
-export async function capabilityImplemented(
-  componentFilePath: string,
-  name: string,
-  variant: 'react-rspack' | 'angular-webpack',
-): Promise<boolean> {
-  if (!(await fs.pathExists(componentFilePath))) return false;
-  const content = await fs.readFile(componentFilePath, 'utf8');
-  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const patterns =
-    variant === 'angular-webpack'
-      ? [new RegExp(`export\\s+(?:default\\s+)?class\\s+${esc}(?:Component)?\\b`)]
-      : [
-          // export const/let/var/function/class/default <Name>
-          new RegExp(`export\\s+(?:default\\s+)?(?:const|let|var|function|class)\\s+${esc}\\b`),
-          // export default <Name>
-          new RegExp(`export\\s+default\\s+${esc}\\b`),
-          // export { ... <Name> ... }
-          new RegExp(`export\\s*\\{[^}]*\\b${esc}\\b[^}]*\\}`),
-        ];
-  return patterns.some((re) => re.test(content));
-}
-
-/**
- * Write generated files to disk
- */
-export async function writeGeneratedFiles(
-  files: GeneratedFile[],
-  options: { force?: boolean; dryRun?: boolean } = {}
-): Promise<{ files: GeneratedFile[]; skipped: string[]; errors: string[] }> {
-  const result: { files: GeneratedFile[]; skipped: string[]; errors: string[] } =
-    { files: [], skipped: [], errors: [] };
-  for (const file of files) {
-    try {
-      const exists = await fs.pathExists(file.path);
-      // overwrite:false = developer-owned; never touch it, even with --force.
-      // overwrite:true  = generated; skip if exists unless --force re-stamps it.
-      if (exists && !file.overwrite) {
-        result.skipped.push(file.path);
-        continue;
-      }
-      if (options.dryRun) {
-        result.files.push(file);
-        continue;
-      }
-      await fs.ensureDir(path.dirname(file.path));
-      await fs.writeFile(file.path, file.content, 'utf8');
-      result.files.push(file);
-    } catch (error) {
-      result.errors.push(`Failed to write ${file.path}: ${(error as Error).message}`);
-    }
-  }
-  return result;
-}
-
-// =============================
-// Handler source parsing (ADR-040)
-// =============================
-
-/**
- * Parse a DSL `source:` specifier into a static import descriptor.
- *
- * Grammar:
- *   "./rel/path"               → named import `{ <hookName> } from './rel/path'`
- *   "@org/pkg"                 → default import `<hookName> from '@org/pkg'`
- *   "@org/pkg#namedExport"     → named import `{ namedExport as <hookName> } from '@org/pkg'`
- *
- * Returning `null` means the source is malformed (empty / only whitespace);
- * the caller logs and falls back to stub generation so codegen never crashes
- * on a typo.
- */
-export function parseHandlerSource(
-  source: string,
-  hookName: string,
-): { module: string; exportName: string } | null {
-  const trimmed = source.trim();
-  if (!trimmed) return null;
-  const hashIdx = trimmed.indexOf('#');
-  if (hashIdx >= 0) {
-    const module = trimmed.slice(0, hashIdx).trim();
-    const exportName = trimmed.slice(hashIdx + 1).trim();
-    if (!module || !exportName) return null;
-    return { module, exportName };
-  }
-  // No '#': relative paths use a named import matching the hook name (the
-  // common case for project-local handler files); bare module specifiers use
-  // the default export.
-  const isRelative = trimmed.startsWith('./') || trimmed.startsWith('../');
-  return {
-    module: trimmed,
-    exportName: isRelative ? hookName : 'default',
-  };
-}
-
-// =============================
 // Unified Generator Entrypoint
 // =============================
 
@@ -969,23 +168,6 @@ export async function generateAllFiles(
  * external handler sources (ADR-040) into the template `vars`. Pure: no disk
  * access, no template rendering.
  */
-/**
- * The BFF endpoint the generated client connector dials. An MFE with a
- * `data:` section is a single deployable unit: server.ts serves the
- * remoteEntry AND /graphql from the manifest's `endpoint` origin, so the
- * connector bakes the absolute URL (endpoint + data.serve.endpoint).
- * Without a manifest endpoint the relative serve path is all we have.
- */
-function resolveBffEndpoint(manifest: DSLManifest): string {
-  const servePath = manifest.data?.serve?.endpoint ?? '/graphql';
-  const origin = manifest.endpoint;
-  if (!origin) return servePath;
-  try {
-    return new URL(servePath, origin).toString();
-  } catch {
-    return servePath;
-  }
-}
 
 function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): RenderModel {
   const vars = extractManifestVars(manifest, variant);
@@ -1116,7 +298,7 @@ async function renderFiles(
   // Platform/BFF directories and template paths
   const platformDir = path.join(basePath, 'src', 'platform', 'base-mfe');
   const bffDir = path.join(basePath, 'src', 'platform', 'bff');
-  const bffTemplateDir = path.resolve(__dirname, '../../../packages/bff-plugin/templates');
+  const bffTemplateDir = path.resolve(__dirname, '../../../packages/plugin-bff/templates');
 
   // --- Feature/component generation ---
   // For each domain capability, generate feature, index, test
@@ -1366,7 +548,7 @@ async function renderFiles(
   // Variant-aware: angular-webpack emits webpack.config.js + tsconfig pair;
   // react-rspack keeps the existing package.json + rspack.config.js shape.
   // tsconfig.json is only emitted here for non-BFF React MFEs — when a BFF
-  // is present the BFF plugin already owns it (packages/bff-plugin/templates/tsconfig.json).
+  // is present the BFF plugin already owns it (packages/plugin-bff/templates/tsconfig.json).
   //
   // Ownership is per-entry. These are developer-owned by default — seeded once
   // and never touched again — because an MFE author edits `package.json`,

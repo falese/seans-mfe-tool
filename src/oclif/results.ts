@@ -8,30 +8,24 @@
 
 import type { BuildError } from '@seans-mfe/contracts';
 
-// BFF result types live in @falese/bff-plugin (migrated in plugin extraction epic)
+// BFF result types live in @seans-mfe/plugin-bff (migrated in plugin extraction epic)
 export type {
   BffInitResult,
   BffBuildResult,
   BffDevResult,
   BffValidateResult,
   BffValidationIssue,
-} from '@falese/bff-plugin';
+} from '@seans-mfe/plugin-bff';
 
 // ---------------------------------------------------------------------------
 // Shared mixin
 // ---------------------------------------------------------------------------
 
-/** Mixin added to every mutating command result (B8). */
-export interface MutatingResult {
-  dryRun: boolean;
-  plannedChanges?: PlannedChange[];
-}
-
-export interface PlannedChange {
-  op: 'create' | 'overwrite' | 'skip' | 'spawn';
-  target: string;
-  detail?: string;
-}
+// The dry-run mixin is part of the envelope vocabulary, not any one command's
+// result, so it is defined once in @seans-mfe/contracts and re-exported here
+// for the commands that already import it from this module (ADR-080).
+export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
+import type { MutatingResult } from '@seans-mfe/contracts';
 
 // ---------------------------------------------------------------------------
 // deploy
@@ -47,15 +41,12 @@ export interface DeployResult extends MutatingResult {
 }
 
 // ---------------------------------------------------------------------------
-// api (create-api)
+// api
 // ---------------------------------------------------------------------------
 
-export interface ApiResult extends MutatingResult {
-  name: string;
-  database: string;
-  port: number;
-  generatedFiles: string[];
-}
+// The api result type lives in @seans-mfe/plugin-api (ADR-063), re-exported
+// here so callers keep one import site — same as the BFF types above.
+export type { ApiResult } from '@seans-mfe/plugin-api';
 
 // ---------------------------------------------------------------------------
 // remote:init

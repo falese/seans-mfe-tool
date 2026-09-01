@@ -13,6 +13,7 @@ superseded-by: []
 implements-pdr: [2]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
+  - packages/runtime/src/mfe-dependencies.ts
 verified-by:
   - packages/runtime/src/__tests__/lifecycle-executor.test.ts
   - packages/runtime/src/__tests__/base-mfe.coverage.test.ts

@@ -122,3 +122,40 @@ docker compose down
 - [Runtime architecture](../../docs/architecture-runtime-platform.md)
 - ADR-054/055: control-plane protocol and `LayoutManager`
 - ADR-066/067/068/069: stable, manifest-declared, provider-scoped slots
+
+## The data tier
+
+`docker compose up` brings up a database-backed REST service alongside the
+games, and the two BFF-bearing MFEs read through it.
+
+```
+SQLite  ->  abc-kids-api (Express)  ->  GraphQL BFF  ->  MFE  ->  shell
+            :3101 /api/*               /graphql          federated  composed by
+                                                                     the control plane
+```
+
+- **`api/abc-kids-api.yaml`** is the canonical spec — players, scores,
+  progression, and a cross-game `/leaderboard`.
+- **`api/abc-kids-api/`** is generated from it by `@seans-mfe/plugin-api`
+  (ADR-063). Regenerate with:
+  `seans-mfe-tool api abc-kids-api --spec ../abc-kids-api.yaml --database sqlite --port 3101`
+- **`flappy/specs/` and `multiplication-quiz/specs/`** hold copies of the spec.
+  They are copies because each MFE's Docker build context is its own directory,
+  so `mesh build` cannot reach a file above it; `src/__tests__/abc-kids-api-spec-copies.test.ts`
+  keeps them identical to the canonical file.
+
+Two pieces are deliberately hand-written, because generated code is seeded, not
+owned (ADR-082):
+
+- **`src/controllers/leaderboard.controller.js`** — the generator scaffolds one
+  CRUD read per resource, which is right for `/players` and wrong for a
+  leaderboard. A leaderboard is an aggregate over scores joined to players, and
+  it is the query that makes the BFF layer a composition point rather than a
+  passthrough: a single game can say how a player did at flappy, only a
+  cross-game query can say who is ahead.
+- **`src/database/seeds/`** — the generator emits `"Sample string 1"`
+  placeholders. These are five players with scores spread across flappy,
+  multiplication-quiz and hockey, so the leaderboard has something to rank.
+
+Demo mode (ADR-052) now means something: `x-bff-mode: mock` returns fixtures,
+and without it the same query returns live rows from the database.

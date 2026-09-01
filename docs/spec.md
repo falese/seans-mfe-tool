@@ -233,6 +233,10 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 
 <!-- BEGIN GENERATED: adr-index -->
 
+### Live — the current architecture
+
+_Ratified decisions. These describe how the platform works today._
+
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
 | [ADR-001](./architecture-decisions/ADR-001-lifecycle-reentrancy-guard.md) | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle | Implemented |
@@ -241,7 +245,6 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-004](./architecture-decisions/ADR-004-handler-array-support.md) | Handler Array Support | Runtime lifecycle | Implemented |
 | [ADR-005](./architecture-decisions/ADR-005-handler-discovery-convention.md) | Handler Discovery Convention | Runtime lifecycle | Implemented |
 | [ADR-006](./architecture-decisions/ADR-006-unified-type-system.md) | Unified Type System | DSL / types | Implemented |
-| [ADR-007](./architecture-decisions/ADR-007-authorization-expression-grammar.md) | Authorization Expression Grammar | DSL / security | Deferred |
 | [ADR-008](./architecture-decisions/ADR-008-data-type-metadata.md) | Data Type Metadata | DSL | Implemented |
 | [ADR-009](./architecture-decisions/ADR-009-language-field-template-selection.md) | Language Field and Template Selection | Codegen | Implemented |
 | [ADR-010](./architecture-decisions/ADR-010-data-lifecycle-alignment.md) | Data Lifecycle Alignment | DSL | Implemented |
@@ -258,46 +261,36 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-021](./architecture-decisions/ADR-021-package-namespace-strategy.md) | Package namespace strategy — @seans-mfe/* vs @falese/* | Packages | Accepted |
 | [ADR-022](./architecture-decisions/ADR-022-plugin-first-architecture.md) | Plugin-first architecture — falese/daemon and falese/coder as oclif plugins | Architecture | Accepted |
 | [ADR-023](./architecture-decisions/ADR-023-no-any-typescript-discipline.md) | No-any TypeScript discipline — use unknown and narrow | TypeScript | Implemented |
-| [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
-| [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Superseded |
 | [ADR-026](./architecture-decisions/ADR-026-load-capability-atomic.md) | Load Capability — Atomic Operation Design | Runtime lifecycle | Accepted (impl phased, #318) |
 | [ADR-027](./architecture-decisions/ADR-027-mesh-v0100-plugins.md) | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer | Implemented |
-| [ADR-028](./architecture-decisions/ADR-028-parallel-execution.md) | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
 | [ADR-029](./architecture-decisions/ADR-029-timeout-protection.md) | Timeout Protection with AbortSignal | Lifecycle engine | Implemented |
 | [ADR-030](./architecture-decisions/ADR-030-error-classification.md) | Error Classification with Hybrid Detection | Lifecycle engine | Implemented |
-| [ADR-031](./architecture-decisions/ADR-031-conditional-execution.md) | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
-| [ADR-032](./architecture-decisions/ADR-032-inter-hook-communication.md) | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
 | [ADR-033](./architecture-decisions/ADR-033-two-headed-giant-developer-model.md) | Two-headed giant — AI-native + human-legible developer experience | Developer model | Accepted |
 | [ADR-034](./architecture-decisions/ADR-034-pluggable-bundler-framework.md) | Pluggable bundler + framework via codegen variants | Codegen / polyglot | Implemented |
 | [ADR-035](./architecture-decisions/ADR-035-docker-turborepo-integration.md) | Docker Build Orchestration via Turborepo Task Graph | Docker / CI | Implemented |
 | [ADR-036](./architecture-decisions/ADR-036-framework-plugins.md) | Framework plugins — abstract BaseFrameworkPlugin with concrete implementations | Build / codegen / deploy | Implemented |
 | [ADR-037](./architecture-decisions/ADR-037-tdd-always.md) | TDD-always — write the failing test before the code | Process | Accepted |
 | [ADR-038](./architecture-decisions/ADR-038-conventional-commits-branch-discipline.md) | Conventional Commits and branch discipline | Process | Accepted |
-| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded |
 | [ADR-040](./architecture-decisions/ADR-040-manifest-declared-handler-sources.md) | Manifest-Declared Handler Sources | DSL / handlers / codegen | Implemented |
 | [ADR-041](./architecture-decisions/ADR-041-base-mfe-abstract-base.md) | BaseMFE Abstract Base Class & Platform Capability Contract | Runtime / base-class | Implemented |
 | [ADR-042](./architecture-decisions/ADR-042-mfe-lifecycle-state-machine.md) | MFE Lifecycle State Machine | Runtime lifecycle | Implemented |
 | [ADR-043](./architecture-decisions/ADR-043-manifest-driven-codegen.md) | Manifest-Driven Code Generation Pipeline | Codegen / DSL | Implemented |
 | [ADR-044](./architecture-decisions/ADR-044-production-container-hardening.md) | Production Container Hardening for Generated MFEs | Docker / deploy / security | Implemented |
-| [ADR-045](./architecture-decisions/ADR-045-package-manager-and-runtime-pinning.md) | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Proposed |
-| [ADR-046](./architecture-decisions/ADR-046-environment-configuration-and-secret-validation.md) | Environment Configuration and Secret Validation | Configuration / security | Proposed |
-| [ADR-047](./architecture-decisions/ADR-047-codeowners-and-review-routing.md) | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
-| [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
-| [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
+| [ADR-045](./architecture-decisions/ADR-045-package-manager-and-runtime-pinning.md) | Package Manager and Local Runtime Pinning | Tooling / package manager / runtime | Implemented |
 | [ADR-050](./architecture-decisions/ADR-050-dependency-governance.md) | Dependency Governance — Pinning Strategy, hasBff Gate, and DEPENDENCY_VERSIONS | Codegen / dependencies / security | Implemented |
 | [ADR-051](./architecture-decisions/ADR-051-angular-19-upgrade.md) | Angular 19 Upgrade — Resolve XSS CVEs in Generated MFEs | Angular / security | Implemented |
 | [ADR-052](./architecture-decisions/ADR-052-bff-demo-mode-mock-switch.md) | BFF Demo Mode — Per-Request Mock Switch via resolversComposition | BFF / mock / demo-mode | Implemented |
 | [ADR-053](./architecture-decisions/ADR-053-remote-mfe-doquery.md) | RemoteMFE.doQuery — Remove throw; BaseMFE.doQuery is sufficient for all MFE+BFF combinations | Runtime / query / BFF | Implemented |
 | [ADR-054](./architecture-decisions/ADR-054-control-plane-message-protocol.md) | Control-Plane Message Protocol as a Shared Contract in @seans-mfe/contracts | Contracts / daemon / control-plane | Implemented |
 | [ADR-055](./architecture-decisions/ADR-055-layout-manager-daemon-driven-shells.md) | LayoutManager — Daemon-Driven Slot Composition for Generic Shells | Runtime / shell / layout / control-plane | Implemented |
-| [ADR-056](./architecture-decisions/ADR-056-mfe-presentation-boundary.md) | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented |
+| [ADR-056](./architecture-decisions/ADR-056-mfe-presentation-boundary.md) | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented → ADR-060 |
 | [ADR-057](./architecture-decisions/ADR-057-virtualized-daemon-socket.md) | Virtualized daemon socket: per-slot control-plane channels over one host connection | Runtime / control-plane / channels | Implemented |
-| [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented |
+| [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented → ADR-068 |
 | [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Implemented |
 | [ADR-060](./architecture-decisions/ADR-060-contextualized-vm-composition.md) | Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution | Runtime / composition / resilience / context | Implemented |
 | [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
-| [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Accepted (impl deferred, #250) |
-| [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Accepted (impl deferred, #251) |
+| [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Implemented |
+| [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Implemented |
 | [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
 | [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Implemented |
 | [ADR-066](./architecture-decisions/ADR-066-stable-slot-addressing-desired-state-placement.md) | Stable slot addressing and desired-state placement | Runtime / slots / addressing / control-plane | Implemented |
@@ -318,6 +311,38 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | [ADR-081](./architecture-decisions/ADR-081-platform-observability-schema.md) | One OpenTelemetry-shaped event schema for the whole platform, propagated by W3C trace context | Observability / contracts / CLI | Accepted (impl phased, #322) |
 | [ADR-082](./architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md) | The platform reports its own breaking changes in code it does not own, and never rewrites that code | Codegen / ownership / DX | Implemented |
 | [ADR-083](./architecture-decisions/ADR-083-control-plane-composition-dsl.md) | Composition is authored in a project-scoped DSL, not hand-written registry JSON | Control plane / DSL / codegen / composition | Accepted (impl phased, #139) |
+
+### Proposed — filed, not ratified
+
+_A decision has been written down but not agreed. Do not build against these._
+
+| ADR | Title | Area | Status |
+|-----|-------|------|--------|
+| [ADR-024](./architecture-decisions/ADR-024-platform-handler-library.md) | Platform Handler Library Standardization | Runtime handlers | Proposed |
+| [ADR-028](./architecture-decisions/ADR-028-parallel-execution.md) | Parallel Handler Execution with Context Isolation | Lifecycle engine | Proposed |
+| [ADR-031](./architecture-decisions/ADR-031-conditional-execution.md) | Conditional Execution with Jexl Expression Engine | Lifecycle engine | Proposed |
+| [ADR-032](./architecture-decisions/ADR-032-inter-hook-communication.md) | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine | Proposed |
+| [ADR-046](./architecture-decisions/ADR-046-environment-configuration-and-secret-validation.md) | Environment Configuration and Secret Validation | Configuration / security | Proposed |
+| [ADR-047](./architecture-decisions/ADR-047-codeowners-and-review-routing.md) | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
+| [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
+| [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
+
+### Deferred — postponed on purpose
+
+_Deliberately not decided yet; the ADR records why._
+
+| ADR | Title | Area | Status |
+|-----|-------|------|--------|
+| [ADR-007](./architecture-decisions/ADR-007-authorization-expression-grammar.md) | Authorization Expression Grammar | DSL / security | Deferred |
+
+### Superseded — replaced, kept for provenance
+
+_Retired by a later decision. Kept so the reasoning stays traceable._
+
+| ADR | Title | Area | Status |
+|-----|-------|------|--------|
+| [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Superseded → ADR-076 |
+| [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded → ADR-081 |
 
 <!-- END GENERATED: adr-index -->
 

@@ -142,7 +142,6 @@ function formatStats(label, stats, extra = {}) {
 
 function ensure(condition, message) {
   if (!condition) {
-    // eslint-disable-next-line no-console
     console.error(`PERF BUDGET FAILED: ${message}`);
     process.exit(1);
   }

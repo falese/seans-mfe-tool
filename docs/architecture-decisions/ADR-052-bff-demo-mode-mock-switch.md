@@ -12,12 +12,12 @@ supersedes: []
 superseded-by: []
 implements-pdr: [1]
 implemented-by:
-  - packages/bff-plugin/templates/mock-switch.js.ejs
-  - packages/bff-plugin/templates/mocks.json.ejs
-  - packages/bff-plugin/src/shared.ts
+  - packages/plugin-bff/templates/mock-switch.js.ejs
+  - packages/plugin-bff/templates/mocks.json.ejs
+  - packages/plugin-bff/src/shared.ts
   - packages/codegen/src/unified-generator.ts
 verified-by:
-  - packages/bff-plugin/src/commands/bff/__tests__/bff-workflow.test.ts
+  - packages/plugin-bff/src/commands/bff/__tests__/bff-workflow.test.ts
 tracked-by: ["#289", "#301"]
 summary: >-
   Generated BFFs gain an opt-in "demo mode" — they serve live upstream data by default but
@@ -27,7 +27,7 @@ summary: >-
 rationale-summary: >-
   Production apps need a demo/sandbox mode that returns stable, presentable data without a live
   backend — for sales demos, offline previews, and deterministic e2e. A trial
-  (docs/agent-plans/bff-live-api-plus-context-mock-RESULTS.md) proved the Guild mock plugin is
+  (docs/archive/agent-plans/bff-live-api-plus-context-mock-RESULTS.md) proved the Guild mock plugin is
   broken in the v0.100.x matrix and architecturally cannot gate per-request, while
   resolversComposition wraps the live resolver cleanly and supports both per-request and
   env-default switching.
@@ -45,7 +45,7 @@ fixtures. The data must look real, be predictable, and switch on/off without red
 different artifacts.
 
 A trial validated two approaches against the live Swagger Petstore
-(`docs/agent-plans/bff-live-api-plus-context-mock-RESULTS.md`):
+(`docs/archive/agent-plans/bff-live-api-plus-context-mock-RESULTS.md`):
 
 - **Variant A — `@graphql-mesh/plugin-mock`:** rejected. Its only published line (0.105.x)
   is broken against `@graphql-mesh/cli@0.100.x` (config-schema and `mockSchema` errors across
@@ -153,5 +153,5 @@ build and is corrected alongside this change.
 ## References
 - ADR-012 (GraphQL Mesh BFF), ADR-027 (Mesh v0.100.x plugins/transforms)
 - ADR-050 (dependency governance — version pinning)
-- Trial: `docs/agent-plans/bff-live-api-plus-context-mock-RESULTS.md`
+- Trial: `docs/archive/agent-plans/bff-live-api-plus-context-mock-RESULTS.md`
 - `src/runtime/base-mfe.ts` `doQuery` already forwards `context.headers` (the MFE can send `x-bff-mode`)

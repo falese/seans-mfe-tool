@@ -1,10 +1,7 @@
 ---
 id: 0062
 title: "`deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis"
-status: Accepted
-impl:
-  stage: deferred
-  refs: ["#250"]
+status: Implemented
 date: 2026-07-01
 deciders: [sean]
 area: Deploy / plugins / scope
@@ -14,8 +11,12 @@ relates-to: [22, 34, 36, 44]
 supersedes: []
 superseded-by: []
 implements-pdr: [4]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - src/commands/deploy.ts
+  - src/codegen/templates/docker
+verified-by:
+  - src/commands/__tests__/deploy.test.js
+  - src/commands/__tests__/deploy.extras.test.ts
 long-form: true
 ---
 

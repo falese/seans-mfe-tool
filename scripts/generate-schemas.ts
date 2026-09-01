@@ -86,8 +86,18 @@ function schemaFilename(commandName: string): string {
  */
 function sourceFileFor(command: RegistryCommand): string | undefined {
   const rel = command.id.split(':').join('/') + '.ts';
-  const roots = command.pluginName === '@falese/bff-plugin'
-    ? [path.join(REPO_ROOT, 'packages/bff-plugin/src/commands')]
+  // Plugin commands live in their own package. Derive the root from the plugin
+  // name by convention rather than listing each plugin here — the previous
+  // hardcoded check knew about exactly one plugin, so a second one's schemas
+  // would have silently stopped generating.
+  const pluginDir = command.pluginName?.startsWith('@')
+    ? command.pluginName.split('/')[1]
+    : undefined;
+  const roots = pluginDir
+    ? [
+        path.join(REPO_ROOT, 'packages', pluginDir, 'src/commands'),
+        path.join(REPO_ROOT, 'src/commands'),
+      ]
     : [path.join(REPO_ROOT, 'src/commands')];
 
   for (const root of roots) {

@@ -25,9 +25,7 @@ async function main() {
   const outFile = process.argv[2] || '/tmp/codegen-snapshot.json';
   // The DSL parser / generator log progress to stdout+stderr; silence them so
   // only the JSON snapshot is produced.
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   console.log = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   console.error = () => {};
   const dirs = fs
     .readdirSync(EXAMPLES, { withFileTypes: true })

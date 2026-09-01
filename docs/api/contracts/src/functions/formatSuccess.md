@@ -8,7 +8,7 @@
 
 > **formatSuccess**\<`T`\>(`data`, `warnings`, `telemetry?`): [`CommandResult`](../type-aliases/CommandResult.md)\<`T`\>
 
-Defined in: [packages/contracts/src/envelope.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L116)
+Defined in: [packages/contracts/src/envelope.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L144)
 
 ## Type Parameters
 

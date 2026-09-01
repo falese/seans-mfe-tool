@@ -210,7 +210,7 @@ if (!fileExists(genPath)) {
 section('Check 2: BFF Template Dependencies');
 
 const bffTemplatePaths = [
-  path.join(ROOT, 'packages/bff-plugin/templates/package.json.ejs'),
+  path.join(ROOT, 'packages/plugin-bff/templates/package.json.ejs'),
   path.join(ROOT, 'src/codegen/templates/bff/package.json.ejs'),
 ];
 
@@ -279,7 +279,7 @@ if (!bffTemplate) {
 section('Check 3: BFF Server Template API Pattern');
 
 const bffServerPaths = [
-  path.join(ROOT, 'packages/bff-plugin/templates/server.ts.ejs'),
+  path.join(ROOT, 'packages/plugin-bff/templates/server.ts.ejs'),
   path.join(ROOT, 'src/codegen/templates/bff/server.ts.ejs'),
 ];
 
@@ -313,7 +313,7 @@ if (!bffServer) {
 section('Check 4: TypeScript Configuration');
 
 const tsconfigPaths = [
-  path.join(ROOT, 'packages/bff-plugin/templates/tsconfig.json'),
+  path.join(ROOT, 'packages/plugin-bff/templates/tsconfig.json'),
   path.join(ROOT, 'src/codegen/templates/bff/tsconfig.json'),
 ];
 
@@ -380,7 +380,7 @@ for (const doc of requiredDocs) {
 section('Check 6: addMeshDependencies() Consistency');
 
 const sharedPaths = [
-  path.join(ROOT, 'packages/bff-plugin/src/shared.ts'),
+  path.join(ROOT, 'packages/plugin-bff/src/shared.ts'),
   path.join(ROOT, 'src/commands/bff/_shared.ts'),
 ];
 

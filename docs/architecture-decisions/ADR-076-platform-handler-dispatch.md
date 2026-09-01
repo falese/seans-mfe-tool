@@ -13,6 +13,7 @@ superseded-by: []
 implements-pdr: [2]
 implemented-by:
   - packages/runtime/src/base-mfe.ts
+  - packages/runtime/src/capability-pipeline.ts
   - packages/runtime/src/handlers/index.ts
   - packages/runtime/src/handlers/auth.ts
   - packages/runtime/src/handlers/validation.ts

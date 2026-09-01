@@ -25,11 +25,15 @@
       "@seans-mfe/codegen/*": ["./packages/codegen/src/*"],
       "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],
       "@seans-mfe/oclif-base/*": ["./packages/oclif-base/src/*"],
-      "@falese/bff-plugin": ["./packages/bff-plugin/src/index.ts"],
-      "@falese/bff-plugin/*": ["./packages/bff-plugin/src/*"],
+      "@seans-mfe/plugin-bff": ["./packages/plugin-bff/src/index.ts"],
+      "@seans-mfe/plugin-bff/*": ["./packages/plugin-bff/src/*"],
       "@seans-mfe/framework-react": ["./packages/framework-react/src/index.ts"],
       "@seans-mfe/framework-react/*": ["./packages/framework-react/src/*"],
       "@seans-mfe/framework-angular": ["./packages/framework-angular/src/index.ts"],
+      "@seans-mfe/plugin-api": ["./packages/plugin-api/src/index.ts"],
+      "@seans-mfe/plugin-api/*": ["./packages/plugin-api/src/*"],
+      "@seans-mfe/plugin-adr": ["./packages/plugin-adr/src/index.ts"],
+      "@seans-mfe/plugin-adr/*": ["./packages/plugin-adr/src/*"],
       "@seans-mfe/framework-angular/*": ["./packages/framework-angular/src/*"]
     }
   },

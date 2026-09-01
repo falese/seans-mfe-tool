@@ -156,7 +156,7 @@ structured context, in priority order:
 The MCP server spawns `seans-mfe-tool <cmd> --json` per tool call and parses the single
 stdout envelope (ADR-019). The guarantees above — one line on stdout, everything else on
 stderr, deterministic exit code — are exactly what makes that child-process boundary
-reliable. See the [MCP Integration Playbook](./platform-design-review/mcp-integration-playbook.md).
+reliable. See the [MCP Integration Playbook](./archive/platform-design-review/mcp-integration-playbook.md).
 
 ---
 
@@ -168,7 +168,7 @@ envelope shape as a breaking change requiring a new ADR and a bump to consumers.
 
 ## Related
 
-- [Contract Alignment Pass](./platform-design-review/contract-alignment-pass.md) — CA-1/CA-2/CA-3 findings this doc resolves.
+- [Contract Alignment Pass](./archive/platform-design-review/contract-alignment-pass.md) — CA-1/CA-2/CA-3 findings this doc resolves.
 - ADR-016, ADR-017, ADR-018, ADR-030 — see [`spec.md#adr-index`](./spec.md#adr-index).
 - [Architecture: current state](./architecture-current-state.md)
 </content>

@@ -1,7 +1,7 @@
 ---
 id: 0045
 title: Package Manager and Local Runtime Pinning
-status: Proposed
+status: Implemented
 date: 2026-05-28
 deciders: [sean]
 area: Tooling / package manager / runtime
@@ -10,8 +10,11 @@ tags: [tooling, package-manager, node, reproducibility, gap]
 relates-to: []
 supersedes: []
 superseded-by: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - package.json
+  - .nvmrc
+verified-by:
+  - src/__tests__/toolchain-pinning.test.ts
 summary: >-
   Standardize the contributor toolchain on a single package manager and an explicit local Node
   runtime pin so workspace installs, builds, and release tasks are reproducible outside CI.
@@ -26,7 +29,7 @@ long-form: true
 
 ## Context
 
-The repository declares `npm@10.8.1` as its package manager in [package.json](/Users/sean/Documents/Development/seans-mfe-tool/package.json#L3), but also carries a pnpm workspace definition in [pnpm-workspace.yaml](/Users/sean/Documents/Development/seans-mfe-tool/pnpm-workspace.yaml). CI installs with `npm ci` in [test.yml](/Users/sean/Documents/Development/seans-mfe-tool/.github/workflows/test.yml#L27) and validates on Node 20.x and 22.x in [test.yml](/Users/sean/Documents/Development/seans-mfe-tool/.github/workflows/test.yml#L14), yet the repository does not pin a local Node version via `.nvmrc`, `.node-version`, or equivalent.
+The repository declares `npm@10.8.1` as its package manager in [package.json](../../package.json), but also carries a pnpm workspace definition in `pnpm-workspace.yaml`. CI installs with `npm ci` in [test.yml](../../.github/workflows/test.yml) and validates on Node 20.x and 22.x, yet the repository does not pin a local Node version via `.nvmrc`, `.node-version`, or equivalent.
 
 That leaves contributors to infer the intended local toolchain from a mix of package manager declarations, workspace files, and CI behavior.
 
@@ -114,7 +117,6 @@ Autofix possible?
 
 ## References
 
-- [package.json](/Users/sean/Documents/Development/seans-mfe-tool/package.json#L3)
-- [pnpm-workspace.yaml](/Users/sean/Documents/Development/seans-mfe-tool/pnpm-workspace.yaml)
-- [test.yml](/Users/sean/Documents/Development/seans-mfe-tool/.github/workflows/test.yml#L14)
-- [MERGE-PLAN.md](/Users/sean/Documents/Development/seans-mfe-tool/MERGE-PLAN.md)
+- [package.json](../../package.json)
+- [test.yml](../../.github/workflows/test.yml)
+- [MERGE-PLAN.md](../MERGE-PLAN.md)

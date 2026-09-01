@@ -3,7 +3,7 @@
 **Status:** Informative onboarding guide. The fastest path from a clean checkout to a
 running, federable MFE. Closes documentation gaps **G27/G29** (no documented zero-to-running
 path) and establishes the onboarding baseline referenced by the
-[Documentation KPI Framework](./platform-design-review/documentation-kpi-framework.md).
+[Documentation KPI Framework](./archive/platform-design-review/documentation-kpi-framework.md).
 
 **Audience:** a new contributor or adopter who has cloned the repo and has Node ≥18 (and
 optionally Bun for the fastest dev entry — ADR-020).
@@ -124,7 +124,7 @@ seans-mfe-tool bff:dev
 
 If a step fails, the envelope's `error.type` + exit code tells you why (validation = 64,
 system = 69, …); see the [CLI Contract](./cli-contract.md) and, for runtime/lifecycle issues,
-the [Runtime Operational Runbook](./platform-design-review/runtime-operational-runbook.md).
+the [Runtime Operational Runbook](./archive/platform-design-review/runtime-operational-runbook.md).
 
 ## Onboarding baseline (KPI)
 

@@ -45,7 +45,7 @@ re-stamps, and `overwrite: false` files it seeds once and then leaves alone —
 That split is correct. It is also, until now, the end of the story.
 
 Carrying ADR-017 out to the fleet measured what that costs
-(`docs/platform-design-review/breaking-change-regeneration-dx-report.md`). A
+(`docs/archive/platform-design-review/breaking-change-regeneration-dx-report.md`). A
 template change touched 48 files across 21 MFEs. Regeneration reached 29. The
 other 19 were `src/index.tsx` — developer-owned — and with every one of them
 stale against the template that seeded it:

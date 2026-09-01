@@ -129,12 +129,11 @@ const manifest = {
   "data": {
     "sources": [
       {
-        "name": "PetStoreAPI",
+        "name": "AbcKidsPlayAPI",
         "handler": {
           "openapi": {
-            "source": "./specs/petstore.yaml",
+            "source": "./specs/abc-kids-api.yaml",
             "operationHeaders": {
-              "Authorization": "Bearer {context.jwt}",
               "X-Request-ID": "{context.requestId}"
             }
           }

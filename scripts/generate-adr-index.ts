@@ -32,8 +32,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseAdrDocument, formatAdrId, normalizeAdrId } from '@seans-mfe/dsl';
-import type { AdrDocument } from '@seans-mfe/dsl';
+import { parseAdrDocument, formatAdrId, normalizeAdrId } from '@seans-mfe/plugin-adr';
+import type { AdrDocument } from '@seans-mfe/plugin-adr';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');
@@ -104,17 +104,93 @@ function cell(text: string): string {
   return text.replace(/\|/g, '\\|').replace(/</g, '\\<').replace(/>/g, '\\>');
 }
 
+/**
+ * The index is grouped by lifecycle tier, not rendered as one flat run of 83
+ * rows. A reader opening this table wants "what is the architecture now"; a
+ * single sorted list answers "what decisions have ever been filed", and buries
+ * the eight Proposed and two Superseded entries among them at full visual
+ * weight.
+ *
+ * The grouping is a property of the generated VIEW. The files stay where they
+ * are: ADR paths are cited from code comments, from other ADRs, and from merged
+ * PRs, and this repo has already paid once for moving them — PR #194's
+ * renumbering left twelve in-body cross-references pointing at decisions whose
+ * meaning had changed (see the register's "Cross-references corrected" table).
+ * Frontmatter is the source of truth and views are generated (ADR-075 §1), so
+ * curation belongs here rather than in the filesystem.
+ */
+const INDEX_TIERS: readonly { heading: string; blurb: string; statuses: readonly string[] }[] = [
+  {
+    heading: 'Live — the current architecture',
+    blurb: 'Ratified decisions. These describe how the platform works today.',
+    statuses: ['Implemented', 'Accepted'],
+  },
+  {
+    heading: 'Proposed — filed, not ratified',
+    blurb: 'A decision has been written down but not agreed. Do not build against these.',
+    statuses: ['Proposed'],
+  },
+  {
+    heading: 'Deferred — postponed on purpose',
+    blurb: 'Deliberately not decided yet; the ADR records why.',
+    statuses: ['Deferred'],
+  },
+  {
+    heading: 'Superseded — replaced, kept for provenance',
+    blurb: 'Retired by a later decision. Kept so the reasoning stays traceable.',
+    statuses: ['Superseded'],
+  },
+];
+
+function renderRow(d: AdrDocument): string {
+  const id = formatAdrId(d.frontmatter.id);
+  const link = `[ADR-${id}](./architecture-decisions/${d.path})`;
+  let status = renderStatus(d);
+  // A bare "Superseded" makes the reader hunt for the replacement.
+  const by = d.frontmatter['superseded-by'];
+  if (by.length > 0) {
+    status += ` → ${by.map((t) => `ADR-${formatAdrId(normalizeAdrId(t))}`).join(', ')}`;
+  }
+  return `| ${link} | ${cell(d.frontmatter.title)} | ${cell(d.frontmatter.area ?? '—')} | ${cell(status)} |`;
+}
+
 function renderIndex(documents: readonly AdrDocument[]): string {
-  const rows = documents.map((d) => {
-    const id = formatAdrId(d.frontmatter.id);
-    const link = `[ADR-${id}](./architecture-decisions/${d.path})`;
-    return `| ${link} | ${cell(d.frontmatter.title)} | ${cell(d.frontmatter.area ?? '—')} | ${cell(renderStatus(d))} |`;
-  });
-  return [
-    '| ADR | Title | Area | Status |',
-    '|-----|-------|------|--------|',
-    ...rows,
-  ].join('\n');
+  const out: string[] = [];
+  const seen = new Set<AdrDocument>();
+
+  for (const tier of INDEX_TIERS) {
+    const inTier = documents.filter((d) => tier.statuses.includes(d.frontmatter.status));
+    if (inTier.length === 0) continue;
+    inTier.forEach((d) => seen.add(d));
+    out.push(
+      `### ${tier.heading}`,
+      '',
+      `_${tier.blurb}_`,
+      '',
+      '| ADR | Title | Area | Status |',
+      '|-----|-------|------|--------|',
+      ...inTier.map(renderRow),
+      '',
+    );
+  }
+
+  // A status outside the tier table would silently vanish from the index, which
+  // is the failure mode this whole file exists to prevent. Surface it instead.
+  const untiered = documents.filter((d) => !seen.has(d));
+  if (untiered.length > 0) {
+    out.push(
+      '### Untiered',
+      '',
+      '_These carry a status the index does not group. Add it to `INDEX_TIERS`._',
+      '',
+      '| ADR | Title | Area | Status |',
+      '|-----|-------|------|--------|',
+      ...untiered.map(renderRow),
+      '',
+    );
+  }
+
+  return out.join('\n').trimEnd();
 }
 
 function renderPdrMap(documents: readonly AdrDocument[], pdrs: readonly Pdr[]): string {

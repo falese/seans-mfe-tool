@@ -400,7 +400,7 @@ artifact instead of deploying.
   [Framework Plugin Authoring Guide](./docs/framework-plugin-authoring.md)
   (ADR-036) and `packages/framework-react/` / `packages/framework-angular/`.
 - **New CLI capability (plugin):** see [PLUGIN-CONTRACT.md](./docs/PLUGIN-CONTRACT.md)
-  and the `@falese/bff-plugin` package under `packages/bff-plugin/` as a worked
+  and the `@seans-mfe/plugin-bff` package under `packages/plugin-bff/` as a worked
   example of an out-of-tree oclif plugin.
 - **Roadmap toward a unified monorepo:** [MERGE-PLAN.md](./docs/MERGE-PLAN.md).
 

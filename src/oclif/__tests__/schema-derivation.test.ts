@@ -128,7 +128,7 @@ describe('selectCatalogCommands', () => {
 
   it('includes first-party plugin commands', () => {
     const ids = selectCatalogCommands([
-      cmd({ id: 'bff:init', pluginName: '@falese/bff-plugin' }),
+      cmd({ id: 'bff:init', pluginName: '@seans-mfe/plugin-bff' }),
     ]).map((c) => c.id);
     expect(ids).toEqual(['bff:init']);
   });

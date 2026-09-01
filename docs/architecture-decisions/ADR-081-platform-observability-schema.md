@@ -47,7 +47,7 @@ their own shape.
 | CLI | `CommandResult.telemetry` — `{durationMs, correlationId}` | `packages/contracts/src/envelope.ts:62` |
 | Control plane | `MessageMetadata` — `{correlationId, acknowledged, error}` | `packages/contracts/src/messages.ts:220` |
 | BFF / Mesh | **OpenTelemetry**, via `@graphql-mesh/plugin-opentelemetry` | `packages/dsl/src/schema.ts:300` |
-| Codegen, CI | unstructured `console.*` | ~55 call sites in `packages/codegen`, `packages/bff-plugin` |
+| Codegen, CI | unstructured `console.*` | ~55 call sites in `packages/codegen`, `packages/plugin-bff` |
 
 Three observations forced this decision.
 
@@ -141,7 +141,7 @@ correct whether or not the `--json` redirect is active, instead of depending on
 a monkey-patch for its correctness.
 
 Library code with no output seam of its own — `packages/codegen`,
-`packages/bff-plugin` — emits through it. Commands keep `this.log()` and their
+`packages/plugin-bff` — emits through it. Commands keep `this.log()` and their
 deliberate human-readable rendering.
 
 ## Boundaries
@@ -153,7 +153,7 @@ deliberate human-readable rendering.
   | --- | --- | --- |
   | Commands rendering for a human | ~270 | Tables, file lists, next-step hints. A structured emitter is the wrong instrument, and `--json` already redirects them. |
   | `packages/runtime` | 4 | Browser code; `console.error`/`warn` only, never stdout. See below. |
-  | `packages/bff-plugin/src/shared.ts` | 4 | `✓ Generated …` progress lines. Same category as the commands — they are rendering, called from a command. |
+  | `packages/plugin-bff/src/shared.ts` | 4 | `✓ Generated …` progress lines. Same category as the commands — they are rendering, called from a command. |
   | `packages/codegen` | 14 | Genuine library diagnostics. Blocked on a seam — see below. |
 
 - **Codegen needs an injection seam before it can emit.** Its 14 diagnostics are

@@ -2,12 +2,17 @@
   "name": "seans-mfe-tool",
   "version": "1.0.0",
   "packageManager": "npm@10.8.1",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "main": "bin/run.js",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/plugin-skeleton"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/bff-plugin packages/framework-react packages/framework-angular",
+    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/framework-react packages/framework-angular",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && node scripts/remove-dist-shims.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
@@ -20,9 +25,12 @@
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "check:template-typecheck": "ts-node scripts/check-template-typecheck.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
+    "build:system-map": "ts-node scripts/generate-system-map.ts",
+    "build:system-map:check": "ts-node scripts/generate-system-map.ts --check",
     "build:adr-index": "ts-node scripts/generate-adr-index.ts",
     "build:adr-index:check": "ts-node scripts/generate-adr-index.ts --check",
     "build:watch": "tsc --watch",
+    "pretest": "node scripts/ensure-build.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -30,9 +38,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:perf": "node tests/performance/run-all.js",
-    "lint": "eslint src jest.setup.js",
+    "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "dev": "bun bin/dev.ts",
+    "clean": "node scripts/clean.js",
     "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc -p tsconfig.typecheck.json && tsc -p packages/runtime/tsconfig.typecheck.json",
     "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
@@ -77,7 +86,9 @@
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins",
-      "@falese/bff-plugin"
+      "@seans-mfe/plugin-bff",
+      "@seans-mfe/plugin-api",
+      "@seans-mfe/plugin-adr"
     ],
     "topics": {
       "coder": {
@@ -112,7 +123,9 @@
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
     "@babel/types": "^7.22.1",
-    "@falese/bff-plugin": "file:packages/bff-plugin",
+    "@seans-mfe/plugin-bff": "file:packages/plugin-bff",
+    "@seans-mfe/plugin-api": "file:packages/plugin-api",
+    "@seans-mfe/plugin-adr": "file:packages/plugin-adr",
     "@oclif/core": "^4.10.5",
     "@oclif/plugin-help": "^6.2.44",
     "@oclif/plugin-plugins": "^5.4.61",
@@ -142,6 +155,7 @@
     "ajv": "^8.17.1",
     "babel-jest": "^29.7.0",
     "eslint": "^9.14.0",
+    "globals": "^14.0.0",
     "http-server": "^14.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.2.0",

@@ -2,7 +2,7 @@
 /**
  * ADR library drift gate (ADR-075).
  *
- * CI wiring for `adr:validate`. The rules live in `@seans-mfe/dsl`
+ * CI wiring for `adr:validate`. The rules live in `@seans-mfe/plugin-adr`
  * (`validateAdrLibrary`, unit-tested) and the IO in the command core
  * (`adrValidateCommand`); this is the wrapper that runs it over the repo and
  * sets an exit code — the same shape as `scripts/check-mfe-consistency.ts`,
@@ -15,7 +15,7 @@
  * Refs ADR-075.
  */
 
-import { adrValidateCommand } from '../src/commands/adr/validate';
+import { adrValidateCommand } from '@seans-mfe/plugin-adr';
 
 async function main(): Promise<void> {
   const includeExamples = process.argv.includes('--include-examples');

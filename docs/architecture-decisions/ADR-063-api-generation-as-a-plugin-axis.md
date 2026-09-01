@@ -1,10 +1,7 @@
 ---
 id: 0063
 title: API-backend generation is a plugin axis, not a wrapper around one OSS codegen
-status: Accepted
-impl:
-  stage: deferred
-  refs: ["#251"]
+status: Implemented
 date: 2026-07-01
 deciders: [sean]
 area: Codegen / API / plugins
@@ -14,8 +11,12 @@ relates-to: [22, 36, 61, 62]
 supersedes: []
 superseded-by: []
 implements-pdr: [4]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/plugin-api/package.json
+  - packages/plugin-api/src/commands/api.ts
+  - packages/plugin-api/src/APIGenerator
+verified-by:
+  - src/__tests__/import-direction.test.ts
 long-form: true
 ---
 

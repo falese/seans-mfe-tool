@@ -8,7 +8,7 @@
 
 > **formatError**(`err`, `correlationId`, `startTime?`, `traceId?`): [`CommandResult`](../type-aliases/CommandResult.md)\<`never`\>
 
-Defined in: [packages/contracts/src/envelope.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L136)
+Defined in: [packages/contracts/src/envelope.ts:164](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L164)
 
 ## Parameters
 

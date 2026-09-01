@@ -28,7 +28,7 @@ Read this before starting any new work. Then read `CLAUDE.md` for coding convent
 
 ### CLI Platform — Epic A + B + C (PR #123, closed April 2026)
 
-All 26 issues (#90–#115) closed. Full detail: [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)
+All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif-migration.md`](./archive/agent-plans/oclif-migration.md)
 
 | What                                                                              | Where                                             |
 | --------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -42,7 +42,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/agent-plans/oclif-migrati
 | `--dry-run` normalized across all mutating commands                               | all mutating commands                             |
 | Integration test: JSON contract round-trip with ajv                               | `src/oclif/__tests__/json-contract.test.ts`       |
 | Plugin contract + starter skeleton                                                | `PLUGIN-CONTRACT.md`, `examples/plugin-skeleton/` |
-| pnpm workspaces + Turborepo build graph                                           | `pnpm-workspace.yaml`, `turbo.json`               |
+| npm workspaces + Turborepo build graph                                            | `package.json` (`workspaces`), `turbo.json`       |
 | Merge plan: phased path to monorepo                                               | `MERGE-PLAN.md`                                   |
 
 ### Code Generation & DSL (pre-#90 era)
@@ -121,7 +121,7 @@ Implemented, 14 Accepted, 11 Proposed, 1 Deferred, 1 Superseded.
 ### Agent contract completion — epic #139 (ADR-077)
 
 The two-headed giant epic, re-derived from measured friction rather than the April spec.
-Full evidence: [`docs/platform-design-review/two-headed-giant-re-derivation.md`](./platform-design-review/two-headed-giant-re-derivation.md).
+Full evidence: [`docs/archive/platform-design-review/two-headed-giant-re-derivation.md`](./archive/platform-design-review/two-headed-giant-re-derivation.md).
 
 Remaining: real `likely-cause` classification beyond the current parsers, MCP schema coverage
 verified for the three commands with no cheap success-path fixture, `received`/`suggestion` on
@@ -244,9 +244,9 @@ See [`docs/requirements/deferred-backlog.md`](./requirements/deferred-backlog.md
 | Find an architecture decision (ADR-NNN)              | [`docs/spec.md#adr-index`](./spec.md#adr-index) — generated from frontmatter (ADR-075)                  |
 | See which decisions are outstanding                 | `seans-mfe-tool adr:status`                                                                             |
 | Understand slot composition                         | [`docs/slot-contract.md`](./slot-contract.md), [`docs/slot-architecture.md`](./slot-architecture.md)   |
-| Understand the agent-facing contract                | [`docs/platform-design-review/two-headed-giant-re-derivation.md`](./platform-design-review/two-headed-giant-re-derivation.md) |
+| Understand the agent-facing contract                | [`docs/archive/platform-design-review/two-headed-giant-re-derivation.md`](./archive/platform-design-review/two-headed-giant-re-derivation.md) |
 | See what a real agent-driven build hit              | [`examples/meridian-station/DX-REPORT.md`](../examples/meridian-station/DX-REPORT.md)                   |
-| Understand the CLI/oclif migration that just shipped | [`docs/agent-plans/oclif-migration.md`](./agent-plans/oclif-migration.md)                               |
+| Understand the CLI/oclif migration that just shipped | [`docs/archive/agent-plans/oclif-migration.md`](./archive/agent-plans/oclif-migration.md)                               |
 | Work on the runtime platform                         | [`docs/architecture-runtime-platform.md`](./architecture-runtime-platform.md) + `packages/runtime/`     |
 | Implement a lifecycle engine enhancement             | [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md) + ADR-028–032 |
 | Understand the merge/monorepo plan                   | [`MERGE-PLAN.md`](MERGE-PLAN.md)                                                                     |
