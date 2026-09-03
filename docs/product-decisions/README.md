@@ -30,6 +30,8 @@ A single PDR is typically implemented by several ADRs, which are in turn detaile
 | [PDR-006](./PDR-006-ecosystem-scaling-thesis.md) | Ecosystem scaling thesis | Proposed | Composes PDR-001–005; see `CLAUDE.md` "What this project is" |
 | [PDR-007](./PDR-007-model-messy-reality.md) | Reference apps model messy reality | Accepted | Overlapping, inconsistent APIs are the point; born from the Meridian Station build (#276) |
 | [PDR-008](./PDR-008-control-plane-is-platform.md) | The control plane is part of the platform, not a plugin | Accepted | ADR-078, ADR-077; narrows PDR-004 for the composition runtime only |
+| [PDR-009](./PDR-009-generative-software-system.md) | A generative software system — business intents compile to the platform contract | Accepted | ADR-084/085/086/087; composes PDR-006/003/001 |
+| [PDR-010](./PDR-010-governance-generation-kernel.md) | The governance+generation machinery is a reusable, self-hosting kernel | Accepted | ADR-089/090; composes PDR-009/006/003, reuses ADR-082/075 |
 
 ## Conventions
 
