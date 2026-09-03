@@ -316,6 +316,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-086](./architecture-decisions/ADR-086-continuous-generation-loop.md) | The generation loop closes on the existing CI gates; continuous deployment waits on registry persistence | CI-CD / control plane / generation | Accepted (impl deferred, #139) |
 | [ADR-087](./architecture-decisions/ADR-087-hybrid-authoring-developer-owned-lane.md) | Coder's source adaptor fills developer-owned feature files; the generator-owned lane stays deterministic | Codegen / generation / AI | Accepted (impl phased) |
 | [ADR-088](./architecture-decisions/ADR-088-coder-plugin-first-party-seam.md) | The coder-facing seam is a first-party in-repo plugin; coder's model engine stays external | Architecture / plugins / AI | Implemented |
+| [ADR-089](./architecture-decisions/ADR-089-kernel-ports-and-adapters.md) | The governance+generation kernel couples to its host through four ports; the host implements them as adapters over its own code | Kernel / ports | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -331,7 +332,6 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-047](./architecture-decisions/ADR-047-codeowners-and-review-routing.md) | CODEOWNERS and Review Routing for Architectural Surfaces | Governance / review | Proposed |
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
-| [ADR-089](./architecture-decisions/ADR-089-kernel-ports-and-adapters.md) | The governance+generation kernel couples to its host through four ports; the host implements them as adapters over its own code | Kernel / ports | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
 
 ### Deferred — postponed on purpose
