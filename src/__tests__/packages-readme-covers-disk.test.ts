@@ -34,6 +34,14 @@ const README = path.join(PACKAGES, 'README.md');
  */
 const NAMESPACE_EXCEPTIONS: Record<string, string> = {
   runtime: '@seans-mfe-tool/runtime',
+  /**
+   * `sentinel` is deliberately unscoped — and this is not a violation awaiting a
+   * fix like `runtime` is. The kernel is extraction-bound: PDR-010 and ADR-089
+   * require a neutral identity (explicitly *not* `@seans-mfe/*`) so it can move
+   * to its own peer repo mechanically. Recorded here so the intent is explicit
+   * and no accidental new violation can hide behind an unscoped name.
+   */
+  sentinel: 'sentinel',
 };
 
 /** Directories under `packages/` that ship a `package.json`. */

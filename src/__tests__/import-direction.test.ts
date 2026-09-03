@@ -33,6 +33,11 @@ const PACKAGES_DIR = path.resolve(__dirname, '..', '..', 'packages');
  */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   contracts: [],
+  // The Sentinel kernel imports no first-party package by invariant (ADR-089 §2,
+  // PDR-010): the host plugs in through ports, and the kernel holds nothing
+  // `@seans-mfe/*` so a later extraction to its own repo is mechanical. An empty
+  // list is the enforcement of that, the same way `contracts: []` is for ADR-061.
+  sentinel: [],
   dsl: ['contracts'],
   runtime: ['contracts', 'dsl'],
   codegen: ['contracts', 'dsl'],

@@ -154,6 +154,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |
 | MFE consistency rules (pure, unit-tested) | `packages/codegen/src/validate.ts` |
 | Platform migration registry (ADR-082) | `packages/codegen/src/platform-migrations.ts` |
+| Governance+generation kernel — ports + HardenedCheck floor, host-agnostic (PDR-010, ADR-089) | `packages/sentinel/src/` (unscoped `sentinel`; imports no `@seans-mfe/*`) |
+| SMT's kernel port adapters (validateFull / findManifest / generateAllFiles / PLATFORM_MIGRATIONS) — the n=1 proof | `src/sentinel/adapters.ts`, `src/sentinel/__tests__/n1-proof.test.ts` |
 | `mfe:validate` command (I/O wrapper) | `src/commands/mfe/validate.ts` |
 | Fleet consistency CI gate | `scripts/check-mfe-consistency.ts` |
 | Envelope types | `packages/contracts/src/envelope.ts` |
