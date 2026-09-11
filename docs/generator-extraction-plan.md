@@ -611,16 +611,36 @@ Nothing else starts until this is green.
    `check:template-typecheck` resolve packages to their compiled output and will
    silently check the last build).
 2. Extend `scripts/codegen-characterization.ts` to cover **both** fleets — it
-   currently walks `examples/abc-kids` only, which is 13 of 21 MFEs, and misses
-   every Angular variant in `meridian-station`. Angular is exactly where the
-   framework branching lives.
-3. Commit the snapshot as a fixture and add a Jest test that regenerates and
-   compares. Today the harness only runs when someone remembers the two-command
-   recipe in its docstring. Wire it to `npm test`.
-4. Record baseline output of `check:mfe-drift:check`, `check:mfe-consistency`,
-   `check:template-typecheck`.
+   walks `examples/abc-kids` only: 14 of 21 MFEs, and exactly one Angular
+   variant (`multiplication-quiz`). Three of the platform's four Angular MFEs
+   live in `meridian-station`, and Angular is where all six framework branches
+   key. The full baseline is 21 MFEs / 435 files.
+3. Export `captureSnapshot()` and guard `main()` behind
+   `require.main === module`. Importing the module currently generates 21 MFEs
+   as an import side effect, which is what makes it unusable from a test.
+4. Commit the snapshot as a fixture and assert it from a Jest test. Today the
+   harness runs only when someone remembers the two-command recipe in its
+   docstring — across the whole ADR-061 packages migration, apparently never.
+5. Record baseline output of every gate.
 
 **Exit:** a single `npm test` failure tells you the generator's output changed.
+
+**Why this is not redundant with `check:mfe-drift` — measured, not assumed.**
+Planting a trailing comment in `App.tsx.ejs`, a developer-owned template:
+
+| Gate | Result |
+|---|---|
+| `check:mfe-drift:check` | exit 0 — did not see it |
+| `check:mfe-consistency` | exit 0 — did not see it |
+| `build:codegen-snapshot:check` | **exit 1 — caught it** |
+
+Planting the same change in `mfe.ts.ejs` (generator-owned) fails both drift and
+the baseline; reverting returns both to green. **182 of the 435 generated files
+— 42% — are developer-owned and therefore structurally invisible to the drift
+gate.** That is the same blind spot that let the ADR-017 rollout leave 19 files
+stale with every gate green (CLAUDE.md, §"Platform changes that reach generated
+code"). The refactor touches templates on both sides of that line, so the
+baseline is the only gate that covers the whole blast radius.
 
 ---
 
@@ -796,7 +816,7 @@ manifests → byte-identical to the characterization snapshot.
 
 | Phase | Effort | Removes | Risk |
 |---|---|---|---|
-| 0 — safety net | ½ day | — | none |
+| 0 — safety net | ½ day | — | none · **done** (`f8ada74`) |
 | 1 — delete | 1 day | ~3,100 LOC | very low (provable dead code) |
 | 2 — single-source facts | 1 day | ~200 LOC, 3 contradictions | low (one manifest migration) |
 | 3 — decouple | 1–2 days | 1 cycle, 12 `console.*` | low |
