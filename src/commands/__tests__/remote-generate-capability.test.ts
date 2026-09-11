@@ -28,7 +28,12 @@ jest.mock('@seans-mfe/dsl', () => ({
 
 jest.mock('@seans-mfe/codegen', () => ({
   generateAllFiles: jest.fn(),
-  writeGeneratedFiles: jest.fn()
+  writeGeneratedFiles: jest.fn(),
+  // Real, not a stub: resolveFrameworkVariant delegates the framework-name
+  // rule here rather than restating it (ADR-090), and a mock returning
+  // undefined would make this suite assert against a variant the platform
+  // never produces.
+  deriveBuiltinVariant: jest.requireActual('@seans-mfe/codegen').deriveBuiltinVariant,
 }));
 
 import { remoteGenerateCapabilityCommand } from '../remote/generate/capability';

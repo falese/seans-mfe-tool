@@ -50,37 +50,6 @@ export class ReactRspackPlugin extends BaseFrameworkPlugin {
   readonly defaultPort = 3001;
   readonly directoryStructure = ['src', 'src/features', 'public'];
 
-  getRuntimeDependencies(): Record<string, string> {
-    return {
-      'react': '^18.2.0',
-      'react-dom': '^18.2.0',
-    };
-  }
-
-  getTemplateDir(): string {
-    return path.resolve(__dirname, '../../..', 'src/codegen/templates/base-mfe');
-  }
-
-  getTemplateVars(_manifest: unknown): Record<string, unknown> {
-    return {
-      framework: 'react',
-      bundler: 'rspack',
-      templateVariant: 'react-rspack',
-    };
-  }
-
-  getRuntimeImport(): string {
-    return '@seans-mfe-tool/runtime';
-  }
-
-  getRuntimeClassName(): string {
-    return 'RemoteMFE';
-  }
-
-  getSourceExtension(): string {
-    return '.tsx';
-  }
-
   getTestExtension(): string {
     return '.test.tsx';
   }

@@ -11,6 +11,7 @@
 import * as path from 'path';
 import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
 import type { DSLManifest } from '@seans-mfe/dsl';
+import { deriveBuiltinVariant } from '@seans-mfe/codegen';
 import type { FrameworkVariant } from '@seans-mfe/codegen';
 
 /** Built-in framework names and their package directory names. */
@@ -113,7 +114,11 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
  * selects Angular.
  */
 export function resolveFrameworkVariant(manifest: DSLManifest): FrameworkVariant {
-  const frameworkName = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  // The name-resolution rule lives in exactly one place (ADR-090). This used
+  // to restate `manifest.framework ?? (bundler === 'webpack' ? 'angular' :
+  // 'react')`, with each function's docstring asserting it matched the other
+  // and nothing enforcing it.
+  const frameworkName = deriveBuiltinVariant(manifest).framework;
   const plugin = loadFrameworkPlugin(frameworkName);
   return {
     framework: plugin.framework,

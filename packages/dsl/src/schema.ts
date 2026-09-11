@@ -20,7 +20,7 @@
  */
 
 import { z } from 'zod';
-import { SLOT_ID_SEGMENT, PLATFORM_WRAPPER_METHODS } from '@seans-mfe/contracts';
+import { SLOT_ID_SEGMENT, PLATFORM_WRAPPER_METHODS, classifyMeshEntry } from '@seans-mfe/contracts';
 
 // =============================================================================
 // Enums and Constants
@@ -186,13 +186,15 @@ export const DataSourceSchema = z.object({
 });
 export type DataSource = z.infer<typeof DataSourceSchema>;
 
-/** Mesh transform - flexible schema with validation */
+/**
+ * Mesh transform — open record, rejected only when the name is a Mesh *plugin*
+ * put in the wrong section. Classification is single-sourced in
+ * `@seans-mfe/contracts` (ADR-090); an unknown name passes, and a name Mesh
+ * ships in both positions (`mock`, `snapshot`) is never reported as misplaced.
+ */
 export const DataTransformSchema = z.record(z.string(), z.unknown()).superRefine((val, ctx) => {
-  const transformNames = Object.keys(val);
-  
-  for (const name of transformNames) {
-    // Check if this looks like a plugin that was put in transforms
-    if ((KNOWN_PLUGINS as readonly string[]).includes(name)) {
+  for (const name of Object.keys(val)) {
+    if (classifyMeshEntry(name) === 'plugin') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `"${name}" is a plugin, not a transform. Move it to the plugins section.`,
@@ -203,42 +205,10 @@ export const DataTransformSchema = z.record(z.string(), z.unknown()).superRefine
 });
 export type DataTransform = z.infer<typeof DataTransformSchema>;
 
-/** Known Mesh plugin names (validation list) */
-const KNOWN_PLUGINS = [
-  'prometheus',
-  'useMaskedErrors',
-  'useResponseCache',
-  'usePersistedOperations',
-  'newrelic',
-  'datadog',
-  'statsd',
-  'mock',
-  'snapshot'
-] as const;
-
-/** Known Mesh transform names (validation list) */
-const KNOWN_TRANSFORMS = [
-  'filterSchema',
-  'rateLimit',
-  'rename',
-  'prefix',
-  'encapsulate',
-  'federation',
-  'namingConvention',
-  'cache',
-  'snapshot',
-  'mock',
-  'resolversComposition',
-  'type-merging'
-] as const;
-
 /** Mesh plugin - flexible schema with validation */
 export const DataPluginSchema = z.record(z.string(), z.unknown()).superRefine((val, ctx) => {
-  const pluginNames = Object.keys(val);
-  
-  for (const name of pluginNames) {
-    // Check if this looks like a transform that was put in plugins
-    if ((KNOWN_TRANSFORMS as readonly string[]).includes(name)) {
+  for (const name of Object.keys(val)) {
+    if (classifyMeshEntry(name) === 'transform') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `"${name}" is a transform, not a plugin. Move it to the transforms section.`,

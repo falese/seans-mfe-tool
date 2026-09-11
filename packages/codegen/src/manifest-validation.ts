@@ -11,8 +11,7 @@
  */
 
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { ValidationError } from '@seans-mfe/contracts';
-import { KNOWN_MESH_PLUGINS, KNOWN_MESH_TRANSFORMS } from './catalog';
+import { ValidationError, classifyMeshEntry } from '@seans-mfe/contracts';
 
 /**
  * Validation result for plugin/transform classification
@@ -59,20 +58,29 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
     : Object.keys(manifestPlugins as object);
 
   for (const pluginName of pluginEntries) {
-    if (KNOWN_MESH_PLUGINS.has(pluginName)) {
-      result.classification.plugins.push(pluginName);
-    } else if (KNOWN_MESH_TRANSFORMS.has(pluginName)) {
-      // This is a transform, not a plugin!
-      result.errors.push(
-        `"${pluginName}" is a transform, not a plugin. Move it to the "transforms" section.`
-      );
-      result.classification.transforms.push(pluginName);
-      result.valid = false;
-    } else {
-      result.warnings.push(
-        `Unknown plugin "${pluginName}". Ensure it's a valid @graphql-mesh/plugin-* package.`
-      );
-      result.classification.unknown.push(pluginName);
+    switch (classifyMeshEntry(pluginName)) {
+      // 'ambiguous' shares this branch: a name Mesh ships in both positions
+      // (`mock`, `snapshot`) is correct here and must not be reported as
+      // misplaced — ADR-090 §2. The previous Set-based lookup listed those
+      // names in both allow-lists, which disabled the misclassification check
+      // for them by accident rather than by decision.
+      case 'plugin':
+      case 'ambiguous':
+        result.classification.plugins.push(pluginName);
+        break;
+      case 'transform':
+        result.errors.push(
+          `"${pluginName}" is a transform, not a plugin. Move it to the "transforms" section.`
+        );
+        result.classification.transforms.push(pluginName);
+        result.valid = false;
+        break;
+      case 'unknown':
+        result.warnings.push(
+          `Unknown plugin "${pluginName}". Ensure it's a valid @graphql-mesh/plugin-* package.`
+        );
+        result.classification.unknown.push(pluginName);
+        break;
     }
   }
 
@@ -108,20 +116,24 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
     : Object.keys(manifestTransforms as object);
 
   for (const transformName of transformEntries) {
-    if (KNOWN_MESH_TRANSFORMS.has(transformName)) {
-      result.classification.transforms.push(transformName);
-    } else if (KNOWN_MESH_PLUGINS.has(transformName)) {
-      // This is a plugin, not a transform!
-      result.errors.push(
-        `"${transformName}" is a plugin, not a transform. Move it to the "plugins" section.`
-      );
-      result.classification.plugins.push(transformName);
-      result.valid = false;
-    } else {
-      result.warnings.push(
-        `Unknown transform "${transformName}". Ensure it's a valid @graphql-mesh/transform-* package.`
-      );
-      result.classification.unknown.push(transformName);
+    switch (classifyMeshEntry(transformName)) {
+      case 'transform':
+      case 'ambiguous':
+        result.classification.transforms.push(transformName);
+        break;
+      case 'plugin':
+        result.errors.push(
+          `"${transformName}" is a plugin, not a transform. Move it to the "plugins" section.`
+        );
+        result.classification.plugins.push(transformName);
+        result.valid = false;
+        break;
+      case 'unknown':
+        result.warnings.push(
+          `Unknown transform "${transformName}". Ensure it's a valid @graphql-mesh/transform-* package.`
+        );
+        result.classification.unknown.push(transformName);
+        break;
     }
   }
 

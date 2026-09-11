@@ -8,4 +8,4 @@
 
 > **DSLManifest** = `z.infer`\<*typeof* [`DSLManifestSchema`](../variables/DSLManifestSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:485](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L485)
+Defined in: [packages/dsl/src/schema.ts:455](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L455)

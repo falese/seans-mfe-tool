@@ -26,34 +26,10 @@ describe('AngularWebpackPlugin', () => {
       expect(plugin.directoryStructure).toContain('src/app');
       expect(plugin.directoryStructure).toContain('src/features');
     });
-
-    it('returns Angular runtime dependencies', () => {
-      const deps = plugin.getRuntimeDependencies();
-      expect(deps).toHaveProperty('@angular/core');
-      expect(deps).toHaveProperty('@angular/common');
-      expect(deps).toHaveProperty('rxjs');
-      expect(deps).toHaveProperty(['zone.js']);
-    });
   });
 
   describe('codegen', () => {
-    it('returns a template directory containing base-mfe-angular', () => {
-      expect(plugin.getTemplateDir()).toMatch(/templates\/base-mfe-angular$/);
-    });
-
-    it('returns angular template variables', () => {
-      const vars = plugin.getTemplateVars({});
-      expect(vars.framework).toBe('angular');
-      expect(vars.bundler).toBe('webpack');
-    });
-
-    it('returns AngularRemoteMFE runtime class', () => {
-      expect(plugin.getRuntimeImport()).toBe('@seans-mfe-tool/runtime/angular');
-      expect(plugin.getRuntimeClassName()).toBe('AngularRemoteMFE');
-    });
-
-    it('uses .ts source extension and .spec.ts test extension', () => {
-      expect(plugin.getSourceExtension()).toBe('.ts');
+    it('uses .spec.ts test extension', () => {
       expect(plugin.getTestExtension()).toBe('.spec.ts');
     });
 

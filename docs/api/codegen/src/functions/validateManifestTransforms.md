@@ -8,7 +8,7 @@
 
 > **validateManifestTransforms**(`manifest`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/codegen/src/manifest-validation.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L86)
+Defined in: [packages/codegen/src/manifest-validation.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L94)
 
 Validate and classify transforms from manifest
 Supports both object format {transformName: config} and array format [{transformName: config}]

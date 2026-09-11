@@ -8,7 +8,7 @@
 
 > **validateManifestConfiguration**(`manifest`): `void`
 
-Defined in: [packages/codegen/src/manifest-validation.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L135)
+Defined in: [packages/codegen/src/manifest-validation.ts:147](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L147)
 
 Comprehensive validation of manifest plugin/transform configuration
 Throws error if validation fails (protect code generation)

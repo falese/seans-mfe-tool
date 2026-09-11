@@ -52,6 +52,10 @@
     "./build-output-parser": {
       "require": "./dist/build-output-parser.js",
       "types": "./dist/build-output-parser.d.ts"
+    },
+    "./mesh-catalog": {
+      "require": "./dist/mesh-catalog.js",
+      "types": "./dist/mesh-catalog.d.ts"
     }
   },
   "files": [

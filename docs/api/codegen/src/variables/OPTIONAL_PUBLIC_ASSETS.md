@@ -8,7 +8,7 @@
 
 > `const` **OPTIONAL\_PUBLIC\_ASSETS**: readonly `string`[]
 
-Defined in: [packages/codegen/src/catalog.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L37)
+Defined in: [packages/codegen/src/catalog.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L39)
 
 Public assets a template variant may legitimately not ship (#341).
 

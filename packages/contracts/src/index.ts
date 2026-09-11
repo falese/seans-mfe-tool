@@ -9,3 +9,4 @@ export * from './framework-plugin';
 export * from './platform-contract';
 export * from './slot-grammar';
 export * from './slot-contract';
+export * from './mesh-catalog';

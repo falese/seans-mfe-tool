@@ -8,6 +8,9 @@
 
 > `const` **DataTransformSchema**: `ZodRecord`\<`ZodString`, `ZodUnknown`\>
 
-Defined in: [packages/dsl/src/schema.ts:190](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L190)
+Defined in: [packages/dsl/src/schema.ts:195](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L195)
 
-Mesh transform - flexible schema with validation
+Mesh transform — open record, rejected only when the name is a Mesh *plugin*
+put in the wrong section. Classification is single-sourced in
+`@seans-mfe/contracts` (ADR-090); an unknown name passes, and a name Mesh
+ships in both positions (`mock`, `snapshot`) is never reported as misplaced.

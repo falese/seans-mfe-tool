@@ -6,10 +6,6 @@
 
 # Variable: KNOWN\_MESH\_TRANSFORMS
 
-> `const` **KNOWN\_MESH\_TRANSFORMS**: `Set`\<`string`\>
+> `const` **KNOWN\_MESH\_TRANSFORMS**: `ReadonlySet`\<`string`\>
 
-Defined in: [packages/codegen/src/catalog.ts:281](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L281)
-
-Known GraphQL Mesh transforms
-Source: @graphql-mesh/transform-* packages
-Used to validate manifest transform configurations and prevent misclassification
+Defined in: [packages/codegen/src/catalog.ts:274](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L274)

@@ -6,7 +6,7 @@
 
 # Interface: RemoteGenerateOptions
 
-Defined in: [packages/dsl/src/schema.ts:553](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L553)
+Defined in: [packages/dsl/src/schema.ts:523](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L523)
 
 remote:generate command options
 
@@ -16,7 +16,7 @@ remote:generate command options
 
 > `optional` **capability**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:556](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L556)
+Defined in: [packages/dsl/src/schema.ts:526](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L526)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:556](https://github.com/falese/seans-mfe
 
 > `optional` **dryRun**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:554](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L554)
+Defined in: [packages/dsl/src/schema.ts:524](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L524)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/dsl/src/schema.ts:554](https://github.com/falese/seans-mfe
 
 > `optional` **force**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:555](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L555)
+Defined in: [packages/dsl/src/schema.ts:525](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L525)

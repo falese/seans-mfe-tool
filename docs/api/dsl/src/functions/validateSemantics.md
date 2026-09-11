@@ -8,7 +8,7 @@
 
 > **validateSemantics**(`manifest`): [`ValidationError`](../interfaces/ValidationError.md)[]
 
-Defined in: [packages/dsl/src/validator.ts:263](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L263)
+Defined in: [packages/dsl/src/validator.ts:212](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L212)
 
 Perform semantic validation beyond schema checks
 
