@@ -208,21 +208,34 @@ exists. It carries a third copy of the Mesh plugin/transform lists (see B1).
 (gone — `src/codegen/templates/` now contains only `docker/`). Both are still in
 the tree; `test:mesh-deps` is still a package.json script.
 
-**A4 — `--force` is a three-layer no-op.**
-`remote:generate --force` is advertised as *"Overwrite existing"*
-(`src/commands/remote/generate.ts:274`), parsed, passed to
-`writeGeneratedFiles(allFiles, { force: options.force })` (line 202) — and
-`writeGeneratedFiles` never reads `options.force`
-(`packages/codegen/src/template-io.ts`). The generator is *also* called with a
-hardcoded `force: true` (line 179) into `generateAllFiles`, whose `options.force`
-and `options.dryRun` are likewise never read (`unified-generator.ts:150-170`).
-Running with and without `--force` produces identical results. The flag is
-published to MCP agents in `schemas/remote-generate.json`.
+**A4 — `--force` was a three-layer no-op.**
+`remote:generate --force` was parsed, passed to
+`writeGeneratedFiles(allFiles, { force: options.force })` — and
+`writeGeneratedFiles` never read it. The generator was *also* called with a
+hardcoded `force: true` into a `generateAllFiles` option that was equally
+unread. Running with and without the flag produced identical results. Its own
+help text already said *"Deprecated no-op"*, so this was known and documented
+rather than unnoticed.
 
-**A5 — `remote:init` advertises two flags it ignores.**
-`--template` and `--skip-install` are declared, parsed, and threaded into
-`RemoteInitOptions`; `remoteInitCommand` reads neither
-(`src/commands/remote/init.ts`). Also published to agents.
+It was not broken by an edit. Both meanings it could have carried were removed
+deliberately: gating re-stamps of generator-owned files became meaningless when
+ADR-043 made regeneration unconditional, and overwriting developer-owned files
+is forbidden by the invariant ADR-082 quotes approvingly.
+
+**Resolved: given the meaning ADR-082 lacks** (ADR-089, commit `06da32b`).
+`--force` now re-seeds developer-owned *scaffolding* from current templates,
+which is the repair action for the warnings ADR-082 can only emit — the
+19-of-48 hand-edit tail from the ADR-017 rollout. Capability feature files stay
+unreachable: they never enter the plan once implemented, so the split between
+scaffolding the platform can rebuild and domain logic it must not touch is
+structural, not a new flag. Re-seeds are reported as their own outcome
+(`reseeded[]`, `PlannedChange.op: 'reseed'`, a red itemised list with a
+recovery line) because it is the only op that can destroy work.
+
+**A5 — `remote:init` advertised two flags it ignored.** *Removed* (`06da32b`).
+`--template` and `--skip-install` were declared, parsed, and threaded into
+`RemoteInitOptions`; `remoteInitCommand` read neither, and the command never
+ran an install, so `--skip-install` had nothing to skip.
 
 **A6 — Completed-migration shims still in `src/commands/`.**
 `remote-init.ts`, `remote-generate.ts`, `remote-init-angular.ts` — three 4-line
@@ -231,11 +244,13 @@ removal."* The oclif migration (Epics A+B+C) is marked ✅ Done in CLAUDE.md.
 They sit inside the oclif command glob (`dist/commands/**/*.js`) while exporting
 functions rather than Command classes.
 
-**A7 — `remote:init-angular` is a deprecated duplicate.**
+**A7 — `remote:init-angular` was a deprecated duplicate.** *Removed* (`06da32b`).
 69 lines re-declaring the same flag set to call `remoteInitCommand(name,
-{framework:'angular'})`. Already excluded from the MCP catalog
-(`CATALOG_EXCLUDED`, `src/oclif/schema-derivation.ts:90`) as *"deprecated
-alias"*.
+{framework:'angular'})`, deprecated since ADR-036 made `--framework` the
+documented path. Removing its `CATALOG_EXCLUDED` entry surfaced something the
+exclusion had been hiding: the schema generator rejects hyphenated command ids
+outright, because `schemas/<cmd>.json` encodes `:` as `-` and consumers decode
+every `-` back to `:`. It could never have had a published schema.
 
 **A8 — Three unused imports and one stale coverage glob.**
 `unified-generator.ts:30` imports `ejs` (never called — all EJS use moved to
@@ -683,9 +698,23 @@ Two findings changed shape once the work started, both worth recording:
 
 **Retained by decision:** `type-system.ts` (A1), now marked in-source.
 
-**Open** — the remaining items all change published CLI surface and are held
-for a decision: `--force` (A4), `--template` / `--skip-install` (A5),
-`remote:init-angular` (A7), and `capabilityImplemented` (A10).
+**Done, second slice** — commit `06da32b`, ADR-089:
+
+- `--force` given the meaning ADR-082 lacks (A4) — see the finding above.
+- `--template` / `--skip-install` removed (A5); `remote:init-angular` removed (A7).
+- The now-empty migration-shim exclusion in `command-conformance`, orphaned by
+  the first slice.
+
+**Deferred to Phase 4** — `capabilityImplemented` (A10). The plan filed this as
+a deletion, and it is not one. Replacing the three regexes with `fs.pathExists`
+leaves the on-disk result identical in every case — an existing feature file is
+either omitted from the plan or pushed as developer-owned and skipped by the
+writer — and the snapshot is byte-identical across all 21 MFEs. But the two
+differ in *reporting* for a file that exists without exporting its capability:
+today it appears in the dry run as `skip — yours`, after it would vanish into
+`preservedCapabilities`. That is a semantic change, however small, and it
+belongs with the Phase 4 rework of preservation rather than smuggled into a
+deletion pass.
 
 Two judgement calls to make here, not assume:
 
