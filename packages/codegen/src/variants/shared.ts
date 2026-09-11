@@ -1,6 +1,10 @@
 /**
- * Specs every variant gets: the platform contract files, the BFF, the public
- * assets, and the per-capability feature scaffolding.
+ * Specs every variant gets: the platform contract files, the public assets,
+ * and the per-capability feature scaffolding.
+ *
+ * The BFF's specs used to live here too. They are a plugin's, and now live in
+ * `@seans-mfe/plugin-bff` as a FileContributor (ADR-091 §6) — which is what
+ * removed the relative-path escape from this package into that one.
  *
  * These are shared because their *output paths* are variant-independent —
  * `src/platform/base-mfe/mfe.ts` is the same address in a React MFE and an
@@ -14,7 +18,6 @@ import type { GenPlanContext } from './types';
 import { toDeclaredSlotIdUnion } from '../slot-types';
 
 const PLATFORM_DIR = 'src/platform/base-mfe';
-const BFF_DIR = 'src/platform/bff';
 
 /**
  * The BaseMFE lifecycle contract — the files generated code imports from.
@@ -41,123 +44,6 @@ export const PLATFORM_SPECS: FileSpec[] = [
   },
   { template: 'mfe.test.ts.ejs', out: `${PLATFORM_DIR}/mfe.test.ts`, owner: 'generator' },
   { template: 'types.ts.ejs', out: `${PLATFORM_DIR}/types.ts`, owner: 'generator' },
-];
-
-const hasBff = (c: unknown): boolean => (c as GenPlanContext).hasBff;
-const bffClassName = (c: unknown): Record<string, unknown> => ({
-  bffClassName: `${(c as GenPlanContext).vars.className as string}BFF`,
-});
-
-/**
- * BFF port = MFE port + 1000 (3002 → 4002), following the e2e2 pattern. The
- * MFE and its BFF are one deployable unit: server.ts serves the remoteEntry
- * and /graphql from the same origin.
- */
-const bffPort = (c: unknown): Record<string, unknown> => ({
-  port: (((c as GenPlanContext).vars.port as number | undefined) ?? 3000) + 1000,
-  includeStatic: true,
-});
-
-/**
- * Emitted only when the manifest declares a `data:` section.
- *
- * `package.json` is deliberately absent. The MFE root template is already a
- * hybrid owning both MFE deps (rspack, react, MUI) and BFF deps (mesh,
- * express, helmet); the BFF template's own `package.json.ejs` is a strict
- * subset and used to clobber it, leaving generated MFEs without MUI while
- * `src/App.tsx` imported it.
- *
- * `server.ts` is generator-owned — pure BFF runtime nobody customises. The
- * rest are developer-owned so customisation survives regeneration.
- */
-export const BFF_SPECS: FileSpec[] = [
-  {
-    template: 'bff.ts.ejs',
-    out: `${BFF_DIR}/bff.ts`,
-    owner: 'generator',
-    root: 'bff',
-    when: hasBff,
-    vars: bffClassName,
-  },
-  {
-    template: 'bff.test.ts.ejs',
-    out: `${BFF_DIR}/bff.test.ts`,
-    owner: 'generator',
-    root: 'bff',
-    when: hasBff,
-    vars: bffClassName,
-  },
-  {
-    // Context-injection Envelop plugin (ADR-027). .meshrc.yaml references it
-    // as ./src/platform/bff/mesh-context.js.
-    template: 'mesh-context.js.ejs',
-    out: `${BFF_DIR}/mesh-context.js`,
-    owner: 'generator',
-    root: 'bff',
-    when: hasBff,
-  },
-  {
-    // Demo-mode mock switch (ADR-052), a resolversComposition transform.
-    template: 'mock-switch.js.ejs',
-    out: `${BFF_DIR}/mock-switch.js`,
-    owner: 'generator',
-    root: 'bff',
-    when: (c) => hasBff(c) && !!(c as GenPlanContext).manifest.data?.mockSwitch?.enabled,
-  },
-  {
-    template: 'mocks.json.ejs',
-    out: `${BFF_DIR}/mocks.json`,
-    owner: 'developer',
-    root: 'bff',
-    when: (c) => hasBff(c) && !!(c as GenPlanContext).manifest.data?.mockSwitch?.enabled,
-  },
-  {
-    template: 'server.ts.ejs',
-    out: 'server.ts',
-    owner: 'generator',
-    root: 'bff',
-    when: hasBff,
-    vars: bffPort,
-    optional: true,
-  },
-  {
-    // Skipped for a variant that ships its own — the Angular tsconfig carries
-    // experimentalDecorators and angularCompilerOptions the generic one lacks.
-    template: 'tsconfig.json',
-    out: 'tsconfig.json',
-    owner: 'developer',
-    root: 'bff',
-    when: (c) => hasBff(c) && !(c as GenPlanContext).variant.ownsRootTsconfig,
-    vars: bffPort,
-    optional: true,
-  },
-  {
-    template: 'Dockerfile.ejs',
-    out: 'Dockerfile',
-    owner: 'developer',
-    root: 'bff',
-    when: hasBff,
-    vars: bffPort,
-    optional: true,
-  },
-  {
-    template: 'docker-compose.yaml.ejs',
-    out: 'docker-compose.yaml',
-    owner: 'developer',
-    root: 'bff',
-    when: hasBff,
-    vars: bffPort,
-    optional: true,
-  },
-  {
-    template: 'README.md.ejs',
-    out: 'README.md',
-    owner: 'developer',
-    root: 'bff',
-    when: hasBff,
-    vars: bffPort,
-    optional: true,
-  },
 ];
 
 /**

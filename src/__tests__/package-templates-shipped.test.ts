@@ -17,12 +17,11 @@
  *                           in package.json, and points at a package that
  *                           depends on codegen (a cycle npm cannot see).
  *
- * The escape is pinned rather than ignored: it is the known exception, and the
- * injection point that removes it is the file-plan work in
- * docs/generator-extraction-plan.md Phase 4, whose acceptance test is a plugin
- * contributing generated files without core naming its templates. Until then a
- * NEW escape fails here immediately, and deleting the known one is a deliberate
- * edit to this list rather than something that happens by accident.
+ * Both are now fixed — plugin-bff ships its templates, and the escape went when
+ * the BFF became a FileContributor resolving its own template root (ADR-091
+ * §6). `KNOWN_ESCAPES` is consequently empty, and the pair of tests below is
+ * what keeps it that way: one fails on a NEW escape, the other fails on a
+ * STALE allowance, so an exception cannot outlive the defect it excused.
  */
 
 import * as fs from 'fs';
@@ -45,12 +44,12 @@ function packagesWithTemplates(): string[] {
  * package. Each entry is a defect with a known owner, not an approved pattern.
  */
 const KNOWN_ESCAPES: ReadonlyArray<{ file: string; reason: string }> = [
-  {
-    file: 'packages/codegen/src/unified-generator.ts',
-    reason:
-      'reads plugin-bff templates via a relative path escape; removed when a plugin can ' +
-      'contribute FileSpecs to the generation plan (extraction plan, Phase 4)',
-  },
+  // Empty, and that is the point. It held one entry — codegen reading
+  // plugin-bff's templates through `../../../packages/plugin-bff/templates` —
+  // until a plugin could contribute FileSpecs with its own template root
+  // (ADR-091 §6). The honesty test below is what forced this list to shrink
+  // when the escape went, rather than leaving a stale allowance behind as
+  // permission for the next one.
 ];
 
 describe('packages ship the templates they read', () => {

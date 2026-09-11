@@ -8,7 +8,7 @@
 
 > **featureSpecs**(`ctx`, `capability`): [`FileSpec`](../interfaces/FileSpec.md)[]
 
-Defined in: [packages/codegen/src/variants/shared.ts:226](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L226)
+Defined in: [packages/codegen/src/variants/shared.ts:112](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L112)
 
 One capability's three files: the component, its barrel, and its test.
 

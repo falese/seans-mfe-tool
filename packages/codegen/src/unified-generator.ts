@@ -55,6 +55,8 @@ import { renderTemplate, capabilityImplemented } from './template-io';
 
 export * from './file-plan';
 export * from './variants';
+export * from './contributors';
+import { fileContributors } from './contributors';
 import { resolveFilePlan, type FileSpec } from './file-plan';
 import {
   findVariant,
@@ -62,7 +64,6 @@ import {
   featureSpecs,
   slotSpecs,
   PLATFORM_SPECS,
-  BFF_SPECS,
   PUBLIC_SPECS,
   FILE_MOCK_SPEC,
   type GenPlanContext,
@@ -286,10 +287,12 @@ async function renderFiles(
 
   const variant = findVariant(vars.templateVariant) ?? reactRspack;
   const templateDir = path.resolve(__dirname, '..', 'templates', variant.templateDirName);
-  // The one remaining path that escapes this package. Removed when a plugin
-  // can contribute FileSpecs of its own — see the KNOWN_ESCAPES entry in
-  // src/__tests__/package-templates-shipped.test.ts.
-  const bffTemplateDir = path.resolve(__dirname, '../../../packages/plugin-bff/templates');
+
+  // Whatever registered itself as a contributor (ADR-091 §6). Each brings its
+  // own template root, resolved inside its own package, so nothing here names
+  // a plugin or reaches outside this package for a template.
+  const contributors = fileContributors();
+  const contributorRoots = Object.fromEntries(contributors.map((c) => [c.id, c.templateRoot]));
 
   // --- Domain capabilities, and which are already realised in code ---
   const domainCapabilities: string[] = [];
@@ -340,9 +343,8 @@ async function renderFiles(
       owner: 'generator',
       vars: () => ({ capabilities: domainCapabilities }),
     },
-    ...meshConfigSpecs(ctx),
     ...PLATFORM_SPECS,
-    ...BFF_SPECS,
+    ...contributors.flatMap((c) => c.specs),
     ...variant.specs,
     ...slotSpecs(ctx),
     ...PUBLIC_SPECS,
@@ -351,7 +353,7 @@ async function renderFiles(
 
   const { files, diagnostics } = await resolveFilePlan(plan, {
     basePath,
-    roots: { variant: templateDir, bff: bffTemplateDir },
+    roots: { variant: templateDir, ...contributorRoots },
     vars: vars as unknown as Record<string, unknown>,
     ctx,
     io: {
@@ -373,39 +375,4 @@ async function renderFiles(
   }
 
   return { files, preservedCapabilities };
-}
-
-/**
- * `.meshrc.yaml` — the one generated file whose content is composed here
- * rather than rendered straight from the model, because the Mesh config is
- * serialized from the manifest's `data:` block before the template sees it.
- */
-function meshConfigSpecs(ctx: GenPlanContext): FileSpec[] {
-  if (!ctx.hasBff) return [];
-  const data = ctx.manifest.data;
-  // Filter empty/invalid sources from pre-Zod YAML.
-  const sources = (data?.sources ?? []).filter(
-    (source) =>
-      source && typeof source === 'object' && source.name && source.name.trim() && source.handler,
-  );
-  const meshConfigYaml = yamlDump({
-    sources,
-    serve: data?.serve || { endpoint: '/graphql', playground: true },
-  });
-  return [
-    {
-      template: 'meshrc.yaml.ejs',
-      out: '.meshrc.yaml',
-      owner: 'generator',
-      root: 'bff',
-      vars: () => ({ meshConfigYaml }),
-    },
-  ];
-}
-
-function yamlDump(value: unknown): string {
-  // Required lazily for the same reason it always was: js-yaml is only needed
-  // by manifests that declare a data: section.
-  const yaml = require('js-yaml') as { dump(v: unknown, o: object): string };
-  return yaml.dump(value, { noRefs: true, lineWidth: -1 });
 }
