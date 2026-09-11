@@ -481,23 +481,27 @@ every package ships the templates it reads, and that no *new* cross-package
 template reference appears; the one escape above is pinned, with a paired
 assertion that the allowance disappears when the escape does.
 
-**D2 — The generator prints to the console.** Twelve `console.*` calls in
-`packages/codegen/src` — seven `console.warn`/`console.log` in
-`unified-generator.ts` (missing-template warnings, "Preserved (already
-implemented): …") and five in `manifest-validation.ts` including
-`console.warn('\n⚠️  Manifest Configuration Warnings:')` and
-`console.log('✅ Manifest validation passed: …')`.
+**D2 — The generator printed to the console.** *Resolved* (ADR-092, `58ecfad`).
+Eight `console.*` calls in `packages/codegen/src`. A library that writes emoji
+to stdout is not embeddable, it violates the repo's own rule, and it collides
+with the JSON-envelope contract under which stdout carries exactly one
+`CommandResult` line. `dsl` and `contracts` had zero — `codegen` was the only
+offender.
 
-A library that writes emoji to stdout is not extractable, and this violates the
-repo's own rule (*"No `console.log` in production code — use the structured
-logger"*). It also collides with the JSON-envelope contract: under `--json`,
-stdout must carry exactly one `CommandResult<T>` line. `dsl` and `contracts`
-have zero `console.*` — `codegen` is the only offender.
+One of the eight was a live defect, not just a smell: the generator printed
+`Preserved (already implemented)` and `remote:generate` printed it again from
+the returned value, so every run that preserved a capability emitted the line
+twice. Seen during the ADR-089 end-to-end check and misread as noise.
 
-**D3 — `validateManifestConfiguration` throws and prints instead of returning.**
-It is the first thing `generateAllFiles` calls. Turning it into a pure function
-that returns diagnostics is a prerequisite for both D2 and any embedding of the
-generator in something that is not a CLI.
+`GenerateAllFilesResult` now carries `diagnostics: GeneratorDiagnostic[]`, and
+`no-console` is `error` across the three extraction packages — verified by
+planting one and watching lint fail.
+
+**D3 — `validateManifestConfiguration` threw and printed instead of returning.**
+*Resolved* (ADR-092). It returns `{ ok, diagnostics }`; `generateAllFiles`
+throws `ValidationError` on `!ok`. Reporting differently is not permitting —
+ADR-027 refuses to generate from a misclassified manifest because the
+alternative is finding out at runtime, inside a container.
 
 ### E. Complexity hot spots
 
@@ -933,7 +937,7 @@ manifests → byte-identical to the characterization snapshot.
 | 0 — safety net | ½ day | — | none · **done** (`f8ada74`) |
 | 1 — delete | 1 day | 1,603 LOC (partial · CLI surface held) | very low (provable dead code) |
 | 2 — single-source facts | 1 day | 4 copies → 1, 2 resolvers → 1, 6 dead members | low · **done** |
-| 3 — decouple | ~1 day | 12 `console.*` (cycle moved to Phase 4) | low |
+| 3 — decouple | ~1 day | 8 `console.*`, 1 duplicate-output bug | low · **done** |
 | 4 — file plan | 2–3 days | ~250 LOC, 6 branches | medium — mitigated by Phase 0 |
 | 5 — boundary | 1 day | ~1,750 LOC of contracts + ~1,500 lines of shadow docs | low |
 
