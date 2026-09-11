@@ -1,9 +1,36 @@
 /**
  * DSL Type System
  * Following REQ-047: Unified Type System
- * 
+ *
  * Parses DSL type strings and generates validation code.
  * Supports GraphQL nullability conventions: nullable by default, ! for required.
+ *
+ * ---------------------------------------------------------------------------
+ * STATUS: NO PRODUCTION CONSUMER. Retained deliberately.
+ * ---------------------------------------------------------------------------
+ *
+ * Nothing in `src/`, `packages/`, `scripts/` or the EJS templates calls any
+ * function in this file, and it is deliberately NOT re-exported from
+ * `packages/dsl/src/index.ts`. Its only callers are its own three test files.
+ * Codegen reads `DSLInput.type` / `DSLOutput.type` as opaque strings and hands
+ * them to templates verbatim; no type string is parsed anywhere in the
+ * generation pipeline.
+ *
+ * It is kept, not deleted, because `toGraphQLType` / `toTypeScriptType` /
+ * `toPythonType` are the concrete shape of the platform's stated goal —
+ * domain capabilities in any framework *or language* (CLAUDE.md, "What this
+ * project is"; `LanguageSchema` already admits python, go, rust and java).
+ * Re-deriving a cross-language type mapper later is more expensive than
+ * carrying one that is already written and fully covered.
+ *
+ * What that costs, stated honestly: 638 lines plus 834 lines of tests, and a
+ * 99/100/100/100 coverage threshold in jest.config.js gating code no shipped
+ * path executes. Read it as a design study, not as platform behaviour — and
+ * if you are here because you are about to use it, check first whether the
+ * pipeline needs a parsed type at all, since today it does not.
+ *
+ * Excluded from the extraction boundary — see
+ * `docs/generator-extraction-plan.md` §Phase 5 and finding A1.
  */
 
 // =============================================================================

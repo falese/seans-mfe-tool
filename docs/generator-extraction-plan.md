@@ -184,10 +184,17 @@ Grouped by kind. Each is independently verifiable at the cited location.
 **A1 — `packages/dsl/src/type-system.ts` (638 LOC) has no production consumer.**
 `parseType`, `toGraphQLType`, `toTypeScriptType`, `toPythonType`,
 `generateZodSchema`, `validateValue` are referenced only by their own three test
-files (~1,000 LOC of tests). It is not exported from `packages/dsl/src/index.ts`.
-A complete, tested, documented DSL type system that nothing calls — 1,600 lines
-of source-plus-test that a reader of the generator must first read and then
-discover is irrelevant.
+files (834 LOC). It is not exported from `packages/dsl/src/index.ts`. Codegen
+reads `DSLInput.type` / `DSLOutput.type` as opaque strings and hands them to
+templates verbatim — no type string is parsed anywhere in the pipeline.
+
+**Resolved: retained, not deleted.** The cross-language mappers are the concrete
+shape of the platform's stated multi-language goal, and `LanguageSchema` already
+admits python, go, rust and java; re-deriving them later costs more than
+carrying them. The file now carries a header stating that it has no consumer,
+what it costs (1,472 lines plus a 99/100/100/100 coverage threshold gating code
+no shipped path executes), and that it sits outside the extraction boundary.
+The defect was that its status was undiscoverable, not that it exists.
 
 **A2 — `src/utils/manifestValidator.js` (210 LOC) is orphaned and misleading.**
 Zero importers. Its header says *"SYNC WITH:
@@ -648,22 +655,37 @@ baseline is the only gate that covers the whole blast radius.
 
 Pure subtraction. Every item is A-series, provable, zero behaviour change.
 
-| Delete | LOC (source + tests) |
+**Done** — commit `5b2ef17`, verified byte-identical output:
+
+| Deleted | LOC (source + tests) |
 |---|---|
-| `packages/dsl/src/type-system.ts` + its 3 test files (A1) | 1,472 |
 | `src/utils/manifestValidator.js` + test (A2) | 683 |
 | `scripts/test-mesh-dependencies.js`, `scripts/generate-mfe.js` (A3) | 495 |
 | `src/utils/ensureFiles.js` + test (A9) | 328 |
-| `src/commands/remote/init-angular.ts` (A7) | 69 |
-| `capabilityImplemented` regex machinery → `pathExists` (A10) | ~25 |
+| `scripts/remove-dist-shims.js` + its build step — existed only to sweep up after the shims | 35 |
 | `src/commands/remote-{init,generate,init-angular}.ts` shims (A6) | 12 |
-| `--force` plumbing: flag, both `options.force` params (A4) | — |
-| `--template` / `--skip-install` flags (A5) | — |
-| 3 unused imports, stale jest glob, missing `clean:test-workspaces` (A8) | — |
-| **Net** | **~3,100** |
+| 18 unused imports (A8) — 14 in `unified-generator.ts`, 4 in `render-model.ts` | — |
+| Stale jest coverage globs and thresholds; `clean:test-workspaces`, `test:mesh-deps` (A8) | — |
+| **Net** | **1,603 deletions / 32 insertions** |
 
-Roughly an eighth of the repo, and a much larger fraction of what a reader of
-the generator has to wade through before reaching code that runs.
+Two findings changed shape once the work started, both worth recording:
+
+- **The shims were load-bearing.** Five test suites imported through
+  `../remote-init` and `../remote-generate`. The reference check that called
+  them dead excluded `__tests__` directories. They now import the real modules
+  directly, which is what the shims existed to avoid needing.
+- **The lint escalation paid for itself immediately.** Raising
+  `no-unused-vars` to `error` — scoped to `contracts`/`dsl`/`codegen`, the
+  extraction boundary, since the rest of the repo carries 11 pre-existing
+  warnings that belong to their own change — found 18 dead imports rather than
+  the 3 this document predicted. Fourteen were the `import` half of an
+  `export … from` that already re-exported the same symbols.
+
+**Retained by decision:** `type-system.ts` (A1), now marked in-source.
+
+**Open** — the remaining items all change published CLI surface and are held
+for a decision: `--force` (A4), `--template` / `--skip-install` (A5),
+`remote:init-angular` (A7), and `capabilityImplemented` (A10).
 
 Two judgement calls to make here, not assume:
 
@@ -817,7 +839,7 @@ manifests → byte-identical to the characterization snapshot.
 | Phase | Effort | Removes | Risk |
 |---|---|---|---|
 | 0 — safety net | ½ day | — | none · **done** (`f8ada74`) |
-| 1 — delete | 1 day | ~3,100 LOC | very low (provable dead code) |
+| 1 — delete | 1 day | 1,603 LOC (partial · CLI surface held) | very low (provable dead code) |
 | 2 — single-source facts | 1 day | ~200 LOC, 3 contradictions | low (one manifest migration) |
 | 3 — decouple | 1–2 days | 1 cycle, 12 `console.*` | low |
 | 4 — file plan | 2–3 days | ~250 LOC, 6 branches | medium — mitigated by Phase 0 |
@@ -838,7 +860,7 @@ The three findings that matter most, in order:
 3. **B1** — three copies of the Mesh allow-lists, two of them using
    contradictory naming conventions, both live on the same manifest.
 
-The rest — ~3,100 lines of dead code, twelve `console.*` calls, a no-op
+The rest — ~1,600 lines of dead code already gone, twelve `console.*` calls, a no-op
 `--force` flag — is real weight but low-risk to shed.
 
 The system's core ideas are sound: the manifest as the only input, Zod as the
