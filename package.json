@@ -22,6 +22,8 @@
     "build:schema:dsl:check": "ts-node scripts/generate-dsl-schema.ts --check",
     "check:mfe-drift": "ts-node scripts/check-mfe-drift.ts",
     "check:mfe-drift:check": "ts-node scripts/check-mfe-drift.ts --check",
+    "build:codegen-snapshot": "ts-node scripts/codegen-characterization.ts",
+    "build:codegen-snapshot:check": "ts-node scripts/codegen-characterization.ts --check",
     "check:mfe-consistency": "ts-node scripts/check-mfe-consistency.ts",
     "check:template-typecheck": "ts-node scripts/check-template-typecheck.ts",
     "check:adr": "ts-node scripts/check-adr-consistency.ts",
@@ -42,7 +44,6 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "dev": "bun bin/dev.ts",
     "clean": "node scripts/clean.js",
-    "clean:test-workspaces": "node scripts/clean-test-workspaces.js",
     "typecheck": "tsc -p tsconfig.typecheck.json && tsc -p packages/runtime/tsconfig.typecheck.json",
     "test:mesh-deps": "node scripts/test-mesh-dependencies.js",
     "docs:check-links": "node scripts/check-doc-links.js",
@@ -93,10 +94,10 @@
     ],
     "topics": {
       "coder": {
-        "description": "Intent-compilation seam — compile a business intent into a DSL mfe-manifest via the external coder service (ADR-085/ADR-088)"
+        "description": "Intent-compilation seam \u2014 compile a business intent into a DSL mfe-manifest via the external coder service (ADR-085/ADR-088)"
       },
       "daemon": {
-        "description": "Control-plane daemon commands (in-platform control plane — PDR-008/ADR-078)"
+        "description": "Control-plane daemon commands (in-platform control plane \u2014 PDR-008/ADR-078)"
       },
       "mfe": {
         "description": "MFE consistency checks (mfe:validate)"
