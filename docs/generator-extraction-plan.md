@@ -304,6 +304,54 @@ with no stated ownership between them:
 
 Only (3) has a clear, non-overlapping remit.
 
+**B5 — Four descriptions of the manifest language; the most authoritative-sounding
+one is the most stale.**
+
+Zod is genuinely the source of truth and the generated chain out of it is sound
+(§1.4, Finding F). The problem is upstream: three hand-maintained prose
+documents describe the same language, none is generated, and none is gated.
+
+| Document | Lines | Declares itself | Read by code | Gated |
+|---|---|---|---|---|
+| `docs/DSL/dsl.yaml` | 644 | *"the complete platform contract that ALL MFEs must conform to"* | no | no |
+| `docs/DSL/dsl-schema-reference.md` | 855 | the v3.2 schema reference | no | no |
+| `docs/schemas/dsl-manifest.md` | — | correctly names Zod as the source | no | no |
+| `packages/dsl/src/schema.ts` | 557 | — | **yes** | **yes** (`build:schema:dsl:check`) |
+
+They have drifted in the predictable direction:
+
+| Field | `dsl.yaml` | `dsl-schema-reference.md` | `schema.ts` |
+|---|---|---|---|
+| `providesSlots` | absent | present | present |
+| `framework` / `bundler` | absent | absent | present |
+| `data.mockSwitch` | absent | absent | present |
+
+The file whose header claims to be the complete platform contract does not know
+the slot contract exists — ADR-066 through ADR-073, marked ✅ Done. It is stamped
+v3.2 and has not moved since. Nothing in `src/`, `packages/`, `scripts/` or
+`tests/` reads any of the three; they are not fixtures and not golden files.
+
+**The live defect inside the package.** `packages/dsl/src/types.ts` is a 52-line
+back-compat re-export shim whose own header says *"single source of truth"* and
+which then hand-restates two of the enums it re-exports:
+
+```ts
+export const VALID_LANGUAGES = ['javascript', 'typescript'] as const;
+```
+
+`LanguageSchema` in the same package admits six: `javascript`, `typescript`,
+`python`, `go`, `rust`, `java`. Same package, four values apart. The three
+constants (`VALID_MFE_TYPES`, `VALID_LANGUAGES`, `VALID_CAPABILITY_TYPES`) are
+among the dead exports in the Phase 1 list, so nothing consumes the wrong answer
+today. The header also cites `docs/dsl-schema-reference.md` — a path that does
+not exist; the file is under `docs/DSL/`.
+
+This is B1 in prose rather than code: one fact stated several times, in
+different states, with the copy carrying the most authority in its own header
+being the most out of date. The fix is the ADR-075 pattern already applied to
+the ADR index and the system map — generate the reference from the schema, and
+demote what remains to a worked example.
+
 ### C. Abstraction that exists but is not wired
 
 **C1 — Six of `BaseFrameworkPlugin`'s thirteen abstract members have zero
@@ -429,7 +477,11 @@ compatibility promise. Most of these were never meant to be one.
 Worth stating plainly, because the refactor should protect these:
 
 - **Zod as the single source of truth** for the manifest — types inferred,
-  JSON Schema generated, one definition. Model to preserve exactly.
+  JSON Schema generated, one definition. The mechanism is exactly right and
+  should be preserved as-is. Note the qualifier from B5: the chain *downstream*
+  of `schema.ts` is clean, but three hand-written documents upstream still
+  claim to define the same language and have drifted from it. Keep the
+  mechanism; retire the shadow copies.
 - **`scripts/generate-schemas.ts`** — deriving MCP tool inputs from the live
   oclif registry and outputs from the command's declared `T` via the TypeScript
   compiler. Its header documents four real drift bugs this design made
@@ -723,7 +775,14 @@ core; characterization identical.
    types, and the pipeline entry points. Stop exporting the 28 sub-schemas and
    the ~30 internal interfaces. Add an `api-surface` snapshot test so additions
    to the public API are deliberate.
-4. Replace `file:` dependencies with real versions; verify `npm pack` produces a
+4. Consolidate the manifest documentation (B5). Generate the field reference
+   from `DSLManifestSchema` the way the ADR index and system map are generated,
+   and gate it. Delete `docs/DSL/dsl-schema-reference.md`; strip the "complete
+   platform contract" claim from `docs/DSL/dsl.yaml` and move it to
+   `examples/` as a worked example, or delete it. Fix the stale doc path in
+   `packages/dsl/src/types.ts` — or delete that shim outright, since Phase 1
+   already removes its only non-re-export content.
+5. Replace `file:` dependencies with real versions; verify `npm pack` produces a
    tarball that generates a complete React MFE *and* a complete BFF MFE in a
    clean directory outside the repo. This is the actual extraction acceptance
    test, and it is the one that would fail today because of D1.
@@ -742,7 +801,7 @@ manifests → byte-identical to the characterization snapshot.
 | 2 — single-source facts | 1 day | ~200 LOC, 3 contradictions | low (one manifest migration) |
 | 3 — decouple | 1–2 days | 1 cycle, 12 `console.*` | low |
 | 4 — file plan | 2–3 days | ~250 LOC, 6 branches | medium — mitigated by Phase 0 |
-| 5 — boundary | 1 day | ~1,750 LOC of unneeded contracts | low |
+| 5 — boundary | 1 day | ~1,750 LOC of contracts + ~1,500 lines of shadow docs | low |
 
 **~7 working days to go from a ~4,500-line generator embedded in ~22,000 lines,
 with a broken extension point and a package cycle, to a standalone, publishable
