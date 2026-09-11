@@ -27,9 +27,8 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import ejs from 'ejs';
-import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
+import type { DSLManifest, DSLInput, DSLOutput } from '@seans-mfe/dsl';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
 import { toDeclaredSlotIdUnion } from './slot-types';
 // Constant data moved to ./catalog (ADR-050 DEPENDENCY_VERSIONS, ADR-027 Mesh
 // tables, #341 optional assets). Re-exported here so the module's public
@@ -43,35 +42,17 @@ export {
   KNOWN_MESH_PLUGINS,
   KNOWN_MESH_TRANSFORMS,
 } from './catalog';
-import {
-  OPTIONAL_PUBLIC_ASSETS,
-  DEPENDENCY_VERSIONS,
-  DEFAULT_MESH_PLUGINS,
-  DEFAULT_MESH_TRANSFORMS,
-  KNOWN_MESH_PLUGINS,
-  KNOWN_MESH_TRANSFORMS,
-} from './catalog';
-
 // Extracted to focused modules; re-exported so this module's public surface,
 // and the barrel's `export * from './unified-generator'`, are unchanged.
 export * from './manifest-validation';
 export * from './dependencies';
 import { validateManifestConfiguration } from './manifest-validation';
-import {
-  resolveDesignSystemDeps,
-  resolveRuntimeExtraDeps,
-  resolveClientDependencies,
-  resolveNeededMeshPluginsAndTransforms,
-  resolveReactSharedDeps,
-  renderJsonDependencyLines,
-  renderSharedEntries,
-} from './dependencies';
 
 export * from './render-model';
 export * from './template-io';
 import { extractManifestVars, parseHandlerSource } from './render-model';
 import type { RenderCapability, RenderLifecycleHook, RenderHandlerSource } from './render-model';
-import { renderTemplate, capabilityImplemented, writeGeneratedFiles } from './template-io';
+import { renderTemplate, capabilityImplemented } from './template-io';
 
 
 

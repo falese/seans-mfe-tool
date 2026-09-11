@@ -34,7 +34,7 @@ jest.mock('path', () => ({
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
-import { remoteInitCommand } from '../remote-init';
+import { remoteInitCommand } from '../remote/init';
 
 describe('remote:init Command', () => {
   beforeEach(() => {

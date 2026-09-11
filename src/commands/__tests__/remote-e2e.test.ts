@@ -2,8 +2,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
-import { remoteInitCommand } from '../remote-init';
-import { remoteGenerateCommand } from '../remote-generate';
+import { remoteInitCommand } from '../remote/init';
+import { remoteGenerateCommand } from '../remote/generate';
 
 describe('remote:init and remote:generate E2E', () => {
 	let testDir: string;

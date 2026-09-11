@@ -48,7 +48,7 @@ jest.mock('@seans-mfe/codegen', () => {
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
-import { remoteGenerateCommand } from '../remote-generate';
+import { remoteGenerateCommand } from '../remote/generate';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 
 import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';

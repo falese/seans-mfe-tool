@@ -15,9 +15,8 @@
  * each template, and a template containing a capability-name array is a defect.
  */
 
-import type { DSLManifest, CapabilityConfig, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
-import { toDeclaredSlotIdUnion } from './slot-types';
+import type { DSLManifest, CapabilityConfig } from '@seans-mfe/dsl';
+import { PLATFORM_CAPABILITIES } from '@seans-mfe/contracts';
 import { deriveBuiltinVariant } from './unified-generator';
 import type { FrameworkVariant } from './unified-generator';
 import {

@@ -44,7 +44,7 @@ jest.mock('../../framework/loader', () => ({
   resolveFrameworkVariant: jest.fn(() => undefined),
 }));
 
-import { remoteGenerateCommand } from '../remote-generate';
+import { remoteGenerateCommand } from '../remote/generate';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
 

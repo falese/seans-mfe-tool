@@ -251,11 +251,6 @@ export const DEFAULT_MESH_TRANSFORMS = {
 // Validation Layer (ADR-027)
 // =============================================================================
 
-/**
- * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
- * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
- * See ADR-014 for migration strategy.
- */
 
 /**
  * Known GraphQL Mesh plugins (production-ready)
