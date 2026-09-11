@@ -117,14 +117,6 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
       char: 'p',
       description: 'Port number for the remote MFE (default: per-framework)',
     }),
-    template: Flags.string({
-      char: 't',
-      description: 'Path to DSL template file',
-    }),
-    'skip-install': Flags.boolean({
-      description: 'Skip npm install',
-      default: false,
-    }),
     force: Flags.boolean({
       char: 'f',
       description: 'Overwrite existing files',
@@ -141,8 +133,6 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     const { args, flags } = await this.parse(RemoteInit)
     return remoteInitCommand(args.name, {
       port: flags.port ? parseInt(flags.port, 10) : undefined,
-      template: flags.template,
-      skipInstall: flags['skip-install'],
       force: flags.force,
       dryRun: flags['dry-run'],
       framework: flags.framework,

@@ -8,7 +8,7 @@
 
 > `const` **KNOWN\_MESH\_TRANSFORMS**: `Set`\<`string`\>
 
-Defined in: [packages/codegen/src/catalog.ts:286](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L286)
+Defined in: [packages/codegen/src/catalog.ts:281](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L281)
 
 Known GraphQL Mesh transforms
 Source: @graphql-mesh/transform-* packages

@@ -8,4 +8,4 @@
 
 > **ExitCodeKey** = keyof *typeof* [`EXIT_CODES`](../variables/EXIT_CODES.md)
 
-Defined in: [packages/contracts/src/envelope.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L131)
+Defined in: [packages/contracts/src/envelope.ts:138](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L138)

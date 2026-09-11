@@ -8,7 +8,7 @@
 
 > `const` **EXIT\_CODES**: `object`
 
-Defined in: [packages/contracts/src/envelope.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L118)
+Defined in: [packages/contracts/src/envelope.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L125)
 
 ## Type Declaration
 

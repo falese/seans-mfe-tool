@@ -69,6 +69,11 @@ export interface RemoteGenerateResult extends MutatingResult {
   errors: string[];
   /** Capability names whose feature files were preserved (already implemented). */
   preserved: string[];
+  /**
+   * Developer-owned files that existed and were replaced because `--force` was
+   * passed (ADR-089). Empty on every run without the flag.
+   */
+  reseeded: string[];
 }
 
 // ---------------------------------------------------------------------------

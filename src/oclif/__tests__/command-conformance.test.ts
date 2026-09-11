@@ -34,8 +34,11 @@ function isCommandFile(relPath: string): boolean {
   if (!base.endsWith('.ts') || base.endsWith('.d.ts')) return false;
   if (base.includes('.test.') || base.startsWith('_')) return false;
   if (relPath.includes('__tests__')) return false;
-  // A6/A7 migration shims: flat files that re-export a nested command.
-  return !['remote-init.ts', 'remote-generate.ts', 'remote-init-angular.ts'].includes(base);
+  // Every remaining file under src/commands is a real command. The A6/A7
+  // Commander migration shims that used to be excluded here were deleted once
+  // the epic they belonged to was finished; nothing re-exports a nested
+  // command from a flat file any more.
+  return true;
 }
 
 function walk(dir: string, prefix = ''): string[] {

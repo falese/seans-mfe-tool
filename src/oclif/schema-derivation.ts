@@ -87,7 +87,6 @@ const FIRST_PARTY = [/^seans-mfe-tool$/, /^@seans-mfe\//, /^@falese\//];
 export const CATALOG_EXCLUDED: Record<string, string> = {
   'mcp:serve': 'the MCP server itself — it would be advertising a tool that starts another copy of it',
   schemas: 'lists the tool catalog; agents get the same information from MCP tools/list',
-  'remote:init-angular': 'deprecated alias for `remote:init --framework angular`',
 };
 
 // ---------------------------------------------------------------------------

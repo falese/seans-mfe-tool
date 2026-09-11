@@ -8,7 +8,7 @@
 
 > `const` **KNOWN\_MESH\_PLUGINS**: `Set`\<`string`\>
 
-Defined in: [packages/codegen/src/catalog.ts:265](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L265)
+Defined in: [packages/codegen/src/catalog.ts:260](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L260)
 
 Known GraphQL Mesh plugins (production-ready)
 Source: @graphql-mesh/plugin-* packages

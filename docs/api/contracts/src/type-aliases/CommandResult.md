@@ -8,7 +8,7 @@
 
 > **CommandResult**\<`T`\> = `object`
 
-Defined in: [packages/contracts/src/envelope.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L85)
+Defined in: [packages/contracts/src/envelope.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L92)
 
 ## Type Parameters
 
@@ -22,7 +22,7 @@ Defined in: [packages/contracts/src/envelope.ts:85](https://github.com/falese/se
 
 > `optional` **data**: `T`
 
-Defined in: [packages/contracts/src/envelope.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L87)
+Defined in: [packages/contracts/src/envelope.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L94)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/contracts/src/envelope.ts:87](https://github.com/falese/se
 
 > `optional` **error**: [`CommandError`](CommandError.md)
 
-Defined in: [packages/contracts/src/envelope.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L88)
+Defined in: [packages/contracts/src/envelope.ts:95](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L95)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [packages/contracts/src/envelope.ts:88](https://github.com/falese/se
 
 > **ok**: `boolean`
 
-Defined in: [packages/contracts/src/envelope.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L86)
+Defined in: [packages/contracts/src/envelope.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L93)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [packages/contracts/src/envelope.ts:86](https://github.com/falese/se
 
 > **telemetry**: `object`
 
-Defined in: [packages/contracts/src/envelope.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L90)
+Defined in: [packages/contracts/src/envelope.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L97)
 
 #### correlationId
 
@@ -73,4 +73,4 @@ predate tracing keep working.
 
 > **warnings**: `string`[]
 
-Defined in: [packages/contracts/src/envelope.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L89)
+Defined in: [packages/contracts/src/envelope.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L96)

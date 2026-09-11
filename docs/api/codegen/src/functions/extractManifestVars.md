@@ -8,7 +8,7 @@
 
 > **extractManifestVars**(`manifest`, `variant`): `object`
 
-Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L82)
+Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L81)
 
 ## Parameters
 

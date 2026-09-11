@@ -12,7 +12,7 @@
       },
       "force": {
         "type": "boolean",
-        "description": "Deprecated no-op: generated platform files re-stamp on every run; developer-owned files are never overwritten"
+        "description": "Re-seed developer-owned scaffolding (App.tsx, package.json, bundler config, …) from the current templates, REPLACING your edits. Capability feature files are never re-seeded. Preview with --dry-run first."
       }
     },
     "required": [],
@@ -25,6 +25,7 @@
       "skipped",
       "errors",
       "preserved",
+      "reseeded",
       "dryRun"
     ],
     "properties": {
@@ -53,6 +54,13 @@
         },
         "description": "Capability names whose feature files were preserved (already implemented)."
       },
+      "reseeded": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Developer-owned files that existed and were replaced because `--force` was\npassed (ADR-089). Empty on every run without the flag."
+      },
       "dryRun": {
         "type": "boolean"
       },
@@ -70,9 +78,11 @@
               "enum": [
                 "create",
                 "overwrite",
+                "reseed",
                 "skip",
                 "spawn"
-              ]
+              ],
+              "description": "`overwrite` re-stamps a generator-owned file; `skip` leaves a\ndeveloper-owned one alone. `reseed` is the third outcome ADR-089 adds —\na developer-owned file that exists and WILL be replaced because `--force`\nwas passed. It is distinct from `overwrite` because it is the only op that\ncan destroy work, and a dry run that calls it `overwrite` hides that."
             },
             "target": {
               "type": "string"

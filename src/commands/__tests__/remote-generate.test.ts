@@ -96,6 +96,7 @@ describe('remote:generate Command', () => {
     mockWriteFiles.mockResolvedValue({
       files: [{ path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }],
       skipped: [],
+      reseeded: [],
       errors: []
     });
     
@@ -190,6 +191,7 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [{ path: '/test/src/features/UserProfile.tsx', content: 'code', overwrite: false }],
         skipped: [],
+        reseeded: [],
         errors: []
       });
 
@@ -204,7 +206,8 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [],
         skipped: ['/test/src/features/UserProfile.tsx'],
-        errors: []
+        reseeded: [],
+      errors: []
       });
 
       await remoteGenerateCommand();
@@ -218,7 +221,8 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [],
         skipped: [],
-        errors: ['Failed to write file']
+        reseeded: [],
+      errors: ['Failed to write file']
       });
 
       await remoteGenerateCommand();

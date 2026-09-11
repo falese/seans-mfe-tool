@@ -67,22 +67,61 @@ export async function capabilityImplemented(
 }
 
 /**
- * Write generated files to disk
+ * Write the generation plan to disk.
+ *
+ * Ownership decides what happens to a file that already exists (ADR-043,
+ * ADR-077 §1); `force` decides whether the developer-owned half can be
+ * re-seeded (ADR-089).
+ *
+ * | exists | `overwrite` | `force` | outcome            |
+ * |--------|-------------|---------|--------------------|
+ * | no     | either      | either  | written            |
+ * | yes    | `true`      | either  | re-stamped         |
+ * | yes    | `false`     | no      | skipped — yours    |
+ * | yes    | `false`     | yes     | **re-seeded**      |
+ *
+ * Generator-owned files are re-stamped unconditionally and always were: ADR-043
+ * makes regeneration idempotent and `check:mfe-drift` requires those files to
+ * match a fresh generation at all times. `force` never had a role there, which
+ * is why it did nothing at all until ADR-089 gave it this one.
+ *
+ * `reseeded` is reported separately from `files` because it is the only outcome
+ * that can destroy work. A caller that cannot tell a re-seed from a first write
+ * cannot warn about it, and this flag is worth warning about.
+ *
+ * WHAT `force` STILL CANNOT REACH: a capability whose feature file already
+ * exists. Those never enter the plan — `generateAllFiles` omits them (see
+ * `capabilityImplemented`) rather than marking them — so a writer that walks
+ * the plan cannot touch them however it is called. That is the boundary between
+ * scaffolding, which the platform can re-seed, and domain implementation, which
+ * it must not (ADR-089 §3).
  */
 export async function writeGeneratedFiles(
   files: GeneratedFile[],
   options: { force?: boolean; dryRun?: boolean } = {}
-): Promise<{ files: GeneratedFile[]; skipped: string[]; errors: string[] }> {
-  const result: { files: GeneratedFile[]; skipped: string[]; errors: string[] } =
-    { files: [], skipped: [], errors: [] };
+): Promise<{
+  files: GeneratedFile[];
+  skipped: string[];
+  /** Developer-owned files that existed and were overwritten because of `force`. */
+  reseeded: string[];
+  errors: string[];
+}> {
+  const result: {
+    files: GeneratedFile[];
+    skipped: string[];
+    reseeded: string[];
+    errors: string[];
+  } = { files: [], skipped: [], reseeded: [], errors: [] };
+
   for (const file of files) {
     try {
       const exists = await fs.pathExists(file.path);
-      // overwrite:false = developer-owned; never touch it, even with --force.
-      // overwrite:true  = generated; skip if exists unless --force re-stamps it.
       if (exists && !file.overwrite) {
-        result.skipped.push(file.path);
-        continue;
+        if (!options.force) {
+          result.skipped.push(file.path);
+          continue;
+        }
+        result.reseeded.push(file.path);
       }
       if (options.dryRun) {
         result.files.push(file);

@@ -1,8 +1,9 @@
 /**
  * remote:init --framework angular tests
  *
- * Tests the unified remoteInitCommand with framework='angular'.
- * Also verifies that the deprecated init-angular command delegates correctly.
+ * Tests the unified remoteInitCommand with framework='angular' — the only way
+ * to scaffold an Angular MFE since the deprecated remote:init-angular alias was
+ * removed (ADR-036 made --framework the documented path).
  */
 
 import * as fs from 'fs-extra';

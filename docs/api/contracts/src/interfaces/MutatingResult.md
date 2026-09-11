@@ -6,7 +6,7 @@
 
 # Interface: MutatingResult
 
-Defined in: [packages/contracts/src/envelope.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L80)
+Defined in: [packages/contracts/src/envelope.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L87)
 
 Mixin added to every mutating command result.
 
@@ -16,7 +16,7 @@ Mixin added to every mutating command result.
 
 > **dryRun**: `boolean`
 
-Defined in: [packages/contracts/src/envelope.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L81)
+Defined in: [packages/contracts/src/envelope.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L88)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/contracts/src/envelope.ts:81](https://github.com/falese/se
 
 > `optional` **plannedChanges**: [`PlannedChange`](PlannedChange.md)[]
 
-Defined in: [packages/contracts/src/envelope.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L82)
+Defined in: [packages/contracts/src/envelope.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L89)

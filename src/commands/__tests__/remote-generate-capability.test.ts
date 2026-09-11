@@ -56,7 +56,7 @@ beforeEach(() => {
     files: [{ path: '/cwd/src/features/UserProfile/index.ts', content: '', overwrite: false }],
     preservedCapabilities: [],
   });
-  mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], errors: [] } as any);
+  mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], reseeded: [], errors: [] } as any);
 });
 
 describe('remoteGenerateCapabilityCommand', () => {
