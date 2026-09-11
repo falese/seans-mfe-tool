@@ -32,37 +32,26 @@ export async function renderTemplate(
 /**
  * Detect whether a domain capability is already realized in code.
  *
- * `remote:generate` should scaffold a capability's feature stub only when it
- * has not been implemented yet, and otherwise leave the file untouched. The
- * signal is the presence of an exported symbol matching the capability name in
- * its own feature file:
- *   - React:   `export const <Name>` / `function` / `class` / `default <Name>`
- *   - Angular: `export class <Name>Component`
+ * `remote:generate` scaffolds a capability's feature stub only when it has not
+ * been implemented, and otherwise leaves the file alone. The signal is an
+ * exported symbol matching the capability name — but *which* patterns count is
+ * a framework question (React exports a const or function; Angular exports a
+ * `<Name>Component` class), so the caller supplies them from the variant
+ * rather than this module branching on a framework id (ADR-091).
  *
  * Note: the generated stub already exports `<Name>`, so a capability counts as
- * "implemented" from the moment its file exists — which is the intended
- * hands-off behavior (features are user-owned once created). A missing file
- * means the capability has not been generated yet → returns false.
+ * implemented from the moment its file exists — the intended hands-off
+ * behaviour, features being user-owned once created. A missing file means the
+ * capability has not been generated yet.
  */
 export async function capabilityImplemented(
   componentFilePath: string,
   name: string,
-  variant: 'react-rspack' | 'angular-webpack',
+  patterns: readonly RegExp[],
 ): Promise<boolean> {
   if (!(await fs.pathExists(componentFilePath))) return false;
   const content = await fs.readFile(componentFilePath, 'utf8');
-  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const patterns =
-    variant === 'angular-webpack'
-      ? [new RegExp(`export\\s+(?:default\\s+)?class\\s+${esc}(?:Component)?\\b`)]
-      : [
-          // export const/let/var/function/class/default <Name>
-          new RegExp(`export\\s+(?:default\\s+)?(?:const|let|var|function|class)\\s+${esc}\\b`),
-          // export default <Name>
-          new RegExp(`export\\s+default\\s+${esc}\\b`),
-          // export { ... <Name> ... }
-          new RegExp(`export\\s*\\{[^}]*\\b${esc}\\b[^}]*\\}`),
-        ];
+  void name;
   return patterns.some((re) => re.test(content));
 }
 

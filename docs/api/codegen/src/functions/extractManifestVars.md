@@ -912,7 +912,7 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 ### templateVariant
 
-> **templateVariant**: `"react-rspack"` \| `"angular-webpack"` = `variant.templateVariant`
+> **templateVariant**: `string` = `variant.templateVariant`
 
 ### version
 

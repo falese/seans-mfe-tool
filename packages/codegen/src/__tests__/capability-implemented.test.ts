@@ -6,6 +6,13 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { capabilityImplemented } from '../unified-generator';
+import { reactRspack, angularWebpack } from '../variants';
+
+// The patterns are the variant's answer now, not a framework id the checker
+// branches on (ADR-091) — so these tests exercise the real variant tables
+// rather than a string the function interprets.
+const react = (name: string) => reactRspack.implementedPatterns(name);
+const angular = (name: string) => angularWebpack.implementedPatterns(name);
 
 let dir: string;
 
@@ -28,7 +35,7 @@ async function writeComponent(file: string, content: string): Promise<string> {
 describe('capabilityImplemented (react-rspack)', () => {
   it('returns false when the feature file does not exist', async () => {
     const missing = path.join(dir, 'PlayGame.tsx');
-    expect(await capabilityImplemented(missing, 'PlayGame', 'react-rspack')).toBe(false);
+    expect(await capabilityImplemented(missing, 'PlayGame', react('PlayGame'))).toBe(false);
   });
 
   it('returns true for the generated stub (export const + default)', async () => {
@@ -36,7 +43,7 @@ describe('capabilityImplemented (react-rspack)', () => {
       'PlayGame.tsx',
       `export const PlayGame: React.FC<PlayGameProps> = () => null;\nexport default PlayGame;\n`,
     );
-    expect(await capabilityImplemented(p, 'PlayGame', 'react-rspack')).toBe(true);
+    expect(await capabilityImplemented(p, 'PlayGame', react('PlayGame'))).toBe(true);
   });
 
   it('returns true for a hand-written implementation', async () => {
@@ -44,12 +51,12 @@ describe('capabilityImplemented (react-rspack)', () => {
       'PlayGame.tsx',
       `import React from 'react';\nexport const PlayGame: React.FC = () => {\n  return <canvas />;\n};\n`,
     );
-    expect(await capabilityImplemented(p, 'PlayGame', 'react-rspack')).toBe(true);
+    expect(await capabilityImplemented(p, 'PlayGame', react('PlayGame'))).toBe(true);
   });
 
   it('returns false when the file exists but exports no matching symbol', async () => {
     const p = await writeComponent('PlayGame.tsx', `export const SomethingElse = 1;\n`);
-    expect(await capabilityImplemented(p, 'PlayGame', 'react-rspack')).toBe(false);
+    expect(await capabilityImplemented(p, 'PlayGame', react('PlayGame'))).toBe(false);
   });
 });
 
@@ -59,11 +66,11 @@ describe('capabilityImplemented (angular-webpack)', () => {
       'PlayGame.component.ts',
       `@Component({})\nexport class PlayGameComponent {}\nexport default PlayGameComponent;\n`,
     );
-    expect(await capabilityImplemented(p, 'PlayGame', 'angular-webpack')).toBe(true);
+    expect(await capabilityImplemented(p, 'PlayGame', angular('PlayGame'))).toBe(true);
   });
 
   it('returns false when no matching class is exported', async () => {
     const p = await writeComponent('PlayGame.component.ts', `export class OtherComponent {}\n`);
-    expect(await capabilityImplemented(p, 'PlayGame', 'angular-webpack')).toBe(false);
+    expect(await capabilityImplemented(p, 'PlayGame', angular('PlayGame'))).toBe(false);
   });
 });

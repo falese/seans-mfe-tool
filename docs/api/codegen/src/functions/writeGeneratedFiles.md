@@ -8,7 +8,7 @@
 
 > **writeGeneratedFiles**(`files`, `options`): `Promise`\<\{ `errors`: `string`[]; `files`: [`GeneratedFile`](../interfaces/GeneratedFile.md)[]; `reseeded`: `string`[]; `skipped`: `string`[]; \}\>
 
-Defined in: [packages/codegen/src/template-io.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/template-io.ts#L99)
+Defined in: [packages/codegen/src/template-io.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/template-io.ts#L88)
 
 Write the generation plan to disk.
 

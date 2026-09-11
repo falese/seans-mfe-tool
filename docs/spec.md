@@ -318,6 +318,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-088](./architecture-decisions/ADR-088-coder-plugin-first-party-seam.md) | The coder-facing seam is a first-party in-repo plugin; coder's model engine stays external | Architecture / plugins / AI | Implemented |
 | [ADR-089](./architecture-decisions/ADR-089-force-re-seeds-developer-owned-scaffolding.md) | `--force` re-seeds developer-owned scaffolding from the current templates; capability implementation stays unreachable | Codegen / ownership / DX | Implemented |
 | [ADR-090](./architecture-decisions/ADR-090-one-mesh-classification-one-resolution-rule.md) | Mesh plugin/transform classification and framework-name resolution each have exactly one implementation; the framework plugin contract drops the members nothing calls | Codegen / contracts / validation | Implemented |
+| [ADR-091](./architecture-decisions/ADR-091-the-file-plan-is-data.md) | What the generator emits is a list of file specs owned by a variant, not a procedure with framework branches | Codegen / extensibility / ownership | Implemented |
 
 ### Proposed — filed, not ratified
 
