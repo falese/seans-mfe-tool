@@ -17,7 +17,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
-// Registers the BFF's file contribution (ADR-091 §6). A side-effect import:
+// Registers the BFF's file contribution (ADR-092 §2). A side-effect import:
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
@@ -190,9 +190,11 @@ export async function remoteGenerateCommand(
 
     console.log(chalk.blue('\nGenerating files...'));
     const frameworkVariant = resolveFrameworkVariant(manifest);
-    const { files: allFiles, preservedCapabilities } = await generateAllFiles(manifest, cwd, {
-      frameworkVariant,
-    });
+    const { files: allFiles, preservedCapabilities, diagnostics } = await generateAllFiles(
+      manifest,
+      cwd,
+      { frameworkVariant },
+    );
 
     if (options.dryRun) {
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
@@ -229,6 +231,15 @@ export async function remoteGenerateCommand(
       for (const cap of preservedCapabilities) {
         console.log(chalk.cyan(`  ${cap}`));
       }
+    }
+
+    // The generator reports; the CLI renders (ADR-092). Warnings it could not
+    // act on — a missing template, an unrecognised Mesh entry — surface here
+    // rather than being written to stdout from inside a library.
+    for (const d of diagnostics) {
+      const line = d.target ? `  ${d.target}: ${d.message}` : `  ${d.message}`;
+      console.log(d.severity === 'error' ? chalk.red(line) : chalk.yellow(line));
+      if (d.fix) console.log(chalk.gray(`      fix: ${d.fix}`));
     }
 
     if (genResult.reseeded.length > 0) {

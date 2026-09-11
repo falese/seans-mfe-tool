@@ -6,15 +6,15 @@
 
 # Interface: ResolvedPlan
 
-Defined in: [packages/codegen/src/file-plan.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L103)
+Defined in: [packages/codegen/src/file-plan.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L118)
 
 ## Properties
 
 ### diagnostics
 
-> **diagnostics**: [`PlanDiagnostic`](PlanDiagnostic.md)[]
+> **diagnostics**: [`GeneratorDiagnostic`](GeneratorDiagnostic.md)[]
 
-Defined in: [packages/codegen/src/file-plan.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L105)
+Defined in: [packages/codegen/src/file-plan.ts:120](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L120)
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: [packages/codegen/src/file-plan.ts:105](https://github.com/falese/se
 
 > **files**: [`PlannedFile`](PlannedFile.md)[]
 
-Defined in: [packages/codegen/src/file-plan.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L104)
+Defined in: [packages/codegen/src/file-plan.ts:119](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L119)

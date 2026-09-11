@@ -3,7 +3,7 @@
  * and the per-capability feature scaffolding.
  *
  * The BFF's specs used to live here too. They are a plugin's, and now live in
- * `@seans-mfe/plugin-bff` as a FileContributor (ADR-091 §6) — which is what
+ * `@seans-mfe/plugin-bff` as a FileContributor (ADR-092 §2) — which is what
  * removed the relative-path escape from this package into that one.
  *
  * These are shared because their *output paths* are variant-independent —

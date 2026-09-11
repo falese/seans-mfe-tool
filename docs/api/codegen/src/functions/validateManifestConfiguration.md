@@ -6,12 +6,24 @@
 
 # Function: validateManifestConfiguration()
 
-> **validateManifestConfiguration**(`manifest`): `void`
+> **validateManifestConfiguration**(`manifest`): `object`
 
-Defined in: [packages/codegen/src/manifest-validation.ts:147](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L147)
+Defined in: [packages/codegen/src/manifest-validation.ts:160](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L160)
 
-Comprehensive validation of manifest plugin/transform configuration
-Throws error if validation fails (protect code generation)
+Classify a manifest's Mesh plugins and transforms, and say whether
+generation may proceed (ADR-027, ADR-092).
+
+Returns rather than prints. It used to write four kinds of line to stdout
+and stderr — an emoji warnings heading, an emoji errors heading, the items
+under each, and a "✅ Manifest validation passed" summary on every single
+successful run. A library that narrates is not embeddable, and under
+`--json` that output lands in a stream the envelope contract reserves
+(ADR-018).
+
+It still refuses: the caller throws on `ok: false`. ADR-027's point is that
+generating from a bad configuration and discovering it at runtime, in a
+container, is the outcome worth preventing — reporting differently is not
+the same as permitting.
 
 ## Parameters
 
@@ -231,4 +243,12 @@ Throws error if validation fails (protect code generation)
 
 ## Returns
 
-`void`
+`object`
+
+### diagnostics
+
+> **diagnostics**: [`GeneratorDiagnostic`](../interfaces/GeneratorDiagnostic.md)[]
+
+### ok
+
+> **ok**: `boolean`

@@ -8,7 +8,7 @@
 
 > **resolveFilePlan**(`plan`, `options`): `Promise`\<[`ResolvedPlan`](../interfaces/ResolvedPlan.md)\>
 
-Defined in: [packages/codegen/src/file-plan.ts:123](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L123)
+Defined in: [packages/codegen/src/file-plan.ts:138](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L138)
 
 Turn a plan into concrete files.
 

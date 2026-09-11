@@ -93,16 +93,31 @@ export interface PlannedFile {
   overwrite: boolean;
 }
 
-export interface PlanDiagnostic {
+/**
+ * Something the generator has to say, returned instead of printed (ADR-092).
+ *
+ * Deliberately the same shape wherever it comes from — the file plan, manifest
+ * validation, a variant's missing slot template — so a caller renders one list
+ * rather than learning three reporting conventions. `severity` decides whether
+ * it blocks; `fix` is filled in by whoever can say what to do about it.
+ */
+export interface GeneratorDiagnostic {
   severity: 'warning' | 'error';
+  /** Stable, greppable kind — e.g. `missing-template`, `mesh-unknown`. */
+  code: string;
   message: string;
-  /** The spec's output path, so a reader knows which entry produced this. */
-  target: string;
+  /** What the diagnostic is about: an output path, a manifest field, a name. */
+  target?: string;
+  /** What to do about it, when that can be said concretely. */
+  fix?: string;
 }
+
+/** @deprecated Use {@link GeneratorDiagnostic}. */
+export type PlanDiagnostic = GeneratorDiagnostic;
 
 export interface ResolvedPlan {
   files: PlannedFile[];
-  diagnostics: PlanDiagnostic[];
+  diagnostics: GeneratorDiagnostic[];
 }
 
 /** Join without importing `path`, so this module stays trivially portable. */
@@ -126,7 +141,7 @@ export async function resolveFilePlan(
 ): Promise<ResolvedPlan> {
   const { basePath, roots, vars, ctx, io } = options;
   const files: PlannedFile[] = [];
-  const diagnostics: PlanDiagnostic[] = [];
+  const diagnostics: GeneratorDiagnostic[] = [];
 
   for (const spec of plan) {
     if (spec.when && !spec.when(ctx)) continue;
@@ -142,6 +157,7 @@ export async function resolveFilePlan(
     if (!spec.template) {
       diagnostics.push({
         severity: 'error',
+        code: 'invalid-spec',
         target: spec.out,
         message: `file plan entry for "${spec.out}" has neither a template nor content`,
       });
@@ -152,6 +168,7 @@ export async function resolveFilePlan(
     if (root === undefined) {
       diagnostics.push({
         severity: 'error',
+        code: 'unknown-template-root',
         target: spec.out,
         message: `file plan entry for "${spec.out}" names template root "${spec.root}", which is not configured`,
       });
@@ -163,6 +180,7 @@ export async function resolveFilePlan(
       if (!spec.optional) {
         diagnostics.push({
           severity: 'warning',
+          code: 'missing-template',
           target: spec.out,
           message: `missing template for ${spec.out}: ${templatePath}`,
         });

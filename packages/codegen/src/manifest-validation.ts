@@ -11,7 +11,8 @@
  */
 
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { ValidationError, classifyMeshEntry } from '@seans-mfe/contracts';
+import { classifyMeshEntry } from '@seans-mfe/contracts';
+import type { GeneratorDiagnostic } from './file-plan';
 
 /**
  * Validation result for plugin/transform classification
@@ -141,38 +142,41 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
 }
 
 /**
- * Comprehensive validation of manifest plugin/transform configuration
- * Throws error if validation fails (protect code generation)
+ * Classify a manifest's Mesh plugins and transforms, and say whether
+ * generation may proceed (ADR-027, ADR-092).
+ *
+ * Returns rather than prints. It used to write four kinds of line to stdout
+ * and stderr — an emoji warnings heading, an emoji errors heading, the items
+ * under each, and a "✅ Manifest validation passed" summary on every single
+ * successful run. A library that narrates is not embeddable, and under
+ * `--json` that output lands in a stream the envelope contract reserves
+ * (ADR-018).
+ *
+ * It still refuses: the caller throws on `ok: false`. ADR-027's point is that
+ * generating from a bad configuration and discovering it at runtime, in a
+ * container, is the outcome worth preventing — reporting differently is not
+ * the same as permitting.
  */
-export function validateManifestConfiguration(manifest: DSLManifest): void {
-  const pluginValidation = validateManifestPlugins(manifest);
-  const transformValidation = validateManifestTransforms(manifest);
+export function validateManifestConfiguration(manifest: DSLManifest): {
+  ok: boolean;
+  diagnostics: GeneratorDiagnostic[];
+} {
+  const plugins = validateManifestPlugins(manifest);
+  const transforms = validateManifestTransforms(manifest);
 
-  const allErrors = [...pluginValidation.errors, ...transformValidation.errors];
-  const allWarnings = [...pluginValidation.warnings, ...transformValidation.warnings];
+  const diagnostics: GeneratorDiagnostic[] = [
+    ...[...plugins.errors, ...transforms.errors].map((message) => ({
+      severity: 'error' as const,
+      code: 'mesh-misclassified',
+      message,
+      fix: 'Move the entry to the section its kind belongs in.',
+    })),
+    ...[...plugins.warnings, ...transforms.warnings].map((message) => ({
+      severity: 'warning' as const,
+      code: 'mesh-unknown',
+      message,
+    })),
+  ];
 
-  // Log warnings (non-fatal)
-  if (allWarnings.length > 0) {
-    console.warn('\n⚠️  Manifest Configuration Warnings:');
-    allWarnings.forEach((warning) => console.warn(`  - ${warning}`));
-  }
-
-  // Throw on errors (fatal - prevent bad generation)
-  if (allErrors.length > 0) {
-    console.error('\n❌ Manifest Configuration Errors:');
-    allErrors.forEach((error) => console.error(`  - ${error}`));
-    throw new ValidationError(
-      `Manifest validation failed with ${allErrors.length} error(s). ` +
-        `Please correct the plugin/transform configuration in your mfe-manifest.yaml.`,
-      'data',
-      'valid-plugin-transform-config'
-    );
-  }
-
-  // Log success for visibility
-  const totalPlugins = pluginValidation.classification.plugins.length;
-  const totalTransforms = transformValidation.classification.transforms.length;
-  console.log(
-    `✅ Manifest validation passed: ${totalPlugins} plugin(s), ${totalTransforms} transform(s)`
-  );
+  return { ok: !diagnostics.some((d) => d.severity === 'error'), diagnostics };
 }

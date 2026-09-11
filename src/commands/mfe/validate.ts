@@ -39,7 +39,7 @@ import type { SourceFile } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
 import type { MfeValidateResult } from '../../oclif/results';
 
-// Registers the BFF's file contribution (ADR-091 §6). A side-effect import:
+// Registers the BFF's file contribution (ADR-092 §2). A side-effect import:
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';

@@ -90,7 +90,7 @@ describe('remote:generate Command', () => {
         { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
         { path: '/test/src/remote.tsx', content: 'exports', overwrite: true },
       ],
-      preservedCapabilities: [],
+      preservedCapabilities: [], diagnostics: [],
     });
     
     mockWriteFiles.mockResolvedValue({

@@ -47,7 +47,7 @@ const KNOWN_ESCAPES: ReadonlyArray<{ file: string; reason: string }> = [
   // Empty, and that is the point. It held one entry — codegen reading
   // plugin-bff's templates through `../../../packages/plugin-bff/templates` —
   // until a plugin could contribute FileSpecs with its own template root
-  // (ADR-091 §6). The honesty test below is what forced this list to shrink
+  // (ADR-092 §2). The honesty test below is what forced this list to shrink
   // when the escape went, rather than leaving a stale allowance behind as
   // permission for the next one.
 ];

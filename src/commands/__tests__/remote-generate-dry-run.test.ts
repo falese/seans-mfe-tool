@@ -72,7 +72,7 @@ describe('remote:generate --dry-run plans what the writer will do (#340)', () =>
   const planFor = async (
     files: Array<{ path: string; content: string; overwrite: boolean }>,
   ) => {
-    mockGenerate.mockResolvedValue({ files, preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files, preservedCapabilities: [], diagnostics: [] } as never);
     const result = await remoteGenerateCommand({ dryRun: true });
     return result.plannedChanges ?? [];
   };

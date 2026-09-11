@@ -1,5 +1,5 @@
 /**
- * The BFF's contribution to MFE code generation (ADR-091 §6).
+ * The BFF's contribution to MFE code generation (ADR-092 §2).
  *
  * `remote:generate` emits BFF files into an MFE whose manifest declares a
  * `data:` section. Those files are the BFF's, not the core generator's — but

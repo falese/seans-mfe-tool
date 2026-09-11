@@ -34,7 +34,7 @@ jest.mock('@seans-mfe/codegen', () => ({
   // undefined would make this suite assert against a variant the platform
   // never produces.
   deriveBuiltinVariant: jest.requireActual('@seans-mfe/codegen').deriveBuiltinVariant,
-  // The BFF registers its file contribution on import (ADR-091 §6); a stubbed
+  // The BFF registers its file contribution on import (ADR-092 §2); a stubbed
   // registry would throw before the command under test ever runs.
   registerFileContributor: jest.fn(),
 }));
@@ -62,7 +62,7 @@ beforeEach(() => {
   mockParseAndValidate.mockResolvedValue({ valid: true, manifest: baseManifest as any, errors: [] });
   mockGenerateAllFiles.mockResolvedValue({
     files: [{ path: '/cwd/src/features/UserProfile/index.ts', content: '', overwrite: false }],
-    preservedCapabilities: [],
+    preservedCapabilities: [], diagnostics: [],
   });
   mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], reseeded: [], errors: [] } as any);
 });

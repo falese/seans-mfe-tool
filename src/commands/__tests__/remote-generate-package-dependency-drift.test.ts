@@ -93,7 +93,7 @@ describe('remote:generate warns when package.json drifts from the template rende
 
   it('reports a missing non-BFF dependency (framework pin), not just BFF ones', async () => {
     const pkgPath = writePackageJson({ express: '^4.18.2' }, { '@graphql-mesh/cli': '^0.100.21' });
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [pkgPath], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();
@@ -109,7 +109,7 @@ describe('remote:generate warns when package.json drifts from the template rende
       { react: '^18.0.0', 'react-dom': '~18.2.0', express: '^4.18.2' },
       { '@rspack/cli': '^1.7.0', '@graphql-mesh/cli': '^0.100.21' },
     );
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [pkgPath], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();
@@ -120,7 +120,7 @@ describe('remote:generate warns when package.json drifts from the template rende
 
   it('reports a missing BFF dependency alongside non-BFF ones in the same run', async () => {
     const pkgPath = writePackageJson({ react: '~18.2.0', 'react-dom': '~18.2.0' }, { '@rspack/cli': '^1.7.0' });
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [pkgPath], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();
@@ -135,7 +135,7 @@ describe('remote:generate warns when package.json drifts from the template rende
       { react: '~18.2.0', 'react-dom': '~18.2.0', express: '^4.18.2' },
       { '@rspack/cli': '^1.7.0', '@graphql-mesh/cli': '^0.100.21' },
     );
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [pkgPath], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();
@@ -149,7 +149,7 @@ describe('remote:generate warns when package.json drifts from the template rende
       { react: '~18.2.0', 'react-dom': '~18.2.0', express: '^4.18.2', lodash: '^4.17.21' },
       { '@rspack/cli': '^1.7.0', '@graphql-mesh/cli': '^0.100.21' },
     );
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [pkgPath], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();
@@ -161,7 +161,7 @@ describe('remote:generate warns when package.json drifts from the template rende
 
   it('says nothing when package.json was not among the skipped files', async () => {
     const pkgPath = writePackageJson({});
-    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files: [renderedPackageJson(pkgPath)], preservedCapabilities: [], diagnostics: [] } as never);
     mockWrite.mockResolvedValue({ files: [], skipped: [], reseeded: [], errors: [] });
 
     await remoteGenerateCommand();

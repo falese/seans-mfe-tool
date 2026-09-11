@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/codegen/src/manifest-validation.ts:19](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L19)
+Defined in: [packages/codegen/src/manifest-validation.ts:20](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L20)
 
 Validation result for plugin/transform classification
 
@@ -16,7 +16,7 @@ Validation result for plugin/transform classification
 
 > **classification**: `object`
 
-Defined in: [packages/codegen/src/manifest-validation.ts:23](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L23)
+Defined in: [packages/codegen/src/manifest-validation.ts:24](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L24)
 
 #### plugins
 
@@ -36,7 +36,7 @@ Defined in: [packages/codegen/src/manifest-validation.ts:23](https://github.com/
 
 > **errors**: `string`[]
 
-Defined in: [packages/codegen/src/manifest-validation.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L21)
+Defined in: [packages/codegen/src/manifest-validation.ts:22](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L22)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [packages/codegen/src/manifest-validation.ts:21](https://github.com/
 
 > **valid**: `boolean`
 
-Defined in: [packages/codegen/src/manifest-validation.ts:20](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L20)
+Defined in: [packages/codegen/src/manifest-validation.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L21)
 
 ***
 
@@ -52,4 +52,4 @@ Defined in: [packages/codegen/src/manifest-validation.ts:20](https://github.com/
 
 > **warnings**: `string`[]
 
-Defined in: [packages/codegen/src/manifest-validation.ts:22](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L22)
+Defined in: [packages/codegen/src/manifest-validation.ts:23](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L23)

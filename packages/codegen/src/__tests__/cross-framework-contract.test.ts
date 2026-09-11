@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import path from 'path';
 
 // These assertions are about BFF output, which is @seans-mfe/plugin-bff's
-// contribution now, not this package's (ADR-091 §6). Registered here by
+// contribution now, not this package's (ADR-092 §2). Registered here by
 // relative path because a test may reach across the monorepo where the
 // PACKAGE may not — the escape gate scans src/, not __tests__/. The tidier
 // end state is these cases living in plugin-bff beside the specs they cover.

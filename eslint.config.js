@@ -104,6 +104,12 @@ module.exports = tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
+      // These three packages are a library, not a CLI (ADR-092). A library
+      // that prints cannot be embedded: every consumer has to muzzle it, and
+      // under --json its output lands in the stream the envelope contract
+      // reserves for exactly one CommandResult line (ADR-018). They report
+      // through GeneratorDiagnostic; the CLI decides what reaches a terminal.
+      'no-console': 'error',
     },
   },
 );

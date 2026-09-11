@@ -9,7 +9,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
-// Registers the BFF's file contribution (ADR-091 §6). A side-effect import:
+// Registers the BFF's file contribution (ADR-092 §2). A side-effect import:
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';

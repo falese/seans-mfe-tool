@@ -28,7 +28,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import type { DSLManifest, DSLInput, DSLOutput } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
 // Constant data moved to ./catalog (ADR-050 DEPENDENCY_VERSIONS, ADR-027 Mesh
 // tables, #341 optional assets). Re-exported here so the module's public
 // surface — and `export * from './unified-generator'` in the barrel — is
@@ -57,7 +57,7 @@ export * from './file-plan';
 export * from './variants';
 export * from './contributors';
 import { fileContributors } from './contributors';
-import { resolveFilePlan, type FileSpec } from './file-plan';
+import { resolveFilePlan, type FileSpec, type GeneratorDiagnostic } from './file-plan';
 import {
   findVariant,
   reactRspack,
@@ -124,6 +124,12 @@ export interface GeneratedFile {
 export interface GenerateAllFilesResult {
   files: GeneratedFile[];
   preservedCapabilities: string[];
+  /**
+   * Everything the generator has to say about this run (ADR-092). Returned,
+   * never printed: the caller decides whether that means chalk on a terminal,
+   * a field in the JSON envelope, or nothing at all.
+   */
+  diagnostics: GeneratorDiagnostic[];
 }
 
 /**
@@ -155,12 +161,28 @@ export async function generateAllFiles(
   // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
   // Throws if validation fails (prevents bad configurations)
-  validateManifestConfiguration(manifest);
+  const configuration = validateManifestConfiguration(manifest);
+  if (!configuration.ok) {
+    // Reporting differently is not permitting: ADR-027 refuses to generate
+    // from a manifest whose plugins and transforms are misclassified, because
+    // the alternative is discovering it at runtime inside a container.
+    const errors = configuration.diagnostics.filter((d) => d.severity === 'error');
+    throw new ValidationError(
+      `Manifest validation failed with ${errors.length} error(s): ` +
+        errors.map((d) => d.message).join('; '),
+      'data',
+      'valid-plugin-transform-config',
+    );
+  }
 
   // Variant is injected by the CLI (ADR-061); default to the built-in trio.
   const variant = options.frameworkVariant ?? deriveBuiltinVariant(manifest);
   const model = planRenderModel(manifest, variant);
-  return renderFiles(manifest, basePath, model);
+  const rendered = await renderFiles(manifest, basePath, model);
+  return {
+    ...rendered,
+    diagnostics: [...configuration.diagnostics, ...rendered.diagnostics],
+  };
 }
 
 /**
@@ -288,7 +310,7 @@ async function renderFiles(
   const variant = findVariant(vars.templateVariant) ?? reactRspack;
   const templateDir = path.resolve(__dirname, '..', 'templates', variant.templateDirName);
 
-  // Whatever registered itself as a contributor (ADR-091 §6). Each brings its
+  // Whatever registered itself as a contributor (ADR-092 §2). Each brings its
   // own template root, resolved inside its own package, so nothing here names
   // a plugin or reaches outside this package for a template.
   const contributors = fileContributors();
@@ -331,9 +353,9 @@ async function renderFiles(
     }
     featurePlan.push(...featureSpecs(ctx, name));
   }
-  if (preservedCapabilities.length > 0) {
-    console.log(`Preserved (already implemented): ${preservedCapabilities.join(', ')}`);
-  }
+  // Deliberately not printed. `preservedCapabilities` is on the result and the
+  // CLI already renders it; printing here produced the line twice on every run
+  // that preserved anything (ADR-092).
 
   const plan: FileSpec[] = [
     ...featurePlan,
@@ -362,17 +384,16 @@ async function renderFiles(
     },
   });
 
-  // Phase 3 of the extraction plan replaces this with a Diagnostic[] on the
-  // result; until then the generator reports the way it always has.
-  for (const d of diagnostics) {
-    console.warn(`[unified-generator] WARNING: ${d.message}`);
-  }
   if (manifest.providesSlots?.length && !variant.slots) {
-    console.warn(
-      `[unified-generator] WARNING: manifest declares providesSlots but variant ` +
-        `"${variant.id}" ships no slots template`,
-    );
+    diagnostics.push({
+      severity: 'warning',
+      code: 'no-slots-template',
+      target: 'providesSlots',
+      message:
+        `manifest declares providesSlots but variant "${variant.id}" ships no slots template`,
+      fix: `Add a slots template to the "${variant.id}" variant, or remove providesSlots.`,
+    });
   }
 
-  return { files, preservedCapabilities };
+  return { files, preservedCapabilities, diagnostics };
 }
