@@ -4,6 +4,12 @@
 contract in this repository, and what that machinery does and does not
 guarantee.
 
+**Shareable rendering:** <https://claude.ai/code/artifact/04c36ade-cfbc-4705-8027-a006b434c14d>
+— the same material, typeset, with the two lane diagrams drawn rather than
+described in ASCII. **This file is canonical.** The rendering is a view of it and
+carries no fact this page does not; when they disagree, this page is right and
+the rendering is stale.
+
 **Citations.** Symbols, not line numbers — this page is prose, so nothing
 derives it and nothing gates it, and a line number is the part most likely to
 be wrong by the time you read it. The irony is the subject of §7.
