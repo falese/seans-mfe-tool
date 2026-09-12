@@ -202,10 +202,11 @@
     <p class="eyebrow">seans-mfe-tool · component schematics</p>
     <h1>Generator CLI Schematics</h1>
     <p class="lede">
-      Six drawings of how the CLI is put together: the packages and what depends
+      Seven drawings of how the CLI is put together: the packages and what depends
       on what, what happens when a command runs, how a manifest becomes files,
       where new frameworks and plugins attach, where the schemas come from, and
-      how an agent reaches the same commands a person does.
+      how an agent reaches the same commands a person does, and where the CLI
+      hands off to the running platform.
     </p>
   </header>
 
@@ -287,7 +288,7 @@
             <text x="267" y="283">the manifest language</text>
             <text x="267" y="295">Zod · composition compiler</text>
             <text x="401" y="283">file plan · variants</text>
-            <text x="401" y="295">56 templates</text>
+            <text x="401" y="295">44 templates</text>
             <text x="535" y="294">resolved at run time</text>
           </g>
 
@@ -354,8 +355,8 @@
           <path d="M700 146 L 700 294" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1t)"/>
           <path d="M804 260 L 804 294" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
 
-          <text x="752" y="404" font-size="9" text-anchor="middle" fill="var(--ink-3)">generated code has one platform import specifier,</text>
-          <text x="752" y="418" font-size="9" text-anchor="middle" fill="var(--ink-3)">and never imports codegen</text>
+          <text x="752" y="404" font-size="9" text-anchor="middle" fill="var(--ink-3)">generated code imports one package and never codegen:</text>
+          <text x="752" y="417" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime, plus /react and /angular</text>
         </svg>
       </div>
       <figcaption>
@@ -860,6 +861,154 @@
     </figure>
   </section>
 
+
+  <!-- ============ FIG 7 — runtime integration ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 7 — runtime integration</span>
+    <h2>Where the CLI stops and the platform takes over</h2>
+    <p class="claim">
+      The CLI runs at build time and is absent at run time. It writes two things
+      the platform later consumes: an MFE that imports the runtime, and a compiled
+      registry payload. Nothing in <code>src/</code> or <code>packages/codegen</code>
+      is loaded by a running fleet.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 430" role="img" aria-label="Build time and run time, separated. At build time the CLI turns a manifest into a generated MFE that imports the runtime package, and turns a control-plane composition document plus the fleet's manifests into a compiled rules.json registry payload. At run time the registry serves that payload, the daemon pushes composition over graphql-ws to a shell's LayoutManager, the shell mounts MFE instances into slots, and each MFE pushes state back through the updateControlPlaneState capability. The CLI is not present at run time.">
+          <defs>
+            <marker id="r7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="r7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+            <marker id="r7d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--dev)"/>
+            </marker>
+          </defs>
+
+          <!-- ---------- build time ---------- -->
+          <text x="16" y="24" font-size="10.5" fill="var(--accent)">BUILD TIME — the CLI</text>
+          <line x1="16" y1="32" x2="864" y2="32" stroke="var(--rule)"/>
+
+          <rect x="16" y="52" width="150" height="42" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="91" y="70" font-size="10" text-anchor="middle" fill="currentColor">mfe-manifest.yaml</text>
+          <text x="91" y="84" font-size="8" text-anchor="middle" fill="var(--ink-3)">one per MFE</text>
+
+          <rect x="16" y="112" width="150" height="42" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="91" y="130" font-size="10" text-anchor="middle" fill="currentColor">control-plane.yaml</text>
+          <text x="91" y="144" font-size="8" text-anchor="middle" fill="var(--ink-3)">one per fleet</text>
+
+          <rect x="216" y="52" width="164" height="42" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="298" y="70" font-size="10" text-anchor="middle" fill="var(--accent)">remote:generate</text>
+          <text x="298" y="84" font-size="8" text-anchor="middle" fill="var(--ink-3)">codegen</text>
+
+          <rect x="216" y="112" width="164" height="42" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="298" y="130" font-size="10" text-anchor="middle" fill="var(--accent)">compose:build</text>
+          <text x="298" y="143" font-size="8" text-anchor="middle" fill="var(--ink-3)">dsl control-plane-compiler</text>
+
+          <rect x="432" y="46" width="176" height="56" rx="2" fill="var(--surface)" stroke="var(--gen)"/>
+          <text x="520" y="66" font-size="10.5" text-anchor="middle" fill="var(--gen)">a generated MFE</text>
+          <text x="520" y="81" font-size="8" text-anchor="middle" fill="var(--ink-3)">imports @seans-mfe-tool/runtime</text>
+          <text x="520" y="93" font-size="8" text-anchor="middle" fill="var(--ink-3)">+ /react or /angular</text>
+
+          <rect x="432" y="112" width="176" height="42" rx="2" fill="var(--surface)" stroke="var(--gen)"/>
+          <text x="520" y="130" font-size="10.5" text-anchor="middle" fill="var(--gen)">control-plane/rules.json</text>
+          <text x="520" y="144" font-size="8" text-anchor="middle" fill="var(--ink-3)">the registry payload (ADR-083)</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#r7)" stroke-opacity="0.55">
+            <path d="M166 73 L 210 73"/>
+            <path d="M166 133 L 210 133"/>
+          </g>
+          <g stroke="var(--accent)" fill="none" marker-end="url(#r7a)">
+            <path d="M380 73 L 426 73"/>
+            <path d="M380 133 L 426 133"/>
+          </g>
+          <path d="M91 112 L 91 100 L 210 100 L 210 120" stroke="currentColor" stroke-opacity="0.3" fill="none" stroke-dasharray="2 3"/>
+          <text x="120" y="110" font-size="7.5" fill="var(--ink-3)">+ every manifest in the fleet</text>
+
+          <text x="736" y="66" font-size="9" fill="var(--ink-3)">compose:validate --check</text>
+          <text x="736" y="79" font-size="9" fill="var(--ink-3)">check:mfe-drift</text>
+          <text x="736" y="92" font-size="9" fill="var(--ink-3)">check:mfe-consistency</text>
+          <text x="736" y="118" font-size="8.5" fill="var(--ink-3)">both artifacts are generated</text>
+          <text x="736" y="130" font-size="8.5" fill="var(--ink-3)">and gated; neither is</text>
+          <text x="736" y="142" font-size="8.5" fill="var(--ink-3)">hand-edited</text>
+          <line x1="620" y1="52" x2="620" y2="154" stroke="var(--rule)" stroke-dasharray="3 3"/>
+
+          <!-- ---------- the boundary ---------- -->
+          <rect x="16" y="182" width="848" height="26" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="440" y="199" font-size="10" text-anchor="middle" fill="var(--blocked)">the CLI exits here — nothing under src/ or packages/codegen is loaded by a running fleet</text>
+
+          <!-- ---------- run time ---------- -->
+          <text x="16" y="238" font-size="10.5" fill="var(--dev)">RUN TIME — the platform</text>
+          <line x1="16" y1="246" x2="864" y2="246" stroke="var(--rule)"/>
+
+          <rect x="16" y="268" width="160" height="62" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="96" y="288" font-size="10" text-anchor="middle" fill="currentColor">registry</text>
+          <line x1="32" y1="296" x2="160" y2="296" stroke="var(--rule)"/>
+          <text x="96" y="312" font-size="8" text-anchor="middle" fill="var(--ink-3)">serves rules.json</text>
+          <text x="96" y="324" font-size="8" text-anchor="middle" fill="var(--ink-3)">packages/control-plane</text>
+
+          <rect x="216" y="268" width="160" height="62" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="296" y="288" font-size="10" text-anchor="middle" fill="currentColor">daemon</text>
+          <line x1="232" y1="296" x2="360" y2="296" stroke="var(--rule)"/>
+          <text x="296" y="312" font-size="8" text-anchor="middle" fill="var(--ink-3)">pushes composition</text>
+          <text x="296" y="324" font-size="8" text-anchor="middle" fill="var(--ink-3)">over graphql-ws</text>
+
+          <rect x="416" y="262" width="180" height="74" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+          <text x="506" y="282" font-size="10.5" text-anchor="middle" fill="var(--dev)">the shell</text>
+          <line x1="432" y1="290" x2="580" y2="290" stroke="var(--dev)" stroke-opacity="0.4"/>
+          <text x="506" y="306" font-size="8.5" text-anchor="middle" fill="currentColor">LayoutManager</text>
+          <text x="506" y="319" font-size="8" text-anchor="middle" fill="var(--ink-3)">GraphQLTransportWsDaemonTransport</text>
+          <text x="506" y="331" font-size="8" text-anchor="middle" fill="var(--ink-3)">binds experiences to slot addresses</text>
+
+          <rect x="636" y="262" width="180" height="74" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+          <text x="726" y="282" font-size="10.5" text-anchor="middle" fill="var(--gen)">the MFE instance</text>
+          <line x1="652" y1="290" x2="800" y2="290" stroke="var(--gen)" stroke-opacity="0.4"/>
+          <text x="726" y="306" font-size="8.5" text-anchor="middle" fill="currentColor">RemoteMFE / AngularRemoteMFE</text>
+          <text x="726" y="319" font-size="8" text-anchor="middle" fill="var(--ink-3)">extends BaseMFE — the lifecycle</text>
+          <text x="726" y="331" font-size="8" text-anchor="middle" fill="var(--ink-3)">packages/runtime</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#r7)" stroke-opacity="0.55">
+            <path d="M176 299 L 210 299"/>
+          </g>
+          <g stroke="var(--dev)" fill="none" marker-end="url(#r7d)">
+            <path d="M376 299 L 410 299"/>
+          </g>
+          <path d="M596 288 L 630 288" stroke="var(--dev)" fill="none" marker-end="url(#r7d)"/>
+          <text x="613" y="280" font-size="7.5" text-anchor="middle" fill="var(--ink-3)">mount</text>
+
+          <path d="M726 336 L 726 358 L 96 358 L 96 336" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" marker-end="url(#r7)"/>
+          <text x="412" y="354" font-size="8.5" text-anchor="middle" fill="var(--gen)">updateControlPlaneState — the MFE pushes state back (pushControlPlaneState sugar)</text>
+
+          <!-- the build-time artifacts feeding run time -->
+          <path d="M520 154 L 520 172" stroke="var(--gen)" fill="none" stroke-dasharray="3 3"/>
+          <path d="M96 212 L 96 262" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" marker-end="url(#r7)"/>
+          <path d="M726 212 L 726 256" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" marker-end="url(#r7)"/>
+          <text x="112" y="232" font-size="8" fill="var(--gen)">rules.json</text>
+          <text x="742" y="232" font-size="8" fill="var(--gen)">the built MFE bundle</text>
+
+          <text x="440" y="404" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">
+            the manifest is the only thing an author writes on the left; everything the right reads was generated from it
+          </text>
+        </svg>
+      </div>
+      <div class="key">
+        <span><i class="swatch sw-gen"></i> generated artifact</span>
+        <span><i class="swatch sw-dev"></i> host-side runtime</span>
+        <span><i class="swatch sw-blocked"></i> the build / run boundary</span>
+      </div>
+      <figcaption>
+        Two artifacts cross the boundary and nothing else does. The CLI's own code
+        is a build dependency, never a runtime one, which is what lets the tooling
+        be replaced without touching a deployed fleet. See
+        <a href="derived-contracts.html">Schema &amp; Contract Architecture</a> for
+        what the runtime barrel re-exports to generated code.
+      </figcaption>
+    </figure>
+  </section>
+
   <!-- ============ closing table ============ -->
   <section class="fig">
     <span class="fignum">Reference</span>
@@ -882,7 +1031,10 @@
           <tr><td>Command schema derivation</td><td><code>scripts/generate-schemas.ts</code></td><td class="n">5</td></tr>
           <tr><td>Manifest schema derivation</td><td><code>scripts/generate-dsl-schema.ts</code></td><td class="n">5</td></tr>
           <tr><td>Agent tool surface</td><td><code>src/mcp/server.ts</code>, <code>src/mcp/tool-registry.ts</code></td><td class="n">6</td></tr>
-          <tr><td>Lifecycle barrel generated code imports</td><td><code>packages/runtime/src/index.ts</code></td><td class="n">1</td></tr>
+          <tr><td>Lifecycle barrel generated code imports</td><td><code>packages/runtime/src/index.ts</code></td><td class="n">1, 7</td></tr>
+          <tr><td>Composition compiler</td><td><code>packages/dsl/src/control-plane-compiler.ts</code></td><td class="n">7</td></tr>
+          <tr><td>Registry and daemon services</td><td><code>packages/control-plane/</code></td><td class="n">7</td></tr>
+          <tr><td>Shell-side composition</td><td><code>packages/runtime/src/layout-manager.ts</code></td><td class="n">7</td></tr>
         </tbody>
       </table>
     </div>
