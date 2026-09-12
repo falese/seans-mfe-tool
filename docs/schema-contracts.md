@@ -267,6 +267,13 @@ A generated MFE never imports `codegen` or `contracts`. It imports
    (types)     (barrel)      (import specifier)
 ```
 
+`runtime` imports `@seans-mfe/contracts` in 22 source files and declares no
+dependency on it. The dependency is satisfied by vendoring:
+`scripts/copy-runtime-files.js` copies `packages/contracts/dist` and its
+`package.json` into `dist/runtime/node_modules/@seans-mfe/contracts` after the
+build. A generated `package.json` therefore declares one platform dependency,
+`@seans-mfe-tool/runtime`, and resolves both.
+
 What arrives that way:
 
 | Generated code imports | Defined in | Reaches it via |

@@ -770,6 +770,16 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
 <pre><code>contracts  &rarr;  runtime  &rarr;  the generated MFE
  (types)      (barrel)      (import specifier)</code></pre>
 
+    <p>
+      <code>runtime</code> imports <code>@seans-mfe/contracts</code> in 22 source
+      files and declares no dependency on it. The dependency is satisfied by
+      vendoring: <code>scripts/copy-runtime-files.js</code> copies
+      <code>packages/contracts/dist</code> and its <code>package.json</code> into
+      <code>dist/runtime/node_modules/@seans-mfe/contracts</code> after the build.
+      A generated <code>package.json</code> therefore declares one platform
+      dependency, <code>@seans-mfe-tool/runtime</code>, and resolves both.
+    </p>
+
     <div class="scroll">
       <table>
         <thead><tr><th class="mono">Generated code imports</th><th class="mono">Defined in</th><th>Reaches it via</th></tr></thead>

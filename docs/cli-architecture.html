@@ -223,7 +223,7 @@
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 470" role="img" aria-label="A layered package graph. Contracts is a full-width foundation rail that every package above depends on. Above it sit dsl, codegen, oclif-base and the two framework packages; above those the four oclif plugins; and at the top the CLI itself. Runtime and control-plane are separate deployables: generated MFEs import runtime at build time and register with the control plane at run time.">
+        <svg viewBox="0 0 880 470" role="img" aria-label="A layered package graph. Contracts is a full-width foundation rail that every package above depends on. Above it sit dsl, codegen, oclif-base and the two framework packages; above those the four oclif plugins; and at the top the CLI itself. Runtime and control-plane are separate deployables. Runtime also depends on contracts, and ships a copy of it vendored inside its own node_modules, so a generated MFE declares one platform dependency and receives both.">
           <defs>
             <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
@@ -296,7 +296,14 @@
           <rect x="76" y="340" width="516" height="46" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
           <text x="334" y="362" font-size="11.5" text-anchor="middle" fill="currentColor">contracts</text>
           <text x="334" y="377" font-size="9" text-anchor="middle" fill="var(--ink-3)">typed errors · envelope · platform contract · slot grammar · mesh catalogue</text>
-          <text x="334" y="404" font-size="9.5" text-anchor="middle" fill="var(--accent)">every package above depends on contracts — it depends on nothing</text>
+          <text x="334" y="404" font-size="9.5" text-anchor="middle" fill="var(--accent)">every package here depends on contracts, runtime included. it depends on nothing.</text>
+
+          <!-- contracts -> runtime: a real source dependency with no package edge -->
+          <path d="M592 356 L 608 356 L 608 112 L 638 112"
+                stroke="var(--accent)" fill="none" stroke-dasharray="5 3" marker-end="url(#p1t)"/>
+          <text x="604" y="196" font-size="8" text-anchor="end" fill="var(--accent)">vendored</text>
+          <text x="604" y="207" font-size="7.5" text-anchor="end" fill="var(--ink-3)">into dist/runtime/</text>
+          <text x="604" y="217" font-size="7.5" text-anchor="end" fill="var(--ink-3)">node_modules/</text>
 
           <!-- edges -->
           <g stroke="currentColor" fill="none" marker-end="url(#p1)" stroke-opacity="0.5">
@@ -334,12 +341,13 @@
           <line x1="628" y1="36" x2="628" y2="440" stroke="var(--rule)" stroke-dasharray="3 4"/>
           <text x="644" y="46" font-size="9" fill="var(--ink-3)">separate deployables — not linked into the CLI</text>
 
-          <rect x="644" y="60" width="216" height="86" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
-          <text x="752" y="82" font-size="11.5" text-anchor="middle" fill="var(--accent)">runtime</text>
-          <text x="752" y="97" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime</text>
-          <line x1="660" y1="106" x2="844" y2="106" stroke="var(--rule)"/>
-          <text x="752" y="123" font-size="9.5" text-anchor="middle" fill="currentColor">the lifecycle barrel</text>
-          <text x="752" y="138" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">re-exports the contracts errors</text>
+          <rect x="644" y="56" width="216" height="96" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="752" y="78" font-size="11.5" text-anchor="middle" fill="var(--accent)">runtime</text>
+          <text x="752" y="93" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime</text>
+          <line x1="660" y1="102" x2="844" y2="102" stroke="var(--rule)"/>
+          <text x="752" y="118" font-size="9.5" text-anchor="middle" fill="currentColor">the lifecycle barrel</text>
+          <text x="752" y="132" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">imports contracts in 22 source files</text>
+          <text x="752" y="145" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">and ships a copy of it inside itself</text>
 
           <rect x="644" y="182" width="216" height="78" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
           <text x="752" y="204" font-size="11.5" text-anchor="middle" fill="currentColor">control-plane</text>
@@ -355,16 +363,24 @@
           <path d="M700 146 L 700 294" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1t)"/>
           <path d="M804 260 L 804 294" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
 
-          <text x="752" y="404" font-size="9" text-anchor="middle" fill="var(--ink-3)">generated code imports one package and never codegen:</text>
-          <text x="752" y="417" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime, plus /react and /angular</text>
+          <text x="752" y="398" font-size="9" text-anchor="middle" fill="var(--ink-3)">a generated package.json declares ONE platform</text>
+          <text x="752" y="410" font-size="9" text-anchor="middle" fill="var(--ink-3)">dependency — @seans-mfe-tool/runtime — and gets</text>
+          <text x="752" y="422" font-size="9" text-anchor="middle" fill="var(--ink-3)">contracts with it. codegen is never a dependency.</text>
         </svg>
       </div>
       <figcaption>
         <code>runtime</code> is the only package a generated MFE imports. The
         lifecycle contract, the slot contract and the capability result types all
-        arrive through that one barrel. <code>control-plane</code> is a pair of
-        GraphQL services a fleet deploys, not a library anything here links
-        against.
+        arrive through that one barrel.
+        <strong>Contracts arrives with it.</strong> <code>runtime</code> imports
+        <code>@seans-mfe/contracts</code> in 22 source files, declares no
+        dependency on it, and instead ships a copy vendored at
+        <code>dist/runtime/node_modules/@seans-mfe/contracts</code> —
+        <code>scripts/copy-runtime-files.js</code> puts it there after the build.
+        That is why the contracts rail reaches across the divider, and why an MFE
+        that declares one platform dependency resolves both.
+        <code>control-plane</code> is a pair of GraphQL services a fleet deploys,
+        not a library anything here links against.
       </figcaption>
     </figure>
   </section>
