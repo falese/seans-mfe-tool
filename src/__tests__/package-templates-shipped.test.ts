@@ -18,8 +18,8 @@
  *                           depends on codegen (a cycle npm cannot see).
  *
  * Both are now fixed — plugin-bff ships its templates, and the escape went when
- * the BFF became a FileContributor resolving its own template root (ADR-091
- * §6). `KNOWN_ESCAPES` is consequently empty, and the pair of tests below is
+ * the BFF became a FileContributor resolving its own template root (ADR-092
+ * §2). `KNOWN_ESCAPES` is consequently empty, and the pair of tests below is
  * what keeps it that way: one fails on a NEW escape, the other fails on a
  * STALE allowance, so an exception cannot outlive the defect it excused.
  */
