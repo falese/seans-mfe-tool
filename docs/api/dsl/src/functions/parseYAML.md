@@ -116,7 +116,7 @@ Parsed DSL manifest (unvalidated)
 
 ### language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 ### name
 
@@ -232,7 +232,7 @@ Parsed DSL manifest (unvalidated)
 
 ### type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 ### version
 

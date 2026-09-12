@@ -325,6 +325,13 @@ jobs:
         # because this check existed but was never wired in (ADR-073 §6).
         run: npm run build:schema:dsl:check
 
+      - name: Manifest field reference is current
+        # Generated from the Zod schema (finding B5). Three hand-written
+        # documents described this language and each fell behind it — the one
+        # calling itself the complete platform contract did not know the slot
+        # contract existed. This page cannot drift without failing here.
+        run: npm run build:manifest-reference:check
+
       - name: MFE drift gate — generator-owned files match their manifests
         # Regenerates every MFE from its mfe-manifest.yaml and fails if any
         # generator-owned file (overwrite:true — the platform-contract shims:
@@ -342,6 +349,16 @@ jobs:
         # A diff here is never noise; regenerate with `npm run build:codegen-snapshot`
         # and review it as part of the change.
         run: npm run build:codegen-snapshot:check
+
+      - name: Published packages can generate an MFE
+        # Every other gate runs from a monorepo checkout, where a path resolves
+        # whether or not the file would ship. This packs contracts/dsl/codegen/
+        # plugin-bff, unpacks them into a scratch node_modules with nothing else
+        # in it, and generates a real MFE from only what came out of the
+        # tarballs — asserting no module resolved back into the checkout.
+        # It is the gate that would have caught plugin-bff shipping zero
+        # templates, and codegen reaching outside its own package for them.
+        run: npm run check:publish-shape
 
       - name: Slot placement targets resolve to declared slots
         # Every registry rule's resolve.props.slot must name an address some

@@ -116,7 +116,7 @@ Defined in: [packages/runtime/src/capability-results.ts:80](https://github.com/f
 
 #### language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 #### name
 
@@ -232,7 +232,7 @@ Defined in: [packages/runtime/src/capability-results.ts:80](https://github.com/f
 
 #### type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 #### version
 

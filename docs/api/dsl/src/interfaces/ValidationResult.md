@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:479](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L479)
+Defined in: [packages/dsl/src/schema.ts:491](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L491)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:481](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L481)
+Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L493)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:481](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:482](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L482)
+Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L494)
 
 #### authorization?
 
@@ -116,7 +116,7 @@ Defined in: [packages/dsl/src/schema.ts:482](https://github.com/falese/seans-mfe
 
 #### language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 #### name
 
@@ -232,7 +232,7 @@ Defined in: [packages/dsl/src/schema.ts:482](https://github.com/falese/seans-mfe
 
 #### type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 #### version
 
@@ -244,4 +244,4 @@ Defined in: [packages/dsl/src/schema.ts:482](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:480](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L480)
+Defined in: [packages/dsl/src/schema.ts:492](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L492)

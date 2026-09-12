@@ -76,7 +76,7 @@ export type { PlatformCapability } from '@seans-mfe/contracts';
 export const DSLInputSchema = z.object({
   name: z.string(),
   type: z.string(),  // DSL type string (e.g., 'string!', 'array<User!>!')
-  description: z.string().optional(),
+  description: z.string().optional().describe('Human-readable summary shown in describe output.'),
   default: z.unknown().optional(),
   values: z.array(z.string()).optional(),  // For enum types
   formats: z.array(z.string()).optional()  // For file types
@@ -414,43 +414,55 @@ export type ProvidesSlots = z.infer<typeof ProvidesSlotsSchema>;
 /** Complete MFE DSL manifest */
 export const DSLManifestSchema = z.object({
   // Core identity (required)
-  name: z.string().min(1, 'Name is required'),
-  version: z.string().regex(/^\d+\.\d+\.\d+/, 'Version must be semver (e.g., 1.0.0)'),
-  type: MFETypeSchema,
-  language: LanguageSchema,
+  name: z.string().min(1, 'Name is required')
+    .describe('Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case.'),
+  version: z.string().regex(/^\d+\.\d+\.\d+/, 'Version must be semver (e.g., 1.0.0)')
+    .describe('Manifest version. Bump on any breaking change to capability inputs or outputs.'),
+  type: MFETypeSchema.describe('Architectural role of this MFE.'),
+  language: LanguageSchema.describe('Implementation language. Only javascript/typescript generate code today.'),
 
   // UI framework + bundler (omit ⇒ react + rspack for back-compat).
   // Drives codegen template variant selection in UnifiedGenerator.
-  framework: FrameworkSchema.optional(),
-  bundler: BundlerSchema.optional(),
+  framework: FrameworkSchema.optional()
+    .describe('UI framework. Open string — an unknown value warns rather than failing (ADR-036). Omitted defaults to react.'),
+  bundler: BundlerSchema.optional()
+    .describe('Build tool. Open string, same policy as framework. Omitted defaults to rspack.'),
 
   // Optional identity
   description: z.string().optional(),
-  owner: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  category: z.string().optional(),
+  owner: z.string().optional().describe('Team or individual responsible. Used for impact analysis (ADR-008).'),
+  tags: z.array(z.string()).optional().describe('Arbitrary labels for registry search and impact analysis.'),
+  category: z.string().optional().describe('Domain grouping for discovery and the marketplace.'),
   
   // Endpoints (required for runtime, generated for new projects)
-  endpoint: z.string().url().optional(),
-  remoteEntry: z.string().url().optional(),
-  discovery: z.string().url().optional(),
+  endpoint: z.string().url().optional()
+    .describe('Base URL this MFE is served from. Also sets the generated dev-server port and the BFF origin.'),
+  remoteEntry: z.string().url().optional().describe('Module Federation remote entry URL.'),
+  discovery: z.string().url().optional().describe('URL of the MFE\'s .well-known manifest, for discovery.'),
   
   // Core sections
-  capabilities: z.array(CapabilityEntrySchema),
-  dependencies: DependenciesSchema.optional(),
-  data: DataConfigSchema.optional(),
+  capabilities: z.array(CapabilityEntrySchema)
+    .describe('The domain and platform capabilities this MFE implements. Drives feature-file generation.'),
+  dependencies: DependenciesSchema.optional()
+    .describe('Runtime, design-system and federated-MFE dependencies. Versions flow into the generated package.json.'),
+  data: DataConfigSchema.optional()
+    .describe('GraphQL Mesh configuration. Its presence is what makes the generator emit a BFF.'),
 
   // Slot contract: the named regions this MFE registers at runtime via
   // provideSlot (ADR-058). Declared here so codegen emits the registration
   // and registry rules validate placement targets at design time (ADR-067).
-  providesSlots: ProvidesSlotsSchema.optional(),
+  providesSlots: ProvidesSlotsSchema.optional()
+    .describe('Named regions this MFE registers at runtime for others to fill (ADR-058, ADR-067).'),
   
   // Performance & observability config (ADR-027)
-  performance: PerformanceConfigSchema.optional(),
-  transforms: z.array(CustomTransformSchema).optional(),
+  performance: PerformanceConfigSchema.optional()
+    .describe('Caching, observability and rate-limiting config. Mesh plugins and transforms are derived from it (ADR-027).'),
+  transforms: z.array(CustomTransformSchema).optional()
+    .describe('Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-090).'),
   
   // Future sections (deferred)
-  authorization: z.unknown().optional()  // ADR-007
+  authorization: z.unknown().optional()
+    .describe('Reserved. Deferred by ADR-007; accepted and ignored.')
 });
 export type DSLManifest = z.infer<typeof DSLManifestSchema>;
 

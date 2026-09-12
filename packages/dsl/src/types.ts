@@ -1,7 +1,9 @@
 /**
  * DSL Type Definitions
  * Following ADR-014: Incremental TypeScript migration
- * Reference: docs/dsl-schema-reference.md v3.2
+ * Field reference: docs/schemas/manifest-fields.md (generated from the Zod
+ * schema). The doc this line used to cite was at a path that never existed, and
+ * described a version of the language three fields behind it — finding B5.
  * 
  * Re-exports types from schema.ts (Zod-derived) for backward compatibility.
  * Import from './schema' for validation, from './types' for types only.

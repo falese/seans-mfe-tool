@@ -138,7 +138,7 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 #### language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 #### name
 
@@ -254,7 +254,7 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 #### type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 #### version
 
