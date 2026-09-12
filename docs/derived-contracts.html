@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Derived Contracts</title>
+<title>Schema &amp; Contract Architecture</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%230A8272%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%278%27%20width%3D%2720%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2714.5%27%20width%3D%2713%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2721%27%20width%3D%2717%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3C%2Fsvg%3E">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
@@ -194,28 +194,8 @@
     font-family: var(--display); font-weight: 600;
     display: block; margin-bottom: 0.3rem; font-size: 0.97rem;
   }
-  .warn { border-left-color: var(--authored); background: var(--authored-bg); }
-  .warn b { color: var(--authored); }
 
-  blockquote.evidence {
-    margin: 1.5rem 0; padding: 1.1rem 1.3rem; max-width: var(--measure);
-    border: 1px solid var(--authored); background: var(--authored-bg);
-  }
-  blockquote.evidence p { margin-bottom: 0.7rem; font-size: 0.97rem; }
-  blockquote.evidence p:last-child { margin-bottom: 0; }
-  blockquote.evidence .tag {
-    font-family: var(--mono);
-    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--authored); font-weight: 600; display: block; margin-bottom: 0.5rem;
-  }
 
-  /* ---------- failure ledger ---------- */
-  .ledger { list-style: none; padding: 0; margin: 1.3rem 0; max-width: var(--measure); }
-  .ledger li {
-    border-left: 2px solid var(--authored); padding: 0.15rem 0 0.15rem 0.9rem;
-    margin-bottom: 0.9rem; font-size: 0.95rem;
-  }
-  .ledger code { font-size: 0.8em; }
 
   .key {
     display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
@@ -247,158 +227,243 @@
   <a class="site-back" href="index.html">&larr; Documentation home</a>
 
   <header class="sheet">
-    <p class="eyebrow">seans-mfe-tool · reference</p>
-    <h1>Derived Contracts</h1>
+    <p class="eyebrow">seans-mfe-tool &middot; architecture reference</p>
+    <h1>Schema &amp; Contract Architecture</h1>
     <p class="lede">
-      How this repository generates its published contracts, and what that does
-      and doesn't catch.
+      The types, schemas and generated artifacts that describe what commands accept
+      and return, what a manifest may contain, and how those facts reach the
+      runtime, the plugins and an agent.
     </p>
   </header>
 
   <div class="rule-card">
-    <p class="sub">The rule</p>
+    <p class="sub">How every contract here is produced</p>
     <p>
-      Every published contract is generated from the code that enforces it, and a
-      gate fails when the committed artifact disagrees.
+      Generated from the code that already enforces the same rule, with a CI gate
+      that fails when the committed artifact differs from a fresh generation.
     </p>
   </div>
 
   <nav class="toc">
     <ol>
-      <li><a href="#problem"><span class="n">01</span> The problem</a></li>
-      <li><a href="#components"><span class="n">02</span> The components</a></li>
-      <li><a href="#lanes"><span class="n">03</span> Two lanes</a></li>
-      <li><a href="#command"><span class="n">04</span> The command contract</a></li>
-      <li><a href="#manifest"><span class="n">05</span> The manifest contract</a></li>
-      <li><a href="#agent"><span class="n">06</span> What an agent sees</a></li>
-      <li><a href="#gates"><span class="n">07</span> The gates</a></li>
-      <li><a href="#limit"><span class="n">08</span> What it cannot do</a></li>
+      <li><a href="#what"><span class="n">01</span> What it publishes</a></li>
+      <li><a href="#packages"><span class="n">02</span> Package layout</a></li>
+      <li><a href="#contracts"><span class="n">03</span> The contracts package</a></li>
+      <li><a href="#generation"><span class="n">04</span> How a contract is generated</a></li>
+      <li><a href="#command"><span class="n">05</span> The command contract</a></li>
+      <li><a href="#manifest"><span class="n">06</span> The manifest contract</a></li>
+      <li><a href="#runtime"><span class="n">07</span> Reaching generated code</a></li>
+      <li><a href="#agent"><span class="n">08</span> Reaching agents</a></li>
+      <li><a href="#build"><span class="n">09</span> Build and check</a></li>
     </ol>
   </nav>
 
   <!-- ================= 01 ================= -->
-  <section id="problem">
-    <h2><span class="n">01</span>Why</h2>
+  <section id="what">
+    <h2><span class="n">01</span>What it publishes</h2>
 
-    <p>
-      <code>seans-mfe-tool</code> is a CLI, a library, and an MCP tool surface.
-      All three need the same facts.
-    </p>
+    <p>Four machine-readable contracts.</p>
 
     <div class="scroll">
       <table>
-        <thead><tr><th>It is</th><th>Its contract is read by</th></tr></thead>
+        <thead><tr><th>Contract</th><th class="mono">Artifact</th><th>Consumed by</th></tr></thead>
         <tbody>
-          <tr><td>a CLI a person types</td><td>a developer reading <code>--help</code></td></tr>
-          <tr><td>a library another package imports</td><td>a compiler resolving types</td></tr>
-          <tr><td>a tool surface an agent calls</td><td>an MCP client validating JSON</td></tr>
+          <tr><td>What a command accepts</td><td class="mono">schemas/&lt;cmd&gt;.json &rarr; input</td><td>the MCP tool catalogue</td></tr>
+          <tr><td>What a command returns</td><td class="mono">schemas/&lt;cmd&gt;.json &rarr; output</td><td>validating clients, conformance tests</td></tr>
+          <tr><td>What a manifest accepts</td><td class="mono">schemas/dsl/manifest.schema.json</td><td>editors, registry rule authoring</td></tr>
+          <tr><td>What a composition document accepts</td><td class="mono">schemas/dsl/control-plane.schema.json</td><td><code>compose:build</code>, editors</td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      What a command accepts, what it returns, what a manifest allows. Writing
-      those facts down three times is how they end up disagreeing, because nothing
-      compares the copies.
+      None is hand-written. The same approach produces the ADR index (ADR-075) and
+      the API reference (ADR-065).
     </p>
-
-    <h3>What went wrong here when we did</h3>
-    <p>Each of these was found in this repository.</p>
-
-    <ul class="ledger">
-      <li><code>build:*</code> had no schema entry, so an agent could scaffold and validate an MFE over MCP but not build one.</li>
-      <li><code>deploy</code> advertised eight flags the command doesn't have. Agents using them got a parse failure.</li>
-      <li><code>remote:generate</code> returned a <code>preserved</code> field missing from a schema marked <code>additionalProperties: false</code>. Validating clients rejected every successful response. Same for <code>bff:validate</code>'s <code>manifest</code> and <code>meshConfig</code>.</li>
-      <li>Four documents described the manifest language. The one titled <em>“the complete platform contract that ALL MFEs must conform to”</em> didn't know the slot contract existed.</li>
-      <li>Two packages read <code>manifest.transforms</code> against different tables. <code>[filterSchema]</code> was rejected by the DSL validator and accepted by codegen; <code>[filter-schema]</code> was the reverse.</li>
-    </ul>
-
-    <p>
-      Generating the artifact from the code removes the copies. Nobody writes the
-      schema, so it can't say something the implementation doesn't.
-    </p>
-
-    <div class="note">
-      <b>The same approach elsewhere</b>
-      <p>
-        The ADR index (ADR-075) and the API reference (ADR-065) work this way for
-        the same reason: generate the pages a reader can't easily check. Anyone
-        can verify a code sample by running it. Almost nobody checks a JSON Schema
-        against its source, so a wrong one survives.
-      </p>
-    </div>
   </section>
 
   <!-- ================= 02 ================= -->
-  <section id="components">
-    <h2><span class="n">02</span>The components</h2>
+  <section id="packages">
+    <h2><span class="n">02</span>Package layout</h2>
+
+    <p>Dependencies run one way. <code>contracts</code> is the root and depends on nothing.</p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 400" role="img" aria-label="Package dependency graph. Contracts is a foundation rail every package above depends on. Above it sit dsl, codegen, oclif-base and the two framework packages; above those the four oclif plugins; and at the top the CLI. Runtime and control-plane are separate deployables that ship to generated MFEs and to a running fleet.">
+          <defs>
+            <marker id="pg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="pgd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--derived)"/>
+            </marker>
+          </defs>
+
+          <rect x="216" y="44" width="200" height="48" rx="2" fill="var(--derived-bg)" stroke="var(--derived)" stroke-width="1.5"/>
+          <text x="316" y="66" font-size="11" text-anchor="middle" fill="var(--derived)">the CLI (src/)</text>
+          <text x="316" y="82" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">commands &middot; hooks &middot; MCP server</text>
+
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="60" y="128" width="118" height="42" rx="2"/>
+            <rect x="192" y="128" width="118" height="42" rx="2"/>
+            <rect x="324" y="128" width="118" height="42" rx="2"/>
+            <rect x="456" y="128" width="118" height="42" rx="2"/>
+          </g>
+          <g font-size="10" text-anchor="middle" fill="currentColor">
+            <text x="119" y="147">plugin-adr</text>
+            <text x="251" y="147">plugin-api</text>
+            <text x="383" y="147">plugin-bff</text>
+            <text x="515" y="147">plugin-coder</text>
+          </g>
+          <g font-size="8" text-anchor="middle" fill="var(--ink-3)">
+            <text x="119" y="161">decision records</text>
+            <text x="251" y="161">OpenAPI</text>
+            <text x="383" y="161">GraphQL mesh</text>
+            <text x="515" y="161">scaffolding</text>
+          </g>
+
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="60" y="208" width="118" height="52" rx="2"/>
+            <rect x="192" y="208" width="118" height="52" rx="2"/>
+          </g>
+          <rect x="324" y="208" width="118" height="52" rx="2" fill="var(--derived-bg)" stroke="var(--derived)"/>
+          <rect x="456" y="208" width="118" height="52" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <g font-size="10" text-anchor="middle">
+            <text x="119" y="228" fill="currentColor">oclif-base</text>
+            <text x="251" y="228" fill="currentColor">dsl</text>
+            <text x="383" y="228" fill="var(--derived)">codegen</text>
+            <text x="515" y="225" fill="currentColor">framework-react</text>
+            <text x="515" y="237" fill="currentColor">framework-angular</text>
+          </g>
+          <g font-size="8" text-anchor="middle" fill="var(--ink-3)">
+            <text x="119" y="243">BaseCommand</text>
+            <text x="119" y="254">envelope &middot; exit codes</text>
+            <text x="251" y="243">manifest language</text>
+            <text x="251" y="254">Zod</text>
+            <text x="383" y="243">file plan &middot; variants</text>
+            <text x="383" y="254">templates</text>
+            <text x="515" y="252">resolved at run time</text>
+          </g>
+
+          <rect x="60" y="296" width="514" height="44" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="317" y="316" font-size="11" text-anchor="middle" fill="currentColor">contracts</text>
+          <text x="317" y="331" font-size="8" text-anchor="middle" fill="var(--ink-3)">envelope &middot; typed errors &middot; platform capabilities &middot; slot grammar &middot; mesh catalogue</text>
+          <text x="317" y="358" font-size="9" text-anchor="middle" fill="var(--derived)">every package above depends on contracts &middot; contracts depends on nothing</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#pg)" stroke-opacity="0.5">
+            <path d="M119 128 L 250 98"/>
+            <path d="M251 128 L 290 98"/>
+            <path d="M383 128 L 344 98"/>
+            <path d="M515 128 L 384 100"/>
+          </g>
+          <g stroke="var(--ink-3)" fill="none" stroke-dasharray="3 3">
+            <path d="M119 208 L 119 190 L 515 190"/>
+          </g>
+          <g stroke="var(--ink-3)" fill="none" marker-end="url(#pg)" stroke-opacity="0.8">
+            <path d="M119 190 L 119 174"/>
+            <path d="M251 190 L 251 174"/>
+            <path d="M515 190 L 515 174"/>
+          </g>
+          <text x="136" y="186" font-size="8" fill="var(--ink-3)">BaseCommand, to every plugin</text>
+          <path d="M383 208 L 383 174" stroke="var(--derived)" fill="none" marker-end="url(#pgd)"/>
+          <path d="M251 260 L 251 276 L 383 276 L 383 266" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#pg)"/>
+          <path d="M574 234 L 594 234 L 594 68 L 422 68" stroke="var(--ink-3)" fill="none" stroke-dasharray="4 3" marker-end="url(#pg)"/>
+          <text x="592" y="256" font-size="8" text-anchor="end" fill="var(--ink-3)">loadFrameworkPlugin()</text>
+
+          <line x1="620" y1="32" x2="620" y2="360" stroke="var(--rule)" stroke-dasharray="3 4"/>
+          <text x="636" y="42" font-size="8.5" fill="var(--ink-3)">separate deployables</text>
+
+          <rect x="636" y="60" width="212" height="70" rx="2" fill="var(--surface)" stroke="var(--derived)"/>
+          <text x="742" y="80" font-size="10.5" text-anchor="middle" fill="var(--derived)">runtime</text>
+          <text x="742" y="95" font-size="8" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime</text>
+          <line x1="652" y1="103" x2="832" y2="103" stroke="var(--rule)"/>
+          <text x="742" y="120" font-size="8.5" text-anchor="middle" fill="currentColor">the barrel a generated MFE imports</text>
+
+          <rect x="636" y="152" width="212" height="62" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="742" y="172" font-size="10.5" text-anchor="middle" fill="currentColor">control-plane</text>
+          <line x1="652" y1="180" x2="832" y2="180" stroke="var(--rule)"/>
+          <text x="742" y="197" font-size="8.5" text-anchor="middle" fill="currentColor">registry &middot; daemon services</text>
+
+          <rect x="636" y="240" width="212" height="62" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="742" y="260" font-size="10" text-anchor="middle" fill="currentColor">a generated MFE</text>
+          <text x="742" y="276" font-size="8" text-anchor="middle" fill="var(--ink-3)">imports runtime at build time</text>
+          <text x="742" y="289" font-size="8" text-anchor="middle" fill="var(--ink-3)">registers with the control plane at run time</text>
+
+          <path d="M690 130 L 690 234" stroke="var(--derived)" fill="none" stroke-dasharray="4 3" marker-end="url(#pgd)"/>
+          <path d="M796 214 L 796 234" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#pg)"/>
+        </svg>
+      </div>
+      <figcaption>
+        The framework packages carry no dependency edge from the CLI.
+        <code>loadFrameworkPlugin()</code> resolves them at run time (ADR-036), trying
+        the built-in package directory first and falling back to
+        <code>require('@seans-mfe/framework-&lt;name&gt;')</code>, so a third-party
+        framework works without an edit here.
+      </figcaption>
+    </figure>
 
     <div class="scroll">
       <table>
-        <thead><tr><th>Component</th><th>Owns</th><th class="mono">Path</th></tr></thead>
+        <thead><tr><th class="mono">Package</th><th class="mono">Depends on</th></tr></thead>
         <tbody>
-          <tr>
-            <td><code>@seans-mfe/contracts</code></td>
-            <td>Shared vocabulary at the root of the dependency graph: envelope type, exit codes, typed errors, the platform capability set, the Mesh table, the slot grammar</td>
-            <td class="mono">packages/contracts/src/</td>
-          </tr>
-          <tr>
-            <td><code>CommandResult&lt;T&gt;</code><br><code>EXIT_CODES</code></td>
-            <td>The envelope every command emits and the numeric codes it exits with</td>
-            <td class="mono">contracts/src/envelope.ts</td>
-          </tr>
-          <tr>
-            <td><code>BaseCommand&lt;T&gt;</code></td>
-            <td>The inversion that makes the output contract knowable — subclasses implement <code>runCommand()</code>, never <code>run()</code></td>
-            <td class="mono">oclif-base/src/BaseCommand.ts</td>
-          </tr>
-          <tr>
-            <td><code>DSLManifestSchema</code></td>
-            <td>The manifest language itself, in Zod — the only definition of what <code>mfe-manifest.yaml</code> accepts</td>
-            <td class="mono">dsl/src/schema.ts</td>
-          </tr>
-          <tr>
-            <td>Input derivation</td>
-            <td>Command flag and arg declarations → input schema; decides which commands are agent-facing at all</td>
-            <td class="mono">src/oclif/schema-derivation.ts</td>
-          </tr>
-          <tr>
-            <td>Output derivation</td>
-            <td>TypeScript type → JSON Schema; finds the <code>T</code> in <code>extends BaseCommand&lt;T&gt;</code></td>
-            <td class="mono">src/oclif/type-to-schema.ts</td>
-          </tr>
-          <tr>
-            <td>Command-lane driver</td>
-            <td>Loads the live oclif registry, runs both halves, writes or diffs each contract</td>
-            <td class="mono">scripts/generate-schemas.ts</td>
-          </tr>
-          <tr>
-            <td>Manifest-lane driver</td>
-            <td>Runs Zod's own JSON Schema emitter over the manifest and composition schemas</td>
-            <td class="mono">scripts/generate-dsl-schema.ts</td>
-          </tr>
-          <tr>
-            <td>The artifacts</td>
-            <td>20 per-command contracts + 2 document schemas. Committed, gated, never hand-edited</td>
-            <td class="mono">schemas/</td>
-          </tr>
-          <tr>
-            <td>The consumer</td>
-            <td>Reads <code>schemas/</code> and turns each contract into an agent-callable tool</td>
-            <td class="mono">src/mcp/tool-registry.ts</td>
-          </tr>
+          <tr><td class="mono">contracts</td><td class="mono">&mdash;</td></tr>
+          <tr><td class="mono">dsl</td><td class="mono">contracts</td></tr>
+          <tr><td class="mono">codegen</td><td class="mono">contracts, dsl</td></tr>
+          <tr><td class="mono">oclif-base</td><td class="mono">contracts</td></tr>
+          <tr><td class="mono">framework-react, framework-angular</td><td class="mono">contracts</td></tr>
+          <tr><td class="mono">plugin-adr, plugin-api</td><td class="mono">contracts, oclif-base</td></tr>
+          <tr><td class="mono">plugin-bff</td><td class="mono">contracts, oclif-base, codegen</td></tr>
+          <tr><td class="mono">plugin-coder</td><td class="mono">contracts, dsl, oclif-base</td></tr>
+          <tr><td class="mono">the CLI (src/)</td><td class="mono">the four plugins, contracts, oclif-base</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <!-- ================= 03 ================= -->
-  <section id="lanes">
-    <h2><span class="n">03</span>Two lanes</h2>
+  <section id="contracts">
+    <h2><span class="n">03</span>The contracts package</h2>
 
     <p>
-      There are two lanes. They share the rule and nothing else: different
-      sources, different mechanisms, different artifacts.
+      The vocabulary every other package shares. It sits at the root of the graph
+      because three or more packages read each of these facts.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th class="mono">Module</th><th>Contains</th><th>Read by</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">envelope.ts</td><td><code>CommandResult&lt;T&gt;</code>, <code>MutatingResult</code>, <code>PlannedChange</code>, <code>EXIT_CODES</code></td><td>oclif-base, every command, the schema generator</td></tr>
+          <tr><td class="mono">errors/</td><td>Validation, Business, Network, System, Timeout and Security errors</td><td>every package, and generated MFE code via runtime</td></tr>
+          <tr><td class="mono">error-classifier.ts</td><td>Maps an error to its exit code</td><td>oclif-base, runtime</td></tr>
+          <tr><td class="mono">platform-contract.ts</td><td><code>PLATFORM_CAPABILITIES</code> and their specs (ADR-080)</td><td>codegen, runtime</td></tr>
+          <tr><td class="mono">slot-grammar.ts</td><td>Slot id grammar (ADR-069)</td><td>dsl, codegen, runtime</td></tr>
+          <tr><td class="mono">slot-contract.ts</td><td>Matching, guard, address registry (ADR-073)</td><td>dsl, runtime</td></tr>
+          <tr><td class="mono">mesh-catalog.ts</td><td>Mesh plugin and transform classification (ADR-090)</td><td>dsl, codegen</td></tr>
+          <tr><td class="mono">framework-plugin.ts</td><td><code>BaseFrameworkPlugin</code> (ADR-036)</td><td>the CLI loader, both framework packages</td></tr>
+          <tr><td class="mono">envelope, messages, observability, presentation, build-output-parser</td><td>CLI-side concerns</td><td>the CLI</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>Which of it the generator uses</b>
+      <p>
+        <code>packages/contracts/src/__tests__/extraction-boundary.test.ts</code> records
+        the modules <code>codegen</code> and <code>dsl</code> are allowed to import, and
+        fails when that set changes.
+      </p>
+    </div>
+  </section>
+  <!-- ================= 03 ================= -->
+  <section id="generation">
+    <h2><span class="n">04</span>How a contract is generated</h2>
+
+    <p>
+      Two lanes, with different sources and different mechanisms. A command's
+      contract lives in two places, so it takes two passes to read; a manifest's is
+      one Zod schema, so Zod's own emitter produces it.
     </p>
 
     <figure>
@@ -497,17 +562,16 @@
         </svg>
       </div>
       <figcaption>
-        Both lanes end in a committed file nobody edits. Lane A needs two
-        mechanisms because a command's truth is split between the registry and the
-        type system. Lane B needs one because the manifest's truth is a single Zod
-        schema.
+        Both lanes end in a committed file that nothing hand-edits. Lane A reads the
+        oclif registry for the input half and the TypeScript checker for the output
+        half. Lane B reads one Zod schema for both its outputs.
       </figcaption>
     </figure>
   </section>
 
   <!-- ================= 04 ================= -->
   <section id="command">
-    <h2><span class="n">04</span>Lane A: the command contract</h2>
+    <h2><span class="n">05</span>The command contract</h2>
 
     <h3>Which commands get a contract</h3>
     <p>
@@ -532,13 +596,11 @@
     </div>
 
     <div class="note">
-      <b>The exclusion list has two lines</b>
+      <b>The exclusion list holds two commands</b>
       <p>
-        <code>mcp:serve</code> would advertise a tool that starts another copy of
-        the server the agent is talking to. <code>schemas</code> lists the
-        catalogue, which the agent gets from <code>tools/list</code>.
-        <code>build:*</code> is not on the list; its absence from the catalogue was
-        the defect this module was written to fix.
+        <code>mcp:serve</code> would advertise a tool that starts another copy of the
+        server the agent is connected to. <code>schemas</code> prints the catalogue,
+        which an agent gets from <code>tools/list</code>.
       </p>
     </div>
 
@@ -623,11 +685,10 @@ if (description) schema.description = description;</code></pre>
 if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code></pre>
 
     <p>
-      <code>additionalProperties: false</code> makes a future undeclared field fail
-      loudly. But a type declaring <code>[key: string]: unknown</code> says extra
-      keys are legal. Closing it anyway publishes a schema stricter than the type
-      it describes, which is how <code>bff:validate</code>'s <code>manifest</code>
-      came to be rejected by its own contract.
+      Objects close by default, so a future undeclared field fails validation. A type
+      declaring <code>[key: string]: unknown</code> says extra keys are legal and is
+      left open; closing it would publish a schema stricter than the type it
+      describes.
     </p>
 
     <h3>One pinned compiler option</h3>
@@ -640,35 +701,31 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
 });</code></pre>
 
     <p>
-      Redundant now that the repo compiles strict. It wasn't when written: under
-      <code>strict: false</code>, <code>string | null</code> collapses to
-      <code>string</code>, and the schema claimed
-      <code>EnvCheckResult.found</code> was always a string while
-      <code>build:check</code> returns <code>null</code> for a missing tool.
-      Pinning it means the contract doesn't depend on an unrelated config file.
+      Pinned regardless of the repo's own tsconfig. Without it,
+      <code>string | null</code> collapses to <code>string</code> and a nullable
+      result field is published as always present.
     </p>
 
     <h3>Two loud failures</h3>
 
     <p>
-      <strong>No derivable output type throws.</strong> The message names the two
-      fixes: give the command a typed result, or exclude it with a reason. Emitting
-      <code>{}</code> would publish a contract that promises nothing.
+      <strong>A command with no resolvable result type is a generation failure</strong>,
+      not an empty schema. The message names the two fixes: give the command a typed
+      result, or exclude it with a reason.
     </p>
 
     <p>
       <strong>Filenames must round-trip.</strong> <code>topic:command</code> becomes
-      <code>topic-command.json</code>, and every consumer recovers the id by turning
-      each <code>-</code> back into a <code>:</code>. So a hyphen in a command id is
-      ambiguous: <code>control-plane:build</code> comes back as
-      <code>control:plane:build</code>, matching no command and failing three
-      unrelated suites without naming the cause. Generation throws instead.
+      <code>topic-command.json</code>, and consumers recover the id by turning each
+      <code>-</code> back into a <code>:</code>. A hyphen inside a command id cannot
+      round-trip, so <code>schemaFilename</code> throws on one. A schema file with no
+      matching command is deleted, or reported in check mode.
     </p>
   </section>
 
   <!-- ================= 05 ================= -->
   <section id="manifest">
-    <h2><span class="n">05</span>Lane B: the manifest contract</h2>
+    <h2><span class="n">06</span>The manifest contract</h2>
 
     <p>Zod does the work. One schema feeds two consumers.</p>
 
@@ -699,9 +756,55 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
     </p>
   </section>
 
-  <!-- ================= 06 ================= -->
+  <!-- ================= 07 ================= -->
+  <section id="runtime">
+    <h2><span class="n">07</span>Reaching generated code</h2>
+
+    <p>
+      A generated MFE never imports <code>codegen</code> or <code>contracts</code>. It
+      imports <code>@seans-mfe-tool/runtime</code> and its two framework subpaths. The
+      runtime barrel (<code>packages/runtime/src/index.ts</code>) is the compatibility
+      surface.
+    </p>
+
+<pre><code>contracts  &rarr;  runtime  &rarr;  the generated MFE
+ (types)      (barrel)      (import specifier)</code></pre>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th class="mono">Generated code imports</th><th class="mono">Defined in</th><th>Reaches it via</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ValidationError, SystemError</td><td class="mono">contracts/src/errors/</td><td>a re-export in <code>runtime/src/errors/index.ts</code></td></tr>
+          <tr><td class="mono">createSlotContract, ProvidedSlotDeclaration</td><td class="mono">contracts/src/slot-contract.ts</td><td>a re-export in <code>runtime/src/slot-contract.ts</code> (ADR-073)</td></tr>
+          <tr><td class="mono">ImperativeMountHandle</td><td class="mono">contracts/src/</td><td>the barrel, directly</td></tr>
+          <tr><td class="mono">Context, LoadResult, RenderResult, QueryResult</td><td class="mono">runtime/src/</td><td>the barrel</td></tr>
+          <tr><td class="mono">RemoteMFE</td><td class="mono">runtime/src/react/</td><td><code>@seans-mfe-tool/runtime/react</code></td></tr>
+          <tr><td class="mono">AngularRemoteMFE</td><td class="mono">runtime/src/angular/</td><td><code>@seans-mfe-tool/runtime/angular</code></td></tr>
+          <tr><td class="mono">createImperativeHandle</td><td class="mono">runtime/src/imperative-handle.ts</td><td>the barrel</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Two consequences follow from the shim layer.</p>
+
+    <p>
+      A rename in <code>contracts</code> can change generated code with no runtime file in
+      the diff, because the change travels through a re-export.
+      <code>PLATFORM_MIGRATIONS</code>
+      (<code>packages/codegen/src/platform-migrations.ts</code>, ADR-082) is where such a
+      change is declared for developer-owned files that regeneration cannot reach.
+    </p>
+
+    <p>
+      <code>npm run check:template-typecheck</code> is the gate that proves the barrel
+      still satisfies generated code. It scaffolds an MFE per framework lane, installs it,
+      and typechecks it.
+    </p>
+  </section>
+
+  <!-- ================= 08 ================= -->
   <section id="agent">
-    <h2><span class="n">06</span>What an agent sees</h2>
+    <h2><span class="n">08</span>Reaching agents</h2>
 
     <p>
       The local MCP source walks <code>schemas/</code> and turns each file into a
@@ -723,165 +826,61 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
     </p>
 
     <div class="note">
-      <b>Why <code>cwd</code> is stripped</b>
+      <b>Process isolation</b>
       <p>
-        Every tool accepts a reserved <code>cwd</code> injected by the registry,
-        which is why <code>cwd</code> is in <code>TRANSPORT_OWNED</code> in §04.
-        Those two are in different packages and agree because one is written as the
-        reason for the other.
+        Each tool call spawns <code>seans-mfe-tool &lt;cmd&gt; --json</code> as a child
+        process and parses one <code>CommandResult</code> line from its stdout. Two
+        calls are two processes, so neither observes the other's
+        <code>process.exit</code> or working-directory change. Every tool accepts a
+        reserved <code>cwd</code> injected by the registry, which is why it is in
+        <code>TRANSPORT_OWNED</code> (§05).
       </p>
     </div>
   </section>
 
-  <!-- ================= 07 ================= -->
-  <section id="gates">
-    <h2><span class="n">07</span>Gates</h2>
-
-    <p>Generation without a gate is a convention. These make it a contract.</p>
+  <!-- ================= 09 ================= -->
+  <section id="build">
+    <h2><span class="n">09</span>Build and check</h2>
 
     <div class="scroll">
       <table>
-        <thead><tr><th class="mono">Gate</th><th>Catches</th></tr></thead>
+        <thead><tr><th class="mono">Command</th><th>Produces</th><th class="mono">Gated by</th></tr></thead>
         <tbody>
-          <tr><td class="mono">build → git diff schemas/</td><td>Committed command contracts disagreeing with a fresh derivation</td></tr>
-          <tr><td class="mono">build:schema:dsl:check</td><td>A stale manifest schema. <code>providesSlots</code> shipped and was missing from the artifact for months because this check existed but wasn't wired in (ADR-073 §6)</td></tr>
-          <tr><td class="mono">build:manifest-reference:check</td><td>A stale field reference</td></tr>
-          <tr><td class="mono">build:docs + git diff docs/api</td><td>A stale TypeDoc API reference</td></tr>
-          <tr><td class="mono">output-schema-conformance</td><td>What commands actually return, validated with ajv against what they publish</td></tr>
-          <tr><td class="mono">command-conformance</td><td>Every catalogued command either exercised or excluded with a named reason</td></tr>
+          <tr><td class="mono">build:schemas</td><td>One contract per catalogued command</td><td class="mono">build, then git diff schemas/</td></tr>
+          <tr><td class="mono">build:schema:dsl</td><td>Manifest and composition schemas</td><td class="mono">build:schema:dsl:check</td></tr>
+          <tr><td class="mono">build:manifest-reference</td><td>The field reference page</td><td class="mono">build:manifest-reference:check</td></tr>
+          <tr><td class="mono">build:docs</td><td><code>docs/api</code> (TypeDoc, ADR-065)</td><td class="mono">the API-docs workflow</td></tr>
+          <tr><td class="mono">check:template-typecheck</td><td>&mdash;</td><td>Scaffolds an MFE per framework lane, installs it, typechecks it</td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      The conformance test looks redundant. Output schemas come from the declared
-      type and TypeScript enforces that a command returns it, so what's left? Its
-      header: <em>“a belt over the compiler's braces.”</em> It catches what the type
-      system can't see: a runtime <code>as</code> cast, a hand-built object literal
-      escaping the declared type, a field added by a helper.
-    </p>
-  </section>
-
-  <!-- ================= 08 ================= -->
-  <section id="limit">
-    <h2><span class="n">08</span>What this catches, and what it doesn't</h2>
-
-    <p>The chain:</p>
-
-    <figure>
-      <div class="frame">
-        <svg viewBox="0 0 880 250" role="img" aria-label="The contract chain: implementation to declared type T to published schema to agent tool. TypeScript enforces the first link, derivation the second and third, and a CI gate the committed artifact. A fourth, unguarded relationship is shown in red: whether the prose inside the contract is actually true, which nothing enforces except human review.">
-          <defs>
-            <marker id="ch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <polygon points="0,0 10,5 0,10" fill="var(--derived)"/>
-            </marker>
-            <marker id="cha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <polygon points="0,0 10,5 0,10" fill="var(--authored)"/>
-            </marker>
-          </defs>
-
-          <g fill="var(--surface-2)" stroke="var(--rule)">
-            <rect x="16" y="56" width="180" height="46" rx="2"/>
-            <rect x="248" y="56" width="180" height="46" rx="2"/>
-            <rect x="480" y="56" width="180" height="46" rx="2"/>
-            <rect x="700" y="56" width="164" height="46" rx="2"/>
-          </g>
-          <g font-size="10.5" text-anchor="middle" fill="currentColor">
-            <text x="106" y="84">implementation</text>
-            <text x="338" y="84">declared type T</text>
-            <text x="570" y="84">published schema</text>
-            <text x="782" y="84">agent tool</text>
-          </g>
-
-          <g stroke="var(--derived)" fill="none" marker-end="url(#ch)">
-            <path d="M196 79 L 242 79"/>
-            <path d="M428 79 L 474 79"/>
-            <path d="M660 79 L 694 79"/>
-          </g>
-
-          <g font-size="9" text-anchor="middle" fill="var(--derived)">
-            <text x="219" y="118">TypeScript</text>
-            <text x="219" y="130">enforces</text>
-            <text x="451" y="118">derivation</text>
-            <text x="451" y="130">produces</text>
-            <text x="677" y="118">the gate</text>
-            <text x="677" y="130">holds</text>
-          </g>
-          <g stroke="var(--derived)" stroke-dasharray="2 3" stroke-opacity="0.5">
-            <line x1="219" y1="86" x2="219" y2="108"/>
-            <line x1="451" y1="86" x2="451" y2="108"/>
-            <line x1="677" y1="86" x2="677" y2="108"/>
-          </g>
-
-          <text x="440" y="30" font-size="10" text-anchor="middle" fill="var(--derived)">every link machine-checked. no runtime validation anywhere.</text>
-
-          <!-- the unguarded relationship -->
-          <line x1="16" y1="164" x2="864" y2="164" stroke="var(--rule)" stroke-dasharray="4 4"/>
-
-          <rect x="248" y="184" width="412" height="48" rx="2" fill="var(--authored-bg)" stroke="var(--authored)"/>
-          <text x="454" y="204" font-size="10.5" text-anchor="middle" fill="var(--authored)">is the sentence inside the contract true?</text>
-          <text x="454" y="222" font-size="9.5" text-anchor="middle" fill="currentColor">nothing checks this. a person read it, or nobody did.</text>
-
-          <path d="M570 102 L 570 150 L 454 150 L 454 178" stroke="var(--authored)" fill="none" stroke-dasharray="4 3" marker-end="url(#cha)"/>
-        </svg>
-      </div>
-      <div class="key">
-        <span><i class="swatch sw-d"></i> generated, machine-checked</span>
-        <span><i class="swatch sw-a"></i> hand-written, unchecked</span>
-      </div>
-      <figcaption>
-        A published contract can't describe a shape the code doesn't produce. It
-        can still describe that shape in a sentence that is no longer true.
-      </figcaption>
-    </figure>
-
-    <p>
-      TypeScript enforces the first link, generation produces the second and third,
-      and a gate holds the committed artifact to it. No runtime validation anywhere.
+      Each generator has a <code>--check</code> mode that regenerates in memory and exits
+      non-zero on a difference.
     </p>
 
-    <p>What it doesn't do:</p>
+    <p>Two test suites cover what generation cannot:</p>
 
-    <blockquote class="evidence">
-      <span class="tag">Found in this codebase</span>
-      <p>
-        ADR-089 redefined <code>--force</code> from <em>does nothing</em> to
-        <em>replaces developer-owned files</em>. One command's flag description
-        stayed <code>'Overwrite existing files'</code>.
-      </p>
-      <p>
-        The pipeline republished that sentence into the published schema on every
-        build, for months, where an agent read it as the tool's documentation. The
-        schema matched the code. The sentence in it was wrong.
-      </p>
-      <p>
-        A person caught it, reading the string against the ADR that superseded it.
-        No gate here can do that, because every gate compares an artifact to a
-        source, and the source was the thing that was wrong.
-      </p>
-    </blockquote>
-
-    <p>
-      So this removes transcription error and does nothing about authoring error.
-      The second is now the only kind left, which makes it easier to find and
-      easier to overlook.
-    </p>
-
-    <div class="note warn">
-      <b>A second case, found while writing this page</b>
-      <p>
-        The header of <code>schema-derivation.ts</code> claimed <em>“Output schemas
-        stay hand-authored: a command's TypeScript result type is not introspectable
-        at runtime.”</em> That stopped being true when <code>type-to-schema.ts</code>
-        landed. Nothing generates a module comment and nothing gates one.
-      </p>
-    </div>
+    <ul>
+      <li>
+        <code>output-schema-conformance.test.ts</code> runs each command and validates its
+        real <code>data</code> payload against the published output schema with ajv. It
+        catches what the type system does not see: a runtime <code>as</code> cast, a
+        hand-built object literal, a field added by a helper.
+      </li>
+      <li>
+        <code>command-conformance.test.ts</code> asserts every catalogued command is either
+        exercised there or excluded with a named reason.
+      </li>
+    </ul>
   </section>
 
   <footer>
     Companion to <code>docs/schema-contracts.md</code> in
-    <code>falese/seans-mfe-tool</code>, which is canonical for the prose. Cited by
-    symbol rather than line number; line numbers go stale.
+    <code>falese/seans-mfe-tool</code>, which is canonical for the prose. See also
+    the <a href="cli-architecture.html">CLI schematics</a> and the
+    <a href="system-map.html">system map</a>.
   </footer>
 
 </div>
