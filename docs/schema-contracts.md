@@ -4,11 +4,12 @@
 contract in this repository, and what that machinery does and does not
 guarantee.
 
-**Shareable rendering:** <https://claude.ai/code/artifact/04c36ade-cfbc-4705-8027-a006b434c14d>
-— the same material, typeset, with the two lane diagrams drawn rather than
-described in ASCII. **This file is canonical.** The rendering is a view of it and
-carries no fact this page does not; when they disagree, this page is right and
-the rendering is stale.
+**Typeset rendering:** [`derived-contracts.html`](./derived-contracts.html) —
+the same material with the two lane diagrams drawn rather than described in
+ASCII. It is published to the docs site beside the system map, and republished
+as an Artifact from that same file, so the page a colleague opens and the page
+in this repository are the same bytes. **This file is canonical** for the prose;
+when the two disagree, this one is right.
 
 **Citations.** Symbols, not line numbers — this page is prose, so nothing
 derives it and nothing gates it, and a line number is the part most likely to

@@ -10,7 +10,9 @@
 #
 #   /                              docs/index.html          — landing page
 #   /404.html                      docs/index.html          — fallback
-#   /system-map.html               docs/system-map.html     — the system map
+#   /system-map.html               docs/system-map.html         — the system map
+#   /cli-architecture.html         docs/cli-architecture.html   — CLI schematics
+#   /derived-contracts.html        docs/derived-contracts.html  — how contracts are derived
 #   /slides/platform-architecture.html|.pdf                 — the deck
 #
 # The system map is the point of this site and does not depend on the deck: the
@@ -29,12 +31,16 @@ on:
     paths:
       - 'docs/index.html'
       - 'docs/system-map.html'
+      - 'docs/cli-architecture.html'
+      - 'docs/derived-contracts.html'
       - 'docs/slides/**'
       - '.github/workflows/pages.yml'
   pull_request:
     paths:
       - 'docs/index.html'
       - 'docs/system-map.html'
+      - 'docs/cli-architecture.html'
+      - 'docs/derived-contracts.html'
       - 'docs/slides/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:

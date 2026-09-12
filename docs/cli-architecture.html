@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator CLI Schematics</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%230A8272%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%278%27%20width%3D%2720%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2714.5%27%20width%3D%2713%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2721%27%20width%3D%2717%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<style>
+  :root {
+    --paper:     #F5F7F9;
+    --surface:   #ffffff;
+    --surface-2: #EDF1F5;
+    --ink:       #131C26;
+    --ink-2:     #33424F;
+    --ink-3:     #5A6B79;
+    --rule:      #DCE3EA;
+    --rule-soft: #EDF1F5;
+    --accent:    #0A8272;
+    --accent-bg: #dcecef;
+    --gen:       #0A8272;
+    --gen-bg:    #dcecef;
+    --dev:       #AE6B14;
+    --dev-bg:    #f4e9d6;
+    --blocked:   #B0451F;
+    --blocked-bg:#f6e1dd;
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --measure: 66ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0E141A;
+      --surface:   #161E27;
+      --surface-2: #1D2731;
+      --ink:       #E7EDF3;
+      --ink-2:     #C0CCD8;
+      --ink-3:     #93A3B1;
+      --rule:      #2A3440;
+      --rule-soft: #3A4855;
+      --accent:    #3FC9B2;
+      --accent-bg: #12333a;
+      --gen:       #3FC9B2;
+      --gen-bg:    #12333a;
+      --dev:       #E4A94F;
+      --dev-bg:    #33280f;
+      --blocked:   #F0916A;
+      --blocked-bg:#3a2119;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #0E141A;
+    --surface:   #161E27;
+    --surface-2: #1D2731;
+    --ink:       #E7EDF3;
+    --ink-2:     #C0CCD8;
+    --ink-3:     #93A3B1;
+    --rule:      #2A3440;
+    --rule-soft: #3A4855;
+    --accent:    #3FC9B2;
+    --accent-bg: #12333a;
+    --gen:       #3FC9B2;
+    --gen-bg:    #12333a;
+    --dev:       #E4A94F;
+    --dev-bg:    #33280f;
+    --blocked:   #F0916A;
+    --blocked-bg:#3a2119;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 2.75rem 5rem;
+  }
+
+  header.sheet { border-bottom: 1px solid var(--rule); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 0.7rem;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(2rem, 6vw, 2.9rem); line-height: 1.05;
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 0.7rem;
+  }
+  .lede { font-size: 1.05rem; color: var(--ink-2); max-width: var(--measure); margin: 0; }
+
+  h2 {
+    font-family: var(--display); font-weight: 600;
+    font-size: 1.45rem; letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 0.3rem;
+  }
+  .fignum {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 0.3rem;
+  }
+
+  p { max-width: var(--measure); margin: 0 0 0.9rem; }
+  p.claim { color: var(--ink); font-size: 1rem; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.84em; background: var(--surface-2);
+    padding: 0.08em 0.34em; border-radius: 2px; overflow-wrap: anywhere;
+  }
+
+  section.fig { margin-bottom: 3.5rem; }
+  section.fig + section.fig { border-top: 1px solid var(--rule-soft); padding-top: 2.5rem; }
+
+  figure { margin: 1.4rem 0 0; }
+  .frame {
+    background: var(--surface); border: 1px solid var(--rule);
+    padding: 1.1rem; overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; margin: 0 auto; color: var(--ink); }
+  svg text { font-family: var(--mono); }
+
+  figcaption {
+    font-size: 0.9rem; color: var(--ink-2); margin-top: 0.8rem;
+    max-width: var(--measure); line-height: 1.55;
+  }
+
+  .key {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.74rem; color: var(--ink-2); margin-top: 0.9rem;
+  }
+  .key span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .sw-gen { background: var(--gen); }
+  .sw-dev { background: var(--dev); }
+  .sw-blocked { background: var(--blocked); }
+
+  .note {
+    border-left: 3px solid var(--accent); background: var(--surface);
+    padding: 0.85rem 1rem; margin: 1.3rem 0 0; max-width: var(--measure);
+    font-size: 0.93rem;
+  }
+  .note > :last-child { margin-bottom: 0; }
+  .note b {
+    font-family: var(--display); font-weight: 600;
+    display: block; margin-bottom: 0.25rem; font-size: 0.95rem;
+  }
+
+  .scroll { overflow-x: auto; margin: 1.2rem 0 0; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  th, td { text-align: left; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-weight: 600; font-size: 0.78rem;
+    color: var(--ink-2); border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  footer {
+    margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem; color: var(--ink-3); max-width: var(--measure); line-height: 1.6;
+  }
+
+  .site-back {
+    display: inline-block; font-family: var(--mono); font-size: .72rem;
+    letter-spacing: .06em; text-decoration: none; color: var(--ink-3);
+    margin-bottom: 1.6rem;
+  }
+  .site-back:hover { color: var(--accent, #0A8272); }
+</style>
+
+
+<div class="page">
+
+  <a class="site-back" href="index.html">&larr; Documentation home</a>
+
+  <header class="sheet">
+    <p class="eyebrow">seans-mfe-tool · component schematics</p>
+    <h1>Generator CLI Schematics</h1>
+    <p class="lede">
+      Six drawings of how the CLI is put together: which packages exist and what
+      depends on what, what happens when a command runs, how a manifest becomes
+      files, where new frameworks and plugins attach, where the schemas come
+      from, and how an agent reaches the same commands a person does.
+    </p>
+  </header>
+
+  <!-- ============ FIG 1 — packages ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 1 — packages</span>
+    <h2>Twelve packages in four tiers</h2>
+    <p class="claim">
+      Dependencies run one way, downward. <code>contracts</code> sits at the
+      bottom and depends on nothing; the CLI sits at the top and depends on the
+      plugins. <code>runtime</code> and <code>control-plane</code> are separate
+      deployables — they ship to generated MFEs and to a running fleet, not into
+      the CLI.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 470" role="img" aria-label="A layered package graph. Contracts is a full-width foundation rail that every package above depends on. Above it sit dsl, codegen, oclif-base and the two framework packages; above those the four oclif plugins; and at the top the CLI itself. Runtime and control-plane are separate deployables: generated MFEs import runtime at build time and register with the control plane at run time.">
+          <defs>
+            <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="p1t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- gutter labels -->
+          <g font-size="9" fill="var(--ink-3)" text-anchor="end">
+            <text x="64" y="88">entry</text>
+            <text x="64" y="182">capability</text>
+            <text x="64" y="278">generation</text>
+            <text x="64" y="366">foundation</text>
+          </g>
+
+          <!-- row A: the CLI -->
+          <rect x="250" y="56" width="204" height="58" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="352" y="78" font-size="12" text-anchor="middle" fill="var(--accent)">seans-mfe-tool (src/)</text>
+          <text x="352" y="94" font-size="9" text-anchor="middle" fill="var(--ink-3)">14 commands · 4 hooks · MCP server</text>
+          <text x="352" y="107" font-size="9" text-anchor="middle" fill="var(--ink-3)">depends on the four plugins, oclif-base, contracts</text>
+
+          <!-- row B: plugins -->
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="76" y="152" width="114" height="54" rx="2"/>
+            <rect x="210" y="152" width="114" height="54" rx="2"/>
+            <rect x="344" y="152" width="114" height="54" rx="2"/>
+            <rect x="478" y="152" width="114" height="54" rx="2"/>
+          </g>
+          <g font-size="10.5" text-anchor="middle" fill="currentColor">
+            <text x="133" y="176">plugin-adr</text>
+            <text x="267" y="176">plugin-api</text>
+            <text x="401" y="176">plugin-bff</text>
+            <text x="535" y="176">plugin-coder</text>
+          </g>
+          <g font-size="8.5" text-anchor="middle" fill="var(--ink-3)">
+            <text x="133" y="193">decision records</text>
+            <text x="267" y="193">OpenAPI</text>
+            <text x="401" y="193">GraphQL mesh</text>
+            <text x="535" y="193">scaffolding</text>
+          </g>
+
+          <!-- row C: generation tier -->
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="76" y="244" width="114" height="62" rx="2"/>
+            <rect x="210" y="244" width="114" height="62" rx="2"/>
+          </g>
+          <rect x="344" y="244" width="114" height="62" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <rect x="478" y="244" width="114" height="62" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+
+          <g font-size="10.5" text-anchor="middle">
+            <text x="133" y="266" fill="currentColor">oclif-base</text>
+            <text x="267" y="266" fill="currentColor">dsl</text>
+            <text x="401" y="266" fill="var(--accent)">codegen</text>
+            <text x="535" y="264" fill="currentColor">framework-react</text>
+            <text x="535" y="277" fill="currentColor">framework-angular</text>
+          </g>
+          <g font-size="8.5" text-anchor="middle" fill="var(--ink-3)">
+            <text x="133" y="283">BaseCommand</text>
+            <text x="133" y="295">envelope · exit codes</text>
+            <text x="267" y="283">the manifest language</text>
+            <text x="267" y="295">Zod · composition compiler</text>
+            <text x="401" y="283">file plan · variants</text>
+            <text x="401" y="295">56 templates</text>
+            <text x="535" y="294">resolved at run time</text>
+          </g>
+
+          <!-- foundation rail -->
+          <rect x="76" y="340" width="516" height="46" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="334" y="362" font-size="11.5" text-anchor="middle" fill="currentColor">contracts</text>
+          <text x="334" y="377" font-size="9" text-anchor="middle" fill="var(--ink-3)">typed errors · envelope · platform contract · slot grammar · mesh catalogue</text>
+          <text x="334" y="404" font-size="9.5" text-anchor="middle" fill="var(--accent)">every package above depends on contracts — it depends on nothing</text>
+
+          <!-- edges -->
+          <g stroke="currentColor" fill="none" marker-end="url(#p1)" stroke-opacity="0.5">
+            <path d="M133 152 L 296 118"/>
+            <path d="M267 152 L 330 118"/>
+            <path d="M401 152 L 374 118"/>
+            <path d="M535 152 L 408 120"/>
+          </g>
+
+          <!-- oclif-base serves every plugin -->
+          <g stroke="var(--ink-3)" fill="none" stroke-dasharray="3 3">
+            <path d="M133 244 L 133 232 L 535 232"/>
+          </g>
+          <g stroke="var(--ink-3)" fill="none" marker-end="url(#p1)" stroke-opacity="0.8">
+            <path d="M133 232 L 133 210"/>
+            <path d="M267 232 L 267 210"/>
+            <path d="M535 232 L 535 210"/>
+          </g>
+          <text x="152" y="228" font-size="8.5" fill="var(--ink-3)">BaseCommand, to every plugin</text>
+
+          <!-- codegen into plugin-bff -->
+          <path d="M401 244 L 401 210" stroke="var(--accent)" fill="none" marker-end="url(#p1t)"/>
+
+          <!-- dsl into codegen, routed below the row -->
+          <path d="M267 306 L 267 322 L 401 322 L 401 312" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
+
+          <!-- dsl into plugin-coder -->
+          <path d="M290 244 L 290 218 L 549 218 L 549 210" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
+
+          <!-- framework plugins loaded by the CLI -->
+          <path d="M592 276 L 606 276 L 606 84 L 460 84" stroke="var(--ink-3)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1)"/>
+          <text x="600" y="300" font-size="8.5" text-anchor="end" fill="var(--ink-3)">loadFrameworkPlugin()</text>
+
+          <!-- separate deployables -->
+          <line x1="628" y1="36" x2="628" y2="440" stroke="var(--rule)" stroke-dasharray="3 4"/>
+          <text x="644" y="46" font-size="9" fill="var(--ink-3)">separate deployables — not linked into the CLI</text>
+
+          <rect x="644" y="60" width="216" height="86" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="752" y="82" font-size="11.5" text-anchor="middle" fill="var(--accent)">runtime</text>
+          <text x="752" y="97" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">@seans-mfe-tool/runtime</text>
+          <line x1="660" y1="106" x2="844" y2="106" stroke="var(--rule)"/>
+          <text x="752" y="123" font-size="9.5" text-anchor="middle" fill="currentColor">the lifecycle barrel</text>
+          <text x="752" y="138" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">re-exports the contracts errors</text>
+
+          <rect x="644" y="182" width="216" height="78" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="752" y="204" font-size="11.5" text-anchor="middle" fill="currentColor">control-plane</text>
+          <line x1="660" y1="214" x2="844" y2="214" stroke="var(--rule)"/>
+          <text x="752" y="232" font-size="9.5" text-anchor="middle" fill="currentColor">registry · daemon</text>
+          <text x="752" y="248" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">GraphQL services a fleet deploys</text>
+
+          <rect x="644" y="300" width="216" height="72" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="752" y="322" font-size="11" text-anchor="middle" fill="currentColor">a generated MFE</text>
+          <text x="752" y="339" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">imports runtime at build time</text>
+          <text x="752" y="353" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">registers with the control plane at run time</text>
+
+          <path d="M700 146 L 700 294" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1t)"/>
+          <path d="M804 260 L 804 294" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
+
+          <text x="752" y="404" font-size="9" text-anchor="middle" fill="var(--ink-3)">generated code has one platform import specifier,</text>
+          <text x="752" y="418" font-size="9" text-anchor="middle" fill="var(--ink-3)">and never imports codegen</text>
+        </svg>
+      </div>
+      <figcaption>
+        Two packages reach beyond the CLI. <code>runtime</code> is the only package
+        a generated MFE imports — the lifecycle contract, the slot contract and the
+        capability result types arrive through that one barrel.
+        <code>control-plane</code> is a pair of GraphQL services a fleet deploys,
+        not a library anything here links against.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 2 — dispatch ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 2 — dispatch</span>
+    <h2>One invocation, exactly one line of stdout</h2>
+    <p class="claim">
+      Every command extends <code>BaseCommand</code> and implements
+      <code>runCommand()</code>, never <code>run()</code>. That inversion puts
+      one place in charge of turning a typed return value into the envelope, and
+      keeps everything else — progress, warnings, diagnostics — on stderr.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 320" role="img" aria-label="A CLI invocation flows from one of two entry points through the oclif registry into BaseCommand, which wraps runCommand and emits a single CommandResult line on stdout while all other output goes to stderr.">
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="a1t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- hooks rail -->
+          <text x="20" y="26" font-size="11" fill="var(--ink-3)">oclif hooks</text>
+          <line x1="20" y1="36" x2="860" y2="36" stroke="var(--rule)" stroke-dasharray="3 4"/>
+          <g font-size="11" fill="var(--accent)" text-anchor="middle">
+            <text x="176" y="52">init</text>
+            <text x="176" y="66" font-size="9.5" fill="var(--ink-3)">correlation id</text>
+            <text x="430" y="52">prerun</text>
+            <text x="430" y="66" font-size="9.5" fill="var(--ink-3)">start clock</text>
+            <text x="700" y="52">postrun</text>
+            <text x="700" y="66" font-size="9.5" fill="var(--ink-3)">telemetry event</text>
+          </g>
+          <g stroke="var(--rule)" stroke-dasharray="2 3">
+            <line x1="176" y1="36" x2="176" y2="42"/>
+            <line x1="430" y1="36" x2="430" y2="42"/>
+            <line x1="700" y1="36" x2="700" y2="42"/>
+          </g>
+
+          <!-- entry points -->
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="20" y="96" width="140" height="34" rx="2"/>
+            <rect x="20" y="140" width="140" height="34" rx="2"/>
+          </g>
+          <g font-size="11.5" fill="currentColor">
+            <text x="32" y="117">bin/dev.ts</text>
+            <text x="32" y="161">bin/run.js</text>
+          </g>
+          <g font-size="9.5" fill="var(--ink-3)" text-anchor="end">
+            <text x="150" y="117">Bun</text>
+            <text x="150" y="161">Node</text>
+          </g>
+
+          <!-- registry -->
+          <rect x="234" y="88" width="176" height="94" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="322" y="108" font-size="11.5" text-anchor="middle" fill="currentColor">oclif registry</text>
+          <text x="322" y="126" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">Config.load()</text>
+          <line x1="250" y1="136" x2="394" y2="136" stroke="var(--rule)"/>
+          <text x="322" y="152" font-size="10" text-anchor="middle" fill="currentColor">14 core commands</text>
+          <text x="322" y="169" font-size="10" text-anchor="middle" fill="currentColor">+ 4 first-party plugins</text>
+
+          <!-- BaseCommand -->
+          <rect x="484" y="80" width="184" height="110" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="576" y="101" font-size="11.5" text-anchor="middle" fill="var(--accent)">BaseCommand.run()</text>
+          <text x="576" y="122" font-size="10" text-anchor="middle" fill="currentColor">try {</text>
+          <text x="576" y="140" font-size="10.5" text-anchor="middle" fill="currentColor">runCommand() → T</text>
+          <text x="576" y="158" font-size="10" text-anchor="middle" fill="currentColor">} catch → typed error</text>
+          <text x="576" y="178" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">the only place T becomes output</text>
+
+          <!-- outputs -->
+          <rect x="736" y="80" width="124" height="46" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="798" y="99" font-size="10.5" text-anchor="middle" fill="var(--accent)">stdout</text>
+          <text x="798" y="115" font-size="9.5" text-anchor="middle" fill="currentColor">1 × CommandResult</text>
+
+          <rect x="736" y="140" width="124" height="46" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="798" y="159" font-size="10.5" text-anchor="middle" fill="currentColor">stderr</text>
+          <text x="798" y="175" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">everything else</text>
+
+          <!-- arrows -->
+          <g stroke="currentColor" fill="none" marker-end="url(#a1)">
+            <path d="M160 113 L 228 122"/>
+            <path d="M160 157 L 228 148"/>
+            <path d="M410 135 L 478 135"/>
+          </g>
+          <g stroke="var(--accent)" fill="none" marker-end="url(#a1t)">
+            <path d="M668 110 L 730 103"/>
+          </g>
+          <g stroke="currentColor" fill="none" marker-end="url(#a1)">
+            <path d="M668 160 L 730 163"/>
+          </g>
+
+          <!-- exit code -->
+          <text x="576" y="234" font-size="10.5" text-anchor="middle" fill="currentColor">exit code from the error's class</text>
+          <text x="576" y="250" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">ValidationError · BusinessError · NetworkError · SystemError · TimeoutError · SecurityError</text>
+          <line x1="576" y1="190" x2="576" y2="220" stroke="var(--rule)" stroke-dasharray="3 3"/>
+
+          <!-- not-found -->
+          <rect x="234" y="272" width="412" height="34" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="246" y="293" font-size="10.5" fill="currentColor">command_not_found — under --json: error envelope, exit 2</text>
+        </svg>
+      </div>
+      <figcaption>
+        Under <code>--json</code>, stdout carries exactly one
+        <code>CommandResult&lt;T&gt;</code> line and nothing else, which is what
+        makes a command safe to parse. The error's class picks the exit code, so
+        a caller can branch on the number without reading the payload.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 3 — generation ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 3 — generation</span>
+    <h2>A manifest becomes files, and each file gets an owner</h2>
+    <p class="claim">
+      <code>mfe-manifest.yaml</code> is the only input. Four phases, each
+      reasonable about on its own: validate to a typed manifest, plan a render
+      model, turn that into a list of file specs, then emit. Every spec carries
+      an <code>owner</code>, and the owner decides what a second run does.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 400" role="img" aria-label="The manifest is parsed and validated by Zod, planned into a render model, turned into a file plan, and emitted. At emit, generator-owned files are always re-stamped while developer-owned files are skipped if they exist, unless force re-seeds them.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="a2g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--gen)"/>
+            </marker>
+            <marker id="a2d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--dev)"/>
+            </marker>
+          </defs>
+
+          <!-- phase boxes -->
+          <g stroke="var(--rule)" fill="var(--surface-2)">
+            <rect x="16" y="60" width="120" height="56" rx="2"/>
+            <rect x="176" y="60" width="130" height="56" rx="2"/>
+            <rect x="346" y="60" width="130" height="56" rx="2"/>
+            <rect x="516" y="60" width="130" height="56" rx="2"/>
+          </g>
+          <g font-size="11.5" text-anchor="middle" fill="currentColor">
+            <text x="76" y="84">manifest.yaml</text>
+            <text x="241" y="84">parse + validate</text>
+            <text x="411" y="84">plan</text>
+            <text x="581" y="84">file plan</text>
+          </g>
+          <g font-size="9.5" text-anchor="middle" fill="var(--ink-3)">
+            <text x="76" y="101">the only input</text>
+            <text x="241" y="101">Zod · @seans-mfe/dsl</text>
+            <text x="411" y="101">RenderModel · pure</text>
+            <text x="581" y="101">FileSpec[] · data</text>
+          </g>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#a2)">
+            <path d="M136 88 L 170 88"/><path d="M306 88 L 340 88"/><path d="M476 88 L 510 88"/>
+          </g>
+
+          <!-- resolve -->
+          <rect x="516" y="152" width="130" height="50" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="581" y="173" font-size="11" text-anchor="middle" fill="var(--accent)">resolveFilePlan</text>
+          <text x="581" y="189" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">render → GeneratedFile[]</text>
+          <line x1="581" y1="116" x2="581" y2="146" stroke="currentColor" marker-end="url(#a2)"/>
+
+          <!-- fork -->
+          <text x="581" y="232" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">every file carries owner →</text>
+          <line x1="581" y1="202" x2="581" y2="216" stroke="currentColor"/>
+          <path d="M581 216 L 300 216 L 300 250" stroke="var(--gen)" fill="none" marker-end="url(#a2g)"/>
+          <path d="M581 216 L 800 216 L 800 250" stroke="var(--dev)" fill="none" marker-end="url(#a2d)"/>
+
+          <!-- generator-owned -->
+          <rect x="176" y="256" width="248" height="98" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+          <text x="300" y="278" font-size="11.5" text-anchor="middle" fill="var(--gen)">generator-owned</text>
+          <text x="300" y="294" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">overwrite: true · 253 of 435 files</text>
+          <line x1="192" y1="304" x2="408" y2="304" stroke="var(--gen)" stroke-opacity="0.35"/>
+          <text x="300" y="322" font-size="10.5" text-anchor="middle" fill="currentColor">re-stamped on every run</text>
+          <text x="300" y="340" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">written fresh on every generate</text>
+
+          <!-- developer-owned -->
+          <rect x="676" y="256" width="188" height="98" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+          <text x="770" y="278" font-size="11.5" text-anchor="middle" fill="var(--dev)">developer-owned</text>
+          <text x="770" y="294" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">overwrite: false · 182 files</text>
+          <line x1="692" y1="304" x2="848" y2="304" stroke="var(--dev)" stroke-opacity="0.35"/>
+          <text x="770" y="322" font-size="10.5" text-anchor="middle" fill="currentColor">exists? skipped</text>
+          <text x="770" y="340" font-size="10.5" text-anchor="middle" fill="currentColor">absent? seeded once</text>
+
+          <!-- force -->
+          <rect x="456" y="284" width="192" height="44" rx="2" fill="var(--surface)" stroke="var(--dev)" stroke-dasharray="4 3"/>
+          <text x="552" y="303" font-size="10.5" text-anchor="middle" fill="var(--dev)">--force re-seeds</text>
+          <text x="552" y="319" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">scaffolding only, never features</text>
+          <line x1="648" y1="306" x2="672" y2="306" stroke="var(--dev)" marker-end="url(#a2d)"/>
+
+          <!-- feature exclusion -->
+          <text x="440" y="382" font-size="10" text-anchor="middle" fill="var(--ink-3)">a capability already implemented never enters the plan — no writer can reach it</text>
+        </svg>
+      </div>
+      <div class="key">
+        <span><i class="swatch sw-gen"></i> generator-owned · re-stamped</span>
+        <span><i class="swatch sw-dev"></i> developer-owned · yours</span>
+      </div>
+      <figcaption>
+        Generator-owned files are written on every run, so a platform change
+        reaches them by regenerating. Developer-owned files are seeded once and
+        then left alone — regeneration never touches them, and a capability with
+        an implementation on disk is dropped from the plan before any writer
+        sees it. <code>--force</code> re-seeds scaffolding only.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 4 — extension ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 4 — extension</span>
+    <h2>Two things plug in, and the core names neither</h2>
+    <p class="claim">
+      A framework variant and a capability plugin supply the same pair: a
+      template root they own, and a list of file specs. <code>resolveFilePlan</code>
+      reads that pair and contains no framework name and no plugin name.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 330" role="img" aria-label="A framework variant and a file contributor each supply a template root and a list of file specs to resolveFilePlan, which contains no framework or plugin name. A third framework or a new plugin needs no change to the core.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- core -->
+          <rect x="316" y="126" width="248" height="86" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="440" y="150" font-size="12.5" text-anchor="middle" fill="var(--accent)">resolveFilePlan</text>
+          <text x="440" y="170" font-size="10" text-anchor="middle" fill="currentColor">walks specs · renders · emits</text>
+          <line x1="336" y1="180" x2="544" y2="180" stroke="var(--accent)" stroke-opacity="0.3"/>
+          <text x="440" y="199" font-size="10" text-anchor="middle" fill="var(--ink-3)">zero framework names · zero plugin names</text>
+
+          <!-- variant -->
+          <rect x="20" y="52" width="252" height="112" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="36" y="74" font-size="11.5" fill="currentColor">CodegenVariant</text>
+          <text x="36" y="91" font-size="9.5" fill="var(--ink-3)">react-rspack · angular-webpack · …</text>
+          <line x1="36" y1="100" x2="256" y2="100" stroke="var(--rule)"/>
+          <g font-size="10" fill="currentColor">
+            <text x="36" y="118">templateDirName</text>
+            <text x="36" y="134">specs: FileSpec[]</text>
+            <text x="36" y="150">featureFiles() · slots · remoteEntry</text>
+          </g>
+
+          <!-- contributor -->
+          <rect x="20" y="188" width="252" height="98" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="36" y="210" font-size="11.5" fill="currentColor">FileContributor</text>
+          <text x="36" y="227" font-size="9.5" fill="var(--ink-3)">@seans-mfe/plugin-bff · …</text>
+          <line x1="36" y1="236" x2="256" y2="236" stroke="var(--rule)"/>
+          <g font-size="10" fill="currentColor">
+            <text x="36" y="254">templateRoot (its own)</text>
+            <text x="36" y="270">specs: FileSpec[]</text>
+          </g>
+
+          <g stroke="var(--accent)" fill="none" marker-end="url(#a3)">
+            <path d="M272 112 L 296 112 L 296 154 L 310 154"/>
+            <path d="M272 236 L 296 236 L 296 186 L 310 186"/>
+          </g>
+          <text x="300" y="104" font-size="9.5" fill="var(--ink-3)">injected</text>
+          <text x="300" y="258" font-size="9.5" fill="var(--ink-3)">registered</text>
+
+          <!-- output -->
+          <rect x="608" y="140" width="252" height="58" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="734" y="164" font-size="11.5" text-anchor="middle" fill="currentColor">GeneratedFile[]</text>
+          <text x="734" y="182" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">one merged plan, one emit loop</text>
+          <line x1="564" y1="169" x2="602" y2="169" stroke="var(--accent)" marker-end="url(#a3)"/>
+
+          <!-- proof -->
+          <rect x="20" y="272" width="840" height="0" fill="none"/>
+          <line x1="20" y1="300" x2="860" y2="300" stroke="var(--rule)" stroke-dasharray="3 4"/>
+          <text x="20" y="322" font-size="10.5" fill="var(--ink-3)">
+            a new framework is a new variant module; a new capability is a new contributor — the core gains no branch either way
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        A variant is injected — the manifest's <code>framework</code> and
+        <code>bundler</code> fields select one. A contributor registers itself as
+        a side effect of being imported, so a host opts in with one import rather
+        than threading a parameter through the call chain. Both land in the same
+        merged plan and go through the same emit loop.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 5 — schemas ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 5 — schemas</span>
+    <h2>Nothing in a schema is written by hand</h2>
+    <p class="claim">
+      Two contracts are published as JSON Schema, and both are derived from the
+      code that already enforces them. Command schemas come out of the live oclif
+      registry and the TypeScript compiler; the manifest schema comes out of the
+      Zod definition the parser runs.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 400" role="img" aria-label="Two derivation chains. A command's flag declarations and its BaseCommand result type are read by the TypeScript compiler to produce one JSON Schema per command, which the MCP tool catalogue reads. The DSL Zod schema produces both inferred TypeScript types used by the generator and a manifest JSON Schema, which produces the field reference documentation.">
+          <defs>
+            <marker id="s5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="s5t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- lane A -->
+          <text x="16" y="28" font-size="10.5" fill="var(--accent)">the command contract</text>
+          <line x1="16" y1="36" x2="864" y2="36" stroke="var(--rule)"/>
+
+          <rect x="16" y="54" width="182" height="44" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="107" y="72" font-size="10.5" text-anchor="middle" fill="currentColor">static flags / args</text>
+          <text x="107" y="88" font-size="9" text-anchor="middle" fill="var(--ink-3)">declared on the command class</text>
+
+          <rect x="16" y="112" width="182" height="44" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="107" y="130" font-size="10.5" text-anchor="middle" fill="currentColor">BaseCommand&lt;T&gt;</text>
+          <text x="107" y="146" font-size="9" text-anchor="middle" fill="var(--ink-3)">the declared result type</text>
+
+          <rect x="252" y="76" width="168" height="58" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="336" y="98" font-size="10.5" text-anchor="middle" fill="var(--accent)">generate-schemas</text>
+          <text x="336" y="114" font-size="9" text-anchor="middle" fill="var(--ink-3)">Config.load() + ts compiler</text>
+          <text x="336" y="127" font-size="9" text-anchor="middle" fill="var(--ink-3)">reads the registry, resolves T</text>
+
+          <rect x="474" y="76" width="168" height="58" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="558" y="99" font-size="10.5" text-anchor="middle" fill="var(--accent)">schemas/&lt;cmd&gt;.json</text>
+          <text x="558" y="116" font-size="9" text-anchor="middle" fill="var(--ink-3)">inputs and outputs, one file</text>
+          <text x="558" y="129" font-size="9" text-anchor="middle" fill="var(--ink-3)">per command</text>
+
+          <rect x="696" y="76" width="168" height="58" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="780" y="99" font-size="10.5" text-anchor="middle" fill="currentColor">MCP tool catalogue</text>
+          <text x="780" y="116" font-size="9" text-anchor="middle" fill="var(--ink-3)">what an agent is allowed</text>
+          <text x="780" y="129" font-size="9" text-anchor="middle" fill="var(--ink-3)">to call, and with what</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#s5)">
+            <path d="M198 76 L 224 92 L 246 97"/>
+            <path d="M198 134 L 224 118 L 246 113"/>
+          </g>
+          <g stroke="var(--accent)" fill="none" marker-end="url(#s5t)">
+            <path d="M420 105 L 468 105"/>
+            <path d="M642 105 L 690 105"/>
+          </g>
+
+          <!-- lane B -->
+          <text x="16" y="196" font-size="10.5" fill="var(--accent)">the manifest contract</text>
+          <line x1="16" y1="204" x2="864" y2="204" stroke="var(--rule)"/>
+
+          <rect x="16" y="236" width="182" height="72" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="107" y="262" font-size="11" text-anchor="middle" fill="var(--accent)">dsl/src/schema.ts</text>
+          <text x="107" y="279" font-size="9.5" text-anchor="middle" fill="currentColor">Zod — the source of truth</text>
+          <text x="107" y="295" font-size="9" text-anchor="middle" fill="var(--ink-3)">field descriptions live here too</text>
+
+          <rect x="252" y="222" width="168" height="46" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="336" y="241" font-size="10.5" text-anchor="middle" fill="currentColor">inferred TS types</text>
+          <text x="336" y="257" font-size="9" text-anchor="middle" fill="var(--ink-3)">z.infer — no second definition</text>
+
+          <rect x="252" y="286" width="168" height="46" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="336" y="305" font-size="10.5" text-anchor="middle" fill="var(--accent)">manifest.schema.json</text>
+          <text x="336" y="321" font-size="9" text-anchor="middle" fill="var(--ink-3)">z.toJSONSchema()</text>
+
+          <rect x="474" y="222" width="168" height="46" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="558" y="241" font-size="10.5" text-anchor="middle" fill="currentColor">the generator</text>
+          <text x="558" y="257" font-size="9" text-anchor="middle" fill="var(--ink-3)">a typed manifest, already valid</text>
+
+          <rect x="474" y="286" width="168" height="46" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="558" y="305" font-size="10.5" text-anchor="middle" fill="currentColor">editor validation</text>
+          <text x="558" y="321" font-size="9" text-anchor="middle" fill="var(--ink-3)">yaml language server</text>
+
+          <rect x="696" y="286" width="168" height="46" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="780" y="305" font-size="10.5" text-anchor="middle" fill="currentColor">field reference</text>
+          <text x="780" y="321" font-size="9" text-anchor="middle" fill="var(--ink-3)">docs/schemas/manifest-fields</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#s5)">
+            <path d="M198 258 L 224 249 L 246 246"/>
+            <path d="M420 245 L 468 245"/>
+            <path d="M420 309 L 468 309"/>
+          </g>
+          <g stroke="var(--accent)" fill="none" marker-end="url(#s5t)">
+            <path d="M198 286 L 224 300 L 246 306"/>
+            <path d="M558 332 L 558 348 L 780 348 L 780 336"/>
+          </g>
+
+          <text x="440" y="380" font-size="10" text-anchor="middle" fill="var(--ink-3)">
+            every box to the right of a source is generated — a check mode diffs each one and fails when it is stale
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        Both chains end in a file that is committed but never edited. The command
+        lane closes the loop between implementation, type and published contract:
+        TypeScript already enforces that a command returns its declared
+        <code>T</code>, and the schema is derived from that same <code>T</code>,
+        so no runtime validation is needed to keep them agreeing.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 6 — agent surface ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 6 — agent surface</span>
+    <h2>Every tool call forks a process</h2>
+    <p class="claim">
+      The MCP server does not call command code in-process. It spawns the CLI
+      with <code>--json</code> and parses one line back. The cost is a process
+      per call; what it buys is that <code>process.exit</code> and
+      working-directory changes cannot escape the child.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 300" role="img" aria-label="An agent calls a tool on the MCP server, which spawns a fresh CLI child process with the json flag, reads one CommandResult line from its stdout, and returns it. Process exit and working directory changes stay inside the child.">
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="a4t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <rect x="16" y="98" width="118" height="52" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="75" y="122" font-size="11.5" text-anchor="middle" fill="currentColor">agent</text>
+          <text x="75" y="139" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">tools/call</text>
+
+          <rect x="182" y="66" width="196" height="116" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="280" y="88" font-size="11.5" text-anchor="middle" fill="currentColor">mcp:serve</text>
+          <line x1="198" y1="98" x2="362" y2="98" stroke="var(--rule)"/>
+          <text x="280" y="116" font-size="10" text-anchor="middle" fill="var(--ink-3)">tool registry, 3 sources</text>
+          <g font-size="10" fill="currentColor" text-anchor="middle">
+            <text x="280" y="136">local — schemas/</text>
+            <text x="280" y="152">plugin — installed oclif</text>
+            <text x="280" y="168">remote — mcp.json</text>
+          </g>
+
+          <!-- child process boundary -->
+          <rect x="440" y="52" width="270" height="144" rx="3" fill="none" stroke="var(--accent)" stroke-dasharray="5 4"/>
+          <text x="575" y="44" font-size="10" text-anchor="middle" fill="var(--accent)">fresh child process, per call</text>
+
+          <rect x="466" y="80" width="218" height="44" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="575" y="107" font-size="10.5" text-anchor="middle" fill="currentColor">seans-mfe-tool &lt;cmd&gt; --json</text>
+
+          <rect x="466" y="138" width="218" height="42" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="575" y="164" font-size="10.5" text-anchor="middle" fill="var(--accent)">1 × CommandResult on stdout</text>
+
+          <line x1="575" y1="124" x2="575" y2="132" stroke="currentColor" marker-end="url(#a4)"/>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#a4)">
+            <path d="M134 124 L 176 124"/>
+            <path d="M378 112 L 434 104"/>
+          </g>
+          <g stroke="var(--accent)" fill="none" marker-end="url(#a4t)">
+            <path d="M440 168 L 396 152 L 378 148"/>
+          </g>
+          <text x="404" y="92" font-size="9.5" fill="var(--ink-3)">spawn</text>
+          <text x="400" y="176" font-size="9.5" fill="var(--ink-3)">parse</text>
+
+          <!-- contained -->
+          <rect x="740" y="80" width="124" height="100" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="802" y="102" font-size="10.5" text-anchor="middle" fill="var(--blocked)">contained</text>
+          <line x1="754" y1="112" x2="850" y2="112" stroke="var(--blocked)" stroke-opacity="0.35"/>
+          <g font-size="10" fill="currentColor" text-anchor="middle">
+            <text x="802" y="131">process.exit</text>
+            <text x="802" y="149">cwd mutation</text>
+            <text x="802" y="167">global state</text>
+          </g>
+
+          <line x1="710" y1="130" x2="734" y2="130" stroke="var(--blocked)" stroke-dasharray="3 3"/>
+
+          <text x="440" y="240" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">
+            schemas/&lt;cmd&gt;.json is what the agent sees — derived, never hand-written (Figure 5)
+          </text>
+          <text x="440" y="266" font-size="10" text-anchor="middle" fill="var(--ink-3)">
+            a tool-name collision across the three sources aborts startup rather than shadowing one silently
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        Concurrency-safe by construction: two tool calls are two processes, so
+        neither can observe the other's <code>chdir</code>. An agent and a person
+        drive the same commands through the same envelope — the tool catalogue is
+        the derived schema set from Figure 5, not a second API.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ closing table ============ -->
+  <section class="fig">
+    <span class="fignum">Reference</span>
+    <h2>Where each mechanism lives</h2>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Mechanism</th><th>Code</th><th class="n">Fig.</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Package graph</td><td><code>packages/</code></td><td class="n">1</td></tr>
+          <tr><td>Envelope and exit codes</td><td><code>packages/oclif-base/src/BaseCommand.ts</code></td><td class="n">2</td></tr>
+          <tr><td>Hooks</td><td><code>src/hooks/</code></td><td class="n">2</td></tr>
+          <tr><td>Plan → render → emit</td><td><code>packages/codegen/src/unified-generator.ts</code></td><td class="n">3</td></tr>
+          <tr><td>The emit loop and ownership</td><td><code>packages/codegen/src/file-plan.ts</code></td><td class="n">3, 4</td></tr>
+          <tr><td>Framework variants</td><td><code>packages/codegen/src/variants/</code></td><td class="n">4</td></tr>
+          <tr><td>Plugin file contributions</td><td><code>packages/codegen/src/contributors.ts</code></td><td class="n">4</td></tr>
+          <tr><td>Manifest language</td><td><code>packages/dsl/src/schema.ts</code></td><td class="n">5</td></tr>
+          <tr><td>Command schema derivation</td><td><code>scripts/generate-schemas.ts</code></td><td class="n">5</td></tr>
+          <tr><td>Manifest schema derivation</td><td><code>scripts/generate-dsl-schema.ts</code></td><td class="n">5</td></tr>
+          <tr><td>Agent tool surface</td><td><code>src/mcp/server.ts</code>, <code>src/mcp/tool-registry.ts</code></td><td class="n">6</td></tr>
+          <tr><td>Lifecycle barrel generated code imports</td><td><code>packages/runtime/src/index.ts</code></td><td class="n">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Drawn from the source at <code>0a48e8f</code>. File counts are the current
+    reference fleet (21 MFEs, 435 files, 253 generator-owned / 182
+    developer-owned). Command count is the built oclif manifest.
+  </footer>
+
+</div>
+
+</body>
+</html>

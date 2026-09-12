@@ -9,7 +9,8 @@ This directory contains agent definitions for GitHub Copilot to perform speciali
 - [Runtime platform](./architecture-runtime-platform.md)
 - [Slot contract](./slot-contract.md)
 - [Query capability](./query-capability.md)
-- [Schemas and contracts](./schema-contracts.md) — how every published contract is derived
+- [Schemas and contracts](./schema-contracts.md) — how every published contract is derived ([typeset](./derived-contracts.html))
+- [Generator CLI schematics](./cli-architecture.html) — six drawings of the component architecture
 - [CLI contract](./cli-contract.md) — envelope, `--json`, exit codes
 - [DSL manifest schema](./schemas/dsl-manifest.md)
 - [Manifest field reference](./schemas/manifest-fields.md) (generated)
