@@ -8,7 +8,7 @@
 
 > **validateManifestPlugins**(`manifest`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/codegen/src/manifest-validation.ts:36](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L36)
+Defined in: [packages/codegen/src/manifest-validation.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L93)
 
 Validate and classify plugins from manifest
 Enforces separation between plugins and transforms

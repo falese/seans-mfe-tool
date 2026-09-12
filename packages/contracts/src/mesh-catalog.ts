@@ -95,7 +95,14 @@ export type MeshTransform = (typeof MESH_TRANSFORMS)[number];
  * Only entries whose two spellings genuinely differ. A name that is identical
  * either way (`prometheus`, `cache`, `federation`) needs no row.
  */
-const ALIASES: Readonly<Record<string, string>> = {
+// Null-prototype, because this table is indexed by a name a MANIFEST supplies
+// and a plain object literal answers for every key on Object.prototype as well
+// as its own. `ALIASES['toString']` returned a FUNCTION — out of a `: string`
+// signature, past a `?? name` guard that only catches nullish — and that value
+// went on to be classified and rendered; `__proto__` returned the prototype
+// object itself. The value type is `string | undefined` so the `??` below is a
+// real check rather than one the compiler believes can never fire.
+const ALIASES: Readonly<Record<string, string | undefined>> = Object.assign(Object.create(null), {
   'response-cache': 'responseCache',
   'filter-schema': 'filterSchema',
   'rate-limit': 'rateLimit',
@@ -109,7 +116,7 @@ const ALIASES: Readonly<Record<string, string>> = {
   'hoist-field': 'hoistField',
   'operation-field-permissions': 'operationFieldPermissions',
   'jwt-auth': 'jwtAuth',
-};
+});
 
 /**
  * Resolve a manifest-written name to its canonical Mesh config key.

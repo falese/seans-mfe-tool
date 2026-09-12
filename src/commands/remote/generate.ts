@@ -197,6 +197,11 @@ export async function remoteGenerateCommand(
     );
 
     if (options.dryRun) {
+      // Computed once and then both reported and printed. `plannedOp` stats the
+      // file, so deriving it separately for the envelope and for the terminal
+      // stat every planned file twice — ~870 synchronous stats on a 435-file
+      // fleet MFE — and left two call sites that could drift apart while
+      // claiming to describe the same run.
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
         op: plannedOp(file, options.force),
         target: path.relative(cwd, file.path),
@@ -208,11 +213,9 @@ export async function remoteGenerateCommand(
         }
       }
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
-      for (const file of allFiles) {
-        const relativePath = path.relative(cwd, file.path);
-        const op = plannedOp(file, options.force);
+      for (const { op, target } of plannedChanges) {
         const label = DRY_RUN_LABEL[op];
-        console.log(`  ${relativePath} ${op === 'reseed' ? chalk.red(label) : chalk.gray(label)}`);
+        console.log(`  ${target} ${op === 'reseed' ? chalk.red(label) : chalk.gray(label)}`);
       }
       return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, reseeded: [], dryRun: true, plannedChanges };
     }

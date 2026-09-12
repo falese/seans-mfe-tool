@@ -35,8 +35,20 @@ interface BffCtx {
 }
 
 const hasBff = (c: unknown): boolean => (c as BffCtx).hasBff;
+
+/**
+ * The generated BFF class name.
+ *
+ * `vars.className` is `string | undefined` and this used to assert it with
+ * `as string`, which is the one thing a cast cannot do: if it were ever
+ * absent the template rendered a class literally named `undefinedBFF` and
+ * every reference to it compiled, because the name was consistent — a BFF
+ * shipped with a nonsense class name and no signal anywhere. A real fallback
+ * instead, the same way `bffPort` directly below already handles its own
+ * missing value.
+ */
 const bffClassName = (c: unknown): Record<string, unknown> => ({
-  bffClassName: `${(c as BffCtx).vars.className as string}BFF`,
+  bffClassName: `${(c as BffCtx).vars.className || 'Remote'}BFF`,
 });
 
 /**

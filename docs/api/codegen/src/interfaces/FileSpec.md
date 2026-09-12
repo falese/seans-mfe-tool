@@ -6,7 +6,7 @@
 
 # Interface: FileSpec
 
-Defined in: [packages/codegen/src/file-plan.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L41)
+Defined in: [packages/codegen/src/file-plan.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L50)
 
 One file the generator may emit.
 
@@ -20,7 +20,7 @@ literals in the middle of the render procedure.
 
 > `optional` **content**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L45)
+Defined in: [packages/codegen/src/file-plan.ts:54](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L54)
 
 Literal file content, for files with no template.
 
@@ -30,7 +30,7 @@ Literal file content, for files with no template.
 
 > `optional` **optional**: `boolean`
 
-Defined in: [packages/codegen/src/file-plan.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L68)
+Defined in: [packages/codegen/src/file-plan.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L77)
 
 A missing template is this variant's choice, not a defect — emitted
 silently instead of warned about. `base-mfe-angular` ships neither
@@ -43,7 +43,7 @@ MFE on every run, in the middle of output a reader is meant to study.
 
 > **out**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L47)
+Defined in: [packages/codegen/src/file-plan.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L56)
 
 Output path relative to the MFE root.
 
@@ -53,7 +53,7 @@ Output path relative to the MFE root.
 
 > **owner**: `"generator"` \| `"developer"`
 
-Defined in: [packages/codegen/src/file-plan.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L55)
+Defined in: [packages/codegen/src/file-plan.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L64)
 
 Who owns the emitted file. THE most consequential field in a spec:
 `generator` becomes `overwrite: true` — re-stamped every run and held
@@ -67,7 +67,7 @@ explicit `--force` re-seed (ADR-089).
 
 > `optional` **root**: [`TemplateRootName`](../type-aliases/TemplateRootName.md)
 
-Defined in: [packages/codegen/src/file-plan.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L57)
+Defined in: [packages/codegen/src/file-plan.ts:66](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L66)
 
 Template root to resolve `template` against. Defaults to `variant`.
 
@@ -77,7 +77,7 @@ Template root to resolve `template` against. Defaults to `variant`.
 
 > `optional` **template**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L43)
+Defined in: [packages/codegen/src/file-plan.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L52)
 
 Template path relative to its root. Mutually exclusive with `content`.
 
@@ -87,7 +87,7 @@ Template path relative to its root. Mutually exclusive with `content`.
 
 > `optional` **vars**: (`ctx`) => `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/codegen/src/file-plan.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L61)
+Defined in: [packages/codegen/src/file-plan.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L70)
 
 Extra template variables, merged over the shared model.
 
@@ -107,7 +107,7 @@ Extra template variables, merged over the shared model.
 
 > `optional` **when**: (`ctx`) => `boolean`
 
-Defined in: [packages/codegen/src/file-plan.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L59)
+Defined in: [packages/codegen/src/file-plan.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L68)
 
 Emit only when this returns true. Absent means always.
 

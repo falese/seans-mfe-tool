@@ -8,7 +8,7 @@
 
 > `const` **PUBLIC\_SPECS**: [`FileSpec`](../interfaces/FileSpec.md)[]
 
-Defined in: [packages/codegen/src/variants/shared.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L55)
+Defined in: [packages/codegen/src/variants/shared.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L68)
 
 Public assets. `demo.html` and `favicon.ico` are optional: a variant may
 legitimately not ship them (an Angular MFE is served through the Angular

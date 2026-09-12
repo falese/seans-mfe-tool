@@ -6,7 +6,7 @@
 
 # Interface: PlanIO
 
-Defined in: [packages/codegen/src/file-plan.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L72)
+Defined in: [packages/codegen/src/file-plan.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L81)
 
 The filesystem operations a plan needs, injected so the plan stays pure.
 
@@ -16,7 +16,7 @@ The filesystem operations a plan needs, injected so the plan stays pure.
 
 > **exists**(`templatePath`): `Promise`\<`boolean`\>
 
-Defined in: [packages/codegen/src/file-plan.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L73)
+Defined in: [packages/codegen/src/file-plan.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L82)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/codegen/src/file-plan.ts:73](https://github.com/falese/sea
 
 > **render**(`templatePath`, `vars`): `Promise`\<`string`\>
 
-Defined in: [packages/codegen/src/file-plan.ts:74](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L74)
+Defined in: [packages/codegen/src/file-plan.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L83)
 
 #### Parameters
 

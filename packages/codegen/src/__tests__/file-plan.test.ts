@@ -9,7 +9,12 @@
  * the machine that reads it.
  */
 
-import { resolveFilePlan, type FileSpec, type PlanIO } from '../file-plan';
+import {
+  resolveFilePlan,
+  mergeTemplateRoots,
+  type FileSpec,
+  type PlanIO,
+} from '../file-plan';
 
 /** A PlanIO whose template set and render output are fully controlled. */
 function fakeIO(present: Record<string, string>): PlanIO & { rendered: string[] } {
@@ -153,5 +158,83 @@ describe('the ownership table', () => {
     ];
 
     expect(ownershipOf(plan)).toEqual({ 'src/a.ts': 'generator', 'src/App.tsx': 'developer' });
+  });
+});
+
+describe('mergeTemplateRoots', () => {
+  // The root table is `{ variant: templateDir, ...contributorRoots }`, keyed by
+  // contributor id — and `FileContributor.id` is an open string while `variant`
+  // is the reserved name every spec falls back to. A contributor registering
+  // under that id silently replaced the variant's own template directory, so
+  // every spec with no explicit `root` (the majority) would render from the
+  // contributor's package instead.
+  //
+  // The failure mode is not an error. It is a complete MFE generated from the
+  // wrong templates, which is why this is an error diagnostic and not a warning.
+  const VARIANT_ROOT = '/tpl/variant';
+
+  it('maps each contributor id to its own template root', () => {
+    const { roots, diagnostics } = mergeTemplateRoots(VARIANT_ROOT, [
+      { id: 'bff', templateRoot: '/pkg/bff/templates' },
+      { id: 'api', templateRoot: '/pkg/api/templates' },
+    ]);
+
+    expect(roots).toEqual({
+      variant: VARIANT_ROOT,
+      bff: '/pkg/bff/templates',
+      api: '/pkg/api/templates',
+    });
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('refuses to let a contributor claim the reserved "variant" root', () => {
+    const { roots, diagnostics } = mergeTemplateRoots(VARIANT_ROOT, [
+      { id: 'variant', templateRoot: '/pkg/hijack/templates' },
+    ]);
+
+    expect(roots.variant).toBe(VARIANT_ROOT);
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].severity).toBe('error');
+    expect(diagnostics[0].code).toBe('reserved-template-root');
+    expect(diagnostics[0].target).toBe('variant');
+  });
+
+  it('keeps the other contributors when one collides', () => {
+    const { roots, diagnostics } = mergeTemplateRoots(VARIANT_ROOT, [
+      { id: 'variant', templateRoot: '/pkg/hijack/templates' },
+      { id: 'bff', templateRoot: '/pkg/bff/templates' },
+    ]);
+
+    expect(roots.bff).toBe('/pkg/bff/templates');
+    expect(roots.variant).toBe(VARIANT_ROOT);
+    expect(diagnostics).toHaveLength(1);
+  });
+
+  it('reports a duplicate contributor id rather than letting the last one win', () => {
+    const { roots, diagnostics } = mergeTemplateRoots(VARIANT_ROOT, [
+      { id: 'bff', templateRoot: '/pkg/bff/templates' },
+      { id: 'bff', templateRoot: '/pkg/other/templates' },
+    ]);
+
+    expect(roots.bff).toBe('/pkg/bff/templates');
+    expect(diagnostics.map((d) => d.code)).toEqual(['duplicate-template-root']);
+  });
+
+  it('a spec with no explicit root still resolves against the variant', async () => {
+    const { roots } = mergeTemplateRoots(VARIANT_ROOT, [
+      { id: 'variant', templateRoot: '/pkg/hijack/templates' },
+    ]);
+    const { files } = await resolveFilePlan(
+      [{ template: 'a.ejs', out: 'a.ts', owner: 'generator' }] as FileSpec[],
+      {
+        basePath: '/out',
+        roots,
+        vars: {},
+        ctx: undefined,
+        io: { exists: async () => true, render: async (p: string) => p },
+      },
+    );
+
+    expect(files[0].content).toBe('/tpl/variant/a.ejs');
   });
 });

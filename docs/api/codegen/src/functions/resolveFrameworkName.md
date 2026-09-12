@@ -2,28 +2,22 @@
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / validateManifestConfiguration
+[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / resolveFrameworkName
 
-# Function: validateManifestConfiguration()
+# Function: resolveFrameworkName()
 
-> **validateManifestConfiguration**(`manifest`): `object`
+> **resolveFrameworkName**(`manifest`): `string`
 
-Defined in: [packages/codegen/src/manifest-validation.ts:213](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L213)
+Defined in: [packages/codegen/src/unified-generator.ts:107](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L107)
 
-Classify a manifest's Mesh plugins and transforms, and say whether
-generation may proceed (ADR-027, ADR-092).
+The framework name a manifest asks for, before any plugin is consulted.
 
-Returns rather than prints. It used to write four kinds of line to stdout
-and stderr — an emoji warnings heading, an emoji errors heading, the items
-under each, and a "✅ Manifest validation passed" summary on every single
-successful run. A library that narrates is not embeddable, and under
-`--json` that output lands in a stream the envelope contract reserves
-(ADR-018).
-
-It still refuses: the caller throws on `ok: false`. ADR-027's point is that
-generating from a bad configuration and discovering it at runtime, in a
-container, is the outcome worth preventing — reporting differently is not
-the same as permitting.
+Single-sourced because two callers need it and they need DIFFERENT things
+from it: `deriveBuiltinVariant` maps it onto one of the two built-in trios,
+while the CLI's `resolveFrameworkVariant` hands it to `loadFrameworkPlugin`,
+where an unrecognised name is a third-party plugin to require (ADR-036), not
+a value to fall back from. A caller that single-sources the *trio* instead of
+the *name* silently turns every third-party framework into React.
 
 ## Parameters
 
@@ -243,12 +237,4 @@ the same as permitting.
 
 ## Returns
 
-`object`
-
-### diagnostics
-
-> **diagnostics**: [`GeneratorDiagnostic`](../interfaces/GeneratorDiagnostic.md)[]
-
-### ok
-
-> **ok**: `boolean`
+`string`

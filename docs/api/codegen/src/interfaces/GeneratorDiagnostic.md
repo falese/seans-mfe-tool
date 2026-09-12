@@ -6,7 +6,7 @@
 
 # Interface: GeneratorDiagnostic
 
-Defined in: [packages/codegen/src/file-plan.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L104)
+Defined in: [packages/codegen/src/file-plan.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L117)
 
 Something the generator has to say, returned instead of printed (ADR-092).
 
@@ -21,7 +21,7 @@ it blocks; `fix` is filled in by whoever can say what to do about it.
 
 > **code**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:107](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L107)
+Defined in: [packages/codegen/src/file-plan.ts:120](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L120)
 
 Stable, greppable kind — e.g. `missing-template`, `mesh-unknown`.
 
@@ -31,7 +31,7 @@ Stable, greppable kind — e.g. `missing-template`, `mesh-unknown`.
 
 > `optional` **fix**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:112](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L112)
+Defined in: [packages/codegen/src/file-plan.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L125)
 
 What to do about it, when that can be said concretely.
 
@@ -41,7 +41,7 @@ What to do about it, when that can be said concretely.
 
 > **message**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:108](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L108)
+Defined in: [packages/codegen/src/file-plan.ts:121](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L121)
 
 ***
 
@@ -49,7 +49,7 @@ Defined in: [packages/codegen/src/file-plan.ts:108](https://github.com/falese/se
 
 > **severity**: `"error"` \| `"warning"`
 
-Defined in: [packages/codegen/src/file-plan.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L105)
+Defined in: [packages/codegen/src/file-plan.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L118)
 
 ***
 
@@ -57,6 +57,6 @@ Defined in: [packages/codegen/src/file-plan.ts:105](https://github.com/falese/se
 
 > `optional` **target**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:110](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L110)
+Defined in: [packages/codegen/src/file-plan.ts:123](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L123)
 
 What the diagnostic is about: an output path, a manifest field, a name.

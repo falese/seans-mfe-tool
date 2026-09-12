@@ -96,3 +96,32 @@ describe('the tables themselves', () => {
     }
   });
 });
+
+describe('names inherited from Object.prototype are not table entries', () => {
+  // `ALIASES` is an object literal indexed by a manifest-supplied string, so
+  // every key on Object.prototype resolved as though it were a row in the
+  // table. `canonicalMeshName('toString')` returned a FUNCTION from a
+  // `: string` signature — `?? name` cannot catch that, because the value is
+  // not nullish. Reaching it needs no adversary: `toString` and `constructor`
+  // are plausible enough names for a transform.
+  const inherited = ['toString', 'constructor', 'valueOf', 'hasOwnProperty', '__proto__'];
+
+  it.each(inherited)('canonicalMeshName(%p) returns a string', (name) => {
+    expect(typeof canonicalMeshName(name)).toBe('string');
+  });
+
+  it.each(inherited)('canonicalMeshName(%p) returns the name unchanged', (name) => {
+    // Unrecognised names pass through untouched — the open-world rule the
+    // real table already follows.
+    expect(canonicalMeshName(name)).toBe(name);
+  });
+
+  it.each(inherited)('classifyMeshEntry(%p) is "unknown"', (name) => {
+    expect(classifyMeshEntry(name)).toBe('unknown');
+  });
+
+  it('still resolves the aliases that are genuinely in the table', () => {
+    expect(canonicalMeshName('filter-schema')).toBe('filterSchema');
+    expect(classifyMeshEntry('filter-schema')).toBe('transform');
+  });
+});

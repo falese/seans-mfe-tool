@@ -8,7 +8,7 @@
 
 > **classifyMeshEntry**(`name`): [`MeshEntryKind`](../type-aliases/MeshEntryKind.md)
 
-Defined in: [packages/contracts/src/mesh-catalog.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/mesh-catalog.ts#L136)
+Defined in: [packages/contracts/src/mesh-catalog.ts:143](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/mesh-catalog.ts#L143)
 
 Classify a manifest-declared Mesh entry, resolving aliases first.
 

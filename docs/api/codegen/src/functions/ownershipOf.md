@@ -8,7 +8,7 @@
 
 > **ownershipOf**(`plan`): `Record`\<`string`, [`FileSpec`](../interfaces/FileSpec.md)\[`"owner"`\]\>
 
-Defined in: [packages/codegen/src/file-plan.ts:211](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L211)
+Defined in: [packages/codegen/src/file-plan.ts:281](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L281)
 
 The ownership map, read straight off the plan.
 

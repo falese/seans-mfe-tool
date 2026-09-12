@@ -6,7 +6,7 @@
 
 # Interface: ResolvePlanOptions
 
-Defined in: [packages/codegen/src/file-plan.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L77)
+Defined in: [packages/codegen/src/file-plan.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L86)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/codegen/src/file-plan.ts:77](https://github.com/falese/sea
 
 > **basePath**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L79)
+Defined in: [packages/codegen/src/file-plan.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L88)
 
 MFE root that `out` paths are relative to.
 
@@ -24,7 +24,7 @@ MFE root that `out` paths are relative to.
 
 > **ctx**: `unknown`
 
-Defined in: [packages/codegen/src/file-plan.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L85)
+Defined in: [packages/codegen/src/file-plan.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L98)
 
 Passed to each spec's `when` and `vars`.
 
@@ -34,17 +34,19 @@ Passed to each spec's `when` and `vars`.
 
 > **io**: [`PlanIO`](PlanIO.md)
 
-Defined in: [packages/codegen/src/file-plan.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L86)
+Defined in: [packages/codegen/src/file-plan.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L99)
 
 ***
 
 ### roots
 
-> **roots**: `Partial`\<`Record`\<[`TemplateRootName`](../type-aliases/TemplateRootName.md), `string`\>\> & `object`
+> **roots**: `Record`\<`string`, `string`\> & `object`
 
-Defined in: [packages/codegen/src/file-plan.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L81)
+Defined in: [packages/codegen/src/file-plan.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L94)
 
-Template roots by name. `variant` is required; others are per-spec.
+Template roots by name. `variant` is required; others are contributor ids.
+Build it with [mergeTemplateRoots](../functions/mergeTemplateRoots.md) rather than by spreading — a
+contributor id colliding with `variant` is otherwise a silent takeover.
 
 #### Type Declaration
 
@@ -58,6 +60,6 @@ Template roots by name. `variant` is required; others are per-spec.
 
 > **vars**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/codegen/src/file-plan.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L83)
+Defined in: [packages/codegen/src/file-plan.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L96)
 
 The shared render model handed to every template.

@@ -6,7 +6,7 @@
 
 # Interface: PlannedFile
 
-Defined in: [packages/codegen/src/file-plan.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L90)
+Defined in: [packages/codegen/src/file-plan.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L103)
 
 A file the plan produced. Mirrors `GeneratedFile` in unified-generator.
 
@@ -16,7 +16,7 @@ A file the plan produced. Mirrors `GeneratedFile` in unified-generator.
 
 > **content**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L92)
+Defined in: [packages/codegen/src/file-plan.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L105)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/codegen/src/file-plan.ts:92](https://github.com/falese/sea
 
 > **overwrite**: `boolean`
 
-Defined in: [packages/codegen/src/file-plan.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L93)
+Defined in: [packages/codegen/src/file-plan.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L106)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/codegen/src/file-plan.ts:93](https://github.com/falese/sea
 
 > **path**: `string`
 
-Defined in: [packages/codegen/src/file-plan.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L91)
+Defined in: [packages/codegen/src/file-plan.ts:104](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L104)

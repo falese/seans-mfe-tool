@@ -8,7 +8,7 @@
 
 > **PlanDiagnostic** = [`GeneratorDiagnostic`](../interfaces/GeneratorDiagnostic.md)
 
-Defined in: [packages/codegen/src/file-plan.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L116)
+Defined in: [packages/codegen/src/file-plan.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L129)
 
 ## Deprecated
 

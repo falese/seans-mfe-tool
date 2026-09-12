@@ -6,11 +6,7 @@
  */
 
 import type { CodegenVariant } from './types';
-
-/** Escape a capability name for use inside a RegExp. */
-function escapeName(name: string): string {
-  return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+import { escapeCapabilityName } from './shared';
 
 export const angularWebpack: CodegenVariant = {
   id: 'angular-webpack',
@@ -29,7 +25,7 @@ export const angularWebpack: CodegenVariant = {
   }),
 
   implementedPatterns: (name) => [
-    new RegExp(`export\\s+(?:default\\s+)?class\\s+${escapeName(name)}(?:Component)?\\b`),
+    new RegExp(`export\\s+(?:default\\s+)?class\\s+${escapeCapabilityName(name)}(?:Component)?\\b`),
   ],
 
   remoteEntry: { template: 'features/remote.ts.ejs', out: 'src/remote.ts' },

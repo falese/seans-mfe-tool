@@ -20,6 +20,19 @@ import { toDeclaredSlotIdUnion } from '../slot-types';
 const PLATFORM_DIR = 'src/platform/base-mfe';
 
 /**
+ * Escape a capability name for use inside a RegExp.
+ *
+ * Lives here rather than once per variant: it was copied verbatim into both
+ * built-ins, and a variant author copying a third time is how the escaping
+ * eventually gets dropped from one of them. A capability name is manifest text
+ * — `Order.Detail` or `A+B` compile to a pattern that matches the wrong files
+ * unescaped.
+ */
+export function escapeCapabilityName(name: string): string {
+  return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * The BaseMFE lifecycle contract — the files generated code imports from.
  * All generator-owned: they are the platform's half of the deal, re-stamped
  * every run and held byte-identical by `check:mfe-drift`.

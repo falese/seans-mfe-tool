@@ -8,7 +8,7 @@
 
 > **deriveBuiltinVariant**(`manifest`): [`FrameworkVariant`](../interfaces/FrameworkVariant.md)
 
-Defined in: [packages/codegen/src/unified-generator.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L100)
+Defined in: [packages/codegen/src/unified-generator.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L118)
 
 Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
 returns for the two shipped plugins (react-rspack, angular-webpack), using

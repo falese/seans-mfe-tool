@@ -29,6 +29,63 @@ export interface ValidationResult {
 }
 
 /**
+ * The names declared in a `plugins:` / `transforms:` section, and the entries
+ * that could not be read as a name.
+ *
+ * Both sections accept two shapes — a list of strings, or a list/map of
+ * `{name: config}` — and both are read BEFORE Zod, from YAML that may be
+ * malformed in ways the schema would have rejected. So this tolerates anything
+ * and says what it could not use, rather than assuming a shape:
+ *
+ *   `Object.keys(null)` throws, and `plugins:\n  -` is valid YAML for `[null]`
+ *   — a bare TypeError out of the generator for a one-character mistake.
+ *   `Object.keys({})[0]` is `undefined`, which was interpolated into the
+ *   warning text as the literal name `"undefined"`.
+ *
+ * Extracted because the two validators had this block character-for-character
+ * identical, so a fix to one silently left the other broken.
+ */
+function meshEntryNames(section: unknown): { names: string[]; malformed: number } {
+  const raw: unknown[] = Array.isArray(section)
+    ? section
+    : typeof section === 'object' && section !== null
+      ? Object.keys(section)
+      : [];
+
+  const names: string[] = [];
+  let malformed = 0;
+
+  for (const entry of raw) {
+    if (typeof entry === 'string') {
+      if (entry.trim()) names.push(entry);
+      else malformed += 1;
+      continue;
+    }
+    // A `{name: config}` mapping is the only other supported shape. Anything
+    // else — null, a number, a nested list, an empty mapping — has no name to
+    // report on, so it is counted rather than guessed at.
+    if (typeof entry === 'object' && entry !== null && !Array.isArray(entry)) {
+      const key = Object.keys(entry)[0];
+      if (typeof key === 'string' && key.trim()) names.push(key);
+      else malformed += 1;
+      continue;
+    }
+    malformed += 1;
+  }
+
+  return { names, malformed };
+}
+
+/** One warning naming how many entries of `section` could not be read. */
+function malformedWarning(count: number, kind: 'plugin' | 'transform'): string[] {
+  if (count === 0) return [];
+  return [
+    `${count} ${kind} entr${count === 1 ? 'y' : 'ies'} could not be read as a name ` +
+      `(expected a string, or a single-key mapping of {name: config}).`,
+  ];
+}
+
+/**
  * Validate and classify plugins from manifest
  * Enforces separation between plugins and transforms
  * Supports both object format {pluginName: config} and array format [{pluginName: config}]
@@ -53,10 +110,8 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
   const manifestPlugins = (manifest as unknown as Record<string, unknown>).plugins;
   if (!manifestPlugins) return result;
 
-  // Handle both array and object formats
-  const pluginEntries = Array.isArray(manifestPlugins)
-    ? manifestPlugins.map((p) => (typeof p === 'string' ? p : Object.keys(p as object)[0]))
-    : Object.keys(manifestPlugins as object);
+  const { names: pluginEntries, malformed } = meshEntryNames(manifestPlugins);
+  result.warnings.push(...malformedWarning(malformed, 'plugin'));
 
   for (const pluginName of pluginEntries) {
     switch (classifyMeshEntry(pluginName)) {
@@ -111,10 +166,8 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
   const manifestTransforms = (manifest as unknown as Record<string, unknown>).transforms;
   if (!manifestTransforms) return result;
 
-  // Handle both array and object formats
-  const transformEntries = Array.isArray(manifestTransforms)
-    ? manifestTransforms.map((t) => (typeof t === 'string' ? t : Object.keys(t as object)[0]))
-    : Object.keys(manifestTransforms as object);
+  const { names: transformEntries, malformed } = meshEntryNames(manifestTransforms);
+  result.warnings.push(...malformedWarning(malformed, 'transform'));
 
   for (const transformName of transformEntries) {
     switch (classifyMeshEntry(transformName)) {

@@ -6,6 +6,7 @@
  */
 
 import type { CodegenVariant, GenPlanContext } from './types';
+import { escapeCapabilityName } from './shared';
 
 /**
  * Capability metadata for the standalone dev entry. `displayName` and `icon`
@@ -27,11 +28,6 @@ function capabilityMetadata(ctx: GenPlanContext): Record<string, unknown> {
   };
 }
 
-/** Escape a capability name for use inside a RegExp. */
-function escapeName(name: string): string {
-  return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 export const reactRspack: CodegenVariant = {
   id: 'react-rspack',
   framework: 'react',
@@ -49,7 +45,7 @@ export const reactRspack: CodegenVariant = {
   }),
 
   implementedPatterns: (name) => {
-    const n = escapeName(name);
+    const n = escapeCapabilityName(name);
     return [
       new RegExp(`export\\s+(?:default\\s+)?(?:const|let|var|function|class)\\s+${n}\\b`),
       new RegExp(`export\\s+default\\s+${n}\\b`),

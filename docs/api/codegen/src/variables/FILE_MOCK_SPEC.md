@@ -8,6 +8,6 @@
 
 > `const` **FILE\_MOCK\_SPEC**: [`FileSpec`](../interfaces/FileSpec.md)
 
-Defined in: [packages/codegen/src/variants/shared.ts:73](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L73)
+Defined in: [packages/codegen/src/variants/shared.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L86)
 
 Jest static-asset mock, required by the generated config's moduleNameMapper.

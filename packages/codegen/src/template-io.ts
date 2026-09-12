@@ -105,19 +105,29 @@ export async function writeGeneratedFiles(
   for (const file of files) {
     try {
       const exists = await fs.pathExists(file.path);
-      if (exists && !file.overwrite) {
-        if (!options.force) {
-          result.skipped.push(file.path);
-          continue;
-        }
-        result.reseeded.push(file.path);
+      const wouldReseed = exists && !file.overwrite;
+
+      if (wouldReseed && !options.force) {
+        result.skipped.push(file.path);
+        continue;
       }
+
       if (options.dryRun) {
+        // A dry run reports intent, so a would-be re-seed is recorded here —
+        // that is the whole point of previewing --force.
+        if (wouldReseed) result.reseeded.push(file.path);
         result.files.push(file);
         continue;
       }
+
       await fs.ensureDir(path.dirname(file.path));
       await fs.writeFile(file.path, file.content, 'utf8');
+      // Recorded only after the write actually lands. Recording it before
+      // meant a file whose write then threw was reported in BOTH `reseeded`
+      // and `errors` — telling the developer their edit had been replaced
+      // when it was still on disk, and sending them to `git checkout --` for
+      // a file with nothing to recover.
+      if (wouldReseed) result.reseeded.push(file.path);
       result.files.push(file);
     } catch (error) {
       result.errors.push(`Failed to write ${file.path}: ${(error as Error).message}`);

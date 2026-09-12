@@ -8,4 +8,4 @@
 
 > `const` **angularWebpack**: [`CodegenVariant`](../interfaces/CodegenVariant.md)
 
-Defined in: [packages/codegen/src/variants/angular-webpack.ts:15](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/angular-webpack.ts#L15)
+Defined in: [packages/codegen/src/variants/angular-webpack.ts:11](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/angular-webpack.ts#L11)

@@ -27,7 +27,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import type { DSLManifest, DSLInput, DSLOutput } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@seans-mfe/dsl';
 import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
 // Constant data moved to ./catalog (ADR-050 DEPENDENCY_VERSIONS, ADR-027 Mesh
 // tables, #341 optional assets). Re-exported here so the module's public
@@ -57,7 +57,12 @@ export * from './file-plan';
 export * from './variants';
 export * from './contributors';
 import { fileContributors } from './contributors';
-import { resolveFilePlan, type FileSpec, type GeneratorDiagnostic } from './file-plan';
+import {
+  resolveFilePlan,
+  mergeTemplateRoots,
+  type FileSpec,
+  type GeneratorDiagnostic,
+} from './file-plan';
 import {
   findVariant,
   reactRspack,
@@ -90,16 +95,33 @@ export interface FrameworkVariant {
 }
 
 /**
+ * The framework name a manifest asks for, before any plugin is consulted.
+ *
+ * Single-sourced because two callers need it and they need DIFFERENT things
+ * from it: `deriveBuiltinVariant` maps it onto one of the two built-in trios,
+ * while the CLI's `resolveFrameworkVariant` hands it to `loadFrameworkPlugin`,
+ * where an unrecognised name is a third-party plugin to require (ADR-036), not
+ * a value to fall back from. A caller that single-sources the *trio* instead of
+ * the *name* silently turns every third-party framework into React.
+ */
+export function resolveFrameworkName(manifest: DSLManifest): string {
+  return manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+}
+
+/**
  * Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
  * returns for the two shipped plugins (react-rspack, angular-webpack), using
  * the same resolution rule (explicit `framework`, else `bundler:'webpack'`
  * selects Angular). Keeps the generator independently runnable/testable
  * without importing the framework loader (ADR-036, ADR-061).
  */
-
 export function deriveBuiltinVariant(manifest: DSLManifest): FrameworkVariant {
-  const framework = manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
-  return framework === 'angular'
+  // Reads the author's name, then answers a narrower question: which BUILT-IN
+  // trio. Collapsing everything non-Angular to React is correct HERE — there
+  // are two built-ins and this is the no-plugin fallback — and wrong anywhere
+  // that still has to honour the name the author wrote. That is why the name
+  // rule is `resolveFrameworkName` and only the trio is decided below.
+  return resolveFrameworkName(manifest) === 'angular'
     ? { framework: 'angular', bundler: 'webpack', templateVariant: 'angular-webpack' }
     : { framework: 'react', bundler: 'rspack', templateVariant: 'react-rspack' };
 }
@@ -109,6 +131,17 @@ export interface GeneratedFile {
   content: string;
   overwrite: boolean;
 }
+
+/** Lifecycle phases, in the order the generated code runs them. */
+const LIFECYCLE_PHASES = ['before', 'main', 'after', 'error'] as const;
+
+/** Widened once: `PLATFORM_CAPABILITIES` is a readonly tuple of literals. */
+const PLATFORM_CAPABILITY_NAMES: readonly string[] = PLATFORM_CAPABILITIES;
+
+/** The `lifecycle` block of one capability config, as the walk below reads it. */
+type CapabilityLifecycle = NonNullable<
+  DSLManifest['capabilities'][number][string]['lifecycle']
+>;
 
 // =============================================================================
 // Dependency Version Constants (ADR-027)
@@ -186,6 +219,55 @@ export async function generateAllFiles(
 }
 
 /**
+ * The lifecycle hooks one capability declares, split into stubs and imports.
+ *
+ * Pulled out of `planRenderModel`, where it sat seven levels deep inside two
+ * other loops and the reader had to hold "which capability" and "which phase"
+ * in their head to follow a hook's fate. The dedup set is a parameter because
+ * dedup is across the WHOLE manifest, not within one capability — the one fact
+ * about this walk that is easy to get wrong and impossible to see when it is
+ * inlined.
+ *
+ * ADR-040: a hook declaring a resolvable `source` is wired through the
+ * generated handler-registry and gets no stub; anything else gets a stub.
+ */
+function collectLifecycleHooks(
+  lifecycle: CapabilityLifecycle | undefined,
+  seen: Set<string>,
+): { hooks: RenderLifecycleHook[]; sources: RenderHandlerSource[] } {
+  const hooks: RenderLifecycleHook[] = [];
+  const sources: RenderHandlerSource[] = [];
+  if (!lifecycle) return { hooks, sources };
+
+  for (const phase of LIFECYCLE_PHASES) {
+    for (const hookEntry of lifecycle[phase] ?? []) {
+      for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
+        // A hook may not shadow a platform capability, and the first
+        // declaration of a name wins across the whole manifest.
+        if (PLATFORM_CAPABILITY_NAMES.includes(hookName)) continue;
+        if (seen.has(hookName)) continue;
+        seen.add(hookName);
+
+        const source = hookConfig?.source;
+        if (typeof source === 'string' && source.length > 0) {
+          const parsed = parseHandlerSource(source, hookName);
+          if (parsed) {
+            sources.push({ localName: hookName, ...parsed });
+            continue;
+          }
+          // An unparseable source falls through to a stub deliberately: the
+          // author asked for an external handler and did not get one, so the
+          // generated code must still have somewhere for the logic to live.
+        }
+        hooks.push({ name: hookName, description: hookConfig?.description || '', phase });
+      }
+    }
+  }
+
+  return { hooks, sources };
+}
+
+/**
  * Plan phase — aggregate the manifest's capabilities, lifecycle hooks, and
  * external handler sources (ADR-040) into the template `vars`. Pure: no disk
  * access, no template rendering.
@@ -198,10 +280,15 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
   // capability set in @seans-mfe/contracts (ADR-080). This map was previously
   // written out by hand and omitted UpdateControlPlaneState, so a manifest
   // declaring it was generated as a domain capability.
-  const platformCapabilities: Record<
-    string,
-    { method: string; returnTypeBase: string } | undefined
-  > = Object.fromEntries(
+  //
+  // A Map, not an object: the key is a capability name straight out of a
+  // manifest, and an object answers for every key on Object.prototype as well
+  // as its own. `platformCapabilities['toString']` was the inherited function
+  // — truthy, so the platform branch was taken — and `.method` on it was
+  // `undefined`, which rendered `async  (context: Context): Promise<>` into
+  // mfe.ts: a method with no name, from a manifest that passed Zod.
+  // Pinned by `__tests__/prototype-keys.test.ts`.
+  const platformCapabilities = new Map<string, { method: string; returnTypeBase: string }>(
     PLATFORM_CAPABILITIES.map((name) => {
       const spec = PLATFORM_CAPABILITY_SPECS[name];
       return [spec.manifestKey, { method: spec.name, returnTypeBase: spec.resultType }];
@@ -216,8 +303,10 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
   // handler-registry.ts + import wiring) and are excluded from lifecycleHooks
   // (no stub method is emitted because the implementation lives elsewhere).
   const handlerSources: RenderHandlerSource[] = [];
-  let inputs: DSLInput[] = [];
-  let outputs: DSLOutput[] = [];
+  // NOTE: this loop also used to accumulate `inputs` and `outputs` with
+  // `arr = arr.concat(...)` per capability — a fresh copy of the whole array
+  // each time — and then never read either one. Templates take inputs and
+  // outputs from `capability.config`, not from an aggregate. Removed.
 
   for (const entry of manifest.capabilities) {
     for (const [method, config] of Object.entries(entry)) {
@@ -230,7 +319,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
       // `method` comes from Object.entries over manifest data, so it is a bare
       // string. Look it up once and narrow, rather than indexing three times
       // with a key the compiler cannot prove is present.
-      const platformCapability = platformCapabilities[method];
+      const platformCapability = platformCapabilities.get(method);
 
       if (platformCapability) {
         capabilities.push({
@@ -247,38 +336,9 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
           stubBody: '',
         });
       }
-      // Collect lifecycle hooks from capability config, deduplicated
-      // Filter out base capability names to prevent conflicts
-      const baseCapabilityNames: readonly string[] = PLATFORM_CAPABILITIES;
-      if (safeConfig.lifecycle) {
-        for (const phase of ['before', 'main', 'after', 'error'] as const) {
-          if (safeConfig.lifecycle[phase]) {
-            for (const hookEntry of safeConfig.lifecycle[phase]) {
-              for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
-                // Skip if it's a base capability name OR already added
-                if (!baseCapabilityNames.includes(hookName) && !lifecycleHookNames.has(hookName)) {
-                  lifecycleHookNames.add(hookName);
-                  const hookDescription = hookConfig?.description || '';
-                  // ADR-040: hooks with a `source` are wired through the
-                  // generated handler-registry, not emitted as stubs.
-                  const source = hookConfig?.source;
-                  if (typeof source === 'string' && source.length > 0) {
-                    const parsed = parseHandlerSource(source, hookName);
-                    if (parsed) {
-                      handlerSources.push({ localName: hookName, ...parsed });
-                      continue;
-                    }
-                  }
-                  lifecycleHooks.push({ name: hookName, description: hookDescription, phase });
-                }
-              }
-            }
-          }
-        }
-      }
-      // Collect inputs/outputs from capability config
-      if (safeConfig.inputs) inputs = inputs.concat(safeConfig.inputs);
-      if (safeConfig.outputs) outputs = outputs.concat(safeConfig.outputs);
+      const collected = collectLifecycleHooks(safeConfig.lifecycle, lifecycleHookNames);
+      lifecycleHooks.push(...collected.hooks);
+      handlerSources.push(...collected.sources);
     }
   }
 
@@ -314,7 +374,10 @@ async function renderFiles(
   // own template root, resolved inside its own package, so nothing here names
   // a plugin or reaches outside this package for a template.
   const contributors = fileContributors();
-  const contributorRoots = Object.fromEntries(contributors.map((c) => [c.id, c.templateRoot]));
+  // Not a spread: `variant` is the root every spec falls back to, and a
+  // contributor id is an open string, so spreading let a contributor named
+  // `variant` replace the variant's own template directory in silence.
+  const { roots, diagnostics: rootDiagnostics } = mergeTemplateRoots(templateDir, contributors);
 
   // --- Domain capabilities, and which are already realised in code ---
   const domainCapabilities: string[] = [];
@@ -375,7 +438,7 @@ async function renderFiles(
 
   const { files, diagnostics } = await resolveFilePlan(plan, {
     basePath,
-    roots: { variant: templateDir, ...contributorRoots },
+    roots,
     vars: vars as unknown as Record<string, unknown>,
     ctx,
     io: {
@@ -395,5 +458,5 @@ async function renderFiles(
     });
   }
 
-  return { files, preservedCapabilities, diagnostics };
+  return { files, preservedCapabilities, diagnostics: [...rootDiagnostics, ...diagnostics] };
 }

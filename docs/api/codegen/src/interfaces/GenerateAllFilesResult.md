@@ -6,7 +6,7 @@
 
 # Interface: GenerateAllFilesResult
 
-Defined in: [packages/codegen/src/unified-generator.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L124)
+Defined in: [packages/codegen/src/unified-generator.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L157)
 
 Generate all files (features, platform, BFF, configs) for a manifest
 
@@ -16,7 +16,7 @@ Generate all files (features, platform, BFF, configs) for a manifest
 
 > **diagnostics**: [`GeneratorDiagnostic`](GeneratorDiagnostic.md)[]
 
-Defined in: [packages/codegen/src/unified-generator.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L132)
+Defined in: [packages/codegen/src/unified-generator.ts:165](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L165)
 
 Everything the generator has to say about this run (ADR-092). Returned,
 never printed: the caller decides whether that means chalk on a terminal,
@@ -28,7 +28,7 @@ a field in the JSON envelope, or nothing at all.
 
 > **files**: [`GeneratedFile`](GeneratedFile.md)[]
 
-Defined in: [packages/codegen/src/unified-generator.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L125)
+Defined in: [packages/codegen/src/unified-generator.ts:158](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L158)
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [packages/codegen/src/unified-generator.ts:125](https://github.com/f
 
 > **preservedCapabilities**: `string`[]
 
-Defined in: [packages/codegen/src/unified-generator.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L126)
+Defined in: [packages/codegen/src/unified-generator.ts:159](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L159)

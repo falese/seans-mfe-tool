@@ -25,8 +25,17 @@
  * `PlanIO`, so a plan can be resolved and asserted without a disk.
  */
 
-/** Where a spec's template is looked up. A variant may name additional roots. */
-export type TemplateRootName = 'variant' | 'bff';
+/**
+ * Where a spec's template is looked up.
+ *
+ * `variant` is reserved for the framework variant's own template directory and
+ * is the default for a spec that names none. Any other value is a
+ * `FileContributor` id, which is an open string — a plugin ships templates the
+ * generator has never heard of, which is the point (ADR-092 §2). Typed as such
+ * so the two literals below read as documentation rather than as a closed set
+ * the generator can be trusted to enumerate.
+ */
+export type TemplateRootName = 'variant' | (string & {});
 
 /** The context a spec's predicates and var-builders see. Opaque to this module. */
 export type PlanContext = unknown;
@@ -77,8 +86,12 @@ export interface PlanIO {
 export interface ResolvePlanOptions {
   /** MFE root that `out` paths are relative to. */
   basePath: string;
-  /** Template roots by name. `variant` is required; others are per-spec. */
-  roots: Partial<Record<TemplateRootName, string>> & { variant: string };
+  /**
+   * Template roots by name. `variant` is required; others are contributor ids.
+   * Build it with {@link mergeTemplateRoots} rather than by spreading — a
+   * contributor id colliding with `variant` is otherwise a silent takeover.
+   */
+  roots: Record<string, string> & { variant: string };
   /** The shared render model handed to every template. */
   vars: Record<string, unknown>;
   /** Passed to each spec's `when` and `vars`. */
@@ -118,6 +131,63 @@ export type PlanDiagnostic = GeneratorDiagnostic;
 export interface ResolvedPlan {
   files: PlannedFile[];
   diagnostics: GeneratorDiagnostic[];
+}
+
+/**
+ * Build the template-root table from the variant's directory and whatever
+ * contributors registered.
+ *
+ * `variant` is reserved: it is the root every spec falls back to when it names
+ * none, which is most of them. The table used to be assembled as
+ * `{ variant: templateDir, ...contributorRoots }` keyed by contributor id —
+ * and `FileContributor.id` is an open string, so a contributor registering
+ * under `variant` silently replaced the variant's own directory and the whole
+ * MFE rendered from that package's templates. No error, no missing file: a
+ * complete MFE built from the wrong source, which is why the collision is an
+ * error diagnostic rather than a warning.
+ *
+ * Duplicate ids get the same treatment. `fileContributors()` de-duplicates by
+ * id today, so this is defence for any other caller assembling the list.
+ */
+export function mergeTemplateRoots(
+  variantRoot: string,
+  contributors: ReadonlyArray<{ id: string; templateRoot: string }>,
+): { roots: ResolvePlanOptions['roots']; diagnostics: GeneratorDiagnostic[] } {
+  const roots: ResolvePlanOptions['roots'] = { variant: variantRoot };
+  const diagnostics: GeneratorDiagnostic[] = [];
+  // A Set rather than an `in`/hasOwnProperty check on `roots`: the ids being
+  // tested come from registered contributors, and testing membership against
+  // an object would consult Object.prototype for `toString` and friends.
+  const claimed = new Set<string>(['variant']);
+
+  for (const { id, templateRoot } of contributors) {
+    if (id === 'variant') {
+      diagnostics.push({
+        severity: 'error',
+        code: 'reserved-template-root',
+        target: id,
+        message:
+          `a file contributor registered under the reserved id "variant"; ` +
+          `its templates were ignored`,
+        fix: 'Give the contributor an id of its own — "variant" names the framework variant\'s own template directory.',
+      });
+      continue;
+    }
+    if (claimed.has(id)) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'duplicate-template-root',
+        target: id,
+        message: `two file contributors registered under the id "${id}"; the second was ignored`,
+        fix: 'Give each contributor a unique id.',
+      });
+      continue;
+    }
+    claimed.add(id);
+    roots[id] = templateRoot;
+  }
+
+  return { roots, diagnostics };
 }
 
 /** Join without importing `path`, so this module stays trivially portable. */

@@ -8,7 +8,7 @@
 
 > **slotSpecs**(`ctx`): [`FileSpec`](../interfaces/FileSpec.md)[]
 
-Defined in: [packages/codegen/src/variants/shared.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L86)
+Defined in: [packages/codegen/src/variants/shared.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/variants/shared.ts#L99)
 
 The slot contract sugar (ADR-067), when the manifest declares slots and the
 variant ships a template for it.

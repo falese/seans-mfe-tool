@@ -8,7 +8,7 @@
 
 > **generateAllFiles**(`manifest`, `basePath`, `options`): `Promise`\<[`GenerateAllFilesResult`](../interfaces/GenerateAllFilesResult.md)\>
 
-Defined in: [packages/codegen/src/unified-generator.ts:156](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L156)
+Defined in: [packages/codegen/src/unified-generator.ts:189](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L189)
 
 Generate all files (features, platform, BFF, configs) for a manifest.
 

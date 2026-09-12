@@ -8,7 +8,7 @@
 
 > **canonicalMeshName**(`name`): `string`
 
-Defined in: [packages/contracts/src/mesh-catalog.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/mesh-catalog.ts#L122)
+Defined in: [packages/contracts/src/mesh-catalog.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/mesh-catalog.ts#L129)
 
 Resolve a manifest-written name to its canonical Mesh config key.
 
