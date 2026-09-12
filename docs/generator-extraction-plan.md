@@ -394,9 +394,21 @@ not exist; the file is under `docs/DSL/`.
 
 This is B1 in prose rather than code: one fact stated several times, in
 different states, with the copy carrying the most authority in its own header
-being the most out of date. The fix is the ADR-075 pattern already applied to
-the ADR index and the system map — generate the reference from the schema, and
-demote what remains to a worked example.
+being the most out of date.
+
+**Resolved** (`de16098`). `docs/schemas/manifest-fields.md` is generated from
+the Zod schema via the JSON Schema and gated by
+`build:manifest-reference:check`. Field descriptions were added to the Zod
+fields themselves, so the documentation lives in the source of truth rather
+than beside it. `dsl-schema-reference.md` is deleted; `dsl.yaml` is demoted to
+a worked example whose header now explains why its claim was wrong;
+`types.ts`'s citation of a path that never existed is corrected.
+
+One demonstration of the finding while fixing it: the description first written
+for `data` cited ADR-046 as the decision making it Mesh config. ADR-046 is
+*Environment Configuration and Secret Validation*, and Proposed. The wrong
+number came from `dsl.yaml`'s header and was copied forward. `check:adr`
+refused it.
 
 ### C. Abstraction that exists but is not wired
 
@@ -943,8 +955,19 @@ core; characterization identical.
    clean directory outside the repo. This is the actual extraction acceptance
    test, and it is the one that would fail today because of D1.
 
-**Exit:** `npm pack` → install in a scratch directory → generate both fleets'
-manifests → byte-identical to the characterization snapshot.
+**Exit — delivered** (`de16098`), CI-gated as `npm run check:publish-shape`:
+pack all four packages, unpack into a scratch `node_modules` containing nothing
+else, and generate a real MFE from a manifest exercising a capability, a slot
+and a `data:` section — asserting no module resolved back into the checkout.
+
+Verified to bite by planting both historical defects: removing `templates` from
+`plugin-bff`'s `files` reports 5 failures, removing them from `codegen`'s
+reports 21, and restoring returns it to green.
+
+The boundary itself is enforced rather than only described.
+`packages/contracts/src/__tests__/extraction-boundary.test.ts` names the six
+contracts modules the generator may import and fails in both directions — on an
+import outside the list, and on a listed module nothing imports.
 
 ---
 
@@ -957,7 +980,7 @@ manifests → byte-identical to the characterization snapshot.
 | 2 — single-source facts | 1 day | 4 copies → 1, 2 resolvers → 1, 6 dead members | low · **done** |
 | 3 — decouple | ~1 day | 8 `console.*`, 1 duplicate-output bug | low · **done** |
 | 4 — file plan | 2–3 days | ~250 LOC, 6 branches | medium — mitigated by Phase 0 |
-| 5 — boundary | 1 day | ~1,750 LOC of contracts + ~1,500 lines of shadow docs | low |
+| 5 — boundary | 1 day | 855 lines of shadow docs; boundary + publish shape now gated | low · **done** |
 
 **~7 working days to go from a ~4,500-line generator embedded in ~22,000 lines,
 with a broken extension point and a package cycle, to a standalone, publishable
