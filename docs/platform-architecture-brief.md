@@ -210,7 +210,7 @@ These are trades made on purpose. The two things you give up are exactly the thi
 
 ## The Path Forward
 
-**What is built.** The runtime plumbing is in place: the LayoutManager (`src/runtime/layout-manager.ts`) with `providerValues` threading, `reportError` sink, slot-scoped fallback, `data-slot-state` markers, and `SLOT_ERROR` escalation with bounded retry. The neutral capability contract (`BaseMFE`, the ten `do*()` methods, the state machine) is in `packages/runtime`. The `BaseControlPlane` abstraction (`packages/runtime`) provides the host integration point. The `@seans-mfe/contracts` package carries the protocol types, the presentation handle shape, and the `hostContext` injection contract.
+**What is built.** The runtime plumbing is in place: the LayoutManager (`packages/runtime/src/layout-manager.ts`) with `providerValues` threading, `reportError` sink, slot-scoped fallback, `data-slot-state` markers, and `SLOT_ERROR` escalation with bounded retry. The neutral capability contract (`BaseMFE`, the ten `do*()` methods, the state machine) is in `packages/runtime`. The `BaseControlPlane` abstraction (`packages/runtime`) provides the host integration point. The `@seans-mfe/contracts` package carries the protocol types, the presentation handle shape, and the `hostContext` injection contract.
 
 **What is next.** Two tracked follow-ups are outstanding:
 

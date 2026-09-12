@@ -369,6 +369,10 @@ capabilities:
 
 ## Language Implementation Guide
 
+The TypeScript block below cites real files. The Python, Go and Rust blocks are
+sketches showing the shape the contract expects of a non-TypeScript MFE; no such
+implementation ships in this repository.
+
 ### Method names by language
 
 | Contract method | TypeScript | Python | Go | Rust |
@@ -403,7 +407,7 @@ export class MyMFE extends BaseMFE {
 }
 ```
 
-File: `src/runtime/base-mfe.ts` (abstract) · `src/runtime/remote-mfe.ts` (Module Federation concrete)
+File: `packages/runtime/src/base-mfe.ts` (abstract) · `packages/runtime/src/remote-mfe.ts` (Module Federation concrete)
 
 ### Python (Flask)
 
@@ -415,7 +419,6 @@ class MyMFE(BaseMFE):
     # ... 8 more methods
 ```
 
-File: `examples/polyglot-stubs/python/base_mfe.py`
 
 ### Go (net/http)
 
@@ -427,7 +430,6 @@ func (m *MyMFE) DoLoad(ctx context.Context, mfeCtx MFEContext) (LoadResult, erro
 // ... 8 more methods
 ```
 
-File: `examples/polyglot-stubs/go/base_mfe.go`
 
 ### Rust (Tokio + axum)
 
@@ -439,7 +441,6 @@ async fn do_load(&self, _ctx: MfeContext) -> Result<LoadResult, String> {
 // ... 8 more methods
 ```
 
-File: `examples/polyglot-stubs/rust/base_mfe.rs`
 
 ---
 

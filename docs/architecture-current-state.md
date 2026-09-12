@@ -1,14 +1,10 @@
-# seans-mfe-tool - Current Architecture (Updated June 2026)
+# seans-mfe-tool — Current Architecture
 
-> **Currency note (June 2026, DOCS-P1 #216).** Reconciled as part of the
-> [Platform Design Review](./archive/platform-design-review/README.md). Resolved a
-> contradictory "Last Updated" footer (previously December 2025 vs. an April
-> 2026 title) and added the now-shipped Framework Plugin System (ADR-036)
-> subsystem. The previously `_(Coming Soon)_` subsystem docs are now authored —
-> [Code Generation](./architecture-codegen.md), [DSL](./architecture-dsl.md),
-> [BFF](./architecture-bff.md), and [API Generator](./architecture-api-generator.md)
-> (gaps G01–G04 closed; see the
-> [Documentation Gap Matrix](./archive/platform-design-review/documentation-gap-matrix.md)).
+**Status:** Subsystem-by-subsystem survey. Each subsystem has its own reference:
+[Code Generation](./architecture-codegen.md), [DSL](./architecture-dsl.md),
+[BFF](./architecture-bff.md), [API Generator](./architecture-api-generator.md),
+[Runtime Platform](./architecture-runtime-platform.md), and
+[Schema & Contracts](./schema-contracts.md).
 
 ## Table of Contents
 
@@ -70,7 +66,7 @@ generator. The core owns the shape of build/scaffold/Docker operations
 - Concrete `ReactRspackPlugin` / `AngularWebpackPlugin` (`packages/framework-react/`, `packages/framework-angular/`)
 - `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`
 - `build:dev/prod/docker/check`, `remote:init`, and `deploy` delegate to the resolved plugin
-- Open `framework`/`bundler` manifest fields (`src/dsl/schema.ts`) — unknown values warn on stderr, fail only at resolution
+- Open `framework`/`bundler` manifest fields (`packages/dsl/src/schema.ts`) — unknown values warn on stderr, fail only at resolution
 
 **Status**: ✅ Complete (Issues #167–185, PRs #187–188, May 2026)
 
@@ -316,7 +312,7 @@ graph TB
 
 #### UnifiedGenerator
 
-**Location**: `src/codegen/UnifiedGenerator/unified-generator.ts`
+**Location**: `packages/codegen/src/unified-generator.ts`
 
 - **Purpose**: Main orchestrator for MFE generation
 - **Responsibilities**:
@@ -337,7 +333,7 @@ graph TB
 
 #### APIGenerator
 
-**Location**: `src/codegen/APIGenerator/`
+**Location**: `packages/plugin-api/src/APIGenerator/`
 
 - **ControllerGenerator**: REST endpoint implementations
 - **RouteGenerator**: Express route wiring
@@ -347,7 +343,7 @@ graph TB
 
 ### 4. DSL & Validation
 
-**Location**: `src/dsl/`
+**Location**: `packages/dsl/src/`
 
 #### schema.ts
 
@@ -379,7 +375,7 @@ graph TB
 
 **📐 [See Detailed Architecture →](./architecture-runtime-platform.md)**
 
-**Location**: `src/runtime/`
+**Location**: `packages/runtime/src/`
 **Output**: `dist/runtime/` → `@seans-mfe-tool/runtime` npm package
 
 #### Overview
@@ -415,7 +411,7 @@ The runtime platform provides the execution environment for all MFE types (remot
 
 ### 6. Templates
 
-**Location**: `src/codegen/templates/`
+**Location**: `packages/codegen/templates/`
 
 #### React Templates
 
@@ -446,13 +442,14 @@ The runtime platform provides the execution environment for all MFE types (remot
 
 ### 7. Utilities
 
-**Location**: `src/utils/`
+**Location**: removed. That directory held a second copy of template rendering and
+manifest validation; both now live in the packages that own them —
+`packages/codegen/src/template-io.ts` renders templates, and
+`packages/dsl/src/validator.ts` validates manifests.
 
 #### templateProcessor.js
 
-- EJS template rendering
-- Variable substitution
-- Recursive directory processing
+- Superseded by `renderTemplate` in `packages/codegen/src/template-io.ts`
 
 #### securityUtils.js
 
@@ -510,13 +507,11 @@ The runtime platform provides the execution environment for all MFE types (remot
 - Exports: BaseMFE, RemoteMFE, Context
 - **Important**: Handlers NOT in default export (prevents jsonwebtoken bundling)
 
-### 10. Agent Orchestrator (Design Phase)
+### 10. Agent Orchestrator
 
-**Location**: `src/agent-orchestrator/`
-
-- Future: Browser-based dynamic MFE loading
-- Design documentation only
-- Not yet implemented
+Not present. Browser-based dynamic MFE loading is served by the control plane
+and `LayoutManager` — see
+[Runtime Platform Architecture](./architecture-runtime-platform.md).
 
 ## Data Flow: MFE Generation
 
@@ -849,7 +844,7 @@ Key ADRs shaping the architecture:
 
 ### Agent Documentation
 
-- Architecture Governance Agent - design archived at `docs/archive/agent-system-design/agents/architecture-governance-agent.md`
+- Architecture Governance Agent - design archived at `docs/architecture-decisions/`
 
 ---
 

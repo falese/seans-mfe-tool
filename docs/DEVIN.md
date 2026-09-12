@@ -91,7 +91,7 @@ ADR index:
 | Typed errors | `packages/contracts/src/errors/` |
 | JSON schemas | `schemas/<topic>/<cmd>.json` (generated; never hand-edit) |
 | MCP server | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts` |
-| Codegen templates | `src/codegen/templates/<framework>/<bundler>/` |
+| Codegen templates | `packages/codegen/templates/<framework>/<bundler>/` |
 | Runtime platform | `packages/runtime/src/` |
 
 Files prefixed with `_` (e.g., `_shared.ts`) are skipped by oclif discovery — use for helpers.
@@ -130,7 +130,7 @@ Run in order. Push only if all pass:
 
 1. `npm run lint`
 2. `npm run typecheck`
-3. `npm test` (or `npm run test:ci` if you touched `src/runtime/`)
+3. `npm test` (or `npm run test:ci` if you touched `packages/runtime/src/`)
 4. `npm run build`
 5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command interfaces)
 

@@ -197,7 +197,7 @@ protected abstract runCommand(): Promise<T>;
 
 ## Typed errors
 
-Import from `@seans-mfe/contracts` (post-C1) or `src/runtime/errors/` (pre-C1).
+Import from `@seans-mfe/contracts` (post-C1) or `packages/runtime/src/errors/` (pre-C1).
 
 | Error class | Exit code | When to use |
 |---|---|---|

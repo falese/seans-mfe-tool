@@ -133,10 +133,10 @@ flowchart TB
 
 | Layer | Package / Module | Responsibility |
 |---|---|---|
-| Host shell | `src/runtime/base-control-plane.ts` | Single entry point; owns daemon + LayoutManager lifecycle |
-| Runtime orchestration | `src/runtime/layout-manager.ts` | Daemon-driven slot composition; mounts MFEs via adaptors |
+| Host shell | `packages/runtime/src/base-control-plane.ts` | Single entry point; owns daemon + LayoutManager lifecycle |
+| Runtime orchestration | `packages/runtime/src/layout-manager.ts` | Daemon-driven slot composition; mounts MFEs via adaptors |
 | Control plane | `packages/control-plane/` | Daemon process + capability registry; resolves actions → experiences. Ships with the platform (PDR-008, ADR-078) |
-| MFE runtime | `src/runtime/base-mfe.ts` | Lifecycle contract every MFE implements (load/render/health) |
+| MFE runtime | `packages/runtime/src/base-mfe.ts` | Lifecycle contract every MFE implements (load/render/health) |
 | Contracts | `packages/contracts/` | Shared type vocabulary across all layers |
 | Framework plugin | `packages/framework-react/` · `packages/framework-angular/` | Build-time codegen + dev server + Docker strategy |
 
@@ -971,17 +971,17 @@ All architectural decisions are recorded in `docs/architecture-decisions/`. Key 
 
 | Concept | Path |
 |---|---|
-| `BaseMFE` | `src/runtime/base-mfe.ts` |
-| `BaseControlPlane` | `src/runtime/base-control-plane.ts` |
-| `LayoutManager` | `src/runtime/layout-manager.ts` |
-| `DaemonChannel` | `src/runtime/daemon-channel.ts` |
+| `BaseMFE` | `packages/runtime/src/base-mfe.ts` |
+| `BaseControlPlane` | `packages/runtime/src/base-control-plane.ts` |
+| `LayoutManager` | `packages/runtime/src/layout-manager.ts` |
+| `DaemonChannel` | `packages/runtime/src/daemon-channel.ts` |
 | `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |
 | `BaseFrameworkPlugin` | `packages/contracts/src/framework-plugin.ts` |
 | Contracts (all shared types) | `packages/contracts/src/` |
 | Error classes | `packages/contracts/src/errors/` |
-| DSL schema (Zod) | `src/dsl/schema.ts` |
-| DSL type parser | `src/dsl/type-system.ts` |
-| Codegen templates | `src/codegen/templates/` |
+| DSL schema (Zod) | `packages/dsl/src/schema.ts` |
+| DSL type parser | `packages/dsl/src/type-system.ts` |
+| Codegen templates | `packages/codegen/templates/` |
 | React plugin | `packages/framework-react/src/plugin.ts` |
 | Angular plugin | `packages/framework-angular/src/plugin.ts` |
 | ADRs | `docs/architecture-decisions/` |

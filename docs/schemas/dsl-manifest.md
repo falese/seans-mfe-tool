@@ -6,7 +6,7 @@ Zod schemas — never defined separately.
 > **The generated field reference is [`manifest-fields.md`](./manifest-fields.md)** — derived
 > from the schema and gated, so it cannot fall behind it. Prefer it for *what is allowed*.
 > This page is hand-written and covers the prose a table cannot: why fields exist and how
-> they interact. `docs/DSL/dsl-schema-reference.md` was a third description of the same
+> they interact. `docs/schemas/manifest-fields.md` was a third description of the same
 > language and has been deleted (finding B5).
 
 ---

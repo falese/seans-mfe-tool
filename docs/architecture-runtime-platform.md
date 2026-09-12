@@ -336,7 +336,7 @@ The host hands it an element; the MFE mounts an **isolated island** (its own Rea
 root, its own Angular bootstrap) and returns its teardown. This path is *always*
 available and *always* polyglot — any host can mount any MFE. It is the default,
 and it is what the ABC Kids games use today. `createImperativeHandle()`
-(`src/runtime/imperative-handle.ts`) wraps an MFE's neutral lifecycle as this
+(`packages/runtime/src/imperative-handle.ts`) wraps an MFE's neutral lifecycle as this
 handle without importing any framework; the actual `createRoot` happens inside
 `RemoteMFE.doRender`, behind the port.
 

@@ -220,6 +220,13 @@ jobs:
       - name: Check relative doc links resolve
         run: node scripts/check-doc-links.js
 
+      - name: Check doc path citations resolve
+        # check-doc-links covers links BETWEEN documents. This covers the other
+        # half: a doc citing `src/dsl/schema.ts` after the monorepo split points
+        # the reader at nothing, and nothing noticed for months. Decision records
+        # and plans are out of scope — they describe the repo as it was.
+        run: node scripts/check-doc-paths.js
+
   adr-governance:
     # Post a governance summary on every PR: which decisions it changes, which
     # its code rests on, and the register's state (ADR-075).

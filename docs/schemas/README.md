@@ -24,7 +24,7 @@ The pillar spans two distinct domains. Keep them separate in your mental model:
 
 ### Domain A — DSL types (manifest-time)
 
-Defined in `src/dsl/` (Zod) and validated when a manifest is parsed or a command is
+Defined in `packages/dsl/src/` (Zod) and validated when a manifest is parsed or a command is
 run. These types describe what an MFE **is** and what it **declares**.
 
 | Sub-document | What it covers |
@@ -71,13 +71,13 @@ renderer. These types describe what the platform **does** and what flows over th
 
 | Schema | Source file |
 |---|---|
-| DSL manifest | `src/dsl/schema.ts` (Zod, inferred TypeScript) |
-| DSL type parser | `src/dsl/type-system.ts` |
+| DSL manifest | `packages/dsl/src/schema.ts` (Zod, inferred TypeScript) |
+| DSL type parser | `packages/dsl/src/type-system.ts` |
 | CLI envelope | `packages/contracts/src/envelope.ts` |
 | Error classes | `packages/contracts/src/errors/` |
 | Error classifier | `packages/contracts/src/error-classifier.ts` |
 | Control-plane messages | `packages/contracts/src/messages.ts` |
 | Presentation handles | `packages/contracts/src/presentation.ts` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
-| Control plane base | `src/runtime/base-control-plane.ts` |
+| Control plane base | `packages/runtime/src/base-control-plane.ts` |
 | Generated command schemas | `schemas/*.json` (machine-generated — never hand-edit) |

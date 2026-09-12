@@ -49,8 +49,8 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 
 | What                                                        | Requirement           | Where                           |
 | ----------------------------------------------------------- | --------------------- | ------------------------------- |
-| DSL schema, parser, validator, type system                  | REQ-042–058 ✅        | `src/dsl/`, `packages/dsl/`     |
-| GraphQL BFF (Mesh init, validate, build, dev)               | REQ-BFF-001–008 ✅    | `src/commands/bff/`             |
+| DSL schema, parser, validator, type system                  | REQ-042–058 ✅        | `packages/dsl/src/`, `packages/dsl/`     |
+| GraphQL BFF (Mesh init, validate, build, dev)               | REQ-BFF-001–008 ✅    | `packages/plugin-bff/src/commands/bff/`             |
 | DSL-first remote generation                                 | REQ-REMOTE-001–010 ✅ | `src/commands/remote/`          |
 | Orchestration system (shell + registry + auto-registration) | REQ-001–041 ✅        | `src/commands/`, `src/codegen/` |
 | OpenAPI → REST API generator (Express + MongoDB/SQLite)     | — ✅                  | `src/codegen/`                  |
@@ -63,7 +63,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | Concrete `ReactRspackPlugin` / `AngularWebpackPlugin`                              | `packages/framework-react/`, `packages/framework-angular/` |
 | `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`           | `src/framework/loader.ts`                         |
 | `build:dev/prod/docker/check`, `remote:init`, `deploy` delegate to the plugin     | `src/commands/build/`, `src/commands/remote/`     |
-| Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `src/dsl/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
+| Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `packages/dsl/src/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
 | Authoring guide                                                                   | [`docs/framework-plugin-authoring.md`](./framework-plugin-authoring.md) |
 
 ### Runtime Composition — Control Plane, Slots, Layout (ADR-054–060, ADR-066–073)
@@ -186,7 +186,7 @@ work landed via ADR-024/025/076 and the control-plane stream rather than through
 | Inter-hook communication   | ADR-032 | 📋 Proposed — no issue yet                                  |
 
 **Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)  
-**Issue templates ready:** see `docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md` in git history (archive removed from the tree; #239)
+**Issue templates ready:** see GitHub Issues in git history (archive removed from the tree; #239)
 
 To create issues:
 

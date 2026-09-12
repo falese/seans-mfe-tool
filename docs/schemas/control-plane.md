@@ -1,6 +1,6 @@
 # Control Plane Interface
 
-Source of truth: `src/runtime/base-control-plane.ts`.
+Source of truth: `packages/runtime/src/base-control-plane.ts`.
 
 Refs: ADR-059 (BaseControlPlane), ADR-054 (control-plane message protocol),
 ADR-055 (LayoutManager), ADR-056 (MFE presentation boundary),
