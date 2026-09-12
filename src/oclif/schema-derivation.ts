@@ -13,9 +13,16 @@
  * a flag cannot be advertised unless the command declares it, and a command
  * cannot be missing unless it is excluded on purpose, below.
  *
- * Output schemas stay hand-authored: a command's TypeScript result type is not
- * introspectable at runtime. The generator fails on a command with no output
- * schema rather than emitting `{}`, so adding a command forces the decision.
+ * This module owns the INPUT half and the selection policy. The output half is
+ * `./type-to-schema.ts`, which resolves the `T` in `extends BaseCommand<T>`
+ * through the TypeScript compiler — a result type is not introspectable at
+ * RUNTIME, which is why output schemas were hand-authored until that landed,
+ * but it is perfectly introspectable at build time with a `ts.Program`.
+ *
+ * Either way the generator fails on a command with no output schema rather than
+ * emitting `{}`, so adding a command forces the decision.
+ *
+ * See `docs/schema-contracts.md` for how the two halves fit together.
  *
  * Refs #139 · ADR-019 · ADR-077
  */
