@@ -19,7 +19,7 @@
  */
 
 import path from 'path';
-import { generateAllFiles, OPTIONAL_PUBLIC_ASSETS } from '../unified-generator';
+import { generateAllFiles, PUBLIC_SPECS } from '../unified-generator';
 
 const BASE = path.join(__dirname, 'output-optional-assets');
 
@@ -96,17 +96,22 @@ describe('optional public assets (#341)', () => {
   });
 
   describe('the optional set is narrow, so required templates still warn', () => {
+    // Asserted against PUBLIC_SPECS — the plan the generator actually reads.
+    // These assertions used to name `OPTIONAL_PUBLIC_ASSETS`, a constant that
+    // stopped having a consumer when optionality moved onto the specs
+    // themselves (ADR-091): adding an entry to it changed nothing while this
+    // suite stayed green, which is the failure mode a gate is supposed to
+    // prevent, not exhibit.
+    const optional = PUBLIC_SPECS.filter((spec) => spec.optional).map((spec) => spec.out);
+
     it('does not include index.html — an MFE with no HTML entry cannot be served', () => {
       // The failure mode this guards is silencing the diagnostic wholesale,
-      // which would trade a noisy gate for a silent one. Asserted against the
-      // exported set rather than by trying to conjure a variant that ships no
-      // index.html: every variant ships one, so no such fixture exists to
-      // generate, and a test that cannot fail is not a test.
-      expect(OPTIONAL_PUBLIC_ASSETS).not.toContain('index.html');
+      // which would trade a noisy gate for a silent one.
+      expect(optional).not.toContain('public/index.html');
     });
 
     it('is exactly the two assets base-mfe-angular legitimately lacks', () => {
-      expect([...OPTIONAL_PUBLIC_ASSETS].sort()).toEqual(['demo.html', 'favicon.ico']);
+      expect([...optional].sort()).toEqual(['public/demo.html', 'public/favicon.ico']);
     });
   });
 });

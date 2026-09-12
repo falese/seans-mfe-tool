@@ -6,7 +6,7 @@
 
 # Interface: FrameworkVariant
 
-Defined in: [packages/codegen/src/unified-generator.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L87)
+Defined in: [packages/codegen/src/unified-generator.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L86)
 
 The resolved codegen variant a caller injects (ADR-061). The CLI derives it
 from the framework plugin (loadFrameworkPlugin) so third-party frameworks
@@ -20,7 +20,7 @@ computed purely from the manifest with no framework-loader dependency.
 
 > **bundler**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L89)
+Defined in: [packages/codegen/src/unified-generator.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L88)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/codegen/src/unified-generator.ts:89](https://github.com/fa
 
 > **framework**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L88)
+Defined in: [packages/codegen/src/unified-generator.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L87)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/codegen/src/unified-generator.ts:88](https://github.com/fa
 
 > **templateVariant**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L94)
+Defined in: [packages/codegen/src/unified-generator.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L93)
 
 The variant id. Open, not a union of the two built-ins: closing it was
 half of why a third framework required editing this file (ADR-091).

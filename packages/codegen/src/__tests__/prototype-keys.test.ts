@@ -65,3 +65,36 @@ describe('capability names inherited from Object.prototype', () => {
     expect(mfe!.content).not.toMatch(/\bundefined\s*\(/);
   });
 });
+
+describe('a capability named for a prototype key keeps its own description', () => {
+  // `featureSpecs` found its manifest entry with `capability in e`, and
+  // `'constructor' in e` is true of every object — so the find matched the
+  // FIRST entry whatever the capability was, `[capability]` on it was
+  // undefined, and the author's description was replaced by the generic
+  // default. The single-capability probe above cannot see this: it needs a
+  // second entry for the wrong one to be matched.
+  const twoCapabilities = (name: string) =>
+    ({
+      name: 'desc-probe',
+      version: '1.0.0',
+      type: 'remote',
+      endpoint: 'http://localhost:3001',
+      capabilities: [
+        { Dashboard: { type: 'domain', description: 'the first entry' } },
+        { [name]: { type: 'domain', description: 'MY OWN DESCRIPTION' } },
+      ],
+    }) as never;
+
+  it.each(['toString', 'constructor', 'valueOf'])(
+    'uses the description declared for %p, not the first entry it finds',
+    async (name) => {
+      const { files } = await generateAllFiles(twoCapabilities(name), '/tmp/desc-probe-unused', {
+        dryRun: true,
+      });
+      const component = files.find((f) => f.path.includes(`src/features/${name}/`));
+      expect(component).toBeDefined();
+      expect(component!.content).toContain('MY OWN DESCRIPTION');
+      expect(component!.content).not.toContain('the first entry');
+    },
+  );
+});

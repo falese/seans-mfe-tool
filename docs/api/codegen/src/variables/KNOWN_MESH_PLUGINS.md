@@ -8,7 +8,7 @@
 
 > `const` **KNOWN\_MESH\_PLUGINS**: `ReadonlySet`\<`string`\>
 
-Defined in: [packages/codegen/src/catalog.ts:269](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L269)
+Defined in: [packages/codegen/src/catalog.ts:249](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L249)
 
 Mesh plugin / transform allow-lists.
 

@@ -8,4 +8,4 @@
 
 > `const` **KNOWN\_MESH\_TRANSFORMS**: `ReadonlySet`\<`string`\>
 
-Defined in: [packages/codegen/src/catalog.ts:274](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L274)
+Defined in: [packages/codegen/src/catalog.ts:254](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L254)

@@ -8,7 +8,7 @@
 
 > **resolveFrameworkName**(`manifest`): `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:107](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L107)
+Defined in: [packages/codegen/src/unified-generator.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L106)
 
 The framework name a manifest asks for, before any plugin is consulted.
 

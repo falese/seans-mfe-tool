@@ -10,7 +10,7 @@ import {
   findMigrationHits,
   diffPackageDependencies,
 } from '@seans-mfe/codegen';
-import type { GeneratedFile } from '@seans-mfe/codegen';
+import type { GeneratedFile, GeneratorDiagnostic } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
@@ -54,6 +54,22 @@ function plannedOp(
   // replaced under --force. Reported as `reseed`, not `overwrite`, because it
   // is the only planned op that can destroy work.
   return force ? 'reseed' : 'skip';
+}
+
+/**
+ * The generator reports; the CLI renders (ADR-092).
+ *
+ * Shared by the real run and the dry run. It used to be inline after the
+ * dry-run branch had already returned, so a missing template, an unregistered
+ * variant or an unrecognised Mesh entry were invisible in exactly the mode a
+ * developer uses to find out what generation will do.
+ */
+function renderDiagnostics(diagnostics: GeneratorDiagnostic[]): void {
+  for (const d of diagnostics) {
+    const line = d.target ? `  ${d.target}: ${d.message}` : `  ${d.message}`;
+    console.log(d.severity === 'error' ? chalk.red(line) : chalk.yellow(line));
+    if (d.fix) console.log(chalk.gray(`      fix: ${d.fix}`));
+  }
 }
 
 const DRY_RUN_LABEL: Record<PlannedChange['op'], string> = {
@@ -217,6 +233,7 @@ export async function remoteGenerateCommand(
         const label = DRY_RUN_LABEL[op];
         console.log(`  ${target} ${op === 'reseed' ? chalk.red(label) : chalk.gray(label)}`);
       }
+      renderDiagnostics(diagnostics);
       return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, reseeded: [], dryRun: true, plannedChanges };
     }
 
@@ -236,14 +253,7 @@ export async function remoteGenerateCommand(
       }
     }
 
-    // The generator reports; the CLI renders (ADR-092). Warnings it could not
-    // act on — a missing template, an unrecognised Mesh entry — surface here
-    // rather than being written to stdout from inside a library.
-    for (const d of diagnostics) {
-      const line = d.target ? `  ${d.target}: ${d.message}` : `  ${d.message}`;
-      console.log(d.severity === 'error' ? chalk.red(line) : chalk.yellow(line));
-      if (d.fix) console.log(chalk.gray(`      fix: ${d.fix}`));
-    }
+    renderDiagnostics(diagnostics);
 
     if (genResult.reseeded.length > 0) {
       // Loud and itemised. --force is the only path that destroys developer

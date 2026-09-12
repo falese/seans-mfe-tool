@@ -16,7 +16,7 @@
       },
       "force": {
         "type": "boolean",
-        "description": "Overwrite existing files"
+        "description": "Re-seed developer-owned scaffolding, replacing your edits to it (ADR-089). Does not touch a capability that is already implemented."
       }
     },
     "required": [
@@ -33,6 +33,7 @@
       "generated",
       "skipped",
       "errors",
+      "reseeded",
       "dryRun"
     ],
     "properties": {
@@ -56,6 +57,13 @@
         "items": {
           "type": "string"
         }
+      },
+      "reseeded": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Developer-owned files that existed and were replaced because `--force` was\npassed (ADR-089). Empty on every run without the flag.\n\nPresent for the same reason it is on `RemoteGenerateResult`: this command\nforwards `--force` to the same writer, so it reaches the same files, and a\ncaller that cannot tell a re-seed from a first write cannot warn about it."
       },
       "dryRun": {
         "type": "boolean"

@@ -59,8 +59,11 @@ export async function remoteGenerateCapabilityCommand(
 
     console.log(chalk.blue(`\nGenerating capability: ${capabilityName}`));
     const frameworkVariant = resolveFrameworkVariant(filteredManifest);
+    // `generateAllFiles` does not read `force` — ownership decides what the
+    // plan contains, and the writer decides what happens to a file that
+    // exists. Passing `force: true` here read as "this command always
+    // overwrites", which was never what it did.
     const { files: allFiles, preservedCapabilities } = await generateAllFiles(filteredManifest, cwd, {
-      force: true,
       frameworkVariant,
     });
 
@@ -78,7 +81,7 @@ export async function remoteGenerateCapabilityCommand(
         const status = file.overwrite ? '(overwrite)' : '(new)';
         console.log(`  ${relativePath} ${chalk.gray(status)}`);
       }
-      return { capabilityName, generated: [], skipped: [], errors: [], dryRun: true, plannedChanges };
+      return { capabilityName, generated: [], skipped: [], errors: [], reseeded: [], dryRun: true, plannedChanges };
     }
 
     const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
@@ -90,12 +93,29 @@ export async function remoteGenerateCapabilityCommand(
       }
     }
 
+    if (genResult.reseeded.length > 0) {
+      // ADR-089 §4. Same treatment as `remote:generate`: this command forwards
+      // the same flag to the same writer, so it replaces the same developer-
+      // owned files — App.tsx, package.json, the bundler config, the BFF's
+      // Dockerfile. Reporting those under "✓ Generated files" described a
+      // destroyed edit as a routine success.
+      console.log(chalk.red('\nRe-seeded (your edits were replaced):'));
+      for (const file of genResult.reseeded) {
+        console.log(chalk.red(`  ${path.relative(cwd, file)}`));
+      }
+      console.log(chalk.gray('  Recover any of these with: git checkout -- <path>'));
+    }
+
     if (genResult.skipped.length > 0) {
-      console.log(chalk.yellow('\nSkipped (already exist):'));
+      console.log(chalk.yellow('\nKept (developer-owned):'));
       for (const file of genResult.skipped) {
         console.log(chalk.yellow(`  ${path.relative(cwd, file)}`));
       }
-      console.log(chalk.gray('  Use --force to overwrite'));
+      // Deliberately NOT "use --force to overwrite". Since ADR-089 that flag
+      // replaces these files rather than doing nothing, and recommending it in
+      // one line with no mention of what it costs is how the destructive path
+      // becomes the habitual one.
+      console.log(chalk.gray('  Yours to edit — regeneration never overwrites these'));
     }
 
     if (genResult.errors.length > 0) {
@@ -115,6 +135,7 @@ export async function remoteGenerateCapabilityCommand(
       generated: genResult.files.map((f) => path.relative(cwd, f.path)),
       skipped:   genResult.skipped.map((f) => path.relative(cwd, f)),
       errors:    genResult.errors,
+      reseeded:  genResult.reseeded.map((f) => path.relative(cwd, f)),
       dryRun:    false,
     };
 
@@ -147,7 +168,9 @@ export default class RemoteGenerateCapability extends BaseCommand<RemoteGenerate
     }),
     force: Flags.boolean({
       char: 'f',
-      description: 'Overwrite existing files',
+      description:
+        'Re-seed developer-owned scaffolding, replacing your edits to it (ADR-089). ' +
+        'Does not touch a capability that is already implemented.',
       default: false,
     }),
   }

@@ -132,7 +132,13 @@ function countFiles(dir: string): number {
 }
 
 function main(): void {
-  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'publish-shape-'));
+  // realpath, because `require.resolve` returns a realpath-resolved path while
+  // `os.tmpdir()` may not be one: on macOS it is /var/folders/... , a symlink
+  // to /private/var/folders/... , so the "did anything resolve outside the
+  // scratch?" check below compared two spellings of the same directory and
+  // failed with a false "Published packages cannot generate an MFE". Linux CI
+  // never saw it because /tmp is its own realpath there.
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'publish-shape-')));
   const tarDir = path.join(scratch, 'tarballs');
   const nodeModules = path.join(scratch, 'node_modules');
   fs.mkdirSync(tarDir, { recursive: true });

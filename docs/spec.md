@@ -34,7 +34,7 @@ Long-term goal: a community marketplace of domain-capability packages — domain
 ```
 seans-mfe-tool remote:generate          # Generate/regenerate MFE source from DSL manifest
 seans-mfe-tool remote:init              # Scaffold a new remote MFE project
-seans-mfe-tool remote:init-angular      # Scaffold a new Angular remote MFE project
+seans-mfe-tool remote:init --framework angular   # ...or any framework with a plugin installed
 seans-mfe-tool bff:init                 # Scaffold a GraphQL BFF for an MFE
 seans-mfe-tool deploy                   # Generate Docker/K8s deployment artifacts
 seans-mfe-tool schemas                  # Generate JSON schemas from command types

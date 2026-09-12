@@ -153,7 +153,15 @@ export function mergeTemplateRoots(
   variantRoot: string,
   contributors: ReadonlyArray<{ id: string; templateRoot: string }>,
 ): { roots: ResolvePlanOptions['roots']; diagnostics: GeneratorDiagnostic[] } {
-  const roots: ResolvePlanOptions['roots'] = { variant: variantRoot };
+  // Null-prototype, for the same reason the Mesh alias table is: this is
+  // indexed by `spec.root`, and on a plain object `roots['toString']` is the
+  // inherited function — sailing past the `root === undefined` guard in
+  // resolveFilePlan and surfacing as a misleading `missing-template`. Assigning
+  // `roots['__proto__'] = x` on a literal also sets the prototype instead of a
+  // key, so a contributor with that id got no root AND no diagnostic.
+  const roots: ResolvePlanOptions['roots'] = Object.assign(Object.create(null), {
+    variant: variantRoot,
+  });
   const diagnostics: GeneratorDiagnostic[] = [];
   // A Set rather than an `in`/hasOwnProperty check on `roots`: the ids being
   // tested come from registered contributors, and testing membership against

@@ -8,7 +8,7 @@
 
 > `const` **DEPENDENCY\_VERSIONS**: `object`
 
-Defined in: [packages/codegen/src/catalog.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L46)
+Defined in: [packages/codegen/src/catalog.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L26)
 
 Centralized dependency versions for template generation
 Following e2e2 dependency resolution (2025-12-06)

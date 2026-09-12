@@ -125,10 +125,16 @@ export function slotSpecs(ctx: GenPlanContext): FileSpec[] {
 export function featureSpecs(ctx: GenPlanContext, capability: string): FileSpec[] {
   const names = ctx.variant.featureFiles(capability);
   const dir = `src/features/${capability}`;
+  // `capability in e` walks the prototype chain, so `'constructor' in e` is
+  // true of EVERY entry: the find matched the first one regardless, and the
+  // author's real description was silently replaced by the default below.
+  // Own-property only.
+  const entry = ctx.manifest.capabilities.find((e) =>
+    Object.prototype.hasOwnProperty.call(e, capability),
+  );
   const description =
-    (ctx.manifest.capabilities.find((e) => capability in e)?.[capability]?.description as
-      | string
-      | undefined) || `${capability} feature component`;
+    (entry?.[capability]?.description as string | undefined) ||
+    `${capability} feature component`;
 
   return [
     {

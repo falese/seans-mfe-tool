@@ -34,7 +34,6 @@ import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } fro
 // surface — and `export * from './unified-generator'` in the barrel — is
 // unchanged by the move.
 export {
-  OPTIONAL_PUBLIC_ASSETS,
   DEPENDENCY_VERSIONS,
   DEFAULT_MESH_PLUGINS,
   DEFAULT_MESH_TRANSFORMS,
@@ -367,7 +366,29 @@ async function renderFiles(
 ): Promise<GenerateAllFilesResult> {
   const { vars, handlerSources } = model;
 
-  const variant = findVariant(vars.templateVariant) ?? reactRspack;
+  // A variant id with no registration is a real failure, not a default. The
+  // CLI resolves the id from a framework plugin, so reaching here unmatched
+  // means the plugin shipped a `templateVariant` it never registered — and
+  // falling through to React silently produced a complete, working, wrong MFE.
+  // That is the same defect `resolveFrameworkVariant` was fixed for, one layer
+  // later, so it gets the same answer: say so.
+  const resolved = findVariant(vars.templateVariant);
+  const variant = resolved ?? reactRspack;
+  const variantDiagnostics: GeneratorDiagnostic[] = resolved
+    ? []
+    : [
+        {
+          severity: 'error',
+          code: 'unregistered-variant',
+          target: vars.templateVariant,
+          message:
+            `no codegen variant is registered as "${vars.templateVariant}"; ` +
+            `generated with "${reactRspack.id}" instead`,
+          fix:
+            `Call registerVariant() with a CodegenVariant whose id is ` +
+            `"${vars.templateVariant}" before generating, or correct the manifest's framework.`,
+        },
+      ];
   const templateDir = path.resolve(__dirname, '..', 'templates', variant.templateDirName);
 
   // Whatever registered itself as a contributor (ADR-092 §2). Each brings its
@@ -458,5 +479,9 @@ async function renderFiles(
     });
   }
 
-  return { files, preservedCapabilities, diagnostics: [...rootDiagnostics, ...diagnostics] };
+  return {
+    files,
+    preservedCapabilities,
+    diagnostics: [...variantDiagnostics, ...rootDiagnostics, ...diagnostics],
+  };
 }

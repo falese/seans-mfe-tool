@@ -119,8 +119,9 @@ All commands accept `--json` for a machine-readable `CommandResult<T>` envelope
 # Scaffold a new remote MFE project (manifest + project skeleton)
 seans-mfe-tool remote:init <name> [--port 3001] [--framework react] [--force]
 
-# Scaffold an Angular remote MFE
-seans-mfe-tool remote:init-angular <name> [--port 3001]
+# Scaffold an Angular remote MFE (any framework: --framework <name>,
+# with @seans-mfe/framework-<name> installed for third-party ones)
+seans-mfe-tool remote:init <name> --framework angular [--port 3001]
 
 # Generate / regenerate MFE source from the DSL manifest
 seans-mfe-tool remote:generate [--dry-run] [--force]

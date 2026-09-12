@@ -238,3 +238,38 @@ describe('mergeTemplateRoots', () => {
     expect(files[0].content).toBe('/tpl/variant/a.ejs');
   });
 });
+
+describe('the template-root table is not prototype-bearing', () => {
+  // `roots[spec.root]` on a plain object returns the INHERITED member for
+  // `toString`, which is not undefined — so `resolveFilePlan`'s
+  // `root === undefined` guard never fires and the spec fails later, as a
+  // misleading `missing-template`, against a garbage path.
+  it('reports an unknown root as unknown, not as a missing template', async () => {
+    const { roots } = mergeTemplateRoots('/tpl/variant', []);
+    const { files, diagnostics } = await resolveFilePlan(
+      [{ template: 'a.ejs', out: 'a.ts', owner: 'generator', root: 'toString' }] as FileSpec[],
+      {
+        basePath: '/out',
+        roots,
+        vars: {},
+        ctx: undefined,
+        io: { exists: async () => true, render: async (p: string) => p },
+      },
+    );
+
+    expect(files).toEqual([]);
+    expect(diagnostics.map((d) => d.code)).toEqual(['unknown-template-root']);
+  });
+
+  it('registers a contributor whose id is __proto__ as a real key', () => {
+    // `roots['__proto__'] = x` on an object literal sets the PROTOTYPE, so the
+    // id was accepted, stored nowhere, and reported as nothing.
+    const { roots, diagnostics } = mergeTemplateRoots('/tpl/variant', [
+      { id: '__proto__', templateRoot: '/pkg/odd/templates' },
+    ]);
+
+    expect(diagnostics).toEqual([]);
+    expect(roots['__proto__']).toBe('/pkg/odd/templates');
+    expect(Object.keys(roots).sort()).toEqual(['__proto__', 'variant']);
+  });
+});
