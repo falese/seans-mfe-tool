@@ -11,7 +11,11 @@
  *
  * Scope: backticked strings that start with a real top-level repository
  * directory. A path is reported when it does not resolve and is not on one of
- * the two allow-lists below.
+ * the allow-lists below.
+ *
+ * Build output is out of scope. A clean checkout has no `dist/`, so judging one
+ * would make this gate pass on a developer's machine and fail in CI — the
+ * failure mode it exists to prevent, in itself.
  *
  * Plain Node with no dependencies, so it runs before `npm ci` if it has to.
  */
@@ -60,6 +64,14 @@ const NOT_IN_THIS_REPO = [
   /^src\/commands\/topic\//,           // the naming convention, spelled out
   /^packages\/(config|telemetry)$/,     // proposed, not yet created
 ];
+
+/**
+ * Build output. Absent from a clean checkout and present after a build, so its
+ * existence says nothing about whether a citation is correct — and checking it
+ * would make this gate pass locally and fail in CI, which is the one thing a
+ * gate must never do.
+ */
+const BUILD_OUTPUT = /(^|\/)(dist|node_modules|coverage|_site|out-tsc|\.mesh)(\/|$)/;
 
 const CITATION = /`([^`\n]+)`/g;
 
@@ -126,6 +138,7 @@ for (const file of walk(path.join(repoRoot, 'docs'))) {
     for (const candidate of expand(normalize(m[1]))) {
       if (!ROOTS.some((r) => candidate.startsWith(r))) continue;
       if (isPlaceholder(candidate)) continue;
+      if (BUILD_OUTPUT.test(candidate)) continue;
       if (NOT_IN_THIS_REPO.some((re) => re.test(candidate))) continue;
       if (seen.has(candidate)) continue;
       seen.add(candidate);
