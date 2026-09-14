@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runtime Platform Schematics</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%230A8272%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%278%27%20width%3D%2720%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2714.5%27%20width%3D%2713%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2721%27%20width%3D%2717%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%20opacity%3D%27.65%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<style>
+  :root {
+    --paper:     #F5F7F9;
+    --surface:   #ffffff;
+    --surface-2: #EDF1F5;
+    --ink:       #131C26;
+    --ink-2:     #33424F;
+    --ink-3:     #5A6B79;
+    --rule:      #DCE3EA;
+    --rule-soft: #EDF1F5;
+    --accent:    #0A8272;
+    --accent-bg: #dcecef;
+    --gen:       #0A8272;
+    --gen-bg:    #dcecef;
+    --dev:       #AE6B14;
+    --dev-bg:    #f4e9d6;
+    --blocked:   #B0451F;
+    --blocked-bg:#f6e1dd;
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --measure: 66ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0E141A;
+      --surface:   #161E27;
+      --surface-2: #1D2731;
+      --ink:       #E7EDF3;
+      --ink-2:     #C0CCD8;
+      --ink-3:     #93A3B1;
+      --rule:      #2A3440;
+      --rule-soft: #3A4855;
+      --accent:    #3FC9B2;
+      --accent-bg: #12333a;
+      --gen:       #3FC9B2;
+      --gen-bg:    #12333a;
+      --dev:       #E4A94F;
+      --dev-bg:    #33280f;
+      --blocked:   #F0916A;
+      --blocked-bg:#3a2119;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #0E141A;
+    --surface:   #161E27;
+    --surface-2: #1D2731;
+    --ink:       #E7EDF3;
+    --ink-2:     #C0CCD8;
+    --ink-3:     #93A3B1;
+    --rule:      #2A3440;
+    --rule-soft: #3A4855;
+    --accent:    #3FC9B2;
+    --accent-bg: #12333a;
+    --gen:       #3FC9B2;
+    --gen-bg:    #12333a;
+    --dev:       #E4A94F;
+    --dev-bg:    #33280f;
+    --blocked:   #F0916A;
+    --blocked-bg:#3a2119;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 2.75rem 5rem;
+  }
+
+  header.sheet { border-bottom: 1px solid var(--rule); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 0.7rem;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(2rem, 6vw, 2.9rem); line-height: 1.05;
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 0.7rem;
+  }
+  .lede { font-size: 1.05rem; color: var(--ink-2); max-width: var(--measure); margin: 0; }
+
+  h2 {
+    font-family: var(--display); font-weight: 600;
+    font-size: 1.45rem; letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 0.3rem;
+  }
+  .fignum {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 0.3rem;
+  }
+
+  p { max-width: var(--measure); margin: 0 0 0.9rem; }
+  p.claim { color: var(--ink); font-size: 1rem; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.84em; background: var(--surface-2);
+    padding: 0.08em 0.34em; border-radius: 2px; overflow-wrap: anywhere;
+  }
+
+  section.fig { margin-bottom: 3.5rem; }
+  section.fig + section.fig { border-top: 1px solid var(--rule-soft); padding-top: 2.5rem; }
+
+  figure { margin: 1.4rem 0 0; }
+  .frame {
+    background: var(--surface); border: 1px solid var(--rule);
+    padding: 1.1rem; overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; margin: 0 auto; color: var(--ink); }
+  svg text { font-family: var(--mono); }
+
+  figcaption {
+    font-size: 0.9rem; color: var(--ink-2); margin-top: 0.8rem;
+    max-width: var(--measure); line-height: 1.55;
+  }
+
+  .key {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.74rem; color: var(--ink-2); margin-top: 0.9rem;
+  }
+  .key span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .sw-gen { background: var(--gen); }
+  .sw-dev { background: var(--dev); }
+  .sw-blocked { background: var(--blocked); }
+
+  .note {
+    border-left: 3px solid var(--accent); background: var(--surface);
+    padding: 0.85rem 1rem; margin: 1.3rem 0 0; max-width: var(--measure);
+    font-size: 0.93rem;
+  }
+  .note > :last-child { margin-bottom: 0; }
+  .note b {
+    font-family: var(--display); font-weight: 600;
+    display: block; margin-bottom: 0.25rem; font-size: 0.95rem;
+  }
+
+  .scroll { overflow-x: auto; margin: 1.2rem 0 0; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  th, td { text-align: left; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-weight: 600; font-size: 0.78rem;
+    color: var(--ink-2); border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  footer {
+    margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem; color: var(--ink-3); max-width: var(--measure); line-height: 1.6;
+  }
+
+  .site-back {
+    display: inline-block; font-family: var(--mono); font-size: .72rem;
+    letter-spacing: .06em; text-decoration: none; color: var(--ink-3);
+    margin-bottom: 1.6rem;
+  }
+  .site-back:hover { color: var(--accent, #0A8272); }
+</style>
+
+
+
+<div class="page">
+
+  <a class="site-back" href="index.html">&larr; Documentation home</a>
+
+  <header class="sheet">
+    <p class="eyebrow">seans-mfe-tool · component schematics</p>
+    <h1>Runtime Platform Schematics</h1>
+    <p class="lede">
+      Eight drawings of what runs after the CLI exits: the class ladder generated
+      code sits on, the state machine every MFE obeys, what one capability call
+      actually does, how a slot gets filled, why an MFE written in any framework
+      can fill it, and the two services that drive the whole loop.
+    </p>
+    <p class="claim" style="margin-top:1rem">
+      Companion to <a href="cli-architecture.html">Generator CLI Schematics</a>,
+      which ends where this begins. Prose references:
+<code>docs/architecture-runtime-platform.md</code>,
+      <code>docs/runtime-class-hierarchy.md</code>,
+      <code>docs/slot-architecture.md</code> and
+      <code>docs/architecture-composition-primer.md</code>, none of which are
+      published to this site &mdash; read them in the repository.
+    </p>
+  </header>
+
+  <div class="note">
+    <b>What is built, and what is only decided</b>
+    <p>
+      The runtime platform is in progress (REQ-RUNTIME-001–012). Every figure here
+      is drawn from code that exists unless a box is marked
+      <em>proposed</em>. Three lifecycle features are decided and
+      <strong>not</strong> implemented — parallel hook execution (ADR-028),
+      conditional/Jexl hooks (ADR-031) and inter-hook communication (ADR-032) —
+      and none of them appear in these drawings except where labelled.
+    </p>
+  </div>
+
+  <!-- ============ FIG 1 — the loop ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 1 — the loop</span>
+    <h2>Four actors, one cycle</h2>
+    <p class="claim">
+      The registry holds what should be composed. The daemon pushes it. The
+      shell's <code>LayoutManager</code> converges on it. The MFE renders and
+      pushes state back, which can change what the registry holds. Everything
+      after this figure is a detail of one of these four.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 250" role="img" aria-label="A cycle of four actors. The registry serves the compiled rules payload to the daemon, which pushes composition over a GraphQL websocket to the shell's LayoutManager, which mounts an MFE instance into a slot. The MFE pushes state back to the registry through the updateControlPlaneState capability, closing the loop.">
+          <defs>
+            <marker id="l1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="l1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="56" width="176" height="76" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="108" y="80" font-size="11.5" text-anchor="middle" fill="currentColor">registry</text>
+          <line x1="36" y1="90" x2="180" y2="90" stroke="var(--rule)"/>
+          <text x="108" y="106" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">serves rules.json</text>
+          <text x="108" y="120" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">holds desired state</text>
+
+          <rect x="248" y="56" width="176" height="76" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="336" y="80" font-size="11.5" text-anchor="middle" fill="currentColor">daemon</text>
+          <line x1="264" y1="90" x2="408" y2="90" stroke="var(--rule)"/>
+          <text x="336" y="106" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">fans out over</text>
+          <text x="336" y="120" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">graphql-ws</text>
+
+          <rect x="476" y="56" width="176" height="76" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+          <text x="564" y="80" font-size="11.5" text-anchor="middle" fill="var(--dev)">LayoutManager</text>
+          <line x1="492" y1="90" x2="636" y2="90" stroke="var(--dev)" stroke-opacity="0.4"/>
+          <text x="564" y="106" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">desired vs actual</text>
+          <text x="564" y="120" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">host-side, in the shell</text>
+
+          <rect x="704" y="56" width="156" height="76" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+          <text x="782" y="80" font-size="11.5" text-anchor="middle" fill="var(--gen)">the MFE</text>
+          <line x1="720" y1="90" x2="844" y2="90" stroke="var(--gen)" stroke-opacity="0.4"/>
+          <text x="782" y="106" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">lifecycle runs</text>
+          <text x="782" y="120" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">any framework</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#l1)" stroke-opacity="0.6">
+            <path d="M196 94 L 242 94"/>
+            <path d="M424 94 L 470 94"/>
+            <path d="M652 94 L 698 94"/>
+          </g>
+          <g font-size="8" text-anchor="middle" fill="var(--ink-3)">
+            <text x="219" y="86">subscribes</text>
+            <text x="447" y="86">pushes</text>
+            <text x="675" y="86">mounts</text>
+          </g>
+
+          <path d="M782 132 L 782 176 L 108 176 L 108 136" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#l1a)"/>
+          <text x="445" y="170" font-size="9" text-anchor="middle" fill="var(--accent)">updateControlPlaneState — the MFE reports back, and the loop turns again</text>
+
+          <text x="440" y="214" font-size="9" text-anchor="middle" fill="var(--ink-3)">the CLI is not here. it produced rules.json and the MFE bundle, then exited</text>
+          <text x="440" y="230" font-size="9" text-anchor="middle" fill="var(--ink-3)">see Generator CLI Schematics, figure 7, for the hand-off</text>
+        </svg>
+      </div>
+      <figcaption>
+        The cycle is what makes composition live: a state change inside one MFE
+        can re-resolve a rule in the registry and re-place an experience in a
+        slot, with no redeploy. <code>packages/control-plane/</code> is the left
+        half; <code>packages/runtime/</code> is the right.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 2 — the class ladder ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 2 — the class ladder</span>
+    <h2>Four rungs, and generated code stands on the top one</h2>
+    <p class="claim">
+      Each rung adds exactly one thing and forbids what the rung above owns.
+      <code>BaseMFE</code> is neutral and never mounts;
+      <code>BaseRemoteMFE</code> adds module federation and is still neutral;
+      only the concrete classes may import a UI framework, because producing the
+      framework-native handle is their whole job.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 400" role="img" aria-label="A four-rung inheritance ladder. BaseMFE is the abstract neutral lifecycle. BaseRemoteMFE extends it with module federation and stays framework-neutral. RemoteMFE and AngularRemoteMFE are concrete and may import React and Angular. A generated MFE extends one of those. Alongside, the runtime barrel index.ts is the compatibility contract that generated code imports from.">
+          <defs>
+            <marker id="c2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="c2g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--gen)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="40" width="292" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="166" y="62" font-size="11.5" text-anchor="middle" fill="currentColor">BaseMFE (abstract)</text>
+          <text x="166" y="78" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">lifecycle · state · hooks · handlers</text>
+          <text x="166" y="90" font-size="8" text-anchor="middle" fill="var(--blocked)">no UI framework. never mounts</text>
+
+          <rect x="20" y="126" width="292" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="166" y="148" font-size="11.5" text-anchor="middle" fill="currentColor">BaseRemoteMFE (abstract)</text>
+          <text x="166" y="164" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">module federation · remote entry</text>
+          <text x="166" y="176" font-size="8" text-anchor="middle" fill="var(--blocked)">still framework-neutral</text>
+
+          <rect x="20" y="212" width="140" height="56" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="90" y="234" font-size="10.5" text-anchor="middle" fill="var(--accent)">RemoteMFE</text>
+          <text x="90" y="249" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">React</text>
+          <text x="90" y="261" font-size="8" text-anchor="middle" fill="var(--ink-3)">may import react</text>
+
+          <rect x="172" y="212" width="140" height="56" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="242" y="234" font-size="10.5" text-anchor="middle" fill="var(--accent)">AngularRemoteMFE</text>
+          <text x="242" y="249" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">Angular</text>
+          <text x="242" y="261" font-size="8" text-anchor="middle" fill="var(--ink-3)">may import angular</text>
+
+          <rect x="20" y="298" width="292" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)" stroke-dasharray="4 3"/>
+          <text x="166" y="320" font-size="10.5" text-anchor="middle" fill="var(--gen)">your generated MFE</text>
+          <text x="166" y="336" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">doLoad · doRender · your domain</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#c2)" stroke-opacity="0.55">
+            <path d="M166 126 L 166 102"/>
+            <path d="M90 212 L 90 188"/>
+            <path d="M242 212 L 242 188"/>
+            <path d="M166 298 L 166 274"/>
+          </g>
+          <text x="302" y="118" font-size="8" fill="var(--ink-3)">extends</text>
+
+          <line x1="352" y1="30" x2="352" y2="352" stroke="var(--rule)" stroke-dasharray="3 4"/>
+
+          <rect x="392" y="40" width="452" height="128" rx="2" fill="var(--surface)" stroke="var(--gen)" stroke-width="1.5"/>
+          <text x="618" y="64" font-size="11.5" text-anchor="middle" fill="var(--gen)">the barrel — packages/runtime/src/index.ts</text>
+          <text x="618" y="80" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">25 exports. this file is the compatibility contract</text>
+          <line x1="412" y1="90" x2="824" y2="90" stroke="var(--gen)" stroke-opacity="0.35"/>
+          <g font-size="8.5" text-anchor="middle" fill="currentColor">
+            <text x="618" y="108">RemoteMFE · AngularRemoteMFE · LayoutManager</text>
+            <text x="618" y="124">BaseControlPlane · DaemonChannel · createImperativeHandle</text>
+            <text x="618" y="140">createSlotContract · htmlAdaptor · jsonAdaptor · …</text>
+          </g>
+          <text x="618" y="158" font-size="8" text-anchor="middle" fill="var(--ink-3)">generated code never imports BaseMFE directly</text>
+
+          <rect x="392" y="196" width="452" height="72" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="618" y="218" font-size="10.5" text-anchor="middle" fill="currentColor">check:template-typecheck</text>
+          <text x="618" y="234" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">scaffolds a real MFE per lane, installs it, typechecks it</text>
+          <text x="618" y="250" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">the only gate that proves the barrel still satisfies</text>
+          <text x="618" y="262" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">generated code</text>
+
+          <path d="M618 196 L 618 174" stroke="var(--gen)" fill="none" marker-end="url(#c2g)"/>
+          <path d="M312 322 L 392 322 L 392 274" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" marker-end="url(#c2g)"/>
+          <text x="618" y="300" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">delete an export and both framework lanes fail with</text>
+          <text x="618" y="314" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">&quot;has no exported member&quot; — verified by doing it</text>
+
+          <text x="440" y="368" font-size="9" text-anchor="middle" fill="var(--ink-3)">a generated package.json declares one platform dependency: @seans-mfe-tool/runtime</text>
+        </svg>
+      </div>
+      <figcaption>
+        The rung an MFE extends decides which framework it may import, and
+        nothing below the concrete classes may import one at all. Prose:
+        <code>docs/runtime-class-hierarchy.md</code>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 3 — the state machine ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 3 — the state machine</span>
+    <h2>Six states, and the legal edges are a frozen table</h2>
+    <p class="claim">
+      <code>MFE_LIFECYCLE_TRANSITIONS</code> in
+      <code>packages/contracts/src/platform-contract.ts</code> is the machine.
+      A transition that is not an edge here is a programming error and throws at
+      the boundary rather than corrupting state silently (ADR-042).
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 320" role="img" aria-label="The MFE lifecycle state machine. Uninitialized goes to loading. Loading goes to ready or error. Ready goes to loading, rendering or destroyed. Rendering goes back to ready or to error. Error goes to loading or destroyed. Destroyed is terminal with no outgoing edges.">
+          <defs>
+            <marker id="s3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="s3b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--blocked)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="96" width="112" height="40" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="76" y="121" font-size="10" text-anchor="middle" fill="currentColor">uninitialized</text>
+
+          <rect x="184" y="96" width="112" height="40" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="240" y="121" font-size="10" text-anchor="middle" fill="currentColor">loading</text>
+
+          <rect x="348" y="96" width="112" height="40" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="404" y="121" font-size="10" text-anchor="middle" fill="var(--accent)">ready</text>
+
+          <rect x="512" y="96" width="112" height="40" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="568" y="121" font-size="10" text-anchor="middle" fill="currentColor">rendering</text>
+
+          <rect x="348" y="208" width="112" height="40" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="404" y="233" font-size="10" text-anchor="middle" fill="var(--blocked)">error</text>
+
+          <rect x="700" y="96" width="112" height="40" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="756" y="121" font-size="10" text-anchor="middle" fill="currentColor">destroyed</text>
+          <text x="756" y="86" font-size="8" text-anchor="middle" fill="var(--ink-3)">terminal — no edges out</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#s3)" stroke-opacity="0.6">
+            <path d="M132 116 L 178 116"/>
+            <path d="M296 110 L 342 110"/>
+            <path d="M460 110 L 506 110"/>
+            <path d="M624 116 L 694 116"/>
+          </g>
+          <path d="M506 128 L 460 128" stroke="currentColor" fill="none" marker-end="url(#s3)" stroke-opacity="0.6"/>
+
+          <path d="M348 126 L 302 126" stroke="currentColor" fill="none" marker-end="url(#s3)" stroke-opacity="0.45"/>
+
+          <g stroke="var(--blocked)" fill="none" marker-end="url(#s3b)" stroke-opacity="0.75">
+            <path d="M228 136 L 228 228 L 342 228"/>
+            <path d="M568 136 L 568 228 L 466 228"/>
+          </g>
+          <path d="M392 208 L 392 168 L 264 168 L 264 140" stroke="var(--blocked)" fill="none" stroke-dasharray="3 3" marker-end="url(#s3b)" stroke-opacity="0.7"/>
+          <path d="M460 228 L 756 228 L 756 142" stroke="var(--blocked)" fill="none" stroke-dasharray="3 3" marker-end="url(#s3b)" stroke-opacity="0.55"/>
+
+          <g font-size="8" fill="var(--ink-3)">
+            <text x="140" y="110">start</text>
+            <text x="300" y="100">loaded</text>
+            <text x="300" y="142">refresh</text>
+            <text x="466" y="104">render</text>
+            <text x="466" y="142">done</text>
+            <text x="632" y="110">teardown</text>
+            <text x="330" y="162">retry</text>
+          </g>
+          <text x="404" y="268" font-size="8" text-anchor="middle" fill="var(--blocked)">any failure</text>
+
+          <text x="404" y="286" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">ready is the only state with three ways out. error has two: retry, or give up</text>
+          <text x="404" y="302" font-size="9" text-anchor="middle" fill="var(--ink-3)">the table is Object.freeze&apos;d — the machine cannot be widened at run time</text>
+        </svg>
+      </div>
+      <figcaption>
+        Read the edges off the frozen table, not off this drawing — the table is
+        the contract and this is a picture of it. The guard runs as the first
+        middleware of every capability call (figure 4), so an illegal call is
+        rejected before any hook executes.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 4 — one capability call ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 4 — one capability call</span>
+    <h2>Ten capabilities, one pipeline</h2>
+    <p class="claim">
+      <code>load()</code>, <code>render()</code>, <code>query()</code> and the
+      seven others are the same machinery with different arguments. Each builds
+      a middleware chain and hands it to <code>runPipeline</code>. The developer
+      writes only the <code>doCapability()</code> in the middle.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 420" role="img" aria-label="One capability call composes a middleware chain: state guard, before hooks, the main developer-implemented capability, after hooks, state transition, and an error boundary wrapping all of it. Three wrappers apply around the chain: timeout, error classification and retry. Ten platform capabilities all run through this same pipeline.">
+          <defs>
+            <marker id="p4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="p4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- the ten capabilities -->
+          <text x="16" y="26" font-size="10" fill="var(--accent)">the ten platform capabilities</text>
+          <line x1="16" y1="34" x2="864" y2="34" stroke="var(--rule)"/>
+          <g font-size="9" fill="currentColor">
+            <text x="20" y="52">load</text>
+            <text x="78" y="52">render</text>
+            <text x="148" y="52">refresh</text>
+            <text x="222" y="52">authorizeAccess</text>
+            <text x="356" y="52">health</text>
+            <text x="420" y="52">describe</text>
+            <text x="500" y="52">schema</text>
+            <text x="566" y="52">query</text>
+            <text x="622" y="52">emit</text>
+            <text x="676" y="52">updateControlPlaneState</text>
+          </g>
+          <path d="M440 60 L 440 82" stroke="currentColor" fill="none" marker-end="url(#p4)" stroke-opacity="0.5"/>
+          <text x="452" y="76" font-size="8" fill="var(--ink-3)">all ten</text>
+
+          <!-- the wrappers -->
+          <rect x="60" y="92" width="760" height="204" rx="3" fill="none" stroke="var(--accent)" stroke-dasharray="5 4"/>
+          <text x="72" y="110" font-size="9" fill="var(--accent)">timeout (ADR-029) · error classification (ADR-030) · retry (ADR-030)</text>
+
+          <!-- the chain -->
+          <g fill="var(--surface-2)" stroke="var(--rule)">
+            <rect x="80" y="130" width="112" height="52" rx="2"/>
+            <rect x="208" y="130" width="112" height="52" rx="2"/>
+            <rect x="464" y="130" width="112" height="52" rx="2"/>
+            <rect x="592" y="130" width="112" height="52" rx="2"/>
+          </g>
+          <rect x="336" y="124" width="112" height="64" rx="2" fill="var(--gen-bg)" stroke="var(--gen)" stroke-width="1.5"/>
+
+          <g font-size="9.5" text-anchor="middle" fill="currentColor">
+            <text x="136" y="152">stateGuard</text>
+            <text x="264" y="152">before hooks</text>
+            <text x="392" y="148" fill="var(--gen)">doCapability</text>
+            <text x="520" y="152">after hooks</text>
+            <text x="648" y="152">transition</text>
+          </g>
+          <g font-size="8" text-anchor="middle" fill="var(--ink-3)">
+            <text x="136" y="168">legal edge?</text>
+            <text x="264" y="168">platform.* custom.*</text>
+            <text x="392" y="164">yours</text>
+            <text x="392" y="178">the only rung you write</text>
+            <text x="520" y="168">platform.* custom.*</text>
+            <text x="648" y="168">new state</text>
+          </g>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#p4)" stroke-opacity="0.55">
+            <path d="M192 156 L 204 156"/>
+            <path d="M320 156 L 332 156"/>
+            <path d="M448 156 L 460 156"/>
+            <path d="M576 156 L 588 156"/>
+          </g>
+
+          <!-- error boundary -->
+          <rect x="80" y="212" width="624" height="44" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="392" y="232" font-size="9.5" text-anchor="middle" fill="var(--blocked)">errorBoundary — wraps the whole chain</text>
+          <text x="392" y="248" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a thrown hook becomes a state, a telemetry event and a contained flag — not a crashed shell</text>
+          <line x1="392" y1="188" x2="392" y2="206" stroke="var(--blocked)" stroke-dasharray="3 3"/>
+
+          <text x="392" y="280" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">runPipeline(middlewares, context) — packages/runtime/src/capability-pipeline.ts</text>
+
+          <!-- proposed -->
+          <rect x="60" y="316" width="760" height="44" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="76" y="334" font-size="9.5" fill="var(--ink-3)">proposed, not built — no code in packages/runtime implements these</text>
+          <text x="76" y="350" font-size="9" fill="var(--ink-3)">parallel hook execution (ADR-028) · conditional / Jexl hooks (ADR-031) · inter-hook communication (ADR-032)</text>
+
+          <text x="440" y="392" font-size="9" text-anchor="middle" fill="var(--ink-3)">the platform owns every box but one. that is the whole bargain</text>
+        </svg>
+      </div>
+      <div class="key">
+        <span><i class="swatch sw-gen"></i> developer-implemented</span>
+        <span><i class="swatch sw-blocked"></i> failure containment</span>
+      </div>
+      <figcaption>
+        Timeout, classification and retry are shipped
+        (<code>timeout-wrapper.ts</code>, <code>error-classifier.ts</code>,
+        <code>retry-wrapper.ts</code>). The three in the dashed box are decided
+        and unimplemented; they are drawn so the gap is visible rather than
+        assumed.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 5 — handler resolution ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 5 — handler resolution</span>
+    <h2>A hook name in YAML becomes a function, once, at module load</h2>
+    <p class="claim">
+      A manifest names hooks as strings. <code>platform.*</code> resolves
+      against a <code>Map</code> built once from the handlers barrel;
+      <code>custom.*</code> resolves against methods the MFE author wrote. The
+      full set of resolvable platform names is visible at startup rather than
+      discovered per call.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 330" role="img" aria-label="A hook name string in the manifest is dispatched by prefix. Platform dot names resolve through PLATFORM_HANDLER_LIBRARY, a Map built once at module load from six handler category modules. Custom dot names resolve to methods on the MFE subclass. An unresolvable name is a typed error, not a silent skip.">
+          <defs>
+            <marker id="h5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="h5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+            <marker id="h5d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--dev)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="118" width="164" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="102" y="140" font-size="10.5" text-anchor="middle" fill="currentColor">a hook name</text>
+          <text x="102" y="156" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a string in the manifest</text>
+          <text x="102" y="168" font-size="8" text-anchor="middle" fill="var(--ink-3)">before / after, per capability</text>
+
+          <text x="210" y="130" font-size="9" text-anchor="end" fill="var(--ink-3)">prefix</text>
+          <path d="M184 146 L 214 146" stroke="currentColor" fill="none" marker-end="url(#h5)" stroke-opacity="0.55"/>
+          <path d="M238 152 L 238 92 L 288 92" stroke="var(--accent)" fill="none" marker-end="url(#h5a)"/>
+          <path d="M238 152 L 238 236 L 288 236" stroke="var(--dev)" fill="none" marker-end="url(#h5d)"/>
+
+          <!-- platform lane -->
+          <rect x="294" y="52" width="230" height="80" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+          <text x="409" y="74" font-size="10.5" text-anchor="middle" fill="var(--accent)">platform.*</text>
+          <text x="409" y="90" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">PLATFORM_HANDLER_LIBRARY</text>
+          <line x1="310" y1="98" x2="508" y2="98" stroke="var(--accent)" stroke-opacity="0.3"/>
+          <text x="409" y="114" font-size="8.5" text-anchor="middle" fill="currentColor">a Map, built once at module load</text>
+          <text x="409" y="126" font-size="8" text-anchor="middle" fill="var(--ink-3)">O(1) — no per-call dynamic import</text>
+
+          <rect x="568" y="40" width="292" height="104" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="714" y="60" font-size="9.5" text-anchor="middle" fill="currentColor">six category modules, export * into one namespace</text>
+          <line x1="584" y1="68" x2="844" y2="68" stroke="var(--rule)"/>
+          <g font-size="9" fill="currentColor">
+            <text x="596" y="86">auth</text>
+            <text x="676" y="86">validation</text>
+            <text x="776" y="86">telemetry</text>
+            <text x="596" y="104">caching</text>
+            <text x="676" y="104">rate-limiting</text>
+            <text x="776" y="104">error-handling</text>
+          </g>
+          <text x="714" y="128" font-size="8" text-anchor="middle" fill="var(--ink-3)">adding a handler = exporting a function from one of these</text>
+          <path d="M524 92 L 562 92" stroke="var(--accent)" fill="none" marker-end="url(#h5a)"/>
+
+          <!-- custom lane -->
+          <rect x="294" y="204" width="230" height="64" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+          <text x="409" y="226" font-size="10.5" text-anchor="middle" fill="var(--dev)">custom.*</text>
+          <text x="409" y="242" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a method on your MFE subclass</text>
+          <text x="409" y="256" font-size="8" text-anchor="middle" fill="var(--ink-3)">you write it, the platform calls it</text>
+
+          <rect x="568" y="204" width="292" height="64" rx="2" fill="var(--surface)" stroke="var(--dev)" stroke-dasharray="4 3"/>
+          <text x="714" y="226" font-size="9.5" text-anchor="middle" fill="currentColor">developer-owned, never regenerated</text>
+          <text x="714" y="242" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">the manifest names it; codegen seeds a stub once</text>
+          <text x="714" y="256" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">and then leaves it alone</text>
+          <path d="M524 236 L 562 236" stroke="var(--dev)" fill="none" marker-end="url(#h5d)"/>
+
+          <!-- unresolvable -->
+          <rect x="20" y="288" width="840" height="30" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="440" y="307" font-size="9.5" text-anchor="middle" fill="var(--blocked)">a name that resolves to neither is a typed error at invocation — never a silently skipped hook</text>
+        </svg>
+      </div>
+      <figcaption>
+        Both lanes take the same shape at the call site —
+        <code>async (context) =&gt; unknown</code> — which is what lets the
+        manifest treat a platform handler and a hand-written one as
+        interchangeable. Resolution is by export name, so the namespace is flat
+        and collisions are visible at load.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 6 — slot convergence ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 6 — slot convergence</span>
+    <h2>Desired state, actual state, and the gap between them</h2>
+    <p class="claim">
+      <code>LayoutManager</code> does not execute placement commands. It holds
+      what the registry wants — <code>desired: Map&lt;address, experience&gt;</code>
+      — and reconciles the DOM toward it. Placing an experience at a new address
+      unplaces it from the old one, because a reverse index keeps the map bounded
+      by live placements (ADR-066).
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 400" role="img" aria-label="The LayoutManager holds a desired map from slot address to experience, plus a reverse index from experience id to its one address. Reconciliation compares desired against the actual mounted DOM and dispatches each placement to an experience adaptor, chosen by delivery mechanism: module federation, html, json or custom.">
+          <defs>
+            <marker id="v6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="v6d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--dev)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="52" width="252" height="112" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="146" y="74" font-size="10.5" text-anchor="middle" fill="currentColor">desired</text>
+          <text x="146" y="90" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">Map&lt;address, experience&gt;</text>
+          <line x1="36" y1="100" x2="256" y2="100" stroke="var(--rule)"/>
+          <g font-size="8.5" fill="currentColor">
+            <text x="40" y="118">games.chess    → ChessBoard</text>
+            <text x="40" y="134">games.go       → GoBoard</text>
+            <text x="40" y="150">sidebar.status → Health</text>
+          </g>
+
+          <rect x="20" y="188" width="252" height="76" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="146" y="210" font-size="10" text-anchor="middle" fill="currentColor">desiredAddressByExperience</text>
+          <text x="146" y="226" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">the reverse index</text>
+          <text x="146" y="244" font-size="8.5" text-anchor="middle" fill="currentColor">one experience, one address</text>
+          <text x="146" y="256" font-size="8" text-anchor="middle" fill="var(--ink-3)">re-placing prunes the old entry</text>
+
+          <rect x="332" y="96" width="196" height="104" rx="2" fill="var(--dev-bg)" stroke="var(--dev)" stroke-width="1.5"/>
+          <text x="430" y="120" font-size="11.5" text-anchor="middle" fill="var(--dev)">reconcile</text>
+          <line x1="348" y1="130" x2="512" y2="130" stroke="var(--dev)" stroke-opacity="0.4"/>
+          <text x="430" y="148" font-size="9" text-anchor="middle" fill="currentColor">desired − actual = work</text>
+          <text x="430" y="166" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">mount what is missing</text>
+          <text x="430" y="180" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">unmount what is stale</text>
+
+          <rect x="332" y="238" width="196" height="64" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="430" y="260" font-size="10" text-anchor="middle" fill="currentColor">actual</text>
+          <text x="430" y="276" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">what is mounted in the DOM</text>
+          <text x="430" y="290" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">one section per slot</text>
+
+          <g stroke="currentColor" fill="none" marker-end="url(#v6)" stroke-opacity="0.55">
+            <path d="M272 108 L 326 118"/>
+            <path d="M272 214 L 300 214 L 300 152 L 326 152"/>
+          </g>
+          <path d="M430 238 L 430 206" stroke="var(--dev)" fill="none" marker-end="url(#v6d)"/>
+          <path d="M448 206 L 448 238" stroke="var(--dev)" fill="none" stroke-dasharray="3 3" marker-end="url(#v6d)"/>
+
+          <rect x="588" y="72" width="272" height="152" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="724" y="94" font-size="10.5" text-anchor="middle" fill="currentColor">ExperienceAdaptor</text>
+          <text x="724" y="110" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">mount(experience, slot, helpers) → unmount</text>
+          <line x1="604" y1="120" x2="844" y2="120" stroke="var(--rule)"/>
+          <g font-size="9" fill="currentColor">
+            <text x="612" y="140">moduleFederationAdaptor</text>
+            <text x="612" y="158">htmlAdaptor</text>
+            <text x="612" y="176">jsonAdaptor</text>
+            <text x="612" y="194">your own</text>
+          </g>
+          <g font-size="8" fill="var(--ink-3)">
+            <text x="762" y="158">raw markup</text>
+            <text x="762" y="176">debug view</text>
+            <text x="762" y="194">register one</text>
+          </g>
+          <text x="724" y="214" font-size="8" text-anchor="middle" fill="var(--ink-3)">delivery mechanism — orthogonal to framework (figure 7)</text>
+          <path d="M528 148 L 582 148" stroke="var(--dev)" fill="none" marker-end="url(#v6d)"/>
+
+          <rect x="588" y="248" width="272" height="54" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="724" y="268" font-size="9.5" text-anchor="middle" fill="currentColor">DaemonChannel</text>
+          <text x="724" y="284" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a per-slot virtual socket over one</text>
+          <text x="724" y="296" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">real connection (ADR-057)</text>
+
+          <text x="440" y="342" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">an address names a place. it never names what renders there, and never a framework</text>
+          <text x="440" y="360" font-size="9" text-anchor="middle" fill="var(--ink-3)">games.{gameId} · sidebar.status — assigned names, not measured ordinals (ADR-066)</text>
+          <text x="440" y="380" font-size="9" text-anchor="middle" fill="var(--accent)">that is the first of the four links that make the platform polyglot →</text>
+        </svg>
+      </div>
+      <figcaption>
+        Desired-state placement is why a registry rule change re-composes a
+        running page without a redeploy: nothing replays a command log, the
+        manager simply converges. Prose:
+        <code>docs/slot-architecture.md</code> and
+        <code>docs/slot-contract.md</code>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 7 — the polyglot waist ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 7 — the polyglot waist</span>
+    <h2>Why a slot can hold an MFE written in a framework the shell has never heard of</h2>
+    <p class="claim">
+      Polyglot composition is not one feature. It is four links in a chain, each
+      of them a place where a framework name could have leaked into the core and
+      did not. The slot contract supplies the first two; the presentation
+      contract supplies the last two. Break any one and the property is gone.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 470" role="img" aria-label="Five layers separated by a thin waist. Above the waist: the control plane, the host shell, and the framework provider, which is the only host-side layer allowed to know a framework. Exactly two things cross the waist: the neutral capability contract and the presentation handle. Below: BaseMFE, which exposes the handle but never mounts, and the framework-specialized concrete classes that may import React or Angular. The imperative mount handle is the guaranteed floor every MFE exposes; a native component handle is an optional tagged upgrade the core never inspects.">
+          <defs>
+            <marker id="w7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="w7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- host side -->
+          <text x="16" y="24" font-size="10" fill="var(--ink-3)">HOST SIDE</text>
+          <rect x="16" y="34" width="560" height="40" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="30" y="52" font-size="10" fill="currentColor">1 · control plane — daemon + registry</text>
+          <text x="30" y="66" font-size="8.5" fill="var(--blocked)">prohibited: any framework awareness, any DOM concern</text>
+
+          <rect x="16" y="84" width="560" height="40" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="30" y="102" font-size="10" fill="currentColor">2 · host shell — declares slots, supplies context values</text>
+          <text x="30" y="116" font-size="8.5" fill="var(--blocked)">prohibited: importing or hard-referencing any specific MFE</text>
+
+          <rect x="16" y="134" width="560" height="52" rx="2" fill="var(--dev-bg)" stroke="var(--dev)" stroke-width="1.5"/>
+          <text x="30" y="152" font-size="10" fill="var(--dev)">3 · framework provider — the ONLY layer that may know a framework</text>
+          <text x="30" y="166" font-size="8.5" fill="currentColor">owns the slot element, the mount, the unmount, the context wrapping</text>
+          <text x="30" y="179" font-size="8.5" fill="var(--ink-3)">registered on hostFramework × handleKind — optimization may be arbitrarily deep</text>
+
+          <!-- the waist -->
+          <rect x="16" y="202" width="560" height="74" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="2"/>
+          <text x="296" y="222" font-size="11" text-anchor="middle" fill="var(--accent)">THE THIN WAIST — exactly two things cross</text>
+          <line x1="40" y1="230" x2="552" y2="230" stroke="var(--accent)" stroke-opacity="0.35"/>
+          <text x="30" y="248" font-size="9" fill="currentColor">the neutral capability contract — load · render · health · query · describe · …</text>
+          <text x="30" y="266" font-size="9" fill="currentColor">the presentation handle — a mount function, and optionally a tagged component</text>
+
+          <!-- mfe side -->
+          <text x="16" y="302" font-size="10" fill="var(--ink-3)">MFE SIDE</text>
+          <rect x="16" y="312" width="560" height="44" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="30" y="330" font-size="10" fill="currentColor">4 · BaseMFE — exposes the handle, never mounts anything</text>
+          <text x="30" y="345" font-size="8.5" fill="var(--blocked)">prohibited: importing a UI framework, calling createRoot / ApplicationRef</text>
+
+          <rect x="16" y="366" width="560" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+          <text x="30" y="384" font-size="10" fill="var(--gen)">5 · RemoteMFE / AngularRemoteMFE — may import React / Angular</text>
+          <text x="30" y="399" font-size="8.5" fill="var(--ink-3)">producing the framework-native handle is the entire reason this rung exists</text>
+
+          <line x1="596" y1="24" x2="596" y2="420" stroke="var(--rule)" stroke-dasharray="3 4"/>
+
+          <!-- the two handles -->
+          <rect x="616" y="34" width="248" height="98" rx="2" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="740" y="54" font-size="10.5" text-anchor="middle" fill="var(--accent)">ImperativeMountHandle</text>
+          <text x="740" y="69" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">kind: &apos;imperative-dom&apos; · mandatory</text>
+          <line x1="632" y1="78" x2="848" y2="78" stroke="var(--accent)" stroke-opacity="0.3"/>
+          <text x="740" y="94" font-size="9" text-anchor="middle" fill="currentColor">mount(element, opts) → unmount</text>
+          <text x="740" y="110" font-size="8.5" text-anchor="middle" fill="currentColor">every client MFE exposes exactly one</text>
+          <text x="740" y="124" font-size="8" text-anchor="middle" fill="var(--ink-3)">the host never needs to know the framework</text>
+
+          <rect x="616" y="152" width="248" height="94" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="740" y="172" font-size="10.5" text-anchor="middle" fill="currentColor">NativeComponentHandle</text>
+          <text x="740" y="187" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">kind: anything else · optional</text>
+          <line x1="632" y1="196" x2="848" y2="196" stroke="var(--rule)"/>
+          <text x="740" y="212" font-size="9" text-anchor="middle" fill="currentColor">component: unknown</text>
+          <text x="740" y="228" font-size="8.5" text-anchor="middle" fill="currentColor">tagged, never inspected</text>
+          <text x="740" y="240" font-size="8" text-anchor="middle" fill="var(--ink-3)">only a provider for that tag knows its shape</text>
+
+          <path d="M576 239 L 610 120" stroke="var(--accent)" fill="none" marker-end="url(#w7a)"/>
+          <path d="M576 252 L 610 200" stroke="currentColor" fill="none" stroke-opacity="0.5" stroke-dasharray="3 3" marker-end="url(#w7)"/>
+
+          <!-- the gate -->
+          <rect x="616" y="270" width="248" height="88" rx="2" fill="var(--blocked-bg)" stroke="var(--blocked)"/>
+          <text x="740" y="290" font-size="10" text-anchor="middle" fill="var(--blocked)">boundary.test.ts</text>
+          <text x="740" y="305" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">the bright line, machine-checked</text>
+          <line x1="632" y1="314" x2="848" y2="314" stroke="var(--blocked)" stroke-opacity="0.35"/>
+          <text x="740" y="330" font-size="8.5" text-anchor="middle" fill="currentColor">scans layers 1, 2 and 4 for a framework import</text>
+          <text x="740" y="346" font-size="8.5" text-anchor="middle" fill="currentColor">layers 3 and 5 are exempt by design</text>
+
+          <text x="740" y="382" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">the gate once could not fail: its regex</text>
+          <text x="740" y="395" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">missed `from &apos;react&apos;` for want of \s*, and</text>
+          <text x="740" y="408" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a real leak shipped. fixed in #341</text>
+
+          <text x="440" y="440" font-size="9.5" text-anchor="middle" fill="var(--accent)">a Vue MFE fills a React shell&apos;s slot because the shell only ever calls mount(el)</text>
+          <text x="440" y="458" font-size="9" text-anchor="middle" fill="var(--ink-3)">and if the shell does speak Vue, it can take the native handle instead and skip the DOM hand-off</text>
+        </svg>
+      </div>
+      <div class="key">
+        <span><i class="swatch sw-dev"></i> may know a framework</span>
+        <span><i class="swatch sw-gen"></i> may import one</span>
+        <span><i class="swatch sw-blocked"></i> enforced prohibition</span>
+      </div>
+      <figcaption>
+        The four links, in order: a slot <strong>address</strong> is a
+        framework-free assigned name (ADR-066/069); a registry <strong>rule</strong>
+        binds experience to address as data, with no code loaded (ADR-083); the
+        <strong>imperative floor</strong> is mandatory and needs no framework
+        knowledge to invoke (ADR-056); the <strong>native handle</strong> is
+        tagged rather than inspected, so a matching host gets a real component
+        and the core still learns nothing. Delivery mechanism (figure 6) is a
+        separate axis — federation, html and json each work for any framework.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ FIG 8 — the two services ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 8 — the two services</span>
+    <h2>The control plane is 1,375 lines of plain JavaScript</h2>
+    <p class="claim">
+      Neither service imports anything from <code>packages/</code>. They are
+      GraphQL servers in Docker images that a fleet deploys, not libraries
+      anything links against — which is why the CLI can be replaced without
+      touching a running fleet.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 330" role="img" aria-label="Two GraphQL services. The registry exposes queries for components and component states, mutations to render a component, handle a message and register an MFE, and a componentUpdate subscription. The daemon subscribes to that and exposes its own messages subscription that renderers subscribe to, plus a sendMessage mutation for user actions travelling up.">
+          <defs>
+            <marker id="g8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+            <marker id="g8a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="44" width="256" height="188" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="148" y="66" font-size="11" text-anchor="middle" fill="currentColor">registry</text>
+          <text x="148" y="80" font-size="8" text-anchor="middle" fill="var(--ink-3)">simple-registry.js · 534 lines</text>
+          <line x1="36" y1="90" x2="260" y2="90" stroke="var(--rule)"/>
+          <g font-size="8.5" fill="currentColor">
+            <text x="40" y="108">Query    components</text>
+            <text x="40" y="122">         componentStates</text>
+            <text x="40" y="142">Mutation renderComponent</text>
+            <text x="40" y="156">         handleMessage</text>
+            <text x="40" y="170">         register (describe + routes)</text>
+            <text x="40" y="190">Subscr.  componentUpdate</text>
+          </g>
+          <text x="148" y="214" font-size="8" text-anchor="middle" fill="var(--ink-3)">holds the compiled rules.json</text>
+
+          <rect x="332" y="44" width="256" height="188" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+          <text x="460" y="66" font-size="11" text-anchor="middle" fill="currentColor">daemon</text>
+          <text x="460" y="80" font-size="8" text-anchor="middle" fill="var(--ink-3)">simple-daemon.js · 778 lines</text>
+          <line x1="348" y1="90" x2="572" y2="90" stroke="var(--rule)"/>
+          <g font-size="8.5" fill="currentColor">
+            <text x="352" y="108">Query    components</text>
+            <text x="352" y="122">         componentStates</text>
+            <text x="352" y="142">Mutation sendMessage</text>
+            <text x="352" y="156">         (actions travelling up)</text>
+            <text x="352" y="190">Subscr.  messages</text>
+          </g>
+          <text x="460" y="214" font-size="8" text-anchor="middle" fill="var(--ink-3)">fans one registry feed out to every renderer</text>
+
+          <rect x="644" y="70" width="216" height="136" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+          <text x="752" y="92" font-size="10.5" text-anchor="middle" fill="var(--dev)">renderers</text>
+          <line x1="660" y1="102" x2="844" y2="102" stroke="var(--dev)" stroke-opacity="0.4"/>
+          <text x="752" y="120" font-size="8.5" text-anchor="middle" fill="currentColor">LayoutManager, one per shell</text>
+          <text x="752" y="136" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">GraphQLTransportWsDaemon-</text>
+          <text x="752" y="148" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">Transport</text>
+          <text x="752" y="168" font-size="8.5" text-anchor="middle" fill="currentColor">DaemonChannel per slot</text>
+          <text x="752" y="188" font-size="8" text-anchor="middle" fill="var(--ink-3)">one socket, many virtual channels</text>
+
+          <path d="M276 128 L 326 128" stroke="var(--accent)" fill="none" marker-end="url(#g8a)"/>
+          <text x="301" y="120" font-size="7.5" text-anchor="middle" fill="var(--accent)">subscribes</text>
+          <path d="M588 120 L 638 120" stroke="var(--accent)" fill="none" marker-end="url(#g8a)"/>
+          <text x="613" y="112" font-size="7.5" text-anchor="middle" fill="var(--accent)">messages</text>
+          <path d="M638 160 L 588 160" stroke="currentColor" fill="none" stroke-opacity="0.5" marker-end="url(#g8)"/>
+          <text x="613" y="176" font-size="7.5" text-anchor="middle" fill="var(--ink-3)">actions</text>
+          <path d="M326 168 L 276 168" stroke="currentColor" fill="none" stroke-opacity="0.5" marker-end="url(#g8)"/>
+          <text x="301" y="184" font-size="7.5" text-anchor="middle" fill="var(--ink-3)">handleMessage</text>
+
+          <rect x="20" y="256" width="568" height="52" rx="2" fill="var(--surface)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="34" y="276" font-size="9" fill="var(--ink-3)">both are Dockerized from packages/control-plane. both reference fleets build their images from it,</text>
+          <text x="34" y="292" font-size="9" fill="var(--ink-3)">and each fleet owns only its own control-plane/rules.json (PDR-008, ADR-078)</text>
+
+          <text x="752" y="276" font-size="9" text-anchor="middle" fill="var(--accent)">rules.json is generated</text>
+          <text x="752" y="292" font-size="9" text-anchor="middle" fill="var(--ink-3)">by compose:build — never hand-edited</text>
+        </svg>
+      </div>
+      <figcaption>
+        The daemon exists to fan out: renderers subscribe to it rather than to
+        the registry, so one registry feed serves many shells and user actions
+        travel back up the same connection. Composition source and the compiler
+        are the CLI's side of this — see
+        <a href="cli-architecture.html">Generator CLI Schematics</a>, figure 7.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ closing table ============ -->
+  <section class="fig">
+    <span class="fignum">Reference</span>
+    <h2>Where each mechanism lives</h2>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Mechanism</th><th>Code</th><th class="n">Fig.</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>The composition loop</td><td><code>packages/control-plane/</code>, <code>packages/runtime/src/layout-manager.ts</code></td><td class="n">1, 8</td></tr>
+          <tr><td>Class ladder</td><td><code>packages/runtime/src/base-mfe.ts</code>, <code>base-remote-mfe.ts</code>, <code>remote-mfe.ts</code>, <code>angular-remote-mfe.ts</code></td><td class="n">2</td></tr>
+          <tr><td>The compatibility barrel</td><td><code>packages/runtime/src/index.ts</code></td><td class="n">2</td></tr>
+          <tr><td>Lifecycle state machine</td><td><code>packages/contracts/src/platform-contract.ts</code></td><td class="n">3</td></tr>
+          <tr><td>Capability pipeline</td><td><code>packages/runtime/src/capability-pipeline.ts</code></td><td class="n">4</td></tr>
+          <tr><td>Timeout, classification, retry</td><td><code>packages/runtime/src/timeout-wrapper.ts</code>, <code>error-classifier.ts</code>, <code>retry-wrapper.ts</code></td><td class="n">4</td></tr>
+          <tr><td>Error containment</td><td><code>packages/runtime/src/error-boundary.ts</code></td><td class="n">4</td></tr>
+          <tr><td>Platform handler library</td><td><code>packages/runtime/src/handlers/</code></td><td class="n">5</td></tr>
+          <tr><td>Desired-state placement</td><td><code>packages/runtime/src/layout-manager.ts</code></td><td class="n">6</td></tr>
+          <tr><td>Experience adaptors</td><td><code>packages/runtime/src/layout-adaptors.ts</code></td><td class="n">6</td></tr>
+          <tr><td>Slot matching and addresses</td><td><code>packages/contracts/src/slot-contract.ts</code>, <code>slot-grammar.ts</code></td><td class="n">6, 7</td></tr>
+          <tr><td>Presentation handles</td><td><code>packages/contracts/src/presentation.ts</code>, <code>packages/runtime/src/imperative-handle.ts</code></td><td class="n">7</td></tr>
+          <tr><td>Neutrality enforcement</td><td><code>packages/runtime/src/__tests__/boundary.test.ts</code></td><td class="n">7</td></tr>
+          <tr><td>Virtual daemon socket</td><td><code>packages/runtime/src/daemon-channel.ts</code>, <code>layout-transport.ts</code></td><td class="n">6, 8</td></tr>
+          <tr><td>Host control plane base</td><td><code>packages/runtime/src/base-control-plane.ts</code></td><td class="n">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Line counts are the current tree: <code>packages/runtime/src</code> is 34 source
+    files, <code>packages/control-plane</code> is 1,375 lines across two services.
+    The runtime platform is in progress (REQ-RUNTIME-001&ndash;012); ADR-028, ADR-031
+    and ADR-032 are decided and not built. See also
+    <a href="cli-architecture.html">Generator CLI Schematics</a>,
+    <a href="derived-contracts.html">Schema &amp; Contract Architecture</a> and the
+    <a href="system-map.html">system map</a>.
+  </footer>
+
+</div>
+
+</body>
+</html>

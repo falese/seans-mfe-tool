@@ -76,14 +76,21 @@ const NOT_IN_THIS_REPO = [
  */
 const BUILD_OUTPUT = /(^|\/)(dist|node_modules|coverage|_site|out-tsc|\.mesh)(\/|$)/;
 
+/**
+ * How a citation is marked, by file type. Markdown uses backticks; the
+ * schematic pages are HTML and use <code>. Both are scanned: those pages are
+ * the most reader-facing docs here, and an unresolving path in a published
+ * diagram is worse than one in a source file.
+ */
 const CITATION = /`([^`\n]+)`/g;
+const CITATION_HTML = /<code>([^<\n]+)<\/code>/g;
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === 'node_modules' || entry.name === 'dist') continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full, out);
-    else if (entry.name.endsWith('.md')) out.push(full);
+    else if (entry.name.endsWith('.md') || entry.name.endsWith('.html')) out.push(full);
   }
   return out;
 }
@@ -136,8 +143,9 @@ for (const file of walk(path.join(repoRoot, 'docs'))) {
   const text = fs.readFileSync(file, 'utf8');
   const seen = new Set();
   let m;
-  CITATION.lastIndex = 0;
-  while ((m = CITATION.exec(text)) !== null) {
+  const pattern = file.endsWith('.html') ? CITATION_HTML : CITATION;
+  pattern.lastIndex = 0;
+  while ((m = pattern.exec(text)) !== null) {
     for (const candidate of expand(normalize(m[1]))) {
       if (!ROOTS.some((r) => candidate.startsWith(r))) continue;
       if (isPlaceholder(candidate)) continue;

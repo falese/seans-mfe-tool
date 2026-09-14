@@ -53,7 +53,12 @@ fs.mkdirSync(path.join(outDir, 'slides'), { recursive: true });
  * filters in .github/workflows/pages.yml too, or a change to it will not
  * trigger a publish.
  */
-const PAGES = ['system-map.html', 'cli-architecture.html', 'derived-contracts.html'];
+const PAGES = [
+  'system-map.html',
+  'cli-architecture.html',
+  'runtime-architecture.html',
+  'derived-contracts.html',
+];
 
 for (const page of PAGES) {
   const from = path.join(docs, page);

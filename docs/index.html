@@ -102,12 +102,23 @@
     <a class="card" href="cli-architecture.html">
       <b>Generator CLI schematics</b>
       <span>
-        Six drawings of how the tooling is put together: the packages and what depends on what,
+        Seven drawings of how the tooling is put together: the packages and what depends on what,
         what happens when a command runs, how a manifest becomes files, where new frameworks and
-        plugins attach, where the schemas come from, and how an agent reaches the same commands a
-        person does.
+        plugins attach, where the schemas come from, how an agent reaches the same commands a
+        person does, and where the CLI hands off to the running platform.
       </span>
       <em>Diagrams &middot; for engineers joining the platform</em>
+    </a>
+
+    <a class="card" href="runtime-architecture.html">
+      <b>Runtime platform schematics</b>
+      <span>
+        Eight drawings of what runs after the CLI exits: the class ladder generated code sits on,
+        the state machine every MFE obeys, what one capability call actually does, how a slot gets
+        filled, why an MFE written in any framework can fill it, and the two services that drive
+        the loop.
+      </span>
+      <em>Diagrams &middot; for engineers working on the platform</em>
     </a>
 
     <a class="card" href="derived-contracts.html">
