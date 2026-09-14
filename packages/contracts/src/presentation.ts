@@ -1,5 +1,5 @@
 /**
- * Presentation handle — the framework-neutral half of the thin waist (ADR-056).
+ * Presentation handle — the framework-neutral half of the interface (ADR-056).
  *
  * This is what crosses the boundary on the presentation axis: a host-side
  * Framework Provider *consumes* it; the MFE side (BaseMFE via its
@@ -17,7 +17,7 @@
  *     root, shared context), accepting framework-singleton coupling.
  */
 
-/** How an MFE can be presented across the waist. Open string (ADR-036). */
+/** How an MFE can be presented across the interface. Open string (ADR-036). */
 export type HandleKind = 'imperative-dom' | 'react-component' | 'web-component' | string;
 
 /** Teardown returned by an imperative mount; idempotent by contract. */
@@ -75,7 +75,7 @@ export interface NativeComponentHandle {
 export type PresentationHandle = ImperativeMountHandle | NativeComponentHandle;
 
 /**
- * The bundle an MFE exposes across the waist. The imperative floor is
+ * The bundle an MFE exposes across the interface. The imperative floor is
  * mandatory; native handles are optional integration upgrades.
  */
 export interface PresentationHandles {

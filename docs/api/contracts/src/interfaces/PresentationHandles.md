@@ -8,7 +8,7 @@
 
 Defined in: [packages/contracts/src/presentation.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L81)
 
-The bundle an MFE exposes across the waist. The imperative floor is
+The bundle an MFE exposes across the interface. The imperative floor is
 mandatory; native handles are optional integration upgrades.
 
 ## Properties

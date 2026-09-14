@@ -8,7 +8,7 @@
  * which are deliberately NOT scanned here — they are allowed to import React /
  * Angular precisely because they produce the native handle.
  *
- * If this test fails, framework code has leaked across the waist into a layer
+ * If this test fails, framework code has leaked across the interface into a layer
  * that must stay polyglot. Move it into a provider/abstract, don't silence it.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';

@@ -66,7 +66,7 @@ export interface HardenedCheck {
 /**
  * The typed schema for a `HardenedCheck`.
  *
- * This is the narrow waist that makes a proposed check safe to accept (PDR-010's auditor loop):
+ * This is the narrow interface that makes a proposed check safe to accept (PDR-010's auditor loop):
  * it is at once the result format, an anti-hallucination bound (a proposal that
  * cannot be expressed in these fields is not a `HardenedCheck`), and the gate a
  * host runs a model-proposed check through before it hardens into code. `pattern`

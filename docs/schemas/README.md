@@ -42,7 +42,7 @@ renderer. These types describe what the platform **does** and what flows over th
 | [CLI envelope](envelope.md) | `CommandResult<T>` shape, exit codes, `--json` mode contract |
 | [Error hierarchy](errors.md) | `ValidationError` → `SecurityError` class ladder and the classifier |
 | [Control-plane messages](control-plane-messages.md) | Daemon ↔ registry ↔ renderer wire protocol |
-| [Presentation contracts](presentation.md) | `PresentationHandle` thin waist — imperative floor + native upgrade |
+| [Presentation contracts](presentation.md) | `PresentationHandle` interface — imperative floor + native upgrade |
 | [Framework plugin interface](framework-plugin.md) | `BaseFrameworkPlugin` abstract — the contract every framework plugin implements |
 | [Control plane interface](control-plane.md) | `BaseControlPlane` abstract — daemon + registry + LayoutManager bundled under a three-line host API |
 
@@ -62,7 +62,7 @@ renderer. These types describe what the platform **does** and what flows over th
 | ADR-053 | Control-plane message protocol |
 | ADR-054 | Isomorphic correlation ID (no Node `crypto` import) |
 | ADR-055 | Module Federation experience output shape |
-| ADR-056 | Presentation handle thin waist |
+| ADR-056 | Presentation handle interface |
 | ADR-057 | Virtualized daemon socket (DaemonChannel) |
 | ADR-058 | Slot-provider MFEs |
 | ADR-059 | BaseControlPlane abstract base |

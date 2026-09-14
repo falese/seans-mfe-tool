@@ -66,7 +66,7 @@ export interface AdaptorHelpers {
   hostFramework?: string;
   /**
    * Host-injected provider values (theme, locale, auth claims, router state, …)
-   * that cross the waist as DATA (ADR-060 value-injection). The MFE island
+   * that cross the interface as DATA (ADR-060 value-injection). The MFE island
    * re-provides its own context from these — context reaches the MFE without a
    * shared reconciler, so isolation, polyglot, and multi-version React all hold.
    */

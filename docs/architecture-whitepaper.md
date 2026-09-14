@@ -960,7 +960,7 @@ All architectural decisions are recorded in `docs/architecture-decisions/`. Key 
 | ADR-036 | Open-string `framework`/`bundler` fields (not enums) | Unknown frameworks warn but don't fail |
 | ADR-054 | Control-plane message protocol in `@seans-mfe/contracts` | Daemon and shell share a typed wire contract |
 | ADR-055 | LayoutManager — daemon-driven slot composition | Shell stays empty; daemon drives what renders |
-| ADR-056 | Presentation handle thin waist (imperative floor + native upgrade) | Polyglot composition without framework coupling |
+| ADR-056 | Presentation handle interface (imperative floor + native upgrade) | Polyglot composition without framework coupling |
 | ADR-057 | DaemonChannel — per-slot virtual WebSocket over one connection | MFEs get isolated control-plane channels without multiplying connections |
 | ADR-058 | Slot-provider MFEs — MFEs that provide slots for other MFEs | Recursive composition; MFEs can act as shells |
 | ADR-059 | `BaseControlPlane` — abstract base bundling daemon + registry + LayoutManager | Host API reduced to three lines; all four base classes now present |

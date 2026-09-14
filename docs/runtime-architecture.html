@@ -769,9 +769,9 @@
     </figure>
   </section>
 
-  <!-- ============ FIG 7 — the polyglot waist ============ -->
+  <!-- ============ FIG 7 — the polyglot interface ============ -->
   <section class="fig">
-    <span class="fignum">Figure 7 — the polyglot waist</span>
+    <span class="fignum">Figure 7 — the polyglot interface</span>
     <h2>Why a slot can hold an MFE written in a framework the shell has never heard of</h2>
     <p class="claim">
       Polyglot composition is not one feature. It is four links in a chain, each
@@ -782,7 +782,7 @@
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 470" role="img" aria-label="Five layers separated by a thin waist. Above the waist: the control plane, the host shell, and the framework provider, which is the only host-side layer allowed to know a framework. Exactly two things cross the waist: the neutral capability contract and the presentation handle. Below: BaseMFE, which exposes the handle but never mounts, and the framework-specialized concrete classes that may import React or Angular. The imperative mount handle is the guaranteed floor every MFE exposes; a native component handle is an optional tagged upgrade the core never inspects.">
+        <svg viewBox="0 0 880 470" role="img" aria-label="Five layers separated by one interface. Above it: the control plane, the host shell, and the framework provider, which is the only host-side layer allowed to know a framework. Exactly two things cross the interface: the neutral capability contract and the presentation handle. Below: BaseMFE, which exposes the handle but never mounts, and the framework-specialized concrete classes that may import React or Angular. The imperative mount handle is the guaranteed floor every MFE exposes; a native component handle is an optional tagged upgrade the core never inspects.">
           <defs>
             <marker id="w7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
@@ -807,9 +807,9 @@
           <text x="30" y="166" font-size="8.5" fill="currentColor">owns the slot element, the mount, the unmount, the context wrapping</text>
           <text x="30" y="179" font-size="8.5" fill="var(--ink-3)">registered on hostFramework × handleKind — optimization may be arbitrarily deep</text>
 
-          <!-- the waist -->
+          <!-- the interface -->
           <rect x="16" y="202" width="560" height="74" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="2"/>
-          <text x="296" y="222" font-size="11" text-anchor="middle" fill="var(--accent)">THE THIN WAIST — exactly two things cross</text>
+          <text x="296" y="222" font-size="11" text-anchor="middle" fill="var(--accent)">THE INTERFACE — exactly two things cross</text>
           <line x1="40" y1="230" x2="552" y2="230" stroke="var(--accent)" stroke-opacity="0.35"/>
           <text x="30" y="248" font-size="9" fill="currentColor">the neutral capability contract — load · render · health · query · describe · …</text>
           <text x="30" y="266" font-size="9" fill="currentColor">the presentation handle — a mount function, and optionally a tagged component</text>
