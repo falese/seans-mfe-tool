@@ -1,5 +1,5 @@
 /**
- * The one classification of GraphQL Mesh plugins and transforms (ADR-090).
+ * The one classification of GraphQL Mesh plugins and transforms (ADR-092).
  *
  * WHY THIS IS IN `contracts` AND NOT IN THE GENERATOR: it is manifest
  * vocabulary. The DSL schema validates against it, the DSL validator classifies

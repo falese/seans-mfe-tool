@@ -17,7 +17,7 @@ been implemented, and otherwise leaves the file alone. The signal is an
 exported symbol matching the capability name — but *which* patterns count is
 a framework question (React exports a const or function; Angular exports a
 `<Name>Component` class), so the caller supplies them from the variant
-rather than this module branching on a framework id (ADR-091).
+rather than this module branching on a framework id (ADR-093).
 
 Note: the generated stub already exports `<Name>`, so a capability counts as
 implemented from the moment its file exists — the intended hands-off

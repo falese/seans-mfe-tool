@@ -12,7 +12,7 @@ Defined in: [packages/codegen/src/catalog.ts:249](https://github.com/falese/sean
 
 Mesh plugin / transform allow-lists.
 
-Derived from the single classification in `@seans-mfe/contracts` (ADR-090),
+Derived from the single classification in `@seans-mfe/contracts` (ADR-092),
 not restated. These used to be two hand-maintained Sets here, one of three
 surviving copies across the repo that disagreed on both contents and
 spelling; `codegen` read camelCase while `dsl` read kebab-case against the

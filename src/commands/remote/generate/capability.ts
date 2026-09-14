@@ -9,7 +9,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
-// Registers the BFF's file contribution (ADR-092 §2). A side-effect import:
+// Registers the BFF's file contribution (ADR-094 §2). A side-effect import:
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
@@ -94,7 +94,7 @@ export async function remoteGenerateCapabilityCommand(
     }
 
     if (genResult.reseeded.length > 0) {
-      // ADR-089 §4. Same treatment as `remote:generate`: this command forwards
+      // ADR-091 §4. Same treatment as `remote:generate`: this command forwards
       // the same flag to the same writer, so it replaces the same developer-
       // owned files — App.tsx, package.json, the bundler config, the BFF's
       // Dockerfile. Reporting those under "✓ Generated files" described a
@@ -111,7 +111,7 @@ export async function remoteGenerateCapabilityCommand(
       for (const file of genResult.skipped) {
         console.log(chalk.yellow(`  ${path.relative(cwd, file)}`));
       }
-      // Deliberately NOT "use --force to overwrite". Since ADR-089 that flag
+      // Deliberately NOT "use --force to overwrite". Since ADR-091 that flag
       // replaces these files rather than doing nothing, and recommending it in
       // one line with no mention of what it costs is how the destructive path
       // becomes the habitual one.
@@ -169,7 +169,7 @@ export default class RemoteGenerateCapability extends BaseCommand<RemoteGenerate
     force: Flags.boolean({
       char: 'f',
       description:
-        'Re-seed developer-owned scaffolding, replacing your edits to it (ADR-089). ' +
+        'Re-seed developer-owned scaffolding, replacing your edits to it (ADR-091). ' +
         'Does not touch a capability that is already implemented.',
       default: false,
     }),

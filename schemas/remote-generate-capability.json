@@ -63,7 +63,7 @@
         "items": {
           "type": "string"
         },
-        "description": "Developer-owned files that existed and were replaced because `--force` was\npassed (ADR-089). Empty on every run without the flag.\n\nPresent for the same reason it is on `RemoteGenerateResult`: this command\nforwards `--force` to the same writer, so it reaches the same files, and a\ncaller that cannot tell a re-seed from a first write cannot warn about it."
+        "description": "Developer-owned files that existed and were replaced because `--force` was\npassed (ADR-091). Empty on every run without the flag.\n\nPresent for the same reason it is on `RemoteGenerateResult`: this command\nforwards `--force` to the same writer, so it reaches the same files, and a\ncaller that cannot tell a re-seed from a first write cannot warn about it."
       },
       "dryRun": {
         "type": "boolean"
@@ -86,7 +86,7 @@
                 "skip",
                 "spawn"
               ],
-              "description": "`overwrite` re-stamps a generator-owned file; `skip` leaves a\ndeveloper-owned one alone. `reseed` is the third outcome ADR-089 adds —\na developer-owned file that exists and WILL be replaced because `--force`\nwas passed. It is distinct from `overwrite` because it is the only op that\ncan destroy work, and a dry run that calls it `overwrite` hides that."
+              "description": "`overwrite` re-stamps a generator-owned file; `skip` leaves a\ndeveloper-owned one alone. `reseed` is the third outcome ADR-091 adds —\na developer-owned file that exists and WILL be replaced because `--force`\nwas passed. It is distinct from `overwrite` because it is the only op that\ncan destroy work, and a dry run that calls it `overwrite` hides that."
             },
             "target": {
               "type": "string"

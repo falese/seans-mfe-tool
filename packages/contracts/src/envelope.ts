@@ -73,7 +73,7 @@ function randomUUID(): string {
 export interface PlannedChange {
   /**
    * `overwrite` re-stamps a generator-owned file; `skip` leaves a
-   * developer-owned one alone. `reseed` is the third outcome ADR-089 adds —
+   * developer-owned one alone. `reseed` is the third outcome ADR-091 adds —
    * a developer-owned file that exists and WILL be replaced because `--force`
    * was passed. It is distinct from `overwrite` because it is the only op that
    * can destroy work, and a dry run that calls it `overwrite` hides that.

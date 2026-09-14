@@ -88,7 +88,7 @@ export interface FrameworkVariant {
   bundler: string;
   /**
    * The variant id. Open, not a union of the two built-ins: closing it was
-   * half of why a third framework required editing this file (ADR-091).
+   * half of why a third framework required editing this file (ADR-093).
    */
   templateVariant: string;
 }
@@ -157,7 +157,7 @@ export interface GenerateAllFilesResult {
   files: GeneratedFile[];
   preservedCapabilities: string[];
   /**
-   * Everything the generator has to say about this run (ADR-092). Returned,
+   * Everything the generator has to say about this run (ADR-094). Returned,
    * never printed: the caller decides whether that means chalk on a terminal,
    * a field in the JSON envelope, or nothing at all.
    */
@@ -350,7 +350,7 @@ function planRenderModel(manifest: DSLManifest, variant: FrameworkVariant): Rend
 
 /**
  * Render phase — turn the planned model into concrete GeneratedFiles by
- * running the variant's file plan (ADR-091).
+ * running the variant's file plan (ADR-093).
  *
  * This function used to be ~300 lines with ~25 hand-written `files.push` sites
  * and six comparisons against the string literal `'angular-webpack'`. It now
@@ -391,7 +391,7 @@ async function renderFiles(
       ];
   const templateDir = path.resolve(__dirname, '..', 'templates', variant.templateDirName);
 
-  // Whatever registered itself as a contributor (ADR-092 §2). Each brings its
+  // Whatever registered itself as a contributor (ADR-094 §2). Each brings its
   // own template root, resolved inside its own package, so nothing here names
   // a plugin or reaches outside this package for a template.
   const contributors = fileContributors();
@@ -424,7 +424,7 @@ async function renderFiles(
 
   // A capability already implemented keeps its files untouched — not emitted
   // and skipped, but absent from the plan entirely, which is what puts it out
-  // of `--force`'s reach as well (ADR-089 §3).
+  // of `--force`'s reach as well (ADR-091 §3).
   const preservedCapabilities: string[] = [];
   const featurePlan: FileSpec[] = [];
   for (const name of domainCapabilities) {
@@ -439,7 +439,7 @@ async function renderFiles(
   }
   // Deliberately not printed. `preservedCapabilities` is on the result and the
   // CLI already renders it; printing here produced the line twice on every run
-  // that preserved anything (ADR-092).
+  // that preserved anything (ADR-094).
 
   const plan: FileSpec[] = [
     ...featurePlan,

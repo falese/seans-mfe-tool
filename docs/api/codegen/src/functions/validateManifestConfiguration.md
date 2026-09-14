@@ -11,7 +11,7 @@
 Defined in: [packages/codegen/src/manifest-validation.ts:213](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L213)
 
 Classify a manifest's Mesh plugins and transforms, and say whether
-generation may proceed (ADR-027, ADR-092).
+generation may proceed (ADR-027, ADR-094).
 
 Returns rather than prints. It used to write four kinds of line to stdout
 and stderr — an emoji warnings heading, an emoji errors heading, the items

@@ -18,7 +18,7 @@ Generate all files (features, platform, BFF, configs) for a manifest
 
 Defined in: [packages/codegen/src/unified-generator.ts:164](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L164)
 
-Everything the generator has to say about this run (ADR-092). Returned,
+Everything the generator has to say about this run (ADR-094). Returned,
 never printed: the caller decides whether that means chalk on a terminal,
 a field in the JSON envelope, or nothing at all.
 

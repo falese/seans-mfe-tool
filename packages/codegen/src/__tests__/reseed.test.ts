@@ -1,12 +1,12 @@
 /**
- * `--force` re-seeds developer-owned scaffolding (ADR-089).
+ * `--force` re-seeds developer-owned scaffolding (ADR-091).
  *
  * ADR-043 splits every emitted file into generator-owned (`overwrite: true`,
  * re-stamped every run) and developer-owned (`overwrite: false`, seeded once).
  * ADR-082 exists because the second half is unreachable by regeneration: a
  * platform change that lands in developer-owned code can only be *reported*.
  *
- * These tests pin the third state ADR-089 adds — an explicit, opt-in re-seed —
+ * These tests pin the third state ADR-091 adds — an explicit, opt-in re-seed —
  * and, just as importantly, pin what it still refuses to touch.
  */
 
@@ -27,7 +27,7 @@ const developerOwned = (p: string, content: string): GeneratedFile => ({
   overwrite: false,
 });
 
-describe('writeGeneratedFiles — re-seed semantics (ADR-089)', () => {
+describe('writeGeneratedFiles — re-seed semantics (ADR-091)', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -114,7 +114,7 @@ describe('writeGeneratedFiles — re-seed semantics (ADR-089)', () => {
 
   describe('the boundary --force does not cross', () => {
     it('cannot reach a capability whose feature file is already implemented', async () => {
-      // ADR-089 §3. This is not enforced here — it is enforced upstream, by
+      // ADR-091 §3. This is not enforced here — it is enforced upstream, by
       // generateAllFiles omitting an implemented capability's files from the
       // plan entirely rather than marking them. A file that never enters the
       // plan cannot be re-seeded by a writer that only walks the plan.

@@ -1,5 +1,5 @@
 /**
- * The generator reports; it does not print (ADR-092).
+ * The generator reports; it does not print (ADR-094).
  *
  * `@seans-mfe/codegen` wrote to stdout and stderr — missing-template warnings,
  * a "Preserved (already implemented)" line, and emoji headings from manifest
@@ -102,7 +102,7 @@ describe('validateManifestConfiguration', () => {
 
   it('reports a misclassified entry as an error diagnostic', () => {
     // `filterSchema` is a transform; declaring it as a plugin is the
-    // misclassification ADR-027 exists to catch and ADR-090 single-sourced.
+    // misclassification ADR-027 exists to catch and ADR-092 single-sourced.
     const manifest = {
       ...baseManifest,
       plugins: { filterSchema: {} },

@@ -114,7 +114,7 @@ export function loadFrameworkPlugin(framework: string): BaseFrameworkPlugin {
  * selects Angular.
  */
 export function resolveFrameworkVariant(manifest: DSLManifest): FrameworkVariant {
-  // The name-resolution rule lives in exactly one place (ADR-090). It has to be
+  // The name-resolution rule lives in exactly one place (ADR-092). It has to be
   // the NAME rule, not `deriveBuiltinVariant`: that function answers "which of
   // the two built-in trios", so reading `.framework` off it collapses every
   // third-party framework to `react` and hands loadFrameworkPlugin the wrong

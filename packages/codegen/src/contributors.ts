@@ -1,5 +1,5 @@
 /**
- * How something outside the generator adds files to what it emits (ADR-092 §2).
+ * How something outside the generator adds files to what it emits (ADR-094 §2).
  *
  * The generator used to reach into `packages/plugin-bff/templates` by relative
  * path, because there was no way for a plugin to contribute to the generation

@@ -40,7 +40,7 @@ Defined in: [packages/contracts/src/envelope.ts:83](https://github.com/falese/se
 Defined in: [packages/contracts/src/envelope.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L81)
 
 `overwrite` re-stamps a generator-owned file; `skip` leaves a
-developer-owned one alone. `reseed` is the third outcome ADR-089 adds —
+developer-owned one alone. `reseed` is the third outcome ADR-091 adds —
 a developer-owned file that exists and WILL be replaced because `--force`
 was passed. It is distinct from `overwrite` because it is the only op that
 can destroy work, and a dry run that calls it `overwrite` hides that.

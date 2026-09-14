@@ -1,5 +1,5 @@
 /**
- * React + rspack — the default variant (ADR-091).
+ * React + rspack — the default variant (ADR-093).
  *
  * Everything here was previously the `else` half of six `templateVariant ===
  * 'angular-webpack'` comparisons inside `renderFiles`.

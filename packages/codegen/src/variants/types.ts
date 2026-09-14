@@ -1,5 +1,5 @@
 /**
- * What a codegen variant is (ADR-091).
+ * What a codegen variant is (ADR-093).
  *
  * ADR-036 said framework support should be a template variant, not a branch,
  * and `unified-generator.ts`'s own header asserted that *"framework differences

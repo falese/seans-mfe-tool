@@ -1,6 +1,6 @@
 /**
  * The file plan — the generic emit loop that replaces ~25 hand-written
- * `files.push` sites (ADR-091, extraction plan Phase 4).
+ * `files.push` sites (ADR-093, extraction plan Phase 4).
  *
  * These tests pin the loop's contract rather than any particular variant's
  * plan: what `when` gates, how `optional` differs from a missing template,

@@ -222,7 +222,7 @@ deliberately: gating re-stamps of generator-owned files became meaningless when
 ADR-043 made regeneration unconditional, and overwriting developer-owned files
 is forbidden by the invariant ADR-082 quotes approvingly.
 
-**Resolved: given the meaning ADR-082 lacks** (ADR-089, commit `06da32b`).
+**Resolved: given the meaning ADR-082 lacks** (ADR-091, commit `06da32b`).
 `--force` now re-seeds developer-owned *scaffolding* from current templates,
 which is the repair action for the warnings ADR-082 can only emit — the
 19-of-48 hand-edit tail from the ADR-017 rollout. Capability feature files stay
@@ -304,7 +304,7 @@ entry and errored otherwise — but `render-model.ts` derives that transform fro
 the `performance` block. The check demanded the author duplicate a derivation,
 and failed the manifest when they did not.
 
-**Resolved** (ADR-090, `3859170`). One table in
+**Resolved** (ADR-092, `3859170`). One table in
 `packages/contracts/src/mesh-catalog.ts`, canonical on the Mesh config key with
 the npm package spelling as an alias, plus an explicit `ambiguous` class for
 names Mesh ships in both positions. Both spellings now resolve in both layers;
@@ -493,7 +493,7 @@ every package ships the templates it reads, and that no *new* cross-package
 template reference appears; the one escape above is pinned, with a paired
 assertion that the allowance disappears when the escape does.
 
-**D2 — The generator printed to the console.** *Resolved* (ADR-092, `58ecfad`).
+**D2 — The generator printed to the console.** *Resolved* (ADR-094, `58ecfad`).
 Eight `console.*` calls in `packages/codegen/src`. A library that writes emoji
 to stdout is not embeddable, it violates the repo's own rule, and it collides
 with the JSON-envelope contract under which stdout carries exactly one
@@ -503,14 +503,14 @@ offender.
 One of the eight was a live defect, not just a smell: the generator printed
 `Preserved (already implemented)` and `remote:generate` printed it again from
 the returned value, so every run that preserved a capability emitted the line
-twice. Seen during the ADR-089 end-to-end check and misread as noise.
+twice. Seen during the ADR-091 end-to-end check and misread as noise.
 
 `GenerateAllFilesResult` now carries `diagnostics: GeneratorDiagnostic[]`, and
 `no-console` is `error` across the three extraction packages — verified by
 planting one and watching lint fail.
 
 **D3 — `validateManifestConfiguration` threw and printed instead of returning.**
-*Resolved* (ADR-092). It returns `{ ok, diagnostics }`; `generateAllFiles`
+*Resolved* (ADR-094). It returns `{ ok, diagnostics }`; `generateAllFiles`
 throws `ValidationError` on `!ok`. Reporting differently is not permitting —
 ADR-027 refuses to generate from a misclassified manifest because the
 alternative is finding out at runtime, inside a container.
@@ -771,7 +771,7 @@ Two findings changed shape once the work started, both worth recording:
 
 **Retained by decision:** `type-system.ts` (A1), now marked in-source.
 
-**Done, second slice** — commit `06da32b`, ADR-089:
+**Done, second slice** — commit `06da32b`, ADR-091:
 
 - `--force` given the meaning ADR-082 lacks (A4) — see the finding above.
 - `--template` / `--skip-install` removed (A5); `remote:init-angular` removed (A7).
@@ -813,7 +813,7 @@ phase, so A8 cannot recur.
 
 ### Phase 2 — Single-source the duplicated facts (1 day)
 
-**Done** — commit `3859170`, ADR-090.
+**Done** — commit `3859170`, ADR-092.
 
 **2a. One Mesh allow-list (B1).** Canonical on the Mesh config key (camelCase),
 npm package spelling accepted as an alias, `ambiguous` for names Mesh ships in

@@ -42,7 +42,7 @@ indexes. This page answers only *what is allowed*.
 | `data` | object (sources, transforms, plugins, serve, …) | — | GraphQL Mesh configuration. Its presence is what makes the generator emit a BFF. |
 | `providesSlots` | object (id, description)[] | — | Named regions this MFE registers at runtime for others to fill (ADR-058, ADR-067). |
 | `performance` | object (caching, observability, rateLimit, filterSchema) | — | Caching, observability and rate-limiting config. Mesh plugins and transforms are derived from it (ADR-027). |
-| `transforms` | `string`[] | — | Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-090). |
+| `transforms` | `string`[] | — | Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-092). |
 | `authorization` | — | — | Reserved. Deferred by ADR-007; accepted and ignored. |
 
 ## Nested sections

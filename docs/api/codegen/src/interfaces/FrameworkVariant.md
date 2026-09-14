@@ -39,4 +39,4 @@ Defined in: [packages/codegen/src/unified-generator.ts:87](https://github.com/fa
 Defined in: [packages/codegen/src/unified-generator.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L93)
 
 The variant id. Open, not a union of the two built-ins: closing it was
-half of why a third framework required editing this file (ADR-091).
+half of why a third framework required editing this file (ADR-093).

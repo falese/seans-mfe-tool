@@ -59,7 +59,7 @@ Who owns the emitted file. THE most consequential field in a spec:
 `generator` becomes `overwrite: true` — re-stamped every run and held
 byte-identical by `check:mfe-drift`; `developer` becomes `overwrite: false`
 — seeded once and then the developer's, reachable afterwards only by an
-explicit `--force` re-seed (ADR-089).
+explicit `--force` re-seed (ADR-091).
 
 ***
 

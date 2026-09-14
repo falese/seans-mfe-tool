@@ -1,5 +1,5 @@
 ---
-id: 0092
+id: 0094
 title: >-
   The generator is a library — it returns diagnostics instead of printing, and receives file
   contributions instead of reaching across packages for them
@@ -9,7 +9,7 @@ deciders: [sean]
 area: Codegen / packaging / DX
 enforcement: code
 tags: [codegen, plugins, dx, packaging, diagnostics]
-relates-to: [18, 22, 27, 77, 82, 91]
+relates-to: [18, 22, 27, 77, 82, 93]
 supersedes: []
 superseded-by: []
 implements-pdr: [1, 4]
@@ -57,7 +57,7 @@ summary on every successful run. Consequences, in order of how much they cost:
 - It duplicated output the CLI already produced. `remote:generate` renders
   `preservedCapabilities` from the returned value, so a run that preserved
   anything printed the line twice — visible in the `--force` end-to-end check
-  during ADR-089's work and mistaken for cosmetic noise at the time.
+  during ADR-091's work and mistaken for cosmetic noise at the time.
 
 **The generator reached into a sibling package.** `renderFiles` resolved
 `../../../packages/plugin-bff/templates` to emit BFF files. That escaped
@@ -71,8 +71,8 @@ The second was originally filed as *"move the BFF templates into codegen"*.
 That was wrong: BFF is a plugin (PDR-004, ADR-022), and moving its templates
 into core would have fixed a packaging symptom by contradicting the
 architecture. The cause was that a plugin had no way to contribute to the
-generation plan — the same cause as the framework branches ADR-091 removed.
-ADR-091 built the plan; this uses it.
+generation plan — the same cause as the framework branches ADR-093 removed.
+ADR-093 built the plan; this uses it.
 
 ## Decision
 
@@ -121,15 +121,15 @@ deletion. The list is empty.
 
 ## Boundaries
 
-**This closes a boundary ADR-091 declared open.** ADR-091's Boundaries section
+**This closes a boundary ADR-093 declared open.** ADR-093's Boundaries section
 says *"The BFF path escape is still there"* and describes the specs as living
 in `codegen/src/variants/shared.ts`. That was accurate when written and was
-resolved by §2 here, in the same phase. ADR-091 is left as written, per the
+resolved by §2 here, in the same phase. ADR-093 is left as written, per the
 rule that decision records are not edited after the fact; this is the
 correction.
 
-**Sections of ADR-091 cited as "§6" mean §2 of this ADR.** Code comments
-written during the work referenced a section number ADR-091 does not have —
+**Sections of ADR-093 cited as "§6" mean §2 of this ADR.** Code comments
+written during the work referenced a section number ADR-093 does not have —
 the contributor mechanism was implemented before it was recorded. The
 citations now point here.
 
@@ -181,5 +181,5 @@ safer-looking option mostly ceremony.
   printing to returning, without changing that it refuses.
 - ADR-082 — the platform reports what it cannot fix; the same posture applied
   to the generator's own findings.
-- ADR-091 — made the emit set a list of file specs; this adds the contributor
+- ADR-093 — made the emit set a list of file specs; this adds the contributor
   that lets something outside the package supply some of them.

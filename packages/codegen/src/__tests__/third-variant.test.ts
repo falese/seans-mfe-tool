@@ -1,5 +1,5 @@
 /**
- * The acceptance test for ADR-091: a third framework generates without editing
+ * The acceptance test for ADR-093: a third framework generates without editing
  * the generator.
  *
  * ADR-036 promised framework support as template-variant data. `renderFiles`

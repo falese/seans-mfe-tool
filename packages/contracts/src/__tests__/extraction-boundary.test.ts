@@ -33,7 +33,7 @@ const ALLOWED = [
   'platform-contract', // PLATFORM_CAPABILITIES and friends (ADR-080)
   'slot-grammar', // slot id grammar (ADR-069)
   'slot-contract', // createSlotAddressRegistry — slot-validation AND composition
-  'mesh-catalog', // Mesh plugin/transform classification (ADR-090)
+  'mesh-catalog', // Mesh plugin/transform classification (ADR-092)
 ] as const;
 
 /** Modules that are CLI or runtime concern and stay behind. */

@@ -1,7 +1,7 @@
 /**
- * `remote:generate:capability --force` must mean what ADR-089 made it mean.
+ * `remote:generate:capability --force` must mean what ADR-091 made it mean.
  *
- * ADR-089 redefined `writeGeneratedFiles`'s `force`: it no longer does nothing,
+ * ADR-091 redefined `writeGeneratedFiles`'s `force`: it no longer does nothing,
  * it REPLACES developer-owned files that already exist. `remote:generate` was
  * updated for that — it reports `reseeded` separately, prints it in red, and
  * tells the developer how to recover.
@@ -22,7 +22,7 @@ import * as fs from 'fs-extra';
 import { writeGeneratedFiles } from '@seans-mfe/codegen';
 import type { RemoteGenerateCapabilityResult } from '../../oclif/results';
 
-describe('remote:generate:capability --force (ADR-089)', () => {
+describe('remote:generate:capability --force (ADR-091)', () => {
   let dir: string;
   beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cap-force-'));

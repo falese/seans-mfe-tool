@@ -14,7 +14,7 @@ One capability's three files: the component, its barrel, and its test.
 
 All developer-owned — this is domain implementation, not scaffolding the
 platform can rebuild, which is why `--force` cannot reach them either
-(ADR-089 §3). A capability already realised in code is omitted entirely by
+(ADR-091 §3). A capability already realised in code is omitted entirely by
 the caller rather than emitted and skipped.
 
 ## Parameters

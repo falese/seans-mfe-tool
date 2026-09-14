@@ -138,7 +138,7 @@ export function validateDataConfig(data: unknown): ValidationResult {
  * @returns Array of validation errors (empty if valid)
  */
 function validatePerformanceConfig(_manifest: DSLManifest): ValidationError[] {
-  // Deliberately empty (ADR-090).
+  // Deliberately empty (ADR-092).
   //
   // This used to require that enabling `performance.rateLimit` or
   // `performance.filterSchema` was accompanied by a matching entry in the
@@ -157,7 +157,7 @@ function validatePerformanceConfig(_manifest: DSLManifest): ValidationError[] {
 }
 
 /**
- * Classify each entry of the top-level `transforms` array (ADR-090).
+ * Classify each entry of the top-level `transforms` array (ADR-092).
  *
  * Entries are plain strings (`CustomTransformSchema = z.string()`). The name
  * is resolved through the single Mesh table in `@seans-mfe/contracts`, so both
@@ -183,7 +183,7 @@ function validateTransformsConfig(manifest: DSLManifest): ValidationError[] {
         });
         break;
       case 'unknown':
-        // Deliberately NOT an error here (ADR-090). `ValidationResult` has no
+        // Deliberately NOT an error here (ADR-092). `ValidationResult` has no
         // warning channel, so reporting an unrecognised name would make it
         // fatal — and the platform's stated policy for open vocabularies is a
         // warning, not a rejection (ADR-036, applied to `framework` and

@@ -37,7 +37,7 @@ export async function renderTemplate(
  * exported symbol matching the capability name — but *which* patterns count is
  * a framework question (React exports a const or function; Angular exports a
  * `<Name>Component` class), so the caller supplies them from the variant
- * rather than this module branching on a framework id (ADR-091).
+ * rather than this module branching on a framework id (ADR-093).
  *
  * Note: the generated stub already exports `<Name>`, so a capability counts as
  * implemented from the moment its file exists — the intended hands-off
@@ -60,7 +60,7 @@ export async function capabilityImplemented(
  *
  * Ownership decides what happens to a file that already exists (ADR-043,
  * ADR-077 §1); `force` decides whether the developer-owned half can be
- * re-seeded (ADR-089).
+ * re-seeded (ADR-091).
  *
  * | exists | `overwrite` | `force` | outcome            |
  * |--------|-------------|---------|--------------------|
@@ -72,7 +72,7 @@ export async function capabilityImplemented(
  * Generator-owned files are re-stamped unconditionally and always were: ADR-043
  * makes regeneration idempotent and `check:mfe-drift` requires those files to
  * match a fresh generation at all times. `force` never had a role there, which
- * is why it did nothing at all until ADR-089 gave it this one.
+ * is why it did nothing at all until ADR-091 gave it this one.
  *
  * `reseeded` is reported separately from `files` because it is the only outcome
  * that can destroy work. A caller that cannot tell a re-seed from a first write
@@ -83,7 +83,7 @@ export async function capabilityImplemented(
  * `capabilityImplemented`) rather than marking them — so a writer that walks
  * the plan cannot touch them however it is called. That is the boundary between
  * scaffolding, which the platform can re-seed, and domain implementation, which
- * it must not (ADR-089 §3).
+ * it must not (ADR-091 §3).
  */
 export async function writeGeneratedFiles(
   files: GeneratedFile[],

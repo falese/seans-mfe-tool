@@ -735,7 +735,7 @@
       "additionalProperties": false
     },
     "transforms": {
-      "description": "Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-090).",
+      "description": "Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-092).",
       "type": "array",
       "items": {
         "type": "string"

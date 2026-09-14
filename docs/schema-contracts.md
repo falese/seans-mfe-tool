@@ -106,7 +106,7 @@ three or more packages read each of these facts.
 | `platform-contract.ts` | `PLATFORM_CAPABILITIES`, `PLATFORM_CAPABILITY_SPECS` (ADR-080) | `codegen`, `runtime` |
 | `slot-grammar.ts` | Slot id grammar (ADR-069) | `dsl`, `codegen`, `runtime` |
 | `slot-contract.ts` | Matching, guard, address registry (ADR-073) | `dsl`, `runtime` |
-| `mesh-catalog.ts` | Mesh plugin/transform classification (ADR-090) | `dsl`, `codegen` |
+| `mesh-catalog.ts` | Mesh plugin/transform classification (ADR-092) | `dsl`, `codegen` |
 | `framework-plugin.ts` | `BaseFrameworkPlugin` (ADR-036) | the CLI's loader, both framework packages |
 | `build-output-parser.ts`, `messages.ts`, `observability.ts`, `presentation.ts` | CLI-side concerns | the CLI |
 

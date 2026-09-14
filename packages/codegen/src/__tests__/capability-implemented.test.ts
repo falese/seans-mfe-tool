@@ -9,7 +9,7 @@ import { capabilityImplemented } from '../unified-generator';
 import { reactRspack, angularWebpack } from '../variants';
 
 // The patterns are the variant's answer now, not a framework id the checker
-// branches on (ADR-091) — so these tests exercise the real variant tables
+// branches on (ADR-093) — so these tests exercise the real variant tables
 // rather than a string the function interprets.
 const react = (name: string) => reactRspack.implementedPatterns(name);
 const angular = (name: string) => angularWebpack.implementedPatterns(name);

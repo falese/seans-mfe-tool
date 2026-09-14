@@ -117,7 +117,7 @@ export function validateManifestPlugins(manifest: DSLManifest): ValidationResult
     switch (classifyMeshEntry(pluginName)) {
       // 'ambiguous' shares this branch: a name Mesh ships in both positions
       // (`mock`, `snapshot`) is correct here and must not be reported as
-      // misplaced — ADR-090 §2. The previous Set-based lookup listed those
+      // misplaced — ADR-092 §2. The previous Set-based lookup listed those
       // names in both allow-lists, which disabled the misclassification check
       // for them by accident rather than by decision.
       case 'plugin':
@@ -196,7 +196,7 @@ export function validateManifestTransforms(manifest: DSLManifest): ValidationRes
 
 /**
  * Classify a manifest's Mesh plugins and transforms, and say whether
- * generation may proceed (ADR-027, ADR-092).
+ * generation may proceed (ADR-027, ADR-094).
  *
  * Returns rather than prints. It used to write four kinds of line to stdout
  * and stderr — an emoji warnings heading, an emoji errors heading, the items

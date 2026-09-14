@@ -1,5 +1,5 @@
 ---
-id: 0091
+id: 0093
 title: >-
   What the generator emits is a list of file specs owned by a variant, not a procedure with
   framework branches
@@ -9,7 +9,7 @@ deciders: [sean]
 area: Codegen / extensibility / ownership
 enforcement: code
 tags: [codegen, ownership, plugins, extensibility, dx]
-relates-to: [36, 43, 61, 77, 82, 89, 90]
+relates-to: [36, 43, 61, 77, 82, 91, 92]
 supersedes: []
 superseded-by: []
 implements-pdr: [1, 4]
@@ -195,9 +195,9 @@ not smuggled into a refactor whose whole claim is that nothing changed.
 - ADR-077 §1 — `overwrite` is the ownership map; §4 gives it one statement.
 - ADR-082 — platform migrations, which exist because developer-owned files are
   unreachable; the ownership column is what its `developerOwned` predicate reads.
-- ADR-089 — `--force` re-seeds developer-owned scaffolding; §3's boundary is
+- ADR-091 — `--force` re-seeds developer-owned scaffolding; §3's boundary is
   why implemented capabilities are omitted from the plan rather than flagged.
-- ADR-090 — gave the Mesh classification and the framework-name resolution
+- ADR-092 — gave the Mesh classification and the framework-name resolution
   each exactly one implementation; this is the same shape of defect applied to
   the emit set.
 - `docs/generator-extraction-plan.md` — findings C2 and D1, and Phase 4.

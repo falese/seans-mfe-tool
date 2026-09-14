@@ -1,5 +1,5 @@
 /**
- * Angular + webpack (ADR-091).
+ * Angular + webpack (ADR-093).
  *
  * Everything here was previously the `if (templateVariant ===
  * 'angular-webpack')` half of six branches inside `renderFiles`.

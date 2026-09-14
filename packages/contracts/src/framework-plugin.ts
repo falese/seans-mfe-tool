@@ -133,7 +133,7 @@ export abstract class BaseFrameworkPlugin {
 
   // ── Codegen ─────────────────────────────────────────────────────────
   //
-  // Six members were removed here (ADR-090): getRuntimeDependencies,
+  // Six members were removed here (ADR-092): getRuntimeDependencies,
   // getTemplateDir, getTemplateVars, getRuntimeImport, getRuntimeClassName and
   // getSourceExtension. Every one was declared abstract, implemented by both
   // shipped plugins, and called by nothing — the generator hardcodes the same

@@ -12,5 +12,5 @@ Defined in: [packages/dsl/src/schema.ts:195](https://github.com/falese/seans-mfe
 
 Mesh transform — open record, rejected only when the name is a Mesh *plugin*
 put in the wrong section. Classification is single-sourced in
-`@seans-mfe/contracts` (ADR-090); an unknown name passes, and a name Mesh
+`@seans-mfe/contracts` (ADR-092); an unknown name passes, and a name Mesh
 ships in both positions (`mock`, `snapshot`) is never reported as misplaced.

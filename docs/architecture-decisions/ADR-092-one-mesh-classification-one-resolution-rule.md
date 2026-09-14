@@ -1,5 +1,5 @@
 ---
-id: 0090
+id: 0092
 title: >-
   Mesh plugin/transform classification and framework-name resolution each have exactly one
   implementation; the framework plugin contract drops the members nothing calls

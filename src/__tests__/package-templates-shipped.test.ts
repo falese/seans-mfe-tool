@@ -18,7 +18,7 @@
  *                           depends on codegen (a cycle npm cannot see).
  *
  * Both are now fixed — plugin-bff ships its templates, and the escape went when
- * the BFF became a FileContributor resolving its own template root (ADR-092
+ * the BFF became a FileContributor resolving its own template root (ADR-094
  * §2). `KNOWN_ESCAPES` is consequently empty, and the pair of tests below is
  * what keeps it that way: one fails on a NEW escape, the other fails on a
  * STALE allowance, so an exception cannot outlive the defect it excused.
@@ -47,7 +47,7 @@ const KNOWN_ESCAPES: ReadonlyArray<{ file: string; reason: string }> = [
   // Empty, and that is the point. It held one entry — codegen reading
   // plugin-bff's templates through `../../../packages/plugin-bff/templates` —
   // until a plugin could contribute FileSpecs with its own template root
-  // (ADR-092 §2). The honesty test below is what forced this list to shrink
+  // (ADR-094 §2). The honesty test below is what forced this list to shrink
   // when the escape went, rather than leaving a stale allowance behind as
   // permission for the next one.
 ];

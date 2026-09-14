@@ -17,7 +17,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 
-// Registers the BFF's file contribution (ADR-092 §2). A side-effect import:
+// Registers the BFF's file contribution (ADR-094 §2). A side-effect import:
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
@@ -50,14 +50,14 @@ function plannedOp(
 ): PlannedChange['op'] {
   if (!fsSync.existsSync(file.path)) return 'create';
   if (file.overwrite) return 'overwrite';
-  // ADR-089: a developer-owned file that exists is skipped by default and
+  // ADR-091: a developer-owned file that exists is skipped by default and
   // replaced under --force. Reported as `reseed`, not `overwrite`, because it
   // is the only planned op that can destroy work.
   return force ? 'reseed' : 'skip';
 }
 
 /**
- * The generator reports; the CLI renders (ADR-092).
+ * The generator reports; the CLI renders (ADR-094).
  *
  * Shared by the real run and the dry run. It used to be inline after the
  * dry-run branch had already returned, so a missing template, an unregistered
@@ -79,7 +79,7 @@ const DRY_RUN_LABEL: Record<PlannedChange['op'], string> = {
   // declining to do its job rather than respecting ownership.
   skip: '(skip — yours)',
   // Deliberately the loudest label here: this is the one line in a dry run that
-  // says an edit of yours is about to be thrown away (ADR-089).
+  // says an edit of yours is about to be thrown away (ADR-091).
   reseed: '(RE-SEED — replaces your edits)',
   spawn: '(spawn)',
 };
@@ -258,7 +258,7 @@ export async function remoteGenerateCommand(
     if (genResult.reseeded.length > 0) {
       // Loud and itemised. --force is the only path that destroys developer
       // work, and the run that did it is the last chance to say so before the
-      // developer discovers it from git (ADR-089 §4).
+      // developer discovers it from git (ADR-091 §4).
       console.log(chalk.red('\nRe-seeded (your edits were replaced):'));
       for (const file of genResult.reseeded) {
         console.log(chalk.red(`  ${path.relative(cwd, file)}`));

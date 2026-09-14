@@ -17,7 +17,7 @@
  *
  * Stating it once, and the specs as data, is what lets a framework variant be
  * a directory plus a list instead of six `if (angular)` branches in the
- * generator (ADR-036 promised this; ADR-091 delivers it), and what gives the
+ * generator (ADR-036 promised this; ADR-093 delivers it), and what gives the
  * ownership split a single definition instead of 25 inline booleans that three
  * separate subsystems each had to re-infer.
  *
@@ -31,7 +31,7 @@
  * `variant` is reserved for the framework variant's own template directory and
  * is the default for a spec that names none. Any other value is a
  * `FileContributor` id, which is an open string — a plugin ships templates the
- * generator has never heard of, which is the point (ADR-092 §2). Typed as such
+ * generator has never heard of, which is the point (ADR-094 §2). Typed as such
  * so the two literals below read as documentation rather than as a closed set
  * the generator can be trusted to enumerate.
  */
@@ -59,7 +59,7 @@ export interface FileSpec {
    * `generator` becomes `overwrite: true` — re-stamped every run and held
    * byte-identical by `check:mfe-drift`; `developer` becomes `overwrite: false`
    * — seeded once and then the developer's, reachable afterwards only by an
-   * explicit `--force` re-seed (ADR-089).
+   * explicit `--force` re-seed (ADR-091).
    */
   owner: 'generator' | 'developer';
   /** Template root to resolve `template` against. Defaults to `variant`. */
@@ -107,7 +107,7 @@ export interface PlannedFile {
 }
 
 /**
- * Something the generator has to say, returned instead of printed (ADR-092).
+ * Something the generator has to say, returned instead of printed (ADR-094).
  *
  * Deliberately the same shape wherever it comes from — the file plan, manifest
  * validation, a variant's missing slot template — so a caller renders one list

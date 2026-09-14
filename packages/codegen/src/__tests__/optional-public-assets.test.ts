@@ -99,7 +99,7 @@ describe('optional public assets (#341)', () => {
     // Asserted against PUBLIC_SPECS — the plan the generator actually reads.
     // These assertions used to name `OPTIONAL_PUBLIC_ASSETS`, a constant that
     // stopped having a consumer when optionality moved onto the specs
-    // themselves (ADR-091): adding an entry to it changed nothing while this
+    // themselves (ADR-093): adding an entry to it changed nothing while this
     // suite stayed green, which is the failure mode a gate is supposed to
     // prevent, not exhibit.
     const optional = PUBLIC_SPECS.filter((spec) => spec.optional).map((spec) => spec.out);

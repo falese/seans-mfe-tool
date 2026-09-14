@@ -71,7 +71,7 @@ export interface RemoteGenerateResult extends MutatingResult {
   preserved: string[];
   /**
    * Developer-owned files that existed and were replaced because `--force` was
-   * passed (ADR-089). Empty on every run without the flag.
+   * passed (ADR-091). Empty on every run without the flag.
    */
   reseeded: string[];
 }
@@ -87,7 +87,7 @@ export interface RemoteGenerateCapabilityResult extends MutatingResult {
   errors: string[];
   /**
    * Developer-owned files that existed and were replaced because `--force` was
-   * passed (ADR-089). Empty on every run without the flag.
+   * passed (ADR-091). Empty on every run without the flag.
    *
    * Present for the same reason it is on `RemoteGenerateResult`: this command
    * forwards `--force` to the same writer, so it reaches the same files, and a

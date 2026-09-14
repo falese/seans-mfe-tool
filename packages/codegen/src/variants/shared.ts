@@ -3,7 +3,7 @@
  * and the per-capability feature scaffolding.
  *
  * The BFF's specs used to live here too. They are a plugin's, and now live in
- * `@seans-mfe/plugin-bff` as a FileContributor (ADR-092 §2) — which is what
+ * `@seans-mfe/plugin-bff` as a FileContributor (ADR-094 §2) — which is what
  * removed the relative-path escape from this package into that one.
  *
  * These are shared because their *output paths* are variant-independent —
@@ -119,7 +119,7 @@ export function slotSpecs(ctx: GenPlanContext): FileSpec[] {
  *
  * All developer-owned — this is domain implementation, not scaffolding the
  * platform can rebuild, which is why `--force` cannot reach them either
- * (ADR-089 §3). A capability already realised in code is omitted entirely by
+ * (ADR-091 §3). A capability already realised in code is omitted entirely by
  * the caller rather than emitted and skipped.
  */
 export function featureSpecs(ctx: GenPlanContext, capability: string): FileSpec[] {

@@ -8,7 +8,7 @@
 
 Defined in: [packages/codegen/src/file-plan.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L117)
 
-Something the generator has to say, returned instead of printed (ADR-092).
+Something the generator has to say, returned instead of printed (ADR-094).
 
 Deliberately the same shape wherever it comes from — the file plan, manifest
 validation, a variant's missing slot template — so a caller renders one list

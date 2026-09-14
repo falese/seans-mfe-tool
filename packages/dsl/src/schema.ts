@@ -189,7 +189,7 @@ export type DataSource = z.infer<typeof DataSourceSchema>;
 /**
  * Mesh transform — open record, rejected only when the name is a Mesh *plugin*
  * put in the wrong section. Classification is single-sourced in
- * `@seans-mfe/contracts` (ADR-090); an unknown name passes, and a name Mesh
+ * `@seans-mfe/contracts` (ADR-092); an unknown name passes, and a name Mesh
  * ships in both positions (`mock`, `snapshot`) is never reported as misplaced.
  */
 export const DataTransformSchema = z.record(z.string(), z.unknown()).superRefine((val, ctx) => {
@@ -458,7 +458,7 @@ export const DSLManifestSchema = z.object({
   performance: PerformanceConfigSchema.optional()
     .describe('Caching, observability and rate-limiting config. Mesh plugins and transforms are derived from it (ADR-027).'),
   transforms: z.array(CustomTransformSchema).optional()
-    .describe('Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-090).'),
+    .describe('Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-092).'),
   
   // Future sections (deferred)
   authorization: z.unknown().optional()

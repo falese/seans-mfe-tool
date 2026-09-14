@@ -20,7 +20,7 @@
  * manifest using only what came out of those tarballs. That no repo source is
  * on the resolution path is asserted, not assumed.
  *
- * Refs: docs/generator-extraction-plan.md Phase 5 · ADR-092
+ * Refs: docs/generator-extraction-plan.md Phase 5 · ADR-094
  */
 
 import { execFileSync } from 'child_process';

@@ -1,5 +1,5 @@
 /**
- * The variant registry (ADR-091).
+ * The variant registry (ADR-093).
  *
  * Two built-ins today. A third framework is a new module here plus a template
  * directory — not an edit to the generator, which is the property the Phase 4
