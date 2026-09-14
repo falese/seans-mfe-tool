@@ -176,6 +176,8 @@ module.exports = {
     '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',
     '^@seans-mfe/framework-react/(.*)$': '<rootDir>/packages/framework-react/src/$1',
     '^@seans-mfe/framework-angular$': '<rootDir>/packages/framework-angular/src/index.ts',
-    '^@seans-mfe/framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1'
+    '^@seans-mfe/framework-angular/(.*)$': '<rootDir>/packages/framework-angular/src/$1',
+    '^sentinel$': '<rootDir>/packages/sentinel/src/index.ts',
+    '^sentinel/(.*)$': '<rootDir>/packages/sentinel/src/$1'
   }
 };
