@@ -245,7 +245,7 @@
           <rect x="250" y="56" width="204" height="58" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.5"/>
           <text x="352" y="78" font-size="12" text-anchor="middle" fill="var(--accent)">seans-mfe-tool (src/)</text>
           <text x="352" y="94" font-size="9" text-anchor="middle" fill="var(--ink-3)">14 commands · 4 hooks · MCP server</text>
-          <text x="352" y="107" font-size="9" text-anchor="middle" fill="var(--ink-3)">depends on the four plugins, oclif-base, contracts</text>
+          <text x="352" y="107" font-size="9" text-anchor="middle" fill="var(--ink-3)">plugins · oclif-base · contracts</text>
 
           <!-- row B: plugins -->
           <g fill="var(--surface-2)" stroke="var(--rule)">
@@ -279,14 +279,14 @@
             <text x="133" y="266" fill="currentColor">oclif-base</text>
             <text x="267" y="266" fill="currentColor">dsl</text>
             <text x="401" y="266" fill="var(--accent)">codegen</text>
-            <text x="535" y="264" fill="currentColor">framework-react</text>
-            <text x="535" y="277" fill="currentColor">framework-angular</text>
+            <text x="535" y="264" font-size="9.5" fill="currentColor">framework-react</text>
+            <text x="535" y="277" font-size="9.5" fill="currentColor">framework-angular</text>
           </g>
           <g font-size="8.5" text-anchor="middle" fill="var(--ink-3)">
             <text x="133" y="283">BaseCommand</text>
             <text x="133" y="295">envelope · exit codes</text>
             <text x="267" y="283">the manifest language</text>
-            <text x="267" y="295">Zod · composition compiler</text>
+            <text x="267" y="295">Zod · composition</text>
             <text x="401" y="283">file plan · variants</text>
             <text x="401" y="295">44 templates</text>
             <text x="535" y="294">resolved at run time</text>
@@ -299,7 +299,7 @@
           <text x="334" y="404" font-size="9.5" text-anchor="middle" fill="var(--accent)">every package here depends on contracts, runtime included. it depends on nothing.</text>
 
           <!-- contracts -> runtime: a real source dependency with no package edge -->
-          <path d="M592 356 L 608 356 L 608 112 L 638 112"
+          <path d="M592 356 L 612 356 L 612 112 L 638 112"
                 stroke="var(--accent)" fill="none" stroke-dasharray="5 3" marker-end="url(#p1t)"/>
 
 
@@ -320,7 +320,7 @@
             <path d="M267 232 L 267 210"/>
             <path d="M535 232 L 535 210"/>
           </g>
-          <text x="152" y="228" font-size="8.5" fill="var(--ink-3)">BaseCommand, to every plugin</text>
+          <text x="140" y="221" font-size="8.5" fill="var(--ink-3)">BaseCommand</text>
 
           <!-- codegen into plugin-bff -->
           <path d="M401 244 L 401 210" stroke="var(--accent)" fill="none" marker-end="url(#p1t)"/>
@@ -332,12 +332,12 @@
           <path d="M290 244 L 290 218 L 549 218 L 549 210" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
 
           <!-- framework plugins loaded by the CLI -->
-          <path d="M592 276 L 606 276 L 606 84 L 460 84" stroke="var(--ink-3)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1)"/>
-          <text x="600" y="300" font-size="8.5" text-anchor="end" fill="var(--ink-3)">loadFrameworkPlugin()</text>
+          <path d="M592 276 L 600 276 L 600 84 L 460 84" stroke="var(--ink-3)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1)"/>
+          <text x="596" y="78" font-size="8.5" text-anchor="end" fill="var(--ink-3)">loadFrameworkPlugin()</text>
 
           <!-- separate deployables -->
           <line x1="628" y1="36" x2="628" y2="440" stroke="var(--rule)" stroke-dasharray="3 4"/>
-          <text x="644" y="46" font-size="9" fill="var(--ink-3)">separate deployables — not linked into the CLI</text>
+          <text x="644" y="46" font-size="9" fill="var(--ink-3)">separate deployables — not in the CLI</text>
 
           <rect x="644" y="56" width="216" height="96" rx="2" fill="var(--surface)" stroke="var(--accent)"/>
           <text x="752" y="78" font-size="11.5" text-anchor="middle" fill="var(--accent)">runtime</text>
@@ -355,13 +355,14 @@
           <rect x="644" y="300" width="216" height="72" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
           <text x="752" y="322" font-size="11" text-anchor="middle" fill="currentColor">a generated MFE</text>
           <text x="752" y="339" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">imports runtime at build time</text>
-          <text x="752" y="353" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">registers with the control plane at run time</text>
+          <text x="752" y="353" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">registers with control plane at run time</text>
 
-          <path d="M700 146 L 700 294" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1t)"/>
+          <path d="M700 146 L 700 165 L 636 165 L 636 285 L 700 285 L 700 294" stroke="var(--accent)" fill="none" stroke-dasharray="4 3" marker-end="url(#p1t)"/>
           <path d="M804 260 L 804 294" stroke="currentColor" stroke-opacity="0.5" fill="none" marker-end="url(#p1)"/>
 
-          <text x="752" y="404" font-size="9" text-anchor="middle" fill="var(--ink-3)">a generated package.json declares one platform</text>
-          <text x="752" y="417" font-size="9" text-anchor="middle" fill="var(--ink-3)">dependency: @seans-mfe-tool/runtime. never codegen.</text>
+          <text x="752" y="400" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">a generated package.json declares exactly one</text>
+          <text x="752" y="412" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">platform dependency: @seans-mfe-tool/runtime</text>
+          <text x="752" y="424" font-size="8.5" text-anchor="middle" fill="var(--accent)">never codegen</text>
         </svg>
       </div>
       <figcaption>
