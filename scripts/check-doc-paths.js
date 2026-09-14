@@ -53,7 +53,9 @@ const HISTORICAL = [
  *
  * Most are inside a GENERATED MFE: `src/features/Dashboard/` is a real address
  * in every scaffolded project and in none of this repository. The rest are
- * illustrative placeholders in prose about conventions.
+ * illustrative placeholders in prose about conventions, or addresses in
+ * another repository — the coder adaptor specs cite `src/adaptors/`, which is
+ * real in Falese/coder.
  */
 const NOT_IN_THIS_REPO = [
   /^src\/features\//,
@@ -63,6 +65,7 @@ const NOT_IN_THIS_REPO = [
   /^src\/app\//,
   /^src\/commands\/topic\//,           // the naming convention, spelled out
   /^packages\/(config|telemetry)$/,     // proposed, not yet created
+  /^src\/adaptors\//,                   // coder's tree, not this one
 ];
 
 /**

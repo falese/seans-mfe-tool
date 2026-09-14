@@ -71,6 +71,13 @@ describe('check-doc-paths', () => {
     expect(code).toBe(0);
   });
 
+  it("ignores a path that belongs to coder's repository", () => {
+    // The adaptor specs describe work in Falese/coder. `src/adaptors/` is a
+    // real address there and in none of this repository.
+    const { code } = runAgainst("coder's `ManifestSchema` (`src/adaptors/types.ts`).\n");
+    expect(code).toBe(0);
+  });
+
   it('ignores a convention placeholder', () => {
     const { code } = runAgainst('Commands live at `src/commands/<topic>/<cmd>.ts`.\n');
     expect(code).toBe(0);
