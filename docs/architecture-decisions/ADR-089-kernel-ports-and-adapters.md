@@ -1,7 +1,7 @@
 ---
 id: 0089
 title: The governance+generation kernel couples to its host through four ports; the host implements them as adapters over its own code
-status: Proposed
+status: Implemented
 date: 2026-09-03
 deciders: [sean]
 area: Kernel / ports
@@ -11,8 +11,14 @@ relates-to: [43, 75, 82, 84, 90]
 supersedes: []
 superseded-by: []
 implements-pdr: [10]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/sentinel/src/ports.ts
+  - packages/sentinel/src/hardened-check.ts
+  - packages/sentinel/src/index.ts
+  - src/sentinel/adapters.ts
+verified-by:
+  - packages/sentinel/src/__tests__/hardened-check.test.ts
+  - src/sentinel/__tests__/n1-proof.test.ts
 tracked-by: []
 summary: >-
   The reusable governance+generation kernel (PDR-010) depends on its host project through exactly
