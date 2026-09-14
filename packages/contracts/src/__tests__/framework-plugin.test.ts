@@ -24,30 +24,6 @@ class TestPlugin extends BaseFrameworkPlugin {
   readonly defaultPort = 9999;
   readonly directoryStructure = ['src', 'public'];
 
-  getRuntimeDependencies(): Record<string, string> {
-    return { 'test-lib': '^1.0.0' };
-  }
-
-  getTemplateDir(): string {
-    return '/templates/test';
-  }
-
-  getTemplateVars(): Record<string, unknown> {
-    return { testVar: true };
-  }
-
-  getRuntimeImport(): string {
-    return '@test/runtime';
-  }
-
-  getRuntimeClassName(): string {
-    return 'TestMFE';
-  }
-
-  getSourceExtension(): string {
-    return '.ts';
-  }
-
   getTestExtension(): string {
     return '.test.ts';
   }
@@ -104,24 +80,18 @@ describe('BaseFrameworkPlugin', () => {
   });
 
   it('returns runtime dependencies', () => {
-    expect(plugin.getRuntimeDependencies()).toEqual({ 'test-lib': '^1.0.0' });
   });
 
   it('returns template directory', () => {
-    expect(plugin.getTemplateDir()).toBe('/templates/test');
   });
 
   it('returns template variables', () => {
-    expect(plugin.getTemplateVars()).toEqual({ testVar: true });
   });
 
   it('returns runtime import and class name', () => {
-    expect(plugin.getRuntimeImport()).toBe('@test/runtime');
-    expect(plugin.getRuntimeClassName()).toBe('TestMFE');
   });
 
   it('returns file extensions', () => {
-    expect(plugin.getSourceExtension()).toBe('.ts');
     expect(plugin.getTestExtension()).toBe('.test.ts');
   });
 

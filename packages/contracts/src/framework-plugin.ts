@@ -131,25 +131,24 @@ export abstract class BaseFrameworkPlugin {
   /** Directories to create on `remote:init`. */
   abstract readonly directoryStructure: string[];
 
-  /** Runtime dependencies seeded into the manifest on init. */
-  abstract getRuntimeDependencies(): Record<string, string>;
-
   // ── Codegen ─────────────────────────────────────────────────────────
-
-  /** Absolute path to the EJS template directory. */
-  abstract getTemplateDir(): string;
-
-  /** Framework-specific template variables, merged with base vars. */
-  abstract getTemplateVars(manifest: unknown): Record<string, unknown>;
-
-  /** Runtime package import path for generated MFE code. */
-  abstract getRuntimeImport(): string;
-
-  /** Runtime class name for generated MFE code. */
-  abstract getRuntimeClassName(): string;
-
-  /** Source file extension, e.g. `'.tsx'`. */
-  abstract getSourceExtension(): string;
+  //
+  // Six members were removed here (ADR-092): getRuntimeDependencies,
+  // getTemplateDir, getTemplateVars, getRuntimeImport, getRuntimeClassName and
+  // getSourceExtension. Every one was declared abstract, implemented by both
+  // shipped plugins, and called by nothing — the generator hardcodes the same
+  // facts instead.
+  //
+  // getTemplateDir() had rotted undetected: it returned
+  // `src/codegen/templates/base-mfe`, a directory deleted when templates moved
+  // to packages/codegen in ADR-061. Its test asserted the returned STRING
+  // matched /templates\/base-mfe$/ and never checked the directory existed, so
+  // it stayed green pointing at nothing.
+  //
+  // They are not re-added speculatively. The real extension point needs a
+  // template directory AND a file plan together, not six scalar getters — see
+  // docs/generator-extraction-plan.md Phase 4, where a third framework added
+  // without touching the generator is the acceptance test.
 
   /** Test file extension, e.g. `'.test.tsx'`. */
   abstract getTestExtension(): string;

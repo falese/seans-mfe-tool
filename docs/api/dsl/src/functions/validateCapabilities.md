@@ -8,7 +8,7 @@
 
 > **validateCapabilities**(`capabilities`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/dsl/src/validator.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L90)
+Defined in: [packages/dsl/src/validator.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L91)
 
 Validate capabilities array
 

@@ -8,4 +8,4 @@
 
 > `const` **VALID\_LANGUAGES**: readonly \[`"javascript"`, `"typescript"`\]
 
-Defined in: [packages/dsl/src/types.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/types.ts#L49)
+Defined in: [packages/dsl/src/types.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/types.ts#L51)

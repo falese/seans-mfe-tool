@@ -71,7 +71,7 @@ const INVOCATIONS: Record<string, Invocation> = {
   // --dry-run so the success path reports without rewriting rules.json.
   'compose:build':    { args: ['compose:build', ABC_KIDS, '--dry-run'] },
   deploy:        { args: ['deploy', 'probe', '--type', 'remote', '--dry-run'] },
-  'remote:init': { args: ['remote:init', 'probe-mfe', '--dry-run', '--skip-install'] },
+  'remote:init': { args: ['remote:init', 'probe-mfe', '--dry-run'] },
 
   // --dry-run makes the mutating commands cheap: they plan and report without
   // writing, which is exactly the success-path payload we need to validate.

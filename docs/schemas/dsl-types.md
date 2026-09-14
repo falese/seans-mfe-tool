@@ -1,6 +1,6 @@
 # DSL Type System
 
-Source of truth: `src/dsl/type-system.ts`. Governs the `type` field on every
+Source of truth: `packages/dsl/src/type-system.ts`. Governs the `type` field on every
 `DSLInput` and `DSLOutput` in a capability declaration.
 
 Refs: ADR-006 (unified type system), REQ-047.

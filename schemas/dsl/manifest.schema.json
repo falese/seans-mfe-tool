@@ -6,14 +6,17 @@
   "type": "object",
   "properties": {
     "name": {
+      "description": "Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case.",
       "type": "string",
       "minLength": 1
     },
     "version": {
+      "description": "Manifest version. Bump on any breaking change to capability inputs or outputs.",
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+"
     },
     "type": {
+      "description": "Architectural role of this MFE.",
       "type": "string",
       "enum": [
         "tool",
@@ -26,6 +29,7 @@
       ]
     },
     "language": {
+      "description": "Implementation language. Only javascript/typescript generate code today.",
       "type": "string",
       "enum": [
         "javascript",
@@ -37,10 +41,12 @@
       ]
     },
     "framework": {
+      "description": "UI framework. Open string — an unknown value warns rather than failing (ADR-036). Omitted defaults to react.",
       "type": "string",
       "minLength": 1
     },
     "bundler": {
+      "description": "Build tool. Open string, same policy as framework. Omitted defaults to rspack.",
       "type": "string",
       "minLength": 1
     },
@@ -48,30 +54,37 @@
       "type": "string"
     },
     "owner": {
+      "description": "Team or individual responsible. Used for impact analysis (ADR-008).",
       "type": "string"
     },
     "tags": {
+      "description": "Arbitrary labels for registry search and impact analysis.",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "category": {
+      "description": "Domain grouping for discovery and the marketplace.",
       "type": "string"
     },
     "endpoint": {
+      "description": "Base URL this MFE is served from. Also sets the generated dev-server port and the BFF origin.",
       "type": "string",
       "format": "uri"
     },
     "remoteEntry": {
+      "description": "Module Federation remote entry URL.",
       "type": "string",
       "format": "uri"
     },
     "discovery": {
+      "description": "URL of the MFE's .well-known manifest, for discovery.",
       "type": "string",
       "format": "uri"
     },
     "capabilities": {
+      "description": "The domain and platform capabilities this MFE implements. Drives feature-file generation.",
       "type": "array",
       "items": {
         "type": "object",
@@ -106,6 +119,7 @@
                     "type": "string"
                   },
                   "description": {
+                    "description": "Human-readable summary shown in describe output.",
                     "type": "string"
                   },
                   "default": {},
@@ -345,6 +359,7 @@
       }
     },
     "dependencies": {
+      "description": "Runtime, design-system and federated-MFE dependencies. Versions flow into the generated package.json.",
       "type": "object",
       "properties": {
         "runtime": {
@@ -378,6 +393,7 @@
       "additionalProperties": false
     },
     "data": {
+      "description": "GraphQL Mesh configuration. Its presence is what makes the generator emit a BFF.",
       "type": "object",
       "properties": {
         "sources": {
@@ -510,6 +526,7 @@
       "additionalProperties": false
     },
     "providesSlots": {
+      "description": "Named regions this MFE registers at runtime for others to fill (ADR-058, ADR-067).",
       "type": "array",
       "items": {
         "type": "object",
@@ -529,6 +546,7 @@
       }
     },
     "performance": {
+      "description": "Caching, observability and rate-limiting config. Mesh plugins and transforms are derived from it (ADR-027).",
       "type": "object",
       "properties": {
         "caching": {
@@ -717,12 +735,15 @@
       "additionalProperties": false
     },
     "transforms": {
+      "description": "Top-level Mesh transform names. Both the config-key and package spellings resolve (ADR-092).",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
-    "authorization": {}
+    "authorization": {
+      "description": "Reserved. Deferred by ADR-007; accepted and ignored."
+    }
   },
   "required": [
     "name",

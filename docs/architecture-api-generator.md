@@ -7,11 +7,11 @@ documentation gap **G04**.
 
 | Concept | Source |
 | --- | --- |
-| Command | `src/commands/api.ts` (`Api extends BaseCommand`, `:714`) |
-| Database generator | `src/codegen/APIGenerator/DatabaseGenerator/` |
-| Controller generator | `src/codegen/APIGenerator/ControllerGenerator/` |
-| Route generator | `src/codegen/APIGenerator/RouteGenerator/` |
-| Templates | `src/codegen/templates/api/`, `src/codegen/templates/docker/{Dockerfile.production.api,dockerfile.nodeAPI}` |
+| Command | `packages/plugin-api/src/commands/api.ts` (`Api extends BaseCommand`, `:714`) |
+| Database generator | `packages/plugin-api/src/APIGenerator/DatabaseGenerator/` |
+| Controller generator | `packages/plugin-api/src/APIGenerator/ControllerGenerator/` |
+| Route generator | `packages/plugin-api/src/APIGenerator/RouteGenerator/` |
+| Templates | `packages/plugin-api/templates/api/` |
 
 > This generator is distinct from the MFE codegen pipeline
 > ([Code Generation Architecture](./architecture-codegen.md)): it consumes an **OpenAPI
@@ -110,7 +110,7 @@ examples of this contract.
 
 A self-contained Express project (`<name>/src/`, `<name>/package.json`, `:639`) with auth,
 validation, error handling, request IDs, logging, and a production Dockerfile
-(`templates/docker/Dockerfile.production.api`, ADR-044 hardening). The command returns an
+(ADR-044 hardening). The command returns an
 `ApiResult` envelope under `--json` like every other command.
 
 ## Related

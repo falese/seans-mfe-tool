@@ -8,7 +8,7 @@
 
 > **validateManifest**(`data`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/dsl/src/validator.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L43)
+Defined in: [packages/dsl/src/validator.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L44)
 
 Validate a complete DSL manifest
 

@@ -8,7 +8,7 @@
 
 > **exitCodeFor**(`type`): `number`
 
-Defined in: [packages/contracts/src/envelope.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L137)
+Defined in: [packages/contracts/src/envelope.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L144)
 
 ## Parameters
 

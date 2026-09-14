@@ -8,7 +8,7 @@
 
 > **deriveBuiltinVariant**(`manifest`): [`FrameworkVariant`](../interfaces/FrameworkVariant.md)
 
-Defined in: [packages/codegen/src/unified-generator.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L100)
+Defined in: [packages/codegen/src/unified-generator.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L117)
 
 Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
 returns for the two shipped plugins (react-rspack, angular-webpack), using
@@ -110,7 +110,7 @@ without importing the framework loader (ADR-036, ADR-061).
 
 #### language
 
-`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
 
 #### name
 
@@ -226,7 +226,7 @@ without importing the framework loader (ADR-036, ADR-061).
 
 #### type
 
-`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `...`
 
 #### version
 

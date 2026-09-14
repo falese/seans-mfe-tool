@@ -29,15 +29,21 @@ make unrepresentable.
 
 > `optional` **detail**: `string`
 
-Defined in: [packages/contracts/src/envelope.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L76)
+Defined in: [packages/contracts/src/envelope.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L83)
 
 ***
 
 ### op
 
-> **op**: `"create"` \| `"overwrite"` \| `"skip"` \| `"spawn"`
+> **op**: `"create"` \| `"overwrite"` \| `"reseed"` \| `"skip"` \| `"spawn"`
 
-Defined in: [packages/contracts/src/envelope.ts:74](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L74)
+Defined in: [packages/contracts/src/envelope.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L81)
+
+`overwrite` re-stamps a generator-owned file; `skip` leaves a
+developer-owned one alone. `reseed` is the third outcome ADR-091 adds —
+a developer-owned file that exists and WILL be replaced because `--force`
+was passed. It is distinct from `overwrite` because it is the only op that
+can destroy work, and a dry run that calls it `overwrite` hides that.
 
 ***
 
@@ -45,4 +51,4 @@ Defined in: [packages/contracts/src/envelope.ts:74](https://github.com/falese/se
 
 > **target**: `string`
 
-Defined in: [packages/contracts/src/envelope.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L75)
+Defined in: [packages/contracts/src/envelope.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/envelope.ts#L82)

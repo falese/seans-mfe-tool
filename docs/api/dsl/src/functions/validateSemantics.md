@@ -8,7 +8,7 @@
 
 > **validateSemantics**(`manifest`): [`ValidationError`](../interfaces/ValidationError.md)[]
 
-Defined in: [packages/dsl/src/validator.ts:263](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L263)
+Defined in: [packages/dsl/src/validator.ts:212](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L212)
 
 Perform semantic validation beyond schema checks
 
@@ -108,7 +108,7 @@ Already schema-validated manifest
 
 #### language
 
-`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
 
 #### name
 
@@ -224,7 +224,7 @@ Already schema-validated manifest
 
 #### type
 
-`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `...`
 
 #### version
 

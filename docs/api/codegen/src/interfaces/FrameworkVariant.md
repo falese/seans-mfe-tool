@@ -34,6 +34,9 @@ Defined in: [packages/codegen/src/unified-generator.ts:87](https://github.com/fa
 
 ### templateVariant
 
-> **templateVariant**: `"react-rspack"` \| `"angular-webpack"`
+> **templateVariant**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L89)
+Defined in: [packages/codegen/src/unified-generator.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L93)
+
+The variant id. Open, not a union of the two built-ins: closing it was
+half of why a third framework required editing this file (ADR-093).

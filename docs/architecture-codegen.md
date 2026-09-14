@@ -7,9 +7,9 @@ ADRs cited inline. Closes documentation gap **G01**.
 
 | Concept | Source |
 | --- | --- |
-| Generator entry point | `src/codegen/UnifiedGenerator/unified-generator.ts` |
-| Manifest schema (codegen input) | `src/dsl/schema.ts` (see [DSL Architecture](./architecture-dsl.md)) |
-| Template variants | `src/codegen/templates/{base-mfe,base-mfe-angular,features,docker,api,kubernetes}/` |
+| Generator entry point | `packages/codegen/src/unified-generator.ts` |
+| Manifest schema (codegen input) | `packages/dsl/src/schema.ts` (see [DSL Architecture](./architecture-dsl.md)) |
+| Template variants | `packages/codegen/templates/{base-mfe,base-mfe-angular}/`; per-capability templates under each variant's `features/` |
 | Framework/bundler resolution | `src/framework/loader.ts`, `packages/contracts/src/framework-plugin.ts` |
 | Governing decisions | ADR-009 (language→template), ADR-034 (pluggable bundler/framework), ADR-036 (framework plugins), ADR-040 (handler sources), ADR-043 (manifest-driven pipeline) |
 
@@ -82,7 +82,7 @@ plugin to resolve specifics. See the
 [Framework Plugin Cookbook](./archive/platform-design-review/framework-plugin-cookbook.md) for
 authoring recipes.
 
-Template directories (`src/codegen/templates/`):
+Template directories (`packages/codegen/templates/`):
 
 | Dir | Purpose |
 | --- | --- |
@@ -94,7 +94,7 @@ Template directories (`src/codegen/templates/`):
 | `kubernetes/` | Deployment manifests |
 
 The BFF artifacts (`.meshrc.yaml`, `server.ts`, `bff.ts`) come from
-`packages/bff-plugin/templates/` (`:793` resolves `bffTemplateDir`); see
+`packages/plugin-bff/templates/` (`:793` resolves `bffTemplateDir`); see
 [BFF Architecture](./architecture-bff.md).
 
 ## 4. Regeneration safety — the ownership-marker contract

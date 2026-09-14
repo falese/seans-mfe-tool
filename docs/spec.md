@@ -34,7 +34,7 @@ Long-term goal: a community marketplace of domain-capability packages — domain
 ```
 seans-mfe-tool remote:generate          # Generate/regenerate MFE source from DSL manifest
 seans-mfe-tool remote:init              # Scaffold a new remote MFE project
-seans-mfe-tool remote:init-angular      # Scaffold a new Angular remote MFE project
+seans-mfe-tool remote:init --framework angular   # ...or any framework with a plugin installed
 seans-mfe-tool bff:init                 # Scaffold a GraphQL BFF for an MFE
 seans-mfe-tool deploy                   # Generate Docker/K8s deployment artifacts
 seans-mfe-tool schemas                  # Generate JSON schemas from command types
@@ -197,7 +197,7 @@ protected abstract runCommand(): Promise<T>;
 
 ## Typed errors
 
-Import from `@seans-mfe/contracts` (post-C1) or `src/runtime/errors/` (pre-C1).
+Import from `@seans-mfe/contracts` (post-C1) or `packages/runtime/src/errors/` (pre-C1).
 
 | Error class | Exit code | When to use |
 |---|---|---|
@@ -317,6 +317,10 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-087](./architecture-decisions/ADR-087-hybrid-authoring-developer-owned-lane.md) | Coder's source adaptor fills developer-owned feature files; the generator-owned lane stays deterministic | Codegen / generation / AI | Accepted (impl phased) |
 | [ADR-088](./architecture-decisions/ADR-088-coder-plugin-first-party-seam.md) | The coder-facing seam is a first-party in-repo plugin; coder's model engine stays external | Architecture / plugins / AI | Implemented |
 | [ADR-089](./architecture-decisions/ADR-089-kernel-ports-and-adapters.md) | The governance+generation kernel couples to its host through four ports; the host implements them as adapters over its own code | Kernel / ports | Implemented |
+| [ADR-091](./architecture-decisions/ADR-091-force-re-seeds-developer-owned-scaffolding.md) | `--force` re-seeds developer-owned scaffolding from the current templates; capability implementation stays unreachable | Codegen / ownership / DX | Implemented |
+| [ADR-092](./architecture-decisions/ADR-092-one-mesh-classification-one-resolution-rule.md) | Mesh plugin/transform classification and framework-name resolution each have exactly one implementation; the framework plugin contract drops the members nothing calls | Codegen / contracts / validation | Implemented |
+| [ADR-093](./architecture-decisions/ADR-093-the-file-plan-is-data.md) | What the generator emits is a list of file specs owned by a variant, not a procedure with framework branches | Codegen / extensibility / ownership | Implemented |
+| [ADR-094](./architecture-decisions/ADR-094-the-generator-is-a-library.md) | The generator is a library — it returns diagnostics instead of printing, and receives file contributions instead of reaching across packages for them | Codegen / packaging / DX | Implemented |
 
 ### Proposed — filed, not ratified
 

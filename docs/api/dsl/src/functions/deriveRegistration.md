@@ -110,7 +110,7 @@ addressed by route instead, so listing them here would say nothing.
 
 #### language
 
-`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
 
 #### name
 
@@ -226,7 +226,7 @@ addressed by route instead, so listing them here would say nothing.
 
 #### type
 
-`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `...`
 
 #### version
 

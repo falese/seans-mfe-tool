@@ -5,6 +5,7 @@
  */
 
 import { ZodError } from 'zod';
+import { classifyMeshEntry } from '@seans-mfe/contracts';
 import { 
   DSLManifestSchema, 
   PartialDSLManifestSchema,
@@ -130,127 +131,75 @@ export function validateDataConfig(data: unknown): ValidationResult {
 // Semantic Validation (Beyond Schema)
 // =============================================================================
 
-// =============================================================================
-// Known Plugin/Transform Classification (ADR-027)
-// =============================================================================
-
-/** Known GraphQL Mesh plugins (go in performance section) */
-const KNOWN_PLUGINS = new Set([
-  'response-cache',
-  'prometheus',
-  'newrelic',
-  'opentelemetry',
-  'http-details',
-  'snapshot',
-  'mock',
-  'live-query'
-]);
-
-/** Known GraphQL Mesh transforms (go in transforms array at root level) */
-const KNOWN_TRANSFORMS = new Set([
-  'rate-limit',
-  'filter-schema',
-  'rename',
-  'prefix',
-  'namingConvention',
-  'encapsulate',
-  'federation',
-  'resolvers-composition',
-  'cache'
-]);
-
 /**
  * Validate performance configuration for proper plugin/transform categorization
  * 
  * @param manifest - Already schema-validated manifest
  * @returns Array of validation errors (empty if valid)
  */
-function validatePerformanceConfig(manifest: DSLManifest): ValidationError[] {
-  const errors: ValidationError[] = [];
-  
-  if (!manifest.performance) {
-    return errors;
-  }
-  
-  // Check if rateLimit is configured (it should be a transform, not plugin)
-  if (manifest.performance.rateLimit?.enabled) {
-    // rateLimit should generate a transform entry, not be in plugins
-    // This is handled by generator, just warn if it's misconfigured
-    
-    // Check if there's a corresponding transform
-    const hasRateLimitTransform = manifest.transforms?.some(t => 
-      typeof t === 'string' && t.includes('rate-limit')
-    );
-    
-    if (!hasRateLimitTransform) {
-      errors.push({
-        path: 'performance.rateLimit',
-        message: 'Rate limiting is enabled but no corresponding rate-limit transform found. Consider adding to transforms array.',
-        code: 'missing_transform'
-      });
-    }
-  }
-  
-  // Check filterSchema configuration
-  if (manifest.performance.filterSchema?.enabled) {
-    const hasFilterTransform = manifest.transforms?.some(t => 
-      typeof t === 'string' && t.includes('filter-schema')
-    );
-    
-    if (!hasFilterTransform) {
-      errors.push({
-        path: 'performance.filterSchema',
-        message: 'Schema filtering is enabled but no corresponding filter-schema transform found. Consider adding to transforms array.',
-        code: 'missing_transform'
-      });
-    }
-  }
-  
-  return errors;
+function validatePerformanceConfig(_manifest: DSLManifest): ValidationError[] {
+  // Deliberately empty (ADR-092).
+  //
+  // This used to require that enabling `performance.rateLimit` or
+  // `performance.filterSchema` was accompanied by a matching entry in the
+  // top-level `transforms` array, and reported `missing_transform` otherwise.
+  // The generator derives both transforms from the `performance` block itself
+  // (`render-model.ts`: `rateLimit: performanceConfig.rateLimit?.enabled ? … :
+  // null`), so the check demanded the author duplicate a derivation — and
+  // failed the manifest when they did not. Measured: a manifest with
+  // `performance.rateLimit.enabled: true` and no `transforms` array was
+  // rejected, for a configuration the platform handles correctly.
+  //
+  // Kept as a named seam rather than deleted outright: performance config is
+  // the obvious place for real cross-field rules, and the next one should land
+  // here rather than re-growing a copy elsewhere.
+  return [];
 }
 
 /**
- * Validate transforms array for known plugin misclassifications
- * 
- * @param manifest - Already schema-validated manifest
- * @returns Array of validation errors (empty if valid)
+ * Classify each entry of the top-level `transforms` array (ADR-092).
+ *
+ * Entries are plain strings (`CustomTransformSchema = z.string()`). The name
+ * is resolved through the single Mesh table in `@seans-mfe/contracts`, so both
+ * the config-key spelling (`filterSchema`) and the package spelling
+ * (`filter-schema`) are accepted — they previously disagreed with codegen,
+ * which read this same field against a camelCase-only list.
  */
 function validateTransformsConfig(manifest: DSLManifest): ValidationError[] {
   const errors: ValidationError[] = [];
-  
-  if (!manifest.transforms || manifest.transforms.length === 0) {
-    return errors;
-  }
-  
-  // Check each transform entry
+  if (!manifest.transforms || manifest.transforms.length === 0) return errors;
+
   manifest.transforms.forEach((transform, index) => {
-    if (typeof transform !== 'string') {
-      return; // Complex transform configs are allowed
-    }
-    
-    // Extract the transform name (handles both simple names and configurations)
-    const transformName = transform.split(':')[0].trim();
-    
-    // Check if this is actually a plugin
-    if (KNOWN_PLUGINS.has(transformName)) {
-      errors.push({
-        path: `transforms[${index}]`,
-        message: `'${transformName}' is a plugin, not a transform. It should be configured in the 'performance' section instead.`,
-        code: 'misclassified_plugin'
-      });
-    }
-    
-    // Validate known transforms
-    if (!KNOWN_TRANSFORMS.has(transformName) && !KNOWN_PLUGINS.has(transformName)) {
-      // Could be a custom transform - just warn
-      errors.push({
-        path: `transforms[${index}]`,
-        message: `'${transformName}' is not a recognized Mesh transform or plugin. Ensure it's properly installed.`,
-        code: 'unknown_transform'
-      });
+    if (typeof transform !== 'string') return;
+    const name = transform.split(':')[0].trim();
+    if (!name) return;
+
+    switch (classifyMeshEntry(name)) {
+      case 'plugin':
+        errors.push({
+          path: `transforms[${index}]`,
+          message: `'${name}' is a plugin, not a transform. It should be configured in the 'performance' section instead.`,
+          code: 'misclassified_plugin',
+        });
+        break;
+      case 'unknown':
+        // Deliberately NOT an error here (ADR-092). `ValidationResult` has no
+        // warning channel, so reporting an unrecognised name would make it
+        // fatal — and the platform's stated policy for open vocabularies is a
+        // warning, not a rejection (ADR-036, applied to `framework` and
+        // `bundler` for the same reason: Mesh ships more transforms than any
+        // table here will track).
+        //
+        // Codegen already warns on exactly this field at generation time
+        // (`validateManifestTransforms`), so the concern has an owner. What it
+        // does not have, any more, is two owners disagreeing about severity.
+        break;
+      case 'transform':
+      case 'ambiguous':
+        break;
     }
   });
-  
+
   return errors;
 }
 

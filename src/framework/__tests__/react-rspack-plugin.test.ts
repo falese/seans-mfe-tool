@@ -26,31 +26,10 @@ describe('ReactRspackPlugin', () => {
       expect(plugin.directoryStructure).toEqual(['src', 'src/features', 'public']);
     });
 
-    it('returns React runtime dependencies', () => {
-      const deps = plugin.getRuntimeDependencies();
-      expect(deps).toHaveProperty('react');
-      expect(deps).toHaveProperty('react-dom');
-    });
   });
 
   describe('codegen', () => {
-    it('returns a template directory containing base-mfe', () => {
-      expect(plugin.getTemplateDir()).toMatch(/templates\/base-mfe$/);
-    });
-
-    it('returns react template variables', () => {
-      const vars = plugin.getTemplateVars({});
-      expect(vars.framework).toBe('react');
-      expect(vars.bundler).toBe('rspack');
-    });
-
-    it('returns RemoteMFE runtime class', () => {
-      expect(plugin.getRuntimeImport()).toBe('@seans-mfe-tool/runtime');
-      expect(plugin.getRuntimeClassName()).toBe('RemoteMFE');
-    });
-
-    it('uses .tsx source extension', () => {
-      expect(plugin.getSourceExtension()).toBe('.tsx');
+    it('uses .test.tsx test extension', () => {
       expect(plugin.getTestExtension()).toBe('.test.tsx');
     });
 

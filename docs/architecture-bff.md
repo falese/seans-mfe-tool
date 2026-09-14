@@ -7,15 +7,11 @@ gap **G03**.
 
 | Concept | Source |
 | --- | --- |
-| BFF plugin (config extraction, deps) | `packages/bff-plugin/src/shared.ts` |
-| BFF types | `packages/bff-plugin/src/types.ts` |
-| BFF templates | `packages/bff-plugin/templates/{meshrc.yaml,server.ts,bff.ts,mesh-context.js,mock-switch.js}.ejs` |
-| `query()` runtime path | `src/runtime/base-mfe.ts:861–886` |
+| BFF plugin (config extraction, deps) | `packages/plugin-bff/src/shared.ts` |
+| BFF types | `packages/plugin-bff/src/types.ts` |
+| BFF templates | `packages/plugin-bff/templates/{meshrc.yaml,server.ts,bff.ts,mesh-context.js,mock-switch.js}.ejs` |
+| `query()` runtime path | `packages/runtime/src/base-mfe.ts:861–886` |
 | Governing decisions | ADR-012 (Mesh BFF), ADR-027 (Mesh v0.100.x plugins/transforms), ADR-052 (demo mode) |
-
-> **ADR numbering note (resolved 2026-07-01):** generated BFF template comments previously
-> cited pre-reflow ADR numbers (`ADR-046`/`ADR-062` in `meshrc.yaml.ejs`); they now use the
-> canonical ADR-012 / ADR-027 (see [`spec.md#adr-index`](./spec.md#adr-index)).
 
 ---
 
@@ -39,7 +35,7 @@ manifest.data ──▶ extractMeshConfig() ──▶ MeshConfig ──▶ write
 
 ## 2. Composition flow
 
-In `packages/bff-plugin/src/shared.ts`:
+In `packages/plugin-bff/src/shared.ts`:
 
 - **`extractMeshConfig(manifestPath)`** (`:124`) reads the manifest and builds a
   `MeshConfig` from `data.sources` / `data.transforms` / `data.plugins`, defaulting

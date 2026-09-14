@@ -10,12 +10,17 @@ import {
   findMigrationHits,
   diffPackageDependencies,
 } from '@seans-mfe/codegen';
-import type { GeneratedFile } from '@seans-mfe/codegen';
+import type { GeneratedFile, GeneratorDiagnostic } from '@seans-mfe/codegen';
 import { resolveFrameworkVariant } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
 import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
+
+// Registers the BFF's file contribution (ADR-094 §2). A side-effect import:
+// the generator emits BFF files only for a host that opts in, and the BFF's
+// templates resolve inside its own package rather than by a path escape.
+import '@seans-mfe/plugin-bff/codegen';
 
 /**
  * What the writer will actually do to this file (#340).
@@ -39,9 +44,32 @@ import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
  * real files rather than a stubbed `fs` — the defect was a missing existence
  * check, so stubbing existence would test nothing.
  */
-function plannedOp(file: { path: string; overwrite: boolean }): PlannedChange['op'] {
+function plannedOp(
+  file: { path: string; overwrite: boolean },
+  force = false,
+): PlannedChange['op'] {
   if (!fsSync.existsSync(file.path)) return 'create';
-  return file.overwrite ? 'overwrite' : 'skip';
+  if (file.overwrite) return 'overwrite';
+  // ADR-091: a developer-owned file that exists is skipped by default and
+  // replaced under --force. Reported as `reseed`, not `overwrite`, because it
+  // is the only planned op that can destroy work.
+  return force ? 'reseed' : 'skip';
+}
+
+/**
+ * The generator reports; the CLI renders (ADR-094).
+ *
+ * Shared by the real run and the dry run. It used to be inline after the
+ * dry-run branch had already returned, so a missing template, an unregistered
+ * variant or an unrecognised Mesh entry were invisible in exactly the mode a
+ * developer uses to find out what generation will do.
+ */
+function renderDiagnostics(diagnostics: GeneratorDiagnostic[]): void {
+  for (const d of diagnostics) {
+    const line = d.target ? `  ${d.target}: ${d.message}` : `  ${d.message}`;
+    console.log(d.severity === 'error' ? chalk.red(line) : chalk.yellow(line));
+    if (d.fix) console.log(chalk.gray(`      fix: ${d.fix}`));
+  }
 }
 
 const DRY_RUN_LABEL: Record<PlannedChange['op'], string> = {
@@ -50,6 +78,9 @@ const DRY_RUN_LABEL: Record<PlannedChange['op'], string> = {
   // Named for the reason, not the mechanism — "skip" alone reads like the tool
   // declining to do its job rather than respecting ownership.
   skip: '(skip — yours)',
+  // Deliberately the loudest label here: this is the one line in a dry run that
+  // says an edit of yours is about to be thrown away (ADR-091).
+  reseed: '(RE-SEED — replaces your edits)',
   spawn: '(spawn)',
 };
 
@@ -175,14 +206,20 @@ export async function remoteGenerateCommand(
 
     console.log(chalk.blue('\nGenerating files...'));
     const frameworkVariant = resolveFrameworkVariant(manifest);
-    const { files: allFiles, preservedCapabilities } = await generateAllFiles(manifest, cwd, {
-      force: true,
-      frameworkVariant,
-    });
+    const { files: allFiles, preservedCapabilities, diagnostics } = await generateAllFiles(
+      manifest,
+      cwd,
+      { frameworkVariant },
+    );
 
     if (options.dryRun) {
+      // Computed once and then both reported and printed. `plannedOp` stats the
+      // file, so deriving it separately for the envelope and for the terminal
+      // stat every planned file twice — ~870 synchronous stats on a 435-file
+      // fleet MFE — and left two call sites that could drift apart while
+      // claiming to describe the same run.
       const plannedChanges: PlannedChange[] = allFiles.map((file) => ({
-        op: plannedOp(file),
+        op: plannedOp(file, options.force),
         target: path.relative(cwd, file.path),
       }));
       if (preservedCapabilities.length > 0) {
@@ -192,11 +229,12 @@ export async function remoteGenerateCommand(
         }
       }
       console.log(chalk.yellow('\n[DRY RUN] Would generate:'));
-      for (const file of allFiles) {
-        const relativePath = path.relative(cwd, file.path);
-        console.log(`  ${relativePath} ${chalk.gray(DRY_RUN_LABEL[plannedOp(file)])}`);
+      for (const { op, target } of plannedChanges) {
+        const label = DRY_RUN_LABEL[op];
+        console.log(`  ${target} ${op === 'reseed' ? chalk.red(label) : chalk.gray(label)}`);
       }
-      return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, dryRun: true, plannedChanges };
+      renderDiagnostics(diagnostics);
+      return { generated: [], skipped: [], errors: [], preserved: preservedCapabilities, reseeded: [], dryRun: true, plannedChanges };
     }
 
     const genResult = await writeGeneratedFiles(allFiles, { force: options.force });
@@ -213,6 +251,21 @@ export async function remoteGenerateCommand(
       for (const cap of preservedCapabilities) {
         console.log(chalk.cyan(`  ${cap}`));
       }
+    }
+
+    renderDiagnostics(diagnostics);
+
+    if (genResult.reseeded.length > 0) {
+      // Loud and itemised. --force is the only path that destroys developer
+      // work, and the run that did it is the last chance to say so before the
+      // developer discovers it from git (ADR-091 §4).
+      console.log(chalk.red('\nRe-seeded (your edits were replaced):'));
+      for (const file of genResult.reseeded) {
+        console.log(chalk.red(`  ${path.relative(cwd, file)}`));
+      }
+      console.log(
+        chalk.gray('  Recover any of these with: git checkout -- <path>'),
+      );
     }
 
     if (genResult.skipped.length > 0) {
@@ -243,6 +296,8 @@ export async function remoteGenerateCommand(
     console.log(`  Generated: ${genResult.files.length}`);
     if (preservedCapabilities.length > 0) console.log(chalk.cyan(`  Preserved: ${preservedCapabilities.length}`));
     console.log(`  Skipped: ${genResult.skipped.length}`);
+    if (genResult.reseeded.length > 0)
+      console.log(chalk.red(`  Re-seeded: ${genResult.reseeded.length}`));
     if (genResult.errors.length > 0) console.log(chalk.red(`  Errors: ${genResult.errors.length}`));
 
     if (genResult.files.length > 0 || preservedCapabilities.length > 0) {
@@ -255,6 +310,7 @@ export async function remoteGenerateCommand(
       skipped:    genResult.skipped.map((f) => path.relative(cwd, f)),
       errors:     genResult.errors,
       preserved:  preservedCapabilities,
+      reseeded:   genResult.reseeded.map((f) => path.relative(cwd, f)),
       dryRun:     false,
     };
 
@@ -271,7 +327,8 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
   static examples = [
     '$ cd my-remote && seans-mfe-tool remote:generate',
     '$ seans-mfe-tool remote:generate --dry-run  # Preview changes',
-    '$ seans-mfe-tool remote:generate --force     # Overwrite existing',
+    '$ seans-mfe-tool remote:generate --force     # Re-seed developer-owned scaffolding',
+    '$ seans-mfe-tool remote:generate --force --dry-run  # Preview what --force would replace',
   ]
 
   static flags = {
@@ -284,7 +341,7 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
     force: Flags.boolean({
       char: 'f',
       description:
-        'Deprecated no-op: generated platform files re-stamp on every run; developer-owned files are never overwritten',
+        'Re-seed developer-owned scaffolding (App.tsx, package.json, bundler config, …) from the current templates, REPLACING your edits. Capability feature files are never re-seeded. Preview with --dry-run first.',
       default: false,
     }),
   }

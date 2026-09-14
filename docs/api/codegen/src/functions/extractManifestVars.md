@@ -8,7 +8,7 @@
 
 > **extractManifestVars**(`manifest`, `variant`): `object`
 
-Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L82)
+Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L81)
 
 ## Parameters
 
@@ -104,7 +104,7 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 #### language
 
-`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
 
 #### name
 
@@ -220,7 +220,7 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 #### type
 
-`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `...`
 
 #### version
 
@@ -704,7 +704,7 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 #### manifest.language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 #### manifest.name
 
@@ -820,7 +820,7 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 #### manifest.type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 #### manifest.version
 
@@ -912,7 +912,7 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 ### templateVariant
 
-> **templateVariant**: `"react-rspack"` \| `"angular-webpack"` = `variant.templateVariant`
+> **templateVariant**: `string` = `variant.templateVariant`
 
 ### version
 

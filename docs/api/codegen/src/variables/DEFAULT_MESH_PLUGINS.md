@@ -8,7 +8,7 @@
 
 > `const` **DEFAULT\_MESH\_PLUGINS**: `object`
 
-Defined in: [packages/codegen/src/catalog.ts:214](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L214)
+Defined in: [packages/codegen/src/catalog.ts:196](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L196)
 
 Plugin configuration defaults
 

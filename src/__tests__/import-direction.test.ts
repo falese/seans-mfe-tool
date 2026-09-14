@@ -30,8 +30,14 @@ const PACKAGES_DIR = path.resolve(__dirname, '..', '..', 'packages');
 /**
  * Who each package is allowed to import. A package absent from a list is
  * forbidden, so adding an edge is a deliberate edit here — which is the point.
+ *
+ * Prototype-free because it is indexed by a directory name read off disk. On an
+ * object literal, `'toString' in ALLOWED` answers true through the prototype
+ * chain, so a `packages/toString/src` would satisfy the allow-list-entry guard
+ * without declaring any edges, and `ALLOWED[pkg]` would then hand back a
+ * function where a string array belongs.
  */
-const ALLOWED: Readonly<Record<string, readonly string[]>> = {
+const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Object.create(null), {
   contracts: [],
   // The Sentinel kernel imports no first-party package by invariant (ADR-089 §2,
   // PDR-010): the host plugs in through ports, and the kernel holds nothing
@@ -48,7 +54,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
   'plugin-coder': ['contracts', 'dsl', 'oclif-base'],
-};
+});
 
 /** First-party scopes. `@seans-mfe-tool/runtime` is the runtime's published name. */
 const FIRST_PARTY = /^@(?:seans-mfe|seans-mfe-tool|falese)\/([a-z-]+)/;
@@ -128,6 +134,20 @@ describe('package import direction', () => {
       }
       expect(violations).toEqual([]);
     });
+  });
+
+  it('does not accept a package name inherited from Object.prototype', () => {
+    // `ALLOWED` is indexed by a directory name read off disk, which is the
+    // same "index a table with untrusted text" shape that produced two
+    // defects in codegen (see packages/codegen/src/__tests__/prototype-keys.test.ts).
+    // On an object literal, `'toString' in ALLOWED` is true through the
+    // prototype chain, so a `packages/toString/src` would satisfy the
+    // allow-list-entry guard above without ever declaring its edges — the one
+    // thing that guard exists to prevent.
+    for (const inherited of ['toString', 'constructor', 'valueOf', 'hasOwnProperty']) {
+      expect(inherited in ALLOWED).toBe(false);
+      expect(ALLOWED[inherited]).toBeUndefined();
+    }
   });
 
   it('contracts depends on no first-party package (ADR-061, ADR-080)', () => {

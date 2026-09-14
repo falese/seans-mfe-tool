@@ -6,7 +6,7 @@
 
 # Interface: CapabilityScaffold
 
-Defined in: [packages/dsl/src/schema.ts:534](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L534)
+Defined in: [packages/dsl/src/schema.ts:516](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L516)
 
 Capability scaffold request
 
@@ -16,7 +16,7 @@ Capability scaffold request
 
 > **basePath**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:537](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L537)
+Defined in: [packages/dsl/src/schema.ts:519](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L519)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:537](https://github.com/falese/seans-mfe
 
 > **config**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:536](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L536)
+Defined in: [packages/dsl/src/schema.ts:518](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L518)
 
 #### authorization?
 
@@ -76,4 +76,4 @@ Defined in: [packages/dsl/src/schema.ts:536](https://github.com/falese/seans-mfe
 
 > **name**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:535](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L535)
+Defined in: [packages/dsl/src/schema.ts:517](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L517)

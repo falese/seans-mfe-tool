@@ -249,7 +249,7 @@ The `frameworkPlugin` named export is **required** — `loadFrameworkPlugin()` r
 
 ## Template directory
 
-`getTemplateDir()` must return an absolute path to a directory of EJS templates. The built-in templates at `src/codegen/templates/base-mfe/` (React) and `src/codegen/templates/base-mfe-angular/` (Angular) are good references.
+`getTemplateDir()` must return an absolute path to a directory of EJS templates. The built-in templates at `packages/codegen/templates/base-mfe/` (React) and `packages/codegen/templates/base-mfe-angular/` (Angular) are good references.
 
 Minimum template files for a remote MFE:
 

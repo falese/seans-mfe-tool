@@ -6,7 +6,7 @@
 
 # Interface: RenderHandlerSource
 
-Defined in: [packages/codegen/src/render-model.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L76)
+Defined in: [packages/codegen/src/render-model.ts:75](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L75)
 
 One manifest-declared handler import (ADR-040).
 
@@ -16,7 +16,7 @@ One manifest-declared handler import (ADR-040).
 
 > **exportName**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L79)
+Defined in: [packages/codegen/src/render-model.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L78)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/codegen/src/render-model.ts:79](https://github.com/falese/
 
 > **localName**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L77)
+Defined in: [packages/codegen/src/render-model.ts:76](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L76)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/codegen/src/render-model.ts:77](https://github.com/falese/
 
 > **module**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:78](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L78)
+Defined in: [packages/codegen/src/render-model.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L77)

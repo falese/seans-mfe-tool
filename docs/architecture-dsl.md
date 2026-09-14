@@ -7,10 +7,10 @@ are normative and enforced by Zod at runtime. Closes documentation gap **G02**.
 
 | Concept | Source |
 | --- | --- |
-| Manifest schema (Zod, single source of truth) | `src/dsl/schema.ts` |
-| Parser | `src/dsl/parser.ts` |
-| Validator | `src/dsl/validator.ts` |
-| Type system | `src/dsl/type-system.ts` |
+| Manifest schema (Zod, single source of truth) | `packages/dsl/src/schema.ts` |
+| Parser | `packages/dsl/src/parser.ts` |
+| Validator | `packages/dsl/src/validator.ts` |
+| Type system | `packages/dsl/src/type-system.ts` |
 | Governing decisions | ADR-006 (unified types), ADR-008 (data-type metadata), ADR-010 (data lifecycle), ADR-034/036 (open framework/bundler), ADR-040 (handler sources) |
 
 > Types are **inferred from the Zod schemas** (`schema.ts:6–7`) — the schema is the single
@@ -21,7 +21,7 @@ are normative and enforced by Zod at runtime. Closes documentation gap **G02**.
 
 ## 1. The manifest at a glance
 
-`DSLManifestSchema` (`src/dsl/schema.ts:382–416`) is the root. Top-level shape:
+`DSLManifestSchema` (`packages/dsl/src/schema.ts:382–416`) is the root. Top-level shape:
 
 | Field | Type | Rule | Source |
 | --- | --- | --- | --- |

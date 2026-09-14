@@ -48,7 +48,7 @@ jest.mock('@seans-mfe/codegen', () => {
 let mockConsole: { log: jest.SpyInstance; error: jest.SpyInstance };
 
 // Import after mocks
-import { remoteGenerateCommand } from '../remote-generate';
+import { remoteGenerateCommand } from '../remote/generate';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 
 import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
@@ -90,12 +90,13 @@ describe('remote:generate Command', () => {
         { path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false },
         { path: '/test/src/remote.tsx', content: 'exports', overwrite: true },
       ],
-      preservedCapabilities: [],
+      preservedCapabilities: [], diagnostics: [],
     });
     
     mockWriteFiles.mockResolvedValue({
       files: [{ path: '/test/src/features/UserProfile/UserProfile.tsx', content: 'code', overwrite: false }],
       skipped: [],
+      reseeded: [],
       errors: []
     });
     
@@ -190,6 +191,7 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [{ path: '/test/src/features/UserProfile.tsx', content: 'code', overwrite: false }],
         skipped: [],
+        reseeded: [],
         errors: []
       });
 
@@ -204,7 +206,8 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [],
         skipped: ['/test/src/features/UserProfile.tsx'],
-        errors: []
+        reseeded: [],
+      errors: []
       });
 
       await remoteGenerateCommand();
@@ -218,7 +221,8 @@ describe('remote:generate Command', () => {
       mockWriteFiles.mockResolvedValue({
         files: [],
         skipped: [],
-        errors: ['Failed to write file']
+        reseeded: [],
+      errors: ['Failed to write file']
       });
 
       await remoteGenerateCommand();

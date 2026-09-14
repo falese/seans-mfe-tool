@@ -28,7 +28,17 @@ jest.mock('@seans-mfe/dsl', () => ({
 
 jest.mock('@seans-mfe/codegen', () => ({
   generateAllFiles: jest.fn(),
-  writeGeneratedFiles: jest.fn()
+  writeGeneratedFiles: jest.fn(),
+  // Real, not a stub: resolveFrameworkVariant delegates the framework-NAME
+  // rule here rather than restating it (ADR-092), and a mock returning
+  // undefined would make this suite assert against a variant the platform
+  // never produces. It is deliberately not `deriveBuiltinVariant`: that one
+  // answers "which built-in trio" and collapses every third-party framework
+  // to react, which is the wrong question at a plugin-resolution call site.
+  resolveFrameworkName: jest.requireActual('@seans-mfe/codegen').resolveFrameworkName,
+  // The BFF registers its file contribution on import (ADR-094 §2); a stubbed
+  // registry would throw before the command under test ever runs.
+  registerFileContributor: jest.fn(),
 }));
 
 import { remoteGenerateCapabilityCommand } from '../remote/generate/capability';
@@ -54,9 +64,9 @@ beforeEach(() => {
   mockParseAndValidate.mockResolvedValue({ valid: true, manifest: baseManifest as any, errors: [] });
   mockGenerateAllFiles.mockResolvedValue({
     files: [{ path: '/cwd/src/features/UserProfile/index.ts', content: '', overwrite: false }],
-    preservedCapabilities: [],
+    preservedCapabilities: [], diagnostics: [],
   });
-  mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], errors: [] } as any);
+  mockWriteGeneratedFiles.mockResolvedValue({ files: [{ path: '/cwd/src/features/UserProfile/index.ts' }], skipped: [], reseeded: [], errors: [] } as any);
 });
 
 describe('remoteGenerateCapabilityCommand', () => {

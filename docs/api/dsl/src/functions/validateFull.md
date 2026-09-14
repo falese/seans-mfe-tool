@@ -8,7 +8,7 @@
 
 > **validateFull**(`data`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/dsl/src/validator.ts:333](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L333)
+Defined in: [packages/dsl/src/validator.ts:282](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L282)
 
 Full validation: schema + semantics
 

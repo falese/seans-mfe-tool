@@ -55,40 +55,6 @@ export class AngularWebpackPlugin extends BaseFrameworkPlugin {
   readonly defaultPort = 3101;
   readonly directoryStructure = ['src', 'src/features', 'src/app', 'public'];
 
-  getRuntimeDependencies(): Record<string, string> {
-    return {
-      '@angular/core': '^17.0.0',
-      '@angular/common': '^17.0.0',
-      '@angular/platform-browser': '^17.0.0',
-      'rxjs': '^7.8.0',
-      'zone.js': '~0.14.0',
-    };
-  }
-
-  getTemplateDir(): string {
-    return path.resolve(__dirname, '../../..', 'src/codegen/templates/base-mfe-angular');
-  }
-
-  getTemplateVars(_manifest: unknown): Record<string, unknown> {
-    return {
-      framework: 'angular',
-      bundler: 'webpack',
-      templateVariant: 'angular-webpack',
-    };
-  }
-
-  getRuntimeImport(): string {
-    return '@seans-mfe-tool/runtime/angular';
-  }
-
-  getRuntimeClassName(): string {
-    return 'AngularRemoteMFE';
-  }
-
-  getSourceExtension(): string {
-    return '.ts';
-  }
-
   getTestExtension(): string {
     return '.spec.ts';
   }

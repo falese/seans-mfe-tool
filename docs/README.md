@@ -9,7 +9,11 @@ This directory contains agent definitions for GitHub Copilot to perform speciali
 - [Runtime platform](./architecture-runtime-platform.md)
 - [Slot contract](./slot-contract.md)
 - [Query capability](./query-capability.md)
+- [Schema & contract architecture](./schema-contracts.md) — contracts, schemas, and how they reach runtime and plugins ([typeset](./derived-contracts.html))
+- [Generator CLI schematics](./cli-architecture.html) — the component architecture, in six drawings
+- [CLI contract](./cli-contract.md) — envelope, `--json`, exit codes
 - [DSL manifest schema](./schemas/dsl-manifest.md)
+- [Manifest field reference](./schemas/manifest-fields.md) (generated)
 - [ADR index](./spec.md#adr-index)
 - [ABC Kids end-to-end example](../examples/abc-kids/README.md)
 
@@ -173,7 +177,7 @@ Located in `.github/ISSUE_TEMPLATE/`:
 
 Every issue links to:
 - **Requirements** (REQ-XXX in docs/\*-requirements.md)
-- **ADRs** (ADR-NNN in docs/architecture-decisions.md)
+- **ADRs** (ADR-NNN in `docs/architecture-decisions/`)
 - **Acceptance Criteria** (docs/acceptance-criteria/\*.feature)
 - **Pull Requests** (when implemented)
 
@@ -294,7 +298,7 @@ Agents are assistants, not replacements. Review and validate all outputs, especi
 
 ### From BACKLOG.md (Deprecated 2025-11-28)
 
-`docs/BACKLOG.md` is now historical reference only. All active backlog is in GitHub Issues.
+The former `BACKLOG.md` has been removed. All active backlog is in GitHub Issues.
 
 **Why the change:**
 - ✅ No manual sync required
@@ -354,6 +358,6 @@ When modifying agents:
 - **Main Copilot Instructions:** `.github/copilot-instructions.md` - Project-wide guidance
 - **GitHub Issue Templates:** `.github/ISSUE_TEMPLATE/` - Standardized issue creation
 - **Requirements Docs:** `docs/*-requirements.md` - Source of truth for features
-- **ADRs:** `docs/architecture-decisions.md` - Architectural decisions
+- **ADRs:** `docs/architecture-decisions/` - Architectural decisions
 - **Acceptance Criteria:** `docs/acceptance-criteria/*.feature` - GWT scenarios
 - **Live Backlog:** [GitHub Issues](https://github.com/falese/seans-mfe-tool/issues)

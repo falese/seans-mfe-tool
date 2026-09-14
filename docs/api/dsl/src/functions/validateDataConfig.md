@@ -8,7 +8,7 @@
 
 > **validateDataConfig**(`data`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/dsl/src/validator.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L113)
+Defined in: [packages/dsl/src/validator.ts:114](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L114)
 
 Validate data configuration (BFF layer)
 

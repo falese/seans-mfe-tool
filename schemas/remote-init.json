@@ -19,14 +19,6 @@
         "type": "string",
         "description": "Port number for the remote MFE (default: per-framework)"
       },
-      "template": {
-        "type": "string",
-        "description": "Path to DSL template file"
-      },
-      "skip-install": {
-        "type": "boolean",
-        "description": "Skip npm install"
-      },
       "force": {
         "type": "boolean",
         "description": "Overwrite existing files"
@@ -85,9 +77,11 @@
               "enum": [
                 "create",
                 "overwrite",
+                "reseed",
                 "skip",
                 "spawn"
-              ]
+              ],
+              "description": "`overwrite` re-stamps a generator-owned file; `skip` leaves a\ndeveloper-owned one alone. `reseed` is the third outcome ADR-091 adds —\na developer-owned file that exists and WILL be replaced because `--force`\nwas passed. It is distinct from `overwrite` because it is the only op that\ncan destroy work, and a dry run that calls it `overwrite` hides that."
             },
             "target": {
               "type": "string"

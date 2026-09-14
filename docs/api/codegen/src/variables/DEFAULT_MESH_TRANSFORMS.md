@@ -8,7 +8,7 @@
 
 > `const` **DEFAULT\_MESH\_TRANSFORMS**: `object`
 
-Defined in: [packages/codegen/src/catalog.ts:233](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L233)
+Defined in: [packages/codegen/src/catalog.ts:215](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/catalog.ts#L215)
 
 Transform configuration defaults
 

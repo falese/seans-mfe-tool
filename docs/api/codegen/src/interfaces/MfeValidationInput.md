@@ -136,7 +136,7 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 #### language
 
-> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+> **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
 
 #### name
 
@@ -252,7 +252,7 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 #### type
 
-> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+> **type**: `"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"`
 
 #### version
 

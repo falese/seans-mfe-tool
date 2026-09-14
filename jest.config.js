@@ -48,8 +48,6 @@ module.exports = {
   coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
     'src/commands/*.{js,ts}',
-    'src/utils/**/*.{js,ts}',
-    'src/codegen/UnifiedGenerator/**/*.{js,ts}',
     'packages/plugin-api/src/**/*.{js,ts}',
     // Include DSL/runtime for TDD Guardian phase.
     // Runtime is now the packages/runtime package (ADR-064); collected here so
@@ -61,13 +59,11 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/*.test.{js,ts}',
     '!src/**/*.d.ts',          // Skip - TypeScript declaration files have no executable code
-    '!src/dsl/schema.js',      // Skip - compiled Peggy parser artifact (not a source file)
     '!packages/dsl/src/**/__tests__/**',
     '!packages/dsl/src/**/*.test.{js,ts}',
     '!packages/dsl/src/**/*.d.ts',
     '!packages/dsl/src/index.ts',
     '!src/**/fixtures/**',
-    '!src/codegen/templates/**',
     '!packages/runtime/src/**/__tests__/**',
     '!packages/runtime/src/**/*.test.{js,ts}',
     '!packages/runtime/src/**/*.d.ts',
@@ -101,13 +97,6 @@ module.exports = {
     'packages/runtime/src/base-mfe.ts': {
       branches: 90,
       functions: 100,
-      lines: 95,
-      statements: 95
-    },
-    // Enforce 95%+ for Utils module even locally (TDD mandate - Phase 1)
-    'src/utils/*.js': {
-      branches: 88,
-      functions: 95,
       lines: 95,
       statements: 95
     },

@@ -15,26 +15,8 @@
  * package.json comes from DEPENDENCY_VERSIONS, and no template hardcodes one.
  */
 
-/**
- * Public assets a template variant may legitimately not ship (#341).
- *
- * Absence is a variant's choice, not a defect, so it is emitted silently rather
- * than warned about. `base-mfe-angular` ships neither: an Angular MFE is served
- * through the Angular builder and has no standalone demo page. Warning anyway
- * printed two lines per Angular MFE on every run — eight across the fleet,
- * landing in the middle of `check:mfe-drift` output a reader is meant to be
- * studying carefully.
- *
- * The set is deliberately short. Everything not in it — `index.html`,
- * `App.tsx`, `index.tsx`, `mfe.ts` — still warns when its template is missing,
- * because there the absence really is a broken variant. Silencing the
- * diagnostic wholesale would trade a noisy gate for a silent one.
- *
- * Follows the same rule as slot emission below, which probes the variant's
- * `templateDir` for a `slots.*.ejs` instead of hardcoding framework names, so
- * a new framework adds support by shipping a template (ADR-036).
- */
-export const OPTIONAL_PUBLIC_ASSETS: readonly string[] = ['demo.html', 'favicon.ico'];
+import { MESH_PLUGINS, MESH_TRANSFORMS, MESH_AMBIGUOUS } from '@seans-mfe/contracts';
+
 
 /**
  * Centralized dependency versions for template generation
@@ -251,53 +233,26 @@ export const DEFAULT_MESH_TRANSFORMS = {
 // Validation Layer (ADR-027)
 // =============================================================================
 
-/**
- * NOTE: These validation constants are duplicated in src/utils/manifestValidator.js
- * for CLI pre-generation checks. Keep both in sync until TypeScript migration completes.
- * See ADR-014 for migration strategy.
- */
 
 /**
- * Known GraphQL Mesh plugins (production-ready)
- * Source: @graphql-mesh/plugin-* packages
- * Used to validate manifest plugin configurations and prevent misclassification
+ * Mesh plugin / transform allow-lists.
+ *
+ * Derived from the single classification in `@seans-mfe/contracts` (ADR-092),
+ * not restated. These used to be two hand-maintained Sets here, one of three
+ * surviving copies across the repo that disagreed on both contents and
+ * spelling; `codegen` read camelCase while `dsl` read kebab-case against the
+ * same manifest field.
+ *
+ * Kept as `Set`s under the existing names so the module's public surface — and
+ * `bff:init`, which imports them — is unchanged by the move.
  */
-export const KNOWN_MESH_PLUGINS = new Set([
-  'responseCache',
-  'prometheus',
-  'opentelemetry',
-  'newrelic',
-  'statsd',
-  'liveQuery',
-  'defer-stream',
-  'meshHttp',
-  'snapshot',
-  'mock',
-  'operationFieldPermissions',
-  'jwtAuth',
-  'hmac',
+export const KNOWN_MESH_PLUGINS: ReadonlySet<string> = new Set<string>([
+  ...MESH_PLUGINS,
+  ...MESH_AMBIGUOUS,
 ]);
 
-/**
- * Known GraphQL Mesh transforms
- * Source: @graphql-mesh/transform-* packages
- * Used to validate manifest transform configurations and prevent misclassification
- */
-export const KNOWN_MESH_TRANSFORMS = new Set([
-  'namingConvention',
-  'rateLimit',
-  'filterSchema',
-  'resolversComposition',
-  'cache',
-  'prefix',
-  'rename',
-  'encapsulate',
-  'federation',
-  'extend',
-  'replace',
-  'typeMerging',
-  'mock',
-  'bare',
-  'type-merging',
+export const KNOWN_MESH_TRANSFORMS: ReadonlySet<string> = new Set<string>([
+  ...MESH_TRANSFORMS,
+  ...MESH_AMBIGUOUS,
 ]);
 

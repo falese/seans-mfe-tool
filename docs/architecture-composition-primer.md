@@ -223,17 +223,17 @@ Slot granularity and data-injection cover the real composition use cases.
 | Concept | ADR | Where it lives |
 |---|---|---|
 | Control-plane wire protocol | ADR-054 | `packages/contracts/src/messages.ts` |
-| Daemon-driven slot composition | ADR-055 | `src/runtime/layout-manager.ts` |
-| Thin waist + imperative floor | ADR-056 | `packages/contracts/src/presentation.ts`, `src/runtime/imperative-handle.ts` |
-| One socket, many slots | ADR-057 | `src/runtime/daemon-channel.ts` |
+| Daemon-driven slot composition | ADR-055 | `packages/runtime/src/layout-manager.ts` |
+| Thin waist + imperative floor | ADR-056 | `packages/contracts/src/presentation.ts`, `packages/runtime/src/imperative-handle.ts` |
+| One socket, many slots | ADR-057 | `packages/runtime/src/daemon-channel.ts` |
 | MFE-provided layout | ADR-058 | `LayoutManager.provideSlot` |
-| Swappable control plane | ADR-059 | `src/runtime/base-control-plane.ts` |
+| Swappable control plane | ADR-059 | `packages/runtime/src/base-control-plane.ts` |
 | **Value-injection** | ADR-060 | `LayoutManagerConfig.providerValues` → `props.hostContext` |
 | **Slot self-healing** | ADR-060 | `AdaptorHelpers.reportError`, `renderSlotFallback`, `data-slot-state` |
 | **Control-plane re-resolution** | ADR-060 | `SLOT_ERROR` action, `MAX_SLOT_ESCALATIONS` |
-| MFE lifecycle + `error` phase | ADR-041/042 | `src/runtime/base-mfe.ts` |
+| MFE lifecycle + `error` phase | ADR-041/042 | `packages/runtime/src/base-mfe.ts` |
 
-The neutrality is **machine-checked**: `src/runtime/__tests__/boundary.test.ts`
+The neutrality is **machine-checked**: `packages/runtime/src/__tests__/boundary.test.ts`
 fails if any neutral-core module imports a UI framework. Framework code is allowed
 only inside the layer-5 abstracts (`RemoteMFE`, `AngularRemoteMFE`).
 

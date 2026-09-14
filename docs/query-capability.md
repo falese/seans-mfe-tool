@@ -123,7 +123,7 @@ protected async doQuery(context: Context): Promise<QueryResult> {
 ## 2. The generated connector — `src/platform/bff/bff.ts`
 
 Generated for every MFE with a `data:` section (template:
-`packages/bff-plugin/templates/bff.ts.ejs`). It's a plain typed GraphQL client:
+`packages/plugin-bff/templates/bff.ts.ejs`). It's a plain typed GraphQL client:
 
 ```ts
 import { query, mutate } from './bff';

@@ -1,8 +1,13 @@
 # DSL Manifest Schema
 
 Source of truth: `packages/dsl/src/schema.ts` (Zod). TypeScript types are inferred from the
-Zod schemas — never defined separately. Reference: `docs/DSL/dsl-schema-reference.md`
-v3.2 for worked examples and YAML snippets.
+Zod schemas — never defined separately.
+
+> **The generated field reference is [`manifest-fields.md`](./manifest-fields.md)** — derived
+> from the schema and gated, so it cannot fall behind it. Prefer it for *what is allowed*.
+> This page is hand-written and covers the prose a table cannot: why fields exist and how
+> they interact. `docs/schemas/manifest-fields.md` was a third description of the same
+> language and has been deleted (finding B5).
 
 ---
 

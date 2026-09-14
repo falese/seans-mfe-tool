@@ -8,7 +8,7 @@
 
 > **validateManifestTransforms**(`manifest`): [`ValidationResult`](../interfaces/ValidationResult.md)
 
-Defined in: [packages/codegen/src/manifest-validation.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L86)
+Defined in: [packages/codegen/src/manifest-validation.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/manifest-validation.ts#L150)
 
 Validate and classify transforms from manifest
 Supports both object format {transformName: config} and array format [{transformName: config}]
@@ -107,7 +107,7 @@ Supports both object format {transformName: config} and array format [{transform
 
 #### language
 
-`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `LanguageSchema`
+`"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
 
 #### name
 
@@ -223,7 +223,7 @@ Supports both object format {transformName: config} and array format [{transform
 
 #### type
 
-`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `MFETypeSchema`
+`"tool"` \| `"agent"` \| `"feature"` \| `"service"` \| `"remote"` \| `"shell"` \| `"bff"` = `...`
 
 #### version
 

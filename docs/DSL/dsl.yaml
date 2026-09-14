@@ -1,6 +1,17 @@
-# MFE DSL Platform Contract v3.2
-# This file defines the complete platform contract that ALL MFEs must conform to
-# regardless of implementation language (JavaScript, Python, Go, etc.)
+# A WORKED EXAMPLE of an mfe-manifest.yaml — not the contract.
+#
+# This file used to be headed "the complete platform contract that ALL MFEs
+# must conform to". It was not: it is hand-written, nothing reads it, no gate
+# checks it, and it does not know that `providesSlots`, `framework`, `bundler`
+# or `data.mockSwitch` exist — the whole slot contract (ADR-066..073) shipped
+# without reaching it. It was stamped v3.2 throughout.
+#
+# THE CONTRACT IS `packages/dsl/src/schema.ts` (Zod), and the field reference
+# generated from it is `docs/schemas/manifest-fields.md`. Read those. This file
+# is kept because a fully worked example with commentary is genuinely useful,
+# and is retained on that basis alone.
+#
+# Finding B5, docs/generator-extraction-plan.md.
 #
 # Session 6 Decisions Applied:
 # - DEC-016: Lifecycle hooks use `contained` (not `wrapped`), mandatory/contained flags

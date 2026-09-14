@@ -1,0 +1,2441 @@
+[
+  {
+    "manifestDir": "abc-kids/animal-sounds",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "2e0633c159041f54864351bec87651b707e024442b374a9b1b442987e2ab67f2"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "f93334836f27a8eb9ce2144dc6972f806e30fd99274e20b7de84251fb17114b7"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "2fbbf60e940671785f34e2f0d0918a0987c8b859a6808d5a02047ffe8e644e10"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "826ac06868da6f061c3952fc8cab558e58cb82d871c7e2807ecb323b969c4f23"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "ee558f614be59e8635df9cc291286c353c241e69682f335d12ff9b5befca3f87"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "e7d0f30b491e0a867ff6984801ddaffc43be59671fa9cc16ac70fe8e830e2277"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "10f517d4745004948bf598195f030093ae62ab2ce7b0d6309e3397832b84bae5"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "d9521d5b7ff3460adbc7e130d9677e330de7a7714c4cd4d04277a5f7b3fb5a31"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "57ca55181dd79ea76c4b5ec8954847006b96eae9d6217fecebaaee80167cee8c"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/color-mixer",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "ed4957e9f2963238258f9c14718431e4db3317914b57bbe9679475d971780b27"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "f5506f5d12dcbbecd5aa5501b44b318277c7ea8ae4c91e9b0472b0dcd2b6b828"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "9ed1f6799c2768fdab8f022e7da52ac2938a75bb5aa27f4a9028bf61b1ca1c86"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "f8e5cd913428af630b9cf7418228ef10d5fde11eed9883dc5637e08fd316097a"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "5780aa6fa6f5156ac79a8114c9760a2a2702cce484b3c52c4fd9d9e54a886c45"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "2e4cdffb88e85d927154f77997be107e5adddf0415ccb50a6cf853876915c956"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "ac5d259e01c4a1d328ddeaaedf0bab9690110c1db7209cb8a0ab6c93d26e642c"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "892996c654a233f6b4833ca81f41c3c8bcf1917a02f55222fd69baa0703c6a2c"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "429aca7b0dab6f7f04189d165f13fb0d5f3b26bae5b5f0c3627db82f3934bf8b"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/counting-stars",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "f978e7979cd51c644b63ec02f052e6e4a5e527cd8c2dc54d5d1d294a9b3471f4"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "51383f3611ae620420ac89bb24ac828c41c2b802876e2280463b306a698c568f"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "cd7a428eeeb9992e8b010769304ea122b7c0a296b49f337da1f142b50e391b30"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "0c3bbfb60d4bed9b2c771915b9fece2023b5f74a6ccc23c90c3fab4dfcf64350"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "64b43f3dce73a11618e973c0a7c9e6ede6dbb6a954bdef29612b5e3cb1c2c421"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "9ec498ea092533cf243bc13fbc9ebc4d14123fb23cefc1f36341b565b4481500"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "96088ef56b628b0d9afb0b970ada1569a9e0bc0c278547686606759b48053bc7"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "eb4d6d5e5f024e482e9069dd16f1027f5f8d626c02d761dd3d7772c66adc6fba"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "85d1b2387b6c87b0e4923aff9003709ee7b9b1e889d5a6bc52c9e2ea12e13821"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/flappy",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 27,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "1a657e1e9ad8cddc0be66a439779bebe3f9cf199c4f31cc1057dfb4d592af365"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "582c7bdd0ff5e9f2e438b1746731f8805112d2aab3c4219b28d5e4a78776542c"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "1c4341cc062eedc6e30bfcd3ed25887de4af220aee3e1411fd2b53db8c9ffdce"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "1ddc4e8ce3d7f3f8f94be5e3fc489b4bdf1af0734eeea8340921999f61cf6fe7"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "babfb3d2b1df82fd1a121a7cac9d89334ea15842dd87dc075bd4c52605714744"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "a88658c20bc2ad564af9bed8431060abe73359fe4952cc5aaf20f897ed47f6a3"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "7a045d2fbbff4416a0ca06a77c709cffdb4cada287d583210f0e87473f0ee386"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "7c0b204d50e6cb8ade0af1b82319effe1bd42c91e87cda2ae5222f4fec127e25"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "b55f290c175feca6fdabe0453e6b949b9a12867bfc67ed01da76cb97ba6a3374"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "6efe4a635cc7652a9bd0e81146efd336b08f17aaa94682e3dd061b6ccfeb07f6"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "a3a589643ff901325b43691b6f9e080fec2d9f0e961899033ccf870514880ceb"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "a692885d242715e1ea8de4c5feff0ad8678318da497a8db203c4ca5edc77ca62"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/handler-registry.ts",
+        "overwrite": true,
+        "sha256": "a49c2451aafa7f45f94d4ab2319acf6228ab644e4da9149c013672b0a9d0d8c9"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "b8c29e87b94194906b26c04396990c8f5b3d65698a209b118feac591fd44b6f6"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "407776a40e0933f92a60ab5fa0aa954cc3462286a9dc513617c08a4bc8f6d3bf"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "37f0ff29917dfb9a373bb0ad2e139ebed018f48a65741ab20232260aa34b77df"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "cbdc9628d8bfe5f27d3ece328d5420fa718ad3a67aea48d3999b9fada7a325e3"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "9d891efa5f6a45ecb983c7811602b8cf5b461195dbb9e6b4ebd76dfc220dc8ff"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/hockey",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "5a3537aa2955844941df3bac14fa8d961a148ffc990fa711e26f1b5f3abc7480"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "64b0bb26633b002dda60d50c3f8eb3df3a6392c90b3185d2fef198a14599247d"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "5a9eeaa0f77f9550e1de6254c0f1ab16f67ca5d172ebb52cc187bdfe625c501c"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "4d3cbb4f1c2cb97c34d75a260c215ee262c1627e99ff240bd0f17cb7d02f2f9f"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "429ab2b7d4d58d21638789a3265640c56b2b40e9423a5d1bda81cae2ca685c4e"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "c6aa1e1a5f10f2724943398931227ddcf22f864a6c4414b010eabc3c57b088fd"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "6863f1e0ab0f87407d4f0a5acbc933f43ddb820abd4453ea8fbc90513ba7f9a8"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "ef00676a9d145c1e77101c125a6a19426c303df7bfa5f834b723509c69a8b1a8"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "3e0c72b5c6f481dbe0e747e4082db3e43d63dec5437fc68878c9df934c58dd4b"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/home",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GameMenu"
+    ],
+    "fileCount": 17,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "fc50d05120ff12f4b0f38e1a7629eff77733dcd239257e55bdd386f5de970b95"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "a194110cffbddb4c09559ebc3522e7d99514c8633b75cb888bf3b3ecb04ad1b4"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "d1d5fd76fd8a0bfea09479003e593408225a4652086576bae44831ecf2c608d6"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "f66687789a66869a7b9bcda582ce118628ea2b08659af8b48969638dbc941ef6"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "b05985e113b2925b25f1d4035d5157069be41e5aba966d8a7ebea0eeda3dc42c"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "836401b57858665f1682575c464037463ede009441a2c1618f588095d54414d7"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "200217cb0acc5db4ea3fc6b97d9e27a4cdfe3ce4980f0f49ca0af1d2b93a9c2e"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "8ea22131b273f6b6fe80fb9527987d2815ad0e0adcc2891d8c0d203ee8f8ebed"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "e4050ac08291eb4b9bd5348be0a3bffde313d18e3ff544719bee95daa523d0bc"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "9e43ce7956c7385e51fc6d642549b6a452591ce78a3c8135ef4030dc144eb0bb"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "6312ee6365df5398d033c04c4aec16004521462c69f7c2b8b7e516501e509f38"
+      },
+      {
+        "path": "<cwd>/src/slots.tsx",
+        "overwrite": true,
+        "sha256": "2d578bcb59afde3d995e50fd20278efa043cd75c81948ba593c14160d12e3301"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/letter-pop",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "2f81f9ffee104332a5b10db038ac2cb5c844597d64f1f1f19215e134930ee960"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "5f77e3743c77f68e87d49ae2ed2b6f8bb6753684f984a870644e444e9d53f710"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "a8838eb49499b17e460127a18f08e690902ad58ab7d865c04f785c4a3a14ec01"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "ab2b5a9f2d689f289823f4b35f10a6748809fa8d14e9dff6dac031be07aa2330"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "ba1020a65d5ac9f34fef1f3c79c52d135f9e8d5a71a2bf3755804f2a86a1dc19"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "4d5e7bc94fcf1c8d9860fa0abc36fed27a8719d3541e7571b44c562eb072388a"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "dffc45c365ee2d465b328415b4487eab8c31d733837568d929a3985181156980"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "2a76f82c15e3988454718f9ab9d208f8c51133ca0bbf5e376e571b5bf63f1009"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "69d6fcf17658acee590dd30d1acb6a886d18d1eac270eaed008d6c423df181ed"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/maze-runner",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "b6d0f53c9c2fa43e730b2713ca25a4890b748b88a59923adeb89aa163649b2a6"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "332323f0f3b18f9ee1431e9d2f9e6c7e7707973e3da48845492d52ca405f925b"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "8403d4207a7a85d5eb73bdc3993abecccdba5306be521c04188cda6645d27675"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "c46a32cddea11204a96b1f4ab9ad49208d01c1d70a5f7fad7e62ee5f3f5fc19b"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "5fc34f8069efdf0bd2dfa89ccce8332bde9f218590f9fb6b0571bb9103be5f3d"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "227fec9c0b03151dd32b5134f603a544574dbf0115fe5f96c8f1e29e470e0ee5"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "50bb540682cadbe11643c6c3fbdbae101e3769b190718050ac567885df3d9f40"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "7fa368706dcf6c0066ced6b5005f96b749b776e2a6c34dbaa978b0791d32c78b"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "89a91da1fdf41e8a9beba6404ba165bf92093aacb7c5773b9045ab6b5db5bbcb"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/memory-match",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "8709d0b1dd58b5eb8d8a145d527641a75bb093e1d1d0cd72b73b5c634083783d"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "277f6a5d2a78d4503d38f685c2322c9fdc1ea15a8544425be7541d361d2eb607"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "6bd9488567d244d6cd6ed5f5b82a4fff730dca7f1520e8b296c054189ec82f57"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "062984669144d5cbd39cfd9dd583634ff1139b504e31f6c80c3c61dd3322cfb6"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "4b01dd9d822fc34b3a3227413d704cf13141bceaf9fbbb33b23a22304df31840"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "cc96e0a2cb127813a57033eca24c72b0ea20e3af1a54ec6eceddf93c3b08bcca"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "9620395e5315410eccfee7e6f68c368d6171880cc9e0b2d30f97fe183b275e74"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "e3ae9bcf3f5ce4b6a4b352b8af80e2482d5046333b599c3ce3aedc9a93875826"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "cca97c304ab1181afd0d3a54a15c743d805d9983f4a374dddd3c68c3a77c7c0f"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/multiplication-quiz",
+    "framework": "angular",
+    "bundler": "webpack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 30,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "1a657e1e9ad8cddc0be66a439779bebe3f9cf199c4f31cc1057dfb4d592af365"
+      },
+      {
+        "path": "<cwd>/angular.json",
+        "overwrite": false,
+        "sha256": "5f24a74aeef3bbacbd1bbda72d4c8ea374a5b21975d453219fa26dc338cc7c0c"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "70980ebf78e9872e515e4dd7d695f7c043c4891c1c0c17bfaf65f362d3375dce"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "05cd8168195ccc95064f1ff6c3afe0da6bd7c9acd17df440eca31e22ba677e0f"
+      },
+      {
+        "path": "<cwd>/jest.config.js",
+        "overwrite": false,
+        "sha256": "c528d1f227746af4a71307edaf6a257ef6395aeb6735ca37b582d9a61e8d62e6"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "aa415d17355943ce7b2ca980fb57837d632225c712681b1f3ccf897c35ddf090"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "3fe8f6a5cefa116c3f4fbe6256f7f33413709d4b20282ed8e3cc52b3385b90e3"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "837c05662f040373e2ac49059b698ac8216aaf5d229e3d838b571a2c572a7245"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "d530b390c417b08575ff17a86dfd2b9d4b72fbb4251d9a11a90b197e0ea46113"
+      },
+      {
+        "path": "<cwd>/setup.jest.ts",
+        "overwrite": false,
+        "sha256": "7b221babcf454c9646175d00cc394abd5c6d929b5d0688d722514396f17d2852"
+      },
+      {
+        "path": "<cwd>/src/app/app.component.ts",
+        "overwrite": false,
+        "sha256": "8e2a3a200d789e995f4fc3cbe7f1ba9d37d171d38430b4fc139e212e718d4e55"
+      },
+      {
+        "path": "<cwd>/src/bootstrap.ts",
+        "overwrite": false,
+        "sha256": "12886380c3174d2a95846e96bfef54d265db88ed9193295120bfb19379d60b37"
+      },
+      {
+        "path": "<cwd>/src/main.ts",
+        "overwrite": false,
+        "sha256": "140595e7c62267ffb2c388c80ad1e81352e6f3f15f8c6cca79b641f4e28dbb99"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "03a29e6dfc5c6279fb0a6dd8c195969e4c974705de977201e09db3e88e7720d6"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "373d4f7503374ff4400978731337a14cbdd98e0af0965a3244d7987a4c8ad147"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "9486590302c016a821cf22badd9348b2f80a48e1051f67bb4e21b7afbf9ad2a8"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "4da601e4372f7d51f95b966277725d3635f00b3ebdccf548d6b98c27df25540b"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "17f0b8ebe3aedb86af50ec35ca84caaee8dea04d32e24359df44f0eabd746f9c"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "fa4fb9ef93541a55fab6d765335313833248d515d696a7d6f2752053a7048bda"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.ts",
+        "overwrite": true,
+        "sha256": "5d931c5075e41b2881e124be6182d6c2020d907b3431c1bfd8737952fa76851e"
+      },
+      {
+        "path": "<cwd>/tsconfig.app.json",
+        "overwrite": false,
+        "sha256": "9afb171932f86b330534a3ba0ef07c0e3b866bdb2c1b191c8942f85ebde68af2"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "4e9869281dc9998eb641bf2cc83162b4c6251a0c09160b7140d72c10159ca517"
+      },
+      {
+        "path": "<cwd>/tsconfig.spec.json",
+        "overwrite": false,
+        "sha256": "86988709602e140dff512d249da1d0c5a81394cf9ef7e0db7db7b42bfbe25445"
+      },
+      {
+        "path": "<cwd>/webpack.config.js",
+        "overwrite": false,
+        "sha256": "4981bd04e3e802b5f9cf24d43e83c2a74838e512396eb41e36099f353dba705c"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/rhythm-tap",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "67b7911f521212b4b76fa2403c997d6404ff3770451cc9c22fc68413490f7c1f"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "b36f2a6f503f5bcb5b0c9ac112f854f7dbb4a9ea35eb010a176b18d1187e668e"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "ac9e1909a1484ca7663789e2db49b573539946e12023ccd6fd4228655bcd911d"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "771449010bdfd45b6e99cfa8c305ec33e1fce27adcef87d0486d5e45c7fd5b03"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "d0be51b67ea27e4a2ba48a2029a0851a09a3b344262cba9f786e9ddba11c813a"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "9b073fec041c6447135d9203fdf0fc680cba94022b9e1964db20c456aeeaf910"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "734a9ce5169ad8a13d19b9afe96de73ea4fbf0b3b466646cc2f885c41050ceb6"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "05c31a922e2b67d2890f6ce7c39099c737f959d8557a8fbef342f496a453b29c"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "b0d2bfbf7a0331600957be09c4751dcb3501a07f533e52218787d58c31a41e7f"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/rocket-math",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "5c46d96d37a554a69de901fc688b21d2650134ba4d76fceb86d85de3d759488a"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "c60990ff4aebf02459c1c17e563ecc8cf7a0a76225a479477213ca8ca36e663e"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "38387d083a93532d22cec7b798d1d208fd6620783dd28a00662db2cbd1688c38"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "8a61c1d819ac159274d1c28dea62f5ec34f5cd05671baf345ed190413230a62d"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "f806548d97773554d7a4325ece3face0f0d1dfa7934be9ccc5f4c0d0662e3be4"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "0542bb65e4ab18c32a5efb2d7fd8909436ae98f45566da6fbffe3e787f987837"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "5760ea2ab324145dc2af7092aedf50592dfcf5d033d1643b4d0179aec36c9dfb"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "490657d59e5f7f60df0db2359e326b0ae141534fa679495a235c0e1680199686"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "dfe9bcf1117a46956c11c22e06805d4db8d456ae44c088e04ea5ee6013679f91"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/shape-sorter",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "574b6d19153e3417f359027a0ea1087324f66d3f8eb8a237aee4fdfec45ddb14"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "f497089e3ecaf6c20463c0fd825acc828c5d3f98a10a8bfed55500028f2a26ec"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "28689a26ab97bb6dfb25ed58c552b4b5a0edd3044e20c9a307f3722a50c95782"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "a2ea6ed22a0de5b771ba57286a8b7a0627e754cf8fe03a9f29ddbafcd27a8e68"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "3b45e33c70db69de17c67b873ee6b09037309d686626aa6922ad22b478061e00"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "dcc651540fa468495925781e3af6b3939e6869cc7c7621b4e124b08cb7ae67a8"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "7a2af1cd02fe9c2c430f923f41989d0e3a4117b55226e3c63003f4e0caa48274"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "2857c343702cf4a569d1a5a5b36b2d5c3ecc2bc4552ab6d837f56bdc0f3b5937"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "b88a1c64f8a479399354cf9c83490b9aff757f62fcb08e903f42cebd930b82a8"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "abc-kids/word-builder",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "GetGameInfo",
+      "PlayGame",
+      "ShowCover"
+    ],
+    "fileCount": 16,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "d32f83cc13c1a433fa83a46d05789e9dbc8142e404a085c3644badec60e0f2ed"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "5800e922d216d43acbb7fd3f386a9bc36a331ac05022d4035505204fde992f37"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "0c958a7d5c595e5a660e5f463f1fcccaabf05a37cdcd6b36d57a4ed6dd334bbf"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "74e200bc0b5c1e75ab72ff58d5a35d9aba8881b88192b85bb13da4f7b07f98e3"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "20c2715f9d7e6b354f80ce1a00ff1f9631e53ace15b59279de6a9d2085f936cc"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "ca8f14446424ad2e66f056782dce58355c730b1a42bb0406c7d37d62061c0b38"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "975bbf0b45430324fecd963718afa3404699abe23c880a5ecf19d054c13b4a62"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "e583a6cb3064b49cf522e50c7c4fe6877f3e35e729c03cd050fe98fc4f03a4db"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "1872cfe1280c44dcdf9c9d4a9fe8d508467716b6c3cb3ee57adfb7377850e469"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "6e254cc7b66590fd6ba54396971cfb8643f76d6ac3b62324949983e1f98e9d69"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "1dced02a0f3a8d3d29b26da4da8d0445fdae8d38131b0e44e8e47035cf6f935d"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-cargo-ops",
+    "framework": "angular",
+    "bundler": "webpack",
+    "preservedCapabilities": [
+      "CargoManifest",
+      "HazardSummary"
+    ],
+    "fileCount": 30,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "248a1cfd49d696d62eb8dfe6d973080e3459fe9db2314b24b4dabbc8506bba83"
+      },
+      {
+        "path": "<cwd>/angular.json",
+        "overwrite": false,
+        "sha256": "9ef3950572a1a997a8ef4e73353fa46a8f1684d861fc82af7fe5a33c6181e39b"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "b952947864fcbb247e767f91bcc5c6c58107df2a3c41e744418f6a66f2820e26"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "69431449d0dc7601e7395207e7510b72622fe6eec0aaa8bb21e1171cfcf046fd"
+      },
+      {
+        "path": "<cwd>/jest.config.js",
+        "overwrite": false,
+        "sha256": "c528d1f227746af4a71307edaf6a257ef6395aeb6735ca37b582d9a61e8d62e6"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "ed8ecc9a6caee2ee3f40480c14e95dfcdf1afcea1f788d3fa7a69fbc0291305f"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "335277d8fdd2d668bbdc5e9d8ec1e909f1ed64328b75c18006c4a36e2fe45a74"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "cee81a17e9cefa4fc23a091d7f9f81fcaf9db434c4e7195a57fa54274aacea5a"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "c6e5443ad49c30a6f55b40a76872d61470ff18f584d8467b392f68c6e4936cfe"
+      },
+      {
+        "path": "<cwd>/setup.jest.ts",
+        "overwrite": false,
+        "sha256": "7b221babcf454c9646175d00cc394abd5c6d929b5d0688d722514396f17d2852"
+      },
+      {
+        "path": "<cwd>/src/app/app.component.ts",
+        "overwrite": false,
+        "sha256": "2082fa490bb912d9b1b62f73517b6ee92d7bb00e03202ec7200c4d72c4badf05"
+      },
+      {
+        "path": "<cwd>/src/bootstrap.ts",
+        "overwrite": false,
+        "sha256": "5d262772ef88059240489e8e25129dbc74363118259c5861bef60500e1fe8584"
+      },
+      {
+        "path": "<cwd>/src/main.ts",
+        "overwrite": false,
+        "sha256": "140595e7c62267ffb2c388c80ad1e81352e6f3f15f8c6cca79b641f4e28dbb99"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "a10f0d9a67c3f22c052edcbc3e3de5f7ef122f56daa9b5762283396b07c90073"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "ae26583508b10ed50e0c957b58d56118a2cbc8f48d3e8b6c321ae5c5e2be9b25"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "c4a6af2211bd78fadf0ba13420a56d15d1dbc4df2d1063ec8343ebb1f26dfdad"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "a9c57e8bd5bffaad145b63157cedb936fee9388cb6ef66cbab28954c748845b9"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "3921a0c5c726247c02eb560455d65dafb09787f999a646aca5fe6e19db361022"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "1949780da2f5547b30a284b5f7caf1bbbf3079286670e8e1b8df7508153e7b06"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.ts",
+        "overwrite": true,
+        "sha256": "d90218fb54adcd304cee07dc472c3374bedc9ea8c3447c2182782ac5efe9faf1"
+      },
+      {
+        "path": "<cwd>/tsconfig.app.json",
+        "overwrite": false,
+        "sha256": "9afb171932f86b330534a3ba0ef07c0e3b866bdb2c1b191c8942f85ebde68af2"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "4e9869281dc9998eb641bf2cc83162b4c6251a0c09160b7140d72c10159ca517"
+      },
+      {
+        "path": "<cwd>/tsconfig.spec.json",
+        "overwrite": false,
+        "sha256": "86988709602e140dff512d249da1d0c5a81394cf9ef7e0db7db7b42bfbe25445"
+      },
+      {
+        "path": "<cwd>/webpack.config.js",
+        "overwrite": false,
+        "sha256": "84f3e644447187430167798149371578302b53ae8b6f9e80c493a442acd1e01d"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-concourse",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "MarketDirectory"
+    ],
+    "fileCount": 26,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "27fca6f513e55285b2c802fa42aa98da29fab023f02947a50e5c4ca048f993df"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "db665653df5168f6007b173e401550fe0c241fe9968d72b38febc6281be6b155"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "6c3a0afb0a61fda07cf7cd7e5f41a000bc7b522e6c6d17ae58995ea2e6d5cd3b"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "717f546bcaa542ba27caa87acb538de775d202f706203a94b3ca23f74d5dbb0b"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "1db80d51becd013d217a03fe0ac6145c815f0c4dce4af1468a96b5d1e1512282"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "7683486db2941a2809a8bad8ccbd3876f4ca0f218a28bfce09430b62b0911c16"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "fcd7071005edf7331a1464041a7a2c2de2269abac1e324fc43eab7c67f447eaa"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "24716fdfcc35febe0c66a08f2d32e4ff0ac763ed469acace93285c4cdd822b46"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "784da9db18c11cedb656e8fed8ed0041bd5183c5dddcf593adccf44fe72a0890"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "d33d3f18e81843818a9b78dc461012309ee0e7204c987c3f13bbe877a1c9eb58"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "41099b9ec72404eb8e5281ef21f8617b8151dc8982a73a66ad240ea45d684025"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "121659c99cf8292889f351bba0e7a86596dd529537c0249f9f0573a274ded219"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "f020a2c4a1167a79aff4cc3648c5af2c5ce6bf6c7ee4f9add4fdeb3a4fee8222"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "11d2ceb6c370b0a1d6045a12dde44b6c007fb23e45f7bda949f30c791eb0595e"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "bb6610952e8363a220e4ef7bea0976fb27575b120984546d9e7638e77143d1f7"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "b964591beba7a03d3175ea7e6f5b9042fe5388ddb850218ae1eee132298fd1c3"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "7e96f29f21c148cba13a2a9e713f6b7e6f736e65a158069dec9fdad2567dfffa"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "de66b13a2cc5c2be22946eeb629eabbe5253770cf5169b28cb20ed7d064d0cfa"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "9d891efa5f6a45ecb983c7811602b8cf5b461195dbb9e6b4ebd76dfc220dc8ff"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-console",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "StationConsole"
+    ],
+    "fileCount": 17,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "bb31d0ca316fbb22f43dd9979a30b33bf5ffa35ca9f562ccfe5b77bd05c24094"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "480ef56cedeec41d6a34fddbd4cd4cc0e278c70c82dd77844be6367aaf53eb78"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "ebddf5fdc76e93ac23bc1ee3383926df2e24f2729ee2b100929ba0468e281dd9"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "d31ab314ff8317e3e8ca469d44cf6c460f0747344e55bd1fd38aead1b9ebaa28"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "914d9c068f67c0333770ca6ef9c9ad06ad21f2d17d126b3845f712038b779dc2"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "27b941a2bfd3f98ebb54f27f5d10b483a826352197e86a646ee6663dab6eaf1c"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "44ca9b94a8ad249c27ed915f32c6b3e82e5aa504b3916041ecea5147d726205a"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "d0a0c2eadc7286819cfd79dea11f75f13df12d6b8c6555419ef055e44fec8435"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "a8ffdc06b1dbd7291684f2e805db0b181ecd63ec8cc9d0281ae17ed73530134d"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "5b33c7577d2f542ef69e5842441f3868fc14dd19916b359cb3836c36200fc541"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "47f0b88eafc2abb3a44a2e06348ede5fe82c93ba3ea36003ba6e84143ccc67b4"
+      },
+      {
+        "path": "<cwd>/src/slots.tsx",
+        "overwrite": true,
+        "sha256": "f66b671a685f92b7d15e53fa1a6f5403f5309632a3b8fff188170f5c734e3df3"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "d1a8583ba1f8fa71af7da71648c4a370e82df3938cd1ee2344469e2ca7efb56a"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-crew-services",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "CrewRoster",
+      "PayStatus"
+    ],
+    "fileCount": 26,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "7ac2c7c1c5e4b0ab0e39c50fed46f8b0fe62f5de315d7a8dbca7edad75cdf054"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "be7eb91e0ef89f041db7ea0ad0876c51bc251b7449a7a2d48d71a287782c337a"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "f2d3c751b052f082cb1b686535be46ba1d8786fd5721521969947d21b61c6955"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "626df0e1e93aba33e3b006f3d217d49d6e675bdd0130e27c25dd3d02a02f2eab"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "e418324d32af29e70eddcae92f1f0b3ece24be9ece03b0fa02449838bac63368"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "f28d4089f6f0a218051e9771d7a5e64ac0fad464cde29776fd276ee2b1520b12"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "73506d0257bc63d9b79ac66b339baa362c7ee4fd2d524334751ee35087ae888e"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "a64ca6fc04b96c0c47259bb3e7a50db2949958ad369d29595a820565a5d7c077"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "2bbae60e84dd23efb711258106a1445fa0df4e5aa7b00ccee17bb73bcfa055cd"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "ee4513e335e0da0e1520d93a1b1c678f1b3da49b113b314930c1171b9fbbea9c"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "bb79d220b1acaad7c63ed7e0f949ada01c8f53fda1ab78bd16b8d9c701187a20"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "65579994681362f0d13b64c19448c3e37359cc215387b38f303223485eed8c7b"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "89b861e1d7cab75a8dba4ebb9f875f600d5cf36ce2e3654eeafba783d4278399"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "0da8d377ffa903c1c5bc1be0ab30a6cc2320e5e8396bc861159f12a95b3cb6b2"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "a62246c1648f535294384e8810a7664351105129e4afcd96a7bc7fd2bcdd4a4e"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "91ef56da02341de30c87a82fe7fa834e266131daaf086a7f4dac3659e3b82a44"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "49001f82e06c5cc80ddad7702585e578f700a172006b6bd119dd107b1f0534c6"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "78dba9282697cd88f1e70dd0dd19a2fb72e8fbd7b84ea3413717f1da8154cb1f"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "9d891efa5f6a45ecb983c7811602b8cf5b461195dbb9e6b4ebd76dfc220dc8ff"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-docking-control",
+    "framework": "angular",
+    "bundler": "webpack",
+    "preservedCapabilities": [
+      "BerthTile",
+      "DockingBoard",
+      "TrafficLog"
+    ],
+    "fileCount": 30,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "93a2c803cde1bc40a88049e75e2dd1560c36bea7b7e9a7ad9912dde1ea86e573"
+      },
+      {
+        "path": "<cwd>/angular.json",
+        "overwrite": false,
+        "sha256": "1d5dd957fdd936ad622cee869dc54aaddfaaf885b96470d6352ca9e08c5ea3e6"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "99bfc3edef054ff3293d0169cc9a3e89f07e7b4061668994c8f904648d136a12"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "cbea3658bc22a52528148a2c69b5523710114eab84880dd0d9f76dca56589a1e"
+      },
+      {
+        "path": "<cwd>/jest.config.js",
+        "overwrite": false,
+        "sha256": "c528d1f227746af4a71307edaf6a257ef6395aeb6735ca37b582d9a61e8d62e6"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "439316c02eaf5af3418a5a1f1cdde917450d03280b704e83238c38ac73ca0676"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "40adf19b3e416bd7687866f323ef3b685ea48e19785b91a68f8962c48ad26e57"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "778c8ccd58a0dac5242b5516170666a1846d892b8c3011be720972d665af51ff"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "32e55fecc49af1a558037b4df77b8879ad3d2ca46c40bd9aa3500328071aeb55"
+      },
+      {
+        "path": "<cwd>/setup.jest.ts",
+        "overwrite": false,
+        "sha256": "7b221babcf454c9646175d00cc394abd5c6d929b5d0688d722514396f17d2852"
+      },
+      {
+        "path": "<cwd>/src/app/app.component.ts",
+        "overwrite": false,
+        "sha256": "fbf4d6afa11c94119d318894424e4b1680740d803db77c12c6660f2df6b53a02"
+      },
+      {
+        "path": "<cwd>/src/bootstrap.ts",
+        "overwrite": false,
+        "sha256": "4b3d5dc6e8239b565ed928dd539a4361cb88815003a1c207a28b4a3e884d5dc3"
+      },
+      {
+        "path": "<cwd>/src/main.ts",
+        "overwrite": false,
+        "sha256": "140595e7c62267ffb2c388c80ad1e81352e6f3f15f8c6cca79b641f4e28dbb99"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "1203f9dace0a63050842f43b5cdb36d136d6afb19bf3ed6816d01dd4fc92c057"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "30c9dbf94dc4f0ffcbca80a42efe981ec62f94f4d8364c52c0f19b5358f8bab4"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "63c37817550f17f5935b9ee648c4d965676ad69c440788ed6633af5d29a5d33a"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "7ce9e62b33c92da9afdb09d344999db76710db9a9cd3fdc278933180e76a058f"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "eba21f8e01e944b2adb69992d194acd28a549304acdc3fffe9a978a7b01de491"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "c0dea9df65c7cc5e7b1da72569bb66091372e1705722b51d3b9260c99cd0bada"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.ts",
+        "overwrite": true,
+        "sha256": "2fe3d8eb66b03e708cd6b00462d738ccf5f44fa96d55f476cd7df0a95098a457"
+      },
+      {
+        "path": "<cwd>/tsconfig.app.json",
+        "overwrite": false,
+        "sha256": "9afb171932f86b330534a3ba0ef07c0e3b866bdb2c1b191c8942f85ebde68af2"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "4e9869281dc9998eb641bf2cc83162b4c6251a0c09160b7140d72c10159ca517"
+      },
+      {
+        "path": "<cwd>/tsconfig.spec.json",
+        "overwrite": false,
+        "sha256": "86988709602e140dff512d249da1d0c5a81394cf9ef7e0db7db7b42bfbe25445"
+      },
+      {
+        "path": "<cwd>/webpack.config.js",
+        "overwrite": false,
+        "sha256": "4cd4701b407d374cadbc7e89fc4e715bf23581bdc5c5cf7d5bb03b798eca62ff"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-docking-simulation",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "DockingSimulation",
+      "ShipControl"
+    ],
+    "fileCount": 26,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "67ea3493b26499865d8a67dc7684083039f9a80d31e2b90909cfc84339db8f98"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "169012d2e9f5d2684af6dd798cba14a051ef9cc00e4f59b28c9bb72b9c9ebbde"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "a44f340a9d5db63d080a94cca12985d72bb801953348a63891f1ffb145e49b01"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "fddb3cb69cc890d4b7033664e73f988297b96de6d70699980e84ae7383514ba2"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "38c319528889c265edfbb869f37df419802208278c327634a55763f2515b49c2"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "d5cc8f23a27b21b80e8f0ebf3f045f3a996b7b8bc09c8f666d8fae9e7c607591"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "bd3099515042fe6d30bf249110ffe42fb2766fc60bcebc184738288ce9b25ec3"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "145b225c6c26e0ac8c7c42e2425ad72b03ff20cd190d8ac18ab67e22a0ee4b0b"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "645e1fc1237e35c96611928e30aa58469d1abb75479e494a51bd17ee90f3e270"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "8d0c8ba9853485c658d987bd28bde85183708e9ab4d823695a4761568361014a"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "adf8a3bea7c1fdef8986c7a54743d82747214a8aaf2286e0164e29983ff23a1b"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "f3d953ac0e07f5867c6bc481d73b00b3944ee3797e29796f19ebb41742df3ecd"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "8cb0537d7ec3b4b39eac140428602f523d24e242818423b33d7bac2a9a5ebd19"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "90295447a61de254531bf867c8c43bf62d4adaccd9d1692c14841cc9003ab238"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "60d6949dcc42ebe7eea8c875de0dd5483848fc69111229984b985045c554cf04"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "28dc3ecbc465155930ceb43eb0cfe887868bce8597b0eb94ae012441e6a964a1"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "8c7cc702451924f18f1a44e05b4b3b318cb271cfd03e296cbb86d5bf3ada27ff"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "9bc8b4d47fa94c9ecbd6b4613071c7d51ca28eb6959c7b46368e6641f47248d9"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "9d891efa5f6a45ecb983c7811602b8cf5b461195dbb9e6b4ebd76dfc220dc8ff"
+      }
+    ]
+  },
+  {
+    "manifestDir": "meridian-station/meridian-life-support",
+    "framework": "angular",
+    "bundler": "webpack",
+    "preservedCapabilities": [
+      "AlertsFeed",
+      "ModuleStatus",
+      "TelemetryDashboard"
+    ],
+    "fileCount": 30,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "2fea6b1cf094406ec59854f840de30c9c53572c17dce2e1bc181ba55164d74bd"
+      },
+      {
+        "path": "<cwd>/angular.json",
+        "overwrite": false,
+        "sha256": "ad1d7fcd276ce8cb1649574125b1804146a3aaadea033788568574f0518b4095"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "a5cf3ea4c0365d3eb96e0e3d17a362c2d0ad9d13f364211acf55d08b2cbde403"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "d1721409cf33499d12816d398a7dad923068967a85c075b1bf78cbd925193444"
+      },
+      {
+        "path": "<cwd>/jest.config.js",
+        "overwrite": false,
+        "sha256": "c528d1f227746af4a71307edaf6a257ef6395aeb6735ca37b582d9a61e8d62e6"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "70751c0f1c1eefe51d8a48788795328113dbf2fbdd16aa08de0cb8fee8e1b5c9"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "10e1f4f9c3cb922012e68a352f8707e72c312b3f50544e8a2139f808702eb6f1"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "55c1bf90a7da83058e361b7107ebdaceb1f2169fe581113ee62e84efc49fc847"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "35200fdaa3d0c701903713a6603fa561c1dff6dc91d5c60135c4ed7159df61c0"
+      },
+      {
+        "path": "<cwd>/setup.jest.ts",
+        "overwrite": false,
+        "sha256": "7b221babcf454c9646175d00cc394abd5c6d929b5d0688d722514396f17d2852"
+      },
+      {
+        "path": "<cwd>/src/app/app.component.ts",
+        "overwrite": false,
+        "sha256": "aac4dd9c207221d8a7b8dce440e64c336e5ffe49abad26914416802f9c7f0cd4"
+      },
+      {
+        "path": "<cwd>/src/bootstrap.ts",
+        "overwrite": false,
+        "sha256": "3b0a4c826de10c4f1deecce29c3c067f528351f58bfd14c89c61dfdfd32531e8"
+      },
+      {
+        "path": "<cwd>/src/main.ts",
+        "overwrite": false,
+        "sha256": "140595e7c62267ffb2c388c80ad1e81352e6f3f15f8c6cca79b641f4e28dbb99"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "d99a1111aa2a0e45926edbdc136aa7035361a77f4af422374a94675c8c61b103"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "e11e0c7a5a7b1e63f47ea7e91a521977122324ee85cacdabbaf9d3c8abd29a9d"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "d9a6d900ed09801a97211682c7dcc8c86365fbb21ec89c7283bb08d2ac4f2002"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "cd377f352b007e8ced4afe150312b99e8819f2f91ceea27fc347a34395b02cd2"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "68381296f1af02b742d98d0721b0cf0bb0cdbb86ef1183bed8d925d7e6b11f46"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "1e5563238427d9608faa3f2f3d8a0ab6fa08271d1c3e488ff84667ba9fb208f0"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.ts",
+        "overwrite": true,
+        "sha256": "c08da15b057f9a80291f0f053a05af794dff2477241440a46a001bf762fa0b73"
+      },
+      {
+        "path": "<cwd>/tsconfig.app.json",
+        "overwrite": false,
+        "sha256": "9afb171932f86b330534a3ba0ef07c0e3b866bdb2c1b191c8942f85ebde68af2"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "4e9869281dc9998eb641bf2cc83162b4c6251a0c09160b7140d72c10159ca517"
+      },
+      {
+        "path": "<cwd>/tsconfig.spec.json",
+        "overwrite": false,
+        "sha256": "86988709602e140dff512d249da1d0c5a81394cf9ef7e0db7db7b42bfbe25445"
+      },
+      {
+        "path": "<cwd>/webpack.config.js",
+        "overwrite": false,
+        "sha256": "2bee874f273e27f995bb86b03b1baccfb2e3d95896b9e6120c8b47822392ac5f"
+      }
+    ]
+  }
+]

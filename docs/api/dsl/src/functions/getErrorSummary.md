@@ -8,7 +8,7 @@
 
 > **getErrorSummary**(`errors`): `string`
 
-Defined in: [packages/dsl/src/validator.ts:386](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L386)
+Defined in: [packages/dsl/src/validator.ts:335](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L335)
 
 Get a single-line summary of validation errors
 

@@ -46,7 +46,7 @@ jest.mock('../../framework/loader', () => ({
   resolveFrameworkVariant: jest.fn(() => undefined),
 }));
 
-import { remoteGenerateCommand } from '../remote-generate';
+import { remoteGenerateCommand } from '../remote/generate';
 import { parseAndValidateDirectory } from '@seans-mfe/dsl';
 import { generateAllFiles } from '@seans-mfe/codegen';
 
@@ -72,7 +72,7 @@ describe('remote:generate --dry-run plans what the writer will do (#340)', () =>
   const planFor = async (
     files: Array<{ path: string; content: string; overwrite: boolean }>,
   ) => {
-    mockGenerate.mockResolvedValue({ files, preservedCapabilities: [] } as never);
+    mockGenerate.mockResolvedValue({ files, preservedCapabilities: [], diagnostics: [] } as never);
     const result = await remoteGenerateCommand({ dryRun: true });
     return result.plannedChanges ?? [];
   };

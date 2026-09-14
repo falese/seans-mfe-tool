@@ -87,4 +87,29 @@ module.exports = tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  {
+    // The extraction boundary (docs/generator-extraction-plan.md): these three
+    // packages are destined to ship as a standalone generator, so an unused
+    // import here is a defect, not a note. Escalated from the repo-wide 'warn'
+    // after it turned out unified-generator.ts was importing 14 symbols it only
+    // re-exports and render-model.ts another 4 — invisible for the whole
+    // ADR-061 packages migration, because a warning fails nothing.
+    //
+    // The rest of the repo stays at 'warn': raising it everywhere at once would
+    // pull packages/runtime and packages/plugin-api into an unrelated change.
+    files: ['packages/contracts/src/**/*.ts', 'packages/dsl/src/**/*.ts', 'packages/codegen/src/**/*.ts'],
+    ignores: ['packages/*/src/**/__tests__/**', 'packages/*/src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+      // These three packages are a library, not a CLI (ADR-094). A library
+      // that prints cannot be embedded: every consumer has to muzzle it, and
+      // under --json its output lands in the stream the envelope contract
+      // reserves for exactly one CommandResult line (ADR-018). They report
+      // through GeneratorDiagnostic; the CLI decides what reaches a terminal.
+      'no-console': 'error',
+    },
+  },
 );

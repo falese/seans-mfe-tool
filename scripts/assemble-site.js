@@ -12,7 +12,9 @@
  * the most failure-prone steps in the pipeline, and they must not be able to
  * take the map down with them. So:
  *
- *   - The map and the landing page are copied unconditionally.
+ *   - The map, the reference pages and the landing page are copied
+ *     unconditionally — each is a self-contained HTML file already in docs/,
+ *     so copying one cannot fail for a reason the others survive.
  *   - If the deck is missing, the landing page's deck card is removed rather
  *     than left pointing at a file that was never published. A dangling link
  *     would fail check-site.js — correctly, since it would 404 for readers.
@@ -41,8 +43,26 @@ const warn = (msg) => console.log(`::warning::${msg}`);
 
 fs.mkdirSync(path.join(outDir, 'slides'), { recursive: true });
 
-// ---- the system map: copied verbatim, always ----
-fs.copyFileSync(path.join(docs, 'system-map.html'), path.join(outDir, 'system-map.html'));
+/**
+ * Self-contained pages copied verbatim, always.
+ *
+ * Each is authored in docs/ as a complete standalone document with no external
+ * assets — which is not a style preference: check-site.js rejects an externally
+ * fetched stylesheet, script or font, because a remote asset is one outage away
+ * from an unstyled page. Adding a page here means adding it to the `paths:`
+ * filters in .github/workflows/pages.yml too, or a change to it will not
+ * trigger a publish.
+ */
+const PAGES = ['system-map.html', 'cli-architecture.html', 'derived-contracts.html'];
+
+for (const page of PAGES) {
+  const from = path.join(docs, page);
+  if (!fs.existsSync(from)) {
+    console.error(`assemble-site: missing ${path.relative(repoRoot, from)} — it is linked from the landing page`);
+    process.exit(1);
+  }
+  fs.copyFileSync(from, path.join(outDir, page));
+}
 
 // ---- the landing page: deck card kept only if the deck exists ----
 let landing = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
@@ -86,6 +106,7 @@ if (!deckBuilt) {
 }
 
 console.log(
-  `assemble-site: OK — system map + landing page published to ${path.relative(repoRoot, outDir)}; ` +
+  `assemble-site: OK — ${PAGES.length} page(s) + landing page published to ` +
+    `${path.relative(repoRoot, outDir)}; ` +
     `slide deck ${deckBuilt ? 'included' : 'OMITTED (build failed or skipped)'}`,
 );
