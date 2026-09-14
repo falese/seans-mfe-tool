@@ -34,6 +34,8 @@
       "@seans-mfe/plugin-api/*": ["./packages/plugin-api/src/*"],
       "@seans-mfe/plugin-adr": ["./packages/plugin-adr/src/index.ts"],
       "@seans-mfe/plugin-adr/*": ["./packages/plugin-adr/src/*"],
+      "sentinel": ["./packages/sentinel/src/index.ts"],
+      "sentinel/*": ["./packages/sentinel/src/*"],
       "@seans-mfe/framework-angular/*": ["./packages/framework-angular/src/*"]
     }
   },

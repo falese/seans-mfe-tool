@@ -12,7 +12,7 @@
     "examples/plugin-skeleton"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/contracts packages/dsl packages/codegen packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/plugin-coder packages/framework-react packages/framework-angular",
+    "build:packages": "tsc -b packages/sentinel packages/contracts packages/dsl packages/codegen packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/plugin-coder packages/framework-react packages/framework-angular",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
@@ -144,7 +144,8 @@
     "inquirer": "^12.0.1",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "sentinel": "file:packages/sentinel"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

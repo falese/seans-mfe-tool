@@ -1,0 +1,28 @@
+{
+  "name": "sentinel",
+  "version": "0.1.0",
+  "description": "Reusable governance+generation kernel — a model reads wide, emits a typed artifact, a deterministic floor executes it. Ports and the HardenedCheck floor; host-agnostic (PDR-010, ADR-089)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}
