@@ -1,6 +1,6 @@
 /**
  * Presentation handle contract tests (ADR-056) — the framework-neutral half
- * of the thin waist: guards plus the host/MFE negotiation primitive.
+ * of the interface: guards plus the host/MFE negotiation primitive.
  */
 import {
   assertPresentationHandles,

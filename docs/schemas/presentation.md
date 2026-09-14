@@ -2,7 +2,7 @@
 
 Source of truth: `packages/contracts/src/presentation.ts`.
 
-Refs: ADR-056 (thin waist), ADR-036 (open-string framework).
+Refs: ADR-056 (interface), ADR-036 (open-string framework).
 
 ---
 
@@ -114,7 +114,7 @@ Discriminate on `kind === 'imperative-dom'` to tell the two apart.
 
 ## PresentationHandles bundle
 
-What an MFE exposes across the waist. The imperative floor is mandatory; native handles
+What an MFE exposes across the interface. The imperative floor is mandatory; native handles
 are optional integration upgrades.
 
 ```typescript

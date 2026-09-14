@@ -276,7 +276,7 @@ export class LayoutManager {
     const helpers: AdaptorHelpers = {
       session: this.config.session,
       hostFramework: this.config.hostFramework,
-      // Host context crosses the waist as DATA (ADR-060 value-injection); the
+      // Host context crosses the interface as DATA (ADR-060 value-injection); the
       // island re-provides its own framework context from these values.
       providerValues: this.config.providerValues,
       sendAction: (actionType, data) => this.sendAction(experience.id, actionType, data),

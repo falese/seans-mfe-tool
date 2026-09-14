@@ -8,7 +8,7 @@
 
 ## The whole system in one picture
 
-The runtime has **two halves joined by a thin waist**:
+The runtime has **two halves joined by one interface**:
 
 - **The MFE side** is a *sealed unit*. It is built in some framework (React,
   Angular, …), but from the outside that framework is invisible. It exposes a
@@ -29,7 +29,7 @@ flowchart LR
         REG --- DAEMON --- LM
     end
 
-    subgraph WAIST["THIN WAIST — the only things that cross"]
+    subgraph INTERFACE["THIN INTERFACE — the only things that cross"]
         direction TB
         CAP["capability contract<br/><i>load · authorize · render · health · query · state</i>"]
         HANDLE["presentation handle<br/><i>mount(el, props) → unmount</i>"]
@@ -53,14 +53,14 @@ The design test (ADR-056): *would Kubernetes reach into a container to do this?*
 If no, neither does the control plane. An MFE is a pod; the capability contract
 is its readiness/liveness probe; the presentation handle is its exposed port; the
 control plane is the scheduler. Framework cleverness is allowed — but only on the
-host side, behind the waist.
+host side, behind the interface.
 
-The rest of this document walks the two halves and the waist between them:
+The rest of this document walks the two halves and the interface between them:
 
 1. **The MFE side** — the `BaseMFE` lifecycle every unit inherits.
 2. **The control plane** — daemon, registry, LayoutManager, and the end-to-end
    composition flow (with ABC Kids).
-3. **The thin waist** — the presentation handle, the imperative floor, and how
+3. **The interface** — the presentation handle, the imperative floor, and how
    framework handling stays quarantined.
 
 ---
@@ -312,10 +312,10 @@ placement survives release and rebinds when the provider returns (ADR-066).
 
 ---
 
-## Part 3 — The thin waist: presentation, framework handling, the imperative floor
+## Part 3 — The interface: presentation, framework handling, the imperative floor
 
 `render` as a capability means **"produce/declare the presentation handle,"** never
-"create a React root." Exactly two things cross the waist (ADR-056):
+"create a React root." Exactly two things cross the interface (ADR-056):
 
 1. the **neutral capability contract** (Part 1), and
 2. the **presentation handle**.
@@ -350,7 +350,7 @@ This is the integration path; it accepts framework-singleton coupling and is a
 choosing whether to share a namespace.
 
 The in-tree React provider is **deferred** (ADR-056) until a concrete shared-context
-need justifies the coupling. It slots in behind the same waist with no change to
+need justifies the coupling. It slots in behind the same interface with no change to
 the contract, the core, or the daemon.
 
 ### Framework handling: negotiation, quarantined
@@ -420,7 +420,7 @@ examples/abc-kids/
    the registry owns what renders for whom.
 3. **The imperative floor is universal.** Every MFE mounts as an isolated island
    anywhere; native in-tree composition is an optional, declared upgrade.
-4. **Framework cleverness is quarantined.** Allowed, but only behind the waist, in
+4. **Framework cleverness is quarantined.** Allowed, but only behind the interface, in
    providers/abstracts — enforced by the boundary test, not by convention.
 5. **One socket, uniform identity.** Slots and nested hosts share one connection
    via `DaemonChannel`; identity is the host's, never spoofable by an MFE.
@@ -438,7 +438,7 @@ examples/abc-kids/
 - ADR-026 — Load capability atomic operation
 - ADR-040 — Manifest-declared handler sources
 
-**Runtime composition (the control plane + waist)**
+**Runtime composition (the control plane + interface)**
 - ADR-054 — Control-plane message protocol (`@seans-mfe/contracts/messages`)
 - ADR-055 — LayoutManager — daemon-driven slot composition
 - ADR-056 — MFE presentation boundary (polyglot VM; imperative floor + native handle)

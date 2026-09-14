@@ -10,4 +10,4 @@
 
 Defined in: [packages/contracts/src/presentation.ts:21](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/presentation.ts#L21)
 
-How an MFE can be presented across the waist. Open string (ADR-036).
+How an MFE can be presented across the interface. Open string (ADR-036).

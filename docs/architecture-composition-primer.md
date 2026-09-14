@@ -62,7 +62,7 @@ flowchart LR
       REG --- DAEMON --- LM
     end
 
-    subgraph WAIST["THE THIN WAIST"]
+    subgraph INTERFACE["THE THIN INTERFACE"]
       direction TB
       W1["capability contract"]
       W2["presentation handle (imperative floor)"]
@@ -92,11 +92,11 @@ guests are sealed; the scheduler is the only thing that's clever.
 
 ---
 
-## 3. The thin waist: exactly four things cross
+## 3. The interface: exactly four things cross
 
 The entire contract between host and MFE is four narrow things — nothing else:
 
-| Crosses the waist | Direction | What it is |
+| Crosses the interface | Direction | What it is |
 |---|---|---|
 | **Capability contract** | both | the 10 neutral lifecycle capabilities (load, authorize, render, health, query, emit, updateControlPlaneState, …) |
 | **Presentation handle** | host ← MFE | the guaranteed `mount(element) → unmount` imperative floor; any host mounts any MFE as an isolated island |
@@ -117,15 +117,15 @@ This is the hinge the whole architecture turns on.
 instance, same version, same crash domain. Isolation and neutrality are gone.
 
 **This platform (value-injection).** The host passes the provider *values* across
-the waist as data; each MFE **re-provides its own context** from those values,
+the interface as data; each MFE **re-provides its own context** from those values,
 inside its own root.
 
 ```mermaid
 flowchart LR
     HOSTV["Host owns the values<br/>theme=dark · locale=en-AU · auth=…"]
-    HOSTV -- "props.hostContext (data)" --> WAIST{{thin waist}}
-    WAIST --> ISL1
-    WAIST --> ISL2
+    HOSTV -- "props.hostContext (data)" --> INTERFACE{{interface}}
+    INTERFACE --> ISL1
+    INTERFACE --> ISL2
 
     subgraph ISL1["MFE island · React 18 (own root)"]
       P1["re-provides<br/>&lt;ThemeProvider value=hostContext.theme&gt;"]
@@ -202,7 +202,7 @@ end-to-end.
 
 | Property | Why it holds |
 |---|---|
-| **Polyglot** | React, Angular, HTML, JSON all compose through one neutral waist + imperative floor |
+| **Polyglot** | React, Angular, HTML, JSON all compose through one neutral interface + imperative floor |
 | **Multi-version React** | separate roots = separate React instances; React 17 and 19 coexist in one shell |
 | **Shared context** | host values injected as data; each island re-provides — no shared tree |
 | **Self-healing** | MFE `error` phase + slot-scoped fallback + control-plane re-resolution |
@@ -224,7 +224,7 @@ Slot granularity and data-injection cover the real composition use cases.
 |---|---|---|
 | Control-plane wire protocol | ADR-054 | `packages/contracts/src/messages.ts` |
 | Daemon-driven slot composition | ADR-055 | `packages/runtime/src/layout-manager.ts` |
-| Thin waist + imperative floor | ADR-056 | `packages/contracts/src/presentation.ts`, `packages/runtime/src/imperative-handle.ts` |
+| Thin interface + imperative floor | ADR-056 | `packages/contracts/src/presentation.ts`, `packages/runtime/src/imperative-handle.ts` |
 | One socket, many slots | ADR-057 | `packages/runtime/src/daemon-channel.ts` |
 | MFE-provided layout | ADR-058 | `LayoutManager.provideSlot` |
 | Swappable control plane | ADR-059 | `packages/runtime/src/base-control-plane.ts` |

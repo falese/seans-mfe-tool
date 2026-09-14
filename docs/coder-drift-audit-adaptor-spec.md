@@ -98,7 +98,7 @@ receives it.
 The model is told (§5) that `enforces` in any finding **must** be an ADR id present in this bundle —
 it may not invent one.
 
-## 5. `prompts/system.md` — the output contract IS the narrow waist
+## 5. `prompts/system.md` — the output contract IS the interface
 
 Must state, unambiguously:
 
@@ -159,7 +159,7 @@ the output —
 3. every `hardened.pattern` compiles as a `RegExp` (`new RegExp(pattern)` doesn't throw);
 4. every `enforces` is an ADR id that appeared in that fixture's bundle (no invented decisions).
 
-This proves the narrow-waist holds — it does **not** prove the findings are *right*. That's 6b.
+This proves the interface holds — it does **not** prove the findings are *right*. That's 6b.
 
 ### 6b. platform-side (Sentinel/SMT, ADR-090) — git-mined recall + precision
 

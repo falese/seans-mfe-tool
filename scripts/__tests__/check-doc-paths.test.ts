@@ -22,12 +22,12 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'scripts', 'check-doc-paths.js');
 
 /** Run the gate against a scratch docs/ tree containing exactly `body`. */
-function runAgainst(body: string): { code: number; out: string } {
+function runAgainst(body: string, filename = 'probe.md'): { code: number; out: string } {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'doc-paths-'));
   try {
     fs.mkdirSync(path.join(scratch, 'docs'), { recursive: true });
     fs.mkdirSync(path.join(scratch, 'scripts'), { recursive: true });
-    fs.writeFileSync(path.join(scratch, 'docs', 'probe.md'), body);
+    fs.writeFileSync(path.join(scratch, 'docs', filename), body);
     // The script resolves paths against its own parent directory, so it has to
     // run from inside the scratch tree rather than against the real repo.
     fs.copyFileSync(SCRIPT, path.join(scratch, 'scripts', 'check-doc-paths.js'));
@@ -67,6 +67,26 @@ describe('check-doc-paths', () => {
     const { code } = runAgainst(
       'Built to `packages/contracts/dist` and staged at ' +
         '`dist/runtime/node_modules/@seans-mfe/contracts`.\n',
+    );
+    expect(code).toBe(0);
+  });
+
+  it('fails a broken citation in an HTML page', () => {
+    // The schematic pages (cli-architecture, runtime-architecture) are HTML and
+    // mark citations with <code>, not backticks. They are the most
+    // reader-facing docs in the repository and were ungated until this case.
+    const { code, out } = runAgainst(
+      '<p>See <code>packages/contracts/src/moved-away.ts</code>.</p>\n',
+      'probe.html',
+    );
+    expect(code).toBe(1);
+    expect(out).toContain('moved-away.ts');
+  });
+
+  it('passes a resolving citation in an HTML page', () => {
+    const { code } = runAgainst(
+      '<p>See <code>packages/contracts/src/index.ts</code>.</p>\n',
+      'probe.html',
     );
     expect(code).toBe(0);
   });
