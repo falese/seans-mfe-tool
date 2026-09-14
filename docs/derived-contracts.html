@@ -706,6 +706,19 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
       result field is published as always present.
     </p>
 
+    <div class="note">
+      <b>The two halves read different sources</b>
+      <p>
+        The output half comes from the TypeScript checker reading <code>src/</code>.
+        The input half comes from <code>Config.load()</code>, which reads
+        <code>oclif.manifest.json</code> — generated from the compiled
+        <code>dist/</code>. Regenerating schemas without rebuilding derives one half
+        from source and the other from the last build, so a flag's description can
+        differ between the two halves of one file. Run <code>npm run build</code>,
+        which recompiles, regenerates the manifest, then the schemas.
+      </p>
+    </div>
+
     <h3>Two loud failures</h3>
 
     <p>

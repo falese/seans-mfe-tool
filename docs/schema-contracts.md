@@ -198,6 +198,14 @@ Three behaviours worth knowing:
 The program is built with `strictNullChecks: true` regardless of the repo's tsconfig, so
 `string | null` does not collapse to `string` in the published schema.
 
+**The two halves read different sources.** The output half above comes from the
+TypeScript checker reading `src/`. The input half (§4.3) comes from
+`Config.load()`, which reads `oclif.manifest.json` — itself generated from the
+compiled `dist/`. Regenerating schemas without rebuilding therefore derives one
+half from source and the other from the last build, and a flag's `description`
+can differ between the two halves of one file. Run `npm run build`, which
+recompiles, regenerates the manifest, then the schemas.
+
 ### 4.5 Assembly
 
 ```json

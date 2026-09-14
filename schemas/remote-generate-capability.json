@@ -16,7 +16,7 @@
       },
       "force": {
         "type": "boolean",
-        "description": "Re-seed developer-owned scaffolding, replacing your edits to it (ADR-089). Does not touch a capability that is already implemented."
+        "description": "Re-seed developer-owned scaffolding, replacing your edits to it (ADR-091). Does not touch a capability that is already implemented."
       }
     },
     "required": [
