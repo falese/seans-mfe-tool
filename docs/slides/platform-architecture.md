@@ -10,7 +10,11 @@ style: |
     font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: #0d1117;
     color: #e6edf3;
+    font-size: 21px;
   }
+  section pre, section pre code { font-size: 0.82em; line-height: 1.35; }
+  section table { font-size: 0.86em; }
+  h1 { font-size: 1.9em; }
   section.lead {
     justify-content: center;
     text-align: center;
@@ -122,7 +126,7 @@ style: |
 
 <div class="highlight">
 
-The unit of composition should be a **domain capability** — not a page.
+The unit of composition is a **domain capability**, not a page.
 
 </div>
 
@@ -130,128 +134,182 @@ The unit of composition should be a **domain capability** — not a page.
 
 # Define once. Generate everything.
 
-A team writes one YAML file. The CLI generates the entire project.
+A team writes one YAML file. The CLI generates the project.
 
 ```yaml
-name: play-game
+name: abc-kids-animal-sounds
+version: 1.0.0
 type: remote
+language: typescript
 framework: react
+bundler: rspack
+
 capabilities:
-  - name: PlayGame
-    inputs: { gameId: id! }
-  - name: ShowCover
-    inputs: { gameId: id! }
+  - PlayGame:
+      type: domain
+  - Load:
+      type: platform
+      lifecycle:
+        before: [{ onLoadBegin: { handler: onLoadBegin } }]
 ```
 
-**What gets generated from this manifest →**
-
-| Artifact | Description |
-|---|---|
-| Bundler config | `rspack.config.ts` — Module Federation remote entry |
-| MFE lifecycle | `BaseMFE` subclass with `load()`, `render()`, `health()` |
-| GraphQL BFF | Resolvers + schema wired to capability handlers |
-| Dockerfile | Multi-stage, framework-specific, production-ready |
-
-`framework` and `bundler` are manifest fields. Changing them regenerates the whole project.
+`framework` and `bundler` are manifest fields. Changing them regenerates the project.
 
 ---
 
-# One pattern. Four layers.
+# What comes out
 
-The same abstraction holds at every level of the platform.
+| Generated | File |
+|---|---|
+| Bundler config | `rspack.config.js` — Module Federation remote entry |
+| MFE lifecycle | `src/platform/base-mfe/mfe.ts` — a `RemoteMFE` subclass |
+| Slot contract | `src/slots.tsx` — when the manifest declares `providesSlots` |
+| GraphQL BFF | `bff/` — when the manifest declares one |
+| Container | `Dockerfile`, `nginx.conf`, `docker-compose.yaml` |
 
-| Layer | Abstract base | Concrete implementations |
+Files fall into two groups. Generator-owned files are re-stamped on every run, so a platform change reaches them by regenerating. Developer-owned files are seeded once and then left alone, and `--force` re-seeds scaffolding but never an implemented capability.
+
+Across the two reference fleets: 21 MFEs, 435 files, 253 generator-owned and 182 developer-owned.
+
+---
+
+# One pattern, four layers
+
+The same shape holds at every level.
+
+| Layer | Abstract base | Concrete |
 |---|---|---|
 | MFE runtime | `BaseMFE` | `RemoteMFE`, `AngularRemoteMFE` |
 | CLI commands | `BaseCommand` | every oclif command |
 | Framework plugins | `BaseFrameworkPlugin` | `ReactRspackPlugin`, `AngularWebpackPlugin` |
-| **Control plane** <span class="pill">new</span> | **`BaseControlPlane`** | **`NodeControlPlane`, `RustControlPlane`** |
+| Host control plane | `BaseControlPlane` | the host supplies its own |
 
 <br/>
 
 <div class="highlight">
 
 **Abstract base owns the shape. Concrete owns the how.**
-Swap any implementation — Node daemon ↔ Rust daemon ↔ mock — without touching the host.
 
 </div>
 
+`BaseControlPlane` is the host-side lifecycle: it starts the transport, the registry client and the `LayoutManager` in order, and stops them in reverse. A shell subclasses it. The repository ships the base and the services, not a concrete host.
+
 ---
 
-# The control plane in three lines
+# The control plane is two services and a manager
 
-`BaseControlPlane` bundles daemon + registry + LayoutManager into one lifecycle unit.
+`packages/control-plane` is a registry and a daemon, each a GraphQL server in its own image. Neither imports anything from `packages/`.
 
-```typescript
-const cp = new NodeControlPlane({
-  container:    document.getElementById('app'),
-  session:      { sessionId, user, jwt },
-  daemonUrl:    'ws://localhost:3001/graphql',
-});
-
-await cp.start();   // daemon → registry → LayoutManager, wired in order
-await cp.stop();    // LayoutManager → registry → daemon, reversed
+```
+registry                    daemon                     the shell
+├─ serves rules.json        ├─ subscribes to registry   ├─ BaseControlPlane
+├─ componentUpdate          ├─ fans out over            │   └─ LayoutManager
+│  subscription             │   graphql-ws              │       ├─ slots
+└─ register(describe        └─ sendMessage for          │       ├─ adaptors
+   + routes)                   actions going up         │       └─ DaemonChannel
 ```
 
 <div class="columns">
 
 <div>
 
-**The host never touches:**
+**The host does not touch**
 - `LayoutManager`
 - slots or adaptors
 - the transport
-- DaemonChannels
+- `DaemonChannel`
 
 </div>
 
 <div>
 
-**The host gets:**
+**The host reads**
 - `status` — idle / starting / running / stopped / error
-- `activeSlots` — what's mounted right now
-- `uptime` — ms since start()
+- `activeSlots` — what is mounted
+- `uptime` — ms since `start()`
 
 </div>
 
 </div>
+
+---
+
+# Composition is authored, then compiled
+
+A fleet writes one composition document. `compose:build` compiles it to the payload the registry serves (ADR-083).
+
+```
+control-plane.yaml          →   compose:build   →   control-plane/rules.json
+one per fleet                                        generated, never hand-edited
+```
+
+Slot addresses are assigned names, never measured positions (ADR-066):
+
+```
+games.{gameId}      sidebar.status      header.profile
+```
+
+One grammar, in `packages/contracts/src/slot-grammar.ts`, is used twice: the DSL validates `providesSlots` against it at design time, and the runtime matcher compiles against it at run time. `compose:validate --check` fails when the committed payload no longer matches the source.
 
 ---
 
 # Any MFE. Any framework. One shell.
 
-Every MFE exposes a guaranteed polyglot floor. React MFEs can opt in to in-tree composition.
+Every MFE exposes a guaranteed mount. A host that shares the MFE's framework can opt into a native handle instead.
 
 ```
 React Shell  (hostFramework: 'react')
 │
 ├── Slot: main ──────► React MFE        → NativeComponentHandle
-│                      PlayGame           shared Redux store, Router, ThemeProvider
+│                      PlayGame           shared store, router, providers
 │
 ├── Slot: sidebar ───► Angular MFE      → ImperativeMountHandle
-│                      ShowCover          isolated DOM island · bootstrapped in place
+│                      ShowCover          isolated DOM island
 │
 └── Slot: header ────► Vue MFE          → ImperativeMountHandle
-                       UserProfile        isolated DOM island · mounted in place
+                       UserProfile        isolated DOM island
 ```
 
 <div class="columns">
 
 <div>
 
-**ImperativeMountHandle** — guaranteed
-Every MFE exposes exactly one.
-Polyglot. Always safe. Always available.
+**ImperativeMountHandle** — mandatory
+`mount(element, opts) → unmount`.
+The host never needs to know the framework.
 
 </div>
 
 <div>
 
-**NativeComponentHandle** — opt-in
-`hostFramework: 'react'` activates it.
-Shared context. In-tree. Framework-native.
+**NativeComponentHandle** — optional
+`component: unknown`, tagged with its framework.
+Tagged, never inspected.
 
 </div>
+
+</div>
+
+---
+
+# Why that works
+
+Four links carry the polyglot property. None of them carries a framework name.
+
+| # | Link | Where |
+|---|---|---|
+| 1 | A slot address is an assigned name | ADR-066 / ADR-069 |
+| 2 | A rule binds experience to address as data | ADR-083 |
+| 3 | The imperative mount is mandatory | ADR-056 |
+| 4 | The native handle is tagged, not inspected | ADR-056 |
+
+<br/>
+
+`packages/runtime/src/__tests__/boundary.test.ts` parses import declarations across the neutral layers and fails on a framework import. The framework-specialized classes are exempt, because producing the native handle is what they do.
+
+<div class="highlight">
+
+A Vue MFE fills a React shell's slot because the shell only ever calls `mount(el)`.
 
 </div>
 
@@ -259,14 +317,13 @@ Shared context. In-tree. Framework-native.
 
 # Adding a framework = publishing a package
 
-Zero core changes required. The CLI resolves the framework plugin at runtime.
+No core change. The CLI resolves the framework plugin at run time (ADR-036).
 
 ```typescript
 // @seans-mfe/framework-vue — a new package, not a core PR
 class VueVitePlugin extends BaseFrameworkPlugin {
   readonly framework = 'vue';
   readonly bundler   = 'vite';
-  readonly defaultPort = 5173;
 
   async startDevServer(manifest, opts): Promise<DevServerHandle> { /* ... */ }
   async buildProduction(manifest, opts): Promise<BuildResult>    { /* ... */ }
@@ -274,38 +331,29 @@ class VueVitePlugin extends BaseFrameworkPlugin {
 }
 ```
 
-<br/>
-
-**Commands that Just Work™ for any plugin:**
+**Commands that resolve the plugin rather than branching on a name:**
 
 `build:dev` · `build:prod` · `build:docker` · `build:check` · `remote:init` · `deploy`
 
-<div class="highlight">
-
-Want Vite support? Publish `@seans-mfe/framework-vue-vite`. Done.
-
-</div>
+`framework` and `bundler` are open strings, not enums: an unknown value warns rather than failing validation.
 
 ---
 
 # Types are not documentation. Types are the platform.
 
-`@seans-mfe/contracts` is the shared vocabulary across every layer.
+`@seans-mfe/contracts` is the shared vocabulary, and depends on nothing.
 
 | Contract | Source of truth | Used by |
 |---|---|---|
-| CLI output envelope | `envelope.ts` | every command, every consumer |
-| Error hierarchy | `errors/` | CLI, daemon, registry |
-| Daemon wire protocol | `messages.ts` | daemon ↔ LayoutManager ↔ MFEs |
-| Presentation handle | `presentation.ts` | MFEs, host-side providers |
-| Framework plugin API | `framework-plugin.ts` | CLI commands, plugin authors |
-| Control plane API | `base-control-plane.ts` | host shells, concrete CP impls |
+| CLI output envelope | `contracts/envelope.ts` | every command, every consumer |
+| Error hierarchy | `contracts/errors/` | CLI, daemon, registry |
+| Daemon wire protocol | `contracts/messages.ts` | daemon ↔ LayoutManager ↔ MFEs |
+| Presentation handle | `contracts/presentation.ts` | MFEs, host-side providers |
+| Framework plugin API | `contracts/framework-plugin.ts` | CLI commands, plugin authors |
+| Lifecycle state machine | `contracts/platform-contract.ts` | runtime, DSL, codegen |
+| Host control plane | `runtime/base-control-plane.ts` | host shells |
 
-<br/>
-
-Every boundary is **validated at runtime** (Zod at ingress).
-Every contract is **versioned** and **published**.
-Prose docs are derived from types — **never the other way around**.
+Schemas are generated from the code that enforces them, then committed and diffed in CI.
 
 ---
 
@@ -345,7 +393,7 @@ Any shell operator installs and composes them.
 
 **Act 3 — Long**
 
-A community registry of domain-capability packs. Install `PlayGame`, `Checkout`, `UserProfile` the same way you install a React component library.
+A community registry of domain-capability packs, installed the way you install a component library.
 
 <div class="highlight">
 
@@ -360,29 +408,24 @@ Federation is the delivery mechanism. **Domain capability is the product.**
 ```
 Host Shell
 └── BaseControlPlane.start() / stop()
-    │
-    ├── LayoutManager          ← daemon-driven slot composition
-    │   ├── slots              ← one DOM section per experience
-    │   ├── adaptors           ← module-federation · html · json · custom
-    │   └── DaemonChannel      ← per-slot virtual WebSocket (ADR-057)
-    │
-    └── Daemon + Registry      ← action → resolution → experience
-        └── DaemonTransport    ← WebSocket / GraphQL subscription
+    ├── LayoutManager          ← desired-state slot composition
+    │   ├── slots · adaptors   ← module-federation · html · json · custom
+    │   └── DaemonChannel      ← per-slot virtual socket (ADR-057)
+    └── transport              ← graphql-ws to the daemon
+
+packages/control-plane          ← registry + daemon, two GraphQL services
 
 MFE (any framework)
-└── BaseMFE.load() → render() → health()
+└── BaseMFE                    ← ten capabilities, one middleware pipeline
     └── PresentationHandles
-        ├── ImperativeMountHandle   ← guaranteed polyglot floor
-        └── NativeComponentHandle[] ← opt-in framework-native upgrade
+        ├── ImperativeMountHandle   ← mandatory
+        └── NativeComponentHandle[] ← optional, tagged
 
-@seans-mfe/contracts            ← shared type vocabulary for all of the above
-
-BaseFrameworkPlugin             ← build-time: scaffold · codegen · build · docker
+@seans-mfe/contracts            ← shared vocabulary, depends on nothing
+BaseFrameworkPlugin             ← build time: scaffold · codegen · build · docker
 ```
 
-<br/>
-
-Full reference: `docs/architecture-whitepaper.md` · ADRs: `docs/architecture-decisions/`
+Drawn in full: `docs/cli-architecture.html`, `docs/runtime-architecture.html`.
 
 ---
 
@@ -393,8 +436,9 @@ Full reference: `docs/architecture-whitepaper.md` · ADRs: `docs/architecture-de
 **Repo:** `falese/seans-mfe-tool`
 
 **Docs:**
-`docs/architecture-whitepaper.md` — full technical white paper
-`docs/schemas/` — every platform type contract
-`docs/architecture-decisions/` — ADR-001 through ADR-059
+`docs/cli-architecture.html` — how the tooling is built
+`docs/runtime-architecture.html` — what runs after the CLI exits
+`docs/architecture-whitepaper.md` — the full technical white paper
+`docs/architecture-decisions/` — every architecture decision, with an index in `docs/spec.md`
 
 *Abstract base owns the shape. Concrete owns the how.*
