@@ -159,10 +159,14 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 
 - **No gate compiles the emitted Swift.** There is no Swift toolchain in CI.
   `packages/framework-swift/src/__tests__/native-contract-pin.test.ts` asserts the
-  *rendering* against `packages/contracts/src/platform-contract.ts` — every
-  state, every transition edge, both halves of every capability pair, the
-  `final` modifiers — but it is a text assertion, not a type check. Compilation
-  is verified by hand on a Mac.
+  *rendering* against `packages/contracts/src/platform-contract.ts`, but it is a
+  text assertion, not a type check. Compilation is verified by hand on a Mac.
+- **Most of that pin suite is circular.** The template renders from the same
+  contract objects the expectations read, so a contract change moves both sides
+  and stays green — verified by adding a seventh state. Those assertions catch
+  *template* drift only. Two assertions are not circular and carry the weight: a
+  frozen literal of the states and capabilities the Swift lane was built for,
+  and a check that every type `MFEBase` returns is declared in `Types.swift`.
 - **No GraphQL client is generated.** The data seam is a protocol the host
   implements; typed query structs would need schema introspection at codegen
   time.

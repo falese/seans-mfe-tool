@@ -163,10 +163,29 @@ generator-owned; the derived Swift is neither.
 
 - **Nothing compiles the emitted Swift.** There is no Swift toolchain in CI or in
   the dev container. `native-contract-pin.test.ts` asserts the *rendering*
-  against the TypeScript contract — both halves of every capability pair, the
-  state enum, the transition table, the `final` modifiers — but it is a text
-  assertion, not a type check. Compilation and the SPM plugin are verified by
-  hand on a Mac. This is the main honest weakness of the feature.
+  against the TypeScript contract, but it is a text assertion, not a type check.
+  Compilation and the SPM plugin are verified by hand on a Mac. This is the main
+  honest weakness of the feature.
+- **Most of that pin suite is circular, and an earlier draft of this ADR said
+  otherwise.** It claimed the suite "fails the moment the TS contract gains a
+  state the Swift rendering does not carry." A reviewer checked, and it does
+  not: the template renders from the same `MFE_LIFECYCLE_STATES` /
+  `PLATFORM_CAPABILITIES` objects the expectations read, so both sides move
+  together. Adding a seventh state was measured to leave the suite green and to
+  *grow* it, because `it.each([...STATES])` generates a case per state. Those
+  assertions catch **template** drift — a hardcoded state, a mis-rendered
+  transition target, one half of a capability pair dropped — and nothing else.
+
+  Two assertions were added that are not circular and carry the real weight: a
+  **frozen literal** of the six states and ten capabilities the Swift lane was
+  written against, so a contract change fails and has to be carried across
+  deliberately; and a check that **every type `MFEBase` returns is declared in
+  `Types.swift`**, which compares two independently generated artifacts. The
+  second is the one that catches the actual breakage — a capability whose
+  `resultType` has no `SWIFT_RESULTS` entry renders `-> SnapshotResult` against
+  a type nothing declares. Measured with an 11th capability added: every other
+  assertion in the file stayed green while the emitted package could not have
+  compiled.
 - **Linux portability was considered and dropped.** `Bundle.principalClass`
   depends on the Objective-C runtime and is not meaningfully available in
   swift-corelibs-foundation, so a Linux-clean `load` would need a second static

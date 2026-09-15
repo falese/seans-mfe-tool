@@ -3,11 +3,32 @@
  * cannot drift from the TypeScript one.
  *
  * There is no Swift toolchain in CI, so nothing compiles the emitted package.
- * This suite is what stands in for a compiler: it regenerates the Swift
- * contract from a manifest declaring every platform capability and asserts,
- * against `@seans-mfe/contracts` itself, that both halves are present and
- * agree. A capability or state added to the contract fails here the moment the
- * Swift rendering does not carry it.
+ *
+ * WHAT THIS SUITE ACTUALLY COVERS, precisely — an earlier version of this
+ * docblock overclaimed, and a reviewer caught it:
+ *
+ *   ✅ TEMPLATE drift. If a template hardcodes a state, mis-renders a
+ *      transition target, or drops one half of a capability pair, the
+ *      assertions below fail. Verified by mutating the EJS.
+ *
+ *   ❌ CONTRACT changes, for the assertions that compare the rendering to
+ *      `MFE_LIFECYCLE_STATES` / `PLATFORM_CAPABILITIES`. Those are CIRCULAR:
+ *      the template renders from the same objects the expectation reads, so
+ *      both sides move together. Adding a seventh state was measured to leave
+ *      the suite green — and to GROW it, because `it.each([...STATES])`
+ *      generates a case per state.
+ *
+ * Two assertions below are not circular, and they are the ones that carry the
+ * "stands in for a compiler" weight:
+ *
+ *   - `the contract is still the shape the Swift lane was built for` — a frozen
+ *     literal, so a contract change fails here and has to be carried into the
+ *     Swift lane deliberately rather than flowing through green.
+ *   - `every type MFEBase returns is declared in Types.swift` — compares two
+ *     independently generated artifacts. This is the one that catches the real
+ *     breakage: an added capability whose `resultType` has no entry in
+ *     `SWIFT_RESULTS` renders `-> SnapshotResult` against a type nothing
+ *     declares, and the package stops compiling.
  *
  * Modeled on `packages/codegen/src/__tests__/platform-contract-pin.test.ts`,
  * which exists for the same reason one level down: codegen once kept its own
@@ -70,6 +91,54 @@ afterAll(async () => {
 
 const lifecycle = () => emitted['swift/Sources/MFE/Platform/MFELifecycle.swift'];
 const base = () => emitted['swift/Sources/MFE/Platform/MFEBase.swift'];
+
+describe('The non-circular assertions', () => {
+  // Frozen deliberately. Every other expectation in this file reads the same
+  // contract object the template rendered from, so it cannot fail when the
+  // contract moves. This one can, and must: the Swift lane was written against
+  // exactly these six states and ten capabilities, and a change to either is a
+  // change the native lane has to be carried through by hand — a new result
+  // type needs a Swift struct and a SWIFT_RESULTS entry, a new state may need
+  // a transition in NativeMFEBase.
+  //
+  // If this fails, do NOT just update the literal. Work out what the Swift
+  // lane needs for the new state or capability, then update both.
+  const SWIFT_LANE_BUILT_FOR_STATES = [
+    'uninitialized', 'loading', 'ready', 'rendering', 'error', 'destroyed',
+  ];
+  const SWIFT_LANE_BUILT_FOR_CAPABILITIES = [
+    'describe', 'load', 'render', 'refresh', 'emit',
+    'query', 'schema', 'authorizeAccess', 'health', 'updateControlPlaneState',
+  ];
+
+  it('the contract is still the shape the Swift lane was built for', () => {
+    expect([...MFE_LIFECYCLE_STATES]).toEqual(SWIFT_LANE_BUILT_FOR_STATES);
+    expect([...PLATFORM_CAPABILITIES]).toEqual(SWIFT_LANE_BUILT_FOR_CAPABILITIES);
+  });
+
+  it('every type MFEBase returns is declared in Types.swift', () => {
+    // The concrete way a contract addition breaks the Swift package:
+    // `SWIFT_RESULTS[spec.resultType] ?? spec.resultType` falls through to the
+    // TypeScript type name, so a capability whose result type has no Swift
+    // mapping emits `-> SnapshotResult` against a type nothing declares.
+    // Measured with an 11th capability added: every other assertion in this
+    // file stayed green while the emitted package referenced an undeclared
+    // type and could not have compiled.
+    const types = emitted['swift/Sources/MFE/Platform/Types.swift'];
+    const builtIn = ['Void', 'Bool'];
+    const returned = [
+      ...new Set(
+        [...base().matchAll(/func \w+\(_ context: MFEContext\) async throws -> (\w+)/g)]
+          .map((m) => m[1]),
+      ),
+    ];
+    expect(returned.length).toBeGreaterThan(0);
+    const undeclared = returned.filter(
+      (t) => !builtIn.includes(t) && !types.includes(`struct ${t}`),
+    );
+    expect(undeclared).toEqual([]);
+  });
+});
 
 describe('MFELifecycle.swift mirrors the platform contract', () => {
   it('declares exactly the contract lifecycle states', () => {
