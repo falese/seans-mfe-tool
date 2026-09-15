@@ -376,3 +376,68 @@ describe('The BFF provider only returns types the package declares', () => {
     expect(client.content).toContain('variables: V,');
   });
 });
+
+describe('The query platform capability is backed by the BFF (ADR-096 §7)', () => {
+  const withBff = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      data: {
+        sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    }) as unknown as DSLManifest;
+
+  const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+
+  const generated = async (m: DSLManifest) =>
+    (await generate(m)).find((f) => f.path.endsWith('Platform/GeneratedMFE.swift'))!;
+
+  it('overrides doQuery with the CALLER’s document, as the web lane does', async () => {
+    // The web lane's generated mfe.ts reads context.payload.document and hands
+    // it to the generated bff.ts connector. Same contract, same direction: a
+    // host asking this MFE to run a query it names.
+    const mfe = await generated(withBff());
+    expect(mfe.content).toContain('public override func doQuery(');
+    expect(mfe.content).toContain('context.inputs["document"]');
+    expect(mfe.content).toContain('bffClient.queryRaw(');
+  });
+
+  it('returns failures as errors rather than throwing', async () => {
+    // `query` answers with an errors array — the web lane catches and returns
+    // { data: null, errors: [...] }, and a throw here would break that shape.
+    const mfe = await generated(withBff());
+    expect(mfe.content).toContain('QueryResult(data: nil, errors: [String(describing: error)])');
+    expect(mfe.content).toContain("errors: [\"query requires a 'document' input\"]");
+  });
+
+  it('defaults the data provider to the generated BFF-backed one', async () => {
+    // NativeMFEBase requires a provider and has no opinion where it comes from.
+    // With a BFF there IS a generated answer, so the host gets it for free and
+    // can still inject a fake by naming the parameter.
+    const mfe = await generated(withBff());
+    expect(mfe.content).toContain(
+      'provider: CrewServicesDataProvider = BFFCrewServicesDataProvider()',
+    );
+    expect(mfe.content).toContain('super.init(provider: provider, identity: identity)');
+  });
+
+  it('leaves doQuery alone when there is no BFF', async () => {
+    // NativeMFEBase's stub stands, and the class keeps the inherited init —
+    // there is no generated provider to default to.
+    const mfe = await generated(noBff());
+    expect(mfe.content).not.toContain('doQuery');
+    expect(mfe.content).not.toContain('BFFClient');
+    expect(mfe.content).not.toContain('public init(');
+  });
+
+  it('exposes queryRaw beside the decoding path, not instead of it', async () => {
+    // Two directions through one client: a document the caller names (no type
+    // to decode into) and a document this package owns (a declared type).
+    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
+    expect(client.content).toContain('public func queryRaw(');
+    expect(client.content).toContain('func query<T: Decodable>(');
+    // Both go through one transport, so the status and error rules are stated once.
+    expect(client.content).toContain('private func perform<V: Encodable>(');
+  });
+});

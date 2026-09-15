@@ -48,6 +48,11 @@ public enum BFFError: Error, CustomStringConvertible {
     }
 }
 
+/// Just the `errors` array, for the raw path where `data` has no static type.
+private struct ErrorsOnly: Decodable {
+    let errors: [BFFGraphQLError]?
+}
+
 private struct BFFResponse<T: Decodable>: Decodable {
     let data: T?
     let errors: [BFFGraphQLError]?
@@ -98,10 +103,56 @@ public struct BFFClient: Sendable {
         try await send(BFFRequest(query: document, variables: variables), headers: headers)
     }
 
+    /// Run a document the CALLER named and return the `data` field as raw JSON.
+    ///
+    /// The `query` platform capability's path: a host hands this MFE a document
+    /// at runtime, so there is no type to decode into. `query(_:as:)` is the
+    /// other direction — a document this package owns, decoded into a declared
+    /// type.
+    public func queryRaw(
+        _ document: String,
+        variables: [String: String]? = nil,
+        headers: [String: String] = [:]
+    ) async throws -> Data {
+        let body = try await perform(BFFRequest(query: document, variables: variables), headers: headers)
+
+        // Errors first, for the same reason the decoding path does it.
+        let envelope = try JSONDecoder().decode(ErrorsOnly.self, from: body)
+        if let errors = envelope.errors, !errors.isEmpty {
+            throw BFFError.graphQL(errors)
+        }
+
+        let root = try JSONSerialization.jsonObject(with: body, options: [.fragmentsAllowed])
+        guard let object = root as? [String: Any], let data = object["data"], !(data is NSNull) else {
+            throw BFFError.emptyResponse
+        }
+        return try JSONSerialization.data(withJSONObject: data, options: [.fragmentsAllowed])
+    }
+
     private func send<T: Decodable, V: Encodable>(
         _ payload: BFFRequest<V>,
         headers: [String: String]
     ) async throws -> T {
+        let body = try await perform(payload, headers: headers)
+        let decoded = try JSONDecoder().decode(BFFResponse<T>.self, from: body)
+
+        // Errors first: a partial response carries both, and a caller asking
+        // for typed data should not silently receive half of it.
+        if let errors = decoded.errors, !errors.isEmpty {
+            throw BFFError.graphQL(errors)
+        }
+        guard let data = decoded.data else {
+            throw BFFError.emptyResponse
+        }
+        return data
+    }
+
+    /// POST and hand back the response body. Shared by both query paths so the
+    /// transport rules are stated once.
+    private func perform<V: Encodable>(
+        _ payload: BFFRequest<V>,
+        headers: [String: String]
+    ) async throws -> Data {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -125,16 +176,6 @@ public struct BFFClient: Sendable {
             )
         }
 
-        let decoded = try JSONDecoder().decode(BFFResponse<T>.self, from: body)
-
-        // Errors first: a partial response carries both, and a caller asking
-        // for typed data should not silently receive half of it.
-        if let errors = decoded.errors, !errors.isEmpty {
-            throw BFFError.graphQL(errors)
-        }
-        guard let data = decoded.data else {
-            throw BFFError.emptyResponse
-        }
-        return data
+        return body
     }
 }

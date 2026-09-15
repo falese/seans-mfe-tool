@@ -41,6 +41,24 @@ function manifest(capabilities: string[], swift?: { capabilities?: string[] } | 
   } as unknown as DSLManifest;
 }
 
+/** The same manifest, plus the `data:` section that generates a BFF. */
+function withBff(m: DSLManifest): DSLManifest {
+  return {
+    ...m,
+    data: {
+      sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+      serve: { endpoint: '/graphql', playground: true },
+    },
+  } as unknown as DSLManifest;
+}
+
+/** One source entry per existing query document. */
+const queries = (names: string[]) =>
+  names.map((n) => ({
+    path: `${FEATURES}${n}Query.swift`,
+    text: `public enum ${n}Query { public static let document = "" }`,
+  }));
+
 /** One source entry per existing view file. */
 const views = (names: string[]) =>
   names.map((n) => ({ path: `${FEATURES}${n}View.swift`, text: `public struct ${n}View: View {}` }));
@@ -194,5 +212,66 @@ describe('native-views-legacy-file', () => {
     expect(PLATFORM_MIGRATIONS.map((m: { id: string }) => m.id)).not.toContain(
       'swift-views-split-per-capability',
     );
+  });
+});
+
+/**
+ * `native-capability-query` — the companion backstop for a deleted DOCUMENT.
+ *
+ * Sharper than the view case: `Platform/BFFDataProvider.swift` is
+ * GENERATOR-owned and calls `<Cap>Query.document` by name, so a deleted
+ * document leaves generated code referring to a symbol nothing declares. A
+ * Swift compiler would catch it — nothing in CI runs one, and the message it
+ * would give (`cannot find 'PayStatusQuery' in scope`) names the symbol and no
+ * fix.
+ */
+describe('native-capability-query', () => {
+  it('passes when every implemented capability has its document', () => {
+    const r = run(withBff(manifest(['CrewRoster', 'PayStatus'])), [
+      ...views(['CrewRoster', 'PayStatus']),
+      ...queries(['CrewRoster', 'PayStatus']),
+    ]);
+    expect(r.checked).toContain('native-capability-query');
+    expect(issuesFor(r, 'native-capability-query')).toHaveLength(0);
+    expect(r.ok).toBe(true);
+  });
+
+  it('REPORTS a deleted document, and fails validation', () => {
+    const r = run(withBff(manifest(['CrewRoster', 'PayStatus'])), [
+      ...views(['CrewRoster', 'PayStatus']),
+      ...queries(['CrewRoster']),
+    ]);
+    const found = issuesFor(r, 'native-capability-query');
+    expect(found).toHaveLength(1);
+    expect(found[0].package).toBe('PayStatus');
+    // Generated code would not compile against it — not a warning.
+    expect(r.ok).toBe(false);
+  });
+
+  it('names the generated caller, so the fix is actionable without the ADR', () => {
+    const r = run(withBff(manifest(['PayStatus'])), views(['PayStatus']));
+    const issue = issuesFor(r, 'native-capability-query')[0];
+    expect(issue.location).toBeUndefined();
+    expect(issue.message).toContain('PayStatusQuery.document');
+    expect(issue.message).toContain('BFFDataProvider.swift');
+    expect(issue.fix).toContain('remote:generate');
+  });
+
+  it('does NOT run when the manifest declares no data source', () => {
+    // No `data:` means no BFF, so no query documents are emitted and none can
+    // be missing. Views are still checked.
+    const r = run(manifest(['CrewRoster']), views(['CrewRoster']));
+    expect(r.checked).toContain('native-capability-view');
+    expect(r.checked).not.toContain('native-capability-query');
+    expect(issuesFor(r, 'native-capability-query')).toHaveLength(0);
+  });
+
+  it('follows the target’s capability subset, not every domain capability', () => {
+    // PayStatus is web-only here, so the native target owes it no document.
+    const r = run(
+      withBff(manifest(['CrewRoster', 'PayStatus'], { capabilities: ['CrewRoster'] })),
+      [...views(['CrewRoster']), ...queries(['CrewRoster'])],
+    );
+    expect(issuesFor(r, 'native-capability-query')).toHaveLength(0);
   });
 });

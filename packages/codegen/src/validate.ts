@@ -60,6 +60,7 @@ export type ValidationRule =
   | 'runtime-declared'
   | 'slots-implemented'
   | 'native-capability-view'
+  | 'native-capability-query'
   | 'capability-has-a-target'
   | 'native-views-legacy-file'
   | 'platform-migrations'
@@ -367,6 +368,48 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           `run remote:generate to re-seed it. Removing "${capability}" from ` +
           `targets.swift.capabilities is the other way out.`,
       });
+    }
+
+    // Every capability a Swift target implements must also have its QUERY
+    // document, when the manifest declares a data source (ADR-096 §7).
+    //
+    // Same backstop shape as the view rule above, and for a sharper reason:
+    // `Platform/BFFDataProvider.swift` is GENERATOR-owned and calls
+    // `<Cap>Query.document` by name, so deleting the developer-owned document
+    // leaves generated code referring to a symbol nothing declares. That is the
+    // generator-to-developer coupling the registry/monolith split already cost
+    // us once, and the platform reports it rather than rewriting the file
+    // (ADR-082).
+    //
+    // Unlike the view rule, a Swift compiler WOULD catch this — the provider is
+    // not behind `#if canImport(SwiftUI)`. Nothing in CI runs one, and
+    // `cannot find 'CrewRosterQuery' in scope` names the symbol and no fix.
+    const hasBff = (manifest as { data?: unknown }).data !== undefined;
+    if (hasBff) {
+      checked.push('native-capability-query');
+      const seeded = new Set(
+        sources
+          .map((f) => f.path.replace(/\\/g, '/'))
+          .filter((p) => p.includes(`/${NATIVE_FEATURES_DIR}`) && p.endsWith('Query.swift'))
+          .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/Query\.swift$/, '')),
+      );
+      for (const capability of implemented) {
+        if (seeded.has(capability)) continue;
+        const file = `${NATIVE_FEATURES_DIR}${capability}Query.swift`;
+        issues.push({
+          rule: 'native-capability-query',
+          package: capability,
+          // No `location`, for the same reason as the view rule: the file is
+          // missing, so there is no real path to relativise.
+          message:
+            `The Swift target implements domain capability "${capability}" and ` +
+            `this MFE has a BFF, but ${file} does not exist — generated ` +
+            `Platform/BFFDataProvider.swift calls ${capability}Query.document.`,
+          fix:
+            `Restore ${file} with \`public enum ${capability}Query\` exposing a ` +
+            `\`static let document\`, or run remote:generate to re-seed it.`,
+        });
+      }
     }
 
     // The pre-split monolith, if it survived (ADR-095).

@@ -198,6 +198,7 @@ const swiftVars = (c: unknown): Record<string, unknown> => {
     domainCapabilities: selectedCapabilities(c),
     capabilityDescriptions: capabilityDescriptions(c),
     bffEndpoint: ctx.vars.bffEndpoint,
+    hasBff: hasSwiftBff(c),
     camel: camelCase,
   };
 };

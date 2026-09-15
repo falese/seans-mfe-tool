@@ -15,8 +15,10 @@
 //     └─ NativeMFEBase      ← sibling of BaseRemoteMFE (Bundle.load acquisition)
 //          └─ MeridianCrewServicesMFE   ← this file
 //
-// It overrides only `mount` — the view selection — exactly the surface a
-// generated `RemoteMFE` subclass fills in the web lane.
+// It overrides `mount` — the view selection — and `doQuery`, which this
+// manifest's `data:` section earns. That is exactly the surface a generated
+// `RemoteMFE` subclass fills in the web lane, where the generated `mfe.ts`
+// overrides the query capability behind the same `hasBff` gate.
 
 import Foundation
 #if canImport(SwiftUI)
@@ -25,18 +27,64 @@ import SwiftUI
 
 public final class MeridianCrewServicesMFE: NativeMFEBase {
 
+    /// This MFE's BFF. Endpoint baked from the manifest, `BFF_URL` overrides.
+    private let bffClient: BFFClient
+
+    /// Defaults the data provider to the generated, BFF-backed one.
+    ///
+    /// `NativeMFEBase` requires a `MeridianCrewServicesDataProvider` and has no
+    /// opinion about where it comes from. Because this manifest declares a
+    /// `data:` section there IS a generated answer, so the host gets it for
+    /// free and can still inject its own — a fake in tests, a different
+    /// backend — by naming the parameter.
+    public init(
+        provider: MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider(),
+        identity: MFEIdentity = .current,
+        bffClient: BFFClient = BFFClient()
+    ) {
+        self.bffClient = bffClient
+        super.init(provider: provider, identity: identity)
+    }
+
     /// Select and mount a capability's view.
     ///
     /// `CapabilityViewRegistry` is generator-owned and lists every domain
-    /// capability the manifest declares. The views themselves live in
-    /// developer-owned `Features/CapabilityViews.swift`, so adding a
-    /// capability to the manifest fails compilation here until the author
-    /// writes its view — a loud, actionable failure rather than a silent gap
-    /// (the ADR-082 posture: the platform reports breaking changes in code it
-    /// does not own, and never rewrites that code).
+    /// capability this target implements. Each view lives in its own
+    /// developer-owned `Features/<Capability>View.swift`, seeded once by
+    /// regeneration and never rewritten after that.
     public override func mount(_ capabilityId: String) throws {
         guard CapabilityViewRegistry.declared.contains(capabilityId) else {
             throw MFEStateError(from: state, attempted: .render, allowed: [.ready])
+        }
+    }
+
+
+    /// The `query` platform capability, backed by this MFE's BFF.
+    ///
+    /// The document comes from the CALLER — `context.inputs["document"]` — the
+    /// same contract the web lane's generated `mfe.ts` implements by reading
+    /// `context.payload.document` and handing it to the generated `bff.ts`
+    /// connector. A host asking this MFE to run a query it names.
+    ///
+    /// This is the opposite direction from `BFFMeridianCrewServicesDataProvider`,
+    /// which runs documents this package owns. Both go through `BFFClient`.
+    ///
+    /// Failures are returned, not thrown: `query` answers with an errors array,
+    /// which is what the web lane does with the same catch.
+    public override func doQuery(_ context: MFEContext) async throws -> QueryResult {
+        guard let document = context.inputs["document"] else {
+            return QueryResult(data: nil, errors: ["query requires a 'document' input"])
+        }
+        var variables = context.inputs
+        variables.removeValue(forKey: "document")
+        do {
+            let data = try await bffClient.queryRaw(
+                document,
+                variables: variables.isEmpty ? nil : variables
+            )
+            return QueryResult(data: data, errors: [])
+        } catch {
+            return QueryResult(data: nil, errors: [String(describing: error)])
         }
     }
 

@@ -21,6 +21,7 @@ implemented-by:
   - packages/framework-swift/templates/Sources/Platform/GeneratedMFE.swift.ejs
   - packages/framework-swift/templates/Sources/Platform/BFFClient.swift.ejs
   - packages/framework-swift/templates/Sources/Platform/BFFDataProvider.swift.ejs
+  - packages/codegen/src/validate.ts
 verified-by:
   - packages/framework-swift/src/__tests__/native-contract-pin.test.ts
   - packages/framework-swift/src/__tests__/swift-contributor.test.ts
@@ -167,7 +168,7 @@ The effect: the manifest is read by two build systems, Node's and Swift's, and
 neither holds a copy of the truth. The projection is committed and
 generator-owned; the derived Swift is neither.
 
-### 7. A BFF gets a generated client and a generated provider; the documents stay the developer's
+### 7. A BFF gets a generated client, a generated provider, and a real `doQuery`
 
 When the manifest declares a `data:` section the platform already generates a
 GraphQL BFF (ADR-012) and, in the web lane, a **generator-owned**
@@ -175,39 +176,72 @@ GraphQL BFF (ADR-012) and, in the web lane, a **generator-owned**
 over that endpoint, with HTTP failures and GraphQL errors mapped to typed
 errors. It does not generate the queries themselves.
 
-The native lane mirrors that split exactly rather than inventing one:
+**There are two directions here, and an earlier draft of this ADR conflated
+them.** It claimed the native lane "mirrors that split exactly." It does not,
+because the web lane has no per-capability document at all. What the web lane
+actually does is in `packages/codegen/templates/base-mfe-angular/mfe.ts.ejs`:
+the generated `doQuery` reads the document out of `context.payload.document` —
+supplied by the **caller at runtime** — and hands it to `bffQuery`. The
+generated connector takes the document as a *parameter* and never names a
+symbol a developer must define.
 
-| Web lane | Native lane | Owner |
+So the native lane carries both directions, and says which is which:
+
+| Direction | Who names the document | Web | Native |
+|---|---|---|---|
+| **In** — a host asks this MFE to run a query | the caller, at runtime | generated `doQuery` reads `context.payload.document` | generated `doQuery` reads `context.inputs["document"]` |
+| **Out** — this MFE fetches its own data | this package | *no equivalent* | `BFF<Module>DataProvider` → `<Cap>Query.document` |
+
+The first row is a faithful port and closes a stub: `NativeMFEBase.doQuery`
+returned `QueryResult(data: nil, errors: [])`. The generated `<Module>MFE` now
+overrides it behind the same `hasBff` gate the web lane uses, calling
+`BFFClient.queryRaw` — raw because the caller named the document, so there is no
+type to decode into.
+
+The second row is **new**, and the honest justification is not a precedent but a
+difference in what fills the seam. On the web a shell supplies the document
+because there is a shell to supply it. A native `<Module>DataProvider` is the
+seam the **host app** fills, and the point of generating `BFF<Module>DataProvider`
+is that the host no longer has to — which is only possible if the documents live
+in the package. Hence:
+
+| What | Where | Owner |
 |---|---|---|
-| `src/platform/bff/bff.ts` | `Platform/BFFClient.swift` | generator |
-| — | `Platform/BFFDataProvider.swift` | generator |
-| the query a feature component writes | `Features/<Cap>Query.swift` | developer |
+| Generic GraphQL client | `Platform/BFFClient.swift` | generator |
+| The provider protocol | `Platform/DataProvider.swift` | generator |
+| Its BFF-backed implementation | `Platform/BFFDataProvider.swift` | generator |
+| One capability's document | `Features/<Cap>Query.swift` | **developer** |
 
-`BFFDataProvider` is the piece with no web counterpart, and it is generated for
-the same reason the registry is: the wiring from a capability to a query is
-mechanical. `<Module>DataProvider`, the protocol, still declares one
-`async throws` method per capability this target implements;
-`BFF<Module>DataProvider` implements every one of them as
-`try await client.query(<Cap>Query.document)`. Adding a capability to the
-manifest regenerates both, and seeds a new developer-owned `<Cap>Query.swift`
-beside them — the per-capability file shape ADR-095 §6 establishes, so the new
-capability lands in a file regeneration is allowed to create rather than needing
-a hand-edit to a file it may never touch.
+`BFF<Module>DataProvider` implements every protocol method as
+`try await client.query(<Cap>Query.document)`, and `<Module>MFE` defaults its
+`provider:` parameter to it, so a host that wants the generated answer gets it
+and a test can still inject a fake. The document stays the developer's because
+codegen cannot know it: the BFF's schema is composed by GraphQL Mesh from
+`data.sources` at build time, so the field names come from the team's OpenAPI
+specs. The seeded document is a valid but useless `query <Cap> { __typename }`
+with a TODO and the playground URL.
 
-What stays the developer's is the **document**, because codegen cannot know it:
-the BFF's schema is composed by GraphQL Mesh from `data.sources` at build time,
-so the field names come from the team's OpenAPI specs, not from anything the
-generator can read. The seeded document is a valid but useless
-`query <Cap> { __typename }` with a TODO and the playground URL.
+**That ownership split has a cost, and it is paid with a validation rule.**
+`BFFDataProvider.swift` is generator-owned and calls `<Cap>Query.document` by
+name — the same generator-to-developer symbol coupling that made the
+`CapabilityViewRegistry` / `CapabilityViews.swift` monolith a build break
+(ADR-095 §7). Per-capability files fix the *addition* case: a new capability
+gets a new document that regeneration writes because it does not exist yet. The
+*deletion* case is backstopped by `native-capability-query` in `mfe:validate`,
+the companion to `native-capability-view`, which names the missing file and the
+generated caller. Sharper than the view rule, because a Swift compiler would
+catch this one — it is not behind `#if canImport(SwiftUI)` — but nothing in CI
+runs a Swift compiler, and `cannot find 'PayStatusQuery' in scope` names a
+symbol and no fix.
 
 The endpoint is baked from the manifest into `BFFClient.defaultEndpoint` and
 overridable at runtime by `BFF_URL`, the same precedence the web connector uses
 and for the same reason: an MFE and its BFF are one deployable unit on one
 origin, so a relative path would resolve against the host app.
 
-A manifest with no `data:` section generates no BFF, so none of these three
-files is emitted; `<Module>DataProvider` remains a bare protocol for the host to
-implement.
+A manifest with no `data:` section generates no BFF, so none of these files is
+emitted, `doQuery` keeps `NativeMFEBase`'s stub, and `<Module>DataProvider`
+remains a bare protocol for the host to implement.
 
 ## Boundaries
 

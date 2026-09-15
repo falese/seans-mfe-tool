@@ -104,10 +104,12 @@ building — the same thing the web lane does with
 `src/features/<Cap>/<Cap>.tsx`. `overwrite: false` means *seed once*, not
 *never write*, so a file that does not exist yet is created.
 
-Two checks cover what regeneration cannot fix on its own, both reported by
-`mfe:validate`: `native-capability-view` if a view was deleted, and
-`native-views-legacy-file` if a pre-split `CapabilityViews.swift` is still
-around from before views were split per capability.
+Three checks cover what regeneration cannot fix on its own, all reported by
+`mfe:validate`: `native-capability-view` if a view was deleted,
+`native-capability-query` if a query document was deleted out from under the
+generated provider, and `native-views-legacy-file` if a pre-split
+`CapabilityViews.swift` is still around from before views were split per
+capability.
 
 ## If the manifest declares a data source, the native build talks to the BFF
 
@@ -132,12 +134,32 @@ public struct BFFMeridianCrewServicesDataProvider: MeridianCrewServicesDataProvi
 ```
 
 The wiring is mechanical, so the platform writes it and keeps writing it: add a
-capability, regenerate, and the provider gains a method. The **document** is
-yours because codegen cannot know it — your BFF's schema is composed by GraphQL
-Mesh from `data.sources` at build time, so the field names come from your
-OpenAPI specs. This is the same split the web lane has: generated
-`src/platform/bff/bff.ts` exposes `query<T>(document, …)`, and the query itself
-is written in the feature component.
+capability, regenerate, and the provider gains a method. `<Module>MFE` defaults
+its `provider:` parameter to `BFF<Module>DataProvider`, so a host gets the
+generated answer for free and a test can still inject a fake.
+
+The **document** is yours because codegen cannot know it — your BFF's schema is
+composed by GraphQL Mesh from `data.sources` at build time, so the field names
+come from your OpenAPI specs.
+
+**Two directions, and only one of them exists on the web.** The web lane has no
+per-capability document at all: its generated `doQuery` reads the document from
+`context.payload.document`, supplied by the caller, and passes it to the
+generated `bff.ts`. The native lane does both:
+
+| Direction | Who names the document | How |
+|---|---|---|
+| **In** — a host asks this MFE to run a query | the caller, at runtime | generated `doQuery` reads `context.inputs["document"]` → `BFFClient.queryRaw` |
+| **Out** — this MFE fetches its own data | this package | `BFF<Module>DataProvider` → `<Cap>Query.document` → `BFFClient.query` |
+
+The first is a straight port of the web lane. The second is new, and it exists
+because a native `DataProvider` is the seam the **host app** fills — generating
+it means the host no longer has to, which is only possible if the documents live
+in the package.
+
+Because `BFFDataProvider.swift` is generated and calls `<Cap>Query.document` by
+name, deleting a document breaks generated code. `mfe:validate` reports that as
+`native-capability-query`, naming the missing file and the caller.
 
 The endpoint is baked in from the manifest and overridden at runtime by
 `BFF_URL`:
