@@ -11,7 +11,7 @@
 import * as path from 'path';
 import { BaseFrameworkPlugin, ValidationError } from '@seans-mfe/contracts';
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { resolveFrameworkName } from '@seans-mfe/codegen';
+import { resolveFrameworkName, findVariant } from '@seans-mfe/codegen';
 import type { FrameworkVariant } from '@seans-mfe/codegen';
 
 /** Built-in framework names and their package directory names. */
@@ -135,10 +135,36 @@ export function resolveFrameworkVariant(manifest: DSLManifest): FrameworkVariant
   // for something else. Pinned by `__tests__/resolve-framework-variant.test.ts`.
   const frameworkName = resolveFrameworkName(manifest);
   const plugin = loadFrameworkPlugin(frameworkName);
+
+  // The plugin declares its own codegen (ADR-097). Doing it here rather than
+  // asking every caller to remember is the same move `registerTargetCodegen`
+  // makes for secondary targets.
+  plugin.registerCodegen?.();
+
+  // A plugin resolved, so a missing variant is a broken plugin — not a
+  // condition to recover from. `renderFiles` falls back to `reactRspack` and
+  // emits an `unregistered-variant` diagnostic, which is right for the
+  // NO-PLUGIN path that ADR-061 requires to stay independently runnable, and
+  // wrong here: it would hand back a complete React MFE for a manifest that
+  // asked for something else, which is the failure ADR-092 §4 already had to
+  // fix once in this same function.
+  if (!findVariant(plugin.id)) {
+    throw new ValidationError(
+      `Framework plugin "${plugin.displayName}" (${plugin.id}) resolved, but no codegen ` +
+        `variant is registered as "${plugin.id}". Implement registerCodegen() on the plugin ` +
+        `and have it call registerVariant() with a CodegenVariant whose id is "${plugin.id}".`,
+      'framework',
+      'registered-variant',
+    );
+  }
+
   return {
     framework: plugin.framework,
     bundler: plugin.bundler,
-    templateVariant: plugin.id as 'react-rspack' | 'angular-webpack',
+    // Not cast to the two built-in literals. `templateVariant` is an open
+    // string (ADR-093) and narrowing it here was a lie the compiler could not
+    // catch, because the built-in ids happen to satisfy it.
+    templateVariant: plugin.id,
   };
 }
 

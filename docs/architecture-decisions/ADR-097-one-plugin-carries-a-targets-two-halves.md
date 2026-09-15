@@ -144,11 +144,26 @@ which fails naming the command and the target.
 - **The BFF still registers by side-effect import.** `@seans-mfe/plugin-bff` is
   an oclif command plugin that also contributes codegen; it has no `targetId`
   and is not resolved per-manifest. Converting it is a separate change.
-- **`framework-react` and `framework-angular` do not yet implement
-  `registerCodegen()`.** Their variants are still registered as codegen
-  built-ins. The member is optional precisely so this could land without
-  rewriting the two shipped plugins in the same change; doing so would close the
-  `plugin.id` → `CodegenVariant.id` string join, and is the obvious next step.
+- **`framework-react` and `framework-angular` now implement
+  `registerCodegen()` too**, so every shipped plugin declares its own codegen.
+  The variant *objects* stay in `@seans-mfe/codegen`: `BUILTIN_VARIANTS` is
+  what keeps the generator independently runnable with no plugin loaded
+  (ADR-061), and moving them into the plugin packages would break that. What
+  moved is ownership of the **declaration**.
+
+  This narrows the `plugin.id` → `CodegenVariant.id` join without removing it —
+  the lookup is still by string. What it removes is the join's failure mode on
+  the CLI path: `resolveFrameworkVariant` now calls `registerCodegen()` and then
+  **asserts** the variant exists, throwing a `ValidationError` that names the
+  plugin, its id and the fix. Previously a plugin that resolved with no
+  registered variant produced a complete React MFE plus an
+  `unregistered-variant` diagnostic — the same class of defect ADR-092 §4 had
+  already fixed once in this very function. `renderFiles` keeps its
+  `reactRspack` fallback for the no-plugin path, where it is correct.
+
+  Removing the string lookup entirely would mean the plugin carrying its
+  `CodegenVariant` object across the `contracts` boundary, which `contracts`
+  cannot type (ADR-061). Not attempted here.
 - **`build:dev` and `build:docker` remain primary-only.** Correctly: there is no
   dev server or container for a natively-linked target. They are not "not yet
   plural".

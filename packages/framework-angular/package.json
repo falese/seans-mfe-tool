@@ -23,7 +23,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts"
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/codegen": "file:../codegen"
   },
   "peerDependencies": {
     "@angular/core": "^17.0.0"

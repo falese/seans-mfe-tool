@@ -9,6 +9,7 @@
 
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { registerVariant, angularWebpack } from '@seans-mfe/codegen';
 import {
   BaseFrameworkPlugin,
   type EnvCheckResult,
@@ -55,6 +56,20 @@ export class AngularWebpackPlugin extends BaseFrameworkPlugin {
   readonly defaultPort = 3101;
   readonly directoryStructure = ['src', 'src/features', 'src/app', 'public'];
 
+
+  /**
+   * Register this plugin's codegen contribution (ADR-097).
+   *
+   * The variant object still lives in `@seans-mfe/codegen`, because the
+   * generator must stay independently runnable with no plugin loaded
+   * (ADR-061) and `BUILTIN_VARIANTS` is what makes that true. What changes is
+   * ownership of the *declaration*: the plugin now says which variant is its
+   * own, the same way `framework-swift` does, instead of the pairing living
+   * only in a lookup table keyed by a string that happens to match.
+   */
+  registerCodegen(): void {
+    registerVariant(angularWebpack);
+  }
   getTestExtension(): string {
     return '.spec.ts';
   }
