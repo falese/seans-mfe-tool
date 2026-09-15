@@ -19,6 +19,7 @@ implemented-by:
   - packages/framework-swift/src/codegen.ts
 verified-by:
   - packages/framework-swift/src/__tests__/native-hooks.test.ts
+  - scripts/check-swift-build.sh
   - packages/framework-swift/src/__tests__/base-mfe-surface.test.ts
 summary: >-
   `MFEBase.execute` inlined the guard, transition and error steps as a `do`/`catch`, which made the
@@ -191,11 +192,12 @@ walk over a parsed manifest, which is why `deps.manifestParser` has no analogue.
   is declared and called on every hook failure; nothing ships a conformer.
   Hook failures are invisible unless a host supplies one, which is still an
   improvement on having nowhere to send them.
-- **Still nothing compiles the emitted Swift.** Unchanged from ADR-096, and this
-  is the largest body of generated Swift logic yet added, so it is also where
-  the risk of that boundary is highest. `native-hooks.test.ts` asserts the
-  rendering — order of the pipeline, presence of each guarantee — which is not a
-  type check.
+- **The rendering tests are not a type check.** `native-hooks.test.ts` asserts
+  the order of the pipeline and the presence of each guarantee; it cannot see a
+  type error. This is the largest body of generated Swift logic yet added, which
+  is what finally made the `swift` CI job worth building — `swift build` +
+  `swift test` on Linux, covering every file this ADR touches, since none of
+  them is behind `#if canImport(SwiftUI)`.
 
 ## Consequences
 

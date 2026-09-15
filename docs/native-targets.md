@@ -269,14 +269,16 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 
 ## Known limits
 
-- **No gate compiles the emitted Swift.** There is no Swift toolchain in CI —
-  though a reviewer showed the package *does* build on Linux (Swift 6.0.3,
-  `swift build` ~12s, `LifecycleTests` 5/5), because the SwiftUI files are
-  behind `#if canImport(SwiftUI)`. A Linux job would close this for the non-UI
-  surface; the views would still need a Mac.
+- **CI compiles the Swift, minus the views.** The `swift` job runs
+  `swift build` + `swift test` in the official `swift:6.0` container against the
+  committed package (`npm run check:swift-build`, which skips locally when you
+  have no toolchain). The SwiftUI files are behind `#if canImport(SwiftUI)`,
+  false on Linux, so the views are skipped and still need a Mac. Everything else
+  — the lifecycle, the base classes, the BFF client and provider — is compiled
+  and its tests run.
   `packages/framework-swift/src/__tests__/native-contract-pin.test.ts` asserts the
-  *rendering* against `packages/contracts/src/platform-contract.ts`, but it is a
-  text assertion, not a type check. Compilation is verified by hand on a Mac.
+  *rendering* against `packages/contracts/src/platform-contract.ts`, which is a
+  text assertion; the CI job is the type check.
 - **Most of that pin suite is circular.** The template renders from the same
   contract objects the expectations read, so a contract change moves both sides
   and stays green — verified by adding a seventh state. Those assertions catch

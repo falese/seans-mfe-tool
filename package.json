@@ -52,7 +52,8 @@
     "docs:check-paths": "node scripts/check-doc-paths.js",
     "docker:build:cli": "docker build -f Dockerfile.cli -t seans-mfe-tool-cli:latest .",
     "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
-    "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build"
+    "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build",
+    "check:swift-build": "bash scripts/check-swift-build.sh"
   },
   "keywords": [
     "module-federation",
@@ -97,22 +98,22 @@
     ],
     "topics": {
       "coder": {
-        "description": "Intent-compilation seam \u2014 compile a business intent into a DSL mfe-manifest via the external coder service (ADR-085/ADR-088)"
+        "description": "Intent-compilation seam — compile a business intent into a DSL mfe-manifest via the external coder service (ADR-085/ADR-088)"
       },
       "daemon": {
-        "description": "Control-plane daemon commands (in-platform control plane \u2014 PDR-008/ADR-078)"
+        "description": "Control-plane daemon commands (in-platform control plane — PDR-008/ADR-078)"
       },
       "mfe": {
         "description": "MFE consistency checks (mfe:validate)"
       },
       "slots": {
-        "description": "Slot contract tooling \u2014 validate registry placement targets (ADR-073)"
+        "description": "Slot contract tooling — validate registry placement targets (ADR-073)"
       },
       "adr": {
-        "description": "ADR library governance \u2014 validate metadata and report lifecycle state (ADR-075)"
+        "description": "ADR library governance — validate metadata and report lifecycle state (ADR-075)"
       },
       "compose": {
-        "description": "Composition tooling \u2014 compile a project's control-plane.yaml into the registry payload (ADR-083)"
+        "description": "Composition tooling — compile a project's control-plane.yaml into the registry payload (ADR-083)"
       }
     },
     "hooks": {

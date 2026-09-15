@@ -262,11 +262,22 @@ remains a bare protocol for the host to implement.
 
 ## Boundaries
 
-- **Nothing compiles the emitted Swift.** There is no Swift toolchain in CI or in
-  the dev container. `native-contract-pin.test.ts` asserts the *rendering*
-  against the TypeScript contract, but it is a text assertion, not a type check.
-  Compilation and the SPM plugin are verified by hand on a Mac. This is the main
-  honest weakness of the feature.
+- **CI compiles the emitted Swift on Linux, and only the non-UI half.** This
+  section previously said nothing compiled it at all, which was true until the
+  `swift` job in `.github/workflows/test.yml` (`npm run check:swift-build`)
+  started running `swift build` + `swift test` against the committed package in
+  the official `swift:6.0` container. That covers `MFEBase`, `NativeMFEBase`,
+  `MFELifecycle`, `Types`, the BFF client and provider — essentially all the
+  generated logic — and it exercises the SPM build-tool plugin, which no
+  Node-side gate can reach. The SwiftUI files are behind
+  `#if canImport(SwiftUI)`, false on Linux, so the views are *skipped* rather
+  than compiled and still need a Mac.
+
+  The gate was overdue, and its absence had a measured cost: two type errors
+  reached `main`-bound commits and were found by reading rather than by a
+  gate — `@escaping` inside a typealias (legal only in parameter position) and
+  a checked `Sendable` conformance on a struct holding an existential `Error`.
+  `native-contract-pin.test.ts` asserts the *rendering* and cannot see either.
 - **Most of that pin suite is circular, and an earlier draft of this ADR said
   otherwise.** It claimed the suite "fails the moment the TS contract gains a
   state the Swift rendering does not carry." A reviewer checked, and it does
@@ -351,9 +362,10 @@ machinery, which was invisible while there was only one delivery mechanism.
 
 Worse, and accepted knowingly:
 
-- **A contract rendered into a language no gate compiles.** The pin test is
-  strong on the contract's *shape* and blind to whether the result is valid
-  Swift. A typo in a template lands green.
+- **A contract whose UI half no gate compiles.** The pin test is strong on the
+  contract's *shape* and blind to whether the result is valid Swift. The `swift`
+  CI job now compiles the platform layer on Linux; the SwiftUI views are behind
+  `#if canImport(SwiftUI)` and are still verified by hand on a Mac.
 - **`ManifestMetadata` is referenced before it exists.** `Types.swift` reads
   symbols the SPM plugin generates at build time. Correct under `swift build`,
   confusing when reading the package in isolation.

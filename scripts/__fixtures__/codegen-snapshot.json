@@ -2041,7 +2041,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "2eff1895966ccdafc7c7c4a37a18193bac3ee40c80ca2c7a4090cdcb73a77965"
+        "sha256": "38dabe732669dd509e2658e692e1406627e9d9615b96d9fd9b5b5d28bab8f7e2"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",

@@ -183,7 +183,11 @@ final class ResultBox<T>: @unchecked Sendable {
 }
 
 /// Invocation context. Mirrors the runtime's `Context`.
-public struct MFEContext: Sendable {
+///
+/// `@unchecked` because of one member: `error` is an existential `any Error`,
+/// which carries no Sendable guarantee, and TypeScript's `Context.error` is the
+/// member being mirrored. Everything else here is a value type.
+public struct MFEContext: @unchecked Sendable {
     public var requestId: String
     public var capabilityId: String?
     public var inputs: [String: JSONValue]
@@ -266,7 +270,7 @@ open class MFEBase {
     /// The context travels in a reference box rather than `inout`: a middleware
     /// list is escaping, and an escaping function type cannot carry an `inout`
     /// parameter across `await` the way TypeScript's shared object does.
-    public typealias Middleware = (MFEContextBox, @escaping () async throws -> Void) async throws -> Void
+    public typealias Middleware = (MFEContextBox, () async throws -> Void) async throws -> Void
 
     private func runStep(_ steps: [Middleware], _ index: Int, _ box: MFEContextBox) async throws {
         guard index < steps.count else { return }
