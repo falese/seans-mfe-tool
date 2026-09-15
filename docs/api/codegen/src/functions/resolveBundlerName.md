@@ -2,17 +2,15 @@
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / resolveNeededMeshPluginsAndTransforms
+[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / resolveBundlerName
 
-# Function: resolveNeededMeshPluginsAndTransforms()
+# Function: resolveBundlerName()
 
-> **resolveNeededMeshPluginsAndTransforms**(`manifest`): `object`
+> **resolveBundlerName**(`manifest`): `string`
 
-Defined in: [packages/codegen/src/dependencies.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L113)
+Defined in: [packages/codegen/src/unified-generator.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L134)
 
-Which optional Mesh plugins/transforms a manifest's `data:`/`performance:`
-config implies (ADR-027). Feeds `extractManifestVars`, which decides what
-`package.json.ejs` and the BFF templates render.
+The bundler a manifest asks for, by the same rule.
 
 ## Parameters
 
@@ -268,12 +266,4 @@ config implies (ADR-027). Feeds `extractManifestVars`, which decides what
 
 ## Returns
 
-`object`
-
-### neededPlugins
-
-> **neededPlugins**: `string`[]
-
-### neededTransforms
-
-> **neededTransforms**: `string`[]
+`string`

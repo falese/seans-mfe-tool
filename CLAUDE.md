@@ -208,6 +208,11 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
   "plugin". A `CodegenVariant` is one per MFE and cannot express a *second*
   build; use a `FileContributor`. Registration is manifest-driven via
   `loadTargetPlugins()`; do **not** add side-effect import lists.
+- **The web build has two spellings and they must agree.** `framework`/`bundler`
+  scalars ≡ `targets.web` (ADR-095 §6). `resolveWebTarget()` in
+  `packages/codegen/src/unified-generator.ts` is the single rule (ADR-092 §4) —
+  never read `manifest.framework` directly. A manifest setting both differently
+  is a validation error, not a precedence question.
 - **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-036, #181).
 
 ## Backlog priority

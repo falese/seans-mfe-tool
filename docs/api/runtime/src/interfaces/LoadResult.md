@@ -282,6 +282,10 @@ Defined in: [packages/runtime/src/capability-results.ts:32](https://github.com/f
 
 > `optional` **targets**: `object`
 
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -301,6 +305,18 @@ Defined in: [packages/runtime/src/capability-results.ts:32](https://github.com/f
 ##### targets.swift.swiftToolsVersion
 
 > **swiftToolsVersion**: `string`
+
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
 
 #### transforms?
 

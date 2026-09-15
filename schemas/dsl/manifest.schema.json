@@ -54,6 +54,23 @@
       "description": "Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).",
       "type": "object",
       "properties": {
+        "web": {
+          "description": "The Module Federation remote. Equivalent to the top-level framework/bundler pair.",
+          "type": "object",
+          "properties": {
+            "framework": {
+              "description": "UI framework for the web build. Same values as the top-level `framework`.",
+              "type": "string",
+              "minLength": 1
+            },
+            "bundler": {
+              "description": "Bundler for the web build. Same values as the top-level `bundler`.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
         "swift": {
           "description": "Emit a Swift Package alongside the web build (ADR-095, ADR-096).",
           "type": "object",
@@ -89,7 +106,13 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      }
     },
     "description": {
       "type": "string"

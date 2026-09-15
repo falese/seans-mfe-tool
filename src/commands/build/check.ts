@@ -14,6 +14,7 @@ import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin, loadTargetPlugins } from '../../framework/loader';
 import { parseManifestFile, findManifest } from '@seans-mfe/dsl';
+import { resolveFrameworkName } from '@seans-mfe/codegen';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { EnvCheckResult } from '@seans-mfe/contracts';
 import type { DSLManifest } from '@seans-mfe/dsl';
@@ -74,7 +75,7 @@ export default class BuildCheck extends BaseCommand<BuildCheckResult> {
     const manifestPath = flags.manifest ?? await findManifest(process.cwd());
     if (manifestPath) {
       loadedManifest = await parseManifestFile(manifestPath) as DSLManifest;
-      framework = framework ?? (loadedManifest as Record<string, unknown>).framework as string | undefined;
+      framework = framework ?? resolveFrameworkName(loadedManifest as DSLManifest);
     }
 
     if (!framework) {

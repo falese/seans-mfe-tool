@@ -220,7 +220,7 @@ Manifest to modify
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -239,6 +239,18 @@ Manifest to modify
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 
@@ -482,6 +494,10 @@ Modified manifest (new object)
 
 > `optional` **targets**: `object`
 
+#### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 #### targets.swift?
 
 > `optional` **swift**: `object`
@@ -501,6 +517,18 @@ Modified manifest (new object)
 #### targets.swift.swiftToolsVersion
 
 > **swiftToolsVersion**: `string`
+
+#### targets.web?
+
+> `optional` **web**: `object`
+
+#### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+#### targets.web.framework?
+
+> `optional` **framework**: `string`
 
 ### transforms?
 

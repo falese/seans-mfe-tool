@@ -252,6 +252,10 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 > `optional` **targets**: `object`
 
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -271,6 +275,18 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 ##### targets.swift.swiftToolsVersion
 
 > **swiftToolsVersion**: `string`
+
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
 
 #### transforms?
 

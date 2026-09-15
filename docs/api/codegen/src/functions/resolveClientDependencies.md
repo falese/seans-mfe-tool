@@ -219,7 +219,7 @@ derived from the manifest: framework singletons + design-system + extras.
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -238,6 +238,18 @@ derived from the manifest: framework singletons + design-system + extras.
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 

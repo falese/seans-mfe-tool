@@ -82,9 +82,12 @@ such.
 
 ### 1. `targets:` names builds produced *alongside* the primary one
 
-`framework` and `bundler` continue to describe the primary web build. `targets:`
-is a new optional manifest block naming what is built beside it. It is additive
-by construction: a manifest that gains a target loses nothing.
+`framework` and `bundler` describe the web build. `targets:` is a new optional
+manifest block naming every build the manifest produces. It is additive by
+construction: a manifest that gains a target loses nothing.
+
+The web build has two spellings — see §6, which makes `targets` a complete list
+rather than a list of everything-except-the-important-one.
 
 `DSLManifestSchema` is a plain, non-strict Zod object, so an undeclared
 top-level key is **stripped, not rejected**. Declaring `targets` in the schema is
@@ -96,6 +99,16 @@ Swift build parses clean and silently loses the request.
 `KNOWN_TARGETS` drives a stderr warning, not a validation error, exactly as
 `KNOWN_FRAMEWORKS` and `KNOWN_BUNDLERS` do. Shipping a target generator outside
 this repository must not require a schema change inside it.
+
+`TargetsSchema` must therefore carry a `.catchall()`. The first implementation
+did not, and the claim above was half-true in a way worth recording: a plain
+`z.object` **strips** unknown keys, so a manifest declaring `targets.kotlin`
+printed the warning from the raw parse and then lost the key entirely in
+`parseAndValidateDirectory` — the path every command actually uses. The
+open-world policy held for `framework` and `bundler`, which are
+`z.string()`, and silently did not hold here. The test that was supposed to
+cover it built its manifest in memory and never round-tripped through
+validation.
 
 ### 3. A secondary target's files are a `FileContributor`, not a variant
 
@@ -140,19 +153,42 @@ an existing MFE gains a second build by a reproducible command rather than by
 hand-edited YAML. Both go through one helper (`src/targets/swift.ts`) so the two
 cannot disagree about what the flag means.
 
+### 6. The web build is a target too, spelled two ways
+
+```yaml
+framework: react            targets:
+bundler: rspack        ≡      web: { framework: react, bundler: rspack }
+```
+
+The scalars came first, every example manifest uses them, and they are not
+deprecated. `targets.web` exists because without it `targets:` is not a list of
+what a manifest builds — it is a list of everything *except* the web build,
+which sits outside in a different shape. A team answering "does this MFE
+support web and mobile?" could not point at one list and say yes.
+
+One resolution rule reads both (`resolveWebTarget`, ADR-092 §4), and the two
+spellings are required to **agree**: a manifest that sets both to different
+values is rejected by `validateFull` with both values named. Silently picking a
+winner between two sources of one fact is the defect class this repository keeps
+paying for — `getTemplateDir()` pointing at a deleted directory, four capability
+arrays two entries short — and a precedence rule here would be another instance
+of it.
+
+`loadTargetPlugins` skips the `web` key for the same reason: it is a spelling of
+the primary build, already resolved, not a second plugin.
+
 ## Boundaries
 
-- **This is not a target *matrix*.** `targets.swift` is one key. There is no
-  `targets.swift.variants`, no per-target framework selection, and no attempt to
-  generalise `framework`/`bundler` into the same structure. When a second
-  secondary target lands, that generalisation is worth revisiting; predicting its
-  shape from n=1 is not.
+- **This is not a target *matrix*.** Each key names one build. There is no
+  `targets.swift.variants` and no per-target framework selection beyond the
+  `web` pair. A target's options are its own generator's business.
+- **`targets.web` does not make the web build optional.** Every manifest still
+  resolves one, and omitting `web` falls back to the scalars and then to
+  react + rspack. "Mobile only" is not expressible and is deliberately not a
+  goal — the point is one manifest producing *both*.
 - **It does not connect `language:` to anything.** ADR-009's scoping stands: a
   `language: go` manifest still generates React. A secondary target is selected
   by `targets`, never inferred from `language`.
-- **It does not make the web build optional.** Every manifest still resolves a
-  primary variant. "Swift only" is not expressible and is deliberately not a goal
-  — the point is one manifest producing *both*.
 - **The target's own contract is ADR-096's problem, not this one.** This ADR
   decides *where a second build attaches*. What the Swift package contains, and
   why its `load` is `Bundle.load()`, is decided there.
@@ -166,6 +202,10 @@ the first evidence it generalises beyond the case it was extracted for.
 
 Worse, and accepted knowingly:
 
+- **The web build now has two spellings.** Redundancy is a cost even when the
+  two are checked against each other, and a reader of an unfamiliar manifest has
+  to know both. The alternative — migrating 21 example manifests and every
+  downstream consumer off the scalars — is a larger change that buys less.
 - **Codegen gains a second reason to be registered.** Targets register through
   their plugin (ADR-097); the BFF still registers by side-effect import. Two
   mechanisms where there should be one.

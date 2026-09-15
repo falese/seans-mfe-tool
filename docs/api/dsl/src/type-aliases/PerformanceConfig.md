@@ -8,4 +8,4 @@
 
 > **PerformanceConfig** = `z.infer`\<*typeof* [`PerformanceConfigSchema`](../variables/PerformanceConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:403](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L403)
+Defined in: [packages/dsl/src/schema.ts:432](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L432)

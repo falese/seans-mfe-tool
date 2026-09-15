@@ -216,7 +216,7 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -235,6 +235,18 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 
@@ -842,6 +854,10 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 > `optional` **targets**: `object`
 
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 #### manifest.targets.swift?
 
 > `optional` **swift**: `object`
@@ -861,6 +877,18 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 #### manifest.targets.swift.swiftToolsVersion
 
 > **swiftToolsVersion**: `string`
+
+#### manifest.targets.web?
+
+> `optional` **web**: `object`
+
+#### manifest.targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+#### manifest.targets.web.framework?
+
+> `optional` **framework**: `string`
 
 #### manifest.transforms?
 

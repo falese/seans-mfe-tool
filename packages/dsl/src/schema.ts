@@ -109,15 +109,44 @@ export const SwiftTargetSchema = z.object({
 export type SwiftTarget = z.infer<typeof SwiftTargetSchema>;
 
 /**
- * Secondary build targets — a second artifact from the same manifest.
+ * The web target — the Module Federation remote.
  *
- * Open in shape for the same reason `framework` is an open string: `swift` is
- * the only key the platform ships, not the only key that may exist.
+ * Carries the same two values the top-level `framework`/`bundler` scalars do.
+ * Those scalars remain the shorthand and are what all 21 example manifests
+ * use; this is the spelling that lets a manifest name every build it produces
+ * in ONE list rather than privileging the web one structurally (ADR-095 §6).
  */
-export const TargetsSchema = z.object({
-  swift: SwiftTargetSchema.optional()
-    .describe('Emit a Swift Package alongside the web build (ADR-095, ADR-096).'),
+export const WebTargetSchema = z.object({
+  framework: FrameworkSchema.optional()
+    .describe('UI framework for the web build. Same values as the top-level `framework`.'),
+  bundler: BundlerSchema.optional()
+    .describe('Bundler for the web build. Same values as the top-level `bundler`.'),
 });
+export type WebTarget = z.infer<typeof WebTargetSchema>;
+
+/**
+ * Every build this manifest produces.
+ *
+ * `web` is the Module Federation remote; any other key is a build produced
+ * beside it from the same capabilities. `swift` is the only other key the
+ * platform ships a generator for today, which is NOT the same as the only key
+ * that may appear.
+ *
+ * `.catchall()` is load-bearing. A plain `z.object` strips unknown keys, so
+ * before it a manifest declaring `targets.kotlin` warned on stderr from the raw
+ * parse and then lost the key entirely in the validated path every command
+ * uses — the exact opposite of the open-world policy this is supposed to
+ * follow (ADR-036 §181, ADR-095 §2). The known keys keep their own schemas;
+ * everything else is preserved as-is for whichever generator claims it.
+ */
+export const TargetsSchema = z
+  .object({
+    web: WebTargetSchema.optional()
+      .describe('The Module Federation remote. Equivalent to the top-level framework/bundler pair.'),
+    swift: SwiftTargetSchema.optional()
+      .describe('Emit a Swift Package alongside the web build (ADR-095, ADR-096).'),
+  })
+  .catchall(z.record(z.string(), z.unknown()));
 export type Targets = z.infer<typeof TargetsSchema>;
 
 /** Capability type discrimination */

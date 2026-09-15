@@ -12,6 +12,7 @@ import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { loadFrameworkPlugin, loadTargetPlugins } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
+import { resolveFrameworkName } from '@seans-mfe/codegen';
 import type { DSLManifest } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
 import type { BuildResult } from '@seans-mfe/contracts';
@@ -38,7 +39,7 @@ export async function buildProdCommand(opts: BuildProdOptions): Promise<BuildPro
   const manifestPath = opts.manifest ?? await findManifest(cwd);
   if (manifestPath) {
     manifest = await parseManifestFile(manifestPath);
-    framework = framework ?? (manifest as Record<string, unknown>).framework as string | undefined;
+    framework = framework ?? resolveFrameworkName(manifest as DSLManifest);
   }
 
   if (!framework) {

@@ -9,17 +9,38 @@ An MFE's manifest declares *capabilities* — what the thing can do. How those
 capabilities get delivered is a separate question, and until now the answer was
 always the same: a Module Federation remote, fetched over HTTP.
 
-A **secondary target** is a second answer to that question, from the same
-manifest. Add four lines:
+A **target** is one answer to that question. A manifest can name more than one.
+
+### Saying "this MFE targets web and mobile"
 
 ```yaml
 targets:
+  web:
+    framework: react
+    bundler: rspack
   swift: {}
 ```
 
-…and `remote:generate` emits a Swift Package under `swift/` beside the web
-build. Same capabilities, same lifecycle contract, two independently buildable
-artifacts.
+Both builds come from the same capabilities. `remote:generate` emits the Module
+Federation remote under `src/` and a Swift Package under `swift/`.
+
+### Or, on an MFE that already exists
+
+`framework` and `bundler` at the top level are the older spelling of
+`targets.web`, they are not deprecated, and every example manifest still uses
+them. So adding a native build to an existing MFE is two lines:
+
+```yaml
+framework: react      # unchanged
+bundler: rspack       # unchanged
+
+targets:
+  swift: {}           # + the native iOS build
+```
+
+The two spellings must **agree** where both are present — a manifest setting
+`framework: react` and `targets.web.framework: angular` is rejected, naming both
+values, rather than quietly building one of them.
 
 ```
 mfe-manifest.yaml
@@ -44,7 +65,7 @@ seans-mfe-tool remote:generate --swift
 ```
 
 The flag is additive. It writes a `targets.swift` block and changes nothing
-else — `framework` and `bundler` still describe the web build.
+else — whichever spelling already describes your web build keeps describing it.
 
 ## What you get, and who owns it
 
@@ -148,6 +169,9 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 - **Manifest lifecycle hooks are not dispatched in Swift yet.** The guard,
   transition and error pipeline is rendered; ADR-040 handler sources are a
   web-lane feature so far.
+- **"Mobile" means iOS.** `swift` is the only native target the platform ships a
+  generator for. A manifest may declare any target id — unknown ids are
+  preserved and warn rather than failing — but nothing will build them.
 
 ## Adding a different target
 

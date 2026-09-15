@@ -183,6 +183,10 @@ export function loadTargetPlugins(manifest: DSLManifest): BaseFrameworkPlugin[] 
   const plugins: BaseFrameworkPlugin[] = [loadFrameworkPlugin(resolveFrameworkName(manifest))];
 
   for (const targetId of Object.keys(manifest.targets ?? {})) {
+    // `web` is the primary build, already loaded above from the single
+    // resolution rule — it is a spelling of framework/bundler, not a second
+    // plugin to resolve (ADR-095 §6).
+    if (targetId === 'web') continue;
     try {
       plugins.push(loadTargetPlugin(targetId));
     } catch {

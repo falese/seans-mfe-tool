@@ -66,6 +66,7 @@
 - [RateLimitConfig](type-aliases/RateLimitConfig.md)
 - [SwiftTarget](type-aliases/SwiftTarget.md)
 - [Targets](type-aliases/Targets.md)
+- [WebTarget](type-aliases/WebTarget.md)
 
 ## Variables
 
@@ -115,6 +116,7 @@
 - [VALID\_CAPABILITY\_TYPES](variables/VALID_CAPABILITY_TYPES.md)
 - [VALID\_LANGUAGES](variables/VALID_LANGUAGES.md)
 - [VALID\_MFE\_TYPES](variables/VALID_MFE_TYPES.md)
+- [WebTargetSchema](variables/WebTargetSchema.md)
 - [WELL\_KNOWN\_PATH](variables/WELL_KNOWN_PATH.md)
 
 ## Functions

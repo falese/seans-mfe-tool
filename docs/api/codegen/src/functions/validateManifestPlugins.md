@@ -220,7 +220,7 @@ Supports both object format {pluginName: config} and array format [{pluginName: 
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -239,6 +239,18 @@ Supports both object format {pluginName: config} and array format [{pluginName: 
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 

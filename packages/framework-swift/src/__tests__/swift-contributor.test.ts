@@ -122,6 +122,31 @@ describe('Swift package layout and ownership (ADR-096)', () => {
   });
 });
 
+describe('The symmetric spelling (ADR-095 §6)', () => {
+  // The sentence a team actually wants to write: "this MFE targets web and
+  // mobile", as one list, rather than "it is a React MFE that also does Swift".
+  const symmetric = () =>
+    ({
+      ...manifest(),
+      framework: undefined,
+      bundler: undefined,
+      targets: { web: { framework: 'react', bundler: 'rspack' }, swift: {} },
+    }) as unknown as DSLManifest;
+
+  it('generates BOTH builds from targets alone, with no top-level framework', async () => {
+    const files = await generate(symmetric());
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain('src/platform/base-mfe/mfe.ts');
+    expect(paths).toContain('swift/Package.swift');
+  });
+
+  it('produces the same files as the scalar spelling', async () => {
+    const viaTargets = (await generate(symmetric())).map((f) => f.path).sort();
+    const viaScalars = (await generate(swiftManifest())).map((f) => f.path).sort();
+    expect(viaTargets).toEqual(viaScalars);
+  });
+});
+
 describe('Module naming (ADR-095)', () => {
   it('derives a PascalCase module name from the MFE name', async () => {
     const files = await generate(swiftManifest());

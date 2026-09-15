@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:562](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L562)
+Defined in: [packages/dsl/src/schema.ts:591](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L591)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:564](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L564)
+Defined in: [packages/dsl/src/schema.ts:593](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L593)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:564](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:565](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L565)
+Defined in: [packages/dsl/src/schema.ts:594](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L594)
 
 #### authorization?
 
@@ -230,6 +230,10 @@ Defined in: [packages/dsl/src/schema.ts:565](https://github.com/falese/seans-mfe
 
 > `optional` **targets**: `object`
 
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -250,6 +254,18 @@ Defined in: [packages/dsl/src/schema.ts:565](https://github.com/falese/seans-mfe
 
 > **swiftToolsVersion**: `string`
 
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]
@@ -268,4 +284,4 @@ Defined in: [packages/dsl/src/schema.ts:565](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:563](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L563)
+Defined in: [packages/dsl/src/schema.ts:592](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L592)

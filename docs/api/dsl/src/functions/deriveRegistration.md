@@ -222,7 +222,7 @@ addressed by route instead, so listing them here would say nothing.
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -241,6 +241,18 @@ addressed by route instead, so listing them here would say nothing.
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 

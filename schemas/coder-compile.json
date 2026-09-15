@@ -167,6 +167,18 @@
               "targets": {
                 "type": "object",
                 "properties": {
+                  "web": {
+                    "type": "object",
+                    "properties": {
+                      "framework": {
+                        "type": "string"
+                      },
+                      "bundler": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
                   "swift": {
                     "type": "object",
                     "required": [
@@ -190,7 +202,9 @@
                     "additionalProperties": false
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": {
+                  "type": "object"
+                }
               },
               "description": {
                 "type": "string"

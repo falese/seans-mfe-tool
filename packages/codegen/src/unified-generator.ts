@@ -94,17 +94,45 @@ export interface FrameworkVariant {
 }
 
 /**
- * The framework name a manifest asks for, before any plugin is consulted.
+ * The web build's framework and bundler, from whichever spelling declared them.
  *
- * Single-sourced because two callers need it and they need DIFFERENT things
- * from it: `deriveBuiltinVariant` maps it onto one of the two built-in trios,
- * while the CLI's `resolveFrameworkVariant` hands it to `loadFrameworkPlugin`,
- * where an unrecognised name is a third-party plugin to require (ADR-036), not
- * a value to fall back from. A caller that single-sources the *trio* instead of
- * the *name* silently turns every third-party framework into React.
+ * Two spellings reach the same pair (ADR-095 §6):
+ *
+ *     framework: react            targets:
+ *     bundler: rspack        ≡      web: { framework: react, bundler: rspack }
+ *
+ * `targets.web` wins where both are present and agree; where they DISAGREE the
+ * manifest is rejected by `validateFull` rather than silently resolved here —
+ * two sources of one fact quietly picking a winner is the defect class this
+ * repo keeps paying for.
+ *
+ * This is the single resolution rule (ADR-092 §4). Callers that need the name
+ * must not re-derive it: `deriveBuiltinVariant` maps it onto one of the two
+ * built-in trios, while the CLI's `resolveFrameworkVariant` hands it to
+ * `loadFrameworkPlugin`, where an unrecognised name is a third-party plugin to
+ * require (ADR-036), not a value to fall back from. A caller that
+ * single-sources the *trio* instead of the *name* silently turns every
+ * third-party framework into React.
  */
+export function resolveWebTarget(manifest: DSLManifest): { framework: string; bundler: string } {
+  const web = manifest.targets?.web;
+  const framework = web?.framework ?? manifest.framework;
+  const bundler = web?.bundler ?? manifest.bundler;
+  // Back-compat rule, unchanged: an explicit framework wins; otherwise
+  // `bundler: webpack` is what selects Angular.
+  const resolvedFramework = framework ?? (bundler === 'webpack' ? 'angular' : 'react');
+  const resolvedBundler = bundler ?? (resolvedFramework === 'angular' ? 'webpack' : 'rspack');
+  return { framework: resolvedFramework, bundler: resolvedBundler };
+}
+
+/** The framework name a manifest asks for, before any plugin is consulted. */
 export function resolveFrameworkName(manifest: DSLManifest): string {
-  return manifest.framework ?? (manifest.bundler === 'webpack' ? 'angular' : 'react');
+  return resolveWebTarget(manifest).framework;
+}
+
+/** The bundler a manifest asks for, by the same rule. */
+export function resolveBundlerName(manifest: DSLManifest): string {
+  return resolveWebTarget(manifest).bundler;
 }
 
 /**

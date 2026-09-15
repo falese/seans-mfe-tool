@@ -2,17 +2,33 @@
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / resolveNeededMeshPluginsAndTransforms
+[seans-mfe-tool API reference](../../../README.md) / [codegen/src](../README.md) / resolveWebTarget
 
-# Function: resolveNeededMeshPluginsAndTransforms()
+# Function: resolveWebTarget()
 
-> **resolveNeededMeshPluginsAndTransforms**(`manifest`): `object`
+> **resolveWebTarget**(`manifest`): `object`
 
-Defined in: [packages/codegen/src/dependencies.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L113)
+Defined in: [packages/codegen/src/unified-generator.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L117)
 
-Which optional Mesh plugins/transforms a manifest's `data:`/`performance:`
-config implies (ADR-027). Feeds `extractManifestVars`, which decides what
-`package.json.ejs` and the BFF templates render.
+The web build's framework and bundler, from whichever spelling declared them.
+
+Two spellings reach the same pair (ADR-095 §6):
+
+    framework: react            targets:
+    bundler: rspack        ≡      web: { framework: react, bundler: rspack }
+
+`targets.web` wins where both are present and agree; where they DISAGREE the
+manifest is rejected by `validateFull` rather than silently resolved here —
+two sources of one fact quietly picking a winner is the defect class this
+repo keeps paying for.
+
+This is the single resolution rule (ADR-092 §4). Callers that need the name
+must not re-derive it: `deriveBuiltinVariant` maps it onto one of the two
+built-in trios, while the CLI's `resolveFrameworkVariant` hands it to
+`loadFrameworkPlugin`, where an unrecognised name is a third-party plugin to
+require (ADR-036), not a value to fall back from. A caller that
+single-sources the *trio* instead of the *name* silently turns every
+third-party framework into React.
 
 ## Parameters
 
@@ -270,10 +286,10 @@ config implies (ADR-027). Feeds `extractManifestVars`, which decides what
 
 `object`
 
-### neededPlugins
+### bundler
 
-> **neededPlugins**: `string`[]
+> **bundler**: `string`
 
-### neededTransforms
+### framework
 
-> **neededTransforms**: `string`[]
+> **framework**: `string`

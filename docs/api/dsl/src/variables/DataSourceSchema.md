@@ -8,6 +8,6 @@
 
 > `const` **DataSourceSchema**: `ZodObject`\<\{ `handler`: `ZodObject`\<\{ `openapi`: `ZodObject`\<\{ `operationHeaders`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `source`: `ZodString`; \}, `$strip`\>; \}, `$strip`\>; `name`: `ZodString`; `transforms`: `ZodOptional`\<`ZodArray`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:244](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L244)
+Defined in: [packages/dsl/src/schema.ts:273](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L273)
 
 Mesh source configuration

@@ -77,6 +77,37 @@ describe('TargetsSchema (ADR-095)', () => {
   });
 });
 
+describe('Unknown target ids survive validation (ADR-095 §2)', () => {
+  // The defect this pins: TargetsSchema was a CLOSED z.object({ swift }), and a
+  // non-strict Zod object STRIPS unknown keys. So a manifest declaring
+  // `targets.kotlin` warned on stderr from the raw parse and then had the key
+  // silently removed by the validated path every command actually uses — the
+  // opposite of the open-world policy ADR-095 §2 claims, and invisible because
+  // the original loader test built its manifest in memory and never
+  // round-tripped through validation.
+  it('keeps a target id this build has no generator for', () => {
+    const parsed = DSLManifestSchema.parse({
+      ...baseManifest,
+      targets: { swift: {}, kotlin: {} },
+    });
+    expect(Object.keys(parsed.targets ?? {}).sort()).toEqual(['kotlin', 'swift']);
+  });
+
+  it('still applies the swift schema to the key it does know', () => {
+    const parsed = DSLManifestSchema.parse({
+      ...baseManifest,
+      targets: { swift: {}, kotlin: { toolchain: '2.0' } },
+    });
+    expect(parsed.targets?.swift?.swiftToolsVersion).toBe('5.9');
+  });
+
+  it('still rejects a malformed swift target', () => {
+    expect(() =>
+      DSLManifestSchema.parse({ ...baseManifest, targets: { swift: { moduleName: 'no-dashes' }, kotlin: {} } })
+    ).toThrow(/identifier/i);
+  });
+});
+
 describe('DSLManifestSchema targets (ADR-095)', () => {
   it('parses a manifest with no targets block', () => {
     const parsed = DSLManifestSchema.parse(baseManifest);

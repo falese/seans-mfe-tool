@@ -8,16 +8,9 @@
 
 > **resolveFrameworkName**(`manifest`): `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L106)
+Defined in: [packages/codegen/src/unified-generator.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L129)
 
 The framework name a manifest asks for, before any plugin is consulted.
-
-Single-sourced because two callers need it and they need DIFFERENT things
-from it: `deriveBuiltinVariant` maps it onto one of the two built-in trios,
-while the CLI's `resolveFrameworkVariant` hands it to `loadFrameworkPlugin`,
-where an unrecognised name is a third-party plugin to require (ADR-036), not
-a value to fall back from. A caller that single-sources the *trio* instead of
-the *name* silently turns every third-party framework into React.
 
 ## Parameters
 
@@ -225,7 +218,7 @@ the *name* silently turns every third-party framework into React.
 
 #### targets?
 
-\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
@@ -244,6 +237,18 @@ the *name* silently turns every third-party framework into React.
 `string` = `...`
 
 #### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
 
 `string` = `...`
 

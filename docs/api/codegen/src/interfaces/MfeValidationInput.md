@@ -250,6 +250,10 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 > `optional` **targets**: `object`
 
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -269,6 +273,18 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 ##### targets.swift.swiftToolsVersion
 
 > **swiftToolsVersion**: `string`
+
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
 
 #### transforms?
 

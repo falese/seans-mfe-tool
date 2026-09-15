@@ -8,6 +8,6 @@
 
 > `const` **ProvidedSlotSchema**: `ZodObject`\<\{ `description`: `ZodOptional`\<`ZodString`\>; `id`: `ZodString`; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:435](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L435)
+Defined in: [packages/dsl/src/schema.ts:464](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L464)
 
 One slot an MFE declares it will provide at runtime (ADR-067).
