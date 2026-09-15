@@ -9,7 +9,7 @@ deciders: [sean]
 area: Runtime / native / platform contract
 enforcement: code
 tags: [native, swift, runtime, platform-contract, codegen]
-relates-to: [34, 36, 41, 42, 80, 95, 97]
+relates-to: [12, 34, 36, 41, 42, 80, 95, 97]
 supersedes: []
 superseded-by: []
 implements-pdr: [2]
@@ -19,8 +19,11 @@ implemented-by:
   - packages/framework-swift/templates/Sources/Platform/MFEBase.swift.ejs
   - packages/framework-swift/templates/Sources/Platform/NativeMFEBase.swift.ejs
   - packages/framework-swift/templates/Sources/Platform/GeneratedMFE.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/BFFClient.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/BFFDataProvider.swift.ejs
 verified-by:
   - packages/framework-swift/src/__tests__/native-contract-pin.test.ts
+  - packages/framework-swift/src/__tests__/swift-contributor.test.ts
 summary: >-
   The generated `<Module>MFE` sits beside `RemoteMFE` and `AngularRemoteMFE` as a third concrete
   subclass of the platform base class — but under a SIBLING of `BaseRemoteMFE`, not under it,
@@ -164,6 +167,48 @@ The effect: the manifest is read by two build systems, Node's and Swift's, and
 neither holds a copy of the truth. The projection is committed and
 generator-owned; the derived Swift is neither.
 
+### 7. A BFF gets a generated client and a generated provider; the documents stay the developer's
+
+When the manifest declares a `data:` section the platform already generates a
+GraphQL BFF (ADR-012) and, in the web lane, a **generator-owned**
+`src/platform/bff/bff.ts` — a generic `query<T>(document, variables, headers)`
+over that endpoint, with HTTP failures and GraphQL errors mapped to typed
+errors. It does not generate the queries themselves.
+
+The native lane mirrors that split exactly rather than inventing one:
+
+| Web lane | Native lane | Owner |
+|---|---|---|
+| `src/platform/bff/bff.ts` | `Platform/BFFClient.swift` | generator |
+| — | `Platform/BFFDataProvider.swift` | generator |
+| the query a feature component writes | `Features/<Cap>Query.swift` | developer |
+
+`BFFDataProvider` is the piece with no web counterpart, and it is generated for
+the same reason the registry is: the wiring from a capability to a query is
+mechanical. `<Module>DataProvider`, the protocol, still declares one
+`async throws` method per capability this target implements;
+`BFF<Module>DataProvider` implements every one of them as
+`try await client.query(<Cap>Query.document)`. Adding a capability to the
+manifest regenerates both, and seeds a new developer-owned `<Cap>Query.swift`
+beside them — the per-capability file shape ADR-095 §6 establishes, so the new
+capability lands in a file regeneration is allowed to create rather than needing
+a hand-edit to a file it may never touch.
+
+What stays the developer's is the **document**, because codegen cannot know it:
+the BFF's schema is composed by GraphQL Mesh from `data.sources` at build time,
+so the field names come from the team's OpenAPI specs, not from anything the
+generator can read. The seeded document is a valid but useless
+`query <Cap> { __typename }` with a TODO and the playground URL.
+
+The endpoint is baked from the manifest into `BFFClient.defaultEndpoint` and
+overridable at runtime by `BFF_URL`, the same precedence the web connector uses
+and for the same reason: an MFE and its BFF are one deployable unit on one
+origin, so a relative path would resolve against the host app.
+
+A manifest with no `data:` section generates no BFF, so none of these three
+files is emitted; `<Module>DataProvider` remains a bare protocol for the host to
+implement.
+
 ## Boundaries
 
 - **Nothing compiles the emitted Swift.** There is no Swift toolchain in CI or in
@@ -207,9 +252,17 @@ generator-owned; the derived Swift is neither.
   therefore feasible and would close the "nothing compiles the emitted Swift"
   gap for the non-UI surface; it is not in this ADR's scope, and the UI surface
   would still need a Mac.
-- **No GraphQL client is generated.** The data seam is a protocol the host
-  implements. Typed query structs would need schema introspection at codegen
-  time; that is a separate scope.
+- **No *typed* GraphQL client is generated.** §7 generates the connector and the
+  provider that calls it, but the documents and the response types are the
+  developer's: `<Cap>Outputs` is emitted as an empty `Codable` struct and the
+  seeded document selects `__typename`. Typed query structs would need schema
+  introspection at codegen time, which is a separate scope — the BFF's schema
+  does not exist until Mesh composes it.
+- **Nothing here is proven against a running BFF.** The provider is asserted at
+  the text level: that it implements the protocol, that each method decodes into
+  a type `Types.swift` declares, and that the client surfaces GraphQL errors
+  ahead of partial data. Whether a real request round-trips is a Mac-and-running-
+  BFF check, and it is on the same side of the line as compilation.
 - **The lifecycle hooks declared in a manifest are not yet dispatched in Swift.**
   `MFEBase` renders the guard/transition/error pipeline; manifest-declared
   before/after/error hooks (ADR-040 handler sources) are a web-lane feature that
@@ -261,4 +314,5 @@ Worse, and accepted knowingly:
 - ADR-041 — the ten platform capabilities that this renders into Swift.
 - ADR-042 — the MFE lifecycle state machine and its guarded transitions, rendered here as `MFELifecycleTransitions`.
 - ADR-080 — the ten platform capabilities and the MFE lifecycle machine are defined once in `@seans-mfe/contracts`; this renders that single definition into a second language.
+- ADR-012 — the GraphQL BFF generated from a manifest's `data:` section; §7 connects the Swift target to it and mirrors the ownership split of the web lane's generated `bff.ts`.
 - ADR-082 — the platform reports its own breaking changes in code it does not own, and never rewrites that code; the Swift build break is that posture.

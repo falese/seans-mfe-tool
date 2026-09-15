@@ -1836,7 +1836,7 @@
       "CrewRoster",
       "PayStatus"
     ],
-    "fileCount": 42,
+    "fileCount": 46,
     "files": [
       {
         "path": "<cwd>/__mocks__/fileMock.js",
@@ -1994,14 +1994,34 @@
         "sha256": "26bd8e917d649eb74cf2f6ac8a11a0acc01c975a04e82655e015a5e60f7e495d"
       },
       {
+        "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterQuery.swift",
+        "overwrite": false,
+        "sha256": "7e046c165a8fcdf99d0ae4641b21aaf3cbe14ed8045a4a8460918ed7f35386c7"
+      },
+      {
         "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterView.swift",
         "overwrite": false,
         "sha256": "cc4e319fb93bc73e0568b4f966672f4f7b0d62699ee3dac3e4e40f941353f1ab"
       },
       {
+        "path": "<cwd>/swift/Sources/MFE/Features/PayStatusQuery.swift",
+        "overwrite": false,
+        "sha256": "def8185f2350fb793c48a5a89e5d644939040a1e13b6c0f2fdac055b5961322e"
+      },
+      {
         "path": "<cwd>/swift/Sources/MFE/Features/PayStatusView.swift",
         "overwrite": false,
         "sha256": "3db3017adaa1493cadcd5731bc0c42519ba07bd373649bd942fe72c26b4af8fd"
+      },
+      {
+        "path": "<cwd>/swift/Sources/MFE/Platform/BFFClient.swift",
+        "overwrite": true,
+        "sha256": "acf34ba367f47d44669a5edf89ffa265880611b32342a52408feee06489cbb78"
+      },
+      {
+        "path": "<cwd>/swift/Sources/MFE/Platform/BFFDataProvider.swift",
+        "overwrite": true,
+        "sha256": "40d05cebe8b7154db28d74b0a3442649e6b443f7bd949c3ed4b8b24ae6e85205"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/CapabilityViewRegistry.swift",

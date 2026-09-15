@@ -205,6 +205,13 @@ exactly as in the web lane.
 the original design missed, and it is worth stating plainly because it is the
 whole reason the two lanes can behave the same.
 
+The per-capability loop is a *set* of files, not one, and the set is itself
+conditional: when the manifest declares a `data:` section the Swift target emits
+`Features/<Cap>Query.swift` beside `Features/<Cap>View.swift`, so the capability
+that gets a view also gets the document backing it (ADR-096 §7). A target's
+generator composes its own repeated structure; the seam only has to hand it the
+plan context.
+
 ## Boundaries
 
 - **This is not a target *matrix*.** Each key names one build. There is no

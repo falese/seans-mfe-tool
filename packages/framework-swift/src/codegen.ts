@@ -64,6 +64,8 @@ interface SwiftCtx {
   };
   vars: { bffEndpoint?: string };
   domainCapabilities: string[];
+  /** True when the manifest declares a `data:` section — i.e. there is a BFF. */
+  hasBff: boolean;
 }
 
 interface SwiftTargetConfig {
@@ -79,6 +81,15 @@ const swiftTarget = (c: unknown): SwiftTargetConfig | undefined =>
 
 /** Every spec's gate — the direct analogue of the BFF's `hasBff`. */
 const hasSwift = (c: unknown): boolean => swiftTarget(c) !== undefined;
+
+/**
+ * The Swift target AND a BFF to talk to.
+ *
+ * A manifest with no `data:` section generates no BFF, so there is nothing for
+ * a client to connect to and the provider stays a bare protocol for the host
+ * to implement.
+ */
+const hasSwiftBff = (c: unknown): boolean => hasSwift(c) && (c as SwiftCtx).hasBff;
 
 /** `crew-services` → `CrewServices`. Must be a legal Swift identifier. */
 export function pascalCase(name: string): string {
@@ -264,6 +275,11 @@ const STATIC_SWIFT_SPECS: FileSpec[] = [
   { template: 'Sources/Platform/GeneratedMFE.swift.ejs', out: `${PLATFORM}/GeneratedMFE.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
   { template: 'Sources/Platform/Types.swift.ejs', out: `${PLATFORM}/Types.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
   { template: 'Sources/Platform/DataProvider.swift.ejs', out: `${PLATFORM}/DataProvider.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
+  // The BFF client and the provider that uses it — generator-owned, because
+  // the wiring from a capability to a query is mechanical. Emitted only when
+  // there is a BFF (ADR-012).
+  { template: 'Sources/Platform/BFFClient.swift.ejs', out: `${PLATFORM}/BFFClient.swift`, owner: 'generator', root: 'swift', when: hasSwiftBff, vars: swiftVars },
+  { template: 'Sources/Platform/BFFDataProvider.swift.ejs', out: `${PLATFORM}/BFFDataProvider.swift`, owner: 'generator', root: 'swift', when: hasSwiftBff, vars: swiftVars },
   { template: 'Sources/Platform/CapabilityViewRegistry.swift.ejs', out: `${PLATFORM}/CapabilityViewRegistry.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
   { template: 'Tests/LifecycleTests.swift.ejs', out: `${SWIFT_DIR}/Tests/MFETests/LifecycleTests.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
 ];
@@ -284,13 +300,31 @@ export function swiftSpecs(ctx: unknown): FileSpec[] {
   const descriptions = capabilityDescriptions(ctx);
   return [
     ...STATIC_SWIFT_SPECS,
-    ...selectedCapabilities(ctx).map((name) => ({
-      template: 'Sources/Features/CapabilityView.swift.ejs',
-      out: `${SOURCES}/Features/${name}View.swift`,
-      owner: 'developer' as const,
-      root: 'swift',
-      vars: () => ({ name, description: descriptions[name] ?? '' }),
-    })),
+    ...selectedCapabilities(ctx).flatMap((name) => {
+      const perCapability: FileSpec[] = [
+        {
+          template: 'Sources/Features/CapabilityView.swift.ejs',
+          out: `${SOURCES}/Features/${name}View.swift`,
+          owner: 'developer',
+          root: 'swift',
+          vars: () => ({ name, description: descriptions[name] ?? '' }),
+        },
+      ];
+      // The document backing this capability. Developer-owned for the same
+      // reason the web lane's queries are: the BFF's schema is composed by
+      // Mesh from `data.sources` at build time, so codegen cannot know the
+      // field names.
+      if (hasSwiftBff(ctx)) {
+        perCapability.push({
+          template: 'Sources/Features/CapabilityQuery.swift.ejs',
+          out: `${SOURCES}/Features/${name}Query.swift`,
+          owner: 'developer',
+          root: 'swift',
+          vars: () => ({ name, bffEndpoint: (ctx as SwiftCtx).vars.bffEndpoint ?? '' }),
+        });
+      }
+      return perCapability;
+    }),
   ];
 }
 

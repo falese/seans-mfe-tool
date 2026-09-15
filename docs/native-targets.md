@@ -89,6 +89,7 @@ else — whichever spelling already describes your web build keeps describing it
 | Path | Owner |
 |---|---|
 | `swift/Sources/MFE/Features/<Cap>View.swift` | **You.** One per capability. Seeded once, then never rewritten. |
+| `swift/Sources/MFE/Features/<Cap>Query.swift` | **You.** One per capability, when the manifest declares a `data:` section. Seeded once. |
 | `swift/Package.swift`, `swift/README.md` | **You.** Seeded once. |
 | `swift/Sources/MFE/Platform/**` | The generator. Re-stamped every run. |
 | `swift/mfe-manifest.json` | The generator. Input to the SPM plugin. |
@@ -97,8 +98,9 @@ This is the same split the web lane already uses — `src/platform/**` is the
 generator's, `src/features/**` is yours — so a Swift author's edits survive
 regeneration for the same reason a React author's do.
 
-**When you add a capability**, you get a new `<Cap>View.swift` seeded with a
-stub and the package keeps building — the same thing the web lane does with
+**When you add a capability**, you get a new `<Cap>View.swift` (and a new
+`<Cap>Query.swift`, if you have a BFF) seeded with a stub, and the package keeps
+building — the same thing the web lane does with
 `src/features/<Cap>/<Cap>.tsx`. `overwrite: false` means *seed once*, not
 *never write*, so a file that does not exist yet is created.
 
@@ -106,6 +108,52 @@ Two checks cover what regeneration cannot fix on its own, both reported by
 `mfe:validate`: `native-capability-view` if a view was deleted, and
 `native-views-legacy-file` if a pre-split `CapabilityViews.swift` is still
 around from before views were split per capability.
+
+## If the manifest declares a data source, the native build talks to the BFF
+
+A manifest with a `data:` section already generates a GraphQL BFF beside the web
+remote (ADR-012). The Swift target connects to that BFF, and the connector is
+**generated**:
+
+| What | Where | Owner |
+|---|---|---|
+| Generic GraphQL client over the BFF endpoint | `Platform/BFFClient.swift` | generator |
+| The provider protocol, one method per capability | `Platform/DataProvider.swift` | generator |
+| An implementation of it that calls the client | `Platform/BFFDataProvider.swift` | generator |
+| The GraphQL document for one capability | `Features/<Cap>Query.swift` | **you** |
+
+```swift
+// Platform/BFFDataProvider.swift — generated, and regenerated
+public struct BFFMeridianCrewServicesDataProvider: MeridianCrewServicesDataProvider {
+    public func crewRoster() async throws -> CrewRosterOutputs {
+        try await client.query(CrewRosterQuery.document)
+    }
+}
+```
+
+The wiring is mechanical, so the platform writes it and keeps writing it: add a
+capability, regenerate, and the provider gains a method. The **document** is
+yours because codegen cannot know it — your BFF's schema is composed by GraphQL
+Mesh from `data.sources` at build time, so the field names come from your
+OpenAPI specs. This is the same split the web lane has: generated
+`src/platform/bff/bff.ts` exposes `query<T>(document, …)`, and the query itself
+is written in the feature component.
+
+The endpoint is baked in from the manifest and overridden at runtime by
+`BFF_URL`:
+
+```swift
+BFFClient.defaultEndpoint            // http://localhost:5005/graphql
+BFFClient()                          // BFF_URL if set, else the baked default
+BFFClient(endpoint: someOtherURL)    // or pass one
+```
+
+An absolute URL rather than a path because the MFE and its BFF are one
+deployable unit on one origin — a relative path would resolve against the host
+app instead.
+
+No `data:` section means no BFF, so none of these three files is emitted and
+`<Module>DataProvider` stays a bare protocol for the host to implement.
 
 ## How it relates to the web build
 
@@ -192,9 +240,14 @@ a build plugin that drags in a YAML parser is one nobody will keep.
   *template* drift only. Two assertions are not circular and carry the weight: a
   frozen literal of the states and capabilities the Swift lane was built for,
   and a check that every type `MFEBase` returns is declared in `Types.swift`.
-- **No GraphQL client is generated.** The data seam is a protocol the host
-  implements; typed query structs would need schema introspection at codegen
-  time.
+- **The generated BFF client is not *typed*.** `<Cap>Outputs` is an empty
+  `Codable` struct and the seeded document selects `__typename`; you declare the
+  fields on both sides. Typed query structs would need schema introspection at
+  codegen time, and the schema does not exist until Mesh composes it.
+- **No gate exercises a real BFF request.** The provider is checked at the text
+  level — that it implements the protocol, that every method decodes into a type
+  `Types.swift` declares, that the client raises GraphQL errors ahead of partial
+  data. An actual round trip is a Mac-and-running-BFF check.
 - **Manifest lifecycle hooks are not dispatched in Swift yet.** The guard,
   transition and error pipeline is rendered; ADR-040 handler sources are a
   web-lane feature so far.

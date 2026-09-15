@@ -247,3 +247,132 @@ describe('Module naming (ADR-095)', () => {
     expect(pkg.content).toContain('.iOS(.v17)');
   });
 });
+
+describe('The Swift target connects to the MFE’s BFF (ADR-012, ADR-095)', () => {
+  const withBff = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      data: {
+        sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    }) as unknown as DSLManifest;
+
+  const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+
+  it('emits a generator-owned BFF client and provider', async () => {
+    const files = await generate(withBff());
+    for (const p of [
+      'swift/Sources/MFE/Platform/BFFClient.swift',
+      'swift/Sources/MFE/Platform/BFFDataProvider.swift',
+    ]) {
+      const f = files.find((x) => x.path === p);
+      expect(f).toBeDefined();
+      // The wiring from a capability to a query is mechanical, so the platform
+      // writes it and keeps writing it.
+      expect(f!.overwrite).toBe(true);
+    }
+  });
+
+  it('bakes the manifest’s BFF endpoint into the client', async () => {
+    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
+    // The MFE and its BFF are one deployable unit on the same origin, so the
+    // absolute URL has to be carried — a relative path would resolve against
+    // the host app.
+    expect(client.content).toContain('http://localhost:5005/graphql');
+    expect(client.content).toContain('ProcessInfo.processInfo.environment["BFF_URL"]');
+  });
+
+  it('imports FoundationNetworking behind a canImport guard', async () => {
+    // URLSession is in FoundationNetworking on Linux. Without this the package
+    // stops compiling there, which is where the non-UI surface is verified.
+    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
+    expect(client.content).toContain('#if canImport(FoundationNetworking)');
+    expect(client.content).toContain('import FoundationNetworking');
+  });
+
+  it('implements the provider protocol, one query per capability', async () => {
+    const provider = (await generate(withBff())).find((f) => f.path.endsWith('BFFDataProvider.swift'))!;
+    expect(provider.content).toContain('struct BFFCrewServicesDataProvider: CrewServicesDataProvider');
+    expect(provider.content).toContain('func crewRoster() async throws -> CrewRosterOutputs');
+    expect(provider.content).toContain('try await client.query(CrewRosterQuery.document)');
+    expect(provider.content).toContain('try await client.query(PayStatusQuery.document)');
+  });
+
+  it('seeds a developer-owned query document per capability', async () => {
+    const files = await generate(withBff());
+    const q = files.find((f) => f.path === 'swift/Sources/MFE/Features/CrewRosterQuery.swift')!;
+    expect(q).toBeDefined();
+    // Developer-owned: the BFF's schema is composed by Mesh from data.sources
+    // at build time, so codegen cannot know the field names.
+    expect(q.overwrite).toBe(false);
+    expect(q.content).toContain('public enum CrewRosterQuery');
+    expect(q.content).toContain('static let document');
+  });
+
+  it('surfaces GraphQL errors ahead of partial data', async () => {
+    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
+    expect(client.content).toContain('throw BFFError.graphQL(errors)');
+    expect(client.content).toContain('case network(String, status: Int?)');
+  });
+
+  it('emits NONE of it when the manifest declares no data source', async () => {
+    // No `data:` means no BFF is generated, so there is nothing to connect to
+    // and the provider stays a bare protocol for the host to implement.
+    const paths = (await generate(noBff())).map((f) => f.path);
+    expect(paths).not.toContain('swift/Sources/MFE/Platform/BFFClient.swift');
+    expect(paths).not.toContain('swift/Sources/MFE/Platform/BFFDataProvider.swift');
+    expect(paths).not.toContain('swift/Sources/MFE/Features/CrewRosterQuery.swift');
+    // The protocol survives either way.
+    expect(paths).toContain('swift/Sources/MFE/Platform/DataProvider.swift');
+  });
+
+  it('respects the target’s capability subset', async () => {
+    const subset = {
+      ...withBff(),
+      targets: { swift: { capabilities: ['CrewRoster'] } },
+    } as unknown as DSLManifest;
+    const files = await generate(subset);
+    const provider = files.find((f) => f.path.endsWith('BFFDataProvider.swift'))!;
+    expect(provider.content).toContain('crewRoster()');
+    expect(provider.content).not.toContain('payStatus()');
+    expect(files.map((f) => f.path)).not.toContain('swift/Sources/MFE/Features/PayStatusQuery.swift');
+  });
+});
+
+describe('The BFF provider only returns types the package declares', () => {
+  const withBff = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      data: {
+        sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    }) as unknown as DSLManifest;
+
+  it('decodes into a Codable type declared in Types.swift', async () => {
+    // `BFFClient.query` needs `T: Decodable`. If a capability's result type
+    // were ever emitted as something else — or not emitted at all — the
+    // provider would not compile, and no gate here runs a Swift compiler. So
+    // assert the pairing directly rather than trusting it.
+    const files = await generate(withBff());
+    const provider = files.find((f) => f.path.endsWith('BFFDataProvider.swift'))!;
+    const types = files.find((f) => f.path.endsWith('Platform/Types.swift'))!;
+
+    const returned = [...provider.content.matchAll(/async throws -> (\w+)/g)].map((m) => m[1]);
+    expect(returned.length).toBeGreaterThan(0);
+    for (const type of returned) {
+      expect(types.content).toContain(`public struct ${type}: Sendable, Codable`);
+    }
+  });
+
+  it('takes arbitrary Encodable variables, not just strings', async () => {
+    // GraphQL variables are arbitrary JSON. A `[String: String]` signature
+    // would make any document with a non-string argument unusable.
+    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
+    expect(client.content).toContain('func query<T: Decodable, V: Encodable>(');
+    expect(client.content).toContain('variables: V,');
+  });
+});
