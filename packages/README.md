@@ -20,7 +20,8 @@ The list is a reading order, not an alphabetical one. Each entry assumes the one
 | 8 | **plugin-api** | OpenAPI → Express + Sequelize backend generation (`api:*`), as a plugin rather than a third of `src/` (ADR-063). The largest single thing that is *not* the CLI. | `src/commands/api.ts` |
 | 9 | **plugin-adr** | The decision-record tooling (`adr:*`) and the governance gates behind `check:adr` / `build:adr-index` (ADR-075). Governs the repo; is not part of the platform contract. | `src/commands/` |
 | 10 | **plugin-coder** | The coder seam (`coder:compile`): the intent-compilation contract and the DSL eval oracle, wrapping the external coder model service out-of-process (ADR-085/ADR-088). The model engine stays external `@falese/coder`. | `src/commands/coder/compile.ts` |
-| 11 | **sentinel** | The reusable governance+generation kernel: the four ports (`validate` / `locateArtifacts` / `materialize` / `HardenedCheck`) and the deterministic `verify` floor. Host-agnostic — imports nothing `@seans-mfe/*`, deliberately unscoped so it extracts to its own repo mechanically (PDR-010, ADR-089). SMT's adapters live in `src/sentinel/`. | `src/index.ts` |
+| 11 | **plugin-swift** | The Swift native target generator: a manifest declaring `targets.swift` also builds as a Swift Package, beside the web remote. A **codegen contributor**, not an oclif command plugin and not a framework plugin — it ships no commands (ADR-095, ADR-096). | `src/codegen.ts` |
+| 12 | **sentinel** | The reusable governance+generation kernel: the four ports (`validate` / `locateArtifacts` / `materialize` / `HardenedCheck`) and the deterministic `verify` floor. Host-agnostic — imports nothing `@seans-mfe/*`, deliberately unscoped so it extracts to its own repo mechanically (PDR-010, ADR-089). SMT's adapters live in `src/sentinel/`. | `src/index.ts` |
 | — | **control-plane** | **Not a TypeScript library and not a workspace member.** Two Dockerised JavaScript services — `daemon/` and `registry/` — each with its own `package.json` and `Dockerfile`. It is under `packages/` because it ships with the platform (PDR-008, ADR-078), not because it compiles with the rest. | `README.md` |
 
 ## The layering is one-way
@@ -36,6 +37,7 @@ contracts ───────────────────────�
                     plugin-api   → contracts, oclif-base
                     plugin-adr   → contracts, oclif-base
                     plugin-coder → contracts, dsl, oclif-base
+                    plugin-swift → contracts, dsl, codegen
 ```
 
 `contracts` depending on nothing is the invariant the rest rests on (ADR-061, ADR-080): it is
@@ -47,9 +49,9 @@ This is enforced, not documented: [`src/__tests__/import-direction.test.ts`](../
 parses real import declarations and fails on any edge not in its allow-list. Adding a dependency
 between packages means editing that list on purpose.
 
-## Two different things are called "plugin"
+## Three different things are called "plugin"
 
-They load by different mechanisms, and conflating them is the most likely early stumble:
+They load by three different mechanisms, and conflating them is the most likely early stumble:
 
 - **oclif command plugins** (`plugin-bff`, `plugin-api`, `plugin-adr`, `plugin-coder`) add *commands* to the CLI. Registered in the root
   `package.json` under `oclif.plugins`, resolved by oclif at startup. Contract:
@@ -58,6 +60,12 @@ They load by different mechanisms, and conflating them is the most likely early 
   behaviour* for a framework. Resolved at runtime by `loadFrameworkPlugin()` from the manifest's
   `framework` field (ADR-036). Guide:
   [`docs/framework-plugin-authoring.md`](../docs/framework-plugin-authoring.md).
+- **codegen contributors** (`plugin-swift`, and the codegen half of `plugin-bff`) add *files* to
+  what the generator emits. Registered by a side-effect import of the package's `./codegen`
+  entry, which hands the generator a template root it owns plus the `FileSpec`s to resolve
+  against it (ADR-094 §2). This is the only one of the three that can express a **second build
+  of the same MFE**: a `CodegenVariant` is mutually exclusive (one per MFE) and
+  `BaseFrameworkPlugin` has had no codegen surface since ADR-092.
 
 ## Namespaces
 

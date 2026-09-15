@@ -51,6 +51,9 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
   'framework-react': ['contracts'],
   'framework-angular': ['contracts'],
   'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
+  // The Swift native target generator ships no commands, so it needs no
+  // oclif-base edge — it is codegen contribution only (ADR-095).
+  'plugin-swift': ['contracts', 'dsl', 'codegen'],
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
   'plugin-coder': ['contracts', 'dsl', 'oclif-base'],

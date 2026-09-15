@@ -1,0 +1,33 @@
+{
+  "name": "@seans-mfe/plugin-swift",
+  "version": "0.1.0",
+  "description": "Swift native target generator for seans-mfe-tool — emits an SPM package beside the web build from the same manifest (ADR-095, ADR-096)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./codegen": {
+      "require": "./dist/codegen.js",
+      "types": "./dist/codegen.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'plugin-swift tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@seans-mfe/codegen": "file:../codegen",
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/dsl": "file:../dsl"
+  }
+}

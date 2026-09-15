@@ -12,7 +12,7 @@
     "examples/plugin-skeleton"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/sentinel packages/contracts packages/dsl packages/codegen packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/plugin-coder packages/framework-react packages/framework-angular",
+    "build:packages": "tsc -b packages/sentinel packages/contracts packages/dsl packages/codegen packages/oclif-base packages/plugin-bff packages/plugin-swift packages/plugin-api packages/plugin-adr packages/plugin-coder packages/framework-react packages/framework-angular",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:schemas:check": "ts-node scripts/generate-schemas.ts --check",
@@ -129,6 +129,7 @@
     "@babel/traverse": "^7.23.0",
     "@babel/types": "^7.22.1",
     "@seans-mfe/plugin-bff": "file:packages/plugin-bff",
+    "@seans-mfe/plugin-swift": "file:packages/plugin-swift",
     "@seans-mfe/plugin-api": "file:packages/plugin-api",
     "@seans-mfe/plugin-adr": "file:packages/plugin-adr",
     "@seans-mfe/plugin-coder": "file:packages/plugin-coder",

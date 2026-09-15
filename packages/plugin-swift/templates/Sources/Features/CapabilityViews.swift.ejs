@@ -1,0 +1,34 @@
+// Seeded once by seans-mfe-tool, then yours.
+//
+// This file is DEVELOPER-OWNED: `remote:generate` will never rewrite it, the
+// same way it never rewrites `src/features/**` in the web lane. Edit freely.
+//
+// `Platform/CapabilityViewRegistry.swift` beside it IS regenerated. If you add
+// a capability to mfe-manifest.yaml, the registry gains an entry and this file
+// will not compile until you add the matching view below — that build failure
+// is the migration notice.
+
+import Foundation
+#if canImport(SwiftUI)
+import SwiftUI
+
+<% domainCapabilities.forEach(function (cap) { -%>
+/// <%= capabilityDescriptions[cap] || cap %>
+public struct <%= cap %>View: View {
+    public init() {}
+
+    public var body: some View {
+        // TODO: implement the <%= cap %> capability.
+        VStack(alignment: .leading, spacing: 8) {
+            Text("<%= cap %>")
+                .font(.headline)
+            Text("<%= (capabilityDescriptions[cap] || 'Not implemented yet.').replace(/"/g, '\\"') %>")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+    }
+}
+
+<% }); -%>
+#endif
