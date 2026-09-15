@@ -324,6 +324,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-095](./architecture-decisions/ADR-095-secondary-build-targets.md) | A manifest may declare secondary build targets — a second artifact from the same capabilities, contributed to the file plan rather than selected as a variant | Codegen / targets / packaging | Implemented |
 | [ADR-096](./architecture-decisions/ADR-096-native-lifecycle-contract.md) | The Swift MFE is a third concrete subclass of the platform base class — the contract crosses to native intact, the federation machinery does not | Runtime / native / platform contract | Implemented |
 | [ADR-097](./architecture-decisions/ADR-097-one-plugin-carries-a-targets-two-halves.md) | A framework plugin declares which target it builds and registers its own codegen — one object carries a target's build lifecycle and its file contribution | Plugins / targets / codegen | Implemented |
+| [ADR-098](./architecture-decisions/ADR-098-native-lifecycle-hooks.md) | Manifest lifecycle hooks cross to the native lane, and the capability pipeline becomes composable middleware so they have somewhere to attach | Runtime / native / lifecycle hooks | Implemented |
 
 ### Proposed — filed, not ratified
 

@@ -199,6 +199,7 @@ const swiftVars = (c: unknown): Record<string, unknown> => {
     capabilityDescriptions: capabilityDescriptions(c),
     bffEndpoint: ctx.vars.bffEndpoint,
     hasBff: hasSwiftBff(c),
+    manifestHandlers: manifestHandlers(c),
     camel: camelCase,
   };
 };
@@ -215,7 +216,12 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
   const descriptions = capabilityDescriptions(c);
   const caps = Array.isArray(ctx.manifest.capabilities) ? ctx.manifest.capabilities : [];
   const selected = new Set(selectedCapabilities(c));
-  const projected: Array<{ name: string; type: string; description: string }> = [];
+  const projected: Array<{
+    name: string;
+    type: string;
+    description: string;
+    lifecycle?: Array<{ phase: string; hook: string; handlers: string[]; contained: boolean }>;
+  }> = [];
   for (const entry of caps) {
     if (!entry || typeof entry !== 'object') continue;
     for (const [name, config] of Object.entries(entry as Record<string, unknown>)) {
@@ -224,10 +230,12 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
       // A domain capability this target does not implement is not part of its
       // contract, so `describe` must not report it.
       if (!isPlatform && !selected.has(name)) continue;
+      const lifecycle = projectLifecycle(config);
       projected.push({
         name,
         type: isPlatform ? 'platform' : 'domain',
         description: descriptions[name] ?? '',
+        ...(lifecycle.length > 0 ? { lifecycle } : {}),
       });
     }
   }
@@ -246,6 +254,74 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
       ) + '\n',
   };
 };
+
+/**
+ * A capability's manifest `lifecycle:` block, flattened for the SPM plugin
+ * (ADR-040, ADR-098 §5).
+ *
+ * The YAML nests phase → [ { hookName: { handler, contained } } ]. A flat list
+ * is what the Swift side filters, and flattening here keeps the build-time
+ * generator a decoder rather than a parser.
+ */
+function projectLifecycle(
+  config: unknown,
+): Array<{ phase: string; hook: string; handlers: string[]; contained: boolean }> {
+  const out: Array<{ phase: string; hook: string; handlers: string[]; contained: boolean }> = [];
+  const lifecycle = (config as { lifecycle?: Record<string, unknown> } | undefined)?.lifecycle;
+  if (!lifecycle || typeof lifecycle !== 'object') return out;
+
+  for (const phase of ['before', 'main', 'after', 'error']) {
+    const entries = (lifecycle as Record<string, unknown>)[phase];
+    if (!Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      for (const [hook, raw] of Object.entries(entry as Record<string, unknown>)) {
+        const cfg = raw as { handler?: unknown; contained?: unknown } | undefined;
+        const handler = cfg?.handler;
+        // REQ-045: a handler may be a single name or an array, run in order.
+        const handlers = Array.isArray(handler)
+          ? handler.filter((h): h is string => typeof h === 'string')
+          : typeof handler === 'string'
+            ? [handler]
+            : [];
+        if (handlers.length === 0) continue;
+        out.push({ phase, hook, handlers, contained: cfg?.contained === true });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Every handler the manifest names, deduplicated, with where it came from.
+ *
+ * The web lane generates a stub METHOD per hook in `mfe.ts`, so a manifest that
+ * declares `handler: onLoadBegin` works the moment it is generated. Swift
+ * cannot resolve a handler to a method by name (ADR-098 §3), so the native
+ * equivalent is a generated entry in `customHandlers` — without it a generated
+ * package would throw on `load()` for a manifest the web lane runs happily.
+ */
+function manifestHandlers(
+  c: unknown,
+): Array<{ handler: string; capability: string; phase: string; hook: string }> {
+  const seen = new Set<string>();
+  const out: Array<{ handler: string; capability: string; phase: string; hook: string }> = [];
+  const caps = (c as SwiftCtx).manifest.capabilities;
+  if (!Array.isArray(caps)) return out;
+  for (const entry of caps) {
+    if (!entry || typeof entry !== 'object') continue;
+    for (const [capability, config] of Object.entries(entry as Record<string, unknown>)) {
+      for (const spec of projectLifecycle(config)) {
+        for (const handler of spec.handlers) {
+          if (seen.has(handler)) continue;
+          seen.add(handler);
+          out.push({ handler, capability, phase: spec.phase, hook: spec.hook });
+        }
+      }
+    }
+  }
+  return out;
+}
 
 /**
  * `Platform/` is generator-owned, `Features/` is developer-owned.

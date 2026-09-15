@@ -291,18 +291,29 @@ a build plugin that drags in a YAML parser is one nobody will keep.
   level — that it implements the protocol, that every method decodes into a type
   `Types.swift` declares, that the client raises GraphQL errors ahead of partial
   data. An actual round trip is a Mac-and-running-BFF check.
-- **Manifest lifecycle hooks are not dispatched in Swift yet.** The guard,
-  transition and error pipeline is rendered; ADR-040 handler sources are a
-  web-lane feature so far. `MFEBase.execute` also inlines the guard/transition/
-  error steps rather than composing them as middleware, so there is no
-  interception point for hooks to attach to — adding them means reworking that
-  first. ADR-096 §Boundaries lists the eight missing members by name.
-- **`emit` and `updateControlPlaneState` throw.** There is no telemetry service
-  and no native analogue of `attachControlPlane(wsClient:)`, so both throw
-  `MFENotImplementedError` naming the missing transport. They used to return
-  `accepted: true`, which claimed work that never happened.
-- **No telemetry.** None of `BaseMFEDependencies`' eight injected dependencies
-  has a native counterpart; `MFEBase.init` takes an identity and nothing else.
+- **Manifest lifecycle hooks run natively** (ADR-098). The capability pipeline
+  is the same eight composed middlewares the web lane uses, in the same order,
+  and the hook engine carries ADR-002's guarantees: handler arrays, `contained`
+  containment, main-phase propagation, telemetry on every failure, and the
+  re-entrancy guard. Two differences you will hit:
+  - **`platform.*` needs an injected handler.** There is no native
+    `PLATFORM_HANDLER_LIBRARY`.
+  - **A custom handler is registered, not discovered.** Swift cannot look a
+    method up by name, so each hook resolves through `deps.customHandlers`.
+    Generation seeds a logging stub for every handler your manifest names — so a
+    manifest that runs on the web runs here — and anything you pass in
+    `deps.customHandlers` overrides it.
+
+  ```swift
+  let mfe = MeridianCrewServicesMFE(deps: MFEDependencies(
+      customHandlers: ["onLoadBegin": { ctx in await audit.record(ctx.requestId) }],
+      telemetry: MyTelemetry()
+  ))
+  ```
+- **Telemetry is a protocol with no implementation.** `MFEDependencies` renders
+  four of `BaseMFEDependencies`' eight members — `platformHandlers`,
+  `customHandlers`, `telemetry`, `errorHandler`. Nothing ships an `MFETelemetry`
+  conformer, so hook failures go nowhere unless you supply one.
 - **"Mobile" means iOS.** `swift` is the only native target the platform ships a
   generator for. A manifest may declare any target id — unknown ids are
   preserved and warn rather than failing — but nothing will build them.

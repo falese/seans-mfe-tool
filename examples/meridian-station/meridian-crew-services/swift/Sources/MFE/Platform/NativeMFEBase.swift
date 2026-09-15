@@ -35,9 +35,11 @@ open class NativeMFEBase: MFEBase {
 
     private let provider: MeridianCrewServicesDataProvider
 
-    public init(provider: MeridianCrewServicesDataProvider, identity: MFEIdentity = .current) {
+    public init(provider: MeridianCrewServicesDataProvider,
+                identity: MFEIdentity = .current,
+                deps: MFEDependencies = MFEDependencies()) {
         self.provider = provider
-        super.init(identity: identity)
+        super.init(identity: identity, deps: deps)
     }
 
     // MARK: - Subclass hooks (the two that DO cross from BaseRemoteMFE)

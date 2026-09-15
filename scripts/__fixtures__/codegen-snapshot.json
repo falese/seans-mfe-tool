@@ -1971,7 +1971,7 @@
       {
         "path": "<cwd>/swift/mfe-manifest.json",
         "overwrite": true,
-        "sha256": "3315ab36c39fcdacd772b36dd71c823f10b5c53e6244eee689b83bb4d7d3eaf9"
+        "sha256": "a816eed2babf2bd36e01443df3ca7bb81aff596fed23b04185166ddb653b09b6"
       },
       {
         "path": "<cwd>/swift/Package.swift",
@@ -1991,7 +1991,7 @@
       {
         "path": "<cwd>/swift/Sources/ManifestMetadataGen/main.swift",
         "overwrite": true,
-        "sha256": "26bd8e917d649eb74cf2f6ac8a11a0acc01c975a04e82655e015a5e60f7e495d"
+        "sha256": "52cf476a427ee922105e7ebff3791eeee70d93d41e1daa19618398b35872ea4e"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterQuery.swift",
@@ -2036,12 +2036,12 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/GeneratedMFE.swift",
         "overwrite": true,
-        "sha256": "efac6a1346c10ec32afffeb3f8f7fb4225177957a3a5b5b98807fba6509a8970"
+        "sha256": "fa470861bd144dcf904948a2e45cac5e983e94de80231ba3627faf7859fc9484"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "dce19bbdaea15bec0700234c8e5c4e96f2ac0b1e885aa71def3b1fa01979b168"
+        "sha256": "2eff1895966ccdafc7c7c4a37a18193bac3ee40c80ca2c7a4090cdcb73a77965"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2051,7 +2051,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/NativeMFEBase.swift",
         "overwrite": true,
-        "sha256": "15093389f4aff22e2f51dc14ba28de80e7dd8735ad5585fe24853999a373d5e1"
+        "sha256": "a560d2c363ad48b1886e8b45ae0e6f462782b6a6eb572eeb174751db3765b784"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",

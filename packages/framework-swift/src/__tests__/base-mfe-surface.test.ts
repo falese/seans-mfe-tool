@@ -31,7 +31,7 @@ const RENDERED: Record<string, string> = {
   getState: 'MFEBase.state (a public property, so no accessor is needed)',
   assertState: 'MFEBase.assertState(_:)',
   transitionState: 'MFEBase.transition(to:)',
-  executeCapability: 'MFEBase.execute(_:_:) — inlined, not middleware (see ABSENT)',
+  executeCapability: 'MFEBase.execute(_:_:_:) — the same eight middlewares, same order (ADR-098 §1)',
   load: 'MFEBase.load(_:)',
   render: 'MFEBase.render(_:)',
   refresh: 'MFEBase.refresh(_:)',
@@ -42,6 +42,17 @@ const RENDERED: Record<string, string> = {
   query: 'MFEBase.query(_:)',
   emit: 'MFEBase.emit(_:)',
   updateControlPlaneState: 'MFEBase.updateControlPlaneState(_:)',
+  executeLifecycle: 'MFEBase.executeLifecycle(_:_:_:)',
+  executeHook: 'MFEBase.executeHook(_:_:_:) — containment, propagation, telemetry',
+  invokeHandler: 'MFEBase.invokeHandler(_:_:) — the only substitution seam (ADR-079)',
+  emitHookFailure: 'MFEBase.emitHookFailure(_:_:_:_:_:)',
+  stateGuard: 'MFEBase.stateGuard(_:) — middleware, as in TypeScript',
+  stateTransition: 'MFEBase.stateTransition(_:) — middleware',
+  lifecyclePhase: 'MFEBase.lifecyclePhase(_:_:) — middleware',
+  errorBoundary: 'MFEBase.errorBoundary(_:) — middleware',
+  _lifecycleStack: 'MFEBase.lifecycleStack — ADR-001 re-entrancy guard, skips rather than throws',
+  deps: 'MFEBase.deps — the four-member native subset (ADR-098 §4)',
+  findCapabilityConfig: 'MFEBase.findCapabilityHooks(_:_:) — a static table lookup, not a parse',
   doLoad: 'MFEBase.doLoad(_:) + NativeMFEBase override',
   doRender: 'MFEBase.doRender(_:) + NativeMFEBase override',
   doRefresh: 'MFEBase.doRefresh(_:) + NativeMFEBase override',
@@ -57,31 +68,22 @@ const RENDERED: Record<string, string> = {
 
 /** Members with NO Swift counterpart, and the reason. */
 const ABSENT: Record<string, string> = {
-  // The lifecycle hook pipeline (ADR-040). ADR-096 records it as a boundary.
-  executeLifecycle: 'manifest lifecycle hooks are not dispatched natively (ADR-096 Boundaries)',
-  _lifecycleStack:
-    're-entrancy guard for the hook pipeline — a hook that re-triggers its own capability/phase',
-  executeHookEntry: 'part of the hook pipeline',
-  executeHook: 'part of the hook pipeline, including `contained` semantics',
-  invokeHandler: 'part of the hook pipeline — the `platform.` prefix routing',
-  invokePlatformHandler: 'part of the hook pipeline',
-  invokeCustomHandler: 'part of the hook pipeline',
-  emitHookFailure: 'part of the hook pipeline; also needs a telemetry transport',
-  findCapabilityConfig: 'reads the manifest `lifecycle:` block the hook pipeline consumes',
-  // The middleware onion. Swift's execute() inlines the same steps, so the
-  // observable state-machine behaviour matches; what is missing is the
-  // interception point the hook pipeline would attach to.
-  stateGuard: 'inlined into MFEBase.execute rather than composed as middleware',
-  stateTransition: 'inlined into MFEBase.execute',
-  lifecyclePhase: 'no middleware composition, and no hook pipeline to phase',
-  errorBoundary: 'inlined into MFEBase.execute',
-  // Dependency injection.
-  deps: 'no dependency container in the native lane',
+  // Folded into invokeHandler rather than missing: Swift cannot look a method
+  // up by name on a plain class, so there is no separate custom-resolution
+  // step, and there is no native PLATFORM_HANDLER_LIBRARY to dispatch to
+  // (ADR-098 §3 and §Boundaries).
+  invokePlatformHandler: 'folded into MFEBase.invokeHandler; no native platform handler library',
+  invokeCustomHandler: 'folded into MFEBase.invokeHandler; Swift has no lookup-by-name on a class',
+  // Folded into the projection: the CLI flattens phase -> [{hook: config}] into
+  // a flat hook list at generation time, so the Swift side has no per-entry
+  // iteration step to render (ADR-098 §5).
+  executeHookEntry: 'the CLI flattens hook entries into ManifestMetadata.hooks at generation time',
+  // Genuinely absent.
   manifest: 'replaced by MFEIdentity + ManifestMetadata, regenerated at swift build time',
-  attachControlPlane: 'no native analogue of DaemonWebSocketClient',
+  attachControlPlane: 'no native analogue of DaemonWebSocketClient (ADR-096 Boundaries)',
   assertCapabilityImplemented:
     'Swift uses fatalError in the open func default — a crash, not a typed error',
-  constructor: 'MFEBase.init(identity:) takes no manifest and no deps',
+  constructor: 'MFEBase.init(identity:deps:) takes no manifest — ManifestMetadata replaces it',
 };
 
 /** Member declarations on the class, skipping locals and object literals. */

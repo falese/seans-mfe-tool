@@ -27,18 +27,51 @@ import SwiftUI
 
 public final class MeridianCrewServicesMFE: NativeMFEBase {
 
-    /// Defaults the data provider to the generated, BFF-backed one.
+    /// Stub handlers for every hook the manifest names.
     ///
-    /// `NativeMFEBase` requires a `MeridianCrewServicesDataProvider` and has no
-    /// opinion about where it comes from. Because this manifest declares a
-    /// `data:` section there IS a generated answer, so the host gets it for
-    /// free and can still inject its own — a fake in tests, a different
-    /// backend — by naming the parameter.
+    /// The web lane generates a stub METHOD per hook on `mfe.ts`, so a manifest
+    /// declaring `handler: onLoadBegin` runs the moment it is generated. Swift
+    /// cannot resolve a handler to a method by name (ADR-098 §3), so the
+    /// equivalent is this map. Without it a generated package would throw on
+    /// `load()` for a manifest the web lane runs happily.
+    ///
+    /// Anything a host passes in `deps.customHandlers` wins over these.
+    public static let generatedHandlers: [String: MFEHandler] = [
+        // Load · before · onLoadBegin — replace with your implementation.
+        "onLoadBegin": { context in
+            print("[MeridianCrewServicesMFE][before][onLoadBegin] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+        // Load · after · onLoadComplete — replace with your implementation.
+        "onLoadComplete": { context in
+            print("[MeridianCrewServicesMFE][after][onLoadComplete] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+        // Load · error · onLoadError — replace with your implementation.
+        "onLoadError": { context in
+            print("[MeridianCrewServicesMFE][error][onLoadError] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+        // Render · before · onRenderBegin — replace with your implementation.
+        "onRenderBegin": { context in
+            print("[MeridianCrewServicesMFE][before][onRenderBegin] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+        // Render · after · onRenderComplete — replace with your implementation.
+        "onRenderComplete": { context in
+            print("[MeridianCrewServicesMFE][after][onRenderComplete] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+        // Render · error · onRenderError — replace with your implementation.
+        "onRenderError": { context in
+            print("[MeridianCrewServicesMFE][error][onRenderError] requestId=\(context.requestId) capability=\(context.capability ?? "-")")
+        },
+    ]
+
     public init(
         provider: MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider(),
-        identity: MFEIdentity = .current
+        identity: MFEIdentity = .current,
+        deps: MFEDependencies = MFEDependencies()
     ) {
-        super.init(provider: provider, identity: identity)
+        var resolved = deps
+        // Host entries win; the generated stubs fill whatever is left.
+        resolved.customHandlers = Self.generatedHandlers.merging(deps.customHandlers) { _, host in host }
+        super.init(provider: provider, identity: identity, deps: resolved)
     }
 
     /// Select and mount a capability's view.

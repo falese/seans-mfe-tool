@@ -9,7 +9,7 @@ deciders: [sean]
 area: Runtime / native / platform contract
 enforcement: code
 tags: [native, swift, runtime, platform-contract, codegen]
-relates-to: [12, 34, 36, 40, 41, 42, 53, 70, 80, 95, 97]
+relates-to: [12, 34, 36, 40, 41, 42, 53, 70, 80, 95, 97, 98]
 supersedes: []
 superseded-by: []
 implements-pdr: [2]
@@ -314,26 +314,19 @@ remains a bare protocol for the host to implement.
   a type `Types.swift` declares, and that the client surfaces GraphQL errors
   ahead of partial data. Whether a real request round-trips is a Mac-and-running-
   BFF check, and it is on the same side of the line as compilation.
-- **The lifecycle hooks declared in a manifest are not yet dispatched in Swift.**
-  `MFEBase` renders the guard/transition/error pipeline; manifest-declared
-  before/after/error hooks (ADR-040 handler sources) are a web-lane feature that
-  the native lane does not yet carry. Concretely absent: `executeLifecycle`,
-  `executeHookEntry`, `executeHook` (including `contained` semantics),
-  `invokeHandler` / `invokePlatformHandler` / `invokeCustomHandler`,
-  `emitHookFailure`, `findCapabilityConfig` and the `_lifecycleStack`
-  re-entrancy guard.
-- **There is no middleware composition.** `BaseMFE.executeCapability` composes
-  `stateGuard` → `lifecyclePhase(before)` → main → `lifecyclePhase(after)` →
-  `stateTransition` → `errorBoundary`. `MFEBase.execute` inlines the same steps
-  as a `do`/`catch`, so the observable state-machine behaviour matches — what is
-  missing is the interception point a hook pipeline would attach to. Adding the
-  hooks means reworking this first.
-- **None of the eight injected dependencies exist.** `BaseMFEDependencies`
-  carries `platformHandlers`, `customHandlers`, `telemetry`, `stateValidator`,
-  `manifestParser`, `errorHandler`, `wsClient` and `bffUrl`; `MFEBase.init` takes
-  an identity. So the native lane emits **no telemetry at all**, and where
-  `assertState` and `transitionState` notify `deps.errorHandler` in TypeScript,
-  Swift only throws.
+- **Manifest lifecycle hooks are dispatched natively as of ADR-098.** This ADR
+  recorded them as a boundary; carrying them across also required replacing the
+  inlined `execute` with the composed middleware pipeline, because the inlined
+  version had no seam a phase could attach to. Both are ADR-098's, not this
+  one's. What remains missing there: no native `PLATFORM_HANDLER_LIBRARY`, and a
+  custom handler must be *registered* rather than discovered, because Swift
+  cannot look a method up by name on a plain class.
+- **Four of the eight injected dependencies are still absent, by design.**
+  `MFEDependencies` renders `platformHandlers`, `customHandlers`, `telemetry`
+  and `errorHandler`. `wsClient`, `bffUrl`, `manifestParser` and
+  `stateValidator` have no native consumer (ADR-098 §4). Telemetry is a
+  *protocol* with no conformer shipped, so hook failures are still invisible
+  unless a host supplies one.
 - **Two capabilities throw rather than answer.** `emit` and
   `updateControlPlaneState` have no native transport — there is no telemetry
   service and no analogue of `attachControlPlane(wsClient:)`. They previously
@@ -345,7 +338,8 @@ remains a bare protocol for the host to implement.
   is exactly the surface that *was* rendered. `base-mfe-surface.test.ts` now
   reads `base-mfe.ts` off disk and fails when any member of `BaseMFE` is in
   neither the rendered nor the knowingly-absent column — it found
-  `_lifecycleStack`, which a by-hand audit had missed.
+  `_lifecycleStack`, which a by-hand audit had missed. Ten of those members
+  moved from absent to rendered in ADR-098.
 
 ## Consequences
 
@@ -393,7 +387,8 @@ Worse, and accepted knowingly:
 - ADR-041 — the ten platform capabilities that this renders into Swift.
 - ADR-042 — the MFE lifecycle state machine and its guarded transitions, rendered here as `MFELifecycleTransitions`.
 - ADR-080 — the ten platform capabilities and the MFE lifecycle machine are defined once in `@seans-mfe/contracts`; this renders that single definition into a second language.
-- ADR-040 — lifecycle hook handler sources; the pipeline that consumes them is the largest piece of `BaseMFE` the native lane does not carry.
+- ADR-040 — lifecycle hook handler sources, which ADR-098 carries into the native lane.
+- ADR-098 — manifest lifecycle hooks cross to Swift, and the capability pipeline becomes composable middleware so they have somewhere to attach; it closes the hook boundary this ADR opened.
 - ADR-053 — BFF endpoint resolution order, which the native `doQuery` follows minus the two steps that have no native meaning.
 - ADR-070 — the uniform no-data query contract: an MFE with no `data:` section answers null rather than dialing. Rendered here on `MFEBase`, as in TypeScript.
 - ADR-012 — the GraphQL BFF generated from a manifest's `data:` section; §7 connects the Swift target to it and mirrors the ownership split of the web lane's generated `bff.ts`.

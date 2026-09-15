@@ -85,6 +85,103 @@ public struct MFENotImplementedError: Error, CustomStringConvertible {
     }
 }
 
+/// A lifecycle hook handler. Mirrors `(context: Context) => Promise<void>`.
+public typealias MFEHandler = @Sendable (MFEContext) async throws -> Void
+
+/// One telemetry event. Emitted on every hook failure (ADR-002 REQ-043).
+public struct MFETelemetryEvent: Sendable {
+    public let name: String
+    public let capability: String
+    public let phase: String
+    public let status: String
+    public let hook: String
+    public let handler: String
+    public let message: String
+    public let severity: String
+}
+
+public protocol MFETelemetry: Sendable {
+    func emit(_ event: MFETelemetryEvent)
+}
+
+public protocol MFEErrorHandler: Sendable {
+    func handle(_ error: Error, context: MFEContext)
+}
+
+/// What a host injects. The native subset of `BaseMFEDependencies` (ADR-098 §4).
+///
+/// TypeScript declares eight; four of them have no native consumer and are
+/// deliberately not declared here (ADR-092 §5): `wsClient` (no control-plane
+/// transport), `bffUrl` (resolution is `inputs["bffUrl"]` → `BFF_URL` →
+/// `identity.bffEndpoint`), `manifestParser` (the manifest is rendered into
+/// `ManifestMetadata` at swift build time, not parsed at runtime) and
+/// `stateValidator` (the transition table is a frozen static).
+public struct MFEDependencies: Sendable {
+    /// `platform.x` handlers. There is no native handler library behind this,
+    /// so an unlisted `platform.*` throws (ADR-098 §Boundaries).
+    public var platformHandlers: [String: MFEHandler]
+    /// Custom handlers by manifest name. In Swift this IS the resolution
+    /// mechanism, not an override of one — there is no way to look a method up
+    /// by name on a plain class (ADR-098 §3).
+    public var customHandlers: [String: MFEHandler]
+    public var telemetry: MFETelemetry?
+    public var errorHandler: MFEErrorHandler?
+
+    public init(platformHandlers: [String: MFEHandler] = [:],
+                customHandlers: [String: MFEHandler] = [:],
+                telemetry: MFETelemetry? = nil,
+                errorHandler: MFEErrorHandler? = nil) {
+        self.platformHandlers = platformHandlers
+        self.customHandlers = customHandlers
+        self.telemetry = telemetry
+        self.errorHandler = errorHandler
+    }
+}
+
+/// A handler named by the manifest that nothing supplied.
+public struct MFEHandlerNotFoundError: Error, CustomStringConvertible {
+    public let handler: String
+    public let hint: String
+    public var description: String { "Handler not found: \(handler). \(hint)" }
+}
+
+/// One lifecycle phase, as the manifest names them.
+public enum MFELifecyclePhase: String, Sendable, CaseIterable {
+    case before, main, after, error
+}
+
+/// One manifest-declared hook, as rendered into `ManifestMetadata` by the SPM
+/// build-tool plugin from `mfe-manifest.json` (ADR-040, ADR-098 §5).
+public struct MFEHookSpec: Sendable {
+    public let capability: String
+    public let phase: MFELifecyclePhase
+    public let hook: String
+    /// One or more handlers, run in order (REQ-045).
+    public let handlers: [String]
+    /// A failure is reported and swallowed rather than propagated (REQ-042).
+    public let contained: Bool
+
+    public init(capability: String, phase: MFELifecyclePhase, hook: String, handlers: [String], contained: Bool) {
+        self.capability = capability
+        self.phase = phase
+        self.hook = hook
+        self.handlers = handlers
+        self.contained = contained
+    }
+}
+
+/// Carries the context through the middleware chain by reference, the way a
+/// TypeScript object travels through `runPipeline`.
+public final class MFEContextBox: @unchecked Sendable {
+    public var context: MFEContext
+    public init(_ context: MFEContext) { self.context = context }
+}
+
+/// Holds a capability's result out of the middleware chain, which returns Void.
+final class ResultBox<T>: @unchecked Sendable {
+    var value: T?
+}
+
 /// Invocation context. Mirrors the runtime's `Context`.
 public struct MFEContext: Sendable {
     public var requestId: String
@@ -94,6 +191,12 @@ public struct MFEContext: Sendable {
     public var jwt: String?
     /// Extra HTTP headers, forwarded to the BFF by the default `doQuery`.
     public var headers: [String: String]
+    /// Set by the hook engine before each phase, as TypeScript's does.
+    public var phase: MFELifecyclePhase?
+    /// The capability currently executing.
+    public var capability: String?
+    /// Populated for the `error` phase only.
+    public var error: Error?
 
     public init(requestId: String = UUID().uuidString,
                 capabilityId: String? = nil,
@@ -117,97 +220,301 @@ open class MFEBase {
 
     public let identity: MFEIdentity
 
-    public init(identity: MFEIdentity = .current) {
+    /// Injected handler maps, telemetry and error reporting (ADR-098 §4).
+    public let deps: MFEDependencies
+
+    /// ADR-001's re-entrancy guard: a manifest may map a hook to a method that
+    /// invokes the capability the hook is attached to, and that cycle is
+    /// invisible to its author. Keyed by capability+phase, checked where every
+    /// phase passes through, so no manifest can opt out of it.
+    private var lifecycleStack: [String] = []
+
+    public init(identity: MFEIdentity = .current, deps: MFEDependencies = MFEDependencies()) {
         self.identity = identity
+        self.deps = deps
     }
 
     // MARK: - Orchestration (the base class's, not a subclass's)
 
-    public final func assertState(_ capability: MFECapability) throws {
+    public final func assertState(_ capability: MFECapability, _ context: MFEContext? = nil) throws {
         let allowed = capability.preStates
         // An empty preStates list means "any state, including destroyed" —
         // only `emit` is that permissive, and telemetry must survive teardown.
         guard allowed.isEmpty || allowed.contains(state) else {
-            throw MFEStateError(from: state, attempted: capability, allowed: allowed)
+            let error = MFEStateError(from: state, attempted: capability, allowed: allowed)
+            // TypeScript's assertState notifies deps.errorHandler before
+            // throwing; the native lane used to report nothing at all.
+            deps.errorHandler?.handle(error, context ?? MFEContext(capabilityId: capability.rawValue))
+            throw error
         }
     }
 
     public final func transition(to newState: MFELifecycleState) throws {
         guard MFELifecycleTransitions.isValid(from: state, to: newState) else {
-            throw MFEStateError(from: state, attempted: .load, allowed: MFELifecycleTransitions.table[state] ?? [])
+            let error = MFEStateError(from: state, attempted: .load, allowed: MFELifecycleTransitions.table[state] ?? [])
+            deps.errorHandler?.handle(error, MFEContext())
+            throw error
         }
         stateHistory.append((from: state, to: newState, at: Date()))
         state = newState
     }
 
-    /// The shared capability pipeline: guard → enter → run → exit, with the
-    /// error state applied on throw. Mirrors `executeCapability` + the
-    /// stateGuard / stateTransition / errorBoundary middleware.
-    private func execute<T>(_ capability: MFECapability, _ body: () async throws -> T) async throws -> T {
-        try assertState(capability)
-        if let enter = capability.enterState { try transition(to: enter) }
-        do {
-            let result = try await body()
-            if let exit = capability.exitState { try transition(to: exit) }
-            return result
-        } catch {
-            if let errorState = capability.errorState, state != errorState {
-                try? transition(to: errorState)
-            }
-            throw error
+    // MARK: - The capability pipeline (ADR-098 §1)
+
+    /// One step. Mirrors `packages/runtime/src/capability-pipeline.ts`.
+    ///
+    /// The context travels in a reference box rather than `inout`: a middleware
+    /// list is escaping, and an escaping function type cannot carry an `inout`
+    /// parameter across `await` the way TypeScript's shared object does.
+    public typealias Middleware = (MFEContextBox, @escaping () async throws -> Void) async throws -> Void
+
+    private func runStep(_ steps: [Middleware], _ index: Int, _ box: MFEContextBox) async throws {
+        guard index < steps.count else { return }
+        try await steps[index](box) { try await self.runStep(steps, index + 1, box) }
+    }
+
+    /// Run a middleware chain, each step calling the next.
+    private func runPipeline(_ steps: [Middleware], _ box: MFEContextBox) async throws {
+        try await runStep(steps, 0, box)
+    }
+
+    /// Middleware: assert the MFE is in one of the capability's pre-states.
+    private func stateGuard(_ capability: MFECapability) -> Middleware {
+        { box, next in
+            try self.assertState(capability, box.context)
+            try await next()
         }
+    }
+
+    /// Middleware: transition the state machine. No-op when there is no state.
+    private func stateTransition(_ target: MFELifecycleState?) -> Middleware {
+        { _, next in
+            if let target { try self.transition(to: target) }
+            try await next()
+        }
+    }
+
+    /// Middleware: run one phase's manifest hooks for a capability.
+    private func lifecyclePhase(_ capability: MFECapability, _ phase: MFELifecyclePhase) -> Middleware {
+        { box, next in
+            try await self.executeLifecycle(capability.rawValue, phase, box)
+            try await next()
+        }
+    }
+
+    /// Middleware: on downstream failure run the error phase and the error
+    /// state, then rethrow.
+    private func errorBoundary(_ capability: MFECapability) -> Middleware {
+        { box, next in
+            do {
+                try await next()
+            } catch {
+                let errorBox = MFEContextBox(box.context)
+                errorBox.context.error = error
+                try? await self.executeLifecycle(capability.rawValue, .error, errorBox)
+                if let errorState = capability.errorState, self.state != errorState {
+                    try? self.transition(to: errorState)
+                }
+                throw error
+            }
+        }
+    }
+
+    /// The capability pipeline, composed in the order
+    /// `BaseMFE.executeCapability` composes it.
+    ///
+    /// The error boundary sits AFTER the guard and the enter-transition on
+    /// purpose: an invalid-state or invalid-transition error propagates without
+    /// running the capability's error phase or error state.
+    private func execute<T>(_ capability: MFECapability, _ context: MFEContext, _ body: @escaping () async throws -> T) async throws -> T {
+        let result = ResultBox<T>()
+        let box = MFEContextBox(context)
+        box.context.capability = capability.rawValue
+
+        let pipeline: [Middleware] = [
+            stateGuard(capability),
+            stateTransition(capability.enterState),
+            errorBoundary(capability),
+            lifecyclePhase(capability, .before),
+            lifecyclePhase(capability, .main),
+            { _, next in
+                result.value = try await body()
+                try await next()
+            },
+            lifecyclePhase(capability, .after),
+            stateTransition(capability.exitState),
+        ]
+
+        try await runPipeline(pipeline, box)
+        guard let value = result.value else {
+            throw MFENotImplementedError(capability: capability, detail: "pipeline completed without producing a result")
+        }
+        return value
+    }
+
+    // MARK: - The hook engine (ADR-002, rendered — ADR-098 §2)
+
+    /// Run every hook the manifest declares for one capability phase.
+    ///
+    /// Skips rather than throws on re-entrancy (ADR-001): the re-entrant call
+    /// is the bug, but the outer call is usually work a user is waiting on, and
+    /// failing that too turns one authoring mistake into a broken capability.
+    private func executeLifecycle(_ capability: String, _ phase: MFELifecyclePhase, _ box: MFEContextBox) async throws {
+        let key = "\(capability):\(phase.rawValue)"
+        if lifecycleStack.contains(key) { return }
+
+        let hooks = findCapabilityHooks(capability, phase)
+        guard !hooks.isEmpty else { return }
+
+        lifecycleStack.append(key)
+        defer { lifecycleStack.removeLast() }
+
+        box.context.phase = phase
+        box.context.capability = capability
+
+        for hook in hooks {
+            try await executeHook(hook, box.context, phase)
+        }
+    }
+
+    /// The manifest's hooks for one capability+phase.
+    ///
+    /// A static table lookup rather than a walk over a parsed manifest: the SPM
+    /// build-tool plugin renders `ManifestMetadata.hooks` from
+    /// `mfe-manifest.json` at swift build time (ADR-095), which is also why
+    /// there is no native analogue of `deps.manifestParser`.
+    private func findCapabilityHooks(_ capability: String, _ phase: MFELifecyclePhase) -> [MFEHookSpec] {
+        ManifestMetadata.hooks.filter { $0.capability == capability && $0.phase == phase }
+    }
+
+    /// One hook's handlers, in order (REQ-045).
+    ///
+    /// `contained` reports and swallows (REQ-042). A main-phase failure
+    /// propagates; before/after/error continue to the next handler (REQ-042,
+    /// REQ-045). Every failure reports (REQ-043).
+    private func executeHook(_ hook: MFEHookSpec, _ context: MFEContext, _ phase: MFELifecyclePhase) async throws {
+        for handler in hook.handlers {
+            do {
+                if hook.contained {
+                    do {
+                        try await invokeHandler(handler, context)
+                    } catch {
+                        emitHookFailure(hook.hook, handler, error, context, "warn")
+                    }
+                } else {
+                    try await invokeHandler(handler, context)
+                }
+            } catch {
+                emitHookFailure(hook.hook, handler, error, context, phase == .main ? "error" : "warn")
+                if phase == .main { throw error }
+            }
+        }
+    }
+
+    /// Resolve and run one handler. THE substitution seam, and the only one.
+    ///
+    /// ADR-079 deleted `deps.lifecycleExecutor` because a seam wrapped around
+    /// the phase loop skipped containment, propagation and telemetry silently.
+    /// Consulting the maps here means a substituted handler still runs under
+    /// every guarantee above.
+    ///
+    /// Resolution differs from TypeScript by necessity (ADR-098 §3): there is
+    /// no way to look a method up by name on a plain Swift class, so the
+    /// handler map IS the mechanism rather than an override of one.
+    open func invokeHandler(_ name: String, _ context: MFEContext) async throws {
+        if name.hasPrefix("platform.") {
+            let platformName = String(name.dropFirst("platform.".count))
+            guard let handler = deps.platformHandlers[platformName] else {
+                throw MFEHandlerNotFoundError(
+                    handler: name,
+                    hint: "There is no native platform handler library. Supply it as deps.platformHandlers[\"\(platformName)\"]."
+                )
+            }
+            try await handler(context)
+            return
+        }
+
+        if let handler = deps.customHandlers[name] {
+            try await handler(context)
+            return
+        }
+        // By last segment, as TypeScript does: 'custom.fail' -> 'fail'.
+        let lastSegment = name.contains(".") ? String(name.split(separator: ".").last!) : name
+        if let handler = deps.customHandlers[lastSegment] {
+            try await handler(context)
+            return
+        }
+        throw MFEHandlerNotFoundError(
+            handler: name,
+            hint: "Register it as deps.customHandlers[\"\(lastSegment)\"]. Swift cannot resolve a handler to a method by name, so a manifest hook needs the map entry."
+        )
+    }
+
+    /// Report a hook failure (REQ-043). Nothing ships an `MFETelemetry`, so
+    /// this is silent until a host supplies one.
+    private func emitHookFailure(_ hook: String, _ handler: String, _ error: Error, _ context: MFEContext, _ severity: String) {
+        deps.telemetry?.emit(MFETelemetryEvent(
+            name: "lifecycle-error",
+            capability: context.capability ?? "lifecycle",
+            phase: context.phase?.rawValue ?? "unknown",
+            status: "error",
+            hook: hook,
+            handler: handler,
+            message: String(describing: error),
+            severity: severity
+        ))
     }
 
     // MARK: - The ten capabilities — final; subclasses override the do* hooks
 
     /// Self-registration — returns the MFE manifest and capabilities.
     public final func describe(_ context: MFEContext) async throws -> DescribeResult {
-        try await execute(.describe) { try await self.doDescribe(context) }
+        try await execute(.describe, context) { try await self.doDescribe(context) }
     }
 
     /// Initialization — connect, warm caches, validate config.
     public final func load(_ context: MFEContext) async throws -> LoadResult {
-        try await execute(.load) { try await self.doLoad(context) }
+        try await execute(.load, context) { try await self.doLoad(context) }
     }
 
     /// The MFE produces its own experience for a resolved capability.
     public final func render(_ context: MFEContext) async throws -> RenderResult {
-        try await execute(.render) { try await self.doRender(context) }
+        try await execute(.render, context) { try await self.doRender(context) }
     }
 
     /// Data reload in place when state changes but this MFE stays selected.
     public final func refresh(_ context: MFEContext) async throws -> Void {
-        try await execute(.refresh) { try await self.doRefresh(context) }
+        try await execute(.refresh, context) { try await self.doRefresh(context) }
     }
 
     /// Telemetry publication. Does not trigger registry re-evaluation.
     public final func emit(_ context: MFEContext) async throws -> EmitResult {
-        try await execute(.emit) { try await self.doEmit(context) }
+        try await execute(.emit, context) { try await self.doEmit(context) }
     }
 
     /// Execute a GraphQL query against this MFE without rendering.
     public final func query(_ context: MFEContext) async throws -> QueryResult {
-        try await execute(.query) { try await self.doQuery(context) }
+        try await execute(.query, context) { try await self.doQuery(context) }
     }
 
     /// GraphQL SDL introspection for registry schema federation.
     public final func schema(_ context: MFEContext) async throws -> SchemaResult {
-        try await execute(.schema) { try await self.doSchema(context) }
+        try await execute(.schema, context) { try await self.doSchema(context) }
     }
 
     /// JWT validation — the gate check the daemon runs before render().
     public final func authorizeAccess(_ context: MFEContext) async throws -> Bool {
-        try await execute(.authorizeAccess) { try await self.doAuthorizeAccess(context) }
+        try await execute(.authorizeAccess, context) { try await self.doAuthorizeAccess(context) }
     }
 
     /// Liveness and dependency checks for registry polling.
     public final func health(_ context: MFEContext) async throws -> HealthResult {
-        try await execute(.health) { try await self.doHealth(context) }
+        try await execute(.health, context) { try await self.doHealth(context) }
     }
 
     /// MFE-initiated push of domain state for registry re-evaluation.
     public final func updateControlPlaneState(_ context: MFEContext) async throws -> ControlPlaneStateResult {
-        try await execute(.updateControlPlaneState) { try await self.doUpdateControlPlaneState(context) }
+        try await execute(.updateControlPlaneState, context) { try await self.doUpdateControlPlaneState(context) }
     }
 
     // MARK: - Subclass hooks (`protected abstract do*()` in TypeScript)

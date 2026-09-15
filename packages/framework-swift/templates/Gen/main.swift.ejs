@@ -8,10 +8,18 @@
 
 import Foundation
 
+struct HookSpec: Decodable {
+    let phase: String
+    let hook: String
+    let handlers: [String]
+    let contained: Bool
+}
+
 struct Capability: Decodable {
     let name: String
     let type: String
     let description: String
+    let lifecycle: [HookSpec]?
 }
 
 struct ManifestProjection: Decodable {
@@ -45,6 +53,16 @@ func swiftString(_ s: String) -> String {
 
 let domain = manifest.capabilities.filter { $0.type == "domain" }
 
+// Flattened across capabilities: MFEBase filters by capability + phase, and a
+// flat literal is what a build-time generator can emit without a parser.
+let hooks = manifest.capabilities.flatMap { capability in
+    (capability.lifecycle ?? []).map { spec -> String in
+        let handlers = spec.handlers.map(swiftString).joined(separator: ", ")
+        return "        MFEHookSpec(capability: \(swiftString(capability.name)), phase: .\(spec.phase), "
+            + "hook: \(swiftString(spec.hook)), handlers: [\(handlers)], contained: \(spec.contained)),"
+    }
+}
+
 var out = """
 // Generated at build time by ManifestCodegen. Do not edit and do not commit.
 import Foundation
@@ -57,6 +75,11 @@ public enum ManifestMetadata {
 
     public static let domainCapabilities: [String] = [
 \(domain.map { "        \(swiftString($0.name))," }.joined(separator: "\n"))
+    ]
+
+    /// Manifest lifecycle hooks, flattened (ADR-040, ADR-098 §5).
+    public static let hooks: [MFEHookSpec] = [
+\(hooks.joined(separator: "\n"))
     ]
 
     public static let capabilities: [CapabilityMetadata] = [

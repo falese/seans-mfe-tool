@@ -452,13 +452,17 @@ describe('The query capability is a concrete default on MFEBase (ADR-053/070)', 
     expect(mfe.content).toContain(
       'provider: CrewServicesDataProvider = BFFCrewServicesDataProvider()',
     );
-    expect(mfe.content).toContain('super.init(provider: provider, identity: identity)');
+    expect(mfe.content).toContain('super.init(provider: provider, identity: identity, deps: resolved)');
   });
 
-  it('gives the no-BFF package no client and no generated provider', async () => {
+  it('gives the no-BFF package no client and no provider default', async () => {
+    // The init still exists — it merges the generated hook handlers — but
+    // `provider:` has no default, because there is no BFF-backed one to point
+    // at. The host must supply a provider.
     const mfe = await fileIn(noBff(), 'Platform/GeneratedMFE.swift');
     expect(mfe.content).not.toContain('BFFClient');
-    expect(mfe.content).not.toContain('public init(');
+    expect(mfe.content).not.toContain('= BFFCrewServicesDataProvider()');
+    expect(mfe.content).toContain('provider: CrewServicesDataProvider,');
   });
 });
 
