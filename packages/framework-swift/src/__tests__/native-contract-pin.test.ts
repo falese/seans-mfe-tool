@@ -25,7 +25,9 @@ import {
 } from '@seans-mfe/contracts';
 import { generateAllFiles } from '@seans-mfe/codegen';
 import type { DSLManifest } from '@seans-mfe/dsl';
-import '../codegen';
+import { registerSwiftCodegen } from '../codegen';
+
+registerSwiftCodegen();
 
 const basePath = path.join(__dirname, 'output-pin');
 

@@ -45,8 +45,7 @@ import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from
 // Registers the BFF's file contribution (ADR-093 §6) — without it this gate
 // would generate no BFF files and report every real one as orphaned.
 import '@seans-mfe/plugin-bff/codegen';
-// ...and the Swift native target's (ADR-095), for the same reason.
-import '@seans-mfe/plugin-swift/codegen';
+import { registerTargetCodegen } from '../src/framework/loader';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');
@@ -87,19 +86,26 @@ const readCurrent = (p: string): string | null =>
  * A manifest with every optional field that gates generator-owned output
  * forced present, so `generateAllFiles` produces the full universe of
  * generator-owned paths this manifest's shape could ever imply — not just
- * what it implies today. Currently that's just `data` (the BFF gate); extend
- * here if another optional section starts owning files of its own.
+ * what it implies today. Two sections gate generator-owned output: `data`
+ * (the BFF) and `targets` (secondary builds, ADR-095). Extend here if another
+ * optional section starts owning files of its own.
  */
 function maximalManifest(manifest: DSLManifest): DSLManifest {
-  if (manifest.data) return manifest;
-  return {
-    ...manifest,
-    data: {
+  const maximal: DSLManifest = { ...manifest };
+  if (!maximal.data) {
+    maximal.data = {
       sources: [
         { name: 'orphanProbe', handler: { openapi: { source: 'https://example.com/openapi.yaml' } } },
       ],
-    },
-  };
+    };
+  }
+  // Without this, deleting `targets.swift` from a manifest would leave the
+  // whole swift/ tree on disk unreported: orphan detection can only see a
+  // path the MAXIMAL generation would own.
+  if (!maximal.targets?.swift) {
+    maximal.targets = { ...(maximal.targets ?? {}), swift: { deploymentTarget: '17.0', swiftToolsVersion: '5.9' } };
+  }
+  return maximal;
 }
 
 async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[] }> {
@@ -107,10 +113,16 @@ async function checkMfe(dir: string): Promise<{ drift: Drift[]; written: string[
   if (!result.valid || !result.manifest) {
     throw new Error(`invalid manifest in ${path.relative(REPO_ROOT, dir)}`);
   }
+  // Register the codegen of every plugin this manifest builds with, and of
+  // every plugin the MAXIMAL manifest would (ADR-097) — orphan detection needs
+  // the contributor loaded even for a target this manifest no longer declares.
+  const maximal = maximalManifest(result.manifest);
+  registerTargetCodegen(maximal);
+
   const { files } = await generateAllFiles(result.manifest, dir);
   const { drift } = diffGeneratedOwned(files, readCurrent);
 
-  const { files: maximalFiles } = await generateAllFiles(maximalManifest(result.manifest), dir);
+  const { files: maximalFiles } = await generateAllFiles(maximal, dir);
   const orphaned = findOrphanedGeneratedFiles(files, maximalFiles, readCurrent);
 
   const allDrift = [...drift, ...orphaned];

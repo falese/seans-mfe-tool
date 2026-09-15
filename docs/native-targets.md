@@ -137,7 +137,7 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 ## Known limits
 
 - **No gate compiles the emitted Swift.** There is no Swift toolchain in CI.
-  `packages/plugin-swift/src/__tests__/native-contract-pin.test.ts` asserts the
+  `packages/framework-swift/src/__tests__/native-contract-pin.test.ts` asserts the
   *rendering* against `packages/contracts/src/platform-contract.ts` — every
   state, every transition edge, both halves of every capability pair, the
   `final` modifiers — but it is a text assertion, not a type check. Compilation
@@ -151,23 +151,29 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 
 ## Adding a different target
 
-A secondary target is a `FileContributor`
-([ADR-094 §2](architecture-decisions/ADR-094-the-generator-is-a-library.md)) —
-a template root your package owns plus the `FileSpec`s to resolve against it,
-every spec gated on your manifest section. `packages/plugin-swift/src/codegen.ts`
-is the worked example; `packages/plugin-bff/src/codegen.ts` is the other one.
+A target is an ordinary **framework plugin** — a `BaseFrameworkPlugin`, like
+`framework-react` — with two additions (ADR-097):
 
-Two seams that look like they should carry this cannot, and it is worth knowing
-why before you try:
+- `targetId`, the `targets:` key that selects it. `'web'`, the default, means
+  the primary build chosen by the manifest's `framework` field.
+- `registerCodegen()`, which hands the generator a template root your package
+  owns plus the `FileSpec`s to resolve against it
+  ([ADR-094 §2](architecture-decisions/ADR-094-the-generator-is-a-library.md)),
+  each spec gated on your manifest section.
 
-- a **`CodegenVariant`** is mutually exclusive — one per MFE — so it can express
-  a *different* build, never a *second* one;
-- a **`BaseFrameworkPlugin`** has had no codegen surface since ADR-092, so it
-  cannot ship a template at all. (`docs/framework-plugin-authoring.md` still
-  documents the removed API and is stale on this point.)
+`packages/framework-swift/` is the worked example:
+`packages/framework-swift/src/plugin.ts` for the build lifecycle,
+`packages/framework-swift/src/codegen.ts` for the files.
 
-Register your contributor everywhere `@seans-mfe/plugin-bff/codegen` is
-imported — `remote:generate`, `remote:generate:capability`,
-`scripts/check-mfe-drift.ts`, `scripts/codegen-characterization.ts`. Missing one
-does not fail loudly: the drift gate compares against a *maximal* generation, so
-files your unregistered contributor would have produced surface as `orphaned`.
+Two things to know before you start:
+
+- A **`CodegenVariant`** cannot carry a secondary target — `findVariant`
+  resolves one per MFE, so a variant is a *different* build, never a *second*
+  one. Use a `FileContributor`, which is what `registerCodegen()` registers.
+- Omit `defaultPort`, `startDevServer` and `getDockerStrategy` if your target is
+  not served over HTTP. They are optional; absent is better than a stub, and
+  `build:dev` / `build:docker` / `remote:init` narrow on them explicitly.
+
+Registration is driven by the manifest, so there is no import list to keep in
+step — `loadTargetPlugins()` finds your plugin from the `targets:` key and calls
+its hook.

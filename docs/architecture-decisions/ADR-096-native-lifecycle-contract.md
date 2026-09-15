@@ -9,18 +9,18 @@ deciders: [sean]
 area: Runtime / native / platform contract
 enforcement: code
 tags: [native, swift, runtime, platform-contract, codegen]
-relates-to: [34, 36, 41, 42, 80, 95]
+relates-to: [34, 36, 41, 42, 80, 95, 97]
 supersedes: []
 superseded-by: []
 implements-pdr: [2]
 implemented-by:
-  - packages/plugin-swift/src/codegen.ts
-  - packages/plugin-swift/templates/Sources/Platform/MFELifecycle.swift.ejs
-  - packages/plugin-swift/templates/Sources/Platform/MFEBase.swift.ejs
-  - packages/plugin-swift/templates/Sources/Platform/NativeMFEBase.swift.ejs
-  - packages/plugin-swift/templates/Sources/Platform/GeneratedMFE.swift.ejs
+  - packages/framework-swift/src/codegen.ts
+  - packages/framework-swift/templates/Sources/Platform/MFELifecycle.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/MFEBase.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/NativeMFEBase.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/GeneratedMFE.swift.ejs
 verified-by:
-  - packages/plugin-swift/src/__tests__/native-contract-pin.test.ts
+  - packages/framework-swift/src/__tests__/native-contract-pin.test.ts
 summary: >-
   The generated `<Module>MFE` sits beside `RemoteMFE` and `AngularRemoteMFE` as a third concrete
   subclass of the platform base class — but under a SIBLING of `BaseRemoteMFE`, not under it,

@@ -10,10 +10,12 @@ import * as path from 'path';
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, loadTargetPlugins } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@seans-mfe/dsl';
 import { ValidationError, BusinessError } from '@seans-mfe/contracts';
-import type { BuildProdResult } from '../../oclif/results';
+import type { BuildResult } from '@seans-mfe/contracts';
+import type { BuildProdResult, TargetBuild } from '../../oclif/results';
 
 export interface BuildProdOptions {
   framework?: string;
@@ -31,12 +33,12 @@ export async function buildProdCommand(opts: BuildProdOptions): Promise<BuildPro
   const cwd = opts.cwd ?? process.cwd();
   const outputDir = opts.outputDir ?? path.join(cwd, 'dist');
 
-  if (!framework) {
-    const manifestPath = opts.manifest ?? await findManifest(cwd);
-    if (manifestPath) {
-      manifest = await parseManifestFile(manifestPath);
-      framework = (manifest as Record<string, unknown>).framework as string | undefined;
-    }
+  // Read the manifest even when --framework is given: the flag overrides the
+  // PRIMARY framework, it does not say which secondary targets exist.
+  const manifestPath = opts.manifest ?? await findManifest(cwd);
+  if (manifestPath) {
+    manifest = await parseManifestFile(manifestPath);
+    framework = framework ?? (manifest as Record<string, unknown>).framework as string | undefined;
   }
 
   if (!framework) {
@@ -47,11 +49,37 @@ export async function buildProdCommand(opts: BuildProdOptions): Promise<BuildPro
     );
   }
 
-  const plugin = loadFrameworkPlugin(framework);
+  // One manifest can declare more than one build (ADR-095); production means
+  // all of them. Ordered primary-first, and the first failure stops the run —
+  // a half-built set of artifacts is not a successful production build.
+  const plugins = manifest
+    ? loadTargetPlugins(manifest as DSLManifest)
+    : [loadFrameworkPlugin(framework)];
 
-  console.log(chalk.blue(`\nBuilding ${plugin.displayName} for production...\n`));
+  const targets: TargetBuild[] = [];
+  let buildResult = null as unknown as BuildResult;
 
-  const buildResult = await plugin.buildProduction(manifest, { cwd, outputDir });
+  for (const plugin of plugins) {
+    console.log(chalk.blue(`\nBuilding ${plugin.displayName} for production...\n`));
+
+    const result = await plugin.buildProduction(manifest, { cwd, outputDir });
+    targets.push({
+      targetId: plugin.targetId,
+      plugin: plugin.id,
+      framework: plugin.framework,
+      bundler: plugin.bundler,
+      success: result.success,
+      artifacts: result.artifacts,
+      duration_ms: result.duration_ms,
+    });
+    if (plugin.targetId === plugins[0].targetId) buildResult = result;
+    if (!result.success) {
+      buildResult = result;
+      break;
+    }
+  }
+
+  const plugin = plugins[0];
 
   if (buildResult.success) {
     console.log(chalk.green(`✓ Build complete in ${buildResult.duration_ms}ms`));
@@ -84,12 +112,13 @@ export async function buildProdCommand(opts: BuildProdOptions): Promise<BuildPro
   }
 
   return {
+    targets,
     plugin: plugin.id,
     framework: plugin.framework,
     bundler: plugin.bundler,
-    success: buildResult.success,
-    artifacts: buildResult.artifacts,
-    duration_ms: buildResult.duration_ms,
+    success: targets.every(t => t.success),
+    artifacts: targets.flatMap(t => t.artifacts),
+    duration_ms: targets.reduce((n, t) => n + t.duration_ms, 0),
     warnings: buildResult.warnings,
     errors: buildResult.errors,
   };

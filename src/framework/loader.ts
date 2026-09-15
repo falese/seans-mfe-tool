@@ -21,6 +21,19 @@ const BUILTIN_FRAMEWORKS: Record<string, string> = {
 };
 
 /**
+ * Built-in SECONDARY target ids and their package directory names (ADR-095).
+ *
+ * Keyed by the `targets:` key, not by a framework name — `targets.swift`
+ * resolves `@seans-mfe/framework-swift`, whose plugin reports
+ * `framework: 'swiftui'`. Separate from BUILTIN_FRAMEWORKS because the two
+ * are selected by different manifest fields and a target is additive: it runs
+ * alongside the primary plugin rather than instead of it.
+ */
+const BUILTIN_TARGETS: Record<string, string> = {
+  swift: 'framework-swift',
+};
+
+/**
  * Check if an object is a BaseFrameworkPlugin.
  *
  * Uses the brand tag first (survives cross-module class identity
@@ -127,4 +140,115 @@ export function resolveFrameworkVariant(manifest: DSLManifest): FrameworkVariant
     bundler: plugin.bundler,
     templateVariant: plugin.id as 'react-rspack' | 'angular-webpack',
   };
+}
+
+
+/**
+ * Load a secondary target's plugin by its `targets:` key (ADR-095).
+ *
+ * Same two-step resolution as `loadFrameworkPlugin`: built-in from
+ * `packages/<dir>`, then `@seans-mfe/framework-<id>` for a third-party target.
+ */
+export function loadTargetPlugin(targetId: string): BaseFrameworkPlugin {
+  const builtinDir = BUILTIN_TARGETS[targetId];
+  if (builtinDir) {
+    try {
+      const builtinPath = path.resolve(__dirname, '..', '..', 'packages', builtinDir);
+       
+      const mod = require(builtinPath);
+      const plugin: unknown = mod.frameworkPlugin ?? mod.default;
+      if (isFrameworkPlugin(plugin)) return plugin;
+    } catch {
+      // Fall through to external resolution.
+    }
+  }
+  return loadFrameworkPlugin(targetId);
+}
+
+/**
+ * Every plugin that builds something for this manifest (ADR-097).
+ *
+ * The primary framework plugin first, then one per declared `targets:` key.
+ * This is the plural form the five single-plugin call sites assumed away: a
+ * manifest declaring `targets.swift` produces two artifacts and therefore has
+ * two plugins, and anything that checks environments or runs builds has to see
+ * both.
+ *
+ * An unknown target id is skipped with a warning rather than failing the
+ * command, matching the open-world policy `framework` and `bundler` already
+ * follow (ADR-036, #181): a manifest naming a target this installation has no
+ * generator for is not an invalid manifest.
+ */
+export function loadTargetPlugins(manifest: DSLManifest): BaseFrameworkPlugin[] {
+  const plugins: BaseFrameworkPlugin[] = [loadFrameworkPlugin(resolveFrameworkName(manifest))];
+
+  for (const targetId of Object.keys(manifest.targets ?? {})) {
+    try {
+      plugins.push(loadTargetPlugin(targetId));
+    } catch {
+      process.stderr.write(
+        `[seans-mfe-tool] Warning: no plugin for build target "${targetId}"; skipping it.\n`,
+      );
+    }
+  }
+  return plugins;
+}
+
+/**
+ * Register the codegen contribution of every plugin this manifest uses.
+ *
+ * Replaces the side-effect `import '@seans-mfe/framework-swift/codegen'` that
+ * each generating call site previously carried. That shape had a failure mode
+ * worth naming: forgetting one import did not error, because the drift gate
+ * compares against a MAXIMAL generation, so files the unregistered contributor
+ * would have produced surfaced as `orphaned` — a diagnostic pointing at a file
+ * nobody had touched. Driving registration from the manifest makes the set of
+ * contributors a function of what is being generated instead of a list four
+ * files have to keep in step.
+ *
+ * Idempotent: both codegen registries key by id.
+ */
+export function registerTargetCodegen(manifest: DSLManifest): void {
+  for (const plugin of loadTargetPlugins(manifest)) {
+    plugin.registerCodegen?.();
+  }
+}
+
+
+/**
+ * A plugin whose target is served over HTTP.
+ *
+ * `defaultPort`, `startDevServer` and `getDockerStrategy` became optional in
+ * ADR-097 so a natively-linked target could decline them honestly instead of
+ * stubbing a port it has no use for. The three commands that assume an HTTP
+ * surface — `build:dev`, `build:docker` and `remote:init` — narrow to this.
+ */
+export type ServedFrameworkPlugin = BaseFrameworkPlugin & {
+  defaultPort: number;
+  startDevServer: NonNullable<BaseFrameworkPlugin['startDevServer']>;
+  getDockerStrategy: NonNullable<BaseFrameworkPlugin['getDockerStrategy']>;
+};
+
+/**
+ * Narrow a plugin to one that serves over HTTP, or fail with a message that
+ * names the command and the target rather than a TypeError deeper in.
+ */
+export function assertServesHttp(
+  plugin: BaseFrameworkPlugin,
+  command: string,
+): asserts plugin is ServedFrameworkPlugin {
+  if (
+    typeof plugin.defaultPort === 'number' &&
+    typeof plugin.startDevServer === 'function' &&
+    typeof plugin.getDockerStrategy === 'function'
+  ) {
+    return;
+  }
+  throw new ValidationError(
+    `${command} needs a target served over HTTP, but "${plugin.displayName}" ` +
+      `(target "${plugin.targetId}") declares no dev server, port or container strategy. ` +
+      `Run ${command} against the MFE's primary web build.`,
+    'target',
+    'http-served',
+  );
 }

@@ -9,27 +9,28 @@ deciders: [sean]
 area: Codegen / targets / packaging
 enforcement: code
 tags: [codegen, plugins, manifest, native, packaging]
-relates-to: [9, 34, 36, 43, 61, 91, 92, 93, 94, 96]
+relates-to: [9, 34, 36, 43, 61, 91, 92, 93, 94, 96, 97]
 supersedes: []
 superseded-by: []
 implements-pdr: [1, 2, 4]
 implemented-by:
   - packages/dsl/src/schema.ts
   - packages/dsl/src/parser.ts
-  - packages/plugin-swift/src/codegen.ts
+  - packages/framework-swift/src/codegen.ts
   - src/targets/swift.ts
   - src/commands/remote/init.ts
   - src/commands/remote/generate.ts
 verified-by:
   - packages/dsl/src/__tests__/schema.targets.test.ts
-  - packages/plugin-swift/src/__tests__/swift-contributor.test.ts
+  - packages/framework-swift/src/__tests__/swift-contributor.test.ts
   - check:mfe-drift:check
 summary: >-
   A manifest gains an optional `targets:` block naming builds produced ALONGSIDE the primary web
   build, rather than instead of it; `targets.swift` emits a Swift Package from the same
   capabilities the Module Federation remote is generated from. A secondary target is a
   FileContributor (ADR-094 §2) with its own template root, gated on its manifest section exactly
-  as the BFF is gated on `data:` — so adding one changes no line of unified-generator.ts.
+  as the BFF is gated on `data:` — so adding one changes no line of unified-generator.ts. Which
+  plugin object owns a target, and registers that contribution, is ADR-097.
 rationale-summary: >-
   The two seams that look like they should carry this cannot: a CodegenVariant is mutually
   exclusive, one per MFE, so it can only express a different build and never a second one; and
@@ -96,24 +97,40 @@ Swift build parses clean and silently loses the request.
 `KNOWN_FRAMEWORKS` and `KNOWN_BUNDLERS` do. Shipping a target generator outside
 this repository must not require a schema change inside it.
 
-### 3. A secondary target is a `FileContributor`, not a variant or a framework plugin
+### 3. A secondary target's files are a `FileContributor`, not a variant
 
 It brings its own template root, resolved inside its own package, and gates every
-spec on its manifest section — the direct analogue of the BFF's `hasBff`. The
-consequence worth stating plainly: **`unified-generator.ts` is not modified by
-this ADR.** Adding the Swift lane touched no line of the generator, which is the
-acceptance criterion ADR-093 set for variants and ADR-094 set for contributors.
+spec on its manifest section — the direct analogue of the BFF's `hasBff`. A
+`CodegenVariant` could not do this: `findVariant` resolves exactly one per MFE,
+so a variant expresses a *different* build and never a *second* one.
 
-### 4. Registration is a side-effect import, at every site that generates
+The consequence worth stating plainly: **`unified-generator.ts` is not modified
+by this ADR.** Adding the Swift lane touched no line of the generator, which is
+the acceptance criterion ADR-093 set for variants and ADR-094 set for
+contributors.
 
-`import '@seans-mfe/plugin-swift/codegen'` goes wherever
-`'@seans-mfe/plugin-bff/codegen'` already is: `remote:generate`,
-`remote:generate:capability`, `check-mfe-drift.ts`, `codegen-characterization.ts`.
+This says where a target's *files* come from. Which object owns the target —
+and registers that contribution — is ADR-097: a `BaseFrameworkPlugin` with a
+`targetId`, carrying the build lifecycle and the codegen contribution together.
+An earlier draft of this ADR made the contributor a separate kind of plugin, on
+the reasoning that `BaseFrameworkPlugin` had no codegen surface after ADR-092.
+That was true and was not a reason: it described the code rather than a
+constraint, it left the target with no build lifecycle at all, and it turned the
+existing `plugin.id` → `CodegenVariant.id` string join into a documented rule.
 
-Missing one does **not** fail loudly. The drift gate compares against a *maximal*
-generation, so files an unregistered contributor would have produced surface as
-`orphaned` — which reads like an unrelated bug in a file nobody edited. Four
-sites, not one, is the whole rule.
+### 4. Registration is driven by the manifest
+
+`registerTargetCodegen(manifest)` asks each plugin the manifest builds with to
+register its own contribution (ADR-097 §3).
+
+The shape this replaces is worth recording, because this ADR originally
+specified it: a side-effect `import` in each of the four files that generate —
+`remote:generate`, `remote:generate:capability`, `check-mfe-drift.ts`,
+`codegen-characterization.ts`. Missing one did **not** fail loudly. The drift
+gate compares against a *maximal* generation, so files the unregistered
+contributor would have produced surfaced as `orphaned` — a diagnostic pointing
+at a file nobody had touched. A hazard documented in four places is still a
+hazard; deriving the contributor set from the manifest removes it.
 
 ### 5. `--swift` is additive on both `remote:init` and `remote:generate`
 
@@ -149,14 +166,9 @@ the first evidence it generalises beyond the case it was extracted for.
 
 Worse, and accepted knowingly:
 
-- **A third concept named "plugin".** `packages/README.md` had two; it now has
-  three (oclif command plugins, framework plugins, codegen contributors). That is
-  a real cost in a codebase where the first two were already confused often
-  enough to need a section explaining them.
-- **Four import sites with a silent failure mode.** §4 exists because the
-  consequence of forgetting one is an `orphaned` diagnostic pointing at the wrong
-  thing. A real registration lifecycle would be better; this is the same debt
-  ADR-094 already carries for the BFF, now doubled.
+- **Codegen gains a second reason to be registered.** Targets register through
+  their plugin (ADR-097); the BFF still registers by side-effect import. Two
+  mechanisms where there should be one.
 - **`package.json` and `jest.config.js` were touched** to add the workspace
   dependency and module mapping. Both are shared files the session checklist asks
   about; a new package cannot avoid them.

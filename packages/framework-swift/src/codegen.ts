@@ -250,6 +250,19 @@ export const SWIFT_SPECS: FileSpec[] = [
 /** Absolute, resolved inside this package. From dist/ that is ../templates. */
 export const swiftTemplateRoot = path.resolve(__dirname, '..', 'templates');
 
-registerFileContributor({ id: 'swift', templateRoot: swiftTemplateRoot, specs: SWIFT_SPECS });
+/**
+ * Register the Swift file contribution.
+ *
+ * An explicit function rather than a module-level side effect, which is what
+ * `SwiftSpmPlugin.registerCodegen()` calls (ADR-097). The side-effect form
+ * could not satisfy its own idempotence contract: `require()` caches, so once
+ * the module had been loaded a second call did nothing — which is fine while
+ * nobody ever unregisters, and wrong the moment anything does. A function runs
+ * every time it is called, and `registerFileContributor` keys by id, so the
+ * result is idempotent for the right reason.
+ */
+export function registerSwiftCodegen(): void {
+  registerFileContributor({ id: 'swift', templateRoot: swiftTemplateRoot, specs: SWIFT_SPECS });
+}
 
 export type { GeneratedFile };

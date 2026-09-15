@@ -11,7 +11,7 @@ import * as fs from 'fs-extra';
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, assertServesHttp } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { DockerStrategy } from '@seans-mfe/contracts';
@@ -123,6 +123,7 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
   }
 
   const plugin = loadFrameworkPlugin(framework);
+  assertServesHttp(plugin, 'build:docker');
   const strategy = plugin.getDockerStrategy(manifest);
   const name = path.basename(cwd);
 

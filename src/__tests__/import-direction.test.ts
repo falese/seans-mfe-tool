@@ -50,10 +50,12 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
   'oclif-base': ['contracts'],
   'framework-react': ['contracts'],
   'framework-angular': ['contracts'],
+  // The Swift target plugin. Like the other two it is a BaseFrameworkPlugin on
+  // `contracts`; unlike them it also contributes codegen (ADR-097), which is
+  // the `codegen` edge. Ships no commands, so no `oclif-base`.
+  'framework-swift': ['contracts', 'dsl', 'codegen'],
   'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
-  // The Swift native target generator ships no commands, so it needs no
-  // oclif-base edge — it is codegen contribution only (ADR-095).
-  'plugin-swift': ['contracts', 'dsl', 'codegen'],
+
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
   'plugin-coder': ['contracts', 'dsl', 'oclif-base'],

@@ -9,7 +9,7 @@
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, assertServesHttp } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { BuildDevResult } from '../../oclif/results';
@@ -49,6 +49,7 @@ export async function buildDevCommand(opts: BuildDevOptions, signal?: AbortSigna
   }
 
   const plugin = loadFrameworkPlugin(framework);
+  assertServesHttp(plugin, 'build:dev');
   const port = opts.port ?? plugin.defaultPort;
 
   console.log(chalk.blue(`\nStarting ${plugin.displayName} dev server on port ${port}...\n`));

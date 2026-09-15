@@ -5,7 +5,7 @@ import chalk = require('chalk');
 import { createMinimalManifest, writeManifest, generateEndpoints } from '@seans-mfe/dsl';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { BusinessError, SystemError } from '@seans-mfe/contracts';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, assertServesHttp } from '../../framework/loader';
 import { withSwiftTarget } from '../../targets/swift';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
 import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
@@ -16,6 +16,9 @@ export async function remoteInitCommand(
 ): Promise<RemoteInitResult> {
   const frameworkName = options.framework ?? 'react';
   const plugin = loadFrameworkPlugin(frameworkName);
+  // remote:init scaffolds an HTTP-served MFE; a secondary target is added to
+  // an existing one with `remote:generate --swift` (ADR-095).
+  assertServesHttp(plugin, 'remote:init');
   const port = options.port || plugin.defaultPort;
   const targetDir = path.resolve(process.cwd(), name);
   const generatedFiles: string[] = [];

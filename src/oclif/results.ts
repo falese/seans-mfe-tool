@@ -125,7 +125,20 @@ export interface BuildDockerResult {
 // build:prod (ADR-036, #175)
 // ---------------------------------------------------------------------------
 
+/** One target's production build (ADR-097). */
+export interface TargetBuild {
+  targetId: string;
+  plugin: string;
+  framework: string;
+  bundler: string;
+  success: boolean;
+  artifacts: string[];
+  duration_ms: number;
+}
+
 export interface BuildProdResult {
+  /** Every build this manifest declares, primary first (ADR-095). */
+  targets: TargetBuild[];
   plugin: string;
   framework: string;
   bundler: string;

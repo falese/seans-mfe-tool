@@ -11,7 +11,7 @@ import {
   diffPackageDependencies,
 } from '@seans-mfe/codegen';
 import type { GeneratedFile, GeneratorDiagnostic } from '@seans-mfe/codegen';
-import { resolveFrameworkVariant } from '../../framework/loader';
+import { resolveFrameworkVariant, registerTargetCodegen } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
@@ -21,11 +21,6 @@ import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
-// Registers the Swift native target's file contribution (ADR-095) on the same
-// seam. Missing this import does not fail loudly — the drift gate compares
-// against a MAXIMAL generation, so files an unregistered contributor would
-// have produced surface as "orphaned", which reads like an unrelated bug.
-import '@seans-mfe/plugin-swift/codegen';
 import { enableSwiftTargetInFile } from '../../targets/swift';
 
 /**
@@ -220,6 +215,11 @@ export async function remoteGenerateCommand(
 
     const manifest = result.manifest;
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
+
+    // Every plugin this manifest builds with registers its own file
+    // contribution (ADR-097). Driven by the manifest rather than by a
+    // side-effect import each call site has to remember.
+    registerTargetCodegen(manifest);
 
     console.log(chalk.blue('\nGenerating files...'));
     const frameworkVariant = resolveFrameworkVariant(manifest);
