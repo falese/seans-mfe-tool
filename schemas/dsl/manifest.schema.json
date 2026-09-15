@@ -50,6 +50,47 @@
       "type": "string",
       "minLength": 1
     },
+    "targets": {
+      "description": "Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).",
+      "type": "object",
+      "properties": {
+        "swift": {
+          "description": "Emit a Swift Package alongside the web build (ADR-095, ADR-096).",
+          "type": "object",
+          "properties": {
+            "moduleName": {
+              "description": "Swift module name. Omitted ⇒ derived as PascalCase(manifest.name).",
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "bundleId": {
+              "description": "Apple bundle identifier. Omitted ⇒ derived from owner and name.",
+              "type": "string",
+              "minLength": 1
+            },
+            "deploymentTarget": {
+              "description": "Minimum iOS deployment target for the generated Package.swift.",
+              "default": "17.0",
+              "type": "string",
+              "minLength": 1
+            },
+            "swiftToolsVersion": {
+              "description": "swift-tools-version pin for the generated Package.swift.",
+              "default": "5.9",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "deploymentTarget",
+            "swiftToolsVersion"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "description": {
       "type": "string"
     },
