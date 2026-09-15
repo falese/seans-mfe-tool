@@ -15,6 +15,10 @@
         "description": "Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.",
         "default": "react"
       },
+      "swift": {
+        "type": "boolean",
+        "description": "Also emit a Swift Package (native iOS) built from this same manifest. Adds a targets.swift block; the web build is unchanged. Run remote:generate to scaffold it."
+      },
       "port": {
         "type": "string",
         "description": "Port number for the remote MFE (default: per-framework)"

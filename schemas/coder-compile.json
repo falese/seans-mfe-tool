@@ -164,6 +164,34 @@
               "bundler": {
                 "type": "string"
               },
+              "targets": {
+                "type": "object",
+                "properties": {
+                  "swift": {
+                    "type": "object",
+                    "required": [
+                      "deploymentTarget",
+                      "swiftToolsVersion"
+                    ],
+                    "properties": {
+                      "deploymentTarget": {
+                        "type": "string"
+                      },
+                      "swiftToolsVersion": {
+                        "type": "string"
+                      },
+                      "moduleName": {
+                        "type": "string"
+                      },
+                      "bundleId": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
               "description": {
                 "type": "string"
               },

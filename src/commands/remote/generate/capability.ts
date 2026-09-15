@@ -13,6 +13,8 @@ import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
+// ...and the Swift native target's (ADR-095), for the same reason.
+import '@seans-mfe/plugin-swift/codegen';
 
 export async function remoteGenerateCapabilityCommand(
   capabilityName: string,

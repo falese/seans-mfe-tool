@@ -6,12 +6,13 @@ import { createMinimalManifest, writeManifest, generateEndpoints } from '@seans-
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { BusinessError, SystemError } from '@seans-mfe/contracts';
 import { loadFrameworkPlugin } from '../../framework/loader';
+import { withSwiftTarget } from '../../targets/swift';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
 import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
 
 export async function remoteInitCommand(
   name: string,
-  options: RemoteInitOptions & { dryRun?: boolean; framework?: string } = {}
+  options: RemoteInitOptions & { dryRun?: boolean; framework?: string; swift?: boolean } = {}
 ): Promise<RemoteInitResult> {
   const frameworkName = options.framework ?? 'react';
   const plugin = loadFrameworkPlugin(frameworkName);
@@ -70,10 +71,17 @@ export async function remoteInitCommand(
       bundler: plugin.bundler,
     });
     const endpoints = generateEndpoints(name, port);
-    const fullManifest: DSLManifest = { ...manifest, ...endpoints };
+    // `--swift` is additive (ADR-095): a SECOND build of this same MFE, from
+    // the same capabilities. It does not change framework/bundler, which still
+    // describe the primary web build.
+    const base: DSLManifest = { ...manifest, ...endpoints };
+    const fullManifest: DSLManifest = options.swift ? withSwiftTarget(base) : base;
     await writeManifest(fullManifest, manifestFile);
     generatedFiles.push(path.relative(process.cwd(), manifestFile));
     console.log(chalk.green('✓ mfe-manifest.yaml'));
+    if (options.swift) {
+      console.log(chalk.green('✓ targets.swift — a Swift Package will be generated beside the web build'));
+    }
 
     console.log(chalk.green(`\n✓ ${plugin.displayName} remote MFE manifest created!`));
     console.log(chalk.blue('\nNext steps:'));
@@ -99,6 +107,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
   static examples = [
     '$ seans-mfe-tool remote:init my-feature',
     '$ seans-mfe-tool remote:init my-feature --framework angular',
+    '$ seans-mfe-tool remote:init my-feature --swift',
     '$ seans-mfe-tool remote:init my-feature --port 3005',
     '$ seans-mfe-tool remote:init my-feature --dry-run',
   ]
@@ -112,6 +121,12 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     framework: Flags.string({
       description: 'Framework to use (default: react). Install @seans-mfe/framework-<name> for third-party frameworks.',
       default: 'react',
+    }),
+    swift: Flags.boolean({
+      description:
+        'Also emit a Swift Package (native iOS) built from this same manifest. Adds a targets.swift block; ' +
+        'the web build is unchanged. Run remote:generate to scaffold it.',
+      default: false,
     }),
     port: Flags.string({
       char: 'p',
@@ -136,6 +151,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
       force: flags.force,
       dryRun: flags['dry-run'],
       framework: flags.framework,
+      swift: flags.swift,
     })
   }
 }

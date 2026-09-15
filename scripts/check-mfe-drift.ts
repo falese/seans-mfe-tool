@@ -45,6 +45,8 @@ import { generateAllFiles, diffGeneratedOwned, findOrphanedGeneratedFiles } from
 // Registers the BFF's file contribution (ADR-093 §6) — without it this gate
 // would generate no BFF files and report every real one as orphaned.
 import '@seans-mfe/plugin-bff/codegen';
+// ...and the Swift native target's (ADR-095), for the same reason.
+import '@seans-mfe/plugin-swift/codegen';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CHECK_MODE = process.argv.includes('--check');
