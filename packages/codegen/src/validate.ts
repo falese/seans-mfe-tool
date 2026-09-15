@@ -59,6 +59,7 @@ export type ValidationRule =
   | 'shared-version-sync'
   | 'runtime-declared'
   | 'slots-implemented'
+  | 'native-capability-view'
   | 'platform-migrations'
   | 'lifecycle-hook-handler-resolvable';
 
@@ -181,6 +182,21 @@ function normalizeHandlers(handler: string | string[]): string[] {
 /**
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
+/** Where the developer-owned SwiftUI views live, relative to the MFE root. */
+const NATIVE_VIEWS_FILE = 'swift/Sources/MFE/Features/CapabilityViews.swift';
+
+/** Domain capability names, in manifest order. Platform capabilities have no view. */
+function domainCapabilityNames(manifest: DSLManifest): string[] {
+  const names: string[] = [];
+  for (const entry of manifest.capabilities ?? []) {
+    if (!entry || typeof entry !== 'object') continue;
+    for (const [name, config] of Object.entries(entry as Record<string, unknown>)) {
+      if ((config as { type?: string } | undefined)?.type === 'domain') names.push(name);
+    }
+  }
+  return names;
+}
+
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
   const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion } =
     input;
@@ -300,6 +316,43 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
         rule: 'slots-implemented',
         package: finding.slotId,
         message: finding.message,
+      });
+    }
+  }
+
+  // Every domain capability a Swift target declares must have a view
+  // (ADR-095/096).
+  //
+  // The generated `CapabilityViewRegistry.swift` references `<Cap>View`, so a
+  // missing one fails to compile — but ONLY on Apple platforms: the reference
+  // sits inside `#if canImport(SwiftUI)` and compiles out on Linux, where the
+  // package otherwise builds fine. There the id still lands in `declared`,
+  // `mount()` still accepts it via `declared.contains`, and rendering that
+  // capability succeeds with nothing behind it.
+  //
+  // So the check belongs here rather than being left to a compiler that may
+  // not run. Same skip posture as `slots-implemented`: no swift target or no
+  // sources means the rule is not evaluated, rather than reporting every
+  // capability as missing.
+  const swiftTarget = (manifest as { targets?: { swift?: unknown } }).targets?.swift;
+  const viewsFile = sources?.find((s) => s.path.replace(/\\/g, '/').endsWith(NATIVE_VIEWS_FILE));
+  if (swiftTarget !== undefined && viewsFile) {
+    checked.push('native-capability-view');
+    for (const capability of domainCapabilityNames(manifest)) {
+      // Anchored: `CrewRosterDetailView` must not satisfy `CrewRoster`.
+      const declaresView = new RegExp(`\\bstruct\\s+${capability}View\\b`).test(viewsFile.text);
+      if (declaresView) continue;
+      issues.push({
+        rule: 'native-capability-view',
+        package: capability,
+        location: NATIVE_VIEWS_FILE,
+        message:
+          `The Swift target declares domain capability "${capability}", ` +
+          `but no ${capability}View is declared in`,
+        fix:
+          `Add \`public struct ${capability}View: View\` to ` +
+          `swift/Sources/MFE/Features/CapabilityViews.swift. That file is ` +
+          `developer-owned, so regeneration will never write it for you.`,
       });
     }
   }
