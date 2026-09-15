@@ -8,7 +8,7 @@
 
 > **getCapabilityNames**(`manifest`): `string`[]
 
-Defined in: [packages/dsl/src/parser.ts:203](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L203)
+Defined in: [packages/dsl/src/parser.ts:214](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L214)
 
 Extract capability names from a manifest
 
@@ -217,6 +217,30 @@ Parsed DSL manifest
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
 
 #### transforms?
 

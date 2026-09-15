@@ -8,4 +8,4 @@
 
 > **PrometheusConfig** = `z.infer`\<*typeof* [`PrometheusConfigSchema`](../variables/PrometheusConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:279](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L279)
+Defined in: [packages/dsl/src/schema.ts:343](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L343)

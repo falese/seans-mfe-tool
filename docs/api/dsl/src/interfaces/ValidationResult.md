@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:491](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L491)
+Defined in: [packages/dsl/src/schema.ts:562](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L562)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L493)
+Defined in: [packages/dsl/src/schema.ts:564](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L564)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L494)
+Defined in: [packages/dsl/src/schema.ts:565](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L565)
 
 #### authorization?
 
@@ -226,6 +226,30 @@ Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe
 
 > `optional` **tags**: `string`[]
 
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]
@@ -244,4 +268,4 @@ Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:492](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L492)
+Defined in: [packages/dsl/src/schema.ts:563](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L563)

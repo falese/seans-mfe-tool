@@ -8,7 +8,7 @@
 
 > **serializeToYAML**(`manifest`): `string`
 
-Defined in: [packages/dsl/src/parser.ts:251](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L251)
+Defined in: [packages/dsl/src/parser.ts:262](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L262)
 
 Serialize a DSL manifest to YAML
 
@@ -217,6 +217,30 @@ DSL manifest to serialize
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
 
 #### transforms?
 

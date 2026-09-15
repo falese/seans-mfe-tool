@@ -8,7 +8,7 @@
 
 > **hasDataLayer**(`manifest`): `boolean`
 
-Defined in: [packages/dsl/src/parser.ts:241](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L241)
+Defined in: [packages/dsl/src/parser.ts:252](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L252)
 
 Check if manifest has data section (needs BFF)
 
@@ -217,6 +217,30 @@ Parsed DSL manifest
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
 
 #### transforms?
 

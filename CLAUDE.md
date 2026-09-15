@@ -166,6 +166,8 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | MCP server | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts` |
 | Hooks | `src/hooks/{init,prerun,postrun,command-not-found}.ts` |
 | Codegen templates | `src/codegen/templates/` |
+| Swift native target generator (ADR-095/096) | `packages/plugin-swift/src/codegen.ts`; templates `packages/plugin-swift/templates/` |
+| Native target explainer (one manifest, two builds) | `docs/native-targets.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |
@@ -199,6 +201,14 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
 - **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-034).
 - **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
+- **A second build is a codegen contributor, not a variant or a framework plugin.**
+  `targets.swift` in a manifest emits a Swift Package beside the web remote
+  (ADR-095). A `CodegenVariant` is one per MFE so it cannot express a *second*
+  build, and `BaseFrameworkPlugin` has had no codegen surface since ADR-092.
+  Register a contributor at **all four** import sites — `remote:generate`,
+  `remote:generate/capability`, `check-mfe-drift.ts`,
+  `codegen-characterization.ts` — a missing one surfaces as `orphaned`, not as a
+  clear error.
 - **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-036, #181).
 
 ## Backlog priority

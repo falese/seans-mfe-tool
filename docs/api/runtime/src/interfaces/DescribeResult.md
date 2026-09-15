@@ -226,6 +226,30 @@ Defined in: [packages/runtime/src/capability-results.ts:80](https://github.com/f
 
 > `optional` **tags**: `string`[]
 
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]

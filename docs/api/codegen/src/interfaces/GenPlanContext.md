@@ -248,6 +248,30 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 > `optional` **tags**: `string`[]
 
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]

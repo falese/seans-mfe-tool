@@ -214,6 +214,30 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 `string`[] = `...`
 
+#### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
 #### transforms?
 
 `string`[] = `...`
@@ -813,6 +837,30 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 #### manifest.tags?
 
 > `optional` **tags**: `string`[]
+
+#### manifest.targets?
+
+> `optional` **targets**: `object`
+
+#### manifest.targets.swift?
+
+> `optional` **swift**: `object`
+
+#### manifest.targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+#### manifest.targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+#### manifest.targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+#### manifest.targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
 
 #### manifest.transforms?
 

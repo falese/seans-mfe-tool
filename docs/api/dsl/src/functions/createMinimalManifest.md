@@ -8,7 +8,7 @@
 
 > **createMinimalManifest**(`name`, `options`): `object`
 
-Defined in: [packages/dsl/src/parser.ts:283](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L283)
+Defined in: [packages/dsl/src/parser.ts:294](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L294)
 
 Create a minimal valid manifest for scaffolding
 
@@ -249,6 +249,30 @@ Minimal DSL manifest
 ### tags?
 
 > `optional` **tags**: `string`[]
+
+### targets?
+
+> `optional` **targets**: `object`
+
+#### targets.swift?
+
+> `optional` **swift**: `object`
+
+#### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+#### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+#### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+#### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
 
 ### transforms?
 

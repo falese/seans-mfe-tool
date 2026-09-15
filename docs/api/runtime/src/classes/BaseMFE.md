@@ -233,6 +233,30 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 `string`[] = `...`
 
+###### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+###### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+###### targets.swift.bundleId?
+
+`string` = `...`
+
+###### targets.swift.deploymentTarget
+
+`string` = `...`
+
+###### targets.swift.moduleName?
+
+`string` = `...`
+
+###### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
 ###### transforms?
 
 `string`[] = `...`
@@ -472,6 +496,30 @@ DSL manifest for this MFE
 #### tags?
 
 > `optional` **tags**: `string`[]
+
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
 
 #### transforms?
 

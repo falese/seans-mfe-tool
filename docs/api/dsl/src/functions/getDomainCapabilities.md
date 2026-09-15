@@ -8,7 +8,7 @@
 
 > **getDomainCapabilities**(`manifest`): `string`[]
 
-Defined in: [packages/dsl/src/parser.ts:217](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L217)
+Defined in: [packages/dsl/src/parser.ts:228](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L228)
 
 Get domain capabilities only (excludes platform capabilities)
 
@@ -217,6 +217,30 @@ Parsed DSL manifest
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{ `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
 
 #### transforms?
 

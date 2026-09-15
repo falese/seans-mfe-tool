@@ -8,6 +8,6 @@
 
 > `const` **DSLOutputSchema**: `ZodObject`\<\{ `description`: `ZodOptional`\<`ZodString`\>; `name`: `ZodString`; `type`: `ZodString`; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L87)
+Defined in: [packages/dsl/src/schema.ts:151](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L151)
 
 Output definition

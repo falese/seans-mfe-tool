@@ -6,7 +6,7 @@
 
 # Interface: GenerationResult
 
-Defined in: [packages/dsl/src/schema.ts:509](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L509)
+Defined in: [packages/dsl/src/schema.ts:580](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L580)
 
 Generation result
 
@@ -16,7 +16,7 @@ Generation result
 
 > **errors**: `string`[]
 
-Defined in: [packages/dsl/src/schema.ts:512](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L512)
+Defined in: [packages/dsl/src/schema.ts:583](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L583)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:512](https://github.com/falese/seans-mfe
 
 > **files**: [`GeneratedFile`](GeneratedFile.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:510](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L510)
+Defined in: [packages/dsl/src/schema.ts:581](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L581)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/dsl/src/schema.ts:510](https://github.com/falese/seans-mfe
 
 > **skipped**: `string`[]
 
-Defined in: [packages/dsl/src/schema.ts:511](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L511)
+Defined in: [packages/dsl/src/schema.ts:582](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L582)
