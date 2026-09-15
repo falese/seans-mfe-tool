@@ -48,11 +48,6 @@ public enum BFFError: Error, CustomStringConvertible {
     }
 }
 
-/// Just the `errors` array, for the raw path where `data` has no static type.
-private struct ErrorsOnly: Decodable {
-    let errors: [BFFGraphQLError]?
-}
-
 private struct BFFResponse<T: Decodable>: Decodable {
     let data: T?
     let errors: [BFFGraphQLError]?
@@ -101,32 +96,6 @@ public struct BFFClient: Sendable {
         as _: T.Type = T.self
     ) async throws -> T {
         try await send(BFFRequest(query: document, variables: variables), headers: headers)
-    }
-
-    /// Run a document the CALLER named and return the `data` field as raw JSON.
-    ///
-    /// The `query` platform capability's path: a host hands this MFE a document
-    /// at runtime, so there is no type to decode into. `query(_:as:)` is the
-    /// other direction — a document this package owns, decoded into a declared
-    /// type.
-    public func queryRaw(
-        _ document: String,
-        variables: [String: String]? = nil,
-        headers: [String: String] = [:]
-    ) async throws -> Data {
-        let body = try await perform(BFFRequest(query: document, variables: variables), headers: headers)
-
-        // Errors first, for the same reason the decoding path does it.
-        let envelope = try JSONDecoder().decode(ErrorsOnly.self, from: body)
-        if let errors = envelope.errors, !errors.isEmpty {
-            throw BFFError.graphQL(errors)
-        }
-
-        let root = try JSONSerialization.jsonObject(with: body, options: [.fragmentsAllowed])
-        guard let object = root as? [String: Any], let data = object["data"], !(data is NSNull) else {
-            throw BFFError.emptyResponse
-        }
-        return try JSONSerialization.data(withJSONObject: data, options: [.fragmentsAllowed])
     }
 
     private func send<T: Decodable, V: Encodable>(

@@ -15,10 +15,10 @@
 //     └─ NativeMFEBase      ← sibling of BaseRemoteMFE (Bundle.load acquisition)
 //          └─ MeridianCrewServicesMFE   ← this file
 //
-// It overrides `mount` — the view selection — and `doQuery`, which this
-// manifest's `data:` section earns. That is exactly the surface a generated
-// `RemoteMFE` subclass fills in the web lane, where the generated `mfe.ts`
-// overrides the query capability behind the same `hasBff` gate.
+// It overrides only `mount` — the view selection — exactly the surface a
+// generated `RemoteMFE` subclass fills in the web lane. The `query` capability
+// needs no override: `MFEBase.doQuery` is a concrete default (ADR-053/070),
+// exactly as `BaseMFE.doQuery` is in TypeScript.
 
 import Foundation
 #if canImport(SwiftUI)
@@ -26,9 +26,6 @@ import SwiftUI
 #endif
 
 public final class MeridianCrewServicesMFE: NativeMFEBase {
-
-    /// This MFE's BFF. Endpoint baked from the manifest, `BFF_URL` overrides.
-    private let bffClient: BFFClient
 
     /// Defaults the data provider to the generated, BFF-backed one.
     ///
@@ -39,10 +36,8 @@ public final class MeridianCrewServicesMFE: NativeMFEBase {
     /// backend — by naming the parameter.
     public init(
         provider: MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider(),
-        identity: MFEIdentity = .current,
-        bffClient: BFFClient = BFFClient()
+        identity: MFEIdentity = .current
     ) {
-        self.bffClient = bffClient
         super.init(provider: provider, identity: identity)
     }
 
@@ -58,35 +53,6 @@ public final class MeridianCrewServicesMFE: NativeMFEBase {
         }
     }
 
-
-    /// The `query` platform capability, backed by this MFE's BFF.
-    ///
-    /// The document comes from the CALLER — `context.inputs["document"]` — the
-    /// same contract the web lane's generated `mfe.ts` implements by reading
-    /// `context.payload.document` and handing it to the generated `bff.ts`
-    /// connector. A host asking this MFE to run a query it names.
-    ///
-    /// This is the opposite direction from `BFFMeridianCrewServicesDataProvider`,
-    /// which runs documents this package owns. Both go through `BFFClient`.
-    ///
-    /// Failures are returned, not thrown: `query` answers with an errors array,
-    /// which is what the web lane does with the same catch.
-    public override func doQuery(_ context: MFEContext) async throws -> QueryResult {
-        guard let document = context.inputs["document"] else {
-            return QueryResult(data: nil, errors: ["query requires a 'document' input"])
-        }
-        var variables = context.inputs
-        variables.removeValue(forKey: "document")
-        do {
-            let data = try await bffClient.queryRaw(
-                document,
-                variables: variables.isEmpty ? nil : variables
-            )
-            return QueryResult(data: data, errors: [])
-        } catch {
-            return QueryResult(data: nil, errors: [String(describing: error)])
-        }
-    }
 
 #if canImport(SwiftUI)
     /// The view for a capability, for a host composing this MFE into a screen.

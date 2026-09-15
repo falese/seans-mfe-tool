@@ -377,7 +377,7 @@ describe('The BFF provider only returns types the package declares', () => {
   });
 });
 
-describe('The query platform capability is backed by the BFF (ADR-096 §7)', () => {
+describe('The query capability is a concrete default on MFEBase (ADR-053/070)', () => {
   const withBff = () =>
     ({
       ...manifest(),
@@ -390,54 +390,96 @@ describe('The query platform capability is backed by the BFF (ADR-096 §7)', () 
 
   const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
 
-  const generated = async (m: DSLManifest) =>
-    (await generate(m)).find((f) => f.path.endsWith('Platform/GeneratedMFE.swift'))!;
+  const fileIn = async (m: DSLManifest, suffix: string) =>
+    (await generate(m)).find((f) => f.path.endsWith(suffix))!;
 
-  it('overrides doQuery with the CALLER’s document, as the web lane does', async () => {
-    // The web lane's generated mfe.ts reads context.payload.document and hands
-    // it to the generated bff.ts connector. Same contract, same direction: a
-    // host asking this MFE to run a query it names.
-    const mfe = await generated(withBff());
-    expect(mfe.content).toContain('public override func doQuery(');
-    expect(mfe.content).toContain('context.inputs["document"]');
-    expect(mfe.content).toContain('bffClient.queryRaw(');
+  it('lives on MFEBase, the layer BaseMFE.doQuery lives at', async () => {
+    // BaseMFE.doQuery is the ONE hook that is not abstract — a working default
+    // on the base class. An earlier version of this put it on the generated
+    // concrete class, which is a layer the web lane does not use.
+    const base = await fileIn(withBff(), 'Platform/MFEBase.swift');
+    expect(base.content).toContain('open func doQuery(_ context: MFEContext) async throws -> QueryResult');
+    expect(base.content).not.toContain('fatalError("doQuery must be overridden")');
+
+    // The comment explains why; what must not be there is an override.
+    const mfe = await fileIn(withBff(), 'Platform/GeneratedMFE.swift');
+    expect(mfe.content).not.toContain('override func doQuery');
   });
 
-  it('returns failures as errors rather than throwing', async () => {
-    // `query` answers with an errors array — the web lane catches and returns
-    // { data: null, errors: [...] }, and a throw here would break that shape.
-    const mfe = await generated(withBff());
-    expect(mfe.content).toContain('QueryResult(data: nil, errors: [String(describing: error)])');
-    expect(mfe.content).toContain("errors: [\"query requires a 'document' input\"]");
+  it('is emitted with or without a BFF — the capability is uniform (ADR-070)', async () => {
+    // An MFE with no data: section answers `data: nil` rather than dialing a
+    // non-existent endpoint. That is what makes query uniform across MFEs.
+    for (const m of [withBff(), noBff()]) {
+      const base = await fileIn(m, 'Platform/MFEBase.swift');
+      expect(base.content).toContain('open func doQuery(');
+      expect(base.content).toContain('guard let target = override ?? identity.bffEndpoint');
+      expect(base.content).toContain('return QueryResult(data: nil, errors: [])');
+    }
   });
 
-  it('defaults the data provider to the generated BFF-backed one', async () => {
-    // NativeMFEBase requires a provider and has no opinion where it comes from.
-    // With a BFF there IS a generated answer, so the host gets it for free and
-    // can still inject a fake by naming the parameter.
-    const mfe = await generated(withBff());
+  it('resolves the endpoint in ADR-053 order', async () => {
+    const base = await fileIn(withBff(), 'Platform/MFEBase.swift');
+    const body = base.content.slice(base.content.indexOf('open func doQuery('));
+    const inputs = body.indexOf('context.inputs["bffUrl"]');
+    const env = body.indexOf('environment["BFF_URL"]');
+    const baked = body.indexOf('identity.bffEndpoint');
+    expect(inputs).toBeGreaterThan(-1);
+    expect(env).toBeGreaterThan(inputs);
+    expect(baked).toBeGreaterThan(env);
+  });
+
+  it('forwards auth and headers off the context', async () => {
+    // The web lane's generated doQuery sets Authorization from context.jwt.
+    // MFEContext had neither field, so there was nowhere to read it from.
+    const base = await fileIn(withBff(), 'Platform/MFEBase.swift');
+    expect(base.content).toContain('public var jwt: String?');
+    expect(base.content).toContain('public var headers: [String: String]');
+    expect(base.content).toContain('request.setValue("Bearer \\(jwt)", forHTTPHeaderField: "Authorization")');
+    expect(base.content).toContain('for (field, value) in context.headers');
+  });
+
+  it('carries arbitrary JSON inputs, not just strings', async () => {
+    // Context.inputs is Record<string, unknown>. [String: String] could not
+    // carry a GraphQL variable that is a number, a bool or an object.
+    const base = await fileIn(withBff(), 'Platform/MFEBase.swift');
+    expect(base.content).toContain('public enum JSONValue: Codable, Sendable, Equatable');
+    expect(base.content).toContain('public var inputs: [String: JSONValue]');
+    expect(base.content).toContain('payload["variables"] = variables');
+  });
+
+  it('still defaults the data provider to the generated BFF-backed one', async () => {
+    const mfe = await fileIn(withBff(), 'Platform/GeneratedMFE.swift');
     expect(mfe.content).toContain(
       'provider: CrewServicesDataProvider = BFFCrewServicesDataProvider()',
     );
     expect(mfe.content).toContain('super.init(provider: provider, identity: identity)');
   });
 
-  it('leaves doQuery alone when there is no BFF', async () => {
-    // NativeMFEBase's stub stands, and the class keeps the inherited init —
-    // there is no generated provider to default to.
-    const mfe = await generated(noBff());
-    expect(mfe.content).not.toContain('doQuery');
+  it('gives the no-BFF package no client and no generated provider', async () => {
+    const mfe = await fileIn(noBff(), 'Platform/GeneratedMFE.swift');
     expect(mfe.content).not.toContain('BFFClient');
     expect(mfe.content).not.toContain('public init(');
   });
+});
 
-  it('exposes queryRaw beside the decoding path, not instead of it', async () => {
-    // Two directions through one client: a document the caller names (no type
-    // to decode into) and a document this package owns (a declared type).
-    const client = (await generate(withBff())).find((f) => f.path.endsWith('BFFClient.swift'))!;
-    expect(client.content).toContain('public func queryRaw(');
-    expect(client.content).toContain('func query<T: Decodable>(');
-    // Both go through one transport, so the status and error rules are stated once.
-    expect(client.content).toContain('private func perform<V: Encodable>(');
+describe('A capability the native lane cannot do throws, rather than claiming success', () => {
+  const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+
+  it('emit and updateControlPlaneState throw MFENotImplementedError', async () => {
+    // Both used to return `accepted: true` with no transport behind them —
+    // a capability reporting success for work it did not do.
+    const native = (await generate(noBff())).find((f) => f.path.endsWith('NativeMFEBase.swift'))!;
+    expect(native.content).not.toContain('EmitResult(accepted: true)');
+    expect(native.content).not.toContain('ControlPlaneStateResult(accepted: true');
+    expect(native.content).toContain('throw MFENotImplementedError(\n            capability: .emit');
+    expect(native.content).toContain('capability: .updateControlPlaneState');
+  });
+
+  it('names the missing transport, not just the capability', async () => {
+    const base = (await generate(noBff())).find((f) => f.path.endsWith('Platform/MFEBase.swift'))!;
+    expect(base.content).toContain('public struct MFENotImplementedError');
+    const native = (await generate(noBff())).find((f) => f.path.endsWith('NativeMFEBase.swift'))!;
+    expect(native.content).toContain('deps.telemetry');
+    expect(native.content).toContain('attachControlPlane(wsClient:)');
   });
 });

@@ -149,13 +149,34 @@ generated `bff.ts`. The native lane does both:
 
 | Direction | Who names the document | How |
 |---|---|---|
-| **In** — a host asks this MFE to run a query | the caller, at runtime | generated `doQuery` reads `context.inputs["document"]` → `BFFClient.queryRaw` |
+| **In** — a host asks this MFE to run a query | the caller, at runtime | `MFEBase.doQuery` reads `context.inputs["document"]` |
 | **Out** — this MFE fetches its own data | this package | `BFF<Module>DataProvider` → `<Cap>Query.document` → `BFFClient.query` |
 
-The first is a straight port of the web lane. The second is new, and it exists
-because a native `DataProvider` is the seam the **host app** fills — generating
-it means the host no longer has to, which is only possible if the documents live
-in the package.
+The first is a straight port: `BaseMFE.doQuery` is the one hook TypeScript does
+not leave abstract, so the Swift default lives on `MFEBase` too. It is emitted
+whether or not you have a BFF — no `data:` section means it answers `data: nil`
+rather than dialing a non-existent endpoint (ADR-070), so `query` behaves the
+same on every MFE. Endpoint order is `context.inputs["bffUrl"]` → `BFF_URL` →
+the manifest's, baked in at generation.
+
+The second is new, and it exists because a native `DataProvider` is the seam the
+**host app** fills — generating it means the host no longer has to, which is only
+possible if the documents live in the package.
+
+```swift
+// In: the caller names the document
+let result = try await mfe.query(MFEContext(
+    inputs: ["document": .string("query { crew { id } }")],
+    jwt: token
+))
+
+// Out: this package's own document, decoded into a declared type
+let roster = try await provider.crewRoster()
+```
+
+`MFEContext.inputs` is `[String: JSONValue]`, not `[String: String]`, so a
+GraphQL variable can be a number, a bool or an object. `jwt` and `headers` are
+forwarded to the BFF.
 
 Because `BFFDataProvider.swift` is generated and calls `<Cap>Query.document` by
 name, deleting a document breaks generated code. `mfe:validate` reports that as
@@ -272,7 +293,16 @@ a build plugin that drags in a YAML parser is one nobody will keep.
   data. An actual round trip is a Mac-and-running-BFF check.
 - **Manifest lifecycle hooks are not dispatched in Swift yet.** The guard,
   transition and error pipeline is rendered; ADR-040 handler sources are a
-  web-lane feature so far.
+  web-lane feature so far. `MFEBase.execute` also inlines the guard/transition/
+  error steps rather than composing them as middleware, so there is no
+  interception point for hooks to attach to — adding them means reworking that
+  first. ADR-096 §Boundaries lists the eight missing members by name.
+- **`emit` and `updateControlPlaneState` throw.** There is no telemetry service
+  and no native analogue of `attachControlPlane(wsClient:)`, so both throw
+  `MFENotImplementedError` naming the missing transport. They used to return
+  `accepted: true`, which claimed work that never happened.
+- **No telemetry.** None of `BaseMFEDependencies`' eight injected dependencies
+  has a native counterpart; `MFEBase.init` takes an identity and nothing else.
 - **"Mobile" means iOS.** `swift` is the only native target the platform ships a
   generator for. A manifest may declare any target id — unknown ids are
   preserved and warn rather than failing — but nothing will build them.

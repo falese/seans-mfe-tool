@@ -140,15 +140,28 @@ open class NativeMFEBase: MFEBase {
         SchemaResult(sdl: nil)
     }
 
-    open override func doQuery(_ context: MFEContext) async throws -> QueryResult {
-        QueryResult(data: nil, errors: [])
-    }
-
+    /// Telemetry emission. NOT implemented in the native lane.
+    ///
+    /// `BaseMFE` emits through an injected `deps.telemetry`; there is no
+    /// dependency container here, so there is nowhere for an event to go.
+    /// Answering `accepted: true` would claim a delivery that never happened.
     open override func doEmit(_ context: MFEContext) async throws -> EmitResult {
-        EmitResult(accepted: true)
+        throw MFENotImplementedError(
+            capability: .emit,
+            detail: "no telemetry transport — BaseMFE emits through deps.telemetry, which this lane has no analogue for"
+        )
     }
 
+    /// Control-plane push. NOT implemented in the native lane.
+    ///
+    /// `BaseMFE.attachControlPlane(wsClient:)` takes a daemon WebSocket client
+    /// and there is no native counterpart, so this had nothing to push and
+    /// returned `accepted: true` regardless — a capability reporting success
+    /// for work it did not do.
     open override func doUpdateControlPlaneState(_ context: MFEContext) async throws -> ControlPlaneStateResult {
-        ControlPlaneStateResult(accepted: true, stateKey: context.inputs["stateKey"] ?? "")
+        throw MFENotImplementedError(
+            capability: .updateControlPlaneState,
+            detail: "no control-plane transport — BaseMFE.attachControlPlane(wsClient:) has no native analogue"
+        )
     }
 }

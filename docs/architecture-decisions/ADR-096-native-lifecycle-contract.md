@@ -9,7 +9,7 @@ deciders: [sean]
 area: Runtime / native / platform contract
 enforcement: code
 tags: [native, swift, runtime, platform-contract, codegen]
-relates-to: [12, 34, 36, 41, 42, 80, 95, 97]
+relates-to: [12, 34, 36, 40, 41, 42, 53, 70, 80, 95, 97]
 supersedes: []
 superseded-by: []
 implements-pdr: [2]
@@ -25,6 +25,7 @@ implemented-by:
 verified-by:
   - packages/framework-swift/src/__tests__/native-contract-pin.test.ts
   - packages/framework-swift/src/__tests__/swift-contributor.test.ts
+  - packages/framework-swift/src/__tests__/base-mfe-surface.test.ts
 summary: >-
   The generated `<Module>MFE` sits beside `RemoteMFE` and `AngularRemoteMFE` as a third concrete
   subclass of the platform base class — but under a SIBLING of `BaseRemoteMFE`, not under it,
@@ -170,6 +171,13 @@ generator-owned; the derived Swift is neither.
 
 ### 7. A BFF gets a generated client, a generated provider, and a real `doQuery`
 
+> `MFEContext` was extended for this: it carries `jwt` and `headers`, and
+> `inputs` became `[String: JSONValue]` rather than `[String: String]`.
+> `Context.inputs` is `Record<string, unknown>` in TypeScript, and a
+> string-keyed-string map cannot carry a GraphQL variable that is a number, a
+> bool or an object — which is most of them. Without `jwt` there was nowhere to
+> read the bearer token the web lane's `doQuery` forwards.
+
 When the manifest declares a `data:` section the platform already generates a
 GraphQL BFF (ADR-012) and, in the web lane, a **generator-owned**
 `src/platform/bff/bff.ts` — a generic `query<T>(document, variables, headers)`
@@ -193,10 +201,19 @@ So the native lane carries both directions, and says which is which:
 | **Out** — this MFE fetches its own data | this package | *no equivalent* | `BFF<Module>DataProvider` → `<Cap>Query.document` |
 
 The first row is a faithful port and closes a stub: `NativeMFEBase.doQuery`
-returned `QueryResult(data: nil, errors: [])`. The generated `<Module>MFE` now
-overrides it behind the same `hasBff` gate the web lane uses, calling
-`BFFClient.queryRaw` — raw because the caller named the document, so there is no
-type to decode into.
+returned `QueryResult(data: nil, errors: [])`. It is now a **concrete default on
+`MFEBase`**, because that is the layer TypeScript puts it at — `BaseMFE.doQuery`
+is the one hook that is not abstract (ADR-053 for the endpoint order, ADR-070
+for the uniform no-data contract). It is emitted with or without a `data:`
+section: an MFE with no BFF answers `data: nil` rather than dialing a
+non-existent endpoint, which is what makes the capability uniform across every
+MFE. No subclass overrides it.
+
+Endpoint resolution is ADR-053's, minus two steps that have no native meaning:
+`context.inputs["bffUrl"]` → `BFF_URL` → `identity.bffEndpoint`. There is no
+dependency container to hold a `deps.bffUrl`, and the manifest composition
+TypeScript does at runtime (`manifest.endpoint` + `data.serve.endpoint`) already
+happened at generation time — `identity.bffEndpoint` *is* that composition.
 
 The second row is **new**, and the honest justification is not a precedent but a
 difference in what fills the seam. On the web a shell supplies the document
@@ -300,7 +317,35 @@ remains a bare protocol for the host to implement.
 - **The lifecycle hooks declared in a manifest are not yet dispatched in Swift.**
   `MFEBase` renders the guard/transition/error pipeline; manifest-declared
   before/after/error hooks (ADR-040 handler sources) are a web-lane feature that
-  the native lane does not yet carry.
+  the native lane does not yet carry. Concretely absent: `executeLifecycle`,
+  `executeHookEntry`, `executeHook` (including `contained` semantics),
+  `invokeHandler` / `invokePlatformHandler` / `invokeCustomHandler`,
+  `emitHookFailure`, `findCapabilityConfig` and the `_lifecycleStack`
+  re-entrancy guard.
+- **There is no middleware composition.** `BaseMFE.executeCapability` composes
+  `stateGuard` → `lifecyclePhase(before)` → main → `lifecyclePhase(after)` →
+  `stateTransition` → `errorBoundary`. `MFEBase.execute` inlines the same steps
+  as a `do`/`catch`, so the observable state-machine behaviour matches — what is
+  missing is the interception point a hook pipeline would attach to. Adding the
+  hooks means reworking this first.
+- **None of the eight injected dependencies exist.** `BaseMFEDependencies`
+  carries `platformHandlers`, `customHandlers`, `telemetry`, `stateValidator`,
+  `manifestParser`, `errorHandler`, `wsClient` and `bffUrl`; `MFEBase.init` takes
+  an identity. So the native lane emits **no telemetry at all**, and where
+  `assertState` and `transitionState` notify `deps.errorHandler` in TypeScript,
+  Swift only throws.
+- **Two capabilities throw rather than answer.** `emit` and
+  `updateControlPlaneState` have no native transport — there is no telemetry
+  service and no analogue of `attachControlPlane(wsClient:)`. They previously
+  returned `accepted: true`, which reported success for work that never
+  happened; they now throw `MFENotImplementedError` naming the missing
+  transport. A capability that fails honestly is worth more than one that lies.
+- **These gaps were invisible to every gate.** `native-contract-pin.test.ts`
+  asserts one `public final func` and one `open func do…` per capability, which
+  is exactly the surface that *was* rendered. `base-mfe-surface.test.ts` now
+  reads `base-mfe.ts` off disk and fails when any member of `BaseMFE` is in
+  neither the rendered nor the knowingly-absent column — it found
+  `_lifecycleStack`, which a by-hand audit had missed.
 
 ## Consequences
 
@@ -348,5 +393,8 @@ Worse, and accepted knowingly:
 - ADR-041 — the ten platform capabilities that this renders into Swift.
 - ADR-042 — the MFE lifecycle state machine and its guarded transitions, rendered here as `MFELifecycleTransitions`.
 - ADR-080 — the ten platform capabilities and the MFE lifecycle machine are defined once in `@seans-mfe/contracts`; this renders that single definition into a second language.
+- ADR-040 — lifecycle hook handler sources; the pipeline that consumes them is the largest piece of `BaseMFE` the native lane does not carry.
+- ADR-053 — BFF endpoint resolution order, which the native `doQuery` follows minus the two steps that have no native meaning.
+- ADR-070 — the uniform no-data query contract: an MFE with no `data:` section answers null rather than dialing. Rendered here on `MFEBase`, as in TypeScript.
 - ADR-012 — the GraphQL BFF generated from a manifest's `data:` section; §7 connects the Swift target to it and mirrors the ownership split of the web lane's generated `bff.ts`.
 - ADR-082 — the platform reports its own breaking changes in code it does not own, and never rewrites that code; the Swift build break is that posture.
