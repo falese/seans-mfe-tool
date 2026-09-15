@@ -55,7 +55,7 @@ import { renderTemplate, capabilityImplemented } from './template-io';
 export * from './file-plan';
 export * from './variants';
 export * from './contributors';
-import { fileContributors } from './contributors';
+import { fileContributors, contributorSpecs } from './contributors';
 import {
   resolveFilePlan,
   mergeTemplateRoots,
@@ -478,7 +478,7 @@ async function renderFiles(
       vars: () => ({ capabilities: domainCapabilities }),
     },
     ...PLATFORM_SPECS,
-    ...contributors.flatMap((c) => c.specs),
+    ...contributors.flatMap((c) => contributorSpecs(c, ctx)),
     ...variant.specs,
     ...slotSpecs(ctx),
     ...PUBLIC_SPECS,

@@ -8,4 +8,4 @@
 
 > **OpenTelemetryConfig** = `z.infer`\<*typeof* [`OpenTelemetryConfigSchema`](../variables/OpenTelemetryConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:392](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L392)
+Defined in: [packages/dsl/src/schema.ts:399](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L399)

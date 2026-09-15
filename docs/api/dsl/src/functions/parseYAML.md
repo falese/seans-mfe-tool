@@ -242,6 +242,10 @@ Parsed DSL manifest (unvalidated)
 
 > `optional` **bundleId**: `string`
 
+#### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 #### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`

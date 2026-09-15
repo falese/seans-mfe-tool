@@ -216,15 +216,19 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
-\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
 
 #### targets.swift.bundleId?
 
 `string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
 
 #### targets.swift.deploymentTarget
 
@@ -865,6 +869,10 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 #### manifest.targets.swift.bundleId?
 
 > `optional` **bundleId**: `string`
+
+#### manifest.targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
 
 #### manifest.targets.swift.deploymentTarget
 

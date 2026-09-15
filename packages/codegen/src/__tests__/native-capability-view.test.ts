@@ -1,29 +1,31 @@
 /**
- * Every domain capability a Swift target declares must have a view
- * (ADR-095/096) — checked at design time, not left to a compiler.
+ * Design-time checks for a Swift target's capability views (ADR-095/096).
  *
- * The first implementation had no check at all. It relied on the generated
- * `CapabilityViewRegistry.swift` referencing `<Cap>View` and therefore failing
- * to compile until the author wrote it, and ADR-096 called that "the ADR-082
- * posture". Two things were wrong with that:
+ * `native-capability-view` is a BACKSTOP now, not the mechanism. Views are
+ * emitted one file per capability, so a capability added to the manifest gets
+ * its own new file that regeneration writes — the same behaviour the web lane
+ * has always had via `featureSpecs()`. This rule catches what is left: a view
+ * someone deleted.
  *
- *   1. The reference lives inside `#if canImport(SwiftUI)`. On Linux — where
- *      the package demonstrably builds — the whole function compiles out, so
- *      NOTHING fails. `declared` still gains the id, `mount()` still accepts
- *      it via `declared.contains`, and rendering that capability succeeds with
- *      no view behind it.
- *   2. ADR-082's mechanism is a diagnostic naming a file, a line and a fix.
- *      A compile error that only happens on Apple platforms is not that.
+ * It exists at all because the compiler cannot be relied on. The registry's
+ * reference to `<Cap>View` sits inside `#if canImport(SwiftUI)`, which compiles
+ * out on Linux where the package otherwise builds — so a missing view would
+ * still reach `declared`, `mount()` would still accept it, and the capability
+ * would render nothing.
  *
- * So the rule lives here, beside the other design-time rules, and fires
- * wherever `mfe:validate` and `check:mfe-consistency` run.
+ * `capability-has-a-target` is the companion: a domain capability the native
+ * target does not implement is a warning, because a target whose generator does
+ * not exist yet is a legitimate reason not to implement it.
  */
 import { validateMfeConsistency } from '../validate';
 import type { DSLManifest } from '@seans-mfe/dsl';
 
-const VIEWS_PATH = 'swift/Sources/MFE/Features/CapabilityViews.swift';
+// Absolute, as `collectSources` supplies them: the command relativises
+// `issue.location` when printing, so it cannot hand relative paths in.
+const MFE = '/abs/mfe';
+const FEATURES = `${MFE}/swift/Sources/MFE/Features/`;
 
-function manifest(capabilities: string[], withSwift = true): DSLManifest {
+function manifest(capabilities: string[], swift?: { capabilities?: string[] } | false): DSLManifest {
   return {
     name: 'crew-services',
     version: '1.0.0',
@@ -35,88 +37,162 @@ function manifest(capabilities: string[], withSwift = true): DSLManifest {
       ...capabilities.map((c) => ({ [c]: { type: 'domain', description: `The ${c}` } })),
       { Load: { type: 'platform', description: 'Init' } },
     ],
-    ...(withSwift ? { targets: { swift: {} } } : {}),
+    ...(swift === false ? {} : { targets: { swift: swift ?? {} } }),
   } as unknown as DSLManifest;
 }
 
-const viewsFile = (views: string[]) => ({
-  path: VIEWS_PATH,
-  text:
-    '#if canImport(SwiftUI)\nimport SwiftUI\n\n' +
-    views.map((v) => `public struct ${v}View: View {\n  public var body: some View { EmptyView() }\n}`).join('\n\n') +
-    '\n#endif\n',
-});
+/** One source entry per existing view file. */
+const views = (names: string[]) =>
+  names.map((n) => ({ path: `${FEATURES}${n}View.swift`, text: `public struct ${n}View: View {}` }));
 
+/**
+ * A fixture the OTHER rules are happy with, so `result.ok` reflects the rules
+ * under test. An earlier version used `^18.2.0` and no design-system deps,
+ * which made `react-pinned` and `manifest-package-sync` fail — and two
+ * assertions here passed for that reason rather than their own.
+ */
 const base = {
   framework: 'react',
-  packageDependencies: { react: '^18.2.0', 'react-dom': '^18.2.0', '@seans-mfe-tool/runtime': '^0.1.0' },
+  packageDependencies: {
+    react: '~18.2.0',
+    'react-dom': '~18.2.0',
+    '@seans-mfe-tool/runtime': '^0.1.0',
+    '@mui/material': '^5.14.0',
+    '@mui/system': '^5.14.0',
+    '@emotion/react': '^11.11.1',
+    '@emotion/styled': '^11.11.0',
+  },
   sharedEntries: [],
 };
 
 const run = (m: DSLManifest, sources?: { path: string; text: string }[]) =>
   validateMfeConsistency({ ...base, manifest: m, sources });
 
+const issuesFor = (r: ReturnType<typeof run>, rule: string) => r.issues.filter((i) => i.rule === rule);
+
 describe('native-capability-view', () => {
-  it('passes when every declared capability has a view', () => {
-    const r = run(manifest(['CrewRoster', 'PayStatus']), [viewsFile(['CrewRoster', 'PayStatus'])]);
+  it('passes when every implemented capability has its view file', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus']), views(['CrewRoster', 'PayStatus']));
     expect(r.checked).toContain('native-capability-view');
-    expect(r.issues.filter((i) => i.rule === 'native-capability-view')).toHaveLength(0);
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(0);
   });
 
-  it('REPORTS a capability with no view — the case the compiler misses on Linux', () => {
-    const r = run(manifest(['CrewRoster', 'PayStatus', 'ShiftRoster']), [
-      viewsFile(['CrewRoster', 'PayStatus']),
-    ]);
-    const found = r.issues.filter((i) => i.rule === 'native-capability-view');
+  it('REPORTS a deleted view — the case the compiler misses on Linux', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus']), views(['CrewRoster']));
+    const found = issuesFor(r, 'native-capability-view');
     expect(found).toHaveLength(1);
-    expect(found[0].package).toBe('ShiftRoster');
+    expect(found[0].package).toBe('PayStatus');
   });
 
-  it('fails validation — this is an error, not an advisory warning', () => {
-    // A capability that renders nothing is a broken build, not a nudge.
-    const r = run(manifest(['ShiftRoster']), [viewsFile([])]);
+  it('fails validation — a capability that renders nothing is a broken build', () => {
+    const clean = run(manifest(['PayStatus']), views(['PayStatus']));
+    expect(clean.ok).toBe(true); // the fixture itself is otherwise valid
+
+    const r = run(manifest(['PayStatus']), views([]));
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(1);
     expect(r.ok).toBe(false);
   });
 
-  it('names the file and a fix the author can act on without reading an ADR', () => {
-    const r = run(manifest(['ShiftRoster']), [viewsFile([])]);
-    const issue = r.issues.find((i) => i.rule === 'native-capability-view')!;
-    expect(issue.location).toBe(VIEWS_PATH);
-    // The reporter renders `location` after `message`, so the message must not
-    // repeat the path or it reads as a stutter.
-    expect(issue.message).not.toContain(VIEWS_PATH);
-    expect(issue.fix).toMatch(/ShiftRosterView/);
-    expect(issue.fix).toMatch(/CapabilityViews\.swift/);
+  it('names the file and a fix, without repeating the path in the message', () => {
+    const r = run(manifest(['PayStatus']), views([]));
+    const issue = issuesFor(r, 'native-capability-view')[0];
+    // No `location`: the file is missing, so there is no real path to
+    // relativise and a synthesised one renders wrong (it resolved against cwd
+    // and printed as `../../../swift/...`).
+    expect(issue.location).toBeUndefined();
+    expect(issue.message).toMatch(/PayStatusView\.swift does not exist/);
+    expect(issue.fix).toMatch(/PayStatusView/);
   });
 
-  it('reports every missing capability, not just the first', () => {
-    const r = run(manifest(['A', 'B', 'C']), [viewsFile(['B'])]);
-    expect(r.issues.filter((i) => i.rule === 'native-capability-view').map((i) => i.package)).toEqual(['A', 'C']);
+  it('reports every missing view, not just the first', () => {
+    const r = run(manifest(['A', 'B', 'C']), views(['B']));
+    expect(issuesFor(r, 'native-capability-view').map((i) => i.package)).toEqual(['A', 'C']);
+  });
+
+  it('does not mistake a neighbouring file for the view', () => {
+    // `CrewRosterDetailView.swift` must not satisfy `CrewRoster`.
+    const r = run(manifest(['CrewRoster']), views(['CrewRosterDetail']));
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(1);
+  });
+
+  it('only requires views for the capabilities the target implements', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus'], { capabilities: ['CrewRoster'] }), views(['CrewRoster']));
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(0);
+  });
+
+  it('ignores a declared capability the manifest does not have', () => {
+    const r = run(manifest(['CrewRoster'], { capabilities: ['CrewRoster', 'Ghost'] }), views(['CrewRoster']));
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(0);
   });
 });
 
-describe('native-capability-view is scoped', () => {
-  it('is not checked when the manifest declares no swift target', () => {
-    const r = run(manifest(['CrewRoster'], false), [viewsFile([])]);
-    expect(r.checked).not.toContain('native-capability-view');
-    expect(r.issues.filter((i) => i.rule === 'native-capability-view')).toHaveLength(0);
+describe('capability-has-a-target', () => {
+  it('warns about a domain capability the native target does not implement', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus'], { capabilities: ['CrewRoster'] }), views(['CrewRoster']));
+    const found = issuesFor(r, 'capability-has-a-target');
+    expect(found).toHaveLength(1);
+    expect(found[0].package).toBe('PayStatus');
   });
 
-  it('is not checked when the caller supplied no sources', () => {
-    // Same posture as slots-implemented: a scan over nothing would report
-    // every capability as missing.
+  it('warns rather than failing — the web build still carries it', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus'], { capabilities: ['CrewRoster'] }), views(['CrewRoster']));
+    expect(issuesFor(r, 'capability-has-a-target')[0].severity).toBe('warning');
+    expect(r.ok).toBe(true);
+  });
+
+  it('is not evaluated when the target declares no subset — all means all', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus']), views(['CrewRoster', 'PayStatus']));
+    expect(r.checked).not.toContain('capability-has-a-target');
+  });
+});
+
+describe('scoping', () => {
+  it('neither rule runs without a swift target', () => {
+    const r = run(manifest(['CrewRoster'], false), views([]));
+    expect(r.checked).not.toContain('native-capability-view');
+    expect(r.checked).not.toContain('capability-has-a-target');
+  });
+
+  it('neither rule runs without sources', () => {
     const r = run(manifest(['CrewRoster']));
     expect(r.checked).not.toContain('native-capability-view');
   });
 
-  it('ignores platform capabilities — only domain capabilities get views', () => {
-    const r = run(manifest([]), [viewsFile([])]);
-    expect(r.issues.filter((i) => i.rule === 'native-capability-view')).toHaveLength(0);
+  it('platform capabilities need no view', () => {
+    const r = run(manifest([]), views([]));
+    expect(issuesFor(r, 'native-capability-view')).toHaveLength(0);
+  });
+});
+
+describe('native-views-legacy-file', () => {
+  it('reports the pre-split monolith, which regeneration cannot delete', () => {
+    const r = run(manifest(['CrewRoster']), [
+      ...views(['CrewRoster']),
+      { path: `${FEATURES}CapabilityViews.swift`, text: 'public struct CrewRosterView: View {}' },
+    ]);
+    const found = issuesFor(r, 'native-views-legacy-file');
+    expect(found).toHaveLength(1);
+    // A real file, so the location is a real absolute path the command can
+    // relativise for display.
+    expect(found[0].location).toBe(`${FEATURES}CapabilityViews.swift`);
+    expect(found[0].fix).toMatch(/delete this file/);
+    expect(r.ok).toBe(false);
   });
 
-  it('does not mistake a substring for a match', () => {
-    // `CrewRosterDetailView` must not satisfy `CrewRoster`.
-    const r = run(manifest(['CrewRoster']), [viewsFile(['CrewRosterDetail'])]);
-    expect(r.issues.filter((i) => i.rule === 'native-capability-view')).toHaveLength(1);
+  it('stays silent once the file is gone', () => {
+    const r = run(manifest(['CrewRoster']), views(['CrewRoster']));
+    expect(issuesFor(r, 'native-views-legacy-file')).toHaveLength(0);
+  });
+
+  it('is not a PLATFORM_MIGRATIONS entry, and could not have been', () => {
+    // `findMigrationHits` matches line by line, and the old and new files carry
+    // byte-identical lines (`public struct CrewRosterView: View {`). The
+    // distinguishing fact is the file's existence, which no line pattern can
+    // express. An earlier attempt shipped a multi-line regex that could never
+    // fire, and its test passed only because it bypassed the scanner.
+    const { PLATFORM_MIGRATIONS } = require('../platform-migrations');
+    expect(PLATFORM_MIGRATIONS.map((m: { id: string }) => m.id)).not.toContain(
+      'swift-views-split-per-capability',
+    );
   });
 });

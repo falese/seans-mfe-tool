@@ -177,11 +177,44 @@ of it.
 `loadTargetPlugins` skips the `web` key for the same reason: it is a spelling of
 the primary build, already resolved, not a second plugin.
 
+### 7. A target declares which capabilities it implements, and its files repeat per capability
+
+`targets.swift.capabilities` names a subset; omitted means all of them, so a
+manifest written before the field existed keeps its meaning. Not every
+capability belongs on every delivery mechanism — a dense table may be web-only,
+a compact card mobile-only — and the manifest should be able to say so rather
+than having every target silently inherit everything.
+
+For that to work, a contributor's files have to repeat per capability the way
+the web lane's have since forever: `featureSpecs(ctx, capability)` runs in a
+loop and emits `src/features/<Cap>/<Cap>.tsx`, `owner: 'developer'`. So
+`FileContributor.specs` may now be a **function of the plan context**, not only
+a fixed array. `FileSpec.out` is a static string, so a fixed array can only
+describe files whose paths are known before any manifest is read.
+
+That limit had already shaped the Swift lane badly. Unable to emit one file per
+capability, it put every view in a single developer-owned
+`CapabilityViews.swift` — and since `overwrite: false` means *seed once*, a
+capability added later had nowhere to land. The resulting build break was then
+written up as an intentional "migration notice" rather than recognised as the
+workaround it was. With per-capability files the break disappears: a new
+capability gets a new file, which does not exist yet and is therefore written,
+exactly as in the web lane.
+
+**`overwrite: false` means seed once, not never write.** That is the sentence
+the original design missed, and it is worth stating plainly because it is the
+whole reason the two lanes can behave the same.
+
 ## Boundaries
 
 - **This is not a target *matrix*.** Each key names one build. There is no
   `targets.swift.variants` and no per-target framework selection beyond the
   `web` pair. A target's options are its own generator's business.
+- **`capabilities` is Swift-only for now.** `targets.web` takes every domain
+  capability, as it always has. Extending the subset to the web lane would
+  change emission for all 21 example MFEs and everything the drift and
+  characterization gates hold; worth doing, not worth doing in the same change
+  that introduces the idea.
 - **`targets.web` does not make the web build optional.** Every manifest still
   resolves one, and omitting `web` falls back to the scalars and then to
   react + rspack. "Mobile only" is not expressible and is deliberately not a

@@ -8,7 +8,7 @@
 
 > **registerFileContributor**(`contributor`): `void`
 
-Defined in: [packages/codegen/src/contributors.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/contributors.ts#L34)
+Defined in: [packages/codegen/src/contributors.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/contributors.ts#L52)
 
 ## Parameters
 

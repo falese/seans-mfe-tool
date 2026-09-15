@@ -6,7 +6,7 @@
 
 # Interface: MfeValidationResult
 
-Defined in: [packages/codegen/src/validate.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L94)
+Defined in: [packages/codegen/src/validate.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L97)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/codegen/src/validate.ts:94](https://github.com/falese/sean
 
 > **checked**: [`ValidationRule`](../type-aliases/ValidationRule.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L98)
+Defined in: [packages/codegen/src/validate.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L101)
 
 Rules that were evaluated (framework-dependent).
 
@@ -24,7 +24,7 @@ Rules that were evaluated (framework-dependent).
 
 > **issues**: [`ValidationIssue`](ValidationIssue.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L99)
+Defined in: [packages/codegen/src/validate.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L102)
 
 ***
 
@@ -32,6 +32,6 @@ Defined in: [packages/codegen/src/validate.ts:99](https://github.com/falese/sean
 
 > **ok**: `boolean`
 
-Defined in: [packages/codegen/src/validate.ts:96](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L96)
+Defined in: [packages/codegen/src/validate.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L99)
 
 False only when at least one issue is an `error` — warnings do not fail.

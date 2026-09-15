@@ -8,4 +8,4 @@
 
 > **FilterSchemaConfig** = `z.infer`\<*typeof* [`FilterSchemaConfigSchema`](../variables/FilterSchemaConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:423](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L423)
+Defined in: [packages/dsl/src/schema.ts:430](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L430)

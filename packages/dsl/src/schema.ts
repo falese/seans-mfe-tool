@@ -105,6 +105,13 @@ export const SwiftTargetSchema = z.object({
     .min(1)
     .default('5.9')
     .describe('swift-tools-version pin for the generated Package.swift.'),
+  capabilities: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      'Domain capabilities this target implements. Omitted ⇒ all of them. ' +
+        'Lets a target carry a subset — a dense table may be web-only, a compact card mobile-only.',
+    ),
 });
 export type SwiftTarget = z.infer<typeof SwiftTargetSchema>;
 

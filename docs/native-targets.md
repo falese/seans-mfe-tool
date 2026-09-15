@@ -24,6 +24,23 @@ targets:
 Both builds come from the same capabilities. `remote:generate` emits the Module
 Federation remote under `src/` and a Swift Package under `swift/`.
 
+### A target can implement a subset
+
+Not every capability belongs on every delivery mechanism:
+
+```yaml
+targets:
+  web:
+    framework: react
+    bundler: rspack
+  swift:
+    capabilities: [CrewRoster]   # the dense PayStatus table stays web-only
+```
+
+Omit `capabilities` and the target takes all of them. A capability no native
+target implements is a warning from `mfe:validate`, not an error — it is still
+built for the web.
+
 ### Or, on an MFE that already exists
 
 `framework` and `bundler` at the top level are the older spelling of
@@ -71,7 +88,7 @@ else — whichever spelling already describes your web build keeps describing it
 
 | Path | Owner |
 |---|---|
-| `swift/Sources/MFE/Features/**` | **You.** Never rewritten. |
+| `swift/Sources/MFE/Features/<Cap>View.swift` | **You.** One per capability. Seeded once, then never rewritten. |
 | `swift/Package.swift`, `swift/README.md` | **You.** Seeded once. |
 | `swift/Sources/MFE/Platform/**` | The generator. Re-stamped every run. |
 | `swift/mfe-manifest.json` | The generator. Input to the SPM plugin. |
@@ -80,11 +97,15 @@ This is the same split the web lane already uses — `src/platform/**` is the
 generator's, `src/features/**` is yours — so a Swift author's edits survive
 regeneration for the same reason a React author's do.
 
-**When you add a capability**, the generator-owned
-`Platform/CapabilityViewRegistry.swift` gains an entry and the Swift build
-fails until you write the matching view. That build failure *is* the migration
-notice ([ADR-082](architecture-decisions/ADR-082-platform-migrations-warn-never-rewrite.md)): the
-platform reports the change in code it does not own, and never rewrites it.
+**When you add a capability**, you get a new `<Cap>View.swift` seeded with a
+stub and the package keeps building — the same thing the web lane does with
+`src/features/<Cap>/<Cap>.tsx`. `overwrite: false` means *seed once*, not
+*never write*, so a file that does not exist yet is created.
+
+Two checks cover what regeneration cannot fix on its own, both reported by
+`mfe:validate`: `native-capability-view` if a view was deleted, and
+`native-views-legacy-file` if a pre-split `CapabilityViews.swift` is still
+around from before views were split per capability.
 
 ## How it relates to the web build
 

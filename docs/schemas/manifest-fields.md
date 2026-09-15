@@ -55,7 +55,7 @@ Secondary build targets built from this same manifest, e.g. a Swift Package (ADR
 | Field | Type | Constraints | Description |
 |---|---|---|---|
 | `web` | object (framework, bundler) | — | The Module Federation remote. Equivalent to the top-level framework/bundler pair. |
-| `swift` | object (moduleName, bundleId, deploymentTarget, swiftToolsVersion) | — | Emit a Swift Package alongside the web build (ADR-095, ADR-096). |
+| `swift` | object (moduleName, bundleId, deploymentTarget, swiftToolsVersion, …) | — | Emit a Swift Package alongside the web build (ADR-095, ADR-096). |
 
 ### `dependencies`
 

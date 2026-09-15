@@ -97,6 +97,14 @@
               "default": "5.9",
               "type": "string",
               "minLength": 1
+            },
+            "capabilities": {
+              "description": "Domain capabilities this target implements. Omitted ⇒ all of them. Lets a target carry a subset — a dense table may be web-only, a compact card mobile-only.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           },
           "required": [

@@ -8,7 +8,7 @@
  * manifest's `framework` field.
  */
 export { SwiftSpmPlugin } from './plugin';
-export { SWIFT_SPECS, swiftTemplateRoot, registerSwiftCodegen, pascalCase, camelCase, moduleNameFor, bundleIdFor } from './codegen';
+export { SWIFT_SPECS, swiftSpecs, swiftTemplateRoot, registerSwiftCodegen, pascalCase, camelCase, moduleNameFor, bundleIdFor } from './codegen';
 
 import { SwiftSpmPlugin } from './plugin';
 

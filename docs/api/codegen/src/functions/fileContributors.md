@@ -8,7 +8,7 @@
 
 > **fileContributors**(): readonly [`FileContributor`](../interfaces/FileContributor.md)[]
 
-Defined in: [packages/codegen/src/contributors.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/contributors.ts#L42)
+Defined in: [packages/codegen/src/contributors.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/contributors.ts#L60)
 
 ## Returns
 

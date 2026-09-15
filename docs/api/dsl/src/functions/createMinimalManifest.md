@@ -266,6 +266,10 @@ Minimal DSL manifest
 
 > `optional` **bundleId**: `string`
 
+#### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 #### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`

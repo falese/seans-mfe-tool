@@ -8,4 +8,4 @@
 
 > **Dependencies** = `z.infer`\<*typeof* [`DependenciesSchema`](../variables/DependenciesSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:448](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L448)
+Defined in: [packages/dsl/src/schema.ts:455](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L455)

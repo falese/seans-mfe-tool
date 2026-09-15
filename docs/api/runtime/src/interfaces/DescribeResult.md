@@ -242,6 +242,10 @@ Defined in: [packages/runtime/src/capability-results.ts:80](https://github.com/f
 
 > `optional` **bundleId**: `string`
 
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 ##### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`

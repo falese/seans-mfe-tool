@@ -8,7 +8,7 @@
 
 > **findUnresolvableLifecycleHooks**(`manifest`): [`UnresolvableHookHandler`](../interfaces/UnresolvableHookHandler.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L149)
+Defined in: [packages/codegen/src/validate.ts:152](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L152)
 
 Lifecycle hooks whose `handler:` cannot resolve at runtime, given how
 codegen names things.
@@ -233,15 +233,19 @@ different by mistake, and nothing has ever said so out loud.
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
-\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
 
 #### targets.swift.bundleId?
 
 `string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
 
 #### targets.swift.deploymentTarget
 

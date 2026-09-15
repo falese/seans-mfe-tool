@@ -8,6 +8,6 @@
 
 > `const` **FilterSchemaConfigSchema**: `ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `filters`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:419](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L419)
+Defined in: [packages/dsl/src/schema.ts:426](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L426)
 
 Filter schema configuration

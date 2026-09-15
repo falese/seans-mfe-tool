@@ -6,7 +6,7 @@
 
 # Variable: SwiftTargetSchema
 
-> `const` **SwiftTargetSchema**: `ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>
+> `const` **SwiftTargetSchema**: `ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>
 
 Defined in: [packages/dsl/src/schema.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L86)
 

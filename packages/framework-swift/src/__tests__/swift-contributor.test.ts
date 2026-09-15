@@ -91,7 +91,8 @@ describe('Swift package layout and ownership (ADR-096)', () => {
   const expectedDeveloper = [
     'swift/Package.swift',
     'swift/README.md',
-    'swift/Sources/MFE/Features/CapabilityViews.swift',
+    'swift/Sources/MFE/Features/CrewRosterView.swift',
+    'swift/Sources/MFE/Features/PayStatusView.swift',
   ];
 
   it.each(expectedGenerator)('%s is generator-owned', async (p) => {
@@ -119,6 +120,80 @@ describe('Swift package layout and ownership (ADR-096)', () => {
     for (const f of files.filter((x) => x.path.startsWith('swift/Sources/MFE/Features/'))) {
       expect(f.overwrite).toBe(false);
     }
+  });
+});
+
+describe('One view file per capability, like the web lane (ADR-095)', () => {
+  // The property the single-file design lacked: a capability added later gets
+  // its OWN file, which does not exist yet and is therefore written, instead
+  // of needing a hand-edit to a developer-owned file regeneration never
+  // touches. Mirrors `src/features/<Cap>/<Cap>.tsx`.
+  it('emits a view per domain capability and no monolithic views file', async () => {
+    const files = await generate(swiftManifest());
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain('swift/Sources/MFE/Features/CrewRosterView.swift');
+    expect(paths).toContain('swift/Sources/MFE/Features/PayStatusView.swift');
+    expect(paths).not.toContain('swift/Sources/MFE/Features/CapabilityViews.swift');
+  });
+
+  it('gives a newly added capability its own new file', async () => {
+    const withThird = {
+      ...manifest(),
+      capabilities: [
+        ...manifest().capabilities,
+        { ShiftRoster: { type: 'domain', description: 'Upcoming shifts' } },
+      ],
+      targets: { swift: {} },
+    } as unknown as DSLManifest;
+    const files = await generate(withThird);
+    const shift = files.find((f) => f.path === 'swift/Sources/MFE/Features/ShiftRosterView.swift');
+    expect(shift).toBeDefined();
+    expect(shift!.overwrite).toBe(false);
+    expect(shift!.content).toContain('public struct ShiftRosterView: View');
+    expect(shift!.content).toContain('Upcoming shifts');
+  });
+
+  it('registry and views agree on the capability set', async () => {
+    const files = await generate(swiftManifest());
+    const registry = files.find((f) => f.path.endsWith('CapabilityViewRegistry.swift'))!;
+    for (const cap of ['CrewRoster', 'PayStatus']) {
+      expect(registry.content).toContain(`case "${cap}": return AnyView(${cap}View())`);
+      expect(files.some((f) => f.path.endsWith(`${cap}View.swift`))).toBe(true);
+    }
+  });
+});
+
+describe('A target may implement a subset of capabilities (ADR-095)', () => {
+  const subset = () =>
+    ({ ...manifest(), targets: { swift: { capabilities: ['CrewRoster'] } } }) as unknown as DSLManifest;
+
+  it('emits views only for the capabilities the target declares', async () => {
+    const paths = (await generate(subset())).map((f) => f.path);
+    expect(paths).toContain('swift/Sources/MFE/Features/CrewRosterView.swift');
+    expect(paths).not.toContain('swift/Sources/MFE/Features/PayStatusView.swift');
+  });
+
+  it('keeps the unselected capability in the WEB build', async () => {
+    // The subset is this target's contract, not the manifest's.
+    const paths = (await generate(subset())).map((f) => f.path);
+    expect(paths).toContain('src/features/PayStatus/PayStatus.tsx');
+  });
+
+  it('omits the unselected capability from the registry and the provider', async () => {
+    const files = await generate(subset());
+    const registry = files.find((f) => f.path.endsWith('CapabilityViewRegistry.swift'))!;
+    const provider = files.find((f) => f.path.endsWith('DataProvider.swift'))!;
+    expect(registry.content).toContain('"CrewRoster"');
+    expect(registry.content).not.toContain('PayStatus');
+    expect(provider.content).not.toContain('payStatus()');
+  });
+
+  it('omits it from the manifest projection the SPM plugin reads', async () => {
+    const files = await generate(subset());
+    const json = JSON.parse(files.find((f) => f.path.endsWith('swift/mfe-manifest.json'))!.content);
+    const names = json.capabilities.map((c: { name: string }) => c.name);
+    expect(names).toContain('CrewRoster');
+    expect(names).not.toContain('PayStatus');
   });
 });
 

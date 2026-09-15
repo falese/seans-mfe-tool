@@ -197,6 +197,12 @@
                       },
                       "bundleId": {
                         "type": "string"
+                      },
+                      "capabilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       }
                     },
                     "additionalProperties": false

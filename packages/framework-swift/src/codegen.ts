@@ -71,6 +71,7 @@ interface SwiftTargetConfig {
   bundleId?: string;
   deploymentTarget?: string;
   swiftToolsVersion?: string;
+  capabilities?: string[];
 }
 
 const swiftTarget = (c: unknown): SwiftTargetConfig | undefined =>
@@ -112,6 +113,21 @@ export function bundleIdFor(c: unknown): string {
 function deploymentMajor(c: unknown): string {
   const raw = swiftTarget(c)?.deploymentTarget || '17.0';
   return raw.split('.')[0];
+}
+
+/**
+ * The domain capabilities THIS target implements (ADR-095).
+ *
+ * `targets.swift.capabilities` names a subset; omitted means all of them, so a
+ * manifest written before the field existed keeps its meaning. A name the
+ * manifest does not declare is dropped here and reported by `mfe:validate`
+ * rather than silently emitting a view for a capability that does not exist.
+ */
+function selectedCapabilities(c: unknown): string[] {
+  const all = (c as SwiftCtx).domainCapabilities;
+  const declared = swiftTarget(c)?.capabilities;
+  if (!declared) return all;
+  return declared.filter((name) => all.includes(name));
 }
 
 /** Manifest capability descriptions, keyed by capability name. */
@@ -168,7 +184,7 @@ const swiftVars = (c: unknown): Record<string, unknown> => {
     bundleId: bundleIdFor(c),
     swiftToolsVersion: swiftTarget(c)?.swiftToolsVersion || '5.9',
     deploymentTargetMajor: deploymentMajor(c),
-    domainCapabilities: ctx.domainCapabilities,
+    domainCapabilities: selectedCapabilities(c),
     capabilityDescriptions: capabilityDescriptions(c),
     bffEndpoint: ctx.vars.bffEndpoint,
     camel: camelCase,
@@ -186,14 +202,19 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
   const ctx = c as SwiftCtx;
   const descriptions = capabilityDescriptions(c);
   const caps = Array.isArray(ctx.manifest.capabilities) ? ctx.manifest.capabilities : [];
+  const selected = new Set(selectedCapabilities(c));
   const projected: Array<{ name: string; type: string; description: string }> = [];
   for (const entry of caps) {
     if (!entry || typeof entry !== 'object') continue;
     for (const [name, config] of Object.entries(entry as Record<string, unknown>)) {
       const cfg = config as { type?: string } | undefined;
+      const isPlatform = cfg?.type === 'platform';
+      // A domain capability this target does not implement is not part of its
+      // contract, so `describe` must not report it.
+      if (!isPlatform && !selected.has(name)) continue;
       projected.push({
         name,
-        type: cfg?.type === 'platform' ? 'platform' : 'domain',
+        type: isPlatform ? 'platform' : 'domain',
         description: descriptions[name] ?? '',
       });
     }
@@ -226,11 +247,11 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
  * `.gitignore`: the root file is variant-owned and its ownership is pinned by
  * `gitignore-ownership.test.ts`.
  */
-export const SWIFT_SPECS: FileSpec[] = [
+const STATIC_SWIFT_SPECS: FileSpec[] = [
   // Developer-owned scaffolding
   { template: 'Package.swift.ejs', out: `${SWIFT_DIR}/Package.swift`, owner: 'developer', root: 'swift', when: hasSwift, vars: swiftVars },
   { template: 'README.md.ejs', out: `${SWIFT_DIR}/README.md`, owner: 'developer', root: 'swift', when: hasSwift, vars: swiftVars },
-  { template: 'Sources/Features/CapabilityViews.swift.ejs', out: `${SOURCES}/Features/CapabilityViews.swift`, owner: 'developer', root: 'swift', when: hasSwift, vars: swiftVars },
+
 
   // Generator-owned: the contract and everything derived from it
   { template: 'gitignore.ejs', out: `${SWIFT_DIR}/.gitignore`, owner: 'generator', root: 'swift', when: hasSwift },
@@ -247,6 +268,35 @@ export const SWIFT_SPECS: FileSpec[] = [
   { template: 'Tests/LifecycleTests.swift.ejs', out: `${SWIFT_DIR}/Tests/MFETests/LifecycleTests.swift`, owner: 'generator', root: 'swift', when: hasSwift, vars: swiftVars },
 ];
 
+/**
+ * The full plan for a generation: the fixed files, plus one view per capability
+ * this target implements.
+ *
+ * A function rather than an array because `FileSpec.out` is a static string
+ * (ADR-095), so per-capability paths cannot be known until a manifest is read.
+ * This mirrors the web lane's `featureSpecs(ctx, capability)` — and it is what
+ * makes a capability added later land in its OWN new file, which regeneration
+ * writes because it does not exist yet, instead of needing a hand-edit to a
+ * developer-owned file regeneration will never touch.
+ */
+export function swiftSpecs(ctx: unknown): FileSpec[] {
+  if (!hasSwift(ctx)) return [];
+  const descriptions = capabilityDescriptions(ctx);
+  return [
+    ...STATIC_SWIFT_SPECS,
+    ...selectedCapabilities(ctx).map((name) => ({
+      template: 'Sources/Features/CapabilityView.swift.ejs',
+      out: `${SOURCES}/Features/${name}View.swift`,
+      owner: 'developer' as const,
+      root: 'swift',
+      vars: () => ({ name, description: descriptions[name] ?? '' }),
+    })),
+  ];
+}
+
+/** Kept exported under its original name for anything importing the plan. */
+export const SWIFT_SPECS = STATIC_SWIFT_SPECS;
+
 /** Absolute, resolved inside this package. From dist/ that is ../templates. */
 export const swiftTemplateRoot = path.resolve(__dirname, '..', 'templates');
 
@@ -262,7 +312,7 @@ export const swiftTemplateRoot = path.resolve(__dirname, '..', 'templates');
  * result is idempotent for the right reason.
  */
 export function registerSwiftCodegen(): void {
-  registerFileContributor({ id: 'swift', templateRoot: swiftTemplateRoot, specs: SWIFT_SPECS });
+  registerFileContributor({ id: 'swift', templateRoot: swiftTemplateRoot, specs: swiftSpecs });
 }
 
 export type { GeneratedFile };

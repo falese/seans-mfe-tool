@@ -231,28 +231,23 @@ Worse, and accepted knowingly:
 - **`ManifestMetadata` is referenced before it exists.** `Types.swift` reads
   symbols the SPM plugin generates at build time. Correct under `swift build`,
   confusing when reading the package in isolation.
-- **Ownership fails loudly by design — but the compiler was the wrong
-  mechanism.** Adding a capability updates the generator-owned
-  `CapabilityViewRegistry.swift`, which references `<Cap>View`, so a missing
-  view breaks the Swift build until the author writes it in developer-owned
-  `Features/CapabilityViews.swift`.
+- **Ownership no longer fails loudly, because it no longer needs to.** Earlier
+  drafts of this section described a build break as the design: adding a
+  capability updated the generator-owned registry, and the developer-owned
+  views file — one file holding every view — had no entry for it. That was a
+  workaround for a contributor seam that could not emit per-capability files,
+  presented as intent, and it was wrong twice over. The break did not occur on
+  Linux at all (the registry's reference sits inside `#if canImport(SwiftUI)`),
+  and a compile error is not ADR-082's mechanism, which is a diagnostic naming
+  a file and a fix.
 
-  An earlier draft of this section called that "the ADR-082 posture". It was
-  not. ADR-082's mechanism is a *diagnostic naming a file and a fix*, surfaced
-  by `mfe:validate`; a compile error that happens to occur is a different
-  thing, and this one does not occur everywhere: the reference sits inside
-  `#if canImport(SwiftUI)` and compiles out on Linux, where the package
-  otherwise builds. There the id still lands in `declared`, `mount()` still
-  accepts it via `declared.contains`, and rendering that capability succeeds
-  with nothing behind it.
+  Views are now one file per capability (ADR-095 §7), so a capability added to
+  the manifest gets its own new file that regeneration writes — the web lane's
+  behaviour. Two design-time rules in `packages/codegen/src/validate.ts` cover
+  what is left: `native-capability-view` for a view someone deleted, and
+  `native-views-legacy-file` for the pre-split monolith, which regeneration
+  cannot delete because it is developer-owned.
 
-  So the check is now the `native-capability-view` rule in
-  `packages/codegen/src/validate.ts`, beside the other design-time rules. It
-  fires in `mfe:validate` and `check:mfe-consistency` on every platform and
-  names the file and the `struct` to add. `mfe:validate` also had to learn to
-  read `swift/` — `collectSources` walked only `src/`, so a rule about a
-  secondary target's sources could never have fired on a real MFE. The compile
-  error remains as a backstop on Apple platforms.
 - **Two base classes to keep in step.** `MFEBase` and `BaseMFE` are the same
   contract expressed twice. The pin test covers the contract surface; it does not
   cover orchestration *behaviour*, so the two pipelines can still diverge in how

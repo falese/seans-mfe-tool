@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:591](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L591)
+Defined in: [packages/dsl/src/schema.ts:598](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L598)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:593](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L593)
+Defined in: [packages/dsl/src/schema.ts:600](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L600)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:593](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:594](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L594)
+Defined in: [packages/dsl/src/schema.ts:601](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L601)
 
 #### authorization?
 
@@ -242,6 +242,10 @@ Defined in: [packages/dsl/src/schema.ts:594](https://github.com/falese/seans-mfe
 
 > `optional` **bundleId**: `string`
 
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 ##### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`
@@ -284,4 +288,4 @@ Defined in: [packages/dsl/src/schema.ts:594](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:592](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L592)
+Defined in: [packages/dsl/src/schema.ts:599](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L599)

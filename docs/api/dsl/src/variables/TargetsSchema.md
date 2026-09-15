@@ -6,9 +6,9 @@
 
 # Variable: TargetsSchema
 
-> `const` **TargetsSchema**: `ZodObject`\<\{ `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
+> `const` **TargetsSchema**: `ZodObject`\<\{ `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
 
-Defined in: [packages/dsl/src/schema.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L142)
+Defined in: [packages/dsl/src/schema.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L149)
 
 Every build this manifest produces.
 

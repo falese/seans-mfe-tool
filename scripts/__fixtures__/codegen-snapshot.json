@@ -1836,7 +1836,7 @@
       "CrewRoster",
       "PayStatus"
     ],
-    "fileCount": 41,
+    "fileCount": 42,
     "files": [
       {
         "path": "<cwd>/__mocks__/fileMock.js",
@@ -1994,9 +1994,14 @@
         "sha256": "26bd8e917d649eb74cf2f6ac8a11a0acc01c975a04e82655e015a5e60f7e495d"
       },
       {
-        "path": "<cwd>/swift/Sources/MFE/Features/CapabilityViews.swift",
+        "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterView.swift",
         "overwrite": false,
-        "sha256": "902e859a08de359c2599e779a80d732509f942edb0574f47981521dfff8e4635"
+        "sha256": "cc4e319fb93bc73e0568b4f966672f4f7b0d62699ee3dac3e4e40f941353f1ab"
+      },
+      {
+        "path": "<cwd>/swift/Sources/MFE/Features/PayStatusView.swift",
+        "overwrite": false,
+        "sha256": "3db3017adaa1493cadcd5731bc0c42519ba07bd373649bd942fe72c26b4af8fd"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/CapabilityViewRegistry.swift",

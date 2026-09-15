@@ -107,8 +107,12 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * `swift/` is a root too, and has to be: a secondary target's sources live
  * outside `src/` (ADR-095), so scanning only `src/` meant the
  * `native-capability-view` rule could never fire on a real MFE no matter what
- * the rule itself did. Paths are returned MFE-relative with forward slashes,
- * because that rule matches on a known path rather than on file content.
+ * the rule itself did.
+ *
+ * Paths stay ABSOLUTE. The command relativises `issue.location` against `dir`
+ * when printing, so returning relative paths here made that resolve a second
+ * time against cwd — `swift/...` rendered as `../../../swift/...`. Rules that
+ * match on location therefore match a suffix, not a prefix.
  */
 async function collectSources(dir: string): Promise<SourceFile[]> {
   const roots = [path.join(dir, 'src'), path.join(dir, 'swift')];
@@ -124,10 +128,7 @@ async function collectSources(dir: string): Promise<SourceFile[]> {
       }
       if (!SOURCE_EXTENSIONS.has(path.extname(entry.name))) continue;
       if (/^slots\.(tsx?|jsx?)$/.test(entry.name)) continue;
-      sources.push({
-        path: path.relative(dir, full).split(path.sep).join('/'),
-        text: await fs.readFile(full, 'utf8'),
-      });
+      sources.push({ path: full, text: await fs.readFile(full, 'utf8') });
     }
   };
 

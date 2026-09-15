@@ -231,15 +231,19 @@ the same as permitting.
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 #### targets.swift?
 
-\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
 
 #### targets.swift.bundleId?
 
 `string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
 
 #### targets.swift.deploymentTarget
 

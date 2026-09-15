@@ -262,6 +262,10 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 > `optional` **bundleId**: `string`
 
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 ##### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`

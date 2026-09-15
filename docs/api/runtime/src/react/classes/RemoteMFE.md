@@ -243,15 +243,19 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 ###### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 ###### targets.swift?
 
-\{ `bundleId?`: `string`; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
 
 ###### targets.swift.bundleId?
 
 `string` = `...`
+
+###### targets.swift.capabilities?
+
+`string`[] = `...`
 
 ###### targets.swift.deploymentTarget
 
@@ -578,6 +582,10 @@ DSL manifest for this MFE
 ##### targets.swift.bundleId?
 
 > `optional` **bundleId**: `string`
+
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
 
 ##### targets.swift.deploymentTarget
 

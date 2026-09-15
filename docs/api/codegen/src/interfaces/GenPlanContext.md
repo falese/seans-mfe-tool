@@ -264,6 +264,10 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 > `optional` **bundleId**: `string`
 
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
 ##### targets.swift.deploymentTarget
 
 > **deploymentTarget**: `string`

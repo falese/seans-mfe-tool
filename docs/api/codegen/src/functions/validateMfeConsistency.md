@@ -8,9 +8,7 @@
 
 > **validateMfeConsistency**(`input`): [`MfeValidationResult`](../interfaces/MfeValidationResult.md)
 
-Defined in: [packages/codegen/src/validate.ts:184](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L184)
-
-Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
+Defined in: [packages/codegen/src/validate.ts:202](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L202)
 
 ## Parameters
 

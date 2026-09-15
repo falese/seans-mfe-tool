@@ -8,4 +8,4 @@
 
 > **DataPlugin** = `z.infer`\<*typeof* [`DataPluginSchema`](../variables/DataPluginSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:313](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L313)
+Defined in: [packages/dsl/src/schema.ts:320](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L320)

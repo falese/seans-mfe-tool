@@ -67,6 +67,7 @@
 
 - [capabilityImplemented](functions/capabilityImplemented.md)
 - [compareVersions](functions/compareVersions.md)
+- [contributorSpecs](functions/contributorSpecs.md)
 - [deriveBuiltinVariant](functions/deriveBuiltinVariant.md)
 - [diffGeneratedOwned](functions/diffGeneratedOwned.md)
 - [diffPackageDependencies](functions/diffPackageDependencies.md)
