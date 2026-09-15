@@ -248,7 +248,7 @@ open class MFEBase {
             let error = MFEStateError(from: state, attempted: capability, allowed: allowed)
             // TypeScript's assertState notifies deps.errorHandler before
             // throwing; the native lane used to report nothing at all.
-            deps.errorHandler?.handle(error, context ?? MFEContext(capabilityId: capability.rawValue))
+            deps.errorHandler?.handle(error, context: context ?? MFEContext(capabilityId: capability.rawValue))
             throw error
         }
     }
@@ -256,7 +256,7 @@ open class MFEBase {
     public final func transition(to newState: MFELifecycleState) throws {
         guard MFELifecycleTransitions.isValid(from: state, to: newState) else {
             let error = MFEStateError(from: state, attempted: .load, allowed: MFELifecycleTransitions.table[state] ?? [])
-            deps.errorHandler?.handle(error, MFEContext())
+            deps.errorHandler?.handle(error, context: MFEContext())
             throw error
         }
         stateHistory.append((from: state, to: newState, at: Date()))

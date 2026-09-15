@@ -2036,12 +2036,12 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/GeneratedMFE.swift",
         "overwrite": true,
-        "sha256": "fa470861bd144dcf904948a2e45cac5e983e94de80231ba3627faf7859fc9484"
+        "sha256": "f4dbb6fe21561aa57b202ae16bb372513dc4622be7a8cf7c45e84b3ee79603ae"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "38dabe732669dd509e2658e692e1406627e9d9615b96d9fd9b5b5d28bab8f7e2"
+        "sha256": "92108359590e10ca149f7791b245680fb3cb0978365968c95d4e1ffb2d9a4483"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",

@@ -453,6 +453,10 @@ describe('The query capability is a concrete default on MFEBase (ADR-053/070)', 
       'provider: CrewServicesDataProvider = BFFCrewServicesDataProvider()',
     );
     expect(mfe.content).toContain('super.init(provider: provider, identity: identity, deps: resolved)');
+    // Same signature as NativeMFEBase's designated init, so Swift requires
+    // `override`. Omitting it is a compile error the text suites cannot see —
+    // the first run of the swift CI job caught exactly this.
+    expect(mfe.content).toContain('public override init(');
   });
 
   it('gives the no-BFF package no client and no provider default', async () => {
@@ -463,6 +467,7 @@ describe('The query capability is a concrete default on MFEBase (ADR-053/070)', 
     expect(mfe.content).not.toContain('BFFClient');
     expect(mfe.content).not.toContain('= BFFCrewServicesDataProvider()');
     expect(mfe.content).toContain('provider: CrewServicesDataProvider,');
+    expect(mfe.content).toContain('public override init(');
   });
 });
 

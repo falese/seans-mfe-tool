@@ -45,7 +45,7 @@ public final class <%= moduleName %>MFE: NativeMFEBase {
 <% }); -%>
     ]
 
-    public init(
+    public override init(
         provider: <%= moduleName %>DataProvider<% if (hasBff) { %> = BFF<%= moduleName %>DataProvider()<% } %>,
         identity: MFEIdentity = .current,
         deps: MFEDependencies = MFEDependencies()

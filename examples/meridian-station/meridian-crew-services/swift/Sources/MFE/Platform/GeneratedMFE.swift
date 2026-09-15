@@ -63,7 +63,7 @@ public final class MeridianCrewServicesMFE: NativeMFEBase {
         },
     ]
 
-    public init(
+    public override init(
         provider: MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider(),
         identity: MFEIdentity = .current,
         deps: MFEDependencies = MFEDependencies()
