@@ -110,6 +110,11 @@ differ only in when it happens — HTTP at runtime, linker at build time — and
 manifest identity, and transitions `uninitialized → loading → ready`.
 `Bundle.load()` is Foundation's real module-loading operation.
 
+(Earlier drafts of this ADR, the PR body and the generated README described that
+as *"resolve `principalClass`"*. The emitted code never does — it is
+`Bundle(for:)`, `isLoaded`, `load()`. The description was of a design that was
+not written.)
+
 ### 3. The contract is rendered from `platform-contract.ts`, never hand-written
 
 `MFE_LIFECYCLE_STATES`, `MFE_LIFECYCLE_TRANSITIONS` and
@@ -186,12 +191,22 @@ generator-owned; the derived Swift is neither.
   a type nothing declares. Measured with an 11th capability added: every other
   assertion in the file stayed green while the emitted package could not have
   compiled.
-- **Linux portability was considered and dropped.** `Bundle.principalClass`
-  depends on the Objective-C runtime and is not meaningfully available in
-  swift-corelibs-foundation, so a Linux-clean `load` would need a second static
-  registry path behind `#if canImport(ObjectiveC)` — machinery in service of a
-  gate that does not exist. SwiftUI stays confined to `Features/` behind
-  `#if canImport(SwiftUI)` as hygiene, and that is all.
+- **Linux portability: the earlier reasoning here was wrong.** This section
+  previously said Linux was "considered and dropped" because
+  `Bundle.principalClass` needs the Objective-C runtime. That rested on a method
+  the emitted code never calls, and a reviewer disproved the conclusion by
+  building it: the Swift 6.0.3 Linux toolchain compiles the generated package
+  and runs its tests (`swift build` ~12s, `LifecycleTests` 5/5) on
+  `x86_64-unknown-linux-gnu`, because the three SwiftUI files are behind
+  `#if canImport(SwiftUI)`.
+
+  What that covers is the non-UI surface — `MFEBase`, `MFELifecycle`, `Types`,
+  `NativeMFEBase`, which is everything the contract pin reasons about. The
+  SwiftUI-gated files are *skipped*, not compiled, so a Linux build does not
+  prove the views are valid. A Linux `swift build && swift test` CI job is
+  therefore feasible and would close the "nothing compiles the emitted Swift"
+  gap for the non-UI surface; it is not in this ADR's scope, and the UI surface
+  would still need a Mac.
 - **No GraphQL client is generated.** The data seam is a protocol the host
   implements. Typed query structs would need schema introspection at codegen
   time; that is a separate scope.

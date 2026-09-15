@@ -157,7 +157,11 @@ a build plugin that drags in a YAML parser is one nobody will keep.
 
 ## Known limits
 
-- **No gate compiles the emitted Swift.** There is no Swift toolchain in CI.
+- **No gate compiles the emitted Swift.** There is no Swift toolchain in CI —
+  though a reviewer showed the package *does* build on Linux (Swift 6.0.3,
+  `swift build` ~12s, `LifecycleTests` 5/5), because the SwiftUI files are
+  behind `#if canImport(SwiftUI)`. A Linux job would close this for the non-UI
+  surface; the views would still need a Mac.
   `packages/framework-swift/src/__tests__/native-contract-pin.test.ts` asserts the
   *rendering* against `packages/contracts/src/platform-contract.ts`, but it is a
   text assertion, not a type check. Compilation is verified by hand on a Mac.

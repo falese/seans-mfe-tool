@@ -1986,7 +1986,7 @@
       {
         "path": "<cwd>/swift/README.md",
         "overwrite": false,
-        "sha256": "9e2065d970543178abe1163985ed4d9bf617dc9e040649dbfd3cd1fb698959d7"
+        "sha256": "1be6da4c41bdd9dadb182c24ac434c0789af25aa16cdcb502a79649ce8c1bc68"
       },
       {
         "path": "<cwd>/swift/Sources/ManifestMetadataGen/main.swift",
@@ -2026,7 +2026,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/NativeMFEBase.swift",
         "overwrite": true,
-        "sha256": "c6b1cf4f75ac721db43a7ce13781d78a5d08a28c22afbb484b5616c85afac35c"
+        "sha256": "de9f7db57e8793fe48e363cd8f32b6a1c9163d57adbe5536c53b46b1825106cc"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",

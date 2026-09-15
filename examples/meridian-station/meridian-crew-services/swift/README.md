@@ -46,5 +46,5 @@ MFEBase                 rendering of BaseMFE — contract + orchestration
 It descends from `NativeMFEBase`, **not** from `BaseRemoteMFE`, because that
 class is Module Federation machinery — `fetchContainer(remoteEntry)`, a shared
 scope, a DOM node — none of which exists here. `load` is not thereby empty: it
-is `Bundle.load()` → resolve the principal type → validate → ready, which is
+is `Bundle.load()` → validate the capability table → ready, which is
 what the contract's *"connect, warm caches, validate config"* always meant.

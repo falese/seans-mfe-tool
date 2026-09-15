@@ -61,11 +61,15 @@ open class NativeMFEBase: MFEBase {
     /// launch for a bundled framework — and iOS forbids `dlopen`ing downloaded
     /// code, so there is no remote entry to fetch. `Bundle.load()` is
     /// Foundation's real module-loading operation and it is not a no-op: it
-    /// maps the image and makes its principal type resolvable.
+    /// maps the bundle's image.
     open func resolveBundle() throws -> Bundle {
         let b = Bundle(for: type(of: self))
         if !b.isLoaded {
-            b.load()
+            // `load()` returns Bool. Discarding it explicitly: a failed load
+            // surfaces as `isLoaded` staying false, which the caller's
+            // capability-table validation then catches — and the bare call
+            // warns under Swift 6.
+            _ = b.load()
         }
         return b
     }
