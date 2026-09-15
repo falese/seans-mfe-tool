@@ -20,6 +20,12 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "targets": {
+    "swift": {
+      "deploymentTarget": "17.0",
+      "swiftToolsVersion": "5.9"
+    }
+  },
   "description": "Meridian Station crew services — roster, certifications, pay status",
   "owner": "meridian-station",
   "tags": [
