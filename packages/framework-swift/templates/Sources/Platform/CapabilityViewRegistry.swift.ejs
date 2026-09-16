@@ -2,11 +2,14 @@
 //
 // The manifest's domain capabilities, as a static table (ADR-096).
 //
-// Generator-owned on purpose. `Features/CapabilityViews.swift` beside it is
-// developer-owned and seeded once, so when a capability is added to the
-// manifest this file gains an entry and the Swift build fails until the author
-// writes the matching view. That failure IS the migration notice — the same
-// posture ADR-082 takes for developer-owned code in the web lane.
+// Generator-owned, and re-stamped on every generate. Each view lives in its own
+// developer-owned `Features/<Capability>View.swift`: adding a capability to the
+// manifest adds an entry here AND seeds that file, which does not exist yet and
+// is therefore written, so the package keeps compiling (ADR-095 §7).
+//
+// `mfe:validate` reports the remaining case — a view someone deleted — as
+// `native-capability-view`, because the reference below is inside
+// `#if canImport(SwiftUI)` and compiles out on Linux.
 
 import Foundation
 #if canImport(SwiftUI)

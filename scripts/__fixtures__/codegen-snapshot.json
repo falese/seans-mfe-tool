@@ -2026,7 +2026,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/CapabilityViewRegistry.swift",
         "overwrite": true,
-        "sha256": "3b88b9f87396d85d6a632565160140f8618256864372f743167120ba88e3dd00"
+        "sha256": "2bc4d74ca70e82f0ac856156d078bfdb10c40eeba5ab70696b1a2779392bb574"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/DataProvider.swift",
