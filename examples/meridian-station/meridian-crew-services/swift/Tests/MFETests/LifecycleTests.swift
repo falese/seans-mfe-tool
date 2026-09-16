@@ -12,6 +12,12 @@ private struct StubProvider: MeridianCrewServicesDataProvider {
     func payStatus() async throws -> PayStatusOutputs { PayStatusOutputs() }
 }
 
+/// Collects handler names across concurrent hook invocations.
+private actor FiredHooks {
+    private(set) var names: [String] = []
+    func record(_ name: String) { names.append(name) }
+}
+
 final class LifecycleTests: XCTestCase {
 
     func testStartsUninitialized() {
@@ -41,6 +47,49 @@ final class LifecycleTests: XCTestCase {
         let mfe = MeridianCrewServicesMFE(provider: StubProvider())
         let described = try await mfe.describe(MFEContext())
         XCTAssertEqual(described.name, ManifestMetadata.name)
+    }
+
+    /// The manifest's hooks actually FIRE.
+    ///
+    /// This exists because they did not. `MFECapability.load.rawValue` is
+    /// "load" and the manifest writes "Load", and the lookup compared the two
+    /// exactly — so every hook this manifest declares was inert while 136 text
+    /// assertions and a clean `swift build` both passed. A text assertion can
+    /// see that the engine was rendered; only running it can see that it runs.
+    func testManifestHooksFire() async throws {
+        let fired = FiredHooks()
+        var handlers: [String: MFEHandler] = [:]
+        handlers["onLoadBegin"] = { _ in await fired.record("onLoadBegin") }
+        handlers["onLoadComplete"] = { _ in await fired.record("onLoadComplete") }
+        handlers["onLoadError"] = { _ in await fired.record("onLoadError") }
+        handlers["onRenderBegin"] = { _ in await fired.record("onRenderBegin") }
+        handlers["onRenderComplete"] = { _ in await fired.record("onRenderComplete") }
+        handlers["onRenderError"] = { _ in await fired.record("onRenderError") }
+
+        let mfe = MeridianCrewServicesMFE(
+            provider: StubProvider(),
+            deps: MFEDependencies(customHandlers: handlers)
+        )
+        _ = try await mfe.load(MFEContext())
+
+        // Whatever `load`'s before/after hooks are, they ran.
+        let ran = await fired.names
+        XCTAssertFalse(ran.isEmpty, "no manifest hook fired during load()")
+        XCTAssertTrue(ran.contains("onLoadBegin"), "before hook onLoadBegin did not fire")
+        XCTAssertTrue(ran.contains("onLoadComplete"), "after hook onLoadComplete did not fire")
+    }
+
+    /// A host's handler wins over the generated stub for the same name.
+    func testHostHandlerOverridesGeneratedStub() async throws {
+        let fired = FiredHooks()
+        let name = "onLoadBegin"
+        let mfe = MeridianCrewServicesMFE(
+            provider: StubProvider(),
+            deps: MFEDependencies(customHandlers: [name: { _ in await fired.record(name) }])
+        )
+        _ = try await mfe.load(MFEContext())
+        let ran = await fired.names
+        XCTAssertTrue(ran.contains(name), "host handler was shadowed by the generated stub")
     }
 
     func testTransitionTableMatchesContract() {

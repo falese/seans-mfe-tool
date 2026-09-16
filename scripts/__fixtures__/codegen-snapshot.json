@@ -1991,7 +1991,7 @@
       {
         "path": "<cwd>/swift/Sources/ManifestMetadataGen/main.swift",
         "overwrite": true,
-        "sha256": "52cf476a427ee922105e7ebff3791eeee70d93d41e1daa19618398b35872ea4e"
+        "sha256": "e63c07113a12f4a6040fa02d9c23795433d143a2ba64cdc187472e39cecd9904"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterQuery.swift",
@@ -2041,7 +2041,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "92108359590e10ca149f7791b245680fb3cb0978365968c95d4e1ffb2d9a4483"
+        "sha256": "676b0b207874dee6fd6a07fc48cd393cfe4b44031a355bab1627271bd967866f"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2061,7 +2061,7 @@
       {
         "path": "<cwd>/swift/Tests/MFETests/LifecycleTests.swift",
         "overwrite": true,
-        "sha256": "f064c3de4db57a0a44e2d253bec37581cfc17b1e0ceba20274f3a43a09153db8"
+        "sha256": "7d2c8c2d3e8deb1fe25b61a601d5c5aaf5b062331c341fca5327490b6b21dc22"
       },
       {
         "path": "<cwd>/tsconfig.json",

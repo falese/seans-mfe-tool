@@ -253,9 +253,13 @@ open class MFEBase {
         }
     }
 
-    public final func transition(to newState: MFELifecycleState) throws {
+    public final func transition(to newState: MFELifecycleState, for capability: MFECapability = .load) throws {
         guard MFELifecycleTransitions.isValid(from: state, to: newState) else {
-            let error = MFEStateError(from: state, attempted: .load, allowed: MFELifecycleTransitions.table[state] ?? [])
+            // `for:` so an invalid transition during render/refresh/… is not
+            // reported as an attempted `load`. Defaulted rather than required
+            // because `transition(to:)` is public API a subclass may already
+            // call.
+            let error = MFEStateError(from: state, attempted: capability, allowed: MFELifecycleTransitions.table[state] ?? [])
             deps.errorHandler?.handle(error, context: MFEContext())
             throw error
         }
@@ -291,9 +295,9 @@ open class MFEBase {
     }
 
     /// Middleware: transition the state machine. No-op when there is no state.
-    private func stateTransition(_ target: MFELifecycleState?) -> Middleware {
+    private func stateTransition(_ target: MFELifecycleState?, for capability: MFECapability) -> Middleware {
         { _, next in
-            if let target { try self.transition(to: target) }
+            if let target { try self.transition(to: target, for: capability) }
             try await next()
         }
     }
@@ -317,7 +321,7 @@ open class MFEBase {
                 errorBox.context.error = error
                 try? await self.executeLifecycle(capability.rawValue, .error, errorBox)
                 if let errorState = capability.errorState, self.state != errorState {
-                    try? self.transition(to: errorState)
+                    try? self.transition(to: errorState, for: capability)
                 }
                 throw error
             }
@@ -337,7 +341,7 @@ open class MFEBase {
 
         let pipeline: [Middleware] = [
             stateGuard(capability),
-            stateTransition(capability.enterState),
+            stateTransition(capability.enterState, for: capability),
             errorBoundary(capability),
             lifecyclePhase(capability, .before),
             lifecyclePhase(capability, .main),
@@ -346,7 +350,7 @@ open class MFEBase {
                 try await next()
             },
             lifecyclePhase(capability, .after),
-            stateTransition(capability.exitState),
+            stateTransition(capability.exitState, for: capability),
         ]
 
         try await runPipeline(pipeline, box)
@@ -388,7 +392,16 @@ open class MFEBase {
     /// `mfe-manifest.json` at swift build time (ADR-095), which is also why
     /// there is no native analogue of `deps.manifestParser`.
     private func findCapabilityHooks(_ capability: String, _ phase: MFELifecyclePhase) -> [MFEHookSpec] {
-        ManifestMetadata.hooks.filter { $0.capability == capability && $0.phase == phase }
+        // CASE-INSENSITIVE, because the two sides spell the capability
+        // differently and always have: `MFECapability.load.rawValue` is "load"
+        // (the platform contract's spelling) while the manifest writes "Load"
+        // and the projection preserves it. `BaseMFE.findCapabilityConfig`
+        // lowercases both sides for exactly this reason; an exact compare here
+        // matched nothing, so every manifest hook was inert.
+        let wanted = capability.lowercased()
+        return ManifestMetadata.hooks.filter {
+            $0.capability.lowercased() == wanted && $0.phase == phase
+        }
     }
 
     /// One hook's handlers, in order (REQ-045).

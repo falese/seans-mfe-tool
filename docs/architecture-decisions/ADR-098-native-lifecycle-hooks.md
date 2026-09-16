@@ -19,6 +19,7 @@ implemented-by:
   - packages/framework-swift/src/codegen.ts
 verified-by:
   - packages/framework-swift/src/__tests__/native-hooks.test.ts
+  - packages/framework-swift/templates/Tests/LifecycleTests.swift.ejs
   - scripts/check-swift-build.sh
   - packages/framework-swift/src/__tests__/base-mfe-surface.test.ts
 summary: >-
@@ -192,6 +193,20 @@ walk over a parsed manifest, which is why `deps.manifestParser` has no analogue.
   is declared and called on every hook failure; nothing ships a conformer.
   Hook failures are invisible unless a host supplies one, which is still an
   improvement on having nowhere to send them.
+- **The two lanes spell a capability differently, and the lookup must not care.**
+  `MFECapability.load.rawValue` is `"load"` — the platform contract's spelling —
+  while a manifest writes `Load:` and the projection preserves it, because
+  `describe` reports what the manifest declared. `BaseMFE.findCapabilityConfig`
+  lowercases both sides; `findCapabilityHooks` does too. It did not at first,
+  and the consequence is the one worth recording: **every manifest hook was
+  inert** while 141 text assertions and a clean `swift build` both passed. A
+  reviewer found it by writing a throwaway XCTest against the committed package
+  and watching zero handlers run.
+
+  That is also why the generated `LifecycleTests.swift` now *runs* the hooks
+  rather than reading for them. The `swift` CI job executes it, so this class of
+  defect — the engine rendered correctly and wired to nothing — fails a gate
+  instead of a review.
 - **The rendering tests are not a type check.** `native-hooks.test.ts` asserts
   the order of the pipeline and the presence of each guarantee; it cannot see a
   type error. This is the largest body of generated Swift logic yet added, which

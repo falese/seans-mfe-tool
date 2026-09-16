@@ -47,8 +47,32 @@ do {
     exit(1)
 }
 
+/// A Swift string literal for `s`.
+///
+/// Escapes control characters, not just `\` and `"`. A manifest `description:`
+/// written with a YAML literal block (`|`) preserves its newlines, and a raw
+/// newline inside a string literal is an unterminated-string error in a file
+/// nobody hand-wrote. Anything else non-printable goes out as `\u{...}`.
 func swiftString(_ s: String) -> String {
-    "\"" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
+    var out = "\""
+    for scalar in s.unicodeScalars {
+        switch scalar {
+        case "\\": out += "\\\\"
+        case "\"": out += "\\\""
+        case "\n": out += "\\n"
+        case "\r": out += "\\r"
+        case "\t": out += "\\t"
+        case "\0": out += "\\0"
+        default:
+            // Swift string literals cannot carry a raw control character.
+            if scalar.value < 0x20 || scalar.value == 0x7F {
+                out += String(format: "\\u{%X}", scalar.value)
+            } else {
+                out.unicodeScalars.append(scalar)
+            }
+        }
+    }
+    return out + "\""
 }
 
 let domain = manifest.capabilities.filter { $0.type == "domain" }

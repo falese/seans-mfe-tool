@@ -107,13 +107,13 @@ describe('The capability pipeline is composed middleware (ADR-098 §1)', () => {
     const swiftPipeline = swift.slice(swift.indexOf('let pipeline: [Middleware] = ['));
     const swiftOrder = [
       'stateGuard(capability)',
-      'stateTransition(capability.enterState)',
+      'stateTransition(capability.enterState, for: capability)',
       'errorBoundary(capability)',
       'lifecyclePhase(capability, .before)',
       'lifecyclePhase(capability, .main)',
       'try await body()',
       'lifecyclePhase(capability, .after)',
-      'stateTransition(capability.exitState)',
+      'stateTransition(capability.exitState, for: capability)',
     ].map((needle) => swiftPipeline.indexOf(needle));
     expect(swiftOrder.every((i) => i > -1)).toBe(true);
     expect([...swiftOrder].sort((a, b) => a - b)).toEqual(swiftOrder);
@@ -126,7 +126,7 @@ describe('The capability pipeline is composed middleware (ADR-098 §1)', () => {
     const swift = (await fileNamed(manifest(), 'Platform/MFEBase.swift')).content;
     const pipeline = swift.slice(swift.indexOf('let pipeline: [Middleware] = ['));
     expect(pipeline.indexOf('errorBoundary(capability)')).toBeGreaterThan(
-      pipeline.indexOf('stateTransition(capability.enterState)'),
+      pipeline.indexOf('stateTransition(capability.enterState, for: capability)'),
     );
     expect(pipeline.indexOf('errorBoundary(capability)')).toBeGreaterThan(
       pipeline.indexOf('stateGuard(capability)'),
@@ -297,5 +297,58 @@ describe('A manifest that runs on the web runs natively (ADR-098 §3)', () => {
     const mfe = await fileNamed(bare, 'Platform/GeneratedMFE.swift');
     expect(mfe.content).toContain('public static let generatedHandlers: [String: MFEHandler] = [');
     expect(mfe.content).not.toContain('": { context in');
+  });
+});
+
+describe('Hook lookup survives the two spellings of a capability name', () => {
+  it('matches case-insensitively, as BaseMFE.findCapabilityConfig does', async () => {
+    // THE BUG THIS PINS. `MFECapability.load.rawValue` is "load" — the platform
+    // contract's spelling — while the manifest writes "Load" and the projection
+    // preserves it. The lookup compared them exactly, so every manifest hook
+    // was inert. Devin measured it against the committed package: the metadata
+    // held ["Load:before", …], the rawValue was "load", and zero handlers ran.
+    //
+    // `base-mfe.ts` lowercases both sides. So does this now.
+    const swift = (await fileNamed(manifest(), 'Platform/MFEBase.swift')).content;
+    const lookup = swift.slice(swift.indexOf('private func findCapabilityHooks('));
+    expect(lookup).toContain('capability.lowercased()');
+    expect(lookup).toContain('$0.capability.lowercased() == wanted');
+  });
+
+  it('keeps the manifest’s spelling in the projection', async () => {
+    // The fix is in the comparison, not the data: `describe` reports the
+    // capability the manifest declared, so the projection must not be
+    // normalised to make the lookup cheaper.
+    const sidecar = await fileNamed(manifest(), 'swift/mfe-manifest.json');
+    const parsed = JSON.parse(sidecar.content) as { capabilities: Array<{ name: string }> };
+    expect(parsed.capabilities.map((c) => c.name)).toContain('Load');
+  });
+
+  it('generates a test that runs the hooks, not one that reads them', async () => {
+    // A text assertion can see the engine was rendered; only running it can see
+    // that it runs. 136 text assertions and a clean `swift build` both passed
+    // with the feature completely inert — this is the gate that closes that.
+    const tests = await fileNamed(manifest(), 'Tests/MFETests/LifecycleTests.swift');
+    expect(tests.content).toContain('func testManifestHooksFire()');
+    expect(tests.content).toContain('XCTAssertFalse(ran.isEmpty');
+    expect(tests.content).toContain('did not fire');
+  });
+
+  it('reports the capability actually attempted on a bad transition', async () => {
+    // Every invalid transition was reported to deps.errorHandler as an
+    // attempted `load`, whatever capability was running.
+    const swift = (await fileNamed(manifest(), 'Platform/MFEBase.swift')).content;
+    expect(swift).toContain('func transition(to newState: MFELifecycleState, for capability: MFECapability');
+    expect(swift).toContain('stateTransition(capability.enterState, for: capability)');
+    expect(swift).toContain('stateTransition(capability.exitState, for: capability)');
+  });
+
+  it('escapes control characters in the build-time generator', async () => {
+    // A `description:` written with a YAML literal block keeps its newlines,
+    // and a raw newline in a Swift string literal is an unterminated-string
+    // error in a file nobody hand-wrote.
+    const gen = await fileNamed(manifest(), 'ManifestMetadataGen/main.swift');
+    expect(gen.content).toContain('case "\\n": out += "\\\\n"');
+    expect(gen.content).toContain('scalar.value < 0x20');
   });
 });
