@@ -59,6 +59,10 @@ export type ValidationRule =
   | 'shared-version-sync'
   | 'runtime-declared'
   | 'slots-implemented'
+  | 'native-capability-view'
+  | 'native-capability-query'
+  | 'capability-has-a-target'
+  | 'native-views-legacy-file'
   | 'platform-migrations'
   | 'lifecycle-hook-handler-resolvable';
 
@@ -181,6 +185,21 @@ function normalizeHandlers(handler: string | string[]): string[] {
 /**
  * Validate an MFE's internal dependency/federation consistency. Pure: no I/O.
  */
+/** Where the developer-owned SwiftUI views live, relative to the MFE root. */
+const NATIVE_FEATURES_DIR = 'swift/Sources/MFE/Features/';
+
+/** Domain capability names, in manifest order. Platform capabilities have no view. */
+function domainCapabilityNames(manifest: DSLManifest): string[] {
+  const names: string[] = [];
+  for (const entry of manifest.capabilities ?? []) {
+    if (!entry || typeof entry !== 'object') continue;
+    for (const [name, config] of Object.entries(entry as Record<string, unknown>)) {
+      if ((config as { type?: string } | undefined)?.type === 'domain') names.push(name);
+    }
+  }
+  return names;
+}
+
 export function validateMfeConsistency(input: MfeValidationInput): MfeValidationResult {
   const { manifest, framework, packageDependencies, sharedEntries, sources, developerOwned, platformVersion } =
     input;
@@ -301,6 +320,146 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
         package: finding.slotId,
         message: finding.message,
       });
+    }
+  }
+
+  // Every capability a Swift target implements must have its view file
+  // (ADR-095/096).
+  //
+  // A BACKSTOP, not the mechanism. Views are emitted one per capability, so a
+  // capability added to the manifest gets its own new file that regeneration
+  // writes — the web lane's behaviour. This rule catches the remaining case: a
+  // view someone deleted.
+  //
+  // It exists at all because the compiler cannot be relied on here. The
+  // registry's reference to `<Cap>View` sits inside `#if canImport(SwiftUI)`,
+  // which compiles out on Linux, where the package otherwise builds — so the
+  // id would still reach `declared`, `mount()` would still accept it, and the
+  // capability would render nothing.
+  const swiftTarget = (manifest as { targets?: { swift?: { capabilities?: string[] } } }).targets
+    ?.swift;
+  if (swiftTarget !== undefined && sources) {
+    checked.push('native-capability-view');
+    const domain = domainCapabilityNames(manifest);
+    const implemented = swiftTarget.capabilities
+      ? swiftTarget.capabilities.filter((name) => domain.includes(name))
+      : domain;
+    // Suffix, not prefix: `sources` carries absolute paths (the command
+    // relativises locations when printing, so it cannot hand relative ones in).
+    const present = new Set(
+      sources
+        .map((f) => f.path.replace(/\\/g, '/'))
+        .filter((p) => p.includes(`/${NATIVE_FEATURES_DIR}`) && p.endsWith('View.swift'))
+        .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/View\.swift$/, '')),
+    );
+    for (const capability of implemented) {
+      if (present.has(capability)) continue;
+      const file = `${NATIVE_FEATURES_DIR}${capability}View.swift`;
+      issues.push({
+        rule: 'native-capability-view',
+        package: capability,
+        // No `location`: the file is MISSING, so there is no real path to
+        // relativise, and a synthesised one renders wrong.
+        message:
+          `The Swift target implements domain capability "${capability}", ` +
+          `but ${file} does not exist.`,
+        fix:
+          `Restore ${file} with \`public struct ${capability}View: View\`, or ` +
+          `run remote:generate to re-seed it. Removing "${capability}" from ` +
+          `targets.swift.capabilities is the other way out.`,
+      });
+    }
+
+    // Every capability a Swift target implements must also have its QUERY
+    // document, when the manifest declares a data source (ADR-096 §7).
+    //
+    // Same backstop shape as the view rule above, and for a sharper reason:
+    // `Platform/BFFDataProvider.swift` is GENERATOR-owned and calls
+    // `<Cap>Query.document` by name, so deleting the developer-owned document
+    // leaves generated code referring to a symbol nothing declares. That is the
+    // generator-to-developer coupling the registry/monolith split already cost
+    // us once, and the platform reports it rather than rewriting the file
+    // (ADR-082).
+    //
+    // Unlike the view rule, a Swift compiler WOULD catch this — the provider is
+    // not behind `#if canImport(SwiftUI)`. Nothing in CI runs one, and
+    // `cannot find 'CrewRosterQuery' in scope` names the symbol and no fix.
+    const hasBff = (manifest as { data?: unknown }).data !== undefined;
+    if (hasBff) {
+      checked.push('native-capability-query');
+      const seeded = new Set(
+        sources
+          .map((f) => f.path.replace(/\\/g, '/'))
+          .filter((p) => p.includes(`/${NATIVE_FEATURES_DIR}`) && p.endsWith('Query.swift'))
+          .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/Query\.swift$/, '')),
+      );
+      for (const capability of implemented) {
+        if (seeded.has(capability)) continue;
+        const file = `${NATIVE_FEATURES_DIR}${capability}Query.swift`;
+        issues.push({
+          rule: 'native-capability-query',
+          package: capability,
+          // No `location`, for the same reason as the view rule: the file is
+          // missing, so there is no real path to relativise.
+          message:
+            `The Swift target implements domain capability "${capability}" and ` +
+            `this MFE has a BFF, but ${file} does not exist — generated ` +
+            `Platform/BFFDataProvider.swift calls ${capability}Query.document.`,
+          fix:
+            `Restore ${file} with \`public enum ${capability}Query\` exposing a ` +
+            `\`static let document\`, or run remote:generate to re-seed it.`,
+        });
+      }
+    }
+
+    // The pre-split monolith, if it survived (ADR-095).
+    //
+    // Views used to be seeded into one developer-owned `CapabilityViews.swift`.
+    // They are now one file per capability, and regeneration never DELETES a
+    // developer-owned file — so an MFE generated before the split keeps the old
+    // file, gains the new ones, and declares every view twice.
+    //
+    // Not a PLATFORM_MIGRATIONS entry: `findMigrationHits` matches line by
+    // line, and the old and new files contain byte-identical lines
+    // (`public struct CrewRosterView: View {`). The distinguishing fact is the
+    // file's existence, which a line matcher cannot express. Same guarantee —
+    // `mfe:validate` reporting a breaking change in code the platform does not
+    // own, with a fix (ADR-082) — through the mechanism that can carry it.
+    const legacy = sources.find((f) =>
+      f.path.replace(/\\/g, '/').endsWith(`/${NATIVE_FEATURES_DIR}CapabilityViews.swift`),
+    );
+    if (legacy) {
+      checked.push('native-views-legacy-file');
+      issues.push({
+        rule: 'native-views-legacy-file',
+        location: legacy.path,
+        message:
+          'Capability views are now one file per capability, so this pre-split ' +
+          'file declares every view a second time. Regeneration cannot delete it —',
+        fix:
+          'Move any edits into the matching swift/Sources/MFE/Features/<Cap>View.swift ' +
+          '(regeneration has already seeded them) and delete this file.',
+      });
+    }
+
+    // A capability nothing builds is probably an oversight, not an error: a
+    // target whose generator does not exist yet is a legitimate reason.
+    if (swiftTarget.capabilities) {
+      checked.push('capability-has-a-target');
+      for (const capability of domain) {
+        if (swiftTarget.capabilities.includes(capability)) continue;
+        issues.push({
+          rule: 'capability-has-a-target',
+          severity: 'warning',
+          package: capability,
+          message:
+            `Domain capability "${capability}" is not implemented by the Swift ` +
+            `target. It is still built for the web.`,
+          fix:
+            `Add "${capability}" to targets.swift.capabilities if the native ` +
+            `build should carry it.`,
+        });
+      }
     }
   }
 

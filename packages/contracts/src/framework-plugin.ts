@@ -123,32 +123,66 @@ export abstract class BaseFrameworkPlugin {
   /** Bundler name matching the manifest `bundler` field. */
   abstract readonly bundler: string;
 
+  /**
+   * Which build this plugin produces for a manifest (ADR-097).
+   *
+   * `'web'` — the default — is the primary build, selected by the manifest's
+   * `framework` field. Any other value names a key under `targets:`, a build
+   * produced ALONGSIDE the primary one from the same capabilities (ADR-095).
+   *
+   * Concrete, not abstract, so a plugin written before secondary targets
+   * existed keeps working unchanged.
+   */
+  readonly targetId: string = 'web';
+
   // ── Scaffold ────────────────────────────────────────────────────────
 
-  /** Default port for dev server. */
-  abstract readonly defaultPort: number;
+  /**
+   * Default dev-server port.
+   *
+   * Optional since ADR-097: a target that is not served over HTTP has no port.
+   * The web lane declares one; the Swift lane does not. Declared rather than
+   * abstract: an optional abstract member still demands an implementation.
+   */
+  readonly defaultPort?: number;
 
   /** Directories to create on `remote:init`. */
   abstract readonly directoryStructure: string[];
 
   // ── Codegen ─────────────────────────────────────────────────────────
-  //
-  // Six members were removed here (ADR-092): getRuntimeDependencies,
-  // getTemplateDir, getTemplateVars, getRuntimeImport, getRuntimeClassName and
-  // getSourceExtension. Every one was declared abstract, implemented by both
-  // shipped plugins, and called by nothing — the generator hardcodes the same
-  // facts instead.
-  //
-  // getTemplateDir() had rotted undetected: it returned
-  // `src/codegen/templates/base-mfe`, a directory deleted when templates moved
-  // to packages/codegen in ADR-061. Its test asserted the returned STRING
-  // matched /templates\/base-mfe$/ and never checked the directory existed, so
-  // it stayed green pointing at nothing.
-  //
-  // They are not re-added speculatively. The real extension point needs a
-  // template directory AND a file plan together, not six scalar getters — see
-  // docs/generator-extraction-plan.md Phase 4, where a third framework added
-  // without touching the generator is the acceptance test.
+
+  /**
+   * Register this plugin's contribution to code generation (ADR-097).
+   *
+   * ADR-092 §5 removed six scalar codegen getters from this class —
+   * `getTemplateDir`, `getTemplateVars`, `getRuntimeImport`,
+   * `getRuntimeClassName`, `getSourceExtension`, `getRuntimeDependencies` —
+   * because every one was abstract, implemented twice, and called by nothing.
+   * `getTemplateDir()` had rotted to a directory deleted in ADR-061 and its
+   * test still passed, because it asserted the STRING and never that the
+   * directory existed.
+   *
+   * It also said what the replacement would have to look like:
+   *
+   *   > the real extension point needs a template directory AND a file plan
+   *   > together, not six scalar getters
+   *
+   * This is that member, and the generator is now able to receive it: ADR-093
+   * made what is emitted a list of `FileSpec`s, and ADR-094 gave the generator
+   * `FileContributor` — a template root the contributor owns plus the specs to
+   * resolve against it. So one method with a real caller replaces six without
+   * one.
+   *
+   * Implementations call `registerVariant()` (a primary build) or
+   * `registerFileContributor()` (a secondary target) from `@seans-mfe/codegen`.
+   * Typed as an optional no-arg method rather than returning a codegen type,
+   * because `contracts` imports nothing first-party (ADR-061) and must not
+   * learn codegen's vocabulary to declare this.
+   *
+   * Idempotent: both registries key by id, so calling it once per manifest in
+   * a loop over a fleet is safe and is what the drift gate does.
+   */
+  registerCodegen?(): void;
 
   /** Test file extension, e.g. `'.test.tsx'`. */
   abstract getTestExtension(): string;
@@ -161,8 +195,13 @@ export abstract class BaseFrameworkPlugin {
   /** Validate that the local environment has the required tools. */
   abstract checkEnvironment(): Promise<EnvCheckResult[]>;
 
-  /** Start the dev server. */
-  abstract startDevServer(
+  /**
+   * Start the dev server.
+   *
+   * Optional since ADR-097 — meaningless for a target with no HTTP surface.
+   * Absent rather than throwing, so a caller can tell from the type.
+   */
+  startDevServer?(
     manifest: unknown,
     opts: { port: number; cwd: string },
   ): Promise<DevServerHandle>;
@@ -175,6 +214,11 @@ export abstract class BaseFrameworkPlugin {
 
   // ── Docker ──────────────────────────────────────────────────────────
 
-  /** Return the Docker build strategy for this framework. */
-  abstract getDockerStrategy(manifest: unknown): DockerStrategy;
+  /**
+   * Return the Docker build strategy for this target.
+   *
+   * Optional since ADR-097. The shipped strategies serve a built bundle from
+   * nginx, which a natively-linked target has no use for.
+   */
+  getDockerStrategy?(manifest: unknown): DockerStrategy;
 }

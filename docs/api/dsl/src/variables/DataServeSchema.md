@@ -8,6 +8,6 @@
 
 > `const` **DataServeSchema**: `ZodObject`\<\{ `endpoint`: `ZodString`; `playground`: `ZodBoolean`; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:223](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L223)
+Defined in: [packages/dsl/src/schema.ts:323](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L323)
 
 Serve configuration

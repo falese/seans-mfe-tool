@@ -1,0 +1,50 @@
+# MeridianCrewServices — native iOS target
+
+Seeded once by `seans-mfe-tool`, then yours.
+
+This Swift Package is a **second build of the same MFE**. It and the web
+Module Federation remote beside it are generated from one
+`mfe-manifest.yaml`: same capabilities, same lifecycle contract, two
+independently buildable artifacts.
+
+## Build
+
+```sh
+swift build
+swift test
+```
+
+`swift build` runs the `ManifestCodegen` build-tool plugin, which regenerates
+`ManifestMetadata.swift` from `mfe-manifest.json`. The manifest is therefore
+the single source inside Xcode too, not only inside the CLI — nothing here
+holds a second copy of the capability list.
+
+## What is yours and what is not
+
+| Path | Owner |
+|---|---|
+| `Sources/MFE/Features/**` | **You.** Never rewritten by regeneration. |
+| `Package.swift`, this README | **You.** Seeded once. |
+| `Sources/MFE/Platform/**` | The generator. Re-stamped on every run. |
+
+If you add a capability to `mfe-manifest.yaml`, the generator-owned
+`Platform/CapabilityViewRegistry.swift` gains an entry and this package stops
+compiling until you write the matching view in `Features/CapabilityViews.swift`.
+That build failure is the migration notice.
+
+## How it relates to the web build
+
+`MeridianCrewServicesMFE` is a third concrete subclass of the platform base class,
+beside `RemoteMFE` (React/rspack) and `AngularRemoteMFE` (Angular/webpack):
+
+```
+MFEBase                 rendering of BaseMFE — contract + orchestration
+  └─ NativeMFEBase      sibling of BaseRemoteMFE — Bundle.load() acquisition
+       └─ MeridianCrewServicesMFE
+```
+
+It descends from `NativeMFEBase`, **not** from `BaseRemoteMFE`, because that
+class is Module Federation machinery — `fetchContainer(remoteEntry)`, a shared
+scope, a DOM node — none of which exists here. `load` is not thereby empty: it
+is `Bundle.load()` → validate the capability table → ready, which is
+what the contract's *"connect, warm caches, validate config"* always meant.

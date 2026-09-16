@@ -8,6 +8,6 @@
 
 > `const` **MockSwitchSchema**: `ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:239](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L239)
+Defined in: [packages/dsl/src/schema.ts:339](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L339)
 
 Demo-mode mock switch (ADR-052): opt-in per-request live/mock switching.

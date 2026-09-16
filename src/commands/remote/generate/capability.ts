@@ -3,7 +3,7 @@ import * as path from 'path';
 import chalk = require('chalk');
 import { parseAndValidateDirectory, formatErrorsForCLI } from '@seans-mfe/dsl';
 import { generateAllFiles, writeGeneratedFiles } from '@seans-mfe/codegen';
-import { resolveFrameworkVariant } from '../../../framework/loader';
+import { resolveFrameworkVariant, registerTargetCodegen } from '../../../framework/loader';
 import { BaseCommand } from '../../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateCapabilityResult, PlannedChange } from '../../../oclif/results';
@@ -37,6 +37,9 @@ export async function remoteGenerateCapabilityCommand(
 
     const manifest = result.manifest;
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
+
+    // Same manifest-driven registration as remote:generate (ADR-097).
+    registerTargetCodegen(manifest);
 
     const matchingCapabilities = (manifest.capabilities ?? []).filter(
       (entry) => Object.keys(entry).some(

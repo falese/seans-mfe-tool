@@ -8,7 +8,7 @@
 
 > **generateAllFiles**(`manifest`, `basePath`, `options`): `Promise`\<[`GenerateAllFilesResult`](../interfaces/GenerateAllFilesResult.md)\>
 
-Defined in: [packages/codegen/src/unified-generator.ts:188](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L188)
+Defined in: [packages/codegen/src/unified-generator.ts:216](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L216)
 
 Generate all files (features, platform, BFF, configs) for a manifest.
 
@@ -220,6 +220,46 @@ step (writeGeneratedFiles).
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
 
 #### transforms?
 

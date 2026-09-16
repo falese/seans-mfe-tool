@@ -1,0 +1,80 @@
+{
+  "name": "meridian-crew-services",
+  "version": "1.0.0",
+  "bundleId": "com.meridian-station.meridian-crew-services",
+  "bffEndpoint": "http://localhost:5005/graphql",
+  "capabilities": [
+    {
+      "name": "CrewRoster",
+      "type": "domain",
+      "description": "Crew roster with certifications from StationOS joined with payroll standing from StellarLedger"
+    },
+    {
+      "name": "PayStatus",
+      "type": "domain",
+      "description": "Compact pay-status card for the console status rail — held and scheduled payroll at a glance"
+    },
+    {
+      "name": "Load",
+      "type": "platform",
+      "description": "",
+      "lifecycle": [
+        {
+          "phase": "before",
+          "hook": "onLoadBegin",
+          "handlers": [
+            "onLoadBegin"
+          ],
+          "contained": false
+        },
+        {
+          "phase": "after",
+          "hook": "onLoadComplete",
+          "handlers": [
+            "onLoadComplete"
+          ],
+          "contained": false
+        },
+        {
+          "phase": "error",
+          "hook": "onLoadError",
+          "handlers": [
+            "onLoadError"
+          ],
+          "contained": true
+        }
+      ]
+    },
+    {
+      "name": "Render",
+      "type": "platform",
+      "description": "",
+      "lifecycle": [
+        {
+          "phase": "before",
+          "hook": "onRenderBegin",
+          "handlers": [
+            "onRenderBegin"
+          ],
+          "contained": false
+        },
+        {
+          "phase": "after",
+          "hook": "onRenderComplete",
+          "handlers": [
+            "onRenderComplete"
+          ],
+          "contained": false
+        },
+        {
+          "phase": "error",
+          "hook": "onRenderError",
+          "handlers": [
+            "onRenderError"
+          ],
+          "contained": true
+        }
+      ]
+    }
+  ]
+}

@@ -100,3 +100,8 @@ dependencies:
     react-dom: ^18.0.0
   design-system:
     "@mui/material": ^5.14.0
+
+# A SECOND build of this same MFE (ADR-095): the capabilities above are also
+# generated as a Swift Package under swift/, beside the web remote.
+targets:
+  swift: {}

@@ -8,7 +8,7 @@
 
 > **getDomainCapabilities**(`manifest`): `string`[]
 
-Defined in: [packages/dsl/src/parser.ts:217](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L217)
+Defined in: [packages/dsl/src/parser.ts:228](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L228)
 
 Get domain capabilities only (excludes platform capabilities)
 
@@ -217,6 +217,46 @@ Parsed DSL manifest
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
 
 #### transforms?
 

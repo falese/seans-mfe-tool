@@ -48,9 +48,17 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
   runtime: ['contracts', 'dsl'],
   codegen: ['contracts', 'dsl'],
   'oclif-base': ['contracts'],
-  'framework-react': ['contracts'],
-  'framework-angular': ['contracts'],
+  // The `codegen` edge is registerCodegen() (ADR-097): the plugin declares
+  // which CodegenVariant is its own, rather than that pairing living only in a
+  // lookup table keyed by a matching string.
+  'framework-react': ['contracts', 'codegen'],
+  'framework-angular': ['contracts', 'codegen'],
+  // The Swift target plugin. Like the other two it is a BaseFrameworkPlugin on
+  // `contracts`; unlike them it also contributes codegen (ADR-097), which is
+  // the `codegen` edge. Ships no commands, so no `oclif-base`.
+  'framework-swift': ['contracts', 'dsl', 'codegen'],
   'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
+
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
   'plugin-coder': ['contracts', 'dsl', 'oclif-base'],

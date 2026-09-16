@@ -25,7 +25,8 @@
       "framework",
       "bundler",
       "checks",
-      "allPassed"
+      "allPassed",
+      "targets"
     ],
     "properties": {
       "plugin": {
@@ -71,7 +72,74 @@
         }
       },
       "allPassed": {
-        "type": "boolean"
+        "type": "boolean",
+        "description": "True only when EVERY target passes — a red Swift toolchain fails the command."
+      },
+      "targets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "targetId",
+            "plugin",
+            "framework",
+            "bundler",
+            "checks",
+            "allPassed"
+          ],
+          "properties": {
+            "targetId": {
+              "type": "string"
+            },
+            "plugin": {
+              "type": "string"
+            },
+            "framework": {
+              "type": "string"
+            },
+            "bundler": {
+              "type": "string"
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "tool",
+                  "required",
+                  "found",
+                  "ok"
+                ],
+                "properties": {
+                  "tool": {
+                    "type": "string"
+                  },
+                  "required": {
+                    "type": "string"
+                  },
+                  "found": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "ok": {
+                    "type": "boolean"
+                  },
+                  "fix": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "allPassed": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "Every target this manifest builds, primary first (ADR-097)."
       }
     },
     "additionalProperties": false

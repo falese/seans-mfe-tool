@@ -246,6 +246,50 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 > `optional` **tags**: `string`[]
 
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]

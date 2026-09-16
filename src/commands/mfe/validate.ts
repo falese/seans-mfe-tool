@@ -94,18 +94,28 @@ const CONFIG_BY_BUNDLER: Record<string, string> = {
 };
 
 /** Extensions worth scanning for a slot reference. */
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte']);
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte', '.swift']);
 
 /** Never scanned: build output, dependencies, and the generated contract itself. */
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage']);
 
 /**
- * Read every scannable source file under `dir/src`, skipping the generated slot
- * contract — `slots.tsx` mirrors the manifest by construction, so counting it as
- * a reference would make the slot rule vacuous.
+ * Read every scannable source file under the MFE's source roots, skipping the
+ * generated slot contract — `slots.tsx` mirrors the manifest by construction,
+ * so counting it as a reference would make the slot rule vacuous.
+ *
+ * `swift/` is a root too, and has to be: a secondary target's sources live
+ * outside `src/` (ADR-095), so scanning only `src/` meant the
+ * `native-capability-view` rule could never fire on a real MFE no matter what
+ * the rule itself did.
+ *
+ * Paths stay ABSOLUTE. The command relativises `issue.location` against `dir`
+ * when printing, so returning relative paths here made that resolve a second
+ * time against cwd — `swift/...` rendered as `../../../swift/...`. Rules that
+ * match on location therefore match a suffix, not a prefix.
  */
 async function collectSources(dir: string): Promise<SourceFile[]> {
-  const root = path.join(dir, 'src');
+  const roots = [path.join(dir, 'src'), path.join(dir, 'swift')];
   const sources: SourceFile[] = [];
 
   const walk = async (current: string): Promise<void> => {
@@ -122,7 +132,9 @@ async function collectSources(dir: string): Promise<SourceFile[]> {
     }
   };
 
-  if (await fs.pathExists(root)) await walk(root);
+  for (const root of roots) {
+    if (await fs.pathExists(root)) await walk(root);
+  }
   return sources;
 }
 

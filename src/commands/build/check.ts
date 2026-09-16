@@ -1,24 +1,45 @@
 /**
- * build:check — validate local environment for the project's framework (ADR-036, #172).
+ * build:check — validate the local environment for every build this manifest
+ * declares (ADR-036 #172, ADR-097).
  *
- * Reads the MFE manifest, loads the framework plugin, and runs
- * plugin.checkEnvironment() to verify required tools are installed.
+ * Reads the MFE manifest, loads the plugin for the primary build and one per
+ * `targets:` key (ADR-095), and runs `checkEnvironment()` on each. `allPassed`
+ * is the conjunction: a manifest declaring a Swift target on a machine with no
+ * Swift toolchain fails, because that machine cannot build what the manifest
+ * asks for.
  */
 
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, loadTargetPlugins } from '../../framework/loader';
 import { parseManifestFile, findManifest } from '@seans-mfe/dsl';
+import { resolveFrameworkName } from '@seans-mfe/codegen';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { EnvCheckResult } from '@seans-mfe/contracts';
+import type { DSLManifest } from '@seans-mfe/dsl';
 
-interface BuildCheckResult {
+/** One target's environment check. */
+interface TargetCheck {
+  targetId: string;
   plugin: string;
   framework: string;
   bundler: string;
   checks: EnvCheckResult[];
   allPassed: boolean;
+}
+
+interface BuildCheckResult {
+  // The primary target's fields stay at the top level: they were here before
+  // secondary targets existed and every existing consumer reads them.
+  plugin: string;
+  framework: string;
+  bundler: string;
+  checks: EnvCheckResult[];
+  /** True only when EVERY target passes — a red Swift toolchain fails the command. */
+  allPassed: boolean;
+  /** Every target this manifest builds, primary first (ADR-097). */
+  targets: TargetCheck[];
 }
 
 export default class BuildCheck extends BaseCommand<BuildCheckResult> {
@@ -48,12 +69,13 @@ export default class BuildCheck extends BaseCommand<BuildCheckResult> {
 
     let framework = flags.framework;
 
-    if (!framework) {
-      const manifestPath = flags.manifest ?? await findManifest(process.cwd());
-      if (manifestPath) {
-        const manifest = await parseManifestFile(manifestPath);
-        framework = (manifest as Record<string, unknown>).framework as string | undefined;
-      }
+    // Read the manifest even when --framework is given: the flag overrides the
+    // PRIMARY framework, it does not say which secondary targets exist.
+    let loadedManifest: DSLManifest | undefined;
+    const manifestPath = flags.manifest ?? await findManifest(process.cwd());
+    if (manifestPath) {
+      loadedManifest = await parseManifestFile(manifestPath) as DSLManifest;
+      framework = framework ?? resolveFrameworkName(loadedManifest as DSLManifest);
     }
 
     if (!framework) {
@@ -64,25 +86,46 @@ export default class BuildCheck extends BaseCommand<BuildCheckResult> {
       );
     }
 
-    const plugin = loadFrameworkPlugin(framework);
+    // A manifest can declare more than one build (ADR-095), and an environment
+    // check that only ever looked at the primary one would report success on a
+    // machine that cannot build half of what the manifest asks for.
+    const plugins = loadedManifest
+      ? loadTargetPlugins(loadedManifest)
+      : [loadFrameworkPlugin(framework)];
 
-    console.log(chalk.blue(`\nChecking environment for ${plugin.displayName}...\n`));
+    const targets: TargetCheck[] = [];
+    for (const plugin of plugins) {
+      console.log(chalk.blue(`\nChecking environment for ${plugin.displayName}...\n`));
 
-    const checks = await plugin.checkEnvironment();
-    const allPassed = checks.every(c => c.ok);
+      const checks = await plugin.checkEnvironment();
+      const targetPassed = checks.every(c => c.ok);
 
-    for (const check of checks) {
-      const status = check.ok
-        ? chalk.green('✓')
-        : chalk.red('✗');
-      const version = check.found
-        ? chalk.gray(`(${check.found})`)
-        : chalk.red('(not found)');
-      console.log(`  ${status} ${check.tool} ${check.required} ${version}`);
-      if (!check.ok && check.fix) {
-        console.log(chalk.yellow(`    Fix: ${check.fix}`));
+      for (const check of checks) {
+        const status = check.ok
+          ? chalk.green('✓')
+          : chalk.red('✗');
+        const version = check.found
+          ? chalk.gray(`(${check.found})`)
+          : chalk.red('(not found)');
+        console.log(`  ${status} ${check.tool} ${check.required} ${version}`);
+        if (!check.ok && check.fix) {
+          console.log(chalk.yellow(`    Fix: ${check.fix}`));
+        }
       }
+
+      targets.push({
+        targetId: plugin.targetId,
+        plugin: plugin.id,
+        framework: plugin.framework,
+        bundler: plugin.bundler,
+        checks,
+        allPassed: targetPassed,
+      });
     }
+
+    const plugin = plugins[0];
+    const checks = targets[0].checks;
+    const allPassed = targets.every(t => t.allPassed);
 
     console.log('');
     if (allPassed) {
@@ -92,6 +135,7 @@ export default class BuildCheck extends BaseCommand<BuildCheckResult> {
     }
 
     return {
+      targets,
       plugin: plugin.id,
       framework: plugin.framework,
       bundler: plugin.bundler,

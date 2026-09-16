@@ -67,6 +67,7 @@
 
 - [capabilityImplemented](functions/capabilityImplemented.md)
 - [compareVersions](functions/compareVersions.md)
+- [contributorSpecs](functions/contributorSpecs.md)
 - [deriveBuiltinVariant](functions/deriveBuiltinVariant.md)
 - [diffGeneratedOwned](functions/diffGeneratedOwned.md)
 - [diffPackageDependencies](functions/diffPackageDependencies.md)
@@ -89,6 +90,7 @@
 - [renderJsonDependencyLines](functions/renderJsonDependencyLines.md)
 - [renderSharedEntries](functions/renderSharedEntries.md)
 - [renderTemplate](functions/renderTemplate.md)
+- [resolveBundlerName](functions/resolveBundlerName.md)
 - [resolveClientDependencies](functions/resolveClientDependencies.md)
 - [resolveDesignSystemDeps](functions/resolveDesignSystemDeps.md)
 - [resolveFilePlan](functions/resolveFilePlan.md)
@@ -96,6 +98,7 @@
 - [resolveNeededMeshPluginsAndTransforms](functions/resolveNeededMeshPluginsAndTransforms.md)
 - [resolveReactSharedDeps](functions/resolveReactSharedDeps.md)
 - [resolveRuntimeExtraDeps](functions/resolveRuntimeExtraDeps.md)
+- [resolveWebTarget](functions/resolveWebTarget.md)
 - [severityFor](functions/severityFor.md)
 - [slotSpecs](functions/slotSpecs.md)
 - [toDeclaredSlotIdUnion](functions/toDeclaredSlotIdUnion.md)

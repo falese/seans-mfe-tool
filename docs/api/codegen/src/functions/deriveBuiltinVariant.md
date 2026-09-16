@@ -8,7 +8,7 @@
 
 > **deriveBuiltinVariant**(`manifest`): [`FrameworkVariant`](../interfaces/FrameworkVariant.md)
 
-Defined in: [packages/codegen/src/unified-generator.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L117)
+Defined in: [packages/codegen/src/unified-generator.ts:145](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L145)
 
 Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
 returns for the two shipped plugins (react-rspack, angular-webpack), using
@@ -219,6 +219,46 @@ without importing the framework loader (ADR-036, ADR-061).
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
 
 #### transforms?
 

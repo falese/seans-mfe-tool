@@ -8,7 +8,7 @@
 
 > **generateEndpoints**(`name`, `port`): `Pick`\<[`DSLManifest`](../type-aliases/DSLManifest.md), `"endpoint"` \| `"remoteEntry"` \| `"discovery"`\>
 
-Defined in: [packages/dsl/src/parser.ts:368](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L368)
+Defined in: [packages/dsl/src/parser.ts:379](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L379)
 
 Generate endpoint URLs from name and port
 
