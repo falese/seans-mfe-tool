@@ -485,7 +485,7 @@ open class MFEBase {
     // MARK: - The ten capabilities — final; subclasses override the do* hooks
 
 <% platformCapabilities.forEach(function (c) { -%>
-    /// <%= c.description %>
+    /// <%- swiftText(c.description) %>
     public final func <%= c.name %>(_ context: MFEContext) async throws -> <%= c.swiftResult %> {
         try await execute(.<%= c.name %>, context) { try await self.do<%= c.pascal %>(context) }
     }

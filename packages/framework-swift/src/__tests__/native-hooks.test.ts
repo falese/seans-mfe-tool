@@ -354,3 +354,41 @@ describe('Hook lookup survives the two spellings of a capability name', () => {
     expect(gen.content).toContain('scalar.value < 0x20');
   });
 });
+
+describe('Descriptions reach Swift as text, not HTML entities', () => {
+  /** A description with the three characters EJS `<%=` rewrites. */
+  const spicy = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      capabilities: [
+        { CrewRoster: { type: 'domain', description: 'Crew & payroll <all> "live"' } },
+        { Load: { type: 'platform', description: 'Init' } },
+      ],
+    }) as unknown as DSLManifest;
+
+  it('does not HTML-escape a capability description into generated Swift', async () => {
+    // EJS `<%=` escapes for HTML. That is invisible in the web lane because a
+    // browser decodes `&amp;` back to `&` when it renders JSX text. Swift has
+    // nothing to decode them, so this shipped `Text("Crew &amp; payroll")`
+    // straight to the iOS UI.
+    const v = (await fileNamed(spicy(), 'Features/CrewRosterView.swift')).content;
+    expect(v).not.toContain('&amp;');
+    expect(v).not.toContain('&lt;');
+    expect(v).toContain('Crew & payroll <all>');
+  });
+
+  it('escapes the quotes that would end the Swift string literal', async () => {
+    const v = (await fileNamed(spicy(), 'Features/CrewRosterView.swift')).content;
+    const line = v.split('\n').find((l) => l.includes('Crew & payroll'))!;
+    // Inside Text("…") the embedded quotes must be backslash-escaped, or the
+    // literal terminates early and the file does not compile.
+    expect(line).toContain('\\"live\\"');
+  });
+
+  it('applies to the platform capability doc comments too', async () => {
+    const base = (await fileNamed(spicy(), 'Platform/MFEBase.swift')).content;
+    expect(base).not.toContain('&amp;');
+    expect(base).not.toContain('&#39;');
+  });
+})

@@ -91,6 +91,23 @@ const hasSwift = (c: unknown): boolean => swiftTarget(c) !== undefined;
  */
 const hasSwiftBff = (c: unknown): boolean => hasSwift(c) && (c as SwiftCtx).hasBff;
 
+/**
+ * Text for a Swift string literal or doc comment.
+ *
+ * EJS `<%=` HTML-escapes, which is invisible in the web lane because a browser
+ * decodes the entities back — `&amp;` in JSX text renders as `&`. Swift has
+ * nothing to decode them, so a capability described as "Crew & payroll" shipped
+ * `Text("Crew &amp; payroll")` straight to the iOS UI. These templates use
+ * `<%-` with this helper instead: no HTML escaping, and the escaping Swift
+ * actually needs.
+ */
+export function swiftText(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r?\n/g, ' ');
+}
+
 /** `crew-services` → `CrewServices`. Must be a legal Swift identifier. */
 export function pascalCase(name: string): string {
   const parts = name.split(/[^A-Za-z0-9]+/).filter(Boolean);
@@ -201,6 +218,7 @@ const swiftVars = (c: unknown): Record<string, unknown> => {
     hasBff: hasSwiftBff(c),
     manifestHandlers: manifestHandlers(c),
     camel: camelCase,
+    swiftText,
   };
 };
 

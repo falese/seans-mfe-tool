@@ -18,7 +18,7 @@ import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
 
-/// <%= description || name %>
+/// <%- swiftText(description || name) %>
 public struct <%= name %>View: View {
     @State private var output: <%= name %>Outputs?
     @State private var error: Error?
@@ -38,7 +38,7 @@ public struct <%= name %>View: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("<%= name %>")
                         .font(.headline)
-                    Text("<%= (description || 'Loaded.').replace(/"/g, '\\"') %>")
+                    Text("<%- swiftText(description || 'Loaded.') %>")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
