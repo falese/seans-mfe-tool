@@ -2001,7 +2001,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterView.swift",
         "overwrite": false,
-        "sha256": "7fbe6c26b099a2edded9245bd0a48599f3edef5016993d9bf0e95e7eba623501"
+        "sha256": "7e685fa184d89b74a6a1368da21c05e85c2e912bec7e56a9449c9e7c72413dab"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Features/PayStatusQuery.swift",
@@ -2011,7 +2011,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Features/PayStatusView.swift",
         "overwrite": false,
-        "sha256": "5f4a523330087f5e8da48896e35ae8592bd7868fb8d92bbe2fee0d368c294b2c"
+        "sha256": "d0590b8454dce68e241a06a379a61a0ebd419e8ad425d1187176faf0e40a87cb"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/BFFClient.swift",
@@ -2026,7 +2026,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/CapabilityViewRegistry.swift",
         "overwrite": true,
-        "sha256": "2bc4d74ca70e82f0ac856156d078bfdb10c40eeba5ab70696b1a2779392bb574"
+        "sha256": "30b7f65b3119cbee0fcd2b2213e8f9dadbd2ceca2791746de86829b21b5494ed"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/DataProvider.swift",
@@ -2036,7 +2036,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/GeneratedMFE.swift",
         "overwrite": true,
-        "sha256": "078cab9a2b0603513150b71600d050737b3ac86dbb4dbc189f0889e51f880d9c"
+        "sha256": "fca3aeb719998136d28195ccdf8677c1f3bdd5e6a4c4e7ca6defcce9c708fa3e"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
@@ -2051,7 +2051,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/NativeMFEBase.swift",
         "overwrite": true,
-        "sha256": "a560d2c363ad48b1886e8b45ae0e6f462782b6a6eb572eeb174751db3765b784"
+        "sha256": "7f6ad33e294222f2bd6c67bdf5ed416cf35d283e27ec68e0fbabfb03238bc1ad"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",

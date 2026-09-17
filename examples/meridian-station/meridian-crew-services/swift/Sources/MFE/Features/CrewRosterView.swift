@@ -7,6 +7,12 @@
 // `src/features/<Cap>/<Cap>.tsx`. Adding a capability to mfe-manifest.yaml
 // creates its own file here — it does not exist yet, so regeneration writes it
 // — and the package keeps compiling.
+//
+// The view is wired to the data provider the same way the web lane's feature
+// scaffold comes with its hook call and loading/error states: it already asks
+// `provider.crewRoster()` and renders loading / error / loaded. What is
+// left for you is the "render real data" branch, once `CrewRosterOutputs`
+// (Platform/Types.swift) has fields.
 
 import Foundation
 #if canImport(SwiftUI)
@@ -14,19 +20,52 @@ import SwiftUI
 
 /// Crew roster with certifications from StationOS joined with payroll standing from StellarLedger
 public struct CrewRosterView: View {
-    public init() {}
+    @State private var output: CrewRosterOutputs?
+    @State private var error: Error?
+    private let provider: any MeridianCrewServicesDataProvider
+
+    /// `provider` is the one the MFE was constructed with when this view is
+    /// reached through `CapabilityViewRegistry`; the BFF-backed provider is the
+    /// default for hosts instantiating the view directly.
+    public init(provider: any MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider()) {
+        self.provider = provider
+    }
 
     public var body: some View {
-        // TODO: implement the CrewRoster capability.
-        VStack(alignment: .leading, spacing: 8) {
-            Text("CrewRoster")
-                .font(.headline)
-            Text("Crew roster with certifications from StationOS joined with payroll standing from StellarLedger")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        Group {
+            if output != nil {
+                // TODO: `if let output` and render the CrewRoster data.
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("CrewRoster")
+                        .font(.headline)
+                    Text("Crew roster with certifications from StationOS joined with payroll standing from StellarLedger")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+            } else if let error {
+                Text(error.localizedDescription)
+                    .foregroundStyle(.red)
+                    .padding()
+            } else {
+                ProgressView()
+                    .padding()
+            }
         }
-        .padding()
+        .task {
+            do {
+                output = try await provider.crewRoster()
+            } catch {
+                self.error = error
+            }
+        }
     }
+}
+
+/// Canned data for the preview canvas, so it renders without a BFF running.
+private struct CrewRosterPreviewData: MeridianCrewServicesDataProvider {
+    func crewRoster() async throws -> CrewRosterOutputs { CrewRosterOutputs() }
+    func payStatus() async throws -> PayStatusOutputs { PayStatusOutputs() }
 }
 
 // `PreviewProvider` rather than `#Preview`: the macro needs Xcode's
@@ -35,7 +74,7 @@ public struct CrewRosterView: View {
 // SwiftUI does.
 struct CrewRosterView_Previews: PreviewProvider {
     static var previews: some View {
-        CrewRosterView()
+        CrewRosterView(provider: CrewRosterPreviewData())
     }
 }
 

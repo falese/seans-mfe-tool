@@ -33,7 +33,9 @@ open class NativeMFEBase: MFEBase {
     /// Capability ids currently mounted, mirroring `mountedComponent`.
     public private(set) var mounted: Set<String> = []
 
-    private let provider: MeridianCrewServicesDataProvider
+    /// The injected data seam (ADR-096). Views reached through
+    /// `CapabilityViewRegistry` fetch through this same instance.
+    public let provider: MeridianCrewServicesDataProvider
 
     public init(provider: MeridianCrewServicesDataProvider,
                 identity: MFEIdentity = .current,

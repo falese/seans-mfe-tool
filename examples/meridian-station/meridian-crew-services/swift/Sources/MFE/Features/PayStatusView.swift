@@ -7,6 +7,12 @@
 // `src/features/<Cap>/<Cap>.tsx`. Adding a capability to mfe-manifest.yaml
 // creates its own file here — it does not exist yet, so regeneration writes it
 // — and the package keeps compiling.
+//
+// The view is wired to the data provider the same way the web lane's feature
+// scaffold comes with its hook call and loading/error states: it already asks
+// `provider.payStatus()` and renders loading / error / loaded. What is
+// left for you is the "render real data" branch, once `PayStatusOutputs`
+// (Platform/Types.swift) has fields.
 
 import Foundation
 #if canImport(SwiftUI)
@@ -14,19 +20,52 @@ import SwiftUI
 
 /// Compact pay-status card for the console status rail — held and scheduled payroll at a glance
 public struct PayStatusView: View {
-    public init() {}
+    @State private var output: PayStatusOutputs?
+    @State private var error: Error?
+    private let provider: any MeridianCrewServicesDataProvider
+
+    /// `provider` is the one the MFE was constructed with when this view is
+    /// reached through `CapabilityViewRegistry`; the BFF-backed provider is the
+    /// default for hosts instantiating the view directly.
+    public init(provider: any MeridianCrewServicesDataProvider = BFFMeridianCrewServicesDataProvider()) {
+        self.provider = provider
+    }
 
     public var body: some View {
-        // TODO: implement the PayStatus capability.
-        VStack(alignment: .leading, spacing: 8) {
-            Text("PayStatus")
-                .font(.headline)
-            Text("Compact pay-status card for the console status rail — held and scheduled payroll at a glance")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        Group {
+            if output != nil {
+                // TODO: `if let output` and render the PayStatus data.
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("PayStatus")
+                        .font(.headline)
+                    Text("Compact pay-status card for the console status rail — held and scheduled payroll at a glance")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+            } else if let error {
+                Text(error.localizedDescription)
+                    .foregroundStyle(.red)
+                    .padding()
+            } else {
+                ProgressView()
+                    .padding()
+            }
         }
-        .padding()
+        .task {
+            do {
+                output = try await provider.payStatus()
+            } catch {
+                self.error = error
+            }
+        }
     }
+}
+
+/// Canned data for the preview canvas, so it renders without a BFF running.
+private struct PayStatusPreviewData: MeridianCrewServicesDataProvider {
+    func crewRoster() async throws -> CrewRosterOutputs { CrewRosterOutputs() }
+    func payStatus() async throws -> PayStatusOutputs { PayStatusOutputs() }
 }
 
 // `PreviewProvider` rather than `#Preview`: the macro needs Xcode's
@@ -35,7 +74,7 @@ public struct PayStatusView: View {
 // SwiftUI does.
 struct PayStatusView_Previews: PreviewProvider {
     static var previews: some View {
-        PayStatusView()
+        PayStatusView(provider: PayStatusPreviewData())
     }
 }
 

@@ -24,11 +24,14 @@ public enum CapabilityViewRegistry {
     ]
 
 #if canImport(SwiftUI)
+    /// `provider` is handed to the view so it fetches through the same seam the
+    /// MFE was constructed with (ADR-096) — a host's stub or the BFF-backed
+    /// provider, never a second one the view made for itself.
     @MainActor
-    public static func view(for capabilityId: String) -> AnyView? {
+    public static func view(for capabilityId: String, provider: any MeridianCrewServicesDataProvider) -> AnyView? {
         switch capabilityId {
-        case "CrewRoster": return AnyView(CrewRosterView())
-        case "PayStatus": return AnyView(PayStatusView())
+        case "CrewRoster": return AnyView(CrewRosterView(provider: provider))
+        case "PayStatus": return AnyView(PayStatusView(provider: provider))
         default: return nil
         }
     }

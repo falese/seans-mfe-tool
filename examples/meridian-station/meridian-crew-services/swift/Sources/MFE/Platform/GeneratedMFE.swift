@@ -99,7 +99,7 @@ public final class MeridianCrewServicesMFE: NativeMFEBase {
     /// `Features/<Capability>View` directly and skip this lookup.
     @MainActor
     public func view(for capabilityId: String) -> AnyView? {
-        CapabilityViewRegistry.view(for: capabilityId)
+        CapabilityViewRegistry.view(for: capabilityId, provider: provider)
     }
 #endif
 }

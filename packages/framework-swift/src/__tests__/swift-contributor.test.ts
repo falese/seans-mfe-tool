@@ -157,7 +157,7 @@ describe('One view file per capability, like the web lane (ADR-095)', () => {
     const files = await generate(swiftManifest());
     const registry = files.find((f) => f.path.endsWith('CapabilityViewRegistry.swift'))!;
     for (const cap of ['CrewRoster', 'PayStatus']) {
-      expect(registry.content).toContain(`case "${cap}": return AnyView(${cap}View())`);
+      expect(registry.content).toContain(`case "${cap}": return AnyView(${cap}View(provider: provider))`);
       expect(files.some((f) => f.path.endsWith(`${cap}View.swift`))).toBe(true);
     }
   });
@@ -513,6 +513,62 @@ describe('An unknown capability id is its own error, not a state violation', () 
   it('the generated test exercises it', async () => {
     const tests = (await generate(noBff())).find((f) => f.path.endsWith('LifecycleTests.swift'))!;
     expect(tests.content).toContain('#expect(throws: MFEUnknownCapabilityError.self)');
+  });
+});
+
+describe('Generated views are wired to the data provider', () => {
+  const withBff = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      data: {
+        sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    }) as unknown as DSLManifest;
+  const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+
+  const fileIn = async (m: DSLManifest, suffix: string) =>
+    (await generate(m)).find((f) => f.path.endsWith(suffix))!;
+
+  it('the view scaffold takes the provider, fetches in .task, and renders loading/error', async () => {
+    const view = await fileIn(noBff(), 'Features/CrewRosterView.swift');
+    expect(view.content).toContain('private let provider: any CrewServicesDataProvider');
+    expect(view.content).toContain('@State private var output: CrewRosterOutputs?');
+    expect(view.content).toContain('@State private var error: Error?');
+    expect(view.content).toContain('output = try await provider.crewRoster()');
+    expect(view.content).toContain('.task {');
+    expect(view.content).toContain('ProgressView()');
+    expect(view.content).toContain('Text(error.localizedDescription)');
+  });
+
+  it('defaults to the BFF provider only when there is a BFF', async () => {
+    const bff = await fileIn(withBff(), 'Features/CrewRosterView.swift');
+    expect(bff.content).toContain(
+      'public init(provider: any CrewServicesDataProvider = BFFCrewServicesDataProvider())',
+    );
+    const plain = await fileIn(noBff(), 'Features/CrewRosterView.swift');
+    expect(plain.content).toContain('public init(provider: any CrewServicesDataProvider) {');
+    expect(plain.content).not.toContain('BFFCrewServicesDataProvider');
+  });
+
+  it('the MFE threads its injected provider through the registry to the view', async () => {
+    const mfe = await fileIn(noBff(), 'Platform/GeneratedMFE.swift');
+    expect(mfe.content).toContain('CapabilityViewRegistry.view(for: capabilityId, provider: provider)');
+    const registry = await fileIn(noBff(), 'Platform/CapabilityViewRegistry.swift');
+    expect(registry.content).toContain(
+      'public static func view(for capabilityId: String, provider: any CrewServicesDataProvider) -> AnyView?',
+    );
+    const base = await fileIn(noBff(), 'Platform/NativeMFEBase.swift');
+    expect(base.content).toContain('public let provider: CrewServicesDataProvider');
+  });
+
+  it('the preview uses canned data covering the whole provider protocol', async () => {
+    const view = await fileIn(noBff(), 'Features/CrewRosterView.swift');
+    expect(view.content).toContain('private struct CrewRosterPreviewData: CrewServicesDataProvider');
+    expect(view.content).toContain('func crewRoster() async throws -> CrewRosterOutputs { CrewRosterOutputs() }');
+    expect(view.content).toContain('func payStatus() async throws -> PayStatusOutputs { PayStatusOutputs() }');
+    expect(view.content).toContain('CrewRosterView(provider: CrewRosterPreviewData())');
   });
 });
 

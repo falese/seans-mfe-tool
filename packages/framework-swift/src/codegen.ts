@@ -384,7 +384,9 @@ export function swiftSpecs(ctx: unknown): FileSpec[] {
           out: `${SOURCES}/Features/${name}View.swift`,
           owner: 'developer',
           root: 'swift',
-          vars: () => ({ name, description: descriptions[name] ?? '' }),
+          // The view fetches through the injected provider, so it needs the
+          // module's names as well as its own.
+          vars: () => ({ ...swiftVars(ctx), name, description: descriptions[name] ?? '' }),
         },
       ];
       // The document backing this capability. Developer-owned for the same

@@ -25,11 +25,14 @@ public enum CapabilityViewRegistry {
     ]
 
 #if canImport(SwiftUI)
+    /// `provider` is handed to the view so it fetches through the same seam the
+    /// MFE was constructed with (ADR-096) — a host's stub or the BFF-backed
+    /// provider, never a second one the view made for itself.
     @MainActor
-    public static func view(for capabilityId: String) -> AnyView? {
+    public static func view(for capabilityId: String, provider: any <%= moduleName %>DataProvider) -> AnyView? {
         switch capabilityId {
 <% domainCapabilities.forEach(function (cap) { -%>
-        case "<%= cap %>": return AnyView(<%= cap %>View())
+        case "<%= cap %>": return AnyView(<%= cap %>View(provider: provider))
 <% }); -%>
         default: return nil
         }
