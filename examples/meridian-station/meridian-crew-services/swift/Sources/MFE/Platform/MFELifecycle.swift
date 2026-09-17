@@ -131,3 +131,14 @@ public struct MFEStateError: Error, CustomStringConvertible {
         return "Invalid state for \(attempted.rawValue): in \(from.rawValue), requires one of [\(states)]"
     }
 }
+
+/// Raised when a capability id is not one this target implements. Not a state
+/// violation — the state may be fine; the id is not in the manifest.
+public struct MFEUnknownCapabilityError: Error, CustomStringConvertible {
+    public let capabilityId: String
+    public let declared: [String]
+
+    public var description: String {
+        "Unknown capability \"\(capabilityId)\": this target declares [\(declared.joined(separator: ", "))]"
+    }
+}

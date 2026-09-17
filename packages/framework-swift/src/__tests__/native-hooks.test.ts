@@ -195,7 +195,7 @@ describe('Handler resolution differs by necessity (ADR-098 §3)', () => {
   });
 
   it('falls back to the last segment, as TypeScript does', async () => {
-    expect(await base()).toContain('name.contains(".") ? String(name.split(separator: ".").last!) : name');
+    expect(await base()).toContain('name.split(separator: ".").last.map(String.init) ?? name');
   });
 
   it('throws naming the exact map key instead of looking up a method', async () => {
@@ -329,8 +329,10 @@ describe('Hook lookup survives the two spellings of a capability name', () => {
     // that it runs. 136 text assertions and a clean `swift build` both passed
     // with the feature completely inert — this is the gate that closes that.
     const tests = await fileNamed(manifest(), 'Tests/MFETests/LifecycleTests.swift');
-    expect(tests.content).toContain('func testManifestHooksFire()');
-    expect(tests.content).toContain('XCTAssertFalse(ran.isEmpty');
+    expect(tests.content).toContain('import Testing');
+    expect(tests.content).not.toContain('import XCTest');
+    expect(tests.content).toContain('@Test func manifestHooksFire()');
+    expect(tests.content).toContain('#expect(!ran.isEmpty');
     expect(tests.content).toContain('did not fire');
   });
 

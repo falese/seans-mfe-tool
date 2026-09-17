@@ -3,8 +3,13 @@
 // Contract smoke test. Mirrors the generator-owned `mfe.test.ts` in the web
 // lane: it asserts the lifecycle machine this module inherits behaves the way
 // the platform contract says, not that any capability does useful work.
+//
+// Swift Testing (`import Testing`, `@Test`, `#expect`), not XCTest. Runs under
+// `swift test` on a Swift 6 toolchain and in Xcode 16+. In Xcode the package's
+// test target is not part of the host app's scheme until you add it — see the
+// package README.
 
-import XCTest
+import Testing
 @testable import MeridianCrewServices
 
 private struct StubProvider: MeridianCrewServicesDataProvider {
@@ -18,35 +23,41 @@ private actor FiredHooks {
     func record(_ name: String) { names.append(name) }
 }
 
-final class LifecycleTests: XCTestCase {
+@Suite struct LifecycleTests {
 
-    func testStartsUninitialized() {
+    @Test func startsUninitialized() {
         let mfe = MeridianCrewServicesMFE(provider: StubProvider())
-        XCTAssertEqual(mfe.state, .uninitialized)
+        #expect(mfe.state == .uninitialized)
     }
 
-    func testLoadMovesToReady() async throws {
+    @Test func loadMovesToReady() async throws {
         let mfe = MeridianCrewServicesMFE(provider: StubProvider())
         _ = try await mfe.load(MFEContext())
-        XCTAssertEqual(mfe.state, .ready)
+        #expect(mfe.state == .ready)
     }
 
-    func testRenderRequiresReady() async {
+    @Test func renderRequiresReady() async {
         let mfe = MeridianCrewServicesMFE(provider: StubProvider())
         // render's preStates is [ready]; from uninitialized this must throw
         // rather than transition.
-        do {
+        await #expect(throws: (any Error).self, "render should be rejected from uninitialized") {
             _ = try await mfe.render(MFEContext(capabilityId: "CrewRoster"))
-            XCTFail("render should be rejected from uninitialized")
-        } catch {
-            XCTAssertEqual(mfe.state, .uninitialized)
+        }
+        #expect(mfe.state == .uninitialized)
+    }
+
+    @Test func mountRejectsUnknownCapability() {
+        let mfe = MeridianCrewServicesMFE(provider: StubProvider())
+        // Not a state-machine violation: the state is fine, the id is not.
+        #expect(throws: MFEUnknownCapabilityError.self) {
+            try mfe.mount("NotACapability")
         }
     }
 
-    func testDescribeReportsManifestCapabilities() async throws {
+    @Test func describeReportsManifestCapabilities() async throws {
         let mfe = MeridianCrewServicesMFE(provider: StubProvider())
         let described = try await mfe.describe(MFEContext())
-        XCTAssertEqual(described.name, ManifestMetadata.name)
+        #expect(described.name == ManifestMetadata.name)
     }
 
     /// The manifest's hooks actually FIRE.
@@ -56,7 +67,7 @@ final class LifecycleTests: XCTestCase {
     /// exactly — so every hook this manifest declares was inert while 136 text
     /// assertions and a clean `swift build` both passed. A text assertion can
     /// see that the engine was rendered; only running it can see that it runs.
-    func testManifestHooksFire() async throws {
+    @Test func manifestHooksFire() async throws {
         let fired = FiredHooks()
         var handlers: [String: MFEHandler] = [:]
         handlers["onLoadBegin"] = { _ in await fired.record("onLoadBegin") }
@@ -74,13 +85,13 @@ final class LifecycleTests: XCTestCase {
 
         // Whatever `load`'s before/after hooks are, they ran.
         let ran = await fired.names
-        XCTAssertFalse(ran.isEmpty, "no manifest hook fired during load()")
-        XCTAssertTrue(ran.contains("onLoadBegin"), "before hook onLoadBegin did not fire")
-        XCTAssertTrue(ran.contains("onLoadComplete"), "after hook onLoadComplete did not fire")
+        #expect(!ran.isEmpty, "no manifest hook fired during load()")
+        #expect(ran.contains("onLoadBegin"), "before hook onLoadBegin did not fire")
+        #expect(ran.contains("onLoadComplete"), "after hook onLoadComplete did not fire")
     }
 
     /// A host's handler wins over the generated stub for the same name.
-    func testHostHandlerOverridesGeneratedStub() async throws {
+    @Test func hostHandlerOverridesGeneratedStub() async throws {
         let fired = FiredHooks()
         let name = "onLoadBegin"
         let mfe = MeridianCrewServicesMFE(
@@ -89,13 +100,13 @@ final class LifecycleTests: XCTestCase {
         )
         _ = try await mfe.load(MFEContext())
         let ran = await fired.names
-        XCTAssertTrue(ran.contains(name), "host handler was shadowed by the generated stub")
+        #expect(ran.contains(name), "host handler was shadowed by the generated stub")
     }
 
-    func testTransitionTableMatchesContract() {
+    @Test func transitionTableMatchesContract() {
         // The six states and their edges come from the platform contract.
-        XCTAssertEqual(MFELifecycleState.allCases.count, 6)
-        XCTAssertTrue(MFELifecycleTransitions.isValid(from: .uninitialized, to: .loading))
-        XCTAssertFalse(MFELifecycleTransitions.isValid(from: .destroyed, to: .loading))
+        #expect(MFELifecycleState.allCases.count == 6)
+        #expect(MFELifecycleTransitions.isValid(from: .uninitialized, to: .loading))
+        #expect(!MFELifecycleTransitions.isValid(from: .destroyed, to: .loading))
     }
 }

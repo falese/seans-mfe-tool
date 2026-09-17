@@ -456,7 +456,7 @@ open class MFEBase {
             return
         }
         // By last segment, as TypeScript does: 'custom.fail' -> 'fail'.
-        let lastSegment = name.contains(".") ? String(name.split(separator: ".").last!) : name
+        let lastSegment = name.split(separator: ".").last.map(String.init) ?? name
         if let handler = deps.customHandlers[lastSegment] {
             try await handler(context)
             return

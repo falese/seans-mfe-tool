@@ -19,6 +19,40 @@ swift test
 the single source inside Xcode too, not only inside the CLI — nothing here
 holds a second copy of the capability list.
 
+## Using it from an Xcode app
+
+The package is a library product; nothing here is an app. To embed it:
+
+1. **File → Add Package Dependencies… → Add Local…** and pick this `swift/`
+   directory (or point at the repository URL once it is pushed).
+2. Select your app target → **General → Frameworks, Libraries, and Embedded
+   Content → +** and add `MeridianCrewServices`. Without this step the package
+   resolves but `import MeridianCrewServices` fails to link.
+3. Build once. The `ManifestCodegen` plugin runs inside Xcode too and emits
+   `ManifestMetadata.swift` into the derived-data build directory — you will not
+   see it in the file tree, and you should not commit one.
+
+```swift
+import MeridianCrewServices
+
+let mfe = MeridianCrewServicesMFE()  // BFF-backed provider by default
+_ = try await mfe.load(MFEContext())
+if let view = mfe.view(for: "CrewRoster") {
+    // compose `view` into your screen
+}
+```
+
+### Running the package tests in Xcode
+
+`Tests/MFETests` uses [Swift Testing](https://developer.apple.com/documentation/testing/)
+and runs under `swift test` (Swift 6 toolchain) or Xcode 16+. A package test
+target is **not** added to an app's scheme automatically, so in Xcode either:
+
+- open the package on its own (**File → Open… → `swift/Package.swift`**) and
+  press ⌘U, or
+- in the app scheme, **Edit Scheme… → Test → +** and add
+  `MeridianCrewServicesTests`, or add it to your `.xctestplan`.
+
 ## What is yours and what is not
 
 | Path | Owner |

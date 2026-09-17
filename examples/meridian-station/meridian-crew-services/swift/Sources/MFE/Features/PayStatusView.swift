@@ -29,4 +29,14 @@ public struct PayStatusView: View {
     }
 }
 
+// `PreviewProvider` rather than `#Preview`: the macro needs Xcode's
+// PreviewsMacros plugin, so a `#Preview` block fails `swift build` on the
+// command line. This form renders in the Xcode canvas and compiles anywhere
+// SwiftUI does.
+struct PayStatusView_Previews: PreviewProvider {
+    static var previews: some View {
+        PayStatusView()
+    }
+}
+
 #endif

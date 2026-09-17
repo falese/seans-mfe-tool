@@ -492,3 +492,47 @@ describe('A capability the native lane cannot do throws, rather than claiming su
     expect(native.content).toContain('attachControlPlane(wsClient:)');
   });
 });
+
+describe('An unknown capability id is its own error, not a state violation', () => {
+  const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+
+  it('mount throws MFEUnknownCapabilityError naming the id and the declared set', async () => {
+    // `MFEStateError` reads "Invalid state for render: in X, requires one of
+    // [Y]", which is the wrong diagnosis when the state is fine and the id is
+    // simply not in the manifest.
+    const files = await generate(noBff());
+    const mfe = files.find((f) => f.path.endsWith('Platform/GeneratedMFE.swift'))!;
+    expect(mfe.content).toContain(
+      'throw MFEUnknownCapabilityError(capabilityId: capabilityId, declared: CapabilityViewRegistry.declared)',
+    );
+    expect(mfe.content).not.toContain('throw MFEStateError(from: state, attempted: .render');
+    const lifecycle = files.find((f) => f.path.endsWith('Platform/MFELifecycle.swift'))!;
+    expect(lifecycle.content).toContain('public struct MFEUnknownCapabilityError: Error, CustomStringConvertible');
+  });
+
+  it('the generated test exercises it', async () => {
+    const tests = (await generate(noBff())).find((f) => f.path.endsWith('LifecycleTests.swift'))!;
+    expect(tests.content).toContain('#expect(throws: MFEUnknownCapabilityError.self)');
+  });
+});
+
+describe('Generator-owned Swift carries no force unwraps', () => {
+  const withBff = () =>
+    ({
+      ...manifest(),
+      targets: { swift: {} },
+      data: {
+        sources: [{ name: 'StationOS', handler: { openapi: { source: './specs/station-os.yaml' } } }],
+        serve: { endpoint: '/graphql', playground: true },
+      },
+    }) as unknown as DSLManifest;
+
+  it('BFFClient and MFEBase unwrap with guard / optional chaining', async () => {
+    const files = await generate(withBff());
+    const client = files.find((f) => f.path.endsWith('Platform/BFFClient.swift'))!;
+    expect(client.content).not.toContain('")!');
+    expect(client.content).toContain('guard let url = URL(string:');
+    const base = files.find((f) => f.path.endsWith('Platform/MFEBase.swift'))!;
+    expect(base.content).not.toContain('.last!');
+  });
+});

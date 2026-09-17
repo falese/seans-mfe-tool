@@ -66,7 +66,12 @@ private struct NoVariables: Encodable {}
 /// Queries this MFE's BFF.
 public struct BFFClient: Sendable {
     /// Baked from the manifest; `BFF_URL` overrides it at runtime.
-    public static let defaultEndpoint = URL(string: "http://localhost:5005/graphql")!
+    public static let defaultEndpoint: URL = {
+        guard let url = URL(string: "http://localhost:5005/graphql") else {
+            fatalError("mfe-manifest.yaml bff endpoint is not a URL: http://localhost:5005/graphql")
+        }
+        return url
+    }()
 
     private let endpoint: URL
     private let session: URLSession

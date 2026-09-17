@@ -82,13 +82,21 @@ public final class MeridianCrewServicesMFE: NativeMFEBase {
     /// regeneration and never rewritten after that.
     public override func mount(_ capabilityId: String) throws {
         guard CapabilityViewRegistry.declared.contains(capabilityId) else {
-            throw MFEStateError(from: state, attempted: .render, allowed: [.ready])
+            throw MFEUnknownCapabilityError(capabilityId: capabilityId, declared: CapabilityViewRegistry.declared)
         }
     }
 
 
 #if canImport(SwiftUI)
     /// The view for a capability, for a host composing this MFE into a screen.
+    ///
+    /// `AnyView` because the registry is keyed by a runtime string: the host
+    /// picks a capability id from the manifest, not a concrete view type. Type
+    /// erasure costs SwiftUI its structural identity for the erased subtree,
+    /// so wrap the result in a stable container (`.id(capabilityId)` or a
+    /// dedicated parent view) rather than swapping it inline in a hot body.
+    /// Hosts that know the capability at compile time should instantiate
+    /// `Features/<Capability>View` directly and skip this lookup.
     @MainActor
     public func view(for capabilityId: String) -> AnyView? {
         CapabilityViewRegistry.view(for: capabilityId)
