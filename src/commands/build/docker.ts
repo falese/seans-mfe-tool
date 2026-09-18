@@ -11,8 +11,10 @@ import * as fs from 'fs-extra';
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { loadFrameworkPlugin } from '../../framework/loader';
+import { loadFrameworkPlugin, assertServesHttp } from '../../framework/loader';
 import { findManifest, parseManifestFile } from '@seans-mfe/dsl';
+import type { DSLManifest } from '@seans-mfe/dsl';
+import { resolveFrameworkName } from '@seans-mfe/codegen';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { DockerStrategy } from '@seans-mfe/contracts';
 import type { BuildDockerResult } from '../../oclif/results';
@@ -110,7 +112,7 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
     const manifestPath = opts.manifest ?? await findManifest(cwd);
     if (manifestPath) {
       manifest = await parseManifestFile(manifestPath);
-      framework = (manifest as Record<string, unknown>).framework as string | undefined;
+      framework = resolveFrameworkName(manifest as DSLManifest);
     }
   }
 
@@ -123,6 +125,7 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
   }
 
   const plugin = loadFrameworkPlugin(framework);
+  assertServesHttp(plugin, 'build:docker');
   const strategy = plugin.getDockerStrategy(manifest);
   const name = path.basename(cwd);
 

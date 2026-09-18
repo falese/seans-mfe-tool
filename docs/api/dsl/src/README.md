@@ -64,6 +64,9 @@
 - [ProvidedSlot](type-aliases/ProvidedSlot.md)
 - [ProvidesSlots](type-aliases/ProvidesSlots.md)
 - [RateLimitConfig](type-aliases/RateLimitConfig.md)
+- [SwiftTarget](type-aliases/SwiftTarget.md)
+- [Targets](type-aliases/Targets.md)
+- [WebTarget](type-aliases/WebTarget.md)
 
 ## Variables
 
@@ -89,6 +92,7 @@
 - [FrameworkSchema](variables/FrameworkSchema.md)
 - [KNOWN\_BUNDLERS](variables/KNOWN_BUNDLERS.md)
 - [KNOWN\_FRAMEWORKS](variables/KNOWN_FRAMEWORKS.md)
+- [KNOWN\_TARGETS](variables/KNOWN_TARGETS.md)
 - [LanguageSchema](variables/LanguageSchema.md)
 - [LifecycleHookEntrySchema](variables/LifecycleHookEntrySchema.md)
 - [LifecycleHookSchema](variables/LifecycleHookSchema.md)
@@ -107,9 +111,12 @@
 - [ProvidedSlotSchema](variables/ProvidedSlotSchema.md)
 - [ProvidesSlotsSchema](variables/ProvidesSlotsSchema.md)
 - [RateLimitConfigSchema](variables/RateLimitConfigSchema.md)
+- [SwiftTargetSchema](variables/SwiftTargetSchema.md)
+- [TargetsSchema](variables/TargetsSchema.md)
 - [VALID\_CAPABILITY\_TYPES](variables/VALID_CAPABILITY_TYPES.md)
 - [VALID\_LANGUAGES](variables/VALID_LANGUAGES.md)
 - [VALID\_MFE\_TYPES](variables/VALID_MFE_TYPES.md)
+- [WebTargetSchema](variables/WebTargetSchema.md)
 - [WELL\_KNOWN\_PATH](variables/WELL_KNOWN_PATH.md)
 
 ## Functions

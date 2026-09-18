@@ -32,6 +32,7 @@ import { generateAllFiles } from '@seans-mfe/codegen';
 // Registers the BFF's file contribution (ADR-093 §6) — without it this gate
 // would generate no BFF files and report every real one as orphaned.
 import '@seans-mfe/plugin-bff/codegen';
+import { registerTargetCodegen } from '../src/framework/loader';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const EXAMPLES_ROOT = path.join(REPO_ROOT, 'examples');
@@ -124,6 +125,7 @@ export async function captureSnapshot(): Promise<SnapshotEntry[]> {
       }
 
       const manifest = result.manifest;
+      registerTargetCodegen(manifest);
       const { files, preservedCapabilities } = await generateAllFiles(manifest, cwd, {
         frameworkVariant: undefined,
       });

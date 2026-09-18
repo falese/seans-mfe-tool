@@ -56,6 +56,106 @@ export type Framework = z.infer<typeof FrameworkSchema>;
 export const BundlerSchema = z.string().min(1);
 export type Bundler = z.infer<typeof BundlerSchema>;
 
+// ---------------------------------------------------------------------------
+// Secondary build targets (ADR-095)
+// ---------------------------------------------------------------------------
+
+/**
+ * Known built-in secondary targets — warnings, not hard errors, exactly as
+ * KNOWN_FRAMEWORKS/KNOWN_BUNDLERS are (ADR-036, #181). A target generator
+ * shipped outside this repo must not require a schema change here.
+ */
+export const KNOWN_TARGETS = ['swift'] as const;
+
+/**
+ * A Swift identifier: a letter or underscore, then letters/digits/underscores.
+ * The module name becomes `Sources/<moduleName>/` and the Swift `module` name,
+ * so a kebab-case MFE name cannot be passed through unchanged — codegen derives
+ * a PascalCase default, and an explicit override has to be legal Swift.
+ */
+const SWIFT_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * The Swift native target (ADR-095, ADR-096).
+ *
+ * Deliberately tiny: everything here is either unavailable to codegen (an
+ * Apple bundle id) or a toolchain pin. Capability set, module identity and
+ * lifecycle all come from the manifest proper — a secondary target declares
+ * how to BUILD, never what the MFE IS.
+ */
+export const SwiftTargetSchema = z.object({
+  moduleName: z
+    .string()
+    .min(1)
+    .regex(SWIFT_IDENTIFIER, 'moduleName must be a Swift identifier (letters, digits, underscore; not leading-digit)')
+    .optional()
+    .describe('Swift module name. Omitted ⇒ derived as PascalCase(manifest.name).'),
+  bundleId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Apple bundle identifier. Omitted ⇒ derived from owner and name.'),
+  deploymentTarget: z
+    .string()
+    .min(1)
+    .default('17.0')
+    .describe('Minimum iOS deployment target for the generated Package.swift.'),
+  swiftToolsVersion: z
+    .string()
+    .min(1)
+    .default('5.9')
+    .describe('swift-tools-version pin for the generated Package.swift.'),
+  capabilities: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      'Domain capabilities this target implements. Omitted ⇒ all of them. ' +
+        'Lets a target carry a subset — a dense table may be web-only, a compact card mobile-only.',
+    ),
+});
+export type SwiftTarget = z.infer<typeof SwiftTargetSchema>;
+
+/**
+ * The web target — the Module Federation remote.
+ *
+ * Carries the same two values the top-level `framework`/`bundler` scalars do.
+ * Those scalars remain the shorthand and are what all 21 example manifests
+ * use; this is the spelling that lets a manifest name every build it produces
+ * in ONE list rather than privileging the web one structurally (ADR-095 §6).
+ */
+export const WebTargetSchema = z.object({
+  framework: FrameworkSchema.optional()
+    .describe('UI framework for the web build. Same values as the top-level `framework`.'),
+  bundler: BundlerSchema.optional()
+    .describe('Bundler for the web build. Same values as the top-level `bundler`.'),
+});
+export type WebTarget = z.infer<typeof WebTargetSchema>;
+
+/**
+ * Every build this manifest produces.
+ *
+ * `web` is the Module Federation remote; any other key is a build produced
+ * beside it from the same capabilities. `swift` is the only other key the
+ * platform ships a generator for today, which is NOT the same as the only key
+ * that may appear.
+ *
+ * `.catchall()` is load-bearing. A plain `z.object` strips unknown keys, so
+ * before it a manifest declaring `targets.kotlin` warned on stderr from the raw
+ * parse and then lost the key entirely in the validated path every command
+ * uses — the exact opposite of the open-world policy this is supposed to
+ * follow (ADR-036 §181, ADR-095 §2). The known keys keep their own schemas;
+ * everything else is preserved as-is for whichever generator claims it.
+ */
+export const TargetsSchema = z
+  .object({
+    web: WebTargetSchema.optional()
+      .describe('The Module Federation remote. Equivalent to the top-level framework/bundler pair.'),
+    swift: SwiftTargetSchema.optional()
+      .describe('Emit a Swift Package alongside the web build (ADR-095, ADR-096).'),
+  })
+  .catchall(z.record(z.string(), z.unknown()));
+export type Targets = z.infer<typeof TargetsSchema>;
+
 /** Capability type discrimination */
 export const CapabilityTypeSchema = z.enum(['platform', 'domain']);
 export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
@@ -427,6 +527,13 @@ export const DSLManifestSchema = z.object({
     .describe('UI framework. Open string — an unknown value warns rather than failing (ADR-036). Omitted defaults to react.'),
   bundler: BundlerSchema.optional()
     .describe('Build tool. Open string, same policy as framework. Omitted defaults to rspack.'),
+
+  // Secondary build targets — a SECOND artifact from this same manifest
+  // (ADR-095). `framework`/`bundler` above describe the primary web build;
+  // this describes anything built beside it. Must be declared here: the
+  // manifest object is non-strict, so an undeclared key is stripped silently.
+  targets: TargetsSchema.optional()
+    .describe('Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).'),
 
   // Optional identity
   description: z.string().optional(),

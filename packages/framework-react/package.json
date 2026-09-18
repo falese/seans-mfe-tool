@@ -23,7 +23,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts"
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/codegen": "file:../codegen"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

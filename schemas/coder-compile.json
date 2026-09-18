@@ -164,6 +164,54 @@
               "bundler": {
                 "type": "string"
               },
+              "targets": {
+                "type": "object",
+                "properties": {
+                  "web": {
+                    "type": "object",
+                    "properties": {
+                      "framework": {
+                        "type": "string"
+                      },
+                      "bundler": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "swift": {
+                    "type": "object",
+                    "required": [
+                      "deploymentTarget",
+                      "swiftToolsVersion"
+                    ],
+                    "properties": {
+                      "deploymentTarget": {
+                        "type": "string"
+                      },
+                      "swiftToolsVersion": {
+                        "type": "string"
+                      },
+                      "moduleName": {
+                        "type": "string"
+                      },
+                      "bundleId": {
+                        "type": "string"
+                      },
+                      "capabilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
               "description": {
                 "type": "string"
               },

@@ -447,3 +447,43 @@ jobs:
         # were masked by swc builds and isolated ts-jest — only `tsc --noEmit`
         # against a real, installed, freshly generated project surfaces them.
         run: npm run check:template-typecheck
+
+  swift:
+    # Compile the generated Swift package (ADR-096, ADR-098).
+    #
+    # Until this job, NOTHING compiled the emitted Swift. Every Swift assertion
+    # in the suite is a text assertion — the right symbols appear in the right
+    # order — which cannot see a type error. Two got through and were caught by
+    # reading, not by a gate: `@escaping` inside a typealias (legal only in
+    # parameter position) and a checked `Sendable` conformance on a struct
+    # holding an existential `Error`.
+    #
+    # WHAT THIS DOES NOT COVER: the SwiftUI files are behind
+    # `#if canImport(SwiftUI)`, which is false on Linux, so the views are
+    # SKIPPED rather than compiled. What it does cover is the platform layer —
+    # MFEBase, NativeMFEBase, MFELifecycle, Types, the BFF client and provider —
+    # which is where essentially all the generated logic lives, and all of what
+    # ADR-098 added. The views still need a Mac.
+    #
+    # It also exercises the SPM build-tool plugin, which regenerates
+    # ManifestMetadata.swift from mfe-manifest.json on every build (ADR-095).
+    # That half is unreachable from any Node-side gate.
+    #
+    # Separate job rather than a step in `quality`: it needs a Swift toolchain
+    # and no Node, so running it in the official container is both simpler and
+    # faster than installing Swift onto the Node runner.
+    runs-on: ubuntu-latest
+    container: swift:6.0
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build and test every generated Swift package
+        # --require so a container without a toolchain fails loudly instead of
+        # skipping. The script skips by default, which is right for a
+        # contributor's machine and wrong here — a silently skipped gate is the
+        # failure mode this whole job exists to end.
+        run: bash scripts/check-swift-build.sh --require

@@ -44,6 +44,9 @@ jest.mock('@seans-mfe/codegen', () => {
 
 jest.mock('../../framework/loader', () => ({
   resolveFrameworkVariant: jest.fn(() => undefined),
+  // Codegen registration is manifest-driven since ADR-097; this suite asserts
+  // the planner, not which contributors registered.
+  registerTargetCodegen: jest.fn(),
 }));
 
 import { remoteGenerateCommand } from '../remote/generate';

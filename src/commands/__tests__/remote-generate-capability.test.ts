@@ -39,6 +39,13 @@ jest.mock('@seans-mfe/codegen', () => ({
   // The BFF registers its file contribution on import (ADR-094 §2); a stubbed
   // registry would throw before the command under test ever runs.
   registerFileContributor: jest.fn(),
+  // Same reason, for the plugin side: since ADR-097 a framework plugin
+  // declares its own variant through registerCodegen(), which the loader calls
+  // while resolving. Real `findVariant`, because the loader now ASSERTS the
+  // variant exists rather than letting codegen fall back to React — a stub
+  // returning undefined would fail every case here.
+  registerVariant: jest.fn(),
+  findVariant: jest.requireActual('@seans-mfe/codegen').findVariant,
 }));
 
 import { remoteGenerateCapabilityCommand } from '../remote/generate/capability';

@@ -8,7 +8,7 @@
 
 > **findManifest**(`directory`): `Promise`\<`string` \| `null`\>
 
-Defined in: [packages/dsl/src/parser.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L98)
+Defined in: [packages/dsl/src/parser.ts:109](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L109)
 
 Find manifest file in a directory by searching common filenames
 

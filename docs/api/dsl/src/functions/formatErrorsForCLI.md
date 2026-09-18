@@ -8,7 +8,7 @@
 
 > **formatErrorsForCLI**(`errors`): `string`
 
-Defined in: [packages/dsl/src/validator.ts:314](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L314)
+Defined in: [packages/dsl/src/validator.ts:339](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/validator.ts#L339)
 
 Format validation errors for CLI output
 

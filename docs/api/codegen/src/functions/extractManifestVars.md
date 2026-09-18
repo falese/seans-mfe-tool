@@ -214,6 +214,46 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 `string`[] = `...`
 
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
+
 #### transforms?
 
 `string`[] = `...`
@@ -813,6 +853,50 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 #### manifest.tags?
 
 > `optional` **tags**: `string`[]
+
+#### manifest.targets?
+
+> `optional` **targets**: `object`
+
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+#### manifest.targets.swift?
+
+> `optional` **swift**: `object`
+
+#### manifest.targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+#### manifest.targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+#### manifest.targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+#### manifest.targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+#### manifest.targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
+#### manifest.targets.web?
+
+> `optional` **web**: `object`
+
+#### manifest.targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+#### manifest.targets.web.framework?
+
+> `optional` **framework**: `string`
 
 #### manifest.transforms?
 
