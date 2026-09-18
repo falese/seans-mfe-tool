@@ -434,8 +434,12 @@ describe('The query capability is a concrete default on MFEBase (ADR-053/070)', 
     const base = await fileIn(withBff(), 'Platform/MFEBase.swift');
     expect(base.content).toContain('public var jwt: String?');
     expect(base.content).toContain('public var headers: [String: String]');
-    expect(base.content).toContain('request.setValue("Bearer \\(jwt)", forHTTPHeaderField: "Authorization")');
-    expect(base.content).toContain('for (field, value) in context.headers');
+    // The jwt now joins context.headers and both travel through GraphQLPost,
+    // the single transport. Behaviour unchanged — and the generated Swift test
+    // `queryForwardsTheBearerTokenAndHeaders` now asserts it by RUNNING the
+    // request over a stub transport rather than by matching this text.
+    expect(base.content).toContain('headers["Authorization"] = "Bearer \\(jwt)"');
+    expect(base.content).toContain('var headers = context.headers');
   });
 
   it('carries arbitrary JSON inputs, not just strings', async () => {

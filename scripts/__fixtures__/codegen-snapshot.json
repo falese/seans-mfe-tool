@@ -2016,7 +2016,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/BFFClient.swift",
         "overwrite": true,
-        "sha256": "6ecc0e8855523affbd850a18d231559e59b0a69e8902e63fb7048564093e9938"
+        "sha256": "fc60275a6d7bae7bf2911c3395675636883b43580dafa5a02aa363694431833c"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/BFFDataProvider.swift",
@@ -2041,7 +2041,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "4260c621563bee3b6229f2b4f032ebe19b75117f0463cf50ee1aca8265dc68a0"
+        "sha256": "52e45fa9332eedafb55af577e28d1070a49d5a473a22c570022eba5308255ee9"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2061,7 +2061,7 @@
       {
         "path": "<cwd>/swift/Tests/MFETests/LifecycleTests.swift",
         "overwrite": true,
-        "sha256": "46bc0d09c52c17354fb66fb75b64ccfd7d80206b220ba33ed3027b91dd11a04b"
+        "sha256": "58ce83c95dce867570b5f6b9bfb02604eff536bd04a1294eb07295b695ccb63e"
       },
       {
         "path": "<cwd>/tsconfig.json",

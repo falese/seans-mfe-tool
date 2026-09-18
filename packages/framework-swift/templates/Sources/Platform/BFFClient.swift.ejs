@@ -13,6 +13,9 @@
 // same precedence the web connector uses: the MFE and its BFF are one
 // deployable unit served from the same origin, so a relative path would resolve
 // against the host app rather than the BFF.
+//
+// Transport is NOT this file's: both this and `MFEBase.doQuery` POST through
+// `GraphQLPost.send`. What differs is error policy — see the note there.
 
 import Foundation
 #if canImport(FoundationNetworking)
@@ -74,14 +77,14 @@ public struct BFFClient: Sendable {
     }()
 
     private let endpoint: URL
-    private let session: URLSession
+    private let transport: MFETransport
 
-    public init(endpoint: URL? = nil, session: URLSession = .shared) {
+    public init(endpoint: URL? = nil, transport: @escaping MFETransport = GraphQLPost.urlSession) {
         self.endpoint =
             endpoint
             ?? ProcessInfo.processInfo.environment["BFF_URL"].flatMap(URL.init(string:))
             ?? Self.defaultEndpoint
-        self.session = session
+        self.transport = transport
     }
 
     /// POST a GraphQL document that takes no variables and decode `data` into `T`.
@@ -121,35 +124,29 @@ public struct BFFClient: Sendable {
         return data
     }
 
-    /// POST and hand back the response body. Shared by both query paths so the
-    /// transport rules are stated once.
+    /// POST and hand back the response body.
+    ///
+    /// Delegates to `GraphQLPost.send` — the one HTTP path in this package,
+    /// shared with `MFEBase.doQuery`. This file used to build its own
+    /// URLRequest, set the same headers and check the same status range; the
+    /// web lane has that duplication because `BaseMFE` ships in a published
+    /// package and cannot import generated code, which is not true here.
+    ///
+    /// Only the ERROR POLICY stays this file's own: `BFFError` rather than the
+    /// transport error, because callers of `query<T>` catch `BFFError`.
     private func perform<V: Encodable>(
         _ payload: BFFRequest<V>,
         headers: [String: String]
     ) async throws -> Data {
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        for (field, value) in headers {
-            request.setValue(value, forHTTPHeaderField: field)
-        }
-        request.httpBody = try JSONEncoder().encode(payload)
-
-        let body: Data
-        let response: URLResponse
         do {
-            (body, response) = try await session.data(for: request)
-        } catch {
-            throw BFFError.network(error.localizedDescription, status: nil)
-        }
-
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw BFFError.network(
-                HTTPURLResponse.localizedString(forStatusCode: http.statusCode),
-                status: http.statusCode
+            return try await GraphQLPost.send(
+                to: endpoint,
+                body: try JSONEncoder().encode(payload),
+                headers: headers,
+                transport: transport
             )
+        } catch let MFETransportError.network(message, status) {
+            throw BFFError.network(message, status: status)
         }
-
-        return body
     }
 }
