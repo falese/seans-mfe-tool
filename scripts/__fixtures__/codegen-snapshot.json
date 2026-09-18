@@ -2061,7 +2061,7 @@
       {
         "path": "<cwd>/swift/Tests/MFETests/LifecycleTests.swift",
         "overwrite": true,
-        "sha256": "58ce83c95dce867570b5f6b9bfb02604eff536bd04a1294eb07295b695ccb63e"
+        "sha256": "d4f5037092a1f9c43dbf9fe3f1b559e035946970e07eda7bf11f2763425252dc"
       },
       {
         "path": "<cwd>/tsconfig.json",

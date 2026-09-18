@@ -10,6 +10,12 @@
 // package README.
 
 import Testing
+import Foundation
+#if canImport(FoundationNetworking)
+// URL is Foundation; HTTPURLResponse is FoundationNetworking on Linux, which is
+// where the `swift` CI job runs.
+import FoundationNetworking
+#endif
 @testable import MeridianCrewServices
 
 private struct StubProvider: MeridianCrewServicesDataProvider {
@@ -191,9 +197,13 @@ private actor FiredHooks {
             endpoint: URL(string: "http://stub.invalid/graphql")!,
             transport: Self.stub(Self.partialResponse)
         )
-        await #expect(throws: BFFError.self) {
+        var thrown: (any Error)?
+        do {
             let _: CrewRosterOutputs = try await client.query("query { x }")
+        } catch {
+            thrown = error
         }
+        #expect(thrown is BFFError)
     }
 
     @Test func transitionTableMatchesContract() {
