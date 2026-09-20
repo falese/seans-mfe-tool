@@ -13,6 +13,10 @@
       "force": {
         "type": "boolean",
         "description": "Re-seed developer-owned scaffolding (App.tsx, package.json, bundler config, …) from the current templates, REPLACING your edits. Capability feature files are never re-seeded. Preview with --dry-run first."
+      },
+      "swift": {
+        "type": "boolean",
+        "description": "Declare and generate a Swift Package (native iOS) from this same manifest. Adds a targets.swift block to mfe-manifest.yaml if absent, then scaffolds swift/ beside the web build. The web build is unchanged."
       }
     },
     "required": [],

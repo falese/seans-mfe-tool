@@ -1,0 +1,82 @@
+// Seeded once by seans-mfe-tool, then yours.
+//
+// DEVELOPER-OWNED: `remote:generate` will never rewrite this file, the same way
+// it never rewrites `src/features/**` in the web lane. Edit freely.
+//
+// One file per capability, mirroring the web lane's
+// `src/features/<Cap>/<Cap>.tsx`. Adding a capability to mfe-manifest.yaml
+// creates its own file here — it does not exist yet, so regeneration writes it
+// — and the package keeps compiling.
+//
+// The view is wired to the data provider the same way the web lane's feature
+// scaffold comes with its hook call and loading/error states: it already asks
+// `provider.<%= camel(name) %>()` and renders loading / error / loaded. What is
+// left for you is the "render real data" branch, once `<%= name %>Outputs`
+// (Platform/Types.swift) has fields.
+
+import Foundation
+#if canImport(SwiftUI)
+import SwiftUI
+
+/// <%- swiftText(description || name) %>
+public struct <%= name %>View: View {
+    @State private var output: <%= name %>Outputs?
+    @State private var error: Error?
+    private let provider: any <%= moduleName %>DataProvider
+
+    /// `provider` is the one the MFE was constructed with when this view is
+    /// reached through `CapabilityViewRegistry`<% if (hasBff) { %>; the BFF-backed provider is the
+    /// default for hosts instantiating the view directly<% } %>.
+    public init(provider: any <%= moduleName %>DataProvider<% if (hasBff) { %> = BFF<%= moduleName %>DataProvider()<% } %>) {
+        self.provider = provider
+    }
+
+    public var body: some View {
+        Group {
+            if output != nil {
+                // TODO: `if let output` and render the <%= name %> data.
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("<%= name %>")
+                        .font(.headline)
+                    Text("<%- swiftText(description || 'Loaded.') %>")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+            } else if let error {
+                Text(error.localizedDescription)
+                    .foregroundStyle(.red)
+                    .padding()
+            } else {
+                ProgressView()
+                    .padding()
+            }
+        }
+        .task {
+            do {
+                output = try await provider.<%= camel(name) %>()
+            } catch {
+                self.error = error
+            }
+        }
+    }
+}
+
+/// Canned data for the preview canvas, so it renders without a BFF running.
+private struct <%= name %>PreviewData: <%= moduleName %>DataProvider {
+<% domainCapabilities.forEach(function (cap) { -%>
+    func <%= camel(cap) %>() async throws -> <%= cap %>Outputs { <%= cap %>Outputs() }
+<% }); -%>
+}
+
+// `PreviewProvider` rather than `#Preview`: the macro needs Xcode's
+// PreviewsMacros plugin, so a `#Preview` block fails `swift build` on the
+// command line. This form renders in the Xcode canvas and compiles anywhere
+// SwiftUI does.
+struct <%= name %>View_Previews: PreviewProvider {
+    static var previews: some View {
+        <%= name %>View(provider: <%= name %>PreviewData())
+    }
+}
+
+#endif

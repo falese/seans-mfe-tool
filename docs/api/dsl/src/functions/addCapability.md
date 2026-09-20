@@ -8,7 +8,7 @@
 
 > **addCapability**(`manifest`, `name`, `config`): `object`
 
-Defined in: [packages/dsl/src/parser.ts:343](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L343)
+Defined in: [packages/dsl/src/parser.ts:354](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L354)
 
 Add a capability to a manifest
 
@@ -217,6 +217,46 @@ Manifest to modify
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
 
 #### transforms?
 
@@ -453,6 +493,50 @@ Modified manifest (new object)
 ### tags?
 
 > `optional` **tags**: `string`[]
+
+### targets?
+
+> `optional` **targets**: `object`
+
+#### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+#### targets.swift?
+
+> `optional` **swift**: `object`
+
+#### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+#### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+#### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+#### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+#### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
+#### targets.web?
+
+> `optional` **web**: `object`
+
+#### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+#### targets.web.framework?
+
+> `optional` **framework**: `string`
 
 ### transforms?
 

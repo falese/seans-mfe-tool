@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:491](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L491)
+Defined in: [packages/dsl/src/schema.ts:598](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L598)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L493)
+Defined in: [packages/dsl/src/schema.ts:600](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L600)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:493](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L494)
+Defined in: [packages/dsl/src/schema.ts:601](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L601)
 
 #### authorization?
 
@@ -226,6 +226,50 @@ Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe
 
 > `optional` **tags**: `string`[]
 
+#### targets?
+
+> `optional` **targets**: `object`
+
+##### Index Signature
+
+\[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+##### targets.swift?
+
+> `optional` **swift**: `object`
+
+##### targets.swift.bundleId?
+
+> `optional` **bundleId**: `string`
+
+##### targets.swift.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+##### targets.swift.deploymentTarget
+
+> **deploymentTarget**: `string`
+
+##### targets.swift.moduleName?
+
+> `optional` **moduleName**: `string`
+
+##### targets.swift.swiftToolsVersion
+
+> **swiftToolsVersion**: `string`
+
+##### targets.web?
+
+> `optional` **web**: `object`
+
+##### targets.web.bundler?
+
+> `optional` **bundler**: `string`
+
+##### targets.web.framework?
+
+> `optional` **framework**: `string`
+
 #### transforms?
 
 > `optional` **transforms**: `string`[]
@@ -244,4 +288,4 @@ Defined in: [packages/dsl/src/schema.ts:494](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:492](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L492)
+Defined in: [packages/dsl/src/schema.ts:599](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L599)

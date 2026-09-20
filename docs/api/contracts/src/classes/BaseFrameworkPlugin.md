@@ -49,13 +49,17 @@ Bundler name matching the manifest `bundler` field.
 
 ***
 
-### defaultPort
+### defaultPort?
 
-> `abstract` `readonly` **defaultPort**: `number`
+> `readonly` `optional` **defaultPort**: `number`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L129)
+Defined in: [packages/contracts/src/framework-plugin.ts:147](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L147)
 
-Default port for dev server.
+Default dev-server port.
+
+Optional since ADR-097: a target that is not served over HTTP has no port.
+The web lane declares one; the Swift lane does not. Declared rather than
+abstract: an optional abstract member still demands an implementation.
 
 ***
 
@@ -63,7 +67,7 @@ Default port for dev server.
 
 > `abstract` `readonly` **directoryStructure**: `string`[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L132)
+Defined in: [packages/contracts/src/framework-plugin.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L150)
 
 Directories to create on `remote:init`.
 
@@ -97,13 +101,30 @@ Defined in: [packages/contracts/src/framework-plugin.ts:115](https://github.com/
 
 Unique id, e.g. `'react-rspack'`, `'angular-webpack'`.
 
+***
+
+### targetId
+
+> `readonly` **targetId**: `string` = `'web'`
+
+Defined in: [packages/contracts/src/framework-plugin.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L136)
+
+Which build this plugin produces for a manifest (ADR-097).
+
+`'web'` — the default — is the primary build, selected by the manifest's
+`framework` field. Any other value names a key under `targets:`, a build
+produced ALONGSIDE the primary one from the same capabilities (ADR-095).
+
+Concrete, not abstract, so a plugin written before secondary targets
+existed keeps working unchanged.
+
 ## Methods
 
 ### buildProduction()
 
 > `abstract` **buildProduction**(`manifest`, `opts`): `Promise`\<[`BuildResult`](../interfaces/BuildResult.md)\>
 
-Defined in: [packages/contracts/src/framework-plugin.ts:171](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L171)
+Defined in: [packages/contracts/src/framework-plugin.ts:210](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L210)
 
 Run a production build with structured error output.
 
@@ -133,7 +154,7 @@ Run a production build with structured error output.
 
 > `abstract` **checkEnvironment**(): `Promise`\<[`EnvCheckResult`](../interfaces/EnvCheckResult.md)[]\>
 
-Defined in: [packages/contracts/src/framework-plugin.ts:162](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L162)
+Defined in: [packages/contracts/src/framework-plugin.ts:196](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L196)
 
 Validate that the local environment has the required tools.
 
@@ -143,13 +164,16 @@ Validate that the local environment has the required tools.
 
 ***
 
-### getDockerStrategy()
+### getDockerStrategy()?
 
-> `abstract` **getDockerStrategy**(`manifest`): [`DockerStrategy`](../interfaces/DockerStrategy.md)
+> `optional` **getDockerStrategy**(`manifest`): [`DockerStrategy`](../interfaces/DockerStrategy.md)
 
-Defined in: [packages/contracts/src/framework-plugin.ts:179](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L179)
+Defined in: [packages/contracts/src/framework-plugin.ts:223](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L223)
 
-Return the Docker build strategy for this framework.
+Return the Docker build strategy for this target.
+
+Optional since ADR-097. The shipped strategies serve a built bundle from
+nginx, which a natively-linked target has no use for.
 
 #### Parameters
 
@@ -167,7 +191,7 @@ Return the Docker build strategy for this framework.
 
 > `abstract` **getSharedDependencies**(`manifest`): [`SharedDep`](../interfaces/SharedDep.md)[]
 
-Defined in: [packages/contracts/src/framework-plugin.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L157)
+Defined in: [packages/contracts/src/framework-plugin.ts:191](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L191)
 
 Shared dependencies for Module Federation. Empty for non-MF targets.
 
@@ -187,7 +211,7 @@ Shared dependencies for Module Federation. Empty for non-MF targets.
 
 > `abstract` **getTestExtension**(): `string`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:154](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L154)
+Defined in: [packages/contracts/src/framework-plugin.ts:188](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L188)
 
 Test file extension, e.g. `'.test.tsx'`.
 
@@ -197,13 +221,58 @@ Test file extension, e.g. `'.test.tsx'`.
 
 ***
 
-### startDevServer()
+### registerCodegen()?
 
-> `abstract` **startDevServer**(`manifest`, `opts`): `Promise`\<[`DevServerHandle`](../interfaces/DevServerHandle.md)\>
+> `optional` **registerCodegen**(): `void`
 
-Defined in: [packages/contracts/src/framework-plugin.ts:165](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L165)
+Defined in: [packages/contracts/src/framework-plugin.ts:185](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L185)
+
+Register this plugin's contribution to code generation (ADR-097).
+
+ADR-092 §5 removed six scalar codegen getters from this class —
+`getTemplateDir`, `getTemplateVars`, `getRuntimeImport`,
+`getRuntimeClassName`, `getSourceExtension`, `getRuntimeDependencies` —
+because every one was abstract, implemented twice, and called by nothing.
+`getTemplateDir()` had rotted to a directory deleted in ADR-061 and its
+test still passed, because it asserted the STRING and never that the
+directory existed.
+
+It also said what the replacement would have to look like:
+
+  > the real extension point needs a template directory AND a file plan
+  > together, not six scalar getters
+
+This is that member, and the generator is now able to receive it: ADR-093
+made what is emitted a list of `FileSpec`s, and ADR-094 gave the generator
+`FileContributor` — a template root the contributor owns plus the specs to
+resolve against it. So one method with a real caller replaces six without
+one.
+
+Implementations call `registerVariant()` (a primary build) or
+`registerFileContributor()` (a secondary target) from `@seans-mfe/codegen`.
+Typed as an optional no-arg method rather than returning a codegen type,
+because `contracts` imports nothing first-party (ADR-061) and must not
+learn codegen's vocabulary to declare this.
+
+Idempotent: both registries key by id, so calling it once per manifest in
+a loop over a fleet is safe and is what the drift gate does.
+
+#### Returns
+
+`void`
+
+***
+
+### startDevServer()?
+
+> `optional` **startDevServer**(`manifest`, `opts`): `Promise`\<[`DevServerHandle`](../interfaces/DevServerHandle.md)\>
+
+Defined in: [packages/contracts/src/framework-plugin.ts:204](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/framework-plugin.ts#L204)
 
 Start the dev server.
+
+Optional since ADR-097 — meaningless for a target with no HTTP surface.
+Absent rather than throwing, so a caller can tell from the type.
 
 #### Parameters
 

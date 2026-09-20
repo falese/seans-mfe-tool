@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import type { DSLManifest, ValidationResult } from './schema';
-import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS } from './schema';
+import { KNOWN_FRAMEWORKS, KNOWN_BUNDLERS, KNOWN_TARGETS } from './schema';
 import { validateFull } from './validator';
 import { SystemError, ValidationError } from '@seans-mfe/contracts';
 
@@ -86,6 +86,17 @@ function warnUnknownPluginValues(manifest: DSLManifest): void {
     process.stderr.write(
       `[seans-mfe-tool] Warning: unknown bundler "${manifest.bundler}".\n`,
     );
+  }
+  // Secondary targets follow the same open-world policy (ADR-095): an id this
+  // build does not know warns, so a target generator shipped elsewhere is not
+  // blocked by a schema this repo owns.
+  for (const target of Object.keys(manifest.targets ?? {})) {
+    if (!(KNOWN_TARGETS as readonly string[]).includes(target)) {
+      process.stderr.write(
+        `[seans-mfe-tool] Warning: unknown build target "${target}". ` +
+        `No generator is registered for it; it will be ignored.\n`,
+      );
+    }
   }
 }
 

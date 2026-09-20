@@ -211,6 +211,31 @@ function validateTransformsConfig(manifest: DSLManifest): ValidationError[] {
  */
 export function validateSemantics(manifest: DSLManifest): ValidationError[] {
   const errors: ValidationError[] = [];
+
+  // The web build has two spellings — the top-level `framework`/`bundler`
+  // scalars and `targets.web` (ADR-095 §6). They may coexist; they may not
+  // disagree. Resolving a winner silently is the defect class this repo keeps
+  // paying for, so a manifest that states the same fact twice and differently
+  // is rejected here rather than quietly building one of the two.
+  const web = manifest.targets?.web;
+  if (web?.framework && manifest.framework && web.framework !== manifest.framework) {
+    errors.push({
+      path: 'targets.web.framework',
+      message:
+        `targets.web.framework is "${web.framework}" but the top-level framework is ` +
+        `"${manifest.framework}". They describe the same build — remove one.`,
+      code: 'target_web_conflict',
+    });
+  }
+  if (web?.bundler && manifest.bundler && web.bundler !== manifest.bundler) {
+    errors.push({
+      path: 'targets.web.bundler',
+      message:
+        `targets.web.bundler is "${web.bundler}" but the top-level bundler is ` +
+        `"${manifest.bundler}". They describe the same build — remove one.`,
+      code: 'target_web_conflict',
+    });
+  }
   
   // Check for duplicate capability names
   const capabilityNames = new Set<string>();

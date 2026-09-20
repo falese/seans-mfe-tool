@@ -8,7 +8,7 @@
 
 > **writeManifest**(`manifest`, `filePath`): `Promise`\<`void`\>
 
-Defined in: [packages/dsl/src/parser.ts:267](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L267)
+Defined in: [packages/dsl/src/parser.ts:278](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L278)
 
 Write manifest to file
 
@@ -217,6 +217,46 @@ DSL manifest to write
 #### tags?
 
 `string`[] = `...`
+
+#### targets?
+
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.swift?
+
+\{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \} = `...`
+
+#### targets.swift.bundleId?
+
+`string` = `...`
+
+#### targets.swift.capabilities?
+
+`string`[] = `...`
+
+#### targets.swift.deploymentTarget
+
+`string` = `...`
+
+#### targets.swift.moduleName?
+
+`string` = `...`
+
+#### targets.swift.swiftToolsVersion
+
+`string` = `...`
+
+#### targets.web?
+
+\{ `bundler?`: `string`; `framework?`: `string`; \} = `...`
+
+#### targets.web.bundler?
+
+`string` = `...`
+
+#### targets.web.framework?
+
+`string` = `...`
 
 #### transforms?
 

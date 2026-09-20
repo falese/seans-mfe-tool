@@ -25,6 +25,7 @@
   "output": {
     "type": "object",
     "required": [
+      "targets",
       "plugin",
       "framework",
       "bundler",
@@ -35,6 +36,49 @@
       "errors"
     ],
     "properties": {
+      "targets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "targetId",
+            "plugin",
+            "framework",
+            "bundler",
+            "success",
+            "artifacts",
+            "duration_ms"
+          ],
+          "properties": {
+            "targetId": {
+              "type": "string"
+            },
+            "plugin": {
+              "type": "string"
+            },
+            "framework": {
+              "type": "string"
+            },
+            "bundler": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            },
+            "artifacts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "duration_ms": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "Every build this manifest declares, primary first (ADR-095)."
+      },
       "plugin": {
         "type": "string"
       },

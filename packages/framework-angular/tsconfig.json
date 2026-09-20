@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "lib": ["ES2020", "dom"],
+    "lib": [
+      "ES2020",
+      "dom"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -17,9 +20,25 @@
     "composite": true,
     "moduleResolution": "node",
     "ignoreDeprecations": "5.0",
-    "typeRoots": ["../../node_modules/@types"],
-    "types": ["node"]
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "src/**/*.spec.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/__tests__/**",
+    "src/**/*.spec.ts"
+  ],
+  "references": [
+    {
+      "path": "../codegen"
+    }
+  ]
 }

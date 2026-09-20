@@ -11,7 +11,7 @@ import {
   diffPackageDependencies,
 } from '@seans-mfe/codegen';
 import type { GeneratedFile, GeneratorDiagnostic } from '@seans-mfe/codegen';
-import { resolveFrameworkVariant } from '../../framework/loader';
+import { resolveFrameworkVariant, registerTargetCodegen } from '../../framework/loader';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { RemoteGenerateResult, PlannedChange } from '../../oclif/results';
@@ -21,6 +21,7 @@ import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 // the generator emits BFF files only for a host that opts in, and the BFF's
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
+import { enableSwiftTargetInFile } from '../../targets/swift';
 
 /**
  * What the writer will actually do to this file (#340).
@@ -182,11 +183,22 @@ function reportPackageDependencyDrift(allFiles: GeneratedFile[], skipped: string
 }
 
 export async function remoteGenerateCommand(
-  options: RemoteGenerateOptions & { dryRun?: boolean } = {}
+  options: RemoteGenerateOptions & { dryRun?: boolean; swift?: boolean } = {}
 ): Promise<RemoteGenerateResult> {
   const cwd = process.cwd();
 
   try {
+    // `--swift` on generate is the retrofit path (ADR-095): it declares the
+    // second build on an EXISTING manifest, so the demo is reproducible by a
+    // command rather than by hand-editing YAML. Done before the manifest is
+    // read, so this run generates the Swift package it just enabled.
+    if (options.swift && !options.dryRun) {
+      const manifestPath = path.join(cwd, 'mfe-manifest.yaml');
+      if (await enableSwiftTargetInFile(manifestPath)) {
+        console.log(chalk.green('✓ Added targets.swift to mfe-manifest.yaml'));
+      }
+    }
+
     console.log(chalk.blue('\nReading mfe-manifest.yaml...'));
 
     const result = await parseAndValidateDirectory(cwd);
@@ -203,6 +215,11 @@ export async function remoteGenerateCommand(
 
     const manifest = result.manifest;
     console.log(chalk.green(`✓ Validated: ${manifest.name} v${manifest.version}`));
+
+    // Every plugin this manifest builds with registers its own file
+    // contribution (ADR-097). Driven by the manifest rather than by a
+    // side-effect import each call site has to remember.
+    registerTargetCodegen(manifest);
 
     console.log(chalk.blue('\nGenerating files...'));
     const frameworkVariant = resolveFrameworkVariant(manifest);
@@ -329,6 +346,7 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
     '$ seans-mfe-tool remote:generate --dry-run  # Preview changes',
     '$ seans-mfe-tool remote:generate --force     # Re-seed developer-owned scaffolding',
     '$ seans-mfe-tool remote:generate --force --dry-run  # Preview what --force would replace',
+    '$ seans-mfe-tool remote:generate --swift    # Also build this MFE as a Swift Package',
   ]
 
   static flags = {
@@ -344,10 +362,16 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
         'Re-seed developer-owned scaffolding (App.tsx, package.json, bundler config, …) from the current templates, REPLACING your edits. Capability feature files are never re-seeded. Preview with --dry-run first.',
       default: false,
     }),
+    swift: Flags.boolean({
+      description:
+        'Declare and generate a Swift Package (native iOS) from this same manifest. Adds a targets.swift block to ' +
+        'mfe-manifest.yaml if absent, then scaffolds swift/ beside the web build. The web build is unchanged.',
+      default: false,
+    }),
   }
 
   protected async runCommand(): Promise<RemoteGenerateResult> {
     const { flags } = await this.parse(RemoteGenerate)
-    return remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force })
+    return remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force, swift: flags.swift })
   }
 }

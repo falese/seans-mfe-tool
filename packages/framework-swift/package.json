@@ -1,0 +1,33 @@
+{
+  "name": "@seans-mfe/framework-swift",
+  "version": "0.1.0",
+  "description": "Swift native target plugin for seans-mfe-tool \u2014 build lifecycle + codegen for an SPM package generated from the same manifest as the web build (ADR-095, ADR-096, ADR-097)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./codegen": {
+      "require": "./dist/codegen.js",
+      "types": "./dist/codegen.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'framework-swift tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@seans-mfe/codegen": "file:../codegen",
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/dsl": "file:../dsl"
+  }
+}
