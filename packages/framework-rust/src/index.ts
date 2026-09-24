@@ -17,6 +17,7 @@ export {
   crateNameFor,
   libNameFor,
   typePrefixFor,
+  wasmScopeFor,
   rustText,
 } from './codegen';
 

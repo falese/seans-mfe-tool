@@ -60,6 +60,7 @@ interface RustTargetConfig {
   crateName?: string;
   edition?: string;
   capabilities?: string[];
+  wasm?: boolean;
 }
 
 const rustTarget = (c: unknown): RustTargetConfig | undefined =>
@@ -70,6 +71,9 @@ const hasRust = (c: unknown): boolean => rustTarget(c) !== undefined;
 
 /** The Rust target AND a BFF to talk to (ADR-012). */
 const hasRustBff = (c: unknown): boolean => hasRust(c) && (c as RustCtx).hasBff;
+
+/** The Rust target AND its browser build (ADR-100). */
+const hasRustWasm = (c: unknown): boolean => hasRust(c) && rustTarget(c)?.wasm === true;
 
 /**
  * Text for a Rust string literal.
@@ -121,6 +125,17 @@ export function crateNameFor(c: unknown): string {
 /** The library name Rust code imports: the package name with `-` → `_`. */
 export function libNameFor(c: unknown): string {
   return crateNameFor(c).replace(/-/g, '_');
+}
+
+/**
+ * The Module Federation scope the browser build registers under (ADR-100).
+ *
+ * Deliberately NOT the React remote's scope (`name` with `-` → `_`): both
+ * builds of one MFE must be able to sit on the same page, and a container is
+ * a global keyed by scope.
+ */
+export function wasmScopeFor(c: unknown): string {
+  return `${libNameFor(c)}_wasm`;
 }
 
 /** Prefix for the crate's public types: `MeridianCrewServicesMfe`. */
@@ -285,6 +300,7 @@ const rustVars = (c: unknown): Record<string, unknown> => {
     crateName: crateNameFor(c),
     libName: libNameFor(c),
     typePrefix: typePrefixFor(c),
+    wasmScope: wasmScopeFor(c),
     edition: rustTarget(c)?.edition || '2021',
     domainCapabilities: selectedCapabilities(c),
     capabilityDescriptions: capabilityDescriptions(c),
@@ -348,6 +364,42 @@ const STATIC_RUST_SPECS: FileSpec[] = [
 ];
 
 /**
+ * The browser build (ADR-100): a second crate under `rust/web/`, so enabling
+ * it adds files and changes none — in particular not the developer-owned
+ * `rust/Cargo.toml`, which regeneration could not update.
+ *
+ * Ownership mirrors the native crate: `src/platform/`, `src/features/mod.rs`,
+ * the remote entry and the build script are the generator's; `Cargo.toml`,
+ * `lib.rs`, the README and each capability's renderer are the developer's.
+ */
+const WEB = `${RUST_DIR}/web`;
+const STATIC_WEB_SPECS: FileSpec[] = [
+  { template: 'web/Cargo.toml.ejs', out: `${WEB}/Cargo.toml`, owner: 'developer', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/README.md.ejs', out: `${WEB}/README.md`, owner: 'developer', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/src/lib.rs.ejs', out: `${WEB}/src/lib.rs`, owner: 'developer', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/gitignore.ejs', out: `${WEB}/.gitignore`, owner: 'generator', root: 'rust', when: hasRustWasm },
+  { template: 'web/build.sh.ejs', out: `${WEB}/build.sh`, owner: 'generator', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/www/remoteEntry.js.ejs', out: `${WEB}/www/remoteEntry.js`, owner: 'generator', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/src/platform/mod.rs.ejs', out: `${WEB}/src/platform/mod.rs`, owner: 'generator', root: 'rust', when: hasRustWasm, vars: rustVars },
+  { template: 'web/src/features/mod.rs.ejs', out: `${WEB}/src/features/mod.rs`, owner: 'generator', root: 'rust', when: hasRustWasm, vars: rustVars },
+];
+
+/** One developer-owned renderer per capability the browser build carries. */
+function webFeatureSpecs(ctx: unknown): FileSpec[] {
+  if (!hasRustWasm(ctx)) return [];
+  const descriptions = capabilityDescriptions(ctx);
+  return selectedCapabilities(ctx).map(
+    (name): FileSpec => ({
+      template: 'web/src/features/capability.rs.ejs',
+      out: `${WEB}/src/features/${snakeCase(name)}.rs`,
+      owner: 'developer',
+      root: 'rust',
+      vars: () => ({ name, description: descriptions[name] ?? '', rustText }),
+    }),
+  );
+}
+
+/**
  * The full plan for a generation: the fixed files, plus one query document per
  * capability this target implements when there is a BFF.
  *
@@ -356,9 +408,11 @@ const STATIC_RUST_SPECS: FileSpec[] = [
  */
 export function rustSpecs(ctx: unknown): FileSpec[] {
   if (!hasRust(ctx)) return [];
-  if (!hasRustBff(ctx)) return [...STATIC_RUST_SPECS];
+  const web = [...STATIC_WEB_SPECS, ...webFeatureSpecs(ctx)];
+  if (!hasRustBff(ctx)) return [...STATIC_RUST_SPECS, ...web];
   return [
     ...STATIC_RUST_SPECS,
+    ...web,
     // Developer-owned for the reason the Swift lane's are: the BFF's schema is
     // composed by Mesh from `data.sources` at build time, so codegen cannot
     // know the field names (ADR-096 §7).

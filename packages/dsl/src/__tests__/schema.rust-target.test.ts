@@ -19,6 +19,7 @@ describe('RustTargetSchema (ADR-099)', () => {
   it('accepts an empty object and defaults the edition', () => {
     const parsed = RustTargetSchema.parse({});
     expect(parsed.edition).toBe('2021');
+    expect(parsed.wasm).toBe(false);
     expect(parsed.crateName).toBeUndefined();
     expect(parsed.capabilities).toBeUndefined();
   });
@@ -40,6 +41,16 @@ describe('RustTargetSchema (ADR-099)', () => {
   });
 });
 
+describe('targets.rust.wasm (ADR-100)', () => {
+  it('accepts true — the crate also builds a browser remote', () => {
+    expect(RustTargetSchema.parse({ wasm: true }).wasm).toBe(true);
+  });
+
+  it('rejects anything but a boolean', () => {
+    expect(() => RustTargetSchema.parse({ wasm: 'yes' })).toThrow();
+  });
+});
+
 describe('targets.rust in a manifest', () => {
   it('names rust as a known target — no stderr warning for it', () => {
     expect(KNOWN_TARGETS).toContain('rust');
@@ -47,7 +58,7 @@ describe('targets.rust in a manifest', () => {
 
   it('survives full manifest validation with its defaults applied', () => {
     const parsed = DSLManifestSchema.parse({ ...baseManifest, targets: { rust: {} } });
-    expect(parsed.targets?.rust).toEqual({ edition: '2021' });
+    expect(parsed.targets?.rust).toEqual({ edition: '2021', wasm: false });
   });
 
   it('sits beside swift — targets are independent of each other', () => {

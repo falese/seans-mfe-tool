@@ -17,7 +17,7 @@ const FEATURES = `${MFE}/rust/src/features/`;
 
 function manifest(
   capabilities: string[],
-  rust: { capabilities?: string[] } | false = {},
+  rust: { capabilities?: string[]; wasm?: boolean } | false = {},
   data = true,
 ): DSLManifest {
   return {
@@ -122,5 +122,54 @@ describe('capability-has-a-target, for the Rust subset', () => {
     const r = run(m, [{ path: `${MFE}/swift/Sources/MFE/Features/PayStatusView.swift`, text: '' }]);
     expect(r.checked.filter((c) => c === 'capability-has-a-target')).toHaveLength(1);
     expect(issuesFor(r, 'capability-has-a-target').map((i) => i.package).sort()).toEqual(['CrewRoster', 'PayStatus']);
+  });
+});
+
+/**
+ * `rust-capability-view` — the browser build's renderers (ADR-100).
+ *
+ * Generator-owned `rust/web/src/platform/mod.rs` dispatches to
+ * `crate::features::<cap>::render` in DEVELOPER-owned files, and
+ * generator-owned `features/mod.rs` declares them — so a deleted renderer is
+ * a wasm32 build break that names a module, not the fix.
+ */
+const WEB_FEATURES = `${MFE}/rust/web/src/features/`;
+const renderers = (files: string[]) =>
+  files.map((f) => ({ path: `${WEB_FEATURES}${f}.rs`, text: 'pub fn render() {}' }));
+
+describe('rust-capability-view', () => {
+  it('passes when every capability has its renderer', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus'], { wasm: true }, false), renderers(['crew_roster', 'pay_status']));
+    expect(r.checked).toContain('rust-capability-view');
+    expect(issuesFor(r, 'rust-capability-view')).toHaveLength(0);
+  });
+
+  it('REPORTS a deleted renderer with its file, caller and fix', () => {
+    const r = run(manifest(['CrewRoster', 'PayStatus'], { wasm: true }, false), renderers(['crew_roster']));
+    const found = issuesFor(r, 'rust-capability-view');
+    expect(found).toHaveLength(1);
+    expect(found[0].package).toBe('PayStatus');
+    expect(found[0].message).toContain('rust/web/src/features/pay_status.rs');
+    expect(found[0].message).toContain('platform/mod.rs');
+    expect(found[0].fix).toContain('remote:generate');
+    expect(r.ok).toBe(false);
+  });
+
+  it('does not count the native query document as a renderer', () => {
+    const r = run(manifest(['PayStatus'], { wasm: true }), queries(['pay_status']));
+    expect(issuesFor(r, 'rust-capability-view')).toHaveLength(1);
+  });
+
+  it('does NOT run without the browser build', () => {
+    const r = run(manifest(['CrewRoster'], {}, false), []);
+    expect(r.checked).not.toContain('rust-capability-view');
+  });
+
+  it('follows the target\'s capability subset', () => {
+    const r = run(
+      manifest(['CrewRoster', 'PayStatus'], { wasm: true, capabilities: ['CrewRoster'] }, false),
+      renderers(['crew_roster']),
+    );
+    expect(issuesFor(r, 'rust-capability-view')).toHaveLength(0);
   });
 });

@@ -23,7 +23,6 @@
 
 use std::collections::BTreeSet;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
 use super::data_provider::<%- typePrefix %>DataProvider;
 use super::error::MfeError;
@@ -71,12 +70,17 @@ impl<T: NativeMfe> MfeHooks for T {
     /// Initialization — connect, warm caches, validate config.
     fn do_load<'a>(&'a self, core: &'a MfeCore, _context: &'a MfeContext) -> BoxFuture<'a, Result<LoadResult, MfeError>> {
         Box::pin(async move {
-            let started = Instant::now();
+            // `Instant::now()` panics on wasm32-unknown-unknown (ADR-100), so the
+            // duration is only measured where there is a clock.
+            #[cfg(not(target_arch = "wasm32"))]
+            let started = Some(std::time::Instant::now());
+            #[cfg(target_arch = "wasm32")]
+            let started: Option<std::time::Instant> = None;
             validate_capability_table(core)?;
             Ok(LoadResult {
                 success: true,
                 available_capabilities: manifest_metadata::DOMAIN_CAPABILITIES.iter().map(|c| c.to_string()).collect(),
-                duration_ms: started.elapsed().as_millis() as u64,
+                duration_ms: started.map(|s| s.elapsed().as_millis() as u64).unwrap_or(0),
             })
         })
     }

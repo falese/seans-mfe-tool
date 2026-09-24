@@ -100,26 +100,41 @@ export class RustCargoPlugin extends BaseFrameworkPlugin {
   }
 
   /**
-   * `cargo build --release` inside the generated crate.
+   * `cargo build --release` inside the generated crate — and, when the
+   * manifest sets `targets.rust.wasm`, the browser remote too (ADR-100).
    *
    * The crate lives under `rust/` in the MFE, so the build runs there rather
-   * than at the MFE root — the same directory `remote:generate` emits.
+   * than at the MFE root — the same directory `remote:generate` emits. The
+   * browser build is the generated `rust/web/build.sh`, so the CLI and a
+   * developer running it by hand build the same thing.
    */
   async buildProduction(
-    _manifest: unknown,
+    manifest: unknown,
     opts: { cwd: string; outputDir: string },
   ): Promise<BuildResult> {
     const started = Date.now();
     const crateDir = path.join(opts.cwd, 'rust');
+    const wasm =
+      (manifest as { targets?: { rust?: { wasm?: unknown } } } | undefined)?.targets?.rust?.wasm === true;
     try {
       execSync('cargo build --release', {
         cwd: crateDir,
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
       });
+      if (wasm) {
+        execSync('bash build.sh', {
+          cwd: path.join(crateDir, 'web'),
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+      }
       return {
         success: true,
-        artifacts: [path.join(crateDir, 'target', 'release')],
+        artifacts: [
+          path.join(crateDir, 'target', 'release'),
+          ...(wasm ? [path.join(crateDir, 'web', 'www')] : []),
+        ],
         duration_ms: Date.now() - started,
         warnings: [],
         errors: [],

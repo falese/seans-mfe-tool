@@ -63,6 +63,7 @@ export type ValidationRule =
   | 'native-capability-view'
   | 'native-capability-query'
   | 'rust-capability-query'
+  | 'rust-capability-view'
   | 'capability-has-a-target'
   | 'native-views-legacy-file'
   | 'platform-migrations'
@@ -192,6 +193,9 @@ const NATIVE_FEATURES_DIR = 'swift/Sources/MFE/Features/';
 
 /** Where the Rust target's developer-owned query documents live (ADR-099). */
 const RUST_FEATURES_DIR = 'rust/src/features/';
+
+/** Where the Rust browser build's developer-owned renderers live (ADR-100). */
+const RUST_WEB_FEATURES_DIR = 'rust/web/src/features/';
 
 /** Domain capability names, in manifest order. Platform capabilities have no view. */
 function domainCapabilityNames(manifest: DSLManifest): string[] {
@@ -471,7 +475,7 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
   // The Rust target (ADR-099). Its developer-owned surface is the query
   // documents — there is no view layer — so only the query backstop and the
   // subset warning apply.
-  const rustTarget = (manifest as { targets?: { rust?: { capabilities?: string[] } } }).targets?.rust;
+  const rustTarget = (manifest as { targets?: { rust?: { capabilities?: string[]; wasm?: boolean } } }).targets?.rust;
   if (rustTarget !== undefined && sources) {
     const domain = domainCapabilityNames(manifest);
     const implemented = rustTarget.capabilities
@@ -507,6 +511,36 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           fix:
             `Restore ${file} with \`pub const DOCUMENT: &str\`, or run ` +
             `remote:generate to re-seed it.`,
+        });
+      }
+    }
+
+    // The browser build (ADR-100): every capability needs its renderer.
+    // Generator-owned `rust/web/src/platform/mod.rs` dispatches to
+    // `crate::features::<cap>::render` and generator-owned `features/mod.rs`
+    // declares the module, so a deleted renderer breaks the wasm32 build with
+    // "file not found for module" — the backstop names the fix.
+    if (rustTarget.wasm === true) {
+      checked.push('rust-capability-view');
+      const drawn = new Set(
+        sources
+          .map((f) => f.path.replace(/\\/g, '/'))
+          .filter((p) => p.includes(`/${RUST_WEB_FEATURES_DIR}`) && p.endsWith('.rs'))
+          .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/\.rs$/, '')),
+      );
+      for (const capability of implemented) {
+        const moduleName = snakeCase(capability);
+        if (drawn.has(moduleName)) continue;
+        const file = `${RUST_WEB_FEATURES_DIR}${moduleName}.rs`;
+        issues.push({
+          rule: 'rust-capability-view',
+          package: capability,
+          message:
+            `The Rust browser build implements domain capability "${capability}", but ${file} ` +
+            `does not exist — generated rust/web/src/platform/mod.rs calls ${moduleName}::render.`,
+          fix:
+            `Restore ${file} with \`pub fn render(element: &Element, props: &serde_json::Value)\`, ` +
+            `or run remote:generate to re-seed it.`,
         });
       }
     }

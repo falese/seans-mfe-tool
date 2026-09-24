@@ -147,6 +147,13 @@ export const RustTargetSchema = z.object({
       'Domain capabilities this target implements. Omitted ⇒ all of them. ' +
         'Same subset semantics as targets.swift.capabilities.',
     ),
+  wasm: z
+    .boolean()
+    .default(false)
+    .describe(
+      'Also build the crate for the browser: a rust/web crate compiled to WebAssembly and served as a ' +
+        'Module Federation remote the shell mounts like any other (ADR-100).',
+    ),
 });
 export type RustTarget = z.infer<typeof RustTargetSchema>;
 

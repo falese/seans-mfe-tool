@@ -277,3 +277,93 @@ describe('Manifest lifecycle hooks reach the crate (ADR-098 §5)', () => {
     expect(test).toContain('"before hook onLoadBegin did not fire"');
   });
 });
+
+describe('The browser build — targets.rust.wasm (ADR-100)', () => {
+  const wasm = (over: Record<string, unknown> = {}) => manifest({ targets: { rust: { wasm: true } }, ...over });
+
+  it('emits no rust/web/ unless wasm is true', async () => {
+    const paths = (await generate(manifest())).map((f) => f.path);
+    expect(paths.filter((p) => p.startsWith('rust/web/'))).toEqual([]);
+  });
+
+  it('adds a second crate and changes nothing in the first', async () => {
+    const without = await generate(manifest());
+    const withWasm = await generate(wasm());
+    for (const f of without.filter((x) => x.path.startsWith('rust/'))) {
+      expect(file(withWasm, f.path).content).toBe(f.content);
+    }
+    expect(withWasm.some((f) => f.path === 'rust/web/Cargo.toml')).toBe(true);
+  });
+
+  const generator = [
+    'rust/web/.gitignore',
+    'rust/web/build.sh',
+    'rust/web/www/remoteEntry.js',
+    'rust/web/src/platform/mod.rs',
+    'rust/web/src/features/mod.rs',
+  ];
+  const developer = [
+    'rust/web/Cargo.toml',
+    'rust/web/README.md',
+    'rust/web/src/lib.rs',
+    'rust/web/src/features/crew_roster.rs',
+    'rust/web/src/features/pay_status.rs',
+  ];
+
+  it.each(generator)('%s is generator-owned', async (p) => {
+    expect(file(await generate(wasm()), p).overwrite).toBe(true);
+  });
+
+  it.each(developer)('%s is developer-owned', async (p) => {
+    expect(file(await generate(wasm()), p).overwrite).toBe(false);
+  });
+
+  it('registers under its own scope so it can share a page with the React remote', async () => {
+    const entry = file(await generate(wasm()), 'rust/web/www/remoteEntry.js').content;
+    expect(entry).toContain("globalThis['crew_services_wasm']");
+    expect(entry).not.toContain("globalThis['crew_services']");
+  });
+
+  it('exposes ./App as the ADR-056 imperative handle the shell adaptor consumes', async () => {
+    const entry = file(await generate(wasm()), 'rust/web/www/remoteEntry.js').content;
+    expect(entry).toContain("kind: 'imperative-dom'");
+    expect(entry).toContain("module === './App'");
+    expect(entry).toContain('handles: { imperative: handle }');
+  });
+
+  it('dispatches each capability to the renderer features/mod.rs declares', async () => {
+    const files = await generate(wasm());
+    const platform = file(files, 'rust/web/src/platform/mod.rs').content;
+    const mod = file(files, 'rust/web/src/features/mod.rs').content;
+    for (const [cap, snake] of [['CrewRoster', 'crew_roster'], ['PayStatus', 'pay_status']]) {
+      expect(platform).toContain(`"${cap}" => crate::features::${snake}::render(element, props)`);
+      expect(mod).toContain(`pub mod ${snake};`);
+    }
+  });
+
+  it('runs load and render through the contract before drawing', async () => {
+    const platform = file(await generate(wasm()), 'rust/web/src/platform/mod.rs').content;
+    const load = platform.indexOf('mfe.load(');
+    const render = platform.indexOf('mfe.render(');
+    const draw = platform.indexOf('draw(&capability');
+    expect(load).toBeGreaterThan(0);
+    expect(render).toBeGreaterThan(load);
+    expect(draw).toBeGreaterThan(render);
+  });
+
+  it('pins wasm-bindgen exactly, because the CLI must match it', async () => {
+    const cargo = file(await generate(wasm()), 'rust/web/Cargo.toml').content;
+    expect(cargo).toMatch(/^wasm-bindgen = "=\d+\.\d+\.\d+"$/m);
+    expect(cargo).toContain('rust-version = "1.77"');
+  });
+
+  it('follows the capability subset', async () => {
+    const paths = (await generate(wasm({ targets: { rust: { wasm: true, capabilities: ['PayStatus'] } } }))).map((f) => f.path);
+    expect(paths).toContain('rust/web/src/features/pay_status.rs');
+    expect(paths).not.toContain('rust/web/src/features/crew_roster.rs');
+  });
+
+  it('keeps generator-owned web code out of rustfmt\'s reach', async () => {
+    expect(file(await generate(wasm()), 'rust/web/src/lib.rs').content).toMatch(/#\[rustfmt::skip\]\npub mod platform;/);
+  });
+});

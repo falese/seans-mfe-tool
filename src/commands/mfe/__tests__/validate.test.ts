@@ -142,6 +142,17 @@ describe('mfeValidateCommand', () => {
     });
   });
 
+  it('does not scan the browser build\'s generated output (ADR-100)', async () => {
+    // wasm-bindgen writes rust/web/www/pkg/*.js, which throws raw Errors. It is
+    // build output, not developer-owned source, so no migration rule may see it.
+    await writeFixture(tmp, { manifestLines: ['targets:', '  rust:', '    wasm: true'] });
+    await fs.outputFile(path.join(tmp, 'rust/web/src/features/demo.rs'), 'pub fn render() {}');
+    await fs.outputFile(path.join(tmp, 'rust/web/www/pkg/mfe.js'), "throw new Error('boom');");
+    await fs.outputFile(path.join(tmp, 'rust/web/target/x.rs'), '');
+    const res = await mfeValidateCommand({ dir: tmp });
+    expect(res.issues.filter((i) => i.rule === 'platform-migrations')).toEqual([]);
+  });
+
   it('throws a typed error when the directory has no manifest', async () => {
     await expect(mfeValidateCommand({ dir: tmp })).rejects.toBeDefined();
   });
