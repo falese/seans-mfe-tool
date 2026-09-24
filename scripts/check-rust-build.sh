@@ -54,7 +54,8 @@ fi
 [[ $HAVE_CLIPPY -eq 0 ]] && echo "check:rust-build: clippy not installed — lint step SKIPPED."
 [[ $HAVE_FMT -eq 0 ]] && echo "check:rust-build: rustfmt not installed — format step SKIPPED."
 
-mapfile -t CRATES < <(find examples -type f -name Cargo.toml -path '*/rust/*' -not -path '*/target/*' | sort)
+# rust/web is the browser build (ADR-100), checked for wasm32 by check:rust-wasm.
+mapfile -t CRATES < <(find examples -type f -name Cargo.toml -path '*/rust/*' -not -path '*/rust/web/*' -not -path '*/target/*' | sort)
 
 if [[ ${#CRATES[@]} -eq 0 ]]; then
   echo "check:rust-build: no generated Rust crates found under examples/." >&2

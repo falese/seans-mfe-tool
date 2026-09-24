@@ -103,7 +103,9 @@ dependencies:
 
 # More builds of this same MFE (ADR-095): the capabilities above are also
 # generated as a Swift Package under swift/ and a Cargo crate under rust/,
-# beside the web remote.
+# beside the web remote. `wasm: true` also builds that crate for the browser
+# as a second Module Federation remote under rust/web/ (ADR-100).
 targets:
   swift: {}
-  rust: {}
+  rust:
+    wasm: true

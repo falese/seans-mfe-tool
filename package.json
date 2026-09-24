@@ -54,7 +54,8 @@
     "docker:build:examples": "docker compose -f examples/abc-kids/docker-compose.yaml build",
     "docker:build:examples:meridian": "docker compose -f examples/meridian-station/docker-compose.yaml build",
     "check:swift-build": "bash scripts/check-swift-build.sh",
-    "check:rust-build": "bash scripts/check-rust-build.sh"
+    "check:rust-build": "bash scripts/check-rust-build.sh",
+    "check:rust-wasm": "bash scripts/check-rust-wasm.sh"
   },
   "keywords": [
     "module-federation",

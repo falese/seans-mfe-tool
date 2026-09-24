@@ -204,11 +204,26 @@ pub struct MfeContext {
 
 static REQUEST_SEQ: AtomicU64 = AtomicU64::new(0);
 
+/// Wall-clock time, where the target has a clock.
+///
+/// `SystemTime::now()` PANICS on `wasm32-unknown-unknown`, which has no clock
+/// std can reach (ADR-100). `None` there rather than a fabricated timestamp.
+pub fn wall_clock() -> Option<SystemTime> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        None
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        Some(SystemTime::now())
+    }
+}
+
 impl MfeContext {
     /// A context with a fresh request id and nothing else.
     pub fn new() -> Self {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
+        let nanos = wall_clock()
+            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
             .map(|d| d.as_nanos())
             .unwrap_or(0);
         let seq = REQUEST_SEQ.fetch_add(1, Ordering::Relaxed);
@@ -256,7 +271,8 @@ impl Default for MfeContext {
 pub struct StateTransition {
     pub from: MfeLifecycleState,
     pub to: MfeLifecycleState,
-    pub at: SystemTime,
+    /// `None` on targets with no clock (`wasm32-unknown-unknown`).
+    pub at: Option<SystemTime>,
 }
 
 /// Lock a mutex, recovering the data if a panicking thread poisoned it. The
@@ -350,7 +366,7 @@ impl MfeCore {
         }
         *state = to;
         drop(state);
-        lock(&self.history).push(StateTransition { from, to, at: SystemTime::now() });
+        lock(&self.history).push(StateTransition { from, to, at: wall_clock() });
         Ok(())
     }
 

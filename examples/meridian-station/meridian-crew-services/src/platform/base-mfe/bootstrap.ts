@@ -26,7 +26,8 @@ const manifest = {
       "swiftToolsVersion": "5.9"
     },
     "rust": {
-      "edition": "2021"
+      "edition": "2021",
+      "wasm": true
     }
   },
   "description": "Meridian Station crew services — roster, certifications, pay status",

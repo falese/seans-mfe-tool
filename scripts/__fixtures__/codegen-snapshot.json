@@ -1836,7 +1836,7 @@
       "CrewRoster",
       "PayStatus"
     ],
-    "fileCount": 66,
+    "fileCount": 76,
     "files": [
       {
         "path": "<cwd>/__mocks__/fileMock.js",
@@ -1971,7 +1971,7 @@
       {
         "path": "<cwd>/rust/src/platform/mfe_base.rs",
         "overwrite": true,
-        "sha256": "1596fd7a853590df3bab441ab55b22d77054cbc7816ed543dbcc73bc759e0230"
+        "sha256": "7058ef71554f6bb1537d293fd8c177fc267ef4827d04a93d87d706bafbb90fe7"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_lifecycle.rs",
@@ -1986,7 +1986,7 @@
       {
         "path": "<cwd>/rust/src/platform/native_mfe_base.rs",
         "overwrite": true,
-        "sha256": "a7fa38b497ffc0ca8efbabda290dbaca1472f8bcdcb7ed7ece602a83649e4691"
+        "sha256": "ba5e0735d0c3a8ddb90826b94b8f4bb6a567db864f665e16a379fbd396abfde0"
       },
       {
         "path": "<cwd>/rust/src/platform/types.rs",
@@ -1997,6 +1997,56 @@
         "path": "<cwd>/rust/tests/lifecycle.rs",
         "overwrite": true,
         "sha256": "3ecd6a998326fb7eaec9d8569159cfcfb8d12692579ee061e64642b574cf71a8"
+      },
+      {
+        "path": "<cwd>/rust/web/.gitignore",
+        "overwrite": true,
+        "sha256": "c6b6ec62f9ffdf16e7e82faf7da1c15a72a82abe384817590f447ca08e543667"
+      },
+      {
+        "path": "<cwd>/rust/web/build.sh",
+        "overwrite": true,
+        "sha256": "e27d8ee333cbf10ba873b5e1625c30f29af73f149af437913e9effa899cf57ef"
+      },
+      {
+        "path": "<cwd>/rust/web/Cargo.toml",
+        "overwrite": false,
+        "sha256": "c325145027cb7e76282566210e4905f5b2e6e01519e19f5d3e61e63146acbda7"
+      },
+      {
+        "path": "<cwd>/rust/web/README.md",
+        "overwrite": false,
+        "sha256": "6d076effeb89da77f9b16e9998d6960a026ab2e00684ca3da487f681a03d3745"
+      },
+      {
+        "path": "<cwd>/rust/web/src/features/crew_roster.rs",
+        "overwrite": false,
+        "sha256": "63bf9a484627bfe779a0501f348770f40f69bf85393b8629b6f55bd29dfb73bd"
+      },
+      {
+        "path": "<cwd>/rust/web/src/features/mod.rs",
+        "overwrite": true,
+        "sha256": "ac0931f2217cc79d9bc14121eb9517019d0fabde409c1c8a54895863ef61761a"
+      },
+      {
+        "path": "<cwd>/rust/web/src/features/pay_status.rs",
+        "overwrite": false,
+        "sha256": "909b966f8e3df8a393fd12db16b4b43897eb9adc382f74c9f7dfb4d8569ed797"
+      },
+      {
+        "path": "<cwd>/rust/web/src/lib.rs",
+        "overwrite": false,
+        "sha256": "fe8e2a42e6ed7cb38297004605efcab76916d505b446a91ed8700868658ef093"
+      },
+      {
+        "path": "<cwd>/rust/web/src/platform/mod.rs",
+        "overwrite": true,
+        "sha256": "151d36428b184dddd13f560984d900e5b7ecb1eda36133e2810420328831e377"
+      },
+      {
+        "path": "<cwd>/rust/web/www/remoteEntry.js",
+        "overwrite": true,
+        "sha256": "ffa2063861275e30c0921bb15703f77980002cc7c6ac485f3639b11721579e8b"
       },
       {
         "path": "<cwd>/server.ts",
@@ -2016,7 +2066,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "0e9229809cfd3ebda8fd5d3a94e89d966e7068a97f52fb12c46a4e3871263f8d"
+        "sha256": "20e9c77347780e386ebf4f67a5668e1bfcbe81f39c0e1415148d6db341ebb96b"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
