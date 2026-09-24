@@ -348,6 +348,14 @@ platform no default to pick:
 The crate depends on `serde` and `serde_json` only. Its futures run on any
 executor; `block_on` is included for synchronous hosts.
 
+All ten capabilities are implemented and answer in the runtime's result shapes
+(`capability-results.ts`) — a host cannot tell from a result which lane
+answered ([ADR-101](architecture-decisions/ADR-101-rust-implements-all-ten-capabilities.md)).
+What the web lane gets from the browser, a Rust host injects through
+`MfeDependencies`: a `transport` for `query`, a `control_plane` client for
+`updateControlPlaneState` (the analogue of `deps.wsClient`), and `telemetry`
+for `emit`.
+
 | Path | Owner |
 |---|---|
 | `rust/src/platform/**`, `rust/src/features/mod.rs`, `rust/tests/lifecycle.rs` | generator |
@@ -386,10 +394,15 @@ Register it like any remote: `remoteEntryUrl` → `.../remoteEntry.js`, scope
 `rust/web/src/features/<cap>.rs` — plain `web-sys`, so use a Rust UI framework
 inside it if you want one.
 
-`npm run check:rust-wasm` builds every browser crate and then mounts it in
-Chromium **through the shell's own compiled adaptor**. Not yet: data fetching
-from the browser build, and placing it from `control-plane.yaml` — both are in
-ADR-100's boundaries.
+In the browser those three are supplied for you: `fetch`, the shell's per-slot
+daemon channel (the adaptor hands it over through `mfe.attachControlPlane`),
+and a telemetry function you attach with `mfe.attachTelemetry`. The remote
+entry's `mfe` object exposes all ten capabilities by their contract names.
+
+`npm run check:rust-wasm` builds every browser crate, mounts it in Chromium
+**through the shell's own compiled adaptor**, and drives all ten capabilities
+there. Not yet: placing it from `control-plane.yaml` — see ADR-100's
+boundaries.
 
 ## Adding a different target
 
