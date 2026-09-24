@@ -371,8 +371,9 @@ A target is an ordinary **framework plugin** — a `BaseFrameworkPlugin`, like
   each spec gated on your manifest section.
 
 `packages/framework-swift/` and `packages/framework-rust/` are the worked
-examples: `src/plugin.ts` for the build lifecycle, `src/codegen.ts` for the
-files.
+examples: `packages/framework-swift/src/plugin.ts` for the build lifecycle,
+`packages/framework-swift/src/codegen.ts` for the files, and the same two files
+under `packages/framework-rust/src/`.
 
 Two things to know before you start:
 
