@@ -1,0 +1,22 @@
+# Seeded once by seans-mfe-tool, then yours — add dependencies freely.
+#
+# The generated platform layer needs exactly two crates: serde (the capability
+# Inputs/Outputs types) and serde_json (the `query` envelope and
+# `MfeContext.inputs`). No async runtime and no HTTP client — the futures run
+# on whatever executor the host uses, and the host injects the transport
+# (ADR-099).
+
+[package]
+name = "meridian-crew-services"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.75"
+publish = false
+description = "Native build of the meridian-crew-services MFE, generated from its mfe-manifest.yaml"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

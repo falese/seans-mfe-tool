@@ -1836,7 +1836,7 @@
       "CrewRoster",
       "PayStatus"
     ],
-    "fileCount": 46,
+    "fileCount": 66,
     "files": [
       {
         "path": "<cwd>/__mocks__/fileMock.js",
@@ -1899,6 +1899,106 @@
         "sha256": "a64ca6fc04b96c0c47259bb3e7a50db2949958ad369d29595a820565a5d7c077"
       },
       {
+        "path": "<cwd>/rust/.gitignore",
+        "overwrite": true,
+        "sha256": "5170ee1df75bf2f3a6b0d684c53d781627ce3bd9f43a2f751175c5ed28abebfe"
+      },
+      {
+        "path": "<cwd>/rust/Cargo.toml",
+        "overwrite": false,
+        "sha256": "aac0c2ed23235401c3d5d06692815d73e65772f3896156df0c593da30057157c"
+      },
+      {
+        "path": "<cwd>/rust/README.md",
+        "overwrite": false,
+        "sha256": "b7fecc1a38b3469843dbcea964e14d101dda9ddccf70809777e99a2b4b0bb821"
+      },
+      {
+        "path": "<cwd>/rust/src/features/crew_roster_query.rs",
+        "overwrite": false,
+        "sha256": "fe380d5c02c33734ca5f1f135fe1820420fe0f6df08f405673100b86e9bc0e22"
+      },
+      {
+        "path": "<cwd>/rust/src/features/mod.rs",
+        "overwrite": true,
+        "sha256": "25f2a6ed6c0edf44ebe2d535bf69424277ce2b65d57069ae2c84a52c2f95c9bd"
+      },
+      {
+        "path": "<cwd>/rust/src/features/pay_status_query.rs",
+        "overwrite": false,
+        "sha256": "8086c96064a213f6f650f152ead635856a8cc348a2f3f8a082b65024f66539d2"
+      },
+      {
+        "path": "<cwd>/rust/src/lib.rs",
+        "overwrite": false,
+        "sha256": "05679c017b449d068f270b11267b3161760568384c8256138798c02f84ead533"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/bff_client.rs",
+        "overwrite": true,
+        "sha256": "6e10651425ae6d97749b98117fd71cad9170a6ed2dc0b7b69ecd7ca6908b7be6"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/bff_data_provider.rs",
+        "overwrite": true,
+        "sha256": "05ca59d9feba155470241b5a1647ac347a37dbb5350a345ab5d60d1103c05e70"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/data_provider.rs",
+        "overwrite": true,
+        "sha256": "841731d2984d3d0227e7db758519711a434a83f2bb992d80af85031014cda9e6"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/error.rs",
+        "overwrite": true,
+        "sha256": "4789ac0faee9f068e0d601e0ebc87c892c02cb2ed377f206a0ed4f798fce0402"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/executor.rs",
+        "overwrite": true,
+        "sha256": "c9a86e1e4213d0d46c3c22362a5dfb50c224a2943d2fb2baa1a5523e869e0f44"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/generated_mfe.rs",
+        "overwrite": true,
+        "sha256": "9a93a29b8cdee556c10aa477a5f0b30c02b0a16abc5cbda5065c58a06fa12da6"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/manifest_metadata.rs",
+        "overwrite": true,
+        "sha256": "2fc93f1ae81e695dbc78da669c5b8e01420508d080fc8bf5578714af36d7827d"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/mfe_base.rs",
+        "overwrite": true,
+        "sha256": "1596fd7a853590df3bab441ab55b22d77054cbc7816ed543dbcc73bc759e0230"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/mfe_lifecycle.rs",
+        "overwrite": true,
+        "sha256": "14bb14ff0e2d898d460254760aaf133f8155bb945d7d5249eb55b2b919389e41"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/mod.rs",
+        "overwrite": true,
+        "sha256": "c46bc8a87f416c2ee5c80df8a32f45b7ccbc3d58038003693220c9f3da65a15e"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/native_mfe_base.rs",
+        "overwrite": true,
+        "sha256": "a7fa38b497ffc0ca8efbabda290dbaca1472f8bcdcb7ed7ece602a83649e4691"
+      },
+      {
+        "path": "<cwd>/rust/src/platform/types.rs",
+        "overwrite": true,
+        "sha256": "3ea1960293cc5cb9a6f7d5f2a0a8809f727e71ffd9b82f16dbcbd6e4e2361b94"
+      },
+      {
+        "path": "<cwd>/rust/tests/lifecycle.rs",
+        "overwrite": true,
+        "sha256": "3ecd6a998326fb7eaec9d8569159cfcfb8d12692579ee061e64642b574cf71a8"
+      },
+      {
         "path": "<cwd>/server.ts",
         "overwrite": true,
         "sha256": "2bbae60e84dd23efb711258106a1445fa0df4e5aa7b00ccee17bb73bcfa055cd"
@@ -1916,7 +2016,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "1e9d3a639a7f9f84396c4d0288a5c69313505c22b70d59ae0f60c68c8d216cf5"
+        "sha256": "0e9229809cfd3ebda8fd5d3a94e89d966e7068a97f52fb12c46a4e3871263f8d"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",

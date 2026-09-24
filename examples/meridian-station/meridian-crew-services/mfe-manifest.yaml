@@ -101,7 +101,9 @@ dependencies:
   design-system:
     "@mui/material": ^5.14.0
 
-# A SECOND build of this same MFE (ADR-095): the capabilities above are also
-# generated as a Swift Package under swift/, beside the web remote.
+# More builds of this same MFE (ADR-095): the capabilities above are also
+# generated as a Swift Package under swift/ and a Cargo crate under rust/,
+# beside the web remote.
 targets:
   swift: {}
+  rust: {}
