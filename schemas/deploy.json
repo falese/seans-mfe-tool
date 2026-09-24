@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/deploy.json",
   "title": "deploy",
-  "description": "Deploy an application to a local development container",
+  "description": "Deploy the application in the current directory as a local development container: build it into a Docker image and run it. Copies src/, public/, package.json, package-lock.json and rspack.config.js into a temp build context, builds `<name>:development`, and runs it detached as `<name>-dev` on --port. An existing container named `<name>-dev` is stopped and removed first. Requires Docker. Development only: --env production is not implemented (ADR-062). Use --dry-run to preview without building or running anything. Not for code generation — use remote:generate.",
   "input": {
     "type": "object",
     "properties": {

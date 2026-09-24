@@ -310,7 +310,13 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
 }
 
 export default class MfeValidate extends BaseCommand<MfeValidateResult> {
-  static description = "Validate an MFE's internal consistency (manifest ⇄ package.json ⇄ federation)";
+  static description =
+    "Validate an MFE's internal consistency: manifest ⇄ package.json ⇄ federation shared config, " +
+    'declared slots are registered, lifecycle hook handlers resolve, native targets have their ' +
+    'developer-owned files, and developer-owned code is checked for platform migrations (ADR-082). ' +
+    'Read-only — reports issues with a file, line and fix, and exits non-zero on any error. Migration ' +
+    'findings are warnings unless --strict. --typecheck also runs tsc. Validates one MFE directory, not ' +
+    'a fleet (use compose:validate for a control plane).';
 
   static aliases = ['mfe:doctor'];
 

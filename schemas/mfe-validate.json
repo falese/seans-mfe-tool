@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/mfe:validate.json",
   "title": "mfe:validate",
-  "description": "Validate an MFE's internal consistency (manifest ⇄ package.json ⇄ federation)",
+  "description": "Validate an MFE's internal consistency: manifest ⇄ package.json ⇄ federation shared config, declared slots are registered, lifecycle hook handlers resolve, native targets have their developer-owned files, and developer-owned code is checked for platform migrations (ADR-082). Read-only — reports issues with a file, line and fix, and exits non-zero on any error. Migration findings are warnings unless --strict. --typecheck also runs tsc. Validates one MFE directory, not a fleet (use compose:validate for a control plane).",
   "input": {
     "type": "object",
     "properties": {

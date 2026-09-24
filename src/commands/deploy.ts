@@ -321,7 +321,13 @@ export {
 };
 
 export default class Deploy extends BaseCommand<DeployResult> {
-  static description = 'Deploy an application to a local development container'
+  static description =
+    'Deploy the application in the current directory as a local development container: build it ' +
+    'into a Docker image and run it. Copies src/, public/, package.json, package-lock.json and rspack.config.js ' +
+    'into a temp build context, builds `<name>:development`, and runs it detached as `<name>-dev` on ' +
+    '--port. An existing container named `<name>-dev` is stopped and removed first. Requires Docker. ' +
+    'Development only: --env production is not implemented (ADR-062). Use --dry-run to preview without ' +
+    'building or running anything. Not for code generation — use remote:generate.'
 
   static args = {
     name: Args.string({ description: 'Application name', required: true }),

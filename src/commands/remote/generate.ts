@@ -347,7 +347,13 @@ export async function remoteGenerateCommand(
 }
 
 export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
-  static description = 'Generate files from mfe-manifest.yaml capabilities'
+  static description =
+    'Generate an MFE\'s files from the mfe-manifest.yaml in the working directory. Generator-owned ' +
+    'files (src/platform/**, and the platform layer of any swift/ or rust/ target) are rewritten on every ' +
+    'run; developer-owned files (feature components, package.json, App.tsx, bundler config) are written ' +
+    'only when missing, so edits survive. --force re-seeds developer-owned scaffolding and REPLACES edits ' +
+    '— preview it with --dry-run. --swift / --rust add that target to the manifest first. Run ' +
+    'mfe:validate afterwards to check consistency; this command does not.'
 
   static examples = [
     '$ cd my-remote && seans-mfe-tool remote:generate',

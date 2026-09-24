@@ -37,17 +37,11 @@ For each acceptance criterion:
 3. Run `npm test -- <focused path>` to confirm.
 4. Move to the next criterion.
 
-Prefer editing existing files over creating new ones. Use utilities the repo already has — check `packages/runtime/src/`, `packages/oclif-base/src/`, `src/utils/` before adding helpers.
+Prefer editing existing files over creating new ones. Use utilities the repo already has — check `packages/runtime/src/`, `packages/oclif-base/src/` and `packages/contracts/src/` before adding helpers.
 
 ## Full verification before push
 
-Run in order; do not push if any fail:
-
-1. `npm run lint`
-2. `npm run typecheck`
-3. `npm test` (or `npm run test:ci` if you touched `src/runtime/`)
-4. `npm run build`
-5. `npm run build:schemas && git diff --exit-code schemas/` (if you changed command flags, args, or return types)
+Run the gates in `CLAUDE.md` → **Verification gates before push**, in order; do not push if any fail. That list is the single source — it includes the conditional gates (drift, consistency, ADR index, API docs) this prompt used to omit.
 
 ## Commits
 
@@ -78,7 +72,7 @@ Closes #$ISSUE
 - [ ] npm run typecheck
 - [ ] npm test
 - [ ] npm run build
-- [ ] npm run build:schemas (if applicable)
+- [ ] conditional gates from CLAUDE.md that apply (list them)
 
 ## Files touched
 - <list>
@@ -108,9 +102,3 @@ Stop and surface the question rather than guessing:
 - You need to deviate from a locked decision in `CLAUDE.md`.
 - A required file or tool is missing from the environment.
 - **A decision is needed and no existing ADR governs it** — a new ADR must be written or the human must explicitly waive it before you proceed.
-
-## Tooling hints for Claude Code
-
-- For broad codebase exploration, use the `Explore` subagent — don't saturate the main context.
-- Use `Grep`/`Glob` for targeted lookups; prefer over shelling out to `grep`/`find`.
-- Use `mcp__github__issue_read` and `mcp__github__add_issue_comment` for GitHub interaction — do not shell out to `gh`.

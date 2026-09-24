@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/remote:generate.json",
   "title": "remote:generate",
-  "description": "Generate files from mfe-manifest.yaml capabilities",
+  "description": "Generate an MFE's files from the mfe-manifest.yaml in the working directory. Generator-owned files (src/platform/**, and the platform layer of any swift/ or rust/ target) are rewritten on every run; developer-owned files (feature components, package.json, App.tsx, bundler config) are written only when missing, so edits survive. --force re-seeds developer-owned scaffolding and REPLACES edits — preview it with --dry-run. --swift / --rust add that target to the manifest first. Run mfe:validate afterwards to check consistency; this command does not.",
   "input": {
     "type": "object",
     "properties": {
