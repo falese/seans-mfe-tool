@@ -54,6 +54,20 @@ test('crew: roster joins StationOS identity with ledger payroll', async ({ page 
   await expect(page.getByText('Pay Exceptions')).toBeVisible();
 });
 
+test('crew: PayStatus is the Rust build, beside the React roster', async ({ page }) => {
+  await page.getByText('Crew Services').click();
+  // control-plane.yaml places PayStatus `from: meridian-crew-services-wasm`
+  // (ADR-103): the status rail is WebAssembly, mounted through the same
+  // Module Federation adaptor as the React roster in main.
+  const card = page.locator('[data-capability="PayStatus"][data-rendered-by="rust-wasm"]');
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  // Live rows from the BFF, fetched through the Rust build's own query capability.
+  await expect(card.locator('[data-state="ready"]')).toBeVisible({ timeout: 15_000 });
+  await expect(card.getByText('HELD').first()).toBeVisible();
+  await expect(card.getByText('₢', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText('Imani Okafor')).toBeVisible();
+});
+
 test('concourse: three conventions on one screen', async ({ page }) => {
   await page.getByText('Concourse', { exact: true }).click();
   await expect(page.getByText('Concourse Directory')).toBeVisible({ timeout: 30_000 });

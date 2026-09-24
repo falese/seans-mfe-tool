@@ -53,6 +53,22 @@ free_port 4504
     nohup node simple-daemon.js > "$LOGS/daemon.log" 2>&1 & )
 echo "  registry → :4500 · daemon → :4504"
 
+echo "── Rust browser build ──────────────────────────────────"
+# crew-services' PayStatus is placed from its Rust build (ADR-103), which its
+# server serves from rust/web/www under /wasm/. The Docker image builds it; this
+# path needs the host to. Skipped when already built — delete www/pkg to rebuild.
+WASM_WWW="$STATION/meridian-crew-services/rust/web/www"
+if [ -f "$WASM_WWW/pkg/mfe_bg.wasm" ]; then
+  echo "  meridian-crew-services-wasm → already built"
+elif command -v cargo >/dev/null && command -v wasm-bindgen >/dev/null; then
+  bash "$STATION/meridian-crew-services/rust/web/build.sh" > "$LOGS/crew-wasm-build.log" 2>&1 \
+    && echo "  meridian-crew-services-wasm → built" \
+    || echo "  meridian-crew-services-wasm → BUILD FAILED (see $LOGS/crew-wasm-build.log)"
+else
+  echo "  meridian-crew-services-wasm → SKIPPED: needs cargo, the wasm32 target and wasm-bindgen-cli"
+  echo "    (rust/web/README.md); the status rail stays empty when Crew Services opens"
+fi
+
 echo "── MFEs ────────────────────────────────────────────────"
 free_port 5001
 ( cd "$STATION/meridian-console" && nohup npx serve dist -p 5001 --cors > "$LOGS/console.log" 2>&1 & )

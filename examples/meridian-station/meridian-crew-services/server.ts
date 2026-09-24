@@ -70,6 +70,12 @@ const meshHandler = createBuiltMeshHTTPHandler();
 
 app.use('/graphql', meshHandler);
 
+// The Rust target's browser build (ADR-100): a second Module Federation remote
+// of this MFE, compiled to WebAssembly by rust/web/build.sh. Served from this
+// same origin under /wasm/, where the composition compiler registers it
+// (ADR-103 §2). Mounted before the SPA fallback, which would otherwise answer
+// a missing .wasm with index.html.
+app.use('/wasm', express.static(path.join(__dirname, 'rust', 'web', 'www')));
 
 // Static MFE assets
 // Following REQ-BFF-004: BFF + Static Assets Same Deployable

@@ -2,11 +2,10 @@
 //!
 //! Seeded once by seans-mfe-tool, then yours. The generated
 //! `platform::bff_data_provider` sends `DOCUMENT` to this MFE's BFF and
-//! decodes the `data` object into `PayStatusOutputs`.
+//! decodes the `data` object into `PayStatusOutputs`; the browser build's
+//! renderer sends the same document through the `query` capability.
 //!
-//! The field names come from the BFF's schema, which GraphQL Mesh composes
-//! from `data.sources` at build time — so codegen cannot know them. Open the
-//! playground at `http://localhost:5005/graphql`, write the query, and paste it here.
+//! `payroll` is StellarLedger's `listPayroll.result`, hoisted at the graph
+//! (see `data.sources` in the manifest) — the query `PayStatus.tsx` sends.
 
-/// TODO: replace `__typename` with the fields `PayStatus` needs.
-pub const DOCUMENT: &str = "query PayStatus { __typename }";
+pub const DOCUMENT: &str = "query PayStatus { payroll { payrollId crewRef grossCents status } }";

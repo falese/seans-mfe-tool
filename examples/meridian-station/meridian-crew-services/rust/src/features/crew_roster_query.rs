@@ -2,11 +2,13 @@
 //!
 //! Seeded once by seans-mfe-tool, then yours. The generated
 //! `platform::bff_data_provider` sends `DOCUMENT` to this MFE's BFF and
-//! decodes the `data` object into `CrewRosterOutputs`.
+//! decodes the `data` object into `CrewRosterOutputs`; the browser build's
+//! renderer sends the same document through the `query` capability.
 //!
-//! The field names come from the BFF's schema, which GraphQL Mesh composes
-//! from `data.sources` at build time — so codegen cannot know them. Open the
-//! playground at `http://localhost:5005/graphql`, write the query, and paste it here.
+//! Three lists from two sources, each envelope hoisted at the graph (see
+//! `data.sources` in the manifest) — the query `CrewRoster.tsx` sends.
 
-/// TODO: replace `__typename` with the fields `CrewRoster` needs.
-pub const DOCUMENT: &str = "query CrewRoster { __typename }";
+pub const DOCUMENT: &str = "query CrewRoster { \
+crew { crewId crewMemberName section dutyStatus } \
+certifications { crewId certificationCode status } \
+payroll { crewRef grossCents status } }";

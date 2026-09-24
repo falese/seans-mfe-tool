@@ -13,13 +13,15 @@ Rust-rendered capability on the page next to React ones.
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.128   # must match Cargo.toml's pin
 bash build.sh
-npx http-server www -p 5105 --cors                # any static server with CORS
 ```
 
-Register it like any remote: `remoteEntryUrl` → `.../remoteEntry.js`,
-`moduleFederation.scope` → `meridian_crew_services_wasm`, `moduleFederation.module` → `./App`.
-The scope differs from the React build's (`meridian_crew_services`) so both can be on
-one page.
+`build.sh` leaves a servable `www/`. If this MFE has a BFF, its generated
+`server.ts` serves `www/` at `/wasm/` and the seeded Dockerfile builds it —
+nothing else to run. Place it from the fleet's `control-plane.yaml` with
+`from: meridian-crew-services-wasm` (ADR-103); the compiler registers it with scope
+`meridian_crew_services_wasm`, module `./App`, and `<endpoint>/wasm/remoteEntry.js`. The
+scope differs from the React build's (`meridian_crew_services`) so both can be on one
+page, and a placement without `from` stays on the React build.
 
 ## What is yours
 

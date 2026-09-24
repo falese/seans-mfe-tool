@@ -4,6 +4,7 @@
 //! and rewritten on every `remote:generate`; `features` holds your code. Add
 //! your own modules here freely.
 
+pub mod crew;
 pub mod features;
 
 // Generator-owned, so regeneration owns its layout rather than rustfmt:
