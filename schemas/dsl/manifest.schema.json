@@ -51,7 +51,7 @@
       "minLength": 1
     },
     "targets": {
-      "description": "Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).",
+      "description": "Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095).",
       "type": "object",
       "properties": {
         "web": {
@@ -110,6 +110,39 @@
           "required": [
             "deploymentTarget",
             "swiftToolsVersion"
+          ],
+          "additionalProperties": false
+        },
+        "rust": {
+          "description": "Emit a Cargo crate alongside the web build (ADR-095, ADR-099).",
+          "type": "object",
+          "properties": {
+            "crateName": {
+              "description": "Cargo package name. Omitted ⇒ the manifest name.",
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+            },
+            "edition": {
+              "description": "Rust edition for the generated Cargo.toml.",
+              "default": "2021",
+              "type": "string",
+              "enum": [
+                "2021",
+                "2024"
+              ]
+            },
+            "capabilities": {
+              "description": "Domain capabilities this target implements. Omitted ⇒ all of them. Same subset semantics as targets.swift.capabilities.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "edition"
           ],
           "additionalProperties": false
         }

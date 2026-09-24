@@ -101,6 +101,7 @@
 - [resolveWebTarget](functions/resolveWebTarget.md)
 - [severityFor](functions/severityFor.md)
 - [slotSpecs](functions/slotSpecs.md)
+- [snakeCase](functions/snakeCase.md)
 - [toDeclaredSlotIdUnion](functions/toDeclaredSlotIdUnion.md)
 - [unregisterFileContributor](functions/unregisterFileContributor.md)
 - [unregisterVariant](functions/unregisterVariant.md)

@@ -8,6 +8,6 @@
 
 > `const` **RateLimitConfigSchema**: `ZodObject`\<\{ `config`: `ZodOptional`\<`ZodArray`\<`ZodObject`\<\{ `field`: `ZodString`; `identifyContext`: `ZodOptional`\<`ZodString`\>; `max`: `ZodNumber`; `ttl`: `ZodNumber`; `type`: `ZodString`; \}, `$strip`\>\>\>; `enabled`: `ZodDefault`\<`ZodBoolean`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:409](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L409)
+Defined in: [packages/dsl/src/schema.ts:446](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L446)
 
 Rate limiting configuration

@@ -8,7 +8,7 @@
 
 > **parseFederationSharedEntries**(`configSource`): [`SharedEntry`](../interfaces/SharedEntry.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L115)
+Defined in: [packages/codegen/src/validate.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L117)
 
 Extract Module-Federation `shared` entries from a bundler config's source
 text (rspack.config.js / webpack.config.js). Matches every

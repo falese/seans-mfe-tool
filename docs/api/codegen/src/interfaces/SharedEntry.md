@@ -6,7 +6,7 @@
 
 # Interface: SharedEntry
 
-Defined in: [packages/codegen/src/validate.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L27)
+Defined in: [packages/codegen/src/validate.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L28)
 
 A framework singleton the bundler shares; parsed from the federation config.
 
@@ -16,7 +16,7 @@ A framework singleton the bundler shares; parsed from the federation config.
 
 > **name**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L28)
+Defined in: [packages/codegen/src/validate.ts:29](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L29)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/codegen/src/validate.ts:28](https://github.com/falese/sean
 
 > **requiredVersion**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:29](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L29)
+Defined in: [packages/codegen/src/validate.ts:30](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L30)

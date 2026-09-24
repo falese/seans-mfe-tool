@@ -8,4 +8,4 @@
 
 > **CapabilityConfig** = `z.infer`\<*typeof* [`CapabilityConfigSchema`](../variables/CapabilityConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:262](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L262)
+Defined in: [packages/dsl/src/schema.ts:299](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L299)

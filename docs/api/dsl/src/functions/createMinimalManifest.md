@@ -258,6 +258,22 @@ Minimal DSL manifest
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
 
+#### targets.rust?
+
+> `optional` **rust**: `object`
+
+#### targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+#### targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+#### targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
+
 #### targets.swift?
 
 > `optional` **swift**: `object`

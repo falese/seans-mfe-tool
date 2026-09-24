@@ -316,9 +316,47 @@ a build plugin that drags in a YAML parser is one nobody will keep.
   four of `BaseMFEDependencies`' eight members — `platformHandlers`,
   `customHandlers`, `telemetry`, `errorHandler`. Nothing ships an `MFETelemetry`
   conformer, so hook failures go nowhere unless you supply one.
-- **"Mobile" means iOS.** `swift` is the only native target the platform ships a
-  generator for. A manifest may declare any target id — unknown ids are
-  preserved and warn rather than failing — but nothing will build them.
+- **"Mobile" means iOS.** `swift` is the only *mobile* target the platform
+  ships a generator for; `rust` (below) is the other native one. A manifest may
+  declare any target id — unknown ids are preserved and warn rather than
+  failing — but nothing will build them.
+
+## The Rust target
+
+*[ADR-099](architecture-decisions/ADR-099-rust-native-target.md).*
+
+```yaml
+targets:
+  swift: {}
+  rust: {}          # or: rust: { crateName: meridian-crew, edition: '2024', capabilities: [CrewRoster] }
+```
+
+`remote:generate --rust` (or `remote:init --rust`) adds the block and emits a
+Cargo **library crate** under `rust/` — the same six states, ten capabilities
+and manifest hooks as the Swift package, rendered from the same contract, for a
+Rust host: a Tauri app, a desktop client, a service.
+
+It differs from the Swift package in three places, each because Rust gave the
+platform no default to pick:
+
+| | Swift | Rust |
+|---|---|---|
+| UI | SwiftUI views per capability | none — the host renders; `mount` validates the id |
+| HTTP | `URLSession.shared` by default | an `MfeTransport` the host injects (the README has a reqwest adapter) |
+| Manifest metadata | re-derived by an SPM plugin on every build | rendered at generation time; `check:mfe-drift` guards it |
+
+The crate depends on `serde` and `serde_json` only. Its futures run on any
+executor; `block_on` is included for synchronous hosts.
+
+| Path | Owner |
+|---|---|
+| `rust/src/platform/**`, `rust/src/features/mod.rs`, `rust/tests/lifecycle.rs` | generator |
+| `rust/Cargo.toml`, `rust/README.md`, `rust/src/lib.rs`, `rust/src/features/<cap>_query.rs` | **you** |
+
+Generator-owned code sits behind `#[rustfmt::skip]`, so `cargo fmt` never
+produces drift. `npm run check:rust-build` builds, tests, lints and
+format-checks every committed crate — and unlike the Swift gate it covers the
+whole crate, because there is no UI half to leave out.
 
 ## Adding a different target
 
@@ -332,9 +370,9 @@ A target is an ordinary **framework plugin** — a `BaseFrameworkPlugin`, like
   ([ADR-094 §2](architecture-decisions/ADR-094-the-generator-is-a-library.md)),
   each spec gated on your manifest section.
 
-`packages/framework-swift/` is the worked example:
-`packages/framework-swift/src/plugin.ts` for the build lifecycle,
-`packages/framework-swift/src/codegen.ts` for the files.
+`packages/framework-swift/` and `packages/framework-rust/` are the worked
+examples: `src/plugin.ts` for the build lifecycle, `src/codegen.ts` for the
+files.
 
 Two things to know before you start:
 

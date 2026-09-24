@@ -216,7 +216,23 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `rust?`: \{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; \}; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.rust?
+
+\{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; \} = `...`
+
+#### targets.rust.capabilities?
+
+`string`[] = `...`
+
+#### targets.rust.crateName?
+
+`string` = `...`
+
+#### targets.rust.edition
+
+`"2021"` \| `"2024"` = `...`
 
 #### targets.swift?
 
@@ -861,6 +877,22 @@ Defined in: [packages/codegen/src/render-model.ts:81](https://github.com/falese/
 ##### Index Signature
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+#### manifest.targets.rust?
+
+> `optional` **rust**: `object`
+
+#### manifest.targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+#### manifest.targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+#### manifest.targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
 
 #### manifest.targets.swift?
 

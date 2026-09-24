@@ -325,6 +325,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-096](./architecture-decisions/ADR-096-native-lifecycle-contract.md) | The Swift MFE is a third concrete subclass of the platform base class — the contract crosses to native intact, the federation machinery does not | Runtime / native / platform contract | Implemented |
 | [ADR-097](./architecture-decisions/ADR-097-one-plugin-carries-a-targets-two-halves.md) | A framework plugin declares which target it builds and registers its own codegen — one object carries a target's build lifecycle and its file contribution | Plugins / targets / codegen | Implemented |
 | [ADR-098](./architecture-decisions/ADR-098-native-lifecycle-hooks.md) | Manifest lifecycle hooks cross to the native lane, and the capability pipeline becomes composable middleware so they have somewhere to attach | Runtime / native / lifecycle hooks | Implemented |
+| [ADR-099](./architecture-decisions/ADR-099-rust-native-target.md) | A manifest may declare a Rust target — a runtime-agnostic Cargo library crate carrying the platform contract, with no UI, no HTTP client and no build-time manifest step | Codegen / targets / native | Implemented |
 
 ### Proposed — filed, not ratified
 

@@ -8,6 +8,6 @@
 
 > `const` **ObservabilityConfigSchema**: `ZodObject`\<\{ `opentelemetry`: `ZodOptional`\<`ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `exporters`: `ZodOptional`\<`ZodArray`\<`ZodObject`\<\{ `endpoint`: `ZodString`; `type`: `ZodString`; \}, `$strip`\>\>\>; `sampling`: `ZodOptional`\<`ZodObject`\<\{ `probability`: `ZodDefault`\<`ZodNumber`\>; \}, `$strip`\>\>; `serviceName`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; `prometheus`: `ZodOptional`\<`ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `endpoint`: `ZodDefault`\<`ZodString`\>; `port`: `ZodDefault`\<`ZodNumber`\>; \}, `$strip`\>\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:402](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L402)
+Defined in: [packages/dsl/src/schema.ts:439](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L439)
 
 Observability configuration

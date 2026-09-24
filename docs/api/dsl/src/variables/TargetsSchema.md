@@ -6,16 +6,16 @@
 
 # Variable: TargetsSchema
 
-> `const` **TargetsSchema**: `ZodObject`\<\{ `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
+> `const` **TargetsSchema**: `ZodObject`\<\{ `rust`: `ZodOptional`\<`ZodObject`\<\{ `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `crateName`: `ZodOptional`\<`ZodString`\>; `edition`: `ZodDefault`\<`ZodEnum`\<\{ `2021`: `"2021"`; `2024`: `"2024"`; \}\>\>; \}, `$strip`\>\>; `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
 
-Defined in: [packages/dsl/src/schema.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L149)
+Defined in: [packages/dsl/src/schema.ts:184](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L184)
 
 Every build this manifest produces.
 
 `web` is the Module Federation remote; any other key is a build produced
-beside it from the same capabilities. `swift` is the only other key the
-platform ships a generator for today, which is NOT the same as the only key
-that may appear.
+beside it from the same capabilities. `swift` and `rust` are the other keys
+the platform ships a generator for today, which is NOT the same as the only
+keys that may appear.
 
 `.catchall()` is load-bearing. A plain `z.object` strips unknown keys, so
 before it a manifest declaring `targets.kotlin` warned on stderr from the raw
