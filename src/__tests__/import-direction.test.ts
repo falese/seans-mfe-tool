@@ -57,6 +57,9 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
   // `contracts`; unlike them it also contributes codegen (ADR-097), which is
   // the `codegen` edge. Ships no commands, so no `oclif-base`.
   'framework-swift': ['contracts', 'dsl', 'codegen'],
+  // The Rust target plugin (ADR-099): same shape as Swift, minus `dsl` — its
+  // codegen reads the plan context, never the manifest types.
+  'framework-rust': ['contracts', 'codegen'],
   'plugin-bff': ['contracts', 'codegen', 'oclif-base'],
 
   'plugin-api': ['contracts', 'oclif-base'],

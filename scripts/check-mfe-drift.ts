@@ -105,6 +105,10 @@ function maximalManifest(manifest: DSLManifest): DSLManifest {
   if (!maximal.targets?.swift) {
     maximal.targets = { ...(maximal.targets ?? {}), swift: { deploymentTarget: '17.0', swiftToolsVersion: '5.9' } };
   }
+  // Same for rust/ (ADR-099).
+  if (!maximal.targets?.rust) {
+    maximal.targets = { ...(maximal.targets ?? {}), rust: { edition: '2021' } };
+  }
   return maximal;
 }
 

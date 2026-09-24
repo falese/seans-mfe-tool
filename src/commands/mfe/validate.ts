@@ -94,7 +94,7 @@ const CONFIG_BY_BUNDLER: Record<string, string> = {
 };
 
 /** Extensions worth scanning for a slot reference. */
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte', '.swift']);
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte', '.swift', '.rs']);
 
 /** Never scanned: build output, dependencies, and the generated contract itself. */
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage']);
@@ -107,7 +107,9 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * `swift/` is a root too, and has to be: a secondary target's sources live
  * outside `src/` (ADR-095), so scanning only `src/` meant the
  * `native-capability-view` rule could never fire on a real MFE no matter what
- * the rule itself did.
+ * the rule itself did. `rust/` likewise (ADR-099), minus its Cargo build
+ * output: `rust/target/` holds generated `.rs` from dependencies' build
+ * scripts, which are nobody's source.
  *
  * Paths stay ABSOLUTE. The command relativises `issue.location` against `dir`
  * when printing, so returning relative paths here made that resolve a second
@@ -115,14 +117,15 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * match on location therefore match a suffix, not a prefix.
  */
 async function collectSources(dir: string): Promise<SourceFile[]> {
-  const roots = [path.join(dir, 'src'), path.join(dir, 'swift')];
+  const roots = [path.join(dir, 'src'), path.join(dir, 'swift'), path.join(dir, 'rust')];
+  const cargoTarget = path.join(dir, 'rust', 'target');
   const sources: SourceFile[] = [];
 
   const walk = async (current: string): Promise<void> => {
     for (const entry of await fs.readdir(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        if (SKIP_DIRECTORIES.has(entry.name)) continue;
+        if (SKIP_DIRECTORIES.has(entry.name) || full === cargoTarget) continue;
         await walk(full);
         continue;
       }

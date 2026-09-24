@@ -22,6 +22,7 @@ import type { RemoteGenerateOptions } from '@seans-mfe/dsl';
 // templates resolve inside its own package rather than by a path escape.
 import '@seans-mfe/plugin-bff/codegen';
 import { enableSwiftTargetInFile } from '../../targets/swift';
+import { enableRustTargetInFile } from '../../targets/rust';
 
 /**
  * What the writer will actually do to this file (#340).
@@ -183,7 +184,7 @@ function reportPackageDependencyDrift(allFiles: GeneratedFile[], skipped: string
 }
 
 export async function remoteGenerateCommand(
-  options: RemoteGenerateOptions & { dryRun?: boolean; swift?: boolean } = {}
+  options: RemoteGenerateOptions & { dryRun?: boolean; swift?: boolean; rust?: boolean } = {}
 ): Promise<RemoteGenerateResult> {
   const cwd = process.cwd();
 
@@ -196,6 +197,13 @@ export async function remoteGenerateCommand(
       const manifestPath = path.join(cwd, 'mfe-manifest.yaml');
       if (await enableSwiftTargetInFile(manifestPath)) {
         console.log(chalk.green('✓ Added targets.swift to mfe-manifest.yaml'));
+      }
+    }
+    // `--rust`: the same retrofit, for the Cargo crate (ADR-099).
+    if (options.rust && !options.dryRun) {
+      const manifestPath = path.join(cwd, 'mfe-manifest.yaml');
+      if (await enableRustTargetInFile(manifestPath)) {
+        console.log(chalk.green('✓ Added targets.rust to mfe-manifest.yaml'));
       }
     }
 
@@ -347,6 +355,7 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
     '$ seans-mfe-tool remote:generate --force     # Re-seed developer-owned scaffolding',
     '$ seans-mfe-tool remote:generate --force --dry-run  # Preview what --force would replace',
     '$ seans-mfe-tool remote:generate --swift    # Also build this MFE as a Swift Package',
+    '$ seans-mfe-tool remote:generate --rust     # Also build this MFE as a Cargo crate',
   ]
 
   static flags = {
@@ -368,10 +377,16 @@ export default class RemoteGenerate extends BaseCommand<RemoteGenerateResult> {
         'mfe-manifest.yaml if absent, then scaffolds swift/ beside the web build. The web build is unchanged.',
       default: false,
     }),
+    rust: Flags.boolean({
+      description:
+        'Declare and generate a Cargo crate (native Rust library) from this same manifest. Adds a targets.rust block to ' +
+        'mfe-manifest.yaml if absent, then scaffolds rust/ beside the web build. The web build is unchanged.',
+      default: false,
+    }),
   }
 
   protected async runCommand(): Promise<RemoteGenerateResult> {
     const { flags } = await this.parse(RemoteGenerate)
-    return remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force, swift: flags.swift })
+    return remoteGenerateCommand({ dryRun: flags['dry-run'], force: flags.force, swift: flags.swift, rust: flags.rust })
   }
 }

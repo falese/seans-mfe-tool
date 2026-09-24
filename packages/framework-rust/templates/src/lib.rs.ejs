@@ -1,0 +1,14 @@
+//! <%- rustDoc(manifestName) %> — the native Rust build of this MFE (ADR-099).
+//!
+//! Seeded once by seans-mfe-tool, then yours. `platform` is generator-owned
+//! and rewritten on every `remote:generate`; `features` holds your code. Add
+//! your own modules here freely.
+
+pub mod features;
+
+// Generator-owned, so regeneration owns its layout rather than rustfmt:
+// formatting it would read as drift to `check:mfe-drift`. Keep the attribute.
+#[rustfmt::skip]
+pub mod platform;
+
+pub use platform::*;

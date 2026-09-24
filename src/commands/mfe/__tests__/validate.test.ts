@@ -20,6 +20,8 @@ const RUNTIME = '@seans-mfe-tool/runtime';
 interface Fixture {
   packageDeps?: Record<string, string>;
   sharedReactVersion?: string;
+  /** Extra top-level manifest YAML lines, appended as-is. */
+  manifestLines?: string[];
 }
 
 async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
@@ -40,6 +42,7 @@ async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
       'dependencies:',
       '  design-system:',
       "    styled-components: '^6.1.0'",
+      ...(fx.manifestLines ?? []),
     ].join('\n'),
   );
   await fs.writeJson(path.join(dir, 'package.json'), {
@@ -106,6 +109,36 @@ describe('mfeValidateCommand', () => {
     await writeFixture(tmp, { sharedReactVersion: '^18.2.0' });
     await expect(mfeValidateCommand({ dir: tmp })).rejects.toMatchObject({
       code: 'MFE_INCONSISTENT',
+    });
+  });
+
+  describe('the rust/ source root (ADR-099)', () => {
+    const rustWithBff = [
+      'data:',
+      '  sources:',
+      '    - name: S',
+      '      handler:',
+      '        openapi:',
+      '          source: ./s.yaml',
+      'targets:',
+      '  rust: {}',
+    ];
+
+    it('scans rust/ — a present query document satisfies rust-capability-query', async () => {
+      await writeFixture(tmp, { manifestLines: rustWithBff });
+      await fs.outputFile(path.join(tmp, 'rust/src/features/demo_query.rs'), 'pub const DOCUMENT: &str = "";');
+      const res = await mfeValidateCommand({ dir: tmp });
+      expect(res.checked).toContain('rust-capability-query');
+      expect(res.ok).toBe(true);
+    });
+
+    it('does not count Cargo build output under rust/target/ as source', async () => {
+      await writeFixture(tmp, { manifestLines: rustWithBff });
+      await fs.outputFile(
+        path.join(tmp, 'rust/target/debug/build/x/out/rust/src/features/demo_query.rs'),
+        'pub const DOCUMENT: &str = "";',
+      );
+      await expect(mfeValidateCommand({ dir: tmp })).rejects.toMatchObject({ code: 'MFE_INCONSISTENT' });
     });
   });
 
