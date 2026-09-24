@@ -312,10 +312,17 @@ a build plugin that drags in a YAML parser is one nobody will keep.
       telemetry: MyTelemetry()
   ))
   ```
-- **Telemetry is a protocol with no implementation.** `MFEDependencies` renders
-  four of `BaseMFEDependencies`' eight members — `platformHandlers`,
-  `customHandlers`, `telemetry`, `errorHandler`. Nothing ships an `MFETelemetry`
-  conformer, so hook failures go nowhere unless you supply one.
+- **Every capability is implemented, through what you inject**
+  ([ADR-102](architecture-decisions/ADR-102-every-target-implements-the-base-class.md)).
+  All ten answer in the runtime's result shapes (`capability-results.ts`), the
+  same as the web and Rust lanes. `emit` forwards to `deps.telemetry`;
+  `updateControlPlaneState` sends its `STATE_UPDATE` envelope through
+  `deps.controlPlane` — an `MFEControlPlaneClient` with the two members
+  `BaseRemoteMFE` uses on its daemon WebSocket client, `connected` and
+  `mutation(_:variables:timeoutMs:)`. Nothing ships a conformer for either, so
+  with none injected `emit` answers `emitted: false` and
+  `updateControlPlaneState` answers `acknowledged: false`, as a web MFE with no
+  telemetry or a closed socket does.
 - **"Mobile" means iOS.** `swift` is the only *mobile* target the platform
   ships a generator for; `rust` (below) is the other native one. A manifest may
   declare any target id — unknown ids are preserved and warn rather than
