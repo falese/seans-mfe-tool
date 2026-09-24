@@ -1911,7 +1911,7 @@
       {
         "path": "<cwd>/rust/README.md",
         "overwrite": false,
-        "sha256": "b7fecc1a38b3469843dbcea964e14d101dda9ddccf70809777e99a2b4b0bb821"
+        "sha256": "46e6680bbc792dfdecb0428bb719a7c2eb5843f9195b9d21ecf8602e5782ac0d"
       },
       {
         "path": "<cwd>/rust/src/features/crew_roster_query.rs",
@@ -1946,12 +1946,12 @@
       {
         "path": "<cwd>/rust/src/platform/data_provider.rs",
         "overwrite": true,
-        "sha256": "841731d2984d3d0227e7db758519711a434a83f2bb992d80af85031014cda9e6"
+        "sha256": "bfdb9ab8e3807b0466bbf783298c90be65d3106ee17d5b5020771dfede67d256"
       },
       {
         "path": "<cwd>/rust/src/platform/error.rs",
         "overwrite": true,
-        "sha256": "4789ac0faee9f068e0d601e0ebc87c892c02cb2ed377f206a0ed4f798fce0402"
+        "sha256": "1371992c8c08cddcd179a94e9eb2765a013ef21f3b16569b4895efa26c2f5d3a"
       },
       {
         "path": "<cwd>/rust/src/platform/executor.rs",
@@ -1961,17 +1961,17 @@
       {
         "path": "<cwd>/rust/src/platform/generated_mfe.rs",
         "overwrite": true,
-        "sha256": "9a93a29b8cdee556c10aa477a5f0b30c02b0a16abc5cbda5065c58a06fa12da6"
+        "sha256": "ecd42f36a93afd0f6f1aead525853085aacded05e73cf9935d7e3a8b724a37a8"
       },
       {
         "path": "<cwd>/rust/src/platform/manifest_metadata.rs",
         "overwrite": true,
-        "sha256": "2fc93f1ae81e695dbc78da669c5b8e01420508d080fc8bf5578714af36d7827d"
+        "sha256": "377ec7d4072d02f08fc9ddcf9f272aab378d4c7f48dc8e4b7b9a74fe94696c7c"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_base.rs",
         "overwrite": true,
-        "sha256": "7058ef71554f6bb1537d293fd8c177fc267ef4827d04a93d87d706bafbb90fe7"
+        "sha256": "e51d1ffdbe0cff2c50ba08845e49cf5d337f9d6d672226ffce405cee2761250d"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_lifecycle.rs",
@@ -1986,17 +1986,17 @@
       {
         "path": "<cwd>/rust/src/platform/native_mfe_base.rs",
         "overwrite": true,
-        "sha256": "ba5e0735d0c3a8ddb90826b94b8f4bb6a567db864f665e16a379fbd396abfde0"
+        "sha256": "98b31e032e24a7ea9265e3315a08c4c976707b881b6d2ecc6875d34db77ba560"
       },
       {
         "path": "<cwd>/rust/src/platform/types.rs",
         "overwrite": true,
-        "sha256": "3ea1960293cc5cb9a6f7d5f2a0a8809f727e71ffd9b82f16dbcbd6e4e2361b94"
+        "sha256": "08f4b60ffb3658aa2291959bc5e5b0af97275be64463b4fde1f23c377fbb4202"
       },
       {
         "path": "<cwd>/rust/tests/lifecycle.rs",
         "overwrite": true,
-        "sha256": "3ecd6a998326fb7eaec9d8569159cfcfb8d12692579ee061e64642b574cf71a8"
+        "sha256": "2c1a8a4a5d5c3abd3e7383bcae3bb4feee6d3568920d10f7e8cbfdd7229f0bd3"
       },
       {
         "path": "<cwd>/rust/web/.gitignore",
@@ -2011,12 +2011,12 @@
       {
         "path": "<cwd>/rust/web/Cargo.toml",
         "overwrite": false,
-        "sha256": "c325145027cb7e76282566210e4905f5b2e6e01519e19f5d3e61e63146acbda7"
+        "sha256": "f085863d306bd73c25eca35167b91c0a8e0237f8758778c39c6af7b1d57867b0"
       },
       {
         "path": "<cwd>/rust/web/README.md",
         "overwrite": false,
-        "sha256": "6d076effeb89da77f9b16e9998d6960a026ab2e00684ca3da487f681a03d3745"
+        "sha256": "5cf9ee917bd0c7ca6f1c9331382a67a4a5187ebb6d89993d59c47c51c2c196ca"
       },
       {
         "path": "<cwd>/rust/web/src/features/crew_roster.rs",
@@ -2041,12 +2041,12 @@
       {
         "path": "<cwd>/rust/web/src/platform/mod.rs",
         "overwrite": true,
-        "sha256": "151d36428b184dddd13f560984d900e5b7ecb1eda36133e2810420328831e377"
+        "sha256": "c648b224db35e138aca08e05fea4d6746584c0f33846f6bb93987f67e20326ca"
       },
       {
         "path": "<cwd>/rust/web/www/remoteEntry.js",
         "overwrite": true,
-        "sha256": "ffa2063861275e30c0921bb15703f77980002cc7c6ac485f3639b11721579e8b"
+        "sha256": "e711a8b08e9234fb2e6dfa72ed0f25b36c9fc40696a91486ea923267c9a22a7c"
       },
       {
         "path": "<cwd>/server.ts",
