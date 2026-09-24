@@ -8,4 +8,4 @@
 
 > **DSLInput** = `z.infer`\<*typeof* [`DSLInputSchema`](../variables/DSLInputSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:221](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L221)
+Defined in: [packages/dsl/src/schema.ts:228](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L228)

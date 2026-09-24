@@ -8,4 +8,4 @@
 
 > **OpenAPIHandler** = `z.infer`\<*typeof* [`OpenAPIHandlerSchema`](../variables/OpenAPIHandlerSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:314](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L314)
+Defined in: [packages/dsl/src/schema.ts:321](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L321)

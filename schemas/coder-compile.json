@@ -210,7 +210,8 @@
                   "rust": {
                     "type": "object",
                     "required": [
-                      "edition"
+                      "edition",
+                      "wasm"
                     ],
                     "properties": {
                       "edition": {
@@ -219,6 +220,9 @@
                           "2021",
                           "2024"
                         ]
+                      },
+                      "wasm": {
+                        "type": "boolean"
                       },
                       "crateName": {
                         "type": "string"

@@ -232,11 +232,11 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 ###### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `rust?`: \{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; \}; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `rust?`: \{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \}; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
 
 ###### targets.rust?
 
-\{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; \} = `...`
+\{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \} = `...`
 
 ###### targets.rust.capabilities?
 
@@ -249,6 +249,10 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 ###### targets.rust.edition
 
 `"2021"` \| `"2024"` = `...`
+
+###### targets.rust.wasm
+
+`boolean` = `...`
 
 ###### targets.swift?
 
@@ -595,6 +599,10 @@ DSL manifest for this MFE
 ##### targets.rust.edition
 
 > **edition**: `"2021"` \| `"2024"`
+
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
 
 ##### targets.swift?
 

@@ -56,7 +56,7 @@ Secondary build targets built from this same manifest, e.g. a Swift Package or a
 |---|---|---|---|
 | `web` | object (framework, bundler) | — | The Module Federation remote. Equivalent to the top-level framework/bundler pair. |
 | `swift` | object (moduleName, bundleId, deploymentTarget, swiftToolsVersion, …) | — | Emit a Swift Package alongside the web build (ADR-095, ADR-096). |
-| `rust` | object (crateName, edition, capabilities) | — | Emit a Cargo crate alongside the web build (ADR-095, ADR-099). |
+| `rust` | object (crateName, edition, capabilities, wasm) | — | Emit a Cargo crate alongside the web build (ADR-095, ADR-099). |
 
 ### `dependencies`
 

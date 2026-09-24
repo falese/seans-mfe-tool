@@ -6,7 +6,7 @@
 
 # Interface: ValidationIssue
 
-Defined in: [packages/codegen/src/validate.ts:81](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L81)
+Defined in: [packages/codegen/src/validate.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L82)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/codegen/src/validate.ts:81](https://github.com/falese/sean
 
 > `optional` **actual**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L85)
+Defined in: [packages/codegen/src/validate.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L86)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [packages/codegen/src/validate.ts:85](https://github.com/falese/sean
 
 > `optional` **expected**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:84](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L84)
+Defined in: [packages/codegen/src/validate.ts:85](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L85)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/codegen/src/validate.ts:84](https://github.com/falese/sean
 
 > `optional` **fix**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:92](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L92)
+Defined in: [packages/codegen/src/validate.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L93)
 
 What to do about it, for rules that can say.
 
@@ -40,7 +40,7 @@ What to do about it, for rules that can say.
 
 > `optional` **location**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L90)
+Defined in: [packages/codegen/src/validate.ts:91](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L91)
 
 `path:line` for issues found in a specific source file.
 
@@ -50,7 +50,7 @@ Defined in: [packages/codegen/src/validate.ts:90](https://github.com/falese/sean
 
 > **message**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L83)
+Defined in: [packages/codegen/src/validate.ts:84](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L84)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [packages/codegen/src/validate.ts:83](https://github.com/falese/sean
 
 > `optional` **package**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L86)
+Defined in: [packages/codegen/src/validate.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L87)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [packages/codegen/src/validate.ts:86](https://github.com/falese/sean
 
 > **rule**: [`ValidationRule`](../type-aliases/ValidationRule.md)
 
-Defined in: [packages/codegen/src/validate.ts:82](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L82)
+Defined in: [packages/codegen/src/validate.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L83)
 
 ***
 
@@ -74,6 +74,6 @@ Defined in: [packages/codegen/src/validate.ts:82](https://github.com/falese/sean
 
 > `optional` **severity**: [`ValidationSeverity`](../type-aliases/ValidationSeverity.md)
 
-Defined in: [packages/codegen/src/validate.ts:88](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L88)
+Defined in: [packages/codegen/src/validate.ts:89](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L89)
 
 Defaults to `error` when absent.

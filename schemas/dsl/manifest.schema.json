@@ -139,10 +139,16 @@
                 "type": "string",
                 "minLength": 1
               }
+            },
+            "wasm": {
+              "description": "Also build the crate for the browser: a rust/web crate compiled to WebAssembly and served as a Module Federation remote the shell mounts like any other (ADR-100).",
+              "default": false,
+              "type": "boolean"
             }
           },
           "required": [
-            "edition"
+            "edition",
+            "wasm"
           ],
           "additionalProperties": false
         }

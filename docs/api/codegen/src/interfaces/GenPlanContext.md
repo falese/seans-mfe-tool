@@ -272,6 +272,10 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 > **edition**: `"2021"` \| `"2024"`
 
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`

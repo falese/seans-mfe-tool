@@ -6,7 +6,7 @@
 
 # Variable: RustTargetSchema
 
-> `const` **RustTargetSchema**: `ZodObject`\<\{ `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `crateName`: `ZodOptional`\<`ZodString`\>; `edition`: `ZodDefault`\<`ZodEnum`\<\{ `2021`: `"2021"`; `2024`: `"2024"`; \}\>\>; \}, `$strip`\>
+> `const` **RustTargetSchema**: `ZodObject`\<\{ `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `crateName`: `ZodOptional`\<`ZodString`\>; `edition`: `ZodDefault`\<`ZodEnum`\<\{ `2021`: `"2021"`; `2024`: `"2024"`; \}\>\>; `wasm`: `ZodDefault`\<`ZodBoolean`\>; \}, `$strip`\>
 
 Defined in: [packages/dsl/src/schema.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L132)
 

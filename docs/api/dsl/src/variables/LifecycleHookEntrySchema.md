@@ -8,6 +8,6 @@
 
 > `const` **LifecycleHookEntrySchema**: `ZodRecord`\<`ZodString`, `ZodObject`\<\{ `contained`: `ZodOptional`\<`ZodBoolean`\>; `description`: `ZodOptional`\<`ZodString`\>; `handler`: `ZodUnion`\<readonly \[`ZodString`, `ZodArray`\<`ZodString`\>\]\>; `mandatory`: `ZodOptional`\<`ZodBoolean`\>; `source`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>
 
-Defined in: [packages/dsl/src/schema.ts:273](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L273)
+Defined in: [packages/dsl/src/schema.ts:280](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L280)
 
 Lifecycle hook entry (name → config)

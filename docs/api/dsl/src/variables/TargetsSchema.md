@@ -6,9 +6,9 @@
 
 # Variable: TargetsSchema
 
-> `const` **TargetsSchema**: `ZodObject`\<\{ `rust`: `ZodOptional`\<`ZodObject`\<\{ `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `crateName`: `ZodOptional`\<`ZodString`\>; `edition`: `ZodDefault`\<`ZodEnum`\<\{ `2021`: `"2021"`; `2024`: `"2024"`; \}\>\>; \}, `$strip`\>\>; `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
+> `const` **TargetsSchema**: `ZodObject`\<\{ `rust`: `ZodOptional`\<`ZodObject`\<\{ `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `crateName`: `ZodOptional`\<`ZodString`\>; `edition`: `ZodDefault`\<`ZodEnum`\<\{ `2021`: `"2021"`; `2024`: `"2024"`; \}\>\>; `wasm`: `ZodDefault`\<`ZodBoolean`\>; \}, `$strip`\>\>; `swift`: `ZodOptional`\<`ZodObject`\<\{ `bundleId`: `ZodOptional`\<`ZodString`\>; `capabilities`: `ZodOptional`\<`ZodArray`\<`ZodString`\>\>; `deploymentTarget`: `ZodDefault`\<`ZodString`\>; `moduleName`: `ZodOptional`\<`ZodString`\>; `swiftToolsVersion`: `ZodDefault`\<`ZodString`\>; \}, `$strip`\>\>; `web`: `ZodOptional`\<`ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>\>; \}, `$catchall`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>\>
 
-Defined in: [packages/dsl/src/schema.ts:184](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L184)
+Defined in: [packages/dsl/src/schema.ts:191](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L191)
 
 Every build this manifest produces.
 

@@ -8,4 +8,4 @@
 
 > **LifecycleHookEntry** = `z.infer`\<*typeof* [`LifecycleHookEntrySchema`](../variables/LifecycleHookEntrySchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:274](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L274)
+Defined in: [packages/dsl/src/schema.ts:281](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L281)

@@ -8,4 +8,4 @@
 
 > **RateLimitConfig** = `z.infer`\<*typeof* [`RateLimitConfigSchema`](../variables/RateLimitConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:460](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L460)
+Defined in: [packages/dsl/src/schema.ts:467](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L467)

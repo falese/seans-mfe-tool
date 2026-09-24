@@ -8,4 +8,4 @@
 
 > **Lifecycle** = `z.infer`\<*typeof* [`LifecycleSchema`](../variables/LifecycleSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:283](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L283)
+Defined in: [packages/dsl/src/schema.ts:290](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L290)

@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:635](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L635)
+Defined in: [packages/dsl/src/schema.ts:642](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L642)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:637](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L637)
+Defined in: [packages/dsl/src/schema.ts:644](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L644)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:637](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:638](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L638)
+Defined in: [packages/dsl/src/schema.ts:645](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L645)
 
 #### authorization?
 
@@ -250,6 +250,10 @@ Defined in: [packages/dsl/src/schema.ts:638](https://github.com/falese/seans-mfe
 
 > **edition**: `"2021"` \| `"2024"`
 
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -304,4 +308,4 @@ Defined in: [packages/dsl/src/schema.ts:638](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:636](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L636)
+Defined in: [packages/dsl/src/schema.ts:643](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L643)

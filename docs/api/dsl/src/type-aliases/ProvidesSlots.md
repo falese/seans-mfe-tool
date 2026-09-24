@@ -8,4 +8,4 @@
 
 > **ProvidesSlots** = `z.infer`\<*typeof* [`ProvidesSlotsSchema`](../variables/ProvidesSlotsSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:545](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L545)
+Defined in: [packages/dsl/src/schema.ts:552](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L552)

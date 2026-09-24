@@ -270,6 +270,10 @@ Defined in: [packages/codegen/src/validate.ts:34](https://github.com/falese/sean
 
 > **edition**: `"2021"` \| `"2024"`
 
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`

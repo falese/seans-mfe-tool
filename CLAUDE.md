@@ -36,6 +36,7 @@ Full spec: `@docs/spec.md`
 | `npm run clean` | Remove every build artifact — all `dist/`, `oclif.manifest.json`, `tsconfig.tsbuildinfo`, `coverage/`. Reach for it the moment a gate's result stops making sense: `tsc -b` is incremental, oclif reads a manifest, and several gates resolve packages to their **compiled** output, so a stale artifact reads as working code. `--dry-run` lists without removing |
 | `npm run check:swift-build` | After any `packages/framework-swift/**` change — `swift build` + `swift test` against every generated `examples/**/swift/` package. **The only gate that type-checks the emitted Swift.** Every other Swift assertion is a text assertion and cannot see a type error; two got through that way. SKIPS with a notice when no toolchain is on PATH, so it is a no-op locally unless you have Swift; the `swift` CI job runs it with `--require` in the `swift:6.0` container. SwiftUI files are behind `#if canImport(SwiftUI)` so the **views are not covered** — they still need a Mac |
 | `npm run check:rust-build` | After any `packages/framework-rust/**` change — `cargo build`, `cargo test`, `cargo clippy` and `cargo fmt --check` against every generated `examples/**/rust/` crate, warnings as errors. The only gate that type-checks the emitted Rust, and it covers the whole crate (there is no UI half). SKIPS with a notice when `cargo` is not on PATH; the `rust` CI job runs it with `--require`, then re-tests on Rust 1.75, the MSRV the generated `Cargo.toml` declares |
+| `npm run check:rust-wasm` | After any `packages/framework-rust/**` change that touches the browser build — builds every `examples/**/rust/web` crate for wasm32 (clippy, fmt, `build.sh`), then mounts each capability in Chromium **through the compiled `dist/runtime` shell adaptor** (ADR-100). Run `npm run build` first. SKIPS without the wasm32 target, the `wasm-bindgen` CLI (pinned `0.2.128`) or a browser; set `CHROMIUM_PATH` if Playwright's own browser is missing. The `rust-wasm` CI job runs it with `--require` |
 | `npm run check:template-typecheck` | After any `packages/runtime/**` or template change — scaffolds a real MFE per framework lane, `npm install`s it, and typechecks it. The only gate that proves the **runtime barrel** still satisfies generated code. ⚠️ Resolves `@seans-mfe-tool/runtime` to `dist/runtime`, so run `npm run build` first or it checks the last build |
 | `npm run build:system-map` | After anything that changes a count the system map asserts — a package, an ADR, a template, an example MFE. `docs/system-map.html` is the executive-facing page and its counts are **generated**; `build:system-map:check` fails when the committed page disagrees with the repository. Three of its eight counts had already drifted before this existed |
 | `npm run build:docs` | After any `packages/{contracts,runtime,dsl}/src/**` change — regenerates the committed `docs/api` reference (ADR-065); the API-docs workflow gates it on PRs, so commit the result |
@@ -156,6 +157,7 @@ place, so they cannot disagree with a copy here.
 | Codegen templates | `packages/codegen/templates/` (Docker templates only: `src/codegen/templates/docker/`) |
 | Swift native target plugin (ADR-095/096/097) | `packages/framework-swift/src/{plugin,codegen}.ts`; templates `packages/framework-swift/templates/` |
 | Rust native target plugin (ADR-099) | `packages/framework-rust/src/{plugin,codegen}.ts`; templates `packages/framework-rust/templates/` |
+| Rust browser build — remote entry, wasm-bindgen glue, per-capability renderers (ADR-100) | `packages/framework-rust/templates/web/` |
 | Capability → Rust module name (shared by codegen and `mfe:validate`) | `packages/codegen/src/rust-naming.ts` |
 | Enabling a target on a manifest (`--swift`, `--rust`) | `src/targets/enable.ts` |
 | Native target explainer (one manifest, two builds) | `docs/native-targets.md` |
@@ -283,7 +285,9 @@ Run in order — push only after all pass:
     Builds, tests, lints and format-checks the generated crate. Like §14 it
     SKIPS without a toolchain — read the output, not the exit code. Generator-
     owned Rust is behind `#[rustfmt::skip]` so `cargo fmt` cannot cause drift;
-    keep it that way (ADR-099 §6).
+    keep it that way (ADR-099 §6). If the browser build is involved, also
+    `npm run build && npm run check:rust-wasm` (ADR-100) — the only gate that
+    compiles the wasm32 crate and mounts it through the shell's adaptor.
 16. `npm run build:docs && git diff --exit-code docs/api`
     (if you touched `packages/contracts/src/**`, `packages/runtime/src/**`, or
     `packages/dsl/src/**`)

@@ -8,6 +8,6 @@
 
 > `const` **OpenTelemetryConfigSchema**: `ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `exporters`: `ZodOptional`\<`ZodArray`\<`ZodObject`\<\{ `endpoint`: `ZodString`; `type`: `ZodString`; \}, `$strip`\>\>\>; `sampling`: `ZodOptional`\<`ZodObject`\<\{ `probability`: `ZodDefault`\<`ZodNumber`\>; \}, `$strip`\>\>; `serviceName`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:419](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L419)
+Defined in: [packages/dsl/src/schema.ts:426](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L426)
 
 OpenTelemetry observability configuration

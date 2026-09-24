@@ -8,7 +8,7 @@
 
 > `const` **WebTargetSchema**: `ZodObject`\<\{ `bundler`: `ZodOptional`\<`ZodString`\>; `framework`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:161](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L161)
+Defined in: [packages/dsl/src/schema.ts:168](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L168)
 
 The web target — the Module Federation remote.
 

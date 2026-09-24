@@ -358,6 +358,39 @@ produces drift. `npm run check:rust-build` builds, tests, lints and
 format-checks every committed crate — and unlike the Swift gate it covers the
 whole crate, because there is no UI half to leave out.
 
+### The same crate in the browser, next to React
+
+*[ADR-100](architecture-decisions/ADR-100-rust-wasm-browser-remote.md).*
+
+```yaml
+targets:
+  rust:
+    wasm: true
+```
+
+adds `rust/web/`: the crate compiled to WebAssembly, plus a small generated
+`remoteEntry.js` that registers a Module Federation container and exposes the
+same imperative mount handle every React and Angular remote exposes (ADR-056).
+The shell's loader mounts it without knowing it is Rust, so a placement can
+put a Rust-rendered capability in one slot and a React one in the next. Nothing
+in the shell, the runtime or the control plane changes.
+
+```sh
+cd rust/web && bash build.sh          # needs the wasm32 target + wasm-bindgen CLI
+npx http-server www -p 5105 --cors
+```
+
+Register it like any remote: `remoteEntryUrl` → `.../remoteEntry.js`, scope
+`<lib>_wasm` (not the React remote's scope, so both fit on one page), module
+`./App`. Each capability draws through its own developer-owned
+`rust/web/src/features/<cap>.rs` — plain `web-sys`, so use a Rust UI framework
+inside it if you want one.
+
+`npm run check:rust-wasm` builds every browser crate and then mounts it in
+Chromium **through the shell's own compiled adaptor**. Not yet: data fetching
+from the browser build, and placing it from `control-plane.yaml` — both are in
+ADR-100's boundaries.
+
 ## Adding a different target
 
 A target is an ordinary **framework plugin** — a `BaseFrameworkPlugin`, like
