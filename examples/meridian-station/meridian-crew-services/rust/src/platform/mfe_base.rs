@@ -19,6 +19,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 use super::error::MfeError;
@@ -26,20 +27,45 @@ use super::manifest_metadata;
 use super::mfe_lifecycle::{MfeCapability, MfeLifecycleState};
 use super::types::*;
 
-/// A boxed, sendable future — what every hook and handler returns.
+/// A boxed future — what every hook and handler returns.
 ///
 /// Boxed rather than `async fn` in a trait so the traits stay object-safe: a
 /// host holds an `Arc<dyn MfeTransport>` or an `Arc<dyn …DataProvider>`, and
 /// an `async fn` in a trait cannot be called through `dyn`.
+///
+/// `Send` natively, so the futures run on a multi-threaded executor. NOT
+/// `Send` on wasm32 (ADR-101): the browser is single-threaded, and every
+/// browser future — `fetch`, the host's daemon client — holds a `JsValue`,
+/// which is never `Send`. Requiring it there would make the browser build
+/// unable to reach the network at all.
+#[cfg(not(target_arch = "wasm32"))]
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+#[cfg(target_arch = "wasm32")]
+pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a>>;
+
+/// `Send + Sync` natively; nothing on wasm32, for the reason on [`BoxFuture`].
+/// Every injectable trait in the crate bounds on this rather than on
+/// `Send + Sync` directly.
+#[cfg(not(target_arch = "wasm32"))]
+pub trait MaybeSendSync: Send + Sync {}
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Send + Sync + ?Sized> MaybeSendSync for T {}
+#[cfg(target_arch = "wasm32")]
+pub trait MaybeSendSync {}
+#[cfg(target_arch = "wasm32")]
+impl<T: ?Sized> MaybeSendSync for T {}
 
 /// A lifecycle hook handler. Mirrors `(context: Context) => Promise<void>`.
 ///
 /// Takes the context by value so a handler can move it into its future without
 /// a lifetime tying it to the call that invoked it.
+#[cfg(not(target_arch = "wasm32"))]
 pub type MfeHandler = Arc<dyn Fn(MfeContext) -> BoxFuture<'static, Result<(), MfeError>> + Send + Sync>;
+#[cfg(target_arch = "wasm32")]
+pub type MfeHandler = Arc<dyn Fn(MfeContext) -> BoxFuture<'static, Result<(), MfeError>>>;
 
 /// Wrap an async closure as an `MfeHandler`.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn handler<F, Fut>(f: F) -> MfeHandler
 where
     F: Fn(MfeContext) -> Fut + Send + Sync + 'static,
@@ -48,24 +74,54 @@ where
     Arc::new(move |context| Box::pin(f(context)))
 }
 
-/// One telemetry event. Emitted on every hook failure (ADR-002 REQ-043).
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Wrap an async closure as an `MfeHandler`.
+#[cfg(target_arch = "wasm32")]
+pub fn handler<F, Fut>(f: F) -> MfeHandler
+where
+    F: Fn(MfeContext) -> Fut + 'static,
+    Fut: Future<Output = Result<(), MfeError>> + 'static,
+{
+    Arc::new(move |context| Box::pin(f(context)))
+}
+
+/// One telemetry event. Mirrors the runtime's `TelemetryEvent`
+/// (`packages/runtime/src/context.ts`), so a host forwarding events to one
+/// collector sees one shape from every lane.
+///
+/// Used for both hook failures (`lifecycle-error`, REQ-043) and whatever a
+/// caller passes to the `emit` capability.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MfeTelemetryEvent {
     pub name: String,
     pub capability: String,
     pub phase: String,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub user: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub duration: Option<u64>,
+    /// `start` | `end` | `error` | `success` | `failure`.
     pub status: String,
-    pub hook: String,
-    pub handler: String,
-    pub message: String,
-    pub severity: String,
+    #[serde(default)]
+    pub metadata: Map<String, Value>,
+    /// ISO-8601; `None` where there is no clock (wasm32).
+    #[serde(default)]
+    pub timestamp: Option<String>,
 }
 
-pub trait MfeTelemetry: Send + Sync {
+pub trait MfeTelemetry: MaybeSendSync {
     fn emit(&self, event: MfeTelemetryEvent);
+
+    /// Whether events emitted now reach anything. `emit` answers
+    /// `emitted: false` when this is `false`, as TypeScript does with no
+    /// `deps.telemetry` — a sink attached later (the browser build's, ADR-101)
+    /// must not report deliveries it drops.
+    fn is_active(&self) -> bool {
+        true
+    }
 }
 
-pub trait MfeErrorHandler: Send + Sync {
+pub trait MfeErrorHandler: MaybeSendSync {
     fn handle(&self, error: &MfeError, context: &MfeContext);
 }
 
@@ -91,8 +147,23 @@ pub struct HttpResponse {
 /// runtime for every host along with it (ADR-099). So there is no default: a
 /// host adapts the client it already has — reqwest, hyper, ureq — in a few
 /// lines, and the crate's futures run on whatever executor that host uses.
-pub trait MfeTransport: Send + Sync {
+pub trait MfeTransport: MaybeSendSync {
     fn post(&self, request: HttpRequest) -> BoxFuture<'_, Result<HttpResponse, MfeError>>;
+}
+
+/// The daemon connection `updateControlPlaneState` pushes state through
+/// (ADR-101). The native analogue of `deps.wsClient` (`DaemonWebSocketClient`):
+/// the same two members the TypeScript implementation calls, so a host adapts
+/// whatever client it already has — a graphql-ws client natively, the shell's
+/// per-slot channel in the browser (ADR-057).
+pub trait MfeControlPlaneClient: MaybeSendSync {
+    /// Whether the daemon connection is up. `false` answers
+    /// `acknowledged: false` without sending, as TypeScript does.
+    fn connected(&self) -> bool;
+    /// Run a GraphQL mutation against the daemon; `Ok(true)` when it
+    /// acknowledged. An error whose message contains `timed out` is reported
+    /// as `sendMessage timed out`.
+    fn mutation<'a>(&'a self, query: &'a str, variables: Value, timeout_ms: u64) -> BoxFuture<'a, Result<bool, MfeError>>;
 }
 
 /// **The** HTTP path to a GraphQL endpoint in this crate.
@@ -132,9 +203,10 @@ impl GraphQlPost {
 
 /// What a host injects. The native subset of `BaseMFEDependencies` (ADR-098 §4).
 ///
-/// The same four the Swift lane renders, for the same reasons, plus the
-/// transport: `wsClient`, `bffUrl`, `manifestParser` and `stateValidator`
-/// have no native consumer.
+/// `platformHandlers`, `customHandlers`, `telemetry` and `errorHandler` as in
+/// TypeScript; `control_plane` is `wsClient`'s analogue (ADR-101); `transport`
+/// stands in for the global `fetch` TypeScript has and Rust does not.
+/// `bffUrl`, `manifestParser` and `stateValidator` have no native consumer.
 #[derive(Clone, Default)]
 pub struct MfeDependencies {
     /// `platform.x` handlers. There is no native handler library behind this,
@@ -148,6 +220,9 @@ pub struct MfeDependencies {
     /// How `do_query` and the BFF client reach the network. `None` means the
     /// `query` capability answers with an error naming this field.
     pub transport: Option<Arc<dyn MfeTransport>>,
+    /// The daemon connection for `updateControlPlaneState` (ADR-101). `None`
+    /// answers `acknowledged: false`, as a disconnected socket does.
+    pub control_plane: Option<Arc<dyn MfeControlPlaneClient>>,
 }
 
 /// One lifecycle phase, as the manifest names them.
@@ -204,6 +279,49 @@ pub struct MfeContext {
 
 static REQUEST_SEQ: AtomicU64 = AtomicU64::new(0);
 
+/// A process-unique id: time where there is a clock, plus a sequence number.
+pub fn next_id(prefix: &str) -> String {
+    let nanos = wall_clock()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let seq = REQUEST_SEQ.fetch_add(1, Ordering::Relaxed);
+    format!("{}{:x}-{:x}", prefix, nanos, seq)
+}
+
+/// `SystemTime` as ISO-8601 UTC with milliseconds — what `Date.toJSON()`
+/// produces, so a timestamp reads the same from every lane.
+pub fn iso8601(time: SystemTime) -> String {
+    let d = time.duration_since(UNIX_EPOCH).unwrap_or_default();
+    let secs = d.as_secs() as i64;
+    let (days, rem) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
+    // Days since 1970-01-01 to a civil date (Howard Hinnant's algorithm).
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = yoe + era * 400 + i64::from(month <= 2);
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
+        year,
+        month,
+        day,
+        rem / 3_600,
+        (rem % 3_600) / 60,
+        rem % 60,
+        d.subsec_millis()
+    )
+}
+
+/// Now, as ISO-8601 — `None` where there is no clock.
+pub fn iso_now() -> Option<String> {
+    wall_clock().map(iso8601)
+}
+
 /// Wall-clock time, where the target has a clock.
 ///
 /// `SystemTime::now()` PANICS on `wasm32-unknown-unknown`, which has no clock
@@ -222,13 +340,8 @@ pub fn wall_clock() -> Option<SystemTime> {
 impl MfeContext {
     /// A context with a fresh request id and nothing else.
     pub fn new() -> Self {
-        let nanos = wall_clock()
-            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-            .map(|d| d.as_nanos())
-            .unwrap_or(0);
-        let seq = REQUEST_SEQ.fetch_add(1, Ordering::Relaxed);
         MfeContext {
-            request_id: format!("{:x}-{:x}", nanos, seq),
+            request_id: next_id(""),
             capability_id: None,
             inputs: Map::new(),
             jwt: None,
@@ -551,18 +664,34 @@ impl MfeCore {
         })
     }
 
-    /// Report a hook failure (REQ-043). Silent until a host supplies telemetry.
+    /// Report a hook failure (REQ-043), in the shape `BaseMFE` emits it.
+    /// Silent until a host supplies telemetry.
     fn emit_hook_failure(&self, hook: &str, handler: &str, error: &MfeError, context: &MfeContext, severity: &str) {
+        let mut metadata = Map::new();
+        metadata.insert("source".to_string(), Value::from("lifecycle-hook"));
+        metadata.insert("hook".to_string(), Value::from(hook));
+        metadata.insert("handler".to_string(), Value::from(handler));
+        metadata.insert("capability".to_string(), Value::from(context.capability.clone()));
+        metadata.insert("mfe".to_string(), Value::from(self.identity.name.clone()));
+        metadata.insert("severity".to_string(), Value::from(severity));
+        metadata.insert("tags".to_string(), serde_json::json!(["lifecycle", "hook-failure"]));
+        metadata.insert("error".to_string(), serde_json::json!({ "message": error.to_string() }));
+        self.emit_telemetry("lifecycle-error", "lifecycle", context.phase.map(|p| p.as_str()).unwrap_or("unknown"), "error", metadata);
+    }
+
+    /// Emit one event through `deps.telemetry`, if there is one. The
+    /// counterpart of `BaseRemoteMFE.emitTelemetry`.
+    pub fn emit_telemetry(&self, name: &str, capability: &str, phase: &str, status: &str, metadata: Map<String, Value>) {
         if let Some(telemetry) = &self.deps.telemetry {
             telemetry.emit(MfeTelemetryEvent {
-                name: "lifecycle-error".to_string(),
-                capability: context.capability.clone().unwrap_or_else(|| "lifecycle".to_string()),
-                phase: context.phase.map(|p| p.as_str()).unwrap_or("unknown").to_string(),
-                status: "error".to_string(),
-                hook: hook.to_string(),
-                handler: handler.to_string(),
-                message: error.to_string(),
-                severity: severity.to_string(),
+                name: name.to_string(),
+                capability: capability.to_string(),
+                phase: phase.to_string(),
+                user: None,
+                duration: None,
+                status: status.to_string(),
+                metadata,
+                timestamp: iso_now(),
             });
         }
     }
@@ -573,7 +702,7 @@ impl MfeCore {
 /// Every hook but `do_query` is required. `do_query` has a working default, at
 /// the layer TypeScript puts it: `BaseMFE.doQuery` is the one hook that is not
 /// abstract (ADR-053, ADR-070).
-pub trait MfeHooks: Send + Sync {
+pub trait MfeHooks: MaybeSendSync {
     fn do_describe<'a>(&'a self, core: &'a MfeCore, context: &'a MfeContext) -> BoxFuture<'a, Result<DescribeResult, MfeError>>;
     fn do_load<'a>(&'a self, core: &'a MfeCore, context: &'a MfeContext) -> BoxFuture<'a, Result<LoadResult, MfeError>>;
     fn do_render<'a>(&'a self, core: &'a MfeCore, context: &'a MfeContext) -> BoxFuture<'a, Result<RenderResult, MfeError>>;
@@ -615,7 +744,7 @@ pub async fn default_do_query(core: &MfeCore, context: &MfeContext) -> Result<Qu
     let Some(document) = context.inputs.get("document").and_then(Value::as_str) else {
         return Ok(QueryResult {
             data: None,
-            errors: vec!["context.inputs[\"document\"] is required for the query capability".to_string()],
+            errors: vec![QueryError::new("context.inputs[\"document\"] is required for the query capability")],
         });
     };
 
@@ -636,14 +765,35 @@ pub async fn default_do_query(core: &MfeCore, context: &MfeContext) -> Result<Qu
         // The envelope policy: `query` answers with errors, it does not fail.
         // `BffClient::query` fails on the same input — the deliberate half of
         // the difference between the two.
-        Err(error) => return Ok(QueryResult { data: None, errors: vec![error.to_string()] }),
+        Err(error) => return Ok(QueryResult { data: None, errors: vec![QueryError::new(error.to_string())] }),
     };
 
     let decoded: Value = serde_json::from_slice(&body).map_err(|e| MfeError::Decode { message: e.to_string() })?;
-    let errors = graphql_error_messages(&decoded);
+    let errors = graphql_errors(&decoded);
     // Partial responses carry both, and the capability returns both.
     let data = decoded.get("data").filter(|d| !d.is_null()).cloned();
     Ok(QueryResult { data, errors })
+}
+
+/// Every entry in a GraphQL response's `errors` array, with its path.
+pub fn graphql_errors(response: &Value) -> Vec<QueryError> {
+    response
+        .get("errors")
+        .and_then(Value::as_array)
+        .map(|list| {
+            list.iter()
+                .filter_map(|e| {
+                    let message = e.get("message").and_then(Value::as_str)?.to_string();
+                    let path = e.get("path").and_then(Value::as_array).map(|p| {
+                        p.iter()
+                            .map(|seg| seg.as_str().map(str::to_string).unwrap_or_else(|| seg.to_string()))
+                            .collect()
+                    });
+                    Some(QueryError { message, path })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// The `message` of every entry in a GraphQL response's `errors` array.

@@ -10,11 +10,11 @@
 #[allow(unused_imports)]
 use super::error::MfeError;
 #[allow(unused_imports)]
-use super::mfe_base::BoxFuture;
+use super::mfe_base::{BoxFuture, MaybeSendSync};
 #[allow(unused_imports)]
 use super::types::*;
 
-pub trait MeridianCrewServicesDataProvider: Send + Sync {
+pub trait MeridianCrewServicesDataProvider: MaybeSendSync {
     /// Data backing the `CrewRoster` capability.
     fn crew_roster(&self) -> BoxFuture<'_, Result<CrewRosterOutputs, MfeError>>;
     /// Data backing the `PayStatus` capability.

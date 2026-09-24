@@ -13,11 +13,15 @@
   var script = document.currentScript;
   var base = script && script.src ? new URL('.', script.src).href : new URL('.', document.baseURI).href;
   var ready = null;
+  var module = null;
 
   function load() {
     if (!ready) {
       ready = import(base + 'pkg/mfe.js').then(function (m) {
         return m.default({ module_or_path: base + 'pkg/mfe_bg.wasm' }).then(function () {
+          module = m;
+          if (channel) m.attach_control_plane(channel);
+          if (telemetry) m.attach_telemetry(telemetry);
           return m;
         });
       });
@@ -41,7 +45,42 @@
     },
   };
 
-  var exposed = { handles: { imperative: handle }, mount: handle };
+  // The same capability surface a TypeScript MFE's `mfe` object has (ADR-101):
+  // each method takes a Context and resolves to the capability's result, run
+  // through the Rust contract. `attachControlPlane` is what the shell's adaptor
+  // calls to hand over its per-slot daemon channel (ADR-057); it may arrive
+  // before the .wasm is loaded, so it is held here and forwarded on load.
+  var channel = null;
+  var telemetry = null;
+  function call(name) {
+    return function (context) {
+      return load().then(function (m) {
+        return m.capability(name, JSON.stringify(context || {})).then(JSON.parse);
+      });
+    };
+  }
+  var mfe = {
+    attachControlPlane: function (wsClient) {
+      channel = wsClient;
+      if (module) module.attach_control_plane(wsClient);
+    },
+    attachTelemetry: function (sink) {
+      telemetry = sink;
+      if (module) module.attach_telemetry(sink);
+    },
+    describe: call('describe'),
+    load: call('load'),
+    render: call('render'),
+    refresh: call('refresh'),
+    emit: call('emit'),
+    query: call('query'),
+    schema: call('schema'),
+    authorizeAccess: call('authorizeAccess'),
+    health: call('health'),
+    updateControlPlaneState: call('updateControlPlaneState'),
+  };
+
+  var exposed = { handles: { imperative: handle }, mount: handle, mfe: mfe };
 
   globalThis['meridian_crew_services_wasm'] = {
     init: function () {

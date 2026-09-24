@@ -31,6 +31,8 @@ pub enum MfeError {
         capability: MfeCapability,
         detail: String,
     },
+    /// Bad capability input — `ValidationError` in the contracts taxonomy.
+    Validation { field: String, message: String },
     /// A handler the manifest names that nothing supplied (ADR-098 §3).
     HandlerNotFound { handler: String, hint: String },
     /// A handler ran and failed. What a host's own handler returns.
@@ -75,6 +77,7 @@ impl fmt::Display for MfeError {
                 capability.as_str(),
                 detail
             ),
+            MfeError::Validation { message, .. } => write!(f, "{}", message),
             MfeError::HandlerNotFound { handler, hint } => {
                 write!(f, "Handler not found: {}. {}", handler, hint)
             }

@@ -111,6 +111,9 @@ impl MfeBase<MeridianCrewServicesNative> {
         if resolved.transport.is_none() {
             resolved.transport = Some(transport.clone());
         }
+        // Not Send on wasm32, deliberately: the browser is single-threaded and
+        // its transport holds JS values (ADR-101). Natively this is Send + Sync.
+        #[allow(clippy::arc_with_non_send_sync)]
         let provider = Arc::new(BffMeridianCrewServicesDataProvider::new(BffClient::with_default_endpoint(transport)));
         Self::new(provider, resolved)
     }

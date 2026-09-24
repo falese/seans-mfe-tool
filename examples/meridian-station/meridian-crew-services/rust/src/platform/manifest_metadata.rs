@@ -16,6 +16,206 @@ pub const VERSION: &str = "1.0.0";
 pub const CRATE_NAME: &str = "meridian-crew-services";
 pub const BFF_ENDPOINT: Option<&str> = Some("http://localhost:5005/graphql");
 
+/// The manifest's `type` (`remote`, …), as `describe` reports it.
+pub const MANIFEST_TYPE: &str = "remote";
+
+/// The manifest this crate was generated from, as pretty JSON — what `schema`
+/// returns and `describe` parses (ADR-101), as `BaseRemoteMFE` returns
+/// `this.manifest`.
+pub const MANIFEST_JSON: &str = r#"{
+  "name": "meridian-crew-services",
+  "version": "1.0.0",
+  "type": "remote",
+  "language": "typescript",
+  "framework": "react",
+  "bundler": "rspack",
+  "targets": {
+    "swift": {
+      "deploymentTarget": "17.0",
+      "swiftToolsVersion": "5.9"
+    },
+    "rust": {
+      "edition": "2021",
+      "wasm": true
+    }
+  },
+  "description": "Meridian Station crew services — roster, certifications, pay status",
+  "owner": "meridian-station",
+  "tags": [
+    "meridian",
+    "crew",
+    "services",
+    "react"
+  ],
+  "category": "services",
+  "endpoint": "http://localhost:5005",
+  "remoteEntry": "http://localhost:5005/remoteEntry.js",
+  "discovery": "http://localhost:5005/.well-known/mfe-manifest.yaml",
+  "capabilities": [
+    {
+      "CrewRoster": {
+        "type": "domain",
+        "description": "Crew roster with certifications from StationOS joined with payroll standing from StellarLedger"
+      }
+    },
+    {
+      "PayStatus": {
+        "type": "domain",
+        "description": "Compact pay-status card for the console status rail — held and scheduled payroll at a glance"
+      }
+    },
+    {
+      "Load": {
+        "type": "platform",
+        "lifecycle": {
+          "before": [
+            {
+              "onLoadBegin": {
+                "handler": "onLoadBegin",
+                "description": "Log load lifecycle entry"
+              }
+            }
+          ],
+          "after": [
+            {
+              "onLoadComplete": {
+                "handler": "onLoadComplete",
+                "description": "Log load success and available components"
+              }
+            }
+          ],
+          "error": [
+            {
+              "onLoadError": {
+                "handler": "onLoadError",
+                "description": "Log load failure",
+                "contained": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Render": {
+        "type": "platform",
+        "lifecycle": {
+          "before": [
+            {
+              "onRenderBegin": {
+                "handler": "onRenderBegin",
+                "description": "Log render lifecycle entry"
+              }
+            }
+          ],
+          "after": [
+            {
+              "onRenderComplete": {
+                "handler": "onRenderComplete",
+                "description": "Log render success"
+              }
+            }
+          ],
+          "error": [
+            {
+              "onRenderError": {
+                "handler": "onRenderError",
+                "description": "Log render failure",
+                "contained": true
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "runtime": {
+      "react": "^18.0.0",
+      "react-dom": "^18.0.0"
+    },
+    "design-system": {
+      "@mui/material": "^5.14.0"
+    }
+  },
+  "data": {
+    "sources": [
+      {
+        "name": "StationOS",
+        "handler": {
+          "openapi": {
+            "source": "./specs/station-os.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
+          }
+        },
+        "transforms": [
+          {
+            "hoistField": [
+              {
+                "typeName": "Query",
+                "pathConfig": [
+                  "GetCrew",
+                  "Data"
+                ],
+                "newFieldName": "crew"
+              },
+              {
+                "typeName": "Query",
+                "pathConfig": [
+                  "GetCertifications",
+                  "Data"
+                ],
+                "newFieldName": "certifications"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "StellarLedger",
+        "handler": {
+          "openapi": {
+            "source": "./specs/stellar-ledger.yaml",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.jwt}",
+              "X-Request-ID": "{context.requestId}"
+            }
+          }
+        },
+        "transforms": [
+          {
+            "hoistField": [
+              {
+                "typeName": "Query",
+                "pathConfig": [
+                  "listPayroll",
+                  "result"
+                ],
+                "newFieldName": "payroll"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "serve": {
+      "endpoint": "/graphql",
+      "playground": true
+    },
+    "mockSwitch": {
+      "enabled": true
+    }
+  }
+}"#;
+
+/// [`MANIFEST_JSON`], parsed.
+pub fn manifest() -> serde_json::Value {
+    serde_json::from_str(MANIFEST_JSON).unwrap_or(serde_json::Value::Null)
+}
+
 /// The domain capabilities this target implements, in manifest order.
 pub const DOMAIN_CAPABILITIES: &[&str] = &["CrewRoster", "PayStatus"];
 

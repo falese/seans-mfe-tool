@@ -4,7 +4,7 @@
 # own adaptor in a real browser (ADR-100).
 #
 # Per examples/**/rust/web crate:
-#   cargo clippy --target wasm32-unknown-unknown -D warnings
+#   cargo clippy --target wasm32-unknown-unknown -D warnings  (core crate AND web crate)
 #   cargo fmt --check
 #   bash build.sh             — cargo build (wasm32) + wasm-bindgen → www/pkg
 # then, once for all of them:
@@ -51,6 +51,13 @@ for manifest in "${CRATES[@]}"; do
   dir="$(dirname "$manifest")"
   echo ""
   echo "=== $dir"
+  # The core crate too: clippy on the web crate only lints the web crate, and
+  # the core's wasm32 cfg branches (ADR-100/101) compile only here.
+  if ! cargo clippy --manifest-path "$(dirname "$dir")/Cargo.toml" --target wasm32-unknown-unknown -- -D warnings; then
+    echo "check:rust-wasm: CORE CRATE CLIPPY (wasm32) FAILED for $dir" >&2
+    FAILED=1
+    continue
+  fi
   if ! cargo clippy --manifest-path "$manifest" --target wasm32-unknown-unknown --all-targets -- -D warnings; then
     echo "check:rust-wasm: CLIPPY FAILED in $dir" >&2
     FAILED=1

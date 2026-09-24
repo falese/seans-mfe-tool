@@ -16,6 +16,14 @@
  *   - two capabilities mount side by side (the adaptor's per-scope queue)
  *   - the returned unmount empties the slot
  *   - an unknown capability is rejected rather than rendering nothing
+ * and then all ten platform capabilities through the remote's `mfe` object
+ * (ADR-101), in the browser:
+ *   - the daemon channel the ADAPTOR handed over (ADR-057) receives the
+ *     STATE_UPDATE envelope from updateControlPlaneState
+ *   - query reaches a stub BFF through the generated fetch transport
+ *   - emit reaches an attached telemetry function
+ *   - health, describe, schema, refresh, authorizeAccess answer in the
+ *     contract's shapes
  *
  * Prerequisites: `npm run build` (dist/runtime), `bash rust/web/build.sh` for
  * each crate (www/pkg), and a Chromium Playwright can launch. Without them it
@@ -87,6 +95,22 @@ function serve(crates) {
   });
   const server = createServer(async (req, res) => {
     const url = decodeURIComponent((req.url ?? '/').split('?')[0]);
+    // A stub BFF for the query capability: echoes the document it was sent,
+    // so the check can tell the request really went through fetch.
+    if (url === '/graphql' && req.method === 'POST') {
+      let body = '';
+      for await (const chunk of req) body += chunk;
+      let document = null;
+      try {
+        document = JSON.parse(body).query ?? null;
+      } catch {
+        document = null;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' }).end(
+        JSON.stringify({ data: { echoed: document, authorization: req.headers.authorization ?? null } }),
+      );
+      return;
+    }
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' }).end(FIXTURE);
       return;
@@ -153,11 +177,22 @@ async function inPage({ remoteEntryUrl, scope, capabilities }) {
     return el;
   };
 
+  // The daemon channel the shell hands every slot (ADR-057). The ADAPTOR
+  // passes it to the remote's mfe.attachControlPlane — not this script.
+  const sent = [];
+  const channel = {
+    connected: true,
+    mutation: (query, variables, timeout) => {
+      sent.push({ query, variables, timeout });
+      return Promise.resolve(true);
+    },
+  };
+
   const report = { mounted: [], unmountedEmpty: true, sideBySide: 0, unknownRejected: false };
   const unmounts = [];
   for (const [i, capability] of capabilities.entries()) {
     const el = slot();
-    const unmount = await moduleFederationAdaptor.mount(experience(capability, `e${i}`), el, {});
+    const unmount = await moduleFederationAdaptor.mount(experience(capability, `e${i}`), el, { channel });
     const card = el.querySelector(`[data-capability="${capability}"][data-rendered-by="rust-wasm"]`);
     report.mounted.push({ capability, drawn: !!card, title: card?.querySelector('h3')?.textContent ?? null });
     unmounts.push({ el, unmount });
@@ -173,7 +208,66 @@ async function inPage({ remoteEntryUrl, scope, capabilities }) {
     report.unknownRejected = /NotACapability/.test(String(error?.message ?? error));
   }
   report.neighbourIntact = document.getElementById('react-neighbour')?.textContent === 'a React remote would sit here';
+
+  // All ten capabilities through the remote's mfe object (ADR-101).
+  const exposed = (await globalThis[scope].get('./App'))();
+  const mfe = exposed.mfe;
+  const events = [];
+  mfe.attachTelemetry((event) => events.push(event));
+  const cap = capabilities[0];
+  const run = async (name, context) => {
+    try {
+      return { ok: true, value: await mfe[name](context ?? {}) };
+    } catch (error) {
+      return { ok: false, error: String(error?.message ?? error) };
+    }
+  };
+  report.capabilities = {
+    load: await run('load'),
+    render: await run('render', { capabilityId: cap }),
+    refresh: await run('refresh'),
+    authorizeAccess: await run('authorizeAccess'),
+    health: await run('health'),
+    describe: await run('describe'),
+    schema: await run('schema'),
+    query: await run('query', {
+      jwt: 'tok',
+      inputs: { document: 'query { probe }', bffUrl: new URL('/graphql', location.href).href },
+    }),
+    emit: await run('emit', { inputs: { event: { name: 'clicked', capability: 'render', phase: 'main', status: 'success' } } }),
+    updateControlPlaneState: await run('updateControlPlaneState', {
+      inputs: { stateKey: 'crew.selected', stateData: { id: 42 }, correlationId: 'probe-1' },
+    }),
+  };
+  report.sent = sent.map((s) => ({ query: s.query, envelope: JSON.parse(s.variables.m) }));
+  report.events = events.map((e) => e.name);
   return report;
+}
+
+/** The ten capabilities, checked against the contract's result shapes. */
+function tenCapabilityChecks(report) {
+  const c = report.capabilities ?? {};
+  const v = (name) => (c[name]?.ok ? c[name].value : undefined);
+  const envelope = report.sent?.[0]?.envelope;
+  return [
+    ['load → status loaded', v('load')?.status === 'loaded'],
+    ['render → status rendered', v('render')?.status === 'rendered'],
+    ['refresh answers', c.refresh?.ok === true],
+    ['authorizeAccess → true', v('authorizeAccess') === true],
+    ['health → status + checks', typeof v('health')?.status === 'string' && Array.isArray(v('health')?.checks)],
+    ['describe → type + manifest', typeof v('describe')?.type === 'string' && typeof v('describe')?.manifest === 'object'],
+    ['schema → manifest JSON', v('schema')?.format === 'json' && (() => { try { return !!JSON.parse(v('schema').schema).name; } catch { return false; } })()],
+    ['query → reached the BFF through fetch, with the bearer token', v('query')?.data?.echoed === 'query { probe }' && v('query')?.data?.authorization === 'Bearer tok'],
+    ['emit → delivered to attached telemetry', v('emit')?.emitted === true && (report.events ?? []).includes('clicked')],
+    ['updateControlPlaneState → acknowledged over the adaptor-attached channel', v('updateControlPlaneState')?.acknowledged === true && v('updateControlPlaneState')?.correlationId === 'probe-1'],
+    ['  … sending the STATE_UPDATE envelope', envelope?.payload?.actionType === 'STATE_UPDATE' && envelope?.payload?.stateKey === 'crew.selected' && envelope?.metadata?.correlationId === 'probe-1'],
+  ].map(([name, ok]) => {
+    if (!ok) {
+      const key = name.split(' ')[0];
+      if (c[key] && !c[key].ok) return [`${name} (${c[key].error})`, false];
+    }
+    return [name, ok];
+  });
 }
 
 async function main() {
@@ -227,6 +321,7 @@ async function main() {
         ['unmount empties the slot', report.unmountedEmpty],
         ['unknown capability is rejected', report.unknownRejected],
         ['neighbouring content untouched', report.neighbourIntact],
+        ...tenCapabilityChecks(report),
         ['no uncaught page errors', errors.length === 0],
       ];
       for (const [name, ok] of checks) {

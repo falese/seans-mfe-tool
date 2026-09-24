@@ -74,7 +74,7 @@ fn starts_uninitialized() {
 fn load_moves_to_ready() {
     let mfe = mfe();
     let loaded = block_on(mfe.load(MfeContext::new())).expect("load");
-    assert!(loaded.success);
+    assert_eq!(loaded.status, LoadStatus::Loaded);
     assert_eq!(mfe.state(), MfeLifecycleState::Ready);
 }
 
@@ -122,10 +122,225 @@ fn describe_reports_manifest_capabilities() {
     assert_eq!(described.capabilities.len(), platform::manifest_metadata::CAPABILITIES.len());
 }
 
+/// Records every telemetry event it is handed.
+#[derive(Default)]
+struct RecordingTelemetry {
+    events: Mutex<Vec<MfeTelemetryEvent>>,
+}
+
+impl MfeTelemetry for RecordingTelemetry {
+    fn emit(&self, event: MfeTelemetryEvent) {
+        self.events.lock().unwrap().push(event);
+    }
+}
+
+/// A daemon client that records the mutation it is sent (ADR-101).
+struct StubControlPlane {
+    connected: bool,
+    answer: Result<bool, MfeError>,
+    sent: Mutex<Vec<(String, serde_json::Value)>>,
+}
+
+impl StubControlPlane {
+    fn new(connected: bool, answer: Result<bool, MfeError>) -> Arc<Self> {
+        Arc::new(StubControlPlane { connected, answer, sent: Mutex::new(Vec::new()) })
+    }
+}
+
+impl MfeControlPlaneClient for StubControlPlane {
+    fn connected(&self) -> bool {
+        self.connected
+    }
+
+    fn mutation<'a>(&'a self, query: &'a str, variables: serde_json::Value, _timeout_ms: u64) -> BoxFuture<'a, Result<bool, MfeError>> {
+        self.sent.lock().unwrap().push((query.to_string(), variables));
+        let answer = self.answer.clone();
+        Box::pin(async move { answer })
+    }
+}
+
+fn loaded(deps: MfeDependencies) -> MeridianCrewServicesMfe {
+    let mfe = mfe_with(deps);
+    block_on(mfe.load(MfeContext::new())).expect("load");
+    mfe
+}
+
 #[test]
-fn emit_fails_honestly_rather_than_claiming_delivery() {
-    let result = block_on(mfe().emit(MfeContext::new()));
-    assert!(matches!(result, Err(MfeError::NotImplemented { capability: MfeCapability::Emit, .. })));
+fn load_reports_the_contract_result() {
+    let result = block_on(mfe().load(MfeContext::new())).expect("load");
+    assert_eq!(result.status, LoadStatus::Loaded);
+    assert_eq!(result.available_components.len(), platform::manifest_metadata::DOMAIN_CAPABILITIES.len());
+    assert!(result.timestamp.is_some());
+}
+
+#[test]
+fn render_reports_the_contract_result() {
+    let mfe = loaded(MfeDependencies::default());
+    let result = block_on(mfe.render(MfeContext::new().with_capability_id("CrewRoster"))).expect("render");
+    assert_eq!(result.status, RenderStatus::Rendered);
+}
+
+#[test]
+fn refresh_and_authorize_access_answer() {
+    let mfe = loaded(MfeDependencies::default());
+    block_on(mfe.refresh(MfeContext::new())).expect("refresh");
+    assert!(block_on(mfe.authorize_access(MfeContext::new())).expect("authorizeAccess"));
+}
+
+#[test]
+fn health_is_healthy_with_passing_checks_once_loaded() {
+    let deps = MfeDependencies { transport: Some(StubTransport::new(200, "{}")), ..MfeDependencies::default() };
+    let result = block_on(loaded(deps).health(MfeContext::new())).expect("health");
+    assert_eq!(result.status, HealthStatus::Healthy, "{:?}", result.checks);
+    assert!(result.checks.iter().any(|c| c.name == "capability-table" && c.status == CheckStatus::Pass));
+    assert!(result.checks.iter().all(|c| c.status == CheckStatus::Pass), "{:?}", result.checks);
+}
+
+#[test]
+fn health_is_unhealthy_in_the_error_state() {
+    let mfe = loaded(MfeDependencies::default());
+    let _ = block_on(mfe.render(MfeContext::new().with_capability_id("NotACapability")));
+    let result = block_on(mfe.health(MfeContext::new())).expect("health");
+    assert_eq!(result.status, HealthStatus::Unhealthy);
+    assert!(result.checks.iter().any(|c| c.name == "state" && c.status == CheckStatus::Fail));
+}
+
+#[test]
+fn health_is_degraded_when_the_bff_has_no_transport() {
+    let result = block_on(loaded(MfeDependencies::default()).health(MfeContext::new())).expect("health");
+    assert_eq!(result.status, HealthStatus::Degraded);
+    let transport = result.checks.iter().find(|c| c.name == "transport").expect("transport check");
+    assert_eq!(transport.status, CheckStatus::Fail);
+    assert!(transport.message.as_deref().unwrap_or("").contains("MfeDependencies.transport"));
+}
+
+#[test]
+fn describe_carries_type_capabilities_and_the_manifest() {
+    let result = block_on(mfe().describe(MfeContext::new())).expect("describe");
+    assert_eq!(result.name, platform::manifest_metadata::NAME);
+    assert_eq!(result.kind, platform::manifest_metadata::MANIFEST_TYPE);
+    assert_eq!(result.manifest["name"], platform::manifest_metadata::NAME);
+    assert_eq!(result.capabilities.len(), platform::manifest_metadata::CAPABILITIES.len());
+}
+
+#[test]
+fn schema_returns_the_manifest_as_json() {
+    let result = block_on(loaded(MfeDependencies::default()).schema(MfeContext::new())).expect("schema");
+    assert_eq!(result.format, SchemaFormat::Json);
+    let parsed: serde_json::Value = serde_json::from_str(&result.schema).expect("schema is JSON");
+    assert_eq!(parsed["name"], platform::manifest_metadata::NAME);
+}
+
+#[test]
+fn emit_delivers_the_event_to_injected_telemetry() {
+    let telemetry = Arc::new(RecordingTelemetry::default());
+    let mfe = mfe_with(MfeDependencies { telemetry: Some(telemetry.clone()), ..MfeDependencies::default() });
+    let event = serde_json::json!({ "name": "clicked", "capability": "render", "phase": "main", "status": "success", "metadata": { "x": 1 } });
+    let result = block_on(mfe.emit(MfeContext::new().with_input("event", event))).expect("emit");
+    assert!(result.emitted);
+    assert!(result.event_id.is_some());
+    let events = telemetry.events.lock().unwrap();
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].name, "clicked");
+    assert_eq!(events[0].metadata["x"], 1);
+}
+
+#[test]
+fn emit_without_telemetry_or_event_reports_not_emitted() {
+    assert!(!block_on(mfe().emit(MfeContext::new().with_input("event", serde_json::json!({ "name": "x" })))).expect("emit").emitted);
+    let telemetry = Arc::new(RecordingTelemetry::default());
+    let mfe = mfe_with(MfeDependencies { telemetry: Some(telemetry), ..MfeDependencies::default() });
+    assert!(!block_on(mfe.emit(MfeContext::new())).expect("emit").emitted);
+}
+
+#[test]
+fn emit_runs_even_after_destroy_like_states() {
+    // emit's pre-states are empty: telemetry must survive teardown.
+    assert!(MfeCapability::Emit.pre_states().is_empty());
+}
+
+fn state_update() -> MfeContext {
+    MfeContext::new()
+        .with_input("stateKey", " analysis.complete ")
+        .with_input("stateData", serde_json::json!({ "score": 7 }))
+        .with_input("correlationId", "corr-1")
+}
+
+#[test]
+fn update_control_plane_state_sends_the_state_update_envelope() {
+    let channel = StubControlPlane::new(true, Ok(true));
+    let telemetry = Arc::new(RecordingTelemetry::default());
+    let mfe = loaded(MfeDependencies {
+        control_plane: Some(channel.clone()),
+        telemetry: Some(telemetry.clone()),
+        ..MfeDependencies::default()
+    });
+    let result = block_on(mfe.update_control_plane_state(state_update())).expect("updateControlPlaneState");
+    assert!(result.acknowledged);
+    assert_eq!(result.correlation_id, "corr-1");
+    assert_eq!(result.error, None);
+
+    let sent = channel.sent.lock().unwrap();
+    assert_eq!(sent.len(), 1);
+    assert_eq!(sent[0].0, "mutation sendMessage($m: String!) { sendMessage(message: $m) }");
+    let envelope: serde_json::Value = serde_json::from_str(sent[0].1["m"].as_str().expect("m is a string")).unwrap();
+    assert_eq!(envelope["direction"], "ACTION");
+    assert_eq!(envelope["kind"], "ACTION");
+    assert_eq!(envelope["payload"]["actionType"], "STATE_UPDATE");
+    assert_eq!(envelope["payload"]["stateKey"], "analysis.complete");
+    assert_eq!(envelope["payload"]["data"]["score"], 7);
+    assert_eq!(envelope["metadata"]["correlationId"], "corr-1");
+    assert_eq!(envelope["metadata"]["acknowledged"], false);
+
+    let events = telemetry.events.lock().unwrap();
+    assert!(events.iter().any(|e| e.name == "control-plane-state-update" && e.status == "success"));
+}
+
+#[test]
+fn update_control_plane_state_reports_a_disconnected_daemon() {
+    let mfe = loaded(MfeDependencies {
+        control_plane: Some(StubControlPlane::new(false, Ok(true))),
+        ..MfeDependencies::default()
+    });
+    let result = block_on(mfe.update_control_plane_state(state_update())).expect("updateControlPlaneState");
+    assert!(!result.acknowledged);
+    assert_eq!(result.error.as_deref(), Some("Daemon WebSocket not connected"));
+    // And with no client at all, the same answer rather than a failure.
+    let bare = loaded(MfeDependencies::default());
+    assert!(!block_on(bare.update_control_plane_state(state_update())).expect("ucps").acknowledged);
+}
+
+#[test]
+fn update_control_plane_state_maps_a_timeout() {
+    let mfe = loaded(MfeDependencies {
+        control_plane: Some(StubControlPlane::new(true, Err(MfeError::Transport { message: "mutation timed out".into(), status: None }))),
+        ..MfeDependencies::default()
+    });
+    let result = block_on(mfe.update_control_plane_state(state_update())).expect("updateControlPlaneState");
+    assert!(!result.acknowledged);
+    assert_eq!(result.error.as_deref(), Some("sendMessage timed out"));
+}
+
+#[test]
+fn update_control_plane_state_validates_its_inputs() {
+    let mfe = loaded(MfeDependencies::default());
+    let missing = block_on(mfe.update_control_plane_state(MfeContext::new()));
+    assert!(matches!(missing, Err(MfeError::Validation { ref field, .. }) if field == "context.inputs.stateKey"), "{:?}", missing);
+    let mfe = loaded(MfeDependencies::default());
+    let bad = block_on(mfe.update_control_plane_state(MfeContext::new().with_input("stateKey", "k").with_input("stateData", "nope")));
+    assert!(matches!(bad, Err(MfeError::Validation { ref field, .. }) if field == "context.inputs.stateData"), "{:?}", bad);
+}
+
+#[test]
+fn results_serialize_to_the_contract_wire_shape() {
+    let mfe = loaded(MfeDependencies::default());
+    let health = serde_json::to_value(block_on(mfe.health(MfeContext::new())).unwrap()).unwrap();
+    assert!(health.get("checks").is_some() && health.get("timestamp").is_some());
+    let load = serde_json::to_value(block_on(mfe_with(MfeDependencies::default()).load(MfeContext::new())).unwrap()).unwrap();
+    assert!(load.get("availableComponents").is_some(), "{}", load);
+    assert_eq!(load["status"], "loaded");
+    let ucps = serde_json::to_value(block_on(mfe.update_control_plane_state(state_update())).unwrap()).unwrap();
+    assert!(ucps.get("correlationId").is_some(), "{}", ucps);
 }
 
 fn recorder(fired: &Arc<Mutex<Vec<String>>>, name: &'static str) -> MfeHandler {
@@ -185,7 +400,7 @@ fn query_returns_partial_data_and_errors_together() {
     let result = block_on(mfe.query(query_context())).expect("query");
     // The envelope policy: the capability answers with both halves.
     assert_eq!(result.data, Some(serde_json::json!({ "x": 1 })));
-    assert_eq!(result.errors, vec!["boom".to_string()]);
+    assert_eq!(result.errors.iter().map(|e| e.message.as_str()).collect::<Vec<_>>(), vec!["boom"]);
 }
 
 #[test]
@@ -204,7 +419,7 @@ fn query_without_a_transport_names_the_missing_dependency() {
     block_on(mfe.load(MfeContext::new())).expect("load");
     let result = block_on(mfe.query(query_context())).expect("query");
     assert_eq!(result.data, None);
-    assert!(result.errors[0].contains("MfeDependencies.transport"), "{:?}", result.errors);
+    assert!(result.errors[0].message.contains("MfeDependencies.transport"), "{:?}", result.errors);
 }
 
 #[test]
