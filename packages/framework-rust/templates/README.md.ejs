@@ -69,6 +69,17 @@ impl MfeTransport for Reqwest {
 Without one, `query` answers with an error naming `MfeDependencies.transport`
 rather than failing silently.
 
+### Pushing state to the control plane
+
+`update_control_plane_state` sends a `STATE_UPDATE` envelope through
+`MfeDependencies.control_plane` — an `MfeControlPlaneClient` with the two
+members the TypeScript runtime uses on its daemon WebSocket client:
+`connected()` and `mutation(query, variables, timeout_ms)`. Adapt whatever
+graphql-ws client your host already has. With none, the capability answers
+`acknowledged: false`, as a disconnected socket does.
+
+`emit` forwards `context.inputs["event"]` to `MfeDependencies.telemetry`.
+
 ### Manifest lifecycle hooks
 
 Rust cannot look a method up by name, so a manifest hook such as

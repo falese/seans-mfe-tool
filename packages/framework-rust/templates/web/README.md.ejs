@@ -32,8 +32,18 @@ one page.
 `render` gets the slot element and the placement's props. It is plain
 `web-sys`; use a UI framework inside it if you want one.
 
-## Not yet
+## What the browser build supplies
 
-Data fetching in the browser is not generated: the native crate's transport
-trait needs `Send` futures and browser `fetch` futures are not `Send`. A
-capability that needs data fetches it in its own `render` for now.
+The same ten capabilities as the native crate, with the browser filling in
+what a native host would inject (ADR-101):
+
+- **`query`** and the generated data provider reach the BFF through `fetch`.
+- **`updateControlPlaneState`** pushes state through the daemon channel the
+  shell hands every slot (ADR-057) — the shell's adaptor calls
+  `mfe.attachControlPlane` for you.
+- **`emit`** forwards to a function you attach with `mfe.attachTelemetry(fn)`;
+  until you do, it answers `emitted: false`.
+
+The remote entry also exposes those capabilities as `mfe.load(context)`,
+`mfe.health(context)`, … — the same surface a TypeScript MFE has. From inside
+a capability's `render`, `crate::platform::mfe()` is this page's instance.

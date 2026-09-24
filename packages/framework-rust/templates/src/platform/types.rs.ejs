@@ -33,7 +33,7 @@ impl MfeIdentity {
     }
 }
 
-/// One capability as reported by `describe`.
+/// One capability as the manifest declares it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CapabilityMetadata {
     pub name: String,
@@ -42,52 +42,144 @@ pub struct CapabilityMetadata {
     pub description: String,
 }
 
+// The ten results below serialize to `packages/runtime/src/capability-results.ts`
+// (ADR-101): camelCase fields, lowercase enum values, ISO-8601 timestamps.
+// `rust-result-contract.test.ts` compares the two files field by field.
+//
+// Timestamps are `Option<String>` because `wasm32-unknown-unknown` has no
+// clock std can reach (ADR-100): `None` there, never a made-up time.
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LoadStatus {
+    Loaded,
+    Error,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoadResult {
-    pub success: bool,
-    pub available_capabilities: Vec<String>,
-    pub duration_ms: u64,
+    pub status: LoadStatus,
+    pub available_components: Vec<String>,
+    pub capabilities: Vec<CapabilityMetadata>,
+    pub timestamp: Option<String>,
+    pub duration: Option<u64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RenderStatus {
+    Rendered,
+    Error,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderResult {
-    pub success: bool,
+    pub status: RenderStatus,
     pub capability_id: String,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum HealthStatus {
+    Healthy,
+    Degraded,
+    Unhealthy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CheckStatus {
+    Pass,
+    Fail,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HealthCheck {
+    pub name: String,
+    pub status: CheckStatus,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub message: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HealthResult {
+    pub status: HealthStatus,
+    pub checks: Vec<HealthCheck>,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DescribeResult {
     pub name: String,
     pub version: String,
-    pub capabilities: Vec<CapabilityMetadata>,
+    /// The manifest's `type` (`remote`, …). `type` is a Rust keyword.
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub capabilities: Vec<String>,
+    /// The manifest this crate was generated from, as JSON.
+    pub manifest: serde_json::Value,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct HealthResult {
-    pub healthy: bool,
-    pub state: String,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SchemaFormat {
+    Graphql,
+    Json,
+    Openapi,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SchemaResult {
-    pub sdl: Option<String>,
+    pub schema: String,
+    pub format: SchemaFormat,
+}
+
+/// One GraphQL error, as the BFF returned it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QueryError {
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub path: Option<Vec<String>>,
+}
+
+impl QueryError {
+    pub fn new(message: impl Into<String>) -> Self {
+        QueryError { message: message.into(), path: None }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QueryResult {
     pub data: Option<serde_json::Value>,
-    pub errors: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub errors: Vec<QueryError>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EmitResult {
-    pub accepted: bool,
+    pub emitted: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub event_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ControlPlaneStateResult {
-    pub accepted: bool,
-    pub state_key: String,
+    pub acknowledged: bool,
+    pub correlation_id: String,
+    pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub resolution: Option<serde_json::Value>,
 }
 <% domainCapabilities.forEach(function (cap) { -%>
 

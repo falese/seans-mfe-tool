@@ -95,7 +95,7 @@ describe('mfe_base.rs renders both halves of every capability', () => {
   });
 
   it('gives do_query — and only do_query — a default, at the layer TypeScript does', () => {
-    const hooks = base().split('pub trait MfeHooks: Send + Sync {')[1].split('\n}\n')[0];
+    const hooks = base().split('pub trait MfeHooks: MaybeSendSync {')[1].split('\n}\n')[0];
     const withBody = [...hooks.matchAll(/fn (do_\w+)<'a>[^;{]*\{/g)].map((m) => m[1]);
     expect(withBody).toEqual(['do_query']);
   });
@@ -134,9 +134,14 @@ describe('The native layer', () => {
     expect(native()).not.toMatch(/fn \w*shared/i);
   });
 
-  it('fails emit and updateControlPlaneState rather than claiming success', () => {
-    expect(native()).toContain('capability: MfeCapability::Emit,');
-    expect(native()).toContain('capability: MfeCapability::UpdateControlPlaneState,');
-    expect(native()).not.toMatch(/(EmitResult|ControlPlaneStateResult) \{\s*accepted/);
+  it('implements every capability — none answers NotImplemented (ADR-101)', () => {
+    expect(native()).not.toContain('MfeError::NotImplemented');
+  });
+
+  it('emits through deps.telemetry and pushes state through deps.control_plane', () => {
+    expect(native()).toContain('core.deps().telemetry');
+    expect(native()).toContain('core.deps().control_plane');
+    expect(native()).toContain('"actionType": "STATE_UPDATE"');
+    expect(native()).toContain('mutation sendMessage($m: String!) { sendMessage(message: $m) }');
   });
 });

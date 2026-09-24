@@ -12,11 +12,11 @@
 #[allow(unused_imports)]
 use super::error::MfeError;
 #[allow(unused_imports)]
-use super::mfe_base::BoxFuture;
+use super::mfe_base::{BoxFuture, MaybeSendSync};
 #[allow(unused_imports)]
 use super::types::*;
 
-pub trait <%- typePrefix %>DataProvider: Send + Sync {
+pub trait <%- typePrefix %>DataProvider: MaybeSendSync {
 <% domainCapabilities.forEach(function (cap) { -%>
     /// Data backing the `<%- cap %>` capability.
     fn <%- snake(cap) %>(&self) -> BoxFuture<'_, Result<<%- cap %>Outputs, MfeError>>;

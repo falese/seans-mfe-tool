@@ -47,6 +47,7 @@ interface RustCtx {
   manifest: {
     name: string;
     version: string;
+    type?: string;
     capabilities?: unknown;
     targets?: { rust?: RustTargetConfig };
   };
@@ -87,6 +88,18 @@ export function rustText(value: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/\r?\n/g, '\\n');
+}
+
+/**
+ * A Rust raw string literal holding `value` verbatim: `r#"…"#` with enough
+ * `#`s that nothing inside can close it early. JSON is full of `"`, which is
+ * why the manifest is embedded raw rather than escaped.
+ */
+export function rustRawString(value: string): string {
+  let longest = 0;
+  for (const m of value.matchAll(/"(#*)/g)) longest = Math.max(longest, m[1].length);
+  const hashes = '#'.repeat(longest + 1);
+  return `r${hashes}"${value}"${hashes}`;
 }
 
 /** Text for a `///` doc comment: one line, no HTML escaping. */
@@ -297,6 +310,9 @@ const rustVars = (c: unknown): Record<string, unknown> => {
     ...contractVars(),
     manifestName: ctx.manifest.name,
     manifestVersion: ctx.manifest.version,
+    manifestType: ctx.manifest.type ?? 'remote',
+    manifestJson: JSON.stringify(ctx.manifest, null, 2),
+    rustRawString,
     crateName: crateNameFor(c),
     libName: libNameFor(c),
     typePrefix: typePrefixFor(c),

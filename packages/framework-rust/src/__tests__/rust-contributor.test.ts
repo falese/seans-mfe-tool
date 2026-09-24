@@ -192,7 +192,9 @@ describe('A target may implement a subset of capabilities (ADR-095)', () => {
   it('omits it from DOMAIN_CAPABILITIES and from what describe reports', async () => {
     const meta = file(await generate(subset()), 'rust/src/platform/manifest_metadata.rs').content;
     expect(meta).toContain('DOMAIN_CAPABILITIES: &[&str] = &["CrewRoster"];');
-    expect(meta).not.toContain('"PayStatus"');
+    // The embedded manifest JSON still names it — it is the whole manifest —
+    // but the capability table does not.
+    expect(meta).not.toContain('name: "PayStatus"');
     // Platform capabilities are always part of the contract.
     expect(meta).toContain('name: "Load"');
   });
@@ -289,7 +291,9 @@ describe('The browser build — targets.rust.wasm (ADR-100)', () => {
   it('adds a second crate and changes nothing in the first', async () => {
     const without = await generate(manifest());
     const withWasm = await generate(wasm());
-    for (const f of without.filter((x) => x.path.startsWith('rust/'))) {
+    // manifest_metadata.rs embeds the manifest (ADR-101), which now says
+    // `wasm: true`; everything else in the native crate is byte-identical.
+    for (const f of without.filter((x) => x.path.startsWith('rust/') && !x.path.endsWith('manifest_metadata.rs'))) {
       expect(file(withWasm, f.path).content).toBe(f.content);
     }
     expect(withWasm.some((f) => f.path === 'rust/web/Cargo.toml')).toBe(true);
