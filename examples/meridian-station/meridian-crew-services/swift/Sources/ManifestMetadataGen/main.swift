@@ -25,6 +25,10 @@ struct Capability: Decodable {
 struct ManifestProjection: Decodable {
     let name: String
     let version: String
+    /// The manifest's `type`, for `describe` (ADR-102).
+    let type: String
+    /// The whole manifest as pretty JSON, for `describe` and `schema` (ADR-102).
+    let manifestJson: String
     let bundleId: String
     let bffEndpoint: String?
     let capabilities: [Capability]
@@ -96,6 +100,14 @@ public enum ManifestMetadata {
     public static let version = \(swiftString(manifest.version))
     public static let bundleId = \(swiftString(manifest.bundleId))
     public static let bffEndpoint: String? = \(manifest.bffEndpoint.map(swiftString) ?? "nil")
+
+    /// The manifest's `type` (`remote`, …), as `describe` reports it.
+    public static let manifestType = \(swiftString(manifest.type))
+
+    /// The manifest this package was generated from, as pretty JSON — what
+    /// `schema` returns and `describe` decodes (ADR-102). Base64 in the source
+    /// so no manifest content can end a string literal early.
+    public static let manifestJSON = String(decoding: Data(base64Encoded: "\(Data(manifest.manifestJson.utf8).base64EncodedString())")!, as: UTF8.self)
 
     public static let domainCapabilities: [String] = [
 \(domain.map { "        \(swiftString($0.name))," }.joined(separator: "\n"))

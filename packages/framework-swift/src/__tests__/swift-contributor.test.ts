@@ -475,25 +475,28 @@ describe('The query capability is a concrete default on MFEBase (ADR-053/070)', 
   });
 });
 
-describe('A capability the native lane cannot do throws, rather than claiming success', () => {
+describe('Every capability is implemented, through what the host injects (ADR-102)', () => {
   const noBff = () => ({ ...manifest(), targets: { swift: {} } }) as unknown as DSLManifest;
+  const native = async () => (await generate(noBff())).find((f) => f.path.endsWith('NativeMFEBase.swift'))!.content;
 
-  it('emit and updateControlPlaneState throw MFENotImplementedError', async () => {
-    // Both used to return `accepted: true` with no transport behind them —
-    // a capability reporting success for work it did not do.
-    const native = (await generate(noBff())).find((f) => f.path.endsWith('NativeMFEBase.swift'))!;
-    expect(native.content).not.toContain('EmitResult(accepted: true)');
-    expect(native.content).not.toContain('ControlPlaneStateResult(accepted: true');
-    expect(native.content).toContain('throw MFENotImplementedError(\n            capability: .emit');
-    expect(native.content).toContain('capability: .updateControlPlaneState');
+  it('no capability throws MFENotImplementedError', async () => {
+    // They used to — emit and updateControlPlaneState, before that
+    // `accepted: true` for work never done. Both now do the work.
+    expect(await native()).not.toContain('throw MFENotImplementedError');
   });
 
-  it('names the missing transport, not just the capability', async () => {
-    const base = (await generate(noBff())).find((f) => f.path.endsWith('Platform/MFEBase.swift'))!;
-    expect(base.content).toContain('public struct MFENotImplementedError');
-    const native = (await generate(noBff())).find((f) => f.path.endsWith('NativeMFEBase.swift'))!;
-    expect(native.content).toContain('deps.telemetry');
-    expect(native.content).toContain('attachControlPlane(wsClient:)');
+  it('emit forwards to deps.telemetry, and reports emitted:false without it', async () => {
+    const src = await native();
+    expect(src).toContain('guard let telemetry = deps.telemetry');
+    expect(src).toContain('return EmitResult(emitted: false, eventId: nil)');
+  });
+
+  it('updateControlPlaneState sends the STATE_UPDATE envelope through deps.controlPlane', async () => {
+    const src = await native();
+    expect(src).toContain('guard let client = deps.controlPlane, client.connected');
+    expect(src).toContain('"actionType": "STATE_UPDATE"');
+    expect(src).toContain('mutation sendMessage($m: String!) { sendMessage(message: $m) }');
+    expect(src).toContain('"Daemon WebSocket not connected"');
   });
 });
 
@@ -594,5 +597,18 @@ describe('Generator-owned Swift carries no force unwraps', () => {
     expect(client.content).toContain('guard let url = URL(string:');
     const base = files.find((f) => f.path.endsWith('Platform/MFEBase.swift'))!;
     expect(base.content).not.toContain('.last!');
+  });
+});
+
+describe('A manifest with no lifecycle hooks (ADR-102 found this)', () => {
+  // `[` + nothing + `]` is an empty ARRAY literal, and Swift rejects it for a
+  // dictionary: "use [:] to get an empty dictionary literal". Every fresh
+  // `remote:init --swift` MFE has no hooks, so this broke the build of every
+  // new Swift package; the one committed example has hooks, so the Swift gate
+  // never saw it.
+  it('renders generatedHandlers as [:] rather than an empty array literal', async () => {
+    const files = await generate(swiftManifest());
+    const mfe = files.find((f) => f.path.endsWith('GeneratedMFE.swift'))!.content;
+    expect(mfe).toContain('public static let generatedHandlers: [String: MFEHandler] = [:]');
   });
 });

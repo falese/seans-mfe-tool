@@ -164,7 +164,10 @@ describe('The hook engine is ADR-002’s, rendered (ADR-098 §2)', () => {
   it('reports every failure — REQ-043', async () => {
     const swift = await base();
     expect(swift).toContain('deps.telemetry?.emit(MFETelemetryEvent(');
-    expect(swift).toContain('name: "lifecycle-error"');
+    // In the runtime's TelemetryEvent shape (ADR-102): the hook, handler and
+    // error ride in metadata, as BaseMFE puts them.
+    expect(swift).toContain('emitTelemetry("lifecycle-error", capability: "lifecycle"');
+    expect(swift).toContain('"hook": .string(hook)');
   });
 
   it('guards re-entrancy by capability+phase, and SKIPS rather than throws — ADR-001', async () => {
@@ -433,7 +436,7 @@ describe('One HTTP path, two error policies', () => {
     const base = files.find((f) => f.path.endsWith('Platform/MFEBase.swift'))!.content;
     const client = files.find((f) => f.path.endsWith('Platform/BFFClient.swift'))!.content;
     // The capability answers with an envelope…
-    expect(base).toContain('return QueryResult(data: nil, errors: [String(describing: error)])');
+    expect(base).toContain('return QueryResult(data: nil, errors: [QueryError(message: String(describing: error))])');
     expect(base).toContain('guard let data = decoded["data"], data != .null else');
     // …the typed client throws. TypeScript splits them the same way.
     expect(client).toContain('throw BFFError.network(message, status: status)');

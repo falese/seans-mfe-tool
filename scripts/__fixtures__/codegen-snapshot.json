@@ -2121,7 +2121,7 @@
       {
         "path": "<cwd>/swift/mfe-manifest.json",
         "overwrite": true,
-        "sha256": "a816eed2babf2bd36e01443df3ca7bb81aff596fed23b04185166ddb653b09b6"
+        "sha256": "7a141ca5c6442f047b7bf0eb01abcc0931f29f316395b707868d3f8e382bdfb8"
       },
       {
         "path": "<cwd>/swift/Package.swift",
@@ -2141,7 +2141,7 @@
       {
         "path": "<cwd>/swift/Sources/ManifestMetadataGen/main.swift",
         "overwrite": true,
-        "sha256": "e63c07113a12f4a6040fa02d9c23795433d143a2ba64cdc187472e39cecd9904"
+        "sha256": "796bbfef439a2d6708daf6a01550c95f5a79a85674faa21f47fe61fa6d73a374"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Features/CrewRosterQuery.swift",
@@ -2191,7 +2191,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "52e45fa9332eedafb55af577e28d1070a49d5a473a22c570022eba5308255ee9"
+        "sha256": "71ce969480cb8412d753b6dd86c79009a17470198e04628bd127d43883e44823"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2201,17 +2201,17 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/NativeMFEBase.swift",
         "overwrite": true,
-        "sha256": "7f6ad33e294222f2bd6c67bdf5ed416cf35d283e27ec68e0fbabfb03238bc1ad"
+        "sha256": "479062cfd45556d9f4f7a4f902ecb0d6ab63f9012e4474110e7181e5400d0a02"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",
         "overwrite": true,
-        "sha256": "095476112c4ff1d12fa36ee8b5cb9a97f72293a401166dc1755f4f5db7bcac5c"
+        "sha256": "fc58237ed4584d0ad3911910b36dbb70cae1cf078685f6d81eb6de097ef28452"
       },
       {
         "path": "<cwd>/swift/Tests/MFETests/LifecycleTests.swift",
         "overwrite": true,
-        "sha256": "d4f5037092a1f9c43dbf9fe3f1b559e035946970e07eda7bf11f2763425252dc"
+        "sha256": "d5fb9aa0ee9280e1302ed75661df16e889e8415744ce4ae0b91a56f7c503e489"
       },
       {
         "path": "<cwd>/tsconfig.json",
