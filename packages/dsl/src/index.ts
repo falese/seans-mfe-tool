@@ -23,6 +23,9 @@ export * from './slot-validation';
 // into the registry payload. Same pure-core / thin-command split again.
 export * from './control-plane-schema';
 export * from './control-plane-compiler';
+// The Rust target's browser build (ADR-100, ADR-103): its registration name,
+// scope and URL, shared by the compiler above and the Rust codegen.
+export * from './browser-build';
 
 // Parser functions
 export {

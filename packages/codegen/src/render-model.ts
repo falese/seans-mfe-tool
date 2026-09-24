@@ -16,6 +16,7 @@
  */
 
 import type { DSLManifest, CapabilityConfig } from '@seans-mfe/dsl';
+import { BROWSER_BUILD_PATH, browserBuildOf } from '@seans-mfe/dsl';
 import { PLATFORM_CAPABILITIES } from '@seans-mfe/contracts';
 import { deriveBuiltinVariant } from './unified-generator';
 import type { FrameworkVariant } from './unified-generator';
@@ -198,6 +199,12 @@ export function extractManifestVars(
     // True when the manifest declares a data: section — gates doQuery() generation
     // and the bff.ts / server.ts / .meshrc.yaml artifacts in both mfe.ts.ejs templates
     hasBff: !!manifest.data,
+
+    // The Rust target's browser build (ADR-100), when `targets.rust.wasm` asks
+    // for one. The MFE's own server serves it under `/<path>/`, the Dockerfile
+    // builds it, and the composition compiler registers it at that URL
+    // (ADR-103 §2) — all three read the path from @seans-mfe/dsl.
+    browserBuild: browserBuildOf(manifest) ? { path: BROWSER_BUILD_PATH } : null,
 
     // The ten platform capability names, from the canonical definition in
     // @seans-mfe/contracts (ADR-080). Templates classify a manifest capability

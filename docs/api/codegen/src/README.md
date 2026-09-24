@@ -110,3 +110,15 @@
 - [validateManifestTransforms](functions/validateManifestTransforms.md)
 - [validateMfeConsistency](functions/validateMfeConsistency.md)
 - [writeGeneratedFiles](functions/writeGeneratedFiles.md)
+
+## References
+
+### rustCrateName
+
+Re-exports [rustCrateName](../../dsl/src/functions/rustCrateName.md)
+
+***
+
+### rustWasmScope
+
+Re-exports [rustWasmScope](../../dsl/src/functions/rustWasmScope.md)

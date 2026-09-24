@@ -18,3 +18,11 @@ export function snakeCase(name: string): string {
   // A leading digit is not a legal identifier start.
   return /^[0-9]/.test(out) ? `mfe_${out}` : out || 'mfe';
 }
+
+/**
+ * The crate name and the browser build's federation scope (ADR-100). Defined
+ * in `@seans-mfe/dsl` because the composition compiler registers the scope in
+ * `rules.json` and the Rust codegen writes it into `remoteEntry.js`; one rule,
+ * re-exported here for the codegen side (ADR-103).
+ */
+export { rustCrateName, rustWasmScope } from '@seans-mfe/dsl';

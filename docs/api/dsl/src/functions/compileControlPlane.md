@@ -8,7 +8,7 @@
 
 > **compileControlPlane**(`input`): [`CompileResult`](../interfaces/CompileResult.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:235](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L235)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:276](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L276)
 
 Compile a composition document plus its fleet's manifests into the registry
 payload, reporting everything that would otherwise surface at runtime.

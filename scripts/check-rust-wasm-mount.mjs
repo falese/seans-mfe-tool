@@ -194,7 +194,10 @@ async function inPage({ remoteEntryUrl, scope, capabilities }) {
     const el = slot();
     const unmount = await moduleFederationAdaptor.mount(experience(capability, `e${i}`), el, { channel });
     const card = el.querySelector(`[data-capability="${capability}"][data-rendered-by="rust-wasm"]`);
-    report.mounted.push({ capability, drawn: !!card, title: card?.querySelector('h3')?.textContent ?? null });
+    // The markers, not the content: a capability's renderer is developer-owned
+    // (Meridian's draws live payroll), so only the data-capability /
+    // data-rendered-by stamp the seeded renderer puts on its root is contract.
+    report.mounted.push({ capability, drawn: !!card });
     unmounts.push({ el, unmount });
   }
   report.sideBySide = document.querySelectorAll('[data-rendered-by="rust-wasm"]').length;
@@ -316,7 +319,7 @@ async function main() {
         capabilities: crate.capabilities,
       });
       const checks = [
-        ...report.mounted.map((m) => [`mounted ${m.capability} through moduleFederationAdaptor`, m.drawn && m.title === m.capability]),
+        ...report.mounted.map((m) => [`mounted ${m.capability} through moduleFederationAdaptor`, m.drawn]),
         [`${crate.capabilities.length} capabilities side by side`, report.sideBySide === crate.capabilities.length],
         ['unmount empties the slot', report.unmountedEmpty],
         ['unknown capability is rejected', report.unknownRejected],

@@ -20,6 +20,8 @@
 import * as path from 'path';
 import {
   registerFileContributor,
+  rustCrateName,
+  rustWasmScope,
   snakeCase,
   type FileSpec,
   type GeneratedFile,
@@ -126,13 +128,11 @@ export { snakeCase };
  *
  * Hyphens are legal in a package name — Cargo derives the library name by
  * replacing them with underscores — so kebab-case passes through. A leading
- * digit is not legal, and gets the same prefix the Swift lane gives it.
+ * digit is not legal, and gets the same prefix the Swift lane gives it. The
+ * rule is `@seans-mfe/dsl`'s, shared with the composition compiler (ADR-103).
  */
 export function crateNameFor(c: unknown): string {
-  const explicit = rustTarget(c)?.crateName;
-  if (explicit) return explicit;
-  const raw = (c as RustCtx).manifest.name.replace(/[^A-Za-z0-9_-]+/g, '-');
-  return /^[0-9]/.test(raw) ? `mfe-${raw}` : raw;
+  return rustCrateName((c as RustCtx).manifest);
 }
 
 /** The library name Rust code imports: the package name with `-` → `_`. */
@@ -145,10 +145,11 @@ export function libNameFor(c: unknown): string {
  *
  * Deliberately NOT the React remote's scope (`name` with `-` → `_`): both
  * builds of one MFE must be able to sit on the same page, and a container is
- * a global keyed by scope.
+ * a global keyed by scope. The composition compiler registers the same value
+ * in `rules.json`, from the same `@seans-mfe/dsl` rule (ADR-103).
  */
 export function wasmScopeFor(c: unknown): string {
-  return `${libNameFor(c)}_wasm`;
+  return rustWasmScope((c as RustCtx).manifest);
 }
 
 /** Prefix for the crate's public types: `MeridianCrewServicesMfe`. */

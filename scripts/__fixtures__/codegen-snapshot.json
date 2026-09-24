@@ -1846,7 +1846,7 @@
       {
         "path": "<cwd>/.dockerignore",
         "overwrite": true,
-        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+        "sha256": "6a23a5c71e21798db2563d780f1077837caf037d0aced4e3c25c3b4ac35fd561"
       },
       {
         "path": "<cwd>/.gitignore",
@@ -1866,7 +1866,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "f2d3c751b052f082cb1b686535be46ba1d8786fd5721521969947d21b61c6955"
+        "sha256": "d362edfd2d13670bdc349fc06f9a0dafb4844486feb7c457588d21f2953563de"
       },
       {
         "path": "<cwd>/package.json",
@@ -2016,7 +2016,7 @@
       {
         "path": "<cwd>/rust/web/README.md",
         "overwrite": false,
-        "sha256": "5cf9ee917bd0c7ca6f1c9331382a67a4a5187ebb6d89993d59c47c51c2c196ca"
+        "sha256": "5ecfdd7b3233e286d032fe9f5777383c035a95c21515f41c06355891d00a0916"
       },
       {
         "path": "<cwd>/rust/web/src/features/crew_roster.rs",
@@ -2051,7 +2051,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "2bbae60e84dd23efb711258106a1445fa0df4e5aa7b00ccee17bb73bcfa055cd"
+        "sha256": "83837f9cc59dbf2f2eff87afe419af4f1d900fdfe2a7ae5305cd393eefdca52b"
       },
       {
         "path": "<cwd>/src/App.tsx",

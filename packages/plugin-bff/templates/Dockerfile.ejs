@@ -10,6 +10,23 @@
 # Build tools stage — provides seans-mfe-tool CLI and pre-compiled runtime
 FROM seans-mfe-tool-cli:latest AS cli-builder
 
+<%_ if (browserBuild) { _%>
+# The Rust target's browser build (ADR-100, ADR-103 §2): rust/web compiled to
+# wasm32 and post-processed by wasm-bindgen into rust/web/www, which server.ts
+# serves under /<%= browserBuild.path %>/. The wasm-bindgen CLI must be the exact
+# version the crate resolved, so it is read from the lockfile rather than
+# restated here — build.sh refuses a mismatch.
+FROM rust:1-slim AS wasm-builder
+RUN rustup target add wasm32-unknown-unknown
+WORKDIR /mfe
+COPY rust ./rust
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cd rust/web && cargo generate-lockfile && \
+    cargo install wasm-bindgen-cli --version "$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')" --locked
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    bash rust/web/build.sh
+
+<%_ } _%>
 FROM node:20-slim AS builder
 
 WORKDIR /app
@@ -90,6 +107,10 @@ COPY --from=builder /app/src/platform/bff/mocks.json ./src/platform/bff/
 # Copy built static assets
 COPY --from=builder /app/dist ./dist
 <% } %>
+<%_ if (browserBuild) { _%>
+# The browser build, served by server.js under /<%= browserBuild.path %>/
+COPY --from=wasm-builder /mfe/rust/web/www ./rust/web/www
+<%_ } _%>
 # Copy compiled server
 COPY --from=builder /app/server.js ./
 

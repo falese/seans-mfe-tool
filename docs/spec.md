@@ -329,6 +329,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-100](./architecture-decisions/ADR-100-rust-wasm-browser-remote.md) | The Rust target's browser build is a Module Federation remote exposing the ADR-056 imperative handle — a WebAssembly MFE needs no shell, runtime or control-plane change | Codegen / targets / delivery | Implemented |
 | [ADR-101](./architecture-decisions/ADR-101-rust-implements-all-ten-capabilities.md) | The Rust lane implements all ten capabilities against the runtime's result contract — emit and updateControlPlaneState included, natively and in the browser | Codegen / targets / native contract | Implemented |
 | [ADR-102](./architecture-decisions/ADR-102-every-target-implements-the-base-class.md) | Every build target implements all ten capabilities against the runtime's result contract — the Swift lane is brought level, and a conformance suite holds every lane to it | Targets / platform contract / conformance | Implemented |
+| [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
 
 ### Proposed — filed, not ratified
 

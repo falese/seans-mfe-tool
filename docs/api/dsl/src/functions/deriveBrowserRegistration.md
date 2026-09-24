@@ -2,19 +2,20 @@
 
 ***
 
-[seans-mfe-tool API reference](../../../README.md) / [dsl/src](../README.md) / deriveRegistration
+[seans-mfe-tool API reference](../../../README.md) / [dsl/src](../README.md) / deriveBrowserRegistration
 
-# Function: deriveRegistration()
+# Function: deriveBrowserRegistration()
 
-> **deriveRegistration**(`manifest`): [`CompiledRegistration`](../interfaces/CompiledRegistration.md)
+> **deriveBrowserRegistration**(`manifest`, `build`): [`CompiledRegistration`](../interfaces/CompiledRegistration.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L87)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L126)
 
-The nine registration fields, from the manifest (ADR-074).
+The registration of a manifest's browser build (ADR-100, ADR-103 §1).
 
-`capabilities` is the *platform* contract — `load`, `render`, … — lowercased,
-because that is what the registry matches against. Domain capabilities are
-addressed by route instead, so listing them here would say nothing.
+The web build's fields, with the three that locate the container replaced:
+`<name>-wasm`, the `_wasm` scope, and `<endpoint>/wasm/remoteEntry.js`. It
+provides no slots — the Rust renderers host no children — and implements the
+same platform capabilities (ADR-101), so `capabilities` is unchanged.
 
 ## Parameters
 
@@ -291,6 +292,10 @@ addressed by route instead, so listing them here would say nothing.
 #### version
 
 `string` = `...`
+
+### build
+
+[`BrowserBuild`](../interfaces/BrowserBuild.md)
 
 ## Returns
 

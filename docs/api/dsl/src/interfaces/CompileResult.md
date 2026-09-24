@@ -6,7 +6,7 @@
 
 # Interface: CompileResult
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L57)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L58)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:57](https://github.com/f
 
 > **findings**: [`ControlPlaneFinding`](ControlPlaneFinding.md)[]
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L60)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L64)
 
 ***
 
@@ -22,6 +22,7 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:60](https://github.com/f
 
 > **payload**: [`CompiledRuleDocument`](CompiledRuleDocument.md)[]
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:59](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L59)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L63)
 
-One entry per MFE, in fleet order, whether or not it has routes.
+One entry per MFE, in fleet order, whether or not it has routes — plus one
+per browser build, right after its MFE (ADR-103).

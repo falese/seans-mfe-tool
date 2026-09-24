@@ -134,6 +134,12 @@ export interface TemplateVars {
   meshPlugins: Record<string, unknown>;
   /** Passed to package.json.ejs / meshrc.yaml.ejs for transform config */
   meshTransforms: Record<string, unknown>;
+  /**
+   * The Rust target's browser build, served under `/<path>/` (ADR-100,
+   * ADR-103 §2). The generator sets it from `targets.rust.wasm`; a BFF
+   * scaffolded by `bff:init` has no Rust target, so it is always null there.
+   */
+  browserBuild: { path: string } | null;
 }
 
 // ============================================================================

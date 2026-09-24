@@ -392,12 +392,25 @@ in the shell, the runtime or the control plane changes.
 
 ```sh
 cd rust/web && bash build.sh          # needs the wasm32 target + wasm-bindgen CLI
-npx http-server www -p 5105 --cors
 ```
 
-Register it like any remote: `remoteEntryUrl` → `.../remoteEntry.js`, scope
-`<lib>_wasm` (not the React remote's scope, so both fit on one page), module
-`./App`. Each capability draws through its own developer-owned
+Place it from `control-plane.yaml` with `from` (ADR-103):
+
+```yaml
+- from: meridian-crew-services-wasm   # <name>-wasm
+  capability: PayStatus
+  into: meridian-console/status
+```
+
+The compiler registers the browser build as `<name>-wasm` beside the web
+build — scope `<lib>_wasm` (not the React remote's scope, so both fit on one
+page), module `./App`, remote entry `<endpoint>/wasm/remoteEntry.js` — and a
+placement without `from` stays on the web build. The MFE's generated
+`server.ts` serves `rust/web/www` at `/wasm/`, and its Dockerfile builds it in
+a `wasm-builder` stage, so the fleet's own image carries it. Meridian's
+`PayStatus` is placed this way, next to the React roster.
+
+Each capability draws through its own developer-owned
 `rust/web/src/features/<cap>.rs` — plain `web-sys`, so use a Rust UI framework
 inside it if you want one.
 
@@ -408,8 +421,7 @@ entry's `mfe` object exposes all ten capabilities by their contract names.
 
 `npm run check:rust-wasm` builds every browser crate, mounts it in Chromium
 **through the shell's own compiled adaptor**, and drives all ten capabilities
-there. Not yet: placing it from `control-plane.yaml` — see ADR-100's
-boundaries.
+there.
 
 ## Adding a different target
 

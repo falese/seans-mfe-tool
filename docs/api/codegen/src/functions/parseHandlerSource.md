@@ -8,7 +8,7 @@
 
 > **parseHandlerSource**(`source`, `hookName`): \{ `exportName`: `string`; `module`: `string`; \} \| `null`
 
-Defined in: [packages/codegen/src/render-model.ts:225](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L225)
+Defined in: [packages/codegen/src/render-model.ts:232](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L232)
 
 Parse a DSL `source:` specifier into a static import descriptor.
 
