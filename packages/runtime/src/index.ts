@@ -20,7 +20,7 @@ export {
   TimeoutError,
   SecurityError,
 } from './errors';
-export { ContextFactory, ContextValidator } from './context';
+export { ContextFactory } from './context';
 
 // BaseMFE and result types (REQ-RUNTIME-001)
 export { BaseMFE, VALID_TRANSITIONS } from './base-mfe';
@@ -45,8 +45,7 @@ export type { ControlPlaneStatePusher, PushControlPlaneStateOptions } from './co
 // failed to bundle on `Can't resolve 'react'`. Enforced by the barrel
 // reachability test in `__tests__/boundary.test.ts`.
 
-// Daemon WebSocket client (used to wire up the control-plane connection)
-export { GraphQLWebSocketClient } from './graphql-ws-client';
+// Daemon WebSocket client contract (implemented by DaemonChannel, ADR-057)
 export type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // Platform handlers (REQ-RUNTIME-005 through REQ-RUNTIME-010)

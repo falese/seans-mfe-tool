@@ -1,17 +1,5 @@
 import type { Context } from '../context';
 
-/** Error-handling state this handler owns on the context. */
-export interface ErrorHandlingState {
-  recoverable?: boolean;
-  fallbackApplied?: boolean;
-  retryStrategy?: 'exponential' | 'linear' | 'none';
-}
-
-/** Typed accessor for the error-handling state this handler owns on a context. */
-export function getErrorHandlingState(context: Context): ErrorHandlingState | undefined {
-  return context.errorHandling as ErrorHandlingState | undefined;
-}
-
 /**
  * `error` is optional because this handler is dispatched by name
  * (`platform.handleError`, ADR-076) with only `context` — the engine sets

@@ -259,7 +259,10 @@ class NodeControlPlane extends BaseControlPlane {
   async health():                       Promise<ControlPlaneHealth> { /* … */ }
 
   createTransport(): DaemonTransport {
-    return new GraphQLWebSocketClient(this.nodeConfig.daemonUrl);
+    return new GraphQLTransportWsDaemonTransport(
+      this.nodeConfig.daemonUrl,
+      (url, protocol) => new WebSocket(url, protocol),
+    );
   }
 }
 ```

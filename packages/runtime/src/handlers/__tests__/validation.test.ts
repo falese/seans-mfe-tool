@@ -1,16 +1,4 @@
-import { validateInputs, sanitizeInputs, getValidationState } from '../validation';
-
-describe('getValidationState', () => {
-  it('returns context.validation typed as ValidationState', () => {
-    const context = { validation: { passed: false, errors: [] } } as any;
-    expect(getValidationState(context)).toEqual({ passed: false, errors: [] });
-  });
-
-  it('returns undefined when context.validation is not set', () => {
-    const context = {} as any;
-    expect(getValidationState(context)).toBeUndefined();
-  });
-});
+import { validateInputs, sanitizeInputs } from '../validation';
 
 describe('platform.validateInputs', () => {
   it('should throw if inputs are missing', async () => {
