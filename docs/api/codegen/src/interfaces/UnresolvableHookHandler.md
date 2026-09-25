@@ -6,7 +6,7 @@
 
 # Interface: UnresolvableHookHandler
 
-Defined in: [packages/codegen/src/validate.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L126)
+Defined in: [packages/codegen/src/validate.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L129)
 
 One `handler:` value that will never resolve at runtime, and why.
 
@@ -16,7 +16,7 @@ One `handler:` value that will never resolve at runtime, and why.
 
 > **capability**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:127](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L127)
+Defined in: [packages/codegen/src/validate.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L130)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/codegen/src/validate.ts:127](https://github.com/falese/sea
 
 > **handler**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L130)
+Defined in: [packages/codegen/src/validate.ts:133](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L133)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/codegen/src/validate.ts:130](https://github.com/falese/sea
 
 > **hookName**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L128)
+Defined in: [packages/codegen/src/validate.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L131)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [packages/codegen/src/validate.ts:128](https://github.com/falese/sea
 
 > **phase**: `"error"` \| `"before"` \| `"main"` \| `"after"`
 
-Defined in: [packages/codegen/src/validate.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L129)
+Defined in: [packages/codegen/src/validate.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L132)

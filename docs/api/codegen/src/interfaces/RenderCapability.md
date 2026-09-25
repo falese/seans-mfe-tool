@@ -6,7 +6,7 @@
 
 # Interface: RenderCapability
 
-Defined in: [packages/codegen/src/render-model.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L60)
+Defined in: [packages/codegen/src/render-model.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L61)
 
 One capability row in the render model.
 
@@ -16,7 +16,7 @@ One capability row in the render model.
 
 > **config**: `object`
 
-Defined in: [packages/codegen/src/render-model.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L62)
+Defined in: [packages/codegen/src/render-model.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L63)
 
 #### authorization?
 
@@ -68,7 +68,7 @@ Defined in: [packages/codegen/src/render-model.ts:62](https://github.com/falese/
 
 > **method**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L61)
+Defined in: [packages/codegen/src/render-model.ts:62](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L62)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [packages/codegen/src/render-model.ts:61](https://github.com/falese/
 
 > **returnTypeBase**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L63)
+Defined in: [packages/codegen/src/render-model.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L64)
 
 ***
 
@@ -84,4 +84,4 @@ Defined in: [packages/codegen/src/render-model.ts:63](https://github.com/falese/
 
 > **stubBody**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L64)
+Defined in: [packages/codegen/src/render-model.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L65)

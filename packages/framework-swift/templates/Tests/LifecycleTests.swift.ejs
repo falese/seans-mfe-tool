@@ -24,6 +24,43 @@ private struct StubProvider: <%= moduleName %>DataProvider {
 <% }); -%>
 }
 
+/// Records telemetry events, from any task.
+private final class RecordingTelemetry: MFETelemetry, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _events: [MFETelemetryEvent] = []
+    var events: [MFETelemetryEvent] { lock.lock(); defer { lock.unlock() }; return _events }
+    func emit(_ event: MFETelemetryEvent) { lock.lock(); _events.append(event); lock.unlock() }
+}
+
+/// A daemon client that records the mutation it is sent (ADR-102).
+private final class StubControlPlane: MFEControlPlaneClient, @unchecked Sendable {
+    let connected: Bool
+    let answer: Result<Bool, Error>
+    private let lock = NSLock()
+    private var _sent: [(query: String, variables: [String: JSONValue])] = []
+    var sent: [(query: String, variables: [String: JSONValue])] { lock.lock(); defer { lock.unlock() }; return _sent }
+
+    init(connected: Bool, answer: Result<Bool, Error> = .success(true)) {
+        self.connected = connected
+        self.answer = answer
+    }
+
+    func mutation(_ query: String, variables: [String: JSONValue], timeoutMs: Int) async throws -> Bool {
+        record(query, variables)
+        return try answer.get()
+    }
+
+    // Synchronous, because NSLock is unavailable directly in async contexts
+    // (an error in the Swift 6 language mode).
+    private func record(_ query: String, _ variables: [String: JSONValue]) {
+        lock.lock(); _sent.append((query, variables)); lock.unlock()
+    }
+}
+
+private struct TimedOut: Error, CustomStringConvertible {
+    var description: String { "mutation timed out" }
+}
+
 /// Captures what the stub transport was handed.
 private actor SeenRequest {
     private(set) var headers: [String: String] = [:]
@@ -73,6 +110,162 @@ private actor FiredHooks {
         let mfe = <%= moduleName %>MFE(provider: StubProvider())
         let described = try await mfe.describe(MFEContext())
         #expect(described.name == ManifestMetadata.name)
+    }
+
+    // MARK: - All ten capabilities, in the runtime's result shapes (ADR-102)
+
+    private func loaded(_ deps: MFEDependencies = MFEDependencies()) async throws -> <%= moduleName %>MFE {
+        let mfe = <%= moduleName %>MFE(provider: StubProvider(), deps: deps)
+        _ = try await mfe.load(MFEContext())
+        return mfe
+    }
+
+    @Test func loadReportsTheContractResult() async throws {
+        let mfe = <%= moduleName %>MFE(provider: StubProvider())
+        let result = try await mfe.load(MFEContext())
+        #expect(result.status == .loaded)
+        #expect(result.availableComponents == ManifestMetadata.domainCapabilities)
+        #expect(!result.timestamp.isEmpty)
+    }
+<% if (domainCapabilities.length > 0) { -%>
+
+    @Test func renderReportsTheContractResult() async throws {
+        let mfe = try await loaded()
+        let result = try await mfe.render(MFEContext(capabilityId: "<%= domainCapabilities[0] %>"))
+        #expect(result.status == .rendered)
+        #expect(result.capabilityId == "<%= domainCapabilities[0] %>")
+    }
+<% } -%>
+
+    @Test func refreshAndAuthorizeAccessAnswer() async throws {
+        let mfe = try await loaded()
+        try await mfe.refresh(MFEContext())
+        #expect(try await mfe.authorizeAccess(MFEContext()))
+    }
+
+    @Test func healthIsHealthyOnceLoaded() async throws {
+        let result = try await loaded().health(MFEContext())
+        #expect(result.status == .healthy)
+        #expect(result.checks.contains { $0.name == "capability-table" && $0.status == .pass })
+        #expect(result.checks.allSatisfy { $0.status == .pass })
+    }
+
+    @Test func healthIsUnhealthyInTheErrorState() async throws {
+        let mfe = try await loaded()
+        _ = try? await mfe.render(MFEContext(capabilityId: "NotACapability"))
+        let result = try await mfe.health(MFEContext())
+        #expect(result.status == .unhealthy)
+        #expect(result.checks.contains { $0.name == "state" && $0.status == .fail })
+    }
+
+    @Test func describeCarriesTypeCapabilitiesAndTheManifest() async throws {
+        let result = try await <%= moduleName %>MFE(provider: StubProvider()).describe(MFEContext())
+        #expect(result.type == ManifestMetadata.manifestType)
+        #expect(result.capabilities == ManifestMetadata.capabilities.map(\.name))
+        guard case let .object(manifest) = result.manifest else {
+            Issue.record("manifest is not an object")
+            return
+        }
+        #expect(manifest["name"] == .string(ManifestMetadata.name))
+    }
+
+    @Test func schemaReturnsTheManifestAsJSON() async throws {
+        let result = try await loaded().schema(MFEContext())
+        #expect(result.format == .json)
+        let parsed = try JSONDecoder().decode([String: JSONValue].self, from: Data(result.schema.utf8))
+        #expect(parsed["name"] == .string(ManifestMetadata.name))
+    }
+
+    @Test func emitDeliversTheEventToInjectedTelemetry() async throws {
+        let telemetry = RecordingTelemetry()
+        let mfe = <%= moduleName %>MFE(provider: StubProvider(), deps: MFEDependencies(telemetry: telemetry))
+        let result = try await mfe.emit(MFEContext(inputs: [
+            "event": .object(["name": "clicked", "capability": "render", "phase": "main", "status": "success", "metadata": .object(["x": .number(1)])]),
+        ]))
+        #expect(result.emitted)
+        #expect(result.eventId != nil)
+        #expect(telemetry.events.count == 1)
+        #expect(telemetry.events.first?.name == "clicked")
+        #expect(telemetry.events.first?.metadata["x"] == .number(1))
+    }
+
+    @Test func emitWithoutTelemetryOrEventReportsNotEmitted() async throws {
+        let bare = <%= moduleName %>MFE(provider: StubProvider())
+        #expect(try await !bare.emit(MFEContext(inputs: ["event": .object(["name": "x"])])).emitted)
+        let withTelemetry = <%= moduleName %>MFE(provider: StubProvider(), deps: MFEDependencies(telemetry: RecordingTelemetry()))
+        #expect(try await !withTelemetry.emit(MFEContext()).emitted)
+    }
+
+    private static func stateUpdate() -> MFEContext {
+        MFEContext(inputs: [
+            "stateKey": " analysis.complete ",
+            "stateData": .object(["score": .number(7)]),
+            "correlationId": "corr-1",
+        ])
+    }
+
+    @Test func updateControlPlaneStateSendsTheStateUpdateEnvelope() async throws {
+        let channel = StubControlPlane(connected: true)
+        let telemetry = RecordingTelemetry()
+        let mfe = try await loaded(MFEDependencies(telemetry: telemetry, controlPlane: channel))
+        let result = try await mfe.updateControlPlaneState(Self.stateUpdate())
+        #expect(result.acknowledged)
+        #expect(result.correlationId == "corr-1")
+        #expect(result.error == nil)
+
+        #expect(channel.sent.count == 1)
+        #expect(channel.sent.first?.query == "mutation sendMessage($m: String!) { sendMessage(message: $m) }")
+        guard let m = channel.sent.first?.variables["m"]?.stringValue else {
+            Issue.record("no m variable")
+            return
+        }
+        let envelope = try JSONDecoder().decode([String: JSONValue].self, from: Data(m.utf8))
+        #expect(envelope["direction"] == "ACTION")
+        #expect(envelope["kind"] == "ACTION")
+        guard case let .object(payload)? = envelope["payload"], case let .object(metadata)? = envelope["metadata"] else {
+            Issue.record("envelope is missing payload or metadata")
+            return
+        }
+        #expect(payload["actionType"] == "STATE_UPDATE")
+        #expect(payload["stateKey"] == "analysis.complete")
+        #expect(payload["data"] == .object(["score": .number(7)]))
+        #expect(metadata["correlationId"] == "corr-1")
+        #expect(metadata["acknowledged"] == .bool(false))
+        #expect(telemetry.events.contains { $0.name == "control-plane-state-update" && $0.status == "success" })
+    }
+
+    @Test func updateControlPlaneStateReportsADisconnectedDaemon() async throws {
+        let result = try await loaded(MFEDependencies(controlPlane: StubControlPlane(connected: false)))
+            .updateControlPlaneState(Self.stateUpdate())
+        #expect(!result.acknowledged)
+        #expect(result.error == "Daemon WebSocket not connected")
+        // And with no client at all, the same answer rather than a throw.
+        #expect(try await !loaded().updateControlPlaneState(Self.stateUpdate()).acknowledged)
+    }
+
+    @Test func updateControlPlaneStateMapsATimeout() async throws {
+        let result = try await loaded(MFEDependencies(controlPlane: StubControlPlane(connected: true, answer: .failure(TimedOut()))))
+            .updateControlPlaneState(Self.stateUpdate())
+        #expect(!result.acknowledged)
+        #expect(result.error == "sendMessage timed out")
+    }
+
+    @Test func updateControlPlaneStateValidatesItsInputs() async throws {
+        await #expect(throws: MFEValidationError.self) {
+            _ = try await self.loaded().updateControlPlaneState(MFEContext())
+        }
+        await #expect(throws: MFEValidationError.self) {
+            _ = try await self.loaded().updateControlPlaneState(MFEContext(inputs: ["stateKey": "k", "stateData": "nope"]))
+        }
+    }
+
+    @Test func resultsEncodeToTheContractWireShape() async throws {
+        let mfe = try await loaded()
+        let health = try JSONDecoder().decode([String: JSONValue].self, from: JSONEncoder().encode(try await mfe.health(MFEContext())))
+        #expect(health["checks"] != nil && health["timestamp"] != nil)
+        #expect(health["status"] == "healthy")
+        let ucps = try JSONDecoder().decode([String: JSONValue].self, from: JSONEncoder().encode(try await mfe.updateControlPlaneState(Self.stateUpdate())))
+        #expect(ucps["correlationId"] == "corr-1")
     }
 
 <%_ if (manifestHandlers.length > 0) { _%>
@@ -150,7 +343,7 @@ private actor FiredHooks {
         ]))
         // The envelope policy: the capability answers with both halves.
         #expect(result.data != nil)
-        #expect(result.errors == ["boom"])
+        #expect(result.errors.map(\.message) == ["boom"])
     }
 
     @Test func queryReturnsErrorsRatherThanThrowingOnHTTPFailure() async throws {

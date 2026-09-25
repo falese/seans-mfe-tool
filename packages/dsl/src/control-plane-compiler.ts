@@ -20,6 +20,7 @@
 
 import { createSlotAddressRegistry, type SlotProviderDeclarations } from '@seans-mfe/contracts';
 import type { DSLManifest } from './schema';
+import { browserBuildOf, type BrowserBuild } from './browser-build';
 import {
   PLACEHOLDER,
   type CompiledRegistration,
@@ -55,7 +56,10 @@ export interface CompileInput {
 }
 
 export interface CompileResult {
-  /** One entry per MFE, in fleet order, whether or not it has routes. */
+  /**
+   * One entry per MFE, in fleet order, whether or not it has routes — plus one
+   * per browser build, right after its MFE (ADR-103).
+   */
   payload: CompiledRuleDocument[];
   findings: ControlPlaneFinding[];
 }
@@ -108,6 +112,26 @@ export function deriveRegistration(manifest: DSLManifest): CompiledRegistration 
     );
   }
 
+  return registration;
+}
+
+/**
+ * The registration of a manifest's browser build (ADR-100, ADR-103 §1).
+ *
+ * The web build's fields, with the three that locate the container replaced:
+ * `<name>-wasm`, the `_wasm` scope, and `<endpoint>/wasm/remoteEntry.js`. It
+ * provides no slots — the Rust renderers host no children — and implements the
+ * same platform capabilities (ADR-101), so `capabilities` is unchanged.
+ */
+export function deriveBrowserRegistration(manifest: DSLManifest, build: BrowserBuild): CompiledRegistration {
+  const { providesSlots: _slots, ...web } = deriveRegistration(manifest);
+  const registration: CompiledRegistration = {
+    ...web,
+    name: build.name,
+    remoteEntryUrl: build.remoteEntryUrl,
+    moduleFederation: { scope: build.scope, module: './App' },
+  };
+  if (registration.remoteEntryUrl === undefined) delete registration.remoteEntryUrl;
   return registration;
 }
 
@@ -170,6 +194,7 @@ function resolveProvider(
   placement: Placement,
   bindings: Record<string, string>,
   byName: Map<string, DSLManifest>,
+  browserBuilds: Map<string, BrowserBuild>,
   byCapability: Map<string, string[]>,
   stateKey: string
 ): { name: string } | { finding: ControlPlaneFinding } {
@@ -177,6 +202,22 @@ function resolveProvider(
 
   if (placement.from) {
     const from = substitute(placement.from, bindings);
+    // A second build of an MFE is named only here: an unqualified placement
+    // stays on the web build (ADR-103 §1).
+    const build = browserBuilds.get(from);
+    if (build) {
+      if (!build.capabilities.includes(capability)) {
+        return {
+          finding: {
+            rule: 'unknown-capability',
+            stateKey,
+            fatal: true,
+            message: `Route "${stateKey}" places "${capability}" from "${from}", which does not implement it (targets.rust.capabilities).`,
+          },
+        };
+      }
+      return { name: from };
+    }
     const manifest = byName.get(from);
     if (!manifest) {
       return {
@@ -237,6 +278,11 @@ export function compileControlPlane(input: CompileInput): CompileResult {
   const findings: ControlPlaneFinding[] = [];
 
   const byName = new Map(manifests.map((manifest) => [manifest.name, manifest]));
+  const browserBuilds = new Map<string, BrowserBuild>();
+  for (const manifest of manifests) {
+    const build = browserBuildOf(manifest);
+    if (build) browserBuilds.set(build.name, build);
+  }
 
   const byCapability = new Map<string, string[]>();
   for (const manifest of manifests) {
@@ -257,9 +303,10 @@ export function compileControlPlane(input: CompileInput): CompileResult {
 
   // One bucket per MFE, in fleet order — a fleet member with no routes still
   // has to be registered or the shell cannot load it at all.
-  const routesByMfe = new Map<string, CompiledRoute[]>(
-    manifests.map((manifest) => [manifest.name, []])
-  );
+  const routesByMfe = new Map<string, CompiledRoute[]>([
+    ...manifests.map((manifest): [string, CompiledRoute[]] => [manifest.name, []]),
+    ...[...browserBuilds.keys()].map((name): [string, CompiledRoute[]] => [name, []]),
+  ]);
 
   const prefix = `${document.namespace}.`;
 
@@ -312,7 +359,7 @@ export function compileControlPlane(input: CompileInput): CompileResult {
         continue;
       }
 
-      const provider = resolveProvider(placement, bindings, byName, byCapability, stateKey);
+      const provider = resolveProvider(placement, bindings, byName, browserBuilds, byCapability, stateKey);
       if ('finding' in provider) {
         findings.push(provider.finding);
         continue;
@@ -344,10 +391,20 @@ export function compileControlPlane(input: CompileInput): CompileResult {
     }
   }
 
-  const payload: CompiledRuleDocument[] = manifests.map((manifest) => ({
-    registration: deriveRegistration(manifest),
-    routes: routesByMfe.get(manifest.name) ?? [],
-  }));
+  // Each browser build registers right after its web build, so the payload
+  // still reads in fleet order.
+  const payload: CompiledRuleDocument[] = manifests.flatMap((manifest) => {
+    const web: CompiledRuleDocument = {
+      registration: deriveRegistration(manifest),
+      routes: routesByMfe.get(manifest.name) ?? [],
+    };
+    const build = browserBuildOf(manifest);
+    if (!build) return [web];
+    return [
+      web,
+      { registration: deriveBrowserRegistration(manifest, build), routes: routesByMfe.get(build.name) ?? [] },
+    ];
+  });
 
   return { payload, findings };
 }

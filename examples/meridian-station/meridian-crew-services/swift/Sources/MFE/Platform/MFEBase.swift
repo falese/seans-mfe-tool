@@ -148,11 +148,9 @@ public enum GraphQLPost {
     }
 }
 
-/// A capability the native lane does not implement.
-///
-/// Returned-as-success is the failure mode this replaces: a stub answering
-/// `accepted: true` claims work it did not do. Throwing names the capability
-/// and says what is missing.
+/// The pipeline finished without producing a capability's result — an
+/// internal invariant, not a capability the lane lacks: every one of the ten
+/// is implemented (ADR-102).
 public struct MFENotImplementedError: Error, CustomStringConvertible {
     public let capability: MFECapability
     public let detail: String
@@ -165,16 +163,60 @@ public struct MFENotImplementedError: Error, CustomStringConvertible {
 /// A lifecycle hook handler. Mirrors `(context: Context) => Promise<void>`.
 public typealias MFEHandler = @Sendable (MFEContext) async throws -> Void
 
-/// One telemetry event. Emitted on every hook failure (ADR-002 REQ-043).
-public struct MFETelemetryEvent: Sendable {
-    public let name: String
-    public let capability: String
-    public let phase: String
-    public let status: String
-    public let hook: String
-    public let handler: String
+/// Bad capability input — `ValidationError` in the contracts taxonomy.
+public struct MFEValidationError: Error, CustomStringConvertible {
+    public let field: String
     public let message: String
-    public let severity: String
+    public var description: String { message }
+}
+
+/// One telemetry event. Mirrors the runtime's `TelemetryEvent`
+/// (`packages/runtime/src/context.ts`), so a collector sees one shape from
+/// every lane. Used for hook failures (`lifecycle-error`, REQ-043) and for
+/// whatever a caller passes to the `emit` capability.
+public struct MFETelemetryEvent: Sendable, Codable, Equatable {
+    public var name: String
+    public var capability: String
+    public var phase: String
+    public var user: String?
+    public var duration: Int?
+    /// `start` | `end` | `error` | `success` | `failure`.
+    public var status: String
+    public var metadata: [String: JSONValue]
+    /// ISO-8601, as `Date.toJSON()` writes it.
+    public var timestamp: String
+
+    public init(name: String, capability: String, phase: String, user: String? = nil, duration: Int? = nil,
+                status: String, metadata: [String: JSONValue] = [:], timestamp: String = isoNow()) {
+        self.name = name
+        self.capability = capability
+        self.phase = phase
+        self.user = user
+        self.duration = duration
+        self.status = status
+        self.metadata = metadata
+        self.timestamp = timestamp
+    }
+}
+
+/// Now, as ISO-8601 UTC with milliseconds — what `Date.toJSON()` produces, so
+/// a timestamp reads the same from every lane.
+public func isoNow() -> String {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter.string(from: Date())
+}
+
+/// The daemon connection `updateControlPlaneState` pushes state through
+/// (ADR-102). The native analogue of `deps.wsClient`: the same two members
+/// `BaseRemoteMFE` calls, so a host adapts the graphql-ws client it has.
+public protocol MFEControlPlaneClient: Sendable {
+    /// `false` answers `acknowledged: false` without sending, as TypeScript does.
+    var connected: Bool { get }
+    /// Run a GraphQL mutation against the daemon; `true` when it acknowledged.
+    /// An error whose description contains `timed out` is reported as
+    /// `sendMessage timed out`.
+    func mutation(_ query: String, variables: [String: JSONValue], timeoutMs: Int) async throws -> Bool
 }
 
 public protocol MFETelemetry: Sendable {
@@ -187,11 +229,11 @@ public protocol MFEErrorHandler: Sendable {
 
 /// What a host injects. The native subset of `BaseMFEDependencies` (ADR-098 §4).
 ///
-/// TypeScript declares eight; four of them have no native consumer and are
-/// deliberately not declared here (ADR-092 §5): `wsClient` (no control-plane
-/// transport), `bffUrl` (resolution is `inputs["bffUrl"]` → `BFF_URL` →
-/// `identity.bffEndpoint`), `manifestParser` (the manifest is rendered into
-/// `ManifestMetadata` at swift build time, not parsed at runtime) and
+/// `platformHandlers`, `customHandlers`, `telemetry`, `errorHandler` as in
+/// TypeScript, and `controlPlane` as `wsClient`'s analogue (ADR-102). Three
+/// have no native consumer (ADR-092 §5): `bffUrl` (resolution is
+/// `inputs["bffUrl"]` → `BFF_URL` → `identity.bffEndpoint`), `manifestParser`
+/// (the manifest is rendered into `ManifestMetadata` at swift build time) and
 /// `stateValidator` (the transition table is a frozen static).
 public struct MFEDependencies: Sendable {
     /// `platform.x` handlers. There is no native handler library behind this,
@@ -207,17 +249,22 @@ public struct MFEDependencies: Sendable {
     /// its tests stub the global `fetch`; Swift has no global to stub, so
     /// without this seam the `query` capability cannot be tested at all.
     public var transport: MFETransport?
+    /// The daemon connection for `updateControlPlaneState` (ADR-102). `nil`
+    /// answers `acknowledged: false`, as a disconnected socket does.
+    public var controlPlane: MFEControlPlaneClient?
 
     public init(platformHandlers: [String: MFEHandler] = [:],
                 customHandlers: [String: MFEHandler] = [:],
                 telemetry: MFETelemetry? = nil,
                 errorHandler: MFEErrorHandler? = nil,
-                transport: MFETransport? = nil) {
+                transport: MFETransport? = nil,
+                controlPlane: MFEControlPlaneClient? = nil) {
         self.platformHandlers = platformHandlers
         self.customHandlers = customHandlers
         self.telemetry = telemetry
         self.errorHandler = errorHandler
         self.transport = transport
+        self.controlPlane = controlPlane
     }
 }
 
@@ -550,19 +597,25 @@ open class MFEBase {
         )
     }
 
-    /// Report a hook failure (REQ-043). Nothing ships an `MFETelemetry`, so
-    /// this is silent until a host supplies one.
+    /// Report a hook failure (REQ-043), in the shape `BaseMFE` emits it.
+    /// Silent until a host supplies telemetry.
     private func emitHookFailure(_ hook: String, _ handler: String, _ error: Error, _ context: MFEContext, _ severity: String) {
-        deps.telemetry?.emit(MFETelemetryEvent(
-            name: "lifecycle-error",
-            capability: context.capability ?? "lifecycle",
-            phase: context.phase?.rawValue ?? "unknown",
-            status: "error",
-            hook: hook,
-            handler: handler,
-            message: String(describing: error),
-            severity: severity
-        ))
+        emitTelemetry("lifecycle-error", capability: "lifecycle", phase: context.phase?.rawValue ?? "unknown", status: "error", metadata: [
+            "source": "lifecycle-hook",
+            "hook": .string(hook),
+            "handler": .string(handler),
+            "capability": context.capability.map(JSONValue.string) ?? .null,
+            "mfe": .string(identity.name),
+            "severity": .string(severity),
+            "tags": .array(["lifecycle", "hook-failure"]),
+            "error": .object(["message": .string(String(describing: error))]),
+        ])
+    }
+
+    /// Emit one event through `deps.telemetry`, if there is one. The
+    /// counterpart of `BaseRemoteMFE.emitTelemetry`.
+    public final func emitTelemetry(_ name: String, capability: String, phase: String, status: String, metadata: [String: JSONValue] = [:]) {
+        deps.telemetry?.emit(MFETelemetryEvent(name: name, capability: capability, phase: phase, status: status, metadata: metadata))
     }
 
     // MARK: - The ten capabilities — final; subclasses override the do* hooks
@@ -685,7 +738,7 @@ open class MFEBase {
             return QueryResult(data: nil, errors: [])
         }
         guard let document = context.inputs["document"]?.stringValue else {
-            return QueryResult(data: nil, errors: ["context.inputs[\"document\"] is required for the query capability"])
+            return QueryResult(data: nil, errors: [QueryError(message: "context.inputs[\"document\"] is required for the query capability")])
         }
 
         var headers = context.headers
@@ -710,15 +763,25 @@ open class MFEBase {
             // The envelope policy: `query` answers with errors, it does not
             // throw. `BFFClient.query<T>` throws for the same failure, which is
             // the deliberate half of the difference between the two.
-            return QueryResult(data: nil, errors: [String(describing: error)])
+            return QueryResult(data: nil, errors: [QueryError(message: String(describing: error))])
         }
 
         let decoded = try JSONDecoder().decode([String: JSONValue].self, from: body)
-        var errors: [String] = []
+        var errors: [QueryError] = []
         if case let .array(list)? = decoded["errors"] {
             errors = list.compactMap { entry in
-                if case let .object(fields) = entry { return fields["message"]?.stringValue }
-                return nil
+                guard case let .object(fields) = entry, let message = fields["message"]?.stringValue else { return nil }
+                var path: [String]?
+                if case let .array(segments)? = fields["path"] {
+                    path = segments.map { segment in
+                        switch segment {
+                        case let .string(s): return s
+                        case let .number(n): return String(Int(n))
+                        default: return ""
+                        }
+                    }
+                }
+                return QueryError(message: message, path: path)
             }
         }
         // Partial responses carry both, and the capability returns both.

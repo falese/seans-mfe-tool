@@ -94,7 +94,7 @@ const CONFIG_BY_BUNDLER: Record<string, string> = {
 };
 
 /** Extensions worth scanning for a slot reference. */
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte', '.swift']);
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.vue', '.svelte', '.swift', '.rs']);
 
 /** Never scanned: build output, dependencies, and the generated contract itself. */
 const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage']);
@@ -107,7 +107,11 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * `swift/` is a root too, and has to be: a secondary target's sources live
  * outside `src/` (ADR-095), so scanning only `src/` meant the
  * `native-capability-view` rule could never fire on a real MFE no matter what
- * the rule itself did.
+ * the rule itself did. `rust/` likewise (ADR-099), minus its build output:
+ * Cargo's `target/` directories hold generated `.rs` from dependencies' build
+ * scripts, and the browser build's `www/pkg/` is wasm-bindgen's JavaScript
+ * (ADR-100). Neither is anybody's source, and the migration rules would
+ * report wasm-bindgen's raw `Error`s as the developer's.
  *
  * Paths stay ABSOLUTE. The command relativises `issue.location` against `dir`
  * when printing, so returning relative paths here made that resolve a second
@@ -115,14 +119,19 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * match on location therefore match a suffix, not a prefix.
  */
 async function collectSources(dir: string): Promise<SourceFile[]> {
-  const roots = [path.join(dir, 'src'), path.join(dir, 'swift')];
+  const roots = [path.join(dir, 'src'), path.join(dir, 'swift'), path.join(dir, 'rust')];
+  const buildOutput = new Set([
+    path.join(dir, 'rust', 'target'),
+    path.join(dir, 'rust', 'web', 'target'),
+    path.join(dir, 'rust', 'web', 'www', 'pkg'),
+  ]);
   const sources: SourceFile[] = [];
 
   const walk = async (current: string): Promise<void> => {
     for (const entry of await fs.readdir(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        if (SKIP_DIRECTORIES.has(entry.name)) continue;
+        if (SKIP_DIRECTORIES.has(entry.name) || buildOutput.has(full)) continue;
         await walk(full);
         continue;
       }
@@ -307,7 +316,13 @@ export async function mfeValidateCommand(opts: MfeValidateOptions): Promise<MfeV
 }
 
 export default class MfeValidate extends BaseCommand<MfeValidateResult> {
-  static description = "Validate an MFE's internal consistency (manifest ⇄ package.json ⇄ federation)";
+  static description =
+    "Validate an MFE's internal consistency: manifest ⇄ package.json ⇄ federation shared config, " +
+    'declared slots are registered, lifecycle hook handlers resolve, native targets have their ' +
+    'developer-owned files, and developer-owned code is checked for platform migrations (ADR-082). ' +
+    'Read-only — reports issues with a file, line and fix, and exits non-zero on any error. Migration ' +
+    'findings are warnings unless --strict. --typecheck also runs tsc. Validates one MFE directory, not ' +
+    'a fleet (use compose:validate for a control plane).';
 
   static aliases = ['mfe:doctor'];
 

@@ -84,6 +84,7 @@ export async function bffInitCommand(name: string | undefined, options: BFFComma
         filterSchema: null,
         customTransforms: [],
       },
+      browserBuild: null,
     };
 
     if (options.dryRun) {

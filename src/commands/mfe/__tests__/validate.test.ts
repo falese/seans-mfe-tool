@@ -20,6 +20,8 @@ const RUNTIME = '@seans-mfe-tool/runtime';
 interface Fixture {
   packageDeps?: Record<string, string>;
   sharedReactVersion?: string;
+  /** Extra top-level manifest YAML lines, appended as-is. */
+  manifestLines?: string[];
 }
 
 async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
@@ -40,6 +42,7 @@ async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
       'dependencies:',
       '  design-system:',
       "    styled-components: '^6.1.0'",
+      ...(fx.manifestLines ?? []),
     ].join('\n'),
   );
   await fs.writeJson(path.join(dir, 'package.json'), {
@@ -107,6 +110,47 @@ describe('mfeValidateCommand', () => {
     await expect(mfeValidateCommand({ dir: tmp })).rejects.toMatchObject({
       code: 'MFE_INCONSISTENT',
     });
+  });
+
+  describe('the rust/ source root (ADR-099)', () => {
+    const rustWithBff = [
+      'data:',
+      '  sources:',
+      '    - name: S',
+      '      handler:',
+      '        openapi:',
+      '          source: ./s.yaml',
+      'targets:',
+      '  rust: {}',
+    ];
+
+    it('scans rust/ — a present query document satisfies rust-capability-query', async () => {
+      await writeFixture(tmp, { manifestLines: rustWithBff });
+      await fs.outputFile(path.join(tmp, 'rust/src/features/demo_query.rs'), 'pub const DOCUMENT: &str = "";');
+      const res = await mfeValidateCommand({ dir: tmp });
+      expect(res.checked).toContain('rust-capability-query');
+      expect(res.ok).toBe(true);
+    });
+
+    it('does not count Cargo build output under rust/target/ as source', async () => {
+      await writeFixture(tmp, { manifestLines: rustWithBff });
+      await fs.outputFile(
+        path.join(tmp, 'rust/target/debug/build/x/out/rust/src/features/demo_query.rs'),
+        'pub const DOCUMENT: &str = "";',
+      );
+      await expect(mfeValidateCommand({ dir: tmp })).rejects.toMatchObject({ code: 'MFE_INCONSISTENT' });
+    });
+  });
+
+  it('does not scan the browser build\'s generated output (ADR-100)', async () => {
+    // wasm-bindgen writes rust/web/www/pkg/*.js, which throws raw Errors. It is
+    // build output, not developer-owned source, so no migration rule may see it.
+    await writeFixture(tmp, { manifestLines: ['targets:', '  rust:', '    wasm: true'] });
+    await fs.outputFile(path.join(tmp, 'rust/web/src/features/demo.rs'), 'pub fn render() {}');
+    await fs.outputFile(path.join(tmp, 'rust/web/www/pkg/mfe.js'), "throw new Error('boom');");
+    await fs.outputFile(path.join(tmp, 'rust/web/target/x.rs'), '');
+    const res = await mfeValidateCommand({ dir: tmp });
+    expect(res.issues.filter((i) => i.rule === 'platform-migrations')).toEqual([]);
   });
 
   it('throws a typed error when the directory has no manifest', async () => {

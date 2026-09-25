@@ -286,6 +286,26 @@ Defined in: [packages/runtime/src/capability-results.ts:32](https://github.com/f
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
 
+##### targets.rust?
+
+> `optional` **rust**: `object`
+
+##### targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+##### targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+##### targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
+
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`

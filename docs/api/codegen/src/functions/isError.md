@@ -8,7 +8,7 @@
 
 > **isError**(`issue`): `boolean`
 
-Defined in: [packages/codegen/src/validate.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L94)
+Defined in: [packages/codegen/src/validate.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L97)
 
 An issue fails validation unless it explicitly says it is only a warning.
 

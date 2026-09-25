@@ -6,7 +6,7 @@
 
 # Variable: KNOWN\_TARGETS
 
-> `const` **KNOWN\_TARGETS**: readonly \[`"swift"`\]
+> `const` **KNOWN\_TARGETS**: readonly \[`"swift"`, `"rust"`\]
 
 Defined in: [packages/dsl/src/schema.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L68)
 

@@ -312,13 +312,116 @@ a build plugin that drags in a YAML parser is one nobody will keep.
       telemetry: MyTelemetry()
   ))
   ```
-- **Telemetry is a protocol with no implementation.** `MFEDependencies` renders
-  four of `BaseMFEDependencies`' eight members — `platformHandlers`,
-  `customHandlers`, `telemetry`, `errorHandler`. Nothing ships an `MFETelemetry`
-  conformer, so hook failures go nowhere unless you supply one.
-- **"Mobile" means iOS.** `swift` is the only native target the platform ships a
-  generator for. A manifest may declare any target id — unknown ids are
-  preserved and warn rather than failing — but nothing will build them.
+- **Every capability is implemented, through what you inject**
+  ([ADR-102](architecture-decisions/ADR-102-every-target-implements-the-base-class.md)).
+  All ten answer in the runtime's result shapes (`capability-results.ts`), the
+  same as the web and Rust lanes. `emit` forwards to `deps.telemetry`;
+  `updateControlPlaneState` sends its `STATE_UPDATE` envelope through
+  `deps.controlPlane` — an `MFEControlPlaneClient` with the two members
+  `BaseRemoteMFE` uses on its daemon WebSocket client, `connected` and
+  `mutation(_:variables:timeoutMs:)`. Nothing ships a conformer for either, so
+  with none injected `emit` answers `emitted: false` and
+  `updateControlPlaneState` answers `acknowledged: false`, as a web MFE with no
+  telemetry or a closed socket does.
+- **"Mobile" means iOS.** `swift` is the only *mobile* target the platform
+  ships a generator for; `rust` (below) is the other native one. A manifest may
+  declare any target id — unknown ids are preserved and warn rather than
+  failing — but nothing will build them.
+
+## The Rust target
+
+*[ADR-099](architecture-decisions/ADR-099-rust-native-target.md).*
+
+```yaml
+targets:
+  swift: {}
+  rust: {}          # or: rust: { crateName: meridian-crew, edition: '2024', capabilities: [CrewRoster] }
+```
+
+`remote:generate --rust` (or `remote:init --rust`) adds the block and emits a
+Cargo **library crate** under `rust/` — the same six states, ten capabilities
+and manifest hooks as the Swift package, rendered from the same contract, for a
+Rust host: a Tauri app, a desktop client, a service.
+
+It differs from the Swift package in three places, each because Rust gave the
+platform no default to pick:
+
+| | Swift | Rust |
+|---|---|---|
+| UI | SwiftUI views per capability | none — the host renders; `mount` validates the id |
+| HTTP | `URLSession.shared` by default | an `MfeTransport` the host injects (the README has a reqwest adapter) |
+| Manifest metadata | re-derived by an SPM plugin on every build | rendered at generation time; `check:mfe-drift` guards it |
+
+The crate depends on `serde` and `serde_json` only. Its futures run on any
+executor; `block_on` is included for synchronous hosts.
+
+All ten capabilities are implemented and answer in the runtime's result shapes
+(`capability-results.ts`) — a host cannot tell from a result which lane
+answered ([ADR-101](architecture-decisions/ADR-101-rust-implements-all-ten-capabilities.md)).
+What the web lane gets from the browser, a Rust host injects through
+`MfeDependencies`: a `transport` for `query`, a `control_plane` client for
+`updateControlPlaneState` (the analogue of `deps.wsClient`), and `telemetry`
+for `emit`.
+
+| Path | Owner |
+|---|---|
+| `rust/src/platform/**`, `rust/src/features/mod.rs`, `rust/tests/lifecycle.rs` | generator |
+| `rust/Cargo.toml`, `rust/README.md`, `rust/src/lib.rs`, `rust/src/features/<cap>_query.rs` | **you** |
+
+Generator-owned code sits behind `#[rustfmt::skip]`, so `cargo fmt` never
+produces drift. `npm run check:rust-build` builds, tests, lints and
+format-checks every committed crate — and unlike the Swift gate it covers the
+whole crate, because there is no UI half to leave out.
+
+### The same crate in the browser, next to React
+
+*[ADR-100](architecture-decisions/ADR-100-rust-wasm-browser-remote.md).*
+
+```yaml
+targets:
+  rust:
+    wasm: true
+```
+
+adds `rust/web/`: the crate compiled to WebAssembly, plus a small generated
+`remoteEntry.js` that registers a Module Federation container and exposes the
+same imperative mount handle every React and Angular remote exposes (ADR-056).
+The shell's loader mounts it without knowing it is Rust, so a placement can
+put a Rust-rendered capability in one slot and a React one in the next. Nothing
+in the shell, the runtime or the control plane changes.
+
+```sh
+cd rust/web && bash build.sh          # needs the wasm32 target + wasm-bindgen CLI
+```
+
+Place it from `control-plane.yaml` with `from` (ADR-103):
+
+```yaml
+- from: meridian-crew-services-wasm   # <name>-wasm
+  capability: PayStatus
+  into: meridian-console/status
+```
+
+The compiler registers the browser build as `<name>-wasm` beside the web
+build — scope `<lib>_wasm` (not the React remote's scope, so both fit on one
+page), module `./App`, remote entry `<endpoint>/wasm/remoteEntry.js` — and a
+placement without `from` stays on the web build. The MFE's generated
+`server.ts` serves `rust/web/www` at `/wasm/`, and its Dockerfile builds it in
+a `wasm-builder` stage, so the fleet's own image carries it. Meridian's
+`PayStatus` is placed this way, next to the React roster.
+
+Each capability draws through its own developer-owned
+`rust/web/src/features/<cap>.rs` — plain `web-sys`, so use a Rust UI framework
+inside it if you want one.
+
+In the browser those three are supplied for you: `fetch`, the shell's per-slot
+daemon channel (the adaptor hands it over through `mfe.attachControlPlane`),
+and a telemetry function you attach with `mfe.attachTelemetry`. The remote
+entry's `mfe` object exposes all ten capabilities by their contract names.
+
+`npm run check:rust-wasm` builds every browser crate, mounts it in Chromium
+**through the shell's own compiled adaptor**, and drives all ten capabilities
+there.
 
 ## Adding a different target
 
@@ -332,9 +435,10 @@ A target is an ordinary **framework plugin** — a `BaseFrameworkPlugin`, like
   ([ADR-094 §2](architecture-decisions/ADR-094-the-generator-is-a-library.md)),
   each spec gated on your manifest section.
 
-`packages/framework-swift/` is the worked example:
-`packages/framework-swift/src/plugin.ts` for the build lifecycle,
-`packages/framework-swift/src/codegen.ts` for the files.
+`packages/framework-swift/` and `packages/framework-rust/` are the worked
+examples: `packages/framework-swift/src/plugin.ts` for the build lifecycle,
+`packages/framework-swift/src/codegen.ts` for the files, and the same two files
+under `packages/framework-rust/src/`.
 
 Two things to know before you start:
 

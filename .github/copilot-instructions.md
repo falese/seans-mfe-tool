@@ -89,8 +89,8 @@ name: my-feature
 version: 1.0.0
 type: remote
 language: typescript
-framework: react          # angular | react | vue | svelte | vanilla
-bundler: rspack           # webpack | rspack | vite | esbuild
+framework: react          # react | angular today; any installed framework plugin
+bundler: rspack           # rspack (react) | webpack (angular)
 
 endpoint: http://localhost:3001
 remoteEntry: http://localhost:3001/remoteEntry.js
@@ -112,7 +112,7 @@ dependencies:
     react: ^18.2.0
 ```
 
-**Manifest fields `framework` and `bundler` select the codegen template variant.** Adding Vue support means adding a `vue/rspack` template variant — not changing the generator logic.
+**Manifest fields `framework` and `bundler` select a framework plugin** (ADR-036). Adding Vue support means publishing `@seans-mfe/framework-vue` — not changing the generator logic. `targets:` adds builds beside the web one: `swift` (ADR-095/096) and `rust` (ADR-099).
 
 ---
 
@@ -126,12 +126,12 @@ seans-mfe-tool remote:generate
       │
       ├─ Parse & validate manifest (Zod schema)
       ├─ Resolve codegen variant (framework + bundler)
-      ├─ Select EJS templates from src/codegen/templates/<variant>/
+      ├─ Resolve each plugin's templates (packages/codegen/templates/, packages/framework-*/templates/)
       ├─ Render templates with manifest variables
       └─ Write generated files (skip if unchanged, --force to overwrite)
 ```
 
-Templates live at `src/codegen/templates/`. Compiled templates are copied to `dist/codegen/templates/` by `scripts/copy-runtime-files.js` (tsc doesn't copy non-TS files).
+Codegen templates live in `packages/codegen/templates/` and each target plugin's `templates/`. `src/codegen/templates/` holds only the Docker templates, copied to `dist/` by `scripts/copy-runtime-files.js`.
 
 ---
 
@@ -143,16 +143,20 @@ Templates live at `src/codegen/templates/`. Compiled templates are copied to `di
 ### Class hierarchy
 
 ```
-BaseMFE (abstract)
-  └── RemoteMFE          — React/rspack MFEs
-  └── AngularRemoteMFE   — Angular/webpack MFEs
+BaseMFE (abstract)                 contract + orchestration
+  └── BaseRemoteMFE (abstract)     Module Federation delivery
+        ├── RemoteMFE              React/rspack
+        └── AngularRemoteMFE       Angular/webpack
 ```
+
+Native targets render the same contract into their own language instead of
+subclassing: the Swift package (ADR-096) and the Rust crate (ADR-099).
 
 ### Platform lifecycle
 
 | Capability | Description |
 |---|---|
-| `load()` | Initialize runtime: fetch remoteEntry.js, init Module Federation container |
+| `load()` | Initialization — connect, warm caches, validate config (acquiring the bundle happens before `load`; ADR-096 §2) |
 | `render()` | Mount component into DOM container |
 | `refresh()` | Reload data and re-render without unmounting |
 | `authorizeAccess()` | Validate JWT and evaluate permissions |
@@ -181,20 +185,8 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 3. **If no ADR exists for the decision at hand: stop and ask the human before implementing.** Do not invent architecture — a new ADR must be written or the human must explicitly waive it.
 4. Do not edit existing ADRs; add a new ADR file instead.
 
-| ADR | Title | Area |
-|-----|-------|------|
-| ADR-022 | Lifecycle Re-Entrancy Guard in BaseMFE | Runtime lifecycle |
-| ADR-058 | Platform Handler Library Standardization | Runtime handlers |
-| ADR-059 | Platform Handler Interface & Execution Model | Runtime handlers |
-| ADR-060 | Load Capability — Atomic Operation Design | Runtime lifecycle |
-| ADR-062 | GraphQL Mesh v0.100.x with Production Plugins & Transforms | BFF layer |
-| ADR-063 | Parallel Handler Execution with Context Isolation | Lifecycle engine |
-| ADR-064 | Timeout Protection with AbortSignal | Lifecycle engine |
-| ADR-065 | Error Classification with Hybrid Detection | Lifecycle engine |
-| ADR-066 | Conditional Execution with Jexl Expression Engine | Lifecycle engine |
-| ADR-067 | Inter-Hook Communication with TypeScript Code Generation | Lifecycle engine |
-| ADR-068 | Two-headed giant — AI-native + human-legible developer experience | Developer model |
-| ADR-069 | Pluggable bundler + framework via codegen variants | Codegen / polyglot |
+The ADR index is generated from ADR frontmatter: see `docs/spec.md#adr-index`.
+Do not copy ADR numbers into this file — a hand-kept table drifts.
 
 ---
 
@@ -207,9 +199,9 @@ All architecture decisions live in `docs/architecture-decisions/`. **Before impl
 | Envelope types | `packages/contracts/src/envelope.ts` |
 | Typed errors | `packages/contracts/src/errors/` |
 | Error classifier | `packages/contracts/src/error-classifier.ts` |
-| JSON schemas | `schemas/<topic>/<cmd>.json` (generated; never hand-edit) |
+| JSON schemas | `schemas/<topic>-<cmd>.json` (generated; never hand-edit) |
 | MCP server | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts` |
-| Codegen templates | `src/codegen/templates/<framework>/<bundler>/` |
+| Codegen templates | `packages/codegen/templates/`, `packages/framework-*/templates/` |
 | Runtime platform | `packages/runtime/src/` |
 | Hooks | `src/hooks/{init,prerun,postrun,command-not-found}.ts` |
 
@@ -233,7 +225,7 @@ Files prefixed with `_` (e.g., `_shared.ts`) are skipped by oclif discovery — 
 | `npm run lint` | Before every commit |
 | `npm run typecheck` | Before every commit |
 | `npm test` | After any `src/**/*` change |
-| `npm run test:ci` | If you touched `src/runtime/` (enforces 80% coverage) |
+| `npm run test:ci` | If you touched `packages/runtime/src/` (enforces 80% coverage) |
 | `npm run build` | Before pushing |
 | `npm run build:schemas` | After changing command flags, args, or return types |
 

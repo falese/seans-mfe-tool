@@ -13,3 +13,4 @@ export * from './slot-types';
 export * from './validate';
 export * from './platform-migrations';
 export * from './package-dependency-diff';
+export * from './rust-naming';

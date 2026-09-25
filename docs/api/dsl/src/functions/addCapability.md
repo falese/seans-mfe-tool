@@ -220,7 +220,27 @@ Manifest to modify
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `rust?`: \{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \}; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.rust?
+
+\{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \} = `...`
+
+#### targets.rust.capabilities?
+
+`string`[] = `...`
+
+#### targets.rust.crateName?
+
+`string` = `...`
+
+#### targets.rust.edition
+
+`"2021"` \| `"2024"` = `...`
+
+#### targets.rust.wasm
+
+`boolean` = `...`
 
 #### targets.swift?
 
@@ -501,6 +521,26 @@ Modified manifest (new object)
 #### Index Signature
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
+
+#### targets.rust?
+
+> `optional` **rust**: `object`
+
+#### targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+#### targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+#### targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
+
+#### targets.rust.wasm
+
+> **wasm**: `boolean`
 
 #### targets.swift?
 

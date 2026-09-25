@@ -19,6 +19,10 @@
         "type": "boolean",
         "description": "Also emit a Swift Package (native iOS) built from this same manifest. Adds a targets.swift block; the web build is unchanged. Run remote:generate to scaffold it."
       },
+      "rust": {
+        "type": "boolean",
+        "description": "Also emit a Cargo crate (native Rust library) built from this same manifest. Adds a targets.rust block; the web build is unchanged. Run remote:generate to scaffold it."
+      },
       "port": {
         "type": "string",
         "description": "Port number for the remote MFE (default: per-framework)"

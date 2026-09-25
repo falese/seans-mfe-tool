@@ -36,6 +36,9 @@ public final class <%= moduleName %>MFE: NativeMFEBase {
     /// `load()` for a manifest the web lane runs happily.
     ///
     /// Anything a host passes in `deps.customHandlers` wins over these.
+<% if (manifestHandlers.length === 0) { -%>
+    public static let generatedHandlers: [String: MFEHandler] = [:]
+<% } else { -%>
     public static let generatedHandlers: [String: MFEHandler] = [
 <% manifestHandlers.forEach(function (h) { -%>
         // <%= h.capability %> · <%= h.phase %> · <%= h.hook %> — replace with your implementation.
@@ -44,6 +47,7 @@ public final class <%= moduleName %>MFE: NativeMFEBase {
         },
 <% }); -%>
     ]
+<% } -%>
 
     public override init(
         provider: <%= moduleName %>DataProvider<% if (hasBff) { %> = BFF<%= moduleName %>DataProvider()<% } %>,

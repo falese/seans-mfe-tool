@@ -15,6 +15,7 @@
 import { findUnreferencedSlots, type SourceFile } from '@seans-mfe/dsl';
 import type { DSLManifest, LifecycleHook } from '@seans-mfe/dsl';
 import { DEPENDENCY_VERSIONS, resolveClientDependencies } from './unified-generator';
+import { snakeCase } from './rust-naming';
 import {
   PLATFORM_MIGRATIONS,
   findMigrationHits,
@@ -61,6 +62,8 @@ export type ValidationRule =
   | 'slots-implemented'
   | 'native-capability-view'
   | 'native-capability-query'
+  | 'rust-capability-query'
+  | 'rust-capability-view'
   | 'capability-has-a-target'
   | 'native-views-legacy-file'
   | 'platform-migrations'
@@ -187,6 +190,12 @@ function normalizeHandlers(handler: string | string[]): string[] {
  */
 /** Where the developer-owned SwiftUI views live, relative to the MFE root. */
 const NATIVE_FEATURES_DIR = 'swift/Sources/MFE/Features/';
+
+/** Where the Rust target's developer-owned query documents live (ADR-099). */
+const RUST_FEATURES_DIR = 'rust/src/features/';
+
+/** Where the Rust browser build's developer-owned renderers live (ADR-100). */
+const RUST_WEB_FEATURES_DIR = 'rust/web/src/features/';
 
 /** Domain capability names, in manifest order. Platform capabilities have no view. */
 function domainCapabilityNames(manifest: DSLManifest): string[] {
@@ -445,7 +454,7 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     // A capability nothing builds is probably an oversight, not an error: a
     // target whose generator does not exist yet is a legitimate reason.
     if (swiftTarget.capabilities) {
-      checked.push('capability-has-a-target');
+      if (!checked.includes('capability-has-a-target')) checked.push('capability-has-a-target');
       for (const capability of domain) {
         if (swiftTarget.capabilities.includes(capability)) continue;
         issues.push({
@@ -458,6 +467,96 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
           fix:
             `Add "${capability}" to targets.swift.capabilities if the native ` +
             `build should carry it.`,
+        });
+      }
+    }
+  }
+
+  // The Rust target (ADR-099). Its developer-owned surface is the query
+  // documents — there is no view layer — so only the query backstop and the
+  // subset warning apply.
+  const rustTarget = (manifest as { targets?: { rust?: { capabilities?: string[]; wasm?: boolean } } }).targets?.rust;
+  if (rustTarget !== undefined && sources) {
+    const domain = domainCapabilityNames(manifest);
+    const implemented = rustTarget.capabilities
+      ? rustTarget.capabilities.filter((name) => domain.includes(name))
+      : domain;
+
+    // Every capability a Rust target implements must have its query document
+    // when there is a BFF. Generator-owned `platform/bff_data_provider.rs`
+    // reads `crate::features::<cap>_query::DOCUMENT` and generator-owned
+    // `features/mod.rs` declares the module, so a deleted document fails
+    // `cargo build` with "file not found for module" — which names the file
+    // and not the fix. Same backstop as `native-capability-query` (ADR-096 §7).
+    const hasBff = (manifest as { data?: unknown }).data !== undefined;
+    if (hasBff) {
+      checked.push('rust-capability-query');
+      const seeded = new Set(
+        sources
+          .map((f) => f.path.replace(/\\/g, '/'))
+          .filter((p) => p.includes(`/${RUST_FEATURES_DIR}`) && p.endsWith('_query.rs'))
+          .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/_query\.rs$/, '')),
+      );
+      for (const capability of implemented) {
+        const moduleName = `${snakeCase(capability)}_query`;
+        if (seeded.has(snakeCase(capability))) continue;
+        const file = `${RUST_FEATURES_DIR}${moduleName}.rs`;
+        issues.push({
+          rule: 'rust-capability-query',
+          package: capability,
+          message:
+            `The Rust target implements domain capability "${capability}" and ` +
+            `this MFE has a BFF, but ${file} does not exist — generated ` +
+            `platform/bff_data_provider.rs reads ${moduleName}::DOCUMENT.`,
+          fix:
+            `Restore ${file} with \`pub const DOCUMENT: &str\`, or run ` +
+            `remote:generate to re-seed it.`,
+        });
+      }
+    }
+
+    // The browser build (ADR-100): every capability needs its renderer.
+    // Generator-owned `rust/web/src/platform/mod.rs` dispatches to
+    // `crate::features::<cap>::render` and generator-owned `features/mod.rs`
+    // declares the module, so a deleted renderer breaks the wasm32 build with
+    // "file not found for module" — the backstop names the fix.
+    if (rustTarget.wasm === true) {
+      checked.push('rust-capability-view');
+      const drawn = new Set(
+        sources
+          .map((f) => f.path.replace(/\\/g, '/'))
+          .filter((p) => p.includes(`/${RUST_WEB_FEATURES_DIR}`) && p.endsWith('.rs'))
+          .map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/\.rs$/, '')),
+      );
+      for (const capability of implemented) {
+        const moduleName = snakeCase(capability);
+        if (drawn.has(moduleName)) continue;
+        const file = `${RUST_WEB_FEATURES_DIR}${moduleName}.rs`;
+        issues.push({
+          rule: 'rust-capability-view',
+          package: capability,
+          message:
+            `The Rust browser build implements domain capability "${capability}", but ${file} ` +
+            `does not exist — generated rust/web/src/platform/mod.rs calls ${moduleName}::render.`,
+          fix:
+            `Restore ${file} with \`pub fn render(element: &Element, props: &serde_json::Value)\`, ` +
+            `or run remote:generate to re-seed it.`,
+        });
+      }
+    }
+
+    if (rustTarget.capabilities) {
+      if (!checked.includes('capability-has-a-target')) checked.push('capability-has-a-target');
+      for (const capability of domain) {
+        if (rustTarget.capabilities.includes(capability)) continue;
+        issues.push({
+          rule: 'capability-has-a-target',
+          severity: 'warning',
+          package: capability,
+          message:
+            `Domain capability "${capability}" is not implemented by the Rust ` +
+            `target. It is still built for the web.`,
+          fix: `Add "${capability}" to targets.rust.capabilities if the Rust build should carry it.`,
         });
       }
     }

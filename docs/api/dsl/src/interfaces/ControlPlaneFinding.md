@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneFinding
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L42)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L43)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:42](https://github.com/f
 
 > **fatal**: `boolean`
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L48)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L49)
 
 Advisory findings must not fail a build; everything structural does.
 
@@ -24,7 +24,7 @@ Advisory findings must not fail a build; everything structural does.
 
 > **message**: `string`
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L46)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L47)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:46](https://github.com/f
 
 > **rule**: [`ControlPlaneRule`](../type-aliases/ControlPlaneRule.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:43](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L43)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L44)
 
 ***
 
@@ -40,6 +40,6 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:43](https://github.com/f
 
 > **stateKey**: `string`
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L45)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L46)
 
 The state key the offending route produces, for locating it in the source.

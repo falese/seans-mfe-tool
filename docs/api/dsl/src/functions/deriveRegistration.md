@@ -8,7 +8,7 @@
 
 > **deriveRegistration**(`manifest`): [`CompiledRegistration`](../interfaces/CompiledRegistration.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:83](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L83)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L87)
 
 The nine registration fields, from the manifest (ADR-074).
 
@@ -222,7 +222,27 @@ addressed by route instead, so listing them here would say nothing.
 
 #### targets?
 
-\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+\{\[`key`: `string`\]: `Record`\<`string`, `unknown`\>; `rust?`: \{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \}; `swift?`: \{ `bundleId?`: `string`; `capabilities?`: `string`[]; `deploymentTarget`: `string`; `moduleName?`: `string`; `swiftToolsVersion`: `string`; \}; `web?`: \{ `bundler?`: `string`; `framework?`: `string`; \}; \} = `...`
+
+#### targets.rust?
+
+\{ `capabilities?`: `string`[]; `crateName?`: `string`; `edition`: `"2021"` \| `"2024"`; `wasm`: `boolean`; \} = `...`
+
+#### targets.rust.capabilities?
+
+`string`[] = `...`
+
+#### targets.rust.crateName?
+
+`string` = `...`
+
+#### targets.rust.edition
+
+`"2021"` \| `"2024"` = `...`
+
+#### targets.rust.wasm
+
+`boolean` = `...`
 
 #### targets.swift?
 

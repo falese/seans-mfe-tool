@@ -206,6 +206,35 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "rust": {
+                    "type": "object",
+                    "required": [
+                      "edition",
+                      "wasm"
+                    ],
+                    "properties": {
+                      "edition": {
+                        "type": "string",
+                        "enum": [
+                          "2021",
+                          "2024"
+                        ]
+                      },
+                      "wasm": {
+                        "type": "boolean"
+                      },
+                      "crateName": {
+                        "type": "string"
+                      },
+                      "capabilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
                   }
                 },
                 "additionalProperties": {

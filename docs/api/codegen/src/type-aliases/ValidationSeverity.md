@@ -8,7 +8,7 @@
 
 > **ValidationSeverity** = `"error"` \| `"warning"`
 
-Defined in: [packages/codegen/src/validate.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L77)
+Defined in: [packages/codegen/src/validate.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L80)
 
 `error` fails validation; `warning` reports and does not.
 

@@ -256,6 +256,26 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
 
+##### targets.rust?
+
+> `optional` **rust**: `object`
+
+##### targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+##### targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+##### targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
+
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`

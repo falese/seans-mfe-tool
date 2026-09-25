@@ -6,7 +6,7 @@
 
 # Interface: RemoteInitOptions
 
-Defined in: [packages/dsl/src/schema.ts:634](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L634)
+Defined in: [packages/dsl/src/schema.ts:678](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L678)
 
 remote:init command options
 
@@ -16,7 +16,7 @@ remote:init command options
 
 > `optional` **force**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:638](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L638)
+Defined in: [packages/dsl/src/schema.ts:682](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L682)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:638](https://github.com/falese/seans-mfe
 
 > `optional` **port**: `number`
 
-Defined in: [packages/dsl/src/schema.ts:635](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L635)
+Defined in: [packages/dsl/src/schema.ts:679](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L679)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/dsl/src/schema.ts:635](https://github.com/falese/seans-mfe
 
 > `optional` **skipInstall**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:637](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L637)
+Defined in: [packages/dsl/src/schema.ts:681](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L681)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [packages/dsl/src/schema.ts:637](https://github.com/falese/seans-mfe
 
 > `optional` **template**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:636](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L636)
+Defined in: [packages/dsl/src/schema.ts:680](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L680)

@@ -31,7 +31,7 @@ indexes. This page answers only *what is allowed*.
 |---|---|---|---|
 | `framework` | `string` | min length 1 | UI framework. Open string — an unknown value warns rather than failing (ADR-036). Omitted defaults to react. |
 | `bundler` | `string` | min length 1 | Build tool. Open string, same policy as framework. Omitted defaults to rspack. |
-| `targets` | object (web, swift) | — | Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095). |
+| `targets` | object (web, swift, rust) | — | Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095). |
 | `description` | `string` | — |  |
 | `owner` | `string` | — | Team or individual responsible. Used for impact analysis (ADR-008). |
 | `tags` | `string`[] | — | Arbitrary labels for registry search and impact analysis. |
@@ -50,12 +50,13 @@ indexes. This page answers only *what is allowed*.
 
 ### `targets`
 
-Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).
+Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095).
 
 | Field | Type | Constraints | Description |
 |---|---|---|---|
 | `web` | object (framework, bundler) | — | The Module Federation remote. Equivalent to the top-level framework/bundler pair. |
 | `swift` | object (moduleName, bundleId, deploymentTarget, swiftToolsVersion, …) | — | Emit a Swift Package alongside the web build (ADR-095, ADR-096). |
+| `rust` | object (crateName, edition, capabilities, wasm) | — | Emit a Cargo crate alongside the web build (ADR-095, ADR-099). |
 
 ### `dependencies`
 

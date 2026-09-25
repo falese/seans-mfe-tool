@@ -34,51 +34,96 @@ public struct MFEIdentity: Sendable {
     )
 }
 
-/// One capability as reported by `describe`.
-public struct CapabilityMetadata: Sendable, Equatable {
+/// One capability as the manifest declares it.
+public struct CapabilityMetadata: Sendable, Equatable, Codable {
     public let name: String
     public let type: String
     public let description: String
 }
 
-public struct LoadResult: Sendable {
-    public let success: Bool
-    public let availableCapabilities: [String]
-    public let durationMs: Int
+// The results below encode to `packages/runtime/src/capability-results.ts`
+// (ADR-102): the property names ARE the contract's field names, enums encode
+// to the contract's lowercase strings, and timestamps are ISO-8601.
+// `every-target-implements-the-base-class.test.ts` compares the two.
+
+public enum LoadStatus: String, Sendable, Codable { case loaded, error }
+
+public struct LoadResult: Sendable, Codable, Equatable {
+    public let status: LoadStatus
+    public let availableComponents: [String]
+    public let capabilities: [CapabilityMetadata]
+    public let timestamp: String
+    public let duration: Int?
 }
 
-public struct RenderResult: Sendable {
-    public let success: Bool
+public enum RenderStatus: String, Sendable, Codable { case rendered, error }
+
+public struct RenderResult: Sendable, Codable, Equatable {
+    public let status: RenderStatus
     public let capabilityId: String
+    public let timestamp: String
 }
 
-public struct DescribeResult: Sendable {
+public enum HealthStatus: String, Sendable, Codable { case healthy, degraded, unhealthy }
+
+public enum CheckStatus: String, Sendable, Codable { case pass, fail }
+
+public struct HealthCheck: Sendable, Codable, Equatable {
+    public let name: String
+    public let status: CheckStatus
+    public let message: String?
+}
+
+public struct HealthResult: Sendable, Codable, Equatable {
+    public let status: HealthStatus
+    public let checks: [HealthCheck]
+    public let timestamp: String
+}
+
+public struct DescribeResult: Sendable, Codable, Equatable {
     public let name: String
     public let version: String
-    public let capabilities: [CapabilityMetadata]
+    /// The manifest's `type` (`remote`, …).
+    public let type: String
+    public let capabilities: [String]
+    /// The manifest this package was generated from.
+    public let manifest: JSONValue
 }
 
-public struct HealthResult: Sendable {
-    public let healthy: Bool
-    public let state: String
+public enum SchemaFormat: String, Sendable, Codable { case graphql, json, openapi }
+
+public struct SchemaResult: Sendable, Codable, Equatable {
+    public let schema: String
+    public let format: SchemaFormat
 }
 
-public struct SchemaResult: Sendable {
-    public let sdl: String?
+/// One GraphQL error, as the BFF returned it.
+public struct QueryError: Sendable, Codable, Equatable {
+    public let message: String
+    public let path: [String]?
+
+    public init(message: String, path: [String]? = nil) {
+        self.message = message
+        self.path = path
+    }
 }
 
 public struct QueryResult: Sendable {
+    /// The response's `data`, still encoded — decode it into your own type.
     public let data: Data?
-    public let errors: [String]
+    public let errors: [QueryError]
 }
 
-public struct EmitResult: Sendable {
-    public let accepted: Bool
+public struct EmitResult: Sendable, Codable, Equatable {
+    public let emitted: Bool
+    public let eventId: String?
 }
 
-public struct ControlPlaneStateResult: Sendable {
-    public let accepted: Bool
-    public let stateKey: String
+public struct ControlPlaneStateResult: Sendable, Codable, Equatable {
+    public let acknowledged: Bool
+    public let correlationId: String
+    public let error: String?
+    public let resolution: JSONValue?
 }
 
 // MARK: - CrewRoster

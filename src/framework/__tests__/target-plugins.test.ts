@@ -37,6 +37,17 @@ describe('loadTargetPlugins', () => {
     expect(plugins.map((p) => p.id)).toEqual(['react-rspack', 'swiftui-spm']);
   });
 
+  it('returns the rust plugin for targets.rust (ADR-099)', () => {
+    const plugins = loadTargetPlugins(manifest({ targets: { rust: {} } } as Partial<DSLManifest>));
+    expect(plugins.map((p) => p.id)).toEqual(['react-rspack', 'rust-cargo']);
+    expect(plugins[1].targetId).toBe('rust');
+  });
+
+  it('returns one plugin per declared target, in declaration order', () => {
+    const plugins = loadTargetPlugins(manifest({ targets: { swift: {}, rust: {} } } as Partial<DSLManifest>));
+    expect(plugins.map((p) => p.id)).toEqual(['react-rspack', 'swiftui-spm', 'rust-cargo']);
+  });
+
   it('puts the primary first — build order and result aggregation depend on it', () => {
     const plugins = loadTargetPlugins(manifest({ targets: { swift: {} } } as Partial<DSLManifest>));
     expect(plugins[0].targetId).toBe('web');

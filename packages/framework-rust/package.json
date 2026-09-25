@@ -1,0 +1,32 @@
+{
+  "name": "@seans-mfe/framework-rust",
+  "version": "0.1.0",
+  "description": "Rust native target plugin for seans-mfe-tool \u2014 build lifecycle + codegen for a Cargo crate generated from the same manifest as the web build (ADR-095, ADR-097, ADR-099)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./codegen": {
+      "require": "./dist/codegen.js",
+      "types": "./dist/codegen.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'framework-rust tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@seans-mfe/codegen": "file:../codegen",
+    "@seans-mfe/contracts": "file:../contracts"
+  }
+}

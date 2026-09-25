@@ -505,3 +505,97 @@ describe('compileControlPlane — slot addresses', () => {
     expect(fatal(findings)).toEqual([]);
   });
 });
+
+// ── the Rust target's browser build (ADR-100, ADR-103) ──────────────────────
+
+describe('compileControlPlane — a manifest with a browser build', () => {
+  const crew = manifest({
+    name: 'meridian-crew-services',
+    framework: 'react',
+    bundler: 'rspack',
+    endpoint: 'http://localhost:5005',
+    remoteEntry: 'http://localhost:5005/remoteEntry.js',
+    capabilities: [
+      { CrewRoster: { type: 'domain' } },
+      { PayStatus: { type: 'domain' } },
+      { Load: { type: 'platform' } },
+      { Render: { type: 'platform' } },
+    ],
+    targets: { rust: { wasm: true } },
+  } as Partial<DSLManifest>);
+
+  const compile = (routes: ControlPlaneDocument['routes']) =>
+    compileControlPlane({
+      document: doc({ mfes: ['meridian-console', 'meridian-crew-services'], routes }),
+      manifests: [consoleManifest, crew],
+    });
+
+  it('registers the browser build as <name>-wasm, right after the web build', () => {
+    const { payload } = compile([]);
+    expect(payload.map((d) => d.registration.name)).toEqual([
+      'meridian-console',
+      'meridian-crew-services',
+      'meridian-crew-services-wasm',
+    ]);
+    expect(payload[2].registration).toEqual({
+      name: 'meridian-crew-services-wasm',
+      version: '1.0.0',
+      type: 'remote',
+      baseUrl: 'http://localhost:5005',
+      capabilities: ['load', 'render'],
+      contentType: 'module-federation',
+      remoteEntryUrl: 'http://localhost:5005/wasm/remoteEntry.js',
+      moduleFederation: { scope: 'meridian_crew_services_wasm', module: './App' },
+    });
+  });
+
+  it('leaves an unqualified placement on the web build — no existing composition changes', () => {
+    const { payload, findings } = compile([
+      { when: 'meridian.open.crew', place: [{ capability: 'PayStatus', into: 'meridian-console/status' }] },
+    ]);
+    expect(fatal(findings)).toEqual([]);
+    expect(payload[1].routes).toHaveLength(1);
+    expect(payload[2].routes).toHaveLength(0);
+  });
+
+  it('places on the browser build with from: <name>-wasm', () => {
+    const { payload, findings } = compile([
+      {
+        when: 'meridian.open.crew',
+        place: [
+          { capability: 'CrewRoster', into: 'meridian-console/main' },
+          { from: 'meridian-crew-services-wasm', capability: 'PayStatus', into: 'meridian-console/status' },
+        ],
+      },
+    ]);
+    expect(fatal(findings)).toEqual([]);
+    expect(payload[1].routes.map((r) => r.resolve.capability)).toEqual(['CrewRoster']);
+    expect(payload[2].routes).toEqual([
+      {
+        when: { stateKey: 'meridian.open.crew' },
+        resolve: { capability: 'PayStatus', props: { slot: 'meridian-console/status' } },
+      },
+    ]);
+  });
+
+  it('rejects a capability the browser build does not implement', () => {
+    const subset = manifest({
+      ...crew,
+      targets: { rust: { wasm: true, capabilities: ['CrewRoster'] } },
+    } as Partial<DSLManifest>);
+    const { findings } = compileControlPlane({
+      document: doc({
+        mfes: ['meridian-console', 'meridian-crew-services'],
+        routes: [{ when: 'meridian.open.crew', place: [{ from: 'meridian-crew-services-wasm', capability: 'PayStatus' }] }],
+      }),
+      manifests: [consoleManifest, subset],
+    });
+    const finding = fatal(findings).find((f) => f.rule === 'unknown-capability');
+    expect(finding?.message).toContain('meridian-crew-services-wasm');
+  });
+
+  it('does not make a capability ambiguous just because a second build of the same MFE serves it', () => {
+    const { findings } = compile([{ when: 'meridian.open.crew', place: [{ capability: 'CrewRoster' }] }]);
+    expect(findings.some((f) => f.rule === 'ambiguous-capability')).toBe(false);
+  });
+});

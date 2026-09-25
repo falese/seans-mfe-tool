@@ -15,7 +15,7 @@ The list is a reading order, not an alphabetical one. Each entry assumes the one
 | 3 | **runtime** | What a generated MFE extends: `BaseMFE` (lifecycle orchestration, hook execution, handler dispatch), `RemoteMFE`/`AngularRemoteMFE`, the layout manager, the control-plane client. | `src/base-mfe.ts` |
 | 4 | **codegen** | Manifest → files. One pipeline: validate → plan → render → emit. Owns which files a generated MFE gets and, through `overwrite`, which ones it owns forever. | `src/unified-generator.ts` |
 | 5 | **oclif-base** | `BaseCommand` — the JSON envelope, the stdout/stderr split, typed exit codes. Every CLI command and every plugin command extends it. | `src/BaseCommand.ts` |
-| 6 | **framework-react**, **framework-angular**, **framework-swift** | Target plugins. Build lifecycle per target, plus (since ADR-097) its codegen contribution. The first two are `targetId: 'web'` — the primary build, chosen by the manifest's `framework`. **framework-swift** is `targetId: 'swift'`, chosen by `targets.swift`, and runs *alongside* the web plugin rather than instead of it (ADR-095). | `src/plugin.ts` |
+| 6 | **framework-react**, **framework-angular**, **framework-swift**, **framework-rust** | Target plugins. Build lifecycle per target, plus (since ADR-097) its codegen contribution. The first two are `targetId: 'web'` — the primary build, chosen by the manifest's `framework`. **framework-swift** is `targetId: 'swift'`, chosen by `targets.swift`, and **framework-rust** is `targetId: 'rust'` (ADR-099); both run *alongside* the web plugin rather than instead of it (ADR-095). | `src/plugin.ts` |
 | 7 | **plugin-bff** | The BFF commands (`bff:init/validate/build/dev`) as an oclif plugin. The worked example for [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md). | `src/commands/` |
 | 8 | **plugin-api** | OpenAPI → Express + Sequelize backend generation (`api:*`), as a plugin rather than a third of `src/` (ADR-063). The largest single thing that is *not* the CLI. | `src/commands/api.ts` |
 | 9 | **plugin-adr** | The decision-record tooling (`adr:*`) and the governance gates behind `check:adr` / `build:adr-index` (ADR-075). Governs the repo; is not part of the platform contract. | `src/commands/` |
@@ -37,6 +37,7 @@ contracts ───────────────────────�
                     plugin-adr   → contracts, oclif-base
                     plugin-coder → contracts, dsl, oclif-base
                     framework-swift → contracts, dsl, codegen
+                    framework-rust  → contracts, codegen
 ```
 
 `contracts` depending on nothing is the invariant the rest rests on (ADR-061, ADR-080): it is
@@ -55,7 +56,7 @@ They load by different mechanisms, and conflating them is the most likely early 
 - **oclif command plugins** (`plugin-bff`, `plugin-api`, `plugin-adr`, `plugin-coder`) add *commands* to the CLI. Registered in the root
   `package.json` under `oclif.plugins`, resolved by oclif at startup. Contract:
   [`docs/PLUGIN-CONTRACT.md`](../docs/PLUGIN-CONTRACT.md).
-- **framework plugins** (`framework-react`, `framework-angular`, `framework-swift`) add *build
+- **framework plugins** (`framework-react`, `framework-angular`, `framework-swift`, `framework-rust`) add *build
   behaviour and code generation* for one target. Resolved at runtime by `loadFrameworkPlugin()`
   from the manifest's `framework` field, or — for a secondary target — by `loadTargetPlugins()`
   from a `targets:` key (ADR-036, ADR-095, ADR-097). Guide:

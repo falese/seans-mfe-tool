@@ -6,7 +6,7 @@
 
 # Interface: RenderLifecycleHook
 
-Defined in: [packages/codegen/src/render-model.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L68)
+Defined in: [packages/codegen/src/render-model.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L69)
 
 One lifecycle hook stub in the render model.
 
@@ -16,7 +16,7 @@ One lifecycle hook stub in the render model.
 
 > **description**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L70)
+Defined in: [packages/codegen/src/render-model.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L71)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/codegen/src/render-model.ts:70](https://github.com/falese/
 
 > **name**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L69)
+Defined in: [packages/codegen/src/render-model.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L70)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/codegen/src/render-model.ts:69](https://github.com/falese/
 
 > **phase**: `string`
 
-Defined in: [packages/codegen/src/render-model.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L71)
+Defined in: [packages/codegen/src/render-model.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/render-model.ts#L72)

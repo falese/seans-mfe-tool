@@ -101,6 +101,7 @@
 - [resolveWebTarget](functions/resolveWebTarget.md)
 - [severityFor](functions/severityFor.md)
 - [slotSpecs](functions/slotSpecs.md)
+- [snakeCase](functions/snakeCase.md)
 - [toDeclaredSlotIdUnion](functions/toDeclaredSlotIdUnion.md)
 - [unregisterFileContributor](functions/unregisterFileContributor.md)
 - [unregisterVariant](functions/unregisterVariant.md)
@@ -109,3 +110,15 @@
 - [validateManifestTransforms](functions/validateManifestTransforms.md)
 - [validateMfeConsistency](functions/validateMfeConsistency.md)
 - [writeGeneratedFiles](functions/writeGeneratedFiles.md)
+
+## References
+
+### rustCrateName
+
+Re-exports [rustCrateName](../../dsl/src/functions/rustCrateName.md)
+
+***
+
+### rustWasmScope
+
+Re-exports [rustWasmScope](../../dsl/src/functions/rustWasmScope.md)

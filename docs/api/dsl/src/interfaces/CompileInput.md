@@ -6,7 +6,7 @@
 
 # Interface: CompileInput
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L51)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L52)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/dsl/src/control-plane-compiler.ts:51](https://github.com/f
 
 > **document**: `object`
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L52)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L53)
 
 #### mfes
 
@@ -53,6 +53,6 @@ Placement decisions.
 
 > **manifests**: readonly `object`[]
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:54](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L54)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L55)
 
 Parsed manifests for the fleet, in `document.mfes` order.

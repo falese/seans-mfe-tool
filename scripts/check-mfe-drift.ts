@@ -105,6 +105,12 @@ function maximalManifest(manifest: DSLManifest): DSLManifest {
   if (!maximal.targets?.swift) {
     maximal.targets = { ...(maximal.targets ?? {}), swift: { deploymentTarget: '17.0', swiftToolsVersion: '5.9' } };
   }
+  // Same for rust/ (ADR-099), with its browser build forced on (ADR-100) so
+  // turning `wasm` off leaves rust/web/ reported as orphaned, not invisible.
+  maximal.targets = {
+    ...(maximal.targets ?? {}),
+    rust: { edition: '2021', ...(maximal.targets?.rust ?? {}), wasm: true },
+  };
   return maximal;
 }
 

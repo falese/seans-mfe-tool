@@ -65,7 +65,7 @@ export type Bundler = z.infer<typeof BundlerSchema>;
  * KNOWN_FRAMEWORKS/KNOWN_BUNDLERS are (ADR-036, #181). A target generator
  * shipped outside this repo must not require a schema change here.
  */
-export const KNOWN_TARGETS = ['swift'] as const;
+export const KNOWN_TARGETS = ['swift', 'rust'] as const;
 
 /**
  * A Swift identifier: a letter or underscore, then letters/digits/underscores.
@@ -116,6 +116,48 @@ export const SwiftTargetSchema = z.object({
 export type SwiftTarget = z.infer<typeof SwiftTargetSchema>;
 
 /**
+ * A Cargo package name: a letter, then letters, digits, `-` or `_`. Cargo
+ * derives the library name by replacing `-` with `_`, so kebab-case MFE names
+ * pass through unchanged; a leading digit is not legal.
+ */
+const CARGO_PACKAGE_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/**
+ * The Rust native target (ADR-095, ADR-099).
+ *
+ * Same principle as the Swift block: a secondary target declares how to BUILD,
+ * never what the MFE IS. Capability set, identity and lifecycle come from the
+ * manifest proper.
+ */
+export const RustTargetSchema = z.object({
+  crateName: z
+    .string()
+    .min(1)
+    .regex(CARGO_PACKAGE_NAME, 'crateName must be a Cargo package name (a letter, then letters, digits, - or _)')
+    .optional()
+    .describe('Cargo package name. Omitted ⇒ the manifest name.'),
+  edition: z
+    .enum(['2021', '2024'])
+    .default('2021')
+    .describe('Rust edition for the generated Cargo.toml.'),
+  capabilities: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      'Domain capabilities this target implements. Omitted ⇒ all of them. ' +
+        'Same subset semantics as targets.swift.capabilities.',
+    ),
+  wasm: z
+    .boolean()
+    .default(false)
+    .describe(
+      'Also build the crate for the browser: a rust/web crate compiled to WebAssembly and served as a ' +
+        'Module Federation remote the shell mounts like any other (ADR-100).',
+    ),
+});
+export type RustTarget = z.infer<typeof RustTargetSchema>;
+
+/**
  * The web target — the Module Federation remote.
  *
  * Carries the same two values the top-level `framework`/`bundler` scalars do.
@@ -135,9 +177,9 @@ export type WebTarget = z.infer<typeof WebTargetSchema>;
  * Every build this manifest produces.
  *
  * `web` is the Module Federation remote; any other key is a build produced
- * beside it from the same capabilities. `swift` is the only other key the
- * platform ships a generator for today, which is NOT the same as the only key
- * that may appear.
+ * beside it from the same capabilities. `swift` and `rust` are the other keys
+ * the platform ships a generator for today, which is NOT the same as the only
+ * keys that may appear.
  *
  * `.catchall()` is load-bearing. A plain `z.object` strips unknown keys, so
  * before it a manifest declaring `targets.kotlin` warned on stderr from the raw
@@ -152,6 +194,8 @@ export const TargetsSchema = z
       .describe('The Module Federation remote. Equivalent to the top-level framework/bundler pair.'),
     swift: SwiftTargetSchema.optional()
       .describe('Emit a Swift Package alongside the web build (ADR-095, ADR-096).'),
+    rust: RustTargetSchema.optional()
+      .describe('Emit a Cargo crate alongside the web build (ADR-095, ADR-099).'),
   })
   .catchall(z.record(z.string(), z.unknown()));
 export type Targets = z.infer<typeof TargetsSchema>;
@@ -533,7 +577,7 @@ export const DSLManifestSchema = z.object({
   // this describes anything built beside it. Must be declared here: the
   // manifest object is non-strict, so an undeclared key is stripped silently.
   targets: TargetsSchema.optional()
-    .describe('Secondary build targets built from this same manifest, e.g. a Swift Package (ADR-095).'),
+    .describe('Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095).'),
 
   // Optional identity
   description: z.string().optional(),

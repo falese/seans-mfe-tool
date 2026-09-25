@@ -487,3 +487,95 @@ jobs:
         # contributor's machine and wrong here — a silently skipped gate is the
         # failure mode this whole job exists to end.
         run: bash scripts/check-swift-build.sh --require
+
+  rust:
+    # Compile, test, lint and format-check the generated Rust crate (ADR-099).
+    #
+    # The Rust lane's counterpart to the `swift` job, present from its first
+    # commit rather than added after type errors got through: every Node-side
+    # Rust assertion is a text assertion and cannot see a type error.
+    #
+    # Unlike `swift` this leaves nothing uncovered — the crate ships no UI, so
+    # the whole generated surface compiles here, and `cargo test` RUNS the
+    # generated tests/lifecycle.rs: the state machine, the manifest hook engine
+    # and both query error policies.
+    #
+    # Separate job for the same reason as `swift`: it needs a Rust toolchain
+    # and no Node.
+    runs-on: ubuntu-latest
+    container: rust:1
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Toolchain components
+        run: |
+          rustup component add clippy rustfmt
+          cargo --version
+
+      - name: Build, test, lint and format-check every generated crate
+        # --require so a missing toolchain or component fails loudly instead
+        # of skipping — the same reasoning as the swift job.
+        run: bash scripts/check-rust-build.sh --require
+
+      - name: MSRV — the rust-version the generated Cargo.toml declares
+        # The generated crate claims `rust-version = "1.75"`. That is a promise
+        # to every host that builds it, and a dependency release can break it
+        # without any change here — so it is checked, not assumed.
+        run: |
+          rustup toolchain install 1.75 --profile minimal
+          find examples -type f -name Cargo.toml -path '*/rust/*' -not -path '*/rust/web/*' -not -path '*/target/*' -print0 |
+            while IFS= read -r -d '' manifest; do
+              echo "=== $manifest"
+              cargo +1.75 test --manifest-path "$manifest"
+            done
+
+  rust-wasm:
+    # Build the Rust crate for the browser and mount it through the shell's own
+    # adaptor in Chromium (ADR-100).
+    #
+    # ADR-100's claim is that a WebAssembly build needs no shell, runtime or
+    # control-plane change — it is one more Module Federation remote. This job
+    # is what holds that claim: check-rust-wasm-mount.mjs loads the COMPILED
+    # dist/runtime/layout-adaptors.js into the page and mounts every capability
+    # through moduleFederationAdaptor, not through a re-implementation of it.
+    #
+    # Needs Node (dist/runtime, Playwright) and Rust (wasm32, wasm-bindgen), so
+    # it runs on the plain runner rather than in the rust container.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (dist/runtime is what the browser probe loads)
+        run: npm run build
+
+      - name: Rust toolchain for wasm32
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt --target wasm32-unknown-unknown
+          rustup default stable
+          # Must equal the wasm-bindgen version pinned in rust/web/Cargo.toml.
+          cargo install wasm-bindgen-cli --version 0.2.128 --locked
+
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build, lint and mount every generated WASM remote
+        run: bash scripts/check-rust-wasm.sh --require
+
+      - name: MSRV — the rust-version the generated web Cargo.toml declares
+        run: |
+          rustup toolchain install 1.77 --profile minimal --target wasm32-unknown-unknown
+          find examples -type f -name Cargo.toml -path '*/rust/web/*' -not -path '*/target/*' -print0 |
+            while IFS= read -r -d '' manifest; do
+              echo "=== $manifest"
+              cargo +1.77 build --manifest-path "$manifest" --target wasm32-unknown-unknown
+            done

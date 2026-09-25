@@ -29,6 +29,8 @@
       "@seans-mfe/plugin-bff/*": ["./packages/plugin-bff/src/*"],
       "@seans-mfe/framework-swift": ["./packages/framework-swift/src/index.ts"],
       "@seans-mfe/framework-swift/*": ["./packages/framework-swift/src/*"],
+      "@seans-mfe/framework-rust": ["./packages/framework-rust/src/index.ts"],
+      "@seans-mfe/framework-rust/*": ["./packages/framework-rust/src/*"],
       "@seans-mfe/framework-react": ["./packages/framework-react/src/index.ts"],
       "@seans-mfe/framework-react/*": ["./packages/framework-react/src/*"],
       "@seans-mfe/framework-angular": ["./packages/framework-angular/src/index.ts"],

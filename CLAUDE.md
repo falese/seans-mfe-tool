@@ -15,7 +15,7 @@ Full spec: `@docs/spec.md`
 - **Runtime:** Node ≥18 (published), Bun (dev entry — no transpile)
 - **Language:** TypeScript (strict, no `any`)
 - **CLI framework:** oclif (colon topics, plugin architecture)
-- **Packages:** `packages/contracts/`, `packages/oclif-base/`, `packages/runtime/`
+- **Packages:** `packages/*` — see `packages/README.md` for the layers and the import direction between them
 - **Bundler support generated:** rspack (React), webpack/@angular-builders (Angular)
 - **Test runner:** Jest
 - **Validation:** Zod
@@ -27,7 +27,7 @@ Full spec: `@docs/spec.md`
 | `npm run lint` | Before every commit |
 | `npm run typecheck` | Before every commit — two projects: the CLI tree and `packages/runtime` (#341) |
 | `npm test` | After any `src/**/*` change |
-| `npm run test:ci` | If you touched `src/runtime/` (enforces 80% coverage) |
+| `npm run test:ci` | If you touched `packages/runtime/src/` (enforces 80% coverage) |
 | `npm run build` | Before pushing — catches broken oclif manifest |
 | `npm run build:schemas` | After any change to command flags, args, or return types |
 | `npm run check:mfe-consistency` | Validate every `examples/**` MFE's internal consistency (manifest ⇄ package.json ⇄ federation `shared`). This is the gate that catches a changed dependency **version** — `check:mfe-drift` does not. CI-gated (#296) |
@@ -35,6 +35,8 @@ Full spec: `@docs/spec.md`
 | `npm run check:mfe-drift` | The fix for the above — regenerates and **writes** the drifted files, for you to commit |
 | `npm run clean` | Remove every build artifact — all `dist/`, `oclif.manifest.json`, `tsconfig.tsbuildinfo`, `coverage/`. Reach for it the moment a gate's result stops making sense: `tsc -b` is incremental, oclif reads a manifest, and several gates resolve packages to their **compiled** output, so a stale artifact reads as working code. `--dry-run` lists without removing |
 | `npm run check:swift-build` | After any `packages/framework-swift/**` change — `swift build` + `swift test` against every generated `examples/**/swift/` package. **The only gate that type-checks the emitted Swift.** Every other Swift assertion is a text assertion and cannot see a type error; two got through that way. SKIPS with a notice when no toolchain is on PATH, so it is a no-op locally unless you have Swift; the `swift` CI job runs it with `--require` in the `swift:6.0` container. SwiftUI files are behind `#if canImport(SwiftUI)` so the **views are not covered** — they still need a Mac |
+| `npm run check:rust-build` | After any `packages/framework-rust/**` change — `cargo build`, `cargo test`, `cargo clippy` and `cargo fmt --check` against every generated `examples/**/rust/` crate, warnings as errors. The only gate that type-checks the emitted Rust, and it covers the whole crate (there is no UI half). SKIPS with a notice when `cargo` is not on PATH; the `rust` CI job runs it with `--require`, then re-tests on Rust 1.75, the MSRV the generated `Cargo.toml` declares |
+| `npm run check:rust-wasm` | After any `packages/framework-rust/**` change that touches the browser build — builds every `examples/**/rust/web` crate for wasm32 (clippy on the core and web crates, fmt, `build.sh`), then mounts each capability in Chromium **through the compiled `dist/runtime` shell adaptor** (ADR-100) and drives all ten platform capabilities there, with the daemon channel handed over by that adaptor (ADR-101). Run `npm run build` first. SKIPS without the wasm32 target, the `wasm-bindgen` CLI (pinned `0.2.128`) or a browser; set `CHROMIUM_PATH` if Playwright's own browser is missing. The `rust-wasm` CI job runs it with `--require` |
 | `npm run check:template-typecheck` | After any `packages/runtime/**` or template change — scaffolds a real MFE per framework lane, `npm install`s it, and typechecks it. The only gate that proves the **runtime barrel** still satisfies generated code. ⚠️ Resolves `@seans-mfe-tool/runtime` to `dist/runtime`, so run `npm run build` first or it checks the last build |
 | `npm run build:system-map` | After anything that changes a count the system map asserts — a package, an ADR, a template, an example MFE. `docs/system-map.html` is the executive-facing page and its counts are **generated**; `build:system-map:check` fails when the committed page disagrees with the repository. Three of its eight counts had already drifted before this existed |
 | `npm run build:docs` | After any `packages/{contracts,runtime,dsl}/src/**` change — regenerates the committed `docs/api` reference (ADR-065); the API-docs workflow gates it on PRs, so commit the result |
@@ -46,7 +48,7 @@ Full spec: `@docs/spec.md`
 | `examples/abc-kids/scripts/build-games.sh` | **Build the abc-kids fleet.** Sequential, with a shared base image so the fleet costs ONE npm install. `SKIP_CLI=1` if the CLI image is current |
 | `examples/meridian-station/scripts/build-station.sh` | **Build the meridian fleet.** Same shape: sequential, `SKIP_CLI=1` to skip the CLI rebuild |
 | `npx turbo run docker:build:examples[:meridian]` | Caching wrapper over the *raw* `docker compose build` — which builds **13 services in parallel** and OOMs on a normal laptop, surfacing as an unrelated `npm install` exit 1 in whichever service loses. Prefer the scripts above; reach for this only when you want turbo's input-hash skipping. `npx` because turbo is a devDependency, not global |
-| `npm run build && npm run docker:build:cli` | After any `src/runtime/**` change: recompile dist/ THEN rebuild CLI image (dist/ is gitignored but baked into the CLI Docker image) |
+| `npm run build && npm run docker:build:cli` | After any `packages/runtime/src/**` change: recompile dist/ THEN rebuild CLI image (dist/ is gitignored but baked into the CLI Docker image) |
 
 ## Development rules
 
@@ -127,26 +129,12 @@ in the PR body — the governance report asks either way, and takes an answer.
 - **JSON envelope:** under `--json`, stdout emits exactly ONE `CommandResult<T>` line; everything else goes to stderr
 - **MCP child-process per tool call:** spawn `seans-mfe-tool <cmd> --json`, parse stdout — isolates `process.exit` and cwd mutations
 - **Bun for dev, Node for publish:** `bin/dev.ts` runs under Bun; `bin/run.js` is the pure-Node published entry
-- **Framework-agnostic runtime contract:** `BaseMFE` lifecycle is delivery-mechanism-independent; adding a new framework means a new codegen template variant, not a new lifecycle
+- **Framework-agnostic runtime contract:** `BaseMFE` lifecycle is delivery-mechanism-independent; adding a new framework means a new framework plugin (ADR-036), not a new lifecycle
 
-## Current state (2026-05-24)
+## Current state
 
-| Work stream | Status |
-|---|---|
-| oclif migration (Epics A + B + C, PR #123) | ✅ Done |
-| Codegen + DSL pipeline | ✅ Done |
-| GraphQL BFF layer | ✅ Done |
-| Framework plugin system (ADR-036, #167–#185, PRs #187–#188) | ✅ Done |
-| Runtime platform (REQ-RUNTIME-001–012) | 🟡 In Progress (issues #47–59) |
-| Slot contract — stable addressing, desired-state placement, manifest-declared/provider-scoped slots, React + Angular sugar, single-sourced grammar (ADR-066/067/068/069, #265) | ✅ Done (PR #266); see `docs/slot-contract.md` |
-| Slot app-code API + design-time validation — `DeclaredSlot` as the sanctioned API with manifest-typed ids, the `slots-implemented` rule in `mfe:validate`, `slots:validate`, registry rule-save checks (ADR-072/073) | ✅ Done; see `docs/slot-architecture.md` |
-| BaseMFE boilerplate codegen from DSL (REQ-057) | 🟡 In Progress (issue #39) |
-| Lifecycle engine — timeout (ADR-029) + error classification/retry (ADR-030) | ✅ Done (`timeout-wrapper.ts`, `error-classifier.ts`, `retry-wrapper.ts`; status reconciled in the ADR-075 pass) |
-| Lifecycle engine — parallel exec (ADR-028), conditional/Jexl (ADR-031), inter-hook (ADR-032) | 📋 Proposed (issues not yet created) |
-| ADR library drift control (ADR-075) | ✅ Done — `npm run check:adr`; frontmatter is the source of truth |
-| npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` | ⏳ Pending (docs/MERGE-PLAN.md Phase 1) |
-
-See `docs/PROJECT-STATUS.md` for priority order and blockers.
+Project status, priorities and blockers live in `docs/PROJECT-STATUS.md` — one
+place, so they cannot disagree with a copy here.
 
 ## Where things live
 
@@ -163,11 +151,15 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 | Typed errors | `packages/contracts/src/errors/` |
 | Error classifier | `packages/contracts/src/error-classifier.ts` |
 | Runtime lifecycle | `packages/runtime/src/` |
-| JSON schemas | `schemas/<topic>/<cmd>.json` (generated — never hand-edit) |
+| JSON schemas | `schemas/<topic>-<cmd>.json` (generated — never hand-edit) |
 | MCP server | `src/commands/mcp/serve.ts`; registry `src/mcp/tool-registry.ts` |
 | Hooks | `src/hooks/{init,prerun,postrun,command-not-found}.ts` |
-| Codegen templates | `src/codegen/templates/` |
+| Codegen templates | `packages/codegen/templates/` (Docker templates only: `src/codegen/templates/docker/`) |
 | Swift native target plugin (ADR-095/096/097) | `packages/framework-swift/src/{plugin,codegen}.ts`; templates `packages/framework-swift/templates/` |
+| Rust native target plugin (ADR-099) | `packages/framework-rust/src/{plugin,codegen}.ts`; templates `packages/framework-rust/templates/` |
+| Rust browser build — remote entry, wasm-bindgen glue, per-capability renderers (ADR-100) | `packages/framework-rust/templates/web/` |
+| Capability → Rust module name (shared by codegen and `mfe:validate`) | `packages/codegen/src/rust-naming.ts` |
+| Enabling a target on a manifest (`--swift`, `--rust`) | `src/targets/enable.ts` |
 | Native target explainer (one manifest, two builds) | `docs/native-targets.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
@@ -204,7 +196,7 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
 - **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
 - **A second build is a framework plugin with a `targetId`, not a new plugin kind.**
   `targets.swift` in a manifest emits a Swift Package beside the web remote
-  (ADR-095). The plugin carries both halves — build lifecycle and
+  (ADR-095); `targets.rust` emits a Cargo library crate (ADR-099). The plugin carries both halves — build lifecycle and
   `registerCodegen()` (ADR-097) — so there are still only two things called
   "plugin". A `CodegenVariant` is one per MFE and cannot express a *second*
   build; use a `FileContributor`. Registration is manifest-driven via
@@ -215,18 +207,6 @@ See `docs/PROJECT-STATUS.md` for priority order and blockers.
   never read `manifest.framework` directly. A manifest setting both differently
   is a validation error, not a precedence question.
 - **Open schema for framework/bundler.** `FrameworkSchema` and `BundlerSchema` are `z.string().min(1)` — not enums. Unknown values emit a stderr warning; they are not validation errors (ADR-036, #181).
-
-## Backlog priority
-
-1. ~~oclif Migration (A + B + C)~~ ✅
-2. ~~Codegen + DSL pipeline~~ ✅
-3. ~~GraphQL BFF layer~~ ✅
-4. Runtime platform — REQ-RUNTIME-002 → 005 → 001 → 004 → … (issues #47–59) 🟡
-5. BaseMFE boilerplate codegen from DSL — REQ-057 (issue #39, blocked on #49) 🟡
-6. Lifecycle engine enhancements — ADR-028 / ADR-031 / ADR-032 (issues not yet created) 📋
-   (ADR-029 timeout and ADR-030 error classification already shipped)
-7. npm publish `@seans-mfe/contracts` + `@seans-mfe/oclif-base` ⏳
-8. Monorepo consolidation (docs/MERGE-PLAN.md Phase 2) ⏳
 
 ## Verification gates before push
 
@@ -255,18 +235,13 @@ Run in order — push only after all pass:
    The script resolves `@seans-mfe/codegen` to `packages/codegen/dist`, so it
    silently checks the last build. Templates are read from disk and do show up
    immediately, which is why this trap stays hidden until you change logic.
-   Regenerates every `examples/**` MFE in memory and fails if any generator-owned file
-   has drifted. It compares generated bytes for generator-**owned** files only, and
-   **is not sufficient on its own**: a changed `DEPENDENCY_VERSIONS` entry
-   (react `~18.2.0` → `~18.9.9`) leaves it green across all 21 examples, because the
-   generated `package.json` is developer-owned and regeneration never compares it.
-   `check:mfe-consistency` is what catches that (verified by planting exactly that
-   change: drift exit 0, consistency exit 1, both 0 again on revert). The converse
-   also holds — `check:mfe-consistency` passes happily on drifted generator-owned
-   files. **Neither substitutes for the other; run both.** Use the `:check` variant here — bare
-   `npm run check:mfe-drift` *writes* the regenerated files, which is the fix, not the
-   check. Whitespace counts: a standalone EJS comment block emits its trailing newline,
-   enough to drift all 21 examples (PR #335).
+   Regenerates every `examples/**` MFE in memory and fails if any
+   generator-owned file has drifted. It compares generator-**owned** files only,
+   so it cannot see a changed `DEPENDENCY_VERSIONS` pin — that lands in the
+   developer-owned `package.json`, which `check:mfe-consistency` checks. Run
+   both; neither substitutes for the other. Use the `:check` variant here —
+   bare `check:mfe-drift` *writes* the regenerated files. Whitespace counts: a
+   standalone EJS comment block emits its trailing newline.
 9. `npm run check:mfe-consistency` — **required alongside §8** for any
    `packages/codegen/**` change, and also run it if you touched
    `packages/runtime/**` or an `examples/**` MFE — CI-gated (#296). It checks
@@ -306,7 +281,14 @@ Run in order — push only after all pass:
     you have a Swift toolchain — which is the trap: it exits 0 and says so, and
     the real run is the `swift` CI job. Read the output, not the exit code.
     Covers the platform layer only; the SwiftUI views compile out on Linux.
-15. `npm run build:docs && git diff --exit-code docs/api`
+15. `npm run check:rust-build` (if you touched `packages/framework-rust/**`)
+    Builds, tests, lints and format-checks the generated crate. Like §14 it
+    SKIPS without a toolchain — read the output, not the exit code. Generator-
+    owned Rust is behind `#[rustfmt::skip]` so `cargo fmt` cannot cause drift;
+    keep it that way (ADR-099 §6). If the browser build is involved, also
+    `npm run build && npm run check:rust-wasm` (ADR-100) — the only gate that
+    compiles the wasm32 crate and mounts it through the shell's adaptor.
+16. `npm run build:docs && git diff --exit-code docs/api`
     (if you touched `packages/contracts/src/**`, `packages/runtime/src/**`, or
     `packages/dsl/src/**`)
     `docs/api` is a committed, gated artifact (ADR-065): the API-docs workflow
@@ -327,7 +309,7 @@ When landing a significant or user-facing change, post a comment on the PR with 
 copy-pasteable **local-test runbook** — as a matter of course, not only when asked:
 
 - exact build commands, including any image/artifact rebuilds the change forces
-  (e.g. `npm run build && npm run docker:build:cli` whenever `src/runtime/**`
+  (e.g. `npm run build && npm run docker:build:cli` whenever `packages/runtime/src/**`
   changed — `dist/runtime` is baked into the CLI image and staged into MFEs);
 - how to run it end to end and drive the new behavior;
 - what a correct result looks like, and the first place to look if it isn't.
@@ -350,4 +332,4 @@ Before opening the PR:
       none is needed (ADR-082)
 - [ ] No shared files touched unless the issue explicitly owns them (`package.json` oclif section, `package.json` `workspaces`, `turbo.json`, `schemas/`)
 
-For the current session's active issue and spec context: `@docs/session-prompt.md`
+`docs/session-prompt.md` is a template a human fills in before a session; its contents describe the session named in its header, not necessarily this one.

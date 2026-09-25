@@ -1,0 +1,22 @@
+# Seeded once by seans-mfe-tool, then yours — add dependencies freely.
+#
+# The generated platform layer needs exactly two crates: serde (the capability
+# Inputs/Outputs types) and serde_json (the `query` envelope and
+# `MfeContext.inputs`). No async runtime and no HTTP client — the futures run
+# on whatever executor the host uses, and the host injects the transport
+# (ADR-099).
+
+[package]
+name = "<%- crateName %>"
+version = "<%- manifestVersion %>"
+edition = "<%- edition %>"
+rust-version = "<%- edition === '2024' ? '1.85' : '1.75' %>"
+publish = false
+description = "<%- rustText('Native build of the ' + manifestName + ' MFE, generated from its mfe-manifest.yaml') %>"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

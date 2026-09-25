@@ -57,6 +57,7 @@ interface SwiftCtx {
   manifest: {
     name: string;
     version: string;
+    type?: string;
     owner?: string;
     endpoint?: string;
     capabilities?: unknown;
@@ -263,6 +264,10 @@ const manifestProjection = (c: unknown): Record<string, unknown> => {
         {
           name: ctx.manifest.name,
           version: ctx.manifest.version,
+          // `describe` reports the type and the whole manifest, and `schema`
+          // returns it, as BaseRemoteMFE does (ADR-102).
+          type: ctx.manifest.type ?? 'remote',
+          manifestJson: JSON.stringify(ctx.manifest, null, 2),
           bundleId: bundleIdFor(c),
           bffEndpoint: ctx.vars.bffEndpoint ?? null,
           capabilities: projected,

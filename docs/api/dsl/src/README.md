@@ -8,6 +8,7 @@
 
 ## Interfaces
 
+- [BrowserBuild](interfaces/BrowserBuild.md)
 - [CapabilityScaffold](interfaces/CapabilityScaffold.md)
 - [CompiledRegistration](interfaces/CompiledRegistration.md)
 - [CompiledRoute](interfaces/CompiledRoute.md)
@@ -21,6 +22,7 @@
 - [PlacementRuleDocument](interfaces/PlacementRuleDocument.md)
 - [RemoteGenerateOptions](interfaces/RemoteGenerateOptions.md)
 - [RemoteInitOptions](interfaces/RemoteInitOptions.md)
+- [RustNamingInput](interfaces/RustNamingInput.md)
 - [SourceFile](interfaces/SourceFile.md)
 - [UnreferencedSlotFinding](interfaces/UnreferencedSlotFinding.md)
 - [ValidationError](interfaces/ValidationError.md)
@@ -64,12 +66,15 @@
 - [ProvidedSlot](type-aliases/ProvidedSlot.md)
 - [ProvidesSlots](type-aliases/ProvidesSlots.md)
 - [RateLimitConfig](type-aliases/RateLimitConfig.md)
+- [RustTarget](type-aliases/RustTarget.md)
 - [SwiftTarget](type-aliases/SwiftTarget.md)
 - [Targets](type-aliases/Targets.md)
 - [WebTarget](type-aliases/WebTarget.md)
 
 ## Variables
 
+- [BROWSER\_BUILD\_PATH](variables/BROWSER_BUILD_PATH.md)
+- [BROWSER\_BUILD\_SUFFIX](variables/BROWSER_BUILD_SUFFIX.md)
 - [BundlerSchema](variables/BundlerSchema.md)
 - [CachingConfigSchema](variables/CachingConfigSchema.md)
 - [CapabilityConfigSchema](variables/CapabilityConfigSchema.md)
@@ -111,6 +116,7 @@
 - [ProvidedSlotSchema](variables/ProvidedSlotSchema.md)
 - [ProvidesSlotsSchema](variables/ProvidesSlotsSchema.md)
 - [RateLimitConfigSchema](variables/RateLimitConfigSchema.md)
+- [RustTargetSchema](variables/RustTargetSchema.md)
 - [SwiftTargetSchema](variables/SwiftTargetSchema.md)
 - [TargetsSchema](variables/TargetsSchema.md)
 - [VALID\_CAPABILITY\_TYPES](variables/VALID_CAPABILITY_TYPES.md)
@@ -122,8 +128,10 @@
 ## Functions
 
 - [addCapability](functions/addCapability.md)
+- [browserBuildOf](functions/browserBuildOf.md)
 - [compileControlPlane](functions/compileControlPlane.md)
 - [createMinimalManifest](functions/createMinimalManifest.md)
+- [deriveBrowserRegistration](functions/deriveBrowserRegistration.md)
 - [deriveRegistration](functions/deriveRegistration.md)
 - [findManifest](functions/findManifest.md)
 - [findUnreferencedSlots](functions/findUnreferencedSlots.md)
@@ -138,6 +146,8 @@
 - [parseManifestFile](functions/parseManifestFile.md)
 - [parseManifestFromDirectory](functions/parseManifestFromDirectory.md)
 - [parseYAML](functions/parseYAML.md)
+- [rustCrateName](functions/rustCrateName.md)
+- [rustWasmScope](functions/rustWasmScope.md)
 - [serializeToYAML](functions/serializeToYAML.md)
 - [validateCapabilities](functions/validateCapabilities.md)
 - [validateDataConfig](functions/validateDataConfig.md)

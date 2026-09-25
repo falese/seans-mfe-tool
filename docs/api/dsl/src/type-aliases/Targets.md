@@ -8,4 +8,4 @@
 
 > **Targets** = `z.infer`\<*typeof* [`TargetsSchema`](../variables/TargetsSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L157)
+Defined in: [packages/dsl/src/schema.ts:201](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L201)

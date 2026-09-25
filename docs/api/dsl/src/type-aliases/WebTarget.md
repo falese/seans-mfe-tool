@@ -8,4 +8,4 @@
 
 > **WebTarget** = `z.infer`\<*typeof* [`WebTargetSchema`](../variables/WebTargetSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L132)
+Defined in: [packages/dsl/src/schema.ts:174](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L174)

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/remote:generate.json",
   "title": "remote:generate",
-  "description": "Generate files from mfe-manifest.yaml capabilities",
+  "description": "Generate an MFE's files from the mfe-manifest.yaml in the working directory. Generator-owned files (src/platform/**, and the platform layer of any swift/ or rust/ target) are rewritten on every run; developer-owned files (feature components, package.json, App.tsx, bundler config) are written only when missing, so edits survive. --force re-seeds developer-owned scaffolding and REPLACES edits — preview it with --dry-run. --swift / --rust add that target to the manifest first. Run mfe:validate afterwards to check consistency; this command does not.",
   "input": {
     "type": "object",
     "properties": {
@@ -17,6 +17,10 @@
       "swift": {
         "type": "boolean",
         "description": "Declare and generate a Swift Package (native iOS) from this same manifest. Adds a targets.swift block to mfe-manifest.yaml if absent, then scaffolds swift/ beside the web build. The web build is unchanged."
+      },
+      "rust": {
+        "type": "boolean",
+        "description": "Declare and generate a Cargo crate (native Rust library) from this same manifest. Adds a targets.rust block to mfe-manifest.yaml if absent, then scaffolds rust/ beside the web build. The web build is unchanged."
       }
     },
     "required": [],

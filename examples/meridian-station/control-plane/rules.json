@@ -333,7 +333,27 @@
             "slot": "meridian-console/main"
           }
         }
-      },
+      }
+    ]
+  },
+  {
+    "registration": {
+      "name": "meridian-crew-services-wasm",
+      "version": "1.0.0",
+      "type": "remote",
+      "baseUrl": "http://localhost:5005",
+      "capabilities": [
+        "load",
+        "render"
+      ],
+      "contentType": "module-federation",
+      "remoteEntryUrl": "http://localhost:5005/wasm/remoteEntry.js",
+      "moduleFederation": {
+        "scope": "meridian_crew_services_wasm",
+        "module": "./App"
+      }
+    },
+    "routes": [
       {
         "when": {
           "stateKey": "meridian.open.crew"

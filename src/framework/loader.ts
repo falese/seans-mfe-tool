@@ -31,6 +31,7 @@ const BUILTIN_FRAMEWORKS: Record<string, string> = {
  */
 const BUILTIN_TARGETS: Record<string, string> = {
   swift: 'framework-swift',
+  rust: 'framework-rust',
 };
 
 /**

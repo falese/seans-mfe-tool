@@ -7,17 +7,18 @@ import { BaseCommand } from '../../oclif/BaseCommand';
 import { BusinessError, SystemError } from '@seans-mfe/contracts';
 import { loadFrameworkPlugin, assertServesHttp } from '../../framework/loader';
 import { withSwiftTarget } from '../../targets/swift';
+import { withRustTarget } from '../../targets/rust';
 import type { RemoteInitResult, PlannedChange } from '../../oclif/results';
 import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
 
 export async function remoteInitCommand(
   name: string,
-  options: RemoteInitOptions & { dryRun?: boolean; framework?: string; swift?: boolean } = {}
+  options: RemoteInitOptions & { dryRun?: boolean; framework?: string; swift?: boolean; rust?: boolean } = {}
 ): Promise<RemoteInitResult> {
   const frameworkName = options.framework ?? 'react';
   const plugin = loadFrameworkPlugin(frameworkName);
   // remote:init scaffolds an HTTP-served MFE; a secondary target is added to
-  // an existing one with `remote:generate --swift` (ADR-095).
+  // an existing one with `remote:generate --swift` / `--rust` (ADR-095).
   assertServesHttp(plugin, 'remote:init');
   const port = options.port || plugin.defaultPort;
   const targetDir = path.resolve(process.cwd(), name);
@@ -74,16 +75,20 @@ export async function remoteInitCommand(
       bundler: plugin.bundler,
     });
     const endpoints = generateEndpoints(name, port);
-    // `--swift` is additive (ADR-095): a SECOND build of this same MFE, from
-    // the same capabilities. It does not change framework/bundler, which still
-    // describe the primary web build.
+    // `--swift` and `--rust` are additive (ADR-095): each is a SECOND build of
+    // this same MFE, from the same capabilities. Neither changes
+    // framework/bundler, which still describe the primary web build.
     const base: DSLManifest = { ...manifest, ...endpoints };
-    const fullManifest: DSLManifest = options.swift ? withSwiftTarget(base) : base;
+    const withSwift: DSLManifest = options.swift ? withSwiftTarget(base) : base;
+    const fullManifest: DSLManifest = options.rust ? withRustTarget(withSwift) : withSwift;
     await writeManifest(fullManifest, manifestFile);
     generatedFiles.push(path.relative(process.cwd(), manifestFile));
     console.log(chalk.green('✓ mfe-manifest.yaml'));
     if (options.swift) {
       console.log(chalk.green('✓ targets.swift — a Swift Package will be generated beside the web build'));
+    }
+    if (options.rust) {
+      console.log(chalk.green('✓ targets.rust — a Cargo crate will be generated beside the web build'));
     }
 
     console.log(chalk.green(`\n✓ ${plugin.displayName} remote MFE manifest created!`));
@@ -111,6 +116,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     '$ seans-mfe-tool remote:init my-feature',
     '$ seans-mfe-tool remote:init my-feature --framework angular',
     '$ seans-mfe-tool remote:init my-feature --swift',
+    '$ seans-mfe-tool remote:init my-feature --rust',
     '$ seans-mfe-tool remote:init my-feature --port 3005',
     '$ seans-mfe-tool remote:init my-feature --dry-run',
   ]
@@ -128,6 +134,12 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     swift: Flags.boolean({
       description:
         'Also emit a Swift Package (native iOS) built from this same manifest. Adds a targets.swift block; ' +
+        'the web build is unchanged. Run remote:generate to scaffold it.',
+      default: false,
+    }),
+    rust: Flags.boolean({
+      description:
+        'Also emit a Cargo crate (native Rust library) built from this same manifest. Adds a targets.rust block; ' +
         'the web build is unchanged. Run remote:generate to scaffold it.',
       default: false,
     }),
@@ -155,6 +167,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
       dryRun: flags['dry-run'],
       framework: flags.framework,
       swift: flags.swift,
+      rust: flags.rust,
     })
   }
 }

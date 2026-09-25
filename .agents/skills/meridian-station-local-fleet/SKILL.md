@@ -85,7 +85,7 @@ The config honours `CHROMIUM_PATH`, so point it at any real Chrome/Chromium
 instead of downloading:
 
 ```bash
-CHROMIUM_PATH=/home/ubuntu/.local/bin/google-chrome npx playwright test --reporter=list
+CHROMIUM_PATH="$(command -v chromium || command -v google-chrome)" npx playwright test --reporter=list
 ```
 
 ## 6. Verifying live data

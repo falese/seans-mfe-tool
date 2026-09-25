@@ -6,7 +6,7 @@
 
 # Interface: MfeValidationInput
 
-Defined in: [packages/codegen/src/validate.ts:32](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L32)
+Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L33)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/codegen/src/validate.ts:32](https://github.com/falese/sean
 
 > `optional` **developerOwned**: (`sourcePath`) => `boolean`
 
-Defined in: [packages/codegen/src/validate.ts:50](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L50)
+Defined in: [packages/codegen/src/validate.ts:51](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L51)
 
 Predicate identifying files the generator seeds but does not own
 (`overwrite: false`), plus anything it never emits. Only these are scanned
@@ -36,7 +36,7 @@ for platform migrations — see the rule below. Absent skips the rule.
 
 > **framework**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L34)
+Defined in: [packages/codegen/src/validate.ts:35](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L35)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [packages/codegen/src/validate.ts:34](https://github.com/falese/sean
 
 > **manifest**: `object`
 
-Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L33)
+Defined in: [packages/codegen/src/validate.ts:34](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L34)
 
 #### authorization?
 
@@ -254,6 +254,26 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 \[`key`: `string`\]: `Record`\<`string`, `unknown`\>
 
+##### targets.rust?
+
+> `optional` **rust**: `object`
+
+##### targets.rust.capabilities?
+
+> `optional` **capabilities**: `string`[]
+
+##### targets.rust.crateName?
+
+> `optional` **crateName**: `string`
+
+##### targets.rust.edition
+
+> **edition**: `"2021"` \| `"2024"`
+
+##### targets.rust.wasm
+
+> **wasm**: `boolean`
+
 ##### targets.swift?
 
 > `optional` **swift**: `object`
@@ -308,7 +328,7 @@ Defined in: [packages/codegen/src/validate.ts:33](https://github.com/falese/sean
 
 > **packageDependencies**: `Record`\<`string`, `string`\>
 
-Defined in: [packages/codegen/src/validate.ts:36](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L36)
+Defined in: [packages/codegen/src/validate.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L37)
 
 Merged dependencies + devDependencies from the MFE's package.json.
 
@@ -318,7 +338,7 @@ Merged dependencies + devDependencies from the MFE's package.json.
 
 > `optional` **platformVersion**: `string`
 
-Defined in: [packages/codegen/src/validate.ts:52](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L52)
+Defined in: [packages/codegen/src/validate.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L53)
 
 Running platform version, for migration `failsAt` escalation (ADR-082).
 
@@ -328,7 +348,7 @@ Running platform version, for migration `failsAt` escalation (ADR-082).
 
 > **sharedEntries**: [`SharedEntry`](SharedEntry.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:38](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L38)
+Defined in: [packages/codegen/src/validate.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L39)
 
 `shared` entries parsed from rspack/webpack federation config.
 
@@ -338,7 +358,7 @@ Defined in: [packages/codegen/src/validate.ts:38](https://github.com/falese/sean
 
 > `optional` **sources**: [`SourceFile`](../../../dsl/src/interfaces/SourceFile.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L44)
+Defined in: [packages/codegen/src/validate.ts:45](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L45)
 
 The MFE's own source files, for the slot rule (ADR-073). Optional: the
 function stays usable without the command layer's file IO, and the rule is

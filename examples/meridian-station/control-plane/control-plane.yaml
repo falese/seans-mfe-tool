@@ -92,7 +92,11 @@ routes:
     place:
       - capability: CrewRoster
         into: meridian-console/main
-      - capability: PayStatus
+      # The Rust build of crew-services (targets.rust.wasm), mounted beside the
+      # React roster: same capability, same BFF, rendered from WebAssembly.
+      # Drop `from` to put the React PayStatus back (ADR-103 §1).
+      - from: meridian-crew-services-wasm
+        capability: PayStatus
         into: meridian-console/status
   - when: meridian.open.concourse
     place:

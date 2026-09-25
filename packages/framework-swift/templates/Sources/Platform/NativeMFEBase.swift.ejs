@@ -93,9 +93,11 @@ open class NativeMFEBase: MFEBase {
         self.bundle = resolved
         try validateCapabilityTable()
         return LoadResult(
-            success: true,
-            availableCapabilities: ManifestMetadata.domainCapabilities,
-            durationMs: Int(Date().timeIntervalSince(started) * 1000)
+            status: .loaded,
+            availableComponents: ManifestMetadata.domainCapabilities,
+            capabilities: ManifestMetadata.capabilities,
+            timestamp: isoNow(),
+            duration: Int(Date().timeIntervalSince(started) * 1000)
         )
     }
 
@@ -114,20 +116,38 @@ open class NativeMFEBase: MFEBase {
         }
         try mount(capabilityId)
         mounted.insert(capabilityId)
-        return RenderResult(success: true, capabilityId: capabilityId)
+        return RenderResult(status: .rendered, capabilityId: capabilityId, timestamp: isoNow())
     }
 
+    /// Data reload in place. The provider owns the fetch; there is nothing
+    /// delivery-mechanism-specific to do here — as `BaseRemoteMFE.doRefresh`.
     open override func doRefresh(_ context: MFEContext) async throws {
-        // Data reload in place. The provider owns the fetch; there is nothing
-        // delivery-mechanism-specific to do here.
     }
 
+    /// Allow, as `BaseRemoteMFE.doAuthorizeAccess` does. Authorization is the
+    /// daemon's gate check before `render` (ADR-042); an MFE that needs its
+    /// own registers a manifest hook on `AuthorizeAccess`, which runs first.
     open override func doAuthorizeAccess(_ context: MFEContext) async throws -> Bool {
         true
     }
 
+    /// Liveness with the checks this lane can make: the state, the capability
+    /// table, and — when there is a BFF — the endpoint it will call. The web
+    /// lane checks its container and components; a linked module has neither.
     open override func doHealth(_ context: MFEContext) async throws -> HealthResult {
-        HealthResult(healthy: state != .error, state: state.rawValue)
+        func check(_ name: String, _ pass: Bool, _ message: String) -> HealthCheck {
+            HealthCheck(name: name, status: pass ? .pass : .fail, message: message)
+        }
+        var checks = [
+            check("state", state != .error, "lifecycle state is \(state.rawValue)"),
+            check("capability-table", !ManifestMetadata.name.isEmpty, "\(ManifestMetadata.domainCapabilities.count) domain capabilities declared"),
+        ]
+        if let endpoint = identity.bffEndpoint {
+            let valid = URL(string: endpoint) != nil
+            checks.append(check("transport", valid, valid ? "BFF at \(endpoint)" : "BFF endpoint \(endpoint) is not a URL"))
+        }
+        let status: HealthStatus = state == .error ? .unhealthy : (checks.contains { $0.status == .fail } ? .degraded : .healthy)
+        return HealthResult(status: status, checks: checks, timestamp: isoNow())
     }
 
     /// Self-registration. Answered from the statically generated table with no
@@ -136,36 +156,114 @@ open class NativeMFEBase: MFEBase {
         DescribeResult(
             name: identity.name,
             version: identity.version,
-            capabilities: ManifestMetadata.capabilities
+            type: ManifestMetadata.manifestType,
+            capabilities: ManifestMetadata.capabilities.map(\.name),
+            manifest: (try? JSONDecoder().decode(JSONValue.self, from: Data(ManifestMetadata.manifestJSON.utf8))) ?? .null
         )
     }
 
+    /// The manifest as JSON, as `BaseRemoteMFE.doSchema` returns it.
     open override func doSchema(_ context: MFEContext) async throws -> SchemaResult {
-        SchemaResult(sdl: nil)
+        SchemaResult(schema: ManifestMetadata.manifestJSON, format: .json)
     }
 
-    /// Telemetry emission. NOT implemented in the native lane.
-    ///
-    /// `BaseMFE` emits through an injected `deps.telemetry`; there is no
-    /// dependency container here, so there is nowhere for an event to go.
-    /// Answering `accepted: true` would claim a delivery that never happened.
+    /// Telemetry: forward `context.inputs["event"]` to `deps.telemetry`
+    /// (ADR-102). `emitted: false`, not an error, with no telemetry or no
+    /// event — as `BaseRemoteMFE.doEmit`.
     open override func doEmit(_ context: MFEContext) async throws -> EmitResult {
-        throw MFENotImplementedError(
-            capability: .emit,
-            detail: "no telemetry transport — BaseMFE emits through deps.telemetry, which this lane has no analogue for"
-        )
+        guard let telemetry = deps.telemetry, case let .object(raw)? = context.inputs["event"] else {
+            return EmitResult(emitted: false, eventId: nil)
+        }
+        func text(_ key: String, _ fallback: String) -> String { raw[key]?.stringValue ?? fallback }
+        var duration: Int?
+        if case let .number(n)? = raw["duration"] { duration = Int(n) }
+        var metadata: [String: JSONValue] = [:]
+        if case let .object(m)? = raw["metadata"] { metadata = m }
+        telemetry.emit(MFETelemetryEvent(
+            name: text("name", "event"),
+            capability: text("capability", "emit"),
+            phase: text("phase", "main"),
+            user: raw["user"]?.stringValue,
+            duration: duration,
+            status: text("status", "success"),
+            metadata: metadata,
+            timestamp: raw["timestamp"]?.stringValue ?? isoNow()
+        ))
+        return EmitResult(emitted: true, eventId: "evt-\(UUID().uuidString)")
     }
 
-    /// Control-plane push. NOT implemented in the native lane.
-    ///
-    /// `BaseMFE.attachControlPlane(wsClient:)` takes a daemon WebSocket client
-    /// and there is no native counterpart, so this had nothing to push and
-    /// returned `accepted: true` regardless — a capability reporting success
-    /// for work it did not do.
+    /// The daemon's `sendMessage` mutation — the document
+    /// `BaseRemoteMFE.doUpdateControlPlaneState` sends — and its timeout.
+    public static let sendMessageMutation = "mutation sendMessage($m: String!) { sendMessage(message: $m) }"
+    public static let sendMessageTimeoutMs = 4_000
+
+    /// Push domain state to the daemon for registry re-evaluation (ADR-102),
+    /// step for step as `BaseRemoteMFE.doUpdateControlPlaneState`: validate the
+    /// inputs, answer `acknowledged: false` with no connected daemon, build the
+    /// ADR-057 `STATE_UPDATE` envelope as `buildMessage` does, send the
+    /// `sendMessage` mutation, report a timeout as `sendMessage timed out`,
+    /// emit telemetry.
     open override func doUpdateControlPlaneState(_ context: MFEContext) async throws -> ControlPlaneStateResult {
-        throw MFENotImplementedError(
-            capability: .updateControlPlaneState,
-            detail: "no control-plane transport — BaseMFE.attachControlPlane(wsClient:) has no native analogue"
-        )
+        guard let stateKey = context.inputs["stateKey"]?.stringValue?.trimmingCharacters(in: .whitespaces), !stateKey.isEmpty else {
+            throw MFEValidationError(field: "context.inputs.stateKey",
+                                     message: "updateControlPlaneState requires context.inputs.stateKey to be a non-empty string")
+        }
+        var stateData: JSONValue = .object([:])
+        if let raw = context.inputs["stateData"] {
+            guard case .object = raw else {
+                throw MFEValidationError(field: "context.inputs.stateData",
+                                         message: "updateControlPlaneState requires context.inputs.stateData to be an object when provided")
+            }
+            stateData = raw
+        }
+        var correlationId = context.requestId
+        if let raw = context.inputs["correlationId"] {
+            guard let c = raw.stringValue?.trimmingCharacters(in: .whitespaces), !c.isEmpty else {
+                throw MFEValidationError(field: "context.inputs.correlationId",
+                                         message: "updateControlPlaneState requires context.inputs.correlationId to be a non-empty string when provided")
+            }
+            correlationId = c
+        }
+
+        guard let client = deps.controlPlane, client.connected else {
+            return ControlPlaneStateResult(acknowledged: false, correlationId: correlationId,
+                                           error: "Daemon WebSocket not connected", resolution: nil)
+        }
+
+        let envelope: JSONValue = .object([
+            "direction": "ACTION",
+            "kind": "ACTION",
+            "payload": .object([
+                "id": .string(UUID().uuidString),
+                "componentId": .string(context.capabilityId ?? identity.name),
+                "actionType": "STATE_UPDATE",
+                "stateKey": .string(stateKey),
+                "data": stateData,
+                "timestamp": .string(isoNow()),
+            ]),
+            "metadata": .object(["correlationId": .string(correlationId), "acknowledged": .bool(false), "error": .null]),
+        ])
+        let message = String(decoding: try JSONEncoder().encode(envelope), as: UTF8.self)
+
+        var acknowledged = false
+        var failure: String?
+        do {
+            acknowledged = try await client.mutation(Self.sendMessageMutation, variables: ["m": .string(message)],
+                                                     timeoutMs: Self.sendMessageTimeoutMs)
+            if !acknowledged { failure = "sendMessage mutation failed" }
+        } catch {
+            let text = String(describing: error)
+            failure = text.contains("timed out") ? "sendMessage timed out" : text
+        }
+
+        emitTelemetry("control-plane-state-update", capability: "updateControlPlaneState", phase: "main",
+                      status: acknowledged ? "success" : "error", metadata: [
+                          "mfe": .string(identity.name),
+                          "stateKey": .string(stateKey),
+                          "correlationId": .string(correlationId),
+                          "acknowledged": .bool(acknowledged),
+                      ])
+
+        return ControlPlaneStateResult(acknowledged: acknowledged, correlationId: correlationId, error: failure, resolution: nil)
     }
 }

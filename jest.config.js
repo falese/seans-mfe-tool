@@ -162,6 +162,8 @@ module.exports = {
     '^@seans-mfe/plugin-bff/(.*)$': '<rootDir>/packages/plugin-bff/src/$1',
     '^@seans-mfe/framework-swift$': '<rootDir>/packages/framework-swift/src/index.ts',
     '^@seans-mfe/framework-swift/(.*)$': '<rootDir>/packages/framework-swift/src/$1',
+    '^@seans-mfe/framework-rust$': '<rootDir>/packages/framework-rust/src/index.ts',
+    '^@seans-mfe/framework-rust/(.*)$': '<rootDir>/packages/framework-rust/src/$1',
     '^@seans-mfe/oclif-base$': '<rootDir>/packages/oclif-base/src/index.ts',
     '^@seans-mfe/oclif-base/(.*)$': '<rootDir>/packages/oclif-base/src/$1',
     '^@seans-mfe/framework-react$': '<rootDir>/packages/framework-react/src/index.ts',

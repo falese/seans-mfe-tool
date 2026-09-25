@@ -18,3 +18,11 @@ out-tsc
 # Compiled BFF server
 server.js
 bff.log
+<%_ if (browserBuild) { _%>
+
+# Cargo output from the Rust target's browser build (ADR-100) — the image
+# builds it for itself in its wasm-builder stage.
+rust/target
+rust/web/target
+rust/web/www/pkg
+<%_ } _%>
