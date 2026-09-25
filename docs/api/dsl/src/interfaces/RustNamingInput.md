@@ -6,7 +6,7 @@
 
 # Interface: RustNamingInput
 
-Defined in: packages/dsl/src/browser-build.ts:17
+Defined in: [packages/dsl/src/browser-build.ts:17](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L17)
 
 The slice of a manifest the naming rules read — structural, so codegen's own manifest views satisfy it.
 
@@ -16,7 +16,7 @@ The slice of a manifest the naming rules read — structural, so codegen's own m
 
 > **name**: `string`
 
-Defined in: packages/dsl/src/browser-build.ts:18
+Defined in: [packages/dsl/src/browser-build.ts:18](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L18)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/dsl/src/browser-build.ts:18
 
 > `optional` **targets**: `object`
 
-Defined in: packages/dsl/src/browser-build.ts:19
+Defined in: [packages/dsl/src/browser-build.ts:19](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L19)
 
 #### rust?
 

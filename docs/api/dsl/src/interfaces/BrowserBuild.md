@@ -6,7 +6,7 @@
 
 # Interface: BrowserBuild
 
-Defined in: packages/dsl/src/browser-build.ts:58
+Defined in: [packages/dsl/src/browser-build.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L58)
 
 A manifest's browser build, as the registry sees it.
 
@@ -16,7 +16,7 @@ A manifest's browser build, as the registry sees it.
 
 > **capabilities**: `string`[]
 
-Defined in: packages/dsl/src/browser-build.ts:65
+Defined in: [packages/dsl/src/browser-build.ts:65](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L65)
 
 The domain capabilities it implements — `targets.rust.capabilities`, else all.
 
@@ -26,7 +26,7 @@ The domain capabilities it implements — `targets.rust.capabilities`, else all.
 
 > **name**: `string`
 
-Defined in: packages/dsl/src/browser-build.ts:60
+Defined in: [packages/dsl/src/browser-build.ts:60](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L60)
 
 `<name>-wasm` — what a placement's `from` names.
 
@@ -36,7 +36,7 @@ Defined in: packages/dsl/src/browser-build.ts:60
 
 > `optional` **remoteEntryUrl**: `string`
 
-Defined in: packages/dsl/src/browser-build.ts:63
+Defined in: [packages/dsl/src/browser-build.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L63)
 
 `<endpoint>/wasm/remoteEntry.js`; absent when the manifest has no endpoint.
 
@@ -46,4 +46,4 @@ Defined in: packages/dsl/src/browser-build.ts:63
 
 > **scope**: `string`
 
-Defined in: packages/dsl/src/browser-build.ts:61
+Defined in: [packages/dsl/src/browser-build.ts:61](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L61)

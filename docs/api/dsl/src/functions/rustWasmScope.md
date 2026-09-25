@@ -8,7 +8,7 @@
 
 > **rustWasmScope**(`manifest`): `string`
 
-Defined in: packages/dsl/src/browser-build.ts:53
+Defined in: [packages/dsl/src/browser-build.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L53)
 
 The Module Federation scope the browser build registers under.
 

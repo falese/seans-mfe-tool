@@ -8,7 +8,7 @@
 
 > **rustCrateName**(`manifest`): `string`
 
-Defined in: packages/dsl/src/browser-build.ts:39
+Defined in: [packages/dsl/src/browser-build.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L39)
 
 Cargo package name: `targets.rust.crateName`, else the MFE name.
 
