@@ -8,6 +8,6 @@
 
 > `const` **ProvidesSlotsSchema**: `ZodArray`\<`ZodObject`\<\{ `description`: `ZodOptional`\<`ZodString`\>; `id`: `ZodString`; \}, `$strip`\>\>
 
-Defined in: [packages/dsl/src/schema.ts:540](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L540)
+Defined in: [packages/dsl/src/schema.ts:571](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L571)
 
 The manifest's slot contract: unique, assigned slot ids (ADR-067).

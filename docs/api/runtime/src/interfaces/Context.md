@@ -67,7 +67,7 @@ Error that triggered error phase
 
 > `optional` **extensions**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/context.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L113)
+Defined in: [packages/runtime/src/context.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L122)
 
 Handler-owned extension state, namespaced per handler. The shapes are
 declared by the owning modules (e.g. RetryState in retry-wrapper.ts,
@@ -152,6 +152,20 @@ Unique request identifier for tracing
 Defined in: [packages/runtime/src/context.ts:90](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L90)
 
 Number of retry attempts for current capability
+
+***
+
+### signal?
+
+> `optional` **signal**: `AbortSignal`
+
+Defined in: [packages/runtime/src/context.ts:113](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L113)
+
+Cancellation for the hook currently running, set only while a hook with a
+declared `timeout` executes (ADR-029). Aborts when the timeout fires; pass
+it to `fetch` or check `aborted` in long loops. On the context rather than
+a second argument because platform handlers already use that position
+(`checkPermissions(context, requiredRoles)`).
 
 ***
 

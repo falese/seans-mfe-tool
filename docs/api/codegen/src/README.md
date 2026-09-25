@@ -79,7 +79,6 @@
 - [generateAllFiles](functions/generateAllFiles.md)
 - [isError](functions/isError.md)
 - [mergeTemplateRoots](functions/mergeTemplateRoots.md)
-- [ownershipOf](functions/ownershipOf.md)
 - [parseFederationSharedEntries](functions/parseFederationSharedEntries.md)
 - [parseHandlerSource](functions/parseHandlerSource.md)
 - [registerFileContributor](functions/registerFileContributor.md)

@@ -8,7 +8,6 @@
 
 ## Classes
 
-- [BaseControlPlane](classes/BaseControlPlane.md)
 - [BaseMFE](classes/BaseMFE.md)
 - [ContextFactory](classes/ContextFactory.md)
 - [DaemonChannel](classes/DaemonChannel.md)
@@ -20,8 +19,6 @@
 - [AdaptorHelpers](interfaces/AdaptorHelpers.md)
 - [ChannelTransport](interfaces/ChannelTransport.md)
 - [Context](interfaces/Context.md)
-- [ControlPlaneConfig](interfaces/ControlPlaneConfig.md)
-- [ControlPlaneHealth](interfaces/ControlPlaneHealth.md)
 - [ControlPlaneStatePusher](interfaces/ControlPlaneStatePusher.md)
 - [ControlPlaneStateResult](interfaces/ControlPlaneStateResult.md)
 - [DaemonEnvelope](interfaces/DaemonEnvelope.md)
@@ -50,7 +47,6 @@
 
 ## Type Aliases
 
-- [ControlPlaneStatus](type-aliases/ControlPlaneStatus.md)
 - [MFEState](type-aliases/MFEState.md)
 - [TransportStatus](type-aliases/TransportStatus.md)
 - [UnmountFn](type-aliases/UnmountFn.md)
@@ -68,7 +64,6 @@
 - [checkPermissions](functions/checkPermissions.md)
 - [createImperativeHandle](functions/createImperativeHandle.md)
 - [handleError](functions/handleError.md)
-- [isBaseControlPlane](functions/isBaseControlPlane.md)
 - [logTelemetry](functions/logTelemetry.md)
 - [pushControlPlaneState](functions/pushControlPlaneState.md)
 - [rateLimitCheck](functions/rateLimitCheck.md)

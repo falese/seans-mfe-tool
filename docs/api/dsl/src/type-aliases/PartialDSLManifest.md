@@ -8,4 +8,4 @@
 
 > **PartialDSLManifest** = `z.infer`\<*typeof* [`PartialDSLManifestSchema`](../variables/PartialDSLManifestSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:628](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L628)
+Defined in: [packages/dsl/src/schema.ts:659](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L659)

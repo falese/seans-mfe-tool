@@ -8,7 +8,7 @@
 
 > **compareVersions**(`a`, `b`): `number`
 
-Defined in: [packages/codegen/src/platform-migrations.ts:141](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L141)
+Defined in: [packages/codegen/src/platform-migrations.ts:153](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L153)
 
 Compare two dotted versions numerically. Returns -1, 0 or 1.
 

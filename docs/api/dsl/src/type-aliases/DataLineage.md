@@ -8,4 +8,4 @@
 
 > **DataLineage** = `z.infer`\<*typeof* [`DataLineageSchema`](../variables/DataLineageSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:379](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L379)
+Defined in: [packages/dsl/src/schema.ts:410](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L410)

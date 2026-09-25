@@ -8,6 +8,6 @@
 
 > `const` **OpenAPIHandlerSchema**: `ZodObject`\<\{ `operationHeaders`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `source`: `ZodString`; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:317](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L317)
+Defined in: [packages/dsl/src/schema.ts:348](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L348)
 
 OpenAPI handler configuration

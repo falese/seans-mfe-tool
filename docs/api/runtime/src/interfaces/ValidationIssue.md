@@ -6,7 +6,7 @@
 
 # Interface: ValidationIssue
 
-Defined in: [packages/runtime/src/context.ts:166](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L166)
+Defined in: [packages/runtime/src/context.ts:175](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L175)
 
 One failed field from a validation handler.
 
@@ -22,7 +22,7 @@ classes at all (ADR-017).
 
 > `optional` **actual**: `unknown`
 
-Defined in: [packages/runtime/src/context.ts:170](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L170)
+Defined in: [packages/runtime/src/context.ts:179](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L179)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/runtime/src/context.ts:170](https://github.com/falese/sean
 
 > `optional` **expected**: `string`
 
-Defined in: [packages/runtime/src/context.ts:169](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L169)
+Defined in: [packages/runtime/src/context.ts:178](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L178)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [packages/runtime/src/context.ts:169](https://github.com/falese/sean
 
 > **field**: `string`
 
-Defined in: [packages/runtime/src/context.ts:167](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L167)
+Defined in: [packages/runtime/src/context.ts:176](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L176)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [packages/runtime/src/context.ts:167](https://github.com/falese/sean
 
 > **message**: `string`
 
-Defined in: [packages/runtime/src/context.ts:168](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L168)
+Defined in: [packages/runtime/src/context.ts:177](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/context.ts#L177)

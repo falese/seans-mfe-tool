@@ -48,7 +48,7 @@ Slot ids currently mounted (mainly for tests and shell debugging).
 
 > **sendAction**(`componentId`, `actionType`, `data`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-manager.ts:392](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L392)
+Defined in: [packages/runtime/src/layout-manager.ts:400](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L400)
 
 Send an action up the control plane, carrying the session context.
 

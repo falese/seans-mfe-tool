@@ -6,7 +6,7 @@
 
 # Interface: ValidationResult
 
-Defined in: [packages/dsl/src/schema.ts:642](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L642)
+Defined in: [packages/dsl/src/schema.ts:673](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L673)
 
 Validation result
 
@@ -16,7 +16,7 @@ Validation result
 
 > **errors**: [`ValidationError`](ValidationError.md)[]
 
-Defined in: [packages/dsl/src/schema.ts:644](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L644)
+Defined in: [packages/dsl/src/schema.ts:675](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L675)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:644](https://github.com/falese/seans-mfe
 
 > `optional` **manifest**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:645](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L645)
+Defined in: [packages/dsl/src/schema.ts:676](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L676)
 
 #### authorization?
 
@@ -36,7 +36,7 @@ Defined in: [packages/dsl/src/schema.ts:645](https://github.com/falese/seans-mfe
 
 #### capabilities
 
-> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `handler`: ...; `mandatory?`: ...; `source?`: ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
+> **capabilities**: `Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `errorHandling?`: ...; `handler`: ...; `mandatory?`: ...; `onTimeout?`: ...; `source?`: ...; `timeout?`: ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `errorHandling?`: ...; `handler`: ...; `mandatory?`: ...; `onTimeout?`: ...; `source?`: ...; `timeout?`: ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `errorHandling?`: ...; `handler`: ...; `mandatory?`: ...; `onTimeout?`: ...; `source?`: ...; `timeout?`: ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ...; `description?`: ...; `errorHandling?`: ...; `handler`: ...; `mandatory?`: ...; `onTimeout?`: ...; `source?`: ...; `timeout?`: ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[]
 
 #### category?
 
@@ -308,4 +308,4 @@ Defined in: [packages/dsl/src/schema.ts:645](https://github.com/falese/seans-mfe
 
 > **valid**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:643](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L643)
+Defined in: [packages/dsl/src/schema.ts:674](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L674)

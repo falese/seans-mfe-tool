@@ -8,6 +8,6 @@
 
 > `const` **CachingConfigSchema**: `ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `strategies`: `ZodOptional`\<`ZodArray`\<`ZodObject`\<\{ `field`: `ZodString`; `ttl`: `ZodNumber`; `type`: `ZodString`; \}, `$strip`\>\>\>; `ttl`: `ZodDefault`\<`ZodNumber`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:402](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L402)
+Defined in: [packages/dsl/src/schema.ts:433](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L433)
 
 Caching configuration

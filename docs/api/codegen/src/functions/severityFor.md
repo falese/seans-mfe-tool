@@ -8,7 +8,7 @@
 
 > **severityFor**(`migration`, `platformVersion`): `"error"` \| `"warning"`
 
-Defined in: [packages/codegen/src/platform-migrations.ts:167](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L167)
+Defined in: [packages/codegen/src/platform-migrations.ts:179](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L179)
 
 Whether this migration is still advice or has become a requirement, for the
 platform version currently running.
