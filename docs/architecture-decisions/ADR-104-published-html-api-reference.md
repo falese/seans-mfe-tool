@@ -10,7 +10,7 @@ area: Docs / tooling / publishing
 enforcement: tooling
 tags: [docs, api, typedoc, pages, publishing]
 relates-to: [65]
-supersedes: []
+supersedes: [65]
 superseded-by: []
 implements-pdr: []
 implemented-by:
@@ -84,6 +84,10 @@ pages at every depth, where a relative link breaks. The checker caught that on t
 
 ## Boundaries
 
+- **This supersedes ADR-065 in part.** Only its rejection of TypeDoc HTML is
+  replaced; ADR-065 stays `Implemented`, and its Markdown reference, drift gate
+  and workflow stand unchanged. ADR-065 records the link back (`superseded-by`
+  and a note under that alternative), following the ADR-056 / ADR-060 precedent.
 - **The Markdown stays the reviewed artifact.** Nothing here changes `docs/api/`, `build:docs`, its
   drift gate or the API-docs workflow.
 - **Same packages as ADR-065.** Adding a package to the reference is a `typedoc.json` change and
@@ -108,4 +112,4 @@ Worse, and accepted:
 
 ## References
 
-- ADR-065 — the generated API reference; its "HTML rejected for now" is what this changes, from the same config.
+- ADR-065 — the generated API reference; superseded in part: its "HTML rejected for now" is what this replaces, from the same config.

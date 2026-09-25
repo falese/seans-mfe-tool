@@ -9,7 +9,7 @@ enforcement: code
 tags: [docs, tooling, packaging]
 relates-to: [64]
 supersedes: []
-superseded-by: []
+superseded-by: [104]
 implemented-by:
   - scripts/generate-dsl-schema.ts
   - typedoc.json
@@ -94,6 +94,12 @@ at #264, which closed when phase 2 landed.
 - **TypeDoc HTML output** — not diffable, needs hosting; markdown-in-repo
   matches how this project reads its own docs. Rejected for now (HTML can be
   layered on later from the same config).
+
+  > **Superseded by [ADR-104](./ADR-104-published-html-api-reference.md).** The
+  > docs site now hosts an HTML reference at `/api/`, built at publish time from
+  > this same `typedoc.json` and never committed, so the diffability concern no
+  > longer applies. The committed Markdown in `docs/api/` and its drift gate are
+  > unchanged. The rest of ADR-065 stands unchanged.
 - **API Extractor first** — its `.api.md` reports are the highest-value
   artifact for the "no public API change" discipline, but it wants per-package
   `.d.ts` builds that don't exist until ADR-064/#252 land. Sequenced as
