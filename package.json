@@ -119,6 +119,9 @@
       },
       "compose": {
         "description": "Composition tooling — compile a project's control-plane.yaml into the registry payload (ADR-083)"
+      },
+      "sentinel": {
+        "description": "Sentinel governance kernel — run the kernel's ports over an MFE (PDR-010/ADR-089)"
       }
     },
     "hooks": {

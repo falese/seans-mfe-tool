@@ -57,6 +57,7 @@ const INVOCATIONS: Record<string, Invocation> = {
   'adr:validate':   { args: ['adr:validate'], cwd: REPO_ROOT },
   'build:check':    { args: ['build:check', '--framework', 'react'] },
   'mfe:validate':   { args: ['mfe:validate', FLAPPY] },
+  'sentinel:validate': { args: ['sentinel:validate', FLAPPY] },
   'slots:validate': {
     args: [
       'slots:validate',

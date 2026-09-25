@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/sentinel:validate.json",
+  "title": "sentinel:validate",
+  "description": "Run the Sentinel governance kernel over an MFE through SMT's port adapters (ADR-089): locate the manifest, validate it, materialize it to learn which files the generator owns, and run every hardened check over the developer-owned rest. Exits non-zero on an invalid manifest; check hits are reported with a file, line and fix but do not fail the run. Read-only.",
+  "input": {
+    "type": "object",
+    "properties": {
+      "dir": {
+        "type": "string",
+        "description": "Directory holding the artifact (default: current directory)"
+      }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "root",
+      "ok",
+      "artifacts",
+      "checks",
+      "scanned",
+      "hits"
+    ],
+    "properties": {
+      "root": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "path",
+            "valid",
+            "errors"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Relative to the root."
+            },
+            "valid": {
+              "type": "boolean"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "message"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "checks": {
+        "type": "number",
+        "description": "How many HardenedChecks ran."
+      },
+      "scanned": {
+        "type": "number",
+        "description": "Developer-owned source files the checks ran over."
+      },
+      "hits": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "check",
+            "enforces",
+            "message",
+            "fix",
+            "location",
+            "text"
+          ],
+          "properties": {
+            "check": {
+              "type": "string",
+              "description": "The HardenedCheck's id."
+            },
+            "enforces": {
+              "type": "string",
+              "description": "The decision it enforces, e.g. `ADR-017`."
+            },
+            "message": {
+              "type": "string"
+            },
+            "fix": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string",
+              "description": "`path:line`, relative to the root."
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
