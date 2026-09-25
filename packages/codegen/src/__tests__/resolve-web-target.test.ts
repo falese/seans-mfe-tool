@@ -10,7 +10,7 @@
  * manifest that states the fact twice and differently must be rejected rather
  * than silently resolved.
  */
-import { resolveWebTarget, resolveFrameworkName, resolveBundlerName } from '../unified-generator';
+import { resolveWebTarget, resolveFrameworkName } from '../unified-generator';
 import type { DSLManifest } from '@seans-mfe/dsl';
 
 const base = {
@@ -59,8 +59,8 @@ describe('back-compat defaults are unchanged', () => {
   });
 
   it('derives the bundler from an explicit framework', () => {
-    expect(resolveBundlerName(m({ framework: 'angular' }))).toBe('webpack');
-    expect(resolveBundlerName(m({ framework: 'react' }))).toBe('rspack');
+    expect(resolveWebTarget(m({ framework: 'angular' })).bundler).toBe('webpack');
+    expect(resolveWebTarget(m({ framework: 'react' })).bundler).toBe('rspack');
   });
 });
 

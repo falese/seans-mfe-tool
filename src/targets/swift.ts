@@ -5,12 +5,7 @@
  */
 
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { hasTarget, withTarget, enableTargetInFile } from './enable';
-
-/** Whether the manifest already declares a Swift target. */
-export function hasSwiftTarget(manifest: Pick<DSLManifest, 'targets'>): boolean {
-  return hasTarget(manifest, 'swift');
-}
+import { withTarget, enableTargetInFile } from './enable';
 
 /** Return a manifest with the Swift target declared. */
 export function withSwiftTarget<T extends Pick<DSLManifest, 'targets'>>(manifest: T): T {

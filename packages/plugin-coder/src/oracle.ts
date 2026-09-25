@@ -9,7 +9,7 @@
  */
 
 import { load as parseYaml } from 'js-yaml';
-import { validateFull, parseAndValidateDirectory, type ValidationResult } from '@seans-mfe/dsl';
+import { validateFull, type ValidationResult } from '@seans-mfe/dsl';
 
 // Re-export the DSL primitives so an eval suite (or the adaptor pack) can reach
 // them through the seam rather than depending on @seans-mfe/dsl a second time.
@@ -57,15 +57,4 @@ export function validateManifestText(text: string): ValidationResult {
   }
 
   return validateFull(parsed);
-}
-
-/**
- * Validate a manifest on disk by directory (the `parseAndValidateDirectory`
- * route from spec §6) — for callers that have already written `mfe-manifest.yaml`
- * into a directory and want the same parse coder's downstream pipeline uses.
- */
-export async function validateManifestDirectory(
-  directory: string,
-): Promise<ValidationResult> {
-  return parseAndValidateDirectory(directory);
 }

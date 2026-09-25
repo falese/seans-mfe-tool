@@ -128,11 +128,6 @@ export function resolveFrameworkName(manifest: DSLManifest): string {
   return resolveWebTarget(manifest).framework;
 }
 
-/** The bundler a manifest asks for, by the same rule. */
-export function resolveBundlerName(manifest: DSLManifest): string {
-  return resolveWebTarget(manifest).bundler;
-}
-
 /**
  * Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
  * returns for the two shipped plugins (react-rspack, angular-webpack), using
