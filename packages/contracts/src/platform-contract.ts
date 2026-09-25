@@ -167,7 +167,7 @@ export const PLATFORM_CAPABILITY_SPECS: Readonly<
     resultType: 'DescribeResult',
     httpMethod: 'GET',
     endpoint: '/describe',
-    description: 'Self-registration — returns the MFE manifest and capabilities.',
+    description: 'Self-description — name, version, type, capability names and the manifest.',
     preStates: ANY_LIVE_STATE,
   }),
   load: Object.freeze({
@@ -235,7 +235,7 @@ export const PLATFORM_CAPABILITY_SPECS: Readonly<
     resultType: 'SchemaResult',
     httpMethod: 'GET',
     endpoint: '/schema',
-    description: 'GraphQL SDL introspection for registry schema federation.',
+    description: 'Publishes the MFE\'s schema — by default its manifest, as JSON.',
     preStates: READY_ONLY,
   }),
   authorizeAccess: Object.freeze({
@@ -245,7 +245,7 @@ export const PLATFORM_CAPABILITY_SPECS: Readonly<
     resultType: 'boolean',
     httpMethod: 'POST',
     endpoint: '/authorize',
-    description: 'JWT validation — the gate check the daemon runs before render().',
+    description: 'Access check for the current caller. The default allows everyone; policy belongs to the product.',
     preStates: READY_ONLY,
   }),
   health: Object.freeze({
@@ -255,7 +255,7 @@ export const PLATFORM_CAPABILITY_SPECS: Readonly<
     resultType: 'HealthResult',
     httpMethod: 'GET',
     endpoint: '/health',
-    description: 'Liveness and dependency checks for registry polling.',
+    description: 'Liveness — an overall status and the checks behind it.',
     preStates: ANY_LIVE_STATE,
   }),
   updateControlPlaneState: Object.freeze({

@@ -47,6 +47,9 @@ on:
       - 'typedoc.json'
       - 'typedoc.html.json'
       - 'tsconfig.typedoc.json'
+      # The API reference opens on the base-class reference and uses this CSS.
+      - 'docs/PLATFORM-CONTRACT.md'
+      - 'docs/api-reference.css'
       - 'scripts/assemble-site.js'
       - '.github/workflows/pages.yml'
   pull_request:
@@ -66,6 +69,9 @@ on:
       - 'typedoc.json'
       - 'typedoc.html.json'
       - 'tsconfig.typedoc.json'
+      # The API reference opens on the base-class reference and uses this CSS.
+      - 'docs/PLATFORM-CONTRACT.md'
+      - 'docs/api-reference.css'
       - 'scripts/assemble-site.js'
       - '.github/workflows/pages.yml'
   workflow_dispatch:

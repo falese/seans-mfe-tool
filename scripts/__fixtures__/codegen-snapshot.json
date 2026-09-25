@@ -1971,7 +1971,7 @@
       {
         "path": "<cwd>/rust/src/platform/mfe_base.rs",
         "overwrite": true,
-        "sha256": "e51d1ffdbe0cff2c50ba08845e49cf5d337f9d6d672226ffce405cee2761250d"
+        "sha256": "9e8eee1bb43b8aacfdb4294ceb60e1e1c39e5607252a2f1745e2488cd579fcaa"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_lifecycle.rs",
@@ -1986,7 +1986,7 @@
       {
         "path": "<cwd>/rust/src/platform/native_mfe_base.rs",
         "overwrite": true,
-        "sha256": "98b31e032e24a7ea9265e3315a08c4c976707b881b6d2ecc6875d34db77ba560"
+        "sha256": "65ce32ded1e8cf0f97cb3b4cdee5320a474ce8deb18ce0d670a5ae3d87735ca3"
       },
       {
         "path": "<cwd>/rust/src/platform/types.rs",
@@ -2191,7 +2191,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "71ce969480cb8412d753b6dd86c79009a17470198e04628bd127d43883e44823"
+        "sha256": "2c36423731415c48dd249d7c5a347794c252fadc0fc31110a39b96205107a858"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2201,7 +2201,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/NativeMFEBase.swift",
         "overwrite": true,
-        "sha256": "479062cfd45556d9f4f7a4f902ecb0d6ab63f9012e4474110e7181e5400d0a02"
+        "sha256": "b2f527304de6dc2056654e1ad368269308794cf013faae6a5201396cec613816"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",

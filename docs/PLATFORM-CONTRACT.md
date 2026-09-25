@@ -1,501 +1,377 @@
-# MFE Platform Contract  v3.2
+# The base class: the MFE platform contract
 
-This document is the definitive reference for building an MFE that integrates
-with the daemon control plane. It explains what every MFE must implement,
-how the daemon calls it, and how that maps to each supported language.
+Every MFE on this platform, in every framework and language it can be built in,
+is the same object underneath: a class with **ten platform capabilities**, a
+**six-state lifecycle**, and a fixed set of **result shapes**. This document is
+the reference for that class. It covers what each capability does, what you
+write and what you inherit, and how the same contract appears in each build:
+React, Angular, Swift, native Rust, and Rust compiled to WebAssembly.
 
----
+The tables marked *generated* are produced by
+`scripts/generate-platform-contract.ts` from the code that defines the
+contract, and CI fails if they fall out of date. The prose around them is
+written by hand.
 
-## System Architecture
+- **Capability names, hooks and state rules** come from
+  `packages/contracts/src/platform-contract.ts` (ADR-080: the contract is
+  defined once, in code).
+- **Result shapes** come from `packages/runtime/src/capability-results.ts`.
+- **The rule that every build implements all ten** is ADR-102, enforced by
+  `src/__tests__/every-target-implements-the-base-class.test.ts`.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    RENDERER  (React / HTML)                     │
-│  Displays MFE experiences · Sends user actions to daemon        │
-└──────┬──────────────────────────────────────────────┬──────────┘
-       │ sendAction (user interacts)                   │ rendered experience
-       │ GraphQL / WebSocket                           │ returned by MFE
-       ▼                                               │
-┌──────────────────────────┐                           │
-│   DAEMON  (Node.js/Rust) │                           │
-│   Control plane          │                           │
-│   Routes state changes   │◄──────────────────────────┘
-└──────┬───────────────────┘
-       │ "what should render for this state change?"
-       │ GraphQL / WebSocket
-       ▼
-┌──────────────────────────┐
-│   REGISTRY  (Node.js)    │
-│   Rules engine           │
-│   Resolves state →       │
-│   { mfe, capability,     │
-│     props }              │
-└──────┬───────────────────┘
-       │ resolution JSON: which MFE, which capability, what props
-       ▼
-┌──────────────────────────┐
-│   DAEMON  (receives       │
-│   resolution, calls MFE) │
-└──────┬───────────────────┘
-       │ POST /render (with props from registry resolution)
-       ▼
-┌──────────────────────────────────────────────────────────────────┐
-│              MFE  (any language)                                 │
-│  Owns its experience · Renders what it wants · Returns output   │
-│                                                                  │
-│  doRender() → HTML fragment / React component / rich data       │
-│               (the MFE decides — not the daemon, not the        │
-│                renderer, not a fixed component type library)    │
-└──────────────────────────────────────────────────────────────────┘
-```
+The API reference has the full class pages: `BaseMFE`, `BaseRemoteMFE`,
+`RemoteMFE` and `AngularRemoteMFE`, with every method and inherited member.
 
 ---
 
-## Daemon Message Protocol
+## The rule
 
-All messages flowing over WebSocket subscriptions share this envelope:
-
-```typescript
-interface Message {
-  direction: "COMPONENT" | "ACTION";
-  kind: "COMPONENT_UPDATE" | "STATE_SNAPSHOT" | "ACTION_ECHO" | "ACTION_FORWARD";
-  payload: RenderedExperience | ActionRecord;
-  metadata: {
-    correlationId: string;   // UUID, carried end-to-end
-    acknowledged: boolean;
-    error: string | null;
-  };
-}
-
-// What an MFE render() returns — the MFE decides the shape
-interface RenderedExperience {
-  mfe: string;               // which MFE produced this
-  capability: string;        // which domain capability was rendered
-  output: unknown;           // MFE-owned: HTML string, component ref, data payload
-  contentType: string;       // "text/html" | "application/json" | "module-federation"
-}
-```
-
-**The daemon does not define component types.** It relays whatever the MFE's
-`render()` returns to the Renderer. The Renderer knows how to display each MFE's
-output because it loaded (or can load) the MFE's own presentation layer.
+1. **Every MFE has all ten capabilities.** A capability that has nothing to do
+   still answers, in the documented shape. It never throws "not implemented".
+2. **Every capability answers in the shape `capability-results.ts` defines**,
+   whichever build produced it. A host reading a result cannot tell which
+   language answered. The only exceptions are fields that exist because a DOM
+   or a Module Federation container exists (`container`, `element`, and the
+   atomic load's `telemetry` and `error`), which native builds omit.
+3. **Every capability runs through the same pipeline** and moves the same
+   lifecycle machine. You write the domain work; the platform owns the rest.
 
 ---
 
-## The 10 Capabilities
+## How the class is layered
 
-### Full Reference Table
+Each capability has two methods: a public **orchestrator** that the host calls,
+and a protected **hook** that you override.
 
-| Capability | HTTP method | Endpoint | Who calls it | Returns |
-|---|---|---|---|---|
-| `describe` | GET | `/describe` | Registry on MFE registration | MFE manifest + capabilities |
-| `load` | POST | `/load` | Daemon after registry resolution selects this MFE | `{status: "loaded"}` |
-| `render` | POST | `/render` | Daemon after registry resolves which MFE + capability to show | MFE's own experience (HTML / component / data) |
-| `refresh` | POST | `/refresh` | Daemon when state changes but same MFE stays selected | void |
-| `emit` | POST | `/emit` | MFE itself — telemetry/observability, no registry reaction | `{emitted, eventId}` |
-| `query` | POST | `/query` | Daemon or renderer requesting data from this MFE | `{data, errors}` |
-| `schema` | GET | `/schema` | Registry introspection | GraphQL SDL |
-| `authorizeAccess` | POST | `/authorize` | Daemon before calling `render()` | `{authorized: bool}` |
-| `health` | GET | `/health` | Registry liveness polling | `{status, checks}` |
-| `updateControlPlaneState` | POST | `/state` | MFE itself — pushes domain state for registry re-evaluation | `{acknowledged, correlationId, resolution?}` |
-
----
-
-## Data Flows
-
-### Render Flow  (state change → registry resolution → MFE renders)
-
-1. User interacts with the Renderer — an action (click, submit, etc.)
-2. Renderer sends `sendAction` to Daemon with a `correlationId`
-3. Daemon sends `ACTION_ECHO` back to Renderer (acknowledged)
-4. Daemon forwards the state change to Registry via `handleMessage`
-5. Registry evaluates rules: **which MFE should handle this state?**
-6. Registry returns a resolution JSON to Daemon:
-   ```json
-   { "mfe": "csv-analyzer", "capability": "DataAnalysis", "props": { ... } }
-   ```
-7. Daemon calls `authorizeAccess()` on the resolved MFE (gate check)
-8. Daemon calls `render()` on the resolved MFE with the props
-9. **MFE produces its own experience** — HTML fragment, React component tree, rich data
-10. Daemon relays the MFE's rendered output back to the Renderer
-11. Renderer displays the MFE's experience
-
-### Refresh Flow  (same MFE, new state)
-
-When a state change arrives but the Registry resolves to the **same** MFE
-that is already loaded, the Daemon calls `refresh()` instead of `render()` —
-the MFE reloads its data and updates its presentation in place.
-
-### Query Flow  (data fetch without render)
-
-The Daemon or Renderer can call `query()` on an MFE directly to fetch data
-without triggering a full render cycle. The MFE executes the GraphQL query
-against its own schema and returns structured data.
-
----
-
-## Capability Details
-
-### `describe()` — Self-registration
-
-The Registry calls this when an MFE registers. Return your full manifest so
-the Registry can store it as component metadata.
-
-```json
-GET /describe
-→ {
-    "name": "csv-analyzer",
-    "version": "1.0.0",
-    "type": "tool",
-    "capabilities": ["load", "render", "refresh", "authorizeAccess",
-                     "health", "describe", "schema", "query", "emit"],
-    "manifest": { ... }
-  }
+```
+host calls  load(context)                        ← orchestrator, owned by the platform
+              │
+              ├─ state guard      is `load` legal in the current state?
+              ├─ enter state      uninitialized → loading
+              ├─ error boundary   a failure becomes a state, a telemetry event, a typed error
+              ├─ before hooks     from the manifest's lifecycle.before
+              ├─ main hooks       from the manifest's lifecycle.main
+              ├─ doLoad(context)  ← the hook you override
+              ├─ after hooks      from the manifest's lifecycle.after
+              └─ exit state       loading → ready
 ```
 
-### `load()` — Initialization
+The orchestrator order is the same in every build. In TypeScript it is
+`executeCapability` in `packages/runtime/src/base-mfe.ts`, built on
+`packages/runtime/src/capability-pipeline.ts`. Timeouts, retries and error
+classification wrap the whole chain.
 
-Called when the Registry wants to activate your MFE. Connect to databases,
-warm caches, validate config. Corresponds to Registry `renderComponent()` mutation.
+### Where each layer lives, per build
 
-```json
-POST /load
-Body: { "inputs": { "config": {} } }
-→ { "status": "loaded", "timestamp": "..." }
-```
+| Build | Orchestrators (ten capabilities) | Default hooks | What generated code extends |
+|---|---|---|---|
+| React | `BaseMFE` in `packages/runtime/src/base-mfe.ts` | `BaseRemoteMFE` in `packages/runtime/src/base-remote-mfe.ts` | `RemoteMFE` (`packages/runtime/src/remote-mfe.ts`) |
+| Angular | `BaseMFE` | `BaseRemoteMFE` | `AngularRemoteMFE` (`packages/runtime/src/angular-remote-mfe.ts`) |
+| Swift | `packages/framework-swift/templates/Sources/Platform/MFEBase.swift.ejs` | `packages/framework-swift/templates/Sources/Platform/NativeMFEBase.swift.ejs` | the generated `<Module>MFE` |
+| Rust (native) | `packages/framework-rust/templates/src/platform/mfe_base.rs.ejs` | `packages/framework-rust/templates/src/platform/native_mfe_base.rs.ejs` | `MfeBase<…Native>` |
+| Rust (WASM, in a browser) | the same crate as native Rust | the same crate | exposed by `packages/framework-rust/templates/web/src/platform/mod.rs.ejs` and the remote entry's `mfe` object (`packages/framework-rust/templates/web/www/remoteEntry.js.ejs`) |
 
-### `render()` — MFE produces its own experience
+The Swift and Rust files are templates: each MFE with `targets.swift` or
+`targets.rust` gets its own generated copy (ADR-095, ADR-099), which it does
+not edit.
 
-The Daemon calls this after the Registry resolves that **this** MFE should
-handle the current state. The MFE owns what it renders — there is no fixed
-component type library. The output travels from the MFE back through the
-Daemon to the Renderer.
+### What you write and what you inherit
 
-```json
-POST /render
-Body: { "inputs": { "capability": "DataAnalysis", "props": { "fileId": "abc" } } }
-→ {
-    "status": "rendered",
-    "element": {
-      "contentType": "text/html",
-      "output": "<section class='csv-analysis'>...</section>"
-    }
-  }
-```
-
-For TypeScript/Module Federation MFEs, `element` carries a component reference
-the Renderer mounts dynamically. For server-side MFEs (Python, Go, Rust),
-`element` carries an HTML fragment or structured data payload. The Renderer
-handles both — it fetches the MFE's presentation layer on first load, then
-renders subsequent `output` values using that layer.
-
-### `refresh()` — Data reload
-
-Called when the Registry `componentUpdate` subscription fires. Reload fresh
-data without full re-initialization.
-
-```json
-POST /refresh
-Body: { "inputs": { "full": false } }
-→ { "refreshed": true }
-```
-
-### `authorizeAccess()` — JWT validation
-
-The daemon forwards the renderer's JWT when calling this. Return whether
-access is granted. The Registry rules engine uses this to gate component creation.
-
-```json
-POST /authorize
-Headers: Authorization: Bearer <jwt>
-Body: { "inputs": { "token": "<jwt>", "context": {} } }
-→ { "authorized": true, "permissions": ["read", "analyze"] }
-```
-
-### `health()` — Liveness
-
-The Registry polls this to monitor component health. Check all dependencies
-and return their status.
-
-```json
-GET /health
-→ {
-    "status": "healthy",
-    "checks": [
-      { "name": "database", "status": "pass" },
-      { "name": "disk", "status": "pass" }
-    ]
-  }
-```
-
-### `schema()` — GraphQL introspection
-
-Return your GraphQL SDL. The Registry uses this to build a federated schema
-across all registered MFEs.
-
-```json
-GET /schema
-→ { "schema": "type Query { ... }", "format": "graphql" }
-```
-
-### `query()` — Data fetching
-
-Execute a GraphQL query. Surfaced via Daemon `Query.state` when the renderer
-or another service requests data from your MFE.
-
-```json
-POST /query
-Body: { "inputs": { "query": "{ analysis(id: \"1\") { rowCount } }", "variables": {} } }
-→ { "data": { "analysis": { "rowCount": 1000 } }, "errors": [] }
-```
-
-### `emit()` — Telemetry publication
-
-Publish a telemetry event or metric to observability sinks (logging, APM, etc.).
-This does **not** trigger registry re-evaluation. Use `updateControlPlaneState()`
-when you want the rules engine to act.
-
-```json
-POST /emit
-Body: { "inputs": { "eventType": "metric", "eventData": { ... }, "severity": "info" } }
-→ { "emitted": true, "eventId": "uuid" }
-```
-
-### `updateControlPlaneState()` — MFE-initiated registry re-evaluation
-
-Called by the MFE itself when internal domain state has changed in a way that
-should determine what experience is shown next. Not telemetry — this is a
-semantic state signal the Registry rules engine acts on.
-
-**When to use it:**
-- Analysis or computation complete → registry may transition to a visualization MFE
-- Form submitted successfully → registry may resolve a confirmation MFE
-- Wizard step finished → registry may resolve the next step's MFE
-- Error that requires escalation → registry may route to an escalation handler MFE
-
-**How it flows:**
-```
-MFE calls updateControlPlaneState()
-  → POST /state to daemon
-  → daemon routes through sendAction → Registry handleMessage
-  → Registry evaluates rules against the new state context
-  → if a new resolution is produced: daemon calls new MFE render()
-  → Renderer gets updated experience via Subscription.messages
-```
-
-```json
-POST /state
-Body: {
-  "inputs": {
-    "stateKey": "analysis.complete",
-    "stateData": { "resultId": "abc123", "rowCount": 5000, "quality": "high" },
-    "correlationId": "uuid-of-originating-render"
-  }
-}
-→ { "acknowledged": true, "correlationId": "uuid", "resolution": null }
-```
-
-The `resolution` field is populated if the daemon/registry can confirm a new
-component synchronously; in practice it usually arrives asynchronously via the
-Renderer's `Subscription.messages` subscription.
-
-**emit() vs updateControlPlaneState():**
-
-| | `emit()` | `updateControlPlaneState()` |
+| Build | You write | You inherit |
 |---|---|---|
-| Direction | MFE → observers | MFE → daemon → registry |
-| Purpose | Telemetry, metrics, APM | Drive registry resolution |
-| Registry reacts? | No | Yes — re-evaluates rules |
-| Use when | "I observed something" | "My state changed, decide what's next" |
+| React | one component per capability, in `src/features/<Capability>/` | all ten capabilities. The generated class in `src/platform/base-mfe/mfe.ts` overrides `doLoad` and `doRender` and calls `super`; the generator owns that file and rewrites it on every run |
+| Angular | one component per capability, in `src/features/<Capability>/` | the same, through a generated class that also overrides `doQuery` when the MFE has a data layer |
+| Swift | the SwiftUI views per capability; the data provider when there is no BFF | all ten capabilities, implemented in `NativeMFEBase` |
+| Rust (native) | the GraphQL document per capability (`src/features/<capability>_query.rs`) | all ten capabilities, implemented in `native_mfe_base.rs` |
+| Rust (WASM) | one `render(element, props)` per capability (`rust/web/src/features/<capability>.rs`) | everything above, plus `fetch`, the shell's daemon channel and attachable telemetry |
+
+The defaults, in every build:
+
+- **`refresh` and `authorizeAccess`** succeed without doing work.
+- **`health`** reports a status and the checks behind it. In TypeScript the
+  check is whether the remote container loaded; natively it is the lifecycle
+  state and the capability table.
+- **`describe` and `schema`** return the manifest; `schema` returns it as JSON.
+- **`emit`** forwards to the telemetry sink the host injected, and reports
+  `emitted: false` when there is none.
+- **`updateControlPlaneState`** sends a `STATE_UPDATE` envelope through the
+  daemon channel the host injected, and reports `acknowledged: false` when there
+  is none.
 
 ---
 
-## State Machine
+## The ten capabilities
 
-All implementations must track and enforce these transitions:
+*Generated from `PLATFORM_CAPABILITY_SPECS`.*
 
-```
-uninitialized ──→ loading ──→ ready ──→ rendering ──→ ready
-                     │           │           │
-                     ▼           ▼           ▼
-                   error ←──────────────── error
-                     │
-                     ▼
-                 destroyed
-```
+<!-- BEGIN GENERATED: capabilities -->
+| Capability | Hook you override | Returns | Purpose |
+|---|---|---|---|
+| `describe` | `doDescribe` | `DescribeResult` | Self-description — name, version, type, capability names and the manifest. |
+| `load` | `doLoad` | `LoadResult` | Initialization — connect, warm caches, validate config. |
+| `render` | `doRender` | `RenderResult` | The MFE produces its own experience for a resolved capability. |
+| `refresh` | `doRefresh` | `void` | Data reload in place when state changes but this MFE stays selected. |
+| `emit` | `doEmit` | `EmitResult` | Telemetry publication. Does not trigger registry re-evaluation. |
+| `query` | `doQuery` | `QueryResult` | Execute a GraphQL query against this MFE without rendering. |
+| `schema` | `doSchema` | `SchemaResult` | Publishes the MFE's schema — by default its manifest, as JSON. |
+| `authorizeAccess` | `doAuthorizeAccess` | `boolean` | Access check for the current caller. The default allows everyone; policy belongs to the product. |
+| `health` | `doHealth` | `HealthResult` | Liveness — an overall status and the checks behind it. |
+| `updateControlPlaneState` | `doUpdateControlPlaneState` | `ControlPlaneStateResult` | MFE-initiated push of domain state for registry re-evaluation. |
 
-| State | Description |
+When each capability may run, and how it moves the lifecycle:
+
+| Capability | Callable from | State change |
+|---|---|---|
+| `describe` | `uninitialized`, `loading`, `ready`, `rendering`, `error` | no change |
+| `load` | `uninitialized`, `ready`, `error` | enters `loading`, `ready` on success, `error` on failure |
+| `render` | `ready` | enters `rendering`, `ready` on success, `error` on failure |
+| `refresh` | `ready` | no change |
+| `emit` | any state | no change |
+| `query` | `ready` | no change |
+| `schema` | `ready` | no change |
+| `authorizeAccess` | `ready` | no change |
+| `health` | `uninitialized`, `loading`, `ready`, `rendering`, `error` | no change |
+| `updateControlPlaneState` | `ready`, `rendering` | no change |
+<!-- END GENERATED: capabilities -->
+
+### emit versus updateControlPlaneState
+
+Both send something out of the MFE. Only one of them changes what the user sees
+next.
+
+| | `emit` | `updateControlPlaneState` |
+|---|---|---|
+| Goes to | the telemetry sink the host injected | the daemon, then the registry |
+| Purpose | metrics, logs, tracing | tell the control plane the MFE's state changed |
+| Does the registry react? | no | yes: it re-evaluates its rules and may place a different capability |
+| Use it when | "I observed something" | "My state changed; decide what comes next" |
+
+Typical `updateControlPlaneState` moments: an analysis finished and a
+visualization should appear, a form was submitted and a confirmation should
+replace it, or a wizard step is done and the next step should load. The
+inputs are `stateKey`, `stateData` and `correlationId`. With no connected
+daemon channel the call answers `acknowledged: false`; it does not throw.
+
+---
+
+## The same capabilities in each language
+
+*Generated.* Swift keeps the TypeScript names. Rust uses their `snake_case`
+forms. The test that generates this table checks every Rust and Swift name
+against the generated example crate and package.
+
+<!-- BEGIN GENERATED: lanes -->
+| TypeScript (React, Angular) | TypeScript hook | Swift | Rust (native and WASM) |
+|---|---|---|---|
+| `describe` | `doDescribe` | `describe` / `doDescribe` | `describe` / `do_describe` |
+| `load` | `doLoad` | `load` / `doLoad` | `load` / `do_load` |
+| `render` | `doRender` | `render` / `doRender` | `render` / `do_render` |
+| `refresh` | `doRefresh` | `refresh` / `doRefresh` | `refresh` / `do_refresh` |
+| `emit` | `doEmit` | `emit` / `doEmit` | `emit` / `do_emit` |
+| `query` | `doQuery` | `query` / `doQuery` | `query` / `do_query` |
+| `schema` | `doSchema` | `schema` / `doSchema` | `schema` / `do_schema` |
+| `authorizeAccess` | `doAuthorizeAccess` | `authorizeAccess` / `doAuthorizeAccess` | `authorize_access` / `do_authorize_access` |
+| `health` | `doHealth` | `health` / `doHealth` | `health` / `do_health` |
+| `updateControlPlaneState` | `doUpdateControlPlaneState` | `updateControlPlaneState` / `doUpdateControlPlaneState` | `update_control_plane_state` / `do_update_control_plane_state` |
+<!-- END GENERATED: lanes -->
+
+---
+
+## The lifecycle
+
+*Generated from `MFE_LIFECYCLE_TRANSITIONS`.* A transition that is not in this
+table is a programming error. The state guard rejects it before any hook runs
+(ADR-042).
+
+<!-- BEGIN GENERATED: lifecycle -->
+| From | May move to |
 |---|---|
-| `uninitialized` | MFE has been created but `load()` has not been called |
-| `loading` | `load()` is in progress |
-| `ready` | Loaded and available for `render()`, `query()`, etc. |
-| `rendering` | `render()` is in progress |
-| `error` | A capability failed; can retry `load()` or be destroyed |
-| `destroyed` | Terminal state — no further transitions allowed |
+| `uninitialized` | `loading` |
+| `loading` | `ready`, `error` |
+| `ready` | `loading`, `rendering`, `destroyed` |
+| `rendering` | `ready`, `error` |
+| `error` | `loading`, `destroyed` |
+| `destroyed` | none (terminal) |
+<!-- END GENERATED: lifecycle -->
 
----
+| State | Meaning |
+|---|---|
+| `uninitialized` | Created; `load` has not run. |
+| `loading` | `load` is in progress. |
+| `ready` | Loaded and available: `render`, `query`, `refresh` and the rest may run. |
+| `rendering` | `render` is in progress. |
+| `error` | A capability failed. `load` may be retried, or the MFE destroyed. |
+| `destroyed` | Terminal. Nothing leaves it. |
 
-## Lifecycle Phases
+### Lifecycle hooks from the manifest
 
-Each capability executes in four optional phases, defined in the manifest:
+Each capability runs manifest-declared handlers in four phases:
 
 ```yaml
 capabilities:
-  - load:
-      type: platform
-      lifecycle:
-        before:      # Run before main logic — validation, pre-checks
-          - validateConfig:
-              handler: checkConfig
-              contained: true   # failures are logged but don't abort
-        main:        # The core logic — failures abort and jump to error phase
-          - initializeRuntime:
-              handler: setupRuntime
-        after:       # Run after success — notifications, cleanup
-          - emitReadyEvent:
-              handler: notifyReady
-        error:       # Run on failure — rollback, fallback
-          - cleanup:
-              handler: rollbackInit
-              contained: true
-```
-
-**Phase semantics:**
-- `before` / `after` / `error`: failures are logged, execution continues (OR-like)
-- `main`: first failure stops execution and jumps to `error` phase (AND-like)
-- `contained: true`: wraps handler in try/catch — errors are swallowed after logging
-
----
-
-## Language Implementation Guide
-
-The TypeScript block below cites real files. The Python, Go and Rust blocks are
-sketches showing the shape the contract expects of a non-TypeScript MFE; no such
-implementation ships in this repository.
-
-### Method names by language
-
-| Contract method | TypeScript | Python | Go | Rust |
-|---|---|---|---|---|
-| Orchestrator | `load(ctx)` | `load(ctx)` | `Load(ctx, mfeCtx)` | `load(&self, ctx)` |
-| Implementation | `doLoad(ctx)` | `do_load(ctx)` | `DoLoad(ctx, mfeCtx)` | `do_load(&self, ctx)` |
-| Orchestrator | `render(ctx)` | `render(ctx)` | `Render(ctx, mfeCtx)` | `render(&self, ctx)` |
-| Implementation | `doRender(ctx)` | `do_render(ctx)` | `DoRender(ctx, mfeCtx)` | `do_render(&self, ctx)` |
-| Orchestrator | `authorizeAccess(ctx)` | `authorize_access(ctx)` | `AuthorizeAccess(ctx, mfeCtx)` | `authorize_access(&self, ctx)` |
-| Implementation | `doAuthorizeAccess(ctx)` | `do_authorize_access(ctx)` | `DoAuthorizeAccess(ctx, mfeCtx)` | `do_authorize_access(&self, ctx)` |
-| Orchestrator | `updateControlPlaneState(ctx)` | `update_control_plane_state(ctx)` | `UpdateControlPlaneState(ctx, mfeCtx)` | `update_control_plane_state(&self, ctx)` |
-| Implementation | `doUpdateControlPlaneState(ctx)` | `do_update_control_plane_state(ctx)` | `DoUpdateControlPlaneState(ctx, mfeCtx)` | `do_update_control_plane_state(&self, ctx)` |
-
-_(same pattern for refresh, health, describe, schema, query, emit)_
-
-### TypeScript (reference)
-
-```typescript
-// Extend BaseMFE and implement the 10 abstract do*() methods:
-export class MyMFE extends BaseMFE {
-  protected async doLoad(ctx: Context): Promise<LoadResult> {
-    // connect, warm, validate
-    return { status: 'loaded', timestamp: new Date() };
-  }
-  protected async doUpdateControlPlaneState(ctx: Context): Promise<ControlPlaneStateResult> {
-    // push domain state to the daemon when something meaningful changes
-    const { stateKey, stateData } = ctx.inputs as any;
-    // await daemonWsClient.sendAction({ stateKey, stateData, mfe: this.manifest.name });
-    return { acknowledged: true, correlationId: ctx.requestId };
-  }
-  // ... 8 more methods
-}
-```
-
-File: `packages/runtime/src/base-mfe.ts` (abstract) · `packages/runtime/src/remote-mfe.ts` (Module Federation concrete)
-
-### Python (Flask)
-
-```python
-class MyMFE(BaseMFE):
-    async def do_load(self, ctx: Context) -> LoadResult:
-        # connect, warm, validate
-        return LoadResult(status="loaded")
-    # ... 8 more methods
-```
-
-
-### Go (net/http)
-
-```go
-func (m *MyMFE) DoLoad(ctx context.Context, mfeCtx MFEContext) (LoadResult, error) {
-    // connect, warm, validate
-    return LoadResult{Status: "loaded"}, nil
-}
-// ... 8 more methods
-```
-
-
-### Rust (Tokio + axum)
-
-```rust
-async fn do_load(&self, _ctx: MfeContext) -> Result<LoadResult, String> {
-    // connect, warm, validate
-    Ok(LoadResult { status: "loaded".to_string(), container: None })
-}
-// ... 8 more methods
-```
-
-
----
-
-## The Manifest (Generic Specification)
-
-The `mfe-manifest.yaml` is the single source of truth. The code generator reads
-it to produce language-specific scaffolding:
-
-```yaml
-name: my-mfe
-version: 1.0.0
-type: tool
-language: python          # javascript | typescript | python | go | rust | java
-
-capabilities:
-  - load:
+  - Load:
       type: platform
       lifecycle:
         before:
           - validateConfig:
-              handler: checkConfig    # language-neutral handler name
+              handler: checkConfig
+              contained: true
         main:
           - initializeRuntime:
               handler: setupRuntime
-
-  - MyFeature:
-      type: domain
-      description: What this domain capability does
-
-data:
-  sources:
-    - name: MyAPI
-      handler:
-        openapi:
-          source: ./specs/my-api.yaml
-          operationHeaders:
-            Authorization: "Bearer {context.jwt}"
+        after:
+          - emitReadyEvent:
+              handler: notifyReady
+        error:
+          - cleanup:
+              handler: rollbackInit
 ```
+
+- **`main`**: the first failure aborts the capability and runs the `error`
+  phase.
+- **`before`, `after` and `error`**: a failure is logged as telemetry and the
+  next handler still runs.
+- **`contained: true`**: the handler's error is caught and logged, and never
+  propagates.
+
+Handlers named `platform.*` resolve against the runtime's handler library.
+Other names resolve against methods on your MFE class (TypeScript) or
+`MfeDependencies.custom_handlers` / `deps.customHandlers` (Rust and Swift,
+ADR-098).
 
 ---
 
-## What the Daemon Does NOT Do
+## What each capability returns
 
-The daemon is **not** a component store, not a template engine, and not a
-fixed-component-type system. It does **not**:
-- Define what components look like (no CARD/FORM/NOTIFICATION type library)
-- Pre-render or store rendered output
-- Own the presentation layer of any MFE
+*Generated from `packages/runtime/src/capability-results.ts`.* Native builds
+omit the DOM and Module Federation fields named in the rule above.
 
-Instead, the daemon is a **state-change router and render orchestrator**:
-1. Receives state changes from the Renderer (`sendAction`)
-2. Asks the Registry: *"which MFE should handle this?"*
-3. Gets back a resolution (which MFE, which capability, what props)
-4. Calls that MFE's `render()` — the MFE decides what the experience looks like
-5. Relays the MFE's output back to the Renderer
+<!-- BEGIN GENERATED: results -->
+#### describe → DescribeResult
 
-**The Renderer displays whatever the MFE produces.** The MFE owns its
-presentation entirely.
+| Field | Required | Type |
+|---|---|---|
+| `name` | yes | `string` |
+| `version` | yes | `string` |
+| `type` | yes | `string` |
+| `capabilities` | yes | `string[]` |
+| `manifest` | yes | `DSLManifest` |
+
+#### load → LoadResult
+
+| Field | Required | Type |
+|---|---|---|
+| `status` | yes | `'loaded' \| 'error'` |
+| `container` | no | `unknown` |
+| `mesh` | no | `unknown` |
+| `worker` | no | `unknown` |
+| `manifest` | no | `import('@seans-mfe/dsl').DSLManifest` |
+| `availableComponents` | no | `string[]` |
+| `capabilities` | no | `CapabilityMetadata[]` |
+| `timestamp` | yes | `Date` |
+| `duration` | no | `number` |
+| `telemetry` | no | `{ entry: { start: Date; duration: number; }; mount: { start: Date; duration: number; }; enableRender: { start: Date; duration: number; }; }` |
+| `error` | no | `{ message: string; phase: 'entry' \| 'mount' \| 'enable-render' \| 'before' \| 'after' \| 'error'; retryCount: number; retryable: boolean; }` |
+
+#### render → RenderResult
+
+| Field | Required | Type |
+|---|---|---|
+| `status` | yes | `'rendered' \| 'error'` |
+| `element` | no | `unknown` |
+| `timestamp` | yes | `Date` |
+
+#### refresh
+
+`refresh` returns nothing; success is the absence of a thrown error.
+
+#### emit → EmitResult
+
+| Field | Required | Type |
+|---|---|---|
+| `emitted` | yes | `boolean` |
+| `eventId` | no | `string` |
+
+#### query → QueryResult
+
+| Field | Required | Type |
+|---|---|---|
+| `data` | yes | `unknown` |
+| `errors` | no | `Array<{ message: string; path?: string[]; }>` |
+
+#### schema → SchemaResult
+
+| Field | Required | Type |
+|---|---|---|
+| `schema` | yes | `string` |
+| `format` | yes | `'graphql' \| 'json' \| 'openapi'` |
+
+#### authorizeAccess
+
+`authorizeAccess` returns a boolean: `true` to allow, `false` to deny.
+
+#### health → HealthResult
+
+| Field | Required | Type |
+|---|---|---|
+| `status` | yes | `'healthy' \| 'degraded' \| 'unhealthy'` |
+| `checks` | yes | `Array<{ name: string; status: 'pass' \| 'fail'; message?: string; }>` |
+| `timestamp` | yes | `Date` |
+
+#### updateControlPlaneState → ControlPlaneStateResult
+
+| Field | Required | Type |
+|---|---|---|
+| `acknowledged` | yes | `boolean` |
+| `correlationId` | yes | `string` |
+| `error` | no | `string \| null` |
+| `resolution` | no | `Resolution \| null` |
+<!-- END GENERATED: results -->
+
+---
+
+## How a capability reaches a running MFE
+
+The control plane never calls an MFE directly. In a browser:
+
+1. A user action becomes a state key, sent to the daemon.
+2. The registry matches the state key against the compiled composition rules
+   (`control-plane/rules.json`, ADR-083) and resolves a placement: which MFE,
+   which capability, which slot, what props.
+3. The daemon pushes the placement to the shell over its GraphQL WebSocket.
+4. The shell's layout manager loads the MFE's Module Federation container and
+   hands it the slot's daemon channel through `mfe.attachControlPlane`
+   (ADR-057). This is the channel `updateControlPlaneState` sends through.
+5. The layout manager mounts through the MFE's imperative handle
+   (`mount(element, { capability, props })`, ADR-056). Inside the MFE that
+   runs `load` if needed, then `render`, through the pipeline above.
+
+The code for steps 4 and 5 is `packages/runtime/src/layout-adaptors.ts`. A
+native host (an iOS app, a Rust service) calls the orchestrators directly and
+injects its own transport, daemon client and telemetry sink.
+
+---
+
+## Limits of the contract
+
+- **`refresh` and `authorizeAccess` are thin in every build.** Both succeed
+  without doing work by default. Authorization policy is left to the adopting
+  product (see the system map's trade-offs).
+- **The HTTP method and endpoint** in `PLATFORM_CAPABILITY_SPECS` describe how
+  a capability *could* be served over HTTP. No server in this repository
+  serves them, and no gate checks them (ADR-080).
+- **Other languages.** Only the builds above exist. A new build is added as a
+  framework plugin with a `targetId` (ADR-097) and joins the conformance suite
+  in the same change (ADR-102).
+
+## References
+
+- ADR-041: `BaseMFE` as the abstract base of every MFE.
+- ADR-042: the lifecycle state machine.
+- ADR-054: the control-plane message protocol.
+- ADR-056: the presentation boundary and the imperative mount handle.
+- ADR-080: the contract is defined once, in `@seans-mfe/contracts`.
+- ADR-098: native lifecycle hooks and `MfeDependencies`.
+- ADR-101: the Rust build implements all ten capabilities.
+- ADR-102: every build implements the base class.
+- `docs/runtime-class-hierarchy.md`: the TypeScript class ladder in more depth.

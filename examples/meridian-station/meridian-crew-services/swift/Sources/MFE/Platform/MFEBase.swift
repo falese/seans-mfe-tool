@@ -620,7 +620,7 @@ open class MFEBase {
 
     // MARK: - The ten capabilities — final; subclasses override the do* hooks
 
-    /// Self-registration — returns the MFE manifest and capabilities.
+    /// Self-description — name, version, type, capability names and the manifest.
     public final func describe(_ context: MFEContext) async throws -> DescribeResult {
         try await execute(.describe, context) { try await self.doDescribe(context) }
     }
@@ -650,17 +650,17 @@ open class MFEBase {
         try await execute(.query, context) { try await self.doQuery(context) }
     }
 
-    /// GraphQL SDL introspection for registry schema federation.
+    /// Publishes the MFE's schema — by default its manifest, as JSON.
     public final func schema(_ context: MFEContext) async throws -> SchemaResult {
         try await execute(.schema, context) { try await self.doSchema(context) }
     }
 
-    /// JWT validation — the gate check the daemon runs before render().
+    /// Access check for the current caller. The default allows everyone; policy belongs to the product.
     public final func authorizeAccess(_ context: MFEContext) async throws -> Bool {
         try await execute(.authorizeAccess, context) { try await self.doAuthorizeAccess(context) }
     }
 
-    /// Liveness and dependency checks for registry polling.
+    /// Liveness — an overall status and the checks behind it.
     public final func health(_ context: MFEContext) async throws -> HealthResult {
         try await execute(.health, context) { try await self.doHealth(context) }
     }

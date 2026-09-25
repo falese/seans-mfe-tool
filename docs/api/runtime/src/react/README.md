@@ -10,6 +10,8 @@
 
 - [RemoteMFE](classes/RemoteMFE.md)
 
-## Interfaces
+## References
 
-- [ModuleFederationContainer](interfaces/ModuleFederationContainer.md)
+### ModuleFederationContainer
+
+Re-exports [ModuleFederationContainer](../base-remote-mfe/interfaces/ModuleFederationContainer.md)

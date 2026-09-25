@@ -425,6 +425,13 @@ jobs:
         # nothing runs is a comment.
         run: npm run build:system-map:check
 
+      - name: Base-class reference tables match the contract
+        # docs/PLATFORM-CONTRACT.md is the base-class reference, and its tables
+        # (capabilities, lifecycle, result shapes, per-language names) are
+        # generated from @seans-mfe/contracts and capability-results.ts
+        # (ADR-080). Fails when either changed without regenerating the page.
+        run: npm run build:platform-contract:check
+
       - name: ADR index and PDR map are generated from frontmatter
         # The spec.md index and the PDR↔ADR map are views of ADR frontmatter
         # (ADR-075 §1), not second copies of it. Same generate-and-diff idiom as

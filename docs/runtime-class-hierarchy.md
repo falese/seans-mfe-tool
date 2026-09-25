@@ -6,6 +6,11 @@ versus what you get for free. It complements
 [`docs/archive/platform-design-review/base-mfe-architecture-and-demo.md`](./archive/platform-design-review/base-mfe-architecture-and-demo.md),
 which walks a real generated MFE through this hierarchy end to end.
 
+> **For every build, start with [`PLATFORM-CONTRACT.md`](./PLATFORM-CONTRACT.md).**
+> That is the base-class reference: the ten capabilities, their result shapes
+> and the lifecycle, as React, Angular, Swift, native Rust and Rust/WASM each
+> implement them. This page goes deeper on the TypeScript class ladder only.
+
 ---
 
 ## The layers

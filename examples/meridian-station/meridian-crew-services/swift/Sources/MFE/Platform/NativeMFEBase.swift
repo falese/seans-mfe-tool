@@ -124,9 +124,9 @@ open class NativeMFEBase: MFEBase {
     open override func doRefresh(_ context: MFEContext) async throws {
     }
 
-    /// Allow, as `BaseRemoteMFE.doAuthorizeAccess` does. Authorization is the
-    /// daemon's gate check before `render` (ADR-042); an MFE that needs its
-    /// own registers a manifest hook on `AuthorizeAccess`, which runs first.
+    /// Allow, as `BaseRemoteMFE.doAuthorizeAccess` does. Access policy belongs
+    /// to the product; an MFE that needs its own check registers a manifest
+    /// hook on `AuthorizeAccess`, which runs first.
     open override func doAuthorizeAccess(_ context: MFEContext) async throws -> Bool {
         true
     }
@@ -150,7 +150,7 @@ open class NativeMFEBase: MFEBase {
         return HealthResult(status: status, checks: checks, timestamp: isoNow())
     }
 
-    /// Self-registration. Answered from the statically generated table with no
+    /// Self-description. Answered from the statically generated table with no
     /// I/O — the native counterpart of reading the manifest off the container.
     open override func doDescribe(_ context: MFEContext) async throws -> DescribeResult {
         DescribeResult(

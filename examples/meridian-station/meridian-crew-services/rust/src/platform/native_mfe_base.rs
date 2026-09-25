@@ -174,10 +174,9 @@ impl<T: NativeMfe> MfeHooks for T {
         Box::pin(async { Ok(()) })
     }
 
-    /// Allow, as `BaseRemoteMFE.doAuthorizeAccess` does. Authorization is the
-    /// daemon's gate check before `render` (ADR-042); an MFE that needs its
-    /// own check registers a manifest hook on `AuthorizeAccess`, which runs in
-    /// the pipeline before this.
+    /// Allow, as `BaseRemoteMFE.doAuthorizeAccess` does. Access policy belongs
+    /// to the product; an MFE that needs its own check registers a manifest
+    /// hook on `AuthorizeAccess`, which runs in the pipeline before this.
     fn do_authorize_access<'a>(&'a self, _core: &'a MfeCore, _context: &'a MfeContext) -> BoxFuture<'a, Result<bool, MfeError>> {
         Box::pin(async { Ok(true) })
     }
@@ -216,7 +215,7 @@ impl<T: NativeMfe> MfeHooks for T {
         })
     }
 
-    /// Self-registration, answered from the generated table with no I/O.
+    /// Self-description, answered from the generated table with no I/O.
     fn do_describe<'a>(&'a self, core: &'a MfeCore, _context: &'a MfeContext) -> BoxFuture<'a, Result<DescribeResult, MfeError>> {
         Box::pin(async move {
             Ok(DescribeResult {
