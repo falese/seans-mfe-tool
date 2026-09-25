@@ -14,7 +14,7 @@
  * logic is unit-testable without a browser.
  */
 
-import { buildMessage } from '@seans-mfe/contracts';
+import { buildMessage, isRenderedExperience } from '@seans-mfe/contracts';
 import type { ActionRecord, RenderedExperience, SessionContext } from '@seans-mfe/contracts';
 import { DaemonChannel } from './daemon-channel';
 import { uuidv4 } from './util/uuid';
@@ -194,7 +194,15 @@ export class LayoutManager {
     }
     if (component.type !== 'EXPERIENCE' || !component.data) return;
 
-    const experience = component.data as unknown as RenderedExperience;
+    // The payload crossed a process boundary; the contracts guard (ADR-054)
+    // vouches for its shape rather than a cast asserting it.
+    const experience: unknown = component.data;
+    if (!isRenderedExperience(experience)) {
+      this.config.onError?.(
+        `Malformed experience from the daemon: expected { mfe, capability, contentType, output }, got ${JSON.stringify(experience)}`
+      );
+      return;
+    }
     await this.mountExperience(experience);
   }
 

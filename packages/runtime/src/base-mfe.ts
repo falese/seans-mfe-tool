@@ -19,6 +19,7 @@ import {
   SystemError,
   MFE_LIFECYCLE_TRANSITIONS,
   MFE_LIFECYCLE_INITIAL_STATE,
+  isValidLifecycleTransition,
   PLATFORM_CAPABILITY_SPECS,
 } from '@seans-mfe/contracts';
 import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
@@ -152,7 +153,7 @@ export abstract class BaseMFE {
     const validTransitions = VALID_TRANSITIONS[this.state];
     const isValid = this.deps?.stateValidator
       ? this.deps.stateValidator.isValidTransition(this.state, newState)
-      : validTransitions.includes(newState);
+      : isValidLifecycleTransition(this.state, newState);
 
     if (!isValid) {
       const error = new BusinessError(

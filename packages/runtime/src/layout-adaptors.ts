@@ -14,6 +14,7 @@
 
 import type {
   ImperativeMountHandle,
+  ModuleFederationExperienceOutput,
   PresentationHandles,
   RenderedExperience,
   SessionContext,
@@ -22,7 +23,13 @@ import type {
 // require("@seans-mfe/contracts") in the compiled runtime. That resolves in
 // every consumer: the CLI image (workspace node_modules) and generated MFEs
 // (contracts is staged as a file: dep of dist/runtime — #236, ADR-054/056).
-import { isImperativeMountHandle, BusinessError, SystemError } from '@seans-mfe/contracts';
+import {
+  isImperativeMountHandle,
+  isModuleFederationOutput,
+  EXPERIENCE_CONTENT_TYPES,
+  BusinessError,
+  SystemError,
+} from '@seans-mfe/contracts';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
 
 // ── Structural element types (testable without a DOM) ────────
@@ -244,13 +251,21 @@ function enqueueScopeMount<T>(scope: string, task: () => Promise<T>): Promise<T>
 /* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 export const moduleFederationAdaptor: ExperienceAdaptor = {
   mount(experience, slot, helpers) {
-    const output = experience.output as {
-      remoteEntryUrl?: string; scope?: string; module?: string;
-      component?: string; props?: Record<string, unknown>;
-    };
-    if (!output?.remoteEntryUrl || !output.scope || !output.module) {
+    const output = experience.output;
+    // These arrive from a control-plane rule, so they are optional on the wire
+    // and can genuinely be absent. Without this the undefined was passed
+    // straight through and surfaced as `script.src = "undefined"` — a 404 on a
+    // nonsense URL rather than a statement of what the rule is missing.
+    if (!isModuleFederationOutput(output) || !output.remoteEntryUrl || !output.scope || !output.module) {
+      const given = (output ?? {}) as Partial<Record<'remoteEntryUrl' | 'scope' | 'module', unknown>>;
+      const missing = (['remoteEntryUrl', 'scope', 'module'] as const)
+        .filter((field) => typeof given[field] !== 'string' || given[field] === '');
       return Promise.reject(
-        new Error('module-federation experience output requires remoteEntryUrl, scope, and module')
+        new BusinessError(
+          `Cannot mount MFE for experience "${experience.id}": the placement rule is missing ` +
+            missing.join(', '),
+          'INCOMPLETE_PLACEMENT_RULE',
+        )
       );
     }
     return enqueueScopeMount(output.scope, () => mountModuleFederation(experience, slot, helpers, output));
@@ -262,32 +277,13 @@ async function mountModuleFederation(
   experience: RenderedExperience,
   slot: SlotElementLike,
   helpers: AdaptorHelpers,
-  output: {
-    remoteEntryUrl?: string; scope?: string; module?: string;
-    component?: string; props?: Record<string, unknown>;
-  }
+  output: ModuleFederationExperienceOutput
 ): Promise<UnmountFn | void> {
     const mountPoint = document.createElement('div');
     mountPoint.id = `layout-mfe-${experience.id}`;
     slot.appendChild(mountPoint);
 
-    // These arrive from a control-plane rule, so they are optional on the wire
-    // and can genuinely be absent. Without this the undefined was passed
-    // straight through and surfaced as `script.src = "undefined"` — a 404 on a
-    // nonsense URL rather than a statement of what the rule is missing.
     const { remoteEntryUrl, scope, module } = output;
-    if (!remoteEntryUrl || !scope || !module) {
-      throw new BusinessError(
-        `Cannot mount MFE for experience "${experience.id}": the placement rule is missing ` +
-        [
-          !remoteEntryUrl && 'remoteEntryUrl',
-          !scope && 'scope',
-          !module && 'module',
-        ].filter(Boolean).join(', '),
-        'INCOMPLETE_PLACEMENT_RULE',
-      );
-    }
-
     const container = await loadRemoteContainer(remoteEntryUrl, scope);
     const factory = await container.get(module);
     const raw = factory();
@@ -349,8 +345,8 @@ async function mountModuleFederation(
 
 export function defaultAdaptors(): Record<string, ExperienceAdaptor> {
   return {
-    'text/html': htmlAdaptor,
-    'application/json': jsonAdaptor,
-    'module-federation': moduleFederationAdaptor,
+    [EXPERIENCE_CONTENT_TYPES.html]: htmlAdaptor,
+    [EXPERIENCE_CONTENT_TYPES.json]: jsonAdaptor,
+    [EXPERIENCE_CONTENT_TYPES.moduleFederation]: moduleFederationAdaptor,
   };
 }
