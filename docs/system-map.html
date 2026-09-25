@@ -184,6 +184,17 @@
     max-width: 68ch;
   }
   .readnote strong { color: var(--ink); }
+  /* The overview reel: self-hosted (check-site.js rejects remote assets), click to play. */
+  .reel { margin: 28px 0 0; max-width: 860px; }
+  .reel video {
+    display: block; width: 100%; height: auto; aspect-ratio: 16 / 9;
+    border-radius: 12px; border: 1px solid var(--rule); background: #06081a;
+    box-shadow: var(--shadow);
+  }
+  .reel figcaption {
+    margin-top: 10px; font-family: var(--display); font-size: 13.5px;
+    line-height: 1.5; color: var(--muted); max-width: 72ch;
+  }
 
   /* ---------- sections ---------- */
   .band { padding: 66px 0 8px; scroll-margin-top: calc(var(--nav-h) + 16px); }
@@ -642,6 +653,14 @@
     Engineers: turn on <em>Show technical implementation</em> in the bar above to reveal
     repository paths throughout.
   </p>
+  <figure class="reel">
+    <video controls muted playsinline preload="metadata" width="1280" height="720"
+           poster="media/smt-sizzle-reel-poster.png" aria-describedby="reel-caption">
+      <source src="media/smt-sizzle-reel.webm" type="video/webm">
+      <a href="media/smt-sizzle-reel.webm">Download the 79-second overview (WebM, 4&nbsp;MB)</a>
+    </video>
+    <figcaption id="reel-caption">The platform in 79 seconds: one manifest generating React, Angular, Swift and Rust builds; a control plane composing them; and live footage of the Meridian Station example, including a capability rendered by Rust compiled to WebAssembly. Silent &mdash; captions are in the picture. Figures as recorded on 25 September 2026.</figcaption>
+  </figure>
 </header>
 
 <main id="main">

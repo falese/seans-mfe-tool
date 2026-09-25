@@ -14,6 +14,7 @@
 #   /cli-architecture.html         docs/cli-architecture.html   — CLI schematics
 #   /derived-contracts.html        docs/derived-contracts.html  — how contracts are derived
 #   /slides/platform-architecture.html|.pdf                 — the deck
+#   /media/*                       docs/media/*                 — the overview reel + poster
 #
 # The system map is the point of this site and does not depend on the deck: the
 # Marp steps are non-fatal, and scripts/assemble-site.js removes the deck card
@@ -35,6 +36,7 @@ on:
       - 'docs/runtime-architecture.html'
       - 'docs/derived-contracts.html'
       - 'docs/slides/**'
+      - 'docs/media/**'
       - '.github/workflows/pages.yml'
   pull_request:
     paths:
@@ -44,6 +46,7 @@ on:
       - 'docs/runtime-architecture.html'
       - 'docs/derived-contracts.html'
       - 'docs/slides/**'
+      - 'docs/media/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 

@@ -69,6 +69,21 @@ for (const page of PAGES) {
   fs.copyFileSync(from, path.join(outDir, page));
 }
 
+// ---- media: files the pages embed (the overview reel and its poster) ----
+//
+// Self-hosted for the same reason pages are self-contained: check-site.js
+// rejects remote assets, and it resolves every local src/href, so a page that
+// embeds a file missing from here fails the publish rather than shipping a
+// broken player.
+const MEDIA = 'media';
+const mediaFrom = path.join(docs, MEDIA);
+if (fs.existsSync(mediaFrom)) {
+  fs.mkdirSync(path.join(outDir, MEDIA), { recursive: true });
+  for (const entry of fs.readdirSync(mediaFrom)) {
+    fs.copyFileSync(path.join(mediaFrom, entry), path.join(outDir, MEDIA, entry));
+  }
+}
+
 // ---- the landing page: deck card kept only if the deck exists ----
 let landing = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
 
@@ -111,7 +126,8 @@ if (!deckBuilt) {
 }
 
 console.log(
-  `assemble-site: OK — ${PAGES.length} page(s) + landing page published to ` +
+  `assemble-site: OK — ${PAGES.length} page(s) + landing page` +
+    `${fs.existsSync(mediaFrom) ? ` + ${fs.readdirSync(mediaFrom).length} media file(s)` : ''} published to ` +
     `${path.relative(repoRoot, outDir)}; ` +
     `slide deck ${deckBuilt ? 'included' : 'OMITTED (build failed or skipped)'}`,
 );
