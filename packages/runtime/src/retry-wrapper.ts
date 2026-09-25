@@ -19,6 +19,20 @@ export interface RetryConfig {
   fallbackHandler?: string;
 }
 
+/**
+ * Retry defaults for a hook that declares `errorHandling`: no retries. Only an
+ * `errorHandling.types` entry with `maxRetries` turns retrying on, for that
+ * error type (ADR-030) — so an entry that exists just to classify by pattern
+ * never makes a hook retry by accident.
+ */
+export const NO_RETRY: RetryConfig = {
+  maxRetries: 0,
+  backoff: 'exponential',
+  baseDelay: 1000,
+  maxDelay: 10000,
+  jitter: false,
+};
+
 /** Retry state this wrapper carries on the context (REQ-LIFECYCLE-005). */
 export interface RetryState {
   attempt: number;

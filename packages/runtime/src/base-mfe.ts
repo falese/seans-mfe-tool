@@ -24,7 +24,7 @@ import {
 import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
 import * as platformHandlerLibrary from './handlers';
 import { withTimeout } from './timeout-wrapper';
-import { withRetry, type RetryConfig } from './retry-wrapper';
+import { withRetry, NO_RETRY } from './retry-wrapper';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -45,20 +45,6 @@ import type {
 import { runPipeline, CAPABILITY_DESCRIPTORS, PLATFORM_HANDLER_LIBRARY } from './capability-pipeline';
 import type { Middleware } from './capability-pipeline';
 
-
-/**
- * Retry defaults for a hook that declares `errorHandling`: no retries. Only an
- * `errorHandling.types` entry with `maxRetries` turns retrying on, for that
- * error type (ADR-030) — so an entry that exists just to classify by pattern
- * never makes a hook retry by accident.
- */
-const NO_RETRY: RetryConfig = {
-  maxRetries: 0,
-  backoff: 'exponential',
-  baseDelay: 1000,
-  maxDelay: 10000,
-  jitter: false,
-};
 
 // =============================================================================
 // State Machine Types (REQ-056)
