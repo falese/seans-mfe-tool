@@ -220,18 +220,22 @@ each MFE's manifest (`providesSlots`, ADR-067), never render-order ordinals.
 The full story — addressing rules, the manifest→codegen→runtime→registry
 chain, rename semantics — is in **[`slot-contract.md`](./slot-contract.md)**.
 
-`BaseControlPlane` (ADR-059) is the abstract base that bundles daemon + registry +
-LayoutManager into one swappable unit (Node daemon, Rust daemon, in-process mock).
-The host writes three lines:
+The control plane is one concrete implementation, the registry and daemon in
+`packages/control-plane` (ADR-078). ADR-105 retired ADR-059's abstract
+`BaseControlPlane` once the Node and Rust implementations it anticipated had
+converged there. The host connects with a `LayoutManager`:
 
 ```typescript
-const cp = new NodeControlPlane({
-  container: document.getElementById('app'),
+const layout = new LayoutManager({
+  container: document.getElementById('app')!,
   session:   { sessionId, user, jwt },
-  daemonUrl: 'ws://localhost:3004/graphql',   // 3001-3003 belong to MFEs (ADR-055)
+  transport: new GraphQLTransportWsDaemonTransport(
+    'ws://localhost:3004/graphql',   // 3001-3003 belong to MFEs (ADR-055)
+    (url, protocol) => new WebSocket(url, protocol),
+  ),
 });
-await cp.start();   // creates + wires the LayoutManager internally
-await cp.stop();
+layout.start();
+await layout.stop();
 ```
 
 ### The message protocol (ADR-054)
@@ -425,7 +429,8 @@ examples/abc-kids/
 5. **One socket, uniform identity.** Slots and nested hosts share one connection
    via `DaemonChannel`; identity is the host's, never spoofable by an MFE.
 6. **Abstract base owns the shape, concrete owns the how** — `BaseMFE`,
-   `BaseCommand`, `BaseFrameworkPlugin`, and now `BaseControlPlane`.
+   `BaseCommand`, `BaseFrameworkPlugin`. The control plane has no abstract base
+   because it has exactly one implementation (ADR-105).
 
 ---
 
@@ -444,7 +449,8 @@ examples/abc-kids/
 - ADR-056 — MFE presentation boundary (polyglot VM; imperative floor + native handle)
 - ADR-057 — Virtualized daemon socket (`DaemonChannel`)
 - ADR-058 — Slot-provider MFEs
-- ADR-059 — `BaseControlPlane` abstract base
+- ADR-059 — `BaseControlPlane` abstract base (superseded by ADR-105)
+- ADR-105 — `BaseControlPlane` retired; one control-plane implementation
 - ADR-060 — Context injection, slot-scoped self-healing, re-resolution
 - ADR-066 — Stable slot addressing and desired-state placement
 - ADR-067 — Manifest-declared slot contract

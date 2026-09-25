@@ -83,7 +83,7 @@ The platform is structured in five layers. Each layer has a clean contract with 
 flowchart TB
     subgraph HOST["Host Shell"]
         direction LR
-        CP["BaseControlPlane\nstart() / stop()"]
+        CP["LayoutManager\nstart() / stop()"]
     end
 
     subgraph ORCHESTRATION["Runtime Orchestration"]
@@ -184,38 +184,6 @@ classDiagram
         #handleError(err) never
     }
 
-    class BaseControlPlane {
-        <<abstract>>
-        +id: string
-        +displayName: string
-        +implementation: string
-        +status: ControlPlaneStatus
-        +start() Promise~void~
-        +stop() Promise~void~
-        +activeSlots: string[]
-        +uptime: number
-        #doStart() Promise~void~*
-        #doStop() Promise~void~*
-        +createTransport() DaemonTransport*
-        +register(mfe) Promise~void~*
-        +resolve(action) Promise~Resolution~*
-        +health() Promise~ControlPlaneHealth~*
-    }
-
-    class NodeControlPlane {
-        +implementation: "node"
-        #doStart() Promise~void~
-        #doStop() Promise~void~
-        +createTransport() DaemonTransport
-    }
-
-    class RustControlPlane {
-        +implementation: "rust"
-        #doStart() Promise~void~
-        #doStop() Promise~void~
-        +createTransport() DaemonTransport
-    }
-
     class BaseFrameworkPlugin {
         <<abstract>>
         +framework: string
@@ -238,20 +206,20 @@ classDiagram
 
     BaseMFE <|-- RemoteMFE
     BaseMFE <|-- AngularRemoteMFE
-    BaseControlPlane <|-- NodeControlPlane
-    BaseControlPlane <|-- RustControlPlane
     BaseFrameworkPlugin <|-- ReactRspackPlugin
     BaseFrameworkPlugin <|-- AngularWebpackPlugin
 ```
 
 ### 4.2 Pattern summary
 
+The control plane is deliberately absent: it has exactly one implementation
+(`packages/control-plane`, ADR-078), so ADR-105 retired ADR-059's `BaseControlPlane`.
+
 | Abstract base | Owns | Concrete owns |
 |---|---|---|
 | `BaseMFE` | Lifecycle FSM, slot rendering, health reporting | How to load the remote module, how to render it |
 | `BaseCommand` | `--json` envelope, exit codes, error classification | What the command does (`runCommand()`) |
 | `BaseFrameworkPlugin` | Build/codegen/docker contract | rspack config, Angular builders, Vite config |
-| `BaseControlPlane` | Daemon + LayoutManager wiring, status transitions | How to connect to the daemon (spawn vs WebSocket vs in-process) |
 
 ---
 
@@ -451,25 +419,31 @@ erDiagram
 
 ### 7.1 What the control plane is
 
-The control plane bundles four concerns into a single unit:
+The control plane is one concrete implementation that ships with the platform
+(ADR-078): the registry and daemon services in `packages/control-plane`. The host
+reaches it through a `LayoutManager`, which virtualizes the single daemon socket
+into per-slot `DaemonChannel`s (ADR-057).
 
 ```mermaid
 flowchart TB
-    subgraph BCP["BaseControlPlane"]
+    subgraph CP["packages/control-plane (services)"]
         direction TB
         D["Daemon\naction routing · pub/sub"]
         R["Registry\ncapability → MFE resolution"]
+        D <--> R
+    end
+
+    subgraph HOSTRT["Host runtime (@seans-mfe-tool/runtime)"]
+        direction TB
         LM["LayoutManager\nslot mounting · adaptor dispatch"]
         DC["DaemonChannel\nper-slot virtual WebSocket"]
-
-        D <--> R
-        R --> LM
         LM --> DC
     end
 
-    HOST["Host Shell\nnew NodeControlPlane(config)\nawait cp.start()"] --> BCP
-    BCP --> MFE1["React MFE\nPlayGame"]
-    BCP --> MFE2["Angular MFE\nShowCover"]
+    HOST["Host Shell\nnew LayoutManager(config)\nlayout.start()"] --> LM
+    LM <-->|"one WebSocket"| D
+    LM --> MFE1["React MFE\nPlayGame"]
+    LM --> MFE2["Angular MFE\nShowCover"]
 ```
 
 ### 7.2 Startup sequence
@@ -477,27 +451,17 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     participant Host as Host Shell
-    participant BCP as BaseControlPlane
-    participant DS as doStart() (concrete)
     participant LM as LayoutManager
-    participant T as DaemonTransport
-    participant D as Daemon Process
+    participant T as GraphQLTransportWsDaemonTransport
+    participant D as Daemon (packages/control-plane)
 
-    Host->>BCP: new NodeControlPlane(config)
-    Host->>BCP: start()
-    BCP->>BCP: status = 'starting'
-    BCP->>DS: doStart()
-    DS->>D: spawn / connect WebSocket
-    D-->>DS: connected
-    DS-->>BCP: resolved
-    BCP->>T: createTransport()
-    T-->>BCP: DaemonTransport instance
-    BCP->>LM: new LayoutManager({ container, transport, session, hostFramework, adaptors })
-    BCP->>LM: start()
-    LM->>T: transport.start()
-    T->>D: subscribe to experience stream
-    BCP->>BCP: status = 'running'
-    BCP-->>Host: resolved
+    Host->>T: new GraphQLTransportWsDaemonTransport(daemonUrl, createSocket)
+    Host->>LM: new LayoutManager({ container, transport, session, hostFramework, adaptors })
+    Host->>LM: start()
+    LM->>T: transport.start(onMessage, onStatus)
+    T->>D: connect + subscribe to experience stream
+    D-->>T: connection_ack
+    T-->>LM: status = 'connected'
 ```
 
 ### 7.3 Action → experience flow
@@ -907,8 +871,7 @@ flowchart LR
 flowchart TB
     subgraph OPEN["Open extension points"]
         FW["Framework plugins\n@seans-mfe/framework-*\nExtend BaseFrameworkPlugin"]
-        CP_IMPL["Control plane implementations\nNodeControlPlane · RustControlPlane\nExtend BaseControlPlane"]
-        ADAPT["Custom adaptors\nControlPlaneConfig.adaptors\nMerged over built-in defaults"]
+        ADAPT["Custom adaptors\nLayoutManagerConfig.adaptors\nMerged over built-in defaults"]
         CAP["Domain capability packages\n@acme/capabilities-commerce\nPublish MFEs as npm packages"]
     end
 
@@ -963,7 +926,8 @@ All architectural decisions are recorded in `docs/architecture-decisions/`. Key 
 | ADR-056 | Presentation handle interface (imperative floor + native upgrade) | Polyglot composition without framework coupling |
 | ADR-057 | DaemonChannel — per-slot virtual WebSocket over one connection | MFEs get isolated control-plane channels without multiplying connections |
 | ADR-058 | Slot-provider MFEs — MFEs that provide slots for other MFEs | Recursive composition; MFEs can act as shells |
-| ADR-059 | `BaseControlPlane` — abstract base bundling daemon + registry + LayoutManager | Host API reduced to three lines; all four base classes now present |
+| ADR-059 | `BaseControlPlane` — abstract base bundling daemon + registry + LayoutManager | Superseded by ADR-105 |
+| ADR-105 | `BaseControlPlane` retired — one control-plane implementation (ADR-078) | Host connects with `LayoutManager`; no abstract base for a single implementation |
 
 ---
 
@@ -972,7 +936,7 @@ All architectural decisions are recorded in `docs/architecture-decisions/`. Key 
 | Concept | Path |
 |---|---|
 | `BaseMFE` | `packages/runtime/src/base-mfe.ts` |
-| `BaseControlPlane` | `packages/runtime/src/base-control-plane.ts` |
+| Control plane (registry + daemon) | `packages/control-plane/` |
 | `LayoutManager` | `packages/runtime/src/layout-manager.ts` |
 | `DaemonChannel` | `packages/runtime/src/daemon-channel.ts` |
 | `BaseCommand` | `packages/oclif-base/src/BaseCommand.ts` |

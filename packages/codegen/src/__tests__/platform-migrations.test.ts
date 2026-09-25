@@ -216,6 +216,26 @@ describe('runtime-dead-exports-removed', () => {
   });
 });
 
+describe('base-control-plane-removed', () => {
+  const entry = byId('base-control-plane-removed');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/host.ts', text }).length;
+
+  it.each([
+    "import { BaseControlPlane } from '@seans-mfe-tool/runtime';",
+    'export class NodeControlPlane extends BaseControlPlane {',
+    'if (isBaseControlPlane(cp)) {',
+    "import type { ControlPlaneConfig } from '@seans-mfe-tool/runtime';",
+  ])('catches a use of the retired abstraction: %s', (line) => {
+    expect(hits(line)).toBe(1);
+  });
+
+  it('leaves the control-plane state capability alone', () => {
+    expect(hits("import { pushControlPlaneState } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits('const r: ControlPlaneStateResult = await mfe.updateControlPlaneState(ctx);')).toBe(0);
+  });
+});
+
 describe('findMigrationHits over real generated shapes', () => {
   it('is silent on the current index.tsx template output', () => {
     const current = [

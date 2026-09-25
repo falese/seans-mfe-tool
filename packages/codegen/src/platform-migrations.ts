@@ -124,6 +124,18 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     pattern: /\b(?:GraphQLWebSocketClient|ContextValidator|get(?:Cache|Validation|ErrorHandling)State)\b/,
     exempt: /^\s*(?:\/\/|\*|\/\*)/,
   },
+  {
+    id: 'base-control-plane-removed',
+    since: '1.0.0',
+    // Removed from the barrel in the same change, so this is an error on arrival.
+    failsAt: '1.0.0',
+    adr: 'ADR-105',
+    message:
+      'Uses BaseControlPlane (or its ControlPlaneConfig / ControlPlaneStatus / ControlPlaneHealth types), which was retired: the control plane is one concrete service in packages/control-plane, not a class a host subclasses',
+    fix: 'Construct a LayoutManager directly with a GraphQLTransportWsDaemonTransport pointed at the daemon URL, and call start()/stop() on it — that is what BaseControlPlane.start() did internally. Registry and daemon run as the packages/control-plane services.',
+    pattern: /\b(?:BaseControlPlane|isBaseControlPlane|ControlPlaneConfig|ControlPlaneStatus|ControlPlaneHealth)\b/,
+    exempt: /^\s*(?:\/\/|\*|\/\*)/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
