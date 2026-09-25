@@ -8,7 +8,7 @@
 
 > `const` **BROWSER\_BUILD\_PATH**: `"wasm"` = `'wasm'`
 
-Defined in: packages/dsl/src/browser-build.ts:28
+Defined in: [packages/dsl/src/browser-build.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L28)
 
 Where an MFE's own server serves the browser build: `<endpoint>/wasm/`
 (ADR-103 §2). One deployable, one origin, no second port.

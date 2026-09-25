@@ -8,7 +8,7 @@
 
 > **browserBuildOf**(`manifest`): [`BrowserBuild`](../interfaces/BrowserBuild.md) \| `undefined`
 
-Defined in: packages/dsl/src/browser-build.ts:69
+Defined in: [packages/dsl/src/browser-build.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/browser-build.ts#L69)
 
 The browser build a manifest declares, or `undefined` without `targets.rust.wasm`.
 

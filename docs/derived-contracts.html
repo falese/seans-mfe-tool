@@ -557,7 +557,7 @@
           </g>
 
           <text x="440" y="404" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">
-            teal is machinery. nobody writes what comes out of it.
+            teal boxes are generated; nobody edits what they produce.
           </text>
         </svg>
       </div>
@@ -649,8 +649,8 @@
       <table>
         <thead><tr><th class="mono">TypeScript</th><th class="mono">JSON Schema</th><th>Note</th></tr></thead>
         <tbody>
-          <tr><td class="mono">string, number, boolean, null</td><td class="mono">the obvious</td><td>—</td></tr>
-          <tr><td class="mono">unknown, any</td><td class="mono">{}</td><td>constrains nothing, says nothing</td></tr>
+          <tr><td class="mono">string, number, boolean, null</td><td class="mono">the same type</td><td>—</td></tr>
+          <tr><td class="mono">unknown, any</td><td class="mono">{}</td><td>places no constraint</td></tr>
           <tr><td class="mono">object</td><td class="mono">{type:'object'}</td><td>TS flags the bare keyword <code>NonPrimitive</code>, not <code>Object</code></td></tr>
           <tr><td class="mono">'a' | 'b'</td><td class="mono">enum</td><td>—</td></tr>
           <tr><td class="mono">string | null</td><td class="mono">type: ['null','string']</td><td>sorted, because TS doesn't guarantee union order and these files are byte-gated</td></tr>
@@ -660,7 +660,7 @@
       </table>
     </div>
 
-    <p><strong>Lift the prose.</strong> For every property:</p>
+    <p><strong>Copy the descriptions.</strong> For every property:</p>
 
 <pre><code>const description = ts
   .displayPartsToString(<span class="mark">prop.getDocumentationComment(checker)</span>)
@@ -679,7 +679,7 @@ if (description) schema.description = description;</code></pre>
       alongside the command's own.
     </p>
 
-    <p><strong>Close carefully.</strong></p>
+    <p><strong>Close objects only when the type allows it.</strong></p>
 
 <pre><code>const indexInfo = checker.getIndexInfoOfType(type, ts.IndexKind.String);
 if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code></pre>
@@ -719,7 +719,7 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
       </p>
     </div>
 
-    <h3>Two loud failures</h3>
+    <h3>Two cases that fail generation</h3>
 
     <p>
       <strong>A command with no resolvable result type is a generation failure</strong>,
@@ -740,7 +740,7 @@ if (!indexInfo) return false;  <span class="cmt">// safe to close</span></code><
   <section id="manifest">
     <h2><span class="n">06</span>The manifest contract</h2>
 
-    <p>Zod does the work. One schema feeds two consumers.</p>
+    <p>Zod produces both outputs from one schema.</p>
 
     <p>
       <code>z.infer</code> gives the compiler <code>DSLManifest</code>. It's

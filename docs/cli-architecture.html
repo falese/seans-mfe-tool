@@ -204,9 +204,9 @@
     <p class="lede">
       Seven drawings of how the CLI is put together: the packages and what depends
       on what, what happens when a command runs, how a manifest becomes files,
-      where new frameworks and plugins attach, where the schemas come from, and
-      how an agent reaches the same commands a person does, and where the CLI
-      hands off to the running platform.
+      where new frameworks and plugins attach, where the schemas come from, how
+      an agent reaches the same commands a person does, and where the CLI hands
+      off to the running platform.
     </p>
   </header>
 
@@ -379,7 +379,7 @@
   <!-- ============ FIG 2 — dispatch ============ -->
   <section class="fig">
     <span class="fignum">Figure 2 — dispatch</span>
-    <h2>One invocation, exactly one line of stdout</h2>
+    <h2>Each command writes one line to stdout</h2>
     <p class="claim">
       Every command extends <code>BaseCommand</code> and implements
       <code>runCommand()</code>, not <code>run()</code>. That puts one place in
@@ -592,7 +592,7 @@
   <!-- ============ FIG 4 — extension ============ -->
   <section class="fig">
     <span class="fignum">Figure 4 — extension</span>
-    <h2>Two things plug in, and the core names neither</h2>
+    <h2>Frameworks and plugins attach without the core naming them</h2>
     <p class="claim">
       A framework variant and a capability plugin supply the same pair: a template
       root they own, and a list of file specs. <code>resolveFilePlan</code> reads
@@ -653,7 +653,7 @@
           <rect x="20" y="272" width="840" height="0" fill="none"/>
           <line x1="20" y1="300" x2="860" y2="300" stroke="var(--rule)" stroke-dasharray="3 4"/>
           <text x="20" y="322" font-size="10.5" fill="var(--ink-3)">
-            a new framework is a new variant module; a new capability is a new contributor. the core gains no branch either way.
+            a new framework is a new variant module; a new capability is a new contributor. neither adds a branch to the core.
           </text>
         </svg>
       </div>
@@ -670,7 +670,7 @@
   <!-- ============ FIG 5 — schemas ============ -->
   <section class="fig">
     <span class="fignum">Figure 5 — schemas</span>
-    <h2>Nothing in a schema is written by hand</h2>
+    <h2>Every schema is generated from code</h2>
     <p class="claim">
       Two contracts are published as JSON Schema, both generated from the code
       that enforces them. Command schemas come from the oclif registry and the
@@ -783,7 +783,7 @@
   <!-- ============ FIG 6 — agent surface ============ -->
   <section class="fig">
     <span class="fignum">Figure 6 — agent surface</span>
-    <h2>Every tool call forks a process</h2>
+    <h2>Each tool call runs in its own process</h2>
     <p class="claim">
       The MCP server doesn't call command code in-process. It spawns the CLI with
       <code>--json</code> and parses one line back. That costs a process per call
@@ -872,7 +872,7 @@
   <!-- ============ FIG 7 — runtime integration ============ -->
   <section class="fig">
     <span class="fignum">Figure 7 — runtime integration</span>
-    <h2>Where the CLI stops and the platform takes over</h2>
+    <h2>Where the CLI hands off to the running platform</h2>
     <p class="claim">
       The CLI runs at build time and is absent at run time. It writes two things
       the platform later consumes: an MFE that imports the runtime, and a compiled
@@ -1007,7 +1007,7 @@
         <span><i class="swatch sw-blocked"></i> the build / run boundary</span>
       </div>
       <figcaption>
-        Two artifacts cross the boundary and nothing else does. The CLI's own code
+        Only two artifacts cross the boundary. The CLI's own code
         is a build dependency, never a runtime one, which is what lets the tooling
         be replaced without touching a deployed fleet. See
         <a href="derived-contracts.html">Schema &amp; Contract Architecture</a> for
