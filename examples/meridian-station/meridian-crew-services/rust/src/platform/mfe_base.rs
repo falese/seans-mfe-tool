@@ -839,7 +839,7 @@ impl<H: MfeHooks> MfeBase<H> {
 
     // ---- The ten capabilities
 
-    /// Self-registration — returns the MFE manifest and capabilities.
+    /// Self-description — name, version, type, capability names and the manifest.
     pub async fn describe(&self, context: MfeContext) -> Result<DescribeResult, MfeError> {
         self.core
             .execute(MfeCapability::Describe, context, |ctx| async move { self.hooks.do_describe(&self.core, &ctx).await })
@@ -881,21 +881,21 @@ impl<H: MfeHooks> MfeBase<H> {
             .await
     }
 
-    /// GraphQL SDL introspection for registry schema federation.
+    /// Publishes the MFE's schema — by default its manifest, as JSON.
     pub async fn schema(&self, context: MfeContext) -> Result<SchemaResult, MfeError> {
         self.core
             .execute(MfeCapability::Schema, context, |ctx| async move { self.hooks.do_schema(&self.core, &ctx).await })
             .await
     }
 
-    /// JWT validation — the gate check the daemon runs before render().
+    /// Access check for the current caller. The default allows everyone; policy belongs to the product.
     pub async fn authorize_access(&self, context: MfeContext) -> Result<bool, MfeError> {
         self.core
             .execute(MfeCapability::AuthorizeAccess, context, |ctx| async move { self.hooks.do_authorize_access(&self.core, &ctx).await })
             .await
     }
 
-    /// Liveness and dependency checks for registry polling.
+    /// Liveness — an overall status and the checks behind it.
     pub async fn health(&self, context: MfeContext) -> Result<HealthResult, MfeError> {
         self.core
             .execute(MfeCapability::Health, context, |ctx| async move { self.hooks.do_health(&self.core, &ctx).await })

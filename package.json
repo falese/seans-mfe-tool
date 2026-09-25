@@ -19,6 +19,8 @@
     "build:docs": "typedoc",
     "build:docs:check": "typedoc && git diff --exit-code docs/api",
     "build:docs:html": "typedoc --options typedoc.html.json",
+    "build:platform-contract": "ts-node scripts/generate-platform-contract.ts",
+    "build:platform-contract:check": "ts-node scripts/generate-platform-contract.ts --check",
     "build:schema:dsl": "ts-node scripts/generate-dsl-schema.ts",
     "build:schema:dsl:check": "ts-node scripts/generate-dsl-schema.ts --check",
     "build:manifest-reference": "ts-node scripts/generate-manifest-reference.ts",

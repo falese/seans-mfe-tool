@@ -1,0 +1,19 @@
+/*
+ * Extra styles for the published HTML API reference (typedoc.html.json,
+ * ADR-104). TypeDoc copies this file into the site as assets/custom.css.
+ *
+ * Tables in the front page (docs/PLATFORM-CONTRACT.md) carry file paths and
+ * identifiers in code spans, which never wrap, so a table could run under the
+ * "On This Page" sidebar. Let code in tables break, and let any table that is
+ * still too wide scroll inside the content column instead.
+ */
+.col-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.col-content table code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

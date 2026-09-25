@@ -2,27 +2,31 @@
 
 ***
 
-[seans-mfe-tool API reference](../../../../README.md) / [runtime/src/angular](../README.md) / AngularRemoteMFE
+[seans-mfe-tool API reference](../../../../README.md) / [runtime/src/base-remote-mfe](../README.md) / BaseRemoteMFE
 
-# Class: AngularRemoteMFE
+# Abstract Class: BaseRemoteMFE
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L56)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L115)
 
-AngularRemoteMFE class for Angular Module Federation remotes
+Framework-neutral base for Module Federation remotes.
 
-Mounts standalone components via bootstrapApplication() from
-@angular/platform-browser. Tracks an ApplicationRef per containerId so
-re-renders destroy and re-bootstrap cleanly.
+Concrete subclasses implement the load/render lifecycle for a specific UI
+framework by overriding only the three abstract members below.
 
 ## Extends
 
-- [`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md)
+- [`BaseMFE`](../../classes/BaseMFE.md)
+
+## Extended by
+
+- [`RemoteMFE`](../../react/classes/RemoteMFE.md)
+- [`AngularRemoteMFE`](../../angular/classes/AngularRemoteMFE.md)
 
 ## Constructors
 
 ### Constructor
 
-> **new AngularRemoteMFE**(`manifest`, `deps`): `AngularRemoteMFE`
+> **new BaseRemoteMFE**(`manifest`, `deps`): `BaseRemoteMFE`
 
 Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-mfe.ts#L99)
 
@@ -308,11 +312,11 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 #### Returns
 
-`AngularRemoteMFE`
+`BaseRemoteMFE`
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`constructor`](../../base-remote-mfe/classes/BaseRemoteMFE.md#constructor)
+[`BaseMFE`](../../classes/BaseMFE.md).[`constructor`](../../classes/BaseMFE.md#constructor)
 
 ## Properties
 
@@ -322,21 +326,13 @@ Defined in: [packages/runtime/src/base-mfe.ts:99](https://github.com/falese/sean
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L117)
 
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`availableComponents`](../../base-remote-mfe/classes/BaseRemoteMFE.md#availablecomponents)
-
 ***
 
 ### container
 
-> `protected` **container**: [`ModuleFederationContainer`](../../base-remote-mfe/interfaces/ModuleFederationContainer.md) \| `null` = `null`
+> `protected` **container**: [`ModuleFederationContainer`](../interfaces/ModuleFederationContainer.md) \| `null` = `null`
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:116](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L116)
-
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`container`](../../base-remote-mfe/classes/BaseRemoteMFE.md#container)
 
 ***
 
@@ -347,10 +343,6 @@ Defined in: [packages/runtime/src/base-remote-mfe.ts:116](https://github.com/fal
 Defined in: [packages/runtime/src/base-remote-mfe.ts:124](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L124)
 
 ID of the currently mounted component; used as actionRecord.componentId
-
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`currentComponentId`](../../base-remote-mfe/classes/BaseRemoteMFE.md#currentcomponentid)
 
 ***
 
@@ -364,7 +356,7 @@ DI dependencies
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`deps`](../../base-remote-mfe/classes/BaseRemoteMFE.md#deps)
+[`BaseMFE`](../../classes/BaseMFE.md).[`deps`](../../classes/BaseMFE.md#deps)
 
 ***
 
@@ -654,7 +646,7 @@ DSL manifest for this MFE
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`manifest`](../../base-remote-mfe/classes/BaseRemoteMFE.md#manifest)
+[`BaseMFE`](../../classes/BaseMFE.md).[`manifest`](../../classes/BaseMFE.md#manifest)
 
 ***
 
@@ -663,10 +655,6 @@ DSL manifest for this MFE
 > `protected` **mountedComponent**: \{ `component`: `string`; `element`: `unknown`; `props`: `Record`\<`string`, `unknown`\>; \} \| `null` = `null`
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:118](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L118)
-
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`mountedComponent`](../../base-remote-mfe/classes/BaseRemoteMFE.md#mountedcomponent)
 
 ***
 
@@ -680,7 +668,7 @@ Current lifecycle state
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`state`](../../base-remote-mfe/classes/BaseRemoteMFE.md#state)
+[`BaseMFE`](../../classes/BaseMFE.md).[`state`](../../classes/BaseMFE.md#state)
 
 ***
 
@@ -706,7 +694,7 @@ State transition history (for debugging)
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`stateHistory`](../../base-remote-mfe/classes/BaseRemoteMFE.md#statehistory)
+[`BaseMFE`](../../classes/BaseMFE.md).[`stateHistory`](../../classes/BaseMFE.md#statehistory)
 
 ## Methods
 
@@ -734,7 +722,7 @@ Error if state doesn't match
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`assertState`](../../base-remote-mfe/classes/BaseRemoteMFE.md#assertstate)
+[`BaseMFE`](../../classes/BaseMFE.md).[`assertState`](../../classes/BaseMFE.md#assertstate)
 
 ***
 
@@ -764,7 +752,7 @@ it. Idempotent: re-attaching replaces the channel.
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`attachControlPlane`](../../base-remote-mfe/classes/BaseRemoteMFE.md#attachcontrolplane)
+[`BaseMFE`](../../classes/BaseMFE.md).[`attachControlPlane`](../../classes/BaseMFE.md#attachcontrolplane)
 
 ***
 
@@ -788,7 +776,7 @@ AuthorizeAccess capability: Check authorization
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`authorizeAccess`](../../base-remote-mfe/classes/BaseRemoteMFE.md#authorizeaccess)
+[`BaseMFE`](../../classes/BaseMFE.md).[`authorizeAccess`](../../classes/BaseMFE.md#authorizeaccess)
 
 ***
 
@@ -812,7 +800,7 @@ Describe capability: Return MFE metadata
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`describe`](../../base-remote-mfe/classes/BaseRemoteMFE.md#describe)
+[`BaseMFE`](../../classes/BaseMFE.md).[`describe`](../../classes/BaseMFE.md#describe)
 
 ***
 
@@ -834,9 +822,9 @@ Implement authorization logic for this MFE
 
 `Promise`\<`boolean`\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doAuthorizeAccess`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doauthorizeaccess)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doAuthorizeAccess`](../../classes/BaseMFE.md#doauthorizeaccess)
 
 ***
 
@@ -858,9 +846,9 @@ Implement describe logic for this MFE
 
 `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doDescribe`](../../base-remote-mfe/classes/BaseRemoteMFE.md#dodescribe)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doDescribe`](../../classes/BaseMFE.md#dodescribe)
 
 ***
 
@@ -882,9 +870,9 @@ Implement telemetry emission logic for this MFE
 
 `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doEmit`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doemit)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doEmit`](../../classes/BaseMFE.md#doemit)
 
 ***
 
@@ -906,9 +894,9 @@ Implement health check logic for this MFE
 
 `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doHealth`](../../base-remote-mfe/classes/BaseRemoteMFE.md#dohealth)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doHealth`](../../classes/BaseMFE.md#dohealth)
 
 ***
 
@@ -935,9 +923,9 @@ REQ-RUNTIME-001: Atomic operation with three phases:
 
 `Promise`\<[`LoadResult`](../../interfaces/LoadResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doLoad`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doload)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doLoad`](../../classes/BaseMFE.md#doload)
 
 ***
 
@@ -981,7 +969,7 @@ Override in concrete subclasses for typed, operation-specific queries:
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doQuery`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doquery)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doQuery`](../../classes/BaseMFE.md#doquery)
 
 ***
 
@@ -1003,9 +991,9 @@ Implement refresh logic for this MFE
 
 `Promise`\<`void`\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doRefresh`](../../base-remote-mfe/classes/BaseRemoteMFE.md#dorefresh)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doRefresh`](../../classes/BaseMFE.md#dorefresh)
 
 ***
 
@@ -1033,9 +1021,9 @@ REQ-RUNTIME-004: Component-aware rendering with:
 
 `Promise`\<[`RenderResult`](../../interfaces/RenderResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doRender`](../../base-remote-mfe/classes/BaseRemoteMFE.md#dorender)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doRender`](../../classes/BaseMFE.md#dorender)
 
 ***
 
@@ -1057,9 +1045,9 @@ Implement schema retrieval logic for this MFE
 
 `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doSchema`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doschema)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doSchema`](../../classes/BaseMFE.md#doschema)
 
 ***
 
@@ -1092,9 +1080,9 @@ Subscription.messages channel the Renderer is already subscribed to.
 
 `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
-#### Inherited from
+#### Overrides
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`doUpdateControlPlaneState`](../../base-remote-mfe/classes/BaseRemoteMFE.md#doupdatecontrolplanestate)
+[`BaseMFE`](../../classes/BaseMFE.md).[`doUpdateControlPlaneState`](../../classes/BaseMFE.md#doupdatecontrolplanestate)
 
 ***
 
@@ -1118,7 +1106,7 @@ Emit capability: Emit telemetry/events
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`emit`](../../base-remote-mfe/classes/BaseRemoteMFE.md#emit)
+[`BaseMFE`](../../classes/BaseMFE.md).[`emit`](../../classes/BaseMFE.md#emit)
 
 ***
 
@@ -1165,10 +1153,6 @@ No-ops when no telemetry service is injected.
 
 `void`
 
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`emitTelemetry`](../../base-remote-mfe/classes/BaseRemoteMFE.md#emittelemetry)
-
 ***
 
 ### executeLifecycle()
@@ -1205,7 +1189,7 @@ Execution context
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`executeLifecycle`](../../base-remote-mfe/classes/BaseRemoteMFE.md#executelifecycle)
+[`BaseMFE`](../../classes/BaseMFE.md).[`executeLifecycle`](../../classes/BaseMFE.md#executelifecycle)
 
 ***
 
@@ -1226,10 +1210,6 @@ Fallback: all non-platform capability names (domain capabilities).
 
 `string`[]
 
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`extractAvailableComponents`](../../base-remote-mfe/classes/BaseRemoteMFE.md#extractavailablecomponents)
-
 ***
 
 ### extractCapabilities()
@@ -1244,15 +1224,11 @@ Extract capability metadata from manifest (REQ-RUNTIME-003)
 
 `CapabilityMetadata`[]
 
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`extractCapabilities`](../../base-remote-mfe/classes/BaseRemoteMFE.md#extractcapabilities)
-
 ***
 
 ### fetchContainer()
 
-> `protected` **fetchContainer**(`remoteEntry`): `Promise`\<[`ModuleFederationContainer`](../../base-remote-mfe/interfaces/ModuleFederationContainer.md)\>
+> `protected` **fetchContainer**(`remoteEntry`): `Promise`\<[`ModuleFederationContainer`](../interfaces/ModuleFederationContainer.md)\>
 
 Defined in: [packages/runtime/src/base-remote-mfe.ts:431](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L431)
 
@@ -1270,34 +1246,22 @@ webpack/rspack federation runtimes are structurally compatible here.
 
 #### Returns
 
-`Promise`\<[`ModuleFederationContainer`](../../base-remote-mfe/interfaces/ModuleFederationContainer.md)\>
-
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`fetchContainer`](../../base-remote-mfe/classes/BaseRemoteMFE.md#fetchcontainer)
+`Promise`\<[`ModuleFederationContainer`](../interfaces/ModuleFederationContainer.md)\>
 
 ***
 
 ### getSharedDependencies()
 
-> `protected` **getSharedDependencies**(): `Record`\<`string`, `unknown`\>
+> `abstract` `protected` **getSharedDependencies**(): `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:68](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L68)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L134)
 
-Get shared dependencies for Module Federation (Angular singletons).
-
-Angular requires singleton + strictVersion across host + remotes — two
-@angular/core instances cause "Two copies of Angular" runtime errors.
-zone.js loads eagerly because Angular bootstrap is zone-dependent and
-must be available synchronously.
+The Module Federation shared-scope map for this framework (e.g. React
+singletons vs Angular singletons + zone.js). Wired into container.init().
 
 #### Returns
 
 `Record`\<`string`, `unknown`\>
-
-#### Overrides
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`getSharedDependencies`](../../base-remote-mfe/classes/BaseRemoteMFE.md#getshareddependencies)
 
 ***
 
@@ -1315,7 +1279,7 @@ Get current state
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`getState`](../../base-remote-mfe/classes/BaseRemoteMFE.md#getstate)
+[`BaseMFE`](../../classes/BaseMFE.md).[`getState`](../../classes/BaseMFE.md#getstate)
 
 ***
 
@@ -1339,7 +1303,7 @@ Health capability: Check MFE health status
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`health`](../../base-remote-mfe/classes/BaseRemoteMFE.md#health)
+[`BaseMFE`](../../classes/BaseMFE.md).[`health`](../../classes/BaseMFE.md#health)
 
 ***
 
@@ -1371,7 +1335,7 @@ Error if custom handler not found
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`invokeCustomHandler`](../../base-remote-mfe/classes/BaseRemoteMFE.md#invokecustomhandler)
+[`BaseMFE`](../../classes/BaseMFE.md).[`invokeCustomHandler`](../../classes/BaseMFE.md#invokecustomhandler)
 
 ***
 
@@ -1412,7 +1376,7 @@ replacing the engine — so a new injection point that can bypass
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`invokeHandler`](../../base-remote-mfe/classes/BaseRemoteMFE.md#invokehandler)
+[`BaseMFE`](../../classes/BaseMFE.md).[`invokeHandler`](../../classes/BaseMFE.md#invokehandler)
 
 ***
 
@@ -1453,7 +1417,7 @@ Error if platform handler not found
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`invokePlatformHandler`](../../base-remote-mfe/classes/BaseRemoteMFE.md#invokeplatformhandler)
+[`BaseMFE`](../../classes/BaseMFE.md).[`invokePlatformHandler`](../../classes/BaseMFE.md#invokeplatformhandler)
 
 ***
 
@@ -1477,7 +1441,7 @@ Load capability: Initialize and prepare MFE for use
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`load`](../../base-remote-mfe/classes/BaseRemoteMFE.md#load)
+[`BaseMFE`](../../classes/BaseMFE.md).[`load`](../../classes/BaseMFE.md#load)
 
 ***
 
@@ -1500,28 +1464,16 @@ Called by doRender() instead of going through the Module Federation container AP
 
 `Promise`\<`unknown`\>
 
-#### Inherited from
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`loadDomainComponent`](../../base-remote-mfe/classes/BaseRemoteMFE.md#loaddomaincomponent)
-
 ***
 
 ### mountComponent()
 
-> `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
+> `abstract` `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L97)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:140](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L140)
 
-Mount an Angular standalone component to the DOM via bootstrapApplication().
-
-Angular's standalone bootstrap is selector-driven: the platform looks up
-the component's selector in the DOM and replaces it. We inject the
-selector tag into the containerId element, then bootstrap.
-
-Re-renders destroy the prior ApplicationRef before re-bootstrapping —
-Angular doesn't expose a simple "update inputs on existing app" idiom
-for standalone bootstrap. Props are applied to the bootstrapped instance
-after the initial component is created.
+Mount a loaded component into the DOM container and return the host element.
+Called by doRender() after the component is resolved.
 
 #### Parameters
 
@@ -1540,10 +1492,6 @@ after the initial component is created.
 #### Returns
 
 `Promise`\<`unknown`\>
-
-#### Overrides
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`mountComponent`](../../base-remote-mfe/classes/BaseRemoteMFE.md#mountcomponent)
 
 ***
 
@@ -1567,7 +1515,7 @@ Query capability: Execute data query
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`query`](../../base-remote-mfe/classes/BaseRemoteMFE.md#query)
+[`BaseMFE`](../../classes/BaseMFE.md).[`query`](../../classes/BaseMFE.md#query)
 
 ***
 
@@ -1591,7 +1539,7 @@ Refresh capability: Refresh MFE data/state
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`refresh`](../../base-remote-mfe/classes/BaseRemoteMFE.md#refresh)
+[`BaseMFE`](../../classes/BaseMFE.md).[`refresh`](../../classes/BaseMFE.md#refresh)
 
 ***
 
@@ -1615,7 +1563,7 @@ Render capability: Render MFE UI into target container
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`render`](../../base-remote-mfe/classes/BaseRemoteMFE.md#render)
+[`BaseMFE`](../../classes/BaseMFE.md).[`render`](../../classes/BaseMFE.md#render)
 
 ***
 
@@ -1639,7 +1587,7 @@ Schema capability: Return GraphQL/JSON schema
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`schema`](../../base-remote-mfe/classes/BaseRemoteMFE.md#schema)
+[`BaseMFE`](../../classes/BaseMFE.md).[`schema`](../../classes/BaseMFE.md#schema)
 
 ***
 
@@ -1667,18 +1615,18 @@ Error if transition is invalid
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`transitionState`](../../base-remote-mfe/classes/BaseRemoteMFE.md#transitionstate)
+[`BaseMFE`](../../classes/BaseMFE.md).[`transitionState`](../../classes/BaseMFE.md#transitionstate)
 
 ***
 
 ### unmount()
 
-> **unmount**(`containerId`): `void`
+> `abstract` **unmount**(`containerId`): `void`
 
-Defined in: [packages/runtime/src/angular-remote-mfe.ts:214](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/angular-remote-mfe.ts#L214)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L150)
 
-Unmount a previously bootstrapped Angular application for the given container
-and release the ApplicationRef. Call from the shell's lifecycle cleanup.
+Tear down a previously rendered component and release its mount handle.
+Call from the shell's lifecycle cleanup to avoid memory leaks.
 
 #### Parameters
 
@@ -1689,10 +1637,6 @@ and release the ApplicationRef. Call from the shell's lifecycle cleanup.
 #### Returns
 
 `void`
-
-#### Overrides
-
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`unmount`](../../base-remote-mfe/classes/BaseRemoteMFE.md#unmount)
 
 ***
 
@@ -1734,4 +1678,4 @@ Available from 'ready' or 'rendering' — an MFE can push state mid-render.
 
 #### Inherited from
 
-[`BaseRemoteMFE`](../../base-remote-mfe/classes/BaseRemoteMFE.md).[`updateControlPlaneState`](../../base-remote-mfe/classes/BaseRemoteMFE.md#updatecontrolplanestate)
+[`BaseMFE`](../../classes/BaseMFE.md).[`updateControlPlaneState`](../../classes/BaseMFE.md#updatecontrolplanestate)

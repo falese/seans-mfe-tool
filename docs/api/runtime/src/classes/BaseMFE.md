@@ -21,6 +21,10 @@ Developer Responsibilities:
 - Implement abstract doCapability() methods
 - Implement custom lifecycle handlers referenced in DSL
 
+## Extended by
+
+- [`BaseRemoteMFE`](../base-remote-mfe/classes/BaseRemoteMFE.md)
+
 ## Constructors
 
 ### Constructor
