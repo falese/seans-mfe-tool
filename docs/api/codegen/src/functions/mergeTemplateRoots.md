@@ -8,7 +8,7 @@
 
 > **mergeTemplateRoots**(`variantRoot`, `contributors`): `object`
 
-Defined in: [packages/codegen/src/file-plan.ts:152](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L152)
+Defined in: [packages/codegen/src/file-plan.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/file-plan.ts#L149)
 
 Build the template-root table from the variant's directory and whatever
 contributors registered.

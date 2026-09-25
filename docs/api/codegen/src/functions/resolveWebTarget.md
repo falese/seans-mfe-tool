@@ -8,7 +8,7 @@
 
 > **resolveWebTarget**(`manifest`): `object`
 
-Defined in: [packages/codegen/src/unified-generator.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L117)
+Defined in: [packages/codegen/src/unified-generator.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L115)
 
 The web build's framework and bundler, from whichever spelling declared them.
 

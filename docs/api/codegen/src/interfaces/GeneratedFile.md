@@ -6,7 +6,7 @@
 
 # Interface: GeneratedFile
 
-Defined in: [packages/codegen/src/unified-generator.ts:156](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L156)
+Defined in: [packages/codegen/src/unified-generator.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L149)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/codegen/src/unified-generator.ts:156](https://github.com/f
 
 > **content**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:158](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L158)
+Defined in: [packages/codegen/src/unified-generator.ts:151](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L151)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [packages/codegen/src/unified-generator.ts:158](https://github.com/f
 
 > **overwrite**: `boolean`
 
-Defined in: [packages/codegen/src/unified-generator.ts:159](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L159)
+Defined in: [packages/codegen/src/unified-generator.ts:152](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L152)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [packages/codegen/src/unified-generator.ts:159](https://github.com/f
 
 > **path**: `string`
 
-Defined in: [packages/codegen/src/unified-generator.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L157)
+Defined in: [packages/codegen/src/unified-generator.ts:150](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L150)

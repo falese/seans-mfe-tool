@@ -8,7 +8,7 @@
 
 > **validateInputs**(`context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/handlers/validation.ts:16](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L16)
+Defined in: [packages/runtime/src/handlers/validation.ts:4](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/validation.ts#L4)
 
 ## Parameters
 

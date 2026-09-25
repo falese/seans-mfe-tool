@@ -8,7 +8,7 @@
 
 > **writeManifest**(`manifest`, `filePath`): `Promise`\<`void`\>
 
-Defined in: [packages/dsl/src/parser.ts:278](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L278)
+Defined in: [packages/dsl/src/parser.ts:206](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L206)
 
 Write manifest to file
 

@@ -8,7 +8,7 @@
 
 > **serializeToYAML**(`manifest`): `string`
 
-Defined in: [packages/dsl/src/parser.ts:262](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L262)
+Defined in: [packages/dsl/src/parser.ts:190](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L190)
 
 Serialize a DSL manifest to YAML
 

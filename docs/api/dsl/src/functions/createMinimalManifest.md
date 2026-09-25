@@ -8,7 +8,7 @@
 
 > **createMinimalManifest**(`name`, `options`): `object`
 
-Defined in: [packages/dsl/src/parser.ts:294](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L294)
+Defined in: [packages/dsl/src/parser.ts:222](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L222)
 
 Create a minimal valid manifest for scaffolding
 
