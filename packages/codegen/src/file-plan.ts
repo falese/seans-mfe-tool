@@ -125,9 +125,6 @@ export interface GeneratorDiagnostic {
   fix?: string;
 }
 
-/** @deprecated Use {@link GeneratorDiagnostic}. */
-export type PlanDiagnostic = GeneratorDiagnostic;
-
 export interface ResolvedPlan {
   files: PlannedFile[];
   diagnostics: GeneratorDiagnostic[];

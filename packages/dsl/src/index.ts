@@ -7,7 +7,6 @@
 
 // Schema and types
 export * from './schema';
-export * from './types';
 // Design-time slot checks (ADR-073): declared-but-unreferenced slots and
 // registry placement targets. Pure functions; the CLI supplies the IO.
 export * from './slot-validation';
