@@ -330,6 +330,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-101](./architecture-decisions/ADR-101-rust-implements-all-ten-capabilities.md) | The Rust lane implements all ten capabilities against the runtime's result contract — emit and updateControlPlaneState included, natively and in the browser | Codegen / targets / native contract | Implemented |
 | [ADR-102](./architecture-decisions/ADR-102-every-target-implements-the-base-class.md) | Every build target implements all ten capabilities against the runtime's result contract — the Swift lane is brought level, and a conformance suite holds every lane to it | Targets / platform contract / conformance | Implemented |
 | [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
+| [ADR-104](./architecture-decisions/ADR-104-published-html-api-reference.md) | The docs site publishes an HTML API reference under /api/, built at publish time from the same TypeDoc config as the committed Markdown, which stays the version reviewed in pull requests | Docs / tooling / publishing | Implemented |
 
 ### Proposed — filed, not ratified
 

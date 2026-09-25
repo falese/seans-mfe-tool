@@ -19,6 +19,8 @@ module.exports = tseslint.config(
       'dist/**',
       'node_modules/**',
       'coverage/**',
+      // The assembled Pages site: TypeDoc's generated JS (ADR-104), never committed.
+      '_site/**',
       'examples/**',
       'packages/*/dist/**',
       'schemas/**',

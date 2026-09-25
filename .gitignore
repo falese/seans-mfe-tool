@@ -171,3 +171,6 @@ docs/.DS_Store
 # committed copies were stale artifacts — after the ABC Kids fleet repointed
 # its BFFs, 45 tracked files still described a sample Pet Store.
 .mesh/
+
+# Assembled GitHub Pages site (scripts/assemble-site.js, npm run build:docs:html)
+_site/
