@@ -37,8 +37,6 @@ export {
   DEPENDENCY_VERSIONS,
   DEFAULT_MESH_PLUGINS,
   DEFAULT_MESH_TRANSFORMS,
-  KNOWN_MESH_PLUGINS,
-  KNOWN_MESH_TRANSFORMS,
 } from './catalog';
 // Extracted to focused modules; re-exported so this module's public surface,
 // and the barrel's `export * from './unified-generator'`, are unchanged.
