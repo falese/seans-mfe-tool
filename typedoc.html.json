@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "extends": ["./typedoc.json"],
+  "plugin": [],
+  "out": "_site/api",
+  "cleanOutputDir": true,
+  "navigationLinks": {
+    "Documentation home": "https://falese.github.io/seans-mfe-tool/",
+    "System map": "https://falese.github.io/seans-mfe-tool/system-map.html"
+  }
+}

@@ -4,8 +4,8 @@
  *
  *   node scripts/assemble-site.js _site
  *
- * Run this AFTER the slide deck build, so it can see whether the deck was
- * actually produced.
+ * Run this AFTER the slide deck and API reference builds, so it can see which
+ * of them were actually produced.
  *
  * The system map is the point of the site; the slide deck is a bonus that
  * needs a third-party CLI (Marp) and a headless browser to produce. Those are
@@ -19,8 +19,12 @@
  *     than left pointing at a file that was never published. A dangling link
  *     would fail check-site.js — correctly, since it would 404 for readers.
  *
- * The card is delimited in docs/index.html by <!-- deck-card:start --> and
- * <!-- deck-card:end -->; the markers are always stripped from the output.
+ * The same holds for the HTML API reference (ADR-104), built by TypeDoc into
+ * <out>/api/: its card is kept only if api/index.html exists.
+ *
+ * Each optional card is delimited in docs/index.html by
+ * <!-- <name>-card:start --> and <!-- <name>-card:end -->; the markers are
+ * always stripped from the output.
  *
  * Plain Node with no dependencies on purpose: the Pages workflow publishes
  * static HTML and never runs `npm ci`.
@@ -35,8 +39,16 @@ const outDir = path.resolve(process.argv[2] || '_site');
 const docs = path.join(repoRoot, 'docs');
 
 const DECK = 'slides/platform-architecture.html';
-const START = '<!-- deck-card:start -->';
-const END = '<!-- deck-card:end -->';
+
+/**
+ * Landing-page cards for optional builds: kept only when `target` exists in
+ * the output. Both builds are non-fatal in the Pages workflow, so either may be
+ * missing, independently.
+ */
+const OPTIONAL_CARDS = [
+  { name: 'deck', what: 'Slide deck', target: DECK, step: 'Build slides' },
+  { name: 'api', what: 'API reference', target: 'api/index.html', step: 'Build the API reference' },
+];
 
 /** GitHub Actions renders these as annotations; harmless locally. */
 const warn = (msg) => console.log(`::warning::${msg}`);
@@ -84,32 +96,37 @@ if (fs.existsSync(mediaFrom)) {
   }
 }
 
-// ---- the landing page: deck card kept only if the deck exists ----
+// ---- the landing page: each optional card kept only if its build exists ----
 let landing = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
+const built = {};
 
-const startAt = landing.indexOf(START);
-const endAt = landing.indexOf(END);
-if (startAt === -1 || endAt === -1 || endAt < startAt) {
-  console.error(
-    `assemble-site: docs/index.html is missing the ${START} / ${END} markers ` +
-      'around the slide-deck card. Restore them, or update this script.',
-  );
-  process.exit(1);
+for (const card of OPTIONAL_CARDS) {
+  const start = `<!-- ${card.name}-card:start -->`;
+  const end = `<!-- ${card.name}-card:end -->`;
+  const startAt = landing.indexOf(start);
+  const endAt = landing.indexOf(end);
+  if (startAt === -1 || endAt === -1 || endAt < startAt) {
+    console.error(
+      `assemble-site: docs/index.html is missing the ${start} / ${end} markers ` +
+        `around the ${card.what.toLowerCase()} card. Restore them, or update this script.`,
+    );
+    process.exit(1);
+  }
+
+  built[card.name] = fs.existsSync(path.join(outDir, card.target));
+  if (built[card.name]) {
+    // Keep the card, drop only the markers.
+    landing = landing.replace(start, '').replace(end, '');
+  } else {
+    // Drop the card entirely so the published page has no link to a 404.
+    landing = landing.slice(0, startAt) + landing.slice(endAt + end.length);
+    warn(
+      `${card.what} was not built — publishing the docs site without it. ` +
+        `The system map is unaffected; check the "${card.step}" step for the cause.`,
+    );
+  }
 }
-
-const deckBuilt = fs.existsSync(path.join(outDir, DECK));
-
-if (deckBuilt) {
-  // Keep the card, drop only the markers.
-  landing = landing.replace(START, '').replace(END, '');
-} else {
-  // Drop the card entirely so the published page has no link to a 404.
-  landing = landing.slice(0, startAt) + landing.slice(endAt + END.length);
-  warn(
-    'Slide deck was not built — publishing the docs site without it. ' +
-      'The system map is unaffected; check the "Build slides" step for the cause.',
-  );
-}
+const deckBuilt = built.deck;
 
 fs.writeFileSync(path.join(outDir, 'index.html'), landing);
 
@@ -129,5 +146,6 @@ console.log(
   `assemble-site: OK — ${PAGES.length} page(s) + landing page` +
     `${fs.existsSync(mediaFrom) ? ` + ${fs.readdirSync(mediaFrom).length} media file(s)` : ''} published to ` +
     `${path.relative(repoRoot, outDir)}; ` +
-    `slide deck ${deckBuilt ? 'included' : 'OMITTED (build failed or skipped)'}`,
+    `slide deck ${deckBuilt ? 'included' : 'OMITTED (build failed or skipped)'}; ` +
+    `API reference ${built.api ? 'included' : 'OMITTED (build failed or skipped)'}`,
 );

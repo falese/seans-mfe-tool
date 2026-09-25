@@ -15,11 +15,13 @@
 #   /derived-contracts.html        docs/derived-contracts.html  — how contracts are derived
 #   /slides/platform-architecture.html|.pdf                 — the deck
 #   /media/*                       docs/media/*                 — the overview reel + poster
+#   /api/                          TypeDoc HTML (ADR-104)       — the API reference
 #
-# The system map is the point of this site and does not depend on the deck: the
-# Marp steps are non-fatal, and scripts/assemble-site.js removes the deck card
-# from the landing page if the deck was not produced. A failed deck build is a
-# warning and a slightly smaller site, never a missing system map.
+# The system map is the point of this site and does not depend on the deck or
+# the API reference: the Marp and TypeDoc steps are non-fatal, and
+# scripts/assemble-site.js removes a card from the landing page when its build
+# was not produced. A failed optional build is a warning and a slightly smaller
+# site, never a missing system map.
 #
 # Every published page is self-contained: no external CSS, JS, fonts or images,
 # and every in-site link is relative. Nothing here assumes the site is served
@@ -37,6 +39,15 @@ on:
       - 'docs/derived-contracts.html'
       - 'docs/slides/**'
       - 'docs/media/**'
+      # The API reference is generated from these (ADR-104).
+      - 'packages/contracts/src/**'
+      - 'packages/dsl/src/**'
+      - 'packages/codegen/src/**'
+      - 'packages/runtime/src/**'
+      - 'typedoc.json'
+      - 'typedoc.html.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/assemble-site.js'
       - '.github/workflows/pages.yml'
   pull_request:
     paths:
@@ -47,6 +58,15 @@ on:
       - 'docs/derived-contracts.html'
       - 'docs/slides/**'
       - 'docs/media/**'
+      # The API reference is generated from these (ADR-104).
+      - 'packages/contracts/src/**'
+      - 'packages/dsl/src/**'
+      - 'packages/codegen/src/**'
+      - 'packages/runtime/src/**'
+      - 'typedoc.json'
+      - 'typedoc.html.json'
+      - 'tsconfig.typedoc.json'
+      - 'scripts/assemble-site.js'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -69,6 +89,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       # The deck needs a third-party CLI and a headless browser — the most
       # failure-prone steps here. Both are non-fatal: if the deck cannot be
@@ -93,8 +114,30 @@ jobs:
             --output _site/slides/platform-architecture.pdf \
             --allow-local-files
 
+      # The HTML API reference (ADR-104): TypeDoc's HTML theme over the same
+      # typedoc.json that writes the committed Markdown in docs/api, so the two
+      # cannot describe different APIs. It needs the repository's dependencies
+      # and built workspace packages, as the API-docs workflow does. Non-fatal
+      # like the deck: a failure here drops the API card and nothing else.
+      - name: Install dependencies (API reference)
+        id: api-install
+        continue-on-error: true
+        run: npm ci --no-audit --no-fund
+
+      - name: Build workspace packages (API reference)
+        id: api-packages
+        if: steps.api-install.outcome == 'success'
+        continue-on-error: true
+        run: npm run build:packages
+
+      - name: Build the API reference
+        id: api
+        if: steps.api-packages.outcome == 'success'
+        continue-on-error: true
+        run: npx typedoc --options typedoc.html.json --out _site/api
+
       # Copies the map and landing page unconditionally, and keeps the deck
-      # card only if the deck actually exists — so the published site can never
+      # and API cards only if those builds exist — so the published site can never
       # contain a link to a page that was not built.
       - name: Assemble the site
         run: node scripts/assemble-site.js _site

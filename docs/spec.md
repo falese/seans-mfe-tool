@@ -292,7 +292,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Implemented |
 | [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Implemented |
 | [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
-| [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Implemented |
+| [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Implemented → ADR-104 |
 | [ADR-066](./architecture-decisions/ADR-066-stable-slot-addressing-desired-state-placement.md) | Stable slot addressing and desired-state placement | Runtime / slots / addressing / control-plane | Implemented |
 | [ADR-067](./architecture-decisions/ADR-067-manifest-declared-slot-contract.md) | Manifest-declared slot contract: slots are declared in the DSL, code is generated from the declaration | DSL / codegen / slots / contract | Implemented |
 | [ADR-068](./architecture-decisions/ADR-068-provider-scoped-slot-addresses.md) | Provider-scoped slot addresses | Runtime / slots / addressing / ownership | Implemented |
@@ -330,6 +330,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-101](./architecture-decisions/ADR-101-rust-implements-all-ten-capabilities.md) | The Rust lane implements all ten capabilities against the runtime's result contract — emit and updateControlPlaneState included, natively and in the browser | Codegen / targets / native contract | Implemented |
 | [ADR-102](./architecture-decisions/ADR-102-every-target-implements-the-base-class.md) | Every build target implements all ten capabilities against the runtime's result contract — the Swift lane is brought level, and a conformance suite holds every lane to it | Targets / platform contract / conformance | Implemented |
 | [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
+| [ADR-104](./architecture-decisions/ADR-104-published-html-api-reference.md) | The docs site publishes an HTML API reference under /api/, built at publish time from the same TypeDoc config as the committed Markdown, which stays the version reviewed in pull requests | Docs / tooling / publishing | Implemented |
 
 ### Proposed — filed, not ratified
 
