@@ -33,14 +33,14 @@ export function getTimeoutState(context: Context): TimeoutState | undefined {
 /**
  * Wraps a function with timeout protection.
  * 
- * @param fn - The function to execute with timeout protection
+ * @param fn - The function to execute; receives the AbortSignal that fires on timeout
  * @param options - Timeout configuration
  * @param context - Lifecycle context for tracking and telemetry
  * @returns Result of fn() if completes before timeout
  * @throws TimeoutError if timeout exceeded and onTimeout is 'error'
  */
 export async function withTimeout<T>(
-  fn: () => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T>,
   options: TimeoutOptions,
   context: Context
 ): Promise<T> {
@@ -60,7 +60,7 @@ export async function withTimeout<T>(
 
   try {
     const result = await Promise.race([
-      fn(),
+      fn(abortController.signal),
       timeoutPromise
     ]);
     clearTimeout(timeoutId!);

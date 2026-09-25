@@ -247,6 +247,28 @@ export type DSLOutput = z.infer<typeof DSLOutputSchema>;
  */
 export { PLATFORM_WRAPPER_METHODS };
 
+/** One error type's classification and retry policy (ADR-030). */
+export const ErrorTypeHandlingSchema = z.object({
+  type: z.enum(['network', 'validation', 'business', 'security', 'system', 'timeout', 'unknown']),
+  pattern: z.string().min(1).optional(),
+  retryable: z.boolean(),
+  maxRetries: z.number().int().min(0).optional(),
+  backoff: z.enum(['exponential', 'linear', 'constant']).optional(),
+  baseDelay: z.number().int().min(0).optional(),
+  maxDelay: z.number().int().min(0).optional(),
+  jitter: z.boolean().optional(),
+  onRetry: z.string().min(1).optional(),
+  fallbackHandler: z.string().min(1).optional(),
+  userFacing: z.boolean().optional(),
+  message: z.string().optional()
+});
+export type ErrorTypeHandling = z.infer<typeof ErrorTypeHandlingSchema>;
+
+export const ErrorHandlingSchema = z.object({
+  types: z.array(ErrorTypeHandlingSchema)
+});
+export type ErrorHandling = z.infer<typeof ErrorHandlingSchema>;
+
 export const LifecycleHookSchema = z.object({
   handler: z.union([z.string(), z.array(z.string())]),
   // ADR-040: declarative module specifier for the handler implementation.
@@ -257,7 +279,16 @@ export const LifecycleHookSchema = z.object({
   source: z.string().min(1).optional(),
   description: z.string().optional(),
   mandatory: z.boolean().optional(),
-  contained: z.boolean().optional()
+  contained: z.boolean().optional(),
+  // ADR-029: fail (or skip, or warn past) a handler that runs longer than
+  // `timeout` ms. Omitted means no timer at all — not a default one.
+  timeout: z.number().int().positive().optional(),
+  onTimeout: z.enum(['error', 'warn', 'skip']).optional(),
+  // ADR-030: classify a handler's failure and retry it. Typed platform errors
+  // classify themselves; `pattern` classifies anything else by message. A
+  // failure is retried only when it is retryable AND its type has an entry
+  // here with `maxRetries` — so declaring nothing retries nothing.
+  errorHandling: ErrorHandlingSchema.optional()
 }).refine(
   (hook) => {
     const forbidden = PLATFORM_WRAPPER_METHODS;

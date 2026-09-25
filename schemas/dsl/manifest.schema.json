@@ -314,6 +314,100 @@
                         },
                         "contained": {
                           "type": "boolean"
+                        },
+                        "timeout": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "onTimeout": {
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "skip"
+                          ]
+                        },
+                        "errorHandling": {
+                          "type": "object",
+                          "properties": {
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "network",
+                                      "validation",
+                                      "business",
+                                      "security",
+                                      "system",
+                                      "timeout",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "pattern": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "retryable": {
+                                    "type": "boolean"
+                                  },
+                                  "maxRetries": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "backoff": {
+                                    "type": "string",
+                                    "enum": [
+                                      "exponential",
+                                      "linear",
+                                      "constant"
+                                    ]
+                                  },
+                                  "baseDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "maxDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "jitter": {
+                                    "type": "boolean"
+                                  },
+                                  "onRetry": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "fallbackHandler": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userFacing": {
+                                    "type": "boolean"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "retryable"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "types"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -358,6 +452,100 @@
                         },
                         "contained": {
                           "type": "boolean"
+                        },
+                        "timeout": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "onTimeout": {
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "skip"
+                          ]
+                        },
+                        "errorHandling": {
+                          "type": "object",
+                          "properties": {
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "network",
+                                      "validation",
+                                      "business",
+                                      "security",
+                                      "system",
+                                      "timeout",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "pattern": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "retryable": {
+                                    "type": "boolean"
+                                  },
+                                  "maxRetries": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "backoff": {
+                                    "type": "string",
+                                    "enum": [
+                                      "exponential",
+                                      "linear",
+                                      "constant"
+                                    ]
+                                  },
+                                  "baseDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "maxDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "jitter": {
+                                    "type": "boolean"
+                                  },
+                                  "onRetry": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "fallbackHandler": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userFacing": {
+                                    "type": "boolean"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "retryable"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "types"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -402,6 +590,100 @@
                         },
                         "contained": {
                           "type": "boolean"
+                        },
+                        "timeout": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "onTimeout": {
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "skip"
+                          ]
+                        },
+                        "errorHandling": {
+                          "type": "object",
+                          "properties": {
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "network",
+                                      "validation",
+                                      "business",
+                                      "security",
+                                      "system",
+                                      "timeout",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "pattern": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "retryable": {
+                                    "type": "boolean"
+                                  },
+                                  "maxRetries": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "backoff": {
+                                    "type": "string",
+                                    "enum": [
+                                      "exponential",
+                                      "linear",
+                                      "constant"
+                                    ]
+                                  },
+                                  "baseDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "maxDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "jitter": {
+                                    "type": "boolean"
+                                  },
+                                  "onRetry": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "fallbackHandler": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userFacing": {
+                                    "type": "boolean"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "retryable"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "types"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -446,6 +728,100 @@
                         },
                         "contained": {
                           "type": "boolean"
+                        },
+                        "timeout": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "onTimeout": {
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "skip"
+                          ]
+                        },
+                        "errorHandling": {
+                          "type": "object",
+                          "properties": {
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "network",
+                                      "validation",
+                                      "business",
+                                      "security",
+                                      "system",
+                                      "timeout",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "pattern": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "retryable": {
+                                    "type": "boolean"
+                                  },
+                                  "maxRetries": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "backoff": {
+                                    "type": "string",
+                                    "enum": [
+                                      "exponential",
+                                      "linear",
+                                      "constant"
+                                    ]
+                                  },
+                                  "baseDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "maxDelay": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "jitter": {
+                                    "type": "boolean"
+                                  },
+                                  "onRetry": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "fallbackHandler": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userFacing": {
+                                    "type": "boolean"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "retryable"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "types"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [

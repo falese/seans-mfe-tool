@@ -103,6 +103,15 @@ export interface Context {
   /** Telemetry emit function (injected by the engine, not handler state) */
   emit?: (event: TelemetryEvent) => Promise<void>;
 
+  /**
+   * Cancellation for the hook currently running, set only while a hook with a
+   * declared `timeout` executes (ADR-029). Aborts when the timeout fires; pass
+   * it to `fetch` or check `aborted` in long loops. On the context rather than
+   * a second argument because platform handlers already use that position
+   * (`checkPermissions(context, requiredRoles)`).
+   */
+  signal?: AbortSignal;
+
   // === Handler-owned Extension Data ===
 
   /**

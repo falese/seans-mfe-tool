@@ -14,10 +14,10 @@
  * network fetch, and lets the three subphases run for real.
  *
  * One criterion is deliberately absent: "Retry: transient errors retry
- * correctly with exponential backoff". `withRetry` (ADR-030) exists and is
- * tested, but nothing wires it to a capability, and the config ADR-026
- * describes (`errorHandling.retry.maxAttempts`) has no field in the DSL
- * schema. Adding one is a decision, not an implementation detail — see #318.
+ * correctly with exponential backoff". Retry is now wired (#383), but per
+ * lifecycle hook with ADR-030's `errorHandling.types[].maxRetries` — not the
+ * capability-wide `errorHandling.retry.maxAttempts` ADR-026 sketches. It is
+ * pinned in `hook-resilience.test.ts`; retrying `doLoad` itself is still open.
  */
 
 import { BaseRemoteMFE, type ModuleFederationContainer } from '../base-remote-mfe';

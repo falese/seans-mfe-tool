@@ -6,9 +6,9 @@ import type { Context } from '../context';
  * `context.error` before running error-phase hooks, so that is the fallback.
  * An explicit second argument still wins for direct (non-dispatched) calls.
  *
- * Retry is not this handler's job: exponential-backoff retry is a separate,
- * already-implemented mechanism (`retry-wrapper.ts`, ADR-030) that wraps
- * capability execution rather than running as a lifecycle hook.
+ * Retry is not this handler's job: exponential-backoff retry (ADR-030) is
+ * per-hook policy — `errorHandling` on a lifecycle hook — applied by
+ * BaseMFE.invokeGuarded around the handler call, not a hook of its own.
  */
 export async function handleError(context: Context, error?: Error): Promise<void> {
   const resolvedError = error ?? context.error ?? new Error('Unknown error');
