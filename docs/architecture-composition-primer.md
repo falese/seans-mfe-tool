@@ -227,7 +227,7 @@ Slot granularity and data-injection cover the real composition use cases.
 | Thin interface + imperative floor | ADR-056 | `packages/contracts/src/presentation.ts`, `packages/runtime/src/imperative-handle.ts` |
 | One socket, many slots | ADR-057 | `packages/runtime/src/daemon-channel.ts` |
 | MFE-provided layout | ADR-058 | `LayoutManager.provideSlot` |
-| Swappable control plane | ADR-059 | `packages/runtime/src/base-control-plane.ts` |
+| Control plane (one implementation; ADR-059's abstract base retired) | ADR-078, ADR-105 | `packages/control-plane/`, host side `packages/runtime/src/layout-manager.ts` |
 | **Value-injection** | ADR-060 | `LayoutManagerConfig.providerValues` → `props.hostContext` |
 | **Slot self-healing** | ADR-060 | `AdaptorHelpers.reportError`, `renderSlotFallback`, `data-slot-state` |
 | **Control-plane re-resolution** | ADR-060 | `SLOT_ERROR` action, `MAX_SLOT_ESCALATIONS` |

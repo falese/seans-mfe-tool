@@ -298,7 +298,7 @@ Want Vite support? Publish `@seans-mfe/framework-vue-vite`. Done.
 | Daemon wire protocol | `messages.ts` | daemon ↔ LayoutManager ↔ MFEs |
 | Presentation handle | `presentation.ts` | MFEs, host-side providers |
 | Framework plugin API | `framework-plugin.ts` | CLI commands, plugin authors |
-| Control plane API | `base-control-plane.ts` | host shells, concrete CP impls |
+| Control plane host API | `layout-manager.ts` | host shells (ADR-105) |
 
 <br/>
 

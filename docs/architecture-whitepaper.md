@@ -133,7 +133,7 @@ flowchart TB
 
 | Layer | Package / Module | Responsibility |
 |---|---|---|
-| Host shell | `packages/runtime/src/base-control-plane.ts` | Single entry point; owns daemon + LayoutManager lifecycle |
+| Host shell | `packages/runtime/src/layout-manager.ts` | Single entry point; the host constructs a LayoutManager over the daemon transport (ADR-105) |
 | Runtime orchestration | `packages/runtime/src/layout-manager.ts` | Daemon-driven slot composition; mounts MFEs via adaptors |
 | Control plane | `packages/control-plane/` | Daemon process + capability registry; resolves actions → experiences. Ships with the platform (PDR-008, ADR-078) |
 | MFE runtime | `packages/runtime/src/base-mfe.ts` | Lifecycle contract every MFE implements (load/render/health) |

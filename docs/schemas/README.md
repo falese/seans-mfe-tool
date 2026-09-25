@@ -80,5 +80,5 @@ renderer. These types describe what the platform **does** and what flows over th
 | Control-plane messages | `packages/contracts/src/messages.ts` |
 | Presentation handles | `packages/contracts/src/presentation.ts` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
-| Control plane base | `packages/runtime/src/base-control-plane.ts` |
+| Control plane (registry + daemon) | `packages/control-plane/` |
 | Generated command schemas | `schemas/*.json` (machine-generated — never hand-edit) |
