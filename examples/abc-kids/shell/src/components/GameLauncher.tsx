@@ -35,22 +35,15 @@ const GameLauncher: React.FC<GameLauncherProps> = ({ game, onClose }) => {
     const mfe = mfeRef.current;
     if (!mfe || game.id !== 'flappy') return;
     try {
-      const ask = () =>
-        mfe.query({
-          requestId: `query-pets-${Date.now()}`,
-          timestamp: new Date(),
-          headers: { 'x-bff-mode': mode },
-          inputs: {
-            document: `query ListPets { listPets { id name status } }`,
-            bffUrl: 'http://localhost:3001/graphql',
-          },
-        });
-      // A transport failure comes back typed (ADR-106): retry once, and only
-      // when the error says a retry can help — a 503 mid-deploy, not a 404.
-      let queryResult = await ask();
-      if (queryResult.errors?.some((e: { retryable?: boolean }) => e.retryable)) {
-        queryResult = await ask();
-      }
+      const queryResult = await mfe.query({
+        requestId: `query-pets-${Date.now()}`,
+        timestamp: new Date(),
+        headers: { 'x-bff-mode': mode },
+        inputs: {
+          document: `query ListPets { listPets { id name status } }`,
+          bffUrl: 'http://localhost:3001/graphql',
+        },
+      });
       const fetched = (queryResult.data as { listPets?: Pet[] })?.listPets ?? [];
       setPets(fetched);
     } catch {

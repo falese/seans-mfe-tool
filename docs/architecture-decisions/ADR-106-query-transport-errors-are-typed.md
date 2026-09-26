@@ -54,26 +54,33 @@ long-form: true
 ## Context
 
 The platform says a failure is classified: typed errors carry a `type` and a `retryable` flag, and
-a caller branches on those rather than on message text (ADR-017, ADR-030). The `query` capability
-is the one place the composed fleet calls a BFF, and it is the one place that promise does not
-hold.
+a caller branches on those rather than on message text (ADR-017, ADR-030). The `query`
+capability is the platform's own BFF path (ADR-053: `BaseMFE.doQuery` is the single implementation
+on the web), and it is the one place that promise does not hold.
 
-**What the composed fleet actually does with a 5xx.** The abc-kids shell fetches a game's data with
-`mfe.query()` (`examples/abc-kids/shell/src/components/GameLauncher.tsx`). That is
-`BaseMFE.doQuery`, which on any non-2xx *returns*:
+**What `mfe.query()` does with a 5xx.** `BaseMFE.doQuery`, which every web MFE inherits, on any
+non-2xx *returns*:
 
 ```ts
 { data: null, errors: [{ message: 'BFF request failed: 503 Service Unavailable' }] }
 ```
 
-It has no type, no `retryable` flag and no status. The shell swallows it. A 503 during a deploy and
-a 404 from a wrong endpoint are indistinguishable except by parsing a string.
+It has no type, no `retryable` flag and no status. A 503 during a deploy and a 404 from a wrong
+endpoint are indistinguishable except by parsing a string. The Swift and Rust capabilities behave
+the same way (ADR-096).
+
+An earlier draft of this section cited the abc-kids shell's `GameLauncher.fetchPets` as a live
+caller. It is not: `GameLauncher` belongs to the shell's pre-ADR-055 static UI and is imported by
+nothing but its own test. The daemon-driven shell (`App.tsx`) never calls `query()`. No example
+exercises the capability at runtime today, which is the finding here, not a reason to leave it
+untyped: the capability is the platform's documented query path for hosts and agents, and a
+contract nobody exercises is exactly where an untyped failure hides.
 
 **#342 fixed a different path.** It made the generated `bff.ts` connector throw
 `NetworkError(msg, status)`. But no game UI imports `bff.ts`, and flappy exposes only `./App`, so
 the fixed code is not in the composed bundle at all. The composition smoke job (#345, PR #400) was
-meant to assert #342's claim in a browser, and would have failed. #342's unit demo is true. It is
-just about a different path.
+meant to assert #342's claim in a browser. Pointed at the capability, it would have failed. #342's
+unit demo is true. It is just about a different path.
 
 **The two web lanes already disagree.** The React template inherits `BaseMFE.doQuery` (ADR-053 §2).
 The Angular template still emits a `doQuery` override that routes through `bff.ts`, catches the
@@ -195,9 +202,9 @@ ADR-053 is not edited; this section is the record of the change.
 
 **Better**
 
-- A shell can tell a transient 503 from a misconfigured endpoint without parsing a message. #345's
-  composition job can assert #342's intent on the path the fleet actually runs:
-  `errors[0]` reads `{ type: 'network', retryable: true, status: 503 }`.
+- A host can tell a transient 503 from a misconfigured endpoint without parsing a message. #345's
+  composition job can assert #342's intent against a real composed remote, by calling its `query()`
+  in the browser: `errors[0]` reads `{ type: 'network', retryable: true, status: 503 }`.
 - The two web lanes stop disagreeing about `query()`, and the Angular lane gains the `bffUrl`
   override its generated comment already promised.
 - A 404 or a 401 from `bff.ts` stops claiming to be retryable.
@@ -208,7 +215,7 @@ ADR-053 is not edited; this section is the record of the change.
 - **Three runtimes change in one decision.** ADR-102 makes that the price of any contract change,
   and the frozen-literal pins are what keep it honest afterwards.
 - **`bff.ts` callers that caught `NetworkError` for every failure now see `SecurityError`,
-  `ValidationError` or `SystemError` for 4xx.** `bff.ts` is generator-owned, but code that
+  `ValidationError` or `BusinessError` for 4xx.** `bff.ts` is generator-owned, but code that
   *catches* its errors is developer-owned. This needs a `PLATFORM_MIGRATIONS` entry (ADR-082)
   matching a `catch` that narrows on `NetworkError` around a `bff.ts` call. The fleet has no such
   code today (no game UI imports `bff.ts`), so the entry is there for adopters.
@@ -218,8 +225,8 @@ ADR-053 is not edited; this section is the record of the change.
   seeing offline failures there. No line-level migration can recognise "a catch around a capability
   call", so this is recorded here and in the PR rather than as a `PLATFORM_MIGRATIONS` entry.
 - **The envelope is richer, not stricter.** A caller that ignores `errors` still ignores them, and
-  the fix only helps callers that look. The shell in `examples/abc-kids` is updated to look, as the
-  worked example.
+  the fix only helps callers that look. No example looks today, because none calls `query()` at
+  runtime (see Context). Until one does, the composition assertion is the only runtime caller.
 
 **Rejected alternative: throw on transport failure.** It gives the strongest signal, and it is what
 the generated connector does. It was rejected because it reverses a policy three targets
