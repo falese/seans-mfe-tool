@@ -358,6 +358,50 @@ private actor FiredHooks {
         ]))
         #expect(result.data == nil)
         #expect(result.errors.count == 1)
+        // Typed from the shared table (ADR-106): a 503 is worth retrying.
+        #expect(result.errors.first?.type == "network")
+        #expect(result.errors.first?.retryable == true)
+        #expect(result.errors.first?.status == 503)
+    }
+
+    @Test func queryMarksA404AsNotRetryable() async throws {
+        let mfe = <%= moduleName %>MFE(
+            provider: StubProvider(),
+            deps: MFEDependencies(transport: Self.stub(Data("missing".utf8), status: 404))
+        )
+        _ = try await mfe.load(MFEContext())
+        let result = try await mfe.query(MFEContext(inputs: [
+            "document": .string("query { x }"),
+            "bffUrl": .string("http://stub.invalid/graphql"),
+        ]))
+        #expect(result.errors.first?.type == "business")
+        #expect(result.errors.first?.retryable == false)
+        #expect(result.errors.first?.status == 404)
+    }
+
+    @Test func classifyHTTPOutcomeMatchesTheTypeScriptTable() {
+        // Row for row with packages/contracts/src/__tests__/http-outcome.test.ts;
+        // a TypeScript pin checks these rows against classifyHttpOutcome itself.
+        let table: [(Int?, String, Bool)] = [
+            (nil, "network", true),
+            (0, "network", true),
+            (408, "network", true),
+            (429, "network", true),
+            (500, "network", true),
+            (503, "network", true),
+            (599, "network", true),
+            (401, "security", false),
+            (403, "security", false),
+            (400, "validation", false),
+            (422, "validation", false),
+            (404, "business", false),
+            (405, "business", false),
+            (409, "business", false),
+        ]
+        for (status, type, retryable) in table {
+            let outcome = classifyHTTPOutcome(status: status)
+            #expect(outcome.type == type && outcome.retryable == retryable, "status \(String(describing: status))")
+        }
     }
 
     @Test func queryForwardsTheBearerTokenAndHeaders() async throws {

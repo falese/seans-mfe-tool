@@ -34,6 +34,7 @@
 - [LoadResult](interfaces/LoadResult.md)
 - [MountableLifecycle](interfaces/MountableLifecycle.md)
 - [PushControlPlaneStateOptions](interfaces/PushControlPlaneStateOptions.md)
+- [QueryError](interfaces/QueryError.md)
 - [QueryInput](interfaces/QueryInput.md)
 - [QueryResult](interfaces/QueryResult.md)
 - [RenderResult](interfaces/RenderResult.md)
@@ -79,6 +80,12 @@ Re-exports [BusinessError](../../contracts/src/classes/BusinessError.md)
 
 ***
 
+### classifyHttpOutcome
+
+Re-exports [classifyHttpOutcome](../../contracts/src/functions/classifyHttpOutcome.md)
+
+***
+
 ### createSlotAddressRegistry
 
 Re-exports [createSlotAddressRegistry](../../contracts/src/functions/createSlotAddressRegistry.md)
@@ -88,6 +95,24 @@ Re-exports [createSlotAddressRegistry](../../contracts/src/functions/createSlotA
 ### createSlotContract
 
 Re-exports [createSlotContract](../../contracts/src/functions/createSlotContract.md)
+
+***
+
+### HttpOutcome
+
+Re-exports [HttpOutcome](../../contracts/src/interfaces/HttpOutcome.md)
+
+***
+
+### httpOutcomeError
+
+Re-exports [httpOutcomeError](../../contracts/src/functions/httpOutcomeError.md)
+
+***
+
+### HttpOutcomeType
+
+Re-exports [HttpOutcomeType](../../contracts/src/type-aliases/HttpOutcomeType.md)
 
 ***
 

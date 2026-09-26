@@ -297,7 +297,7 @@ omit the DOM and Module Federation fields named in the rule above.
 | Field | Required | Type |
 |---|---|---|
 | `data` | yes | `unknown` |
-| `errors` | no | `Array<{ message: string; path?: string[]; }>` |
+| `errors` | no | `QueryError[]` |
 
 #### schema → SchemaResult
 

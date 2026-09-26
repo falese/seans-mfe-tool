@@ -86,10 +86,27 @@ export interface SchemaResult {
   format: 'graphql' | 'json' | 'openapi';
 }
 
+/**
+ * One error in a query result.
+ *
+ * A GraphQL error from the BFF carries `message` and `path`. A transport
+ * failure (a non-2xx, or no response at all) also carries `type`, `retryable`
+ * and `status`, classified by `classifyHttpOutcome` (ADR-106), so a caller can
+ * tell a transient 503 from a misconfigured endpoint without parsing text.
+ */
+export interface QueryError {
+  message: string;
+  path?: string[];
+  type?: 'network' | 'security' | 'validation' | 'business';
+  retryable?: boolean;
+  /** HTTP status; 0 when no response arrived. */
+  status?: number;
+}
+
 /** Result from query capability */
 export interface QueryResult {
   data: unknown;
-  errors?: Array<{ message: string; path?: string[] }>;
+  errors?: QueryError[];
 }
 
 /** Result from emit capability */

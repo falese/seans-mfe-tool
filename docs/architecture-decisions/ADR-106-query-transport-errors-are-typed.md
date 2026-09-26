@@ -3,7 +3,7 @@ id: 0106
 title: >-
   The query capability keeps its error envelope, and a transport failure in it is typed — one
   status mapping, shared by the capability and the generated BFF client, on every target
-status: Proposed
+status: Implemented
 date: 2026-09-26
 deciders: [sean]
 area: Runtime / capabilities / query
@@ -13,14 +13,32 @@ relates-to: [12, 17, 30, 53, 70, 82, 96, 101, 102]
 supersedes: []
 superseded-by: []
 implements-pdr: []
-implemented-by: []
-verified-by: []
+implemented-by:
+  - packages/contracts/src/http-outcome.ts
+  - packages/runtime/src/base-mfe.ts
+  - packages/runtime/src/capability-results.ts
+  - packages/plugin-bff/templates/bff.ts.ejs
+  - packages/codegen/templates/base-mfe-angular/mfe.ts.ejs
+  - packages/framework-rust/templates/src/platform/types.rs.ejs
+  - packages/framework-rust/templates/src/platform/mfe_base.rs.ejs
+  - packages/framework-swift/templates/Sources/Platform/Types.swift.ejs
+  - packages/framework-swift/templates/Sources/Platform/MFEBase.swift.ejs
+  - packages/codegen/src/platform-migrations.ts
+verified-by:
+  - packages/contracts/src/__tests__/http-outcome.test.ts
+  - packages/runtime/src/__tests__/base-mfe-query.test.ts
+  - packages/codegen/src/__tests__/generated-typed-errors.test.ts
+  - packages/framework-rust/src/__tests__/rust-contract-pin.test.ts
+  - packages/framework-swift/src/__tests__/native-contract-pin.test.ts
+  - check:rust-build
+  - check:swift-build
 tracked-by: ["#345"]
 summary: >-
   A failed BFF request answered by the query capability stays in the QueryResult envelope, as
   ADR-053 and ADR-096 decided, but each transport error now carries a type, a retryable flag and
   the HTTP status, from one status-to-type mapping. The same mapping decides which typed error the
-  generated bff.ts connector throws, so a 404 is no longer reported as a retryable network error.
+  generated bff.ts connector throws, so a 404 is no longer reported as a retryable network error, and a request that got no
+  response at all is answered in the envelope instead of escaping as a raw TypeError.
   The Angular template stops overriding doQuery and inherits BaseMFE.doQuery, as the React
   template already does. Swift and Rust carry the same fields and the same table.
 rationale-summary: >-
@@ -87,14 +105,16 @@ is typed, from one mapping that the capability and the generated BFF client shar
 interface QueryError {
   message: string;
   path?: string[];
-  type?: 'network' | 'security' | 'validation' | 'system';
+  type?: 'network' | 'security' | 'validation' | 'business';
   retryable?: boolean;
   status?: number;
 }
 ```
 
 `BaseMFE.doQuery` sets all three on the error it returns for a transport failure: a non-2xx, or
-`fetch` rejecting with no response. The message is unchanged, so code that reads it keeps working.
+`fetch` rejecting with no response. The non-2xx message is unchanged, so code that reads it keeps
+working. A `fetch` rejection used to escape `doQuery` as a raw `TypeError`, the one transport failure
+the envelope did not answer. It is now answered like the others, `status: 0`.
 A caller branches on `errors.some((e) => e.retryable)` instead of parsing text.
 
 GraphQL errors in a 2xx response are **not** transport errors and stay as they are,
@@ -109,13 +129,16 @@ the resolver's business, not the transport's.
 | `408`, `429`, any `5xx` | `network` | `true` | `NetworkError` |
 | `401`, `403` | `security` | `false` | `SecurityError` |
 | `400`, `422` | `validation` | `false` | `ValidationError` (field `document`) |
-| any other `4xx` (`404`, `405`, …) | `system` | `false` | `SystemError`: the endpoint is misconfigured, ADR-053 §3's case |
+| any other `4xx` (`404`, `405`, …) | `business` | `false` | `BusinessError`: the endpoint is misconfigured, ADR-053 §3's case |
 
 It is one exported function in `packages/contracts`, `classifyHttpOutcome(status | undefined)`,
 re-exported by the runtime. `BaseMFE.doQuery` uses it to fill §1's fields. The generated `bff.ts`
 uses it to choose which typed error to throw, instead of throwing `NetworkError` for everything.
 The `type` strings are the typed errors' own `type` values, so the envelope and a thrown error
-classify the same failure the same way.
+classify the same failure the same way. That is why the last row is `business` and not `system`.
+The accepted draft of this ADR said `system`, but `SystemError.retryable` is `true` (an environment
+that may recover), so a thrown 404 would have claimed to be retryable while the envelope said it was
+not. `BusinessError` (a precondition not met, `retryable: false`) is the class that agrees.
 
 ### 3. The Angular template inherits `doQuery`
 
@@ -124,19 +147,33 @@ Both web lanes then share one URL resolution (including `inputs.bffUrl`), one he
 §1's typed errors. The file is generator-owned, so regeneration carries the change to every Angular
 MFE.
 
+The override did one thing `BaseMFE.doQuery` did not: it sent `X-Request-ID` from
+`context.requestId`, which the BFF's `mesh-context` uses as the request's correlation id (it mints a
+random one otherwise). Removing the override would have dropped it, so it moves into
+`BaseMFE.doQuery`. React MFEs, which never sent it, now do too. An explicit `context.headers` entry
+still wins.
+
 ### 4. Swift and Rust carry the same fields and table
 
 `QueryError` in `Types.swift.ejs` and `types.rs.ejs` gains `type`, `retryable` and `status`, with
-the same names, optionality and encoding as §1. `MFEBase.doQuery` / `do_query` fill them from the
+the same wire names, optionality and encoding as §1. In Rust the field is `kind`, serialized as
+`"type"`, because `type` is a keyword. `MFEBase.doQuery` / `do_query` fill them from the
 same table when `GraphQLPost.send` fails. `BFFError.network` / `MfeError::Transport` already carry
-the status, so no new transport plumbing is needed. The table is pinned by a frozen-literal test in
-each lane (the ADR-096 pattern), so the three copies cannot drift apart silently.
+the status, so no new transport plumbing is needed. Each lane's generated test carries the table as
+a literal and runs it against its own function (`cargo test`, `swift test`). A TypeScript pin parses
+those literal rows out of the generated test and checks each one against `classifyHttpOutcome`
+itself. So a change to any of the three copies fails a gate, rather than relying on the ADR-096
+pattern of rendering both sides from one object, which is circular.
+
+Rust has one case the web runtime does not: no transport injected at all. That is a configuration
+mistake no retry fixes, so it is `business`/not retryable rather than going through the table's
+no-response row. Swift falls back to `URLSession` and has no such case.
 
 ### 5. Replaces ADR-053 §3's contract, and only that section
 
 Once this is accepted, a `RemoteMFE` with no BFF that calls `query()` still receives
 `{ data: null, errors: [...] }` rather than an exception. But the error now reads
-`{ type: 'system', retryable: false, status: 404, … }`. ADR-053 §1 and §2 stand unchanged.
+`{ type: 'business', retryable: false, status: 404, … }`. ADR-053 §1 and §2 stand unchanged.
 ADR-053 is not edited; this section is the record of the change.
 
 ## Boundaries
@@ -164,6 +201,7 @@ ADR-053 is not edited; this section is the record of the change.
 - The two web lanes stop disagreeing about `query()`, and the Angular lane gains the `bffUrl`
   override its generated comment already promised.
 - A 404 or a 401 from `bff.ts` stops claiming to be retryable.
+- Angular MFEs keep request correlation, and React MFEs gain it (§3).
 
 **Worse, and accepted**
 
@@ -174,6 +212,11 @@ ADR-053 is not edited; this section is the record of the change.
   *catches* its errors is developer-owned. This needs a `PLATFORM_MIGRATIONS` entry (ADR-082)
   matching a `catch` that narrows on `NetworkError` around a `bff.ts` call. The fleet has no such
   code today (no game UI imports `bff.ts`), so the entry is there for adopters.
+- **A `query()` call that got no response no longer throws.** It used to escape as a raw `TypeError`,
+  so a `try`/`catch` around `mfe.query()` was the only way to see it. It now arrives in `errors`
+  like every other transport failure. A caller whose only failure handling is that `catch` stops
+  seeing offline failures there. No line-level migration can recognise "a catch around a capability
+  call", so this is recorded here and in the PR rather than as a `PLATFORM_MIGRATIONS` entry.
 - **The envelope is richer, not stricter.** A caller that ignores `errors` still ignores them, and
   the fix only helps callers that look. The shell in `examples/abc-kids` is updated to look, as the
   worked example.

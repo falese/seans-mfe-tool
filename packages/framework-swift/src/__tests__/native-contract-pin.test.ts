@@ -42,6 +42,7 @@ import {
   PLATFORM_CAPABILITY_SPECS,
   MFE_LIFECYCLE_STATES,
   MFE_LIFECYCLE_TRANSITIONS,
+  classifyHttpOutcome,
   type PlatformCapability,
 } from '@seans-mfe/contracts';
 import { generateAllFiles } from '@seans-mfe/codegen';
@@ -248,3 +249,34 @@ describe('The concrete class is a third sibling, not a subclass of the web lanes
     expect(code).not.toMatch(/URLSession|dlopen/);
   });
 });
+
+describe('The query transport table (ADR-106 §4)', () => {
+  // Not circular: the Swift rows are a hand-written literal in the generated
+  // package's own test, and each is checked here against the TypeScript
+  // function the web runtime classifies by. `swift test` then checks the Swift
+  // function against those same rows.
+  const rows = (): Array<{ status: number | undefined; type: string; retryable: boolean }> => {
+    const test = Object.entries(emitted).find(([p]) => p.endsWith('LifecycleTests.swift'))?.[1] ?? '';
+    const block = /func classifyHTTPOutcomeMatchesTheTypeScriptTable\(\)[\s\S]*?\]\n/.exec(test)?.[0] ?? '';
+    return [...block.matchAll(/\((nil|\d+), "(\w+)", (true|false)\)/g)].map((m) => ({
+      status: m[1] === 'nil' ? undefined : Number(m[1]),
+      type: m[2],
+      retryable: m[3] === 'true',
+    }));
+  };
+
+  it('pins at least every class of outcome', () => {
+    expect(new Set(rows().map((r) => r.type))).toEqual(new Set(['network', 'security', 'validation', 'business']));
+  });
+
+  it('classifies every Swift row the way classifyHttpOutcome does', () => {
+    for (const row of rows()) {
+      expect({ status: row.status, ...classifyHttpOutcome(row.status) }).toEqual({
+        status: row.status,
+        type: row.type,
+        retryable: row.retryable,
+      });
+    }
+  });
+});
+

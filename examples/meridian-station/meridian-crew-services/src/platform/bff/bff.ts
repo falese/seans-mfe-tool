@@ -9,7 +9,7 @@
  *   const data = await query<GetUserQuery>(GET_USER, { id });
  */
 
-import { NetworkError, BusinessError } from '@seans-mfe-tool/runtime';
+import { BusinessError, httpOutcomeError } from '@seans-mfe-tool/runtime';
 
 const BFF_ENDPOINT =
   (typeof process !== 'undefined' && (process.env['BFF_URL'] || process.env['VITE_BFF_URL'])) ||
@@ -31,14 +31,23 @@ export async function query<T>(
   variables?: Record<string, unknown>,
   headers?: Record<string, string>,
 ): Promise<T> {
-  const response = await fetch(BFF_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify({ query: document, variables }),
-  });
+  // A failed request throws the typed error its status maps to (ADR-106): a
+  // 503 is a retryable NetworkError, a 404 a non-retryable BusinessError. The
+  // query capability classifies the same failure by the same table.
+  let response: Response;
+  try {
+    response = await fetch(BFF_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ query: document, variables }),
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw httpOutcomeError(`BFF request failed: ${reason}`, 0);
+  }
 
   if (!response.ok) {
-    throw new NetworkError(
+    throw httpOutcomeError(
       `BFF request failed: ${response.status} ${response.statusText}`,
       response.status
     );

@@ -97,14 +97,60 @@ public struct SchemaResult: Sendable, Codable, Equatable {
     public let format: SchemaFormat
 }
 
-/// One GraphQL error, as the BFF returned it.
+/// One error in a query result.
+///
+/// A GraphQL error from the BFF carries `message` and `path`. A transport
+/// failure also carries `type`, `retryable` and `status`, from the same table
+/// as the TypeScript runtime's `classifyHttpOutcome` (ADR-106), so a host can
+/// tell a transient 503 from a misconfigured endpoint.
 public struct QueryError: Sendable, Codable, Equatable {
     public let message: String
     public let path: [String]?
+    public let type: String?
+    public let retryable: Bool?
+    /// HTTP status; 0 when no response arrived.
+    public let status: Int?
 
-    public init(message: String, path: [String]? = nil) {
+    public init(
+        message: String,
+        path: [String]? = nil,
+        type: String? = nil,
+        retryable: Bool? = nil,
+        status: Int? = nil
+    ) {
         self.message = message
         self.path = path
+        self.type = type
+        self.retryable = retryable
+        self.status = status
+    }
+
+    /// A request that failed in transport, classified by its status.
+    public static func transport(message: String, status: Int?) -> QueryError {
+        let outcome = classifyHTTPOutcome(status: status)
+        return QueryError(
+            message: message,
+            type: outcome.type,
+            retryable: outcome.retryable,
+            status: status ?? 0
+        )
+    }
+}
+
+/// The status-to-type table (ADR-106 §2), row for row with the TypeScript
+/// runtime's `classifyHttpOutcome`. `nil` or `0` means no response arrived.
+public func classifyHTTPOutcome(status: Int?) -> (type: String, retryable: Bool) {
+    switch status ?? 0 {
+    case 0, 408, 429:
+        return ("network", true)
+    case 500...:
+        return ("network", true)
+    case 401, 403:
+        return ("security", false)
+    case 400, 422:
+        return ("validation", false)
+    default:
+        return ("business", false)
     }
 }
 

@@ -8,7 +8,7 @@
  */
 import * as path from 'path';
 import { generateAllFiles } from '@seans-mfe/codegen';
-import { MFE_LIFECYCLE_STATES, PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS } from '@seans-mfe/contracts';
+import { MFE_LIFECYCLE_STATES, PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, classifyHttpOutcome } from '@seans-mfe/contracts';
 import type { DSLManifest } from '@seans-mfe/dsl';
 import { registerRustCodegen, pascalCase, snakeCase } from '../codegen';
 
@@ -145,3 +145,34 @@ describe('The native layer', () => {
     expect(native()).toContain('mutation sendMessage($m: String!) { sendMessage(message: $m) }');
   });
 });
+
+describe('The query transport table (ADR-106 §4)', () => {
+  // Not circular: the Rust rows are a hand-written literal in the generated
+  // crate's own test, and each is checked here against the TypeScript
+  // function the web runtime classifies by. `cargo test` then checks the Rust
+  // function against those same rows, so the two lanes cannot drift apart.
+  const rows = (): Array<{ status: number | undefined; type: string; retryable: boolean }> => {
+    const test = emitted['rust/tests/lifecycle.rs'];
+    const block = /fn classify_http_outcome_matches_the_typescript_table\(\)[\s\S]*?\];/.exec(test)?.[0] ?? '';
+    return [...block.matchAll(/\((None|Some\((\d+)\)), "(\w+)", (true|false)\)/g)].map((m) => ({
+      status: m[2] === undefined ? undefined : Number(m[2]),
+      type: m[3],
+      retryable: m[4] === 'true',
+    }));
+  };
+
+  it('pins at least every class of outcome', () => {
+    expect(new Set(rows().map((r) => r.type))).toEqual(new Set(['network', 'security', 'validation', 'business']));
+  });
+
+  it('classifies every Rust row the way classifyHttpOutcome does', () => {
+    for (const row of rows()) {
+      expect({ status: row.status, ...classifyHttpOutcome(row.status) }).toEqual({
+        status: row.status,
+        type: row.type,
+        retryable: row.retryable,
+      });
+    }
+  });
+});
+

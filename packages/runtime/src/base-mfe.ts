@@ -21,6 +21,7 @@ import {
   MFE_LIFECYCLE_INITIAL_STATE,
   isValidLifecycleTransition,
   PLATFORM_CAPABILITY_SPECS,
+  classifyHttpOutcome,
 } from '@seans-mfe/contracts';
 import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
 import * as platformHandlerLibrary from './handlers';
@@ -810,20 +811,45 @@ export abstract class BaseMFE {
       ? { Authorization: `Bearer ${context.jwt}` }
       : {};
 
-    const response = await fetch(bffUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(context.headers ?? {}),
-        ...authHeaders,
-      },
-      body: JSON.stringify({ query: inputs.document, variables: inputs.variables }),
-    });
+    // A transport failure is answered in the envelope, never thrown (ADR-053
+    // §3, ADR-096), and typed from one table so a caller can decide whether to
+    // retry (ADR-106). A fetch that gets no response at all used to escape
+    // here as a raw TypeError; it is the same kind of failure, answered the
+    // same way.
+    let response: Response;
+    try {
+      response = await fetch(bffUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // The BFF's mesh-context takes this as the request's correlation id
+          // and mints a random one without it. The Angular template's own
+          // doQuery sent it; lifted here when that override was removed so both
+          // lanes send it (ADR-106 §3). An explicit context header still wins.
+          ...(context.requestId ? { 'X-Request-ID': context.requestId } : {}),
+          ...(context.headers ?? {}),
+          ...authHeaders,
+        },
+        body: JSON.stringify({ query: inputs.document, variables: inputs.variables }),
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      return {
+        data: null,
+        errors: [{ message: `BFF request failed: ${reason}`, ...classifyHttpOutcome(0), status: 0 }],
+      };
+    }
 
     if (!response.ok) {
       return {
         data: null,
-        errors: [{ message: `BFF request failed: ${response.status} ${response.statusText}` }],
+        errors: [
+          {
+            message: `BFF request failed: ${response.status} ${response.statusText}`,
+            ...classifyHttpOutcome(response.status),
+            status: response.status,
+          },
+        ],
       };
     }
 

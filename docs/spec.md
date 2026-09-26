@@ -331,6 +331,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
 | [ADR-104](./architecture-decisions/ADR-104-published-html-api-reference.md) | The docs site publishes an HTML API reference under /api/, built at publish time from the same TypeDoc config as the committed Markdown, which stays the version reviewed in pull requests | Docs / tooling / publishing | Implemented |
 | [ADR-105](./architecture-decisions/ADR-105-retire-base-control-plane.md) | Retire BaseControlPlane — the control plane has one implementation, so a host connects with a LayoutManager instead of subclassing an abstract base | Runtime / control-plane / abstract-base | Implemented |
+| [ADR-106](./architecture-decisions/ADR-106-query-transport-errors-are-typed.md) | The query capability keeps its error envelope, and a transport failure in it is typed — one status mapping, shared by the capability and the generated BFF client, on every target | Runtime / capabilities / query | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -347,7 +348,6 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
-| [ADR-106](./architecture-decisions/ADR-106-query-transport-errors-are-typed.md) | The query capability keeps its error envelope, and a transport failure in it is typed — one status mapping, shared by the capability and the generated BFF client, on every target | Runtime / capabilities / query | Proposed |
 
 ### Deferred — postponed on purpose
 

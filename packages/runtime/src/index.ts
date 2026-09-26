@@ -20,11 +20,15 @@ export {
   TimeoutError,
   SecurityError,
 } from './errors';
+// The status-to-type table a failed BFF request is classified by (ADR-106).
+// The generated bff.ts throws through it; BaseMFE.doQuery reports through it.
+export { classifyHttpOutcome, httpOutcomeError } from '@seans-mfe/contracts';
+export type { HttpOutcome, HttpOutcomeType } from '@seans-mfe/contracts';
 export { ContextFactory } from './context';
 
 // BaseMFE and result types (REQ-RUNTIME-001)
 export { BaseMFE, VALID_TRANSITIONS } from './base-mfe';
-export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, EmitResult, ControlPlaneStateResult, MFEState } from './base-mfe';
+export type { LoadResult, RenderResult, HealthResult, DescribeResult, SchemaResult, QueryResult, QueryError, EmitResult, ControlPlaneStateResult, MFEState } from './base-mfe';
 
 // Sugar over the inherited updateControlPlaneState capability — fills in the
 // Context boilerplate every real call site otherwise hand-rolls.

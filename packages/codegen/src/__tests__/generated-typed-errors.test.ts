@@ -62,14 +62,22 @@ describe('generated code throws typed errors (ADR-017)', () => {
   };
 
   describe('the BFF connector', () => {
-    it('throws NetworkError carrying the HTTP status, so a 5xx is retryable', () => {
+    it('throws the typed error its status maps to, so only a transient failure is retryable (ADR-106)', () => {
       const bff = emitted('platform/bff/bff.ts');
 
-      expect(bff).toContain('throw new NetworkError(');
-      // The status is the whole point — without it the classifier has nothing
-      // to distinguish a 503 from a 400.
+      // One table (classifyHttpOutcome) decides the class. The connector used
+      // to throw NetworkError for every non-2xx, and NetworkError is retryable
+      // by construction — so a 404 or a 401 claimed to be retryable.
+      expect(bff).toContain('throw httpOutcomeError(');
       expect(bff).toContain('response.status');
-      expect(bff).toMatch(/import \{[^}]*NetworkError[^}]*\} from '@seans-mfe-tool\/runtime'/);
+      expect(bff).not.toContain('throw new NetworkError(');
+      expect(bff).toMatch(/import \{[^}]*httpOutcomeError[^}]*\} from '@seans-mfe-tool\/runtime'/);
+    });
+
+    it('throws a typed error, not a raw TypeError, when no response arrives (ADR-106)', () => {
+      const bff = emitted('platform/bff/bff.ts');
+
+      expect(bff).toMatch(/catch \(error\) \{[\s\S]*?throw httpOutcomeError\(`BFF request failed: \$\{reason\}`, 0\)/);
     });
 
     it('throws BusinessError for GraphQL errors, which are not a transport fault', () => {

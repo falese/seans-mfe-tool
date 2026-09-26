@@ -418,6 +418,52 @@ fn query_returns_errors_rather_than_failing_on_http_failure() {
     let result = block_on(mfe.query(query_context())).expect("query");
     assert_eq!(result.data, None);
     assert_eq!(result.errors.len(), 1);
+    // Typed from the shared table (ADR-106): a 503 is worth retrying.
+    assert_eq!(result.errors[0].kind.as_deref(), Some("network"));
+    assert_eq!(result.errors[0].retryable, Some(true));
+    assert_eq!(result.errors[0].status, Some(503));
+}
+
+#[test]
+fn query_marks_a_404_as_not_retryable() {
+    let transport = StubTransport::new(404, "missing");
+    let mfe = mfe_with(MfeDependencies { transport: Some(transport), ..MfeDependencies::default() });
+    block_on(mfe.load(MfeContext::new())).expect("load");
+    let result = block_on(mfe.query(query_context())).expect("query");
+    assert_eq!(result.errors[0].kind.as_deref(), Some("business"));
+    assert_eq!(result.errors[0].retryable, Some(false));
+    assert_eq!(result.errors[0].status, Some(404));
+}
+
+#[test]
+fn query_error_serializes_its_kind_as_type() {
+    let json = serde_json::to_value(QueryError::transport("x", Some(503))).expect("serialize");
+    assert_eq!(json, serde_json::json!({ "message": "x", "type": "network", "retryable": true, "status": 503 }));
+}
+
+#[test]
+fn classify_http_outcome_matches_the_typescript_table() {
+    // Row for row with packages/contracts/src/__tests__/http-outcome.test.ts;
+    // a TypeScript pin checks these rows against classifyHttpOutcome itself.
+    let table: [(Option<u16>, &str, bool); 14] = [
+        (None, "network", true),
+        (Some(0), "network", true),
+        (Some(408), "network", true),
+        (Some(429), "network", true),
+        (Some(500), "network", true),
+        (Some(503), "network", true),
+        (Some(599), "network", true),
+        (Some(401), "security", false),
+        (Some(403), "security", false),
+        (Some(400), "validation", false),
+        (Some(422), "validation", false),
+        (Some(404), "business", false),
+        (Some(405), "business", false),
+        (Some(409), "business", false),
+    ];
+    for (status, kind, retryable) in table {
+        assert_eq!(classify_http_outcome(status), (kind, retryable), "status {:?}", status);
+    }
 }
 
 #[test]
@@ -427,6 +473,9 @@ fn query_without_a_transport_names_the_missing_dependency() {
     let result = block_on(mfe.query(query_context())).expect("query");
     assert_eq!(result.data, None);
     assert!(result.errors[0].message.contains("MfeDependencies.transport"), "{:?}", result.errors);
+    // A missing transport is a configuration mistake, which no retry fixes.
+    assert_eq!(result.errors[0].kind.as_deref(), Some("business"));
+    assert_eq!(result.errors[0].retryable, Some(false));
 }
 
 #[test]

@@ -691,8 +691,14 @@ open class MFEBase {
         } catch {
             // The envelope policy: `query` answers with errors, it does not
             // throw. `BFFClient.query<T>` throws for the same failure, which is
-            // the deliberate half of the difference between the two.
-            return QueryResult(data: nil, errors: [QueryError(message: String(describing: error))])
+            // the deliberate half of the difference between the two. The error
+            // is typed from the shared table (ADR-106) so a host can decide
+            // whether to retry.
+            var status: Int?
+            if case let MFETransportError.network(_, status: code) = error {
+                status = code
+            }
+            return QueryResult(data: nil, errors: [QueryError.transport(message: String(describing: error), status: status)])
         }
 
         let decoded = try JSONDecoder().decode([String: JSONValue].self, from: body)

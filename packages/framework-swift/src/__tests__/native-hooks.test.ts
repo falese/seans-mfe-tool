@@ -436,7 +436,8 @@ describe('One HTTP path, two error policies', () => {
     const base = files.find((f) => f.path.endsWith('Platform/MFEBase.swift'))!.content;
     const client = files.find((f) => f.path.endsWith('Platform/BFFClient.swift'))!.content;
     // The capability answers with an envelope…
-    expect(base).toContain('return QueryResult(data: nil, errors: [QueryError(message: String(describing: error))])');
+    // …typed from the shared table (ADR-106), still without throwing.
+    expect(base).toContain('return QueryResult(data: nil, errors: [QueryError.transport(message: String(describing: error), status: status)])');
     expect(base).toContain('guard let data = decoded["data"], data != .null else');
     // …the typed client throws. TypeScript splits them the same way.
     expect(client).toContain('throw BFFError.network(message, status: status)');

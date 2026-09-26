@@ -17,6 +17,10 @@
       "require": "./dist/error-classifier.js",
       "types": "./dist/error-classifier.d.ts"
     },
+    "./http-outcome": {
+      "require": "./dist/http-outcome.js",
+      "types": "./dist/http-outcome.d.ts"
+    },
     "./envelope": {
       "require": "./dist/envelope.js",
       "types": "./dist/envelope.d.ts"
