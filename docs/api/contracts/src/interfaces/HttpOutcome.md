@@ -6,7 +6,7 @@
 
 # Interface: HttpOutcome
 
-Defined in: packages/contracts/src/http-outcome.ts:25
+Defined in: [packages/contracts/src/http-outcome.ts:25](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/http-outcome.ts#L25)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/contracts/src/http-outcome.ts:25
 
 > **retryable**: `boolean`
 
-Defined in: packages/contracts/src/http-outcome.ts:27
+Defined in: [packages/contracts/src/http-outcome.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/http-outcome.ts#L27)
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: packages/contracts/src/http-outcome.ts:27
 
 > **type**: [`HttpOutcomeType`](../type-aliases/HttpOutcomeType.md)
 
-Defined in: packages/contracts/src/http-outcome.ts:26
+Defined in: [packages/contracts/src/http-outcome.ts:26](https://github.com/falese/seans-mfe-tool/blob/main/packages/contracts/src/http-outcome.ts#L26)
