@@ -347,6 +347,7 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
+| [ADR-106](./architecture-decisions/ADR-106-query-transport-errors-are-typed.md) | The query capability keeps its error envelope, and a transport failure in it is typed — one status mapping, shared by the capability and the generated BFF client, on every target | Runtime / capabilities / query | Proposed |
 
 ### Deferred — postponed on purpose
 
