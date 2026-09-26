@@ -65,6 +65,13 @@ jobs:
       - name: Build the CLI
         run: npm run build
 
+      # --testPathIgnorePatterns="/examples/" stays, deliberately (#345). The
+      # ~75 test files under examples/ belong to each example MFE, not to this
+      # repo's jest project: each runs under its own jest config against its own
+      # node_modules (React/Angular, @testing-library, the MFE's shared deps),
+      # none of which the root install provides. Running them here would mean an
+      # `npm ci` per MFE. What they would catch at composition time is covered by
+      # the Composition workflow, which builds and drives the abc-kids fleet.
       - name: Run all tests with coverage
         run: |
           set +e
