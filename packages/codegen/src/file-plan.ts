@@ -125,9 +125,6 @@ export interface GeneratorDiagnostic {
   fix?: string;
 }
 
-/** @deprecated Use {@link GeneratorDiagnostic}. */
-export type PlanDiagnostic = GeneratorDiagnostic;
-
 export interface ResolvedPlan {
   files: PlannedFile[];
   diagnostics: GeneratorDiagnostic[];
@@ -224,6 +221,11 @@ export async function resolveFilePlan(
   for (const spec of plan) {
     if (spec.when && !spec.when(ctx)) continue;
 
+    // The one place ownership becomes `overwrite` (ADR-093 §4). check:mfe-drift,
+    // mfe:validate's developerOwned predicate, sentinel:validate and the
+    // dry-run planner all read `overwrite` off these files, so the split is
+    // stated once — as FileSpec.owner. It used to be 25 inline booleans, where
+    // moving a file between the halves was invisible in review (ADR-082).
     const overwrite = spec.owner === 'generator';
     const outPath = joinPath(basePath, spec.out);
 
@@ -274,20 +276,4 @@ export async function resolveFilePlan(
   }
 
   return { files, diagnostics };
-}
-
-/**
- * The ownership map, read straight off the plan.
- *
- * Three subsystems need this split and each used to derive it independently:
- * `check:mfe-drift` (compares only generator-owned files), `mfe:validate`'s
- * `developerOwned` predicate (scans only the other half for platform
- * migrations), and the dry-run planner. Ownership was 25 inline booleans, so
- * moving a file between the two was invisible in review — which is the risk
- * ADR-082 exists to mitigate. Here it is one column.
- */
-export function ownershipOf(plan: readonly FileSpec[]): Record<string, FileSpec['owner']> {
-  const map: Record<string, FileSpec['owner']> = {};
-  for (const spec of plan) map[spec.out] = spec.owner;
-  return map;
 }

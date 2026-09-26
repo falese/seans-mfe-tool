@@ -2,7 +2,7 @@
  * Codegen catalog — the constant data the generator renders from.
  *
  * This is data, not logic: pinned dependency versions (ADR-050), the Mesh
- * plugin/transform defaults and allow-lists (ADR-027), and the set of public
+ * plugin/transform defaults (ADR-027; classification lives in contracts, ADR-092), and the set of public
  * assets a template variant may legitimately omit (#341).
  *
  * It lived in unified-generator.ts, where 257 lines of version strings and
@@ -14,9 +14,6 @@
  * ADR-050 is the rule these tables serve: every version string in a generated
  * package.json comes from DEPENDENCY_VERSIONS, and no template hardcodes one.
  */
-
-import { MESH_PLUGINS, MESH_TRANSFORMS, MESH_AMBIGUOUS } from '@seans-mfe/contracts';
-
 
 /**
  * Centralized dependency versions for template generation
@@ -228,31 +225,3 @@ export const DEFAULT_MESH_TRANSFORMS = {
     enabled: false,
   },
 };
-
-// =============================================================================
-// Validation Layer (ADR-027)
-// =============================================================================
-
-
-/**
- * Mesh plugin / transform allow-lists.
- *
- * Derived from the single classification in `@seans-mfe/contracts` (ADR-092),
- * not restated. These used to be two hand-maintained Sets here, one of three
- * surviving copies across the repo that disagreed on both contents and
- * spelling; `codegen` read camelCase while `dsl` read kebab-case against the
- * same manifest field.
- *
- * Kept as `Set`s under the existing names so the module's public surface — and
- * `bff:init`, which imports them — is unchanged by the move.
- */
-export const KNOWN_MESH_PLUGINS: ReadonlySet<string> = new Set<string>([
-  ...MESH_PLUGINS,
-  ...MESH_AMBIGUOUS,
-]);
-
-export const KNOWN_MESH_TRANSFORMS: ReadonlySet<string> = new Set<string>([
-  ...MESH_TRANSFORMS,
-  ...MESH_AMBIGUOUS,
-]);
-

@@ -8,7 +8,7 @@
 
 > **resolveWebTarget**(`manifest`): `object`
 
-Defined in: [packages/codegen/src/unified-generator.ts:117](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L117)
+Defined in: [packages/codegen/src/unified-generator.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L115)
 
 The web build's framework and bundler, from whichever spelling declared them.
 
@@ -44,7 +44,7 @@ third-party framework into React.
 
 #### capabilities
 
-`Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[] = `...`
+`Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[] = `...`
 
 #### category?
 

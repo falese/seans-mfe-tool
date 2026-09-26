@@ -8,7 +8,7 @@
 
 > **parseAndValidateDirectory**(`directory`): `Promise`\<[`ValidationResult`](../interfaces/ValidationResult.md) & `object`\>
 
-Defined in: [packages/dsl/src/parser.ts:187](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L187)
+Defined in: [packages/dsl/src/parser.ts:163](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L163)
 
 Parse and validate manifest from directory
 

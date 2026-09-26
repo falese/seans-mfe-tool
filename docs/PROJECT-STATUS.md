@@ -72,7 +72,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | --- | --- |
 | Control-plane message protocol; virtualized daemon socket | `packages/contracts/src/` (ADR-054, ADR-057) |
 | `LayoutManager` — daemon-driven slot composition; contextualized VM composition | `packages/runtime/src/layout-manager.ts` (ADR-055, ADR-060) |
-| `BaseControlPlane` abstract base | `packages/runtime/src/base-control-plane.ts` (ADR-059) |
+| Control plane — the one registry + daemon implementation (`BaseControlPlane` retired) | `packages/control-plane/` (ADR-078, ADR-105) |
 | Slot contract — stable addressing, desired-state placement, provider-scoped ids, single-sourced grammar | `packages/contracts/src/slot-contract.ts`, `slot-grammar.ts` (ADR-066–069) |
 | `DeclaredSlot` app-code API + design-time validation (`slots:validate`, `slots-implemented` rule) | `packages/framework-react/`, `packages/dsl/src/slot-validation.ts` (ADR-072, ADR-073) |
 | Explainers | [`docs/slot-contract.md`](./slot-contract.md), [`docs/slot-architecture.md`](./slot-architecture.md) |

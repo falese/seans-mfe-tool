@@ -8,23 +8,17 @@
 
 ## Classes
 
-- [BaseControlPlane](classes/BaseControlPlane.md)
 - [BaseMFE](classes/BaseMFE.md)
 - [ContextFactory](classes/ContextFactory.md)
-- [ContextValidator](classes/ContextValidator.md)
 - [DaemonChannel](classes/DaemonChannel.md)
 - [GraphQLTransportWsDaemonTransport](classes/GraphQLTransportWsDaemonTransport.md)
-- [GraphQLWebSocketClient](classes/GraphQLWebSocketClient.md)
 - [LayoutManager](classes/LayoutManager.md)
 
 ## Interfaces
 
 - [AdaptorHelpers](interfaces/AdaptorHelpers.md)
-- [CacheState](interfaces/CacheState.md)
 - [ChannelTransport](interfaces/ChannelTransport.md)
 - [Context](interfaces/Context.md)
-- [ControlPlaneConfig](interfaces/ControlPlaneConfig.md)
-- [ControlPlaneHealth](interfaces/ControlPlaneHealth.md)
 - [ControlPlaneStatePusher](interfaces/ControlPlaneStatePusher.md)
 - [ControlPlaneStateResult](interfaces/ControlPlaneStateResult.md)
 - [DaemonEnvelope](interfaces/DaemonEnvelope.md)
@@ -32,7 +26,6 @@
 - [DaemonWebSocketClient](interfaces/DaemonWebSocketClient.md)
 - [DescribeResult](interfaces/DescribeResult.md)
 - [EmitResult](interfaces/EmitResult.md)
-- [ErrorHandlingState](interfaces/ErrorHandlingState.md)
 - [ExperienceAdaptor](interfaces/ExperienceAdaptor.md)
 - [HealthResult](interfaces/HealthResult.md)
 - [ImperativeHandleOptions](interfaces/ImperativeHandleOptions.md)
@@ -50,12 +43,10 @@
 - [TelemetryEvent](interfaces/TelemetryEvent.md)
 - [UserContext](interfaces/UserContext.md)
 - [ValidationIssue](interfaces/ValidationIssue.md)
-- [ValidationState](interfaces/ValidationState.md)
 - [WebSocketLike](interfaces/WebSocketLike.md)
 
 ## Type Aliases
 
-- [ControlPlaneStatus](type-aliases/ControlPlaneStatus.md)
 - [MFEState](type-aliases/MFEState.md)
 - [TransportStatus](type-aliases/TransportStatus.md)
 - [UnmountFn](type-aliases/UnmountFn.md)
@@ -72,11 +63,7 @@
 - [cacheResult](functions/cacheResult.md)
 - [checkPermissions](functions/checkPermissions.md)
 - [createImperativeHandle](functions/createImperativeHandle.md)
-- [getCacheState](functions/getCacheState.md)
-- [getErrorHandlingState](functions/getErrorHandlingState.md)
-- [getValidationState](functions/getValidationState.md)
 - [handleError](functions/handleError.md)
-- [isBaseControlPlane](functions/isBaseControlPlane.md)
 - [logTelemetry](functions/logTelemetry.md)
 - [pushControlPlaneState](functions/pushControlPlaneState.md)
 - [rateLimitCheck](functions/rateLimitCheck.md)

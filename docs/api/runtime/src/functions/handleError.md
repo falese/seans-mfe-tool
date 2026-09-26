@@ -8,16 +8,16 @@
 
 > **handleError**(`context`, `error?`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/handlers/error-handling.ts:25](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L25)
+Defined in: [packages/runtime/src/handlers/error-handling.ts:13](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/error-handling.ts#L13)
 
 `error` is optional because this handler is dispatched by name
 (`platform.handleError`, ADR-076) with only `context` — the engine sets
 `context.error` before running error-phase hooks, so that is the fallback.
 An explicit second argument still wins for direct (non-dispatched) calls.
 
-Retry is not this handler's job: exponential-backoff retry is a separate,
-already-implemented mechanism (`retry-wrapper.ts`, ADR-030) that wraps
-capability execution rather than running as a lifecycle hook.
+Retry is not this handler's job: exponential-backoff retry (ADR-030) is
+per-hook policy — `errorHandling` on a lifecycle hook — applied by
+BaseMFE.invokeGuarded around the handler call, not a hook of its own.
 
 ## Parameters
 

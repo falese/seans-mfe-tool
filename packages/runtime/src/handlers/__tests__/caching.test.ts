@@ -1,16 +1,4 @@
-import { cacheResult, getCacheState } from '../caching';
-
-describe('getCacheState', () => {
-  it('returns context.cache typed as CacheState', () => {
-    const context = { cache: { key: 'k', hit: true } } as any;
-    expect(getCacheState(context)).toEqual({ key: 'k', hit: true });
-  });
-
-  it('returns undefined when context.cache is not set', () => {
-    const context = {} as any;
-    expect(getCacheState(context)).toBeUndefined();
-  });
-});
+import { cacheResult } from '../caching';
 
 describe('platform.cacheResult', () => {
   it('should emit info with ttl', async () => {

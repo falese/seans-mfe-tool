@@ -44,7 +44,7 @@ renderer. These types describe what the platform **does** and what flows over th
 | [Control-plane messages](control-plane-messages.md) | Daemon ↔ registry ↔ renderer wire protocol |
 | [Presentation contracts](presentation.md) | `PresentationHandle` interface — imperative floor + native upgrade |
 | [Framework plugin interface](framework-plugin.md) | `BaseFrameworkPlugin` abstract — the contract every framework plugin implements |
-| [Control plane interface](control-plane.md) | `BaseControlPlane` abstract — daemon + registry + LayoutManager bundled under a three-line host API |
+| [Control plane interface](control-plane.md) | How a host connects to the one control plane: `LayoutManager` over a daemon transport (ADR-078, ADR-105) |
 
 ## Governing ADRs
 
@@ -65,7 +65,8 @@ renderer. These types describe what the platform **does** and what flows over th
 | ADR-056 | Presentation handle interface |
 | ADR-057 | Virtualized daemon socket (DaemonChannel) |
 | ADR-058 | Slot-provider MFEs |
-| ADR-059 | BaseControlPlane abstract base |
+| ADR-059 | BaseControlPlane abstract base (superseded by ADR-105) |
+| ADR-105 | BaseControlPlane retired; one control-plane implementation |
 
 ## Authoritative source locations
 
@@ -79,5 +80,5 @@ renderer. These types describe what the platform **does** and what flows over th
 | Control-plane messages | `packages/contracts/src/messages.ts` |
 | Presentation handles | `packages/contracts/src/presentation.ts` |
 | Framework plugin base | `packages/contracts/src/framework-plugin.ts` |
-| Control plane base | `packages/runtime/src/base-control-plane.ts` |
+| Control plane (registry + daemon) | `packages/control-plane/` |
 | Generated command schemas | `schemas/*.json` (machine-generated — never hand-edit) |

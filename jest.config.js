@@ -71,7 +71,8 @@ module.exports = {
   ],
   
   // Coverage thresholds. Phase 1.1 adds per-file thresholds for the four
-  // newly-covered files (api.ts, deploy.ts, schemas.ts, graphql-ws-client.ts)
+  // newly-covered files (api.ts, deploy.ts, schemas.ts; graphql-ws-client.ts's
+  // entry went with its class in #387 — the file is an interface now)
   // and tightens the global floor.
   //
   // Targets (from the production-readiness roadmap):
@@ -118,13 +119,6 @@ module.exports = {
       functions: 90,
       lines: 90,
       statements: 90
-    },
-    // Phase 1.1: runtime-layer coverage target
-    'packages/runtime/src/graphql-ws-client.ts': {
-      branches: 90,
-      functions: 100,
-      lines: 95,
-      statements: 95
     }
   },
 

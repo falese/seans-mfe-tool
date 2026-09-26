@@ -226,6 +226,23 @@ describe('LayoutManager', () => {
     expect(manager.activeSlots).toEqual([]);
   });
 
+  it('rejects an EXPERIENCE payload that is not a RenderedExperience instead of mounting it', async () => {
+    // The payload crosses a process boundary from the daemon; the contracts
+    // guard (isRenderedExperience, ADR-054) is what vouches for its shape.
+    const { adaptor, mounts } = makeAdaptor();
+    const { manager, transport, errors } = makeManager(adaptor);
+    manager.start();
+
+    transport.onMessage?.({
+      kind: 'COMPONENT_UPDATE',
+      payload: { id: 'x', type: 'EXPERIENCE', data: { mfe: 'm', capability: 'C' } },
+    });
+    await flush();
+
+    expect(mounts).toHaveLength(0);
+    expect(errors[0]).toMatch(/Malformed experience from the daemon/);
+  });
+
   it('falls back to "?" identifiers for RESOLUTION_ERROR with missing fields', async () => {
     const { adaptor } = makeAdaptor();
     const { manager, transport, errors } = makeManager(adaptor);

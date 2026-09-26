@@ -109,6 +109,33 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
       /import\s*\{[^}]*\bRemoteMFE\b[^}]*\}\s*from\s*['"]@seans-mfe-tool\/runtime['"]/,
     exempt: /import\s+type\s*\{/,
   },
+  {
+    id: 'runtime-dead-exports-removed',
+    since: '1.0.0',
+    // Already gone from the barrel, so a use no longer compiles: this is an
+    // error on arrival, and the entry exists to say *why* and what replaces it.
+    failsAt: '1.0.0',
+    adr: 'ADR-057',
+    message:
+      'Uses a runtime export that was removed as dead code (#386, #387): GraphQLWebSocketClient, ContextValidator, or a getCacheState / getValidationState / getErrorHandlingState accessor',
+    fix: "GraphQLWebSocketClient: use the DaemonChannel the host injects as deps.wsClient (type it as DaemonWebSocketClient, ADR-057). ContextValidator: check context.jwt / context.user / context.inputs directly, or use the platform.validateJWT / platform.checkPermissions handlers. get*State accessors: delete the call — no handler ever wrote those context fields, so they always returned undefined.",
+    // The names are distinctive enough to match bare, which also catches the
+    // one-name-per-line form of a multi-line import.
+    pattern: /\b(?:GraphQLWebSocketClient|ContextValidator|get(?:Cache|Validation|ErrorHandling)State)\b/,
+    exempt: /^\s*(?:\/\/|\*|\/\*)/,
+  },
+  {
+    id: 'base-control-plane-removed',
+    since: '1.0.0',
+    // Removed from the barrel in the same change, so this is an error on arrival.
+    failsAt: '1.0.0',
+    adr: 'ADR-105',
+    message:
+      'Uses BaseControlPlane (or its ControlPlaneConfig / ControlPlaneStatus / ControlPlaneHealth types), which was retired: the control plane is one concrete service in packages/control-plane, not a class a host subclasses',
+    fix: 'Construct a LayoutManager directly with a GraphQLTransportWsDaemonTransport pointed at the daemon URL, and call start()/stop() on it — that is what BaseControlPlane.start() did internally. Registry and daemon run as the packages/control-plane services.',
+    pattern: /\b(?:BaseControlPlane|isBaseControlPlane|ControlPlaneConfig|ControlPlaneStatus|ControlPlaneHealth)\b/,
+    exempt: /^\s*(?:\/\/|\*|\/\*)/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

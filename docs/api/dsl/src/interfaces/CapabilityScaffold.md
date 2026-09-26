@@ -6,7 +6,7 @@
 
 # Interface: CapabilityScaffold
 
-Defined in: [packages/dsl/src/schema.ts:667](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L667)
+Defined in: [packages/dsl/src/schema.ts:698](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L698)
 
 Capability scaffold request
 
@@ -16,7 +16,7 @@ Capability scaffold request
 
 > **basePath**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:670](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L670)
+Defined in: [packages/dsl/src/schema.ts:701](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L701)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:670](https://github.com/falese/seans-mfe
 
 > **config**: `object`
 
-Defined in: [packages/dsl/src/schema.ts:669](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L669)
+Defined in: [packages/dsl/src/schema.ts:700](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L700)
 
 #### authorization?
 
@@ -48,19 +48,19 @@ Defined in: [packages/dsl/src/schema.ts:669](https://github.com/falese/seans-mfe
 
 ##### lifecycle.after?
 
-> `optional` **after**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **after**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.before?
 
-> `optional` **before**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **before**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.error?
 
-> `optional` **error**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **error**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.main?
 
-> `optional` **main**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **main**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 #### outputs?
 
@@ -76,4 +76,4 @@ Defined in: [packages/dsl/src/schema.ts:669](https://github.com/falese/seans-mfe
 
 > **name**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:668](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L668)
+Defined in: [packages/dsl/src/schema.ts:699](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L699)

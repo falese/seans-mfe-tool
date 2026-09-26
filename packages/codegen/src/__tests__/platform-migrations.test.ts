@@ -188,6 +188,54 @@ describe('remote-mfe-subpath', () => {
   });
 });
 
+describe('runtime-dead-exports-removed', () => {
+  const entry = byId('runtime-dead-exports-removed');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/App.tsx', text }).length;
+
+  it.each([
+    "import { GraphQLWebSocketClient } from '@seans-mfe-tool/runtime';",
+    "import { ContextFactory, ContextValidator } from '@seans-mfe/runtime';",
+    '  getCacheState,',
+    'const v = getValidationState(ctx);',
+    'if (getErrorHandlingState(ctx)?.recoverable) {',
+    'const client = new GraphQLWebSocketClient(socket);',
+  ])('catches a use of a removed export: %s', (line) => {
+    expect(hits(line)).toBe(1);
+  });
+
+  it('leaves the surviving neighbours alone', () => {
+    expect(hits("import type { DaemonWebSocketClient } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits("import { ContextFactory } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits('await cacheResult(context, { ttl: 60 });')).toBe(0);
+  });
+
+  it('does not fire on a comment that mentions a removed name', () => {
+    expect(hits('// was ContextValidator.validate before #386')).toBe(0);
+    expect(hits(' * GraphQLWebSocketClient was replaced by DaemonChannel (ADR-057)')).toBe(0);
+  });
+});
+
+describe('base-control-plane-removed', () => {
+  const entry = byId('base-control-plane-removed');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/host.ts', text }).length;
+
+  it.each([
+    "import { BaseControlPlane } from '@seans-mfe-tool/runtime';",
+    'export class NodeControlPlane extends BaseControlPlane {',
+    'if (isBaseControlPlane(cp)) {',
+    "import type { ControlPlaneConfig } from '@seans-mfe-tool/runtime';",
+  ])('catches a use of the retired abstraction: %s', (line) => {
+    expect(hits(line)).toBe(1);
+  });
+
+  it('leaves the control-plane state capability alone', () => {
+    expect(hits("import { pushControlPlaneState } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits('const r: ControlPlaneStateResult = await mfe.updateControlPlaneState(ctx);')).toBe(0);
+  });
+});
+
 describe('findMigrationHits over real generated shapes', () => {
   it('is silent on the current index.tsx template output', () => {
     const current = [

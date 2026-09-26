@@ -40,19 +40,19 @@ Defined in: [packages/codegen/src/render-model.ts:63](https://github.com/falese/
 
 ##### lifecycle.after?
 
-> `optional` **after**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **after**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.before?
 
-> `optional` **before**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **before**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.error?
 
-> `optional` **error**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **error**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 ##### lifecycle.main?
 
-> `optional` **main**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `source?`: `string`; \}\>[]
+> `optional` **main**: `Record`\<`string`, \{ `contained?`: `boolean`; `description?`: `string`; `errorHandling?`: \{ `types`: `object`[]; \}; `handler`: `string` \| `string`[]; `mandatory?`: `boolean`; `onTimeout?`: `"skip"` \| `"error"` \| `"warn"`; `source?`: `string`; `timeout?`: `number`; \}\>[]
 
 #### outputs?
 

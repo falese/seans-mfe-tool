@@ -8,7 +8,7 @@
 
 > **serializeToYAML**(`manifest`): `string`
 
-Defined in: [packages/dsl/src/parser.ts:262](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L262)
+Defined in: [packages/dsl/src/parser.ts:190](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L190)
 
 Serialize a DSL manifest to YAML
 
@@ -28,7 +28,7 @@ DSL manifest to serialize
 
 #### capabilities
 
-`Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `source?`: ... \| ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[] = `...`
+`Record`\<`string`, \{ `authorization?`: `string`; `description?`: `string`; `handler?`: `string`; `inputs?`: `object`[]; `lifecycle?`: \{ `after?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `before?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `error?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; `main?`: `Record`\<`string`, \{ `contained?`: ... \| ... \| ...; `description?`: ... \| ...; `errorHandling?`: ... \| ...; `handler`: ... \| ...; `mandatory?`: ... \| ... \| ...; `onTimeout?`: ... \| ... \| ... \| ...; `source?`: ... \| ...; `timeout?`: ... \| ...; \}\>[]; \}; `outputs?`: `object`[]; `type`: `"platform"` \| `"domain"`; \}\>[] = `...`
 
 #### category?
 

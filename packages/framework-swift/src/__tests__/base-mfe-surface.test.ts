@@ -79,6 +79,8 @@ const ABSENT: Record<string, string> = {
   // iteration step to render (ADR-098 §5).
   executeHookEntry: 'the CLI flattens hook entries into ManifestMetadata.hooks at generation time',
   // Genuinely absent.
+  invokeGuarded:
+    'hook timeout/retry (ADR-029/030) is not rendered natively; a native hook runs once, untimed',
   manifest: 'replaced by MFEIdentity + ManifestMetadata, regenerated at swift build time',
   attachControlPlane: 'no native analogue of DaemonWebSocketClient (ADR-096 Boundaries)',
   assertCapabilityImplemented:

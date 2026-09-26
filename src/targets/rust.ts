@@ -5,12 +5,7 @@
  */
 
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { hasTarget, withTarget, enableTargetInFile } from './enable';
-
-/** Whether the manifest already declares a Rust target. */
-export function hasRustTarget(manifest: Pick<DSLManifest, 'targets'>): boolean {
-  return hasTarget(manifest, 'rust');
-}
+import { withTarget, enableTargetInFile } from './enable';
 
 /** Return a manifest with the Rust target declared. */
 export function withRustTarget<T extends Pick<DSLManifest, 'targets'>>(manifest: T): T {

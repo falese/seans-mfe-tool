@@ -12,8 +12,10 @@ against one.
 | `registry/` | `simple-registry.js`, `slot-target.js` | 4000 | Stores MFE registrations, evaluates placement rules, publishes resolved components |
 | `daemon/` | `simple-daemon.js` | 3004 | Relays renderer actions to the registry and the resolved experience back |
 
-`packages/runtime/src/base-control-plane.ts` (ADR-059) owns the *abstract* shape;
-this package is the concrete implementation of it.
+This is the one control-plane implementation (ADR-078). There is no abstract base
+to extend: ADR-059's `BaseControlPlane` was retired by ADR-105 once the external
+implementations it anticipated had moved in here. A host connects to it with a
+`LayoutManager` over a `GraphQLTransportWsDaemonTransport`.
 
 ## What lives here, and what does not
 

@@ -7,7 +7,6 @@
 import {
   UserContext,
   ContextFactory,
-  ContextValidator,
 } from '../context';
 
 describe('REQ-RUNTIME-002: Shared Context', () => {
@@ -147,118 +146,6 @@ describe('REQ-RUNTIME-002: Shared Context', () => {
       
       ContextFactory.incrementRetry(context);
       expect(context.retryCount).toBe(2);
-    });
-  });
-  
-  describe('ContextValidator.validate', () => {
-    it('should pass validation for valid context', () => {
-      const context = ContextFactory.create();
-      
-      const result = ContextValidator.validate(context, {});
-      
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-    
-    it('should fail if authentication required but missing', () => {
-      const context = ContextFactory.create();
-      
-      const result = ContextValidator.validate(context, {
-        requiresAuth: true,
-      });
-      
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Context missing JWT (authentication required)');
-    });
-    
-    it('should fail if user required but missing', () => {
-      const context = ContextFactory.create({ jwt: 'token' });
-      
-      const result = ContextValidator.validate(context, {
-        requiresUser: true,
-      });
-      
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Context missing user (user context required)');
-    });
-    
-    it('should fail if required inputs missing', () => {
-      const context = ContextFactory.create({
-        inputs: { dataUrl: 'http://example.com' },
-      });
-      
-      const result = ContextValidator.validate(context, {
-        requiredInputs: ['dataUrl', 'format'],
-      });
-      
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Context missing required input: format');
-    });
-    
-    it('should pass if all requirements met', () => {
-      const user: UserContext = {
-        id: 'user123',
-        username: 'testuser',
-        roles: ['admin'],
-      };
-      
-      const context = ContextFactory.create({
-        user,
-        jwt: 'token123',
-        inputs: { dataUrl: 'http://example.com', format: 'csv' },
-      });
-      
-      const result = ContextValidator.validate(context, {
-        requiresAuth: true,
-        requiresUser: true,
-        requiredInputs: ['dataUrl', 'format'],
-      });
-      
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-  });
-  
-  describe('ContextValidator.validateUserRole', () => {
-    it('should fail if no user context', () => {
-      const context = ContextFactory.create();
-      
-      const result = ContextValidator.validateUserRole(context, ['admin']);
-      
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('No user context');
-    });
-    
-    it('should fail if user missing required role', () => {
-      const user: UserContext = {
-        id: 'user123',
-        username: 'testuser',
-        roles: ['user', 'viewer'],
-      };
-      
-      const context = ContextFactory.create({ user });
-      
-      const result = ContextValidator.validateUserRole(context, ['admin', 'superuser']);
-      
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('User missing required role');
-      expect(result.error).toContain('Required: [admin, superuser]');
-      expect(result.error).toContain('User has: [user, viewer]');
-    });
-    
-    it('should pass if user has one of required roles', () => {
-      const user: UserContext = {
-        id: 'user123',
-        username: 'testuser',
-        roles: ['user', 'admin'],
-      };
-      
-      const context = ContextFactory.create({ user });
-      
-      const result = ContextValidator.validateUserRole(context, ['admin', 'superuser']);
-      
-      expect(result.valid).toBe(true);
-      expect(result.error).toBeUndefined();
     });
   });
   

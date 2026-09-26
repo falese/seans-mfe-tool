@@ -103,6 +103,15 @@ export interface Context {
   /** Telemetry emit function (injected by the engine, not handler state) */
   emit?: (event: TelemetryEvent) => Promise<void>;
 
+  /**
+   * Cancellation for the hook currently running, set only while a hook with a
+   * declared `timeout` executes (ADR-029). Aborts when the timeout fires; pass
+   * it to `fetch` or check `aborted` in long loops. On the context rather than
+   * a second argument because platform handlers already use that position
+   * (`checkPermissions(context, requiredRoles)`).
+   */
+  signal?: AbortSignal;
+
   // === Handler-owned Extension Data ===
 
   /**
@@ -248,75 +257,5 @@ export class ContextFactory {
    */
   static incrementRetry(context: Context): void {
     context.retryCount = (context.retryCount || 0) + 1;
-  }
-}
-
-/**
- * Context validator - ensures context meets requirements
- */
-export class ContextValidator {
-  /**
-   * Validate that context has required fields for a capability
-   */
-  static validate(context: Context, requirements: {
-    requiresAuth?: boolean;
-    requiresUser?: boolean;
-    requiredInputs?: string[];
-  }): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    
-    if (!context.requestId) {
-      errors.push('Context missing requestId');
-    }
-    
-    if (!context.timestamp) {
-      errors.push('Context missing timestamp');
-    }
-    
-    if (requirements.requiresAuth && !context.jwt) {
-      errors.push('Context missing JWT (authentication required)');
-    }
-    
-    if (requirements.requiresUser && !context.user) {
-      errors.push('Context missing user (user context required)');
-    }
-    
-    if (requirements.requiredInputs) {
-      for (const input of requirements.requiredInputs) {
-        if (!context.inputs || !(input in context.inputs)) {
-          errors.push(`Context missing required input: ${input}`);
-        }
-      }
-    }
-    
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
-  }
-  
-  /**
-   * Validate that user has required role
-   */
-  static validateUserRole(
-    context: Context,
-    requiredRoles: string[]
-  ): { valid: boolean; error?: string } {
-    if (!context.user) {
-      return { valid: false, error: 'No user context' };
-    }
-    
-    const hasRole = requiredRoles.some(role => 
-      context.user!.roles.includes(role)
-    );
-    
-    if (!hasRole) {
-      return {
-        valid: false,
-        error: `User missing required role. Required: [${requiredRoles.join(', ')}], User has: [${context.user.roles.join(', ')}]`,
-      };
-    }
-    
-    return { valid: true };
   }
 }

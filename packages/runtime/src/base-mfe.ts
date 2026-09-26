@@ -19,10 +19,13 @@ import {
   SystemError,
   MFE_LIFECYCLE_TRANSITIONS,
   MFE_LIFECYCLE_INITIAL_STATE,
+  isValidLifecycleTransition,
   PLATFORM_CAPABILITY_SPECS,
 } from '@seans-mfe/contracts';
 import type { Resolution, MfeLifecycleState, PlatformCapabilitySpec } from '@seans-mfe/contracts';
 import * as platformHandlerLibrary from './handlers';
+import { withTimeout } from './timeout-wrapper';
+import { withRetry, NO_RETRY } from './retry-wrapper';
 
 // Re-export for convenience
 export type { Context, UserContext, TelemetryEvent };
@@ -150,7 +153,7 @@ export abstract class BaseMFE {
     const validTransitions = VALID_TRANSITIONS[this.state];
     const isValid = this.deps?.stateValidator
       ? this.deps.stateValidator.isValidTransition(this.state, newState)
-      : validTransitions.includes(newState);
+      : isValidLifecycleTransition(this.state, newState);
 
     if (!isValid) {
       const error = new BusinessError(
@@ -274,14 +277,14 @@ export abstract class BaseMFE {
         // Contained flag: wrap in try-catch (REQ-042)
         if (hookConfig.contained) {
           try {
-            await this.invokeHandler(handlerName, context);
+            await this.invokeGuarded(hookName, handlerName, hookConfig, context);
           } catch (error) {
             // Contained errors are logged but don't propagate
             await this.emitHookFailure(hookName, handlerName, error as Error, context, 'warn');
           }
         } else {
           // Non-contained: errors may propagate
-          await this.invokeHandler(handlerName, context);
+          await this.invokeGuarded(hookName, handlerName, hookConfig, context);
         }
       } catch (error) {
         // Handler failed
@@ -298,6 +301,53 @@ export abstract class BaseMFE {
     }
   }
   
+  /**
+   * Invoke one handler under the hook's declared timeout and retry policy.
+   *
+   * Retry wraps timeout, so every attempt gets a fresh timer and a timeout is
+   * itself a classifiable, retryable failure (ADR-029 "Retry Integration").
+   * Both are opt-in per hook: with neither `timeout` nor `errorHandling`
+   * declared this is exactly `invokeHandler` — no timer, one attempt. It runs
+   * inside executeHook's containment, so `contained`, main-phase propagation
+   * and failure telemetry apply to what finally comes out of it (ADR-002).
+   */
+  private async invokeGuarded(
+    hookName: string,
+    handlerName: string,
+    hookConfig: LifecycleHook,
+    context: Context
+  ): Promise<void> {
+    const timeoutMs = hookConfig.timeout;
+    const attempt = timeoutMs === undefined
+      ? (): Promise<void> => this.invokeHandler(handlerName, context)
+      : (): Promise<void> => withTimeout(
+          async (signal) => {
+            const previous = context.signal;
+            context.signal = signal;
+            try {
+              await this.invokeHandler(handlerName, context);
+            } finally {
+              context.signal = previous;
+            }
+          },
+          { timeoutMs, onTimeout: hookConfig.onTimeout ?? 'error', hookName },
+          context
+        );
+
+    if (!hookConfig.errorHandling) {
+      await attempt();
+      return;
+    }
+    await withRetry(
+      attempt,
+      NO_RETRY,
+      hookConfig.errorHandling,
+      context,
+      hookName,
+      (name) => (ctx) => this.invokeHandler(name, ctx)
+    );
+  }
+
   /**
    * Invoke a handler by name (platform.* or custom.*)
    * 
@@ -455,9 +505,10 @@ export abstract class BaseMFE {
    *
    * The pipeline is a data structure — each stage is a small composable
    * middleware, so the execution model can be read (and, later, extended: the
-   * retry/timeout stages of ADR-029/ADR-030 already do, and the proposed
-   * ADR-028/031/032 stages would) — adr-lint-ignore: code-cites-ratified-adr
-   * instead of being buried in procedural code:
+   * proposed ADR-028/031/032 stages would) — adr-lint-ignore: code-cites-ratified-adr
+   * instead of being buried in procedural code. Timeout and retry (ADR-029/030)
+   * are not stages here: they are per-hook policy, applied around each handler
+   * call in invokeGuarded():
    *
    *   stateGuard → stateTransition(enter) → errorBoundary(
    *     lifecycle(before) → lifecycle(main) → doX → lifecycle(after) →

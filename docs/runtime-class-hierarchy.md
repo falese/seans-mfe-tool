@@ -250,14 +250,15 @@ If rspack is replaced, or Module Federation's container API changes, only
 Layer 2/3 need to change. Generated MFEs and `BaseMFE` are unaffected. A new
 UI framework needs a new Layer 3 concrete class, not a new copy of Layer 1/2.
 
-### The other half of the platform: `BaseControlPlane`
+### The other half of the platform: the control plane
 
-`BaseControlPlane` (`packages/runtime/src/base-control-plane.ts`, ADR-059) is
-a structurally similar pattern — abstract shape, concrete `doStart`/`doStop`
-— but it's an entirely separate, **host-side** hierarchy: it's what the
-*shell* extends to bundle a daemon, registry, and layout manager into one
-unit. It is not part of the MFE-side chain above and an MFE author never
-touches it directly.
+The host side has no class hierarchy. The control plane is one concrete
+implementation, the registry and daemon services in `packages/control-plane`
+(ADR-078). A shell connects to it by constructing a `LayoutManager` over a
+`GraphQLTransportWsDaemonTransport` (see `docs/schemas/control-plane.md`).
+ADR-059's abstract `BaseControlPlane` expected several external implementations.
+Those moved into the platform instead, so ADR-105 retired the class. An MFE
+author never touches any of this.
 
 ---
 

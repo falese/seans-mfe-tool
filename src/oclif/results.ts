@@ -177,3 +177,34 @@ export interface MfeValidateResult {
     output?: string;
   };
 }
+
+/**
+ * sentinel:validate — one kernel run over one root through SMT's ports
+ * (ADR-089, #384). `hits` are HardenedCheck findings in developer-owned code;
+ * they are advice and never fail the run. An invalid artifact does.
+ */
+export interface SentinelValidateResult {
+  root: string;
+  ok: boolean;
+  artifacts: Array<{
+    /** Relative to the root. */
+    path: string;
+    valid: boolean;
+    errors: Array<{ path: string; message: string; code?: string }>;
+  }>;
+  /** How many HardenedChecks ran. */
+  checks: number;
+  /** Developer-owned source files the checks ran over. */
+  scanned: number;
+  hits: Array<{
+    /** The HardenedCheck's id. */
+    check: string;
+    /** The decision it enforces, e.g. `ADR-017`. */
+    enforces: string;
+    message: string;
+    fix: string;
+    /** `path:line`, relative to the root. */
+    location: string;
+    text: string;
+  }>;
+}

@@ -54,7 +54,7 @@ What happens, step by step, when an MFE slot errors:
 
 4. The slot is marked `data-slot-state="error"`. Host chrome that watches this attribute can show a skeleton, a "temporarily unavailable" message, or any framework-neutral replacement without needing React Suspense.
 
-5. The LayoutManager emits a `SLOT_ERROR` action up the control plane, via the `BaseControlPlane` integration point, if the slot has not yet reached the escalation cap (default: 3 attempts). The cap prevents unbounded re-resolution storms on a persistently failing MFE.
+5. The LayoutManager emits a `SLOT_ERROR` action up the control plane, over its daemon transport, if the slot has not yet reached the escalation cap (default: 3 attempts). The cap prevents unbounded re-resolution storms on a persistently failing MFE.
 
 6. The registry receives the `SLOT_ERROR` action. It may re-resolve the slot to an alternate MFE — a different game, a fallback experience, or a "try something else" prompt — and relay the new resolution back down.
 

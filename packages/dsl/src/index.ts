@@ -7,7 +7,6 @@
 
 // Schema and types
 export * from './schema';
-export * from './types';
 // Design-time slot checks (ADR-073): declared-but-unreferenced slots and
 // registry placement targets. Pure functions; the CLI supplies the IO.
 export * from './slot-validation';
@@ -32,16 +31,11 @@ export {
   parseYAML,
   parseManifestFile,
   findManifest,
-  parseManifestFromDirectory,
   parseAndValidateFile,
   parseAndValidateDirectory,
-  getCapabilityNames,
-  getDomainCapabilities,
-  hasDataLayer,
   serializeToYAML,
   writeManifest,
   createMinimalManifest,
-  addCapability,
   generateEndpoints,
   MANIFEST_FILENAMES,
   WELL_KNOWN_PATH

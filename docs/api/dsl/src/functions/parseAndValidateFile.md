@@ -8,7 +8,7 @@
 
 > **parseAndValidateFile**(`manifestPath`): `Promise`\<[`ValidationResult`](../interfaces/ValidationResult.md)\>
 
-Defined in: [packages/dsl/src/parser.ts:159](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L159)
+Defined in: [packages/dsl/src/parser.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/parser.ts#L135)
 
 Parse and validate manifest from file
 

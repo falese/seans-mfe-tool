@@ -127,30 +127,6 @@ export async function findManifest(directory: string): Promise<string | null> {
 }
 
 /**
- * Parse manifest from a directory (auto-detects filename)
- * 
- * @param directory - Directory containing the manifest
- * @returns Parsed DSL manifest and its path
- * @throws Error if no manifest found or parsing fails
- */
-export async function parseManifestFromDirectory(directory: string): Promise<{
-  manifest: DSLManifest;
-  manifestPath: string;
-}> {
-  const manifestPath = await findManifest(directory);
-  
-  if (!manifestPath) {
-    throw new SystemError(
-      `No manifest found in ${directory}. ` +
-      `Expected one of: ${MANIFEST_FILENAMES.join(', ')}`
-    );
-  }
-  
-  const manifest = await parseManifestFile(manifestPath);
-  return { manifest, manifestPath };
-}
-
-/**
  * Parse and validate manifest from file
  * 
  * @param manifestPath - Path to manifest file
@@ -204,54 +180,6 @@ export async function parseAndValidateDirectory(directory: string): Promise<Vali
 // =============================================================================
 // Utility Functions
 // =============================================================================
-
-/**
- * Extract capability names from a manifest
- * 
- * @param manifest - Parsed DSL manifest
- * @returns Array of capability names
- */
-export function getCapabilityNames(manifest: DSLManifest): string[] {
-  if (!manifest.capabilities || !Array.isArray(manifest.capabilities)) {
-    return [];
-  }
-  
-  return manifest.capabilities.flatMap(entry => Object.keys(entry));
-}
-
-/**
- * Get domain capabilities only (excludes platform capabilities)
- * 
- * @param manifest - Parsed DSL manifest
- * @returns Array of domain capability names
- */
-export function getDomainCapabilities(manifest: DSLManifest): string[] {
-  if (!manifest.capabilities || !Array.isArray(manifest.capabilities)) {
-    return [];
-  }
-  
-  const domainCapabilities: string[] = [];
-  
-  for (const entry of manifest.capabilities) {
-    for (const [name, config] of Object.entries(entry)) {
-      if (config.type === 'domain') {
-        domainCapabilities.push(name);
-      }
-    }
-  }
-  
-  return domainCapabilities;
-}
-
-/**
- * Check if manifest has data section (needs BFF)
- * 
- * @param manifest - Parsed DSL manifest
- * @returns True if data section exists with sources
- */
-export function hasDataLayer(manifest: DSLManifest): boolean {
-  return !!(manifest.data?.sources && manifest.data.sources.length > 0);
-}
 
 /**
  * Serialize a DSL manifest to YAML
@@ -341,32 +269,6 @@ export function createMinimalManifest(
     if (options.bundler) manifest.bundler = options.bundler;
   }
   return manifest;
-}
-
-/**
- * Add a capability to a manifest
- * 
- * @param manifest - Manifest to modify
- * @param name - Capability name
- * @param config - Capability configuration
- * @returns Modified manifest (new object)
- */
-export function addCapability(
-  manifest: DSLManifest,
-  name: string,
-  config: { type: 'platform' | 'domain'; description?: string }
-): DSLManifest {
-  const newCapability = {
-    [name]: {
-      type: config.type,
-      description: config.description || ''
-    }
-  };
-  
-  return {
-    ...manifest,
-    capabilities: [...manifest.capabilities, newCapability]
-  };
 }
 
 /**

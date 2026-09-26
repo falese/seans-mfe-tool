@@ -1,16 +1,4 @@
-import { handleError, getErrorHandlingState } from '../error-handling';
-
-describe('getErrorHandlingState', () => {
-  it('returns context.errorHandling typed as ErrorHandlingState', () => {
-    const context = { errorHandling: { recoverable: true, retryStrategy: 'exponential' } } as any;
-    expect(getErrorHandlingState(context)).toEqual({ recoverable: true, retryStrategy: 'exponential' });
-  });
-
-  it('returns undefined when context.errorHandling is not set', () => {
-    const context = {} as any;
-    expect(getErrorHandlingState(context)).toBeUndefined();
-  });
-});
+import { handleError } from '../error-handling';
 
 describe('platform.handleError', () => {
   it('should emit error telemetry', async () => {

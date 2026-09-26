@@ -118,7 +118,7 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', 'cove
  * time against cwd — `swift/...` rendered as `../../../swift/...`. Rules that
  * match on location therefore match a suffix, not a prefix.
  */
-async function collectSources(dir: string): Promise<SourceFile[]> {
+export async function collectSources(dir: string): Promise<SourceFile[]> {
   const roots = [path.join(dir, 'src'), path.join(dir, 'swift'), path.join(dir, 'rust')];
   const buildOutput = new Set([
     path.join(dir, 'rust', 'target'),

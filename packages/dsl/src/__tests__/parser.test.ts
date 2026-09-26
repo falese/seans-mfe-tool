@@ -8,16 +8,11 @@ import {
   parseYAML,
   parseManifestFile,
   findManifest,
-  parseManifestFromDirectory,
   parseAndValidateFile,
   parseAndValidateDirectory,
-  getCapabilityNames,
-  getDomainCapabilities,
-  hasDataLayer,
   serializeToYAML,
   writeManifest,
   createMinimalManifest,
-  addCapability,
   generateEndpoints,
   MANIFEST_FILENAMES,
   WELL_KNOWN_PATH
@@ -133,33 +128,6 @@ capabilities: []
     });
   });
 
-  describe('parseManifestFromDirectory', () => {
-    it('should parse manifest from directory', async () => {
-      const validManifest = `
-name: test-mfe
-version: 1.0.0
-type: remote
-language: typescript
-capabilities: []
-`;
-      asMock(fs.pathExists).mockImplementation(async (p: any) => {
-        return (p as string).includes('mfe-manifest.yaml');
-      });
-      asMock(fs.readFile).mockResolvedValue(validManifest as never);
-
-      const result = await parseManifestFromDirectory('/test');
-      expect(result.manifest.name).toBe('test-mfe');
-    });
-
-    it('should throw error if no manifest found', async () => {
-      asMock(fs.pathExists).mockResolvedValue(false as never);
-
-      await expect(parseManifestFromDirectory('/test')).rejects.toThrow(
-        'No manifest found in /test'
-      );
-    });
-  });
-
   describe('parseAndValidateFile', () => {
     it('should return valid result for valid manifest', async () => {
       const validManifest = `
@@ -242,129 +210,6 @@ capabilities: []
     });
   });
 
-  describe('getCapabilityNames', () => {
-    it('should extract all capability names', () => {
-      const manifest: Partial<DSLManifest> = {
-        capabilities: [
-          { UserProfile: { type: 'domain' } },
-          { Dashboard: { type: 'domain' } },
-          { load: { type: 'platform' } }
-        ]
-      };
-
-      const names = getCapabilityNames(manifest as DSLManifest);
-      expect(names).toEqual(['UserProfile', 'Dashboard', 'load']);
-    });
-
-    it('should return empty array for empty capabilities', () => {
-      const manifest: Partial<DSLManifest> = {
-        capabilities: []
-      };
-
-      const names = getCapabilityNames(manifest as DSLManifest);
-      expect(names).toEqual([]);
-    });
-
-    it('should return empty array when capabilities is undefined', () => {
-      const manifest: Partial<DSLManifest> = {};
-
-      const names = getCapabilityNames(manifest as DSLManifest);
-      expect(names).toEqual([]);
-    });
-
-    it('should return empty array when capabilities is not an array', () => {
-      const manifest = {
-        name: 'test',
-        version: '1.0.0',
-        type: 'remote',
-        language: 'typescript',
-        capabilities: 'not-an-array' as any
-      };
-
-      const names = getCapabilityNames(manifest as DSLManifest);
-      expect(names).toEqual([]);
-    });
-  });
-
-  describe('getDomainCapabilities', () => {
-    it('should filter only domain capabilities', () => {
-      const manifest: Partial<DSLManifest> = {
-        capabilities: [
-          { UserProfile: { type: 'domain' } },
-          { load: { type: 'platform' } },
-          { Dashboard: { type: 'domain' } }
-        ]
-      };
-
-      const domain = getDomainCapabilities(manifest as DSLManifest);
-      expect(domain).toHaveLength(2);
-      expect(domain).toEqual(['UserProfile', 'Dashboard']);
-    });
-
-    it('should return empty array when no domain capabilities', () => {
-      const manifest: Partial<DSLManifest> = {
-        capabilities: [
-          { load: { type: 'platform' } }
-        ]
-      };
-
-      const domain = getDomainCapabilities(manifest as DSLManifest);
-      expect(domain).toHaveLength(0);
-    });
-
-    it('should return empty array when capabilities is undefined', () => {
-      const manifest: Partial<DSLManifest> = {
-        name: 'test',
-        version: '1.0.0'
-      };
-
-      const domain = getDomainCapabilities(manifest as DSLManifest);
-      expect(domain).toHaveLength(0);
-    });
-
-    it('should return empty array when capabilities is not an array', () => {
-      const manifest = {
-        name: 'test',
-        version: '1.0.0',
-        capabilities: 'not-an-array'
-      };
-
-      const domain = getDomainCapabilities(manifest as unknown as DSLManifest);
-      expect(domain).toHaveLength(0);
-    });
-  });
-
-  describe('hasDataLayer', () => {
-    it('should return true when data section has sources', () => {
-      const manifest: Partial<DSLManifest> = {
-        data: {
-          sources: [{ name: 'api', handler: { openapi: { source: './api.yaml' } } }]
-        }
-      };
-
-      expect(hasDataLayer(manifest as DSLManifest)).toBe(true);
-    });
-
-    it('should return false when no data section', () => {
-      const manifest: Partial<DSLManifest> = {
-        name: 'test',
-        version: '1.0.0'
-      };
-
-      expect(hasDataLayer(manifest as DSLManifest)).toBe(false);
-    });
-
-    it('should return false when data section has empty sources', () => {
-      const manifest: Partial<DSLManifest> = {
-        data: {
-          sources: []
-        }
-      };
-
-      expect(hasDataLayer(manifest as DSLManifest)).toBe(false);
-    });
-  });
-
   describe('serializeToYAML', () => {
     it('should serialize manifest to YAML', () => {
       const manifest: Partial<DSLManifest> = {
@@ -443,26 +288,6 @@ capabilities: []
       expect(manifest.bundler).toBe('webpack');
       expect(manifest.dependencies?.runtime?.['@angular/core']).toBeDefined();
       expect(manifest.dependencies?.runtime?.react).toBeUndefined();
-    });
-  });
-
-  describe('addCapability', () => {
-    it('should add capability to manifest', () => {
-      const manifest = createMinimalManifest('test');
-      const updated = addCapability(manifest, 'UserProfile', {
-        type: 'domain',
-        description: 'User profile management'
-      });
-
-      expect(updated.capabilities).toHaveLength(1);
-      expect(updated.capabilities[0]).toHaveProperty('UserProfile');
-    });
-
-    it('should not modify original manifest', () => {
-      const manifest = createMinimalManifest('test');
-      addCapability(manifest, 'UserProfile', { type: 'domain' });
-
-      expect(manifest.capabilities).toHaveLength(0);
     });
   });
 

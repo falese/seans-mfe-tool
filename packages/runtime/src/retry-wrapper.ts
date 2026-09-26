@@ -19,6 +19,20 @@ export interface RetryConfig {
   fallbackHandler?: string;
 }
 
+/**
+ * Retry defaults for a hook that declares `errorHandling`: no retries. Only an
+ * `errorHandling.types` entry with `maxRetries` turns retrying on, for that
+ * error type (ADR-030) — so an entry that exists just to classify by pattern
+ * never makes a hook retry by accident.
+ */
+export const NO_RETRY: RetryConfig = {
+  maxRetries: 0,
+  backoff: 'exponential',
+  baseDelay: 1000,
+  maxDelay: 10000,
+  jitter: false,
+};
+
 /** Retry state this wrapper carries on the context (REQ-LIFECYCLE-005). */
 export interface RetryState {
   attempt: number;
@@ -37,6 +51,38 @@ export interface FallbackState {
 
 /** Handler registry carried on the context for onRetry/fallback handlers. */
 export type ContextHandlerRegistry = Record<string, (context: Context) => Promise<unknown>>;
+
+/**
+ * Resolves an onRetry / fallback handler name to something callable. BaseMFE
+ * passes its own `invokeHandler`, so those names resolve exactly like any hook
+ * handler (platform.*, deps.customHandlers, a method on the class).
+ */
+export type HandlerResolver = (name: string) => ((context: Context) => Promise<unknown>) | undefined;
+
+/**
+ * The retry policy for one classified failure: the matching `errorHandling`
+ * entry's fields over the caller's defaults (ADR-030 puts `maxRetries`,
+ * `backoff` etc. per error type). An entry carrying `maxRetries` wins over a
+ * pattern-only entry of the same type.
+ */
+function policyFor(
+  classification: ErrorClassification,
+  defaults: RetryConfig,
+  errorConfig: ErrorHandlingConfig,
+): RetryConfig {
+  const entries = errorConfig.types.filter((t) => t.type === classification.type);
+  const entry = entries.find((t) => t.maxRetries !== undefined) ?? entries[0];
+  if (!entry) return defaults;
+  return {
+    maxRetries: entry.maxRetries ?? defaults.maxRetries,
+    backoff: entry.backoff ?? defaults.backoff,
+    baseDelay: entry.baseDelay ?? defaults.baseDelay,
+    maxDelay: entry.maxDelay ?? defaults.maxDelay,
+    jitter: entry.jitter ?? defaults.jitter,
+    onRetry: entry.onRetry ?? defaults.onRetry,
+    fallbackHandler: entry.fallbackHandler ?? defaults.fallbackHandler,
+  };
+}
 
 /** Typed accessor for the retry state this wrapper owns on a context. */
 export function getRetryState(context: Context): RetryState | undefined {
@@ -61,6 +107,7 @@ export function getContextHandlers(context: Context): ContextHandlerRegistry | u
  * @param errorConfig - Error classification config
  * @param context - Lifecycle context
  * @param hookName - Name of the hook for telemetry
+ * @param resolveHandler - Resolves onRetry/fallback names; defaults to `context.handlers`
  * @returns Result of fn() or fallback handler
  * @throws Error if all retries exhausted and no fallback
  */
@@ -69,26 +116,31 @@ export async function withRetry<T>(
   config: RetryConfig,
   errorConfig: ErrorHandlingConfig,
   context: Context,
-  hookName: string
+  hookName: string,
+  resolveHandler: HandlerResolver = (name) => getContextHandlers(context)?.[name]
 ): Promise<T> {
   // Read on the first retry's telemetry before any assignment, so it must be
   // declared as possibly-absent rather than asserted with `!` at the throw.
   let lastError: Error | undefined;
   const previousErrors: Array<{ message: string; timestamp: string }> = [];
 
-  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+  // The policy in force is the one for the most recent failure's type, so the
+  // bound is re-read each pass rather than fixed before the first attempt.
+  let policy = config;
+
+  for (let attempt = 0; attempt <= policy.maxRetries; attempt++) {
     try {
       // Mark retry state in context
       const retryState: RetryState = {
         attempt,
-        maxRetries: config.maxRetries,
+        maxRetries: policy.maxRetries,
         isRetry: attempt > 0,
         previousErrors
       };
       context.retry = retryState;
 
       // Call onRetry hook if configured (before retry attempt)
-      const onRetryHandler = config.onRetry ? getContextHandlers(context)?.[config.onRetry] : undefined;
+      const onRetryHandler = policy.onRetry ? resolveHandler(policy.onRetry) : undefined;
       if (attempt > 0 && onRetryHandler) {
         await onRetryHandler(context);
       }
@@ -126,6 +178,7 @@ export async function withRetry<T>(
 
       // Classify error
       const classification = classifyError(error as Error, errorConfig);
+      policy = policyFor(classification, config, errorConfig);
 
       // Emit classification telemetry
       if (context.emit) {
@@ -138,7 +191,7 @@ export async function withRetry<T>(
             errorType: classification.type,
             retryable: classification.retryable,
             attempt,
-            maxRetries: config.maxRetries,
+            maxRetries: policy.maxRetries,
             handler: hookName,
             severity: 'error'
           },
@@ -147,15 +200,16 @@ export async function withRetry<T>(
       }
 
       // Check if retryable
-      if (!classification.retryable || attempt === config.maxRetries) {
+      if (!classification.retryable || attempt >= policy.maxRetries) {
         // Attempt fallback handler if configured
-        if (attempt === config.maxRetries && config.fallbackHandler) {
+        if (attempt >= policy.maxRetries && policy.fallbackHandler) {
           return await invokeFallbackHandler(
-            config.fallbackHandler,
+            policy.fallbackHandler,
             context,
             lastError,
-            config.maxRetries,
-            classification
+            policy.maxRetries,
+            classification,
+            resolveHandler
           );
         }
         
@@ -164,7 +218,7 @@ export async function withRetry<T>(
       }
 
       // Calculate backoff delay
-      const delay = calculateBackoff(config, attempt);
+      const delay = calculateBackoff(policy, attempt);
 
       // Emit backoff telemetry
       if (context.emit) {
@@ -176,7 +230,7 @@ export async function withRetry<T>(
           metadata: {
             attempt,
             delay,
-            backoff: config.backoff,
+            backoff: policy.backoff,
             handler: hookName,
             severity: 'info'
           },
@@ -231,7 +285,8 @@ async function invokeFallbackHandler<T>(
   context: Context,
   originalError: Error,
   retriesExhausted: number,
-  classification: ErrorClassification
+  classification: ErrorClassification,
+  resolveHandler: HandlerResolver
 ): Promise<T> {
   // Mark fallback mode in context
   const fallbackState: FallbackState = {
@@ -260,7 +315,7 @@ async function invokeFallbackHandler<T>(
   }
 
   // Invoke fallback handler
-  const handler = getContextHandlers(context)?.[fallbackHandlerName];
+  const handler = resolveHandler(fallbackHandlerName);
   if (!handler) {
     throw new BusinessError(
       `Fallback handler '${fallbackHandlerName}' not found`,

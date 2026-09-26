@@ -165,14 +165,13 @@ The same abstraction holds at every level of the platform.
 | MFE runtime | `BaseMFE` | `RemoteMFE`, `AngularRemoteMFE` |
 | CLI commands | `BaseCommand` | every oclif command |
 | Framework plugins | `BaseFrameworkPlugin` | `ReactRspackPlugin`, `AngularWebpackPlugin` |
-| **Control plane** <span class="pill">new</span> | **`BaseControlPlane`** | **`NodeControlPlane`, `RustControlPlane`** |
 
 <br/>
 
 <div class="highlight">
 
 **Abstract base owns the shape. Concrete owns the how.**
-Swap any implementation — Node daemon ↔ Rust daemon ↔ mock — without touching the host.
+The control plane has no abstract base: it has one implementation, `packages/control-plane` (ADR-078, ADR-105).
 
 </div>
 
@@ -180,17 +179,17 @@ Swap any implementation — Node daemon ↔ Rust daemon ↔ mock — without tou
 
 # The control plane in three lines
 
-`BaseControlPlane` bundles daemon + registry + LayoutManager into one lifecycle unit.
+The registry and daemon run as `packages/control-plane` services. The host connects with a `LayoutManager`.
 
 ```typescript
-const cp = new NodeControlPlane({
-  container:    document.getElementById('app'),
-  session:      { sessionId, user, jwt },
-  daemonUrl:    'ws://localhost:3001/graphql',
+const layout = new LayoutManager({
+  container: document.getElementById('app')!,
+  session:   { sessionId, user, jwt },
+  transport: new GraphQLTransportWsDaemonTransport(daemonUrl, (u, p) => new WebSocket(u, p)),
 });
 
-await cp.start();   // daemon → registry → LayoutManager, wired in order
-await cp.stop();    // LayoutManager → registry → daemon, reversed
+layout.start();        // connect; slots fill as the daemon publishes
+await layout.stop();   // unmount every slot, close the socket
 ```
 
 <div class="columns">
@@ -299,7 +298,7 @@ Want Vite support? Publish `@seans-mfe/framework-vue-vite`. Done.
 | Daemon wire protocol | `messages.ts` | daemon ↔ LayoutManager ↔ MFEs |
 | Presentation handle | `presentation.ts` | MFEs, host-side providers |
 | Framework plugin API | `framework-plugin.ts` | CLI commands, plugin authors |
-| Control plane API | `base-control-plane.ts` | host shells, concrete CP impls |
+| Control plane host API | `layout-manager.ts` | host shells (ADR-105) |
 
 <br/>
 
@@ -359,15 +358,13 @@ Federation is the delivery mechanism. **Domain capability is the product.**
 
 ```
 Host Shell
-└── BaseControlPlane.start() / stop()
-    │
-    ├── LayoutManager          ← daemon-driven slot composition
-    │   ├── slots              ← one DOM section per experience
-    │   ├── adaptors           ← module-federation · html · json · custom
-    │   └── DaemonChannel      ← per-slot virtual WebSocket (ADR-057)
-    │
-    └── Daemon + Registry      ← action → resolution → experience
-        └── DaemonTransport    ← WebSocket / GraphQL subscription
+└── LayoutManager.start() / stop()   ← daemon-driven slot composition
+    ├── slots              ← one DOM section per experience
+    ├── adaptors           ← module-federation · html · json · custom
+    ├── DaemonChannel      ← per-slot virtual WebSocket (ADR-057)
+    └── DaemonTransport    ← the one WebSocket / GraphQL subscription
+        │
+        └── Daemon + Registry   ← packages/control-plane: action → resolution → experience
 
 MFE (any framework)
 └── BaseMFE.load() → render() → health()

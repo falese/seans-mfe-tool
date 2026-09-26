@@ -28,7 +28,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import type { DSLManifest } from '@seans-mfe/dsl';
-import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError } from '@seans-mfe/contracts';
+import { PLATFORM_CAPABILITIES, PLATFORM_CAPABILITY_SPECS, ValidationError, isPlatformCapability } from '@seans-mfe/contracts';
 // Constant data moved to ./catalog (ADR-050 DEPENDENCY_VERSIONS, ADR-027 Mesh
 // tables, #341 optional assets). Re-exported here so the module's public
 // surface — and `export * from './unified-generator'` in the barrel — is
@@ -37,8 +37,6 @@ export {
   DEPENDENCY_VERSIONS,
   DEFAULT_MESH_PLUGINS,
   DEFAULT_MESH_TRANSFORMS,
-  KNOWN_MESH_PLUGINS,
-  KNOWN_MESH_TRANSFORMS,
 } from './catalog';
 // Extracted to focused modules; re-exported so this module's public surface,
 // and the barrel's `export * from './unified-generator'`, are unchanged.
@@ -130,11 +128,6 @@ export function resolveFrameworkName(manifest: DSLManifest): string {
   return resolveWebTarget(manifest).framework;
 }
 
-/** The bundler a manifest asks for, by the same rule. */
-export function resolveBundlerName(manifest: DSLManifest): string {
-  return resolveWebTarget(manifest).bundler;
-}
-
 /**
  * Built-in variant fallback: reproduces exactly what loadFrameworkPlugin()
  * returns for the two shipped plugins (react-rspack, angular-webpack), using
@@ -161,9 +154,6 @@ export interface GeneratedFile {
 
 /** Lifecycle phases, in the order the generated code runs them. */
 const LIFECYCLE_PHASES = ['before', 'main', 'after', 'error'] as const;
-
-/** Widened once: `PLATFORM_CAPABILITIES` is a readonly tuple of literals. */
-const PLATFORM_CAPABILITY_NAMES: readonly string[] = PLATFORM_CAPABILITIES;
 
 /** The `lifecycle` block of one capability config, as the walk below reads it. */
 type CapabilityLifecycle = NonNullable<
@@ -271,7 +261,7 @@ function collectLifecycleHooks(
       for (const [hookName, hookConfig] of Object.entries(hookEntry)) {
         // A hook may not shadow a platform capability, and the first
         // declaration of a name wins across the whole manifest.
-        if (PLATFORM_CAPABILITY_NAMES.includes(hookName)) continue;
+        if (isPlatformCapability(hookName)) continue;
         if (seen.has(hookName)) continue;
         seen.add(hookName);
 

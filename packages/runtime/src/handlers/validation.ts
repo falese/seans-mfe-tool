@@ -1,17 +1,5 @@
 import type { Context } from '../context';
 import { ValidationError } from '@seans-mfe/contracts';
-import type { ValidationIssue } from '../context';
-
-/** Validation results these handlers own on the context. */
-export interface ValidationState {
-  passed?: boolean;
-  errors?: ValidationIssue[];
-}
-
-/** Typed accessor for the validation state these handlers own on a context. */
-export function getValidationState(context: Context): ValidationState | undefined {
-  return context.validation as ValidationState | undefined;
-}
 
 export async function validateInputs(context: Context): Promise<void> {
   // Example: validate required fields

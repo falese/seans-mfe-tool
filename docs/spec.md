@@ -286,7 +286,6 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-056](./architecture-decisions/ADR-056-mfe-presentation-boundary.md) | MFE Presentation Boundary and Host-Side Composition Providers (Polyglot VM Model) | Runtime / boundary / providers / polyglot | Implemented → ADR-060 |
 | [ADR-057](./architecture-decisions/ADR-057-virtualized-daemon-socket.md) | Virtualized daemon socket: per-slot control-plane channels over one host connection | Runtime / control-plane / channels | Implemented |
 | [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented → ADR-068 |
-| [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Implemented |
 | [ADR-060](./architecture-decisions/ADR-060-contextualized-vm-composition.md) | Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution | Runtime / composition / resilience / context | Implemented |
 | [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
 | [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Implemented |
@@ -331,6 +330,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-102](./architecture-decisions/ADR-102-every-target-implements-the-base-class.md) | Every build target implements all ten capabilities against the runtime's result contract — the Swift lane is brought level, and a conformance suite holds every lane to it | Targets / platform contract / conformance | Implemented |
 | [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
 | [ADR-104](./architecture-decisions/ADR-104-published-html-api-reference.md) | The docs site publishes an HTML API reference under /api/, built at publish time from the same TypeDoc config as the committed Markdown, which stays the version reviewed in pull requests | Docs / tooling / publishing | Implemented |
+| [ADR-105](./architecture-decisions/ADR-105-retire-base-control-plane.md) | Retire BaseControlPlane — the control plane has one implementation, so a host connects with a LayoutManager instead of subclassing an abstract base | Runtime / control-plane / abstract-base | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -364,6 +364,7 @@ _Retired by a later decision. Kept so the reasoning stays traceable._
 |-----|-------|------|--------|
 | [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Superseded → ADR-076 |
 | [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded → ADR-081 |
+| [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Superseded → ADR-105 |
 
 <!-- END GENERATED: adr-index -->
 

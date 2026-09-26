@@ -146,21 +146,6 @@ describe('literal content', () => {
   });
 });
 
-describe('the ownership table', () => {
-  it('is derivable from the plan without rendering anything', async () => {
-    // Three subsystems need the ownership split (drift gate, mfe:validate's
-    // developerOwned predicate, the dry-run planner) and each used to infer it
-    // separately. The plan is the one place it is stated.
-    const { ownershipOf } = await import('../file-plan');
-    const plan: FileSpec[] = [
-      { template: 'a.ejs', out: 'src/a.ts', owner: 'generator' },
-      { template: 'b.ejs', out: 'src/App.tsx', owner: 'developer' },
-    ];
-
-    expect(ownershipOf(plan)).toEqual({ 'src/a.ts': 'generator', 'src/App.tsx': 'developer' });
-  });
-});
-
 describe('mergeTemplateRoots', () => {
   // The root table is `{ variant: templateDir, ...contributorRoots }`, keyed by
   // contributor id — and `FileContributor.id` is an open string while `variant`
