@@ -317,7 +317,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "1ac47e8e9a2126d5c6317bef39373732f42504050f30488513ded05af79ca3fc"
+        "sha256": "fe8b07fcbd051df86c882a4dd55ac82483dc6c0588540633372cb3771a6065d3"
       },
       {
         "path": "<cwd>/package.json",
@@ -938,7 +938,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "77e826bd22cf07a04f492d54ebb9b7dd1ea0cc1bdb6facaa5a4dff20711eb26c"
+        "sha256": "fa17492078c31e5accd43334584844cae8b316527717efc3e7ef7c1ebecbff0d"
       },
       {
         "path": "<cwd>/jest.config.js",
@@ -1472,7 +1472,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "aa6e967f3a75393300a2670b3977d5ebce7e1f7c8c2fb7f6d7b9cd4ba1b2f2a3"
+        "sha256": "9569dee0822d289322818288327e7da7981b6e08b2700f5d56e870ddc8c7705f"
       },
       {
         "path": "<cwd>/jest.config.js",
@@ -1628,7 +1628,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "61026c3862230d71aab140124254c2cc277d5be6ddf12e7d718f8a74c73c11aa"
+        "sha256": "9f5d39740e5c110c914807bcbca52956ecff48e11173bacc303640a6774ea000"
       },
       {
         "path": "<cwd>/package.json",
@@ -1866,7 +1866,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "110d50478251a62852fea73f194ea10e179e832c2196d4c8b36ea189eb59dbc3"
+        "sha256": "9ec51f204527b47adc8098d778053192eacf144569910a6a50569acf16ec7fc8"
       },
       {
         "path": "<cwd>/package.json",
@@ -2264,7 +2264,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "b8c8024c5275cc9af0284605455ee2bbda09bd1f8b7c4038e2557052e5da09ab"
+        "sha256": "e41cc1b174921fccfabde2f6834d5fc872c5c3c919b060f667a6d37bb47dc241"
       },
       {
         "path": "<cwd>/jest.config.js",
@@ -2421,7 +2421,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "00080c1110180c8b4055cec7238cf03b3c62bb0d0a5330c80209b04179139f84"
+        "sha256": "73a792185a34ef160c47ce86be085ea3e966145cdc67835e112f11926fb101f1"
       },
       {
         "path": "<cwd>/package.json",
@@ -2569,7 +2569,7 @@
       {
         "path": "<cwd>/Dockerfile",
         "overwrite": false,
-        "sha256": "6d775a01d099dc549cba18c0b1abda7c3216ca416e8fe79dbc9138f4052292a8"
+        "sha256": "9c2c7705e8b05e25491a9d4b80c333af9e6a700788c4d7749d8ad5288035dd63"
       },
       {
         "path": "<cwd>/jest.config.js",

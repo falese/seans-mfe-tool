@@ -51,6 +51,12 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 # `npm pkg delete` (package.json only) could not be kept. With no lockfile,
 # the uninstall resolves one from the registry — what `npm install` did — so
 # an MFE without one still builds.
+#
+# `npm ci` installs exactly what the lockfile records, platform binaries
+# included. A lockfile regenerated on macOS over an existing node_modules can
+# list only darwin builds of rspack/esbuild (npm/cli#4828), and this Linux
+# build then has none. Regenerate it with
+# `rm -rf node_modules package-lock.json && npm install`.
 COPY package*.json ./
 # The npm download cache lives in a shared BuildKit cache mount rather than in
 # this layer (#347). Without it every MFE's builder stage carries its own full
