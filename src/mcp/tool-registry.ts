@@ -21,6 +21,13 @@ export interface McpToolDefinition {
   name:        string;
   description: string;
   inputSchema: object;
+  /**
+   * The CLI command this tool runs. Set by sources that know it (the local
+   * schemas carry it as `title`); without it, `buildArgv` falls back to
+   * stripping the source prefix from `name` — which is how a command already
+   * in the `mfe:` topic used to become the tool `mfe:mfe:validate` (#331).
+   */
+  command?:    string;
 }
 
 export interface RegistryOptions {
@@ -87,17 +94,17 @@ export async function loadToolRegistry(
  * Examples:
  *   mfe:deploy  → ["deploy", "--json"]
  *   mfe:bff:init → ["bff:init", "--json"]
- *   daemon:start → ["daemon:start", "--json"]
+ *   mfe:validate (command "mfe:validate") → ["mfe:validate", "--json"]
  */
 export function buildArgv(
   toolName: string,
   input: Record<string, unknown>,
   positional?: string[],
+  command?: string,
 ): string[] {
-  // Strip the source prefix (mfe:, daemon:, coder:, etc.)
-  const parts = toolName.split(':');
-  const commandParts = parts.slice(1); // drop source prefix
-  const commandId = commandParts.join(':');
+  // The tool's declared command wins. Otherwise strip the source prefix
+  // (mfe:, daemon:, coder:, etc.).
+  const commandId = command ?? toolName.split(':').slice(1).join(':');
   const argv: string[] = [commandId];
 
   // Which inputs the command takes positionally comes from its own arg
