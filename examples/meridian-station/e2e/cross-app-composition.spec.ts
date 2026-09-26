@@ -80,7 +80,12 @@ test.describe('Cross-application composition (#345)', () => {
     // Children, not just a ready flag: an empty slot is the white screen.
     expect(await main.locator('*').count()).toBeGreaterThan(0);
     await expect(main.locator('.mfe-error-boundary[role="alert"]')).toHaveCount(0);
-    await expect(page.locator('[data-slot-state="error"]')).toHaveCount(0);
+    // The slots this composition owns. The console also fires
+    // meridian.berth.b1..b6 on mount, which resolve to docking-control — not
+    // in this minimal stack — so those six berth slots end in `error` by
+    // design and are not what this test is about.
+    await expect(slot(page, 'root')).toHaveAttribute('data-slot-state', 'ready');
+    await expect(main).toHaveAttribute('data-slot-state', 'ready');
     // It is abc-kids' own deployment: the container the LayoutManager loaded
     // is flappy's, from flappy's origin, not anything meridian built.
     const loaded = await page.evaluate(() => typeof (window as unknown as Record<string, unknown>)['abc_kids_flappy']);
@@ -88,6 +93,11 @@ test.describe('Cross-application composition (#345)', () => {
   });
 
   test('a remote component that throws shows the fallback, not an empty host (#247)', async ({ page, request }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (e) => pageErrors.push(`pageerror: ${e.message}`));
+    page.on('console', (m) => {
+      if (m.type() === 'error') pageErrors.push(`console.error: ${m.text().slice(0, 300)}`);
+    });
     await goOffShift(page, request);
 
     // Through the foreign remote's own federation container: its bundle, its
@@ -114,6 +124,17 @@ test.describe('Cross-application composition (#345)', () => {
     });
 
     expect(outcome).toEqual({ ok: true });
-    await expect(page.locator('#composition-probe .mfe-error-boundary[role="alert"]')).toBeVisible();
+    const fallback = page.locator('#composition-probe .mfe-error-boundary[role="alert"]');
+    try {
+      await expect(fallback).toBeVisible();
+    } catch (error) {
+      // Say what the probe rendered and what the page reported, so a failure
+      // here names its cause instead of only "element not found".
+      const rendered = await page.locator('#composition-probe').innerHTML();
+      throw new Error(
+        `No fallback rendered.\nprobe innerHTML: ${JSON.stringify(rendered.slice(0, 500))}\n` +
+          `page errors:\n  ${pageErrors.join('\n  ') || '(none)'}\n${(error as Error).message}`
+      );
+    }
   });
 });
