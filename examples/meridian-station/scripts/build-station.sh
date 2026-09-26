@@ -18,6 +18,7 @@ SERVICES=(
   meridian-console
   meridian-docking-control meridian-docking-simulation meridian-life-support meridian-cargo-ops
   meridian-crew-services meridian-concourse
+  abc-kids-flappy
   shell
 )
 

@@ -71,7 +71,8 @@ jobs:
       # node_modules (React/Angular, @testing-library, the MFE's shared deps),
       # none of which the root install provides. Running them here would mean an
       # `npm ci` per MFE. What they would catch at composition time is covered by
-      # the Composition workflow, which builds and drives the abc-kids fleet.
+      # the Composition workflow, which composes abc-kids' flappy into Meridian
+      # Station and drives it in Chromium.
       - name: Run all tests with coverage
         run: |
           set +e

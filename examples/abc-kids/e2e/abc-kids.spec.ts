@@ -155,8 +155,9 @@ test.describe('Multiplication Quiz MFE', () => {
 // `.mfe-error-boundary[role="alert"]` is what the runtime's ErrorBoundary
 // renders (packages/runtime/src/error-boundary.ts). These assertions used
 // `.mfe-error-boundary[role="alert"]`, which nothing emits, so they could not
-// fail. composition.spec.ts proves the selector does appear when a render
-// throws, which is what makes its absence here mean something (#345).
+// fail. The composition job's cross-app-composition.spec.ts (meridian-station)
+// proves the selector does appear when a render throws (#345). This suite
+// itself targets the pre-ADR-055 shell UI: see #402.
 
 test.describe('Error boundary', () => {
   test('no error fallback visible on normal load', async ({ page }) => {
