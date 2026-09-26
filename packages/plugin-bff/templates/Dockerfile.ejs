@@ -43,9 +43,15 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 # module resolution would escape the project (real path /seans-mfe-tool),
 # and framework imports inside the runtime — @angular/platform-browser,
 # react — would fail to resolve during ng build / rspack.
-COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+#
+# The install is `npm ci` from the committed lockfile, so two builds of one
+# commit get one dependency tree (#346). The runtime is staged, not
+# installed, so it comes out first — from package.json AND the lockfile:
+# `npm ci` rejects a lockfile that disagrees with package.json, which is why
+# `npm pkg delete` (package.json only) could not be kept. With no lockfile,
+# the uninstall resolves one from the registry — what `npm install` did — so
+# an MFE without one still builds.
+COPY package*.json ./
 # The npm download cache lives in a shared BuildKit cache mount rather than in
 # this layer (#347). Without it every MFE's builder stage carries its own full
 # copy — ~850 packages each across a 13-service fleet — and a sequential fleet
@@ -56,7 +62,8 @@ RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true &
 # `docker builder prune` only as far as the cache is kept, and is never part of
 # the produced image.
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    npm install --legacy-peer-deps --no-audit --no-fund
+    npm uninstall @seans-mfe-tool/runtime --package-lock-only --legacy-peer-deps --no-audit --no-fund && \
+    npm ci --legacy-peer-deps --no-audit --no-fund
 RUN mkdir -p node_modules/@seans-mfe-tool && \
     cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 

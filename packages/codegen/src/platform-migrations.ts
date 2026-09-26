@@ -136,6 +136,19 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     pattern: /\b(?:BaseControlPlane|isBaseControlPlane|ControlPlaneConfig|ControlPlaneStatus|ControlPlaneHealth)\b/,
     exempt: /^\s*(?:\/\/|\*|\/\*)/,
   },
+  {
+    id: 'dockerfile-installs-from-lockfile',
+    since: '1.0.0',
+    // Advice: an old Dockerfile still builds, it just is not reproducible.
+    adr: 'ADR-082',
+    message:
+      'The Dockerfile copies package.json without the lockfile and runs `npm install`, so the image resolves dependencies from the registry as it is today instead of from the committed package-lock.json — two builds of one commit can differ (#346)',
+    fix: "Replace `COPY package.json ./` with `COPY package*.json ./`, drop the `npm pkg delete ...@seans-mfe-tool/runtime` step before the install, and install with `npm uninstall @seans-mfe-tool/runtime --package-lock-only <flags> && npm ci <flags>` (keep your existing flags, e.g. --legacy-peer-deps). The uninstall removes the staged runtime from package.json and the lockfile together, which `npm ci` requires. Regenerating a new MFE shows the full block.",
+    // Anchored on the manifest-only copy. The production stage's
+    // `COPY --from=builder /app/package.json ./` starts differently, and is
+    // followed by no install.
+    pattern: /^\s*COPY\s+package\.json\s+\.\/\s*$/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

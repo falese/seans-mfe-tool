@@ -144,6 +144,14 @@ export async function collectSources(dir: string): Promise<SourceFile[]> {
   for (const root of roots) {
     if (await fs.pathExists(root)) await walk(root);
   }
+
+  // The Dockerfile is developer-owned (seeded once, never re-stamped), so a
+  // change to the template reaches it only through a migration entry — and
+  // an entry can only fire on a file that is scanned (#346).
+  const dockerfile = path.join(dir, 'Dockerfile');
+  if (await fs.pathExists(dockerfile)) {
+    sources.push({ path: dockerfile, text: await fs.readFile(dockerfile, 'utf8') });
+  }
   return sources;
 }
 
