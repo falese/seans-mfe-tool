@@ -16,7 +16,7 @@ impl:
 implements-pdr: [9]
 implemented-by: []
 verified-by: []
-tracked-by: ["#139"]
+tracked-by: ["#139", "#369"]
 summary: >-
   The source side of the continuous-generation loop needs no new gate: a generated
   manifest is integrated the moment it passes the drift, compose and slots checks
