@@ -15,6 +15,7 @@ implemented-by:
   - packages/contracts/src/envelope.ts
 verified-by:
   - docs/cli-contract.md
+tracked-by: ["#331"]
 summary: >-
   Under --json, every command emits exactly one CommandResult<T> JSON object to stdout; all
   other output (progress, warnings, interactive prompts) goes to stderr.

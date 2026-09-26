@@ -16,6 +16,7 @@ implemented-by:
   - packages/codegen/src/unified-generator.ts
   - packages/codegen/src/render-model.ts
 verified-by: []
+tracked-by: ["#350"]
 summary: >-
   Extend LifecycleHookSchema with an optional `source` field so a manifest hook can declare
   where its handler implementation lives; codegen emits a static `handler-registry.ts` that

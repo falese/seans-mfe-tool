@@ -12,6 +12,7 @@ supersedes: []
 superseded-by: []
 implemented-by: []
 verified-by: []
+tracked-by: ["#63"]
 summary: >-
   Implement opt-in parallel handler execution with isolated read-only context copies per
   handler, namespaced outputs, and three failure strategies (fail-fast, complete-all,
