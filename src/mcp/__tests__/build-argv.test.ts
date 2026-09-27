@@ -72,3 +72,15 @@ describe('buildArgv positional handling', () => {
     expect(argv).not.toContain('--quiet');
   });
 });
+
+describe('buildArgv command resolution (#331)', () => {
+  it('runs the command the tool declares, not one parsed out of its name', () => {
+    // `mfe:validate` minus its source prefix is `validate`, which does not
+    // exist. The tool says which command it runs; that wins.
+    expect(buildArgv('mfe:validate', {}, [], 'mfe:validate')).toEqual(['mfe:validate', '--json']);
+  });
+
+  it('falls back to stripping the source prefix for tools that declare no command', () => {
+    expect(buildArgv('mfe:bff:init', {}, [])[0]).toBe('bff:init');
+  });
+});

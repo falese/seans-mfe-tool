@@ -46,6 +46,21 @@ describe('loadLocalTools', () => {
     expect(tools.map((t) => t.name)).toEqual(['mfe:remote:init']);
   });
 
+  it('carries the command id the tool runs', async () => {
+    await writeSchema('remote-init.json', COMMAND_SCHEMA);
+    const [tool] = await loadLocalTools(schemasDir);
+    expect(tool.command).toBe('remote:init');
+  });
+
+  it('does not stutter a command already in the mfe: topic (#331)', async () => {
+    // schemas/mfe-validate.json used to become `mfe:mfe:validate` — the only
+    // tool whose name did not match its command id.
+    await writeSchema('mfe-validate.json', { ...COMMAND_SCHEMA, title: 'mfe:validate' });
+    const [tool] = await loadLocalTools(schemasDir);
+    expect(tool.name).toBe('mfe:validate');
+    expect(tool.command).toBe('mfe:validate');
+  });
+
   it('registers a nested command schema one level deep', async () => {
     await writeSchema('remote/generate.json', COMMAND_SCHEMA);
     const tools = await loadLocalTools(schemasDir);

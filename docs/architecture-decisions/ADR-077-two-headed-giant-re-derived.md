@@ -31,7 +31,7 @@ verified-by:
   - src/oclif/__tests__/type-to-schema.test.ts
   - src/oclif/__tests__/output-schema-conformance.test.ts
   - packages/contracts/src/__tests__/build-output-parser.test.ts
-tracked-by: ["#139"]
+tracked-by: ["#139", "#330"]
 summary: >-
   ADR-033's framing stands; its implementation table does not. The ownership half is withdrawn
   because `overwrite` plus regenerate-and-diff gates already solve it, the shell half moves to

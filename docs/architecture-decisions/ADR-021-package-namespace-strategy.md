@@ -14,6 +14,7 @@ implements-pdr: [2, 4]
 implemented-by:
   - CLAUDE.md
 verified-by: []
+tracked-by: ["#362"]
 summary: >-
   Shared platform packages use the @seans-mfe/* namespace (contracts, oclif-base, runtime,
   framework-*); third-party and personal plugins use the @falese/* namespace.

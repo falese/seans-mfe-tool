@@ -16,7 +16,7 @@ implemented-by:
   - packages/runtime/src/error-boundary.ts
 verified-by:
   - packages/runtime/src/__tests__/error-boundary.test.ts
-tracked-by: []
+tracked-by: ["#345", "#360"]
 summary: >-
   Generated MFE containers run as non-root on unprivileged nginx (port 8080), ship a hardened
   federation-aware nginx server block (security headers, gzip, /health, content-hash-friendly

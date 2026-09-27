@@ -13,7 +13,7 @@ superseded-by: []
 implements-pdr: [4, 9]
 implemented-by: [packages/plugin-coder/src/index.ts, packages/plugin-coder/src/oracle.ts, packages/plugin-coder/src/commands/coder/compile.ts]
 verified-by: []
-tracked-by: ["#364", "#365"]
+tracked-by: ["#364"]
 summary: >-
   The coder-facing surface — the `coder:*` commands, the intent-compilation contract, and the
   DSL eval oracle — becomes a first-party in-repo workspace package, `@seans-mfe/coder-plugin`
