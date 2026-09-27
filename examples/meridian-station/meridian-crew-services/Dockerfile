@@ -38,11 +38,12 @@ RUN chmod +x /seans-mfe-tool/bin/run.js && \
 # module resolution would escape the project (real path /seans-mfe-tool),
 # and framework imports inside the runtime — @angular/platform-browser,
 # react — would fail to resolve during ng build / rspack.
-COPY package.json ./
-RUN npm pkg delete dependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true && \
-    npm pkg delete devDependencies['@seans-mfe-tool/runtime'] 2>/dev/null || true
+COPY package*.json ./
+# npm ci from the committed lockfile (#346). The staged runtime comes out of
+# package.json AND the lockfile first; npm ci rejects the two disagreeing.
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    npm install --legacy-peer-deps --no-audit --no-fund
+    npm uninstall @seans-mfe-tool/runtime --package-lock-only --legacy-peer-deps --no-audit --no-fund && \
+    npm ci --legacy-peer-deps --no-audit --no-fund
 RUN mkdir -p node_modules/@seans-mfe-tool && \
     cp -r /seans-mfe-tool/dist/runtime node_modules/@seans-mfe-tool/runtime
 
