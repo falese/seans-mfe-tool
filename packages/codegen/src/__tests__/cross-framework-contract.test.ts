@@ -66,7 +66,7 @@ describe('cross-framework lifecycle-contract parity (#281)', () => {
   });
 
   async function gen(manifest: DSLManifest, dir: string) {
-    const { files } = await generateAllFiles(manifest, dir, { force: true });
+    const { files } = await generateAllFiles(manifest, dir);
     const get = (relPath: string) =>
       files.find((f) => f.path === path.join(dir, relPath));
     return { files, get };

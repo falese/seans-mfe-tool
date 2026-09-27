@@ -62,9 +62,7 @@ describe('codegen ↔ platform contract pin', () => {
   });
 
   it('generates no feature stub for any platform capability', async () => {
-    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath, {
-      force: true,
-    });
+    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath);
     const featureDir = path.join(basePath, 'src', 'features');
     const featurePaths = files.map((f) => f.path).filter((p) => p.startsWith(featureDir));
 
@@ -80,9 +78,7 @@ describe('codegen ↔ platform contract pin', () => {
   });
 
   it('never imports a fabricated Outputs type for a platform capability', async () => {
-    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath, {
-      force: true,
-    });
+    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath);
     const mfe = files.find((f) => f.path.endsWith(path.join('platform', 'base-mfe', 'mfe.ts')));
     expect(mfe).toBeDefined();
 
@@ -96,9 +92,7 @@ describe('codegen ↔ platform contract pin', () => {
   });
 
   it('never writes a domain smoke test for a platform capability', async () => {
-    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath, {
-      force: true,
-    });
+    const { files } = await generateAllFiles(manifestWithEveryPlatformCapability(), basePath);
     const spec = files.find((f) => f.path.endsWith(path.join('platform', 'base-mfe', 'mfe.test.ts')));
     expect(spec).toBeDefined();
 
@@ -127,8 +121,7 @@ describe('codegen ↔ platform contract pin', () => {
           },
         },
       }),
-      angularBase,
-      { force: true }
+      angularBase
     );
 
     const mfe = files.find((f) => f.path.endsWith(path.join('platform', 'base-mfe', 'mfe.ts')));
@@ -157,7 +150,7 @@ describe('codegen ↔ platform contract pin', () => {
     } as DSLManifest;
 
     const ucpsBase = path.join(basePath, 'ucps');
-    const { files } = await generateAllFiles(manifest, ucpsBase, { force: true });
+    const { files } = await generateAllFiles(manifest, ucpsBase);
     const mfe = files.find((f) => f.path.endsWith(path.join('platform', 'base-mfe', 'mfe.ts')));
 
     expect(mfe).toBeDefined();
