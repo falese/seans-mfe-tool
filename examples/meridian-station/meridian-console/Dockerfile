@@ -5,7 +5,12 @@
 FROM seans-mfe-tool-cli:latest AS cli-builder
 
 FROM node:20-slim AS builder
-WORKDIR /app
+# Three levels below a root, like this MFE in the repository. package.json
+# declares the runtime as file:../../../dist/runtime and the lockfile records
+# that link; from /app it climbs past / and `npm uninstall --package-lock-only`
+# crashes ("reading 'extraneous'"). The link is removed before npm ci, so
+# nothing is read from there — the depth only has to match.
+WORKDIR /repo/examples/meridian-station/app
 
 COPY --from=cli-builder /seans-mfe-tool /seans-mfe-tool
 RUN chmod +x /seans-mfe-tool/bin/run.js && \
@@ -28,7 +33,7 @@ COPY . .
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /repo/examples/meridian-station/app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 5001
 CMD ["nginx", "-g", "daemon off;"]
