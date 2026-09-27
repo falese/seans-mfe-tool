@@ -58,6 +58,22 @@ services:
     ports:
       - "5001:5001"
 
+  # Another application's MFE. abc-kids owns and builds flappy; meridian only
+  # places it — on `meridian.off-shift` it takes over the console's work area
+  # (control-plane.yaml). Same image, same port as in the abc-kids fleet.
+  abc-kids-flappy:
+    build: ../abc-kids/flappy
+    environment:
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   meridian-docking-control:
     build: ./meridian-docking-control
     depends_on:

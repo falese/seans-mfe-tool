@@ -255,6 +255,12 @@ describe('dockerfile-installs-from-lockfile (#346)', () => {
     expect(hits('COPY --from=builder /app/package.json ./')).toBe(0);
   });
 
+  it('warns that a file: runtime link must not climb past the WORKDIR', () => {
+    // Seven meridian images crashed in `npm uninstall` building from /app.
+    expect(entry.fix).toMatch(/declares the runtime as a `file:` path that climbs out/);
+    expect(entry.fix).toMatch(/WORKDIR at least that many levels deep/);
+  });
+
   it('is advice, not a deadline: an old Dockerfile still builds', () => {
     expect(entry.failsAt).toBeUndefined();
   });

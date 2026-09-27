@@ -74,6 +74,20 @@ npx ng build --configuration production   # Angular MFEs
 The berth strip needs no driving: the console fires `meridian.berth.b1..b6`
 on mount and six independent control-plane round trips fill it.
 
+### Off shift: another application's MFE
+
+```bash
+./scripts/send-action.sh meridian.off-shift   # the console's work area becomes abc-kids' flappy
+```
+
+Meridian did not build flappy. abc-kids owns it and builds it from
+`examples/abc-kids/flappy`, and meridian's `control-plane.yaml` only
+references it and places `PlayGame` into `meridian-console/main` on this
+state key. The shell, the console and flappy stay as they are: the context
+change is one registry rule, and the MFE is the same image the abc-kids
+fleet runs. The `Composition` CI workflow drives exactly this
+(`e2e/cross-app-composition.spec.ts`).
+
 ### What correct looks like
 
 - Header: `Meridian Station · control plane: connected` (green dot).
