@@ -19,7 +19,7 @@ implemented-by:
   - packages/codegen/src/platform-migrations.ts
 verified-by:
   - packages/codegen/src/__tests__/platform-migrations.test.ts
-tracked-by: ["#385"]
+tracked-by: []
 summary: >-
   BaseControlPlane, isBaseControlPlane and the ControlPlaneConfig / ControlPlaneStatus /
   ControlPlaneHealth types are removed from the runtime and its public barrel. A host connects to

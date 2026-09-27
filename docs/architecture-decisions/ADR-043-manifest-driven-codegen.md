@@ -15,6 +15,7 @@ implemented-by:
   - packages/codegen/src/unified-generator.ts
 verified-by:
   - check:mfe-drift:check
+tracked-by: ["#373"]
 summary: >-
   The `mfe-manifest.yaml` DSL is the single source of truth for a generated MFE.
   `remote:generate` runs one pipeline — parse/validate (Zod) → resolve the framework/bundler

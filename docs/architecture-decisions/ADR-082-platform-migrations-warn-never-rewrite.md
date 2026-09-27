@@ -21,7 +21,7 @@ verified-by:
   - packages/codegen/src/__tests__/platform-migrations.test.ts
   - scripts/__tests__/adr-governance-report.test.ts
   - check:mfe-consistency
-tracked-by: []
+tracked-by: ["#346"]
 summary: >-
   A platform change that affects code the generator seeds but does not own is declared as a
   migration entry with a matcher, a fix and a version at which it stops being advisory; the

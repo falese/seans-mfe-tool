@@ -17,6 +17,7 @@ implemented-by:
 verified-by:
   - src/commands/__tests__/deploy.test.js
   - src/commands/__tests__/deploy.extras.test.ts
+tracked-by: ["#250"]
 long-form: true
 ---
 
