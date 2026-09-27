@@ -435,12 +435,17 @@ export abstract class BaseRemoteMFE extends BaseMFE {
         // Initialize with shared dependencies
         void shared; // Module Federation shared scope
       },
+      // Exposes nothing, and says so the way a real container does for a
+      // module it lacks. It used to answer every request with a placeholder
+      // class, which RemoteMFE took for an MFE-provided `./ErrorBoundary` and
+      // React could not render — so a caught render error blanked the slot
+      // instead of showing the fallback (#345). Components never come through
+      // here; they load via loadDomainComponent().
       get: async (module: string) => {
-        // Return a factory function for the requested module
-        void module;
-        return () => ({
-          default: class MockComponent {},
-        });
+        throw new BusinessError(
+          `Module "${module}" is not exposed by this container`,
+          'MODULE_NOT_EXPOSED'
+        );
       },
     };
   }
