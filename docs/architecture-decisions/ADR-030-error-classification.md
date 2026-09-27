@@ -15,6 +15,7 @@ implemented-by:
   - packages/contracts/src/error-classifier.ts
   - packages/runtime/src/retry-wrapper.ts
 verified-by: []
+tracked-by: ["#345"]
 summary: >-
   Implement typed error classes (NetworkError, ValidationError, SecurityError, etc.) with a
   hybrid detection algorithm — typed error properties first, regex pattern matching fallback —

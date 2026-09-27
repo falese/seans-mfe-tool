@@ -20,7 +20,7 @@ implemented-by:
   - packages/control-plane/README.md
 verified-by:
   - packages/contracts/src/__tests__/registry-slot-pin.test.ts
-tracked-by: ["#139"]
+tracked-by: ["#139", "#144", "#329"]
 summary: >-
   The registry and daemon move from a vendored copy inside each reference app into
   `packages/control-plane`, and `platform:init` generates a runnable composition environment —

@@ -17,6 +17,7 @@ implemented-by:
   - packages/plugin-api/src/APIGenerator
 verified-by:
   - src/__tests__/import-direction.test.ts
+tracked-by: ["#251", "#360"]
 long-form: true
 ---
 

@@ -52,7 +52,7 @@ export async function executeToolCall(
   options:   McpServerOptions,
   tool?:     McpToolDefinition,
 ): Promise<ToolCallResult> {
-  const argv   = buildArgv(toolName, input, positionalsOf(tool));
+  const argv   = buildArgv(toolName, input, positionalsOf(tool), tool?.command);
   const cliBin = options.cliBin;
   const timeoutMs = options.timeoutMs ?? 300_000;
 

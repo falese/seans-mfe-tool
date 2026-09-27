@@ -12,6 +12,7 @@ supersedes: []
 superseded-by: []
 implemented-by: []
 verified-by: []
+tracked-by: ["#25"]
 summary: >-
   Authorization expressions in the DSL will support AND/OR/NOT Boolean logic with atoms for user
   identity, roles, permissions, and resource ownership — but this feature is deferred to a
