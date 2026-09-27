@@ -153,6 +153,34 @@ describe('mfeValidateCommand', () => {
     expect(res.issues.filter((i) => i.rule === 'platform-migrations')).toEqual([]);
   });
 
+  describe('the root Dockerfile (#346)', () => {
+    const OLD_INSTALL = [
+      'FROM node:20-slim AS builder',
+      'COPY package.json ./',
+      'RUN npm install --no-audit --no-fund',
+    ].join('\n');
+
+    it('is scanned, so a Dockerfile migration can fire and name its line', async () => {
+      await writeFixture(tmp);
+      await fs.writeFile(path.join(tmp, 'Dockerfile'), OLD_INSTALL);
+      const res = await mfeValidateCommand({ dir: tmp });
+      const hit = res.issues.find(
+        (i) => i.rule === 'platform-migrations' && i.message.includes('lockfile'),
+      );
+      expect(hit?.location).toMatch(/Dockerfile:2$/);
+    });
+
+    it('is silent once the Dockerfile installs from the lockfile', async () => {
+      await writeFixture(tmp);
+      await fs.writeFile(
+        path.join(tmp, 'Dockerfile'),
+        ['COPY package*.json ./', 'RUN npm ci --no-audit --no-fund'].join('\n'),
+      );
+      const res = await mfeValidateCommand({ dir: tmp });
+      expect(res.issues.filter((i) => i.rule === 'platform-migrations')).toEqual([]);
+    });
+  });
+
   it('throws a typed error when the directory has no manifest', async () => {
     await expect(mfeValidateCommand({ dir: tmp })).rejects.toBeDefined();
   });
