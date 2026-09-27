@@ -38,7 +38,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('emits angular.json + webpack partial + tsconfig pair (not rspack.config.js)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const paths = files.map((f) => f.path);
 
     expect(paths).toContain(path.join(basePath, 'angular.json'));
@@ -49,7 +49,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('single-sources federation shared + runtime versions from DEPENDENCY_VERSIONS (#293)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const webpack = files.find((f) => f.path === path.join(basePath, 'webpack.config.js'));
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
 
@@ -75,7 +75,7 @@ describe('unified-generator angular-webpack variant', () => {
         },
       },
     };
-    const { files } = await generateAllFiles(withExtras, basePath, { force: true });
+    const { files } = await generateAllFiles(withExtras, basePath);
     const pkg = JSON.parse(
       files.find((f) => f.path === path.join(basePath, 'package.json'))!.content,
     );
@@ -85,7 +85,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('emits an Angular-aware tsconfig.json (not the BFF/React one)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const tsconfig = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
     expect(tsconfig).toBeDefined();
     expect(tsconfig!.content).toContain('experimentalDecorators');
@@ -98,7 +98,7 @@ describe('unified-generator angular-webpack variant', () => {
   // server.js cannot require(). Root must be commonjs; the Angular app build
   // gets ES modules from tsconfig.app.json instead.
   it('emits a commonjs root tsconfig (for the Mesh BFF) and an ES2022 app tsconfig', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const root = files.find((f) => f.path === path.join(basePath, 'tsconfig.json'));
     const app = files.find((f) => f.path === path.join(basePath, 'tsconfig.app.json'));
     expect(root).toBeDefined();
@@ -119,7 +119,7 @@ describe('unified-generator angular-webpack variant', () => {
         { id: 'info', description: 'Info region' },
       ],
     };
-    const { files } = await generateAllFiles(withSlots, basePath, { force: true });
+    const { files } = await generateAllFiles(withSlots, basePath);
     const paths = files.map((f) => f.path);
     expect(paths).toContain(path.join(basePath, 'src', 'slots.ts'));
     expect(paths).not.toContain(path.join(basePath, 'src', 'slots.tsx'));
@@ -135,7 +135,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('emits Angular entry files instead of App.tsx / index.tsx', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const paths = files.map((f) => f.path);
 
     expect(paths).toContain(path.join(basePath, 'src', 'main.ts'));
@@ -146,7 +146,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('configures angular.json with the custom-webpack builder pointing at the MF partial', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const angularJson = files.find((f) => f.path === path.join(basePath, 'angular.json'));
 
     expect(angularJson).toBeDefined();
@@ -157,7 +157,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('emits feature components as .component.ts (Angular convention)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const paths = files.map((f) => f.path);
 
     expect(paths).toContain(
@@ -172,7 +172,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('emits src/remote.ts (not remote.tsx) as the MF expose target', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const paths = files.map((f) => f.path);
 
     expect(paths).toContain(path.join(basePath, 'src', 'remote.ts'));
@@ -180,7 +180,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('renders webpack.config.js as an MF partial with Angular singletons in shared scope', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const webpackConfig = files.find((f) => f.path.endsWith('webpack.config.js'));
 
     expect(webpackConfig).toBeDefined();
@@ -197,7 +197,7 @@ describe('unified-generator angular-webpack variant', () => {
   // #272: the MF expose key is standardized on './App' across frameworks (React
   // exposes './App' too), so hosts register any MFE without per-framework casing.
   it('exposes the remote under ./App (not ./Component) for cross-framework parity (#272)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const webpackConfig = files.find((f) => f.path.endsWith('webpack.config.js'));
 
     expect(webpackConfig).toBeDefined();
@@ -206,7 +206,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('renders package.json with Angular CLI builder deps (and no react/rspack/ngtools)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
 
     expect(pkg).toBeDefined();
@@ -230,7 +230,7 @@ describe('unified-generator angular-webpack variant', () => {
   // emit build:server / bff:dev / mesh deps unconditionally, so `tsc server.ts`
   // (build:server) failed on a missing ./.mesh for every no-data Angular MFE.
   it('omits BFF scripts and mesh deps when the manifest has no data: section (#271)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
 
     expect(pkg).toBeDefined();
@@ -254,7 +254,7 @@ describe('unified-generator angular-webpack variant', () => {
         serve: { endpoint: '/graphql', playground: true },
       },
     } as DSLManifest;
-    const { files } = await generateAllFiles(withData, basePath, { force: true });
+    const { files } = await generateAllFiles(withData, basePath);
     const pkg = files.find((f) => f.path === path.join(basePath, 'package.json'));
 
     expect(pkg).toBeDefined();
@@ -273,7 +273,7 @@ describe('unified-generator angular-webpack variant', () => {
   // #274: the Angular variant also emits a .gitignore keeping build artifacts
   // (.angular/, out-tsc/, .mesh/, compiled server.js) out of the tree.
   it('emits a .gitignore that ignores Angular + BFF build artifacts (#274)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const gitignore = files.find((f) => f.path === path.join(basePath, '.gitignore'));
     expect(gitignore).toBeDefined();
     expect(gitignore!.content).toContain('.mesh/');
@@ -284,7 +284,7 @@ describe('unified-generator angular-webpack variant', () => {
   });
 
   it('generates mfe.ts that extends AngularRemoteMFE (not RemoteMFE)', async () => {
-    const { files } = await generateAllFiles(baseManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest, basePath);
     const mfeFile = files.find((f) =>
       f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts')
     );
@@ -361,7 +361,7 @@ describe('unified-generator react-rspack regression (no framework/bundler set)',
   });
 
   it('still emits rspack.config.js and React entry files', async () => {
-    const { files } = await generateAllFiles(reactManifest, basePath, { force: true });
+    const { files } = await generateAllFiles(reactManifest, basePath);
     const paths = files.map((f) => f.path);
 
     expect(paths).toContain(path.join(basePath, 'rspack.config.js'));
