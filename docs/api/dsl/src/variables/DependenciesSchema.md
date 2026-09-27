@@ -6,8 +6,13 @@
 
 # Variable: DependenciesSchema
 
-> `const` **DependenciesSchema**: `ZodObject`\<\{ `design-system`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `mfes`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `runtime`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; \}, `$strip`\>
+> `const` **DependenciesSchema**: `ZodObject`\<\{ `design-system`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `mfes`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `runtime`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; \}, `$strict`\>
 
-Defined in: [packages/dsl/src/schema.ts:525](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L525)
+Defined in: [packages/dsl/src/schema.ts:532](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L532)
 
-Dependencies section
+Dependencies section.
+
+Closed (#373): a plain `z.object` strips an unknown key, so
+`dependencies.devDependencies` validated clean and was silently dropped —
+while the JSON Schema generated from this source (ADR-065) rejects it. A
+strict object makes the two agree and tells the author where the key goes.

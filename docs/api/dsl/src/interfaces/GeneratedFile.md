@@ -6,7 +6,7 @@
 
 # Interface: GeneratedFile
 
-Defined in: [packages/dsl/src/schema.ts:684](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L684)
+Defined in: [packages/dsl/src/schema.ts:700](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L700)
 
 File to generate
 
@@ -16,7 +16,7 @@ File to generate
 
 > **content**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:686](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L686)
+Defined in: [packages/dsl/src/schema.ts:702](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L702)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/schema.ts:686](https://github.com/falese/seans-mfe
 
 > **overwrite**: `boolean`
 
-Defined in: [packages/dsl/src/schema.ts:687](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L687)
+Defined in: [packages/dsl/src/schema.ts:703](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L703)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/dsl/src/schema.ts:687](https://github.com/falese/seans-mfe
 
 > **path**: `string`
 
-Defined in: [packages/dsl/src/schema.ts:685](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L685)
+Defined in: [packages/dsl/src/schema.ts:701](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L701)
