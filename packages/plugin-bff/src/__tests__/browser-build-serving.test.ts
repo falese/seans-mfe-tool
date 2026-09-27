@@ -36,7 +36,7 @@ const dir = path.join(__dirname, 'output-browser-build');
 afterAll(() => fs.remove(dir));
 
 async function generated(manifest: DSLManifest): Promise<(rel: string) => string> {
-  const { files } = await generateAllFiles(manifest, dir, { force: true });
+  const { files } = await generateAllFiles(manifest, dir);
   return (rel) => {
     const file = files.find((f) => f.path === path.join(dir, rel));
     if (!file) throw new Error(`${rel} was not generated`);

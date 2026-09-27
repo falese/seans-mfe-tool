@@ -35,9 +35,7 @@ const INHERITED = ['toString', 'constructor', 'valueOf', 'hasOwnProperty'];
 
 describe('capability names inherited from Object.prototype', () => {
   it.each(INHERITED)('treats %p as a domain capability, not a platform one', async (name) => {
-    const { files } = await generateAllFiles(manifestWith(name), '/tmp/proto-probe-unused', {
-      dryRun: true,
-    });
+    const { files } = await generateAllFiles(manifestWith(name), '/tmp/proto-probe-unused');
 
     // The platform branch would emit the capability with `method: undefined`.
     // The domain branch names it. Reading the rendered mfe.ts is the honest
@@ -58,7 +56,6 @@ describe('capability names inherited from Object.prototype', () => {
         capabilities: [{ Health: { type: 'platform', description: 'health' } }],
       } as never,
       '/tmp/platform-probe-unused',
-      { dryRun: true },
     );
 
     const mfe = files.find((f) => f.path.endsWith('src/platform/base-mfe/mfe.ts'));
@@ -88,9 +85,7 @@ describe('a capability named for a prototype key keeps its own description', () 
   it.each(['toString', 'constructor', 'valueOf'])(
     'uses the description declared for %p, not the first entry it finds',
     async (name) => {
-      const { files } = await generateAllFiles(twoCapabilities(name), '/tmp/desc-probe-unused', {
-        dryRun: true,
-      });
+      const { files } = await generateAllFiles(twoCapabilities(name), '/tmp/desc-probe-unused');
       const component = files.find((f) => f.path.includes(`src/features/${name}/`));
       expect(component).toBeDefined();
       expect(component!.content).toContain('MY OWN DESCRIPTION');

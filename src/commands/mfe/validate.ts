@@ -68,7 +68,7 @@ async function developerOwnedPredicate(
   manifest: unknown,
 ): Promise<(sourcePath: string) => boolean> {
   try {
-    const { files } = await generateAllFiles(manifest as never, dir, { force: true });
+    const { files } = await generateAllFiles(manifest as never, dir);
     const generatorOwned = new Set(
       files.filter((f) => f.overwrite).map((f) => path.resolve(f.path)),
     );

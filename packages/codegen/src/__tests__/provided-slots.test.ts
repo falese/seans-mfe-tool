@@ -36,7 +36,7 @@ describe('provided-slots codegen (ADR-067)', () => {
         { id: 'card.{sku}', description: 'One card per product' },
       ],
     };
-    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as never, basePath);
     const slots = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'));
 
     expect(slots).toBeDefined();
@@ -57,7 +57,7 @@ describe('provided-slots codegen (ADR-067)', () => {
       ...baseManifest,
       providesSlots: [{ id: 'main' }, { id: 'card.{sku}' }],
     };
-    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as never, basePath);
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
     // Layer split (ADR-067): the generated file mirrors manifest data and
@@ -70,7 +70,7 @@ describe('provided-slots codegen (ADR-067)', () => {
   });
 
   it('emits nothing slot-related when the manifest declares no slots', async () => {
-    const { files } = await generateAllFiles(baseManifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(baseManifest as never, basePath);
     const slots = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'));
     expect(slots).toBeUndefined();
   });
@@ -82,7 +82,7 @@ describe('provided-slots codegen (ADR-067)', () => {
       ...baseManifest,
       providesSlots: [{ id: 'main' }, { id: 'status' }, { id: 'berth.{id}' }],
     };
-    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as never, basePath);
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
     // A literal declaration becomes a string-literal member; a {param} segment
@@ -99,7 +99,7 @@ describe('provided-slots codegen (ADR-067)', () => {
       ...baseManifest,
       providesSlots: [{ id: 'section.{key}.footer' }, { id: 'cell.{row}.{col}' }],
     };
-    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as never, basePath);
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
     expect(content).toContain(
@@ -111,7 +111,7 @@ describe('provided-slots codegen (ADR-067)', () => {
   // could not express what real providers needed (inline style, semantic elements).
   it('accepts standard element props and an `as` element override', async () => {
     const manifest = { ...baseManifest, providesSlots: [{ id: 'main' }] };
-    const { files } = await generateAllFiles(manifest as never, basePath, { force: true });
+    const { files } = await generateAllFiles(manifest as never, basePath);
     const content = files.find((f) => f.path === path.join(basePath, 'src', 'slots.tsx'))?.content ?? '';
 
     expect(content).toContain('extends React.HTMLAttributes<HTMLElement>');

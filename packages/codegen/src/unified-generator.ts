@@ -202,11 +202,15 @@ interface RenderModel {
  * independently: validate → plan (aggregate manifest into a RenderModel) →
  * render (turn the model into concrete GeneratedFiles). Emit is a separate
  * step (writeGeneratedFiles).
+ *
+ * Nothing here writes, so `force` and `dryRun` are not options: they belong
+ * to `writeGeneratedFiles`, which honours them. Accepting and ignoring them
+ * here read as a dry run that was not one (#332).
  */
 export async function generateAllFiles(
   manifest: DSLManifest,
   basePath: string,
-  options: { force?: boolean; dryRun?: boolean; frameworkVariant?: FrameworkVariant } = {}
+  options: { frameworkVariant?: FrameworkVariant } = {}
 ): Promise<GenerateAllFilesResult> {
   // === Validation Layer (ADR-027) ===
   // Validate manifest configuration before generation
