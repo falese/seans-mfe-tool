@@ -236,6 +236,30 @@ describe('base-control-plane-removed', () => {
   });
 });
 
+describe('dockerfile-installs-from-lockfile (#346)', () => {
+  const entry = byId('dockerfile-installs-from-lockfile');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'Dockerfile', text }).length;
+
+  it('catches the manifest-only copy the old template emitted', () => {
+    expect(hits('COPY package.json ./')).toBe(1);
+    expect(hits('COPY package.json ./   ')).toBe(1);
+  });
+
+  it('leaves the lockfile-aware copy alone', () => {
+    expect(hits('COPY package*.json ./')).toBe(0);
+    expect(hits('COPY package.json package-lock.json ./')).toBe(0);
+  });
+
+  it('leaves the production stage alone — it copies package.json from the builder, no install follows', () => {
+    expect(hits('COPY --from=builder /app/package.json ./')).toBe(0);
+  });
+
+  it('is advice, not a deadline: an old Dockerfile still builds', () => {
+    expect(entry.failsAt).toBeUndefined();
+  });
+});
+
 describe('bff-4xx-no-longer-network-error (ADR-106)', () => {
   const entry = byId('bff-4xx-no-longer-network-error');
   const hits = (text: string): number =>
