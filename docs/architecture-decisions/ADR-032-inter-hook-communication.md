@@ -12,6 +12,7 @@ supersedes: []
 superseded-by: []
 implemented-by: []
 verified-by: []
+tracked-by: ["#64"]
 summary: >-
   Add typed inputs/outputs to lifecycle hook DSL entries with namespaced context storage;
   generate TypeScript interfaces for all hook contracts from the manifest; validate circular

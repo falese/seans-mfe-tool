@@ -521,12 +521,28 @@ export type CustomTransform = z.infer<typeof CustomTransformSchema>;
 // Dependencies Schemas
 // =============================================================================
 
-/** Dependencies section */
-export const DependenciesSchema = z.object({
-  runtime: z.record(z.string(), z.string()).optional(),
-  'design-system': z.record(z.string(), z.string()).optional(),
-  mfes: z.record(z.string(), z.string()).optional()
-});
+/**
+ * Dependencies section.
+ *
+ * Closed (#373): a plain `z.object` strips an unknown key, so
+ * `dependencies.devDependencies` validated clean and was silently dropped —
+ * while the JSON Schema generated from this source (ADR-065) rejects it. A
+ * strict object makes the two agree and tells the author where the key goes.
+ */
+export const DependenciesSchema = z.strictObject(
+  {
+    runtime: z.record(z.string(), z.string()).optional(),
+    'design-system': z.record(z.string(), z.string()).optional(),
+    mfes: z.record(z.string(), z.string()).optional()
+  },
+  {
+    error: (issue) =>
+      issue.code === 'unrecognized_keys'
+        ? `Unknown dependencies section(s): ${issue.keys.join(', ')}. ` +
+          'Allowed: runtime, design-system, mfes. Dev-only dependencies belong in package.json.'
+        : undefined
+  }
+);
 export type Dependencies = z.infer<typeof DependenciesSchema>;
 
 // =============================================================================

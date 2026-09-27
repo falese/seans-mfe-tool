@@ -19,7 +19,7 @@ implemented-by:
 verified-by:
   - build:schema:dsl:check
   - build:docs:check
-tracked-by: ["#252"]
+tracked-by: ["#252", "#373"]
 long-form: true
 ---
 
