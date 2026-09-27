@@ -808,7 +808,7 @@ Describe capability: Return MFE metadata
 
 > `protected` **doAuthorizeAccess**(`_context`): `Promise`\<`boolean`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:526](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L526)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:531](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L531)
 
 Implement authorization logic for this MFE
 
@@ -832,7 +832,7 @@ Implement authorization logic for this MFE
 
 > `protected` **doDescribe**(`_context`): `Promise`\<[`DescribeResult`](../../interfaces/DescribeResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:550](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L550)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:555](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L555)
 
 Implement describe logic for this MFE
 
@@ -856,7 +856,7 @@ Implement describe logic for this MFE
 
 > `protected` **doEmit**(`context`): `Promise`\<[`EmitResult`](../../interfaces/EmitResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:567](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L567)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:572](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L572)
 
 Implement telemetry emission logic for this MFE
 
@@ -880,7 +880,7 @@ Implement telemetry emission logic for this MFE
 
 > `protected` **doHealth**(`_context`): `Promise`\<[`HealthResult`](../../interfaces/HealthResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:531](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L531)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:536](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L536)
 
 Implement health check logic for this MFE
 
@@ -977,7 +977,7 @@ Override in concrete subclasses for typed, operation-specific queries:
 
 > `protected` **doRefresh**(`_context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:522](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L522)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:527](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L527)
 
 Implement refresh logic for this MFE
 
@@ -1031,7 +1031,7 @@ REQ-RUNTIME-004: Component-aware rendering with:
 
 > `protected` **doSchema**(`_context`): `Promise`\<[`SchemaResult`](../../interfaces/SchemaResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:560](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L560)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:565](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L565)
 
 Implement schema retrieval logic for this MFE
 
@@ -1055,7 +1055,7 @@ Implement schema retrieval logic for this MFE
 
 > `protected` **doUpdateControlPlaneState**(`context`): `Promise`\<[`ControlPlaneStateResult`](../../interfaces/ControlPlaneStateResult.md)\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:597](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L597)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:602](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L602)
 
 Push domain state to the daemon control plane for registry re-evaluation.
 
@@ -1197,7 +1197,7 @@ Execution context
 
 > `protected` **extractAvailableComponents**(): `string`[]
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:456](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L456)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:461](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L461)
 
 Extract available components from manifest.
 
@@ -1216,7 +1216,7 @@ Fallback: all non-platform capability names (domain capabilities).
 
 > `protected` **extractCapabilities**(): `CapabilityMetadata`[]
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:489](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L489)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:494](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L494)
 
 Extract capability metadata from manifest (REQ-RUNTIME-003)
 
@@ -1449,7 +1449,7 @@ Load capability: Initialize and prepare MFE for use
 
 > `protected` **loadDomainComponent**(`_name`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/base-remote-mfe.ts:512](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L512)
+Defined in: [packages/runtime/src/base-remote-mfe.ts:517](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/base-remote-mfe.ts#L517)
 
 Override in subclass to load the named domain component.
 Called by doRender() instead of going through the Module Federation container API.

@@ -3,6 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright config for Phase 1.3 E2E suite.
  *
+ * WHAT THIS SUITE TESTS: the contract's *description*, not an implementation.
+ * It cannot fail when a real generated MFE breaks, because it never loads one.
+ * The suite that drives real generated MFEs composed in a real shell is
+ * examples/meridian-station/e2e/cross-app-composition.spec.ts, run by
+ * .github/workflows/composition.yml: Meridian Station composing abc-kids'
+ * flappy on a context change (#345).
+ *
  * The E2E tests in tests/e2e/ run against a static fixture page
  * (tests/e2e/fixtures/index.html) that implements the public DOM contract
  * scaffolded MFEs are expected to expose. The fixture is framework-free and

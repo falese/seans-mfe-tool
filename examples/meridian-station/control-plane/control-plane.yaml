@@ -8,6 +8,10 @@ mfes:
   - meridian-crew-services
   - meridian-concourse
   - meridian-docking-simulation
+  # Not a meridian MFE: abc-kids' flappy, built and deployed by that project.
+  # Meridian places it on a context change without owning or rebuilding it —
+  # the platform's claim that a domain feature composes into any shell.
+  - ../abc-kids/flappy
 routes:
   - when: meridian.root
     place:
@@ -52,6 +56,12 @@ routes:
               emoji: 🍜
               color: '#d64570'
               blurb: Vendors, stalls, settlements
+  # Context change: the crew goes off shift, and the console's work area swaps
+  # from station operations to another application's game.
+  - when: meridian.off-shift
+    place:
+      - capability: PlayGame
+        into: meridian-console/main
   - when: meridian.open.docking
     place:
       - capability: DockingBoard

@@ -1,0 +1,142 @@
+# Composition smoke (#345): does an MFE compose into an application that did
+# not build it?
+#
+# Every other job is static — bytes, types, manifests, declared-vs-used — and
+# the root Playwright suite runs against a hand-written fixture, not an MFE.
+# This one stands up Meridian Station's shell, console and control plane plus
+# abc-kids' flappy, a different application's MFE, built from that project's
+# own directory. It registers meridian's control-plane/rules.json and drives
+# it in Chromium the way a session does. `meridian.root` composes the console;
+# the `meridian.off-shift` context change mounts flappy into the console's
+# work area. A render throw is contained.
+#
+# Advisory for now: not a required check. It is the slowest job in the repo
+# and has no history yet, so it earns "required" after a week of runs.
+#
+# Path-filtered to what can change the composed result.
+name: Composition
+
+on:
+  pull_request:
+    paths:
+      - 'packages/codegen/templates/**'
+      - 'packages/plugin-bff/templates/**'
+      - 'packages/runtime/src/**'
+      - 'packages/contracts/src/**'
+      - 'packages/framework-react/**'
+      - 'packages/control-plane/**'
+      - 'examples/meridian-station/**'
+      - 'examples/abc-kids/flappy/**'
+      - 'Dockerfile.cli'
+      - '.github/workflows/composition.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/codegen/templates/**'
+      - 'packages/plugin-bff/templates/**'
+      - 'packages/runtime/src/**'
+      - 'packages/contracts/src/**'
+      - 'packages/framework-react/**'
+      - 'packages/control-plane/**'
+      - 'examples/meridian-station/**'
+      - 'examples/abc-kids/flappy/**'
+      - 'Dockerfile.cli'
+      - '.github/workflows/composition.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: composition-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cross-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      COMPOSE_FILE: examples/meridian-station/docker-compose.yaml
+      # Classic sequential builds. BuildKit's bake runs every service at once,
+      # and a parallel fleet build exhausts memory and surfaces as an unrelated
+      # `npm install` exit 1 in whichever service loses.
+      COMPOSE_BAKE: 'false'
+      # The minimum a cross-application composition needs. The station APIs
+      # and the other domain MFEs belong to meridian-station.spec.ts, the full
+      # demo suite, not to this smoke.
+      SERVICES: registry daemon shell meridian-console abc-kids-flappy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # dist/runtime is baked into the CLI image, and every MFE image stages
+      # the runtime from it — so the CLI image is built from this commit.
+      - name: Build the CLI and its image
+        run: |
+          npm run build
+          npm run docker:build:cli
+
+      - name: Build the stack, one service at a time
+        run: |
+          for svc in $SERVICES; do
+            echo "::group::build $svc"
+            docker compose build "$svc"
+            echo "::endgroup::"
+          done
+
+      # --no-deps: the services above are the whole composition. Without it
+      # compose would also start everything they declare a dependency on.
+      - name: Start the stack and wait for it
+        run: |
+          docker compose up -d --no-deps $SERVICES
+          wait_for() {
+            for i in $(seq 1 60); do
+              if curl -fsS -o /dev/null "$1"; then echo "ready: $1"; return 0; fi
+              sleep 5
+            done
+            echo "::error::not ready after 5 minutes: $1"; return 1
+          }
+          wait_for http://localhost:4500/
+          wait_for http://localhost:5001/remoteEntry.js
+          wait_for http://localhost:3001/remoteEntry.js
+          wait_for http://localhost:5000/
+
+      # Composition is data (ADR-073): the registry holds nothing until the
+      # project's rules are registered, and the shell renders nothing until then.
+      - name: Register control-plane/rules.json
+        run: bash examples/meridian-station/scripts/register-station.sh
+
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Drive the composition
+        run: npx playwright test -c examples/meridian-station/playwright.config.ts cross-app-composition.spec.ts --reporter=list,html
+        env:
+          CI: true
+          PLAYWRIGHT_HTML_REPORT: composition-report
+
+      - name: Collect container state and logs
+        if: failure()
+        run: |
+          docker compose ps -a > compose-ps.txt
+          docker compose logs --no-color --timestamps > compose-logs.txt
+
+      - name: Upload report and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: composition-failure
+          path: |
+            composition-report/
+            compose-ps.txt
+            compose-logs.txt
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v --remove-orphans

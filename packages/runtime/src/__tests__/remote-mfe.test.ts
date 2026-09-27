@@ -855,6 +855,26 @@ describe('RemoteMFE React adapter', () => {
       expect((instance.render() as any).type).toBe('div');
     });
 
+    // The tests above swap in their own container. This one keeps the container
+    // load() produces — the one every composed page has — whose stub used to
+    // answer `./ErrorBoundary` with a class, which React cannot call without
+    // `new`: the boundary then threw inside its own catch and blanked the slot.
+    it('uses the built-in boundary with the container load() produced', async () => {
+      installDocumentStub();
+      const capture = new TelemetryCapture();
+      const mfe = new TestRemoteMFE(buildManifest(), { telemetry: capture }, { Widget: class {} });
+      await (mfe as any).doLoad(makeContext());
+
+      await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+      const { instance } = boundaryFrom(mfe as any);
+      instance.state = { hasError: true };
+      expect((instance.render() as any).type).toBe('div');
+      instance.componentDidCatch(new Error('boom'), {});
+      const [event] = capture.getEventsByType('render-fallback-applied');
+      expect(event.metadata).toEqual(expect.objectContaining({ fallbackType: 'default' }));
+    });
+
     it('emits render-fallback-applied with the fallback type on a catch', async () => {
       installDocumentStub();
       const capture = new TelemetryCapture();

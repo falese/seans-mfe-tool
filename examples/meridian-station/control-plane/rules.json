@@ -428,5 +428,36 @@
         }
       }
     ]
+  },
+  {
+    "registration": {
+      "name": "abc-kids-flappy",
+      "version": "1.0.0",
+      "type": "remote",
+      "baseUrl": "http://localhost:3001",
+      "capabilities": [
+        "load",
+        "render"
+      ],
+      "contentType": "module-federation",
+      "remoteEntryUrl": "http://localhost:3001/remoteEntry.js",
+      "moduleFederation": {
+        "scope": "abc_kids_flappy",
+        "module": "./App"
+      }
+    },
+    "routes": [
+      {
+        "when": {
+          "stateKey": "meridian.off-shift"
+        },
+        "resolve": {
+          "capability": "PlayGame",
+          "props": {
+            "slot": "meridian-console/main"
+          }
+        }
+      }
+    ]
   }
 ]

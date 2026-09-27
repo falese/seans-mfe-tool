@@ -151,6 +151,13 @@ test.describe('Multiplication Quiz MFE', () => {
 });
 
 // ─── Suite: Error boundary (regression) ────────────────────────────────────────
+//
+// `.mfe-error-boundary[role="alert"]` is what the runtime's ErrorBoundary
+// renders (packages/runtime/src/error-boundary.ts). These assertions used
+// `.mfe-error-boundary[role="alert"]`, which nothing emits, so they could not
+// fail. The composition job's cross-app-composition.spec.ts (meridian-station)
+// proves the selector does appear when a render throws (#345). This suite
+// itself targets the pre-ADR-055 shell UI: see #402.
 
 test.describe('Error boundary', () => {
   test('no error fallback visible on normal load', async ({ page }) => {
@@ -159,18 +166,18 @@ test.describe('Error boundary', () => {
     // Flappy Bird
     await page.getByText('Flappy Bird').click();
     await expect(page.locator('[role="progressbar"]')).toBeHidden({ timeout: 15_000 });
-    await expect(page.locator('[data-testid="mfe-error-fallback"]')).not.toBeVisible();
+    await expect(page.locator('.mfe-error-boundary[role="alert"]')).not.toBeVisible();
     await page.locator('button:has([data-testid="CloseIcon"])').click();
 
     // Ice Hockey
     await page.getByText('Ice Hockey').click();
     await expect(page.locator('[role="progressbar"]')).toBeHidden({ timeout: 15_000 });
-    await expect(page.locator('[data-testid="mfe-error-fallback"]')).not.toBeVisible();
+    await expect(page.locator('.mfe-error-boundary[role="alert"]')).not.toBeVisible();
     await page.locator('button:has([data-testid="CloseIcon"])').click();
 
     // Multiplication Quiz
     await page.getByText('Multiplication Quiz').click();
     await expect(page.locator('[role="progressbar"]')).toBeHidden({ timeout: 20_000 });
-    await expect(page.locator('[data-testid="mfe-error-fallback"]')).not.toBeVisible();
+    await expect(page.locator('.mfe-error-boundary[role="alert"]')).not.toBeVisible();
   });
 });
