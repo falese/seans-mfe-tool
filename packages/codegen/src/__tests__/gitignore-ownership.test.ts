@@ -49,7 +49,7 @@ describe('.gitignore ownership (#341)', () => {
     const { files } = await generateAllFiles(
       manifest(framework) as never,
       path.join(BASE, framework),
-      { force: true } as never,
+      {} as never,
     );
     jest.restoreAllMocks();
     return files;

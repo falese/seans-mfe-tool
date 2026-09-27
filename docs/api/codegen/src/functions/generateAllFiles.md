@@ -8,7 +8,7 @@
 
 > **generateAllFiles**(`manifest`, `basePath`, `options`): `Promise`\<[`GenerateAllFilesResult`](../interfaces/GenerateAllFilesResult.md)\>
 
-Defined in: [packages/codegen/src/unified-generator.ts:206](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L206)
+Defined in: [packages/codegen/src/unified-generator.ts:210](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/unified-generator.ts#L210)
 
 Generate all files (features, platform, BFF, configs) for a manifest.
 
@@ -16,6 +16,10 @@ Three phases, each isolated so they can be reasoned about (and reused)
 independently: validate → plan (aggregate manifest into a RenderModel) →
 render (turn the model into concrete GeneratedFiles). Emit is a separate
 step (writeGeneratedFiles).
+
+Nothing here writes, so `force` and `dryRun` are not options: they belong
+to `writeGeneratedFiles`, which honours them. Accepting and ignoring them
+here read as a dry run that was not one (#332).
 
 ## Parameters
 
@@ -298,14 +302,6 @@ step (writeGeneratedFiles).
 `string`
 
 ### options
-
-#### dryRun?
-
-`boolean`
-
-#### force?
-
-`boolean`
 
 #### frameworkVariant?
 

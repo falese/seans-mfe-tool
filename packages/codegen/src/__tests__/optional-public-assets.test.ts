@@ -60,7 +60,7 @@ describe('optional public assets (#341)', () => {
       const { files } = await generateAllFiles(
         manifest('angular') as never,
         path.join(BASE, 'angular'),
-        { force: true } as never,
+        {} as never,
       );
       paths = files.map((f) => f.path);
       spy.mockRestore();
@@ -74,7 +74,6 @@ describe('optional public assets (#341)', () => {
 
   it('says nothing about the assets the Angular variant does not ship', async () => {
     await generateAllFiles(manifest('angular') as never, path.join(BASE, 'quiet'), {
-      force: true,
     } as never);
 
     // The exact two lines the drill complained about.
@@ -86,7 +85,7 @@ describe('optional public assets (#341)', () => {
     const { files } = await generateAllFiles(
       manifest('react') as never,
       path.join(BASE, 'react'),
-      { force: true } as never,
+      {} as never,
     );
     const paths = files.map((f) => f.path);
 

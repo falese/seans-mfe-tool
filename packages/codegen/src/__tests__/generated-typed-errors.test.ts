@@ -47,7 +47,7 @@ describe('generated code throws typed errors (ADR-017)', () => {
   let files: Array<{ path: string; content: string }>;
 
   beforeAll(async () => {
-    ({ files } = await generateAllFiles(manifest as never, BASE, { force: true }));
+    ({ files } = await generateAllFiles(manifest as never, BASE));
   });
 
   afterAll(async () => {

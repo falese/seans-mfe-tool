@@ -84,7 +84,7 @@ async function checkLane(lane: Lane): Promise<void> {
     // `mfe:validate` (invoked below) reads mfe-manifest.yaml off disk like a
     // real MFE directory — remote:init's job, not generateAllFiles's.
     await writeManifest(manifest, path.join(dir, 'mfe-manifest.yaml'));
-    const { files } = await generateAllFiles(manifest, dir, { force: true });
+    const { files } = await generateAllFiles(manifest, dir);
     await writeGeneratedFiles(files, { force: true });
 
     // `@seans-mfe-tool/runtime` isn't published to npm yet (ADR-064) — real
