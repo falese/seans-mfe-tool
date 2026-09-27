@@ -19,7 +19,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { EXIT_CODES } from '@seans-mfe/contracts';
 import { CATALOG_EXCLUDED } from '../schema-derivation';
+import { loadLocalTools } from '../../mcp/sources/local';
+import { buildArgv } from '../../mcp/tool-registry';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const COMMANDS_DIR = path.join(REPO_ROOT, 'src', 'commands');
@@ -180,6 +183,28 @@ describe('schema catalog', () => {
       expect(schema).toHaveProperty('input');
       expect(schema).toHaveProperty('output');
       expect(schema).toHaveProperty('errorCodes');
+    }
+  });
+
+  it('every published errorCodes list is the contracts exit-code table (#331)', () => {
+    // generate-schemas.ts once kept its own copy of this list, so adding an
+    // exit code to the taxonomy left every published schema stale.
+    const table = [...new Set(Object.values(EXIT_CODES))].sort((a, b) => a - b);
+    for (const file of schemaFiles) {
+      const schema = JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, file), 'utf8'));
+      expect({ file, errorCodes: schema.errorCodes }).toEqual({ file, errorCodes: table });
+    }
+  });
+
+  it('every MCP tool is named for the command it runs, never stuttered (#331)', async () => {
+    const tools = await loadLocalTools(SCHEMAS_DIR);
+    expect(tools.length).toBeGreaterThan(0);
+    for (const tool of tools) {
+      expect(tool.name).not.toMatch(/^mfe:mfe:/);
+      const command = tool.command ?? '';
+      expect(tool.name).toBe(command.startsWith('mfe:') ? command : `mfe:${command}`);
+      // ...and a call to it actually dispatches to that command.
+      expect(buildArgv(tool.name, {}, [], tool.command)[0]).toBe(command);
     }
   });
 

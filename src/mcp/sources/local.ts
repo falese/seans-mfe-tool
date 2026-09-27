@@ -1,6 +1,7 @@
 /**
  * Local MCP source — discovers tools from the CLI's own schemas/ directory.
- * All tool names are prefixed with "mfe:" (e.g. mfe:deploy, mfe:bff:init).
+ * Tool names are the command id in the "mfe:" namespace (mfe:deploy,
+ * mfe:bff:init, mfe:validate).
  *
  * Refs #113 (C5)
  */
@@ -41,19 +42,26 @@ export async function loadLocalTools(schemasDir: string): Promise<McpToolDefinit
     if (!isCommandContract(schema)) continue;
 
     const baseName = path.basename(filePath, '.json');
-
-    // bff-init → mfe:bff:init
-    const toolName = 'mfe:' + baseName.replace(/-/g, ':');
     const commandName: string = schema.title ?? baseName.replace(/-/g, ':');
 
     tools.push({
-      name: toolName,
+      name: toolNameFor(commandName),
       description: schema.description ?? `Run seans-mfe-tool ${commandName}`,
       inputSchema: schema.input,
+      command: commandName,
     });
   }
 
   return tools;
+}
+
+/**
+ * bff:init → mfe:bff:init. A command already in the `mfe:` topic keeps its own
+ * id: prefixing it produced `mfe:mfe:validate`, the one tool whose name did not
+ * match its command (#331).
+ */
+export function toolNameFor(commandId: string): string {
+  return commandId.startsWith('mfe:') ? commandId : `mfe:${commandId}`;
 }
 
 interface CommandContract {
