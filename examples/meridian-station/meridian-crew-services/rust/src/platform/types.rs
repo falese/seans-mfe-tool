@@ -141,18 +141,67 @@ pub struct SchemaResult {
     pub format: SchemaFormat,
 }
 
-/// One GraphQL error, as the BFF returned it.
+/// One error in a query result.
+///
+/// A GraphQL error from the BFF carries `message` and `path`. A transport
+/// failure also carries `type`, `retryable` and `status`, from the same table
+/// as the TypeScript runtime's `classifyHttpOutcome` (ADR-106), so a host can
+/// tell a transient 503 from a misconfigured endpoint. `kind` is `type` on the
+/// wire; `type` is a Rust keyword.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryError {
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub path: Option<Vec<String>>,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none", default)]
+    pub kind: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub retryable: Option<bool>,
+    /// HTTP status; 0 when no response arrived.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub status: Option<u16>,
 }
 
 impl QueryError {
     pub fn new(message: impl Into<String>) -> Self {
-        QueryError { message: message.into(), path: None }
+        QueryError { message: message.into(), path: None, kind: None, retryable: None, status: None }
+    }
+
+    /// A request that failed in transport, classified by its status.
+    pub fn transport(message: impl Into<String>, status: Option<u16>) -> Self {
+        let (kind, retryable) = classify_http_outcome(status);
+        QueryError {
+            message: message.into(),
+            path: None,
+            kind: Some(kind.to_string()),
+            retryable: Some(retryable),
+            status: Some(status.unwrap_or(0)),
+        }
+    }
+
+    /// No transport was injected at all: a configuration mistake, which no
+    /// retry fixes. Native only; the web runtime always has `fetch`.
+    pub fn unconfigured(message: impl Into<String>) -> Self {
+        QueryError {
+            message: message.into(),
+            path: None,
+            kind: Some("business".to_string()),
+            retryable: Some(false),
+            status: None,
+        }
+    }
+}
+
+/// The status-to-type table (ADR-106 §2), row for row with the TypeScript
+/// runtime's `classifyHttpOutcome`. `None` or `0` means no response arrived.
+pub fn classify_http_outcome(status: Option<u16>) -> (&'static str, bool) {
+    match status.unwrap_or(0) {
+        0 | 408 | 429 => ("network", true),
+        s if s >= 500 => ("network", true),
+        401 | 403 => ("security", false),
+        400 | 422 => ("validation", false),
+        _ => ("business", false),
     }
 }
 

@@ -765,7 +765,17 @@ pub async fn default_do_query(core: &MfeCore, context: &MfeContext) -> Result<Qu
         // The envelope policy: `query` answers with errors, it does not fail.
         // `BffClient::query` fails on the same input — the deliberate half of
         // the difference between the two.
-        Err(error) => return Ok(QueryResult { data: None, errors: vec![QueryError::new(error.to_string())] }),
+        // Typed from the shared table (ADR-106), so a host can decide whether
+        // to retry. A missing transport is a configuration mistake, not a
+        // transient failure, and is not classified as one.
+        Err(error) => {
+            let classified = match (&error, core.deps().transport.is_some()) {
+                (_, false) => QueryError::unconfigured(error.to_string()),
+                (MfeError::Transport { status, .. }, true) => QueryError::transport(error.to_string(), *status),
+                (_, true) => QueryError::transport(error.to_string(), None),
+            };
+            return Ok(QueryResult { data: None, errors: vec![classified] });
+        }
     };
 
     let decoded: Value = serde_json::from_slice(&body).map_err(|e| MfeError::Decode { message: e.to_string() })?;
@@ -789,7 +799,7 @@ pub fn graphql_errors(response: &Value) -> Vec<QueryError> {
                             .map(|seg| seg.as_str().map(str::to_string).unwrap_or_else(|| seg.to_string()))
                             .collect()
                     });
-                    Some(QueryError { message, path })
+                    Some(QueryError { message, path, kind: None, retryable: None, status: None })
                 })
                 .collect()
         })

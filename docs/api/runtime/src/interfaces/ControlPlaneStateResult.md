@@ -6,7 +6,7 @@
 
 # Interface: ControlPlaneStateResult
 
-Defined in: [packages/runtime/src/capability-results.ts:108](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L108)
+Defined in: [packages/runtime/src/capability-results.ts:125](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L125)
 
 Result from updateControlPlaneState capability.
 
@@ -20,7 +20,7 @@ form always sets it). The `resolution` shape IS the contracts `Resolution`.
 
 > **acknowledged**: `boolean`
 
-Defined in: [packages/runtime/src/capability-results.ts:110](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L110)
+Defined in: [packages/runtime/src/capability-results.ts:127](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L127)
 
 Whether the daemon acknowledged the state update
 
@@ -30,7 +30,7 @@ Whether the daemon acknowledged the state update
 
 > **correlationId**: `string`
 
-Defined in: [packages/runtime/src/capability-results.ts:112](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L112)
+Defined in: [packages/runtime/src/capability-results.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L129)
 
 Correlation ID for tracing this update through the control plane
 
@@ -40,7 +40,7 @@ Correlation ID for tracing this update through the control plane
 
 > `optional` **error**: `string` \| `null`
 
-Defined in: [packages/runtime/src/capability-results.ts:114](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L114)
+Defined in: [packages/runtime/src/capability-results.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L131)
 
 Non-null when the update could not be delivered (not connected, timeout, etc.)
 
@@ -50,7 +50,7 @@ Non-null when the update could not be delivered (not connected, timeout, etc.)
 
 > `optional` **resolution**: [`Resolution`](../../../contracts/src/interfaces/Resolution.md) \| `null`
 
-Defined in: [packages/runtime/src/capability-results.ts:120](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L120)
+Defined in: [packages/runtime/src/capability-results.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/capability-results.ts#L137)
 
 Populated when the registry immediately resolved a new component based
 on the state update. In practice this may arrive asynchronously via the

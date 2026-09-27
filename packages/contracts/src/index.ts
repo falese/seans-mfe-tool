@@ -1,5 +1,6 @@
 export * from './errors/index';
 export * from './error-classifier';
+export * from './http-outcome';
 export * from './build-output-parser';
 export * from './envelope';
 export * from './observability';

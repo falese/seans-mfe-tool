@@ -149,6 +149,17 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     // followed by no install.
     pattern: /^\s*COPY\s+package\.json\s+\.\/\s*$/,
   },
+  {
+    id: 'bff-4xx-no-longer-network-error',
+    since: '1.0.0',
+    // Advice: the narrowing still compiles and still catches every 5xx.
+    adr: 'ADR-106',
+    message:
+      'Narrows a failure to NetworkError. The generated bff.ts connector used to throw NetworkError for every non-2xx; it now throws the class the status maps to, so a 401/403 is a SecurityError, a 400/422 a ValidationError and any other 4xx a BusinessError, and this check no longer sees them',
+    fix: "Branch on the classification instead: `(err as { retryable?: boolean }).retryable` to decide on a retry, or `err.type` ('network' | 'security' | 'validation' | 'business'). If you meant only transient failures, the NetworkError check is still right and this warning can be ignored.",
+    pattern: /\binstanceof\s+NetworkError\b/,
+    exempt: /^\s*(?:\/\/|\*|\/\*)/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

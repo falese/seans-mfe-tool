@@ -51,6 +51,21 @@ describe('meridian-crew-services BFF connector', () => {
     await expect(query('{ hello }')).rejects.toThrow('BFF request failed: 503');
   });
 
+  it('marks a 5xx retryable and a 404 not (ADR-106)', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: false, status: 503, statusText: 'Service Unavailable' })
+      .mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
+
+    await expect(query('{ hello }')).rejects.toMatchObject({ type: 'network', retryable: true });
+    await expect(query('{ hello }')).rejects.toMatchObject({ type: 'business', retryable: false });
+  });
+
+  it('throws a retryable NetworkError when no response arrives (ADR-106)', async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await expect(query('{ hello }')).rejects.toMatchObject({ type: 'network', retryable: true, statusCode: 0 });
+  });
+
   it('forwards custom headers', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,

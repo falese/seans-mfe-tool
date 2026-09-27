@@ -331,6 +331,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-103](./architecture-decisions/ADR-103-composing-the-browser-build.md) | A manifest's browser build registers as `\<name\>-wasm`, served by the MFE's own server under `/wasm/` — placements stay on the web build unless `from` names the browser build | Control plane / composition / targets | Implemented |
 | [ADR-104](./architecture-decisions/ADR-104-published-html-api-reference.md) | The docs site publishes an HTML API reference under /api/, built at publish time from the same TypeDoc config as the committed Markdown, which stays the version reviewed in pull requests | Docs / tooling / publishing | Implemented |
 | [ADR-105](./architecture-decisions/ADR-105-retire-base-control-plane.md) | Retire BaseControlPlane — the control plane has one implementation, so a host connects with a LayoutManager instead of subclassing an abstract base | Runtime / control-plane / abstract-base | Implemented |
+| [ADR-106](./architecture-decisions/ADR-106-query-transport-errors-are-typed.md) | The query capability keeps its error envelope, and a transport failure in it is typed — one status mapping, shared by the capability and the generated BFF client, on every target | Runtime / capabilities / query | Implemented |
 
 ### Proposed — filed, not ratified
 

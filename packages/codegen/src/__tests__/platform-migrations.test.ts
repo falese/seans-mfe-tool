@@ -266,6 +266,30 @@ describe('dockerfile-installs-from-lockfile (#346)', () => {
   });
 });
 
+describe('bff-4xx-no-longer-network-error (ADR-106)', () => {
+  const entry = byId('bff-4xx-no-longer-network-error');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/features/Pets/Pets.tsx', text }).length;
+
+  it('catches code that narrows a failure to NetworkError', () => {
+    expect(hits('  if (err instanceof NetworkError) {')).toBe(1);
+    expect(hits('} catch (e) { if (e instanceof NetworkError) retry(); }')).toBe(1);
+  });
+
+  it('leaves the import and branches on the classification alone', () => {
+    expect(hits("import { NetworkError } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits('  if ((err as { retryable?: boolean }).retryable) {')).toBe(0);
+  });
+
+  it('does not fire on a comment', () => {
+    expect(hits('// used to check `err instanceof NetworkError` here')).toBe(0);
+  });
+
+  it('is advice: code that narrows still compiles and still catches 5xx', () => {
+    expect(entry.failsAt).toBeUndefined();
+  });
+});
+
 describe('findMigrationHits over real generated shapes', () => {
   it('is silent on the current index.tsx template output', () => {
     const current = [

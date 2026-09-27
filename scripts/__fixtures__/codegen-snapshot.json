@@ -392,12 +392,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "37f0ff29917dfb9a373bb0ad2e139ebed018f48a65741ab20232260aa34b77df"
+        "sha256": "780badbae5a60a8ab778102117c688a3d45cd34dcd4d6f681c860bccb488dcf4"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "cbdc9628d8bfe5f27d3ece328d5420fa718ad3a67aea48d3999b9fada7a325e3"
+        "sha256": "cd0318b05eee1a1838d34c13827052423a25980e798ab883367d753eb1797b01"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -998,7 +998,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "9486590302c016a821cf22badd9348b2f80a48e1051f67bb4e21b7afbf9ad2a8"
+        "sha256": "2b54bbe5689062a5899d5c458de648982d0d8cd4474bd7db926fa63e7f75d92a"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1008,12 +1008,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "17f0b8ebe3aedb86af50ec35ca84caaee8dea04d32e24359df44f0eabd746f9c"
+        "sha256": "81a1a5a7f3728ef6f27a4f3b9b9a8153195db93fc6ad9329b80f9e9035673888"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "fa4fb9ef93541a55fab6d765335313833248d515d696a7d6f2752053a7048bda"
+        "sha256": "264d9fa044fe0d86bdd0d4a04126f93c8488fd5c65a4a09e25b7b03298120ebe"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -1532,7 +1532,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "c4a6af2211bd78fadf0ba13420a56d15d1dbc4df2d1063ec8343ebb1f26dfdad"
+        "sha256": "747cd1d99231e27de268fc99fe55ab9eda3d6de7bb4467ff3b71d95e35293390"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1542,12 +1542,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "3921a0c5c726247c02eb560455d65dafb09787f999a646aca5fe6e19db361022"
+        "sha256": "75dcebba42d7728ba8240a666fa81009c2bf9de4e22a138bfd8dd5b429681c94"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "1949780da2f5547b30a284b5f7caf1bbbf3079286670e8e1b8df7508153e7b06"
+        "sha256": "404c3fb0130e781664d8d99ebc97d261b1ea99b7005129433685c89188d23a4c"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -1698,12 +1698,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "b964591beba7a03d3175ea7e6f5b9042fe5388ddb850218ae1eee132298fd1c3"
+        "sha256": "86fec8ac03e47c0335c6f29e66fa3e91fa8d3c9f0960c9efe686401ee9287466"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "7e96f29f21c148cba13a2a9e713f6b7e6f736e65a158069dec9fdad2567dfffa"
+        "sha256": "1d375a0c29aea539b6f562545e7d9b07db41a91f5b1cc1fdb3232ec47ab081fd"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -1971,7 +1971,7 @@
       {
         "path": "<cwd>/rust/src/platform/mfe_base.rs",
         "overwrite": true,
-        "sha256": "9e8eee1bb43b8aacfdb4294ceb60e1e1c39e5607252a2f1745e2488cd579fcaa"
+        "sha256": "7fa77f46a7a14bd15792e775f592b72a8950ab55b05dbd8be15a0360ca910258"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_lifecycle.rs",
@@ -1991,12 +1991,12 @@
       {
         "path": "<cwd>/rust/src/platform/types.rs",
         "overwrite": true,
-        "sha256": "08f4b60ffb3658aa2291959bc5e5b0af97275be64463b4fde1f23c377fbb4202"
+        "sha256": "993a2a739d37b16873a21fbe18fd09991a95da76c2ac269a9154e4378d11370c"
       },
       {
         "path": "<cwd>/rust/tests/lifecycle.rs",
         "overwrite": true,
-        "sha256": "2c1a8a4a5d5c3abd3e7383bcae3bb4feee6d3568920d10f7e8cbfdd7229f0bd3"
+        "sha256": "946b3c5bb5056d948b6bf3bd68eda6c33fe105434b66a68a05f3b0f606fe2ed7"
       },
       {
         "path": "<cwd>/rust/web/.gitignore",
@@ -2086,12 +2086,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "91ef56da02341de30c87a82fe7fa834e266131daaf086a7f4dac3659e3b82a44"
+        "sha256": "1a0584cb5cb2906ec6fafb4c0fd3a9d135c38c3cd2b1b423107046a864ba66ba"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "49001f82e06c5cc80ddad7702585e578f700a172006b6bd119dd107b1f0534c6"
+        "sha256": "0a301aa502eb628e1bca90cc7949ee8566ad59a9a5ad035957251dd5c1bf2cb2"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -2191,7 +2191,7 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFEBase.swift",
         "overwrite": true,
-        "sha256": "2c36423731415c48dd249d7c5a347794c252fadc0fc31110a39b96205107a858"
+        "sha256": "ebea809cea201abccfc541b6807eb291080e27923d350d120b30ba6590c3b973"
       },
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/MFELifecycle.swift",
@@ -2206,12 +2206,12 @@
       {
         "path": "<cwd>/swift/Sources/MFE/Platform/Types.swift",
         "overwrite": true,
-        "sha256": "fc58237ed4584d0ad3911910b36dbb70cae1cf078685f6d81eb6de097ef28452"
+        "sha256": "8b3818ec1bed0d06f965b3e71c80f1c11e3d5e6a78bde69807aa1a817f9bdb7b"
       },
       {
         "path": "<cwd>/swift/Tests/MFETests/LifecycleTests.swift",
         "overwrite": true,
-        "sha256": "d5fb9aa0ee9280e1302ed75661df16e889e8415744ce4ae0b91a56f7c503e489"
+        "sha256": "65c0307cda7f315ec11fa93181b2ba1aafaf1f6c812e72ce3cf2ba3807a9bf3a"
       },
       {
         "path": "<cwd>/tsconfig.json",
@@ -2324,7 +2324,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "63c37817550f17f5935b9ee648c4d965676ad69c440788ed6633af5d29a5d33a"
+        "sha256": "5eea2177123a37339fe247eebcb2c13eb603343751332fa4b9762e9e70bc5591"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2334,12 +2334,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "eba21f8e01e944b2adb69992d194acd28a549304acdc3fffe9a978a7b01de491"
+        "sha256": "9ba0e67cbbcdb761b8118f07a6cb0c0cbe04655e02bd0387646cd3f0777d0387"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "c0dea9df65c7cc5e7b1da72569bb66091372e1705722b51d3b9260c99cd0bada"
+        "sha256": "d9005dae0fb8453940a5896262b98c5a7f1b69ee2150a430201d20f93a65a526"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -2491,12 +2491,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "28dc3ecbc465155930ceb43eb0cfe887868bce8597b0eb94ae012441e6a964a1"
+        "sha256": "f0dd93d150e503a4de7689b474920f9bbab7309c60768357a24dff4a40d23369"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "8c7cc702451924f18f1a44e05b4b3b318cb271cfd03e296cbb86d5bf3ada27ff"
+        "sha256": "434f3588bc5e64a767715a28096f5536421febff27fc620b30bbde813a435935"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
@@ -2629,7 +2629,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "d9a6d900ed09801a97211682c7dcc8c86365fbb21ec89c7283bb08d2ac4f2002"
+        "sha256": "dafea7ca76b3b01de532f548840d724d379b1ecd3b455d8fbab152cd91984097"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2639,12 +2639,12 @@
       {
         "path": "<cwd>/src/platform/bff/bff.test.ts",
         "overwrite": true,
-        "sha256": "68381296f1af02b742d98d0721b0cf0bb0cdbb86ef1183bed8d925d7e6b11f46"
+        "sha256": "b86fe00420d0737848a324627f9182712887f1c7cc2f9fa5dfd5d01ae17d92b8"
       },
       {
         "path": "<cwd>/src/platform/bff/bff.ts",
         "overwrite": true,
-        "sha256": "1e5563238427d9608faa3f2f3d8a0ab6fa08271d1c3e488ff84667ba9fb208f0"
+        "sha256": "1e224193268ca29f8f65327e61fe4f0cb29234a4f5f4bccc3cabe3316cd81235"
       },
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",

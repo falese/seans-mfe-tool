@@ -133,6 +133,59 @@ describe('BaseMFE.doQuery() — default BFF dispatch', () => {
     expect((result.errors as Array<{ message: string }>)[0].message).toMatch(/BFF request failed: 503/);
   });
 
+  it('forwards context.requestId as X-Request-ID, which the BFF uses for correlation (ADR-106 §3)', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ data: {} }) });
+    const mfe = new TestMFE(BASE_MANIFEST, { bffUrl: 'http://bff/graphql' });
+    await (mfe as unknown as { doQuery: (c: Context) => Promise<unknown> }).doQuery(
+      makeContext({ document: '{ hello }' }, { requestId: 'req-42' }),
+    );
+    const init = fetchMock.mock.calls[0][1] as { headers: Record<string, string> };
+    expect(init.headers['X-Request-ID']).toBe('req-42');
+  });
+
+  // ADR-106: the envelope stays, and a transport failure inside it is typed.
+  describe('typed transport errors (ADR-106)', () => {
+    type Errs = Array<{ message: string; path?: string[]; type?: string; retryable?: boolean; status?: number }>;
+    const run = async (): Promise<{ data: unknown; errors?: Errs }> =>
+      (new TestMFE(BASE_MANIFEST, { bffUrl: 'http://bff/graphql' }) as unknown as {
+        doQuery: (c: Context) => Promise<{ data: unknown; errors?: Errs }>;
+      }).doQuery(makeContext({ document: '{ hello }' }));
+
+    it('marks a 503 as a retryable network error, with its status', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: false, status: 503, statusText: 'Service Unavailable' });
+      const result = await run();
+      expect(result.data).toBeNull();
+      expect(result.errors).toEqual([
+        { message: 'BFF request failed: 503 Service Unavailable', type: 'network', retryable: true, status: 503 },
+      ]);
+    });
+
+    it('marks a 404 as not retryable — a misconfigured endpoint does not recover', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
+      const [err] = (await run()).errors ?? [];
+      expect(err).toMatchObject({ type: 'business', retryable: false, status: 404 });
+    });
+
+    it('answers a fetch that never got a response in the envelope, instead of throwing', async () => {
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      const result = await run();
+      expect(result.data).toBeNull();
+      expect(result.errors).toEqual([
+        { message: 'BFF request failed: Failed to fetch', type: 'network', retryable: true, status: 0 },
+      ]);
+    });
+
+    it('leaves GraphQL errors in a 2xx untyped — they are not transport failures', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: null, errors: [{ message: 'field not found', path: ['hello'] }] }),
+      });
+      const result = await run();
+      expect(result.errors).toEqual([{ message: 'field not found', path: ['hello'] }]);
+    });
+  });
+
   it('throws ValidationError when context.inputs.document is missing', async () => {
     const mfe = new TestMFE(BASE_MANIFEST, { bffUrl: 'http://bff/graphql' });
     const ctx = makeContext(undefined);
