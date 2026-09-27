@@ -8,7 +8,8 @@
 # own directory. It registers meridian's control-plane/rules.json and drives
 # it in Chromium the way a session does. `meridian.root` composes the console;
 # the `meridian.off-shift` context change mounts flappy into the console's
-# work area. A render throw is contained.
+# work area. A render throw is contained, and a 503 from the remote's BFF
+# reaches the caller typed as a retryable network error (ADR-106).
 #
 # Advisory for now: not a required check. It is the slowest job in the repo
 # and has no history yet, so it earns "required" after a week of runs.

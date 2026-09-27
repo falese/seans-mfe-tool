@@ -137,4 +137,40 @@ test.describe('Cross-application composition (#345)', () => {
       );
     }
   });
+  // ADR-106: a transport failure reaches the caller typed, through the foreign
+  // remote's own runtime copy. The 503 is faked at the network layer so the
+  // assertion is about classification, not about any particular BFF being down.
+  test("a 503 from a remote's BFF comes back typed as a retryable network error (ADR-106)", async ({ page, request }) => {
+    await goOffShift(page, request);
+    const bffUrl = 'http://localhost:3001/__composition-probe/graphql';
+    await page.route(bffUrl, (route) =>
+      route.fulfill({ status: 503, statusText: 'Service Unavailable', body: 'down' })
+    );
+
+    const result = await page.evaluate(async (url) => {
+      const w = window as unknown as Record<string, unknown>;
+      const container = w['abc_kids_flappy'] as
+        | { get(module: string): Promise<() => { mfe?: Record<string, unknown> }> }
+        | undefined;
+      if (!container) return { error: 'no abc_kids_flappy container on window' };
+      const mfe = (await container.get('./App'))().mfe as
+        | { query(ctx: object): Promise<unknown> }
+        | undefined;
+      if (!mfe) return { error: './App exposes no mfe' };
+      try {
+        return await mfe.query({
+          requestId: 'composition-probe-503',
+          timestamp: new Date(),
+          inputs: { document: '{ __typename }', bffUrl: url },
+        });
+      } catch (e) {
+        return { threw: (e as Error).message };
+      }
+    }, bffUrl);
+
+    expect(result).toEqual({
+      data: null,
+      errors: [expect.objectContaining({ type: 'network', retryable: true, status: 503 })],
+    });
+  });
 });
