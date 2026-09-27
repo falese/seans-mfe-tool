@@ -9,7 +9,12 @@ FROM seans-mfe-tool-cli:latest AS cli-builder
 
 FROM node:20-slim AS builder
 
-WORKDIR /app
+# Three levels below a root, like this MFE in the repository. package.json
+# declares the runtime as file:../../../dist/runtime and the lockfile records
+# that link; from /app it climbs past / and `npm uninstall --package-lock-only`
+# crashes ("reading 'extraneous'"). The link is removed before npm ci, so
+# nothing is read from there — the depth only has to match.
+WORKDIR /repo/examples/meridian-station/app
 
 # Make the pre-compiled runtime available at a stable path inside the image.
 # Using dist/runtime (compiled .js + .d.ts) avoids traversing TypeScript source
@@ -63,22 +68,22 @@ WORKDIR /app
 # Copy node_modules from builder — the .mesh/index.js requires @graphql-mesh/http,
 # @graphql-mesh/runtime, etc., which are transitive deps of @graphql-mesh/cli
 # (devDep) and not installed by a production --omit=dev install.
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+COPY --from=builder /repo/examples/meridian-station/app/node_modules ./node_modules
+COPY --from=builder /repo/examples/meridian-station/app/package.json ./
 # Copy Mesh artifacts
-COPY --from=builder /app/.mesh ./.mesh
+COPY --from=builder /repo/examples/meridian-station/app/.mesh ./.mesh
 
 # Copy BFF platform files dynamically imported by the built Mesh artifacts at runtime.
 # .mesh/index.js resolves these relative to the project root via the paths in .meshrc.yaml.
-COPY --from=builder /app/src/platform/bff/mesh-context.js ./src/platform/bff/
-COPY --from=builder /app/src/platform/bff/mock-switch.js ./src/platform/bff/
-COPY --from=builder /app/src/platform/bff/mocks.json ./src/platform/bff/
+COPY --from=builder /repo/examples/meridian-station/app/src/platform/bff/mesh-context.js ./src/platform/bff/
+COPY --from=builder /repo/examples/meridian-station/app/src/platform/bff/mock-switch.js ./src/platform/bff/
+COPY --from=builder /repo/examples/meridian-station/app/src/platform/bff/mocks.json ./src/platform/bff/
 
 # Copy built static assets
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /repo/examples/meridian-station/app/dist ./dist
 
 # Copy compiled server
-COPY --from=builder /app/server.js ./
+COPY --from=builder /repo/examples/meridian-station/app/server.js ./
 
 # Health check — uses PORT env var so compose can override the default port
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
