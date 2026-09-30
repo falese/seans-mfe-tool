@@ -35,6 +35,8 @@ async function writeFixture(dir: string, fx: Fixture = {}): Promise<void> {
       'language: typescript',
       'framework: react',
       'bundler: rspack',
+      'hosts:',
+      '  - id: fixture',
       'capabilities:',
       '  - Demo:',
       '      type: domain',

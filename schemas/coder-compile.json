@@ -241,6 +241,21 @@
                   "type": "object"
                 }
               },
+              "hosts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
               "description": {
                 "type": "string"
               },

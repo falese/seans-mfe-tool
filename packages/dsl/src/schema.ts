@@ -200,6 +200,55 @@ export const TargetsSchema = z
   .catchall(z.record(z.string(), z.unknown()));
 export type Targets = z.infer<typeof TargetsSchema>;
 
+// =============================================================================
+// Declared hosts (ADR-107)
+// =============================================================================
+
+/**
+ * A control-plane namespace: letters, digits, `-` and `_`, starting with a
+ * letter. The single definition — `control-plane.yaml`'s `namespace` (ADR-083
+ * §1) and a manifest's `hosts[].id` must agree, because the second names the
+ * first.
+ */
+export const NAMESPACE_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/**
+ * One shell this MFE declares it works in, named by that project's
+ * control-plane `namespace` (ADR-107 §1).
+ *
+ * An object rather than a bare string so a host's own access-management block
+ * can be added beside `id` without a second spelling (§3). Strict until then:
+ * an `auth:` written today would otherwise be stripped and read as configured.
+ */
+export const HostSchema = z
+  .object({
+    id: z
+      .string()
+      .regex(NAMESPACE_PATTERN, 'host id must be a control-plane namespace: a letter, then letters, digits, - or _')
+      .describe('The host project\'s control-plane namespace, as declared in its control-plane.yaml.'),
+  })
+  .strict();
+export type Host = z.infer<typeof HostSchema>;
+
+/** The hosts an MFE may be composed into — non-empty, no repeats (ADR-107 §2). */
+export const HostsSchema = z
+  .array(HostSchema)
+  .min(1, 'hosts must name at least one host — an empty list composes nowhere')
+  .superRefine((hosts, ctx) => {
+    const seen = new Set<string>();
+    hosts.forEach((host, index) => {
+      if (seen.has(host.id)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `host "${host.id}" is declared more than once`,
+          path: [index, 'id'],
+        });
+      }
+      seen.add(host.id);
+    });
+  });
+export type Hosts = z.infer<typeof HostsSchema>;
+
 /** Capability type discrimination */
 export const CapabilityTypeSchema = z.enum(['platform', 'domain']);
 export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
@@ -625,6 +674,12 @@ export const DSLManifestSchema = z.object({
   // manifest object is non-strict, so an undeclared key is stripped silently.
   targets: TargetsSchema.optional()
     .describe('Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095).'),
+
+  // The shells this MFE may be composed into (ADR-107). Optional to the
+  // parser so every loader still reads an older manifest; required by
+  // mfe:validate (`hosts-declared`) and by compose (`undeclared-host`).
+  hosts: HostsSchema.optional()
+    .describe('The host projects this MFE works in, each named by its control-plane namespace. Required by mfe:validate and compose (ADR-107).'),
 
   // Optional identity
   description: z.string().optional(),

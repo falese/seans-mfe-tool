@@ -16,6 +16,7 @@
  */
 
 import { z } from 'zod';
+import { NAMESPACE_PATTERN } from './schema';
 
 /**
  * `{name}` placeholders, as used by `forEach` expansion.
@@ -26,8 +27,8 @@ import { z } from 'zod';
  */
 export const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9_]*)\}/g;
 
-/** A namespace segment: letters, digits, `-` and `_`, starting with a letter. */
-const NAMESPACE = /^[A-Za-z][A-Za-z0-9_-]*$/;
+/** A namespace segment — one definition, shared with a manifest's `hosts[].id` (ADR-107). */
+const NAMESPACE = NAMESPACE_PATTERN;
 
 /**
  * One placement: a capability, and where it goes.

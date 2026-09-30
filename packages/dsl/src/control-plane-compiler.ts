@@ -38,12 +38,18 @@ export type ControlPlaneRule =
   | 'ambiguous-capability'
   | 'unknown-mfe'
   | 'unbound-placeholder'
-  | 'undeclared-slot';
+  | 'undeclared-slot'
+  | 'undeclared-host';
 
 export interface ControlPlaneFinding {
   rule: ControlPlaneRule;
-  /** The state key the offending route produces, for locating it in the source. */
-  stateKey: string;
+  /**
+   * The state key the offending route produces, for locating it in the source.
+   * Absent for a finding about a fleet member rather than a route.
+   */
+  stateKey?: string;
+  /** The fleet member the finding is about, when it is about one (ADR-107). */
+  mfe?: string;
   message: string;
   /** Advisory findings must not fail a build; everything structural does. */
   fatal: boolean;
@@ -270,6 +276,31 @@ function resolveProvider(
 }
 
 /**
+ * Every fleet member must name this project's namespace in its `hosts:`
+ * (ADR-107 §2). A manifest is where an MFE's owner states which shells it has
+ * been built and tested for; composing it anywhere else is a decision the
+ * owner did not make. Fatal, like every structural finding: an absent list is
+ * the same failure as a list without this host.
+ */
+function checkDeclaredHosts(namespace: string, manifests: readonly DSLManifest[]): ControlPlaneFinding[] {
+  const findings: ControlPlaneFinding[] = [];
+  for (const manifest of manifests) {
+    const declared = (manifest.hosts ?? []).map((host) => host.id);
+    if (declared.includes(namespace)) continue;
+    findings.push({
+      rule: 'undeclared-host',
+      mfe: manifest.name,
+      fatal: true,
+      message:
+        declared.length === 0
+          ? `"${manifest.name}" declares no hosts, so it cannot be composed into "${namespace}" — add \`hosts: [{ id: ${namespace} }]\` to its mfe-manifest.yaml (ADR-107).`
+          : `"${manifest.name}" declares hosts ${declared.map((id) => `"${id}"`).join(', ')}, not "${namespace}" — its owner has to add \`{ id: ${namespace} }\` to hosts before this project can compose it (ADR-107).`,
+    });
+  }
+  return findings;
+}
+
+/**
  * Compile a composition document plus its fleet's manifests into the registry
  * payload, reporting everything that would otherwise surface at runtime.
  */
@@ -307,6 +338,8 @@ export function compileControlPlane(input: CompileInput): CompileResult {
     ...manifests.map((manifest): [string, CompiledRoute[]] => [manifest.name, []]),
     ...[...browserBuilds.keys()].map((name): [string, CompiledRoute[]] => [name, []]),
   ]);
+
+  findings.push(...checkDeclaredHosts(document.namespace, manifests));
 
   const prefix = `${document.namespace}.`;
 

@@ -28,6 +28,7 @@ const FEATURES = `${MFE}/swift/Sources/MFE/Features/`;
 function manifest(capabilities: string[], swift?: { capabilities?: string[] } | false): DSLManifest {
   return {
     name: 'crew-services',
+    hosts: [{ id: 'meridian' }],
     version: '1.0.0',
     type: 'remote',
     language: 'typescript',

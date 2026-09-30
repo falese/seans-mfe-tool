@@ -67,7 +67,8 @@ export type ValidationRule =
   | 'capability-has-a-target'
   | 'native-views-legacy-file'
   | 'platform-migrations'
-  | 'lifecycle-hook-handler-resolvable';
+  | 'lifecycle-hook-handler-resolvable'
+  | 'hosts-declared';
 
 /**
  * `error` fails validation; `warning` reports and does not.
@@ -214,6 +215,22 @@ export function validateMfeConsistency(input: MfeValidationInput): MfeValidation
     input;
   const issues: ValidationIssue[] = [];
   const checked: ValidationRule[] = [];
+
+  // Every MFE names the shells it works in (ADR-107). Framework-independent,
+  // so it is always checked. The parser accepts a manifest without it so every
+  // loader can still read one; this is where the gap is named.
+  checked.push('hosts-declared');
+  if (!manifest.hosts || manifest.hosts.length === 0) {
+    issues.push({
+      rule: 'hosts-declared',
+      // No `location`: locations are absolute `path:line`, and this pure
+      // function is not told where the manifest is. The message names it.
+      message: `mfe-manifest.yaml for "${manifest.name}" declares no hosts, so no project can compose it (ADR-107)`,
+      fix:
+        'Add a hosts: list naming each shell this MFE works in by its control-plane namespace ' +
+        '(the `namespace:` in that project\'s control-plane.yaml), e.g.\n  hosts:\n    - id: abc\n    - id: meridian',
+    });
+  }
 
   // react/react-dom pinned to the platform version (React MFEs only, ADR-050/#293).
   if (framework === 'react') {

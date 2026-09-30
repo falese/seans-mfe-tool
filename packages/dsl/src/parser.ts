@@ -227,6 +227,8 @@ export function createMinimalManifest(
     framework?: DSLManifest['framework'];
     bundler?: DSLManifest['bundler'];
     description?: string;
+    /** Host namespaces this MFE works in (ADR-107). Omitted ⇒ no `hosts:` key, which mfe:validate reports. */
+    hosts?: string[];
   } = {}
 ): DSLManifest {
   // Treat bundler:'webpack' as selecting Angular too, matching UnifiedGenerator's
@@ -267,6 +269,9 @@ export function createMinimalManifest(
   } else {
     if (options.framework) manifest.framework = options.framework;
     if (options.bundler) manifest.bundler = options.bundler;
+  }
+  if (options.hosts && options.hosts.length > 0) {
+    manifest.hosts = options.hosts.map((id) => ({ id }));
   }
   return manifest;
 }

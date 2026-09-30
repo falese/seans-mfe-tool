@@ -33,6 +33,7 @@ function manifest(overrides: Partial<DSLManifest> = {}): DSLManifest {
     bundler: 'webpack',
     endpoint: 'http://localhost:5002',
     remoteEntry: 'http://localhost:5002/remoteEntry.js',
+    hosts: [{ id: 'meridian' }],
     capabilities: [
       { DockingBoard: { type: 'domain' } },
       { BerthTile: { type: 'domain' } },
@@ -283,12 +284,14 @@ describe('compileControlPlane — forEach expansion', () => {
       name: 'abc-kids-flappy',
       endpoint: 'http://localhost:3001',
       remoteEntry: 'http://localhost:3001/remoteEntry.js',
+      hosts: [{ id: 'abc' }],
       capabilities: [{ PlayGame: { type: 'domain' } }, { Load: { type: 'platform' } }],
     } as Partial<DSLManifest>);
     const hockey = manifest({
       name: 'abc-kids-hockey',
       endpoint: 'http://localhost:3002',
       remoteEntry: 'http://localhost:3002/remoteEntry.js',
+      hosts: [{ id: 'abc' }],
       capabilities: [{ PlayGame: { type: 'domain' } }, { Load: { type: 'platform' } }],
     } as Partial<DSLManifest>);
 
@@ -372,6 +375,69 @@ describe('compileControlPlane — namespace scoping', () => {
     });
 
     expect(fatal(findings).some((f) => f.rule === 'namespace-escape')).toBe(true);
+  });
+});
+
+// ── declared hosts (ADR-107) ────────────────────────────────────────────────
+
+describe('compileControlPlane — declared hosts', () => {
+  const hostRule = (findings: ControlPlaneFinding[]): ControlPlaneFinding[] =>
+    fatal(findings).filter((f) => f.rule === 'undeclared-host');
+
+  it('accepts a fleet whose every MFE lists this project\'s namespace', () => {
+    const { findings } = compileControlPlane({ document: doc(), manifests: [consoleManifest, manifest()] });
+    expect(hostRule(findings)).toEqual([]);
+  });
+
+  it('accepts a guest MFE that lists this host beside its home one', () => {
+    const flappy = manifest({
+      name: 'abc-kids-flappy',
+      hosts: [{ id: 'abc' }, { id: 'meridian' }],
+      capabilities: [{ PlayGame: { type: 'domain' } }],
+    } as Partial<DSLManifest>);
+    const { findings } = compileControlPlane({
+      document: doc({ mfes: ['meridian-console', 'abc-kids-flappy'] }),
+      manifests: [consoleManifest, flappy],
+    });
+    expect(hostRule(findings)).toEqual([]);
+  });
+
+  it('rejects composing an MFE whose hosts do not include this namespace', () => {
+    const flappy = manifest({ name: 'abc-kids-flappy', hosts: [{ id: 'abc' }] } as Partial<DSLManifest>);
+    const { findings } = compileControlPlane({
+      document: doc({ mfes: ['meridian-console', 'abc-kids-flappy'] }),
+      manifests: [consoleManifest, flappy],
+    });
+
+    const [finding] = hostRule(findings);
+    expect(finding).toBeDefined();
+    expect(finding.mfe).toBe('abc-kids-flappy');
+    expect(finding.stateKey).toBeUndefined();
+    expect(finding.message).toContain('meridian');
+    expect(finding.message).toContain('abc');
+  });
+
+  it('rejects composing an MFE that declares no hosts at all', () => {
+    const bare = manifest({ name: 'meridian-cargo-ops' });
+    delete (bare as { hosts?: unknown }).hosts;
+    const { findings } = compileControlPlane({
+      document: doc({ mfes: ['meridian-console', 'meridian-cargo-ops'] }),
+      manifests: [consoleManifest, bare],
+    });
+
+    const [finding] = hostRule(findings);
+    expect(finding).toBeDefined();
+    expect(finding.mfe).toBe('meridian-cargo-ops');
+    expect(finding.message).toContain('hosts');
+  });
+
+  it('still derives the payload, so the finding is the only thing that fails the build', () => {
+    const flappy = manifest({ name: 'abc-kids-flappy', hosts: [{ id: 'abc' }] } as Partial<DSLManifest>);
+    const { payload } = compileControlPlane({
+      document: doc({ mfes: ['meridian-console', 'abc-kids-flappy'] }),
+      manifests: [consoleManifest, flappy],
+    });
+    expect(payload.map((d) => d.registration.name)).toContain('abc-kids-flappy');
   });
 });
 

@@ -23,6 +23,13 @@
         "type": "boolean",
         "description": "Also emit a Cargo crate (native Rust library) built from this same manifest. Adds a targets.rust block; the web build is unchanged. Run remote:generate to scaffold it."
       },
+      "host": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "A shell this MFE works in, by that project's control-plane namespace. Repeatable. Written to the manifest as hosts:, which mfe:validate and compose require (ADR-107)."
+      },
       "port": {
         "type": "string",
         "description": "Port number for the remote MFE (default: per-framework)"
