@@ -114,6 +114,10 @@ Parsed DSL manifest (unvalidated)
 
 > `optional` **framework**: `string`
 
+### hosts?
+
+> `optional` **hosts**: `object`[]
+
 ### language
 
 > **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`

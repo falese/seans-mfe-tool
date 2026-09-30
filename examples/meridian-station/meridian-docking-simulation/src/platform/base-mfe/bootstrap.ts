@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station docking simulation — first-person 3D spacecraft docking gameplay",
   "owner": "meridian-station",
   "tags": [

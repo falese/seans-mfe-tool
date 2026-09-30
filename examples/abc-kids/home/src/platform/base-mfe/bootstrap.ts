@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "ABC Kids — the home launcher; pick a game to play!",
   "owner": "abc-kids-team",
   "tags": [

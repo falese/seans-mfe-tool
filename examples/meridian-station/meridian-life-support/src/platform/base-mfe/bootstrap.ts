@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "angular",
   "bundler": "webpack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station life support — telemetry dashboard, module status, alerts",
   "owner": "meridian-station",
   "tags": [

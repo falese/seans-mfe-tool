@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Maze Runner — steer through the maze to reach the flag!",
   "owner": "abc-kids-team",
   "tags": [

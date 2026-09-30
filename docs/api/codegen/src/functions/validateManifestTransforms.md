@@ -105,6 +105,10 @@ Supports both object format {transformName: config} and array format [{transform
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

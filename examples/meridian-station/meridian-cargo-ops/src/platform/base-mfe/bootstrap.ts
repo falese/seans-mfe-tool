@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "angular",
   "bundler": "webpack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station cargo operations — manifests with valuations, hazard summary",
   "owner": "meridian-station",
   "tags": [

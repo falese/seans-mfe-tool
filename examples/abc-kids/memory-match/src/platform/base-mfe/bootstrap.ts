@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Memory Match — flip the cards and find every pair!",
   "owner": "abc-kids-team",
   "tags": [

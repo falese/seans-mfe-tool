@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Ice Hockey — move your paddle, score goals against the AI!",
   "owner": "abc-kids-team",
   "tags": [

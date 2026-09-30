@@ -8,7 +8,7 @@
 
 > `const` **DependenciesSchema**: `ZodObject`\<\{ `design-system`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `mfes`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; `runtime`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodString`\>\>; \}, `$strict`\>
 
-Defined in: [packages/dsl/src/schema.ts:532](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L532)
+Defined in: [packages/dsl/src/schema.ts:581](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L581)
 
 Dependencies section.
 

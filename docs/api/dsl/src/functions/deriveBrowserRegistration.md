@@ -8,7 +8,7 @@
 
 > **deriveBrowserRegistration**(`manifest`, `build`): [`CompiledRegistration`](../interfaces/CompiledRegistration.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:126](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L126)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L132)
 
 The registration of a manifest's browser build (ADR-100, ADR-103 §1).
 
@@ -108,6 +108,10 @@ same platform capabilities (ADR-101), so `capabilities` is unchanged.
 #### framework?
 
 `string` = `...`
+
+#### hosts?
+
+`object`[] = `...`
 
 #### language
 

@@ -105,6 +105,10 @@ derived from the manifest: framework singletons + design-system + extras.
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

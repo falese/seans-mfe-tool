@@ -117,6 +117,10 @@ the same as permitting.
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

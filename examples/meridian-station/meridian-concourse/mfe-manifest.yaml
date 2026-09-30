@@ -9,6 +9,10 @@ owner: meridian-station
 tags: [meridian, concourse, marketplace, react]
 category: services
 
+# The shells this MFE works in, by control-plane namespace (ADR-107).
+hosts:
+  - id: meridian
+
 endpoint: http://localhost:5006
 remoteEntry: http://localhost:5006/remoteEntry.js
 discovery: http://localhost:5006/.well-known/mfe-manifest.yaml

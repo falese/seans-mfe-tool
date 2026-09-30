@@ -8,7 +8,7 @@
 
 > `const` **PlacementSchema**: `ZodObject`\<\{ `capability`: `ZodString`; `from`: `ZodOptional`\<`ZodString`\>; `into`: `ZodOptional`\<`ZodString`\>; `props`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L41)
+Defined in: [packages/dsl/src/control-plane-schema.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L42)
 
 One placement: a capability, and where it goes.
 

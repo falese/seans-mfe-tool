@@ -30,6 +30,11 @@ const manifest = {
       "wasm": true
     }
   },
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station crew services — roster, certifications, pay status",
   "owner": "meridian-station",
   "tags": [

@@ -104,6 +104,10 @@ The framework name a manifest asks for, before any plugin is consulted.
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

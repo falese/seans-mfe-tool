@@ -8,4 +8,4 @@
 
 > **DataServe** = `z.infer`\<*typeof* [`DataServeSchema`](../variables/DataServeSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:402](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L402)
+Defined in: [packages/dsl/src/schema.ts:451](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L451)

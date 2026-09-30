@@ -106,6 +106,10 @@ to force into a single shared instance.
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

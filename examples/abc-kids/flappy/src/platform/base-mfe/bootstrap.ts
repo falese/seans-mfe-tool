@@ -20,6 +20,14 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    },
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Flappy Bird — tap to flap, avoid pipes, keep score!",
   "owner": "abc-kids-team",
   "tags": [

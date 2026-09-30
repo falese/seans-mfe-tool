@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Color Mixer — mix two paints to make the target color!",
   "owner": "abc-kids-team",
   "tags": [

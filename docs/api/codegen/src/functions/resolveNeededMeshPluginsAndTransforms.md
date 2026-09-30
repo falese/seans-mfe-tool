@@ -106,6 +106,10 @@ config implies (ADR-027). Feeds `extractManifestVars`, which decides what
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

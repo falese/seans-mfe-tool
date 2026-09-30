@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Rhythm Tap — watch the pattern, then drum it back!",
   "owner": "abc-kids-team",
   "tags": [

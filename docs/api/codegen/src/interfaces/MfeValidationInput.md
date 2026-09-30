@@ -134,6 +134,10 @@ Defined in: [packages/codegen/src/validate.ts:34](https://github.com/falese/sean
 
 > `optional` **framework**: `string`
 
+#### hosts?
+
+> `optional` **hosts**: `object`[]
+
 #### language
 
 > **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`

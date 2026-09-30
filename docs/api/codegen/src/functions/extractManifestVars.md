@@ -102,6 +102,10 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
@@ -765,6 +769,10 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 #### manifest.framework?
 
 > `optional` **framework**: `string`
+
+#### manifest.hosts?
+
+> `optional` **hosts**: `object`[]
 
 #### manifest.language
 

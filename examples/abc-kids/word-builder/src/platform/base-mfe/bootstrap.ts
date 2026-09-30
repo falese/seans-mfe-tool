@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Word Builder — tap the letters in order to spell the word!",
   "owner": "abc-kids-team",
   "tags": [
