@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Animal Sounds — which animal makes that sound?",
   "owner": "abc-kids-team",
   "tags": [

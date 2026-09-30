@@ -32,6 +32,7 @@ indexes. This page answers only *what is allowed*.
 | `framework` | `string` | min length 1 | UI framework. Open string — an unknown value warns rather than failing (ADR-036). Omitted defaults to react. |
 | `bundler` | `string` | min length 1 | Build tool. Open string, same policy as framework. Omitted defaults to rspack. |
 | `targets` | object (web, swift, rust) | — | Secondary build targets built from this same manifest, e.g. a Swift Package or a Cargo crate (ADR-095). |
+| `hosts` | object (id)[] | — | The host projects this MFE works in, each named by its control-plane namespace. Required by mfe:validate and compose (ADR-107). |
 | `description` | `string` | — |  |
 | `owner` | `string` | — | Team or individual responsible. Used for impact analysis (ADR-008). |
 | `tags` | `string`[] | — | Arbitrary labels for registry search and impact analysis. |
@@ -94,5 +95,5 @@ Caching, observability and rate-limiting config. Mesh plugins and transforms are
 
 ---
 
-_21 top-level fields, 5 required. Generated from
+_22 top-level fields, 5 required. Generated from
 `schemas/dsl/manifest.schema.json`._

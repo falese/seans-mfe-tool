@@ -86,6 +86,29 @@ describe('remote:init Command', () => {
     });
   });
 
+  describe('Declared hosts (ADR-107)', () => {
+    const writtenManifest = (): string =>
+      String(
+        (mockFs.writeFile as unknown as jest.Mock).mock.calls.find((c: unknown[]) =>
+          String(c[0]).endsWith('mfe-manifest.yaml')
+        )?.[1]
+      );
+
+    it('writes each --host into the manifest', async () => {
+      await remoteInitCommand('my-feature', { skipInstall: true, hosts: ['abc', 'meridian'] });
+      const text = writtenManifest();
+      expect(text).toContain('hosts:');
+      expect(text).toMatch(/- id: abc\n\s+- id: meridian/);
+    });
+
+    it('leaves hosts out without --host, and says to declare them', async () => {
+      await remoteInitCommand('my-feature', { skipInstall: true });
+      expect(writtenManifest()).not.toContain('hosts:');
+      const logged = mockConsole.log.mock.calls.map((c) => String(c[0])).join('\n');
+      expect(logged).toContain('hosts');
+    });
+  });
+
   describe('Directory Exists Handling', () => {
     it('should throw error if directory exists without --force', async () => {
       (mockFs.pathExists as jest.Mock).mockResolvedValue(true);

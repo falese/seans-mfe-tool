@@ -9,6 +9,7 @@ function reactManifest(deps: Record<string, unknown> = {}): DSLManifest {
     name: 'demo',
     version: '1.0.0',
     framework: 'react',
+    hosts: [{ id: 'demo' }],
     dependencies: deps,
   } as unknown as DSLManifest;
 }
@@ -33,6 +34,30 @@ function consistentInput(): Parameters<typeof validateMfeConsistency>[0] {
 }
 
 describe('validateMfeConsistency', () => {
+  describe('hosts-declared (ADR-107)', () => {
+    it('is always checked', () => {
+      expect(validateMfeConsistency(consistentInput()).checked).toContain('hosts-declared');
+    });
+
+    it('fails a manifest that declares no hosts, and says how to fix it', () => {
+      const input = consistentInput();
+      delete (input.manifest as { hosts?: unknown }).hosts;
+      const res = validateMfeConsistency(input);
+
+      expect(res.ok).toBe(false);
+      const issue = res.issues.find((i) => i.rule === 'hosts-declared');
+      expect(issue).toBeDefined();
+      expect(issue!.message).toContain('mfe-manifest.yaml');
+      expect(issue!.fix).toContain('hosts:');
+      expect(issue!.fix).toContain('namespace');
+    });
+
+    it('passes a manifest that declares at least one host', () => {
+      const res = validateMfeConsistency(consistentInput());
+      expect(res.issues.filter((i) => i.rule === 'hosts-declared')).toEqual([]);
+    });
+  });
+
   it('passes a fully consistent MFE', () => {
     const res = validateMfeConsistency(consistentInput());
     expect(res.ok).toBe(true);

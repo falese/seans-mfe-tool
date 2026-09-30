@@ -9,6 +9,10 @@ owner: meridian-station
 tags: [meridian, docking, ops, angular]
 category: operations
 
+# The shells this MFE works in, by control-plane namespace (ADR-107).
+hosts:
+  - id: meridian
+
 endpoint: http://localhost:5002
 remoteEntry: http://localhost:5002/remoteEntry.js
 discovery: http://localhost:5002/.well-known/mfe-manifest.yaml

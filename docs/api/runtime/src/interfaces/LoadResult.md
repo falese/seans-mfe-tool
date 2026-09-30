@@ -166,6 +166,10 @@ Defined in: [packages/runtime/src/capability-results.ts:32](https://github.com/f
 
 > `optional` **framework**: `string`
 
+#### hosts?
+
+> `optional` **hosts**: `object`[]
+
 #### language
 
 > **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`

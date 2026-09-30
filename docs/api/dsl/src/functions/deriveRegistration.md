@@ -8,7 +8,7 @@
 
 > **deriveRegistration**(`manifest`): [`CompiledRegistration`](../interfaces/CompiledRegistration.md)
 
-Defined in: [packages/dsl/src/control-plane-compiler.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L87)
+Defined in: [packages/dsl/src/control-plane-compiler.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-compiler.ts#L93)
 
 The nine registration fields, from the manifest (ADR-074).
 
@@ -107,6 +107,10 @@ addressed by route instead, so listing them here would say nothing.
 #### framework?
 
 `string` = `...`
+
+#### hosts?
+
+`object`[] = `...`
 
 #### language
 

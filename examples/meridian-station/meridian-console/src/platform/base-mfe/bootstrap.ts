@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station console — the station operator's home screen and slot provider",
   "owner": "meridian-station",
   "tags": [

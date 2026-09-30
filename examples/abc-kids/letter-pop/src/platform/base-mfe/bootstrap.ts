@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Letter Pop — pop the balloons in alphabetical order!",
   "owner": "abc-kids-team",
   "tags": [

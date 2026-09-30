@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Counting Stars — tap exactly the right number of stars!",
   "owner": "abc-kids-team",
   "tags": [

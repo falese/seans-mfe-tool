@@ -13,7 +13,14 @@ import type { RemoteInitOptions, DSLManifest } from '@seans-mfe/dsl';
 
 export async function remoteInitCommand(
   name: string,
-  options: RemoteInitOptions & { dryRun?: boolean; framework?: string; swift?: boolean; rust?: boolean } = {}
+  options: RemoteInitOptions & {
+    dryRun?: boolean;
+    framework?: string;
+    swift?: boolean;
+    rust?: boolean;
+    /** Host namespaces this MFE works in (ADR-107). */
+    hosts?: string[];
+  } = {}
 ): Promise<RemoteInitResult> {
   const frameworkName = options.framework ?? 'react';
   const plugin = loadFrameworkPlugin(frameworkName);
@@ -73,6 +80,7 @@ export async function remoteInitCommand(
       language: 'typescript',
       framework: plugin.framework,
       bundler: plugin.bundler,
+      hosts: options.hosts,
     });
     const endpoints = generateEndpoints(name, port);
     // `--swift` and `--rust` are additive (ADR-095): each is a SECOND build of
@@ -94,6 +102,10 @@ export async function remoteInitCommand(
     console.log(chalk.green(`\n✓ ${plugin.displayName} remote MFE manifest created!`));
     console.log(chalk.blue('\nNext steps:'));
     console.log(`  1. ${chalk.cyan(`cd ${name}`)}`);
+    if (!options.hosts || options.hosts.length === 0) {
+      // ADR-107: mfe:validate and compose both fail until the MFE names a host.
+      console.log(chalk.yellow(`⚠ No --host given: add a hosts: list (each shell's control-plane namespace) before composing this MFE`));
+    }
     console.log(`  2. Edit ${chalk.cyan('mfe-manifest.yaml')} to add capabilities`);
     console.log(`  3. Run ${chalk.cyan('seans-mfe-tool remote:generate')} to scaffold features and platform files`);
     console.log(`  4. Run ${chalk.cyan('npm install && npm run dev')} to start development`);
@@ -117,6 +129,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
     '$ seans-mfe-tool remote:init my-feature --framework angular',
     '$ seans-mfe-tool remote:init my-feature --swift',
     '$ seans-mfe-tool remote:init my-feature --rust',
+    '$ seans-mfe-tool remote:init my-feature --host meridian',
     '$ seans-mfe-tool remote:init my-feature --port 3005',
     '$ seans-mfe-tool remote:init my-feature --dry-run',
   ]
@@ -143,6 +156,12 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
         'the web build is unchanged. Run remote:generate to scaffold it.',
       default: false,
     }),
+    host: Flags.string({
+      description:
+        "A shell this MFE works in, by that project's control-plane namespace. Repeatable. " +
+        'Written to the manifest as hosts:, which mfe:validate and compose require (ADR-107).',
+      multiple: true,
+    }),
     port: Flags.string({
       char: 'p',
       description: 'Port number for the remote MFE (default: per-framework)',
@@ -168,6 +187,7 @@ export default class RemoteInit extends BaseCommand<RemoteInitResult> {
       framework: flags.framework,
       swift: flags.swift,
       rust: flags.rust,
+      hosts: flags.host,
     })
   }
 }

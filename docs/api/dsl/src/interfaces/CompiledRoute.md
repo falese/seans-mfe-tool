@@ -6,7 +6,7 @@
 
 # Interface: CompiledRoute
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:141](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L141)
+Defined in: [packages/dsl/src/control-plane-schema.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L142)
 
 One compiled route, in the registry's own shape.
 
@@ -16,7 +16,7 @@ One compiled route, in the registry's own shape.
 
 > **resolve**: `object`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:143](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L143)
+Defined in: [packages/dsl/src/control-plane-schema.ts:144](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L144)
 
 #### capability
 
@@ -32,7 +32,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:143](https://github.com/fa
 
 > **when**: `object`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L142)
+Defined in: [packages/dsl/src/control-plane-schema.ts:143](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L143)
 
 #### stateKey
 

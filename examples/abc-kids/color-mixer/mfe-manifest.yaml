@@ -9,6 +9,10 @@ owner: abc-kids-team
 tags: [kids, game, colors, art]
 category: games
 
+# The shells this MFE works in, by control-plane namespace (ADR-107).
+hosts:
+  - id: abc
+
 endpoint: http://localhost:3008
 remoteEntry: http://localhost:3008/remoteEntry.js
 discovery: http://localhost:3008/.well-known/mfe-manifest.yaml

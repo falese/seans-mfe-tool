@@ -6,7 +6,7 @@
 
 # Interface: CompiledRegistration
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:128](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L128)
+Defined in: [packages/dsl/src/control-plane-schema.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L129)
 
 The nine derived registration fields (ADR-074).
 
@@ -16,7 +16,7 @@ The nine derived registration fields (ADR-074).
 
 > `optional` **baseUrl**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L132)
+Defined in: [packages/dsl/src/control-plane-schema.ts:133](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L133)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:132](https://github.com/fa
 
 > **capabilities**: `string`[]
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:133](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L133)
+Defined in: [packages/dsl/src/control-plane-schema.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L134)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:133](https://github.com/fa
 
 > **contentType**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:134](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L134)
+Defined in: [packages/dsl/src/control-plane-schema.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L135)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:134](https://github.com/fa
 
 > **moduleFederation**: `object`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L136)
+Defined in: [packages/dsl/src/control-plane-schema.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L137)
 
 #### module
 
@@ -56,7 +56,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:136](https://github.com/fa
 
 > **name**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:129](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L129)
+Defined in: [packages/dsl/src/control-plane-schema.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L130)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:129](https://github.com/fa
 
 > `optional` **providesSlots**: `object`[]
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L137)
+Defined in: [packages/dsl/src/control-plane-schema.ts:138](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L138)
 
 #### description?
 
@@ -80,7 +80,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:137](https://github.com/fa
 
 > `optional` **remoteEntryUrl**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:135](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L135)
+Defined in: [packages/dsl/src/control-plane-schema.ts:136](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L136)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:135](https://github.com/fa
 
 > **type**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L131)
+Defined in: [packages/dsl/src/control-plane-schema.ts:132](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L132)
 
 ***
 
@@ -96,4 +96,4 @@ Defined in: [packages/dsl/src/control-plane-schema.ts:131](https://github.com/fa
 
 > **version**: `string`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:130](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L130)
+Defined in: [packages/dsl/src/control-plane-schema.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L131)

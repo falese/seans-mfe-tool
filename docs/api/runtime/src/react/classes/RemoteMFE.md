@@ -129,6 +129,10 @@ Defined in: [packages/runtime/src/base-mfe.ts:103](https://github.com/falese/sea
 
 `string` = `...`
 
+###### hosts?
+
+`object`[] = `...`
+
 ###### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`
@@ -474,6 +478,10 @@ DSL manifest for this MFE
 #### framework?
 
 > `optional` **framework**: `string`
+
+#### hosts?
+
+> `optional` **hosts**: `object`[]
 
 #### language
 

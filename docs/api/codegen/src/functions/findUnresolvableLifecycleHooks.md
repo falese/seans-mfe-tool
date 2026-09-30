@@ -8,7 +8,7 @@
 
 > **findUnresolvableLifecycleHooks**(`manifest`): [`UnresolvableHookHandler`](../interfaces/UnresolvableHookHandler.md)[]
 
-Defined in: [packages/codegen/src/validate.ts:156](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L156)
+Defined in: [packages/codegen/src/validate.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/validate.ts#L157)
 
 Lifecycle hooks whose `handler:` cannot resolve at runtime, given how
 codegen names things.
@@ -118,6 +118,10 @@ different by mistake, and nothing has ever said so out loud.
 #### framework?
 
 `string` = `...`
+
+#### hosts?
+
+`object`[] = `...`
 
 #### language
 

@@ -251,6 +251,15 @@ capabilities: []
       expect(manifest.capabilities).toEqual([]);
     });
 
+    it('declares the hosts it is given (ADR-107)', () => {
+      const manifest = createMinimalManifest('my-remote', { hosts: ['abc', 'meridian'] });
+      expect(manifest.hosts).toEqual([{ id: 'abc' }, { id: 'meridian' }]);
+    });
+
+    it('omits hosts when none are given, so validation names the gap', () => {
+      expect(createMinimalManifest('my-remote').hosts).toBeUndefined();
+    });
+
     it('should accept options', () => {
       const manifest = createMinimalManifest('my-shell', {
         type: 'shell',

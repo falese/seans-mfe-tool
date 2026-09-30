@@ -136,6 +136,10 @@ Defined in: [packages/codegen/src/variants/types.ts:29](https://github.com/fales
 
 > `optional` **framework**: `string`
 
+#### hosts?
+
+> `optional` **hosts**: `object`[]
+
 #### language
 
 > **language**: `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`

@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Rocket Math — solve sums to fuel the rocket for launch!",
   "owner": "abc-kids-team",
   "tags": [

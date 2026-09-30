@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Shape Sorter — find the shape that matches the word!",
   "owner": "abc-kids-team",
   "tags": [

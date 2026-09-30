@@ -39,6 +39,11 @@ pub const MANIFEST_JSON: &str = r#"{
       "wasm": true
     }
   },
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station crew services — roster, certifications, pay status",
   "owner": "meridian-station",
   "tags": [

@@ -106,6 +106,10 @@ Supports both object format {pluginName: config} and array format [{pluginName: 
 
 `string` = `...`
 
+#### hosts?
+
+`object`[] = `...`
+
 #### language
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"` = `...`

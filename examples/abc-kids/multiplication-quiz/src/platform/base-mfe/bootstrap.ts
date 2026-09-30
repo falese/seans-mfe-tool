@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "angular",
   "bundler": "webpack",
+  "hosts": [
+    {
+      "id": "abc"
+    }
+  ],
   "description": "Multiplication Quiz — a cat and a dog take turns asking multiplication questions!",
   "owner": "abc-kids-team",
   "tags": [

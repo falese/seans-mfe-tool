@@ -161,6 +161,25 @@
         "additionalProperties": {}
       }
     },
+    "hosts": {
+      "description": "The host projects this MFE works in, each named by its control-plane namespace. Required by mfe:validate and compose (ADR-107).",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The host project's control-plane namespace, as declared in its control-plane.yaml.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
     "description": {
       "type": "string"
     },

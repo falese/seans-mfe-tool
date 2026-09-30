@@ -8,4 +8,4 @@
 
 > **DSLOutput** = `z.infer`\<*typeof* [`DSLOutputSchema`](../variables/DSLOutputSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:236](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L236)
+Defined in: [packages/dsl/src/schema.ts:285](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L285)

@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "angular",
   "bundler": "webpack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station docking & traffic control — berth board, berth tiles, traffic log",
   "owner": "meridian-station",
   "tags": [

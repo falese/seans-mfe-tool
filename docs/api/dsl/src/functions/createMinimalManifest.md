@@ -36,6 +36,12 @@ Optional configuration
 
 `string`
 
+#### hosts?
+
+`string`[]
+
+Host namespaces this MFE works in (ADR-107). Omitted ⇒ no `hosts:` key, which mfe:validate reports.
+
 #### language?
 
 `"javascript"` \| `"typescript"` \| `"python"` \| `"go"` \| `"rust"` \| `"java"`
@@ -137,6 +143,10 @@ Minimal DSL manifest
 ### framework?
 
 > `optional` **framework**: `string`
+
+### hosts?
+
+> `optional` **hosts**: `object`[]
 
 ### language
 

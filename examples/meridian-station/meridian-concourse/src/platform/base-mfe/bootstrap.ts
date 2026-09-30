@@ -20,6 +20,11 @@ const manifest = {
   "language": "typescript",
   "framework": "react",
   "bundler": "rspack",
+  "hosts": [
+    {
+      "id": "meridian"
+    }
+  ],
   "description": "Meridian Station concourse — vendor directory, stalls, settlements, inbound supplies",
   "owner": "meridian-station",
   "tags": [

@@ -8,7 +8,7 @@
 
 > `const` **ControlPlaneRouteSchema**: `ZodObject`\<\{ `description`: `ZodOptional`\<`ZodString`\>; `forEach`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodArray`\<`ZodString`\>\>\>; `place`: `ZodArray`\<`ZodObject`\<\{ `capability`: `ZodString`; `from`: `ZodOptional`\<`ZodString`\>; `into`: `ZodOptional`\<`ZodString`\>; `props`: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodUnknown`\>\>; \}, `$strip`\>\>; `when`: `ZodString`; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L70)
+Defined in: [packages/dsl/src/control-plane-schema.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L71)
 
 One route: when this state key fires, place these capabilities.
 

@@ -8,4 +8,4 @@
 
 > **ErrorTypeHandling** = `z.infer`\<*typeof* [`ErrorTypeHandlingSchema`](../variables/ErrorTypeHandlingSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:265](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L265)
+Defined in: [packages/dsl/src/schema.ts:314](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L314)

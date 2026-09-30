@@ -8,7 +8,7 @@
 
 > `const` **PLACEHOLDER**: `RegExp`
 
-Defined in: [packages/dsl/src/control-plane-schema.ts:27](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L27)
+Defined in: [packages/dsl/src/control-plane-schema.ts:28](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/control-plane-schema.ts#L28)
 
 `{name}` placeholders, as used by `forEach` expansion.
 

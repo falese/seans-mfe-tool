@@ -63,7 +63,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "10f517d4745004948bf598195f030093ae62ab2ce7b0d6309e3397832b84bae5"
+        "sha256": "8c4fa2f22bff3fa5c3305c824632f88fd5a2c8c29e82e06ab9dd71450e3e2df8"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -156,7 +156,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "ac5d259e01c4a1d328ddeaaedf0bab9690110c1db7209cb8a0ab6c93d26e642c"
+        "sha256": "d8ae4e17583ebbe906f1cd9c6d02761ea396933b25c7b68796102469917ffca0"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -249,7 +249,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "96088ef56b628b0d9afb0b970ada1569a9e0bc0c278547686606759b48053bc7"
+        "sha256": "94a8dbb282334f295bcb57179265500aba6904b528faccdd203acd7f8f16726d"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -367,7 +367,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "a692885d242715e1ea8de4c5feff0ad8678318da497a8db203c4ca5edc77ca62"
+        "sha256": "1e51e93b2f1d29c045c7ce88e936d73d1ce32ac6b17efb3363ad32d2929bde2b"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/handler-registry.ts",
@@ -490,7 +490,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "6863f1e0ab0f87407d4f0a5acbc933f43ddb820abd4453ea8fbc90513ba7f9a8"
+        "sha256": "8289ef694bb420a9db61b96b5761086f23ae567688939bb3087b01089935cab0"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -581,7 +581,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "200217cb0acc5db4ea3fc6b97d9e27a4cdfe3ce4980f0f49ca0af1d2b93a9c2e"
+        "sha256": "8ccd67108e650ab156c72d5931cdd824e3c79720e8d3c702724363bd48f94a9f"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -679,7 +679,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "dffc45c365ee2d465b328415b4487eab8c31d733837568d929a3985181156980"
+        "sha256": "0909ddb02cb269cc24ffa23263f4bfd29971576c6207335d74b81b66e0211826"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -772,7 +772,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "50bb540682cadbe11643c6c3fbdbae101e3769b190718050ac567885df3d9f40"
+        "sha256": "08c7f67f9623101366a789ebedd25f67a9a5e14d07a52e63b9a7b69ba5fc24f8"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -865,7 +865,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "9620395e5315410eccfee7e6f68c368d6171880cc9e0b2d30f97fe183b275e74"
+        "sha256": "c86c4af5ceb6e98606d33f876f9c3d65e15cace6bf4869c5da5c6d7eecd2df8a"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -988,7 +988,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "03a29e6dfc5c6279fb0a6dd8c195969e4c974705de977201e09db3e88e7720d6"
+        "sha256": "dcec77a2dd0dbb8867f98ad9f712f4ad0ad49d4512f0e67bbd1bd503fd83ea5c"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1121,7 +1121,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "734a9ce5169ad8a13d19b9afe96de73ea4fbf0b3b466646cc2f885c41050ceb6"
+        "sha256": "33c0358954fb500696e62e14fcb7b84cf8bf5aaa9081ecf31a0cf828bde0f8fa"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1214,7 +1214,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "5760ea2ab324145dc2af7092aedf50592dfcf5d033d1643b4d0179aec36c9dfb"
+        "sha256": "ded1539b660a261fde12bfa6a7bc8aa4a041b1973546569c44f93d718b88a23a"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1307,7 +1307,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "7a2af1cd02fe9c2c430f923f41989d0e3a4117b55226e3c63003f4e0caa48274"
+        "sha256": "202bad993a5ff9f26bfbdcf25ef7cc1f35ff39f6896cff36b86d1c816b1a6492"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1400,7 +1400,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "975bbf0b45430324fecd963718afa3404699abe23c880a5ecf19d054c13b4a62"
+        "sha256": "ab17d387b8cfc86bab77384ff0cb6c2c28c5cd77083e669c088a33400064bd86"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1522,7 +1522,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "a10f0d9a67c3f22c052edcbc3e3de5f7ef122f56daa9b5762283396b07c90073"
+        "sha256": "c73f83fef540ae9e7784d13b3eb1d62e2743b4c3c9812e78b37eb109ec9e3ff9"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1678,7 +1678,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "121659c99cf8292889f351bba0e7a86596dd529537c0249f9f0573a274ded219"
+        "sha256": "6bb56e920bdc292a95ce975af9241c674708331bbf94a30d6bf7a9657bd04887"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1794,7 +1794,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "44ca9b94a8ad249c27ed915f32c6b3e82e5aa504b3916041ecea5147d726205a"
+        "sha256": "ad7ca82ddfc9f995af85486a08854ba35b74c0d37e8942fdb1dedd0d47430733"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -1966,7 +1966,7 @@
       {
         "path": "<cwd>/rust/src/platform/manifest_metadata.rs",
         "overwrite": true,
-        "sha256": "377ec7d4072d02f08fc9ddcf9f272aab378d4c7f48dc8e4b7b9a74fe94696c7c"
+        "sha256": "1b6245f34c3a527d017c62c4c13f15b82f3ac0880d7e5c8202933be648646c73"
       },
       {
         "path": "<cwd>/rust/src/platform/mfe_base.rs",
@@ -2066,7 +2066,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "20e9c77347780e386ebf4f67a5668e1bfcbe81f39c0e1415148d6db341ebb96b"
+        "sha256": "4ca4cc6beaec97e85213d7bbccbc2c5e777eeca42e1ad273a98f5f7768462701"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -2121,7 +2121,7 @@
       {
         "path": "<cwd>/swift/mfe-manifest.json",
         "overwrite": true,
-        "sha256": "7a141ca5c6442f047b7bf0eb01abcc0931f29f316395b707868d3f8e382bdfb8"
+        "sha256": "59c413269cdb9df49bc36302a2178b3aeb2f1dd962208ead7931616729579861"
       },
       {
         "path": "<cwd>/swift/Package.swift",
@@ -2314,7 +2314,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "1203f9dace0a63050842f43b5cdb36d136d6afb19bf3ed6816d01dd4fc92c057"
+        "sha256": "a41f1ad8bc922767aec3e6dc55ea13d6570ae6da485006f5d0a6364c32a5e6ff"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -2471,7 +2471,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "f3d953ac0e07f5867c6bc481d73b00b3944ee3797e29796f19ebb41742df3ecd"
+        "sha256": "8f0ebc5341ac05ddaf5cae297cbafe51e58db5850af8d13f9a1be0ab7daf4e42"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
@@ -2619,7 +2619,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
         "overwrite": true,
-        "sha256": "d99a1111aa2a0e45926edbdc136aa7035361a77f4af422374a94675c8c61b103"
+        "sha256": "4ecf3928a098db8be4f885d53671c1ff138de7e710e0ac8ea611bc5bbb5b8da1"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
