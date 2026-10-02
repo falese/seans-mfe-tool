@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/design:export.json",
+  "title": "design:export",
+  "description": "Capture a running UI and generate a Figma import bundle: renders the page in headless Chromium, extracts the layout/styles into a design tree, and writes a Figma plugin (manifest.json + code.js) that recreates it as editable frames, text, and images. Experimental — POC, no ADR yet.",
+  "input": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "URL of the running UI to capture (e.g. http://localhost:3001)"
+      },
+      "out": {
+        "type": "string",
+        "description": "Output directory for the export bundle",
+        "default": "./figma-export"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name for the root frame / plugin (default: page title)"
+      },
+      "viewport": {
+        "type": "string",
+        "description": "Capture viewport as WxH",
+        "default": "1440x900"
+      },
+      "wait": {
+        "type": "string",
+        "description": "Settle time in ms after page load before capturing",
+        "default": 1200
+      },
+      "full-page": {
+        "type": "boolean",
+        "description": "Expand the viewport to the full scroll height"
+      },
+      "max-depth": {
+        "type": "string",
+        "description": "Maximum element nesting depth to capture",
+        "default": 20
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "x-positional": [
+      "url"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "url",
+      "outDir",
+      "name",
+      "stats",
+      "fonts",
+      "files"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "outDir": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "stats": {
+        "type": "object",
+        "required": [
+          "elements",
+          "texts",
+          "images",
+          "placeholders",
+          "truncated"
+        ],
+        "properties": {
+          "elements": {
+            "type": "number"
+          },
+          "texts": {
+            "type": "number"
+          },
+          "images": {
+            "type": "number"
+          },
+          "placeholders": {
+            "type": "number"
+          },
+          "truncated": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "fonts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "family",
+            "weight",
+            "italic"
+          ],
+          "properties": {
+            "family": {
+              "type": "string"
+            },
+            "weight": {
+              "type": "number"
+            },
+            "italic": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

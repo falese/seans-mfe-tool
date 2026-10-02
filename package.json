@@ -122,6 +122,9 @@
       },
       "sentinel": {
         "description": "Sentinel governance kernel — run the kernel's ports over an MFE (PDR-010/ADR-089)"
+      },
+      "design": {
+        "description": "Design tooling — capture a running UI and export a Figma import bundle (POC)"
       }
     },
     "hooks": {
