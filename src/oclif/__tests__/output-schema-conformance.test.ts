@@ -102,6 +102,7 @@ const NO_FIXTURE: Record<string, string> = {
   'bff:dev': 'starts a long-lived mesh server',
   'build:prod': 'needs an installed bundler in the target project (a full npm install per run)',
   'coder:compile': 'shells out to the external coder MLX model service (ADR-085/ADR-088) — an ~18GB Apple-Silicon dependency absent from CI',
+  'design:export': 'renders a URL in headless Chromium — needs a Playwright browser download and a page to serve, neither guaranteed in unit-test jobs',
 };
 
 function runCli(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {

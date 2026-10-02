@@ -235,7 +235,8 @@ async function resolveFont(spec) {
       return { family, style: 'Regular' };
     } catch (e) { /* try the next fallback */ }
   }
-  throw new Error('No usable font found (tried ' + spec.family + ' and fallbacks)');
+  const err = new Error('No usable font found (tried ' + spec.family + ' and fallbacks)');
+  throw err;
 }
 
 async function applyImageFill(node, src) {
