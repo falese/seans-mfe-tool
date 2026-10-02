@@ -178,6 +178,26 @@ export interface MfeValidateResult {
   };
 }
 
+// ---------------------------------------------------------------------------
+// design:export
+// ---------------------------------------------------------------------------
+
+/** design:export — captured design bundle summary (POC). */
+export interface DesignExportResult {
+  url: string;
+  outDir: string;
+  name: string;
+  stats: {
+    elements: number;
+    texts: number;
+    images: number;
+    placeholders: number;
+    truncated: number;
+  };
+  fonts: Array<{ family: string; weight: number; italic: boolean }>;
+  files: string[];
+}
+
 /**
  * sentinel:validate — one kernel run over one root through SMT's ports
  * (ADR-089, #384). `hits` are HardenedCheck findings in developer-owned code;
