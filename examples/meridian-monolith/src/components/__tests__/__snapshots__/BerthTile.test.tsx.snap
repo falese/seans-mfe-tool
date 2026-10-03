@@ -1,0 +1,147 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders correctly 1`] = `
+<div
+  className="tile"
+  style={
+    {
+      "background": "#0e1226",
+      "borderRadius": 10,
+      "boxSizing": "border-box",
+      "color": "#dfe4ff",
+      "display": "flex",
+      "flexDirection": "column",
+      "fontFamily": "system-ui, sans-serif",
+      "gap": 4,
+      "minHeight": 96,
+      "padding": "10px 12px",
+    }
+  }
+>
+  <div
+    style={
+      {
+        "alignItems": "baseline",
+        "display": "flex",
+        "justifyContent": "space-between",
+      }
+    }
+  >
+    <span
+      style={
+        {
+          "fontSize": 14,
+          "fontWeight": 700,
+        }
+      }
+    >
+      b1
+    </span>
+    <span
+      className="chip"
+      style={
+        {
+          "border": "1px solid #2e9e6b",
+          "borderRadius": 999,
+          "color": "#2e9e6b",
+          "display": "inline-block",
+          "fontSize": 10,
+          "fontWeight": 700,
+          "padding": "1px 7px",
+        }
+      }
+    >
+      DOCKED
+    </span>
+  </div>
+  <span
+    style={
+      {
+        "color": "#8b93b5",
+        "fontSize": 12,
+      }
+    }
+  >
+    VR-88213
+  </span>
+  <span
+    style={
+      {
+        "color": "#d9a514",
+        "fontSize": 11,
+        "fontVariantNumeric": "tabular-nums",
+      }
+    }
+  >
+    ₢ 4,800.00
+     due
+  </span>
+</div>
+`;
+
+exports[`renders free berth correctly 1`] = `
+<div
+  className="tile"
+  style={
+    {
+      "background": "#0e1226",
+      "borderRadius": 10,
+      "boxSizing": "border-box",
+      "color": "#dfe4ff",
+      "display": "flex",
+      "flexDirection": "column",
+      "fontFamily": "system-ui, sans-serif",
+      "gap": 4,
+      "minHeight": 96,
+      "padding": "10px 12px",
+    }
+  }
+>
+  <div
+    style={
+      {
+        "alignItems": "baseline",
+        "display": "flex",
+        "justifyContent": "space-between",
+      }
+    }
+  >
+    <span
+      style={
+        {
+          "fontSize": 14,
+          "fontWeight": 700,
+        }
+      }
+    >
+      b1
+    </span>
+    <span
+      className="chip"
+      style={
+        {
+          "border": "1px solid #8b93b5",
+          "borderRadius": 999,
+          "color": "#8b93b5",
+          "display": "inline-block",
+          "fontSize": 10,
+          "fontWeight": 700,
+          "padding": "1px 7px",
+        }
+      }
+    >
+      FREE
+    </span>
+  </div>
+  <span
+    style={
+      {
+        "color": "#5d6690",
+        "fontSize": 12,
+      }
+    }
+  >
+    berth available
+  </span>
+</div>
+`;

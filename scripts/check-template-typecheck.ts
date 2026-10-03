@@ -70,6 +70,7 @@ function scratchManifest(lane: Lane): DSLManifest {
     framework: lane.framework,
     bundler: lane.bundler,
     description: `Scratch probe manifest (${lane.framework}) — #281 typecheck gate`,
+    hosts: [{ id: 'abc' }, { id: 'meridian' }],
     capabilities: [{ DataAnalysis: { type: 'domain', description: 'Analyze data' } }],
     ...generateEndpoints('template-typecheck-probe', lane.port),
   } as DSLManifest;
