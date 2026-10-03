@@ -24,6 +24,22 @@ docker compose -f examples/abc-kids/docker-compose.yaml up --build
 
 ---
 
+## Decomposition subjects
+
+### `meridian-monolith/`
+Meridian Station written as **one React SPA**, the way a real team would have
+built it, on the same three backends as `meridian-station/`. It is the input
+for agent-driven decomposition (PDR-011, epic #410), and its
+`answer-key.yaml` (the seven meridian-station MFEs, every file's owner, the
+couplings, and a triage of its deliberately poor test suite) is the score
+target. Not a generated MFE: no manifest, and repo Jest/ESLint ignore it.
+
+```bash
+cd meridian-monolith && npm install && npm start   # :5090; needs the meridian APIs on :5101–5103
+```
+
+---
+
 ## API Codegen Examples (`api-examples/`)
 
 Outputs from the `seans-mfe-tool api` command — REST API generation from OpenAPI specs.
