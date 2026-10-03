@@ -15,7 +15,7 @@ superseded-by: []
 implements-pdr: [11]
 implemented-by: []
 verified-by: []
-tracked-by: ["#410", "#415", "#416"]
+tracked-by: ["#410", "#415", "#416", "#425"]
 summary: >-
   `decompose:propose` writes `decomposition.yaml`: the domains, the components and files each
   owns, the backends each fronts, the slots each occupies, the test triage, and per-signal
@@ -45,6 +45,15 @@ It lists domains with: owned components and files, fronted backends, occupied sl
 capabilities, shared code it depends on, and the evidence score per signal (network, DOM,
 navigation, source, ownership) behind its boundary.
 
+### 1a. The first draft is deterministic; judgment is the agent's, recorded as edits
+
+`decompose:propose` produces the first `decomposition.yaml` by deterministic graph clustering
+over the evidence, so the same bundle always yields the same draft and the draft can be
+tested and scored in CI. The operating agent (an MCP client following the decomposition
+playbook) then makes the judgment calls — naming, merging, splitting, assigning ambiguous
+components — as edits to `decomposition.yaml`. No model runs inside the CLI on this path;
+this is PDR-010's split of a model that reads wide over a deterministic floor that executes.
+
 ### 2. Manifests and composition are derived, and validated like hand-written ones
 
 Each domain becomes a draft `mfe-manifest.yaml` (validated with `validateFull`); the
@@ -55,6 +64,8 @@ re-runnable: `decompose:propose --from decomposition.yaml`.
 
 The proposal PR carries `decomposition.yaml`, a readable summary, the derived files, and the
 Figma boundary overlay. Merging it is the agreement; nothing is scaffolded before that.
+Any later approval surface — such as a review UI for non-engineers (#425) — writes to the same
+`decomposition.yaml` on the same PR, so the PR stays the single system of record.
 
 ### 4. Edits go to the proposal
 

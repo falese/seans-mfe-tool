@@ -48,8 +48,10 @@ intent→manifest (PDR-009). An agent operating the toolchain through its agent 
    ownership.
 3. **Proposes** a decomposition where every boundary carries the evidence for it,
    as draft manifests and composition that pass the same validation a human's would.
+   The first draft comes from deterministic clustering of the evidence; the agent's
+   judgment (naming, merging, splitting) is applied on top as reviewable edits.
 4. **Stops for agreement.** A human approves, merges, splits or renames domains before
-   anything is generated.
+   anything is generated. In v1 the agreement is a merged proposal PR.
 5. **Generates and strangles.** The monolith is wrapped as one MFE; new MFEs replace it
    one placement at a time.
 6. **Proves parity** against the captured baseline at every step, with a regression
@@ -97,6 +99,10 @@ developer-owned files (ADR-087).
   but required before a real customer app.
 - **Evaluation needs ground truth.** The reference app and its answer key are part of
   the product, not a test fixture, and must be maintained like one.
+- **Agreement starts in GitHub.** A merged PR is the v1 approval, which suits engineers
+  better than product owners. A purpose-built approval UI for non-engineers is a later
+  phase (#425); it must write to the same proposal document so there is one system of
+  record.
 
 ## Implemented by
 
