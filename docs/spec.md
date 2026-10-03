@@ -349,6 +349,11 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
+| [ADR-109](./architecture-decisions/ADR-109-decomposition-evidence-bundle.md) | A decomposition starts from an evidence bundle — what the running app did, keyed by region and interaction and joined to source — and every later stage reads only that bundle | Decomposition / capture | Proposed |
+| [ADR-110](./architecture-decisions/ADR-110-decomposition-proposal.md) | A decomposition is agreed as one reviewable document, decomposition.yaml, from which the manifests and composition are derived — humans edit the proposal, never the derived files | Decomposition / proposal | Proposed |
+| [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Proposed |
+| [ADR-112](./architecture-decisions/ADR-112-openapi-inference-from-traffic.md) | When a backend has no spec, the toolchain infers an OpenAPI document from recorded traffic and client code, marks it inferred, and the BFF consumes it like any other source | Decomposition / BFF / specs | Proposed |
+| [ADR-113](./architecture-decisions/ADR-113-decomposition-parity-gate.md) | A decomposition step is accepted only when the composed app passes the parity gate — the captured journeys produce the same regions, the same backend calls, the same visuals and no new errors as the monolith | Decomposition / regression | Proposed |
 
 ### Deferred — postponed on purpose
 
