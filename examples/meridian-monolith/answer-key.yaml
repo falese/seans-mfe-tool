@@ -1,0 +1,309 @@
+# Answer key for decomposing meridian-monolith (#412, epic #410).
+#
+# meridian-monolith is meridian-station rebuilt as ONE React SPA the way a
+# real team would have written it. The correct decomposition is the one
+# meridian-station already ships. `decompose:score` (#415) compares an
+# agent's decomposition.yaml against this file.
+#
+# DO NOT give this file to the agent being scored. It is ground truth.
+
+version: 1
+subject: examples/meridian-monolith
+reference: examples/meridian-station
+
+# --------------------------------------------------------------------------
+# Domains: the seven MFEs meridian-station ships
+# --------------------------------------------------------------------------
+domains:
+  - id: console
+    mfe: meridian-console
+    capabilities: [StationConsole]
+    providesSlots: [main, status, "berth.{id}"]
+    backends: []
+    notes: >-
+      The shell around everything: domain menu, berth strip frame, main area,
+      status rail. Owns no data. In the monolith this is App.tsx + layout/.
+
+  - id: docking
+    mfe: meridian-docking-control
+    capabilities: [DockingBoard, BerthTile, TrafficLog]
+    placements:
+      DockingBoard: meridian-console/main
+      TrafficLog: meridian-console/status
+      BerthTile: "meridian-console/berth.{id}"   # one per berth, props.berthId
+    backends: [Harbormaster, StellarLedger]
+
+  - id: docking-simulation
+    mfe: meridian-docking-simulation
+    capabilities: [DockingSimulation]
+    placements:
+      DockingSimulation: meridian-console/main
+    backends: []          # the station manifest declares Harbormaster + StationOS; no screen calls them
+    notes: >-
+      meridian-station also declares a ShipControl capability that is never
+      placed; the monolith has no equivalent and none is expected.
+
+  - id: life-support
+    mfe: meridian-life-support
+    capabilities: [TelemetryDashboard, AlertsFeed, ModuleStatus]
+    placements:
+      TelemetryDashboard: meridian-console/main
+      AlertsFeed: meridian-console/status
+      ModuleStatus: meridian-console/status
+    backends: [StationOS]
+
+  - id: cargo
+    mfe: meridian-cargo-ops
+    capabilities: [CargoManifest, HazardSummary]
+    placements:
+      CargoManifest: meridian-console/main
+      HazardSummary: meridian-console/status
+    backends: [Harbormaster, StellarLedger]
+
+  - id: crew
+    mfe: meridian-crew-services
+    capabilities: [CrewRoster, PayStatus]
+    placements:
+      CrewRoster: meridian-console/main
+      PayStatus: meridian-console/status
+    backends: [StationOS, StellarLedger]
+
+  - id: concourse
+    mfe: meridian-concourse
+    capabilities: [MarketDirectory]
+    placements:
+      MarketDirectory: meridian-console/main
+    backends: [StationOS, StellarLedger, Harbormaster]
+
+# Backend -> base path the monolith proxies, and the convention to normalize.
+backends:
+  Harbormaster:  { proxy: /api/harbormaster, upstream: "http://localhost:5101/api", convention: "bare arrays, snake_case" }
+  StellarLedger: { proxy: /api/ledger,       upstream: "http://localhost:5102/api", convention: "{ result, meta: { cursor, hasMore } }, camelCase" }
+  StationOS:     { proxy: /api/stationos,    upstream: "http://localhost:5103/api", convention: "{ Data, Pagination }, PascalCase" }
+
+# --------------------------------------------------------------------------
+# Every source file -> owning domain
+#   shared  = used by several domains; a good proposal splits or duplicates it
+#             (see `shared` below) rather than assigning it to one domain
+# --------------------------------------------------------------------------
+files:
+  src/index.tsx: console
+  src/App.tsx: console
+  src/layout/Sidebar.tsx: console
+  src/layout/BerthStrip.tsx: console
+  src/utils/constants.ts: console
+  src/components/DockingBoard.tsx: docking
+  src/components/TrafficLog.tsx: docking
+  src/components/BerthTile.tsx: docking
+  src/simulator/DockingSimulation.tsx: docking-simulation
+  src/simulator/GameEngine.ts: docking-simulation
+  src/simulator/useDockingPhysics.ts: docking-simulation
+  src/simulator/useInput.ts: docking-simulation
+  src/pages/SimulatorPage.tsx: docking-simulation
+  src/pages/LifeSupportPage.tsx: life-support      # TelemetryDashboard, inlined
+  src/components/AlertsFeed.tsx: life-support
+  src/components/ModuleStatus.tsx: life-support
+  src/pages/cargo/CargoManifest.tsx: cargo
+  src/pages/cargo/HazardSummary.tsx: cargo
+  src/pages/cargo/index.tsx: cargo
+  src/components/crew/CrewRoster.tsx: crew
+  src/components/crew/PayStatus.tsx: crew
+  src/pages/ConcoursePage.tsx: concourse          # MarketDirectory, inlined
+  src/utils/helpers.ts: shared
+  src/api/client.ts: shared
+  src/store/AppContext.tsx: shared
+  src/components/StatusChip.tsx: shared
+  src/types.ts: shared
+
+# The code organization is deliberately inconsistent (type folders, domain
+# folders, pages that inline their component). Folder names are NOT a
+# reliable boundary signal; data ownership and imports are.
+
+shared:
+  - file: src/utils/helpers.ts
+    expected: split by domain
+    detail: >-
+      Ref translators go with the domain that joins on them (toDockingRef ->
+      docking AND cargo via toLineRef; toCrewRef -> crew; toMerchantId ->
+      concourse). Color helpers go with their domain (statusColor -> docking,
+      alertColor/formatMetric/worstLevel -> life-support, hazardColor ->
+      cargo, certColor/payColor -> crew, licenseColor -> concourse).
+      formatCents is used by docking, cargo and crew: duplicate it (meridian-
+      station does) or move it to a shared library; either is acceptable.
+  - file: src/api/client.ts
+    expected: replaced by one BFF per MFE
+    detail: >-
+      Its three normalizers (snake_case, ledger envelope, StationOS envelope +
+      PascalCase) are exactly what each MFE's BFF does. Each MFE's data.sources
+      must list only the backends that MFE's screens call (see domains above).
+  - file: src/store/AppContext.tsx
+    expected: dissolved
+    detail: >-
+      A global store loading berths, dockings, charges (docking), modules,
+      telemetry (life-support) for the whole app. In the decomposition each
+      domain fetches its own data through its BFF. No cross-MFE store.
+  - file: src/components/StatusChip.tsx
+    expected: duplicate per MFE or shared library
+  - file: src/types.ts
+    expected: split by domain
+
+# --------------------------------------------------------------------------
+# Cross-domain coupling a good decomposition must notice
+# --------------------------------------------------------------------------
+couplings:
+  - where: src/pages/cargo/HazardSummary.tsx
+    what: reads dockings (docking data) from the global store
+    expected: cargo's BFF sources Harbormaster dockings itself
+  - where: src/pages/ConcoursePage.tsx
+    what: reads dockings from the global store for "inbound supplies"
+    expected: concourse's BFF sources Harbormaster itself
+  - where: src/layout/Sidebar.tsx
+    what: console nav shows a life-support alert count (OPS-212)
+    expected: >-
+      Flag it. meridian-station's console has no badge. Acceptable answers:
+      drop it (product decision, ask), or source it from life-support through
+      the composition rather than a shared store. Silently keeping a console
+      that reads life-support data is wrong.
+  - where: src/App.tsx
+    what: two hand-maintained route tables (main + status rail) that must agree
+    expected: becomes control-plane.yaml routes placing capabilities into main/status
+
+# --------------------------------------------------------------------------
+# Navigation -> control-plane state keys
+# --------------------------------------------------------------------------
+routes:
+  "/":             { stateKey: meridian.root,                  main: null,                 status: ModuleStatus }
+  "/docking":      { stateKey: meridian.open.docking,          main: DockingBoard,         status: TrafficLog }
+  "/simulator":    { stateKey: meridian.open.docking-simulation, main: DockingSimulation,  status: null }
+  "/life-support": { stateKey: meridian.open.life-support,     main: TelemetryDashboard,   status: AlertsFeed }
+  "/cargo":        { stateKey: meridian.open.cargo,            main: CargoManifest,        status: HazardSummary }
+  "/crew":         { stateKey: meridian.open.crew,             main: CrewRoster,           status: PayStatus }
+  "/concourse":    { stateKey: meridian.open.concourse,        main: MarketDirectory,      status: null }
+  berth-strip:     { stateKey: "meridian.berth.{id}",          into: "meridian-console/berth.{id}", capability: BerthTile }
+
+divergences_from_reference:
+  - The monolith shows ModuleStatus in the status rail on "/"; meridian-station places it on meridian.status.life-support.
+  - The Life Support nav badge (see couplings) does not exist in meridian-station.
+  - meridian-station's off-shift route (abc-kids flappy) belongs to another project and is not in the monolith.
+
+# --------------------------------------------------------------------------
+# Behavior a decomposition must PRESERVE (parity), including what's wrong
+# --------------------------------------------------------------------------
+latent_bugs:
+  - id: dockings-default-page
+    detail: >-
+      GET /dockings with no limit returns 10 of 12 rows. Dockings 4029 (b1,
+      SCHEDULED) and 4030 (b6, APPROACH) never appear in the traffic log or
+      the concourse's inbound list. meridian-station has the same bug. Parity
+      means preserving it; fixing it is a separate, explicit change.
+  - id: favicon-404
+    detail: >-
+      Every page load logs a 404 for /favicon.ico. It is part of the console
+      baseline; the parity gate must not count it as a new error.
+
+# --------------------------------------------------------------------------
+# Tests: the monolith's own suite and how a good migration treats each one
+#   keep    - behavioral and passing; move with its component
+#   rewrite - pins markup, implementation, or nothing useful; replace with a behavioral test
+#   discard - skipped, commented out, ignored, or asserts behavior the app no longer has
+# --------------------------------------------------------------------------
+tests:
+  - file: src/components/__tests__/DockingBoard.test.tsx
+    domain: docking
+    verdict: keep
+    why: behavioral (rows, totals, error state) against realistic data
+  - file: src/components/__tests__/BerthTile.test.tsx
+    domain: docking
+    verdict: rewrite
+    why: snapshot tests pin markup; assert status, vessel and amount due instead
+  - file: src/utils/__tests__/helpers.test.ts
+    domain: shared
+    verdict: keep
+    why: >-
+      Real unit tests of formatCents, ref builders and worstLevel. Split with
+      the helpers. The commented-out toMerchantId test asserts the OLD format
+      (ACC-105, now ACC-7105): discard that block.
+  - file: src/components/__tests__/AlertsFeed.test.tsx
+    domain: life-support
+    verdict: rewrite
+    why: implementation-coupled; asserts hook call counts and that Array.prototype.sort ran, never what renders
+  - file: src/pages/__tests__/LifeSupportPage.test.tsx
+    domain: life-support
+    verdict: rewrite
+    why: snapshot only
+  - file: src/pages/cargo/__tests__/CargoManifest.test.tsx
+    domain: cargo
+    verdict: rewrite
+    why: >-
+      Mocks the client with idealized camelCase data, so real shapes are never
+      exercised, and asserts only that a heading and a SKU render. Misses the
+      key behavior: "valuation pending — finance" for unvalued lines.
+  - file: src/pages/cargo/__tests__/HazardSummary.test.tsx
+    domain: cargo
+    verdict: rewrite
+    why: flaky; races a random 0-60ms mock against a fixed 50ms sleep (fails ~1 run in 6)
+  - file: src/components/crew/__tests__/PayStatus.test.tsx
+    domain: crew
+    verdict: rewrite
+    why: the behavioral test is it.skip'd; the remaining one only checks the heading
+  - file: src/components/crew/__tests__/CrewRoster.test.tsx
+    domain: crew
+    verdict: rewrite
+    why: only the loading state is tested; the real tests are commented out
+  - file: src/layout/__tests__/Sidebar.test.tsx
+    domain: console
+    verdict: rewrite
+    why: brittle structural selectors (nav > div > a, index 2); also pins the coupling badge
+  - file: src/api/__tests__/client.test.ts
+    domain: shared
+    verdict: rewrite
+    why: >-
+      Split. "camelCases harbormaster rows" is a real normalization test: keep
+      its intent in the docking/cargo BFF tests. "returns payroll" passes on a
+      fabricated { data: [] } shape the ledger never sends (it sends
+      { result }): discard.
+  - file: src/pages/__tests__/ConcoursePage.test.tsx
+    domain: concourse
+    verdict: discard
+    why: >-
+      Excluded in jest.config.js (OPS-188) and asserts copy the app no longer
+      has ("Loading vendors...", "Settled ✓") plus the old ACC-105 merchant id
+  - file: e2e/smoke.spec.ts
+    domain: console
+    verdict: rewrite
+    why: >-
+      Two happy paths only; nth-child selectors and fixed 3s sleeps. Useful
+      as journeys (home, open docking) but assertions must move to
+      data-smt-* selectors (#408).
+
+# Behavior no test covers at all. A good migration covers every one.
+untested_behaviors:
+  - TrafficLog sorting newest-first and the 10-row truncation (dockings-default-page)
+  - ModuleStatus worst-level dot per module
+  - AlertsFeed filtering to WATCH/CRITICAL only and "All systems nominal."
+  - CargoManifest "valuation pending — finance" for lines with no valuation (DCK-004027/2 in the seed)
+  - HazardSummary excludes non-DOCKED dockings and NONE hazard
+  - CrewRoster certification chips, ON_DUTY coloring, "no ledger record"
+  - PayStatus hides PAID records
+  - Concourse settlement label (HELD / period open / settled / no ledger account) and inbound supplies
+  - Concourse VendorId -> ACC-7xxx merchant join
+  - Berth strip tiles for every berth, including FREE and amount due
+  - The whole docking simulator
+  - Every error state except DockingBoard's
+  - Routing: each path renders the right main + status pair
+
+# Line coverage measured with `npm run test:coverage` at the commit that
+# added this file. Line coverage overstates quality here: cargo's 96.8%
+# comes from a render-only test with invented data. Score migrations on
+# behaviors asserted, not lines.
+coverage_before:
+  overall_lines: 29.2
+  by_domain_lines:
+    console: 69.2
+    docking: 87.9
+    docking-simulation: 0.0
+    life-support: 66.7
+    cargo: 96.8
+    crew: 64.0
+    concourse: 0.0
+    shared: 53.0
