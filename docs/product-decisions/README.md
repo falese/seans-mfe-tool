@@ -32,6 +32,7 @@ A single PDR is typically implemented by several ADRs, which are in turn detaile
 | [PDR-008](./PDR-008-control-plane-is-platform.md) | The control plane is part of the platform, not a plugin | Accepted | ADR-078, ADR-077; narrows PDR-004 for the composition runtime only |
 | [PDR-009](./PDR-009-generative-software-system.md) | A generative software system — business intents compile to the platform contract | Accepted | ADR-084/085/086/087; composes PDR-006/003/001 |
 | [PDR-010](./PDR-010-governance-generation-kernel.md) | The governance+generation machinery is a reusable, self-hosting kernel | Accepted | ADR-089/090; composes PDR-009/006/003, reuses ADR-082/075 |
+| [PDR-011](./PDR-011-agent-driven-monolith-decomposition.md) | An agent decomposes a running monolith into SMT MFEs from observed evidence, and proves the result behaves the same | Proposed | ADR-109–113 (Proposed); epic #410; composes PDR-009/007/003/001 |
 
 ## Conventions
 
