@@ -223,6 +223,25 @@ versus wrong-but-invisible is the entire argument.
 Design time answers *may this address exist*; runtime answers *does it exist
 right now*; convergence makes the gap between them safe.
 
+## Telling whose region is whose
+
+Once a capability mounts, its DOM is just markup. So the LayoutManager stamps every
+slot it binds with the occupant, on the same element as `data-layout-slot`:
+
+| Attribute | Value |
+|---|---|
+| `data-smt-mfe` | the MFE that rendered it, e.g. `meridian-cargo-ops` |
+| `data-smt-capability` | the capability, e.g. `CargoManifest` |
+| `data-smt-experience` | the experience id |
+| `data-smt-content-type` | how it was mounted, e.g. `module-federation` |
+
+So "the cargo manifest in the main area" is the selector
+`[data-layout-slot="meridian-console/main"][data-smt-capability="CargoManifest"]`.
+The stamps stay on while the slot shows its error fallback and disappear when it
+clears. They are a public contract (`SLOT_STAMP_ATTRIBUTES` in
+`@seans-mfe-tool/runtime`), and they're reliable only because nothing but the
+LayoutManager mounts an MFE (ADR-108).
+
 ## Where everything lives
 
 | Piece | Path |

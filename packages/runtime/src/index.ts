@@ -59,7 +59,7 @@ export * from './handlers';
 // LayoutManager and stay empty until the daemon publishes experiences.
 // Split across three modules at the natural seams: manager (routing),
 // transport (graphql-transport-ws client), adaptors (per-contentType mounts).
-export { LayoutManager } from './layout-manager';
+export { LayoutManager, SLOT_STAMP_ATTRIBUTES } from './layout-manager';
 export type { LayoutManagerConfig, LayoutHostLike } from './layout-manager';
 // Slot contract logic (ADR-067): manifest-declared identity, matching, and
 // the declare-before-register guard — framework-free; generated MFEs mirror
