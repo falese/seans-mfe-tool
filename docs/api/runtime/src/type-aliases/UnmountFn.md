@@ -8,7 +8,7 @@
 
 > **UnmountFn** = () => `void` \| `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L47)
+Defined in: [packages/runtime/src/layout-adaptors.ts:53](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L53)
 
 ## Returns
 

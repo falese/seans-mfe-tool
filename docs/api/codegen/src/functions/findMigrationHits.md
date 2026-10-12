@@ -8,7 +8,7 @@
 
 > **findMigrationHits**(`migration`, `source`): [`MigrationHit`](../interfaces/MigrationHit.md)[]
 
-Defined in: [packages/codegen/src/platform-migrations.ts:216](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L216)
+Defined in: [packages/codegen/src/platform-migrations.ts:229](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/platform-migrations.ts#L229)
 
 Every line of `source` that uses what `migration` describes.
 

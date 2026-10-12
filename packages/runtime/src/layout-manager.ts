@@ -280,6 +280,9 @@ export class LayoutManager {
     // (ADR-060). Host chrome can render a skeleton on [data-slot-state=pending].
     slot.state = 'pending';
     slot.element.setAttribute('data-slot-state', 'pending');
+    // Boundary stamps (#408): name the region's occupant in the DOM. Only this
+    // path mounts (ADR-108), so every mounted slot carries them.
+    stampSlot(slot.element, experience);
 
     const helpers: AdaptorHelpers = {
       session: this.config.session,
@@ -599,9 +602,39 @@ export class LayoutManager {
     } finally {
       slot.unmount = undefined;
       slot.experienceId = undefined;
+      // A stamp must never outlive its occupant (#408).
+      clearSlotStamps(slot.element);
       // A provided element belongs to its MFE's DOM; clearing its contents is
       // enough (and the entry is deleted by the provider's release above).
       slot.element.innerHTML = '';
     }
+  }
+}
+
+// ── Boundary stamps (#408) ───────────────────────────────────
+
+/**
+ * What a mounted slot is stamped with, beside data-layout-slot and
+ * data-slot-state. A public DOM contract: tests, design capture and error
+ * attribution select on these names, so renaming one is a breaking change.
+ */
+export const SLOT_STAMP_ATTRIBUTES = {
+  mfe: 'data-smt-mfe',
+  capability: 'data-smt-capability',
+  experience: 'data-smt-experience',
+  contentType: 'data-smt-content-type',
+} as const;
+
+function stampSlot(element: SlotElementLike, experience: RenderedExperience): void {
+  element.setAttribute(SLOT_STAMP_ATTRIBUTES.mfe, experience.mfe);
+  element.setAttribute(SLOT_STAMP_ATTRIBUTES.capability, experience.capability);
+  element.setAttribute(SLOT_STAMP_ATTRIBUTES.experience, experience.id);
+  element.setAttribute(SLOT_STAMP_ATTRIBUTES.contentType, experience.contentType);
+}
+
+function clearSlotStamps(element: SlotElementLike): void {
+  for (const name of Object.values(SLOT_STAMP_ATTRIBUTES)) {
+    if (element.removeAttribute) element.removeAttribute(name);
+    else element.setAttribute(name, '');
   }
 }

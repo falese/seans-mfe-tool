@@ -86,6 +86,11 @@ test.describe('Cross-application composition (#345)', () => {
     // design and are not what this test is about.
     await expect(slot(page, 'root')).toHaveAttribute('data-slot-state', 'ready');
     await expect(main).toHaveAttribute('data-slot-state', 'ready');
+    // Boundary stamps (#408): each region names its occupant in the DOM.
+    await expect(slot(page, 'root')).toHaveAttribute('data-smt-mfe', 'meridian-console');
+    await expect(slot(page, 'root')).toHaveAttribute('data-smt-capability', 'StationConsole');
+    await expect(main).toHaveAttribute('data-smt-mfe', 'abc-kids-flappy');
+    await expect(main).toHaveAttribute('data-smt-capability', 'PlayGame');
     // It is abc-kids' own deployment: the container the LayoutManager loaded
     // is flappy's, from flappy's origin, not anything meridian built.
     const loaded = await page.evaluate(() => typeof (window as unknown as Record<string, unknown>)['abc_kids_flappy']);

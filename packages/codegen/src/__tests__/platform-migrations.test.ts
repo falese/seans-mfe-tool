@@ -236,6 +236,30 @@ describe('base-control-plane-removed', () => {
   });
 });
 
+describe('mfe-host-removed (#407)', () => {
+  const entry = byId('mfe-host-removed');
+  const hits = (text: string): number =>
+    findMigrationHits(entry, { path: 'src/App.tsx', text }).length;
+
+  it.each([
+    "import { MfeHost } from '@seans-mfe/framework-react/runtime';",
+    "import { MfeHost, useMfe } from '@seans-mfe/framework-react/runtime';",
+    "import type { MfeHostProps, UseMfeOptions } from '@seans-mfe/framework-react/runtime';",
+    '  const ref = useMfe(handles, { capability: "PlayGame" });',
+    '      <MfeHost handles={handles} capability="PlayGame" />',
+  ])('catches a use of the removed bypass: %s', (line) => {
+    expect(hits(line)).toBe(1);
+  });
+
+  it('leaves the sanctioned surfaces and look-alikes alone', () => {
+    expect(hits("import { DeclaredSlot, useControlPlaneState } from '@seans-mfe/framework-react/runtime';")).toBe(0);
+    expect(hits("import { LayoutManager } from '@seans-mfe-tool/runtime';")).toBe(0);
+    expect(hits('const host = useMfeContext();')).toBe(0);
+    expect(hits('  return <div ref={ref} data-mfe-host="" />;')).toBe(0);
+    expect(hits(' * MfeHost was removed in favor of the LayoutManager (ADR-108)')).toBe(0);
+  });
+});
+
 describe('dockerfile-installs-from-lockfile (#346)', () => {
   const entry = byId('dockerfile-installs-from-lockfile');
   const hits = (text: string): number =>

@@ -39,6 +39,12 @@ export interface SlotElementLike {
   appendChild(child: unknown): unknown;
   remove(): void;
   setAttribute(name: string, value: string): void;
+  /**
+   * Optional so a host's own `createSlotElement` that predates it still type-
+   * checks; every DOM element has it. Without it, cleared stamps are blanked
+   * rather than removed (#408).
+   */
+  removeAttribute?(name: string): void;
   addEventListener(type: string, listener: (event: unknown) => void): void;
 }
 
