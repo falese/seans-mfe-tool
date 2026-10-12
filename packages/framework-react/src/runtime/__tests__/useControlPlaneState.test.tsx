@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  *
- * useControlPlaneState tests. Same posture as MfeHost.test.tsx/
- * DeclaredSlot.test.tsx (react + @testing-library/react devDependencies,
+ * useControlPlaneState tests. Same posture as DeclaredSlot.test.tsx
+ * (react + @testing-library/react devDependencies,
  * root testMatch includes .tsx, this file's own @jest-environment pragma).
  */
 import * as React from 'react';

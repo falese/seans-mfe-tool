@@ -137,6 +137,19 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     exempt: /^\s*(?:\/\/|\*|\/\*)/,
   },
   {
+    id: 'mfe-host-removed',
+    since: '1.0.0',
+    // Removed from @seans-mfe/framework-react/runtime in the same change, so a
+    // use no longer compiles: an error on arrival. The entry says why.
+    failsAt: '1.0.0',
+    adr: 'ADR-108',
+    message:
+      'Uses MfeHost or useMfe (or their MfeHostProps / UseMfeOptions / MfeHandleInput types), which were removed: they mounted an MFE handle directly and bypassed the LayoutManager, so the slot got no state, error isolation, escalation, provided slots or boundary stamps',
+    fix: "Mount through a LayoutManager from '@seans-mfe-tool/runtime': give it a container element (a React ref works) plus the daemon transport and session, call start(), and call stop() on unmount. The control plane places capabilities into its slots; for a slot an MFE contributes, use DeclaredSlot.",
+    pattern: /\b(?:MfeHost|useMfe|MfeHostProps|UseMfeOptions|MfeHandleInput)\b/,
+    exempt: /^\s*(?:\/\/|\*|\/\*)/,
+  },
+  {
     id: 'dockerfile-installs-from-lockfile',
     since: '1.0.0',
     // Advice: an old Dockerfile still builds, it just is not reproducible.
