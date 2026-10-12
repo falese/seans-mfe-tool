@@ -9,7 +9,7 @@
  * the address's desired experience instead of destroying it (ADR-066).
  *
  * This module imports React by design — it is boundary layer 3 (host-side
- * sugar), same posture as MfeHost. React is a peer dependency. The contract
+ * sugar). React is a peer dependency. The contract
  * is accepted structurally so this package needs no dependency on the runtime
  * package: `createSlotContract(...)` satisfies `SlotContractLike`.
  *

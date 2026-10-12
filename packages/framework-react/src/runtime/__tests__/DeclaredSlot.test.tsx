@@ -3,8 +3,9 @@
  *
  * DeclaredSlot tests (ADR-067, three-layer split).
  *
- * Needs react + @testing-library/react + jsdom (same posture as
- * MfeHost.test.tsx — see its header for what changed to make that true).
+ * Needs react + @testing-library/react + jsdom — devDependencies of
+ * @seans-mfe/framework-react — and the root testMatch to include .tsx (both
+ * true now; before, .tsx tests here silently never ran under `npm test`).
  * The contract *logic* is fully covered framework-free in
  * packages/runtime/src/__tests__/slot-contract.test.ts; this pins the sugar:
  * assert on render, register through a stable ref, inert without a host.
