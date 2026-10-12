@@ -185,17 +185,20 @@ divergences_from_reference:
   - The monolith shows ModuleStatus in the status rail on "/"; meridian-station places it on meridian.status.life-support.
   - The Life Support nav badge (see couplings) does not exist in meridian-station.
   - meridian-station's off-shift route (abc-kids flappy) belongs to another project and is not in the monolith.
+  - The concourse inbound list is capped at three rows (see latent_bugs: concourse-inbound-cap); meridian-station shows them all.
 
 # --------------------------------------------------------------------------
 # Behavior a decomposition must PRESERVE (parity), including what's wrong
 # --------------------------------------------------------------------------
 latent_bugs:
-  - id: dockings-default-page
+  - id: concourse-inbound-cap
     detail: >-
-      GET /dockings with no limit returns 10 of 12 rows. Dockings 4029 (b1,
-      SCHEDULED) and 4030 (b6, APPROACH) never appear in the traffic log or
-      the concourse's inbound list. meridian-station has the same bug. Parity
-      means preserving it; fixing it is a separate, explicit change.
+      The concourse's "Inbound supplies" list is cut to three rows
+      (src/pages/ConcoursePage.tsx, OPS-140) and is not sorted first. With the
+      seed it hides docking 4030 (VR-72410, b6, APPROACH): the one vessel
+      actually on approach. meridian-station's MarketDirectory shows all four
+      inbound dockings, so this is monolith-only. Parity means preserving it;
+      fixing it is an explicit product change. A good proposal flags it.
   - id: favicon-404
     detail: >-
       Every page load logs a 404 for /favicon.ico. It is part of the console
@@ -278,7 +281,8 @@ tests:
 
 # Behavior no test covers at all. A good migration covers every one.
 untested_behaviors:
-  - TrafficLog sorting newest-first and the 10-row truncation (dockings-default-page)
+  - TrafficLog sorting newest-first
+  - Concourse inbound list capped at three rows (concourse-inbound-cap)
   - ModuleStatus worst-level dot per module
   - AlertsFeed filtering to WATCH/CRITICAL only and "All systems nominal."
   - CargoManifest "valuation pending — finance" for lines with no valuation (DCK-004027/2 in the seed)

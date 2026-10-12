@@ -452,4 +452,74 @@ describe('DatabaseAdapter', () => {
       expect(sqliteDelete).toContain('where:');
     });
   });
+
+  // #428: list queries honor the operation's declared pagination instead of
+  // a hardcoded `limit || 10`. Operations that declare none keep the old
+  // behavior (covered by the tests above).
+  describe('declared pagination (#428)', () => {
+    const q = (name, schema) => ({ name, in: 'query', schema });
+    const harbormaster = { parameters: [q('offset', { type: 'integer', default: 0 }), q('limit', { type: 'integer', default: 50 })] };
+    const stationOs = { parameters: [q('Page', { type: 'integer', default: 1 }), q('PageSize', { type: 'integer', default: 20 })] };
+    const ledger = { parameters: [q('pageSize', { type: 'integer', default: 25 })] };
+    const noDefault = { parameters: [q('limit', { type: 'integer' })] };
+
+    describe('SQLite', () => {
+      const adapter = DatabaseAdapter.create('sqlite');
+
+      it('uses a declared limit default and offset (Harbormaster)', () => {
+        const result = adapter.generateFindQuery('get', '/dockings', harbormaster);
+        expect(result).toContain('limit: parseInt(req.query.limit, 10) || 50');
+        expect(result).toContain('offset: parseInt(req.query.offset, 10) || 0');
+        expect(result).not.toContain('|| 10,');
+      });
+
+      it('maps a 1-based Page/PageSize pair to limit and offset (StationOS)', () => {
+        const result = adapter.generateFindQuery('get', '/telemetry', stationOs);
+        expect(result).toContain('limit: parseInt(req.query.PageSize, 10) || 20');
+        expect(result).toContain('offset: ((parseInt(req.query.Page, 10) || 1) - 1) * (parseInt(req.query.PageSize, 10) || 20)');
+      });
+
+      it('falls back to 10 when the page size declares no default', () => {
+        const result = adapter.generateFindQuery('get', '/dockings', noDefault);
+        expect(result).toContain('limit: parseInt(req.query.limit, 10) || 10');
+      });
+
+      it('keeps the old offset handling when the spec declares no offset or page', () => {
+        // Silence in the spec means unchanged behavior (petstore declares only limit).
+        const result = adapter.generateFindQuery('get', '/pets', noDefault);
+        expect(result).toContain('offset: parseInt(req.query.offset) || 0');
+      });
+
+      it('keeps the old query when the operation declares no pagination', () => {
+        expect(adapter.generateFindQuery('get', '/users', { parameters: [] }))
+          .toBe(adapter.generateFindQuery('get', '/users'));
+      });
+
+      it('ignores declared pagination on item lookups', () => {
+        expect(adapter.generateFindQuery('get', '/dockings/{docking_id}', harbormaster))
+          .toBe(adapter.generateFindQuery('get', '/dockings/{docking_id}'));
+      });
+    });
+
+    describe('MongoDB', () => {
+      const adapter = DatabaseAdapter.create('mongodb');
+
+      it('uses a declared pageSize default with no offset parameter (StellarLedger)', () => {
+        const result = adapter.generateFindQuery('get', '/charges', ledger);
+        expect(result).toContain('.limit(parseInt(req.query.pageSize, 10) || 25)');
+        expect(result).toContain('.skip(parseInt(req.query.offset) || 0)');
+      });
+
+      it('maps Page/PageSize to limit and skip', () => {
+        const result = adapter.generateFindQuery('get', '/telemetry', stationOs);
+        expect(result).toContain('.limit(parseInt(req.query.PageSize, 10) || 20)');
+        expect(result).toContain('.skip(((parseInt(req.query.Page, 10) || 1) - 1) * (parseInt(req.query.PageSize, 10) || 20))');
+      });
+
+      it('keeps the old query when the operation declares no pagination', () => {
+        expect(adapter.generateFindQuery('get', '/users', {}))
+          .toBe(adapter.generateFindQuery('get', '/users'));
+      });
+    });
+  });
 });

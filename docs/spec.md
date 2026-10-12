@@ -333,6 +333,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-105](./architecture-decisions/ADR-105-retire-base-control-plane.md) | Retire BaseControlPlane — the control plane has one implementation, so a host connects with a LayoutManager instead of subclassing an abstract base | Runtime / control-plane / abstract-base | Implemented |
 | [ADR-106](./architecture-decisions/ADR-106-query-transport-errors-are-typed.md) | The query capability keeps its error envelope, and a transport failure in it is typed — one status mapping, shared by the capability and the generated BFF client, on every target | Runtime / capabilities / query | Implemented |
 | [ADR-107](./architecture-decisions/ADR-107-mfe-declares-its-hosts.md) | An MFE's manifest declares the hosts it works in, by control-plane namespace, and a project can compose only MFEs that name it | DSL / manifest / composition | Implemented |
+| [ADR-114](./architecture-decisions/ADR-114-generated-apis-honor-declared-pagination.md) | A generated list endpoint pages the way its spec declares — the page-size parameter, its default, and offset or 1-based page — and keeps the old behavior only where the spec is silent | API generation / controllers / pagination | Implemented |
 
 ### Proposed — filed, not ratified
 

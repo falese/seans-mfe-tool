@@ -23,8 +23,8 @@ const db = require('../models');
       
       const item = await db.Vessel.findAll({
       where: Object.fromEntries(Object.entries(req.query).filter(([key]) => key in db.Vessel.rawAttributes)),
-      limit: parseInt(req.query.limit) || 10,
-      offset: parseInt(req.query.offset) || 0
+      limit: parseInt(req.query.limit, 10) || 50,
+      offset: parseInt(req.query.offset, 10) || 0
     });
       if (!item) {
         throw new ApiError(404, 'Not found');
