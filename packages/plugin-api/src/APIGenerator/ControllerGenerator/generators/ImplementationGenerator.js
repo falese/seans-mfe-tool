@@ -2,7 +2,7 @@ class ImplementationGenerator {
     static generate(method, operationPath, operation, modelName, dbAdapter) {
       switch (method.toLowerCase()) {
         case 'get':
-          return this.generateGetImplementation(operationPath, dbAdapter);
+          return this.generateGetImplementation(operationPath, dbAdapter, operation);
         case 'post':
           return this.generatePostImplementation(modelName, dbAdapter);
         case 'put':
@@ -16,8 +16,8 @@ class ImplementationGenerator {
       }
     }
   
-    static generateGetImplementation(operationPath, dbAdapter) {
-      const query = dbAdapter.generateFindQuery('get', operationPath);
+    static generateGetImplementation(operationPath, dbAdapter, operation) {
+      const query = dbAdapter.generateFindQuery('get', operationPath, operation);
       return `
       const item = await ${query};
       if (!item) {
