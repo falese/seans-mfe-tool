@@ -1,5 +1,5 @@
 /**
- * design:export — capture a working UI and emit a Figma import bundle (POC).
+ * design:export — capture a working UI and emit a Figma import bundle (ADR-115).
  *
  * The reverse direction of every other generator in the tool: instead of
  * manifest → code, this renders the running UI in headless Chromium, folds
@@ -19,7 +19,7 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { captureDesignTree } from '../../design/dom-capture';
-import { buildDesignTree } from '../../design/design-tree';
+import { buildDesignTree, DEFAULT_MAX_DEPTH } from '../../design/design-tree';
 import { renderPluginBundle } from '../../design/figma-plugin';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { DesignExportResult } from '../../oclif/results';
@@ -41,7 +41,7 @@ export default class DesignExport extends BaseCommand<DesignExportResult> {
     'Capture a running UI and generate a Figma import bundle: renders the page ' +
     'in headless Chromium, extracts the layout/styles into a design tree, and ' +
     'writes a Figma plugin (manifest.json + code.js) that recreates it as ' +
-    'editable frames, text, and images. Experimental — POC, no ADR yet.';
+    'editable frames, text, and images (ADR-115).';
 
   static args = {
     url: Args.string({
@@ -76,13 +76,14 @@ export default class DesignExport extends BaseCommand<DesignExportResult> {
       default: 1200,
     }),
     'full-page': Flags.boolean({
-      description: 'Expand the viewport to the full scroll height',
+      description:
+        'Expand the viewport to the full scroll height; --no-full-page captures only what is on screen',
       default: true,
       allowNo: true,
     }),
     'max-depth': Flags.integer({
       description: 'Maximum element nesting depth to capture',
-      default: 20,
+      default: DEFAULT_MAX_DEPTH,
     }),
   };
 
@@ -112,6 +113,9 @@ export default class DesignExport extends BaseCommand<DesignExportResult> {
 
     const { root, fonts, stats } = buildDesignTree(capture.records, {
       maxDepth: flags['max-depth'],
+      // The design holds what the screenshot shows: the viewport, or the page
+      // up to the full-page height cap (#409).
+      clip: capture.viewport,
     });
     const name = flags.name ?? capture.title ?? 'Design Export';
     root.name = name;
@@ -134,6 +138,12 @@ export default class DesignExport extends BaseCommand<DesignExportResult> {
       await write(path.join('figma-plugin', file), content);
     }
 
+    const capturedBottom = capture.viewport.y + capture.viewport.height;
+    if (flags['full-page'] && capture.pageHeight > capturedBottom) {
+      this.warnings.push(
+        `page is ${capture.pageHeight}px tall; captured the first ${capturedBottom}px (the full-page limit)`
+      );
+    }
     if (stats.truncated > 0) {
       this.warnings.push(
         `${stats.truncated} node(s) dropped beyond --max-depth ${flags['max-depth']}`

@@ -111,7 +111,8 @@ export function serializePage(): SerializedPage {
     'letter-spacing',
     'text-decoration-line',
     'text-transform',
-    'opacity',
+    // Not opacity: the parent element's frame already carries it, and copying
+    // it here applied it twice (#409).
     'visibility',
   ];
 
@@ -209,13 +210,28 @@ export function serializePage(): SerializedPage {
 
     if (ATOMIC_TAGS.has(tag)) return;
 
-    for (const child of Array.from(el.childNodes)) {
+    for (const child of renderedChildren(el, tag)) {
       if (child.nodeType === 1) {
         pushElement(child as DomElementLike, index);
       } else if (child.nodeType === 3) {
         pushText(child, index, styles);
       }
     }
+  }
+
+  /**
+   * The nodes that render inside `el`, in order: an open shadow root replaces
+   * the light DOM, and a slot renders the light nodes assigned to it — or its
+   * own fallback content when none are (#409). Closed shadow roots are not
+   * reachable from the page and stay opaque.
+   */
+  function renderedChildren(el: DomElementLike, tag: string): DomNodeLike[] {
+    if (el.shadowRoot) return Array.from(el.shadowRoot.childNodes);
+    if (tag === 'slot' && el.assignedNodes) {
+      const assigned = el.assignedNodes({ flatten: true });
+      if (assigned.length > 0) return assigned;
+    }
+    return Array.from(el.childNodes);
   }
 
   pushElement(document.body, -1);

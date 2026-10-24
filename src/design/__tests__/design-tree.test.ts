@@ -207,3 +207,139 @@ describe('buildDesignTree', () => {
     if (frame.kind === 'frame') expect(frame.clipsContent).toBe(true);
   });
 });
+
+describe('buildDesignTree — #409 capture fidelity', () => {
+  const flexStyles = (extra: Record<string, string>) => ({
+    display: 'flex',
+    'overflow-x': 'visible',
+    'overflow-y': 'visible',
+    ...extra,
+  });
+
+  it('treats a zero-size display:contents wrapper as transparent and keeps its subtree', () => {
+    const contents = el({ rect: rect(0, 0, 0, 0), styles: { display: 'contents' } });
+    const p = el({ parentIndex: 1, tag: 'p', rect: rect(0, 0, 200, 20) });
+    const t = txt({ parentIndex: 2, text: 'text' });
+    const { root } = buildDesignTree([ROOT, contents, p, t]);
+    expect(root.children.map((c) => c.name)).toEqual(['p']);
+    const pNode = root.children[0];
+    if (pNode.kind === 'frame') expect(pNode.children[0]).toMatchObject({ kind: 'text', characters: 'text' });
+  });
+
+  it('keeps document order when a transparent wrapper sits between siblings', () => {
+    const a = el({ id: 'a' });
+    const contents = el({ rect: rect(0, 0, 0, 0), styles: { display: 'contents' } });
+    const b = el({ parentIndex: 2, id: 'b' });
+    const c = el({ id: 'c' });
+    const { root } = buildDesignTree([ROOT, a, contents, b, c]);
+    expect(root.children.map((n) => n.name)).toEqual(['div#a', 'div#b', 'div#c']);
+  });
+
+  it('drops the subtree of a zero-size element that clips its content', () => {
+    const clipper = el({
+      rect: rect(0, 0, 0, 0),
+      styles: { display: 'block', 'overflow-x': 'hidden', 'overflow-y': 'hidden' },
+    });
+    const inside = el({ parentIndex: 1, id: 'clipped' });
+    const { root } = buildDesignTree([ROOT, clipper, inside]);
+    expect(root.children).toHaveLength(0);
+  });
+
+  it('carries the opacity of a transparent wrapper onto the children it hands up', () => {
+    const faded = el({
+      rect: rect(0, 0, 0, 0),
+      styles: { display: 'block', opacity: '0.5', 'overflow-x': 'visible', 'overflow-y': 'visible' },
+    });
+    const kid = el({ parentIndex: 1, styles: { display: 'block', opacity: '0.8' } });
+    const { root } = buildDesignTree([ROOT, faded, kid]);
+    expect(root.children[0].opacity).toBeCloseTo(0.4, 5);
+  });
+
+  it('applies opacity once to direct text — the frame carries it, the text does not', () => {
+    const faded = el({ styles: { display: 'block', opacity: '0.5' } });
+    // A capture from before the fix copied the parent's opacity onto the text record.
+    const t = txt({ parentIndex: 1, styles: { ...txt({}).styles, opacity: '0.5' } });
+    const { root } = buildDesignTree([ROOT, faded, t]);
+    const frameNode = root.children[0];
+    expect(frameNode.opacity).toBe(0.5);
+    if (frameNode.kind === 'frame') expect(frameNode.children[0].opacity).toBe(1);
+  });
+
+  it('maps a wrapping row to wrapping auto-layout with the row gap as counter-axis spacing', () => {
+    const flex = el({
+      styles: flexStyles({ 'flex-direction': 'row', 'flex-wrap': 'wrap', 'column-gap': '8px', 'row-gap': '12px' }),
+    });
+    const { root } = buildDesignTree([ROOT, flex, el({ parentIndex: 1 }), el({ parentIndex: 1 })]);
+    const frameNode = root.children[0];
+    if (frameNode.kind !== 'frame') throw new Error('expected a frame');
+    expect(frameNode.layout).toMatchObject({ direction: 'HORIZONTAL', wrap: true, itemSpacing: 8, counterAxisSpacing: 12 });
+  });
+
+  it('keeps absolute coordinates for wrapping layouts auto-layout cannot express', () => {
+    for (const extra of [
+      { 'flex-direction': 'column', 'flex-wrap': 'wrap' },
+      { 'flex-direction': 'row', 'flex-wrap': 'wrap-reverse' },
+    ]) {
+      const flex = el({ styles: flexStyles(extra) });
+      const { root } = buildDesignTree([ROOT, flex, el({ parentIndex: 1 })]);
+      const frameNode = root.children[0];
+      if (frameNode.kind === 'frame') expect(frameNode.layout).toBeUndefined();
+    }
+  });
+
+  it('reverses child order and the primary axis for row-reverse / column-reverse', () => {
+    const cases: Array<[string, string | undefined, string]> = [
+      ['row-reverse', undefined, 'MAX'],
+      ['row-reverse', 'flex-end', 'MIN'],
+      ['column-reverse', 'flex-start', 'MAX'],
+      ['row-reverse', 'center', 'CENTER'],
+      ['row-reverse', 'space-between', 'SPACE_BETWEEN'],
+    ];
+    for (const [direction, justify, expected] of cases) {
+      const styles = flexStyles({ 'flex-direction': direction });
+      if (justify) styles['justify-content'] = justify;
+      const flex = el({ styles });
+      const { root } = buildDesignTree([ROOT, flex, el({ parentIndex: 1, id: 'first' }), el({ parentIndex: 1, id: 'second' })]);
+      const frameNode = root.children[0];
+      if (frameNode.kind !== 'frame') throw new Error('expected a frame');
+      expect(frameNode.layout?.primaryAxis).toBe(expected);
+      expect(frameNode.layout?.direction).toBe(direction.startsWith('row') ? 'HORIZONTAL' : 'VERTICAL');
+      expect(frameNode.children.map((c) => c.name)).toEqual(['div#second', 'div#first']);
+    }
+  });
+
+  it('culls records wholly outside the clip rect, keeping an inside child of an outside wrapper', () => {
+    const viewport = { x: 0, y: 0, width: 800, height: 600 };
+    const inside = el({ id: 'inside', rect: rect(10, 10, 100, 50) });
+    const below = el({ id: 'below', rect: rect(0, 2000, 100, 50) });
+    const belowText = txt({ parentIndex: 2, rect: rect(0, 2000, 50, 16) });
+    const straddle = el({ id: 'straddle', rect: rect(0, 580, 100, 50) });
+    const offscreenWrapper = el({ id: 'wrapper', rect: rect(-500, 0, 100, 50) });
+    const poking = el({ parentIndex: 5, id: 'poking', rect: rect(20, 20, 40, 40), styles: { display: 'block', position: 'absolute' } });
+    const records = [ROOT, inside, below, belowText, straddle, offscreenWrapper, poking];
+    const { root, stats } = buildDesignTree(records, { clip: viewport });
+    expect(root.children.map((c) => c.name)).toEqual(['div#inside', 'div#straddle', 'div#poking']);
+    expect(stats.texts).toBe(0);
+  });
+
+  it('builds a 100k-record tree in linear time', () => {
+    // The suite fakes timers (jest.config.js), which freezes Date.now.
+    jest.useRealTimers();
+    const records: RawRecord[] = [ROOT];
+    // 20k sibling sections, each with an element child and two text runs.
+    for (let i = 0; i < 20_000; i += 1) {
+      const section = records.push(el({ parentIndex: 0, rect: rect(0, i * 10, 100, 10) })) - 1;
+      const inner = records.push(el({ parentIndex: section, rect: rect(0, i * 10, 50, 10) })) - 1;
+      records.push(txt({ parentIndex: section }));
+      records.push(txt({ parentIndex: inner }));
+      records.push(el({ parentIndex: inner, rect: rect(0, 0, 0, 0), styles: { display: 'contents' } }));
+    }
+    const started = Date.now();
+    const { stats } = buildDesignTree(records);
+    const elapsed = Date.now() - started;
+    expect(stats.elements).toBe(40_001);
+    expect(stats.texts).toBe(40_000);
+    // Quadratic took ~66s at 50k layers (#409); linear is well under a second.
+    expect(elapsed).toBeLessThan(3000);
+  });
+});

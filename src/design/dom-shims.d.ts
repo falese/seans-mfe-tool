@@ -35,6 +35,10 @@ interface DomElementLike extends DomNodeLike {
   getAttribute(name: string): string | null;
   currentSrc?: string;
   src?: string;
+  /** Open shadow root; null for closed roots and plain elements. */
+  shadowRoot?: { childNodes: ArrayLike<DomNodeLike> } | null;
+  /** `<slot>` only. */
+  assignedNodes?(options?: { flatten?: boolean }): DomNodeLike[];
 }
 
 interface DomRangeLike {

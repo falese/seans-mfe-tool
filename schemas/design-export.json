@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/design:export.json",
   "title": "design:export",
-  "description": "Capture a running UI and generate a Figma import bundle: renders the page in headless Chromium, extracts the layout/styles into a design tree, and writes a Figma plugin (manifest.json + code.js) that recreates it as editable frames, text, and images. Experimental — POC, no ADR yet.",
+  "description": "Capture a running UI and generate a Figma import bundle: renders the page in headless Chromium, extracts the layout/styles into a design tree, and writes a Figma plugin (manifest.json + code.js) that recreates it as editable frames, text, and images (ADR-115).",
   "input": {
     "type": "object",
     "properties": {
@@ -31,12 +31,12 @@
       },
       "full-page": {
         "type": "boolean",
-        "description": "Expand the viewport to the full scroll height"
+        "description": "Expand the viewport to the full scroll height; --no-full-page captures only what is on screen"
       },
       "max-depth": {
         "type": "string",
         "description": "Maximum element nesting depth to capture",
-        "default": 20
+        "default": 64
       }
     },
     "required": [

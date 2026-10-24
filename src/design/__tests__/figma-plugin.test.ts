@@ -134,3 +134,89 @@ describe('renderPluginBundle', () => {
     expect(() => new Function('figma', code)).not.toThrow();
   });
 });
+
+/**
+ * Runs the generated code.js against a stub of the Figma plugin API — enough
+ * surface to execute the executor end to end and observe what it asked for.
+ */
+async function runPlugin(code: string): Promise<{ created: Array<Record<string, unknown>>; fontLoads: string[]; closed: string }> {
+  const created: Array<Record<string, unknown>> = [];
+  const fontLoads: string[] = [];
+  let resolveClosed: (msg: string) => void = () => undefined;
+  const closed = new Promise<string>((resolve) => {
+    resolveClosed = resolve;
+  });
+  const make = (type: string) => () => {
+    const node: Record<string, unknown> = {
+      type,
+      children: [] as unknown[],
+      appendChild(child: unknown) {
+        (this.children as unknown[]).push(child);
+      },
+      resize(w: number, h: number) {
+        this.width = w;
+        this.height = h;
+      },
+    };
+    created.push(node);
+    return node;
+  };
+  const figma = {
+    currentPage: { appendChild: () => undefined },
+    viewport: { scrollAndZoomIntoView: () => undefined },
+    createFrame: make('FRAME'),
+    createText: make('TEXT'),
+    createRectangle: make('RECTANGLE'),
+    createImageAsync: async () => ({ hash: 'h' }),
+    loadFontAsync: async (f: { family: string; style: string }) => {
+      fontLoads.push(`${f.family} ${f.style}`);
+    },
+    closePlugin: (msg: string) => resolveClosed(msg),
+  };
+  new Function('figma', 'console', code)(figma, { error: () => undefined });
+  return { created, fontLoads, closed: await closed };
+}
+
+describe('generated code.js — #409', () => {
+  beforeEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('loads each font once, however many text layers use it', async () => {
+    const root = frame({ children: [text(), text({ characters: 'Again' }), text({ characters: 'Thrice' })] });
+    const bundle = renderPluginBundle(root, [{ family: 'Inter', weight: 400, italic: false }], { name: 'Fonts' });
+    const { fontLoads, closed } = await runPlugin(bundle['code.js']);
+    expect(closed).toContain('Imported 4 layers');
+    expect(fontLoads).toEqual(['Inter Regular']);
+  });
+
+  it('applies wrapping auto-layout', async () => {
+    const root = frame({
+      layout: {
+        direction: 'HORIZONTAL',
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        itemSpacing: 8,
+        counterAxisSpacing: 12,
+        wrap: true,
+        primaryAxis: 'MIN',
+        counterAxis: 'MIN',
+      },
+      children: [frame({ name: 'a' }), frame({ name: 'b' })],
+    });
+    const { ops } = emitFigmaOps(root, []);
+    expect(ops[0].layout).toMatchObject({ wrap: true, counterAxisSpacing: 12 });
+    const { created } = await runPlugin(renderPluginBundle(root, [], { name: 'Wrap' })['code.js']);
+    expect(created[0]).toMatchObject({ layoutMode: 'HORIZONTAL', layoutWrap: 'WRAP', counterAxisSpacing: 12 });
+  });
+
+  it('declares the manifest fields current Figma requires of a new plugin', () => {
+    const manifest = JSON.parse(renderPluginBundle(frame(), [], { name: 'M' })['manifest.json']) as Record<string, unknown>;
+    expect(manifest.documentAccess).toBe('dynamic-page');
+    // Image fills fetch the captured page's own image URLs.
+    expect(manifest.networkAccess).toMatchObject({ allowedDomains: ['*'] });
+    expect(typeof (manifest.networkAccess as { reasoning?: unknown }).reasoning).toBe('string');
+  });
+});

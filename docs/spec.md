@@ -335,6 +335,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-107](./architecture-decisions/ADR-107-mfe-declares-its-hosts.md) | An MFE's manifest declares the hosts it works in, by control-plane namespace, and a project can compose only MFEs that name it | DSL / manifest / composition | Implemented |
 | [ADR-108](./architecture-decisions/ADR-108-layout-manager-is-the-sole-mounter.md) | The LayoutManager is the only thing that mounts an MFE — no host-side component may drive a presentation handle itself | Runtime / composition / mounting | Implemented |
 | [ADR-114](./architecture-decisions/ADR-114-generated-apis-honor-declared-pagination.md) | A generated list endpoint pages the way its spec declares — the page-size parameter, its default, and offset or 1-based page — and keeps the old behavior only where the spec is silent | API generation / controllers / pagination | Implemented |
+| [ADR-115](./architecture-decisions/ADR-115-design-export-runtime-ui-to-figma.md) | design:export renders a running UI, folds it into a normalized design tree, and emits a data-driven Figma plugin; the capture follows what the browser renders, not the raw DOM | Design / capture / Figma | Implemented |
 
 ### Proposed — filed, not ratified
 
