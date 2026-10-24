@@ -254,3 +254,30 @@ export interface DecomposeCaptureResult {
   replayMisses: string[];
   files: string[];
 }
+
+// ---------------------------------------------------------------------------
+// decompose:analyze
+// ---------------------------------------------------------------------------
+
+/** decompose:analyze — the source graph written, joined to an evidence bundle when given (ADR-109 §3). */
+export interface DecomposeAnalyzeResult {
+  dir: string;
+  outDir: string;
+  sourceFiles: number;
+  /** Files per assignment category: screen, shared, shell, unreached. */
+  assignment: Record<string, number>;
+  routes: number;
+  endpoints: number;
+  storeReads: number;
+  tests: { files: number; ran: boolean; reason: string | null; passed: number; failed: number; skipped: number };
+  history: { coChangePairs: number; ownedFiles: number; unavailable: string | null };
+  join: {
+    observedEndpoints: number;
+    explained: number;
+    unexplained: number;
+    sourceOnly: number;
+    filesSeenAtRuntime: number;
+    sourceFiles: number;
+  } | null;
+  files: string[];
+}

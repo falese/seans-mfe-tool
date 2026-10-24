@@ -163,6 +163,7 @@ place, so they cannot disagree with a copy here.
 | Enabling a target on a manifest (`--swift`, `--rust`) | `src/targets/enable.ts` |
 | Native target explainer (one manifest, two builds) | `docs/native-targets.md` |
 | `decompose:capture` — evidence bundle: regions ↔ source, request attribution, replay (ADR-109) | `src/commands/decompose/capture.ts`; core `src/decompose/`; explainer `docs/decompose-capture.md` |
+| `decompose:analyze` — source graph: routes, endpoints through wrappers, store reads, file → screen, test inventory, runtime join (ADR-109 §3) | `src/commands/decompose/analyze.ts`; core `src/decompose/source/`; explainer `docs/decompose-analyze.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |

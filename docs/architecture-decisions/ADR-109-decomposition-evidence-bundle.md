@@ -6,7 +6,7 @@ title: >-
 status: Accepted
 impl:
   stage: phased
-  refs: ["#414", "#437"]
+  refs: ["#437"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / capture
@@ -23,12 +23,22 @@ implemented-by:
   - src/decompose/regions.ts
   - src/decompose/attribution.ts
   - src/decompose/page-probe.ts
+  - src/commands/decompose/analyze.ts
+  - src/decompose/source/analyze.ts
+  - src/decompose/source/parse.ts
+  - src/decompose/source/graph.ts
+  - src/decompose/source/join.ts
+  - src/decompose/source/tests.ts
+  - src/decompose/source/history.ts
 verified-by:
   - src/decompose/__tests__/bundle.test.ts
   - src/decompose/__tests__/regions.test.ts
   - src/decompose/__tests__/attribution.test.ts
   - src/decompose/__tests__/page-probe.test.ts
-tracked-by: ["#410", "#413", "#414", "#437"]
+  - src/decompose/source/__tests__/graph.test.ts
+  - src/decompose/source/__tests__/join.test.ts
+  - src/decompose/source/__tests__/meridian-monolith.test.ts
+tracked-by: ["#410", "#413", "#414", "#424", "#437"]
 summary: >-
   `decompose:capture` runs the monolith in headless Chromium, drives journeys, and writes an
   evidence bundle: DOM regions, network requests attributed to the region and interaction that
@@ -98,6 +108,21 @@ In a development build, each region resolves to its React component and source f
 the fiber attached to its DOM node. `decompose:analyze` keys the source graph (routes,
 imports, API call sites, co-change, ownership) by the same component/file ids, so runtime
 and source evidence vote on the same units.
+
+As implemented (#414), `decompose:analyze` writes `source/` into the bundle:
+
+| File | Holds |
+|---|---|
+| `graph.json` | per file: components, resolved imports, the endpoints it reaches (URLs followed through wrapper functions to concrete paths), store reads resolved to the endpoints that load them, and its assignment; the route table with the landmark each route renders into |
+| `tests.json` | per test file: what it imports and mocks, snapshots, skips, structural selectors, fixed waits, and per-test results from running the suite, including tests the project's config excludes |
+| `history.json` | co-change pairs from `git log` and CODEOWNERS owners |
+| `join.json` | each observed endpoint matched to the source that calls it, endpoints in source no journey exercised, and what the capture saw of each file |
+
+A file's assignment is the set of route roots that reach it through the import graph: one
+route is a **screen** file, several are **shared**, reached only from the entry is the
+**shell**, and reached from nowhere is **unreached**. The store reads are what the runtime
+data signal cannot see: a component that reads store data only to filter (§Boundaries) is
+still a consumer of the endpoint that loads it.
 
 ### 4. Responses are recorded for replay
 

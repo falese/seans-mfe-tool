@@ -90,7 +90,8 @@ beside the JSON but are not part of that guarantee.
 
 - Data a component uses without showing it — to filter or count — leaves no trace on screen,
   and a store-initiated request has no component on its stack. Those couplings
-  (meridian-monolith's `HazardSummary` reading dockings) are for `decompose:analyze` (#414).
+  (meridian-monolith's `HazardSummary` reading dockings) are found by `decompose:analyze` from
+  the source's store reads ([`decompose-analyze.md`](./decompose-analyze.md)).
 - Behavior no journey exercised is absent from the bundle, which means unknown, not unused.
 - Re-running the app's own e2e specs as journeys is #437.
 - Recorded responses become BFF `mocks.json` fixtures at scaffold time (#417), once field

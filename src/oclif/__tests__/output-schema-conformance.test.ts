@@ -71,6 +71,8 @@ const INVOCATIONS: Record<string, Invocation> = {
   'compose:validate': { args: ['compose:validate', ABC_KIDS, '--check'] },
   // --dry-run so the success path reports without rewriting rules.json.
   'compose:build':    { args: ['compose:build', ABC_KIDS, '--dry-run'] },
+  // Static analysis of the reference monolith; writes ./evidence/source under the temp cwd.
+  'decompose:analyze': { args: ['decompose:analyze', path.join(REPO_ROOT, 'examples', 'meridian-monolith'), '--no-run-tests'] },
   deploy:        { args: ['deploy', 'probe', '--type', 'remote', '--dry-run'] },
   'remote:init': { args: ['remote:init', 'probe-mfe', '--dry-run'] },
 
