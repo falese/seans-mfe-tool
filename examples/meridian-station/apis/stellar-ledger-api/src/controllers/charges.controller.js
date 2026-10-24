@@ -25,7 +25,7 @@ const Model = require('../models');
       
       const item = await Model.Charge
       .find(Object.fromEntries(Object.entries(req.query).filter(([key]) => key in Model.Charge.schema.paths)))
-      .limit(parseInt(req.query.limit) || 10)
+      .limit(parseInt(req.query.pageSize, 10) || 25)
       .skip(parseInt(req.query.offset) || 0);
       if (!item) {
         throw new ApiError(404, 'Not found');

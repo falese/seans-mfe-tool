@@ -32,7 +32,8 @@ export default function ConcoursePage() {
   if (!vendors) return <section className="wrap" style={{ background: '#0e1226', borderRadius: 12, padding: 20 }}><p style={{ color: '#5d6690' }}>Opening the concourse…</p></section>;
 
   const stallByVendor = new Map(stalls.map((s) => [s.vendorId, s]));
-  const inbound = dockings.filter((d) => d.statusCode === 'APPROACH' || d.statusCode === 'SCHEDULED');
+  // The panel only has room for three rows (OPS-140).
+  const inbound = dockings.filter((d) => d.statusCode === 'APPROACH' || d.statusCode === 'SCHEDULED').slice(0, 3);
 
   return (
     <section className="wrap" style={{ background: '#0e1226', color: '#dfe4ff', borderRadius: 12, padding: 20 }}>

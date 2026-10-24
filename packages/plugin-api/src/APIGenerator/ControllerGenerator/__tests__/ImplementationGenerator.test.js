@@ -329,4 +329,13 @@ describe('ImplementationGenerator', () => {
       expect(result1).toBe(result2);
     });
   });
+
+  // #428: the operation reaches the adapter, so declared pagination applies.
+  describe('declared pagination (#428)', () => {
+    it('passes the operation through generate() to the find query', () => {
+      const operation = { parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer', default: 50 } }] };
+      const result = ImplementationGenerator.generate('get', '/dockings', operation, 'Docking', sqliteAdapter);
+      expect(result).toContain('limit: parseInt(req.query.limit, 10) || 50');
+    });
+  });
 });
