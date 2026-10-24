@@ -6,7 +6,7 @@ title: >-
 status: Accepted
 impl:
   stage: phased
-  refs: ["#416", "#422", "#440"]
+  refs: ["#422", "#440"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / proposal
@@ -24,10 +24,16 @@ implemented-by:
   - src/decompose/propose/derive.ts
   - src/decompose/propose/triage.ts
   - src/decompose/propose/score.ts
+  - src/commands/decompose/edit.ts
+  - src/commands/decompose/present.ts
+  - src/decompose/propose/edit.ts
+  - src/decompose/propose/present.ts
 verified-by:
   - src/decompose/propose/__tests__/meridian-monolith.test.ts
   - src/decompose/propose/__tests__/derive.test.ts
   - src/decompose/propose/__tests__/score.test.ts
+  - src/decompose/propose/__tests__/edit.test.ts
+  - src/decompose/propose/__tests__/present.test.ts
 tracked-by: ["#410", "#415", "#416", "#425", "#440"]
 summary: >-
   `decompose:propose` writes `decomposition.yaml`: the domains, the components and files each
@@ -114,6 +120,14 @@ Any later approval surface — such as a review UI for non-engineers (#425) — 
 
 Merging, splitting or renaming domains is an edit to `decomposition.yaml` followed by
 re-derivation. Hand edits to derived manifests before scaffolding are overwritten.
+
+As implemented (#416), `decompose:edit` applies edits as named operations — rename or merge
+domains, move a file (with any capability it holds), rename a capability or slot — so every
+reference moves with what changed and the re-derived fleet stays consistent. They are the
+same kinds `decompose:score` lists, so an agent's edits read back the way they were made.
+`decompose:present` writes the agreement artifact for the PR in §3: `PROPOSAL.md`, and an
+overlay of the proposed domains and couplings on the captured screens, as an HTML page and a
+Figma plugin.
 
 ## Boundaries
 

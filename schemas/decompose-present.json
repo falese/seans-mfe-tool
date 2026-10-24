@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:present.json",
+  "title": "decompose:present",
+  "description": "Write the agreement artifact for a decomposition proposal PR: PROPOSAL.md, and an overlay of the proposed domains on the captured screens as an HTML page and a Figma plugin (ADR-110).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The proposal directory (holding decomposition.yaml)"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "The decompose:capture evidence bundle whose screens to overlay (default: the proposal directory's parent)"
+      }
+    },
+    "required": [
+      "proposal"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "proposalDir",
+      "screens",
+      "boxes",
+      "domainsShown",
+      "domainsNotShown",
+      "files"
+    ],
+    "properties": {
+      "proposalDir": {
+        "type": "string"
+      },
+      "screens": {
+        "type": "number",
+        "description": "Screens in the overlay, and domain boxes drawn on them."
+      },
+      "boxes": {
+        "type": "number"
+      },
+      "domainsShown": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Domains with at least one box on some screen; the rest never appeared in the capture."
+      },
+      "domainsNotShown": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

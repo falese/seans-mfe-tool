@@ -328,3 +328,33 @@ export interface DecomposeScoreResult {
   /** The training-corpus record written, when --corpus was given. */
   corpusRecord: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// decompose:edit
+// ---------------------------------------------------------------------------
+
+/** decompose:edit — named edits applied to a proposal, and the fleet re-derived (ADR-110 §4). */
+export interface DecomposeEditResult {
+  proposal: string;
+  edits: Array<Record<string, string>>;
+  domains: string[];
+  validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
+  valid: boolean;
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:present
+// ---------------------------------------------------------------------------
+
+/** decompose:present — the agreement artifact: PROPOSAL.md and the boundary overlay (#416). */
+export interface DecomposePresentResult {
+  proposalDir: string;
+  /** Screens in the overlay, and domain boxes drawn on them. */
+  screens: number;
+  boxes: number;
+  /** Domains with at least one box on some screen; the rest never appeared in the capture. */
+  domainsShown: string[];
+  domainsNotShown: string[];
+  files: string[];
+}

@@ -108,6 +108,8 @@ const NO_FIXTURE: Record<string, string> = {
   'decompose:capture': 'drives a running app in headless Chromium — needs a Playwright browser download and an app to serve, neither guaranteed in unit-test jobs',
   'decompose:propose': 'reads decompose:analyze output, which no fixture commits — the same path runs in src/decompose/propose/__tests__/meridian-monolith.test.ts',
   'decompose:score': 'scores a decomposition.yaml, which no fixture commits — scoring runs against the real answer key in src/decompose/propose/__tests__/meridian-monolith.test.ts',
+  'decompose:edit': 'edits a decomposition.yaml, which no fixture commits — the edit operations and their re-derivation run in src/decompose/propose/__tests__/edit.test.ts',
+  'decompose:present': 'needs a proposal and a captured evidence bundle with screenshots, which no fixture commits — rendering runs in src/decompose/propose/__tests__/present.test.ts',
 };
 
 function runCli(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {

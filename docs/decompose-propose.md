@@ -33,6 +33,34 @@ Judgment belongs to the operating agent: names, merges, splits, and files the dr
 place. The agent edits `decomposition.yaml`, and `propose --from` re-derives everything from
 it. `proposal.base.yaml` keeps the draft, so the edits can be listed.
 
+## Editing, and the proposal PR
+
+Judgment is applied as named edits, not text edits, so nothing is left pointing at an old name:
+
+```bash
+seans-mfe-tool decompose:edit decomposition.yaml \
+  --rename-domain shell=console --move src/utils/constants.ts=console \
+  --rename-capability LifeSupportPage=TelemetryDashboard --rename-slot aside=status
+seans-mfe-tool decompose:edit decomposition.yaml --merge docking,cargo=harbor
+```
+
+Each run re-derives and validates the fleet. A merge carries both domains' files,
+capabilities, backends and placements, and drops couplings that are now internal.
+
+`decompose:present <proposal-dir> --evidence <bundle>` writes what a reviewer reads before
+agreeing (ADR-110 §3):
+
+- **`PROPOSAL.md`:** domains and their evidence, why each boundary is where it is, shared
+  files, risks (couplings, unassigned files, untested capabilities), the test triage, the
+  composition, and how to change it.
+- **`overlay/index.html`:** each captured screen with every proposed domain outlined where it
+  begins, labelled *domain · MFE · slot · backends*. Couplings are drawn dashed red, where
+  they show.
+- **`overlay/figma-plugin/`:** the same page as Figma layers (Plugins → Development → Import
+  plugin from manifest). The screenshots are embedded, so it needs no network access.
+
+Merging the PR that carries these is the agreement; nothing is scaffolded before it merges.
+
 ## What the proposal holds
 
 | Section | |
@@ -73,7 +101,7 @@ one training record (PDR-009): evidence, draft, edits, proposal, answer key, and
 
 - **The draft's one miss** is `examples/meridian-monolith/src/utils/constants.ts`, filed as shared. It holds the
   console's domain menu and berth list.
-- **The agent's edits:**
+- **The agent's edits** (applied with `decompose:edit`):
   - renamed domains: `shell` → `console`, and `simulator` → `docking-simulation` (the id
     `constants.ts` uses);
   - renamed capabilities, from the code's own comments ("Telemetry dashboard",

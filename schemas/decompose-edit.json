@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:edit.json",
+  "title": "decompose:edit",
+  "description": "Apply named edits to a decomposition.yaml — rename or merge domains, move a file, rename a capability or slot — keeping every reference consistent, then re-derive and validate the fleet (ADR-110).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The decomposition.yaml to edit"
+      },
+      "rename-domain": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "from=to"
+      },
+      "merge": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "a,b[,…]=into — merge domains into one"
+      },
+      "move": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "file=domain — move a file (and any capability it holds); domain may be \"shared\""
+      },
+      "rename-capability": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "from=to"
+      },
+      "rename-slot": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "from=to"
+      }
+    },
+    "required": [
+      "proposal"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "proposal",
+      "edits",
+      "domains",
+      "validation",
+      "valid",
+      "files"
+    ],
+    "properties": {
+      "proposal": {
+        "type": "string"
+      },
+      "edits": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "domains": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "validation": {
+        "type": "object",
+        "required": [
+          "manifests",
+          "composition"
+        ],
+        "properties": {
+          "manifests": {
+            "type": "object"
+          },
+          "composition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "rule",
+                "message"
+              ],
+              "properties": {
+                "rule": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "valid": {
+        "type": "boolean"
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
