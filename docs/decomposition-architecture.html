@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monolith Decomposition Schematics</title>
-<meta name="description" content="How the toolchain takes a monolithic React app apart: capture, analyze, propose, agree, verify — and what it found on apps nobody here wrote.">
+<title>Breaking Up a Big App — How It Works</title>
+<meta name="description" content="How the toolchain splits one big web app into smaller pieces that separate teams can own — step by step, with what each step must do.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%236B4FBB%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%277%27%20width%3D%2720%27%20height%3D%278%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2718%27%20width%3D%279%27%20height%3D%277%27%20rx%3D%271.5%27%20fill%3D%27%23D9CFFA%27%2F%3E%3Crect%20x%3D%2717%27%20y%3D%2718%27%20width%3D%279%27%20height%3D%277%27%20rx%3D%271.5%27%20fill%3D%27%23D9CFFA%27%2F%3E%3C%2Fsvg%3E">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
@@ -198,15 +198,27 @@
   .pill {
     display: inline-block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: .06em;
     text-transform: uppercase; padding: 0.1em 0.5em; border-radius: 2px; white-space: nowrap;
+    vertical-align: middle;
   }
   .pill.done { background: var(--gen-bg); color: var(--gen); }
   .pill.next { background: var(--dev-bg); color: var(--dev); }
   .pill.gate { background: var(--accent-bg); color: var(--accent); }
-  .twoup { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.2rem; }
-  @media (max-width: 640px) { .twoup { grid-template-columns: 1fr; } }
-  .stat { background: var(--surface); border: 1px solid var(--rule); padding: 0.9rem 1rem; }
-  .stat b { display: block; font-family: var(--display); font-size: 1.6rem; letter-spacing: -0.02em; color: var(--accent); }
-  .stat span { font-size: 0.88rem; color: var(--ink-2); }
+  .io { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 1.1rem 0 0; }
+  @media (max-width: 680px) { .io { grid-template-columns: 1fr; } }
+  .io div { background: var(--surface); border: 1px solid var(--rule); padding: 0.7rem 0.85rem; font-size: 0.92rem; }
+  .io b {
+    display: block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 500; margin-bottom: 0.3rem;
+  }
+  .must { margin: 1rem 0 0; padding: 0.8rem 1rem 0.6rem; border-left: 3px solid var(--accent); background: var(--surface); max-width: var(--measure); }
+  .must b { font-family: var(--display); font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 0.35rem; }
+  .must ul { margin: 0; padding-left: 1.15rem; }
+  .must li { margin: 0 0 0.4rem; font-size: 0.93rem; }
+  dl.words { margin: 1rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.45rem 1.1rem; max-width: var(--measure); }
+  @media (max-width: 560px) { dl.words { grid-template-columns: 1fr; } dl.words dd { margin-bottom: 0.5rem; } }
+  dl.words dt { font-family: var(--display); font-weight: 600; }
+  dl.words dd { margin: 0; color: var(--ink-2); }
+  .stepno { font-family: var(--mono); color: var(--accent); }
 </style>
 
 <div class="page">
@@ -214,88 +226,97 @@
   <a class="site-back" href="index.html">&larr; Documentation home</a>
 
   <header class="sheet">
-    <p class="eyebrow">seans-mfe-tool · component schematics</p>
-    <h1>Monolith Decomposition Schematics</h1>
+    <p class="eyebrow">seans-mfe-tool · how it works</p>
+    <h1>Breaking up a big app</h1>
     <p class="lede">
-      How the toolchain takes a monolithic React app apart into independently deployable
-      capabilities. It watches the running app, reads its source, and proposes domains with the
-      evidence behind each one. A person agrees the boundaries. A parity gate then proves the
-      result still behaves like the original. Six drawings, then the results on an app we wrote
-      and on two apps nobody here wrote.
+      Many products start as one big web app that one team built. Over time, many teams need to
+      change it, and they get in each other's way. This toolchain splits that app into smaller
+      pieces, so each team can own, change and release its own piece. The product still looks
+      and works the same to the people who use it.
     </p>
     <p class="claim" style="margin-top:1rem">
-      The product decision is PDR-011, and the architecture is ADR-109 to ADR-113, in
-      <code>docs/architecture-decisions/</code>. The reference subject is
-      <code>examples/meridian-monolith/</code>. Every stage below is a CLI command, so an agent
-      reaches it the way a person does (as an MCP tool). Companion to
-      <a href="cli-architecture.html">Generator CLI Schematics</a> and
-      <a href="runtime-architecture.html">Runtime Platform Schematics</a>, which describe what the
-      decomposition produces.
+      This page explains how each step works and what it must do. Read it as a requirements
+      prototype: some steps are built, some are next, and each one says which.
     </p>
   </header>
 
 
-  <!-- ============ FIG 1 — the pipeline ============ -->
+  <!-- ============ WORDS ============ -->
   <section class="fig">
-    <span class="fignum">Figure 1 — the pipeline</span>
-    <h2>Eight stages, two human gates</h2>
+    <span class="fignum">Before you start</span>
+    <h2>Words we use</h2>
+    <dl class="words">
+      <dt>The big app</dt><dd>The existing app we are splitting up. Engineers call it a <em>monolith</em>.</dd>
+      <dt>A piece</dt><dd>One part of the product that one team owns, such as "orders" or "profile". Engineers call it a <em>micro-frontend</em>, or MFE.</dd>
+      <dt>Shell</dt><dd>The frame around the pieces: the header, the menu, and the space where each piece appears.</dd>
+      <dt>Screen area</dt><dd>One visible part of a screen, such as a table, a panel or a card.</dd>
+      <dt>Backend</dt><dd>The service a screen gets its data from.</dd>
+      <dt>Data helper</dt><dd>A small service for one piece. It fetches that piece's data from the backends. Engineers call it a <em>BFF</em>.</dd>
+      <dt>API description</dt><dd>A document that lists what a backend can be asked and what it answers. Engineers call it an <em>OpenAPI spec</em>.</dd>
+      <dt>The plan</dt><dd>One file listing the proposed pieces and why. Everything else is built from it.</dd>
+    </dl>
+  </section>
+
+
+  <!-- ============ FIG 1 — the steps ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 1 — the steps</span>
+    <h2>Eight steps, and two decisions only people make</h2>
     <p class="claim">
-      A monolith is taken apart in the order a careful team would do it by hand: find out what it
-      does, decide where the seams are, agree them, then move one piece at a time, proving after
-      each move that nothing changed. The toolchain does the finding, proposing and proving. People
-      make the two decisions that are theirs.
+      The order is the one a careful team would follow by hand. First, find out what the app
+      does. Then decide where to cut it, and agree that. Then move one piece at a time, checking
+      after each move that nothing changed. The tools do the finding, suggesting and checking.
+      People decide where to cut, and when the work is finished.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 300" role="img" aria-label="Eight stages in two rows. Built: capture, analyze, propose, agree and verify. Next: scaffold, port and test, and strangle. Agree and sign-off are human gates.">
+        <svg viewBox="0 0 880 300" role="img" aria-label="Eight steps in two rows: watch the app, read the code, suggest the pieces, people agree, build the pieces, move the code, switch over one at a time, check nothing changed. Steps one to four and eight are built. Steps five to seven are next. Agreeing and the final sign-off are decisions people make.">
           <defs>
             <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
             </marker>
           </defs>
           <g font-size="11.5" text-anchor="middle">
-            <!-- row 1 -->
             <rect x="20"  y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="115" y="58" fill="var(--gen)">1 · capture</text>
-            <text x="115" y="80" font-size="8.5" fill="var(--ink-3)">run the app: regions, calls,</text>
-            <text x="115" y="94" font-size="8.5" fill="var(--ink-3)">console, screenshots</text>
+            <text x="115" y="58" fill="var(--gen)">1 · watch the app</text>
+            <text x="115" y="80" font-size="8.5" fill="var(--ink-3)">use it like a person would,</text>
+            <text x="115" y="94" font-size="8.5" fill="var(--ink-3)">record everything it does</text>
 
             <rect x="236" y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="331" y="58" fill="var(--gen)">2 · analyze</text>
-            <text x="331" y="80" font-size="8.5" fill="var(--ink-3)">read the source: routes, imports,</text>
-            <text x="331" y="94" font-size="8.5" fill="var(--ink-3)">endpoints, stores, tests, history</text>
+            <text x="331" y="58" fill="var(--gen)">2 · read the code</text>
+            <text x="331" y="80" font-size="8.5" fill="var(--ink-3)">which screen uses which</text>
+            <text x="331" y="94" font-size="8.5" fill="var(--ink-3)">files and which data</text>
 
             <rect x="452" y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="547" y="58" fill="var(--gen)">3 · propose</text>
-            <text x="547" y="80" font-size="8.5" fill="var(--ink-3)">domains with evidence scores,</text>
-            <text x="547" y="94" font-size="8.5" fill="var(--ink-3)">derived manifests and API specs</text>
+            <text x="547" y="58" fill="var(--gen)">3 · suggest the pieces</text>
+            <text x="547" y="80" font-size="8.5" fill="var(--ink-3)">a plan, with the reasons</text>
+            <text x="547" y="94" font-size="8.5" fill="var(--ink-3)">for every cut</text>
 
             <rect x="668" y="34" width="190" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
-            <text x="763" y="58" fill="var(--accent)">4 · agree</text>
-            <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">a person approves, merges,</text>
-            <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">splits, renames — HUMAN GATE</text>
+            <text x="763" y="58" fill="var(--accent)">4 · people agree</text>
+            <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">review the plan on the real</text>
+            <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">screens, in Figma — DECISION</text>
 
-            <!-- row 2 -->
             <rect x="668" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
-            <text x="763" y="200" fill="var(--dev)">5 · scaffold</text>
-            <text x="763" y="222" font-size="8.5" fill="var(--ink-3)">generate the MFEs and BFFs,</text>
-            <text x="763" y="236" font-size="8.5" fill="var(--ink-3)">wrap the legacy app as one</text>
+            <text x="763" y="200" fill="var(--dev)">5 · build the pieces</text>
+            <text x="763" y="222" font-size="8.5" fill="var(--ink-3)">an empty piece per area,</text>
+            <text x="763" y="236" font-size="8.5" fill="var(--ink-3)">plus the old app as one piece</text>
 
             <rect x="452" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
-            <text x="547" y="200" fill="var(--dev)">6 · port and test</text>
-            <text x="547" y="222" font-size="8.5" fill="var(--ink-3)">move components and the tests</text>
-            <text x="547" y="236" font-size="8.5" fill="var(--ink-3)">worth keeping into each MFE</text>
+            <text x="547" y="200" fill="var(--dev)">6 · move the code</text>
+            <text x="547" y="222" font-size="8.5" fill="var(--ink-3)">screens and good tests move</text>
+            <text x="547" y="236" font-size="8.5" fill="var(--ink-3)">into their new piece</text>
 
             <rect x="236" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
-            <text x="331" y="200" fill="var(--dev)">7 · strangle</text>
-            <text x="331" y="222" font-size="8.5" fill="var(--ink-3)">flip one placement at a time</text>
-            <text x="331" y="236" font-size="8.5" fill="var(--ink-3)">from legacy to the new MFE</text>
+            <text x="331" y="200" fill="var(--dev)">7 · switch over</text>
+            <text x="331" y="222" font-size="8.5" fill="var(--ink-3)">one screen area at a time,</text>
+            <text x="331" y="236" font-size="8.5" fill="var(--ink-3)">old app to new piece</text>
 
             <rect x="20" y="176" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)" stroke-width="1.6"/>
-            <text x="115" y="200" fill="var(--gen)">8 · verify</text>
-            <text x="115" y="222" font-size="8.5" fill="var(--ink-3)">the parity gate, after every flip;</text>
-            <text x="115" y="236" font-size="8.5" fill="var(--ink-3)">sign-off — HUMAN GATE</text>
+            <text x="115" y="200" fill="var(--gen)">8 · check nothing changed</text>
+            <text x="115" y="222" font-size="8.5" fill="var(--ink-3)">after every switch; people</text>
+            <text x="115" y="236" font-size="8.5" fill="var(--ink-3)">sign off at the end — DECISION</text>
           </g>
           <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#p1)">
             <path d="M210 76 L 230 76"/>
@@ -307,113 +328,197 @@
             <path d="M236 218 L 216 218"/>
           </g>
           <path d="M115 176 C 115 150, 331 150, 331 182" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" stroke-opacity="0.8"/>
-          <text x="223" y="146" font-size="8.5" text-anchor="middle" fill="var(--gen)">after every flip</text>
-          <text x="440" y="290" font-size="9" text-anchor="middle" fill="var(--ink-3)">the capture from stage 1 is the baseline stage 8 compares against — the monolith's own tests are not trusted</text>
+          <text x="223" y="146" font-size="8.5" text-anchor="middle" fill="var(--gen)">after every switch</text>
+          <text x="440" y="290" font-size="9" text-anchor="middle" fill="var(--ink-3)">step 8 compares against the recording from step 1 — not against the old app's own tests</text>
         </svg>
       </div>
       <div class="key">
-        <span><i class="swatch sw-gen"></i>built — in review</span>
+        <span><i class="swatch sw-gen"></i>built</span>
         <span><i class="swatch sw-dev"></i>next</span>
-        <span><i class="swatch" style="background:var(--accent)"></i>human gate</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>a decision people make</span>
       </div>
       <figcaption>
-        Stages 1–4 and 8 are built and in review (pull requests listed at the end). Stages 5–7
-        (scaffold, port, strangle) are next. The capture, not the monolith's own test suite, defines
-        what "behaves the same" means, because real suites are thin, coupled and partly skipped.
+        Why the recording, not the old tests? Old apps rarely have good tests. Watching the app
+        itself is the only reliable record of what it really does.
       </figcaption>
     </figure>
   </section>
 
 
-  <!-- ============ FIG 2 — two kinds of evidence ============ -->
+  <!-- ============ STEP 1 ============ -->
   <section class="fig">
-    <span class="fignum">Figure 2 — evidence</span>
-    <h2>What the app did, joined to what the code says</h2>
+    <span class="fignum">Step 1 — watch the app <span class="pill done">built</span></span>
+    <h2>Use the app like a person would, and record everything</h2>
     <p class="claim">
-      Neither signal is enough on its own. The running app shows which data appears in which part
-      of the screen. The source shows what reaches what, including behaviour no journey happened
-      to exercise. The bridge between them is React's development metadata. Every element on the
-      screen knows which component drew it and which file that component is in, so both halves
-      talk about the same units.
+      A browser opens the big app and follows a set of short scripts called <em>journeys</em>,
+      such as "open the home page, click Docking, open a berth". It also explores the app by
+      itself, following every link it can find. At each step it notes what is on the screen,
+      which piece of code drew each part, what data the screen asked for, and any errors. It
+      saves a screenshot too.
+    </p>
+    <div class="io">
+      <div><b>Goes in</b>The running big app, and a few journeys (optional)</div>
+      <div><b>What happens</b>A browser clicks through it, with the clock frozen so dates never change between runs</div>
+      <div><b>Comes out</b>A <em>recording</em>: screens, screen areas, data requests and answers, errors, screenshots</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Name the piece of code behind each screen area, by reading the labels React adds while an app is in development.</li>
+        <li>Link each data request to the screen area that shows its answer.</li>
+        <li>Keep every answer, so the same journeys can be replayed later with exactly the same data and no live backend.</li>
+        <li>Never press buttons or submit forms while exploring, so it cannot change the app's data.</li>
+        <li>Handle older and newer apps alike: different React versions, and both kinds of web address (<code>/page</code> and <code>/#/page</code>).</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 2 ============ -->
+  <section class="fig">
+    <span class="fignum">Step 2 — read the code <span class="pill done">built</span></span>
+    <h2>Find out what reaches what</h2>
+    <p class="claim">
+      The recording shows what happened. The code shows everything that <em>could</em> happen,
+      including screens nobody visited. This step reads the code and builds a map: which address
+      shows which screen, which files each screen uses, and which data each screen asks for. It
+      follows the request all the way to the backend address. It also finds data a screen uses
+      without showing it, which is a hidden link between areas that screenshots can't reveal.
+    </p>
+    <div class="io">
+      <div><b>Goes in</b>The app's source code, and the recording from step 1</div>
+      <div><b>What happens</b>The code is read, not run; then the map is matched against the recording</div>
+      <div><b>Comes out</b>A map: screens, files, data requests, hidden links, the old tests sorted, and who changes what</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Explain every data request the recording saw by pointing at the code that makes it.</li>
+        <li>Sort the app's existing tests into <em>keep</em>, <em>rewrite</em> or <em>throw away</em>, with a reason for each.</li>
+        <li>Mark a file used by several screens as <em>shared</em>, not hand it to one of them.</li>
+        <li>Read the common ways apps are written: plain JavaScript or TypeScript, older and newer routing, and the usual ways of storing and fetching data.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 3 ============ -->
+  <section class="fig">
+    <span class="fignum">Step 3 — suggest the pieces <span class="pill done">built</span></span>
+    <h2>Group the files into pieces, and show the reasons</h2>
+    <p class="claim">
+      The strongest clue is data. Screens that show the same data usually belong together. The
+      tools start from the app's screens, give each file to the screen that uses it, and pull in
+      the files that share a screen's data. Every suggested piece gets a score for each clue, so
+      a reviewer can see <em>why</em> the line is where it is. The same rules always give the
+      same answer, so the result can be checked and repeated.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 320" role="img" aria-label="Runtime signals on the left and source signals on the right, joined in the middle through React's per-element source metadata, producing candidate domains each scored per signal.">
+        <svg viewBox="0 0 880 270" role="img" aria-label="Six clues feed the suggestion: which screen, which data, which files import which, what the recording saw, which files change together, and who owns them. The result is the plan: pieces with a score per clue, shared files, hidden links, test sorting, and where each piece appears on screen.">
           <defs>
-            <marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
             </marker>
           </defs>
-          <rect x="20" y="20" width="260" height="230" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-          <text x="150" y="44" font-size="11.5" text-anchor="middle" fill="currentColor">decompose:capture — the running app</text>
-          <line x1="36" y1="54" x2="264" y2="54" stroke="var(--rule)"/>
-          <g font-size="9" fill="var(--ink-2)">
-            <text x="36" y="76">regions — each component instance,</text>
-            <text x="48" y="90" fill="var(--ink-3)">its file, landmark, rectangle, text</text>
-            <text x="36" y="114">requests — with the call stack that sent</text>
-            <text x="48" y="128" fill="var(--ink-3)">them and the regions they feed</text>
-            <text x="36" y="152">paths, console errors, page errors</text>
-            <text x="36" y="176">a screenshot per step</text>
-            <text x="36" y="200">recorded responses — so any later</text>
-            <text x="48" y="214" fill="var(--ink-3)">run can replay them exactly</text>
-          </g>
+          <g font-size="9.5" text-anchor="middle">
+            <rect x="20" y="20" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="39" fill="currentColor">which screen shows it</text>
+            <rect x="20" y="58" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="77" fill="currentColor">which data it uses — strongest</text>
+            <rect x="20" y="96" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="115" fill="currentColor">which files it uses</text>
+            <rect x="20" y="134" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="153" fill="currentColor">what the recording saw</text>
+            <rect x="20" y="172" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="191" fill="currentColor">what changes together</text>
+            <rect x="20" y="210" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="229" fill="currentColor">who owns the code</text>
 
-          <rect x="600" y="20" width="260" height="230" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-          <text x="730" y="44" font-size="11.5" text-anchor="middle" fill="currentColor">decompose:analyze — the source</text>
-          <line x1="616" y1="54" x2="844" y2="54" stroke="var(--rule)"/>
-          <g font-size="9" fill="var(--ink-2)">
-            <text x="616" y="76">routes — which page each path shows</text>
-            <text x="616" y="100">imports — which files each page reaches</text>
-            <text x="616" y="124">endpoints — followed through wrapper</text>
-            <text x="628" y="138" fill="var(--ink-3)">functions to the URL actually called</text>
-            <text x="616" y="162">store reads — data a page uses without</text>
-            <text x="628" y="176" fill="var(--ink-3)">fetching it (a hidden coupling)</text>
-            <text x="616" y="200">tests — classified keep / rewrite / discard</text>
-            <text x="616" y="224">git history — co-change and owners</text>
-          </g>
+            <rect x="330" y="95" width="180" height="70" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="420" y="122" font-size="11" fill="currentColor">group and score</text>
+            <text x="420" y="142" font-size="8.5" fill="var(--ink-3)">same rules, same answer</text>
 
-          <rect x="330" y="80" width="220" height="100" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
-          <text x="440" y="106" font-size="11.5" text-anchor="middle" fill="var(--accent)">the join</text>
-          <text x="440" y="128" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">React dev metadata: element →</text>
-          <text x="440" y="142" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">component → source file</text>
-          <text x="440" y="164" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">observed call ↔ code that makes it</text>
-
-          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#e1)">
-            <path d="M280 130 L 324 130"/>
-            <path d="M600 130 L 556 130"/>
-            <path d="M440 180 L 440 262"/>
+            <rect x="620" y="60" width="240" height="140" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="740" y="86" font-size="11.5" fill="var(--accent)">the plan</text>
+            <g font-size="8.5" fill="var(--ink-2)">
+              <text x="740" y="108">each piece, with a score per clue</text>
+              <text x="740" y="124">shared files, and what to do with them</text>
+              <text x="740" y="140">hidden links between pieces</text>
+              <text x="740" y="156">old tests: keep, rewrite, throw away</text>
+              <text x="740" y="172">where each piece appears on screen</text>
+              <text x="740" y="188">which data each piece needs</text>
+            </g>
           </g>
-          <rect x="250" y="266" width="380" height="40" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-          <text x="440" y="285" font-size="10.5" text-anchor="middle" fill="var(--gen)">candidate domains, each scored per signal</text>
-          <text x="440" y="299" font-size="8.5" text-anchor="middle" fill="var(--ink-3)">route · data · imports · runtime · co-change · ownership</text>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.5" marker-end="url(#s1)">
+            <path d="M220 35 L 324 118"/>
+            <path d="M220 73 L 324 124"/>
+            <path d="M220 111 L 324 128"/>
+            <path d="M220 149 L 324 132"/>
+            <path d="M220 187 L 324 136"/>
+            <path d="M220 225 L 324 142"/>
+            <path d="M510 130 L 614 130"/>
+          </g>
         </svg>
       </div>
       <figcaption>
-        Data ownership is the strongest signal: which screens call which backends, and what each
-        screen shows. A coupling the screen never shows, such as a summary that reads another
-        domain's data from a shared store to count it, is found from the source, not the
-        screenshots.
+        The plan is one file. It is the only thing anyone edits. Everything that comes later is
+        built from it, so it can never fall out of step with the plan.
       </figcaption>
     </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Give every piece the reasons behind it, not just a name.</li>
+        <li>Flag every hidden link, where one piece reads another piece's data, as a risk to fix.</li>
+        <li>Tell apart an app with one backend from one whose requests go to several backends.</li>
+        <li>Check that the plan can really be built: every piece must pass the same checks a hand-made one does.</li>
+      </ul>
+    </div>
   </section>
 
 
-  <!-- ============ FIG 3 — one document ============ -->
+  <!-- ============ STEP 3b — data ============ -->
   <section class="fig">
-    <span class="fignum">Figure 3 — agreement</span>
-    <h2>One document is agreed; everything else is derived from it</h2>
+    <span class="fignum">Step 3, continued — data <span class="pill done">built</span></span>
+    <h2>Give each piece a description of the data it needs</h2>
     <p class="claim">
-      The proposal is a single reviewable file, <code>decomposition.yaml</code>. It records the
-      domains, the files and capabilities each owns, the backends each fronts, the slots and
-      routes that compose them, the shared files, the couplings, and the test triage. People and
-      the agent edit that file and nothing else. The manifests, the composition and each BFF's
-      API spec are re-derived from it and re-validated on every change.
+      Each new piece gets its own data helper, and a data helper needs an API description of
+      every backend it talks to. Old apps rarely have one. So the tools write one from the
+      recording: every question the app asked and every answer it got. They then compare it
+      with the code, so questions the recording missed still appear. Each piece's data helper
+      gets only the questions that piece asks, plus the recorded answers as sample data for
+      demos.
+    </p>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Describe only what the app was seen or written to ask. Never guess at more.</li>
+        <li>Mark the description as written by the tools, and record which recorded request each part came from.</li>
+        <li>Prefer the backend's own description when it has one, and report where the two disagree.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 4 + FIGMA ============ -->
+  <section class="fig">
+    <span class="fignum">Step 4 — people agree <span class="pill gate">decision</span></span>
+    <h2>Review the plan on the real screens</h2>
+    <p class="claim">
+      A plan written as a list is hard to judge. So the tools turn it into a review package:
+      a written summary, and every screen of the app with a coloured box around each suggested
+      piece. That is produced both as a web page and as a Figma page. The reviewer can then
+      approve the plan, or rename, merge or split pieces, or move a file. Each change is a named
+      action, so everything connected to it moves too, and the plan is checked again
+      straight away.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 290" role="img" aria-label="Edits come in from a person through named edit operations, from the agent, and from the proposed workspace UI, all into decomposition.yaml. Out of it are derived validated manifests, the composition, each BFF's OpenAPI spec and mocks, and the proposal artifact: PROPOSAL.md and a domain overlay as HTML and as a Figma page.">
+        <svg viewBox="0 0 880 290" role="img" aria-label="Changes come from a reviewer using named actions, from the AI agent, and later from a review screen for product owners. They all change the one plan file. From the plan come the review package (a written summary, the screens with a box per piece as a web page and as a Figma page), and the pieces themselves.">
           <defs>
             <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
@@ -421,32 +526,31 @@
           </defs>
           <g font-size="10" text-anchor="middle">
             <rect x="20" y="30" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="120" y="53" fill="currentColor">a person</text>
-            <text x="120" y="70" font-size="8.5" fill="var(--ink-3)">decompose:edit — rename, merge, move</text>
+            <text x="120" y="53" fill="currentColor">a reviewer</text>
+            <text x="120" y="70" font-size="8.5" fill="var(--ink-3)">rename, merge, split, move a file</text>
             <rect x="20" y="116" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="120" y="139" fill="currentColor">the agent</text>
-            <text x="120" y="156" font-size="8.5" fill="var(--ink-3)">names and judgment calls</text>
+            <text x="120" y="139" fill="currentColor">the AI agent</text>
+            <text x="120" y="156" font-size="8.5" fill="var(--ink-3)">suggests names and fixes</text>
             <rect x="20" y="202" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
-            <text x="120" y="225" fill="currentColor">workspace UI</text>
-            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners — proposed</text>
+            <text x="120" y="225" fill="currentColor">a review screen</text>
+            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners — planned</text>
 
             <rect x="320" y="104" width="220" height="80" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
-            <text x="430" y="138" font-size="12" fill="var(--accent)">decomposition.yaml</text>
-            <text x="430" y="158" font-size="8.5" fill="var(--ink-3)">the only thing anyone edits</text>
+            <text x="430" y="138" font-size="12" fill="var(--accent)">the plan</text>
+            <text x="430" y="158" font-size="8.5" fill="var(--ink-3)">one file, checked after every change</text>
 
             <rect x="640" y="18" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="39" fill="var(--gen)">MFE manifests</text>
-            <text x="750" y="55" font-size="8.5" fill="var(--ink-3)">validated like hand-written ones</text>
+            <text x="750" y="39" fill="var(--gen)">written summary</text>
+            <text x="750" y="55" font-size="8.5" fill="var(--ink-3)">pieces, reasons, risks, tests</text>
             <rect x="640" y="82" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="103" fill="var(--gen)">composition</text>
-            <text x="750" y="119" font-size="8.5" fill="var(--ink-3)">routes into slots, compiled</text>
+            <text x="750" y="103" fill="var(--gen)">screens with boxes</text>
+            <text x="750" y="119" font-size="8.5" fill="var(--ink-3)">a web page</text>
             <rect x="640" y="146" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="167" fill="var(--gen)">BFF API specs + mocks</text>
-            <text x="750" y="183" font-size="8.5" fill="var(--ink-3)">one per backend, cut per MFE</text>
-            <rect x="640" y="210" width="220" height="60" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="231" fill="var(--gen)">the proposal PR</text>
-            <text x="750" y="247" font-size="8.5" fill="var(--ink-3)">PROPOSAL.md + domain overlay</text>
-            <text x="750" y="261" font-size="8.5" fill="var(--ink-3)">on the screens, HTML and Figma</text>
+            <text x="750" y="167" fill="var(--gen)">the same, in Figma</text>
+            <text x="750" y="183" font-size="8.5" fill="var(--ink-3)">one frame per screen</text>
+            <rect x="640" y="210" width="220" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="750" y="232" fill="currentColor">after approval: the pieces</text>
+            <text x="750" y="248" font-size="8.5" fill="var(--ink-3)">built from the plan in step 5</text>
           </g>
           <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#d1)">
             <path d="M220 58 C 270 58, 270 130, 314 134"/>
@@ -455,97 +559,137 @@
             <path d="M540 128 C 590 128, 590 43, 634 43"/>
             <path d="M540 138 L 634 107"/>
             <path d="M540 150 L 634 171"/>
-            <path d="M540 160 C 590 160, 590 240, 634 240"/>
+            <path d="M540 160 C 590 160, 590 238, 634 238"/>
           </g>
         </svg>
       </div>
       <figcaption>
-        Edits are named operations rather than free text, so every reference to what changed moves
-        with it. Merging two domains re-points their routes, couplings, tests and API specs in one
-        step, and the derived fleet still validates. The overlay draws each proposed domain over
-        the real screenshots, with cross-domain couplings dashed in red, so a reviewer sees the
-        boundary on the product, not in a diagram.
+        In the boxes, each piece has its own colour. Each box is labelled with the piece's name,
+        where it sits on the screen, and which backends it uses. A dashed red box marks a hidden
+        link, where one piece reads another piece's data.
       </figcaption>
     </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Show every suggested piece on at least one real screen, and warn about any piece no screen shows.</li>
+        <li>Keep the plan valid after every change; an invalid change is refused with a reason.</li>
+        <li>Work without the internet: the Figma page carries its own screenshots.</li>
+        <li>Treat approving the plan as the decision. Nothing is built before it.</li>
+      </ul>
+    </div>
   </section>
 
 
-  <!-- ============ FIG 4 — inferred API specs ============ -->
+  <!-- ============ FIGMA ============ -->
   <section class="fig">
-    <span class="fignum">Figure 4 — API specs nobody wrote</span>
-    <h2>Each BFF gets a spec inferred from what the app actually called</h2>
+    <span class="fignum">Figure 4 — Figma</span>
+    <h2>Turn any running screen into an editable Figma design</h2>
     <p class="claim">
-      Every generated BFF needs an OpenAPI document for each backend it fronts, and a monolith's
-      backends rarely have one. So one is inferred from the recorded traffic and the endpoint
-      templates in the client code. It is a lower bound: only what the app was seen or written to
-      call. It is marked as inferred, and each operation names the requests it came from. Where a
-      backend publishes a real spec, the real one wins and the inferred one reports how they
-      differ.
+      Separately from the review boxes, the tools can turn any screen of a running app into a
+      real, editable Figma design. It is made of frames, text and shapes, not a flat picture.
+      Designers start from what is actually live, not from an old mock-up. It works on any web
+      app, split up or not.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 210" role="img" aria-label="Recorded requests and responses plus client-code URL templates produce one OpenAPI document per backend, with templated paths, merged schemas, provenance and the list envelope recorded. That document is cut per MFE, with hoistField rules and the recorded responses as mock fixtures. A published spec, when given, replaces it and receives a difference report.">
+        <svg viewBox="0 0 880 230" role="img" aria-label="Three stages. First, a browser opens the screen and lists everything that is drawn, as plain facts. Second, the tools turn that list into a clean design outline and make every layout choice there. Third, a small Figma plugin draws the outline in Figma as frames, text and shapes. A screenshot is kept beside it to compare.">
           <defs>
-            <marker id="o1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
             </marker>
           </defs>
           <g font-size="10" text-anchor="middle">
-            <rect x="20" y="30" width="190" height="50" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="115" y="52" fill="currentColor">recorded traffic</text>
-            <text x="115" y="68" font-size="8.5" fill="var(--ink-3)">paths, queries, bodies, status</text>
-            <rect x="20" y="100" width="190" height="50" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="115" y="122" fill="currentColor">client code</text>
-            <text x="115" y="138" font-size="8.5" fill="var(--ink-3)">URL templates, parameters</text>
+            <rect x="20" y="40" width="230" height="110" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="135" y="66" font-size="11.5" fill="currentColor">1 · read the screen</text>
+            <text x="135" y="88" font-size="8.5" fill="var(--ink-3)">a browser opens the page and lists</text>
+            <text x="135" y="102" font-size="8.5" fill="var(--ink-3)">everything that is drawn: boxes,</text>
+            <text x="135" y="116" font-size="8.5" fill="var(--ink-3)">text, colours, sizes, positions</text>
+            <text x="135" y="136" font-size="8.5" fill="var(--ink-3)">facts only — no decisions</text>
 
-            <rect x="290" y="44" width="250" height="92" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
-            <text x="415" y="68" fill="var(--accent)">OpenAPI 3, one per backend</text>
-            <text x="415" y="88" font-size="8.5" fill="var(--ink-3)">paths templated where code and traffic agree</text>
-            <text x="415" y="102" font-size="8.5" fill="var(--ink-3)">schemas merged from every response seen</text>
-            <text x="415" y="116" font-size="8.5" fill="var(--ink-3)">provenance on every operation</text>
+            <rect x="325" y="40" width="230" height="110" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+            <text x="440" y="66" font-size="11.5" fill="var(--accent)">2 · make a design outline</text>
+            <text x="440" y="88" font-size="8.5" fill="var(--ink-3)">drop what can't be seen;</text>
+            <text x="440" y="102" font-size="8.5" fill="var(--ink-3)">turn rows and columns into Figma</text>
+            <text x="440" y="116" font-size="8.5" fill="var(--ink-3)">auto-layout where it fits exactly</text>
+            <text x="440" y="136" font-size="8.5" fill="var(--ink-3)">every design choice happens here</text>
 
-            <rect x="620" y="30" width="240" height="56" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="740" y="52" fill="var(--gen)">each MFE's BFF</text>
-            <text x="740" y="68" font-size="8.5" fill="var(--ink-3)">only the calls it makes, lists unwrapped,</text>
-            <text x="740" y="80" font-size="8.5" fill="var(--ink-3)">recorded responses as demo fixtures</text>
-            <rect x="620" y="104" width="240" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
-            <text x="740" y="126" fill="currentColor">a published spec, if any</text>
-            <text x="740" y="142" font-size="8.5" fill="var(--ink-3)">wins; the inferred one reports the diff</text>
+            <rect x="630" y="40" width="230" height="110" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="745" y="66" font-size="11.5" fill="var(--gen)">3 · draw it in Figma</text>
+            <text x="745" y="88" font-size="8.5" fill="var(--ink-3)">a small Figma plugin replays</text>
+            <text x="745" y="102" font-size="8.5" fill="var(--ink-3)">the outline as frames, text</text>
+            <text x="745" y="116" font-size="8.5" fill="var(--ink-3)">and shapes you can edit</text>
+            <text x="745" y="136" font-size="8.5" fill="var(--ink-3)">a screenshot is kept to compare</text>
           </g>
-          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#o1)">
-            <path d="M210 55 L 284 80"/>
-            <path d="M210 125 L 284 100"/>
-            <path d="M540 80 L 614 60"/>
-            <path d="M614 132 L 546 104"/>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#f1)">
+            <path d="M250 95 L 319 95"/>
+            <path d="M555 95 L 624 95"/>
           </g>
-          <text x="440" y="192" font-size="9" text-anchor="middle" fill="var(--ink-3)">on two RealWorld apps every inferred operation exists in the published spec — and the diff caught a field the backend returns that the spec no longer declares</text>
+          <text x="440" y="190" font-size="9" text-anchor="middle" fill="var(--ink-3)">the same reading of the screen feeds the review boxes in step 4 — one way to see a screen, used twice</text>
         </svg>
       </div>
       <figcaption>
-        The same rules also decide what a backend is. A gateway path, <code>/api/&lt;backend&gt;/&lt;resource&gt;</code>,
-        fronts several backends; a single API, <code>/api/&lt;resource&gt;</code>, is one. The
-        toolchain judges which layout an app uses once, from every URL it calls, and records the
-        answer in the proposal, where it can be corrected.
+        Keeping all design choices in the middle stage means each rule can be tested without a
+        browser or Figma open. The rule throughout: when Figma can't show something exactly, keep
+        it looking right rather than make it editable but wrong.
       </figcaption>
     </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Include only what you can see on the screen, including content inside reusable web components.</li>
+        <li>Use Figma auto-layout only where it matches the page exactly; elsewhere keep exact positions.</li>
+        <li>Say what it could not copy. Gradients become a plain colour, only the first shadow is kept, and video, canvas and embedded frames become labelled placeholders.</li>
+        <li>Be checked in the Figma desktop app before anyone relies on it. So far it has only run against a stand-in for Figma (issue <a href="https://github.com/falese/seans-mfe-tool/issues/434">#434</a>).</li>
+      </ul>
+    </div>
   </section>
 
 
-  <!-- ============ FIG 5 — the parity gate ============ -->
+  <!-- ============ STEPS 5-7 ============ -->
   <section class="fig">
-    <span class="fignum">Figure 5 — the parity gate</span>
-    <h2>Proof that a step changed nothing</h2>
+    <span class="fignum">Steps 5 to 7 — build, move, switch over <span class="pill next">next</span></span>
+    <h2>Move one piece at a time, with the old app still running</h2>
     <p class="claim">
-      <code>decompose:verify</code> drives a candidate through the baseline's journeys, with the
-      same frozen clock and the same recorded responses, and compares the two runs step by step.
-      Run against the monolith itself first, it proves the journeys are repeatable. After that,
-      any difference means the app changed.
+      The pieces are not swapped in all at once. First, the whole old app is wrapped up as one
+      piece of its own, so the new shell can show it unchanged. Then, one screen area at a time,
+      that area is pointed at its new piece instead of the old app. After every switch, step 8
+      checks that nothing changed. If something did, that one switch is undone.
+    </p>
+    <div class="io">
+      <div><b>Step 5 · build</b>An empty piece and data helper for each area in the plan, plus the old app wrapped as one piece. At first every screen still shows the old app.</div>
+      <div><b>Step 6 · move</b>Each screen's code, and the tests marked <em>keep</em>, move into its piece. Tests marked <em>rewrite</em> are replaced with ones that check behaviour.</div>
+      <div><b>Step 7 · switch over</b>One screen area at a time moves from the old app to its new piece. Each switch is its own small, reviewable change.</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Keep the product working at every point: users see no difference while the work goes on.</li>
+        <li>Never switch more than one screen area without passing the check in step 8.</li>
+        <li>Only write into the parts of each piece that developers own, never over files the platform generates.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 8 ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 5 — step 8, check nothing changed <span class="pill done">built</span></span>
+    <h2>Replay the same journeys and compare</h2>
+    <p class="claim">
+      The check takes the recording from step 1 and replays its journeys against the new
+      version. It uses the same frozen clock and the same recorded answers, so the data cannot
+      differ. It then compares the two runs screen by screen. Run first against the old app
+      itself, it proves the journeys give the same result every time. After that, any
+      difference means the app changed.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 250" role="img" aria-label="The baseline bundle provides journeys, clock and recorded responses. The candidate app is driven through them and captured as a second bundle. Four comparisons per step: content, network, console and visual. The result is a parity report and a pass or fail exit.">
+        <svg viewBox="0 0 880 250" role="img" aria-label="The recording from step 1 provides the journeys, the frozen clock and the recorded answers. The new version is driven through them. Four comparisons per screen: what is shown, what data is asked for, new errors, and how it looks. The result is a report: same, or exactly what changed.">
           <defs>
             <marker id="v1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
@@ -553,33 +697,33 @@
           </defs>
           <g font-size="10" text-anchor="middle">
             <rect x="20" y="40" width="180" height="70" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="110" y="64" fill="currentColor">baseline bundle</text>
-            <text x="110" y="82" font-size="8.5" fill="var(--ink-3)">the monolith's capture:</text>
-            <text x="110" y="96" font-size="8.5" fill="var(--ink-3)">journeys, clock, responses</text>
+            <text x="110" y="64" fill="currentColor">the recording</text>
+            <text x="110" y="82" font-size="8.5" fill="var(--ink-3)">from step 1: journeys,</text>
+            <text x="110" y="96" font-size="8.5" fill="var(--ink-3)">clock, recorded answers</text>
             <rect x="20" y="140" width="180" height="56" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
-            <text x="110" y="164" fill="var(--dev)">candidate app</text>
-            <text x="110" y="180" font-size="8.5" fill="var(--ink-3)">the composed app, after a step</text>
+            <text x="110" y="164" fill="var(--dev)">the new version</text>
+            <text x="110" y="180" font-size="8.5" fill="var(--ink-3)">after a switch</text>
 
             <rect x="270" y="90" width="170" height="60" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
             <text x="355" y="114" fill="currentColor">same journeys,</text>
-            <text x="355" y="130" fill="currentColor">replayed data</text>
+            <text x="355" y="130" fill="currentColor">same data</text>
 
             <rect x="510" y="20" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="590" y="40" fill="var(--gen)">content</text>
-            <text x="590" y="54" font-size="8" fill="var(--ink-3)">regions, text, parents</text>
+            <text x="590" y="40" fill="var(--gen)">what is shown</text>
+            <text x="590" y="54" font-size="8" fill="var(--ink-3)">every area, its words</text>
             <rect x="510" y="74" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="590" y="94" fill="var(--gen)">network</text>
-            <text x="590" y="108" font-size="8" fill="var(--ink-3)">the same backend calls</text>
+            <text x="590" y="94" fill="var(--gen)">data asked for</text>
+            <text x="590" y="108" font-size="8" fill="var(--ink-3)">the same requests</text>
             <rect x="510" y="128" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="590" y="148" fill="var(--gen)">console</text>
-            <text x="590" y="162" font-size="8" fill="var(--ink-3)">no new errors</text>
+            <text x="590" y="148" fill="var(--gen)">errors</text>
+            <text x="590" y="162" font-size="8" fill="var(--ink-3)">nothing new</text>
             <rect x="510" y="182" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="590" y="202" fill="var(--gen)">visual</text>
-            <text x="590" y="216" font-size="8" fill="var(--ink-3)">each region's own pixels</text>
+            <text x="590" y="202" fill="var(--gen)">how it looks</text>
+            <text x="590" y="216" font-size="8" fill="var(--ink-3)">every area, pixel by pixel</text>
 
             <rect x="730" y="96" width="130" height="50" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
-            <text x="795" y="117" fill="var(--accent)">parity report</text>
-            <text x="795" y="133" font-size="8.5" fill="var(--ink-3)">pass, or what moved</text>
+            <text x="795" y="117" fill="var(--accent)">report</text>
+            <text x="795" y="133" font-size="8.5" fill="var(--ink-3)">same, or what changed</text>
           </g>
           <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#v1)">
             <path d="M200 75 L 264 108"/>
@@ -596,55 +740,34 @@
         </svg>
       </div>
       <figcaption>
-        Regions are matched by component and order, never by source file, because the composed app
-        renders the same components from new files inside wrappers the shell adds. Pixels are
-        compared region by region, each region's nested regions excluded. So a change is reported
-        once, in the region that drew it, and a region that only moved on the page still matches.
+        Screen areas are matched by what they are, not by which file draws them. After the split,
+        the same parts come from new files, and the check still recognises them.
       </figcaption>
     </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Pass against the old app itself before it is trusted to judge a new version.</li>
+        <li>Report a change once, in the screen area that caused it, not in every area around it.</li>
+        <li>Allow no visual difference unless a person sets an allowance on purpose.</li>
+        <li>Name what the journeys never visited, so nobody mistakes "not checked" for "unchanged".</li>
+      </ul>
+    </div>
   </section>
 
 
-  <!-- ============ FIG 6 — results ============ -->
+  <!-- ============ DOES IT WORK ============ -->
   <section class="fig">
-    <span class="fignum">Figure 6 — results</span>
-    <h2>On an app we wrote, and on two apps nobody here wrote</h2>
-    <p class="claim">
-      <strong>meridian-monolith</strong> is the reference subject: seven domains in one React app,
-      written the way real teams write them, with a deliberately poor test suite and an answer key.
-      Scores against an app we wrote only show agreement with us. So the toolchain was also run on
-      two independent implementations of <strong>RealWorld</strong> (&ldquo;Conduit&rdquo;), one
-      product built in dozens of frontends against one published API spec. Same product, so the
-      same domains should come out. Published spec, so every inferred API has a ground truth.
-    </p>
-
-    <div class="twoup">
-      <div class="stat"><b>0.963 → 1.000</b><span>meridian: file assignment F1, from the deterministic draft (26 of 27 files) to after nine named edits by the agent (27 of 27)</span></div>
-      <div class="stat"><b>11 / 11</b><span>meridian: steps at parity with its own capture; 250 of 250 regions, 0 pixels different. A colour change on one heading fails every step.</span></div>
-    </div>
-
-    <div class="scroll">
-      <table>
-        <thead><tr><th></th><th>RealWorld · react-redux</th><th>RealWorld · ts-redux-react</th></tr></thead>
-        <tbody>
-          <tr><td>Built with</td><td>React 16, React Router 4, Redux, superagent, JavaScript</td><td>React 17, React Router 5 (hash URLs), Redux Toolkit, axios, TypeScript</td></tr>
-          <tr><td>Screen elements traced to source</td><td class="n">97%</td><td class="n">98%</td></tr>
-          <tr><td>Observed calls explained by source</td><td class="n">19 / 19</td><td class="n">19 / 19</td></tr>
-          <tr><td><strong>Domains found</strong></td><td colspan="2"><strong>shell, article, editor, home, login, profile, register, settings — identical in both</strong></td></tr>
-          <tr><td>Inferred API operations in the published spec</td><td class="n">19 / 19</td><td class="n">17 / 17</td></tr>
-          <tr><td>Same behaviour on a replayed run</td><td class="n">27 / 27</td><td class="n">27 / 27</td></tr>
-        </tbody>
-      </table>
-    </div>
-
+    <span class="fignum">Does it work?</span>
+    <h2>Tested on our own app, and on two that nobody here wrote</h2>
     <div class="note">
-      <b>Why the corpus matters</b>
-      On its first run against code nobody here wrote, the toolchain found almost nothing: no
-      routes and no endpoints in one app, and everything collapsed into a single domain in both.
-      Sixteen gaps came to light that the reference app, written to suit the tool, never
-      could. Among them: React 16, hash routing, routes in plain JavaScript, a central Redux store
-      that made every page look shared, and a single API mistaken for many backends. All sixteen
-      are fixed, and the reference app's scores did not move.
+      <b>The short answer</b>
+      On our reference app, built to be split, it found the seven planned pieces. On two
+      unrelated public versions of the same blogging product, written by different people with
+      different tools, it found the <strong>same eight pieces</strong> in both. It also explained
+      every data request in both, and both passed the step 8 check against themselves. The
+      outside apps also exposed sixteen gaps the reference app never could; all are fixed.
     </div>
   </section>
 
@@ -652,34 +775,34 @@
   <!-- ============ STATUS ============ -->
   <section class="fig">
     <span class="fignum">Status</span>
-    <h2>Where each stage is</h2>
+    <h2>Where each step is</h2>
     <div class="scroll">
       <table>
-        <thead><tr><th>Stage</th><th>Command</th><th>State</th><th>Change</th></tr></thead>
+        <thead><tr><th>Step</th><th>State</th><th>Change</th></tr></thead>
         <tbody>
-          <tr><td>Capture</td><td><code>decompose:capture</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/438">#438</a></td></tr>
-          <tr><td>Analyze</td><td><code>decompose:analyze</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/439">#439</a></td></tr>
-          <tr><td>Propose and score</td><td><code>decompose:propose</code>, <code>decompose:score</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/441">#441</a></td></tr>
-          <tr><td>Agree: edits, proposal artifact</td><td><code>decompose:edit</code>, <code>decompose:present</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
-          <tr><td>Agree: workspace UI</td><td>—</td><td><span class="pill gate">decision proposed</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
-          <tr><td>Inferred API specs</td><td><code>decompose:propose</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/445">#445</a></td></tr>
-          <tr><td>Verify: the parity gate</td><td><code>decompose:verify</code></td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>
-          <tr><td>Reverse-engineering corpus</td><td>one-command run</td><td><span class="pill done">in review</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a></td></tr>
-          <tr><td>Scaffold, port and test, strangle</td><td>—</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">epic #410</a></td></tr>
+          <tr><td>1 · Watch the app</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/438">#438</a></td></tr>
+          <tr><td>2 · Read the code</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/439">#439</a></td></tr>
+          <tr><td>3 · Suggest the pieces</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/441">#441</a>, data <a href="https://github.com/falese/seans-mfe-tool/pull/445">#445</a></td></tr>
+          <tr><td>4 · People agree: review package and Figma page</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
+          <tr><td>4 · People agree: review screen for product owners</td><td><span class="pill gate">planned</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
+          <tr><td>Screens to editable Figma designs</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/435">#435</a></td></tr>
+          <tr><td>5–7 · Build, move, switch over</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">#410</a></td></tr>
+          <tr><td>8 · Check nothing changed</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>
+          <tr><td>Testing on outside apps</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a></td></tr>
         </tbody>
       </table>
     </div>
     <p style="margin-top:1rem">
-      The changes in review form one stack, merged in order from #435 to #447. The top of the
-      stack, <a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a>, contains all of
-      them, so it is the one branch to check out to try everything at once.
+      "Built" means the change is written and its checks pass, and it is waiting for review. The
+      changes stack on each other. The last one, <a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a>,
+      contains them all.
     </p>
   </section>
 
   <footer>
-    Figures as measured on 24 October 2026. The meridian-monolith answer key is
-    <code>examples/meridian-monolith/answer-key.yaml</code>; the RealWorld apps are pinned to
-    commits and run by one script in the corpus change. See also
+    The product decision is PDR-011, and the design decisions are ADR-109 to ADR-113 and ADR-115,
+    in <code>docs/architecture-decisions/</code>. The reference app is
+    <code>examples/meridian-monolith/</code>. See also
     <a href="cli-architecture.html">Generator CLI Schematics</a>,
     <a href="runtime-architecture.html">Runtime Platform Schematics</a> and the
     <a href="system-map.html">system map</a>.
