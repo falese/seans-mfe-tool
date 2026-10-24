@@ -323,6 +323,33 @@ export interface DecomposeSpecSummary {
 }
 
 // ---------------------------------------------------------------------------
+// decompose:verify
+// ---------------------------------------------------------------------------
+
+/** decompose:verify — the parity gate run (ADR-113). A run not at parity fails with PARITY_FAILED; the report is on disk. */
+export interface DecomposeVerifyResult {
+  baseline: string;
+  candidate: string;
+  /** The app driven; null when an existing bundle was compared. */
+  url: string | null;
+  parity: boolean;
+  summary: {
+    steps: number;
+    stepsAtParity: number;
+    regions: number;
+    regionsAtParity: number;
+    requests: number;
+    newConsoleErrors: number;
+    visualFailures: number;
+  };
+  failingSteps: string[];
+  /** Behavior no journey exercised: routes never visited. */
+  gaps: { routes: string[] };
+  replayMisses: string[];
+  report: { json: string; markdown: string };
+}
+
+// ---------------------------------------------------------------------------
 // decompose:score
 // ---------------------------------------------------------------------------
 

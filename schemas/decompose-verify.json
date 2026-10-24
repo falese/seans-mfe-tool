@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:verify.json",
+  "title": "decompose:verify",
+  "description": "Run the parity gate: drive an app through a baseline evidence bundle's journeys on its recorded data and compare regions, text, backend calls, console errors and pixels step by step (ADR-113).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "baseline": {
+        "type": "string",
+        "description": "The baseline evidence bundle (the monolith's decompose:capture)"
+      },
+      "url": {
+        "type": "string",
+        "description": "The app to verify (default: the app the baseline captured)"
+      },
+      "candidate": {
+        "type": "string",
+        "description": "Compare this existing bundle instead of capturing one"
+      },
+      "out": {
+        "type": "string",
+        "description": "Directory for the candidate bundle and the report (default: <baseline>/../verify)"
+      },
+      "pixel-tolerance": {
+        "type": "string",
+        "description": "Per-channel difference (0–255) a pixel may have before it counts as changed",
+        "default": 4
+      },
+      "max-diff-pixels": {
+        "type": "string",
+        "description": "Pixels a region may have changed before it fails (as toHaveScreenshot)",
+        "default": 0
+      },
+      "settle": {
+        "type": "string",
+        "description": "Quiet milliseconds with no request in flight before a step is recorded",
+        "default": 500
+      },
+      "source-root": {
+        "type": "string",
+        "description": "Directory source paths are made relative to (default: cut at /src/)"
+      }
+    },
+    "required": [
+      "baseline"
+    ],
+    "x-positional": [
+      "baseline"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "baseline",
+      "candidate",
+      "url",
+      "parity",
+      "summary",
+      "failingSteps",
+      "gaps",
+      "replayMisses",
+      "report"
+    ],
+    "properties": {
+      "baseline": {
+        "type": "string"
+      },
+      "candidate": {
+        "type": "string"
+      },
+      "url": {
+        "type": [
+          "null",
+          "string"
+        ],
+        "description": "The app driven; null when an existing bundle was compared."
+      },
+      "parity": {
+        "type": "boolean"
+      },
+      "summary": {
+        "type": "object",
+        "required": [
+          "steps",
+          "stepsAtParity",
+          "regions",
+          "regionsAtParity",
+          "requests",
+          "newConsoleErrors",
+          "visualFailures"
+        ],
+        "properties": {
+          "steps": {
+            "type": "number"
+          },
+          "stepsAtParity": {
+            "type": "number"
+          },
+          "regions": {
+            "type": "number"
+          },
+          "regionsAtParity": {
+            "type": "number"
+          },
+          "requests": {
+            "type": "number"
+          },
+          "newConsoleErrors": {
+            "type": "number"
+          },
+          "visualFailures": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "failingSteps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "gaps": {
+        "type": "object",
+        "required": [
+          "routes"
+        ],
+        "properties": {
+          "routes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "Behavior no journey exercised: routes never visited."
+      },
+      "replayMisses": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "report": {
+        "type": "object",
+        "required": [
+          "json",
+          "markdown"
+        ],
+        "properties": {
+          "json": {
+            "type": "string"
+          },
+          "markdown": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
