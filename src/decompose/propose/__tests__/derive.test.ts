@@ -1,4 +1,5 @@
 import { deriveFleet } from '../derive';
+import { inferSpecs } from '../openapi';
 import type { Decomposition } from '../model';
 
 const evidence = { route: 1, data: 1, imports: 1, runtime: null, cochange: null, ownership: null };
@@ -67,5 +68,46 @@ describe('deriveFleet', () => {
     });
     const { validation } = deriveFleet(broken);
     expect(validation.composition.map((f) => f.rule)).toContain('unknown-capability');
+  });
+
+  describe('with inferred specs (ADR-112)', () => {
+    const inferred = inferSpecs({
+      appUrl: 'http://localhost:5173',
+      requests: [
+        { id: 'a.0.r0', method: 'GET', url: '/api/harbormaster/dockings', status: 200 },
+        { id: 'a.0.r1', method: 'GET', url: '/api/harbormaster/berths', status: 200 },
+        { id: 'a.0.r2', method: 'GET', url: '/api/ledger/charges', status: 200 },
+      ],
+      responses: {
+        'GET /api/harbormaster/dockings': { status: 200, mimeType: 'application/json', body: [{ docking_id: 4021 }] },
+        'GET /api/harbormaster/berths': { status: 200, mimeType: 'application/json', body: [{ berth_id: 'b1' }] },
+        'GET /api/ledger/charges': { status: 200, mimeType: 'application/json', body: { meta: { hasMore: false }, result: [{ chargeId: 'C-1' }] } },
+      },
+      code: [],
+    });
+    const specs = Object.fromEntries(Object.entries(inferred).map(([k, v]) => [k, v.document]));
+    const mocks = Object.fromEntries(Object.entries(inferred).map(([k, v]) => [k, v.mocks]));
+    const fleet = deriveFleet(doc(), { specs, mocks });
+
+    it('gives each BFF only the operations its domain calls, and unwraps enveloped lists', () => {
+      expect(fleet.validation.manifests['meridian-docking']).toEqual([]);
+      expect(Object.keys(fleet.bff['meridian-docking'].specs.harbormaster.paths)).toEqual(['/dockings']);
+      const sources = (fleet.manifests['meridian-docking'].data as { sources: Array<Record<string, unknown>> }).sources;
+      expect(sources[0]).toEqual({ name: 'harbormaster', handler: { openapi: { source: './specs/harbormaster.yaml' } } });
+      expect(sources[1].transforms).toEqual([
+        { hoistField: [{ typeName: 'Query', pathConfig: ['listCharges', 'result'], newFieldName: 'charges' }] },
+      ]);
+      expect(fleet.manifests['meridian-docking'].data).toMatchObject({ mockSwitch: { enabled: true } });
+    });
+
+    it('turns the recorded responses into the BFF’s demo fixtures, the hoisted field included', () => {
+      expect(fleet.bff['meridian-docking'].mocks).toEqual({
+        listDockings: [{ docking_id: 4021 }],
+        listCharges: { meta: { hasMore: false }, result: [{ chargeId: 'C-1' }] },
+        charges: [{ chargeId: 'C-1' }],
+      });
+      // A domain with no backend has no BFF.
+      expect(fleet.bff['meridian-console']).toBeUndefined();
+    });
   });
 });

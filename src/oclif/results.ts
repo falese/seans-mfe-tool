@@ -299,7 +299,27 @@ export interface DecomposeProposeResult {
   /** Manifest errors per MFE and fatal composition findings; empty when everything validates. */
   validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
   valid: boolean;
+  /** One OpenAPI document per backend the BFFs front (ADR-112); empty when there was no traffic or spec to read. */
+  specs: DecomposeSpecSummary[];
   files: string[];
+}
+
+/** A backend's spec: where it came from, whether it validates, and how an inferred one differs from a published one. */
+export interface DecomposeSpecSummary {
+  backend: string;
+  source: 'inferred' | 'published';
+  operations: number;
+  /** OpenAPI validation errors; empty when the document is valid. */
+  errors: string[];
+  differences?: {
+    operationsMatched: number;
+    inferredOnly: string[];
+    publishedOnly: string[];
+    fieldsMatched: number;
+    fieldsInferredOnly: number;
+    fieldsPublishedOnly: number;
+    typeMismatches: string[];
+  };
 }
 
 // ---------------------------------------------------------------------------

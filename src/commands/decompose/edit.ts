@@ -17,7 +17,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { deriveFleet } from '../../decompose/propose/derive';
 import { applyEdits, parseEditFlags } from '../../decompose/propose/edit';
-import { dumpYaml, readDecomposition, writeFleet } from '../../decompose/propose/io';
+import { dumpYaml, readDecomposition, readSpecs, writeFleet } from '../../decompose/propose/io';
 import type { DecomposeEditResult } from '../../oclif/results';
 
 export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
@@ -57,7 +57,8 @@ export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
 
     const edited = applyEdits(await readDecomposition(file), ops);
     await fs.writeFile(file, `# Edited with decompose:edit; re-derive with decompose:propose --from, or edit again.\n${dumpYaml(edited)}`);
-    const fleet = deriveFleet(edited);
+    // The proposal's specs (ADR-112) follow the edit: each BFF is re-cut to what its domain now calls.
+    const fleet = deriveFleet(edited, await readSpecs(path.dirname(file)));
     const files = [file, ...(await writeFleet(path.dirname(file), fleet))];
     const valid = Object.values(fleet.validation.manifests).every((e) => e.length === 0) && fleet.validation.composition.length === 0;
 

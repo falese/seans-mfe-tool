@@ -6,7 +6,7 @@ title: >-
 status: Accepted
 impl:
   stage: phased
-  refs: ["#422", "#440"]
+  refs: ["#422"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / proposal

@@ -18,11 +18,26 @@ import {
   type DSLManifest,
 } from '@seans-mfe/dsl';
 import type { Decomposition, Domain } from './model';
+import { hoistsOf, restrictSpec, type OpenApiDocument } from './openapi';
+
+/** Per backend: its OpenAPI document (inferred or published) and the recorded responses by operationId (ADR-112). */
+export interface BackendSpecs {
+  specs: Record<string, OpenApiDocument>;
+  mocks?: Record<string, Record<string, unknown>>;
+}
+
+/** What one MFE's BFF is generated from: the specs it fronts, cut to what it calls, and its demo fixtures. */
+export interface BffInputs {
+  specs: Record<string, OpenApiDocument>;
+  mocks: Record<string, unknown>;
+}
 
 export interface DerivedFleet {
   /** MFE name → manifest, in domain order. */
   manifests: Record<string, Record<string, unknown>>;
   composition: ControlPlaneDocument;
+  /** MFE name → its BFF's specs and fixtures; only MFEs with a backend that has a spec. */
+  bff: Record<string, BffInputs>;
   validation: {
     /** MFE name → `path: message` for each manifest error. */
     manifests: Record<string, string[]>;
@@ -52,7 +67,28 @@ const platformCapabilities = [
   },
 ];
 
-function manifestFor(doc: Decomposition, domain: Domain, index: number): Record<string, unknown> {
+function bffFor(domain: Domain, backends?: BackendSpecs): BffInputs | undefined {
+  if (!backends) return undefined;
+  const specs: Record<string, OpenApiDocument> = {};
+  const mocks: Record<string, unknown> = {};
+  for (const b of domain.backends) {
+    const full = backends.specs[b];
+    if (!full) continue;
+    const doc = restrictSpec(full, domain.endpoints, b);
+    specs[b] = doc;
+    const recorded = backends.mocks?.[b] ?? {};
+    const ids = new Set(Object.values(doc.paths).flatMap((item) => Object.values(item).map((op) => op?.operationId)));
+    for (const id of Object.keys(recorded)) if (ids.has(id)) mocks[id] = recorded[id];
+    // The mock switch wraps every Query field, the hoisted ones included (ADR-052).
+    for (const h of hoistsOf(doc)) {
+      const body = recorded[h.pathConfig[0]];
+      if (body && typeof body === 'object' && !Array.isArray(body)) mocks[h.newFieldName] = (body as Record<string, unknown>)[h.pathConfig[1]];
+    }
+  }
+  return Object.keys(specs).length > 0 ? { specs, mocks } : undefined;
+}
+
+function manifestFor(doc: Decomposition, domain: Domain, index: number, bff?: BffInputs): Record<string, unknown> {
   const port = BASE_PORT + index;
   const manifest: Record<string, unknown> = {
     name: domain.mfe,
@@ -75,11 +111,20 @@ function manifestFor(doc: Decomposition, domain: Domain, index: number): Record<
     ],
   };
   if (domain.backends.length > 0) {
-    // One BFF source per backend the domain's screens call. The OpenAPI document
-    // is inferred from recorded traffic and client code — #440, a follow-up;
-    // until then the path names where it goes.
+    // One BFF source per backend the domain's screens call, each from the
+    // backend's OpenAPI document — published, or inferred from what the app
+    // was seen to call (ADR-112). Enveloped lists are unwrapped at the graph.
     manifest.data = {
-      sources: domain.backends.map((b) => ({ name: b, handler: { openapi: { source: `./specs/${b}.yaml` } } })),
+      sources: domain.backends.map((b) => {
+        const hoists = bff?.specs[b] ? hoistsOf(bff.specs[b]) : [];
+        return {
+          name: b,
+          handler: { openapi: { source: `./specs/${b}.yaml` } },
+          ...(hoists.length > 0 ? { transforms: [{ hoistField: hoists }] } : {}),
+        };
+      }),
+      // The recorded responses become the demo fixtures (ADR-052, ADR-109 §4).
+      ...(bff ? { mockSwitch: { enabled: true } } : {}),
     };
   }
   if (domain.shell) {
@@ -89,12 +134,15 @@ function manifestFor(doc: Decomposition, domain: Domain, index: number): Record<
   return manifest;
 }
 
-export function deriveFleet(doc: Decomposition): DerivedFleet {
+export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): DerivedFleet {
   const manifests: Record<string, Record<string, unknown>> = {};
+  const bff: Record<string, BffInputs> = {};
   const errors: Record<string, string[]> = {};
   const parsed: DSLManifest[] = [];
   doc.domains.forEach((domain, i) => {
-    const manifest = manifestFor(doc, domain, i);
+    const inputs = bffFor(domain, backends);
+    if (inputs) bff[domain.mfe] = inputs;
+    const manifest = manifestFor(doc, domain, i, inputs);
     manifests[domain.mfe] = manifest;
     const result = validateFull(manifest);
     errors[domain.mfe] = result.valid ? [] : result.errors.map((e) => `${e.path}: ${e.message}`);
@@ -137,6 +185,7 @@ export function deriveFleet(doc: Decomposition): DerivedFleet {
   return {
     manifests,
     composition,
+    bff,
     validation: {
       manifests: errors,
       composition: findings.filter((f) => f.fatal).map((f) => ({ rule: f.rule, message: f.message })),

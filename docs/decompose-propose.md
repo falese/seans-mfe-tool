@@ -75,6 +75,29 @@ Merging the PR that carries these is the agreement; nothing is scaffolded before
 Derived beside it: an `mfe-manifest.yaml` per domain and `control-plane/control-plane.yaml`.
 The layout is a fleet's, so `compose:validate <proposal dir>` checks it like any project.
 
+## BFF specs (ADR-112)
+
+Each domain's BFF fronts the backends its screens call, and the BFF is generated from an
+OpenAPI document per backend. A monolith's backends rarely publish one, so `decompose:propose`
+infers it from the evidence bundle's recorded traffic and the client code's endpoint templates:
+
+```
+specs/<backend>.yaml                 one per backend: inferred, or the published spec
+specs/<backend>.mocks.json           recorded responses, by operationId
+specs/<backend>.differences.json     inferred vs published, when a published spec is given
+<mfe>/specs/<backend>.yaml           cut to the operations this MFE's domain calls
+<mfe>/src/platform/bff/mocks.json    the BFF's demo fixtures (ADR-052)
+```
+
+An inferred document is a lower bound: only what the app was seen, or written, to call. Every
+operation names the requests behind it (`x-smt-observed`) and whether code, traffic or both
+gave it (`x-smt-source`). Each manifest's source carries `hoistField` rules that unwrap the
+lists its backend wraps (`{ result }`, `{ Data }`).
+
+A published spec wins (`--spec stationos=./station-os.yaml`, or any document in `specs/`
+without `x-smt-inferred`). The inferred one then reports what it saw that the spec lacks.
+`--evidence` names the bundle when it is not the analysis directory's parent.
+
 ## Scoring
 
 `decompose:score` never compares names: `shell` and `console`, or `aside` and `status`, score
@@ -111,14 +134,32 @@ one training record (PDR-009): evidence, draft, edits, proposal, answer key, and
 - **All three couplings in the answer key are flagged:** cargo and the concourse read docking's
   dockings from the store, and the shell shows life-support telemetry.
 
+**Specs.** The capture's 13 calls become 13 operations across three backends. Each validates
+as OpenAPI 3 and loads through the Mesh `openapi` handler the BFFs pin. Against
+meridian-station's hand-written specs (`--spec`):
+
+- all 13 inferred operations match a published one, with no type mismatches;
+- the derived `hoistField` names (`payroll`, `crew`, `certifications`, …) are the ones written
+  by hand;
+- the inferred specs carry `id`, `createdAt` and `updatedAt`, which every backend returns and no
+  published spec declares. That is spec drift the inference makes visible.
+
+Two gaps show up as well:
+
+- The ledger's lists were empty in this capture, though the seed holds rows, so their item fields
+  are unknown (`items: {}`). Re-capturing against a seeded ledger fills them.
+- The harbormaster and StationOS published specs do not validate: an unquoted comma in a YAML
+  flow mapping adds stray keys (#444).
+
 Read the test-triage score with care. The triage rules are ordinary test smells (excluded,
 skipped, snapshot-only, mocks, structural selectors, fixed sleeps), but they were written with
 this answer key in view. A second subject is what will say whether they generalize.
 
 ## Limits
 
-- **BFF specs are not inferred yet.** Each derived BFF names `./specs/<backend>.yaml`;
-  inferring it from traffic and client code is #440.
+- **Inferred specs are a lower bound.** Operations the journeys never reached appear only if the
+  client code names them, and without a response shape. Request bodies are not recorded, so a
+  write operation's body is untyped. Each `servers` URL is the origin the capture ran against.
 - **Repeated placements stay in the proposal.** Their keys (`{id}`) are bound with `forEach`
   when composed, and the source does not know them.
 - **Typed props for capabilities** wait on #422.

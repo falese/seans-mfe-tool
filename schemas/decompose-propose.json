@@ -25,6 +25,17 @@
       "from": {
         "type": "string",
         "description": "An edited decomposition.yaml to re-derive from, instead of clustering"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "The decompose:capture bundle whose recorded traffic the BFF specs are inferred from (default: the parent of the analysis directory, or of the proposal with --from)"
+      },
+      "spec": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "backend=path — a published OpenAPI document for a backend; it is used instead of the inferred one (ADR-112 §3)"
       }
     },
     "required": [],
@@ -45,6 +56,7 @@
       "uncovered",
       "validation",
       "valid",
+      "specs",
       "files"
     ],
     "properties": {
@@ -168,6 +180,87 @@
       },
       "valid": {
         "type": "boolean"
+      },
+      "specs": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "backend",
+            "source",
+            "operations",
+            "errors"
+          ],
+          "properties": {
+            "backend": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "inferred",
+                "published"
+              ]
+            },
+            "operations": {
+              "type": "number"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "OpenAPI validation errors; empty when the document is valid."
+            },
+            "differences": {
+              "type": "object",
+              "required": [
+                "operationsMatched",
+                "inferredOnly",
+                "publishedOnly",
+                "fieldsMatched",
+                "fieldsInferredOnly",
+                "fieldsPublishedOnly",
+                "typeMismatches"
+              ],
+              "properties": {
+                "operationsMatched": {
+                  "type": "number"
+                },
+                "inferredOnly": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "publishedOnly": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fieldsMatched": {
+                  "type": "number"
+                },
+                "fieldsInferredOnly": {
+                  "type": "number"
+                },
+                "fieldsPublishedOnly": {
+                  "type": "number"
+                },
+                "typeMismatches": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "One OpenAPI document per backend the BFFs front (ADR-112); empty when there was no traffic or spec to read."
       },
       "files": {
         "type": "array",
