@@ -281,3 +281,50 @@ export interface DecomposeAnalyzeResult {
   } | null;
   files: string[];
 }
+
+// ---------------------------------------------------------------------------
+// decompose:propose
+// ---------------------------------------------------------------------------
+
+/** decompose:propose — a decomposition proposed (or re-derived), with its derived fleet validated (ADR-110). */
+export interface DecomposeProposeResult {
+  outDir: string;
+  mode: 'clustered' | 'rederived';
+  domains: Array<{ id: string; mfe: string; files: number; capabilities: string[]; backends: string[] }>;
+  shared: string[];
+  unassigned: string[];
+  couplings: number;
+  tests: { keep: number; rewrite: number; discard: number };
+  uncovered: number;
+  /** Manifest errors per MFE and fatal composition findings; empty when everything validates. */
+  validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
+  valid: boolean;
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:score
+// ---------------------------------------------------------------------------
+
+/** One proposal scored against an answer key. */
+export interface DecompositionScoreSummary {
+  domainMap: Record<string, string | null>;
+  assignment: { correct: number; total: number; precision: number; recall: number; f1: number; misplaced: Array<{ file: string; proposed: string; expected: string }> };
+  backends: { perDomain: Record<string, number>; mean: number };
+  slots: { slotMap: Record<string, string>; matched: number; total: number; score: number };
+  tests: { agree: number; total: number; score: number; disagreements: Array<{ file: string; proposed: string; expected: string }> };
+  gaps: { detected: string[]; missed: string[]; unmatchable: string[]; recall: number };
+}
+
+/** decompose:score — the proposal and, when there is one, its deterministic base, scored (#415). */
+export interface DecomposeScoreResult {
+  proposal: string;
+  answerKey: string;
+  score: DecompositionScoreSummary;
+  /** The deterministic draft scored alone, when proposal.base.yaml is beside the proposal (or --base). */
+  base: DecompositionScoreSummary | null;
+  /** The agent's edits from base to proposal. */
+  edits: Array<Record<string, string>>;
+  /** The training-corpus record written, when --corpus was given. */
+  corpusRecord: string | null;
+}

@@ -69,6 +69,10 @@ export interface FileFacts {
   hookReads: Array<{ hook: string; fields: string[] }>;
   /** Module-level code mounts the app (`createRoot`, `hydrateRoot`, `ReactDOM.render`): an entry point. */
   bootstraps: boolean;
+  /** Landmark elements (`main`, `nav`, `aside`, `header`, `footer`) the file renders, in source order. */
+  landmarks: string[];
+  /** Components the file renders, and whether inside a `.map(...)` (one per item). Router elements excluded. */
+  renders: Array<{ component: string; repeated: boolean }>;
 }
 
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
@@ -90,6 +94,8 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
     hooks: [],
     hookReads: [],
     bootstraps: false,
+    landmarks: [],
+    renders: [],
   };
 
   // Module-level consts, for folding `BASE.harbormaster` and friends.
@@ -386,6 +392,38 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
     ts.forEachChild(n, visitRoutes);
   };
   visitRoutes(sf);
+
+  // ---- rendered landmarks and components ----------------------------------------
+  const LANDMARKS = new Set(['main', 'nav', 'aside', 'header', 'footer']);
+  const ROUTER = new Set(['Routes', 'Route', 'BrowserRouter', 'Router', 'Outlet', 'Fragment', 'React.Fragment']);
+  const insideMap = (node: TS.Node): boolean => {
+    for (let p: TS.Node | undefined = node.parent; p; p = p.parent) {
+      if (ts.isCallExpression(p) && ts.isPropertyAccessExpression(p.expression) && p.expression.name.text === 'map') return true;
+      if (ts.isFunctionDeclaration(p) || ts.isSourceFile(p)) return false;
+    }
+    return false;
+  };
+  const insideRouteElement = (node: TS.Node): boolean => {
+    for (let p: TS.Node | undefined = node.parent; p; p = p.parent) {
+      if (ts.isJsxAttribute(p) && ['element', 'component', 'Component'].includes(p.name.getText(sf))) return true;
+    }
+    return false;
+  };
+  const visitRenders = (n: TS.Node): void => {
+    const opening = ts.isJsxSelfClosingElement(n) ? n : ts.isJsxElement(n) ? n.openingElement : null;
+    if (opening) {
+      const tag = tagName(opening);
+      if (LANDMARKS.has(tag) && !facts.landmarks.includes(tag)) facts.landmarks.push(tag);
+      if (/^[A-Z]/.test(tag) && !ROUTER.has(tag) && !tag.includes('.Provider') && !insideRouteElement(n)) {
+        const repeated = insideMap(n);
+        const known = facts.renders.find((r) => r.component === tag);
+        if (!known) facts.renders.push({ component: tag, repeated });
+        else if (repeated) known.repeated = true;
+      }
+    }
+    ts.forEachChild(n, visitRenders);
+  };
+  visitRenders(sf);
 
   return facts;
 }

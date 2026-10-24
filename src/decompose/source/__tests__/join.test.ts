@@ -9,6 +9,8 @@ const node = (file: string, extra: Partial<FileNode>): FileNode => ({
   endpoints: [],
   apiClient: false,
   storeReads: [],
+  landmarks: [],
+  renders: [],
   assignment: { category: 'shell', screens: [] },
   ...extra,
 });

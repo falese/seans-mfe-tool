@@ -8,6 +8,7 @@
  *   history.json   co-change pairs and CODEOWNERS owners
  *   tests.json     the test inventory, with per-test results when the suite ran
  *   join.json      runtime ⇄ source: observed endpoints explained by source, per-file runtime facts
+ *   project.json   the app's name (from package.json) and directory, for decompose:propose
  */
 
 import * as path from 'path';
@@ -56,7 +57,10 @@ export async function analyzeProject(options: AnalyzeOptions): Promise<AnalyzeOu
   const history = await readHistory(options.dir, [...sourceFiles, ...project.tests]);
   const join = options.evidenceDir ? joinEvidence(graph, await readEvidence(options.evidenceDir)) : null;
 
-  const out: Record<string, unknown> = { 'graph.json': graph, 'history.json': history, 'tests.json': tests };
+  const pkgPath = path.join(options.dir, 'package.json');
+  const pkg = (await fs.pathExists(pkgPath)) ? ((await fs.readJson(pkgPath)) as { name?: string }) : {};
+  const projectInfo = { name: pkg.name ?? path.basename(options.dir), dir: options.dir };
+  const out: Record<string, unknown> = { 'graph.json': graph, 'history.json': history, 'tests.json': tests, 'project.json': projectInfo };
   if (join) out['join.json'] = join;
   const files: string[] = [];
   await fs.ensureDir(options.outDir);

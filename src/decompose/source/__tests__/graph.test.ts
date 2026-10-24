@@ -95,4 +95,15 @@ describe('buildSourceGraph', () => {
     expect(byCategory['src/utils/dead.ts']).toEqual({ category: 'unreached', screens: [] });
     expect(graph.entries).toEqual(['src/index.tsx']);
   });
+
+  it('resolves rendered components to their files, keeping whether they repeat', () => {
+    const g = project({
+      'src/index.tsx': `import Strip from './Strip'; createRoot(el).render(<Strip />);`,
+      'src/Strip.tsx': `import Tile from './Tile'; export default function Strip() { return <header>{[1].map((i) => <Tile key={i} />)}</header>; }`,
+      'src/Tile.tsx': `export default function Tile() { return <div />; }`,
+    });
+    const strip = g.files.find((f) => f.file === 'src/Strip.tsx');
+    expect(strip?.landmarks).toEqual(['header']);
+    expect(strip?.renders).toEqual([{ component: 'Tile', file: 'src/Tile.tsx', repeated: true }]);
+  });
 });

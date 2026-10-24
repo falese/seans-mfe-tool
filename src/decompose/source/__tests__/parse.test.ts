@@ -130,4 +130,18 @@ describe('parseFile', () => {
     );
     expect(consumer.hookReads).toEqual([{ hook: 'useAppState', fields: ['dockings', 'error'] }]);
   });
+
+  it('records the landmarks a file renders and the components it renders, repeated or once', () => {
+    const facts = parse(
+      'src/layout/BerthStrip.tsx',
+      `export default function BerthStrip({ berths }) {
+         return (<header><nav><Logo /></nav>{berths.map((b) => <BerthTile key={b.id} id={b.id} />)}</header>);
+       }`
+    );
+    expect(facts.landmarks).toEqual(['header', 'nav']);
+    expect(facts.renders).toEqual([
+      { component: 'Logo', repeated: false },
+      { component: 'BerthTile', repeated: true },
+    ]);
+  });
 });

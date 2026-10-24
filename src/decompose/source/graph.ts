@@ -49,6 +49,10 @@ export interface FileNode {
   apiClient: boolean;
   /** Store fields read through a hook, and the endpoints that load them. */
   storeReads: Array<{ hook: string; store: string; field: string; endpoints: Endpoint[] }>;
+  /** Landmarks the file renders (`main`, `nav`, `aside`, `header`, `footer`). */
+  landmarks: string[];
+  /** Components the file renders, resolved to their files; `repeated` when rendered per item of a list. */
+  renders: Array<{ component: string; file: string | null; repeated: boolean }>;
   assignment: Assignment;
 }
 
@@ -287,6 +291,11 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
         endpoints: endpoints.sort((a, b) => a.url.localeCompare(b.url) || a.method.localeCompare(b.method)),
         apiClient: f.functions.some((fn) => fn.http.length > 0),
         storeReads,
+        landmarks: f.landmarks,
+        renders: f.renders.map((r) => {
+          const target = resolveName(f.file, r.component);
+          return { component: target?.name ?? r.component, file: target?.file ?? null, repeated: r.repeated };
+        }),
         assignment: assign(f.file),
       };
     })

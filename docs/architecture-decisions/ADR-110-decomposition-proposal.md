@@ -3,7 +3,10 @@ id: 0110
 title: >-
   A decomposition is agreed as one reviewable document, decomposition.yaml, from which the
   manifests and composition are derived — humans edit the proposal, never the derived files
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#416", "#422", "#440"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / proposal
@@ -13,9 +16,19 @@ relates-to: [83, 84, 109, 111]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
-implemented-by: []
-verified-by: []
-tracked-by: ["#410", "#415", "#416", "#425"]
+implemented-by:
+  - src/commands/decompose/propose.ts
+  - src/commands/decompose/score.ts
+  - src/decompose/propose/model.ts
+  - src/decompose/propose/cluster.ts
+  - src/decompose/propose/derive.ts
+  - src/decompose/propose/triage.ts
+  - src/decompose/propose/score.ts
+verified-by:
+  - src/decompose/propose/__tests__/meridian-monolith.test.ts
+  - src/decompose/propose/__tests__/derive.test.ts
+  - src/decompose/propose/__tests__/score.test.ts
+tracked-by: ["#410", "#415", "#416", "#425", "#440"]
 summary: >-
   `decompose:propose` writes `decomposition.yaml`: the domains, the components and files each
   owns, the backends each fronts, the slots each occupies, the test triage, and per-signal
@@ -54,11 +67,41 @@ playbook) then makes the judgment calls — naming, merging, splitting, assignin
 components — as edits to `decomposition.yaml`. No model runs inside the CLI on this path;
 this is PDR-010's split of a model that reads wide over a deterministic floor that executes.
 
+As implemented (#415), the draft is built in four steps:
+
+1. **Seeds.** A route that puts a component in the primary area seeds a domain; the files
+   only that route reaches join it.
+2. **Shell.** Files only the entry reaches form the shell.
+3. **Data affinity.** A component left over — rendered by the shell, or by a route with no
+   primary area — joins the domain that supplies at least half of the data it reads. Chrome
+   (navigation, headers, the route table) stays in the shell, and its reads of other domains'
+   data become couplings.
+4. **Shared** files get a suggestion instead of an owner.
+
+Each domain carries a 0–1 score per signal (route, data, imports, runtime, co-change, ownership;
+null where absent). The proposal also records couplings through the shared store or the shell,
+slots and routes, repeated placements (one tile per item), test triage, and capabilities no
+kept test covers. `proposal.base.yaml` keeps the draft so the agent's edits can be diffed
+against it.
+
 ### 2. Manifests and composition are derived, and validated like hand-written ones
 
 Each domain becomes a draft `mfe-manifest.yaml` (validated with `validateFull`); the
 placements become `control-plane.yaml` (validated with `compileControlPlane`). Derivation is
 re-runnable: `decompose:propose --from decomposition.yaml`.
+
+As implemented, the derived fleet has a project's layout (`<mfe>/mfe-manifest.yaml`,
+`control-plane/control-plane.yaml`), so `compose:validate` reads it like any fleet.
+Repeated placements stay in the proposal: their keys (`{id}`) are bound with `forEach` when
+composed, and the source does not know them. Each BFF names its OpenAPI document; inferring it
+is #440 (ADR-112).
+
+### 2a. Scoring and the corpus
+
+`decompose:score` grades a proposal against an answer key. It matches domains by shared files
+and slots by shared placements, so names never count. It scores the draft and the edited
+proposal separately, lists the edits between them, and with `--corpus` writes the run as one
+training record (PDR-009).
 
 ### 3. Agreement is a merged PR
 

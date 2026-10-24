@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:score.json",
+  "title": "decompose:score",
+  "description": "Score a decomposition.yaml against an answer key — file assignment F1, backends, slot structure, test triage and gap detection — alongside its deterministic draft, and optionally write a training-corpus record.",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The decomposition.yaml to score"
+      },
+      "answer-key": {
+        "type": "string",
+        "description": "The answer key to score against"
+      },
+      "base": {
+        "type": "string",
+        "description": "The deterministic draft (default: proposal.base.yaml beside the proposal)"
+      },
+      "corpus": {
+        "type": "string",
+        "description": "Directory to write a training-corpus record into"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "The evidence bundle the proposal came from, recorded in the corpus record"
+      }
+    },
+    "required": [
+      "proposal",
+      "answer-key"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "proposal",
+      "answerKey",
+      "score",
+      "base",
+      "edits",
+      "corpusRecord"
+    ],
+    "properties": {
+      "proposal": {
+        "type": "string"
+      },
+      "answerKey": {
+        "type": "string"
+      },
+      "score": {
+        "type": "object",
+        "required": [
+          "domainMap",
+          "assignment",
+          "backends",
+          "slots",
+          "tests",
+          "gaps"
+        ],
+        "properties": {
+          "domainMap": {
+            "type": "object"
+          },
+          "assignment": {
+            "type": "object",
+            "required": [
+              "correct",
+              "total",
+              "precision",
+              "recall",
+              "f1",
+              "misplaced"
+            ],
+            "properties": {
+              "correct": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "precision": {
+                "type": "number"
+              },
+              "recall": {
+                "type": "number"
+              },
+              "f1": {
+                "type": "number"
+              },
+              "misplaced": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "proposed",
+                    "expected"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "proposed": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "backends": {
+            "type": "object",
+            "required": [
+              "perDomain",
+              "mean"
+            ],
+            "properties": {
+              "perDomain": {
+                "type": "object"
+              },
+              "mean": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "slots": {
+            "type": "object",
+            "required": [
+              "slotMap",
+              "matched",
+              "total",
+              "score"
+            ],
+            "properties": {
+              "slotMap": {
+                "type": "object"
+              },
+              "matched": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "score": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "tests": {
+            "type": "object",
+            "required": [
+              "agree",
+              "total",
+              "score",
+              "disagreements"
+            ],
+            "properties": {
+              "agree": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "score": {
+                "type": "number"
+              },
+              "disagreements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "proposed",
+                    "expected"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "proposed": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "gaps": {
+            "type": "object",
+            "required": [
+              "detected",
+              "missed",
+              "unmatchable",
+              "recall"
+            ],
+            "properties": {
+              "detected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "missed": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "unmatchable": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "recall": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "base": {
+        "description": "The deterministic draft scored alone, when proposal.base.yaml is beside the proposal (or --base)."
+      },
+      "edits": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "The agent's edits from base to proposal."
+      },
+      "corpusRecord": {
+        "type": [
+          "null",
+          "string"
+        ],
+        "description": "The training-corpus record written, when --corpus was given."
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}
