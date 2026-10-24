@@ -57,6 +57,7 @@
 - [htmlAdaptor](variables/htmlAdaptor.md)
 - [jsonAdaptor](variables/jsonAdaptor.md)
 - [moduleFederationAdaptor](variables/moduleFederationAdaptor.md)
+- [SLOT\_STAMP\_ATTRIBUTES](variables/SLOT_STAMP_ATTRIBUTES.md)
 - [VALID\_TRANSITIONS](variables/VALID_TRANSITIONS.md)
 
 ## Functions

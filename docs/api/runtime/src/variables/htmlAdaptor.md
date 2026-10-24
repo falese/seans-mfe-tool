@@ -8,6 +8,6 @@
 
 > `const` **htmlAdaptor**: [`ExperienceAdaptor`](../interfaces/ExperienceAdaptor.md)
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:131](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L131)
+Defined in: [packages/runtime/src/layout-adaptors.ts:137](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L137)
 
 text/html — MFE-owned markup. Elements with data-action send actions.

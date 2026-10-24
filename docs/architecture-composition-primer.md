@@ -187,6 +187,15 @@ uncaught throw tears down the whole tree. Suspense falls out of the same lifecyc
 slots carry `data-slot-state` (`pending → ready | error`) from the load/render
 promises, so the host renders skeletons without React Suspense.
 
+Every slot the LayoutManager binds also names its occupant (#408): `data-smt-mfe`,
+`data-smt-capability`, `data-smt-experience` and `data-smt-content-type` sit on the
+same element as `data-layout-slot`. They stay on through the error fallback, so a
+failure is attributable, and are removed when the slot clears. Because the
+LayoutManager is the only mounter (ADR-108), every mounted region carries them,
+which makes them a stable selector for tests, design capture and error
+attribution. The names are exported as `SLOT_STAMP_ATTRIBUTES`; renaming one is
+a breaking change.
+
 Slot *identity and placement* have their own contract layered on top of this:
 ids are assigned names declared in each MFE's manifest (ADR-067), placement is
 desired state the host converges on regardless of ordering (ADR-066), and

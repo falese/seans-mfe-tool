@@ -22,7 +22,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:38](https://github.com/fale
 
 > **addEventListener**(`type`, `listener`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L42)
+Defined in: [packages/runtime/src/layout-adaptors.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L48)
 
 #### Parameters
 
@@ -63,6 +63,28 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:39](https://github.com/fale
 > **remove**(): `void`
 
 Defined in: [packages/runtime/src/layout-adaptors.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L40)
+
+#### Returns
+
+`void`
+
+***
+
+### removeAttribute()?
+
+> `optional` **removeAttribute**(`name`): `void`
+
+Defined in: [packages/runtime/src/layout-adaptors.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L47)
+
+Optional so a host's own `createSlotElement` that predates it still type-
+checks; every DOM element has it. Without it, cleared stamps are blanked
+rather than removed (#408).
+
+#### Parameters
+
+##### name
+
+`string`
 
 #### Returns
 
