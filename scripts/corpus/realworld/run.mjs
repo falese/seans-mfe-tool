@@ -38,9 +38,19 @@ const CLOCK = '2026-10-24T12:00:00.000Z';
 const children = [];
 
 const log = (msg) => process.stderr.write(`${msg}\n`);
+/** Stop every server started, its own children included (`npm start` → react-scripts → webpack). */
+function stopAll() {
+  for (const c of children) {
+    try {
+      process.kill(-c.pid, 'SIGTERM');
+    } catch {
+      // already gone
+    }
+  }
+}
 function fail(msg) {
   log(`✗ ${msg}`);
-  for (const c of children) c.kill();
+  stopAll();
   process.exit(1);
 }
 function run(cmd, args, opts = {}) {
@@ -61,7 +71,8 @@ function cli(args) {
 }
 function start(name, cmd, args, opts) {
   const out = fs.openSync(path.join(work, `${name}.log`), 'w');
-  const child = spawn(cmd, args, { stdio: ['ignore', out, out], ...opts });
+  // Its own process group, so stopping it stops what it spawned.
+  const child = spawn(cmd, args, { stdio: ['ignore', out, out], detached: true, ...opts });
   children.push(child);
   return child;
 }
@@ -152,7 +163,7 @@ for (const app of corpus.apps) {
   });
 }
 
-for (const c of children) c.kill();
+stopAll();
 
 const table = [
   '| App | Stack | Steps | Mapped to source | Calls explained by source | Domains | Inferred operations | Matching the published spec | Not in the spec | Parity with itself |',
