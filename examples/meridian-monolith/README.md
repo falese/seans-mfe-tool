@@ -27,8 +27,9 @@ backends. So a decomposition agent's proposal can be **scored** against
 - **Coupling:** the console's nav shows a life-support alert count.
 - **Routing:** `App.tsx` keeps two route tables (main and status rail) that
   must agree.
-- **Latent bug:** `GET /dockings` returns 10 of 12 rows by default, so two
-  dockings never show. meridian-station has the same bug; parity preserves it.
+- **Latent bug:** the concourse's inbound-supplies panel is capped at three
+  rows and hides the one vessel on approach. meridian-station shows all four;
+  parity preserves the monolith's behavior until someone decides otherwise.
 - **Tests:** low and uneven coverage, snapshots, implementation-coupled
   tests, brittle selectors, a skipped test, commented-out tests, a flaky
   timing test, a file excluded from Jest that asserts behavior the app no

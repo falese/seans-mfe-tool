@@ -21,7 +21,7 @@ const Model = require('../models');
       
       const item = await Model.Pets
       .find(req.query)
-      .limit(parseInt(req.query.limit) || 10)
+      .limit(parseInt(req.query.limit, 10) || 10)
       .skip(parseInt(req.query.offset) || 0);
       if (!item) {
         throw new ApiError(404, 'Not found');
