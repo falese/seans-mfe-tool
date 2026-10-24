@@ -172,7 +172,7 @@ place, so they cannot disagree with a copy here.
 | Composition source (per project, ADR-083) | `examples/*/control-plane/control-plane.yaml` |
 | Compiled registry payload (generated — never hand-edit) | `examples/*/control-plane/rules.json` |
 | Composition schema + compiler | `packages/dsl/src/control-plane-{schema,compiler}.ts` |
-| React slot sugar (`DeclaredSlot`, beside `MfeHost`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
+| React slot sugar (`DeclaredSlot`) | `packages/framework-react/src/runtime/DeclaredSlot.tsx` |
 | Generated slot contract template (data + thin binding) | `packages/codegen/templates/base-mfe/slots.tsx.ejs` |
 | Slot id grammar (single source, ADR-069) | `packages/contracts/src/slot-grammar.ts` |
 | Angular slot sugar (`[smtDeclaredSlot]` directive) | `packages/framework-angular/src/runtime/declared-slot.directive.ts` |
