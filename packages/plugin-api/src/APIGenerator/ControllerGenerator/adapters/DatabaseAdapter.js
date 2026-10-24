@@ -52,6 +52,36 @@ class DatabaseAdapter {
     const match = String(path).match(/{([^}]+)}/);
     return match ? match[1] : null;
   }
+
+  /**
+   * The list pagination an operation declares, as code expressions for the
+   * page size and the row offset — or null when it declares none (#428).
+   *
+   * Specs name these differently: `limit` + `offset`, `pageSize`, or a
+   * 1-based `Page` + `PageSize`. Each declared default is honored. Where the
+   * spec is silent the old behavior stands: a page size with no default
+   * falls back to 10, and an undeclared offset is still read from `offset`.
+   */
+  getPagination(operation) {
+    const params = (operation?.parameters ?? []).filter((p) => p && p.in === 'query');
+    const find = (names) => params.find((p) => names.includes(String(p.name).toLowerCase()));
+    const size = find(['limit', 'pagesize', 'page_size', 'per_page', 'perpage']);
+    if (!size) return null;
+
+    const intOr = (param, fallback) =>
+      `parseInt(req.query.${param.name}, 10) || ${param.schema?.default ?? fallback}`;
+    const sizeExpr = intOr(size, 10);
+
+    const offset = find(['offset', 'skip']);
+    if (offset) return { size: sizeExpr, offset: intOr(offset, 0) };
+
+    const page = find(['page', 'page_number', 'pagenumber']);
+    if (page) return { size: sizeExpr, offset: `((${intOr(page, 1)}) - 1) * (${sizeExpr})` };
+
+    // The spec declares no offset or page: keep the generator's old offset
+    // handling rather than silently dropping an `offset` callers may send.
+    return { size: sizeExpr, offset: 'parseInt(req.query.offset) || 0' };
+  }
 }
 
 class MongoDBAdapter extends DatabaseAdapter {
@@ -59,7 +89,7 @@ class MongoDBAdapter extends DatabaseAdapter {
     return `const Model = require('../models');`;
   }
 
-  generateFindQuery(method, path) {
+  generateFindQuery(method, path, operation) {
     const modelName = this.getModelName(path);
     if (path.includes('{')) {
       const paramName = this.getPathParamName(path);
@@ -72,10 +102,12 @@ class MongoDBAdapter extends DatabaseAdapter {
     }
     // Restrict the filter to declared schema paths so pagination params in
     // req.query never leak into the Mongo query.
+    // Honor the spec's declared pagination when it has one (#428).
+    const page = this.getPagination(operation);
     return `Model.${modelName}
       .find(Object.fromEntries(Object.entries(req.query).filter(([key]) => key in Model.${modelName}.schema.paths)))
-      .limit(parseInt(req.query.limit) || 10)
-      .skip(parseInt(req.query.offset) || 0)`;
+      .limit(${page ? page.size : 'parseInt(req.query.limit) || 10'})
+      .skip(${page ? page.offset : 'parseInt(req.query.offset) || 0'})`;
   }
 
   generateCreateQuery(resourceName) {
@@ -107,7 +139,7 @@ class SQLiteAdapter extends DatabaseAdapter {
     return `const db = require('../models');`;
   }
 
-  generateFindQuery(method, path) {
+  generateFindQuery(method, path, operation) {
     const modelName = this.getModelName(path);
     if (path.includes('{')) {
       const paramName = this.getPathParamName(path);
@@ -120,10 +152,12 @@ class SQLiteAdapter extends DatabaseAdapter {
     }
     // Restrict the where clause to real model attributes so pagination
     // params never reach SQL (\`no such column: ${modelName}.limit\`).
+    // Honor the spec's declared pagination when it has one (#428).
+    const page = this.getPagination(operation);
     return `db.${modelName}.findAll({
       where: Object.fromEntries(Object.entries(req.query).filter(([key]) => key in db.${modelName}.rawAttributes)),
-      limit: parseInt(req.query.limit) || 10,
-      offset: parseInt(req.query.offset) || 0
+      limit: ${page ? page.size : 'parseInt(req.query.limit) || 10'},
+      offset: ${page ? page.offset : 'parseInt(req.query.offset) || 0'}
     })`;
   }
 

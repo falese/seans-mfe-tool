@@ -25,8 +25,8 @@ const db = require('../models');
       
       const item = await db.Telemetry.findAll({
       where: Object.fromEntries(Object.entries(req.query).filter(([key]) => key in db.Telemetry.rawAttributes)),
-      limit: parseInt(req.query.limit) || 10,
-      offset: parseInt(req.query.offset) || 0
+      limit: parseInt(req.query.PageSize, 10) || 20,
+      offset: ((parseInt(req.query.Page, 10) || 1) - 1) * (parseInt(req.query.PageSize, 10) || 20)
     });
       if (!item) {
         throw new ApiError(404, 'Not found');
