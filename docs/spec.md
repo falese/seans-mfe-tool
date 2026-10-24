@@ -356,6 +356,7 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Proposed |
 | [ADR-112](./architecture-decisions/ADR-112-openapi-inference-from-traffic.md) | When a backend has no spec, the toolchain infers an OpenAPI document from recorded traffic and client code, marks it inferred, and the BFF consumes it like any other source | Decomposition / BFF / specs | Proposed |
 | [ADR-113](./architecture-decisions/ADR-113-decomposition-parity-gate.md) | A decomposition step is accepted only when the composed app passes the parity gate — the captured journeys produce the same regions, the same backend calls, the same visuals and no new errors as the monolith | Decomposition / regression | Proposed |
+| [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a local, stateless UI for the product owner over decomposition.yaml; the agent works beside them, and every change is an edit to that document | Decomposition / agreement / UI | Proposed |
 
 ### Deferred — postponed on purpose
 
