@@ -228,3 +228,29 @@ export interface SentinelValidateResult {
     text: string;
   }>;
 }
+
+// ---------------------------------------------------------------------------
+// decompose:capture
+// ---------------------------------------------------------------------------
+
+/** decompose:capture — an evidence bundle written (ADR-109). */
+export interface DecomposeCaptureResult {
+  url: string;
+  outDir: string;
+  /** Names of the journeys that ran, `explore` included. */
+  journeys: string[];
+  mode: 'live' | 'replay';
+  clock: string;
+  stats: {
+    steps: number;
+    regions: number;
+    requests: number;
+    attributedRequests: number;
+    sourceCoverage: { visibleElements: number; mappedToSource: number };
+    consoleErrors: number;
+    pageErrors: number;
+  };
+  /** Requests a replay had no recording for, as `METHOD url`. */
+  replayMisses: string[];
+  files: string[];
+}

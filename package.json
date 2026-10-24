@@ -125,6 +125,9 @@
       },
       "design": {
         "description": "Design tooling — capture a running UI and export a Figma import bundle (POC)"
+      },
+      "decompose": {
+        "description": "Monolith decomposition — capture, analyze and propose MFE boundaries from a running app (PDR-011)"
       }
     },
     "hooks": {

@@ -162,6 +162,7 @@ place, so they cannot disagree with a copy here.
 | Capability → Rust module name (shared by codegen and `mfe:validate`) | `packages/codegen/src/rust-naming.ts` |
 | Enabling a target on a manifest (`--swift`, `--rust`) | `src/targets/enable.ts` |
 | Native target explainer (one manifest, two builds) | `docs/native-targets.md` |
+| `decompose:capture` — evidence bundle: regions ↔ source, request attribution, replay (ADR-109) | `src/commands/decompose/capture.ts`; core `src/decompose/`; explainer `docs/decompose-capture.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |

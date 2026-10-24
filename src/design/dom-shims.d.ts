@@ -39,6 +39,7 @@ interface DomElementLike extends DomNodeLike {
   shadowRoot?: { childNodes: ArrayLike<DomNodeLike> } | null;
   /** `<slot>` only. */
   assignedNodes?(options?: { flatten?: boolean }): DomNodeLike[];
+  attributes?: ArrayLike<{ name: string; value: string }>;
 }
 
 interface DomRangeLike {
@@ -54,6 +55,7 @@ declare const document: {
 };
 
 declare const window: {
+  location: { pathname: string; search: string };
   innerWidth: number;
   innerHeight: number;
   scrollX: number;

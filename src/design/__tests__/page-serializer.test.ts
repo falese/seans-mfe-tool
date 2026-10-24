@@ -27,6 +27,7 @@ interface FakeElement extends FakeNode {
   className: string;
   styles: Record<string, string>;
   shadowRoot?: { childNodes: FakeNode[] } | null;
+  attributes?: Array<{ name: string; value: string }>;
   assigned?: FakeNode[];
   getBoundingClientRect(): FakeRect & { top: number; left: number };
   getAttribute(name: string): string | null;
@@ -128,5 +129,19 @@ describe('serializePage', () => {
     const run = records.find((r) => r.kind === 'text');
     expect(run?.styles).not.toHaveProperty('opacity');
     expect(records[1].styles?.opacity).toBe('0.5');
+  });
+});
+
+describe('serializePage — data attributes (#413)', () => {
+  it('keeps data-* attributes, boundary stamps included, and nothing else', () => {
+    const slot = element('div', [text('cargo')]);
+    slot.attributes = [
+      { name: 'data-layout-slot', value: 'main' },
+      { name: 'data-smt-capability', value: 'CargoManifest' },
+      { name: 'class', value: 'panel' },
+    ];
+    const records = serialize(element('body', [slot]));
+    expect(records[1].data).toEqual({ 'data-layout-slot': 'main', 'data-smt-capability': 'CargoManifest' });
+    expect(records[0].data).toBeUndefined();
   });
 });

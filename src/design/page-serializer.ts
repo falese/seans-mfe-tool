@@ -206,6 +206,10 @@ export function serializePage(): SerializedPage {
     if (tag === 'img') {
       record.src = el.currentSrc ?? el.src ?? el.getAttribute('src') ?? undefined;
     }
+    const attrs = el.attributes ? Array.from(el.attributes) : [];
+    for (const a of attrs) {
+      if (a.name.indexOf('data-') === 0) (record.data ??= {})[a.name] = a.value;
+    }
     const index = records.push(record) - 1;
 
     if (ATOMIC_TAGS.has(tag)) return;

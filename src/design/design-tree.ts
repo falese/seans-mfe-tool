@@ -30,6 +30,8 @@ export interface RawRecord {
   styles?: Record<string, string>;
   /** img only: resolved image URL. */
   src?: string;
+  /** `data-*` attributes, `data-smt-*` boundary stamps and `data-layout-slot` included. */
+  data?: Record<string, string>;
 }
 
 /** RGBA with channels normalized to 0–1 — Figma's paint shape. */
