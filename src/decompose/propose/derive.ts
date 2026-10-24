@@ -67,14 +67,14 @@ const platformCapabilities = [
   },
 ];
 
-function bffFor(domain: Domain, backends?: BackendSpecs): BffInputs | undefined {
+function bffFor(domain: Domain, backends: BackendSpecs | undefined, gateway: boolean): BffInputs | undefined {
   if (!backends) return undefined;
   const specs: Record<string, OpenApiDocument> = {};
   const mocks: Record<string, unknown> = {};
   for (const b of domain.backends) {
     const full = backends.specs[b];
     if (!full) continue;
-    const doc = restrictSpec(full, domain.endpoints, b);
+    const doc = restrictSpec(full, domain.endpoints, b, { gateway });
     specs[b] = doc;
     const recorded = backends.mocks?.[b] ?? {};
     const ids = new Set(Object.values(doc.paths).flatMap((item) => Object.values(item).map((op) => op?.operationId)));
@@ -140,7 +140,8 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
   const errors: Record<string, string[]> = {};
   const parsed: DSLManifest[] = [];
   doc.domains.forEach((domain, i) => {
-    const inputs = bffFor(domain, backends);
+    // Only an explicit `false` is one API: a document built in code may lack the field.
+    const inputs = bffFor(domain, backends, doc.app.gateway !== false);
     if (inputs) bff[domain.mfe] = inputs;
     const manifest = manifestFor(doc, domain, i, inputs);
     manifests[domain.mfe] = manifest;

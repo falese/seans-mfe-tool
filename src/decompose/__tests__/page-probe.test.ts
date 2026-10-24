@@ -3,7 +3,7 @@
  * elements carry React-shaped development fibers (`__reactFiber$…` with
  * `_debugSource` / `_debugOwner`).
  */
-import { probeElements } from '../page-probe';
+import { probeElements, routePath } from '../page-probe';
 
 interface Fiber {
   type?: unknown;
@@ -23,7 +23,7 @@ const box = { x: 0, y: 0, width: 100, height: 20 };
 function el(
   tag: string,
   children: FakeNode[] = [],
-  opts: { fiber?: Fiber; attrs?: Record<string, string>; hidden?: boolean } = {}
+  opts: { fiber?: Fiber; legacyFiber?: Fiber; attrs?: Record<string, string>; hidden?: boolean } = {}
 ): FakeNode & Record<string, unknown> {
   const node: FakeNode & Record<string, unknown> = {
     nodeType: 1,
@@ -38,15 +38,17 @@ function el(
     getAttribute: () => null,
   };
   if (opts.fiber) node.__reactFiber$x1 = opts.fiber;
+  // React 16 keeps the same fiber under another key.
+  if (opts.legacyFiber) node.__reactInternalInstance$x1 = opts.legacyFiber;
   return node;
 }
 
 const text = (value: string): FakeNode => ({ nodeType: 3, nodeValue: value, childNodes: [] });
 
-function probe(body: FakeNode) {
+function probe(body: FakeNode, location = { pathname: '/docking', search: '', hash: '' }) {
   const g = globalThis as Record<string, unknown>;
   g.document = { body };
-  g.window = { scrollX: 0, scrollY: 0, location: { pathname: '/docking', search: '' } };
+  g.window = { scrollX: 0, scrollY: 0, location };
   g.getComputedStyle = (n: { hidden: boolean }) => ({
     getPropertyValue: (p: string) => (p === 'display' && n.hidden ? 'none' : ''),
   });
@@ -121,5 +123,25 @@ describe('probeElements', () => {
   it('reports no owner without development metadata', () => {
     const { facts } = probe(el('body', [el('div', [], { fiber: { _debugOwner: null } })]));
     expect(facts[1].owner).toBeNull();
+  });
+
+  it('reads React 16 fibers too, which live under __reactInternalInstance$ (#442)', () => {
+    const owner: Fiber = { type: DockingBoard, _debugSource: { fileName: '/app/src/App.js' } };
+    const host: Fiber = { type: 'div', _debugSource: { fileName: '/app/src/DockingBoard.js' }, _debugOwner: owner };
+    const result = probe(el('body', [el('div', [text('Berths')], { legacyFiber: host })]));
+    expect(result.facts.find((f) => f.tag === 'div')?.owner).toMatchObject({ component: 'DockingBoard', file: '/app/src/DockingBoard.js' });
+  });
+
+  it('reports a hash route as the path, as the app’s router sees it (#442)', () => {
+    expect(probe(el('div'), { pathname: '/', search: '', hash: '#/article/notes' }).path).toBe('/article/notes');
+  });
+});
+
+describe('routePath', () => {
+  it('is the hash route under a hash router, and pathname + search otherwise', () => {
+    expect(routePath({ pathname: '/', search: '', hash: '#/profile/ada?tab=favorites' })).toBe('/profile/ada?tab=favorites');
+    expect(routePath({ pathname: '/docking', search: '?b=1', hash: '' })).toBe('/docking?b=1');
+    // An in-page anchor is not a route.
+    expect(routePath({ pathname: '/docs', search: '', hash: '#install' })).toBe('/docs');
   });
 });

@@ -27,6 +27,7 @@ import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { propose } from '../../decompose/propose/cluster';
+import { backendLayout, type BackendLayout } from '../../decompose/propose/backends';
 import { deriveFleet, type BackendSpecs } from '../../decompose/propose/derive';
 import { dumpYaml, readAnalysis, readDecomposition, readSpecs, readTraffic, writeFleet, writeSpecs } from '../../decompose/propose/io';
 import type { Decomposition } from '../../decompose/propose/model';
@@ -89,7 +90,14 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
       graph = analysis.graph;
       evidenceDefault = path.join(dir, '..');
       const name = SAFE(flags.name ?? analysis.project.name);
+      // One API or a gateway, judged over every concrete URL: observed and in source (#442).
+      const traffic = await readTraffic(path.resolve(flags.evidence ?? evidenceDefault));
+      const layout = backendLayout([
+        ...(traffic?.requests.map((r) => r.url) ?? []),
+        ...analysis.graph.files.flatMap((f) => f.endpoints.map((e) => e.url)),
+      ]);
       doc = propose({
+        layout,
         appName: name,
         namespace: flags.namespace ?? name,
         graph: analysis.graph,
@@ -112,7 +120,9 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
     }
     files.push(proposalFile);
 
-    const { backends, report } = await this.specs(outDir, path.resolve(flags.evidence ?? evidenceDefault), flags.spec ?? [], graph);
+    const { backends, report } = await this.specs(outDir, path.resolve(flags.evidence ?? evidenceDefault), flags.spec ?? [], graph, {
+      gateway: doc.app.gateway !== false,
+    });
     if (backends) files.push(...(await writeSpecs(outDir, backends)));
     const specs: DecomposeSpecSummary[] = [];
     for (const r of report) {
@@ -198,7 +208,8 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
     outDir: string,
     evidenceDir: string,
     specFlags: string[],
-    graph: SourceGraph | undefined
+    graph: SourceGraph | undefined,
+    layout: BackendLayout
   ): Promise<{ backends?: BackendSpecs; report: SpecReport[] }> {
     const existing = await readSpecs(outDir);
     const published: Record<string, OpenApiDocument> = {};
@@ -234,6 +245,6 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
         }
       }
     }
-    return chooseSpecs(inferSpecs({ ...traffic, code }), published);
+    return chooseSpecs(inferSpecs({ ...traffic, code, layout }), published);
   }
 }

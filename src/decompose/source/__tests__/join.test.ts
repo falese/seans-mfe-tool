@@ -92,4 +92,15 @@ describe('joinEvidence', () => {
       sourceFiles: 3,
     });
   });
+
+  it('matches a template that carries its own query string, as `/articles?${query}` does (#442)', () => {
+    const g: SourceGraph = { entries: [], routes: [], files: [node('src/agent.js', { apiClient: true, endpoints: [{ method: 'GET', url: '/api/articles?{?}' }] })] };
+    const j = joinEvidence(g, { requests: [{ id: 'a.0.r0', step: 'a.0', method: 'GET', url: '/api/articles?limit=10&offset=0', attributedTo: [] }], steps: [] });
+    expect(j.endpoints.map((e) => [e.url, e.template])).toEqual([['/api/articles', '/api/articles?{?}']]);
+    expect(j.summary.explained).toBe(1);
+    // An unresolved part of a path is not a query string.
+    const g2: SourceGraph = { entries: [], routes: [], files: [node('src/agent.js', { apiClient: true, endpoints: [{ method: 'GET', url: '/api/articles/{?}/comments' }] })] };
+    const j2 = joinEvidence(g2, { requests: [{ id: 'a.0.r0', step: 'a.0', method: 'GET', url: '/api/articles/notes/comments', attributedTo: [] }], steps: [] });
+    expect(j2.endpoints[0].template).toBe('/api/articles/{?}/comments');
+  });
 });

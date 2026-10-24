@@ -21,6 +21,15 @@ export interface ProbeResult {
   path: string;
 }
 
+/**
+ * The route a location shows: the hash route under a hash router (`#/article/x`
+ * → `/article/x`), else pathname + search. An in-page anchor is not a route.
+ * Self-contained, so it also ships into the page via `toString()`.
+ */
+export function routePath(loc: { pathname: string; search: string; hash: string }): string {
+  return loc.hash.startsWith('#/') ? loc.hash.slice(1) : loc.pathname + loc.search;
+}
+
 export function probeElements(): ProbeResult {
   const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'META', 'HEAD', 'TITLE']);
   const LANDMARK_TAGS = new Set(['main', 'nav', 'aside', 'header', 'footer']);
@@ -38,7 +47,8 @@ export function probeElements(): ProbeResult {
   function fiberOf(el: DomElementLike): Fiber | undefined {
     const bag = el as unknown as Record<string, unknown>;
     for (const key of Object.keys(bag)) {
-      if (key.startsWith('__reactFiber$')) return bag[key] as Fiber;
+      // React 17+ and React 16 name the same fiber differently.
+      if (key.startsWith('__reactFiber$') || key.startsWith('__reactInternalInstance$')) return bag[key] as Fiber;
     }
     return undefined;
   }
@@ -131,5 +141,7 @@ export function probeElements(): ProbeResult {
   }
 
   visit(document.body, -1);
-  return { facts, path: window.location.pathname + window.location.search };
+  const loc = window.location;
+  // routePath(), inlined: this function runs in the page and cannot import.
+  return { facts, path: loc.hash.startsWith('#/') ? loc.hash.slice(1) : loc.pathname + loc.search };
 }

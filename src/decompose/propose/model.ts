@@ -44,6 +44,11 @@ export const DecompositionSchema = z.object({
     name: z.string().min(1),
     /** The control-plane namespace the derived composition owns (ADR-083). */
     namespace: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]*$/),
+    /**
+     * How the app's API URLs name backends: `/api/<backend>/<resource>` (a
+     * gateway) or `/api/<resource>` (one API). Judged by `backendLayout`.
+     */
+    gateway: z.boolean().default(true),
   }),
   domains: z.array(DomainSchema).min(1),
   /** Files several domains use; each needs splitting, duplicating or replacing, not an owner. */

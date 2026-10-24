@@ -21,6 +21,7 @@ import type { Endpoint, FileNode, SourceGraph } from '../source/graph';
 import type { History } from '../source/history';
 import type { Join } from '../source/join';
 import type { TestInventory } from '../source/tests';
+import { backendOf, type BackendLayout } from './backends';
 import type { Decomposition, Domain } from './model';
 import { triageTests } from './triage';
 
@@ -31,31 +32,29 @@ export interface ProposeInput {
   tests?: TestInventory;
   history?: History;
   join?: Join;
+  /** One API or a gateway (`backendLayout`); a gateway when not given. */
+  layout?: BackendLayout;
 }
 
 const SHELL_ID = 'shell';
 const ep = (e: Endpoint) => `${e.method} ${e.url}`;
 
+/** A route path's literal part as an id: `/article/:id` → `article`, `/` → `home`; '' when it has none (`/@:username`). */
 export function slug(path: string): string {
   const s = path
     .split('/')
-    .filter((p) => p && !p.startsWith(':') && p !== '*')
+    .filter((p) => p && !p.includes(':') && p !== '*')
     .join('-')
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-');
-  return s || 'home';
+  return s || (path.replace(/\/+$/, '') === '' ? 'home' : '');
 }
 
 export function kebab(name: string): string {
   return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-/** The backend a URL addresses: the first path segment after an `api` prefix. */
-export function backendOf(url: string): string {
-  const parts = url.replace(/^https?:\/\/[^/]+/, '').split('/').filter(Boolean);
-  const first = parts[0] === 'api' ? parts[1] : parts[0];
-  return (first ?? 'unknown').replace(/\{.*$/, '') || 'unknown';
-}
+export { backendOf };
 
 /** Data a file uses: what it calls itself, plus what it reads from a store. */
 function dataOf(f: FileNode): Set<string> {
@@ -75,12 +74,31 @@ export function propose(input: ProposeInput): Decomposition {
   // ---- 1. seeds -------------------------------------------------------------------
   const routeFiles = new Set<string>();
   for (const r of graph.routes) for (const e of r.elements) if (e.file) routeFiles.add(e.file);
+  // The primary area: the page in <main>, else a route's only page unless it renders into a side
+  // landmark (a <div> around the <Switch> is no sidebar — #442).
+  const SIDE = new Set(['aside', 'nav', 'header', 'footer']);
+  const primaryOf = (r: SourceGraph['routes'][number]) =>
+    r.elements.find((e) => e.container === 'main') ??
+    (r.elements.length === 1 && !SIDE.has(r.elements[0].container ?? '') ? r.elements[0] : undefined);
+  // One domain per route family (routes under one first segment, as the graph assigns files):
+  // named for that segment, else for the page of its shortest route — `/@:username` → `profile` (#442).
+  const familyOf = (p: string) => p.split('/').filter(Boolean)[0] ?? '';
+  const familyIds = new Map<string, string>();
+  for (const r of [...graph.routes].sort((a, b) => a.path.length - b.path.length || a.path.localeCompare(b.path))) {
+    const k = familyOf(r.path);
+    if (familyIds.has(k)) continue;
+    const primary = primaryOf(r);
+    const id = slug(`/${k}`) || (primary ? kebab(primary.component) : '');
+    if (id) familyIds.set(k, id);
+  }
+  const idOf = (p: string) => familyIds.get(familyOf(p)) ?? (slug(p) || 'screen');
+
   const seeds = new Map<string, string>(); // route path → domain id
   for (const r of graph.routes) {
-    const primary = r.elements.find((e) => e.container === 'main') ?? (r.elements.length === 1 && !r.elements[0].container ? r.elements[0] : undefined);
+    const primary = primaryOf(r);
     if (!primary?.file) continue;
-    seeds.set(r.path, slug(r.path));
-    note(slug(r.path), `route ${r.path} places ${primary.component} in the primary area`);
+    seeds.set(r.path, idOf(r.path));
+    note(idOf(r.path), `route ${r.path} places ${primary.component} in the primary area`);
   }
   for (const f of graph.files) {
     const a = f.assignment;
@@ -121,8 +139,8 @@ export function propose(input: ProposeInput): Decomposition {
     }
     if (a.category === 'screen' && !seeds.has(a.screens[0])) {
       // A route with no primary area and no data home: a domain of its own.
-      owner.set(f.file, slug(a.screens[0]));
-      note(slug(a.screens[0]), `route ${a.screens[0]} has no primary area; ${f.file} has no data home elsewhere`);
+      owner.set(f.file, idOf(a.screens[0]));
+      note(idOf(a.screens[0]), `route ${a.screens[0]} has no primary area; ${f.file} has no data home elsewhere`);
       continue;
     }
     owner.set(f.file, SHELL_ID);
@@ -153,7 +171,15 @@ export function propose(input: ProposeInput): Decomposition {
   const shellFiles = new Set([...owner].filter(([, d]) => d === SHELL_ID).map(([f]) => f));
   const slotsUsed = new Map<string, boolean>();
   const routes: Decomposition['routes'] = [];
-  const stateKey = (path: string) => (path === '/' ? `${input.namespace}.root` : `${input.namespace}.open.${slug(path)}`);
+  // Parameters keep their name, so `/editor` and `/editor/:slug` get different keys (#442).
+  const stateKey = (path: string) => {
+    const parts = path
+      .split('/')
+      .filter((p) => p && p !== '*')
+      .map((p) => p.replace(/^@?:/, '').toLowerCase().replace(/[^a-z0-9-]/g, '-'))
+      .filter(Boolean);
+    return parts.length === 0 ? `${input.namespace}.root` : `${input.namespace}.open.${parts.join('.')}`;
+  };
   for (const r of graph.routes) {
     const place = r.elements
       .filter((e) => e.file && domainOf(e.file))
@@ -198,7 +224,7 @@ export function propose(input: ProposeInput): Decomposition {
       shell: id === SHELL_ID,
       files,
       capabilities,
-      backends: [...new Set(sortedEndpoints.map((x) => backendOf(x.split(' ')[1])))].sort(),
+      backends: [...new Set(sortedEndpoints.map((x) => backendOf(x.split(' ')[1], input.layout)))].sort(),
       endpoints: sortedEndpoints,
       evidence: evidenceFor(id, files, input, owner, endpointOwner),
       reasons: reasons.get(id) ?? [],
@@ -252,7 +278,7 @@ export function propose(input: ProposeInput): Decomposition {
 
   return {
     version: 1,
-    app: { name: input.appName, namespace: input.namespace },
+    app: { name: input.appName, namespace: input.namespace, gateway: input.layout?.gateway ?? true },
     domains,
     shared,
     unassigned: graph.files.filter((f) => f.assignment.category === 'unreached').map((f) => f.file),

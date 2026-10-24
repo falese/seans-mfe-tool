@@ -76,9 +76,14 @@ export interface FileFacts {
 }
 
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
+/** superagent spells DELETE `del`. */
+const VERB_ALIASES: Record<string, string> = { del: 'delete' };
+/** Packages whose default import is an HTTP client called as `client.get(url)`. */
+const HTTP_LIBS = new Set(['axios', 'superagent']);
 
 export function parseFile(ts: typeof TS, file: string, text: string): FileFacts {
-  const kind = /\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.jsx$/.test(file) ? ts.ScriptKind.JSX : ts.ScriptKind.TS;
+  // A `.js` file may hold JSX (the Create React App convention), so it parses as JSX.
+  const kind = /\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.jsx?$/.test(file) ? ts.ScriptKind.JSX : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
   const lineOf = (node: TS.Node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
 
@@ -108,6 +113,26 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
   const hasDefault = (node: TS.Node) =>
     ts.canHaveModifiers(node) && (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
 
+  // Capitalised names declared at the top level: the components a wrapper may wrap.
+  const declared = new Set<string>();
+  for (const stmt of sf.statements) {
+    if ((ts.isFunctionDeclaration(stmt) || ts.isClassDeclaration(stmt)) && stmt.name) declared.add(stmt.name.text);
+    if (ts.isVariableStatement(stmt)) for (const d of stmt.declarationList.declarations) if (ts.isIdentifier(d.name)) declared.add(d.name.text);
+  }
+  /**
+   * The component a higher-order wrapper exports: `connect(mapState)(Article)`,
+   * `withRouter(connect(...)(X))`, `React.memo(X)` → the local component inside (#442).
+   */
+  const wrappedComponent = (e: TS.Expression): string | null => {
+    if (ts.isIdentifier(e)) return /^[A-Z]/.test(e.text) && declared.has(e.text) ? e.text : null;
+    if (!ts.isCallExpression(e)) return null;
+    for (const a of e.arguments) {
+      const hit = wrappedComponent(a);
+      if (hit) return hit;
+    }
+    return ts.isCallExpression(e.expression) ? wrappedComponent(e.expression) : null;
+  };
+
   // ---- pass 1: module structure -------------------------------------------
   for (const stmt of sf.statements) {
     if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
@@ -124,6 +149,7 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
       }
       facts.imports.push({ spec, names, typeOnly: !!clause?.isTypeOnly });
       if (spec === 'axios' && clause?.name) axiosName = clause.name.text;
+      if (HTTP_LIBS.has(spec) && clause?.name) httpClients.add(clause.name.text);
     } else if (ts.isExportDeclaration(stmt)) {
       if (stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
         const spec = stmt.moduleSpecifier.text;
@@ -141,7 +167,14 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
         for (const el of stmt.exportClause.elements) facts.exports[el.name.text] = (el.propertyName ?? el.name).text;
       }
     } else if (ts.isExportAssignment(stmt) && !stmt.isExportEquals) {
-      facts.exports.default = ts.isIdentifier(stmt.expression) ? stmt.expression.text : '<expression>';
+      facts.exports.default = ts.isIdentifier(stmt.expression) ? stmt.expression.text : (wrappedComponent(stmt.expression) ?? '<expression>');
+      // `export default { Articles, Tags: X }`: callers reach `agent.Articles.all` through it.
+      if (ts.isObjectLiteralExpression(stmt.expression)) {
+        for (const prop of stmt.expression.properties) {
+          if (ts.isShorthandPropertyAssignment(prop)) facts.exports[`default.${prop.name.text}`] = prop.name.text;
+          else if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.initializer)) facts.exports[`default.${prop.name.getText(sf)}`] = prop.initializer.text;
+        }
+      }
     } else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
       if (hasExport(stmt)) facts.exports[hasDefault(stmt) ? 'default' : stmt.name.text] = stmt.name.text;
     } else if (ts.isClassDeclaration(stmt) && stmt.name && hasExport(stmt)) {
@@ -155,16 +188,16 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
     }
   }
   for (const [name, init] of consts) {
+    if (!ts.isCallExpression(init)) continue;
     // `const http = axios.create(...)`: an axios instance.
-    if (
-      ts.isCallExpression(init) &&
+    const created =
       ts.isPropertyAccessExpression(init.expression) &&
       ts.isIdentifier(init.expression.expression) &&
-      init.expression.expression.text === axiosName &&
-      init.expression.name.text === 'create'
-    ) {
-      httpClients.add(name);
-    }
+      httpClients.has(init.expression.expression.text) &&
+      init.expression.name.text === 'create';
+    // `const superagent = superagentPromise(_superagent, Promise)`: a client wrapped by a call.
+    const wrapped = init.arguments.some((a) => ts.isIdentifier(a) && httpClients.has(a.text));
+    if (created || wrapped) httpClients.add(name);
   }
 
   // ---- folding ---------------------------------------------------------------
@@ -217,7 +250,7 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
     }
     if (ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)) {
       const target = callee.expression.text;
-      const verb = callee.name.text;
+      const verb = VERB_ALIASES[callee.name.text] ?? callee.name.text;
       if ((target === axiosName || httpClients.has(target)) && HTTP_METHODS.has(verb)) {
         return { method: verb.toUpperCase(), url: fold(call.arguments[0], params) ?? '{?}', line: lineOf(call) };
       }
@@ -238,6 +271,8 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
   };
 
   const units: Array<{ name: string; params: string[]; body: TS.Node }> = [];
+  const isMethodLike = (p: TS.ObjectLiteralElementLike) =>
+    ts.isMethodDeclaration(p) || (ts.isPropertyAssignment(p) && (ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer)));
   const moduleLevel: TS.Node[] = [];
   for (const stmt of sf.statements) {
     if (ts.isFunctionDeclaration(stmt) && stmt.name && stmt.body) {
@@ -258,6 +293,17 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
         const init = decl.initializer;
         if (ts.isIdentifier(decl.name) && init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) {
           units.push({ name: decl.name.text, params: init.parameters.map((p) => p.name.getText(sf)), body: init.body });
+        } else if (ts.isIdentifier(decl.name) && init && ts.isObjectLiteralExpression(init) && init.properties.some(isMethodLike)) {
+          // `const Auth = { login: (e, p) => requests.post(...) }`: each method is a function `Auth.login`.
+          for (const prop of init.properties) {
+            const fnNode = ts.isMethodDeclaration(prop)
+              ? prop
+              : ts.isPropertyAssignment(prop) && (ts.isArrowFunction(prop.initializer) || ts.isFunctionExpression(prop.initializer))
+                ? prop.initializer
+                : null;
+            if (!fnNode || !fnNode.body) continue;
+            units.push({ name: `${decl.name.text}.${prop.name?.getText(sf)}`, params: fnNode.parameters.map((p) => p.name.getText(sf)), body: fnNode.body });
+          }
         } else {
           moduleLevel.push(stmt);
         }
@@ -271,14 +317,18 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
     if (/^[A-Z]/.test(unit.name) && returnsJsx(unit.body)) facts.components.push(unit.name);
   }
 
+  /** `a.b` or `a.b.c`, identifiers only (not `this.props.x`, which is no import). */
+  const dotted = (e: TS.Expression): boolean =>
+    ts.isPropertyAccessExpression(e) && (ts.isIdentifier(e.expression) ? e.expression.text !== 'this' : dotted(e.expression));
   const scan = (name: string, params: Set<string>, nodes: TS.Node[]): FunctionFact => {
     const fn: FunctionFact = { name, params: [...params], calls: [], http: [] };
     const visit = (n: TS.Node): void => {
       if (ts.isCallExpression(n)) {
         const http = httpCallOf(n, params);
         if (http) fn.http.push(http);
-        else if (ts.isIdentifier(n.expression)) {
-          fn.calls.push({ callee: n.expression.text, args: n.arguments.map((a) => fold(a, params)) });
+        else if (ts.isIdentifier(n.expression) || dotted(n.expression)) {
+          // `hm(path)`, and through objects: `requests.get(url)`, `agent.Articles.all()`.
+          fn.calls.push({ callee: n.expression.getText(sf), args: n.arguments.map((a) => fold(a, params)) });
         }
       }
       // const [a, b] = await Promise.all([fa(), fb()]) / const a = await fa()
@@ -358,7 +408,10 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
   };
   const visitRoutes = (n: TS.Node): void => {
     const opening = ts.isJsxSelfClosingElement(n) ? n : ts.isJsxElement(n) ? n.openingElement : null;
-    if (opening && tagName(opening) === 'Route') {
+    // `<Route>`, and wrappers named for it (`<GuestOnlyRoute path=…>`, `<PrivateRoute>`).
+    const isRoute = (o: TS.JsxOpeningLikeElement) =>
+      tagName(o) === 'Route' || (/Route$/.test(tagName(o)) && o.attributes.properties.some((a) => ts.isJsxAttribute(a) && a.name.getText(sf) === 'path'));
+    if (opening && isRoute(opening)) {
       let routePath: string | null = null;
       let element: string | null = null;
       for (const attr of opening.attributes.properties) {
@@ -370,6 +423,16 @@ export function parseFile(ts: typeof TS, file: string, text: string): FileFacts 
         if ((name === 'element' || name === 'component' || name === 'Component') && init && ts.isJsxExpression(init)) {
           const e = init.expression;
           element = e && ts.isIdentifier(e) ? e.text : componentOfJsx(e);
+        }
+      }
+      // React Router 5: the component is a child, `<Route path="/x"><X /></Route>`.
+      if (element === null && ts.isJsxElement(n)) {
+        for (const child of n.children) {
+          const c = ts.isJsxElement(child) || ts.isJsxSelfClosingElement(child) ? componentOfJsx(child) : null;
+          if (c && /^[A-Z]/.test(c)) {
+            element = c;
+            break;
+          }
         }
       }
       facts.routes.push({ path: routePath, element, container: containerOf(n), line: lineOf(n) });

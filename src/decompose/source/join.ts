@@ -83,7 +83,10 @@ export function joinEvidence(graph: SourceGraph, evidence: Evidence): Join {
     for (const ep of f.endpoints) (f.apiClient ? slot(ep).clients : slot(ep).callers).add(f.file);
     for (const read of f.storeReads) for (const ep of read.endpoints) slot(ep).storeReaders.add(f.file);
   }
-  const compiled = [...templates.values()].map((t) => ({ ...t, re: templateRegExp(t.ep.url) }));
+  // Observed URLs are compared without their query, so templates are too: `/articles?{?}` → `/articles`
+  // (#442). An unresolved part (`{?}`) is not a query.
+  const templatePath = (url: string) => pathOf(url.replace(/\{\?\}/g, '⟨unresolved⟩')).replace(/⟨unresolved⟩/g, '{?}');
+  const compiled = [...templates.values()].map((t) => ({ ...t, re: templateRegExp(templatePath(t.ep.url)) }));
 
   // Observed endpoints, by method and path.
   const observed = new Map<string, { method: string; url: string; count: number }>();

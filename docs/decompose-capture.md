@@ -21,9 +21,13 @@ For every journey step:
 - **Regions:** each rendered instance of an app component, with its source file, the landmark
   it sits in (`main`, `nav`, `aside`, or a `data-layout-slot`), its rectangle, and the text it
   draws itself. Library components are attributed to the app component that used them, so a
-  router `<Link>` belongs to the `Sidebar` that rendered it.
+  router `<Link>` belongs to the `Sidebar` that rendered it. React 16's fibers are read as well
+  as React 17+'s.
 - **Requests:** every XHR and fetch, with the app source files on its call stack and the
-  regions it feeds.
+  regions it feeds. The dev server's own traffic (its live-reload socket, hot updates) is left
+  out, and passes through untouched on replay.
+- **The path:** the route the app shows. Under a hash router that is the hash route
+  (`#/article/x` → `/article/x`).
 - **Navigations, console errors and warnings, page errors:** the baseline the parity gate
   compares against (ADR-113).
 - **A screenshot.**
@@ -75,7 +79,9 @@ journeys:
 
 Each journey runs in a fresh browser context. `--explore N` adds an `explore` journey that
 follows in-app links breadth-first for up to `N` steps. It never presses buttons or submits
-forms, so it cannot change the app's data.
+forms, so it cannot change the app's data. A queued link that an earlier click navigated away
+from is reached by its `href` instead, and the replayable journey records that `goto`. A written
+journey's step that cannot be performed still fails the capture.
 
 ## Replay and determinism
 

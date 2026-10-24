@@ -14,9 +14,9 @@
 import { launchBrowser, type ChromiumLike } from '../design/dom-capture';
 import { ValidationError } from '@seans-mfe/contracts';
 import { initiatorFiles, type CdpStackTrace } from './attribution';
-import { relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
+import { isDevServerRequest, relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
 import type { Journey, JourneyStep } from './journeys';
-import { probeElements, type ProbeResult } from './page-probe';
+import { probeElements, routePath, type ProbeResult } from './page-probe';
 import { assembleRegions, normalizeSourcePath } from './regions';
 
 export interface CaptureOptions {
@@ -75,6 +75,8 @@ interface BrowserWithContexts {
 
 const API_TYPES = new Set(['XHR', 'Fetch']);
 const STEP_TIMEOUT = 15_000;
+/** An explored link is on the page or it is not; no need to wait long for it. */
+const EXPLORE_TIMEOUT = 2_000;
 
 async function importChromium(): Promise<ChromiumLike> {
   try {
@@ -101,20 +103,20 @@ function parseBody(text: string, mimeType: string): unknown {
 }
 
 /** A link-following journey: the app's in-page links, breadth-first, one click each. */
-async function exploreSteps(page: PageLike, budget: number, visited: Set<string>): Promise<JourneyStep[]> {
+async function exploreSteps(page: PageLike, budget: number, visited: Set<string>): Promise<Array<{ step: JourneyStep; href: string }>> {
   const links = await page.evaluate<Array<{ href: string; path: string }>>(
     `Array.from(document.querySelectorAll('a[href]'))
       .filter((a) => { const r = a.getBoundingClientRect(); return r.width > 0 && r.height > 0; })
       .map((a) => ({ href: a.getAttribute('href'), path: new URL(a.href, location.href) }))
       .filter((l) => l.path.origin === location.origin)
-      .map((l) => ({ href: l.href, path: l.path.pathname + l.path.search }))`
+      .map((l) => ({ href: l.href, path: (${routePath.toString()})(l.path) }))`
   );
-  const steps: JourneyStep[] = [];
+  const steps: Array<{ step: JourneyStep; href: string }> = [];
   for (const link of links) {
     if (steps.length >= budget) break;
     if (visited.has(link.path)) continue;
     visited.add(link.path);
-    steps.push({ click: `a[href=${JSON.stringify(link.href)}] >> nth=0` });
+    steps.push({ step: { click: `a[href=${JSON.stringify(link.href)}] >> nth=0` }, href: link.href });
   }
   return steps;
 }
@@ -172,16 +174,18 @@ async function runJourney(
         ],
       });
       cdp.on('Fetch.requestPaused', (e: { requestId: string; request: { method: string; url: string } }) => {
-        const key = responseKey(e.request.method, relativeUrl(e.request.url, options.url));
-        const hit = recorded[key];
-        if (!hit) replayMisses.add(key);
-        const body = hit ? (typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body)) : '{"error":"not recorded"}';
+        const answer = replayAnswer(e.request.method, e.request.url, options.url, recorded);
+        if (answer.kind === 'continue') {
+          void cdp.send('Fetch.continueRequest', { requestId: e.requestId }).catch(() => undefined);
+          return;
+        }
+        if (answer.miss) replayMisses.add(responseKey(e.request.method, relativeUrl(e.request.url, options.url)));
         void cdp
           .send('Fetch.fulfillRequest', {
             requestId: e.requestId,
-            responseCode: hit ? hit.status : 404,
-            responseHeaders: [{ name: 'Content-Type', value: hit ? hit.mimeType : 'application/json' }],
-            body: Buffer.from(body, 'utf8').toString('base64'),
+            responseCode: answer.status,
+            responseHeaders: [{ name: 'Content-Type', value: answer.mimeType }],
+            body: Buffer.from(answer.body, 'utf8').toString('base64'),
           })
           .catch(() => undefined);
       });
@@ -276,10 +280,13 @@ async function runJourney(
     const ran: JourneyStep[] = [];
     const visited = new Set<string>();
     const queue = [...journey.steps];
+    // Explored link steps → the link's href, to reach it by when the link is gone.
+    const explored = new Map<JourneyStep, string>();
     while (queue.length > 0) {
-      const step = queue.shift() as JourneyStep;
+      const queued = queue.shift() as JourneyStep;
       current = steps.length;
-      await perform(page, step, options.url);
+      const step = await performStep(page, queued, options.url, { optional: explored.has(queued), fallbackHref: explored.get(queued) });
+      if (!step) continue;
       await settle();
 
       const probe = await page.evaluate<ProbeResult>(`(${probeElements.toString()})()`);
@@ -301,7 +308,11 @@ async function runJourney(
       if (explore) {
         visited.add(probe.path);
         const budget = options.explore - ran.length - queue.length;
-        if (budget > 0) queue.push(...(await exploreSteps(page, budget, visited)));
+        if (budget > 0) {
+          const found = await exploreSteps(page, budget, visited);
+          for (const f of found) explored.set(f.step, f.href);
+          queue.push(...found.map((f) => f.step));
+        }
       }
     }
 
@@ -311,17 +322,52 @@ async function runJourney(
   }
 }
 
-async function perform(page: PageLike, step: JourneyStep, appUrl: string): Promise<void> {
-  const timeout = STEP_TIMEOUT;
-  if ('goto' in step) {
-    await page.goto(new URL(step.goto, appUrl).href, { waitUntil: 'load', timeout: 60_000 });
-  } else if ('click' in step) {
-    await page.click(step.click, { timeout });
-  } else if ('fill' in step) {
-    await page.fill(step.fill.selector, step.fill.value, { timeout });
-  } else if ('press' in step) {
-    await page.press(step.press.selector, step.press.key, { timeout });
-  } else {
-    await page.waitForTimeout(step.wait);
+export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: number; mimeType: string; body: string; miss: boolean };
+
+/**
+ * How a replay answers one intercepted call: from the recording, or 404 for
+ * a call never recorded (reported as a miss). The dev server's own traffic is
+ * never recorded (#442), so it goes through to the server instead of failing.
+ */
+export function replayAnswer(method: string, url: string, appUrl: string, recorded: Record<string, RecordedResponse>): ReplayAnswer {
+  if (isDevServerRequest(url)) return { kind: 'continue' };
+  const hit = recorded[responseKey(method, relativeUrl(url, appUrl))];
+  if (!hit) return { kind: 'fulfill', status: 404, mimeType: 'application/json', body: '{"error":"not recorded"}', miss: true };
+  return { kind: 'fulfill', status: hit.status, mimeType: hit.mimeType, body: typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body), miss: false };
+}
+
+/**
+ * Perform one step and return the step actually performed, or null when an
+ * optional one could not be. A written journey is a contract, so a step that
+ * cannot be performed fails the capture. An explored link is best-effort:
+ * exploration queues the links on the page it is looking at, and an earlier
+ * click may have navigated away. A link that is gone is reached by its href
+ * instead (`fallbackHref`) — the `goto` is what enters the replayable journey —
+ * or skipped, rather than aborting the capture (#442).
+ */
+export async function performStep(
+  page: Pick<PageLike, 'goto' | 'click' | 'fill' | 'press' | 'waitForTimeout'>,
+  step: JourneyStep,
+  appUrl: string,
+  opts: { optional: boolean; fallbackHref?: string }
+): Promise<JourneyStep | null> {
+  const timeout = opts.optional ? EXPLORE_TIMEOUT : STEP_TIMEOUT;
+  try {
+    if ('goto' in step) {
+      await page.goto(new URL(step.goto, appUrl).href, { waitUntil: 'load', timeout: 60_000 });
+    } else if ('click' in step) {
+      await page.click(step.click, { timeout });
+    } else if ('fill' in step) {
+      await page.fill(step.fill.selector, step.fill.value, { timeout });
+    } else if ('press' in step) {
+      await page.press(step.press.selector, step.press.key, { timeout });
+    } else {
+      await page.waitForTimeout(step.wait);
+    }
+    return step;
+  } catch (err) {
+    if (!opts.optional) throw err;
+    if (opts.fallbackHref === undefined) return null;
+    return performStep(page, { goto: opts.fallbackHref }, appUrl, { optional: true });
   }
 }

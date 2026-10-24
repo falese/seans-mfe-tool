@@ -144,4 +144,87 @@ describe('parseFile', () => {
       { component: 'BerthTile', repeated: true },
     ]);
   });
+
+  // ---- patterns from the RealWorld corpus (#442) ---------------------------------
+
+  it('parses JSX in a .js file, and reads React Router 4 component routes', () => {
+    const facts = parse(
+      'src/components/App.js',
+      `export default function App() {
+         return (<div><Switch>
+           <Route exact path="/" component={Home}/>
+           <Route path="/login" component={Login} />
+         </Switch></div>);
+       }`
+    );
+    expect(facts.components).toEqual(['App']);
+    expect(facts.routes.map((r) => [r.path, r.element])).toEqual([
+      ['/', 'Home'],
+      ['/login', 'Login'],
+    ]);
+  });
+
+  it('reads routes whose component is a child, through route wrappers (React Router 5)', () => {
+    const facts = parse(
+      'src/components/App/App.tsx',
+      `export function App() {
+         return (<HashRouter><Switch>
+           <GuestOnlyRoute exact path='/login' userIsLogged={userIsLogged}><Login /></GuestOnlyRoute>
+           <Route path='/article/:slug'><ArticlePage /></Route>
+           <Route exact path='/'><Home /></Route>
+         </Switch></HashRouter>);
+       }`
+    );
+    expect(facts.routes.map((r) => [r.path, r.element])).toEqual([
+      ['/login', 'Login'],
+      ['/article/:slug', 'ArticlePage'],
+      ['/', 'Home'],
+    ]);
+  });
+
+  it('follows a superagent client through object-literal API methods and a default-exported object', () => {
+    const facts = parse(
+      'src/agent.js',
+      `import superagentPromise from 'superagent-promise';
+       import _superagent from 'superagent';
+       const superagent = superagentPromise(_superagent, global.Promise);
+       const API_ROOT = '/api';
+       const requests = {
+         get: url => superagent.get(\`\${API_ROOT}\${url}\`).then(res => res.body),
+         del: url => superagent.del(\`\${API_ROOT}\${url}\`),
+       };
+       const Articles = {
+         all: page => requests.get(\`/articles?\${limit(10, page)}\`),
+         del: slug => requests.del(\`/articles/\${slug}\`),
+       };
+       export default { Articles, Tags: Articles };`
+    );
+    const fn = (name: string) => facts.functions.find((f) => f.name === name);
+    expect(fn('requests.get')?.http).toEqual([{ method: 'GET', url: '/api{url}', line: 6 }]);
+    expect(fn('requests.del')?.http).toEqual([{ method: 'DELETE', url: '/api{url}', line: 7 }]);
+    expect(fn('Articles.all')?.calls).toContainEqual({ callee: 'requests.get', args: ['/articles?{?}'] });
+    expect(fn('Articles.del')?.params).toEqual(['slug']);
+    expect(facts.exports).toMatchObject({ 'default.Articles': 'Articles', 'default.Tags': 'Articles' });
+  });
+
+  it('records calls made through an object, as a component calls agent.Articles.all()', () => {
+    const facts = parse(
+      'src/components/Home/index.js',
+      `import agent from '../../agent';
+       class Home extends React.Component {
+         componentWillMount() { this.props.onLoad(agent.Articles.all()); }
+         render() { return <div />; }
+       }
+       export default Home;`
+    );
+    expect(facts.functions.find((f) => f.name === 'Home.componentWillMount')?.calls).toContainEqual({ callee: 'agent.Articles.all', args: [] });
+  });
+
+  it('sees through a higher-order component in the default export: connect(...)(Article), withRouter(X) (#442)', () => {
+    const hoc = (exp: string) => parse('src/components/Article/index.js', `class Article extends React.Component { render() { return <div />; } }\n${exp}`).exports.default;
+    expect(hoc('export default connect(mapStateToProps, mapDispatchToProps)(Article);')).toBe('Article');
+    expect(hoc('export default withRouter(connect(null, mapDispatch)(Article));')).toBe('Article');
+    expect(hoc('export default React.memo(Article);')).toBe('Article');
+    expect(hoc('export default compose(a, b);')).toBe('<expression>');
+  });
 });

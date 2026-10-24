@@ -131,11 +131,42 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
     return null;
   };
 
-  /** What a name used in `file` refers to: a local function, or an import. */
-  const resolveName = (file: string, name: string): SymbolRef | null => {
+  /**
+   * `default.Articles.all` in `file`: a local function of that name, or the
+   * longest exported prefix (`default.Articles` → `Articles`) followed into
+   * the local name it stands for (`Articles.all`), itself possibly imported.
+   */
+  const resolveDotted = (file: string, dottedName: string, depth = 0): SymbolRef | null => {
+    const facts = byFile.get(file);
+    if (!facts || depth > 8) return null;
+    if (facts.functions.some((f) => f.name === dottedName)) return { file, name: dottedName };
+    const parts = dottedName.split('.');
+    for (let i = parts.length - 1; i >= 1; i -= 1) {
+      const local = facts.exports[parts.slice(0, i).join('.')];
+      if (local === undefined) continue;
+      const name = [local, ...parts.slice(i)].join('.');
+      if (facts.functions.some((f) => f.name === name)) return { file, name };
+      return resolveName(file, name, depth + 1);
+    }
+    return null;
+  };
+
+  /** What a name used in `file` refers to: a local function, or an import — `agent.Articles.all` included (#442). */
+  const resolveName = (file: string, name: string, depth = 0): SymbolRef | null => {
     const facts = byFile.get(file);
     if (facts?.functions.some((f) => f.name === name)) return { file, name };
-    return resolveLocal(file, name);
+    if (!name.includes('.')) return resolveLocal(file, name);
+    if (!facts || depth > 8) return null;
+    const [head, ...rest] = name.split('.');
+    for (const imp of facts.imports) {
+      const binding = imp.names.find((n) => n.local === head);
+      if (!binding) continue;
+      const target = resolveModule(file, imp.spec, fileSet);
+      if (!target) return null;
+      const inTarget = binding.imported === '*' ? rest.join('.') : [binding.imported, ...rest].join('.');
+      return resolveDotted(target, inTarget, depth + 1);
+    }
+    return null;
   };
 
   // ---- endpoints: follow URLs through wrapper functions ------------------------
@@ -215,6 +246,9 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
       routeMap.set(r.path, route);
       if (!r.element) continue;
       const target = resolveName(f.file, r.element);
+      // A route to the component that declares the routes (`<Route path="/" component={App}/>`
+      // around the app) is the router's frame, not a screen: it stays in the shell (#442).
+      if (target && (byFile.get(target.file)?.routes.length ?? 0) > 0) continue;
       route.elements.push({ component: target?.name ?? r.element, file: target?.file ?? null, container: r.container });
     }
   }
@@ -224,20 +258,34 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
   const roots = new Map<string, Set<string>>(); // root label → files
   const rootFiles = new Set<string>();
   for (const r of routes) for (const e of r.elements) if (e.file) rootFiles.add(e.file);
-  const reach = (start: string[], stopAt: Set<string>): Set<string> => {
+  // Registries: files that import two or more files, each imported directly by one page and no
+  // other (a store combining every page's slice). Importing the store is not using every slice,
+  // so a screen reaches a registry but not through it (#442).
+  const directRoots = new Map<string, Set<string>>();
+  for (const root of rootFiles) {
+    for (const t of importsOf.get(root) ?? []) if (!rootFiles.has(t)) directRoots.set(t, (directRoots.get(t) ?? new Set()).add(root));
+  }
+  const registries = new Set<string>();
+  for (const [file, imports] of importsOf) {
+    if (rootFiles.has(file)) continue;
+    const owners = new Set(imports.map((t) => directRoots.get(t)).filter((o): o is Set<string> => o?.size === 1).map((o) => [...o][0]));
+    if (owners.size >= 2) registries.add(file);
+  }
+  const reach = (start: string[], stopAt: Set<string>, noExpand: Set<string> = new Set()): Set<string> => {
     const seen = new Set<string>();
     const stack = [...start];
     while (stack.length > 0) {
       const f = stack.pop() as string;
       if (seen.has(f)) continue;
       seen.add(f);
+      if (noExpand.has(f)) continue;
       for (const next of importsOf.get(f) ?? []) if (!stopAt.has(next)) stack.push(next);
     }
     return seen;
   };
   for (const r of routes) {
     const files = r.elements.map((e) => e.file).filter((f): f is string => !!f);
-    if (files.length > 0) roots.set(r.path, reach(files, new Set()));
+    if (files.length > 0) roots.set(r.path, reach(files, new Set(), registries));
   }
   const shell = reach(entries, rootFiles);
 
@@ -246,9 +294,23 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
     shell: shell.has(file),
   });
 
+  const importersOf = new Map<string, string[]>();
+  for (const [from, tos] of importsOf) for (const to of tos) importersOf.set(to, [...(importersOf.get(to) ?? []), from]);
+
+  // Routes under one first segment are one screen family: `/editor` and `/editor/:slug`, a profile
+  // and its favorites tab. A file only they reach belongs to the family's first route (#442).
+  const familyOf = (p: string) => p.split('/').filter(Boolean)[0] ?? '';
+  const oneFamily = (screens: string[]) => screens.length > 0 && screens.every((x) => familyOf(x) === familyOf(screens[0]));
+
   const assign = (file: string): Assignment => {
     const { screens, shell: inShell } = ownersOf(file);
-    if (screens.length === 1 && !inShell) return { category: 'screen', screens: [screens[0]] };
+    if (oneFamily(screens) && !inShell) return { category: 'screen', screens: [screens[0]] };
+    if (oneFamily(screens) && inShell) {
+      // The shell reaches it only through a registry (the store combining every slice):
+      // registering is not using, so the file is its one screen's (#442).
+      const shellImporters = (importersOf.get(file) ?? []).filter((i) => shell.has(i));
+      if (shellImporters.length > 0 && shellImporters.every((i) => registries.has(i))) return { category: 'screen', screens: [screens[0]] };
+    }
     if (screens.length === 0 && inShell) {
       // A barrel the shell imports that only leads into one screen belongs to that screen.
       const leads = new Set((importsOf.get(file) ?? []).flatMap((t) => ownersOf(t).screens));
@@ -302,4 +364,41 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
     .sort((a, b) => a.file.localeCompare(b.file));
 
   return { files, routes, entries };
+}
+
+/** True for a URL a client resolves against its `baseURL`: no leading `/`, no scheme, not a placeholder. */
+const isRelative = (url: string) => !/^(\/|https?:|\{)/.test(url);
+
+/**
+ * The path every observed call shares, to a segment boundary: `/api/` when
+ * the app calls `/api/tags` and `/api/user`, `/` when nothing is shared.
+ */
+export function apiBaseOf(paths: string[]): string {
+  const segs = paths.filter((p) => p.startsWith('/')).map((p) => p.split(/[?#]/)[0].split('/').filter(Boolean));
+  if (segs.length === 0) return '/';
+  const common: string[] = [];
+  // A path's last segment is a resource, not part of the base.
+  for (let i = 0; segs.every((s) => s.length > i + 1 && s[i] === segs[0][i]); i += 1) common.push(segs[0][i]);
+  return `/${common.map((c) => `${c}/`).join('')}`;
+}
+
+/**
+ * The graph with every relative endpoint URL resolved against `base` — what
+ * `axios.get('tags')` under `axios.defaults.baseURL` really calls (#442). The
+ * base is not readable from one file (it is often imported settings), so it
+ * comes from the traffic: `apiBaseOf` over the observed paths.
+ */
+export function resolveRelativeUrls(graph: SourceGraph, base: string): SourceGraph {
+  const fix = (eps: Endpoint[]): Endpoint[] =>
+    eps
+      .map((e) => (isRelative(e.url) ? { ...e, url: `${base}${e.url}` } : e))
+      .sort((a, b) => a.url.localeCompare(b.url) || a.method.localeCompare(b.method));
+  return {
+    ...graph,
+    files: graph.files.map((f) => ({
+      ...f,
+      endpoints: fix(f.endpoints),
+      storeReads: f.storeReads.map((r) => ({ ...r, endpoints: fix(r.endpoints) })),
+    })),
+  };
 }

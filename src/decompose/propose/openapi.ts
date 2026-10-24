@@ -28,6 +28,9 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPI } from 'openapi-types';
 import type { Endpoint } from '../source/graph';
+import { splitBackendUrl, type BackendLayout, type BackendUrl } from './backends';
+
+export { splitBackendUrl };
 
 export interface SchemaObject {
   type?: string;
@@ -92,6 +95,8 @@ export interface InferInput {
   responses: Record<string, RecordedBody>;
   /** Endpoint templates from the client code (`decompose:analyze`). */
   code: Endpoint[];
+  /** One API or a gateway (`backendLayout`); a gateway when not given. */
+  layout?: BackendLayout;
 }
 
 export interface InferredBackend {
@@ -144,32 +149,6 @@ export function schemaOf(samples: unknown[]): SchemaObject {
 }
 
 // ---- URLs --------------------------------------------------------------------
-
-export interface BackendUrl {
-  /** Origin for a URL off the app's origin; '' for an app-relative one. */
-  origin: string;
-  backend: string;
-  /** The path up to and including the backend segment. */
-  prefix: string;
-  /** The path the backend serves, under its prefix. */
-  path: string;
-  query: string;
-}
-
-/** Split a URL the app calls at its backend: the first segment after an `api` prefix (as `backendOf`). */
-export function splitBackendUrl(url: string): BackendUrl {
-  // `{?}` (an unresolved part of a code template) is not a query string.
-  const m = /^(https?:\/\/[^/]+)?([^?#]*)(?:\?([^#]*))?/.exec(url.replace(/\{\?\}/g, '⟨unresolved⟩')) as RegExpExecArray;
-  const parts = (m[2] ?? '').replace(/⟨unresolved⟩/g, '{?}').split('/').filter(Boolean);
-  const at = parts[0] === 'api' && parts.length > 1 ? 1 : 0;
-  return {
-    origin: m[1] ?? '',
-    backend: (parts[at] ?? 'unknown').replace(/\{.*$/, '') || 'unknown',
-    prefix: `/${parts.slice(0, at + 1).join('/')}`,
-    path: `/${parts.slice(at + 1).join('/')}`,
-    query: (m[3] ?? '').replace(/⟨unresolved⟩/g, '{?}'),
-  };
-}
 
 const segments = (p: string) => p.split('/').filter(Boolean);
 const isParam = (seg: string) => /^\{[^}]*\}$/.test(seg);
@@ -285,7 +264,7 @@ export function inferSpecs(input: InferInput): Record<string, InferredBackend> {
 
   // Code first: its templates name the parameters traffic can only show values for.
   for (const e of input.code) {
-    const u = splitBackendUrl(e.url);
+    const u = splitBackendUrl(e.url, input.layout);
     if (u.prefix.includes('{')) continue;
     const op = draft(backendFor(u), e.method.toUpperCase(), nameUnresolved(u.path));
     op.fromCode = true;
@@ -296,7 +275,7 @@ export function inferSpecs(input: InferInput): Record<string, InferredBackend> {
   }
 
   for (const r of input.requests) {
-    const u = splitBackendUrl(r.url);
+    const u = splitBackendUrl(r.url, input.layout);
     const b = backendFor(u);
     const method = r.method.toUpperCase();
     const template = [...b.ops.values()].find((o) => o.fromCode && o.method === method && fits(o.path, u.path))?.path ?? templateIds(u.path);
@@ -330,7 +309,7 @@ export function inferSpecs(input: InferInput): Record<string, InferredBackend> {
       const parameters: ParameterObject[] = [];
       segments(op.path).forEach((seg, i) => {
         if (!isParam(seg)) return;
-        const values = op.observed.map((o) => segments(splitBackendUrl(o.url).path)[i]).filter((v): v is string => v !== undefined);
+        const values = op.observed.map((o) => segments(splitBackendUrl(o.url, input.layout).path)[i]).filter((v): v is string => v !== undefined);
         parameters.push({ name: seg.slice(1, -1), in: 'path', required: true, schema: typeOfValues(values) });
       });
       for (const k of [...op.query.keys()].sort()) {
@@ -401,7 +380,11 @@ function resolve(doc: OpenApiDocument, schema: SchemaObject | undefined, depth =
 
 function okSchema(doc: OpenApiDocument, op: OperationObject): SchemaObject | undefined {
   const status = Object.keys(op.responses).filter((s) => /^2\d\d$/.test(s)).sort()[0];
-  const content = status ? op.responses[status].content : undefined;
+  let response: (OperationObject['responses'][string] & { $ref?: string }) | undefined = status ? op.responses[status] : undefined;
+  // A response may itself be a reference: `$ref: '#/components/responses/TagsResponse'` (#442).
+  const ref = response?.$ref ? /^#\/components\/responses\/(.+)$/.exec(response.$ref)?.[1] : undefined;
+  if (ref) response = (doc.components as { responses?: Record<string, OperationObject['responses'][string]> } | undefined)?.responses?.[ref];
+  const content = response?.content;
   const json = content ? Object.keys(content).find((k) => k.includes('json')) : undefined;
   return json && content ? resolve(doc, content[json].schema) : undefined;
 }
@@ -422,11 +405,11 @@ function operations(doc: OpenApiDocument): Array<{ method: string; path: string;
  * `Domain.endpoints`), counting only endpoints of `backend` when given. None
  * named → all of it.
  */
-export function restrictSpec(doc: OpenApiDocument, endpoints: string[], backend?: string): OpenApiDocument {
+export function restrictSpec(doc: OpenApiDocument, endpoints: string[], backend?: string, layout?: BackendLayout): OpenApiDocument {
   const mine = endpoints
     .map((e) => {
       const [method, url] = e.split(' ');
-      const u = splitBackendUrl(url ?? '');
+      const u = splitBackendUrl(url ?? '', layout);
       return { method, backend: u.backend, path: nameUnresolved(u.path) };
     })
     .filter((e) => e.method && (!backend || e.backend === backend));
@@ -481,12 +464,17 @@ const shape = (method: string, path: string) => `${method} ${path.replace(/\{[^}
 function leaves(doc: OpenApiDocument, schema: SchemaObject | undefined, at = '', depth = 0, out = new Map<string, string>()): Map<string, string> {
   const s = resolve(doc, schema);
   if (!s || depth > 8) return out;
-  if (s.type === 'object' && s.properties) {
+  const isType = (t: string) => s.type === t || (Array.isArray(s.type as unknown) && (s.type as unknown as string[]).includes(t));
+  if (isType('object') && s.properties) {
     for (const k of Object.keys(s.properties)) leaves(doc, s.properties[k], at ? `${at}.${k}` : k, depth + 1, out);
     return out;
   }
-  if (s.type === 'array') return leaves(doc, s.items, `${at}[]`, depth + 1, out);
-  if (at) out.set(at, s.type === 'integer' ? 'number' : (s.type ?? 'any'));
+  if (isType('array')) return leaves(doc, s.items, `${at}[]`, depth + 1, out);
+  // OpenAPI 3.1 writes a nullable type as `[string, 'null']`; nullability is not the type.
+  const raw: unknown = s.type;
+  const types = (Array.isArray(raw) ? raw : [raw]).filter((t): t is string => typeof t === 'string' && t !== 'null');
+  const type = types.length === 1 ? types[0] : types.length === 0 ? 'any' : types.sort().join('|');
+  if (at) out.set(at, type === 'integer' ? 'number' : type);
   return out;
 }
 

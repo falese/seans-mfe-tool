@@ -18,11 +18,11 @@ by default.
 
 | Signal | How |
 |---|---|
-| **Routes** | React Router `<Route path element>` and object configs, with the landmark (`main`, `aside`) each `<Routes>` renders into, resolved through barrels and re-exports to the component's file |
+| **Routes** | React Router `<Route path element>`, `component={X}` (v4/v5), a child component (`<Route path><X /></Route>`), route wrappers (`<PrivateRoute path>`), and object configs, with the landmark (`main`, `aside`) each `<Routes>` renders into, resolved through barrels, re-exports and higher-order wrappers (`connect(...)(X)`, `withRouter(X)`) to the component's file. A route to the component that declares the routes is the router's frame, not a screen. JSX in `.js` files is read |
 | **Import graph** | every local import resolved to a file; packages listed separately |
-| **Endpoints** | `fetch`, `axios` and `axios.create()` call sites, with URLs folded from constants and followed through wrapper functions: `getBerths = () => hm('/berths')`, with `hm(path)` calling `` http.get(`${BASE.harbormaster}${path}`) ``, is `GET /api/harbormaster/berths` |
+| **Endpoints** | `fetch`, `axios`, `superagent`, and clients made from them (`axios.create()`, `wrap(superagent)`), with URLs folded from constants and followed through wrapper functions — object-literal methods and default-exported objects included, so `agent.Articles.all()` reaches `requests.get` and `superagent.get`: `getBerths = () => hm('/berths')`, with `hm(path)` calling `` http.get(`${BASE.harbormaster}${path}`) ``, is `GET /api/harbormaster/berths`. A URL relative to a client's `baseURL` (`axios.get('tags')`) is resolved against the base the traffic shows |
 | **Store reads** | a store that loads fields (`const [a, b] = await Promise.all([fa(), fb()])`) and consumers that read them (`const { a } = useStore()`) give consumer → field → endpoint |
-| **Assignment** | each file's owners are the route roots that reach it: **screen** (one), **shared** (several), **shell** (only the entry), **unreached** (none) |
+| **Assignment** | each file's owners are the route roots that reach it: **screen** (one), **shared** (several), **shell** (only the entry), **unreached** (none). Routes under one first segment (`/editor`, `/editor/:slug`) are one screen family. A screen reaches a store that registers every page's slice, but not every slice through it |
 | **Tests** | per test file: imports, mocks, snapshots, skips, structural selectors, fixed waits; the Jest suite is run for per-test results, and tests the project's config excludes are marked |
 | **History** | co-change pairs from `git log` (sweeping commits ignored) and CODEOWNERS owners |
 | **Join** | each observed endpoint matched to the client that defines it, the files that call it, and the files that read it from a store; endpoints in source that no journey hit; what the capture saw of each file |

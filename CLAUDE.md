@@ -166,6 +166,7 @@ place, so they cannot disagree with a copy here.
 | `decompose:analyze` — source graph: routes, endpoints through wrappers, store reads, file → screen, test inventory, runtime join (ADR-109 §3) | `src/commands/decompose/analyze.ts`; core `src/decompose/source/`; explainer `docs/decompose-analyze.md` |
 | `decompose:propose` / `edit` / `present` / `score` — deterministic draft → `decomposition.yaml`, named edits, the proposal-PR artifact (PROPOSAL.md + domain overlay, HTML and Figma), scoring vs an answer key (ADR-110); BFF specs inferred per backend from traffic and code, published specs compared (ADR-112) | `src/commands/decompose/{propose,edit,present,score}.ts`; core `src/decompose/propose/` (specs: `openapi.ts`); explainer `docs/decompose-propose.md` |
 | `decompose:verify` — the parity gate: replay a baseline's journeys against a candidate, compare regions, calls, console and per-region pixels (ADR-113) | `src/commands/decompose/verify.ts`; core `src/decompose/verify/`; explainer `docs/decompose-verify.md` |
+| RealWorld reverse-engineering corpus — pinned apps, journeys, seed, one-command run; findings (#442) | `scripts/corpus/realworld/`; report `docs/decompose-corpus.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |
 | ADR register (canonical numbering) | `docs/architecture-decisions/README.md` |

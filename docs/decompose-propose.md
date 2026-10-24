@@ -75,6 +75,23 @@ Merging the PR that carries these is the agreement; nothing is scaffolded before
 Derived beside it: an `mfe-manifest.yaml` per domain and `control-plane/control-plane.yaml`.
 The layout is a fleet's, so `compose:validate <proposal dir>` checks it like any project.
 
+## Backends and route families
+
+**Backends.** An app's API URLs name backends one of two ways, and a URL alone can't tell which:
+
+- a gateway, `/api/<backend>/<resource>`: meridian-monolith, with three backends;
+- one API, `/api/<resource>`: RealWorld, where `/api/tags` is already a resource.
+
+The draft judges this once, over every concrete URL observed or in source: a resource at the top
+level means one API. It records the answer as `app.gateway`, which can be corrected by hand.
+Clustering, spec inference and each MFE's spec cut all read that field.
+
+**Route families.** Routes under one first segment are one domain: `/editor` and `/editor/:slug`,
+or a profile and its favorites tab (`/@:username`, `/@:username/favorites`). A family is named
+for that segment. When the segment has no literal part, as in `/@:username`, it is named for the
+page of its shortest route (`Profile` → `profile`). State keys keep parameter names, so every
+route gets its own key (`conduit.open.editor.slug`).
+
 ## BFF specs (ADR-112)
 
 Each domain's BFF fronts the backends its screens call, and the BFF is generated from an

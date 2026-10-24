@@ -236,3 +236,68 @@ describe('validateOpenApi', () => {
     expect(await validateOpenApi(broken)).toHaveLength(1);
   });
 });
+
+describe('one API rather than a gateway (#442)', () => {
+  const traffic = {
+    appUrl: 'http://localhost:4100',
+    requests: [
+      { id: 'b.0.r0', method: 'GET', url: '/api/tags', status: 200 },
+      { id: 'b.0.r1', method: 'GET', url: '/api/articles/notes/comments', status: 200 },
+    ],
+    responses: {
+      'GET /api/tags': { status: 200, mimeType: 'application/json', body: { tags: ['history'] } },
+      'GET /api/articles/notes/comments': { status: 200, mimeType: 'application/json', body: { comments: [] } },
+    },
+    code: [{ method: 'GET', url: '/api/articles/{slug}/comments' }],
+    layout: { gateway: false },
+  };
+  it('writes one document for the API, with every resource as a path under it', () => {
+    const specs = inferSpecs(traffic);
+    expect(Object.keys(specs)).toEqual(['api']);
+    expect(specs.api.document.servers).toEqual([{ url: 'http://localhost:4100/api' }]);
+    expect(Object.keys(specs.api.document.paths)).toEqual(['/articles/{slug}/comments', '/tags']);
+  });
+  it('cuts the document to a domain’s calls under the same layout', () => {
+    const { api } = inferSpecs(traffic);
+    expect(Object.keys(restrictSpec(api.document, ['GET /api/tags'], 'api', { gateway: false }).paths)).toEqual(['/tags']);
+  });
+});
+
+describe('compareSpecs through response references (#442)', () => {
+  it('follows $ref to components/responses, as the RealWorld spec writes every response', () => {
+    const published: OpenApiDocument = {
+      openapi: '3.0.1',
+      info: { title: 'Conduit', version: '1' },
+      paths: { '/tags': { get: { operationId: 'GetTags', responses: { '200': { $ref: '#/components/responses/TagsResponse' } as never } } } },
+      components: {
+        responses: { TagsResponse: { description: 'Tags', content: { 'application/json': { schema: { type: 'object', properties: { tags: { type: 'array', items: { type: 'string' } } } } } } } },
+      } as never,
+    };
+    const { api } = inferSpecs({
+      appUrl: 'http://localhost:4100',
+      requests: [{ id: 'a.0.r0', method: 'GET', url: '/api/tags', status: 200 }],
+      responses: { 'GET /api/tags': { status: 200, mimeType: 'application/json', body: { tags: ['history'] } } },
+      code: [],
+      layout: { gateway: false },
+    });
+    expect(compareSpecs(api.document, published).fields).toEqual({ matched: 1, inferredOnly: [], realOnly: [], typeMismatches: [] });
+  });
+});
+
+describe('compareSpecs with OpenAPI 3.1 types (#442)', () => {
+  it('reads type: [string, null] as a nullable string, not a different type', () => {
+    const published = {
+      openapi: '3.1.0',
+      info: { title: 'Conduit', version: '1' },
+      paths: { '/profiles/{u}': { get: { operationId: 'GetProfile', responses: { '200': { description: 'ok', content: { 'application/json': { schema: { type: 'object', properties: { bio: { type: ['string', 'null'] } } } } } } } } } },
+    } as unknown as OpenApiDocument;
+    const { api } = inferSpecs({
+      appUrl: 'http://localhost:4100',
+      requests: [{ id: 'a.0.r0', method: 'GET', url: '/api/profiles/ada', status: 200 }],
+      responses: { 'GET /api/profiles/ada': { status: 200, mimeType: 'application/json', body: { bio: 'x' } } },
+      code: [{ method: 'GET', url: '/api/profiles/{u}' }],
+      layout: { gateway: false },
+    });
+    expect(compareSpecs(api.document, published).fields.typeMismatches).toEqual([]);
+  });
+});

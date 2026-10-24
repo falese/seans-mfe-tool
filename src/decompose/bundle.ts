@@ -104,6 +104,16 @@ export function relativeUrl(url: string, appUrl: string): string {
   }
 }
 
+/**
+ * What a development server requests for itself — its live-reload socket and
+ * hot-update manifests — rather than anything the app does (#442). Matched on
+ * the path's start, so an app's own `/api/ws/...` is not mistaken for it.
+ */
+export function isDevServerRequest(url: string): boolean {
+  const p = relativeUrl(url, url).replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+  return /^\/(sockjs-node|__webpack_hmr|webpack-dev-server|ws$|@vite\/)/.test(p) || /\.hot-update\.(json|js)$/.test(p);
+}
+
 export function responseKey(method: string, url: string): string {
   return `${method.toUpperCase()} ${url}`;
 }
@@ -127,8 +137,9 @@ export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
 
     // Stable ids: per step, sorted by method then URL, then original order.
     const ids = new Map<RawRequest, string>();
+    const appRequests = run.requests.filter((r) => !isDevServerRequest(r.url));
     for (let k = 0; k < run.steps.length; k += 1) {
-      run.requests
+      appRequests
         .map((r, order) => ({ r, order, url: relativeUrl(r.url, meta.appUrl) }))
         .filter((x) => x.r.step === k)
         .sort((a, b) => a.r.method.localeCompare(b.r.method) || a.url.localeCompare(b.url) || a.order - b.order)

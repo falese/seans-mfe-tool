@@ -55,7 +55,7 @@ declare const document: {
 };
 
 declare const window: {
-  location: { pathname: string; search: string };
+  location: { pathname: string; search: string; hash: string };
   innerWidth: number;
   innerHeight: number;
   scrollX: number;

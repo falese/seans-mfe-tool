@@ -1,4 +1,4 @@
-import { buildBundle, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
+import { buildBundle, isDevServerRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
 import type { Region } from '../regions';
 
 const region = (id: string, file: string, ownText: string): Region => ({
@@ -135,6 +135,24 @@ describe('buildBundle', () => {
   it('emits the journeys that ran, so a replay can repeat them', () => {
     expect(bundle.files['journeys.yaml']).toContain('name: docking');
     expect(bundle.files['journeys.yaml']).toContain('click: text=Docking');
+  });
+});
+
+describe('dev-server traffic (#442)', () => {
+  it('recognises what a dev server sends for itself — hot reload, its socket — and nothing the app calls', () => {
+    expect(isDevServerRequest('http://localhost:4100/sockjs-node/info?t=1')).toBe(true);
+    expect(isDevServerRequest('/__webpack_hmr')).toBe(true);
+    expect(isDevServerRequest('/main.6b2f.hot-update.json')).toBe(true);
+    expect(isDevServerRequest('/ws')).toBe(true);
+    expect(isDevServerRequest('/api/tags')).toBe(false);
+    expect(isDevServerRequest('/api/ws/messages')).toBe(false);
+  });
+  it('leaves dev-server requests out of the bundle', () => {
+    const r = run();
+    r.requests.push({ step: 0, method: 'GET', url: 'http://localhost:5090/sockjs-node/info?t=1', initiator: [], status: 200, mimeType: 'application/json', body: {} });
+    const b = buildBundle([r], { appUrl: APP, viewport: { width: 1440, height: 900 }, clock: '2026-10-24T00:00:00.000Z' });
+    expect((b.files['requests.json'] as Array<{ url: string }>).map((x) => x.url)).not.toContain('/sockjs-node/info?t=1');
+    expect(b.stats.requests).toBe(3);
   });
 });
 

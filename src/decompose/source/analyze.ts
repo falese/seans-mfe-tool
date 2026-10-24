@@ -14,7 +14,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { stableStringify } from '../bundle';
-import { buildSourceGraph, type SourceGraph } from './graph';
+import { apiBaseOf, buildSourceGraph, resolveRelativeUrls, type SourceGraph } from './graph';
 import { readHistory, type History } from './history';
 import { joinEvidence, type Evidence, type Join } from './join';
 import { loadTypeScript, readProject } from './load';
@@ -51,11 +51,14 @@ async function readEvidence(dir: string): Promise<Evidence> {
 export async function analyzeProject(options: AnalyzeOptions): Promise<AnalyzeOutcome> {
   const ts = await loadTypeScript();
   const project = await readProject(ts, options.dir, options.srcDir);
-  const graph = buildSourceGraph(project.facts);
+  const evidence = options.evidenceDir ? await readEvidence(options.evidenceDir) : null;
+  // URLs relative to a client's baseURL resolve against the base the traffic shows (#442).
+  const parsed = buildSourceGraph(project.facts);
+  const graph = evidence ? resolveRelativeUrls(parsed, apiBaseOf(evidence.requests.map((r) => r.url))) : parsed;
   const sourceFiles = new Set(project.facts.map((f) => f.file));
   const tests = await inventoryTests(ts, options.dir, project.tests, sourceFiles, options.runTests);
   const history = await readHistory(options.dir, [...sourceFiles, ...project.tests]);
-  const join = options.evidenceDir ? joinEvidence(graph, await readEvidence(options.evidenceDir)) : null;
+  const join = evidence ? joinEvidence(graph, evidence) : null;
 
   const pkgPath = path.join(options.dir, 'package.json');
   const pkg = (await fs.pathExists(pkgPath)) ? ((await fs.readJson(pkgPath)) as { name?: string }) : {};
