@@ -51,7 +51,8 @@ concurrency:
 
 jobs:
   cross-app:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest is 26.04, which Playwright 1.60 cannot install Chromium on (#432).
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       COMPOSE_FILE: examples/meridian-station/docker-compose.yaml
