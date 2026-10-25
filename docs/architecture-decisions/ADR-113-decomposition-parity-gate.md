@@ -4,7 +4,10 @@ title: >-
   A decomposition step is accepted only when the composed app passes the parity gate — the
   captured journeys produce the same regions, the same backend calls, the same visuals and no
   new errors as the monolith
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#418"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / regression
@@ -14,8 +17,15 @@ relates-to: [52, 84, 86, 109, 111, 112]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - src/commands/decompose/verify.ts
+  - src/decompose/verify/parity.ts
+  - src/decompose/verify/png.ts
+  - src/decompose/verify/io.ts
+verified-by:
+  - src/decompose/verify/__tests__/parity.test.ts
+  - src/decompose/verify/__tests__/png.test.ts
+  - src/decompose/verify/__tests__/io.test.ts
 tracked-by: ["#410", "#418", "#419"]
 summary: >-
   The monolith's own tests cannot define its behavior — real suites are thin, coupled and
@@ -56,6 +66,22 @@ The evidence bundle (ADR-109), not the existing suite, defines what the app does
 ### 3. Proven on the monolith first
 
 Generated tests must pass against the monolith before they may judge the composed app.
+
+As implemented (#418), `decompose:verify` is the gate's runner. It drives the candidate through
+the baseline bundle's journeys with the baseline's clock and recorded responses, captures it as
+a second bundle, and compares the two step by step:
+
+- **Content:** regions are matched by component and order, never by source file, since the
+  composed app renders the same components from new files. A wrapper with no text of its own is
+  not a difference; new visible text is.
+- **Network:** the backend calls each step made.
+- **Console:** errors the baseline did not have.
+- **Visual:** each region's own pixels, its nested regions excluded, compared by content so a
+  region that moved still matches. As with `toHaveScreenshot`, no pixel may differ by default.
+
+Run against the monolith itself, it proves the journeys are deterministic: meridian-monolith is
+at parity, 11 of 11 steps and 250 of 250 regions. Characterization specs for the scaffolded
+MFEs' own CI, contract tests (§2), and migrating the triaged tests (§5) follow under #418.
 
 ### 4. Deterministic data
 

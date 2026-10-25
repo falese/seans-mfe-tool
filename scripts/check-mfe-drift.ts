@@ -53,7 +53,9 @@ const roots = process.argv
   .slice(2)
   .filter((a) => !a.startsWith('--'))
   .map((r) => path.resolve(REPO_ROOT, r));
-const SEARCH_ROOTS = roots.length > 0 ? roots : [path.join(REPO_ROOT, 'examples')];
+// The decomposition workspace (ADR-116) is a generated MFE that ships inside a
+// plugin, not an example, and is held to the same gate.
+const SEARCH_ROOTS = roots.length > 0 ? roots : [path.join(REPO_ROOT, 'examples'), path.join(REPO_ROOT, 'packages', 'workspace')];
 
 /** Recursively find every directory containing an mfe-manifest.yaml. */
 function findManifestDirs(root: string): string[] {

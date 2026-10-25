@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breaking Up a Big App — How It Works</title>
+<meta name="description" content="How the toolchain splits one big web app into smaller pieces that separate teams can own — step by step, with what each step must do.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%236B4FBB%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%277%27%20width%3D%2720%27%20height%3D%278%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%2718%27%20width%3D%279%27%20height%3D%277%27%20rx%3D%271.5%27%20fill%3D%27%23D9CFFA%27%2F%3E%3Crect%20x%3D%2717%27%20y%3D%2718%27%20width%3D%279%27%20height%3D%277%27%20rx%3D%271.5%27%20fill%3D%27%23D9CFFA%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<style>
+  :root {
+    --paper:     #F5F7F9;
+    --surface:   #ffffff;
+    --surface-2: #EDF1F5;
+    --ink:       #131C26;
+    --ink-2:     #33424F;
+    --ink-3:     #5A6B79;
+    --rule:      #DCE3EA;
+    --rule-soft: #EDF1F5;
+    --accent:    #6B4FBB;
+    --accent-bg: #ebe5f8;
+    --gen:       #0A8272;
+    --gen-bg:    #dcecef;
+    --dev:       #AE6B14;
+    --dev-bg:    #f4e9d6;
+    --blocked:   #B0451F;
+    --blocked-bg:#f6e1dd;
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --measure: 66ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0E141A;
+      --surface:   #161E27;
+      --surface-2: #1D2731;
+      --ink:       #E7EDF3;
+      --ink-2:     #C0CCD8;
+      --ink-3:     #93A3B1;
+      --rule:      #2A3440;
+      --rule-soft: #3A4855;
+      --accent:    #A996F0;
+      --accent-bg: #2a2345;
+      --gen:       #3FC9B2;
+      --gen-bg:    #12333a;
+      --dev:       #E4A94F;
+      --dev-bg:    #33280f;
+      --blocked:   #F0916A;
+      --blocked-bg:#3a2119;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #0E141A;
+    --surface:   #161E27;
+    --surface-2: #1D2731;
+    --ink:       #E7EDF3;
+    --ink-2:     #C0CCD8;
+    --ink-3:     #93A3B1;
+    --rule:      #2A3440;
+    --rule-soft: #3A4855;
+    --accent:    #A996F0;
+    --accent-bg: #2a2345;
+    --gen:       #3FC9B2;
+    --gen-bg:    #12333a;
+    --dev:       #E4A94F;
+    --dev-bg:    #33280f;
+    --blocked:   #F0916A;
+    --blocked-bg:#3a2119;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 2.75rem 5rem;
+  }
+
+  header.sheet { border-bottom: 1px solid var(--rule); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 0.7rem;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(2rem, 6vw, 2.9rem); line-height: 1.05;
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 0.7rem;
+  }
+  .lede { font-size: 1.05rem; color: var(--ink-2); max-width: var(--measure); margin: 0; }
+
+  h2 {
+    font-family: var(--display); font-weight: 600;
+    font-size: 1.45rem; letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 0.3rem;
+  }
+  .fignum {
+    font-family: var(--mono);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 0.3rem;
+  }
+
+  p { max-width: var(--measure); margin: 0 0 0.9rem; }
+  p.claim { color: var(--ink); font-size: 1rem; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.84em; background: var(--surface-2);
+    padding: 0.08em 0.34em; border-radius: 2px; overflow-wrap: anywhere;
+  }
+
+  section.fig { margin-bottom: 3.5rem; }
+  section.fig + section.fig { border-top: 1px solid var(--rule-soft); padding-top: 2.5rem; }
+
+  figure { margin: 1.4rem 0 0; }
+  .frame {
+    background: var(--surface); border: 1px solid var(--rule);
+    padding: 1.1rem; overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; margin: 0 auto; color: var(--ink); }
+  svg text { font-family: var(--mono); }
+
+  figcaption {
+    font-size: 0.9rem; color: var(--ink-2); margin-top: 0.8rem;
+    max-width: var(--measure); line-height: 1.55;
+  }
+
+  .key {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.74rem; color: var(--ink-2); margin-top: 0.9rem;
+  }
+  .key span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .sw-gen { background: var(--gen); }
+  .sw-dev { background: var(--dev); }
+  .sw-blocked { background: var(--blocked); }
+
+  .note {
+    border-left: 3px solid var(--accent); background: var(--surface);
+    padding: 0.85rem 1rem; margin: 1.3rem 0 0; max-width: var(--measure);
+    font-size: 0.93rem;
+  }
+  .note > :last-child { margin-bottom: 0; }
+  .note b {
+    font-family: var(--display); font-weight: 600;
+    display: block; margin-bottom: 0.25rem; font-size: 0.95rem;
+  }
+
+  .scroll { overflow-x: auto; margin: 1.2rem 0 0; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  th, td { text-align: left; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-weight: 600; font-size: 0.78rem;
+    color: var(--ink-2); border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  footer {
+    margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem; color: var(--ink-3); max-width: var(--measure); line-height: 1.6;
+  }
+
+  .site-back {
+    display: inline-block; font-family: var(--mono); font-size: .72rem;
+    letter-spacing: .06em; text-decoration: none; color: var(--ink-3);
+    margin-bottom: 1.6rem;
+  }
+  .site-back:hover { color: var(--accent, #6B4FBB); }
+</style>
+
+<style>
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: .06em;
+    text-transform: uppercase; padding: 0.1em 0.5em; border-radius: 2px; white-space: nowrap;
+    vertical-align: middle;
+  }
+  .pill.done { background: var(--gen-bg); color: var(--gen); }
+  .pill.next { background: var(--dev-bg); color: var(--dev); }
+  .pill.gate { background: var(--accent-bg); color: var(--accent); }
+  .io { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 1.1rem 0 0; }
+  @media (max-width: 680px) { .io { grid-template-columns: 1fr; } }
+  .io div { background: var(--surface); border: 1px solid var(--rule); padding: 0.7rem 0.85rem; font-size: 0.92rem; }
+  .io b {
+    display: block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 500; margin-bottom: 0.3rem;
+  }
+  .shot { margin: 0; padding: 0; overflow: hidden; }
+  .shot img { display: block; width: 100%; height: auto; }
+  .must { margin: 1rem 0 0; padding: 0.8rem 1rem 0.6rem; border-left: 3px solid var(--accent); background: var(--surface); max-width: var(--measure); }
+  .must b { font-family: var(--display); font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 0.35rem; }
+  .must ul { margin: 0; padding-left: 1.15rem; }
+  .must li { margin: 0 0 0.4rem; font-size: 0.93rem; }
+  dl.words { margin: 1rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.45rem 1.1rem; max-width: var(--measure); }
+  @media (max-width: 560px) { dl.words { grid-template-columns: 1fr; } dl.words dd { margin-bottom: 0.5rem; } }
+  dl.words dt { font-family: var(--display); font-weight: 600; }
+  dl.words dd { margin: 0; color: var(--ink-2); }
+  .stepno { font-family: var(--mono); color: var(--accent); }
+</style>
+
+<div class="page">
+
+  <a class="site-back" href="index.html">&larr; Documentation home</a>
+
+  <header class="sheet">
+    <p class="eyebrow">seans-mfe-tool · how it works</p>
+    <h1>Breaking up a big app</h1>
+    <p class="lede">
+      Many products start as one big web app that one team built. Over time, many teams need to
+      change it, and they get in each other's way. This toolchain splits that app into smaller
+      pieces, so each team can own, change and release its own piece. The product still looks
+      and works the same to the people who use it.
+    </p>
+    <p class="claim" style="margin-top:1rem">
+      This page explains how each step works and what it must do. Read it as a requirements
+      prototype: some steps are built, some are next, and each one says which.
+    </p>
+  </header>
+
+
+  <!-- ============ WORDS ============ -->
+  <section class="fig">
+    <span class="fignum">Before you start</span>
+    <h2>Words we use</h2>
+    <dl class="words">
+      <dt>The big app</dt><dd>The existing app we are splitting up. Engineers call it a <em>monolith</em>.</dd>
+      <dt>A piece</dt><dd>One part of the product that one team owns, such as "orders" or "profile". Engineers call it a <em>micro-frontend</em>, or MFE.</dd>
+      <dt>Shell</dt><dd>The frame around the pieces: the header, the menu, and the space where each piece appears.</dd>
+      <dt>Screen area</dt><dd>One visible part of a screen, such as a table, a panel or a card.</dd>
+      <dt>Backend</dt><dd>The service a screen gets its data from.</dd>
+      <dt>Data helper</dt><dd>A small service for one piece. It fetches that piece's data from the backends. Engineers call it a <em>BFF</em>.</dd>
+      <dt>API description</dt><dd>A document that lists what a backend can be asked and what it answers. Engineers call it an <em>OpenAPI spec</em>.</dd>
+      <dt>The plan</dt><dd>One file listing the proposed pieces and why. Everything else is built from it.</dd>
+      <dt>The workspace</dt><dd>The review screen for product owners. It shows the plan on the real screens and changes it only through the same named actions. Approving there records exactly which version of the plan was approved.</dd>
+    </dl>
+  </section>
+
+
+  <!-- ============ FIG 1 — the steps ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 1 — the steps</span>
+    <h2>Eight steps, and two decisions only people make</h2>
+    <p class="claim">
+      The order is the one a careful team would follow by hand. First, find out what the app
+      does. Then decide where to cut it, and agree that. Then move one piece at a time, checking
+      after each move that nothing changed. The tools do the finding, suggesting and checking.
+      People decide where to cut, and when the work is finished.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 300" role="img" aria-label="Eight steps in two rows: watch the app, read the code, suggest the pieces, people agree, build the pieces, move the code, switch over one at a time, check nothing changed. Steps one to four and eight are built. Steps five to seven are next. Agreeing and the final sign-off are decisions people make.">
+          <defs>
+            <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-size="11.5" text-anchor="middle">
+            <rect x="20"  y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="115" y="58" fill="var(--gen)">1 · watch the app</text>
+            <text x="115" y="80" font-size="8.5" fill="var(--ink-3)">use it like a person would,</text>
+            <text x="115" y="94" font-size="8.5" fill="var(--ink-3)">record everything it does</text>
+
+            <rect x="236" y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="331" y="58" fill="var(--gen)">2 · read the code</text>
+            <text x="331" y="80" font-size="8.5" fill="var(--ink-3)">which screen uses which</text>
+            <text x="331" y="94" font-size="8.5" fill="var(--ink-3)">files and which data</text>
+
+            <rect x="452" y="34" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="547" y="58" fill="var(--gen)">3 · suggest the pieces</text>
+            <text x="547" y="80" font-size="8.5" fill="var(--ink-3)">a plan, with the reasons</text>
+            <text x="547" y="94" font-size="8.5" fill="var(--ink-3)">for every cut</text>
+
+            <rect x="668" y="34" width="190" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="763" y="58" fill="var(--accent)">4 · people agree</text>
+            <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">review the plan on the real</text>
+            <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">screens, in Figma — DECISION</text>
+
+            <rect x="668" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+            <text x="763" y="200" fill="var(--dev)">5 · build the pieces</text>
+            <text x="763" y="222" font-size="8.5" fill="var(--ink-3)">an empty piece per area,</text>
+            <text x="763" y="236" font-size="8.5" fill="var(--ink-3)">plus the old app as one piece</text>
+
+            <rect x="452" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+            <text x="547" y="200" fill="var(--dev)">6 · move the code</text>
+            <text x="547" y="222" font-size="8.5" fill="var(--ink-3)">screens and good tests move</text>
+            <text x="547" y="236" font-size="8.5" fill="var(--ink-3)">into their new piece</text>
+
+            <rect x="236" y="176" width="190" height="84" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+            <text x="331" y="200" fill="var(--dev)">7 · switch over</text>
+            <text x="331" y="222" font-size="8.5" fill="var(--ink-3)">one screen area at a time,</text>
+            <text x="331" y="236" font-size="8.5" fill="var(--ink-3)">old app to new piece</text>
+
+            <rect x="20" y="176" width="190" height="84" rx="2" fill="var(--gen-bg)" stroke="var(--gen)" stroke-width="1.6"/>
+            <text x="115" y="200" fill="var(--gen)">8 · check nothing changed</text>
+            <text x="115" y="222" font-size="8.5" fill="var(--ink-3)">after every switch; people</text>
+            <text x="115" y="236" font-size="8.5" fill="var(--ink-3)">sign off at the end — DECISION</text>
+          </g>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#p1)">
+            <path d="M210 76 L 230 76"/>
+            <path d="M426 76 L 446 76"/>
+            <path d="M642 76 L 662 76"/>
+            <path d="M763 118 L 763 170"/>
+            <path d="M668 218 L 648 218"/>
+            <path d="M452 218 L 432 218"/>
+            <path d="M236 218 L 216 218"/>
+          </g>
+          <path d="M115 176 C 115 150, 331 150, 331 182" stroke="var(--gen)" fill="none" stroke-dasharray="4 3" stroke-opacity="0.8"/>
+          <text x="223" y="146" font-size="8.5" text-anchor="middle" fill="var(--gen)">after every switch</text>
+          <text x="440" y="290" font-size="9" text-anchor="middle" fill="var(--ink-3)">step 8 compares against the recording from step 1 — not against the old app's own tests</text>
+        </svg>
+      </div>
+      <div class="key">
+        <span><i class="swatch sw-gen"></i>built</span>
+        <span><i class="swatch sw-dev"></i>next</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>a decision people make</span>
+      </div>
+      <figcaption>
+        Why the recording, not the old tests? Old apps rarely have good tests. Watching the app
+        itself is the only reliable record of what it really does.
+      </figcaption>
+    </figure>
+  </section>
+
+
+  <!-- ============ STEP 1 ============ -->
+  <section class="fig">
+    <span class="fignum">Step 1 — watch the app <span class="pill done">built</span></span>
+    <h2>Use the app like a person would, and record everything</h2>
+    <p class="claim">
+      A browser opens the big app and follows a set of short scripts called <em>journeys</em>,
+      such as "open the home page, click Docking, open a berth". It also explores the app by
+      itself, following every link it can find. At each step it notes what is on the screen,
+      which piece of code drew each part, what data the screen asked for, and any errors. It
+      saves a screenshot too.
+    </p>
+    <div class="io">
+      <div><b>Goes in</b>The running big app, and a few journeys (optional)</div>
+      <div><b>What happens</b>A browser clicks through it, with the clock frozen so dates never change between runs</div>
+      <div><b>Comes out</b>A <em>recording</em>: screens, screen areas, data requests and answers, errors, screenshots</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Name the piece of code behind each screen area, by reading the labels React adds while an app is in development.</li>
+        <li>Link each data request to the screen area that shows its answer.</li>
+        <li>Keep every answer, so the same journeys can be replayed later with exactly the same data and no live backend.</li>
+        <li>Never press buttons or submit forms while exploring, so it cannot change the app's data.</li>
+        <li>Handle older and newer apps alike: different React versions, and both kinds of web address (<code>/page</code> and <code>/#/page</code>).</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 2 ============ -->
+  <section class="fig">
+    <span class="fignum">Step 2 — read the code <span class="pill done">built</span></span>
+    <h2>Find out what reaches what</h2>
+    <p class="claim">
+      The recording shows what happened. The code shows everything that <em>could</em> happen,
+      including screens nobody visited. This step reads the code and builds a map: which address
+      shows which screen, which files each screen uses, and which data each screen asks for. It
+      follows the request all the way to the backend address. It also finds data a screen uses
+      without showing it, which is a hidden link between areas that screenshots can't reveal.
+    </p>
+    <div class="io">
+      <div><b>Goes in</b>The app's source code, and the recording from step 1</div>
+      <div><b>What happens</b>The code is read, not run; then the map is matched against the recording</div>
+      <div><b>Comes out</b>A map: screens, files, data requests, hidden links, the old tests sorted, and who changes what</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Explain every data request the recording saw by pointing at the code that makes it.</li>
+        <li>Sort the app's existing tests into <em>keep</em>, <em>rewrite</em> or <em>throw away</em>, with a reason for each.</li>
+        <li>Mark a file used by several screens as <em>shared</em>, not hand it to one of them.</li>
+        <li>Read the common ways apps are written: plain JavaScript or TypeScript, older and newer routing, and the usual ways of storing and fetching data.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 3 ============ -->
+  <section class="fig">
+    <span class="fignum">Step 3 — suggest the pieces <span class="pill done">built</span></span>
+    <h2>Group the files into pieces, and show the reasons</h2>
+    <p class="claim">
+      The strongest clue is data. Screens that show the same data usually belong together. The
+      tools start from the app's screens, give each file to the screen that uses it, and pull in
+      the files that share a screen's data. Every suggested piece gets a score for each clue, so
+      a reviewer can see <em>why</em> the line is where it is. The same rules always give the
+      same answer, so the result can be checked and repeated.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 270" role="img" aria-label="Six clues feed the suggestion: which screen, which data, which files import which, what the recording saw, which files change together, and who owns them. The result is the plan: pieces with a score per clue, shared files, hidden links, test sorting, and where each piece appears on screen.">
+          <defs>
+            <marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-size="9.5" text-anchor="middle">
+            <rect x="20" y="20" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="39" fill="currentColor">which screen shows it</text>
+            <rect x="20" y="58" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="77" fill="currentColor">which data it uses — strongest</text>
+            <rect x="20" y="96" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="115" fill="currentColor">which files it uses</text>
+            <rect x="20" y="134" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="153" fill="currentColor">what the recording saw</text>
+            <rect x="20" y="172" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="191" fill="currentColor">what changes together</text>
+            <rect x="20" y="210" width="200" height="30" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="229" fill="currentColor">who owns the code</text>
+
+            <rect x="330" y="95" width="180" height="70" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="420" y="122" font-size="11" fill="currentColor">group and score</text>
+            <text x="420" y="142" font-size="8.5" fill="var(--ink-3)">same rules, same answer</text>
+
+            <rect x="620" y="60" width="240" height="140" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="740" y="86" font-size="11.5" fill="var(--accent)">the plan</text>
+            <g font-size="8.5" fill="var(--ink-2)">
+              <text x="740" y="108">each piece, with a score per clue</text>
+              <text x="740" y="124">shared files, and what to do with them</text>
+              <text x="740" y="140">hidden links between pieces</text>
+              <text x="740" y="156">old tests: keep, rewrite, throw away</text>
+              <text x="740" y="172">where each piece appears on screen</text>
+              <text x="740" y="188">which data each piece needs</text>
+            </g>
+          </g>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.5" marker-end="url(#s1)">
+            <path d="M220 35 L 324 118"/>
+            <path d="M220 73 L 324 124"/>
+            <path d="M220 111 L 324 128"/>
+            <path d="M220 149 L 324 132"/>
+            <path d="M220 187 L 324 136"/>
+            <path d="M220 225 L 324 142"/>
+            <path d="M510 130 L 614 130"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        The plan is one file. It is the only thing anyone edits. Everything that comes later is
+        built from it, so it can never fall out of step with the plan.
+      </figcaption>
+    </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Give every piece the reasons behind it, not just a name.</li>
+        <li>Flag every hidden link, where one piece reads another piece's data, as a risk to fix.</li>
+        <li>Tell apart an app with one backend from one whose requests go to several backends.</li>
+        <li>Check that the plan can really be built: every piece must pass the same checks a hand-made one does.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 3b — data ============ -->
+  <section class="fig">
+    <span class="fignum">Step 3, continued — data <span class="pill done">built</span></span>
+    <h2>Give each piece a description of the data it needs</h2>
+    <p class="claim">
+      Each new piece gets its own data helper, and a data helper needs an API description of
+      every backend it talks to. Old apps rarely have one. So the tools write one from the
+      recording: every question the app asked and every answer it got. They then compare it
+      with the code, so questions the recording missed still appear. Each piece's data helper
+      gets only the questions that piece asks, plus the recorded answers as sample data for
+      demos.
+    </p>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Describe only what the app was seen or written to ask. Never guess at more.</li>
+        <li>Mark the description as written by the tools, and record which recorded request each part came from.</li>
+        <li>Prefer the backend's own description when it has one, and report where the two disagree.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 4 + FIGMA ============ -->
+  <section class="fig">
+    <span class="fignum">Step 4 — people agree <span class="pill gate">decision</span></span>
+    <h2>Review the plan on the real screens</h2>
+    <p class="claim">
+      A plan written as a list is hard to judge. So the tools turn it into a review package:
+      a written summary, and every screen of the app with a coloured box around each suggested
+      piece. That is produced both as a web page and as a Figma page. The reviewer can then
+      approve the plan, or rename, merge or split pieces, or move a file. Each change is a named
+      action, so everything connected to it moves too, and the plan is checked again
+      straight away.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 290" role="img" aria-label="Changes come from a reviewer using named actions, from the AI agent, and from the workspace, a review screen for product owners. They all change the one plan file. From the plan come the review package (a written summary, the screens with a box per piece as a web page and as a Figma page), and the pieces themselves.">
+          <defs>
+            <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-size="10" text-anchor="middle">
+            <rect x="20" y="30" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="53" fill="currentColor">a reviewer</text>
+            <text x="120" y="70" font-size="8.5" fill="var(--ink-3)">rename, merge, split, move a file</text>
+            <rect x="20" y="116" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="120" y="139" fill="currentColor">the AI agent</text>
+            <text x="120" y="156" font-size="8.5" fill="var(--ink-3)">suggests names and fixes</text>
+            <rect x="20" y="202" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
+            <text x="120" y="225" fill="currentColor">the workspace</text>
+            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners · one command</text>
+
+            <rect x="320" y="104" width="220" height="80" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="430" y="138" font-size="12" fill="var(--accent)">the plan</text>
+            <text x="430" y="158" font-size="8.5" fill="var(--ink-3)">one file, checked after every change</text>
+
+            <rect x="640" y="18" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="750" y="39" fill="var(--gen)">written summary</text>
+            <text x="750" y="55" font-size="8.5" fill="var(--ink-3)">pieces, reasons, risks, tests</text>
+            <rect x="640" y="82" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="750" y="103" fill="var(--gen)">screens with boxes</text>
+            <text x="750" y="119" font-size="8.5" fill="var(--ink-3)">a web page</text>
+            <rect x="640" y="146" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="750" y="167" fill="var(--gen)">the same, in Figma</text>
+            <text x="750" y="183" font-size="8.5" fill="var(--ink-3)">one frame per screen</text>
+            <rect x="640" y="210" width="220" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="750" y="232" fill="currentColor">after approval: the pieces</text>
+            <text x="750" y="248" font-size="8.5" fill="var(--ink-3)">built from the plan in step 5</text>
+          </g>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#d1)">
+            <path d="M220 58 C 270 58, 270 130, 314 134"/>
+            <path d="M220 144 L 314 144"/>
+            <path d="M220 230 C 270 230, 270 158, 314 154"/>
+            <path d="M540 128 C 590 128, 590 43, 634 43"/>
+            <path d="M540 138 L 634 107"/>
+            <path d="M540 150 L 634 171"/>
+            <path d="M540 160 C 590 160, 590 238, 634 238"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        In the boxes, each piece has its own colour. Each box is labelled with the piece's name,
+        where it sits on the screen, and which backends it uses. A dashed red box marks a hidden
+        link, where one piece reads another piece's data.
+      </figcaption>
+    </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Show every suggested piece on at least one real screen, and warn about any piece no screen shows.</li>
+        <li>Keep the plan valid after every change; an invalid change is refused with a reason.</li>
+        <li>Work without the internet: the Figma page carries its own screenshots.</li>
+        <li>Treat approving the plan as the decision. Nothing is built before it.</li>
+      </ul>
+    </div>
+
+    <h3>The workspace: the same review, for product owners</h3>
+    <p class="claim">
+      A product owner should not have to read a plan file or open a terminal. The workspace is a
+      screen where they see the plan drawn over the real app, as below, and shape it: merge or
+      split pieces, rename them, move a file, leave comments, and approve. It keeps nothing of its
+      own. Every click is one of the same named actions, so it is checked the same way, and the
+      plan file stays the only record. The AI agent works there too. It answers a question such as
+      "split hazards out of cargo" with suggested changes. Each suggestion is tried on a copy of
+      the plan first: one that would break the plan is dropped, with the reason shown, and the
+      rest wait until a person accepts them. The agent is a hosted model reached through the
+      platform's coder plugin, using an API key the engineer sets; without one, the rest of the
+      workspace works the same.
+    </p>
+
+    <p>
+      An engineer opens it with one command, <code>decompose:workspace</code>, and it runs on that
+      person's own machine. It is itself one of the pieces the platform builds: a generated MFE
+      with four screen areas (the map, shaping, the agent, approval) and its own data helper.
+    </p>
+
+    <figure>
+      <div class="frame shot">
+        <img src="media/workspace-agent.jpg" width="1600" height="1000"
+             alt="The workspace running on the reference app. On the left, the cargo screen with the suggested pieces outlined, and below it why cargo's boundary is where it is: its backends and the calls it makes. On the right, the agent tab with two suggestions, renaming the shell to console and splitting hazards out of cargo, each with the question it answers, its reasons, a green 'Checks out' badge and Accept and Reject buttons.">
+      </div>
+      <figcaption>
+        The workspace running on the reference app. The map shows the real cargo screen with each
+        piece outlined, and the panel below it explains cargo's boundary. On the right are two
+        suggestions from the agent. Each one names the question it answers and gives its reasons.
+        A green badge means it has already been tried on a copy of the plan and checks out.
+        Nothing changes until someone presses Accept.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="frame shot">
+        <img src="media/workspace-approve.jpg" width="1600" height="1000"
+             alt="The same workspace after accepting the rename and approving. The shell is now called console everywhere: in the domain chips, on the map and in the hidden-link label. The approval tab says approved by Sean with the date and time, lists the open risks (three hidden links to resolve, six shared files to place, one suggestion waiting) and shows a table of the seven pieces with their screens and data.">
+      </div>
+      <figcaption>
+        After accepting the rename and approving. The shell is called <em>console</em> everywhere:
+        in the chips, on the map, and in the hidden-link label. The approval names who approved it
+        and when. The open risks are listed above the table of pieces. Approving also saved the plan
+        to the project's history, so the change request carries it.
+      </figcaption>
+    </figure>
+
+    <div class="must">
+      <b>The workspace must</b>
+      <ul>
+        <li>Keep nothing of its own: a reload, a second tab or a restart shows the same plan.</li>
+        <li>Change the plan only through the named actions, so an invalid change is refused with a reason.</li>
+        <li>Hold every agent suggestion until a person accepts or rejects it, and show whether it would still work.</li>
+        <li>Record who approved, when, and exactly which version of the plan. Any later change to the pieces makes the approval out of date. A comment does not.</li>
+        <li>Run on the person's own machine first, and be built so the same screen can later be hosted.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ FIGMA ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 4 — Figma</span>
+    <h2>Turn any running screen into an editable Figma design</h2>
+    <p class="claim">
+      Separately from the review boxes, the tools can turn any screen of a running app into a
+      real, editable Figma design. It is made of frames, text and shapes, not a flat picture.
+      Designers start from what is actually live, not from an old mock-up. It works on any web
+      app, split up or not.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 230" role="img" aria-label="Three stages. First, a browser opens the screen and lists everything that is drawn, as plain facts. Second, the tools turn that list into a clean design outline and make every layout choice there. Third, a small Figma plugin draws the outline in Figma as frames, text and shapes. A screenshot is kept beside it to compare.">
+          <defs>
+            <marker id="f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-size="10" text-anchor="middle">
+            <rect x="20" y="40" width="230" height="110" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="135" y="66" font-size="11.5" fill="currentColor">1 · read the screen</text>
+            <text x="135" y="88" font-size="8.5" fill="var(--ink-3)">a browser opens the page and lists</text>
+            <text x="135" y="102" font-size="8.5" fill="var(--ink-3)">everything that is drawn: boxes,</text>
+            <text x="135" y="116" font-size="8.5" fill="var(--ink-3)">text, colours, sizes, positions</text>
+            <text x="135" y="136" font-size="8.5" fill="var(--ink-3)">facts only — no decisions</text>
+
+            <rect x="325" y="40" width="230" height="110" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+            <text x="440" y="66" font-size="11.5" fill="var(--accent)">2 · make a design outline</text>
+            <text x="440" y="88" font-size="8.5" fill="var(--ink-3)">drop what can't be seen;</text>
+            <text x="440" y="102" font-size="8.5" fill="var(--ink-3)">turn rows and columns into Figma</text>
+            <text x="440" y="116" font-size="8.5" fill="var(--ink-3)">auto-layout where it fits exactly</text>
+            <text x="440" y="136" font-size="8.5" fill="var(--ink-3)">every design choice happens here</text>
+
+            <rect x="630" y="40" width="230" height="110" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="745" y="66" font-size="11.5" fill="var(--gen)">3 · draw it in Figma</text>
+            <text x="745" y="88" font-size="8.5" fill="var(--ink-3)">a small Figma plugin replays</text>
+            <text x="745" y="102" font-size="8.5" fill="var(--ink-3)">the outline as frames, text</text>
+            <text x="745" y="116" font-size="8.5" fill="var(--ink-3)">and shapes you can edit</text>
+            <text x="745" y="136" font-size="8.5" fill="var(--ink-3)">a screenshot is kept to compare</text>
+          </g>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#f1)">
+            <path d="M250 95 L 319 95"/>
+            <path d="M555 95 L 624 95"/>
+          </g>
+          <text x="440" y="190" font-size="9" text-anchor="middle" fill="var(--ink-3)">the same reading of the screen feeds the review boxes in step 4 — one way to see a screen, used twice</text>
+        </svg>
+      </div>
+      <figcaption>
+        Keeping all design choices in the middle stage means each rule can be tested without a
+        browser or Figma open. The rule throughout: when Figma can't show something exactly, keep
+        it looking right rather than make it editable but wrong.
+      </figcaption>
+    </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Include only what you can see on the screen, including content inside reusable web components.</li>
+        <li>Use Figma auto-layout only where it matches the page exactly; elsewhere keep exact positions.</li>
+        <li>Say what it could not copy. Gradients become a plain colour, only the first shadow is kept, and video, canvas and embedded frames become labelled placeholders.</li>
+        <li>Be checked in the Figma desktop app before anyone relies on it. So far it has only run against a stand-in for Figma (issue <a href="https://github.com/falese/seans-mfe-tool/issues/434">#434</a>).</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEPS 5-7 ============ -->
+  <section class="fig">
+    <span class="fignum">Steps 5 to 7 — build, move, switch over <span class="pill next">next</span></span>
+    <h2>Move one piece at a time, with the old app still running</h2>
+    <p class="claim">
+      The pieces are not swapped in all at once. First, the whole old app is wrapped up as one
+      piece of its own, so the new shell can show it unchanged. Then, one screen area at a time,
+      that area is pointed at its new piece instead of the old app. After every switch, step 8
+      checks that nothing changed. If something did, that one switch is undone.
+    </p>
+    <div class="io">
+      <div><b>Step 5 · build</b>An empty piece and data helper for each area in the plan, plus the old app wrapped as one piece. At first every screen still shows the old app.</div>
+      <div><b>Step 6 · move</b>Each screen's code, and the tests marked <em>keep</em>, move into its piece. Tests marked <em>rewrite</em> are replaced with ones that check behaviour.</div>
+      <div><b>Step 7 · switch over</b>One screen area at a time moves from the old app to its new piece. Each switch is its own small, reviewable change.</div>
+    </div>
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Keep the product working at every point: users see no difference while the work goes on.</li>
+        <li>Never switch more than one screen area without passing the check in step 8.</li>
+        <li>Only write into the parts of each piece that developers own, never over files the platform generates.</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ STEP 8 ============ -->
+  <section class="fig">
+    <span class="fignum">Figure 5 — step 8, check nothing changed <span class="pill done">built</span></span>
+    <h2>Replay the same journeys and compare</h2>
+    <p class="claim">
+      The check takes the recording from step 1 and replays its journeys against the new
+      version. It uses the same frozen clock and the same recorded answers, so the data cannot
+      differ. It then compares the two runs screen by screen. Run first against the old app
+      itself, it proves the journeys give the same result every time. After that, any
+      difference means the app changed.
+    </p>
+
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 880 250" role="img" aria-label="The recording from step 1 provides the journeys, the frozen clock and the recorded answers. The new version is driven through them. Four comparisons per screen: what is shown, what data is asked for, new errors, and how it looks. The result is a report: same, or exactly what changed.">
+          <defs>
+            <marker id="v1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-size="10" text-anchor="middle">
+            <rect x="20" y="40" width="180" height="70" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="110" y="64" fill="currentColor">the recording</text>
+            <text x="110" y="82" font-size="8.5" fill="var(--ink-3)">from step 1: journeys,</text>
+            <text x="110" y="96" font-size="8.5" fill="var(--ink-3)">clock, recorded answers</text>
+            <rect x="20" y="140" width="180" height="56" rx="2" fill="var(--dev-bg)" stroke="var(--dev)"/>
+            <text x="110" y="164" fill="var(--dev)">the new version</text>
+            <text x="110" y="180" font-size="8.5" fill="var(--ink-3)">after a switch</text>
+
+            <rect x="270" y="90" width="170" height="60" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="355" y="114" fill="currentColor">same journeys,</text>
+            <text x="355" y="130" fill="currentColor">same data</text>
+
+            <rect x="510" y="20" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="590" y="40" fill="var(--gen)">what is shown</text>
+            <text x="590" y="54" font-size="8" fill="var(--ink-3)">every area, its words</text>
+            <rect x="510" y="74" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="590" y="94" fill="var(--gen)">data asked for</text>
+            <text x="590" y="108" font-size="8" fill="var(--ink-3)">the same requests</text>
+            <rect x="510" y="128" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="590" y="148" fill="var(--gen)">errors</text>
+            <text x="590" y="162" font-size="8" fill="var(--ink-3)">nothing new</text>
+            <rect x="510" y="182" width="160" height="44" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="590" y="202" fill="var(--gen)">how it looks</text>
+            <text x="590" y="216" font-size="8" fill="var(--ink-3)">every area, pixel by pixel</text>
+
+            <rect x="730" y="96" width="130" height="50" rx="2" fill="var(--accent-bg)" stroke="var(--accent)"/>
+            <text x="795" y="117" fill="var(--accent)">report</text>
+            <text x="795" y="133" font-size="8.5" fill="var(--ink-3)">same, or what changed</text>
+          </g>
+          <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#v1)">
+            <path d="M200 75 L 264 108"/>
+            <path d="M200 168 L 264 132"/>
+            <path d="M440 120 L 504 42"/>
+            <path d="M440 120 L 504 96"/>
+            <path d="M440 120 L 504 150"/>
+            <path d="M440 120 L 504 204"/>
+            <path d="M670 42 L 724 112"/>
+            <path d="M670 96 L 724 116"/>
+            <path d="M670 150 L 724 126"/>
+            <path d="M670 204 L 724 130"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        Screen areas are matched by what they are, not by which file draws them. After the split,
+        the same parts come from new files, and the check still recognises them.
+      </figcaption>
+    </figure>
+
+    <div class="must">
+      <b>It must</b>
+      <ul>
+        <li>Pass against the old app itself before it is trusted to judge a new version.</li>
+        <li>Report a change once, in the screen area that caused it, not in every area around it.</li>
+        <li>Allow no visual difference unless a person sets an allowance on purpose.</li>
+        <li>Name what the journeys never visited, so nobody mistakes "not checked" for "unchanged".</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ============ DOES IT WORK ============ -->
+  <section class="fig">
+    <span class="fignum">Does it work?</span>
+    <h2>Tested on our own app, and on two that nobody here wrote</h2>
+    <div class="note">
+      <b>The short answer</b>
+      On our reference app, built to be split, it found the seven planned pieces. On two
+      unrelated public versions of the same blogging product, written by different people with
+      different tools, it found the <strong>same eight pieces</strong> in both. It also explained
+      every data request in both, and both passed the step 8 check against themselves. The
+      outside apps also exposed sixteen gaps the reference app never could; all are fixed.
+    </div>
+  </section>
+
+
+  <!-- ============ STATUS ============ -->
+  <section class="fig">
+    <span class="fignum">Finding your way <span class="pill done">built</span></span>
+    <h2>Ask where you are, and get the next command</h2>
+    <p class="claim">
+      Eight steps across a dozen commands is a lot to keep in your head, and on the first run
+      against the reference app it took five wrong turns to reach a plan. Now one command looks at
+      the evidence folder and says where things stand: which steps are done, which went out of date
+      because something before them changed, which are waiting on a person, and the exact next
+      command, with the app's address and folder already filled in.
+    </p>
+    <div class="frame" style="margin-bottom:1.2rem"><pre style="margin:0;font-size:12px;line-height:1.5;white-space:pre-wrap">$ seans-mfe-tool flow:status ./evidence
+
+  ✓ Run the app and record what it does
+  ✓ Read the app's source, joined to the capture
+  ✓ Propose the domains
+  ○ Shape the proposal — merge, split, rename, ask the agent — 1 suggestion waiting
+  ↻ Write the review package — proposal/decomposition.yaml changed since proposal/PROPOSAL.md was built
+  ✓ Approve the proposal — approved by Sean
+  ✗ Generate the MFEs, their BFFs and the legacy wrapper — not built yet (#410)
+  · Prove the composed app behaves like the monolith — waits on scaffold
+
+  next: seans-mfe-tool decompose:present ./evidence/proposal</pre></div>
+    <p>
+      It keeps no record of its own. Each time, it reads what is on disk. Each step notes which
+      versions of its inputs it was built from, so "out of date" means the inputs really changed;
+      switching branches, which only changes file dates, cannot fake it. The order of the steps is
+      written down once, as data (<code>flows/decompose.yaml</code>), and the same command will
+      cover other tasks, such as creating and building a piece, as they are added (PDR-012,
+      ADR-119).
+    </p>
+  </section>
+
+  <section class="fig">
+    <span class="fignum">Status</span>
+    <h2>Where each step is</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Step</th><th>State</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Watch the app</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/438">#438</a></td></tr>
+          <tr><td>2 · Read the code</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/439">#439</a></td></tr>
+          <tr><td>3 · Suggest the pieces</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/441">#441</a>, data <a href="https://github.com/falese/seans-mfe-tool/pull/445">#445</a></td></tr>
+          <tr><td>4 · People agree: review package and Figma page</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
+          <tr><td>4 · People agree: the workspace's plan, actions and data service</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/449">#449</a>, decisions <a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
+          <tr><td>4 · People agree: the workspace's screens and <code>decompose:workspace</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/450">#450</a></td></tr>
+          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/451">#451</a></td></tr>
+          <tr><td>The plan's rules as one shared package, used by every tool</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/451">#451</a></td></tr>
+          <tr><td>Finding your way: <code>flow:status</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/453">#453</a></td></tr>
+          <tr><td>Screens to editable Figma designs</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/435">#435</a></td></tr>
+          <tr><td>5–7 · Build, move, switch over</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">#410</a></td></tr>
+          <tr><td>8 · Check nothing changed</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>
+          <tr><td>Testing on outside apps</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1rem">
+      "Built" means the change is written and its checks pass, and it is waiting for review. The
+      changes stack on each other. The last one, <a href="https://github.com/falese/seans-mfe-tool/pull/453">#453</a>,
+      contains them all. The step-by-step guide is
+      <a href="https://github.com/falese/seans-mfe-tool/blob/main/docs/decompose-runbook.md">docs/decompose-runbook.md</a>.
+    </p>
+  </section>
+
+  <footer>
+    The product decisions are PDR-011 and PDR-012, and the design decisions are ADR-109 to ADR-113
+    and ADR-115 to ADR-119, in <code>docs/architecture-decisions/</code>. The reference app is
+    <code>examples/meridian-monolith/</code>. See also
+    <a href="cli-architecture.html">Generator CLI Schematics</a>,
+    <a href="runtime-architecture.html">Runtime Platform Schematics</a> and the
+    <a href="system-map.html">system map</a>.
+  </footer>
+
+</div>
+
+</body>
+</html>

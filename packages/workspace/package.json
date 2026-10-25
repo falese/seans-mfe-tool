@@ -1,0 +1,37 @@
+{
+  "name": "@seans-mfe/workspace",
+  "version": "0.1.0",
+  "description": "The decomposition workspace (ADR-116, ADR-118): the workspace API over decomposition.yaml, its runner, and the generated workspace MFE it serves standalone. A library; decompose:workspace is a core command",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./decomposition-workspace/specs/workspace-api.yaml": "./decomposition-workspace/specs/workspace-api.yaml"
+  },
+  "files": [
+    "dist",
+    "decomposition-workspace/specs",
+    "decomposition-workspace/mfe-manifest.yaml",
+    "decomposition-workspace/package.json",
+    "decomposition-workspace/dist",
+    "decomposition-workspace/server.js",
+    "decomposition-workspace/.mesh"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:workspace": "cd decomposition-workspace && npm install --no-audit --no-fund && npx mesh build && npx rspack build && npm run build:server",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/decompose": "file:../decompose"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}

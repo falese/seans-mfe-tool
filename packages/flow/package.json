@@ -1,0 +1,32 @@
+{
+  "name": "@seans-mfe/flow",
+  "version": "0.1.0",
+  "description": "Multi-command flows as data: a flow's steps, commands, outputs and human gates, and where a directory stands in it, derived from its files (PDR-012, ADR-119)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'flow tests run from the root jest project' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts",
+    "js-yaml": "^4.1.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.9.3"
+  }
+}

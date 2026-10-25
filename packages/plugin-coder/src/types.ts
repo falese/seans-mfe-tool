@@ -38,10 +38,16 @@ export interface RepoContext {
  * How the seam reaches the external coder service (ADR-019 out-of-process).
  *  - `subprocess`: spawn `coder generate …` and read the completion from stdout.
  *  - `serve`: POST the prompt to a running `coder serve` SSE endpoint.
+ *  - `api`: send it to a hosted model over HTTPS, with the key from the
+ *    environment (ADR-117 §1). Anthropic is the first provider.
  */
 export type CoderTransport =
   | { kind: 'subprocess'; bin?: string }
-  | { kind: 'serve'; endpoint: string };
+  | { kind: 'serve'; endpoint: string }
+  | { kind: 'api'; provider: ApiProvider; model?: string };
+
+/** Hosted model providers the `api` transport can reach (ADR-117 §1). */
+export type ApiProvider = 'anthropic';
 
 /** Input to the seam: the compilation request. */
 export interface IntentCompileRequest {

@@ -69,8 +69,12 @@ const INVOCATIONS: Record<string, Invocation> = {
   // committed payload. --check makes it assert the fleet is current, so this
   // doubles as a guard that abc-kids' rules.json has not drifted (ADR-083).
   'compose:validate': { args: ['compose:validate', ABC_KIDS, '--check'] },
+  // A directory with nothing in it is the start of the decomposition flow (ADR-119).
+  'flow:status':      { args: ['flow:status', path.join(REPO_ROOT, 'examples', 'meridian-monolith'), '--flow', 'decompose'] },
   // --dry-run so the success path reports without rewriting rules.json.
   'compose:build':    { args: ['compose:build', ABC_KIDS, '--dry-run'] },
+  // Static analysis of the reference monolith; writes ./evidence/source under the temp cwd.
+  'decompose:analyze': { args: ['decompose:analyze', path.join(REPO_ROOT, 'examples', 'meridian-monolith'), '--no-run-tests'] },
   deploy:        { args: ['deploy', 'probe', '--type', 'remote', '--dry-run'] },
   'remote:init': { args: ['remote:init', 'probe-mfe', '--dry-run'] },
 
@@ -102,6 +106,16 @@ const NO_FIXTURE: Record<string, string> = {
   'bff:dev': 'starts a long-lived mesh server',
   'build:prod': 'needs an installed bundler in the target project (a full npm install per run)',
   'coder:compile': 'shells out to the external coder MLX model service (ADR-085/ADR-088) — an ~18GB Apple-Silicon dependency absent from CI',
+  'design:export': 'renders a URL in headless Chromium — needs a Playwright browser download and a page to serve, neither guaranteed in unit-test jobs',
+  'decompose:capture': 'drives a running app in headless Chromium — needs a Playwright browser download and an app to serve, neither guaranteed in unit-test jobs',
+  'decompose:propose': 'reads decompose:analyze output, which no fixture commits — the same path runs in src/decompose/propose/__tests__/meridian-monolith.test.ts',
+  'decompose:score': 'scores a decomposition.yaml, which no fixture commits — scoring runs against the real answer key in src/decompose/propose/__tests__/meridian-monolith.test.ts',
+  'decompose:edit': 'edits a decomposition.yaml, which no fixture commits — the edit operations and their re-derivation run in src/decompose/propose/__tests__/edit.test.ts',
+  'decompose:workspace': 'serves the workspace until stopped, from a built MFE and a proposal no fixture commits — its parts run in packages/workspace/src/run/__tests__/ and the MFE’s own suite',
+  'decompose:ask': 'calls a hosted model with a key from the environment — its flow runs against an injected model in packages/decompose/src/__tests__/ask.test.ts and src/decompose/__tests__/agent.test.ts',
+  'decompose:status': 'reads a decomposition.yaml and evidence bundle, which no fixture commits — the read model runs in src/decompose/propose/__tests__/status.test.ts',
+  'decompose:present': 'needs a proposal and a captured evidence bundle with screenshots, which no fixture commits — rendering runs in src/decompose/propose/__tests__/present.test.ts',
+  'decompose:verify': 'needs a captured evidence bundle (and a running app, or a second bundle), which no fixture commits — the comparison runs in src/decompose/verify/__tests__/parity.test.ts',
 };
 
 function runCli(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {

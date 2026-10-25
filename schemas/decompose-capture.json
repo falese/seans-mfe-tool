@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:capture.json",
+  "title": "decompose:capture",
+  "description": "Run a monolithic web app and record an evidence bundle for decomposition: regions on screen mapped to their React components and source files, API requests attributed to the regions they feed, navigations, console errors and screenshots, per journey step (ADR-109).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "URL of the running app (a React development build maps regions to source)"
+      },
+      "out": {
+        "type": "string",
+        "description": "Directory to write the evidence bundle to",
+        "default": "./evidence"
+      },
+      "journeys": {
+        "type": "string",
+        "description": "Journey file (YAML or JSON) of steps to drive"
+      },
+      "explore": {
+        "type": "string",
+        "description": "Follow in-app links for up to this many steps as an extra \"explore\" journey (0 disables)",
+        "default": 20
+      },
+      "replay": {
+        "type": "string",
+        "description": "Answer API requests from this bundle's recorded responses, reusing its clock and journeys"
+      },
+      "clock": {
+        "type": "string",
+        "description": "Freeze the page clock at this ISO-8601 time (default: now, or the replayed bundle's)"
+      },
+      "viewport": {
+        "type": "string",
+        "description": "Viewport as WxH",
+        "default": "1440x900"
+      },
+      "settle": {
+        "type": "string",
+        "description": "Quiet milliseconds with no request in flight before a step is recorded",
+        "default": 500
+      },
+      "source-root": {
+        "type": "string",
+        "description": "Directory source paths are made relative to (default: cut at /src/)"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "x-positional": [
+      "url"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "url",
+      "outDir",
+      "journeys",
+      "mode",
+      "clock",
+      "stats",
+      "replayMisses",
+      "files"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "outDir": {
+        "type": "string"
+      },
+      "journeys": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Names of the journeys that ran, `explore` included."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "live",
+          "replay"
+        ]
+      },
+      "clock": {
+        "type": "string"
+      },
+      "stats": {
+        "type": "object",
+        "required": [
+          "steps",
+          "regions",
+          "requests",
+          "attributedRequests",
+          "sourceCoverage",
+          "consoleErrors",
+          "pageErrors"
+        ],
+        "properties": {
+          "steps": {
+            "type": "number"
+          },
+          "regions": {
+            "type": "number"
+          },
+          "requests": {
+            "type": "number"
+          },
+          "attributedRequests": {
+            "type": "number"
+          },
+          "sourceCoverage": {
+            "type": "object",
+            "required": [
+              "visibleElements",
+              "mappedToSource"
+            ],
+            "properties": {
+              "visibleElements": {
+                "type": "number"
+              },
+              "mappedToSource": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "consoleErrors": {
+            "type": "number"
+          },
+          "pageErrors": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "replayMisses": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Requests a replay had no recording for, as `METHOD url`."
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

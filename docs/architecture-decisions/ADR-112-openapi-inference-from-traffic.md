@@ -3,7 +3,10 @@ id: 0112
 title: >-
   When a backend has no spec, the toolchain infers an OpenAPI document from recorded traffic and
   client code, marks it inferred, and the BFF consumes it like any other source
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#418"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / BFF / specs
@@ -13,9 +16,16 @@ relates-to: [52, 92, 109, 110]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
-implemented-by: []
-verified-by: []
-tracked-by: ["#410", "#415", "#418"]
+implemented-by:
+  - packages/decompose/src/openapi.ts
+  - packages/decompose/src/derive.ts
+  - src/decompose/propose/io.ts
+  - src/commands/decompose/propose.ts
+verified-by:
+  - packages/decompose/src/__tests__/openapi.test.ts
+  - packages/decompose/src/__tests__/derive.test.ts
+  - src/decompose/propose/__tests__/io.test.ts
+tracked-by: ["#410", "#415", "#418", "#440"]
 summary: >-
   BFF generation consumes OpenAPI specs through the manifest's `data.sources`; nothing in the
   toolchain produces one. For each backend observed in the evidence bundle, `decompose:propose`
@@ -46,9 +56,29 @@ from observed requests and responses; refine with types and paths read from clie
 The document carries an `x-smt-inferred` marker and references to the bundle observations
 behind each operation, so a reviewer can see what is guessed and from what.
 
+As implemented (#440), `decompose:propose` reads the bundle's `requests.json` and
+`responses.json` and the endpoint templates `decompose:analyze` folded from the client code:
+
+- Paths are templated from code where the two agree. An id-like segment that no code explains
+  becomes `{id}`. Operations seen only in code are kept, with `x-smt-source: [code]`.
+- Response schemas merge every body seen. Required fields are those every sample had.
+- Each operation lists its observations (`x-smt-observed`), and the envelope each list arrives in
+  is recorded (`x-smt-envelope`: `bare`, `result`, `Data`, …).
+
+The specs are written beside the proposal as `specs/<backend>.yaml`, with the recorded responses
+in `specs/<backend>.mocks.json`. The derived fleet gets one copy per MFE, cut to the operations
+its domain calls. Each manifest's source gets the `hoistField` rules that unwrap its enveloped
+lists, and the recorded responses become the BFF's `mocks.json` (ADR-052). `decompose:edit`
+re-cuts them after an edit.
+
 ### 3. A real spec wins
 
 If the backend publishes a spec, it is used and the inferred one only reports differences.
+
+As implemented, a published spec comes from `--spec backend=path`, or from any document in
+`specs/` without the `x-smt-inferred` marker. Differences are written to
+`specs/<backend>.differences.json`: operations and response fields each side lacks, and type
+mismatches. The recorded fixtures are re-keyed to the published operationIds.
 
 ### 4. Contract tests hold the BFF to the observations
 

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:analyze.json",
+  "title": "decompose:analyze",
+  "description": "Read a React app's source into a source graph — routes, imports, components, API endpoints, store reads, each file's screen — inventory and run its tests, read co-change and CODEOWNERS, and join it to a decompose:capture evidence bundle (ADR-109).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "dir": {
+        "type": "string",
+        "description": "The app's directory (holding package.json and src/)"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "A decompose:capture evidence bundle to join with"
+      },
+      "out": {
+        "type": "string",
+        "description": "Directory to write to (default: <evidence>/source, or ./evidence/source)"
+      },
+      "src": {
+        "type": "string",
+        "description": "Source directory inside the app",
+        "default": "src"
+      },
+      "run-tests": {
+        "type": "boolean",
+        "description": "Run the app's Jest suite to record per-test results (needs its dependencies installed)"
+      }
+    },
+    "required": [
+      "dir"
+    ],
+    "x-positional": [
+      "dir"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "dir",
+      "outDir",
+      "sourceFiles",
+      "assignment",
+      "routes",
+      "endpoints",
+      "storeReads",
+      "tests",
+      "history",
+      "join",
+      "files"
+    ],
+    "properties": {
+      "dir": {
+        "type": "string"
+      },
+      "outDir": {
+        "type": "string"
+      },
+      "sourceFiles": {
+        "type": "number"
+      },
+      "assignment": {
+        "type": "object",
+        "description": "Files per assignment category: screen, shared, shell, unreached."
+      },
+      "routes": {
+        "type": "number"
+      },
+      "endpoints": {
+        "type": "number"
+      },
+      "storeReads": {
+        "type": "number"
+      },
+      "tests": {
+        "type": "object",
+        "required": [
+          "files",
+          "ran",
+          "reason",
+          "passed",
+          "failed",
+          "skipped"
+        ],
+        "properties": {
+          "files": {
+            "type": "number"
+          },
+          "ran": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "passed": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "skipped": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "history": {
+        "type": "object",
+        "required": [
+          "coChangePairs",
+          "ownedFiles",
+          "unavailable"
+        ],
+        "properties": {
+          "coChangePairs": {
+            "type": "number"
+          },
+          "ownedFiles": {
+            "type": "number"
+          },
+          "unavailable": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "join": {},
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

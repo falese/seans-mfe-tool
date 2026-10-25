@@ -1,0 +1,23 @@
+# Conduit journeys, written once and run against every RealWorld implementation.
+# Click-driven, by visible text and the shared RealWorld markup, so they do not
+# depend on how an implementation routes (browser history vs hash).
+journeys:
+  - name: browse
+    steps:
+      - goto: /
+      - wait: 300
+      - click: ".sidebar .tag-pill >> text=history"
+      - click: "text=Notes on the Analytical Engine"
+      - click: ".article-meta .author >> nth=0"
+      - click: "text=Favorited Articles"
+  - name: signed-in
+    steps:
+      - goto: /
+      - click: "nav >> text=Sign in"
+      - fill: { selector: "input[placeholder=Email]", value: "grace@conduit.test" }
+      - fill: { selector: "input[placeholder=Password]", value: "password123" }
+      - press: { selector: "input[placeholder=Password]", key: Enter }
+      - wait: 500
+      - click: "text=Your Feed"
+      - click: "nav >> text=Settings"
+      - click: "nav a[href$=editor]"

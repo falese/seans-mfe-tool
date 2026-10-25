@@ -38,11 +38,14 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
     "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/decompose": "file:../decompose",
     "@seans-mfe/dsl": "file:../dsl",
     "@seans-mfe/oclif-base": "file:../oclif-base",
     "chalk": "^4.1.2",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@oclif/core": "^4.10.5",

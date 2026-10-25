@@ -1,0 +1,40 @@
+# The RealWorld reverse-engineering corpus (#442): apps nobody here wrote, pinned.
+#
+# RealWorld ("Conduit") is one product — articles, profiles, comments, auth,
+# a feed — built in dozens of frontends against one published API spec. So the
+# domain model a decomposition finds should be close to the same in every
+# implementation, and the spec gives every inferred OpenAPI document a truth to
+# be scored against. Cloned at run time, never committed. All MIT.
+spec:
+  repo: gothinkster/realworld
+  commit: ebbcdeb8d55b42a3a613c787560498b8ef10003f
+  path: specs/api/openapi.yml
+  license: MIT
+
+# The public demo API is gone, so a reference backend runs locally once; every
+# later run replays what it recorded (ADR-109 replay).
+backend:
+  repo: gothinkster/golang-gin-realworld-example-app
+  commit: 626c372d259472148d93303f74aa9b9a1cdcef24
+  license: MIT
+  port: 8080
+
+apps:
+  - name: react-redux
+    repo: gothinkster/react-redux-realworld-example-app
+    commit: ee72eba4056392c95a27bc48d385d3f54ba38a18
+    license: MIT
+    stack: React 16, React Router 4 (browser history), Redux, superagent, JavaScript (CRA 1)
+    port: 4100
+    # The one change made to each app: call the API same-origin, through the dev
+    # server's proxy, instead of a dead public host (the backend sends no CORS headers).
+    setup:
+      replace: { file: src/agent.js, from: "https://conduit.productionready.io/api", to: "/api" }
+  - name: ts-redux-react
+    repo: angelguzmaning/ts-redux-react-realworld-example-app
+    commit: cb397562724ea7f53758d5511c220690b99fe2f5
+    license: MIT
+    stack: React 17, React Router 5 (hash history), Redux Toolkit, axios, TypeScript (CRA 4)
+    port: 4200
+    setup:
+      replace: { file: src/config/settings.ts, from: "https://api.realworld.io/api/", to: "/api/" }

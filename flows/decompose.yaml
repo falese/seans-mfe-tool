@@ -1,0 +1,71 @@
+# The decomposition flow (PDR-011, PDR-012, ADR-119).
+#
+# Each step's state is derived from the files it produces, so this document is
+# the whole of what `flow:status` knows about the order. `from` names what a
+# step's output is built from: the command records their digests beside the
+# output (`<output>.from.json`), and freshness compares content, not clocks. When a decompose
+# command changes what it writes, or a new one joins the flow, change it here
+# too: src/flow/__tests__/decompose-flow.test.ts checks every command and check
+# named below exists.
+id: decompose
+title: Decompose a monolith into MFEs
+root: the evidence bundle decompose:capture writes (the proposal lives inside it)
+description: >-
+  Run the app and record what it does, read its source, propose domains, shape and agree the
+  proposal, then build, move and switch over, and prove the result behaves the same.
+inputs:
+  appUrl: { from: bundle.json, field: app, otherwise: <app-url> }
+  appDir: { from: source/project.json, field: dir, otherwise: <app-dir> }
+steps:
+  - id: capture
+    title: Run the app and record what it does
+    produces: [bundle.json, requests.json]
+    command: seans-mfe-tool decompose:capture {appUrl} --out {root} --explore 20
+
+  - id: analyze
+    title: Read the app's source, joined to the capture
+    after: [capture]
+    produces: [source/graph.json, source/join.json]
+    from: [bundle.json, requests.json]
+    command: seans-mfe-tool decompose:analyze {appDir} --evidence {root}
+
+  - id: propose
+    title: Propose the domains
+    after: [analyze]
+    produces: [proposal/proposal.base.yaml, proposal/decomposition.yaml]
+    from: [source/graph.json, source/join.json]
+    command: seans-mfe-tool decompose:propose {root}
+
+  - id: shape
+    title: Shape the proposal — merge, split, rename, ask the agent
+    kind: optional
+    after: [propose]
+    check: suggestions-waiting
+    command: seans-mfe-tool decompose:workspace {root}/proposal
+
+  - id: present
+    title: Write the review package
+    after: [propose]
+    produces: [proposal/PROPOSAL.md]
+    from: [proposal/decomposition.yaml]
+    command: seans-mfe-tool decompose:present {root}/proposal
+
+  - id: approve
+    title: Approve the proposal
+    kind: gate
+    after: [present]
+    check: proposal-approved
+    command: seans-mfe-tool decompose:workspace {root}/proposal
+
+  - id: scaffold
+    title: Generate the MFEs, their BFFs and the legacy wrapper
+    after: [approve]
+    available: false
+    issue: '#410'
+
+  - id: verify
+    title: Prove the composed app behaves like the monolith
+    after: [scaffold]
+    produces: [../verify/parity.json]
+    check: at-parity
+    command: seans-mfe-tool decompose:verify {root}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:workspace.json",
+  "title": "decompose:workspace",
+  "description": "Open the decomposition workspace on a proposal: the screens with the proposed domains outlined, merge / split / rename / move, agent suggestions and approval — served on this machine, every change a named edit (ADR-116).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The proposal directory (holding decomposition.yaml)"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "The decompose:capture evidence bundle to show (default: the proposal directory's parent)"
+      },
+      "port": {
+        "type": "string",
+        "description": "Port for the workspace page",
+        "default": 4611
+      },
+      "who": {
+        "type": "string",
+        "description": "Name recorded on comments and approvals (default: git's user.name)"
+      },
+      "commit": {
+        "type": "boolean",
+        "description": "Commit the proposal when it is approved (ADR-116 §5)"
+      },
+      "agent": {
+        "type": "boolean",
+        "description": "Connect the agent pane to a hosted model when ANTHROPIC_API_KEY is set (ADR-117)"
+      },
+      "model": {
+        "type": "string",
+        "description": "The model the agent asks (default: the coder seam’s)"
+      },
+      "build": {
+        "type": "boolean",
+        "description": "Install and build the workspace MFE first (needed once, and after an upgrade)"
+      },
+      "exit-after-start": {
+        "type": "boolean",
+        "description": "Start, report where, and stop — for checks and scripts"
+      }
+    },
+    "required": [
+      "proposal"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "url",
+      "proposal",
+      "approvals"
+    ],
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Where the workspace was served."
+      },
+      "proposal": {
+        "type": "string"
+      },
+      "approvals": {
+        "type": "array",
+        "items": {},
+        "description": "Each approval made while it ran, and whether it was committed."
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

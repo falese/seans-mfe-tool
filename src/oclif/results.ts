@@ -26,6 +26,7 @@ export type {
 // for the commands that already import it from this module (ADR-080).
 export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
 import type { MutatingResult } from '@seans-mfe/contracts';
+import type { ProposalStatus } from '@seans-mfe/decompose';
 
 // ---------------------------------------------------------------------------
 // deploy
@@ -178,6 +179,26 @@ export interface MfeValidateResult {
   };
 }
 
+// ---------------------------------------------------------------------------
+// design:export
+// ---------------------------------------------------------------------------
+
+/** design:export — captured design bundle summary (POC). */
+export interface DesignExportResult {
+  url: string;
+  outDir: string;
+  name: string;
+  stats: {
+    elements: number;
+    texts: number;
+    images: number;
+    placeholders: number;
+    truncated: number;
+  };
+  fonts: Array<{ family: string; weight: number; italic: boolean }>;
+  files: string[];
+}
+
 /**
  * sentinel:validate — one kernel run over one root through SMT's ports
  * (ADR-089, #384). `hits` are HardenedCheck findings in developer-owned code;
@@ -207,4 +228,241 @@ export interface SentinelValidateResult {
     location: string;
     text: string;
   }>;
+}
+
+// ---------------------------------------------------------------------------
+// decompose:capture
+// ---------------------------------------------------------------------------
+
+/** decompose:capture — an evidence bundle written (ADR-109). */
+export interface DecomposeCaptureResult {
+  url: string;
+  outDir: string;
+  /** Names of the journeys that ran, `explore` included. */
+  journeys: string[];
+  mode: 'live' | 'replay';
+  clock: string;
+  stats: {
+    steps: number;
+    regions: number;
+    requests: number;
+    attributedRequests: number;
+    sourceCoverage: { visibleElements: number; mappedToSource: number };
+    consoleErrors: number;
+    pageErrors: number;
+  };
+  /** Requests a replay had no recording for, as `METHOD url`. */
+  replayMisses: string[];
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:analyze
+// ---------------------------------------------------------------------------
+
+/** decompose:analyze — the source graph written, joined to an evidence bundle when given (ADR-109 §3). */
+export interface DecomposeAnalyzeResult {
+  dir: string;
+  outDir: string;
+  sourceFiles: number;
+  /** Files per assignment category: screen, shared, shell, unreached. */
+  assignment: Record<string, number>;
+  routes: number;
+  endpoints: number;
+  storeReads: number;
+  tests: { files: number; ran: boolean; reason: string | null; passed: number; failed: number; skipped: number };
+  history: { coChangePairs: number; ownedFiles: number; unavailable: string | null };
+  join: {
+    observedEndpoints: number;
+    explained: number;
+    unexplained: number;
+    sourceOnly: number;
+    filesSeenAtRuntime: number;
+    sourceFiles: number;
+  } | null;
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:propose
+// ---------------------------------------------------------------------------
+
+/** decompose:propose — a decomposition proposed (or re-derived), with its derived fleet validated (ADR-110). */
+export interface DecomposeProposeResult {
+  outDir: string;
+  mode: 'clustered' | 'rederived';
+  domains: Array<{ id: string; mfe: string; files: number; capabilities: string[]; backends: string[] }>;
+  shared: string[];
+  unassigned: string[];
+  couplings: number;
+  tests: { keep: number; rewrite: number; discard: number };
+  uncovered: number;
+  /** Manifest errors per MFE and fatal composition findings; empty when everything validates. */
+  validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
+  valid: boolean;
+  /** One OpenAPI document per backend the BFFs front (ADR-112); empty when there was no traffic or spec to read. */
+  specs: DecomposeSpecSummary[];
+  files: string[];
+}
+
+/** A backend's spec: where it came from, whether it validates, and how an inferred one differs from a published one. */
+export interface DecomposeSpecSummary {
+  backend: string;
+  source: 'inferred' | 'published';
+  operations: number;
+  /** OpenAPI validation errors; empty when the document is valid. */
+  errors: string[];
+  differences?: {
+    operationsMatched: number;
+    inferredOnly: string[];
+    publishedOnly: string[];
+    fieldsMatched: number;
+    fieldsInferredOnly: number;
+    fieldsPublishedOnly: number;
+    typeMismatches: string[];
+  };
+}
+
+// ---------------------------------------------------------------------------
+// decompose:verify
+// ---------------------------------------------------------------------------
+
+/** decompose:verify — the parity gate run (ADR-113). A run not at parity fails with PARITY_FAILED; the report is on disk. */
+export interface DecomposeVerifyResult {
+  baseline: string;
+  candidate: string;
+  /** The app driven; null when an existing bundle was compared. */
+  url: string | null;
+  parity: boolean;
+  summary: {
+    steps: number;
+    stepsAtParity: number;
+    regions: number;
+    regionsAtParity: number;
+    requests: number;
+    newConsoleErrors: number;
+    visualFailures: number;
+  };
+  failingSteps: string[];
+  /** Behavior no journey exercised: routes never visited. */
+  gaps: { routes: string[] };
+  replayMisses: string[];
+  report: { json: string; markdown: string };
+}
+
+// ---------------------------------------------------------------------------
+// decompose:score
+// ---------------------------------------------------------------------------
+
+/** One proposal scored against an answer key. */
+export interface DecompositionScoreSummary {
+  domainMap: Record<string, string | null>;
+  assignment: { correct: number; total: number; precision: number; recall: number; f1: number; misplaced: Array<{ file: string; proposed: string; expected: string }> };
+  backends: { perDomain: Record<string, number>; mean: number };
+  slots: { slotMap: Record<string, string>; matched: number; total: number; score: number };
+  tests: { agree: number; total: number; score: number; disagreements: Array<{ file: string; proposed: string; expected: string }> };
+  gaps: { detected: string[]; missed: string[]; unmatchable: string[]; recall: number };
+}
+
+/** decompose:score — the proposal and, when there is one, its deterministic base, scored (#415). */
+export interface DecomposeScoreResult {
+  proposal: string;
+  answerKey: string;
+  score: DecompositionScoreSummary;
+  /** The deterministic draft scored alone, when proposal.base.yaml is beside the proposal (or --base). */
+  base: DecompositionScoreSummary | null;
+  /** The agent's edits from base to proposal. */
+  edits: Array<Record<string, string>>;
+  /** The training-corpus record written, when --corpus was given. */
+  corpusRecord: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// decompose:edit
+// ---------------------------------------------------------------------------
+
+/** decompose:edit — named edits applied to a proposal, and the fleet re-derived (ADR-110 §4). */
+export interface DecomposeEditResult {
+  proposal: string;
+  edits: Array<Record<string, string>>;
+  domains: string[];
+  /** Whether a recorded approval still names the edited document (ADR-116 §5). */
+  approval: 'none' | 'current' | 'stale';
+  /** Agent suggestions still waiting for a decision. */
+  suggestions: number;
+  validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
+  valid: boolean;
+  /** True when the edits were only applied and validated, not written (ADR-117 §4). */
+  dryRun: boolean;
+  /** What was written; empty on a dry run. */
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:status
+// ---------------------------------------------------------------------------
+
+export interface DecomposeStatusResult extends ProposalStatus {
+  proposal: string;
+  /** The evidence bundle the screens' screenshot paths are relative to; null without one. */
+  bundle: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// decompose:present
+// ---------------------------------------------------------------------------
+
+/** decompose:present — the agreement artifact: PROPOSAL.md and the boundary overlay (#416). */
+export interface DecomposePresentResult {
+  proposalDir: string;
+  /** Screens in the overlay, and domain boxes drawn on them. */
+  screens: number;
+  boxes: number;
+  /** Domains with at least one box on some screen; the rest never appeared in the capture. */
+  domainsShown: string[];
+  domainsNotShown: string[];
+  files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:workspace / decompose:ask (ADR-116, ADR-117, ADR-118)
+// ---------------------------------------------------------------------------
+
+export interface DecomposeWorkspaceResult {
+  /** Where the workspace was served. */
+  url: string;
+  proposal: string;
+  /** Each approval made while it ran, and whether it was committed. */
+  approvals: Array<{ committed: true; commit: string } | { committed: false; reason: string }>;
+}
+
+/** The agent's answer, the edits written as suggestions, and the edits the check dropped, with why. */
+export interface DecomposeAskResult {
+  answer: string;
+  suggested: Array<{ explanation: string; edit: Record<string, unknown> }>;
+  dropped: Array<{ explanation: string; edit: Record<string, unknown>; reason: string }>;
+  model: string;
+}
+
+// ---------------------------------------------------------------------------
+// flow:status (PDR-012, ADR-119)
+// ---------------------------------------------------------------------------
+
+/** Where a directory stands in a flow, derived from its files. */
+export interface FlowStatusResult {
+  flow: string;
+  title: string;
+  /** The directory, resolved. */
+  root: string;
+  steps: Array<{
+    id: string;
+    title: string;
+    kind: 'command' | 'gate' | 'optional';
+    state: 'done' | 'stale' | 'next' | 'ready' | 'waiting' | 'blocked' | 'optional' | 'unavailable';
+    detail?: string;
+    command?: string;
+  }>;
+  /** The command to run next, or null when nothing can run. */
+  next: { step: string; command: string; placeholders: string[] } | null;
+  summary: string;
 }

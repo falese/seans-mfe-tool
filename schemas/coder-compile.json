@@ -21,7 +21,7 @@
       },
       "model": {
         "type": "string",
-        "description": "MLX model dir/id to pass through to coder (--model)"
+        "description": "Model to run: an MLX model dir/id for local coder (--model), or a hosted model id with --api"
       },
       "context": {
         "type": "array",
@@ -33,6 +33,10 @@
       "endpoint": {
         "type": "string",
         "description": "Use a running `coder serve` SSE endpoint instead of a subprocess"
+      },
+      "api": {
+        "type": "boolean",
+        "description": "Send the intent to a hosted model (Anthropic; needs ANTHROPIC_API_KEY) instead of a local coder (ADR-117)"
       },
       "out": {
         "type": "string",

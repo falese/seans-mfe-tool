@@ -10,6 +10,7 @@
 
 import { execFile } from 'node:child_process';
 import { BusinessError, NetworkError, SystemError } from '@seans-mfe/contracts';
+import { makeApiRunner } from './api-runner';
 import { stripFences } from './oracle';
 import {
   DEFAULT_ADAPTOR,
@@ -169,9 +170,14 @@ export function makeServeRunner(endpoint: string): CoderRunner {
 /** Pick the real runner for a request's transport (subprocess by default). */
 export function runnerForRequest(request: IntentCompileRequest): CoderRunner {
   const transport = request.transport ?? { kind: 'subprocess' };
-  return transport.kind === 'serve'
-    ? makeServeRunner(transport.endpoint)
-    : makeSubprocessRunner(transport.bin);
+  switch (transport.kind) {
+    case 'serve':
+      return makeServeRunner(transport.endpoint);
+    case 'api':
+      return makeApiRunner(transport);
+    default:
+      return makeSubprocessRunner(transport.bin);
+  }
 }
 
 /**
