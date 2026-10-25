@@ -1340,7 +1340,7 @@
   <!-- ============================================================ 4 · CAPABILITIES -->
   <section class="band" id="capabilities">
     <p class="kicker">4 · What the platform provides</p>
-    <h2 class="section-title wide">Eleven things the platform is responsible for</h2>
+    <h2 class="section-title wide">Twelve things the platform is responsible for</h2>
     <p class="lede">
       The platform's job list, grouped by what each part does rather than where its files sit. Four are
       foundational: everything else is built on them. These are not folders. Several span more than one
@@ -1426,7 +1426,15 @@
         <h3>Operator interface</h3>
         <p class="part-what">One set of commands does everything above: start a capability, build it, check it, package it, deploy it, compile a composition. The identical commands are also published as tools that AI assistants can call directly.</p>
         <p class="part-why"><span>Why it matters</span> People and AI assistants use the same commands, so a person can repeat anything an assistant does, and the reverse. Each assistant call runs in its own isolated process.</p>
-        <p class="paths">src/commands/ (19 published commands) · src/mcp/ · schemas/</p>
+        <p class="paths">src/commands/ (30 published commands) · src/mcp/ · schemas/</p>
+      </article>
+
+      <article class="part" data-layer="build">
+        <p class="part-kind">Adoption</p>
+        <h3>Breaking up an existing app</h3>
+        <p class="part-what">Tools that watch an existing app being used, read its code, and propose how to split it into capabilities. Each proposed piece comes with its own data service and the evidence for every boundary. Product owners review the plan drawn over the real screens, change it, and approve it in a workspace. A parity check then proves the split app behaves the same as before.</p>
+        <p class="part-why"><span>Why it matters</span> Most organisations start with one large app, not a blank page. This turns adoption from a rewrite into a reviewed, step-by-step migration, decided by the people who own the product. Every change, an AI agent's included, goes through the same checked edits.</p>
+        <p class="paths">src/commands/decompose/ · src/decompose/ · packages/plugin-workspace/ · ADR-109 – ADR-117</p>
       </article>
 
       <article class="part" data-layer="contract">
@@ -1656,7 +1664,7 @@
               <rect class="strip l-people" x="24" y="650" width="1592" height="94" rx="10"></rect>
               <text class="c-tag l-people-t" x="44" y="678">THE OPERATOR INTERFACE · one entry point for people and AI assistants</text>
               <text class="c-desc">
-                <tspan x="44" y="702">Every action on this map is one command. The same 19 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
+                <tspan x="44" y="702">Every action on this map is one command. The same 30 commands are published as tools an AI assistant can call, and each call runs in its own</tspan>
                 <tspan x="44" y="722">isolated process, so an assistant cannot corrupt the state of the next one. Two capabilities in the spaceport product were built this way.</tspan>
               </text>
               <text class="paths-t paths" x="1596" y="722" text-anchor="end">src/commands/ · src/mcp/ · schemas/</text>
@@ -1713,7 +1721,8 @@
           <tr><td>Composition rules</td><td class="p">examples/*/control-plane/control-plane.yaml → rules.json · packages/dsl/src/control-plane-compiler.ts</td></tr>
           <tr><td>Data translation</td><td class="p">packages/bff-plugin/ · <code>src/platform/bff/</code> in each generated capability</td></tr>
           <tr><td>Access &amp; identity</td><td class="p">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> · platform/bff/mesh-context.js</td></tr>
-          <tr><td>Operator interface</td><td class="p">src/commands/ · src/mcp/ · schemas/ (19 command schemas)</td></tr>
+          <tr><td>Operator interface</td><td class="p">src/commands/ · src/mcp/ · schemas/ (30 command schemas)</td></tr>
+          <tr><td>Breaking up an existing app</td><td class="p">src/commands/decompose/ · src/decompose/ · packages/plugin-workspace/ · docs/decomposition-architecture.html</td></tr>
           <tr><td>Governance checks</td><td class="p">scripts/check-mfe-drift.ts · check-mfe-consistency.ts · check-adr-consistency.ts · packages/codegen/src/platform-migrations.ts</td></tr>
           <tr><td>Reference products</td><td class="p">examples/abc-kids/ · examples/meridian-station/</td></tr>
           <tr><td>Recorded decisions</td><td class="p">docs/architecture-decisions/ · docs/product-decisions/ · docs/spec.md#adr-index</td></tr>
@@ -1788,7 +1797,7 @@
         <li>
           <span class="tag tag-fact">fact</span>
           <h3>People and AI assistants operate the platform through the same interface.</h3>
-          <p>All 19 published commands are exposed as assistant-callable tools generated from the same
+          <p>All 30 published commands are exposed as assistant-callable tools generated from the same
           schemas, each call isolated in its own process. Two capabilities in the spaceport product were
           built through that interface rather than by a person typing, and the comparison was written up.</p>
           <p class="paths">src/mcp/ · schemas/ · examples/meridian-station/DX-REPORT.md</p>
@@ -1987,8 +1996,8 @@
         </div>
         <div class="amb-item">
           <h3>The count of platform responsibilities is a judgement</h3>
-          <p>The eleven groupings were chosen to be easy to follow. The repository has nine shared packages, but
-          they do not map one-to-one: the platform standard spans two packages, and the operator interface
+          <p>The twelve groupings were chosen to be easy to follow. They do not map one-to-one onto the
+          repository's shared packages: the platform standard spans two packages, and the operator interface
           spans several directories.</p>
         </div>
       </div>
@@ -1997,9 +2006,9 @@
 
   <footer class="foot">
     <p>
-      Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>. Counts as measured:
-      83 architecture decisions, 8 product decisions, 19 published commands, 9 shared packages,
-      44 code templates, 220 test files, 21 reference capabilities across 2 demo products.
+      Derived from the repository at <span class="mono">falese/seans-mfe-tool</span>. The counts in
+      <em>The repository at a glance</em> are regenerated from the repository by
+      <span class="mono">npm run build:system-map</span>, and a check fails when they drift.
     </p>
     <p>
       Turn on <em>Show technical implementation</em> in the bar at the top to trace any concept on this
