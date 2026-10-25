@@ -31,6 +31,8 @@ export interface WorkspaceApiOptions {
   now?: () => Date;
   /** 0 picks a free port. */
   port: number;
+  /** Called with who approved, once an approve edit has applied (ADR-116 §5: the approval lands on the PR). */
+  onApproved?: (by: string) => Promise<void>;
 }
 
 export interface RunningApi {
@@ -110,6 +112,8 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
       try {
         const result = await opts.cli.run(['decompose:edit', proposalFile, '--ops', `@${tmp}`, '--json']);
         if (!result.ok) return problem(res, 422, result.error?.message ?? 'the edits could not be applied', result.error?.type);
+        const approval = ops.filter((e) => e.kind === 'approve').pop();
+        if (approval && opts.onApproved) await opts.onApproved(String(approval.by));
         await status(res);
       } finally {
         fs.rmSync(path.dirname(tmp), { recursive: true, force: true });

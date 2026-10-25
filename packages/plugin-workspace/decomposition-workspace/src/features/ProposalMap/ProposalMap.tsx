@@ -84,8 +84,10 @@ const ProposalMapView: React.FC<ProposalMapProps> = ({ initialPath }) => {
             key={d.id}
             label={d.id}
             onClick={() => setSelected(d.id)}
-            variant={selected === d.id ? 'filled' : 'outlined'}
-            sx={{ borderColor: colors.get(d.id), ...(selected === d.id ? { bgcolor: colors.get(d.id), color: '#fff' } : {}) }}
+            variant="outlined"
+            aria-pressed={selected === d.id}
+            // Inline, so MUI's own chip colours cannot wash the domain colour out.
+            style={{ borderColor: colors.get(d.id), ...(selected === d.id ? { backgroundColor: colors.get(d.id), color: '#fff' } : {}) }}
           />
         ))}
       </Stack>
@@ -99,7 +101,7 @@ const ProposalMapView: React.FC<ProposalMapProps> = ({ initialPath }) => {
               <Tab key={s.path} value={s.path} label={s.path} />
             ))}
           </Tabs>
-          <Box sx={{ position: 'relative', width: '100%', lineHeight: 0, border: 1, borderColor: 'divider' }}>
+          <Box sx={{ position: 'relative', width: '100%', lineHeight: 0, border: 1, borderColor: 'divider', overflow: 'hidden' }}>
             <img src={client.screenshotUrl(current.screenshot)} alt={`Screen ${current.path}`} style={{ width: '100%', height: 'auto', display: 'block' }} />
             {current.boxes.map((b, i) => (
               <Box

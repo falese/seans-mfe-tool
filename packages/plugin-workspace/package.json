@@ -1,7 +1,7 @@
 {
   "name": "@seans-mfe/plugin-workspace",
   "version": "0.1.0",
-  "description": "The decomposition workspace (ADR-116): the workspace API over decomposition.yaml, and the command that serves it beside the workspace MFE",
+  "description": "The decomposition workspace (ADR-116): decompose:workspace, the workspace API over decomposition.yaml, and the workspace MFE it runs standalone",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -13,18 +13,47 @@
   },
   "files": [
     "dist",
-    "decomposition-workspace/specs"
+    "oclif.manifest.json",
+    "decomposition-workspace/specs",
+    "decomposition-workspace/mfe-manifest.yaml",
+    "decomposition-workspace/package.json",
+    "decomposition-workspace/dist",
+    "decomposition-workspace/server.js",
+    "decomposition-workspace/.mesh"
   ],
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist",
+    "build": "tsc && npx oclif manifest",
+    "build:workspace": "cd decomposition-workspace && npm install --no-audit --no-fund && npx mesh build && npx rspack build && npm run build:server",
+    "clean": "rm -rf dist oclif.manifest.json",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@seans-mfe/contracts": "file:../contracts"
+    "@seans-mfe/contracts": "file:../contracts",
+    "@seans-mfe/oclif-base": "file:../oclif-base",
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
+    "@oclif/core": "^4.10.5",
+    "oclif": "^4.0.0",
     "typescript": "^5.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "oclif": {
+    "commands": "./dist/commands",
+    "bin": "seans-mfe-tool",
+    "topics": {
+      "decompose": {
+        "description": "Decompose a monolith into MFEs (ADR-109 \u2013 ADR-117)"
+      }
+    }
+  },
+  "peerDependencies": {
+    "@oclif/core": "^4",
+    "seans-mfe-tool": "^1"
+  },
+  "peerDependenciesMeta": {
+    "seans-mfe-tool": {
+      "optional": true
+    }
+  }
 }

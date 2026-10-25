@@ -63,7 +63,7 @@ describe('proposalStatus — what the workspace renders (ADR-116 §3)', () => {
       { kind: 'suggest', by: 'agent', at, explanation: 'no such domain', edit: { kind: 'rename-domain', from: 'crew', to: 'people' } },
     ]);
     const status = proposalStatus(suggested);
-    expect(status.suggestions.map((s) => [s.id, s.check.ok])).toEqual([['s1', true], ['s2', false]]);
+    expect(status.suggestions.map((s) => s.check.ok)).toEqual([true, false]);
     expect(status.suggestions[1].check.errors).toEqual(['no domain "crew" in the proposal']);
     expect(status.suggestions[0].check.domains).toEqual(['shell', 'harbor']);
   });

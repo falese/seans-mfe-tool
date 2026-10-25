@@ -20,7 +20,7 @@ The list is a reading order, not an alphabetical one. Each entry assumes the one
 | 8 | **plugin-api** | OpenAPI → Express + Sequelize backend generation (`api:*`), as a plugin rather than a third of `src/` (ADR-063). The largest single thing that is *not* the CLI. | `src/commands/api.ts` |
 | 9 | **plugin-adr** | The decision-record tooling (`adr:*`) and the governance gates behind `check:adr` / `build:adr-index` (ADR-075). Governs the repo; is not part of the platform contract. | `src/commands/` |
 | 10 | **plugin-coder** | The coder seam (`coder:compile`): the intent-compilation contract and the DSL eval oracle, wrapping the external coder model service out-of-process (ADR-085/ADR-088). The model engine stays external `@falese/coder`. | `src/commands/coder/compile.ts` |
-| 11 | **plugin-workspace** | The decomposition workspace (ADR-116): the workspace API described by `decomposition-workspace/specs/workspace-api.yaml`, its local server, which reads with `decompose:status` and writes with `decompose:edit`, each as a child process. Keeps no state of its own. | `src/api/server.ts` |
+| 11 | **plugin-workspace** | The decomposition workspace (ADR-116): `decompose:workspace`, which runs on 127.0.0.1 the workspace API, the generated workspace MFE's BFF and a front door for its standalone page. The MFE itself lives in `decomposition-workspace/`, a real SMT MFE whose BFF sources `decomposition-workspace/specs/workspace-api.yaml`. Reads go to `decompose:status`, writes to `decompose:edit`, each as a child process; it keeps no state of its own. | `src/run/workspace.ts` |
 | 12 | **sentinel** | The reusable governance+generation kernel: the four ports (`validate` / `locateArtifacts` / `materialize` / `HardenedCheck`) and the deterministic `verify` floor. Host-agnostic — imports nothing `@seans-mfe/*`, deliberately unscoped so it extracts to its own repo mechanically (PDR-010, ADR-089). SMT's adapters live in `src/sentinel/`. | `src/index.ts` |
 | — | **control-plane** | **Not a TypeScript library and not a workspace member.** Two Dockerised JavaScript services — `daemon/` and `registry/` — each with its own `package.json` and `Dockerfile`. It is under `packages/` because it ships with the platform (PDR-008, ADR-078), not because it compiles with the rest. | `README.md` |
 
@@ -37,7 +37,7 @@ contracts ───────────────────────�
                     plugin-api   → contracts, oclif-base
                     plugin-adr   → contracts, oclif-base
                     plugin-coder → contracts, dsl, oclif-base
-                    plugin-workspace → contracts
+                    plugin-workspace → contracts, oclif-base
                     framework-swift → contracts, dsl, codegen
                     framework-rust  → contracts, codegen
 ```

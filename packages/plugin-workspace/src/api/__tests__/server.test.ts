@@ -144,3 +144,25 @@ describe('the workspace API (ADR-116)', () => {
     ]);
   });
 });
+
+describe('after an approval (ADR-116 §5)', () => {
+  let api: RunningApi | undefined;
+  beforeEach(() => jest.useRealTimers());
+  afterEach(async () => api?.close());
+
+  it('tells the caller once the approve edit has applied, and only then', async () => {
+    const approved: string[] = [];
+    let refuse = false;
+    const cli: CliRunner = { run: async (args) => (args[0] === 'decompose:edit' && refuse ? failed('nope') : ok(STATUS)) };
+    const root = project();
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli, who: 'sean', port: 0, onApproved: async (by) => void approved.push(by) });
+    const post = (edits: unknown[]) => fetch(`${api?.url}/api/edits`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ edits }) });
+    await post([{ kind: 'comment', text: 'x' }]);
+    expect(approved).toEqual([]);
+    await post([{ kind: 'approve' }]);
+    expect(approved).toEqual(['sean']);
+    refuse = true;
+    await post([{ kind: 'approve', by: 'pat' }]);
+    expect(approved).toEqual(['sean']);
+  });
+});

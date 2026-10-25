@@ -93,6 +93,20 @@ as it was.
 (`packages/plugin-workspace/decomposition-workspace/specs/workspace-api.yaml`). Reads go to `decompose:status`, and
 writes go to `decompose:edit`, each run as a child process.
 
+### Opening the workspace
+
+```bash
+npm run build:workspace                                  # once, in the repository: builds the workspace MFE
+seans-mfe-tool decompose:workspace ./evidence/proposal   # then open http://127.0.0.1:4611
+```
+
+The page is the generated `decomposition-workspace` MFE in standalone mode. It has four
+screen areas: the map, shaping, the agent, and approval. Everything runs on this machine
+only, on ports 4610 (the API), 5611 (the MFE's BFF) and 4611 (the page). The command
+refuses to start if any of them is taken. An approval is committed to the repository,
+covering only the proposal directory; `--no-commit` turns that off. Comments and
+approvals are recorded under git's `user.name`, or under `--who`.
+
 ## What the proposal holds
 
 | Section | |

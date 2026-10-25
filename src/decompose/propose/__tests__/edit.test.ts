@@ -194,12 +194,20 @@ describe('the workspace edits (ADR-116)', () => {
     ]);
     // Nothing changed yet.
     expect(suggested.domains.map((d) => d.id)).toEqual(['shell', 'docking', 'cargo']);
-    expect(suggested.suggestions?.map((s) => s.id)).toEqual(['s1', 's2']);
+    const [merge, rename] = suggested.suggestions?.map((s) => s.id) ?? [];
+    expect(merge).toMatch(/^s-[0-9a-f]{8}$/);
 
-    const accepted = applyEdits(suggested, [{ kind: 'accept-suggestion', id: 's1' }, { kind: 'reject-suggestion', id: 's2' }]);
+    const accepted = applyEdits(suggested, [{ kind: 'accept-suggestion', id: merge }, { kind: 'reject-suggestion', id: rename }]);
     expect(accepted.domains.map((d) => d.id)).toEqual(['shell', 'harbor']);
     expect(accepted.suggestions).toEqual([]);
     expect(() => applyEdits(suggested, [{ kind: 'accept-suggestion', id: 's9' }])).toThrow(/no suggestion "s9"/);
+    // An id names one suggestion for good: a later suggestion never takes over an id a page may still show.
+    const after = applyEdits(suggested, [
+      { kind: 'reject-suggestion', id: merge },
+      { kind: 'suggest', by: 'agent', at, explanation: 'Clearer name', edit: { kind: 'rename-domain', from: 'cargo', to: 'freight' } },
+    ]);
+    expect(after.suggestions?.map((s) => s.id)).not.toContain(merge);
+    expect(() => applyEdits(suggested, [{ kind: 'suggest', by: 'agent', at, explanation: 'One harbor team owns both', edit: { kind: 'merge-domains', domains: ['docking', 'cargo'], into: 'harbor' } }])).toThrow(/already suggested/);
     // A suggestion cannot carry approval, or another suggestion.
     expect(() => applyEdits(doc(), [{ kind: 'suggest', by: 'agent', at, explanation: '', edit: { kind: 'approve', by: 'agent', at } }])).toThrow(/cannot be suggested/);
   });

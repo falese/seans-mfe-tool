@@ -17,7 +17,7 @@ import type { WorkspaceClient } from './client';
 const theme = createTheme({
   palette: { primary: { main: '#3b6ff5' }, background: { default: '#f4f6f9' } },
   shape: { borderRadius: 6 },
-  typography: { fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' },
+  typography: { fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif', button: { textTransform: 'none' } },
 });
 
 const APPROVAL = {
@@ -38,7 +38,7 @@ function Header() {
             <Chip size="small" label={`${status.document.domains.length} domains`} />
             <Chip size="small" color={status.valid ? 'success' : 'error'} label={status.valid ? 'Valid' : 'Does not validate'} />
             <Chip size="small" color={APPROVAL[status.approval.status].color} label={APPROVAL[status.approval.status].label} />
-            {status.suggestions.length > 0 && <Chip size="small" color="info" label={`${status.suggestions.length} suggestions`} />}
+            {status.suggestions.length > 0 && <Chip size="small" color="info" label={`${status.suggestions.length} suggestion${status.suggestions.length === 1 ? "" : "s"}`} />}
           </Stack>
         )}
       </Toolbar>

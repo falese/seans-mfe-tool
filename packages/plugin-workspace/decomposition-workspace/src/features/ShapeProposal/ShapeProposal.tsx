@@ -11,7 +11,8 @@ import { Alert, Box, Button, Checkbox, FormControlLabel, LinearProgress, Paper, 
 import { useWorkspace, withWorkspace } from '../workspace/WorkspaceContext';
 import type { Edit } from '../workspace/types';
 
-export interface ShapeProposalProps {}
+/** Takes no props: everything comes from the proposal (ADR-116 §3). */
+export type ShapeProposalProps = Record<string, never>;
 
 const Section: React.FC<{ title: string; hint: string; children: React.ReactNode }> = ({ title, hint, children }) => (
   <Paper variant="outlined" role="group" aria-label={title} sx={{ p: 2 }}>

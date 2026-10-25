@@ -7,6 +7,7 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { SystemError } from '@seans-mfe-tool/runtime';
 import { createWorkspaceClient, type WorkspaceClient } from './client';
 import type { Edit, ProposalStatus } from './types';
 
@@ -67,7 +68,7 @@ export const WorkspaceProvider: React.FC<{ client?: WorkspaceClient; children?: 
 
 export function useWorkspace(): Workspace {
   const ws = useContext(Ctx);
-  if (!ws) throw new Error('useWorkspace() needs a <WorkspaceProvider> above it — capabilities get one from withWorkspace()');
+  if (!ws) throw new SystemError('useWorkspace() needs a <WorkspaceProvider> above it — capabilities get one from withWorkspace()');
   return ws;
 }
 

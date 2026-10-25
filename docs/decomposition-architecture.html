@@ -536,7 +536,7 @@
             <text x="120" y="156" font-size="8.5" fill="var(--ink-3)">suggests names and fixes</text>
             <rect x="20" y="202" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
             <text x="120" y="225" fill="currentColor">the workspace</text>
-            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners — being built</text>
+            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners · one command</text>
 
             <rect x="320" y="104" width="220" height="80" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
             <text x="430" y="138" font-size="12" fill="var(--accent)">the plan</text>
@@ -594,18 +594,36 @@
       the plan first, and nothing changes until a person accepts it.
     </p>
 
+    <p>
+      An engineer opens it with one command, <code>decompose:workspace</code>, and it runs on that
+      person's own machine. It is itself one of the pieces the platform builds: a generated MFE
+      with four screen areas (the map, shaping, the agent, approval) and its own data helper.
+    </p>
+
     <figure>
       <div class="frame shot">
-        <img src="media/decomposition-map-cargo.jpg" width="1440" height="830"
-             alt="The cargo screen of the reference app with the suggested pieces outlined: the menu belongs to the shell, the berth tiles along the top to docking, the cargo manifest in the middle and the hazard list on the right to cargo. Two dashed red boxes mark hidden links: the menu reads life-support's alerts, and the hazard list reads docking's dockings.">
+        <img src="media/workspace-agent.jpg" width="1600" height="1000"
+             alt="The workspace running on the reference app. On the left, the cargo screen with the suggested pieces outlined, and below it why cargo's boundary is where it is: its backends and the calls it makes. On the right, the agent tab with two suggestions, renaming the shell to console and splitting hazards out of cargo, each with the question it answers, its reasons, a green 'Checks out' badge and Accept and Reject buttons.">
       </div>
       <figcaption>
-        A real screen from the reference app with the suggested pieces drawn on it. The
-        workspace's map shows exactly this view. It comes from the workspace's data service
-        today, and the workspace screens that sit around it are being built next. The menu is
-        the shell, the berth tiles along the top are docking, and the manifest and hazard list
-        are cargo. The two dashed red boxes are hidden links the plan flags: the menu shows a
-        life-support alert count, and the hazard list reads docking's data.
+        The workspace running on the reference app. The map shows the real cargo screen with each
+        piece outlined, and the panel below it explains cargo's boundary. On the right are two
+        suggestions from the agent. Each one names the question it answers and gives its reasons.
+        A green badge means it has already been tried on a copy of the plan and checks out.
+        Nothing changes until someone presses Accept.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="frame shot">
+        <img src="media/workspace-approve.jpg" width="1600" height="1000"
+             alt="The same workspace after accepting the rename and approving. The shell is now called console everywhere: in the domain chips, on the map and in the hidden-link label. The approval tab says approved by Sean with the date and time, lists the open risks (three hidden links to resolve, six shared files to place, one suggestion waiting) and shows a table of the seven pieces with their screens and data.">
+      </div>
+      <figcaption>
+        After accepting the rename and approving. The shell is called <em>console</em> everywhere:
+        in the chips, on the map, and in the hidden-link label. The approval names who approved it
+        and when. The open risks are listed above the table of pieces. Approving also saved the plan
+        to the project's history, so the change request carries it.
       </figcaption>
     </figure>
 
@@ -825,7 +843,8 @@
           <tr><td>3 · Suggest the pieces</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/441">#441</a>, data <a href="https://github.com/falese/seans-mfe-tool/pull/445">#445</a></td></tr>
           <tr><td>4 · People agree: review package and Figma page</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
           <tr><td>4 · People agree: the workspace's plan, actions and data service</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/449">#449</a>, decisions <a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
-          <tr><td>4 · People agree: the workspace's screens and the agent</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
+          <tr><td>4 · People agree: the workspace's screens and <code>decompose:workspace</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
+          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
           <tr><td>Screens to editable Figma designs</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/435">#435</a></td></tr>
           <tr><td>5–7 · Build, move, switch over</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">#410</a></td></tr>
           <tr><td>8 · Check nothing changed</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>

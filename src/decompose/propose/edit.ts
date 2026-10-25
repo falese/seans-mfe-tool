@@ -158,8 +158,15 @@ function applyOne(doc: Decomposition, op: EditOp): void {
         fail(`a ${(op.edit as { kind: string }).kind} cannot be suggested — only edits to the proposal can`);
       }
       const suggestions = doc.suggestions ?? [];
+      // Named by what it says, never by position: an id a page still shows can
+      // never come to mean a different edit after a rejection (ADR-116 §4).
+      const id = `s-${createHash('sha256')
+        .update(JSON.stringify(canonical({ by: op.by, at: op.at, explanation: op.explanation, edit: op.edit })))
+        .digest('hex')
+        .slice(0, 8)}`;
+      if (suggestions.some((x) => x.id === id)) fail(`this edit is already suggested (${id})`);
       suggestions.push({
-        id: nextId('s', suggestions),
+        id,
         by: op.by,
         at: op.at,
         explanation: op.explanation,

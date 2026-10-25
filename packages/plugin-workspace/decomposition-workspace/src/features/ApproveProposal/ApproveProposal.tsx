@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 import { useWorkspace, withWorkspace } from '../workspace/WorkspaceContext';
 
-export interface ApproveProposalProps {}
+/** Takes no props: everything comes from the proposal (ADR-116 §3). */
+export type ApproveProposalProps = Record<string, never>;
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const when = (at?: string) => (at ? new Date(at).toLocaleString() : '');

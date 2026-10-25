@@ -11,7 +11,8 @@ import { Alert, Box, Button, Chip, LinearProgress, Paper, Stack, TextField, Typo
 import { useWorkspace, withWorkspace } from '../workspace/WorkspaceContext';
 import { describeEdit } from '../workspace/describe';
 
-export interface AgentPaneProps {}
+/** Takes no props: everything comes from the proposal (ADR-116 §3). */
+export type AgentPaneProps = Record<string, never>;
 
 const AgentPaneView: React.FC<AgentPaneProps> = () => {
   const { status, error, busy, apply, client, refresh } = useWorkspace();
