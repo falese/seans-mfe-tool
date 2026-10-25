@@ -64,10 +64,15 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
 
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
-  'plugin-coder': ['contracts', 'dsl', 'oclif-base'],
-  // The decomposition workspace (ADR-116). It reaches the document only through
-  // CLI child processes, so it needs the envelope and BaseCommand, nothing more.
-  'plugin-workspace': ['contracts', 'oclif-base'],
+  // The `decompose` edge is the decomposition-edit prompt adaptor, whose edit
+  // schema is the proposal model's own (ADR-118 §3).
+  'plugin-coder': ['contracts', 'dsl', 'oclif-base', 'decompose'],
+  // The proposal model (ADR-118 §1): derivation validates through the DSL.
+  decompose: ['contracts', 'dsl'],
+  // The decomposition workspace, a library (ADR-116, ADR-118 §4). It reads and
+  // edits proposals through the model; it ships no commands and names no model
+  // provider, so no `oclif-base` and no `plugin-coder`.
+  workspace: ['contracts', 'decompose'],
 });
 
 /** First-party scopes. `@seans-mfe-tool/runtime` is the runtime's published name. */

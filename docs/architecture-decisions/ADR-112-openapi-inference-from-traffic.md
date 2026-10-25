@@ -17,13 +17,13 @@ supersedes: []
 superseded-by: []
 implements-pdr: [11]
 implemented-by:
-  - src/decompose/propose/openapi.ts
-  - src/decompose/propose/derive.ts
+  - packages/decompose/src/openapi.ts
+  - packages/decompose/src/derive.ts
   - src/decompose/propose/io.ts
   - src/commands/decompose/propose.ts
 verified-by:
-  - src/decompose/propose/__tests__/openapi.test.ts
-  - src/decompose/propose/__tests__/derive.test.ts
+  - packages/decompose/src/__tests__/openapi.test.ts
+  - packages/decompose/src/__tests__/derive.test.ts
   - src/decompose/propose/__tests__/io.test.ts
 tracked-by: ["#410", "#415", "#418", "#440"]
 summary: >-

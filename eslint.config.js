@@ -25,9 +25,9 @@ module.exports = tseslint.config(
       'packages/*/dist/**',
       // The workspace MFE's generated output (ADR-116 §7), held by check:mfe-drift
       // like an example's. Its feature files are hand-written and are linted.
-      'packages/plugin-workspace/decomposition-workspace/{.mesh,dist,node_modules}/**',
-      'packages/plugin-workspace/decomposition-workspace/server.{js,ts}',
-      'packages/plugin-workspace/decomposition-workspace/src/platform/**',
+      'packages/workspace/decomposition-workspace/{.mesh,dist,node_modules}/**',
+      'packages/workspace/decomposition-workspace/server.{js,ts}',
+      'packages/workspace/decomposition-workspace/src/platform/**',
       'schemas/**',
       'src/codegen/templates/**',
       '**/*.d.ts',

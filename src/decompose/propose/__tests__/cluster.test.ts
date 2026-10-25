@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import { parseFile } from '../../source/parse';
 import { buildSourceGraph } from '../../source/graph';
 import { propose, slug } from '../cluster';
-import { DecompositionSchema } from '../model';
+import { DecompositionSchema } from '@seans-mfe/decompose';
 
 const graph = buildSourceGraph(
   Object.entries({

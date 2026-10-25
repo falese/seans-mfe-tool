@@ -19,21 +19,21 @@ implements-pdr: [11]
 implemented-by:
   - src/commands/decompose/propose.ts
   - src/commands/decompose/score.ts
-  - src/decompose/propose/model.ts
+  - packages/decompose/src/model.ts
   - src/decompose/propose/cluster.ts
-  - src/decompose/propose/derive.ts
+  - packages/decompose/src/derive.ts
   - src/decompose/propose/triage.ts
   - src/decompose/propose/score.ts
   - src/commands/decompose/edit.ts
   - src/commands/decompose/present.ts
-  - src/decompose/propose/edit.ts
-  - src/decompose/propose/present.ts
+  - packages/decompose/src/edit.ts
+  - packages/decompose/src/present.ts
 verified-by:
   - src/decompose/propose/__tests__/meridian-monolith.test.ts
-  - src/decompose/propose/__tests__/derive.test.ts
+  - packages/decompose/src/__tests__/derive.test.ts
   - src/decompose/propose/__tests__/score.test.ts
-  - src/decompose/propose/__tests__/edit.test.ts
-  - src/decompose/propose/__tests__/present.test.ts
+  - packages/decompose/src/__tests__/edit.test.ts
+  - packages/decompose/src/__tests__/present.test.ts
 tracked-by: ["#410", "#415", "#416", "#425", "#440"]
 summary: >-
   `decompose:propose` writes `decomposition.yaml`: the domains, the components and files each

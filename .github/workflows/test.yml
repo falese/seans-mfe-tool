@@ -83,7 +83,7 @@ jobs:
           set +e
           npm test -- --ci --coverage \
             --testPathIgnorePatterns="/examples/" \
-            --testPathIgnorePatterns="/packages/plugin-workspace/decomposition-workspace/" \
+            --testPathIgnorePatterns="/packages/workspace/decomposition-workspace/" \
             --testPathIgnorePatterns="NodemonServer.test.js" \
             --testPathIgnorePatterns="create-shell.test.js" \
             --json --outputFile=/tmp/jest-results.json
@@ -98,7 +98,7 @@ jobs:
       # dist/runtime the build step above produced.
       - name: Workspace MFE tests
         if: matrix.node-version == '22.x'
-        working-directory: packages/plugin-workspace/decomposition-workspace
+        working-directory: packages/workspace/decomposition-workspace
         run: |
           npm ci --no-audit --no-fund
           npx jest --ci
@@ -415,7 +415,7 @@ jobs:
         run: |
           ./bin/run.js compose:validate examples/meridian-station --check
           ./bin/run.js compose:validate examples/abc-kids --check
-          ./bin/run.js compose:validate packages/plugin-workspace --check
+          ./bin/run.js compose:validate packages/workspace --check
 
       - name: MFE consistency gate — manifest ⇄ package.json ⇄ federation shared
         # Runs the reusable `mfe:validate` core over every examples/** MFE:

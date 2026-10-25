@@ -16,8 +16,8 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { readDecomposition, readEvidenceSteps } from '../../decompose/propose/io';
-import { buildOverlay, renderOverlayHtml, renderOverlayPlugin, renderProposalMarkdown } from '../../decompose/propose/present';
+import { readDecomposition, readEvidenceSteps } from '@seans-mfe/decompose';
+import { buildOverlay, renderOverlayHtml, renderOverlayPlugin, renderProposalMarkdown } from '@seans-mfe/decompose';
 import type { DecomposePresentResult } from '../../oclif/results';
 
 export default class DecomposePresent extends BaseCommand<DecomposePresentResult> {

@@ -27,11 +27,12 @@ import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { propose } from '../../decompose/propose/cluster';
-import { backendLayout, type BackendLayout } from '../../decompose/propose/backends';
-import { deriveFleet, type BackendSpecs } from '../../decompose/propose/derive';
-import { dumpYaml, readAnalysis, readDecomposition, readSpecs, readTraffic, writeFleet, writeSpecs } from '../../decompose/propose/io';
-import type { Decomposition } from '../../decompose/propose/model';
-import { chooseSpecs, inferSpecs, validateOpenApi, type InferredBackend, type OpenApiDocument, type SpecReport } from '../../decompose/propose/openapi';
+import { backendLayout, type BackendLayout } from '@seans-mfe/decompose';
+import { deriveFleet, type BackendSpecs } from '@seans-mfe/decompose';
+import { dumpYaml, readDecomposition, readSpecs, writeFleet, writeSpecs } from '@seans-mfe/decompose';
+import { readAnalysis, readTraffic } from '../../decompose/propose/io';
+import type { Decomposition } from '@seans-mfe/decompose';
+import { chooseSpecs, inferSpecs, validateOpenApi, type InferredBackend, type OpenApiDocument, type SpecReport } from '@seans-mfe/decompose';
 import type { Endpoint, SourceGraph } from '../../decompose/source/graph';
 import type { DecomposeProposeResult, DecomposeSpecSummary } from '../../oclif/results';
 

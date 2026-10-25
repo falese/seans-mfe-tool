@@ -26,7 +26,7 @@ export type {
 // for the commands that already import it from this module (ADR-080).
 export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
 import type { MutatingResult } from '@seans-mfe/contracts';
-import type { ProposalStatus } from '../decompose/propose/status';
+import type { ProposalStatus } from '@seans-mfe/decompose';
 
 // ---------------------------------------------------------------------------
 // deploy
@@ -422,4 +422,24 @@ export interface DecomposePresentResult {
   domainsShown: string[];
   domainsNotShown: string[];
   files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:workspace / decompose:ask (ADR-116, ADR-117, ADR-118)
+// ---------------------------------------------------------------------------
+
+export interface DecomposeWorkspaceResult {
+  /** Where the workspace was served. */
+  url: string;
+  proposal: string;
+  /** Each approval made while it ran, and whether it was committed. */
+  approvals: Array<{ committed: true; commit: string } | { committed: false; reason: string }>;
+}
+
+/** The agent's answer, the edits written as suggestions, and the edits the check dropped, with why. */
+export interface DecomposeAskResult {
+  answer: string;
+  suggested: Array<{ explanation: string; edit: Record<string, unknown> }>;
+  dropped: Array<{ explanation: string; edit: Record<string, unknown>; reason: string }>;
+  model: string;
 }

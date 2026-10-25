@@ -9,13 +9,10 @@
  * answers its reads from this command, and its writes from decompose:edit.
  */
 
-import * as path from 'path';
 import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
-import * as fs from 'fs-extra';
+import { loadProposalStatus } from '@seans-mfe/decompose';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { readDecomposition, readEvidenceSteps, readSpecs } from '../../decompose/propose/io';
-import { proposalStatus } from '../../decompose/propose/status';
 import type { DecomposeStatusResult } from '../../oclif/results';
 
 export default class DecomposeStatus extends BaseCommand<DecomposeStatusResult> {
@@ -36,18 +33,9 @@ export default class DecomposeStatus extends BaseCommand<DecomposeStatusResult> 
 
   protected async runCommand(): Promise<DecomposeStatusResult> {
     const { args, flags } = await this.parse(DecomposeStatus);
-    const dir = path.resolve(args.proposal);
-    const doc = await readDecomposition(path.join(dir, 'decomposition.yaml'));
-    const bundle = path.resolve(flags.evidence ?? path.join(dir, '..'));
-    const hasBundle = await fs.pathExists(path.join(bundle, 'bundle.json'));
-    const evidence = hasBundle
-      ? {
-          steps: await readEvidenceSteps(bundle),
-          viewport: ((await fs.readJson(path.join(bundle, 'bundle.json'))) as { viewport: { width: number; height: number } }).viewport,
-        }
-      : {};
-    if (!hasBundle) this.warnings.push(`${bundle} is not an evidence bundle — no screens to show (pass --evidence)`);
-    const status = proposalStatus(doc, { specs: await readSpecs(dir), ...evidence });
+    const { warnings, ...status } = await loadProposalStatus(args.proposal, { evidence: flags.evidence });
+    this.warnings.push(...warnings);
+    const doc = status.document;
 
     this.log(`\n  ${chalk.bold(doc.app.name)}: ${doc.domains.map((d) => d.id).join(', ')}`);
     this.log(status.valid ? chalk.green('  ✓ every manifest and the composition validate') : chalk.red('  ✗ validation failed — see validation in --json'));
@@ -58,6 +46,6 @@ export default class DecomposeStatus extends BaseCommand<DecomposeStatusResult> 
     if (status.screens) this.log(`  screens: ${status.screens.screens.length}`);
     this.log('');
 
-    return { proposal: path.join(dir, 'decomposition.yaml'), bundle: hasBundle ? bundle : null, ...status };
+    return status;
   }
 }

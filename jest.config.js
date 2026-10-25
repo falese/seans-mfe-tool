@@ -133,7 +133,7 @@ module.exports = {
     '/dist/',
     '/examples/',
     // A generated MFE with its own jest and dependencies, like the examples (ADR-116).
-    '/packages/plugin-workspace/decomposition-workspace/'
+    '/packages/workspace/decomposition-workspace/'
   ],
 
   // Test environment configuration
@@ -151,6 +151,9 @@ module.exports = {
     '^@seans-mfe/contracts$': '<rootDir>/packages/contracts/src/index.ts',
     '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
     '^@seans-mfe/dsl$': '<rootDir>/packages/dsl/src/index.ts',
+    '^@seans-mfe/decompose$': '<rootDir>/packages/decompose/src/index.ts',
+    '^@seans-mfe/plugin-coder$': '<rootDir>/packages/plugin-coder/src/index.ts',
+    '^@seans-mfe/workspace$': '<rootDir>/packages/workspace/src/index.ts',
     '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',
     '^@seans-mfe/codegen$': '<rootDir>/packages/codegen/src/index.ts',
     '^@seans-mfe/codegen/(.*)$': '<rootDir>/packages/codegen/src/$1',

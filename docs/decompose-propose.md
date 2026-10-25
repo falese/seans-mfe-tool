@@ -89,9 +89,10 @@ as it was.
 - each pending suggestion, checked by applying it alone and validating the result;
 - the captured screens with the domains outlined.
 
-`@seans-mfe/plugin-workspace` serves this as the workspace API
-(`packages/plugin-workspace/decomposition-workspace/specs/workspace-api.yaml`). Reads go to `decompose:status`, and
-writes go to `decompose:edit`, each run as a child process.
+`@seans-mfe/workspace` serves this as the workspace API
+(`packages/workspace/decomposition-workspace/specs/workspace-api.yaml`). Reads and writes go
+through `@seans-mfe/decompose`, the same code `decompose:status` and `decompose:edit` wrap
+(ADR-118).
 
 ### Opening the workspace
 
@@ -115,7 +116,7 @@ The same thing works from the command line:
 
 ```bash
 export ANTHROPIC_API_KEY=…
-seans-mfe-tool coder:suggest ./evidence/proposal "Split hazards out of cargo — they're a separate team"
+seans-mfe-tool decompose:ask ./evidence/proposal "Split hazards out of cargo — they're a separate team"
 ```
 
 The model sees the whole proposal, including its conversation, and answers in the named edits

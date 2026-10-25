@@ -15,20 +15,20 @@ supersedes: []
 superseded-by: []
 implements-pdr: [9, 10, 11]
 implemented-by:
-  - src/decompose/propose/status.ts
-  - src/decompose/propose/edit-file.ts
+  - packages/decompose/src/status.ts
+  - packages/decompose/src/ask.ts
   - packages/plugin-coder/src/api-runner.ts
   - packages/plugin-coder/src/adaptors/decomposition-edit.ts
-  - packages/plugin-coder/src/suggest.ts
-  - packages/plugin-coder/src/commands/coder/suggest.ts
-  - packages/plugin-workspace/src/api/server.ts
+  - src/decompose/agent.ts
+  - src/commands/decompose/ask.ts
+  - packages/workspace/src/api/server.ts
 verified-by:
-  - src/decompose/propose/__tests__/status.test.ts
-  - src/decompose/propose/__tests__/edit-file.test.ts
+  - packages/decompose/src/__tests__/status.test.ts
+  - packages/decompose/src/__tests__/ask.test.ts
   - packages/plugin-coder/src/__tests__/api-runner.test.ts
   - packages/plugin-coder/src/adaptors/__tests__/decomposition-edit.test.ts
-  - packages/plugin-coder/src/__tests__/suggest.test.ts
-  - packages/plugin-workspace/src/api/__tests__/server.test.ts
+  - src/decompose/__tests__/agent.test.ts
+  - packages/workspace/src/api/__tests__/server.test.ts
 tracked-by: ["#410", "#425"]
 summary: >-
   `@seans-mfe/plugin-coder` gains a third transport beside `subprocess` and `serve`: `api`,
@@ -139,15 +139,16 @@ says changes the document until a person accepts it.
   carries a literal `kind` as a description rather than a constraint. So the answer is parsed
   again against the adaptor's schema, and the CLI parses each edit a third time when it
   dry-applies it.
-- **The oracle.** `decompose:edit --dry-run` applies and validates without writing.
-  `coder:suggest <proposal> "<request>"` (`suggestEdits`) dry-runs each edit on top of the ones
-  that passed before it, and drops a failure with its reason. It then writes, in one
-  `decompose:edit`, the question (signed by the asker) and the answer (signed `agent`) as
-  comments, and each survivor as a pending suggestion.
-- **The workspace.** `GET /api/agent` and `POST /api/ask` (Mesh: `getAgent`, `askAgent`) run
-  `coder:suggest`, one question at a time. `decompose:workspace` connects the agent when
-  `ANTHROPIC_API_KEY` is set; `--no-agent` turns it off. The agent pane shows the answer and any
-  edits the check dropped.
+- **The oracle.** `askAgent` (`@seans-mfe/decompose`, ADR-118) dry-applies each edit, in-process,
+  on top of the ones that passed before it. It drops a failure, or a repeat of a pending
+  suggestion, with the reason. Then, in one edit, it writes the question (signed by the asker)
+  and the answer (signed `agent`) as comments, and each survivor as a pending suggestion.
+  `decompose:edit --dry-run` does the same check for people and scripts.
+- **The commands.** `decompose:ask <proposal> "<request>"` wires `askAgent` to the
+  `decomposition-edit` adaptor. `decompose:workspace` does the same for the agent pane,
+  through `GET /api/agent` and `POST /api/ask` (Mesh: `getAgent`, `askAgent`), one question at a
+  time. The agent is connected when `ANTHROPIC_API_KEY` is set, and `--no-agent` turns it off.
+  The pane shows the answer and any edits the check dropped.
 
 ## Boundaries
 

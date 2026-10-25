@@ -10,7 +10,7 @@
  * list — the record of judgment that a fine-tuning corpus wants (PDR-009).
  */
 
-import type { Decomposition } from './model';
+import type { Decomposition } from '@seans-mfe/decompose';
 
 export interface AnswerKey {
   domains: Array<{ id: string; capabilities: string[]; backends: string[] }>;

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:ask.json",
+  "title": "decompose:ask",
+  "description": "Ask the agent to change a decomposition proposal, or a question about it; its edits are checked and written as suggestions for a person to accept or reject (ADR-117). Needs ANTHROPIC_API_KEY.",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The proposal directory (holding decomposition.yaml)"
+      },
+      "request": {
+        "type": "string",
+        "description": "What to change, or a question about the proposal"
+      },
+      "by": {
+        "type": "string",
+        "description": "Who is asking; signs the question in the proposal’s conversation (default: your user name)"
+      },
+      "model": {
+        "type": "string",
+        "description": "The model to ask",
+        "default": "claude-opus-5-5"
+      }
+    },
+    "required": [
+      "proposal",
+      "request"
+    ],
+    "x-positional": [
+      "proposal",
+      "request"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "answer",
+      "suggested",
+      "dropped",
+      "model"
+    ],
+    "properties": {
+      "answer": {
+        "type": "string"
+      },
+      "suggested": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "explanation",
+            "edit"
+          ],
+          "properties": {
+            "explanation": {
+              "type": "string"
+            },
+            "edit": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "dropped": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "explanation",
+            "edit",
+            "reason"
+          ],
+          "properties": {
+            "explanation": {
+              "type": "string"
+            },
+            "edit": {
+              "type": "object"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "model": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

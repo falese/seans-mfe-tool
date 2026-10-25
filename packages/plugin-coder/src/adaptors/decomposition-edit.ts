@@ -7,38 +7,19 @@
  * edits and nothing else, so the model has no other way to express a change,
  * and it cannot approve, accept or reject — those are a person's (ADR-116 §4).
  *
- * The edits mirror `SuggestableEditSchema` in the CLI's proposal model, less
- * the `by` and `at` the caller signs them with. This package does not import
- * the CLI, so the CLI's own parser checks them again when they are dry-applied.
- * That matters: the SDK's structured-output transform carries a literal `kind`
- * as a description, not a constraint, so the parse below and the dry run are
- * what actually hold the model to these kinds.
+ * The edits are `AgentEditSchema` from `@seans-mfe/decompose`: one definition
+ * for the CLI, the workspace and the model (ADR-118 §3). The SDK's
+ * structured-output transform carries a literal `kind` as a description, not a
+ * constraint, so the parse in `runPromptAdaptor` and the dry run in
+ * `askAgent` are what hold the model to these kinds.
  */
 
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
-import type { PromptAdaptor } from '../api-runner';
+import { AgentEditSchema, type AgentModel, type Decomposition } from '@seans-mfe/decompose';
+import { runPromptAdaptor, type MessagesClient, type PromptAdaptor } from '../api-runner';
 
-export const AgentEditSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('rename-domain'), from: z.string(), to: z.string() }),
-  z.object({ kind: z.literal('merge-domains'), domains: z.array(z.string()), into: z.string() }),
-  z.object({ kind: z.literal('split-domain'), domain: z.string(), into: z.string(), files: z.array(z.string()).min(1) }),
-  z.object({ kind: z.literal('move-file'), file: z.string(), to: z.string() }),
-  z.object({ kind: z.literal('rename-capability'), from: z.string(), to: z.string() }),
-  z.object({ kind: z.literal('rename-slot'), from: z.string(), to: z.string() }),
-  z.object({ kind: z.literal('comment'), text: z.string().min(1), about: z.string().optional() }),
-]);
-export type AgentEdit = z.infer<typeof AgentEditSchema>;
-
-export const AGENT_EDIT_KINDS: readonly AgentEdit['kind'][] = [
-  'rename-domain',
-  'merge-domains',
-  'split-domain',
-  'move-file',
-  'rename-capability',
-  'rename-slot',
-  'comment',
-];
+export const AGENT_EDIT_KINDS = AgentEditSchema.options.map((o) => o.shape.kind.value);
 
 export const DecompositionEditAnswerSchema = z.object({
   /** What the agent says back, in a few sentences; recorded in the proposal's conversation. */
@@ -48,8 +29,7 @@ export const DecompositionEditAnswerSchema = z.object({
 export type DecompositionEditAnswer = z.infer<typeof DecompositionEditAnswerSchema>;
 
 export interface DecompositionEditInput {
-  /** The proposal as `decompose:status` returns it. */
-  document: unknown;
+  document: Decomposition;
   request: string;
 }
 
@@ -85,3 +65,8 @@ export const decompositionEdit: PromptAdaptor<DecompositionEditInput, Decomposit
   }),
   output: DecompositionEditAnswerSchema,
 };
+
+/** The adaptor as the model `askAgent` takes (`@seans-mfe/decompose`). */
+export function decompositionEditModel(opts: { client: MessagesClient; model?: string }): AgentModel {
+  return (input) => runPromptAdaptor(decompositionEdit, input, opts);
+}

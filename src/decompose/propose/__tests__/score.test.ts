@@ -1,5 +1,5 @@
 import { diffProposals, scoreProposal, type AnswerKey } from '../score';
-import type { Decomposition, Domain } from '../model';
+import { applyEdits, type Decomposition, type Domain } from '@seans-mfe/decompose';
 
 const evidence = { route: null, data: null, imports: null, runtime: null, cochange: null, ownership: null };
 const domain = (id: string, files: string[], extra: Partial<Domain> = {}): Domain => ({
@@ -119,6 +119,16 @@ describe('scoreProposal — gap matching', () => {
 });
 
 describe('diffProposals', () => {
+  it('round-trips with applyEdits: the edits it lists are the edits that were applied', () => {
+    const edits = [
+      { kind: 'rename-domain' as const, from: 'shell', to: 'console' },
+      { kind: 'move-file' as const, file: 'src/Module.tsx', to: 'life-support' },
+    ];
+    const listed = diffProposals(base(), applyEdits(base(), edits));
+    expect(listed[0]).toEqual({ kind: 'rename-domain', from: 'shell', to: 'console' });
+    expect(listed).toContainEqual(expect.objectContaining({ kind: 'move-file', file: 'src/Module.tsx', to: 'life-support' }));
+  });
+
   it('records the agent’s judgment as edits: renames and moves', () => {
     const edited = base();
     edited.domains[0].id = 'console';

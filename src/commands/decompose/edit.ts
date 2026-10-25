@@ -19,8 +19,8 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { approvalStatus, parseEditFlags, parseEditOps } from '../../decompose/propose/edit';
-import { editProposalFile } from '../../decompose/propose/edit-file';
+import { approvalStatus, parseEditFlags, parseEditOps } from '@seans-mfe/decompose';
+import { editProposalFile } from '@seans-mfe/decompose';
 import type { DecomposeEditResult } from '../../oclif/results';
 
 export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {

@@ -1,5 +1,7 @@
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
-import { AGENT_EDIT_KINDS, DecompositionEditAnswerSchema, decompositionEdit } from '../decomposition-edit';
+import { AgentEditSchema } from '@seans-mfe/decompose';
+import type { MessagesClient } from '../../api-runner';
+import { AGENT_EDIT_KINDS, DecompositionEditAnswerSchema, decompositionEdit, decompositionEditModel } from '../decomposition-edit';
 
 const document = {
   version: 1,
@@ -19,6 +21,28 @@ describe('the decomposition-edit prompt adaptor (ADR-117 §3)', () => {
     for (const kind of ['approve', 'accept-suggestion', 'reject-suggestion', 'suggest']) {
       expect(DecompositionEditAnswerSchema.safeParse({ answer: 'a', edits: [{ explanation: 'e', edit: { kind, id: 'x', by: 'a', at: 'b' } }] }).success).toBe(false);
     }
+  });
+
+  it('takes its edits from the proposal model itself, so the two cannot drift (ADR-118 §3)', () => {
+    expect(DecompositionEditAnswerSchema.shape.edits.element.shape.edit).toBe(AgentEditSchema);
+  });
+
+  it('is the agent model askAgent takes: the proposal and the request in, the checked answer and the model out', async () => {
+    const calls: Record<string, unknown>[] = [];
+    const answer = { answer: 'ok', edits: [{ explanation: 'e', edit: { kind: 'rename-domain', from: 'a', to: 'b' } }] };
+    const client = {
+      beta: {
+        messages: {
+          parse: async (params: Record<string, unknown>) => {
+            calls.push(params);
+            return { model: 'answered-by', stop_reason: 'end_turn', content: [], parsed_output: answer };
+          },
+        },
+      },
+    } as unknown as MessagesClient;
+    const model = decompositionEditModel({ client, model: 'model-x' });
+    await expect(model({ document: document as never, request: 'Rename a' })).resolves.toEqual({ output: answer, model: 'answered-by' });
+    expect(calls[0].model).toBe('model-x');
   });
 
   it('accepts a split with its files and an explanation', () => {

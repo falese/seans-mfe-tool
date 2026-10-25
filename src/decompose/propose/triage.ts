@@ -14,7 +14,7 @@
  */
 
 import type { TestInventory } from '../source/tests';
-import type { Decomposition } from './model';
+import type { Decomposition } from '@seans-mfe/decompose';
 
 export function triageTests(inventory: TestInventory, domainOf: (file: string) => string | null): Decomposition['tests'] {
   return inventory.files

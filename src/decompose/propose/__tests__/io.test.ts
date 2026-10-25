@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import type { DerivedFleet } from '../derive';
-import { readAnalysis, readAnswerKey, readSpecs, readTraffic, writeFleet, writeSpecs } from '../io';
+import { readSpecs, writeFleet, writeSpecs, type DerivedFleet } from '@seans-mfe/decompose';
+import { readAnalysis, readAnswerKey, readTraffic } from '../io';
 
 describe('readAnswerKey', () => {
   it('reads a behavior written with ": " back as text — YAML parses it as a one-entry map', async () => {

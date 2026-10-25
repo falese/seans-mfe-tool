@@ -21,8 +21,8 @@ import type { Endpoint, FileNode, SourceGraph } from '../source/graph';
 import type { History } from '../source/history';
 import type { Join } from '../source/join';
 import type { TestInventory } from '../source/tests';
-import { backendOf, type BackendLayout } from './backends';
-import type { Decomposition, Domain } from './model';
+import { backendOf, type BackendLayout } from '@seans-mfe/decompose';
+import type { Decomposition, Domain } from '@seans-mfe/decompose';
 import { triageTests } from './triage';
 
 export interface ProposeInput {

@@ -47,7 +47,7 @@ async function main(): Promise<void> {
     argRoots.length > 0
       ? argRoots.map((r) => path.resolve(REPO_ROOT, r))
       : // The decomposition workspace (ADR-116) ships in a plugin and is held to the same rules.
-        [path.join(REPO_ROOT, 'examples'), path.join(REPO_ROOT, 'packages', 'plugin-workspace')];
+        [path.join(REPO_ROOT, 'examples'), path.join(REPO_ROOT, 'packages', 'workspace')];
 
   const dirs = [...new Set(roots.flatMap(findManifestDirs))].sort();
   const failed: string[] = [];

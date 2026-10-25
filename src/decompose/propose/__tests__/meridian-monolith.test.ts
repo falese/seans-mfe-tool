@@ -10,11 +10,11 @@ import { readProject } from '../../source/load';
 import { buildSourceGraph } from '../../source/graph';
 import { inventoryTests } from '../../source/tests';
 import { propose } from '../cluster';
-import { deriveFleet } from '../derive';
-import { applyEdits } from '../edit';
+import { deriveFleet } from '@seans-mfe/decompose';
+import { applyEdits } from '@seans-mfe/decompose';
 import { readAnswerKey } from '../io';
 import { scoreProposal } from '../score';
-import type { Decomposition } from '../model';
+import type { Decomposition } from '@seans-mfe/decompose';
 
 const MONOLITH = path.resolve(__dirname, '../../../../examples/meridian-monolith');
 
