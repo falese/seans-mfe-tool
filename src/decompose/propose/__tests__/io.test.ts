@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import type { DerivedFleet } from '../derive';
-import { readAnswerKey, readSpecs, readTraffic, writeFleet, writeSpecs } from '../io';
+import { readAnalysis, readAnswerKey, readSpecs, readTraffic, writeFleet, writeSpecs } from '../io';
 
 describe('readAnswerKey', () => {
   it('reads a behavior written with ": " back as text — YAML parses it as a one-entry map', async () => {
@@ -64,5 +64,30 @@ describe('specs on disk (ADR-112)', () => {
     expect(mocks.listBerths).toEqual([]);
     expect(String(mocks._comment)).toContain('ADR-052');
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('readAnalysis — where decompose:propose looks', () => {
+  const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'analysis-'));
+  const graph = { files: [], routes: [], endpoints: [] };
+
+  it('takes the analysis directory itself', async () => {
+    const dir = tmp();
+    fs.writeFileSync(path.join(dir, 'graph.json'), JSON.stringify(graph));
+    await expect(readAnalysis(dir)).resolves.toMatchObject({ dir, graph });
+  });
+
+  it('takes the evidence bundle too, and finds its source/', async () => {
+    const bundle = tmp();
+    fs.mkdirSync(path.join(bundle, 'source'));
+    fs.writeFileSync(path.join(bundle, 'source', 'graph.json'), JSON.stringify(graph));
+    await expect(readAnalysis(bundle)).resolves.toMatchObject({ dir: path.join(bundle, 'source'), graph });
+  });
+
+  it('says what to run when a capture has not been analysed yet', async () => {
+    const bundle = tmp();
+    fs.writeFileSync(path.join(bundle, 'bundle.json'), '{}');
+    await expect(readAnalysis(bundle)).rejects.toThrow(`${bundle} is an evidence bundle with no analysis yet — run: seans-mfe-tool decompose:analyze <app-dir> --evidence ${bundle}`);
+    await expect(readAnalysis(tmp())).rejects.toThrow(/has no graph.json — run decompose:analyze first/);
   });
 });

@@ -1,4 +1,4 @@
-import { parseJourneys, describeStep } from '../journeys';
+import { parseJourneys, describeStep, readJourneysFile } from '../journeys';
 
 describe('parseJourneys', () => {
   it('reads a YAML journey file', () => {
@@ -37,5 +37,14 @@ journeys:
     expect(() =>
       parseJourneys('journeys:\n  - name: a\n    steps: [{ goto: / }]\n  - name: a\n    steps: [{ goto: / }]\n')
     ).toThrow(/duplicate/i);
+  });
+});
+
+describe('readJourneysFile', () => {
+  it('names the flag and the path when the file is not there', async () => {
+    await expect(readJourneysFile('/nowhere/meridian-journeys.yaml')).rejects.toMatchObject({
+      name: 'ValidationError',
+      message: expect.stringContaining('--journeys /nowhere/meridian-journeys.yaml: no such file'),
+    });
   });
 });

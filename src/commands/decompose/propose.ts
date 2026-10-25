@@ -88,7 +88,7 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
       const dir = path.resolve(args.analysis);
       const analysis = await readAnalysis(dir);
       graph = analysis.graph;
-      evidenceDefault = path.join(dir, '..');
+      evidenceDefault = path.join(analysis.dir, '..');
       const name = SAFE(flags.name ?? analysis.project.name);
       // One API or a gateway, judged over every concrete URL: observed and in source (#442).
       const traffic = await readTraffic(path.resolve(flags.evidence ?? evidenceDefault));
@@ -105,7 +105,7 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
         history: analysis.history,
         join: analysis.join,
       });
-      outDir = path.resolve(flags.out ?? path.join(dir, '..', 'proposal'));
+      outDir = path.resolve(flags.out ?? path.join(analysis.dir, '..', 'proposal'));
       await fs.ensureDir(outDir);
       const base = path.join(outDir, 'proposal.base.yaml');
       await fs.writeFile(base, `# The deterministic draft (decompose:propose). Kept to diff the agent's edits against; do not edit.\n${dumpYaml(doc)}`);

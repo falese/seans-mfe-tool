@@ -31,6 +31,8 @@ import type { EvidenceStep } from './present';
 import type { AnswerKey } from './score';
 
 export interface Analysis {
+  /** The directory the analysis was read from: the one given, or its `source/`. */
+  dir: string;
   project: { name: string; dir: string };
   graph: SourceGraph;
   tests?: TestInventory;
@@ -42,13 +44,25 @@ async function readOptional<T>(file: string): Promise<T | undefined> {
   return (await fs.pathExists(file)) ? ((await fs.readJson(file)) as T) : undefined;
 }
 
-/** Read `decompose:analyze` output from `<dir>` (an evidence bundle's `source/`, or an --out directory). */
-export async function readAnalysis(dir: string): Promise<Analysis> {
+/**
+ * Read `decompose:analyze` output from `<given>`: the analysis directory itself
+ * (an --out directory, or a bundle's `source/`), or the evidence bundle holding it.
+ */
+export async function readAnalysis(given: string): Promise<Analysis> {
+  const dir = (await fs.pathExists(path.join(given, 'graph.json'))) ? given : path.join(given, 'source');
   const graph = await readOptional<SourceGraph>(path.join(dir, 'graph.json'));
   if (!graph) {
-    throw new ValidationError(`${dir} has no graph.json — run decompose:analyze first`, 'analysis', 'graph.json');
+    if (await fs.pathExists(path.join(given, 'bundle.json'))) {
+      throw new ValidationError(
+        `${given} is an evidence bundle with no analysis yet — run: seans-mfe-tool decompose:analyze <app-dir> --evidence ${given}`,
+        'analysis',
+        'graph.json'
+      );
+    }
+    throw new ValidationError(`${given} has no graph.json — run decompose:analyze first`, 'analysis', 'graph.json');
   }
   return {
+    dir,
     project: (await readOptional<{ name: string; dir: string }>(path.join(dir, 'project.json'))) ?? { name: 'app', dir: '.' },
     graph,
     tests: await readOptional<TestInventory>(path.join(dir, 'tests.json')),

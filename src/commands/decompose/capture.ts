@@ -21,7 +21,7 @@ import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { buildBundle, readReplaySource, writeBundle, type ReplaySource } from '../../decompose/bundle';
 import { captureEvidence } from '../../decompose/capture';
-import { parseJourneys, type Journey } from '../../decompose/journeys';
+import { parseJourneys, readJourneysFile, type Journey } from '../../decompose/journeys';
 import type { DecomposeCaptureResult } from '../../oclif/results';
 
 function parseViewport(raw: string): { width: number; height: number } {
@@ -81,7 +81,7 @@ export default class DecomposeCapture extends BaseCommand<DecomposeCaptureResult
 
     let journeys: Journey[] = [];
     if (flags.journeys) {
-      journeys = parseJourneys(await fs.readFile(path.resolve(flags.journeys), 'utf8'));
+      journeys = await readJourneysFile(path.resolve(flags.journeys));
     } else if (replay) {
       // A replay repeats exactly what ran, the explored steps included.
       journeys = parseJourneys(replay.journeysYaml);

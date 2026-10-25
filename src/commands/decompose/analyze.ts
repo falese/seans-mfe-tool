@@ -18,6 +18,7 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
+import { analysisOutDir } from '../../decompose/source/out-dir';
 import { analyzeProject } from '../../decompose/source/analyze';
 import type { DecomposeAnalyzeResult } from '../../oclif/results';
 
@@ -55,7 +56,12 @@ export default class DecomposeAnalyze extends BaseCommand<DecomposeAnalyzeResult
     if (evidenceDir && !(await fs.pathExists(path.join(evidenceDir, 'requests.json')))) {
       throw new ValidationError(`--evidence ${flags.evidence} is not an evidence bundle (no requests.json)`, 'evidence', 'bundle');
     }
-    const outDir = path.resolve(flags.out ?? (evidenceDir ? path.join(evidenceDir, 'source') : './evidence/source'));
+    const out = analysisOutDir({ evidence: evidenceDir, out: flags.out });
+    const outDir = out.dir;
+    if (out.warning) {
+      this.warnings.push(out.warning);
+      this.log(chalk.yellow(`  ! ${out.warning}`));
+    }
 
     this.log(chalk.blue(`\nAnalyzing ${dir}${evidenceDir ? `, joined to ${evidenceDir}` : ''}\n`));
     const outcome = await analyzeProject({ dir, srcDir: flags.src, outDir, evidenceDir, runTests: flags['run-tests'] });

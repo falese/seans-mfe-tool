@@ -16,6 +16,7 @@
  *         - wait: 250                      # milliseconds
  */
 
+import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
 import { ValidationError } from '@seans-mfe/contracts';
@@ -93,4 +94,19 @@ export function parseJourneys(text: string): Journey[] {
     });
     return { name, steps };
   });
+}
+
+/** Read and parse `--journeys <file>`; a missing file names the flag, not just an errno. */
+export async function readJourneysFile(file: string): Promise<Journey[]> {
+  let text: string;
+  try {
+    text = await fs.promises.readFile(file, 'utf8');
+  } catch {
+    throw new ValidationError(
+      `--journeys ${file}: no such file. Write a journey file there, or drop --journeys and use --explore N to follow the app's links`,
+      'journeys',
+      'file'
+    );
+  }
+  return parseJourneys(text);
 }
