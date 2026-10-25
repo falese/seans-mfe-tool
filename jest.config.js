@@ -152,6 +152,7 @@ module.exports = {
     '^@seans-mfe/contracts/(.*)$': '<rootDir>/packages/contracts/src/$1',
     '^@seans-mfe/dsl$': '<rootDir>/packages/dsl/src/index.ts',
     '^@seans-mfe/decompose$': '<rootDir>/packages/decompose/src/index.ts',
+    '^@seans-mfe/flow$': '<rootDir>/packages/flow/src/index.ts',
     '^@seans-mfe/plugin-coder$': '<rootDir>/packages/plugin-coder/src/index.ts',
     '^@seans-mfe/workspace$': '<rootDir>/packages/workspace/src/index.ts',
     '^@seans-mfe/dsl/(.*)$': '<rootDir>/packages/dsl/src/$1',

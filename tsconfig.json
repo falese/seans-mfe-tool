@@ -22,6 +22,7 @@
       "@seans-mfe/dsl": ["./packages/dsl/src/index.ts"],
       "@seans-mfe/dsl/*": ["./packages/dsl/src/*"],
       "@seans-mfe/decompose": ["./packages/decompose/src/index.ts"],
+      "@seans-mfe/flow": ["./packages/flow/src/index.ts"],
       "@seans-mfe/codegen": ["./packages/codegen/src/index.ts"],
       "@seans-mfe/codegen/*": ["./packages/codegen/src/*"],
       "@seans-mfe/oclif-base": ["./packages/oclif-base/src/index.ts"],

@@ -443,3 +443,26 @@ export interface DecomposeAskResult {
   dropped: Array<{ explanation: string; edit: Record<string, unknown>; reason: string }>;
   model: string;
 }
+
+// ---------------------------------------------------------------------------
+// flow:status (PDR-012, ADR-119)
+// ---------------------------------------------------------------------------
+
+/** Where a directory stands in a flow, derived from its files. */
+export interface FlowStatusResult {
+  flow: string;
+  title: string;
+  /** The directory, resolved. */
+  root: string;
+  steps: Array<{
+    id: string;
+    title: string;
+    kind: 'command' | 'gate' | 'optional';
+    state: 'done' | 'stale' | 'next' | 'ready' | 'waiting' | 'blocked' | 'optional' | 'unavailable';
+    detail?: string;
+    command?: string;
+  }>;
+  /** The command to run next, or null when nothing can run. */
+  next: { step: string; command: string; placeholders: string[] } | null;
+  summary: string;
+}

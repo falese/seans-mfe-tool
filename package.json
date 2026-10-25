@@ -12,7 +12,7 @@
     "examples/plugin-skeleton"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/sentinel packages/contracts packages/dsl packages/codegen packages/decompose packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/plugin-coder packages/workspace packages/framework-react packages/framework-angular packages/framework-swift packages/framework-rust",
+    "build:packages": "tsc -b packages/sentinel packages/contracts packages/dsl packages/codegen packages/decompose packages/flow packages/oclif-base packages/plugin-bff packages/plugin-api packages/plugin-adr packages/plugin-coder packages/workspace packages/framework-react packages/framework-angular packages/framework-swift packages/framework-rust",
     "build": "npm run build:packages && tsc -p tsconfig.build.json && tsc -p packages/runtime/tsconfig.build.json && node scripts/copy-runtime-files.js && npx oclif manifest && npm run build:schemas",
     "build:schemas": "ts-node scripts/generate-schemas.ts",
     "build:workspace": "npm run build:workspace --workspace=@seans-mfe/workspace",
@@ -79,7 +79,8 @@
     "bin/run.js",
     "dist",
     "oclif.manifest.json",
-    "schemas"
+    "schemas",
+    "flows"
   ],
   "oclif": {
     "bin": "seans-mfe-tool",
@@ -129,6 +130,9 @@
       },
       "decompose": {
         "description": "Monolith decomposition — capture, analyze and propose MFE boundaries from a running app (PDR-011)"
+      },
+      "flow": {
+        "description": "Where a directory stands in an SMT flow — what is done, stale or waiting on a person, and the next command (PDR-012)"
       }
     },
     "hooks": {
@@ -152,6 +156,7 @@
     "@seans-mfe/plugin-coder": "file:packages/plugin-coder",
     "@seans-mfe/workspace": "file:packages/workspace",
     "@seans-mfe/decompose": "file:packages/decompose",
+    "@seans-mfe/flow": "file:packages/flow",
     "@oclif/core": "^4.10.5",
     "@oclif/plugin-help": "^6.2.44",
     "@oclif/plugin-plugins": "^5.4.61",

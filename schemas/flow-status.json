@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/flow:status.json",
+  "title": "flow:status",
+  "description": "Show where a directory stands in an SMT flow — which steps are done, stale or waiting on a person — and the next command to run, with its arguments filled in (PDR-012).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "dir": {
+        "type": "string",
+        "description": "The flow's directory (for decompose: the evidence bundle)",
+        "default": "."
+      },
+      "flow": {
+        "type": "string",
+        "description": "The flow (decompose); may be left out while there is only one"
+      }
+    },
+    "required": [],
+    "x-positional": [
+      "dir"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "flow",
+      "title",
+      "root",
+      "steps",
+      "next",
+      "summary"
+    ],
+    "properties": {
+      "flow": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "root": {
+        "type": "string",
+        "description": "The directory, resolved."
+      },
+      "steps": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "kind",
+            "state"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "optional",
+                "command",
+                "gate"
+              ]
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "optional",
+                "stale",
+                "done",
+                "next",
+                "ready",
+                "waiting",
+                "blocked",
+                "unavailable"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            },
+            "command": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "next": {
+        "description": "The command to run next, or null when nothing can run."
+      },
+      "summary": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

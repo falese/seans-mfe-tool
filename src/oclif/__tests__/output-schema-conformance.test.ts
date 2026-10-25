@@ -69,6 +69,8 @@ const INVOCATIONS: Record<string, Invocation> = {
   // committed payload. --check makes it assert the fleet is current, so this
   // doubles as a guard that abc-kids' rules.json has not drifted (ADR-083).
   'compose:validate': { args: ['compose:validate', ABC_KIDS, '--check'] },
+  // A directory with nothing in it is the start of the decomposition flow (ADR-119).
+  'flow:status':      { args: ['flow:status', path.join(REPO_ROOT, 'examples', 'meridian-monolith'), '--flow', 'decompose'] },
   // --dry-run so the success path reports without rewriting rules.json.
   'compose:build':    { args: ['compose:build', ABC_KIDS, '--dry-run'] },
   // Static analysis of the reference monolith; writes ./evidence/source under the temp cwd.
