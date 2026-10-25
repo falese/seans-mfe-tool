@@ -437,7 +437,7 @@
         It is an API between the review screen and the proposal, not a command's output, so
         nothing derives it. Two tests keep it honest: the document must validate as
         OpenAPI, and every operation it declares must be one the server answers. Behind it,
-        a read and a write run the same code as <code>decompose:status</code> and
+        a read and a write run the same code as <code>flow:status --proposal</code> and
         <code>decompose:edit</code>, in <code>@seans-mfe/decompose</code> (ADR-118). The
         schemas of those two commands are generated like every other command's.
       </p>

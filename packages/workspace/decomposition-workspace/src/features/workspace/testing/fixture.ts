@@ -2,7 +2,7 @@ import type { ProposalStatus } from '../types';
 
 const evidence = { route: 1, data: 0.8, imports: 0.6, runtime: null, cochange: null, ownership: null };
 
-/** A small proposal in the shape decompose:status returns. */
+/** A small proposal in the shape flow:status --proposal returns. */
 export function fixtureStatus(over: Partial<ProposalStatus> = {}): ProposalStatus {
   return {
     proposal: '/p/decomposition.yaml',

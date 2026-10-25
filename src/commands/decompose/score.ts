@@ -29,6 +29,7 @@ const line = (label: string, s: Score) =>
   `  backends ${s.backends.mean.toFixed(3)}  slots ${s.slots.score.toFixed(3)}  tests ${s.tests.score.toFixed(3)}  gaps ${s.gaps.recall.toFixed(3)}`;
 
 export default class DecomposeScore extends BaseCommand<DecomposeScoreResult> {
+  static hidden = true; // plumbing for agents and scripts: out of --help, still an MCP tool (#454)
   static description =
     'Score a decomposition.yaml against an answer key — file assignment F1, backends, slot structure, test ' +
     'triage and gap detection — alongside its deterministic draft, and optionally write a training-corpus record.';

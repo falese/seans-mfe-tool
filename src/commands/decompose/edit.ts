@@ -24,6 +24,7 @@ import { editProposalFile } from '@seans-mfe/decompose';
 import type { DecomposeEditResult } from '../../oclif/results';
 
 export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
+  static hidden = true; // plumbing for agents and scripts: out of --help, still an MCP tool (#454)
   static description =
     'Apply named edits to a decomposition.yaml — rename, merge or split domains, move a file, rename a capability ' +
     'or slot, comment, suggest, approve — keeping every reference consistent, then re-derive and validate the fleet ' +

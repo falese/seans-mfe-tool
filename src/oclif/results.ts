@@ -399,10 +399,11 @@ export interface DecomposeEditResult {
 }
 
 // ---------------------------------------------------------------------------
-// decompose:status
+// flow:status --proposal (was decompose:status)
 // ---------------------------------------------------------------------------
 
-export interface DecomposeStatusResult extends ProposalStatus {
+export interface FlowProposalStatus extends ProposalStatus {
+  /** The decomposition.yaml read. */
   proposal: string;
   /** The evidence bundle the screens' screenshot paths are relative to; null without one. */
   bundle: string | null;
@@ -465,4 +466,6 @@ export interface FlowStatusResult {
   /** The command to run next, or null when nothing can run. */
   next: { step: string; command: string; placeholders: string[] } | null;
   summary: string;
+  /** The proposal as the workspace reads it (ADR-116 §3); only with `--proposal`. */
+  proposal?: FlowProposalStatus;
 }

@@ -138,7 +138,7 @@ non-engineers: [`docs/decomposition-architecture.html`](./decomposition-architec
 | RealWorld corpus: the toolchain on apps nobody here wrote (#442) | `scripts/corpus/realworld/`, `docs/decompose-corpus.md` | #447 |
 | `design:export` — any running screen to an editable Figma page (ADR-115) | `src/design/` | #435 |
 | The workspace: review, shape and approve, for product owners (ADR-116) | `packages/workspace/`, `decompose:workspace` | #449, #450 |
-| The agent: hosted model through the coder seam, every edit checked (ADR-117) | `packages/plugin-coder/`, `decompose:ask` | #451 |
+| The agent: hosted model through the coder seam, every edit checked (ADR-117, folded into ADR-120) | `packages/plugin-coder/`, `decompose:ask` | #451 |
 | The proposal model as a package; consumers realigned (ADR-118) | `packages/decompose/` | #451 |
 | `flow:status` — where you are and the next command, by content (PDR-012, ADR-119) | `packages/flow/`, `flows/`, `src/commands/flow/` | #453 |
 
@@ -152,9 +152,22 @@ key. The clustering thresholds are tuned on one subject.
 
 ### Simplify the decomposition additions (#454)
 
-A separate pass, before steps 5–7 build on top of it. The brief is in the issue: three
-overlapping status views, a three-process local workspace, ten `decompose:*` commands, and
-how much new architecture one month added.
+A separate pass, before steps 5–7 build on top of it. What changed, and what was measured and
+left alone:
+
+- **Done.** `decompose:status` is `flow:status --proposal`, so "where is this proposal" has one
+  answer. `decompose:edit`, `ask` and `score` are hidden from `--help` and remain MCP tools
+  (`hidden` no longer removes a command from the catalog). ADR-120 folds ADR-117 into one decision
+  beside ADR-118 and states that an ADR records a choice, not a command. The layering gate now
+  refuses any package import of `src/`, not only `src/commands/`. The runbook is the entry point;
+  the workspace, edit and ask material has its own page, [`decompose-workspace`](./decompose-workspace.md).
+- **Left alone, with the reason.** The three-process workspace: already one `startWorkspace`, and
+  `WorkspaceClient` is the seam if the BFF is ever dropped locally (ADR-116 §7 keeps it for now).
+  The `src/decompose` / `packages/decompose` split: only the CLI calls the browser and parser
+  halves, so a package would have no second caller (ADR-120). Provenance sidecars: digests
+  embedded in an output change that output's own hash and break ADR-119 §2's guarantee that a
+  checkout cannot make a step look stale. `analyze` into `capture` and `present` into the
+  approval: the flow has a step for each, with its own `from`.
 
 ### Agent contract completion — epic #139 (ADR-077)
 

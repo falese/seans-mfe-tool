@@ -10,7 +10,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
-import { approvalStatus, DecompositionSchema, type Decomposition } from '@seans-mfe/decompose';
+import { approvalStatus, DecompositionSchema, loadProposalStatus, type Decomposition } from '@seans-mfe/decompose';
+import type { FlowProposalStatus } from '../oclif/results';
 import { digestFile, flowStatus, loadFlow, type Flow, type FlowChecks, type FlowProbe, type FlowStatus } from '@seans-mfe/flow';
 
 /** From `src/flow` and from `dist/flow` alike. */
@@ -78,4 +79,19 @@ export const flowChecks: FlowChecks = {
 
 export function statusOf(id: string, dir: string): FlowStatus {
   return flowStatus(loadShippedFlow(id), dir, fsProbe, flowChecks);
+}
+
+/**
+ * The proposal inside a bundle as the workspace renders it — the document,
+ * validation, approval, each pending suggestion checked, the screens (ADR-116
+ * §3). Heavier than `statusOf`, so it is asked for, not always run. Null when
+ * the bundle has no proposal yet.
+ */
+export async function proposalStatusOf(
+  bundle: string,
+): Promise<{ status: FlowProposalStatus; warnings: string[] } | null> {
+  const dir = path.join(bundle, 'proposal');
+  if (!fs.existsSync(path.join(dir, 'decomposition.yaml'))) return null;
+  const { warnings, ...status } = await loadProposalStatus(dir, { evidence: bundle });
+  return { status, warnings };
 }

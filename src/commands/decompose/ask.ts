@@ -19,6 +19,7 @@ import { BaseCommand } from '../../oclif/BaseCommand';
 import type { DecomposeAskResult } from '../../oclif/results';
 
 export default class DecomposeAsk extends BaseCommand<DecomposeAskResult> {
+  static hidden = true; // plumbing for agents and scripts: out of --help, still an MCP tool (#454)
   static description =
     'Ask the agent to change a decomposition proposal, or a question about it; its edits are checked and written as ' +
     'suggestions for a person to accept or reject (ADR-117). Needs ANTHROPIC_API_KEY.';

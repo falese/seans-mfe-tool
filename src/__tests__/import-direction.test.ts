@@ -128,6 +128,14 @@ function importedPackages(file: string): string[] {
   return found;
 }
 
+/** True when `specifier`, imported from `file`, resolves into the CLI tree (`<repo>/src`). */
+function reachesCliTree(file: string, specifier: string): boolean {
+  if (/(^|\/)src\/commands\//.test(specifier)) return true;
+  if (!specifier.startsWith('.')) return false;
+  const resolved = path.resolve(path.dirname(file), specifier);
+  return resolved.startsWith(path.join(path.resolve(PACKAGES_DIR, '..', 'src'), path.sep));
+}
+
 const packagesOnDisk = fs
   .readdirSync(PACKAGES_DIR, { withFileTypes: true })
   .filter((e) => e.isDirectory() && fs.existsSync(path.join(PACKAGES_DIR, e.name, 'src')))
@@ -181,7 +189,19 @@ describe('package import direction', () => {
     expect(edges).toEqual([]);
   });
 
-  it('no package imports the CLI', () => {
+  it('recognises a relative import that reaches into the CLI tree, wherever under src/', () => {
+    // The check below used to match only `src/commands/`, while ADR-118 §6 says
+    // nothing in packages/ may import src/ at all (#454). A fixture, so the rule
+    // is proved on a path no package takes today.
+    const file = path.join(PACKAGES_DIR, 'decompose', 'src', 'files.ts');
+    expect(reachesCliTree(file, '../../../src/decompose/source/analyze')).toBe(true);
+    expect(reachesCliTree(file, '../../../src/commands/decompose/capture')).toBe(true);
+    expect(reachesCliTree(file, './model')).toBe(false);
+    expect(reachesCliTree(file, '../../flow/src/status')).toBe(false);
+    expect(reachesCliTree(file, '@seans-mfe/flow')).toBe(false);
+  });
+
+  it('no package imports the CLI tree (ADR-118 §6)', () => {
     const offenders: string[] = [];
     for (const pkg of packagesOnDisk) {
       for (const file of sourceFiles(path.join(PACKAGES_DIR, pkg, 'src'))) {
@@ -192,7 +212,7 @@ describe('package import direction', () => {
             (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
             node.moduleSpecifier &&
             ts.isStringLiteral(node.moduleSpecifier) &&
-            /(^|\/)src\/commands\//.test(node.moduleSpecifier.text)
+            reachesCliTree(file, node.moduleSpecifier.text)
           ) {
             offenders.push(`${path.relative(PACKAGES_DIR, file)} -> ${node.moduleSpecifier.text}`);
           }

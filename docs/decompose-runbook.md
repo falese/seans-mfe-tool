@@ -1,7 +1,7 @@
 # Decompose a monolith — start to finish
 
 This guide walks one monolith through every step that is built today, using the reference app
-`examples/meridian-monolith`. Each command's own page explains what it does. This page gives the
+`examples/meridian-monolith`. Each command's own page is reference: flags, formats, limits. This page gives the
 order, and what to check between steps.
 
 **When you lose your place, run `flow:status`.** It reads the evidence folder and prints which
@@ -12,16 +12,26 @@ its arguments filled in ([flows](./flows.md)):
 seans-mfe-tool flow:status ./evidence
 ```
 
-| # | Step | Command | Writes |
-|---|---|---|---|
-| 1 | Watch the app | `decompose:capture` | `evidence/bundle.json`, `requests.json`, `journeys/`, `screens/` |
-| 2 | Read the code | `decompose:analyze` | `evidence/source/` |
-| 3 | Suggest the pieces | `decompose:propose` | `evidence/proposal/decomposition.yaml`, the derived manifests |
-| — | Shape it (optional) | `decompose:workspace`, `decompose:edit`, `decompose:ask` | edits to `decomposition.yaml` |
-| 4 | Review package | `decompose:present` | `evidence/proposal/PROPOSAL.md`, `overlay/` |
-| 4 | Approve (a person) | the workspace's Approve tab, or `decompose:edit` | `approval` in `decomposition.yaml` |
-| 5–7 | Build, move, switch over | — not built yet ([#410](https://github.com/falese/seans-mfe-tool/issues/410)) | |
-| 8 | Check nothing changed | `decompose:verify` | `verify/parity.json`, `parity.md` |
+The report lists each step with its state and ends with the command to run next:
+
+```
+  Decompose a monolith into MFEs  /work/evidence
+
+  ✓ Run the app and record what it does
+  ✓ Read the app's source, joined to the capture
+  ✓ Propose the domains
+  ○ Shape the proposal — merge, split, rename, ask the agent — 1 suggestion waiting
+  ↻ Write the review package — proposal/decomposition.yaml changed after proposal/PROPOSAL.md was written
+  ✓ Approve the proposal — approved by Sean
+  ✗ Generate the MFEs, their BFFs and the legacy wrapper — not built yet (#410)
+  · Prove the composed app behaves like the monolith — waits on scaffold
+
+  next: seans-mfe-tool decompose:present /work/evidence/proposal
+```
+
+The steps below are the same ones, in order. Each names what it writes. Steps 5–7 (build, move, switch
+over) are not built yet ([#410](https://github.com/falese/seans-mfe-tool/issues/410)).
+The order and the commands live in one place, `flows/decompose.yaml`; `flow:status` reads it.
 
 ## Before you start
 
@@ -80,6 +90,8 @@ seans-mfe-tool decompose:edit ./evidence/proposal/decomposition.yaml --rename-do
 # Ask the agent (needs ANTHROPIC_API_KEY); its edits arrive as suggestions to accept or reject
 seans-mfe-tool decompose:ask ./evidence/proposal "Split hazards out of cargo — they are a separate team"
 ```
+
+→ [decompose-workspace](./decompose-workspace.md)
 
 ## 4. Review and approve
 
