@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: Decomposition workspace API
+  version: 1.0.0
+  description: >-
+    What the decomposition workspace reads and writes (ADR-116). The workspace keeps no state:
+    a read is the proposal's status, and every write is a named edit, both through
+    @seans-mfe/decompose as `decompose:status` and `decompose:edit` do (ADR-118). The local
+    server in @seans-mfe/workspace implements this document;
+    a hosted relay implements the same one (ADR-116 §6), and the workspace MFE's BFF sources it.
+servers:
+  - url: http://localhost:4610/api
+paths:
+  /proposal:
+    get:
+      operationId: getProposal
+      summary: The proposal as the workspace shows it
+      responses:
+        '200':
+          description: The document, validation, approval, checked suggestions and screens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProposalStatus' }
+        '404':
+          description: No decomposition.yaml in the proposal directory
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /edits:
+    post:
+      operationId: applyEdits
+      summary: Apply named edits, in order, all or none
+      description: >-
+        `by` and `at` may be left out of comment, suggest and approve edits; the server fills
+        them with the person running the workspace and the current time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [edits]
+              properties:
+                edits:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/Edit' }
+      responses:
+        '200':
+          description: The proposal after the edits
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProposalStatus' }
+        '422':
+          description: An edit could not be applied; nothing was changed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /agent:
+    get:
+      operationId: getAgent
+      summary: Whether an agent is connected to answer questions, and which model
+      responses:
+        '200':
+          description: The agent's state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+  /ask:
+    post:
+      operationId: askAgent
+      summary: Ask the agent to change the proposal, or a question about it
+      description: >-
+        Asks the agent the workspace was started with (ADR-117, ADR-118). The agent's edits are dry-applied and validated; those
+        that pass are written as pending suggestions, beside the question and the answer in the
+        proposal's comments. Nothing else changes until a person accepts a suggestion.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request]
+              properties:
+                request: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: The agent's answer, what it suggested and what the check dropped
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResult' }
+        '422':
+          description: The agent could not answer; nothing was changed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '503':
+          description: No agent is connected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /screenshot:
+    get:
+      operationId: getScreenshot
+      summary: A captured screen's screenshot
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: The screenshot path a screen names, relative to the evidence bundle (screens/<step>.png)
+          schema: { type: string, pattern: '^screens/[A-Za-z0-9._-]+\.png$' }
+      responses:
+        '200':
+          description: The PNG
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        '404':
+          description: No such screenshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+components:
+  schemas:
+    Agent:
+      type: object
+      required: [connected]
+      properties:
+        connected: { type: boolean }
+        model: { type: string }
+        reason: { type: string, description: Why no agent is connected }
+    CheckedEdit:
+      type: object
+      required: [explanation, edit]
+      properties:
+        explanation: { type: string }
+        edit: { $ref: '#/components/schemas/Edit' }
+        reason: { type: string, description: Why the check dropped it }
+    AskResult:
+      type: object
+      required: [answer, suggested, dropped, model]
+      properties:
+        answer: { type: string }
+        suggested: { type: array, items: { $ref: '#/components/schemas/CheckedEdit' } }
+        dropped: { type: array, items: { $ref: '#/components/schemas/CheckedEdit' } }
+        model: { type: string, description: The model that answered }
+    Problem:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        type: { type: string }
+    Edit:
+      description: >-
+        One named edit (ADR-110 §4, ADR-116 §3). `kind` selects which other fields apply:
+        rename-domain, rename-capability, rename-slot (from, to); merge-domains (domains, into);
+        split-domain (domain, into, files); move-file (file, to); comment (text, about?);
+        suggest (explanation, request?, edit); accept-suggestion and reject-suggestion (id);
+        approve.
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [rename-domain, merge-domains, split-domain, move-file, rename-capability, rename-slot, comment, suggest, accept-suggestion, reject-suggestion, approve]
+        from: { type: string }
+        to: { type: string }
+        domains: { type: array, items: { type: string } }
+        domain: { type: string }
+        into: { type: string }
+        files: { type: array, items: { type: string } }
+        file: { type: string }
+        text: { type: string }
+        about: { type: string }
+        explanation: { type: string }
+        request: { type: string }
+        edit: { $ref: '#/components/schemas/Edit' }
+        id: { type: string }
+        by: { type: string }
+        at: { type: string }
+    Rect:
+      type: object
+      required: [x, y, width, height]
+      properties:
+        x: { type: number }
+        y: { type: number }
+        width: { type: number }
+        height: { type: number }
+    Screen:
+      type: object
+      required: [id, path, screenshot, width, height, boxes, couplings]
+      properties:
+        id: { type: string }
+        path: { type: string }
+        screenshot: { type: string }
+        width: { type: number }
+        height: { type: number }
+        boxes:
+          type: array
+          items:
+            type: object
+            required: [domain, mfe, capability, slot, label, color, rect]
+            properties:
+              domain: { type: string }
+              mfe: { type: string }
+              capability: { type: string }
+              slot: { type: string }
+              label: { type: string }
+              color: { type: string }
+              rect: { $ref: '#/components/schemas/Rect' }
+        couplings:
+          type: array
+          items:
+            type: object
+            required: [file, label, rect]
+            properties:
+              file: { type: string }
+              label: { type: string }
+              rect: { $ref: '#/components/schemas/Rect' }
+    Suggestion:
+      type: object
+      required: [id, by, at, explanation, edit, check]
+      properties:
+        id: { type: string }
+        by: { type: string }
+        at: { type: string }
+        explanation: { type: string }
+        request: { type: string }
+        edit: { $ref: '#/components/schemas/Edit' }
+        check:
+          description: The edit applied alone to the current document, then the fleet validated (ADR-117 §4)
+          type: object
+          required: [ok, errors, domains]
+          properties:
+            ok: { type: boolean }
+            errors: { type: array, items: { type: string } }
+            domains: { type: array, items: { type: string } }
+    ProposalStatus:
+      type: object
+      required: [proposal, app, approval, document, validation, valid, suggestions]
+      properties:
+        proposal: { type: string }
+        bundle: { type: string, nullable: true }
+        app:
+          type: object
+          required: [name, namespace]
+          properties:
+            name: { type: string }
+            namespace: { type: string }
+        approval:
+          type: object
+          required: [status]
+          properties:
+            status: { type: string, enum: [none, current, stale] }
+            by: { type: string }
+            at: { type: string }
+            hash: { type: string }
+        document:
+          description: decomposition.yaml as parsed (ADR-110)
+          type: object
+          additionalProperties: true
+        validation:
+          type: object
+          additionalProperties: true
+        valid: { type: boolean }
+        suggestions:
+          type: array
+          items: { $ref: '#/components/schemas/Suggestion' }
+        screens:
+          type: object
+          nullable: true
+          required: [screens, legend]
+          properties:
+            screens:
+              type: array
+              items: { $ref: '#/components/schemas/Screen' }
+            legend:
+              type: array
+              items:
+                type: object
+                required: [domain, mfe, color]
+                properties:
+                  domain: { type: string }
+                  mfe: { type: string }
+                  color: { type: string }

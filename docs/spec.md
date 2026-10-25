@@ -342,6 +342,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-115](./architecture-decisions/ADR-115-design-export-runtime-ui-to-figma.md) | design:export renders a running UI, folds it into a normalized design tree, and emits a data-driven Figma plugin; the capture follows what the browser renders, not the raw DOM | Design / capture / Figma | Implemented |
 | [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Accepted (impl phased, #425) |
 | [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Implemented |
+| [ADR-118](./architecture-decisions/ADR-118-decompose-package.md) | The decomposition proposal model is a package, @seans-mfe/decompose; every command, plugin and library that reads or changes a proposal calls it in-process, and the CLI is one of its callers rather than the only door to it | Decomposition / packaging / layering | Implemented |
 
 ### Proposed — filed, not ratified
 
