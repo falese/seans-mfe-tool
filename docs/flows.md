@@ -40,6 +40,8 @@ the command shows a placeholder like `<app-url>` and tells you to fill it in.
 With `--json`, the same report is one envelope, so an agent over MCP can call `flow:status`
 and then the command it names.
 
+The full walkthrough of the decomposition flow is [decompose-runbook.md](./decompose-runbook.md).
+
 ## How it works (ADR-119)
 
 - **A flow is data.** Each flow is a YAML file in `flows/`, such as `flows/decompose.yaml`. It

@@ -1432,9 +1432,17 @@
       <article class="part" data-layer="build">
         <p class="part-kind">Adoption</p>
         <h3>Breaking up an existing app</h3>
-        <p class="part-what">Tools that watch an existing app being used, read its code, and propose how to split it into capabilities. Each proposed piece comes with its own data service and the evidence for every boundary. Product owners review the plan drawn over the real screens, change it, and approve it in a workspace. A parity check then proves the split app behaves the same as before.</p>
+        <p class="part-what">Tools that watch an existing app being used, read its code, and propose how to split it into capabilities. Each proposed piece comes with its own data service and the evidence for every boundary. Product owners review the plan drawn over the real screens, change it, and approve it in a workspace. A parity check then proves the split app behaves the same as before. <code>flow:status</code> says which step comes next.</p>
         <p class="part-why"><span>Why it matters</span> Most organisations start with one large app, not a blank page. This turns adoption from a rewrite into a reviewed, step-by-step migration, decided by the people who own the product. Every change, an AI agent's included, goes through the same checked edits.</p>
-        <p class="paths">src/commands/decompose/ · src/decompose/ · packages/workspace/ · ADR-109 – ADR-117</p>
+        <p class="paths">src/commands/decompose/ · src/decompose/ · packages/decompose/ · packages/workspace/ · ADR-109 – ADR-118</p>
+      </article>
+
+      <article class="part" data-layer="build">
+        <p class="part-kind">Guidance</p>
+        <h3>Knowing what to run next</h3>
+        <p class="part-what">Most work in SMT takes several commands in a set order. <code>flow:status</code> looks at a working folder and lists which steps are done, which went out of date because something before them changed, and which are waiting on a person. It ends with the exact next command, with its details already filled in. The order is written down once per task, as data, and the decomposition task is the first one.</p>
+        <p class="part-why"><span>Why it matters</span> Nobody has to remember the order or read it in the docs, and an AI assistant can ask instead of guessing. A step counts as out of date only when what it was built from really changed, so switching branches cannot fake it.</p>
+        <p class="paths">src/commands/flow/ · flows/ · packages/flow/ · PDR-012 · ADR-119</p>
       </article>
 
       <article class="part" data-layer="contract">
@@ -1722,7 +1730,7 @@
           <tr><td>Data translation</td><td class="p">packages/bff-plugin/ · <code>src/platform/bff/</code> in each generated capability</td></tr>
           <tr><td>Access &amp; identity</td><td class="p">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> · platform/bff/mesh-context.js</td></tr>
           <tr><td>Operator interface</td><td class="p">src/commands/ · src/mcp/ · schemas/ (30 command schemas)</td></tr>
-          <tr><td>Breaking up an existing app</td><td class="p">src/commands/decompose/ · src/decompose/ · packages/workspace/ · docs/decomposition-architecture.html</td></tr>
+          <tr><td>Breaking up an existing app</td><td class="p">src/commands/decompose/ · src/decompose/ · packages/decompose/ · packages/workspace/ · docs/decomposition-architecture.html</td></tr>
           <tr><td>Governance checks</td><td class="p">scripts/check-mfe-drift.ts · check-mfe-consistency.ts · check-adr-consistency.ts · packages/codegen/src/platform-migrations.ts</td></tr>
           <tr><td>Reference products</td><td class="p">examples/abc-kids/ · examples/meridian-station/</td></tr>
           <tr><td>Recorded decisions</td><td class="p">docs/architecture-decisions/ · docs/product-decisions/ · docs/spec.md#adr-index</td></tr>

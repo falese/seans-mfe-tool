@@ -13,7 +13,8 @@ seans-mfe-tool decompose:score ./evidence/proposal/decomposition.yaml \
   --answer-key examples/meridian-monolith/answer-key.yaml --corpus ./corpus
 ```
 
-Lost? `seans-mfe-tool flow:status ./evidence` shows which steps are done, stale or waiting on
+New to this? Start with the [step-by-step guide](./decompose-runbook.md). Lost?
+`seans-mfe-tool flow:status ./evidence` shows which steps are done, stale or waiting on
 someone, and the next command to run ([flows](./flows.md)).
 
 ## Two halves: a deterministic draft, then judgment

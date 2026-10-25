@@ -835,6 +835,38 @@
 
   <!-- ============ STATUS ============ -->
   <section class="fig">
+    <span class="fignum">Finding your way <span class="pill done">built</span></span>
+    <h2>Ask where you are, and get the next command</h2>
+    <p class="claim">
+      Eight steps across a dozen commands is a lot to keep in your head, and on the first run
+      against the reference app it took five wrong turns to reach a plan. Now one command looks at
+      the evidence folder and says where things stand: which steps are done, which went out of date
+      because something before them changed, which are waiting on a person, and the exact next
+      command, with the app's address and folder already filled in.
+    </p>
+    <div class="frame" style="margin-bottom:1.2rem"><pre style="margin:0;font-size:12px;line-height:1.5;white-space:pre-wrap">$ seans-mfe-tool flow:status ./evidence
+
+  ✓ Run the app and record what it does
+  ✓ Read the app's source, joined to the capture
+  ✓ Propose the domains
+  ○ Shape the proposal — merge, split, rename, ask the agent — 1 suggestion waiting
+  ↻ Write the review package — proposal/decomposition.yaml changed since proposal/PROPOSAL.md was built
+  ✓ Approve the proposal — approved by Sean
+  ✗ Generate the MFEs, their BFFs and the legacy wrapper — not built yet (#410)
+  · Prove the composed app behaves like the monolith — waits on scaffold
+
+  next: seans-mfe-tool decompose:present ./evidence/proposal</pre></div>
+    <p>
+      It keeps no record of its own. Each time, it reads what is on disk. Each step notes which
+      versions of its inputs it was built from, so "out of date" means the inputs really changed;
+      switching branches, which only changes file dates, cannot fake it. The order of the steps is
+      written down once, as data (<code>flows/decompose.yaml</code>), and the same command will
+      cover other tasks, such as creating and building a piece, as they are added (PDR-012,
+      ADR-119).
+    </p>
+  </section>
+
+  <section class="fig">
     <span class="fignum">Status</span>
     <h2>Where each step is</h2>
     <div class="scroll">
@@ -846,8 +878,10 @@
           <tr><td>3 · Suggest the pieces</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/441">#441</a>, data <a href="https://github.com/falese/seans-mfe-tool/pull/445">#445</a></td></tr>
           <tr><td>4 · People agree: review package and Figma page</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
           <tr><td>4 · People agree: the workspace's plan, actions and data service</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/449">#449</a>, decisions <a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
-          <tr><td>4 · People agree: the workspace's screens and <code>decompose:workspace</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
-          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
+          <tr><td>4 · People agree: the workspace's screens and <code>decompose:workspace</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/450">#450</a></td></tr>
+          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/451">#451</a></td></tr>
+          <tr><td>The plan's rules as one shared package, used by every tool</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/451">#451</a></td></tr>
+          <tr><td>Finding your way: <code>flow:status</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/453">#453</a></td></tr>
           <tr><td>Screens to editable Figma designs</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/435">#435</a></td></tr>
           <tr><td>5–7 · Build, move, switch over</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">#410</a></td></tr>
           <tr><td>8 · Check nothing changed</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>
@@ -857,14 +891,15 @@
     </div>
     <p style="margin-top:1rem">
       "Built" means the change is written and its checks pass, and it is waiting for review. The
-      changes stack on each other. The last one, <a href="https://github.com/falese/seans-mfe-tool/pull/447">#447</a>,
-      contains them all.
+      changes stack on each other. The last one, <a href="https://github.com/falese/seans-mfe-tool/pull/453">#453</a>,
+      contains them all. The step-by-step guide is
+      <a href="https://github.com/falese/seans-mfe-tool/blob/main/docs/decompose-runbook.md">docs/decompose-runbook.md</a>.
     </p>
   </section>
 
   <footer>
-    The product decision is PDR-011, and the design decisions are ADR-109 to ADR-113 and ADR-115,
-    in <code>docs/architecture-decisions/</code>. The reference app is
+    The product decisions are PDR-011 and PDR-012, and the design decisions are ADR-109 to ADR-113
+    and ADR-115 to ADR-119, in <code>docs/architecture-decisions/</code>. The reference app is
     <code>examples/meridian-monolith/</code>. See also
     <a href="cli-architecture.html">Generator CLI Schematics</a>,
     <a href="runtime-architecture.html">Runtime Platform Schematics</a> and the
