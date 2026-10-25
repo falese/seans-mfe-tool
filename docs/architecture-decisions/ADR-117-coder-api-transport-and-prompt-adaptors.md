@@ -4,7 +4,7 @@ title: >-
   The coder seam gains an API transport to a hosted model and prompt adaptors that live in this
   repository; whatever the transport, coder's output is a typed artifact the deterministic floor
   checks before anything acts on it
-status: Implemented
+status: Superseded
 date: 2026-10-25
 deciders: [sean]
 area: Generation / coder seam / transports
@@ -12,7 +12,7 @@ enforcement: code
 tags: [coder, agent, transport, adaptor, decomposition, model]
 relates-to: [19, 84, 85, 88, 110, 116]
 supersedes: []
-superseded-by: []
+superseded-by: [120]
 implements-pdr: [9, 10, 11]
 implemented-by:
   - packages/decompose/src/status.ts
