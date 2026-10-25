@@ -6,10 +6,11 @@
  * named edits, each checked by applying it alone (ADR-117 §4), and nothing
  * changes until a person accepts one here.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, LinearProgress, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useWorkspace, withWorkspace } from '../workspace/WorkspaceContext';
 import { describeEdit } from '../workspace/describe';
+import type { AgentInfo, AskResult } from '../workspace/types';
 
 /** Takes no props: everything comes from the proposal (ADR-116 §3). */
 export type AgentPaneProps = Record<string, never>;
@@ -19,15 +20,29 @@ const AgentPaneView: React.FC<AgentPaneProps> = () => {
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
+  const [agent, setAgent] = useState<AgentInfo | null>(null);
+  const [reply, setReply] = useState<AskResult | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    client
+      .agent()
+      .then((a) => live && setAgent(a))
+      .catch((err: unknown) => live && setAgent({ connected: false, reason: err instanceof Error ? err.message : String(err) }));
+    return () => {
+      live = false;
+    };
+  }, [client]);
+
   if (!status) return <LinearProgress aria-label="Loading the proposal" />;
 
-  const ask = client.ask;
+  const connected = agent?.connected === true;
   const send = async () => {
-    if (!ask || !question.trim()) return;
+    if (!connected || !question.trim()) return;
     setAsking(true);
     setAskError(null);
     try {
-      await ask(question.trim());
+      setReply(await client.ask(question.trim()));
       setQuestion('');
       await refresh();
     } catch (err) {
@@ -48,21 +63,43 @@ const AgentPaneView: React.FC<AgentPaneProps> = () => {
           placeholder="e.g. Split hazards out of cargo — they're a separate team"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          disabled={!ask || asking}
+          disabled={!connected || asking}
         />
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-          <Button variant="contained" disabled={!ask || asking || !question.trim()} onClick={() => void send()}>
+          <Button variant="contained" disabled={!connected || asking || !question.trim()} onClick={() => void send()}>
             Ask
           </Button>
-          {asking && <Typography variant="body2" color="text.secondary">The agent is thinking…</Typography>}
+          {asking && <Typography variant="body2" color="text.secondary">The agent is thinking — this can take a minute…</Typography>}
+          {connected && !asking && (
+            <Typography variant="caption" color="text.secondary">{agent?.model ? `Connected · ${agent.model}` : 'Connected'}</Typography>
+          )}
         </Stack>
-        {!ask && (
+        {agent && !connected && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            No agent is connected. Suggestions an agent makes from the command line still appear below.
+            {agent.reason ?? 'No agent is connected.'} Suggestions an agent makes from the command line still appear below.
           </Typography>
         )}
         {askError && <Alert severity="error" sx={{ mt: 1 }}>{askError}</Alert>}
       </Paper>
+
+      {reply && (
+        <Paper component="section" aria-label="The agent’s answer" variant="outlined" sx={{ p: 2 }}>
+          <Typography variant="body2">{reply.answer}</Typography>
+          <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
+            {reply.suggested.length === 1 ? '1 suggestion added below' : `${reply.suggested.length} suggestions added below`}
+          </Typography>
+          {reply.dropped.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="caption" color="text.secondary">Checked and dropped — these would not apply:</Typography>
+              {reply.dropped.map((d) => (
+                <Alert key={`${describeEdit(d.edit)}:${d.reason ?? ''}`} severity="warning" sx={{ mt: 0.5, py: 0 }}>
+                  {`${describeEdit(d.edit)} — ${d.reason ?? 'did not validate'}`}
+                </Alert>
+              ))}
+            </Box>
+          )}
+        </Paper>
+      )}
 
       <Typography variant="subtitle1">Suggestions</Typography>
       {error && <Alert severity="error" role="alert">{error}</Alert>}

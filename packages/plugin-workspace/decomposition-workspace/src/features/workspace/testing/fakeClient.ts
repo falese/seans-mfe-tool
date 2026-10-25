@@ -12,6 +12,8 @@ export function fakeClient(over: Partial<WorkspaceClient> = {}): WorkspaceClient
       return fixtureStatus({ approval: { status: 'current', by: 'sean', at: 'now' } });
     }),
     screenshotUrl: (p: string) => `/api/screenshot?path=${p}`,
+    agent: jest.fn().mockResolvedValue({ connected: false, reason: 'No agent is connected: set ANTHROPIC_API_KEY before starting the workspace.' }),
+    ask: jest.fn().mockRejectedValue(new Error('no agent')),
     ...over,
   };
 }

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { BFF_PORT, MFE_DIR, portIsFree, preflight, startWorkspace } from '../workspace';
+import { BFF_PORT, MFE_DIR, agentFor, portIsFree, preflight, startWorkspace } from '../workspace';
 
 describe('preflight — is the workspace MFE built?', () => {
   beforeEach(() => jest.useRealTimers());
@@ -64,4 +64,16 @@ describe('stopping the workspace', () => {
     await ws.close();
     expect(await portIsFree(BFF_PORT)).toBe(true);
   }, 20000);
+});
+
+describe('agentFor — is the agent connected? (ADR-117)', () => {
+  it('connects when there is a key in the environment, with the model asked for', () => {
+    expect(agentFor({ enabled: true, env: { ANTHROPIC_API_KEY: 'k' } })).toEqual({ agent: {} });
+    expect(agentFor({ enabled: true, model: 'm', env: { ANTHROPIC_API_KEY: 'k' } })).toEqual({ agent: { model: 'm' } });
+  });
+
+  it('says which variable to set when there is no key, and that it was turned off when it was', () => {
+    expect(agentFor({ enabled: true, env: {} })).toEqual({ unavailable: expect.stringContaining('ANTHROPIC_API_KEY') });
+    expect(agentFor({ enabled: false, env: { ANTHROPIC_API_KEY: 'k' } })).toEqual({ unavailable: expect.stringContaining('--no-agent') });
+  });
 });

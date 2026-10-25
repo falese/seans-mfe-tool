@@ -2,8 +2,9 @@
  * The workspace API, local implementation (ADR-116 §2–§3).
  *
  * It keeps nothing. A read is `decompose:status`; a write is `decompose:edit
- * --ops`, run as a child process with `--json` the way MCP tool calls are
- * (CLAUDE.md, "MCP child-process per tool call"), so the API cannot reach the
+ * --ops`; a question to the agent is `coder:suggest` (ADR-117). Each runs as
+ * a child process with `--json` the way MCP tool calls are (CLAUDE.md, "MCP
+ * child-process per tool call"), so the API cannot reach the
  * document by any path the CLI does not validate. `decomposition-workspace/specs/workspace-api.yaml`
  * is the contract; a hosted relay implements the same one (§6).
  */
@@ -33,6 +34,10 @@ export interface WorkspaceApiOptions {
   port: number;
   /** Called with who approved, once an approve edit has applied (ADR-116 §5: the approval lands on the PR). */
   onApproved?: (by: string) => Promise<void>;
+  /** The agent questions go to through `coder:suggest` (ADR-117); absent when none is connected. */
+  agent?: { model?: string };
+  /** Why no agent is connected, in words the page can show. */
+  agentUnavailable?: string;
 }
 
 export interface RunningApi {
@@ -121,6 +126,29 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
     });
   }
 
+  function agent(res: http.ServerResponse): void {
+    send(res, 200, opts.agent ? { connected: true, ...(opts.agent.model ? { model: opts.agent.model } : {}) } : { connected: false, reason: opts.agentUnavailable ?? 'no agent is connected' });
+  }
+
+  /** One question, one `coder:suggest`: the CLI asks, checks the edits and writes the survivors (ADR-117 §4). */
+  async function ask(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    if (!opts.agent) return problem(res, 503, opts.agentUnavailable ?? 'no agent is connected');
+    const model = opts.agent.model ? ['--model', opts.agent.model] : [];
+    let body: unknown;
+    try {
+      body = await readBody(req);
+    } catch {
+      return problem(res, 422, 'the request body is not JSON');
+    }
+    const request = (body as { request?: unknown }).request;
+    if (typeof request !== 'string' || !request.trim()) return problem(res, 422, 'expected { "request": "…" } with a question or a change to make');
+    await serially(async () => {
+      const result = await opts.cli.run(['coder:suggest', proposalDir, request.trim(), '--by', opts.who, ...model, '--json']);
+      if (result.ok) send(res, 200, result.data);
+      else problem(res, 422, result.error?.message ?? 'the agent could not answer', result.error?.type);
+    });
+  }
+
   function screenshot(url: URL, res: http.ServerResponse): void {
     const rel = url.searchParams.get('path') ?? '';
     // Only a screens/<name>.png path, resolved inside the bundle: never anything else on disk.
@@ -145,6 +173,10 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
           return edits(req, res);
         case 'GET /api/screenshot':
           return screenshot(url, res);
+        case 'GET /api/agent':
+          return agent(res);
+        case 'POST /api/ask':
+          return ask(req, res);
         default:
           return problem(res, 404, `no route ${route}`);
       }

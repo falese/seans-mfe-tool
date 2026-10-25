@@ -36,4 +36,33 @@ describe('the workspace client (ADR-116)', () => {
   it('points screenshots at the same origin, so the page needs nothing cross-origin', () => {
     expect(createWorkspaceClient(jest.fn()).screenshotUrl('screens/explore.0.png')).toBe('/api/screenshot?path=screens%2Fexplore.0.png');
   });
+
+  it('asks whether an agent is connected', async () => {
+    const query = jest.fn().mockResolvedValue({ getAgent: { connected: true, model: 'model-x', reason: null } });
+    await expect(createWorkspaceClient(query).agent()).resolves.toEqual({ connected: true, model: 'model-x' });
+    expect(query.mock.calls[0][0]).toContain('getAgent');
+  });
+
+  it('asks the agent, and reads its suggested and dropped edits back with their real kinds', async () => {
+    const query = jest.fn().mockResolvedValue({
+      askAgent: {
+        __typename: 'AskResult',
+        answer: 'Hazards can stand alone.',
+        model: 'model-x',
+        suggested: [{ explanation: 'separate team', reason: null, edit: { kind: 'split_domain', domain: 'cargo', into: 'hazmat', files: ['a.tsx'] } }],
+        dropped: [{ explanation: 'misplaced', reason: 'no domain "nowhere"', edit: { kind: 'move_file', file: 'b.tsx', to: 'nowhere' } }],
+      },
+    });
+    const result = await createWorkspaceClient(query).ask('Split hazards out of cargo');
+    expect(query.mock.calls[0][0]).toContain('askAgent');
+    expect(query.mock.calls[0][1]).toEqual({ request: 'Split hazards out of cargo' });
+    expect(result.answer).toBe('Hazards can stand alone.');
+    expect(result.suggested[0].edit.kind).toBe('split-domain');
+    expect(result.dropped[0]).toEqual({ explanation: 'misplaced', reason: 'no domain "nowhere"', edit: { kind: 'move-file', file: 'b.tsx', to: 'nowhere' } });
+  });
+
+  it('turns the agent’s refusal into a thrown error carrying its message', async () => {
+    const query = jest.fn().mockResolvedValue({ askAgent: { __typename: 'Problem', message: 'the model declined to answer this request' } });
+    await expect(createWorkspaceClient(query).ask('q')).rejects.toThrow('the model declined to answer this request');
+  });
 });

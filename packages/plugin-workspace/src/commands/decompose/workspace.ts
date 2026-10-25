@@ -13,7 +13,7 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import { BaseCommand } from '@seans-mfe/oclif-base';
 import type { CommitResult } from '../../run/git';
-import { MFE_DIR, buildMfe, startWorkspace, whoIsApproving } from '../../run/workspace';
+import { MFE_DIR, agentFor, buildMfe, startWorkspace, whoIsApproving } from '../../run/workspace';
 
 export interface DecomposeWorkspaceResult {
   /** Where the workspace was served. */
@@ -43,6 +43,12 @@ export default class DecomposeWorkspace extends BaseCommand<DecomposeWorkspaceRe
     port: Flags.integer({ description: 'Port for the workspace page', default: 4611 }),
     who: Flags.string({ description: "Name recorded on comments and approvals (default: git's user.name)" }),
     commit: Flags.boolean({ description: 'Commit the proposal when it is approved (ADR-116 §5)', default: true, allowNo: true }),
+    agent: Flags.boolean({
+      description: 'Connect the agent pane to a hosted model through coder:suggest when ANTHROPIC_API_KEY is set (ADR-117)',
+      default: true,
+      allowNo: true,
+    }),
+    model: Flags.string({ description: "The model the agent asks (default: coder:suggest's)" }),
     build: Flags.boolean({ description: 'Install and build the workspace MFE first (needed once, and after an upgrade)', default: false }),
     'exit-after-start': Flags.boolean({ description: 'Start, report where, and stop — for checks and scripts', default: false, hidden: true }),
   };
@@ -65,11 +71,13 @@ export default class DecomposeWorkspace extends BaseCommand<DecomposeWorkspaceRe
       who: flags.who ?? (await whoIsApproving(proposal)),
       commit: flags.commit,
       log,
+      agent: agentFor({ enabled: flags.agent, model: flags.model, env: process.env }),
     });
 
     log(chalk.green(`\n  ✓ Decomposition workspace: ${chalk.bold(workspace.url)}`));
     log(`    proposal  ${proposal}`);
     log(`    api       ${workspace.api}   bff ${workspace.bff}   (this machine only)`);
+    log(`    agent     ${workspace.agent}`);
     if (!flags['exit-after-start']) {
       log(chalk.dim('    Ctrl-C to stop\n'));
       await new Promise<void>((resolve) => {

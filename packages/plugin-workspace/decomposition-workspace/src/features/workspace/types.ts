@@ -106,3 +106,25 @@ export interface ProposalStatus {
   };
   screens: { screens: Screen[]; legend: Array<{ domain: string; mfe: string; color: string }> } | null;
 }
+
+/** Whether an agent answers questions here (ADR-117), and if not, why. */
+export interface AgentInfo {
+  connected: boolean;
+  model?: string;
+  reason?: string;
+}
+
+export interface CheckedEdit {
+  explanation: string;
+  edit: Edit;
+  /** Why the check dropped it. */
+  reason?: string;
+}
+
+/** One answer from the agent: its edits that passed the check are now suggestions. */
+export interface AskResult {
+  answer: string;
+  suggested: CheckedEdit[];
+  dropped: CheckedEdit[];
+  model: string;
+}

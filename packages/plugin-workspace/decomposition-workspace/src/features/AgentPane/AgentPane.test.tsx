@@ -76,9 +76,47 @@ describe('AgentPane', () => {
     expect(screen.getByText(/No suggestions waiting/)).toBeInTheDocument();
   });
 
-  it('asks the agent when one is connected, and says so when none is', async () => {
+  it('says why no agent is connected, and keeps the question box shut', async () => {
     await renderPane(fakeClient());
+    expect(await screen.findByText(/set ANTHROPIC_API_KEY/)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Ask the agent' })).toBeDisabled();
-    expect(screen.getByText(/No agent is connected/)).toBeInTheDocument();
+  });
+
+  it('asks a connected agent, shows its answer and what the check dropped, then reloads the suggestions', async () => {
+    const read = jest.fn().mockResolvedValue(fixtureStatus());
+    const ask = jest.fn().mockResolvedValue({
+      answer: 'Hazards can stand alone; the move would leave nowhere to go.',
+      model: 'model-x',
+      suggested: [{ explanation: 'separate team', edit: { kind: 'split-domain', domain: 'cargo', into: 'hazmat', files: ['a/HazardSummary.tsx'] } }],
+      dropped: [{ explanation: 'misplaced', reason: 'no domain "nowhere"', edit: { kind: 'move-file', file: 'src/b.tsx', to: 'nowhere' } }],
+    });
+    await renderPane(fakeClient({ read, ask, agent: jest.fn().mockResolvedValue({ connected: true, model: 'model-x' }) }));
+
+    const box = await screen.findByRole('textbox', { name: 'Ask the agent' });
+    await screen.findByText(/Connected · model-x/);
+    expect(box).toBeEnabled();
+    fireEvent.change(box, { target: { value: '  Split hazards out of cargo ' } });
+    const callsBefore = read.mock.calls.length;
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Ask' })));
+
+    expect(ask).toHaveBeenCalledWith('Split hazards out of cargo');
+    const reply = screen.getByRole('region', { name: 'The agent’s answer' });
+    expect(reply).toHaveTextContent('Hazards can stand alone');
+    expect(reply).toHaveTextContent('1 suggestion added');
+    expect(reply).toHaveTextContent('Move b.tsx to nowhere');
+    expect(reply).toHaveTextContent('no domain "nowhere"');
+    expect(read.mock.calls.length).toBeGreaterThan(callsBefore);
+    expect(box).toHaveValue('');
+  });
+
+  it('shows the agent’s failure and keeps the question for another try', async () => {
+    const ask = jest.fn().mockRejectedValue(new Error('the model declined to answer this request'));
+    await renderPane(fakeClient({ ask, agent: jest.fn().mockResolvedValue({ connected: true }) }));
+    const box = await screen.findByRole('textbox', { name: 'Ask the agent' });
+    await screen.findByText(/^Connected$/);
+    fireEvent.change(box, { target: { value: 'q' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Ask' })));
+    expect(screen.getByText('the model declined to answer this request')).toBeInTheDocument();
+    expect(box).toHaveValue('q');
   });
 });

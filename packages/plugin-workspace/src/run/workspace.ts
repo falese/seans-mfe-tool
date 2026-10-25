@@ -94,6 +94,13 @@ async function waitForHealth(url: string, child: ChildProcess, output: () => str
   throw new SystemError(`the workspace BFF did not answer ${url} within ${seconds}s`);
 }
 
+/** The agent questions go to, or why there is none (ADR-117: the key comes from the environment). */
+export function agentFor(opts: { enabled: boolean; model?: string; env: NodeJS.ProcessEnv }): { agent: { model?: string } } | { unavailable: string } {
+  if (!opts.enabled) return { unavailable: 'The agent was turned off with --no-agent.' };
+  if (!opts.env.ANTHROPIC_API_KEY) return { unavailable: 'No agent is connected: set ANTHROPIC_API_KEY before starting the workspace.' };
+  return { agent: opts.model ? { model: opts.model } : {} };
+}
+
 export interface WorkspaceOptions {
   proposalDir: string;
   evidenceDir?: string;
@@ -104,6 +111,8 @@ export interface WorkspaceOptions {
   commit: boolean;
   log: (line: string) => void;
   mfeDir?: string;
+  /** From {@link agentFor}; no agent when absent. */
+  agent?: ReturnType<typeof agentFor>;
 }
 
 export interface RunningWorkspace {
@@ -111,10 +120,13 @@ export interface RunningWorkspace {
   api: string;
   bff: string;
   approvals: CommitResult[];
+  /** "connected", or why not. */
+  agent: string;
   close(): Promise<void>;
 }
 
 export async function startWorkspace(opts: WorkspaceOptions): Promise<RunningWorkspace> {
+  const agentState = opts.agent ?? { unavailable: 'No agent is connected.' };
   const mfeDir = opts.mfeDir ?? MFE_DIR;
   const proposalDir = path.resolve(opts.proposalDir);
   if (!fs.existsSync(path.join(proposalDir, 'decomposition.yaml'))) {
@@ -167,6 +179,7 @@ export async function startWorkspace(opts: WorkspaceOptions): Promise<RunningWor
       cli: makeCliRunner(opts.cli),
       who: opts.who,
       port: API_PORT,
+      ...('agent' in agentState ? { agent: agentState.agent } : { agentUnavailable: agentState.unavailable }),
       onApproved: async (by) => {
         if (!opts.commit) return;
         const result = await commitApproval(proposalDir, by);
@@ -191,7 +204,8 @@ export async function startWorkspace(opts: WorkspaceOptions): Promise<RunningWor
     await waitForHealth(`${bffUrl}/health`, bff, () => output);
 
     front = await startFront({ dist: path.join(mfeDir, 'dist'), bff: bffUrl, api: api.url, port: opts.port });
-    return { url: front.url, api: api.url, bff: bffUrl, approvals, close };
+    const agent = 'agent' in agentState ? `connected${agentState.agent.model ? ` (${agentState.agent.model})` : ''}` : agentState.unavailable;
+    return { url: front.url, api: api.url, bff: bffUrl, approvals, agent, close };
   } catch (err) {
     await close();
     throw err;

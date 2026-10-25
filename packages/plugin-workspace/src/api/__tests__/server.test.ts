@@ -138,8 +138,10 @@ describe('the workspace API (ADR-116)', () => {
   it('every operation the document declares is one the server answers', () => {
     const spec = yaml.load(fs.readFileSync(SPEC, 'utf8')) as { paths: Record<string, Record<string, { operationId: string }>> };
     expect(Object.entries(spec.paths).flatMap(([p, ops]) => Object.keys(ops).map((m) => `${m.toUpperCase()} ${p}`)).sort()).toEqual([
+      'GET /agent',
       'GET /proposal',
       'GET /screenshot',
+      'POST /ask',
       'POST /edits',
     ]);
   });
@@ -164,5 +166,55 @@ describe('after an approval (ADR-116 §5)', () => {
     refuse = true;
     await post([{ kind: 'approve', by: 'pat' }]);
     expect(approved).toEqual(['sean']);
+  });
+});
+
+describe('the agent (ADR-117)', () => {
+  let api: RunningApi | undefined;
+  beforeEach(() => jest.useRealTimers());
+  afterEach(async () => api?.close());
+
+  const ANSWER = { answer: 'Hazards can stand alone.', suggested: [{ explanation: 'separate team', edit: { kind: 'split-domain', domain: 'cargo', into: 'hazmat', files: ['a.tsx'] } }], dropped: [], model: 'model-x' };
+  const ask = (url: string, body: unknown) => fetch(`${url}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+  it('says whether an agent is connected, and which model', async () => {
+    const root = project();
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli: fakeCli(() => ok(STATUS)), who: 'sean', port: 0, agent: { model: 'model-x' } });
+    expect(await (await fetch(`${api.url}/api/agent`)).json()).toEqual({ connected: true, model: 'model-x' });
+    await api.close();
+
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli: fakeCli(() => ok(STATUS)), who: 'sean', port: 0, agentUnavailable: 'set ANTHROPIC_API_KEY' });
+    expect(await (await fetch(`${api.url}/api/agent`)).json()).toEqual({ connected: false, reason: 'set ANTHROPIC_API_KEY' });
+  });
+
+  it('asks through coder:suggest, signed by the person running the workspace, and returns its answer', async () => {
+    const cli = fakeCli((args) => (args[0] === 'coder:suggest' ? ok(ANSWER) : ok(STATUS)));
+    const root = project();
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli, who: 'sean', port: 0, agent: { model: 'model-x' } });
+    const res = await ask(api.url, { request: 'Split hazards out of cargo' });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(ANSWER);
+    expect(cli.calls).toEqual([
+      ['coder:suggest', path.join(root, 'proposal'), 'Split hazards out of cargo', '--by', 'sean', '--model', 'model-x', '--json'],
+    ]);
+  });
+
+  it('refuses a question when no agent is connected, without running anything', async () => {
+    const cli = fakeCli(() => ok(STATUS));
+    const root = project();
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli, who: 'sean', port: 0 });
+    const res = await ask(api.url, { request: 'anything' });
+    expect(res.status).toBe(503);
+    expect(cli.calls).toEqual([]);
+  });
+
+  it('refuses an empty question, and reports the agent’s failure as 422 with the reason', async () => {
+    const cli = fakeCli((args) => (args[0] === 'coder:suggest' ? failed('the model declined to answer this request') : ok(STATUS)));
+    const root = project();
+    api = await startWorkspaceApi({ proposalDir: path.join(root, 'proposal'), cli, who: 'sean', port: 0, agent: { model: 'm' } });
+    expect((await ask(api.url, { request: '  ' })).status).toBe(422);
+    const res = await ask(api.url, { request: 'q' });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ message: 'the model declined to answer this request', type: 'ValidationError' });
   });
 });

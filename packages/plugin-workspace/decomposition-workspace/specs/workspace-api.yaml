@@ -55,6 +55,49 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Problem' }
+  /agent:
+    get:
+      operationId: getAgent
+      summary: Whether an agent is connected to answer questions, and which model
+      responses:
+        '200':
+          description: The agent's state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+  /ask:
+    post:
+      operationId: askAgent
+      summary: Ask the agent to change the proposal, or a question about it
+      description: >-
+        Runs `coder:suggest` (ADR-117). The agent's edits are dry-applied and validated; those
+        that pass are written as pending suggestions, beside the question and the answer in the
+        proposal's comments. Nothing else changes until a person accepts a suggestion.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request]
+              properties:
+                request: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: The agent's answer, what it suggested and what the check dropped
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResult' }
+        '422':
+          description: The agent could not answer; nothing was changed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '503':
+          description: No agent is connected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
   /screenshot:
     get:
       operationId: getScreenshot
@@ -78,6 +121,28 @@ paths:
               schema: { $ref: '#/components/schemas/Problem' }
 components:
   schemas:
+    Agent:
+      type: object
+      required: [connected]
+      properties:
+        connected: { type: boolean }
+        model: { type: string }
+        reason: { type: string, description: Why no agent is connected }
+    CheckedEdit:
+      type: object
+      required: [explanation, edit]
+      properties:
+        explanation: { type: string }
+        edit: { $ref: '#/components/schemas/Edit' }
+        reason: { type: string, description: Why the check dropped it }
+    AskResult:
+      type: object
+      required: [answer, suggested, dropped, model]
+      properties:
+        answer: { type: string }
+        suggested: { type: array, items: { $ref: '#/components/schemas/CheckedEdit' } }
+        dropped: { type: array, items: { $ref: '#/components/schemas/CheckedEdit' } }
+        model: { type: string, description: The model that answered }
     Problem:
       type: object
       required: [message]

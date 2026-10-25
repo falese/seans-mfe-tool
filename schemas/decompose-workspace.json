@@ -27,6 +27,14 @@
         "type": "boolean",
         "description": "Commit the proposal when it is approved (ADR-116 §5)"
       },
+      "agent": {
+        "type": "boolean",
+        "description": "Connect the agent pane to a hosted model through coder:suggest when ANTHROPIC_API_KEY is set (ADR-117)"
+      },
+      "model": {
+        "type": "string",
+        "description": "The model the agent asks (default: coder:suggest's)"
+      },
       "build": {
         "type": "boolean",
         "description": "Install and build the workspace MFE first (needed once, and after an upgrade)"
