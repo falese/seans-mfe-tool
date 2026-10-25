@@ -1,12 +1,7 @@
 import React from 'react';
+import { WorkspaceLayout } from './features/workspace/WorkspaceLayout';
 
-const App: React.FC = () => {
-  return (
-    <main>
-      <h1>Welcome to decomposition-workspace!</h1>
-      {/* Add your feature components here */}
-    </main>
-  );
-};
+/** The whole workspace on one page — what a host gets from this MFE's default export. */
+const App: React.FC = () => <WorkspaceLayout />;
 
 export default App;
