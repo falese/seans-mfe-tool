@@ -139,7 +139,10 @@ describe('renderPluginBundle', () => {
  * Runs the generated code.js against a stub of the Figma plugin API — enough
  * surface to execute the executor end to end and observe what it asked for.
  */
-async function runPlugin(code: string): Promise<{ created: Array<Record<string, unknown>>; fontLoads: string[]; closed: string }> {
+async function runPlugin(
+  code: string,
+  opts: { hasFont?: (family: string, style: string) => boolean; glyphWidth?: number } = {}
+): Promise<{ created: Array<Record<string, unknown>>; fontLoads: string[]; closed: string }> {
   const created: Array<Record<string, unknown>> = [];
   const fontLoads: string[] = [];
   let resolveClosed: (msg: string) => void = () => undefined;
@@ -158,6 +161,18 @@ async function runPlugin(code: string): Promise<{ created: Array<Record<string, 
         this.height = h;
       },
     };
+    if (type === 'TEXT' && opts.glyphWidth) {
+      // Stands in for Figma's text measurement: setting WIDTH_AND_HEIGHT
+      // sizes the box to its characters in the substituted font.
+      let mode = 'NONE';
+      Object.defineProperty(node, 'textAutoResize', {
+        get: () => mode,
+        set(v: string) {
+          mode = v;
+          if (v === 'WIDTH_AND_HEIGHT') node.width = String(node.characters).length * (opts.glyphWidth ?? 0);
+        },
+      });
+    }
     created.push(node);
     return node;
   };
@@ -169,6 +184,7 @@ async function runPlugin(code: string): Promise<{ created: Array<Record<string, 
     createRectangle: make('RECTANGLE'),
     createImageAsync: async () => ({ hash: 'h' }),
     loadFontAsync: async (f: { family: string; style: string }) => {
+      if (opts.hasFont && !opts.hasFont(f.family, f.style)) throw new Error(`no ${f.family} ${f.style}`);
       fontLoads.push(`${f.family} ${f.style}`);
     },
     closePlugin: (msg: string) => resolveClosed(msg),
@@ -218,5 +234,57 @@ describe('generated code.js — #409', () => {
     // Image fills fetch the captured page's own image URLs.
     expect(manifest.networkAccess).toMatchObject({ allowedDomains: ['*'] });
     expect(typeof (manifest.networkAccess as { reasoning?: unknown }).reasoning).toBe('string');
+  });
+});
+
+describe('generated code.js — first Figma desktop run (#434)', () => {
+  const only = (...fonts: string[]) => (family: string, style: string) => fonts.includes(`${family} ${style}`);
+
+  it('keeps the weight when the family falls back', async () => {
+    const root = frame({ children: [text({ fontFamily: 'Helvetica Neue', fontWeight: 700 })] });
+    const fonts = [{ family: 'Helvetica Neue', weight: 700, italic: false }];
+    const { created } = await runPlugin(renderPluginBundle(root, fonts, { name: 'Bold' })['code.js'], {
+      hasFont: only('Inter Regular', 'Inter Bold'),
+    });
+    expect(created[1].fontName).toEqual({ family: 'Inter', style: 'Bold' });
+  });
+
+  it('reads a system font stack as SF Pro when Figma has it, Inter when not', async () => {
+    const root = frame({ children: [text({ fontFamily: '-apple-system', fontWeight: 600 })] });
+    const fonts = [{ family: '-apple-system', weight: 600, italic: false }];
+    const code = renderPluginBundle(root, fonts, { name: 'System' })['code.js'];
+    const mac = await runPlugin(code, { hasFont: only('SF Pro Semibold', 'Inter Semi Bold') });
+    expect(mac.created[1].fontName).toEqual({ family: 'SF Pro', style: 'Semibold' });
+    const other = await runPlugin(code, { hasFont: only('Inter Regular', 'Inter Semi Bold') });
+    expect(other.created[1].fontName).toEqual({ family: 'Inter', style: 'Semi Bold' });
+  });
+
+  it('sizes a one-line run to its text and lets a wrapped run keep its width', () => {
+    const root = frame({
+      children: [
+        text({ characters: 'VR-83/555', rect: rect(0, 0, 60, 18), fontSize: 15 }),
+        text({ characters: 'A paragraph that wrapped in the browser', rect: rect(0, 30, 120, 54), fontSize: 15, lineHeightPx: 18 }),
+      ],
+    });
+    const { ops } = emitFigmaOps(root, []);
+    expect(ops[1].text?.autoResize).toBe('WIDTH_AND_HEIGHT');
+    expect(ops[2].text?.autoResize).toBe('HEIGHT');
+  });
+
+  it('never wraps a one-line run, and keeps centred and right-aligned text anchored', async () => {
+    const root = frame({
+      rect: rect(0, 0, 400, 100),
+      children: [
+        text({ characters: 'left', rect: rect(10, 0, 30, 16) }),
+        text({ characters: 'centre', rect: rect(100, 0, 40, 16), align: 'CENTER' }),
+        text({ characters: 'right', rect: rect(300, 0, 30, 16), align: 'RIGHT' }),
+      ],
+    });
+    // 10px a glyph: each run comes out wider than the browser measured it.
+    const { created } = await runPlugin(renderPluginBundle(root, [{ family: 'Inter', weight: 400, italic: false }], { name: 'Runs' })['code.js'], { glyphWidth: 10 });
+    const [, left, centre, right] = created;
+    expect(left).toMatchObject({ textAutoResize: 'WIDTH_AND_HEIGHT', width: 40, x: 10 });
+    expect(centre).toMatchObject({ width: 60, x: 90 }); // grew 20, centre stays at 120
+    expect(right).toMatchObject({ width: 50, x: 280 }); // grew 20, right edge stays at 330
   });
 });
