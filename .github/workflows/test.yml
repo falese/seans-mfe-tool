@@ -65,6 +65,11 @@ jobs:
       - name: Build the CLI
         run: npm run build
 
+      # The decomposition workspace MFE (ADR-116 §7) is a generated MFE with its own
+      # jest and node_modules, like the examples, so the root run skips it too; the
+      # next-but-one step runs its suite under its own config. A CLI
+      # --testPathIgnorePatterns replaces jest.config.js's list, so it is repeated here.
+      #
       # --testPathIgnorePatterns="/examples/" stays, deliberately (#345). The
       # ~75 test files under examples/ belong to each example MFE, not to this
       # repo's jest project: each runs under its own jest config against its own
@@ -78,6 +83,7 @@ jobs:
           set +e
           npm test -- --ci --coverage \
             --testPathIgnorePatterns="/examples/" \
+            --testPathIgnorePatterns="/packages/plugin-workspace/decomposition-workspace/" \
             --testPathIgnorePatterns="NodemonServer.test.js" \
             --testPathIgnorePatterns="create-shell.test.js" \
             --json --outputFile=/tmp/jest-results.json
@@ -85,6 +91,17 @@ jobs:
           exit $JEST_EXIT
         env:
           CI: true
+
+      # The workspace MFE's own suite (ADR-116 §7): its screens, client and
+      # layout, under its own jest and dependencies. Once per run, not per Node
+      # line: it is a browser bundle's test suite. Its runtime resolves to the
+      # dist/runtime the build step above produced.
+      - name: Workspace MFE tests
+        if: matrix.node-version == '22.x'
+        working-directory: packages/plugin-workspace/decomposition-workspace
+        run: |
+          npm ci --no-audit --no-fund
+          npx jest --ci
 
       - name: Post test results as PR comment
         if: always() && github.event_name == 'pull_request'
