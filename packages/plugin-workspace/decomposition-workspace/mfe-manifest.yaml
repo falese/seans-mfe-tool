@@ -1,0 +1,76 @@
+name: decomposition-workspace
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: >-
+  The decomposition workspace (ADR-116): a product owner reviews, shapes and approves a
+  decomposition proposal on the real screens. Stateless — every action is a named edit to
+  decomposition.yaml, applied by the CLI through the workspace API this MFE's BFF fronts.
+owner: seans-mfe-tool
+tags: [decomposition, workspace, review, react]
+category: tooling
+
+hosts:
+  - id: smt-tools
+
+endpoint: http://localhost:4611
+remoteEntry: http://localhost:4611/remoteEntry.js
+discovery: http://localhost:4611/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - ProposalMap:
+      type: domain
+      description: The captured screens with each proposed domain outlined, and the evidence behind the selected domain
+  - ShapeProposal:
+      type: domain
+      description: Merge, split, rename and move — each a named edit, validated before it is applied
+  - AgentPane:
+      type: domain
+      description: Ask the agent in plain language; its suggested edits wait here to be accepted or rejected
+  - ApproveProposal:
+      type: domain
+      description: The summary a product owner approves — domains, data, couplings, comments — and the approval itself
+
+  - Load:
+      type: platform
+      lifecycle:
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+# One source: the workspace API (packages/plugin-workspace), served on 127.0.0.1:4610 by
+# decompose:workspace. Reads come from decompose:status, writes go to decompose:edit.
+data:
+  sources:
+    - name: WorkspaceAPI
+      handler:
+        openapi:
+          source: ./specs/workspace-api.yaml
+  serve:
+    endpoint: /graphql
+    playground: false
+
+# The workspace must show each edit the moment it lands, so no response caching.
+performance:
+  caching:
+    enabled: false
+
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  design-system:
+    "@mui/material": ^5.14.0

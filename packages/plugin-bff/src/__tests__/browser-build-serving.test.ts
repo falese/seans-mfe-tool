@@ -79,3 +79,11 @@ describe('an MFE without it', () => {
     expect(get('.dockerignore')).not.toContain('rust/');
   });
 });
+
+describe('the address an MFE server listens on', () => {
+  it('is every interface by default, as a container needs, and HOST narrows it', async () => {
+    const server = (await generated(base))('server.ts');
+    expect(server).toContain("const host = process.env.HOST || '0.0.0.0';");
+    expect(server).toContain('app.listen(Number(port), host, () => {');
+  });
+});

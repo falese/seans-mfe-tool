@@ -131,7 +131,9 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
-    '/examples/'
+    '/examples/',
+    // A generated MFE with its own jest and dependencies, like the examples (ADR-116).
+    '/packages/plugin-workspace/decomposition-workspace/'
   ],
 
   // Test environment configuration

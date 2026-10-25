@@ -90,7 +90,7 @@ as it was.
 - the captured screens with the domains outlined.
 
 `@seans-mfe/plugin-workspace` serves this as the workspace API
-(`packages/plugin-workspace/openapi/workspace-api.yaml`). Reads go to `decompose:status`, and
+(`packages/plugin-workspace/decomposition-workspace/specs/workspace-api.yaml`). Reads go to `decompose:status`, and
 writes go to `decompose:edit`, each run as a child process.
 
 ## What the proposal holds

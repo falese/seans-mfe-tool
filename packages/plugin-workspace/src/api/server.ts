@@ -4,7 +4,7 @@
  * It keeps nothing. A read is `decompose:status`; a write is `decompose:edit
  * --ops`, run as a child process with `--json` the way MCP tool calls are
  * (CLAUDE.md, "MCP child-process per tool call"), so the API cannot reach the
- * document by any path the CLI does not validate. `openapi/workspace-api.yaml`
+ * document by any path the CLI does not validate. `decomposition-workspace/specs/workspace-api.yaml`
  * is the contract; a hosted relay implements the same one (§6).
  */
 
@@ -38,7 +38,7 @@ export interface RunningApi {
   close(): Promise<void>;
 }
 
-export const SPEC_PATH = path.resolve(__dirname, '../../openapi/workspace-api.yaml');
+export const SPEC_PATH = path.resolve(__dirname, '../../decomposition-workspace/specs/workspace-api.yaml');
 
 /** Edit kinds that record who made them and when. */
 const ATTRIBUTED = new Set(['comment', 'suggest', 'approve']);

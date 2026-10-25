@@ -21,7 +21,7 @@ implemented-by:
   - src/decompose/propose/status.ts
   - src/commands/decompose/status.ts
   - packages/plugin-workspace/src/api/server.ts
-  - packages/plugin-workspace/openapi/workspace-api.yaml
+  - packages/plugin-workspace/decomposition-workspace/specs/workspace-api.yaml
 verified-by:
   - src/decompose/propose/__tests__/edit.test.ts
   - src/decompose/propose/__tests__/status.test.ts
@@ -99,7 +99,7 @@ As implemented (#425, part 1):
   - each suggestion, checked by applying it alone;
   - the captured screens with the domains outlined.
 - **The workspace API.** `@seans-mfe/plugin-workspace` describes it in
-  `openapi/workspace-api.yaml`. Its local server answers reads with `decompose:status` and writes
+  `decomposition-workspace/specs/workspace-api.yaml`. Its local server answers reads with `decompose:status` and writes
   with `decompose:edit`, each as a child process, so the API has no path to the document that the
   CLI does not validate. The server applies edits one at a time, listens on 127.0.0.1 only, and
   serves only `screens/*.png` from the bundle.

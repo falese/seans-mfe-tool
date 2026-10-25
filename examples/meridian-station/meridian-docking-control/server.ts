@@ -91,8 +91,11 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 const port = process.env.PORT || 6002;
+// Every interface by default, as a container needs; HOST=127.0.0.1 keeps a
+// local tool's BFF off the network (the decomposition workspace, ADR-116).
+const host = process.env.HOST || '0.0.0.0';
 
-app.listen(port, () => {
+app.listen(Number(port), host, () => {
   console.log(`🚀 meridian-docking-control BFF server running on port ${port}`);
   console.log(`   GraphQL endpoint: http://localhost:${port}/graphql`);
 

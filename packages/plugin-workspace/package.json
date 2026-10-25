@@ -9,11 +9,11 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./openapi/workspace-api.yaml": "./openapi/workspace-api.yaml"
+    "./decomposition-workspace/specs/workspace-api.yaml": "./decomposition-workspace/specs/workspace-api.yaml"
   },
   "files": [
     "dist",
-    "openapi"
+    "decomposition-workspace/specs"
   ],
   "scripts": {
     "build": "tsc",

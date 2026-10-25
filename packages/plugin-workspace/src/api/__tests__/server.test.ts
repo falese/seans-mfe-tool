@@ -6,7 +6,7 @@ import * as yaml from 'js-yaml';
 import type { CommandResult } from '@seans-mfe/contracts';
 import { startWorkspaceApi, type CliRunner, type RunningApi } from '../server';
 
-const SPEC = path.resolve(__dirname, '../../../openapi/workspace-api.yaml');
+const SPEC = path.resolve(__dirname, '../../../decomposition-workspace/specs/workspace-api.yaml');
 
 const ok = <T>(data: T): CommandResult<T> => ({ ok: true, data, warnings: [], telemetry: { durationMs: 1, correlationId: 'c' } });
 const failed = (message: string): CommandResult<never> => ({
