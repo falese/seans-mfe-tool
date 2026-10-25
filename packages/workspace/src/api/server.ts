@@ -3,7 +3,7 @@
  *
  * It keeps nothing. A read is the proposal's status; a write is named edits,
  * applied all or none; both go through `@seans-mfe/decompose`, the same code
- * `decompose:status` and `decompose:edit` wrap, so the API cannot change the
+ * `flow:status --proposal` and `decompose:edit` wrap, so the API cannot change the
  * document by any path the CLI does not validate (ADR-118 §2). A question goes
  * to the agent it was handed, if any (ADR-117); the API never names a model
  * provider. `decomposition-workspace/specs/workspace-api.yaml` is the contract;

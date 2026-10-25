@@ -19,7 +19,7 @@ implements-pdr: [11]
 implemented-by:
   - packages/decompose/src/edit.ts
   - packages/decompose/src/status.ts
-  - src/commands/decompose/status.ts
+  - src/commands/flow/status.ts
   - packages/workspace/src/api/server.ts
   - packages/workspace/decomposition-workspace/specs/workspace-api.yaml
   - packages/workspace/decomposition-workspace/mfe-manifest.yaml

@@ -5,7 +5,7 @@ info:
   description: >-
     What the decomposition workspace reads and writes (ADR-116). The workspace keeps no state:
     a read is the proposal's status, and every write is a named edit, both through
-    @seans-mfe/decompose as `decompose:status` and `decompose:edit` do (ADR-118). The local
+    @seans-mfe/decompose as `flow:status --proposal` and `decompose:edit` do (ADR-118). The local
     server in @seans-mfe/workspace implements this document;
     a hosted relay implements the same one (ADR-116 §6), and the workspace MFE's BFF sources it.
 servers:

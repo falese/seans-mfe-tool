@@ -40,6 +40,10 @@ the command shows a placeholder like `<app-url>` and tells you to fill it in.
 With `--json`, the same report is one envelope, so an agent over MCP can call `flow:status`
 and then the command it names.
 
+Add `--proposal` to also get the proposal as the workspace shows it (document, validation, approval,
+checked suggestions, screens) under a `proposal` key. It runs the checks, so it is slower; the default
+report stays cheap.
+
 The full walkthrough of the decomposition flow is [decompose-runbook.md](./decompose-runbook.md).
 
 ## How it works (ADR-119)

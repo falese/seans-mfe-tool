@@ -86,7 +86,7 @@ A proposal records what each file calls (`fileEndpoints`), so a split or a move 
 domain's backends and endpoints. A proposal written before this field existed keeps its data
 as it was.
 
-`decompose:status <proposal-dir>` returns everything the workspace shows:
+`flow:status <bundle> --proposal` returns, under `proposal`, everything the workspace shows:
 - the document;
 - whether the derived fleet validates;
 - the approval, and whether it is still `current` or has gone `stale`;
@@ -95,7 +95,7 @@ as it was.
 
 `@seans-mfe/workspace` serves this as the workspace API
 (`packages/workspace/decomposition-workspace/specs/workspace-api.yaml`). Reads and writes go
-through `@seans-mfe/decompose`, the same code `decompose:status` and `decompose:edit` wrap
+through `@seans-mfe/decompose`, the same code `flow:status --proposal` and `decompose:edit` wrap
 (ADR-118).
 
 ### Opening the workspace

@@ -1,5 +1,5 @@
 /**
- * The workspace's view of a proposal: what `decompose:status` returns through
+ * The workspace's view of a proposal: what `flow:status --proposal` returns through
  * the workspace API (ADR-116 §3). Only the fields the screens read are typed;
  * the document carries more.
  */

@@ -3,7 +3,8 @@ import * as os from 'os';
 import * as path from 'path';
 import { applyEdits, dumpYaml, type Decomposition } from '@seans-mfe/decompose';
 import { writeProvenance } from '@seans-mfe/flow';
-import { FLOW_IDS, flowChecks, fsProbe, loadShippedFlow, statusOf } from '../index';
+import { loadProposalStatus } from '@seans-mfe/decompose';
+import { FLOW_IDS, flowChecks, fsProbe, loadShippedFlow, proposalStatusOf, statusOf } from '../index';
 
 const REPO = path.resolve(__dirname, '../../..');
 
@@ -110,6 +111,19 @@ describe('the decomposition flow (PDR-012, ADR-119)', () => {
     const suggested = applyEdits(doc(), [{ kind: 'suggest', by: 'agent', at: 't', explanation: 'x', edit: { kind: 'rename-domain', from: 'shell', to: 'console' } }]);
     write(path.join(bundle, 'proposal', 'decomposition.yaml'), dumpYaml(suggested));
     expect(flowChecks['suggestions-waiting'](bundle)).toMatchObject({ detail: '1 suggestion waiting' });
+  });
+
+  it('reports the proposal as the workspace reads it, for flow:status --proposal', async () => {
+    write(path.join(bundle, 'proposal', 'decomposition.yaml'), dumpYaml(doc()));
+    const proposal = path.join(bundle, 'proposal');
+    const { warnings, ...expected } = await loadProposalStatus(proposal, { evidence: bundle });
+    const got = await proposalStatusOf(bundle);
+    expect(got).toEqual({ status: expected, warnings });
+    expect(got?.status.approval.status).toBe('none');
+  });
+
+  it('has no proposal status before a proposal exists', async () => {
+    await expect(proposalStatusOf(bundle)).resolves.toBeNull();
   });
 
   it('reports verify done only when the parity report says at parity', () => {
