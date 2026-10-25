@@ -9,7 +9,7 @@ deciders: [sean]
 area: Decomposition / agreement / UI
 enforcement: tooling
 tags: [decomposition, ui, agreement, product-owner, agent, stateless]
-relates-to: [84, 109, 110]
+relates-to: [12, 36, 84, 85, 88, 109, 110, 117]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
@@ -25,7 +25,10 @@ summary: >-
   re-derived. Approval is recorded in the document and lands on the proposal PR. Because the UI
   keeps no state, the same UI can be hosted: the engineer's CLI publishes the document to a
   workspace service, the product owner edits there, and the CLI syncs the edits back into the
-  repository. The service relays; the repository stays the source of truth.
+  repository. The service relays; the repository stays the source of truth. The workspace is
+  built on the platform it serves: an oclif plugin whose command runs a generated SMT MFE in
+  standalone mode, its BFF fronting the workspace API; the agent is reached through the coder
+  seam (ADR-117).
 rationale-summary: >-
   The people who must agree on domain boundaries are product owners, and a PR full of YAML is an
   engineer's tool. Making the decomposition DSL the only state means the UI, the agent, the CLI
@@ -55,7 +58,7 @@ main tool.
 v1 is local: `seans-mfe-tool decompose:workspace <project>` serves the UI on localhost from the
 CLI, beside the repository and the evidence bundle. The UI talks to one workspace API, and the
 local CLI server is its first implementation; a hosted service (§6) implements the same API, so
-the same UI build runs in both places.
+the same UI build runs in both places. What the UI is built with is §7.
 
 ### 3. Stateless: the decomposition DSL is the only source of truth
 
@@ -78,6 +81,12 @@ operations the UI's own controls use, so it has no private path into the documen
 edit is shown as a change the product owner accepts or rejects before it is applied. The model
 runs outside the CLI, as in ADR-110 §1a and PDR-010; the workspace connects to an agent and
 hosts no model.
+
+The connection is the coder seam (ADR-085, ADR-088), not a channel of the workspace's own: a
+question goes to coder with the `decomposition-edit` adaptor and the current document as
+context, and coder's answer is a list of named edits, checked by dry-applying them before they
+are shown (ADR-117). Proposed edits are written into `decomposition.yaml` as pending
+suggestions, so they survive a reload like everything else (§3).
 
 ### 5. Approval lands on the PR
 
@@ -105,6 +114,24 @@ The service holds a published snapshot and a queue of pending operations, nothin
 it loses at most unsynced edits; everything else is rebuilt from the repository by publishing
 again. An approval made in the hosted UI is recorded against the published hash and takes
 effect when it is synced into the document (§5).
+
+### 7. The workspace is built on the platform it serves
+
+The workspace is not a bespoke web app. It is:
+
+- **an oclif plugin** (ADR-036's plugin pattern, beside `@seans-mfe/plugin-coder` and the BFF
+  plugin) that contributes `decompose:workspace`;
+- **an SMT MFE**, generated from its own `mfe-manifest.yaml` like any fleet member, whose
+  capabilities are the screens (map, shape, agent, approve). The command runs it in
+  **standalone mode** — the entry every generated MFE already has — so no shell is needed;
+- **a BFF over the workspace API.** The workspace API is described by an OpenAPI document, and
+  the MFE's BFF sources it the way any MFE's BFF sources its backends (ADR-012). The local
+  implementation of that API is a server the command starts beside the MFE; a hosted service
+  (§6) implements the same document.
+
+So the workspace exercises the platform's own contracts — manifest, codegen, runtime, BFF —
+and every change to them is felt by the team that makes it. The same MFE can later be
+composed into a shell alongside other tools.
 
 ## Boundaries
 

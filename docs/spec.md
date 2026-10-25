@@ -357,6 +357,7 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-112](./architecture-decisions/ADR-112-openapi-inference-from-traffic.md) | When a backend has no spec, the toolchain infers an OpenAPI document from recorded traffic and client code, marks it inferred, and the BFF consumes it like any other source | Decomposition / BFF / specs | Proposed |
 | [ADR-113](./architecture-decisions/ADR-113-decomposition-parity-gate.md) | A decomposition step is accepted only when the composed app passes the parity gate — the captured journeys produce the same regions, the same backend calls, the same visuals and no new errors as the monolith | Decomposition / regression | Proposed |
 | [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Proposed |
+| [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Proposed |
 
 ### Deferred — postponed on purpose
 
