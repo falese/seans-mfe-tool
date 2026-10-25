@@ -32,7 +32,7 @@ summary: >-
   here beside ADR-118's package decision, because the two are one choice seen from two sides:
   the agent can sit behind the workspace's API without a child process per edit only because
   the model is a package. This ADR records the two choices and what was rejected; what each
-  command does lives in docs/decompose-propose.md. Its other purpose is to say how ADRs are
+  command does lives in the explainers under docs/. Its other purpose is to say how ADRs are
   written in this track from here.
 rationale-summary: >-
   Ten ADRs in a month for one feature (#454) meant several described a command rather than
