@@ -24,6 +24,12 @@ const StepSchema = z.object({
   after: z.array(z.string()).default([]),
   /** Paths relative to the root; the first is the step's own output, compared for freshness. */
   produces: z.array(z.string().min(1)).default([]),
+  /**
+   * What the step's first output is built from, relative to the root. When set,
+   * freshness compares the digests the step recorded (`<output>.from.json`)
+   * with the inputs' content now; without it, modification times decide.
+   */
+  from: z.array(z.string().min(1)).default([]),
   /** A template over `{root}` and the flow's inputs. */
   command: z.string().min(1).optional(),
   /** A check the host registers, deciding the step instead of, or as well as, its files. */

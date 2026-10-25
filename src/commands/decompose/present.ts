@@ -15,6 +15,7 @@ import { Args, Flags } from '@oclif/core';
 import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
+import { provenanceOf, writeProvenance } from '@seans-mfe/flow';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { readDecomposition, readEvidenceSteps } from '@seans-mfe/decompose';
 import { buildOverlay, renderOverlayHtml, renderOverlayPlugin, renderProposalMarkdown } from '@seans-mfe/decompose';
@@ -55,6 +56,9 @@ export default class DecomposePresent extends BaseCommand<DecomposePresentResult
       files.push(full);
     };
     await write('PROPOSAL.md', renderProposalMarkdown(doc));
+    // Which version of the proposal this review package shows, by content (ADR-119).
+    await writeProvenance(path.join(dir, 'PROPOSAL.md'), [path.join(dir, 'decomposition.yaml')]);
+    files.push(provenanceOf(path.join(dir, 'PROPOSAL.md')));
     await fs.remove(path.join(dir, 'overlay'));
     const pngs: Record<string, Buffer> = {};
     for (const s of overlay.screens) {

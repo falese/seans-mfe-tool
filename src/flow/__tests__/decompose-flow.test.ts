@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { applyEdits, dumpYaml, type Decomposition } from '@seans-mfe/decompose';
+import { writeProvenance } from '@seans-mfe/flow';
 import { FLOW_IDS, flowChecks, fsProbe, loadShippedFlow, statusOf } from '../index';
 
 const REPO = path.resolve(__dirname, '../../..');
@@ -86,6 +87,23 @@ describe('the decomposition flow (PDR-012, ADR-119)', () => {
     write(path.join(bundle, 'proposal', 'PROPOSAL.md'), '# proposal');
     write(path.join(bundle, 'proposal', 'decomposition.yaml'), dumpYaml(changed));
     expect(stateOf('approve')).toMatchObject({ state: 'stale', detail: expect.stringContaining('changed after sean approved it') });
+  });
+
+  it('is not fooled by a checkout: an untouched proposal with a newer timestamp leaves the review package fresh', async () => {
+    for (const f of ['bundle.json', 'requests.json', 'source/project.json', 'source/graph.json', 'source/join.json']) write(path.join(bundle, f), '{}');
+    write(path.join(bundle, 'proposal', 'proposal.base.yaml'), dumpYaml(doc()));
+    write(path.join(bundle, 'proposal', 'decomposition.yaml'), dumpYaml(doc()));
+    write(path.join(bundle, 'proposal', 'PROPOSAL.md'), '# proposal');
+    await writeProvenance(path.join(bundle, 'proposal', 'PROPOSAL.md'), [path.join(bundle, 'proposal', 'decomposition.yaml')]);
+    // git checkout: every file gets a new mtime, in whatever order; the content is the same.
+    const later = clock + 1000;
+    fs.utimesSync(path.join(bundle, 'proposal', 'decomposition.yaml'), later, later);
+    expect(stateOf('present')?.state).toBe('done');
+
+    // A real edit is still seen, whatever the timestamps say.
+    fs.writeFileSync(path.join(bundle, 'proposal', 'decomposition.yaml'), dumpYaml(applyEdits(doc(), [{ kind: 'rename-domain', from: 'shell', to: 'console' }])));
+    fs.utimesSync(path.join(bundle, 'proposal', 'decomposition.yaml'), 1, 1);
+    expect(stateOf('present')).toMatchObject({ state: 'stale', detail: 'proposal/decomposition.yaml changed since proposal/PROPOSAL.md was built' });
   });
 
   it('counts the agent’s suggestions waiting on the optional shaping step', () => {

@@ -12,6 +12,7 @@
  */
 
 import * as path from 'path';
+import { provenanceOf, writeProvenance } from '@seans-mfe/flow';
 import * as fs from 'fs-extra';
 import { stableStringify } from '../bundle';
 import { apiBaseOf, buildSourceGraph, resolveRelativeUrls, type SourceGraph } from './graph';
@@ -71,6 +72,12 @@ export async function analyzeProject(options: AnalyzeOptions): Promise<AnalyzeOu
     const full = path.join(options.outDir, name);
     await fs.writeFile(full, stableStringify(value));
     files.push(full);
+  }
+  // What the analysis was joined to, by content, so flow:status can tell a re-capture from a checkout (ADR-119).
+  if (options.evidenceDir) {
+    const graphFile = path.join(options.outDir, 'graph.json');
+    await writeProvenance(graphFile, [path.join(options.evidenceDir, 'bundle.json'), path.join(options.evidenceDir, 'requests.json')]);
+    files.push(provenanceOf(graphFile));
   }
   return { graph, history, tests, join, files: files.sort() };
 }

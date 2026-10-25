@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
 import { approvalStatus, DecompositionSchema, type Decomposition } from '@seans-mfe/decompose';
-import { flowStatus, loadFlow, type Flow, type FlowChecks, type FlowProbe, type FlowStatus } from '@seans-mfe/flow';
+import { digestFile, flowStatus, loadFlow, type Flow, type FlowChecks, type FlowProbe, type FlowStatus } from '@seans-mfe/flow';
 
 /** From `src/flow` and from `dist/flow` alike. */
 export const FLOWS_DIR = path.resolve(__dirname, '../../flows');
@@ -42,6 +42,7 @@ export const fsProbe: FlowProbe = {
       return undefined;
     }
   },
+  digest: digestFile,
 };
 
 /** The proposal inside a bundle, or why there is none. */

@@ -9,12 +9,15 @@
 import * as path from 'path';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { Flow, FlowStep } from './flow';
+import { provenanceOf, type Provenance } from './provenance';
 
 export interface FlowProbe {
   /** Modification time in ms, or null when the path does not exist. */
   mtime(file: string): number | null;
   /** The parsed JSON at the path, or undefined. */
   readJson(file: string): unknown;
+  /** `sha256:<hex>` of the file's content, or null; without it, freshness falls back to timestamps. */
+  digest?(file: string): string | null;
 }
 
 export interface CheckResult {
@@ -91,6 +94,34 @@ export function flowStatus(flow: Flow, dir: string, probe: FlowProbe, checks: Fl
   const rendered = new Map<string, { command: string; placeholders: string[] }>();
   const file = (rel: string) => path.resolve(root, rel);
 
+  /** Why a done step is stale, or undefined. By content where the step records provenance, else by timestamp. */
+  const staleness = (step: FlowStep): string | undefined => {
+    const output = step.produces[0];
+    if (!output) return undefined;
+    const ownFile = file(output);
+    const recorded = probe.digest && step.from.length > 0 ? (probe.readJson(provenanceOf(ownFile)) as Provenance | undefined) : undefined;
+    if (recorded && probe.digest) {
+      const changed = step.from.filter((rel) => {
+        const key = path.relative(path.dirname(ownFile), file(rel)).split(path.sep).join('/');
+        return recorded.inputs?.[key] !== probe.digest?.(file(rel));
+      });
+      return changed.length > 0 ? `${changed.join(', ')} changed since ${output} was built` : undefined;
+    }
+    const own = probe.mtime(ownFile);
+    if (own === null) return undefined;
+    const inputs =
+      step.from.length > 0
+        ? step.from
+        : step.after
+            .map((a) => byId.get(a))
+            .filter((a): a is FlowStep => a !== undefined && a.kind !== 'optional')
+            .flatMap((a) => a.produces);
+    const newer = inputs.filter((p) => (probe.mtime(file(p)) ?? 0) > own);
+    if (newer.length === 0) return undefined;
+    const how = step.from.length > 0 ? ' (by timestamp: it was built before provenance was recorded — re-run it to record it)' : '';
+    return `${newer.join(', ')} changed after ${output} was written${how}`;
+  };
+
   for (const step of flow.steps) {
     const base = { id: step.id, title: step.title, kind: step.kind };
     if (!step.available) {
@@ -120,17 +151,9 @@ export function flowStatus(flow: Flow, dir: string, probe: FlowProbe, checks: Fl
       continue;
     }
 
-    const own = step.produces[0] ? probe.mtime(file(step.produces[0])) : null;
-    const newer =
-      own === null
-        ? []
-        : step.after
-            .map((a) => byId.get(a))
-            .filter((a): a is FlowStep => a !== undefined && a.kind !== 'optional')
-            .flatMap((a) => a.produces)
-            .filter((p) => (probe.mtime(file(p)) ?? 0) > own);
-    if (newer.length > 0) {
-      states.set(step.id, { ...base, ...cmd, state: 'stale', detail: `${newer.join(', ')} changed after ${step.produces[0]} was written` });
+    const changed = staleness(step);
+    if (changed) {
+      states.set(step.id, { ...base, ...cmd, state: 'stale', detail: changed });
     } else if (check?.stale) {
       states.set(step.id, { ...base, ...cmd, state: 'stale', ...(check.detail ? { detail: check.detail } : {}) });
     } else {

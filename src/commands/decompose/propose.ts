@@ -25,6 +25,7 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
+import { provenanceOf, writeProvenance } from '@seans-mfe/flow';
 import { BaseCommand } from '../../oclif/BaseCommand';
 import { propose } from '../../decompose/propose/cluster';
 import { backendLayout, type BackendLayout } from '@seans-mfe/decompose';
@@ -110,7 +111,9 @@ export default class DecomposePropose extends BaseCommand<DecomposeProposeResult
       await fs.ensureDir(outDir);
       const base = path.join(outDir, 'proposal.base.yaml');
       await fs.writeFile(base, `# The deterministic draft (decompose:propose). Kept to diff the agent's edits against; do not edit.\n${dumpYaml(doc)}`);
-      files.push(base);
+      // What the draft was clustered from, by content (ADR-119).
+      await writeProvenance(base, [path.join(analysis.dir, 'graph.json'), path.join(analysis.dir, 'join.json')]);
+      files.push(base, provenanceOf(base));
       this.log(chalk.blue(`\nProposing from ${dir}\n`));
     }
 

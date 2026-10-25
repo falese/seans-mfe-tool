@@ -48,6 +48,12 @@ and then the command it names.
   proposal is approved.
 - **State is derived, never recorded.** Every call reads the files. Run a command by hand, edit
   the proposal, or delete a report, and the next `flow:status` reflects it.
+- **Freshness is by content.** `analyze`, `propose` and `present` write
+  `<output>.from.json` beside their output, holding the digest of each input they read. A
+  `git checkout`, which rewrites every timestamp, cannot make a step look stale or fresh.
+  Outputs written before this existed fall back to timestamps, and the report says so.
+- **It borrows from others.** It takes Make's targets and DVC's content hashes. It adds human
+  gates and agent-readable output, which neither has. ADR-119 compares the prior art.
 - **It runs nothing.** Executing the remaining steps (`flow:run`) and a `next` hint in every
   command's output are later steps on the same definitions.
 - **The engine is `@seans-mfe/flow`.** It is pure, and its checks are handed in. A test keeps

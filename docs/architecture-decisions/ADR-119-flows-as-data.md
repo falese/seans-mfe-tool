@@ -105,8 +105,13 @@ For each step, in order:
 - **unavailable**: `available: false`.
 - **blocked**: a step it follows is not done (optional steps never block).
 - **done**: every file it produces exists and its check, if any, passes.
-- **stale**: done, but a file produced by a step it follows is newer than its own first output;
-  or its check reports `stale`, as an approval does after the proposal changes.
+- **stale**: done, but no longer true of what it was built from:
+  - **by content, where the step declares `from`.** The command records the digest of each
+    input beside its first output (`<output>.from.json`, paths relative to the output). A
+    step is stale when an input's content differs from what was recorded.
+  - **by timestamp otherwise,** or for an output written before provenance was recorded. The
+    report then says so.
+  - **or its check reports `stale`,** as an approval does after the proposal changes.
 - **waiting**: a gate that is not done.
 - **next**: the first step that is not done or optional, whose predecessors are all done.
 - **ready**: any other step that could run now.
@@ -123,8 +128,10 @@ says the placeholder needs filling. Nothing is written.
   - the schema;
   - `loadFlow(yamlText)`;
   - `flowStatus(flow, root, probe, checks)`.
-- `probe` is `{ mtime(path), readJson(path) }`, so the engine is pure and unit-testable without
-  a disk.
+- `probe` is `{ mtime(path), readJson(path), digest?(path) }`, so the engine is pure and
+  unit-testable without a disk.
+- `writeProvenance(output, inputs)` and `digestFile` are the package's only filesystem code.
+  They are what a producing command calls.
 - `checks` is a map from name to `(root) => { done, stale?, detail? }`. This is the shape of
   sentinel's `ValidatePort` lifted to a step (ADR-089), so a sentinel adapter can be passed as
   a check. The engine does not import sentinel: its ports locate and validate one artifact
@@ -143,6 +150,51 @@ says the placeholder needs filling. Nothing is written.
   only flow there is; with several, it requires the flag.
 - **A gate.** A test checks that every command a shipped flow names exists in the CLI, and that
   every check it names is registered. A renamed command fails CI, not a user.
+
+## Freshness by content, not by clock
+
+The first version (#453) compared modification times, as Make does. That is Make's best-known
+weakness, and it applies here in full:
+
+- A `git clone` or a branch switch rewrites every timestamp.
+- After one, a review package can read as stale when nothing changed.
+- Worse, an edited proposal can read as fresh.
+
+A digest of each input, recorded by the step that read it, cannot be fooled that way.
+
+This is a recorded fact, but it is not a record of progress. The output states what it is true
+of, the same way an approval carries the hash of what it approved (ADR-116 §5). Delete the
+output, and the fact goes with it. DVC keeps the equivalent digests in a separate `dvc.lock`;
+keeping them beside each output means nothing outside the artifacts can disagree with them.
+
+The decomposition steps that record provenance:
+- `analyze` (from `bundle.json` and `requests.json`);
+- `propose` (from `source/graph.json` and `source/join.json`);
+- `present` (from `proposal/decomposition.yaml`).
+
+`capture` reads a running app, which has nothing to hash. `approve` and `verify` are decided by
+their checks.
+
+## Prior art
+
+Each of these solves part of the problem. None solves the part SMT needs, and the ones closest
+to it inform the design.
+
+| Tool | What it already does | Why it is not the answer here |
+|---|---|---|
+| **Make, Just, Taskfile** | Targets, prerequisites, "stale if an input is newer", `make -n` for what would run | No human gates. Domain facts (approval still current) must be faked as marker files. Output is for people, not an agent. Make's timestamps are the flaw described above |
+| **DVC pipelines** (`dvc.yaml`, `dvc status`, `dvc repro`) | The closest match: stages with command, deps and outs; content hashes; `status` names stale stages | A Python toolchain built around data versioning in git. Hashes live in a lock file beside the repository rather than with each output. No gates, no placeholders, no unbuilt steps. The content-hash idea is adopted from it |
+| **Turborepo, Nx** (turbo is in this repository) | A task graph over package scripts, with input-hash caching and `--dry` | Works per workspace package, not per user directory and its artifacts. No gates. The init → generate → build flow should *describe* and *delegate to* turbo, not reimplement its caching |
+| **Temporal, Airflow, Argo, Prefect** | Orchestration with retries, schedules and approval steps | Each needs a server and its own run state: the second record of progress PDR-012 rejects. Reconsider only if `flow:run` ever needs retries or scheduling |
+| **Backstage scaffolder, Yeoman, Projen** | Guided, multi-step generation | One-shot wizards, with no notion of where an existing directory stands |
+
+What remains SMT's own is small:
+- the gates a document decides (the approval hash);
+- steps that are not built yet, shown honestly;
+- arguments filled from earlier steps' outputs;
+- one JSON envelope, which makes it an MCP tool.
+
+That is why the engine is about 300 lines, not a dependency.
 
 ## Boundaries
 
