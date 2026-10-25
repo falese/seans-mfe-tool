@@ -288,6 +288,13 @@ export function propose(input: ProposeInput): Decomposition {
     repeated,
     tests,
     uncovered,
+    // What each file calls, so an edit can recompute a domain's data (ADR-116).
+    fileEndpoints: Object.fromEntries(
+      graph.files
+        .map((f) => [f.file, [...dataOf(f)].sort()] as const)
+        .filter(([, e]) => e.length > 0)
+        .sort(([a], [b]) => a.localeCompare(b))
+    ),
   };
 }
 

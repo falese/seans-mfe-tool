@@ -65,6 +65,9 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = Object.assign(Objec
   'plugin-api': ['contracts', 'oclif-base'],
   'plugin-adr': ['contracts', 'oclif-base'],
   'plugin-coder': ['contracts', 'dsl', 'oclif-base'],
+  // The decomposition workspace (ADR-116). It reaches the document only through
+  // CLI child processes, so it needs the envelope type and nothing else.
+  'plugin-workspace': ['contracts'],
 });
 
 /** First-party scopes. `@seans-mfe-tool/runtime` is the runtime's published name. */

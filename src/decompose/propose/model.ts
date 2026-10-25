@@ -38,6 +38,34 @@ export type Domain = z.infer<typeof DomainSchema>;
 
 export const PlacementSchema = z.object({ capability: z.string(), domain: z.string(), slot: z.string() });
 
+const DomainId = z.string().regex(/^[a-z][a-z0-9-]*$/, 'domain ids are lower-case kebab-case');
+const Who = z.string().min(1);
+/** ISO-8601; supplied by the caller so applying edits stays deterministic. */
+const When = z.string().min(1);
+
+/** Edits that change what the proposal says, or comment on it — the ones an agent may suggest (ADR-116 §4). */
+const SUGGESTABLE = [
+  z.object({ kind: z.literal('rename-domain'), from: z.string(), to: z.string() }),
+  z.object({ kind: z.literal('merge-domains'), domains: z.array(z.string()), into: z.string() }),
+  z.object({ kind: z.literal('split-domain'), domain: z.string(), into: z.string(), files: z.array(z.string()).min(1) }),
+  z.object({ kind: z.literal('move-file'), file: z.string(), to: z.string() }),
+  z.object({ kind: z.literal('rename-capability'), from: z.string(), to: z.string() }),
+  z.object({ kind: z.literal('rename-slot'), from: z.string(), to: z.string() }),
+  z.object({ kind: z.literal('comment'), by: Who, at: When, text: z.string().min(1), about: z.string().optional() }),
+] as const;
+export const SuggestableEditSchema = z.discriminatedUnion('kind', [...SUGGESTABLE]);
+
+/** Every named edit (ADR-110 §4, ADR-116 §3): the only way the document changes. */
+export const EditOpSchema = z.discriminatedUnion('kind', [
+  ...SUGGESTABLE,
+  z.object({ kind: z.literal('suggest'), by: Who, at: When, explanation: z.string(), request: z.string().optional(), edit: SuggestableEditSchema }),
+  z.object({ kind: z.literal('accept-suggestion'), id: z.string() }),
+  z.object({ kind: z.literal('reject-suggestion'), id: z.string() }),
+  z.object({ kind: z.literal('approve'), by: Who, at: When }),
+]);
+export type EditOp = z.infer<typeof EditOpSchema>;
+export type SuggestableEdit = z.infer<typeof SuggestableEditSchema>;
+
 export const DecompositionSchema = z.object({
   version: z.literal(1),
   app: z.object({
@@ -81,5 +109,19 @@ export const DecompositionSchema = z.object({
   ),
   /** Capabilities no kept test exercises. */
   uncovered: z.array(z.object({ capability: z.string(), domain: z.string(), file: z.string(), reason: z.string() })),
+  /**
+   * `METHOD /path` each file calls or reads through a store, so a move or a
+   * split can recompute what each domain's BFF fronts. Absent in proposals
+   * written before the workspace (ADR-116).
+   */
+  fileEndpoints: z.record(z.string(), z.array(z.string())).optional(),
+  /** The conversation about the proposal, kept with it so the PR carries it (ADR-116 §3). */
+  comments: z.array(z.object({ id: z.string(), by: Who, at: When, text: z.string(), about: DomainId.optional() })).optional(),
+  /** Edits an agent proposed, waiting for a person to accept or reject them (ADR-116 §4). */
+  suggestions: z
+    .array(z.object({ id: z.string(), by: Who, at: When, explanation: z.string(), request: z.string().optional(), edit: SuggestableEditSchema }))
+    .optional(),
+  /** Who approved, when, and a hash of what they approved (ADR-116 §5). */
+  approval: z.object({ by: Who, at: When, hash: z.string() }).optional(),
 });
 export type Decomposition = z.infer<typeof DecompositionSchema>;

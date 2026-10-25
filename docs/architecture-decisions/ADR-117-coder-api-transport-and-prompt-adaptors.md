@@ -4,7 +4,10 @@ title: >-
   The coder seam gains an API transport to a hosted model and prompt adaptors that live in this
   repository; whatever the transport, coder's output is a typed artifact the deterministic floor
   checks before anything acts on it
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#425"]
 date: 2026-10-25
 deciders: [sean]
 area: Generation / coder seam / transports
@@ -14,8 +17,10 @@ relates-to: [19, 84, 85, 88, 110, 116]
 supersedes: []
 superseded-by: []
 implements-pdr: [9, 10, 11]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - src/decompose/propose/status.ts
+verified-by:
+  - src/decompose/propose/__tests__/status.test.ts
 tracked-by: ["#410", "#425"]
 summary: >-
   `@seans-mfe/plugin-coder` gains a third transport beside `subprocess` and `serve`: `api`,
@@ -102,7 +107,12 @@ oracle is deterministic and already exists:
 2. the derived manifests and composition are validated (ADR-110 §2);
 3. edits that fail are dropped, with the reason, and never shown as acceptable.
 
-What survives is written to the document as pending suggestions (ADR-116 §4). Nothing the model
+What survives is written to the document as pending suggestions (ADR-116 §4).
+
+As implemented (#425, part 1), the check runs on every pending suggestion each time the workspace
+reads the proposal (`proposalStatus`), so a suggestion that was valid when made, and is not after
+a later edit, shows as failing rather than stale-but-green. The `api` transport and the
+`decomposition-edit` adaptor are the rest of #425. Nothing the model
 says changes the document until a person accepts it.
 
 ## Boundaries

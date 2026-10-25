@@ -27,6 +27,7 @@ import type { TestInventory } from '../source/tests';
 import type { BackendSpecs, DerivedFleet } from './derive';
 import { DecompositionSchema, type Decomposition } from './model';
 import type { Observation, OpenApiDocument, RecordedBody } from './openapi';
+import type { EvidenceStep } from './present';
 import type { AnswerKey } from './score';
 
 export interface Analysis {
@@ -182,4 +183,15 @@ export async function writeFleet(outDir: string, fleet: DerivedFleet): Promise<s
   );
   written.push(cp);
   return written;
+}
+
+/** Every captured step of an evidence bundle, journey by journey (ADR-109). */
+export async function readEvidenceSteps(bundle: string): Promise<EvidenceStep[]> {
+  const dir = path.join(bundle, 'journeys');
+  const steps: EvidenceStep[] = [];
+  for (const name of (await fs.readdir(dir)).filter((n) => n.endsWith('.json')).sort()) {
+    const journey = (await fs.readJson(path.join(dir, name))) as { steps: EvidenceStep[] };
+    steps.push(...journey.steps);
+  }
+  return steps;
 }

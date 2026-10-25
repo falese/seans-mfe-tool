@@ -26,6 +26,7 @@ export type {
 // for the commands that already import it from this module (ADR-080).
 export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
 import type { MutatingResult } from '@seans-mfe/contracts';
+import type { ProposalStatus } from '../decompose/propose/status';
 
 // ---------------------------------------------------------------------------
 // deploy
@@ -385,9 +386,23 @@ export interface DecomposeEditResult {
   proposal: string;
   edits: Array<Record<string, string>>;
   domains: string[];
+  /** Whether a recorded approval still names the edited document (ADR-116 §5). */
+  approval: 'none' | 'current' | 'stale';
+  /** Agent suggestions still waiting for a decision. */
+  suggestions: number;
   validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
   valid: boolean;
   files: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:status
+// ---------------------------------------------------------------------------
+
+export interface DecomposeStatusResult extends ProposalStatus {
+  proposal: string;
+  /** The evidence bundle the screens' screenshot paths are relative to; null without one. */
+  bundle: string | null;
 }
 
 // ---------------------------------------------------------------------------

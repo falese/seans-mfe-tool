@@ -61,6 +61,38 @@ agreeing (ADR-110 §3):
 
 Merging the PR that carries these is the agreement; nothing is scaffolded before it merges.
 
+### The workspace edits (ADR-116)
+
+The decomposition workspace changes the document only through these same edits. Six more
+exist for it, and `--ops` takes any edit as JSON:
+
+| Edit | What it does |
+|---|---|
+| `--split cargo=hazmat:src/pages/cargo/HazardSummary.tsx` | Moves the named files, with their capabilities, placements and couplings, into a new domain |
+| `comment` | Adds `{ by, at, text, about? }` to the document's `comments` |
+| `suggest` | Holds an edit an agent proposed in `suggestions`, unapplied |
+| `accept-suggestion` / `reject-suggestion` | Applies the held edit and drops it from `suggestions`, or just drops it |
+| `approve` | Records `{ by, at, hash }`. The hash covers what the proposal decides, not its comments or suggestions |
+
+```bash
+seans-mfe-tool decompose:edit decomposition.yaml --ops '[{"kind":"approve","by":"sean","at":"2026-10-25T12:00:00Z"}]'
+```
+
+A proposal records what each file calls (`fileEndpoints`), so a split or a move recomputes each
+domain's backends and endpoints. A proposal written before this field existed keeps its data
+as it was.
+
+`decompose:status <proposal-dir>` returns everything the workspace shows:
+- the document;
+- whether the derived fleet validates;
+- the approval, and whether it is still `current` or has gone `stale`;
+- each pending suggestion, checked by applying it alone and validating the result;
+- the captured screens with the domains outlined.
+
+`@seans-mfe/plugin-workspace` serves this as the workspace API
+(`packages/plugin-workspace/openapi/workspace-api.yaml`). Reads go to `decompose:status`, and
+writes go to `decompose:edit`, each run as a child process.
+
 ## What the proposal holds
 
 | Section | |

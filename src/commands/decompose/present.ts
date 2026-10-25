@@ -16,19 +16,9 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { readDecomposition } from '../../decompose/propose/io';
-import { buildOverlay, renderOverlayHtml, renderOverlayPlugin, renderProposalMarkdown, type EvidenceStep } from '../../decompose/propose/present';
+import { readDecomposition, readEvidenceSteps } from '../../decompose/propose/io';
+import { buildOverlay, renderOverlayHtml, renderOverlayPlugin, renderProposalMarkdown } from '../../decompose/propose/present';
 import type { DecomposePresentResult } from '../../oclif/results';
-
-async function readSteps(bundle: string): Promise<EvidenceStep[]> {
-  const dir = path.join(bundle, 'journeys');
-  const steps: EvidenceStep[] = [];
-  for (const name of (await fs.readdir(dir)).filter((n) => n.endsWith('.json')).sort()) {
-    const journey = (await fs.readJson(path.join(dir, name))) as { steps: EvidenceStep[] };
-    steps.push(...journey.steps);
-  }
-  return steps;
-}
 
 export default class DecomposePresent extends BaseCommand<DecomposePresentResult> {
   static description =
@@ -55,7 +45,7 @@ export default class DecomposePresent extends BaseCommand<DecomposePresentResult
       throw new ValidationError(`${bundle} is not an evidence bundle (no bundle.json) — pass --evidence`, 'evidence', 'bundle');
     }
     const meta = (await fs.readJson(path.join(bundle, 'bundle.json'))) as { viewport: { width: number; height: number } };
-    const overlay = buildOverlay(doc, await readSteps(bundle), meta.viewport);
+    const overlay = buildOverlay(doc, await readEvidenceSteps(bundle), meta.viewport);
 
     const files: string[] = [];
     const write = async (rel: string, content: string | Buffer) => {

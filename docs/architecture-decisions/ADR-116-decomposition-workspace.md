@@ -3,7 +3,10 @@ id: 0116
 title: >-
   The decomposition workspace is a stateless UI for the product owner over decomposition.yaml —
   local first, deployable by design; every change, the agent's included, is an edit to that document
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#425"]
 date: 2026-10-24
 deciders: [sean]
 area: Decomposition / agreement / UI
@@ -13,8 +16,16 @@ relates-to: [12, 36, 84, 85, 88, 109, 110, 117]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - src/decompose/propose/edit.ts
+  - src/decompose/propose/status.ts
+  - src/commands/decompose/status.ts
+  - packages/plugin-workspace/src/api/server.ts
+  - packages/plugin-workspace/openapi/workspace-api.yaml
+verified-by:
+  - src/decompose/propose/__tests__/edit.test.ts
+  - src/decompose/propose/__tests__/status.test.ts
+  - packages/plugin-workspace/src/api/__tests__/server.test.ts
 tracked-by: ["#410", "#425"]
 summary: >-
   `seans-mfe-tool decompose:workspace` serves a web UI, locally first, in which a product owner
@@ -73,6 +84,26 @@ component, comment, approve. The CLI applies it, validates the result and re-der
 a second browser tab, or a restart shows the same thing, because there is nothing else to show.
 Comments and approvals live in the document too, so the PR carries the whole conversation.
 
+As implemented (#425, part 1):
+
+- **The document.** `decomposition.yaml` gains optional `comments`, `suggestions` and `approval`,
+  and `fileEndpoints`: what each file calls, so that a split or a move recomputes each domain's
+  data instead of leaving it stale. Every field is optional, so earlier proposals stay valid.
+- **The edits.** `split-domain`, `comment`, `suggest`, `accept-suggestion`, `reject-suggestion` and
+  `approve` join the existing edits as one schema (`EditOpSchema`). `decompose:edit --ops` takes
+  any of them as JSON.
+- **Reads.** `decompose:status` is the read side. It returns:
+  - the document;
+  - validation of the derived fleet;
+  - the approval, and whether it still names the document;
+  - each suggestion, checked by applying it alone;
+  - the captured screens with the domains outlined.
+- **The workspace API.** `@seans-mfe/plugin-workspace` describes it in
+  `openapi/workspace-api.yaml`. Its local server answers reads with `decompose:status` and writes
+  with `decompose:edit`, each as a child process, so the API has no path to the document that the
+  CLI does not validate. The server applies edits one at a time, listens on 127.0.0.1 only, and
+  serves only `screens/*.png` from the bundle.
+
 ### 4. The agent works through the same edits
 
 The workspace has an agent pane. The product owner asks in plain language ("split cargo from
@@ -94,6 +125,10 @@ Approving records who approved, when, and a hash of the approved document in
 `decomposition.yaml`. The workspace then commits to the proposal branch, and the PR stays the
 system of record (ADR-110 §3). Any later edit invalidates the recorded hash, so an approval
 always names exactly what was approved.
+
+As implemented (#425, part 1), the hash covers what the proposal decides. Comments, pending
+suggestions and the approval itself are left out, so a comment after approval does not unsettle
+it. Any other edit makes the approval stale. Committing to the proposal branch is part 2.
 
 ### 6. Hosted: the CLI publishes, the service relays, the CLI syncs
 

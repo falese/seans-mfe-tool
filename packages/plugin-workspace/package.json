@@ -1,0 +1,30 @@
+{
+  "name": "@seans-mfe/plugin-workspace",
+  "version": "0.1.0",
+  "description": "The decomposition workspace (ADR-116): the workspace API over decomposition.yaml, and the command that serves it beside the workspace MFE",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./openapi/workspace-api.yaml": "./openapi/workspace-api.yaml"
+  },
+  "files": [
+    "dist",
+    "openapi"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seans-mfe/contracts": "file:../contracts"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}

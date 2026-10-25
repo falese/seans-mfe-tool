@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://seans-mfe.dev/schemas/decompose:edit.json",
   "title": "decompose:edit",
-  "description": "Apply named edits to a decomposition.yaml — rename or merge domains, move a file, rename a capability or slot — keeping every reference consistent, then re-derive and validate the fleet (ADR-110).",
+  "description": "Apply named edits to a decomposition.yaml — rename, merge or split domains, move a file, rename a capability or slot, comment, suggest, approve — keeping every reference consistent, then re-derive and validate the fleet (ADR-110, ADR-116).",
   "input": {
     "type": "object",
     "properties": {
@@ -24,6 +24,13 @@
         },
         "description": "a,b[,…]=into — merge domains into one"
       },
+      "split": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "domain=into:file[,file…] — split files out of a domain into a new one"
+      },
       "move": {
         "type": "array",
         "items": {
@@ -44,6 +51,10 @@
           "type": "string"
         },
         "description": "from=to"
+      },
+      "ops": {
+        "type": "string",
+        "description": "Named edits as a JSON list (or @file): any edit kind, including comment, suggest, accept-suggestion, reject-suggestion and approve"
       }
     },
     "required": [
@@ -59,6 +70,8 @@
       "proposal",
       "edits",
       "domains",
+      "approval",
+      "suggestions",
       "validation",
       "valid",
       "files"
@@ -78,6 +91,19 @@
         "items": {
           "type": "string"
         }
+      },
+      "approval": {
+        "type": "string",
+        "enum": [
+          "none",
+          "current",
+          "stale"
+        ],
+        "description": "Whether a recorded approval still names the edited document (ADR-116 §5)."
+      },
+      "suggestions": {
+        "type": "number",
+        "description": "Agent suggestions still waiting for a decision."
       },
       "validation": {
         "type": "object",

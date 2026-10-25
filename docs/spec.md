@@ -340,6 +340,8 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-113](./architecture-decisions/ADR-113-decomposition-parity-gate.md) | A decomposition step is accepted only when the composed app passes the parity gate — the captured journeys produce the same regions, the same backend calls, the same visuals and no new errors as the monolith | Decomposition / regression | Accepted (impl phased, #418) |
 | [ADR-114](./architecture-decisions/ADR-114-generated-apis-honor-declared-pagination.md) | A generated list endpoint pages the way its spec declares — the page-size parameter, its default, and offset or 1-based page — and keeps the old behavior only where the spec is silent | API generation / controllers / pagination | Implemented |
 | [ADR-115](./architecture-decisions/ADR-115-design-export-runtime-ui-to-figma.md) | design:export renders a running UI, folds it into a normalized design tree, and emits a data-driven Figma plugin; the capture follows what the browser renders, not the raw DOM | Design / capture / Figma | Implemented |
+| [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Accepted (impl phased, #425) |
+| [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Accepted (impl phased, #425) |
 
 ### Proposed — filed, not ratified
 
@@ -357,8 +359,6 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
 | [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Proposed |
-| [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Proposed |
-| [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Proposed |
 
 ### Deferred — postponed on purpose
 

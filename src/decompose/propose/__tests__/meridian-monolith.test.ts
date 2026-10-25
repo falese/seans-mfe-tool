@@ -11,6 +11,7 @@ import { buildSourceGraph } from '../../source/graph';
 import { inventoryTests } from '../../source/tests';
 import { propose } from '../cluster';
 import { deriveFleet } from '../derive';
+import { applyEdits } from '../edit';
 import { readAnswerKey } from '../io';
 import { scoreProposal } from '../score';
 import type { Decomposition } from '../model';
@@ -54,5 +55,18 @@ describe('decompose:propose on meridian-monolith', () => {
     for (const f of sources.filter((f) => f !== 'score.ts' && f !== 'io.ts')) {
       expect([f, fs.readFileSync(path.join(__dirname, '..', f), 'utf8').includes('answer-key')]).toEqual([f, false]);
     }
+  });
+
+  it('records what each file calls, so a split or a move recomputes each domain’s data exactly (ADR-116)', () => {
+    const data = doc.fileEndpoints ?? {};
+    // Every domain's data is exactly what its files call, so recomputing it from the per-file record is lossless.
+    for (const d of doc.domains.filter((x) => !x.shell)) {
+      expect([...new Set(d.files.flatMap((f) => data[f] ?? []))].sort()).toEqual(d.endpoints);
+    }
+    // HazardSummary reads docking's dockings (the coupling) and cargo's own manifest lines; moving it takes both.
+    expect(data['src/pages/cargo/HazardSummary.tsx']).toEqual(['GET /api/harbormaster/dockings', 'GET /api/harbormaster/manifest_lines']);
+    const moved = applyEdits(doc, [{ kind: 'move-file', file: 'src/pages/cargo/HazardSummary.tsx', to: 'docking' }]);
+    expect(moved.domains.find((d) => d.id === 'docking')?.endpoints).toContain('GET /api/harbormaster/manifest_lines');
+    expect(moved.couplings.map((c) => c.file)).not.toContain('src/pages/cargo/HazardSummary.tsx');
   });
 });
