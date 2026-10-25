@@ -357,6 +357,8 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
 | [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Proposed |
+| [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Proposed |
+| [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Proposed |
 
 ### Deferred — postponed on purpose
 
