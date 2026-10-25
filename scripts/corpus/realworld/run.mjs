@@ -76,8 +76,14 @@ function start(name, cmd, args, opts) {
   children.push(child);
   return child;
 }
-async function waitFor(url, seconds = 300) {
+/** Wait for `url`; a server that exits first fails at once, naming its log. */
+async function waitFor(url, child, name, seconds = 300) {
+  let exited = null;
+  child.once('exit', (code) => {
+    exited = code;
+  });
   for (let i = 0; i < seconds; i += 2) {
+    if (exited !== null) fail(`${name} exited (${exited}) before ${url} came up; see ${path.join(work, `${name}.log`)}`);
     try {
       if ((await fetch(url)).ok) return;
     } catch {
@@ -109,9 +115,9 @@ const backendBin = path.join(work, 'conduit-api');
 if (!fs.existsSync(backendBin)) run('go', ['build', '-o', backendBin, '.'], { cwd: backendDir });
 const db = path.join(work, 'conduit.db');
 fs.rmSync(db, { force: true });
-start('backend', backendBin, [], { env: { ...process.env, DB_PATH: db, PORT: String(corpus.backend.port), GIN_MODE: 'release' } });
+const backend = start('backend', backendBin, [], { env: { ...process.env, DB_PATH: db, PORT: String(corpus.backend.port), GIN_MODE: 'release' } });
 const api = `http://localhost:${corpus.backend.port}/api`;
-await waitFor(`${api}/tags`);
+await waitFor(`${api}/tags`, backend, 'backend');
 log(`seeded: ${JSON.stringify(await seed(api))}`);
 
 // ---- apps ---------------------------------------------------------------------------
@@ -129,13 +135,21 @@ for (const app of corpus.apps) {
   pkg.proxy = `http://localhost:${corpus.backend.port}`;
   fs.writeFileSync(pkgFile, `${JSON.stringify(pkg, null, 2)}\n`);
   if (!fs.existsSync(path.join(dir, 'node_modules'))) run('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps'], { cwd: dir });
+  // fsevents 1.x (CRA 1's watcher) is a native module current Node on macOS
+  // can't load: "fsevents.watch is not a function". Without it chokidar falls
+  // back to fs.watch, which works everywhere.
+  const fsevents = path.join(dir, 'node_modules', 'fsevents');
+  if (fs.existsSync(path.join(fsevents, 'package.json')) && JSON.parse(fs.readFileSync(path.join(fsevents, 'package.json'), 'utf8')).version.startsWith('1.')) {
+    log('removing fsevents 1.x (cannot load on current Node; the watcher falls back to fs.watch)');
+    fs.rmSync(fsevents, { recursive: true, force: true });
+  }
   // Webpack 3/4 predate Node 17's OpenSSL 3.
-  start(app.name, 'npm', ['start'], {
+  const server = start(app.name, 'npm', ['start'], {
     cwd: dir,
     env: { ...process.env, BROWSER: 'none', PORT: String(app.port), NODE_OPTIONS: '--openssl-legacy-provider' },
   });
   const url = `http://localhost:${app.port}`;
-  await waitFor(url);
+  await waitFor(url, server, app.name);
 
   const ev = path.join(work, app.name, 'evidence');
   fs.rmSync(path.join(work, app.name), { recursive: true, force: true });
