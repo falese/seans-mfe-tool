@@ -151,9 +151,9 @@ describe('selectCatalogCommands', () => {
     expect(ids).toEqual(['adr:validate']);
   });
 
-  it('excludes hidden commands', () => {
-    const ids = selectCatalogCommands([cmd({ id: 'secret', hidden: true })]).map((c) => c.id);
-    expect(ids).toEqual([]);
+  it('keeps hidden commands: hidden leaves --help, not the MCP catalog (#454)', () => {
+    const ids = selectCatalogCommands([cmd({ id: 'decompose:edit', hidden: true })]).map((c) => c.id);
+    expect(ids).toEqual(['decompose:edit']);
   });
 
   it('excludes commands named in CATALOG_EXCLUDED', () => {

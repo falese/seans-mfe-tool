@@ -115,9 +115,13 @@ function isAliasEntry(command: RegistryCommand): boolean {
   return (command.aliases ?? []).includes(command.id);
 }
 
+/**
+ * `hidden` takes a command out of `--help`, not out of the catalog: plumbing
+ * for agents and scripts (`decompose:edit`) is hidden from people but is still
+ * an MCP tool. A command that should be neither goes in CATALOG_EXCLUDED.
+ */
 export function selectCatalogCommands(commands: RegistryCommand[]): RegistryCommand[] {
   return commands
-    .filter((c) => !c.hidden)
     .filter((c) => !isAliasEntry(c))
     .filter((c) => isFirstParty(c.pluginName))
     .filter((c) => !(c.id in CATALOG_EXCLUDED))
