@@ -110,6 +110,7 @@ const NO_FIXTURE: Record<string, string> = {
   'decompose:score': 'scores a decomposition.yaml, which no fixture commits — scoring runs against the real answer key in src/decompose/propose/__tests__/meridian-monolith.test.ts',
   'decompose:edit': 'edits a decomposition.yaml, which no fixture commits — the edit operations and their re-derivation run in src/decompose/propose/__tests__/edit.test.ts',
   'decompose:workspace': 'serves the workspace until stopped, from a built MFE and a proposal no fixture commits — its parts run in packages/plugin-workspace/src/run/__tests__/ and the MFE’s own suite',
+  'coder:suggest': 'calls a hosted model with a key from the environment — its flow runs against a fake model and CLI in packages/plugin-coder/src/__tests__/suggest.test.ts',
   'decompose:status': 'reads a decomposition.yaml and evidence bundle, which no fixture commits — the read model runs in src/decompose/propose/__tests__/status.test.ts',
   'decompose:present': 'needs a proposal and a captured evidence bundle with screenshots, which no fixture commits — rendering runs in src/decompose/propose/__tests__/present.test.ts',
   'decompose:verify': 'needs a captured evidence bundle (and a running app, or a second bundle), which no fixture commits — the comparison runs in src/decompose/verify/__tests__/parity.test.ts',

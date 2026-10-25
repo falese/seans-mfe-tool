@@ -392,6 +392,9 @@ export interface DecomposeEditResult {
   suggestions: number;
   validation: { manifests: Record<string, string[]>; composition: Array<{ rule: string; message: string }> };
   valid: boolean;
+  /** True when the edits were only applied and validated, not written (ADR-117 §4). */
+  dryRun: boolean;
+  /** What was written; empty on a dry run. */
   files: string[];
 }
 

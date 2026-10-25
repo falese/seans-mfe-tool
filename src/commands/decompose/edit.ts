@@ -9,7 +9,8 @@
  * moves, capability renames, slot renames. `--ops` takes any named edit as
  * JSON — comments, suggestions, accepting or rejecting one, approval — and is
  * how the workspace changes the document (ADR-116 §3); those apply after the
- * flags, in the order given.
+ * flags, in the order given. `--dry-run` applies and validates without
+ * writing — how the agent's edits are checked (ADR-117 §4).
  */
 
 import * as path from 'path';
@@ -18,9 +19,8 @@ import chalk = require('chalk');
 import * as fs from 'fs-extra';
 import { ValidationError } from '@seans-mfe/contracts';
 import { BaseCommand } from '../../oclif/BaseCommand';
-import { deriveFleet } from '../../decompose/propose/derive';
-import { applyEdits, approvalStatus, parseEditFlags, parseEditOps } from '../../decompose/propose/edit';
-import { dumpYaml, readDecomposition, readSpecs, writeFleet } from '../../decompose/propose/io';
+import { approvalStatus, parseEditFlags, parseEditOps } from '../../decompose/propose/edit';
+import { editProposalFile } from '../../decompose/propose/edit-file';
 import type { DecomposeEditResult } from '../../oclif/results';
 
 export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
@@ -51,6 +51,7 @@ export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
     ops: Flags.string({
       description: 'Named edits as a JSON list (or @file): any edit kind, including comment, suggest, accept-suggestion, reject-suggestion and approve',
     }),
+    'dry-run': Flags.boolean({ description: 'Apply and validate the edits, but write nothing', default: false }),
   };
 
   protected async runCommand(): Promise<DecomposeEditResult> {
@@ -70,12 +71,8 @@ export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
     }
     if (ops.length === 0) throw new ValidationError('no edits given — see --help for the edit flags', 'edits', 'non-empty');
 
-    const edited = applyEdits(await readDecomposition(file), ops);
-    await fs.writeFile(file, `# Edited with decompose:edit; re-derive with decompose:propose --from, or edit again.\n${dumpYaml(edited)}`);
-    // The proposal's specs (ADR-112) follow the edit: each BFF is re-cut to what its domain now calls.
-    const fleet = deriveFleet(edited, await readSpecs(path.dirname(file)));
-    const files = [file, ...(await writeFleet(path.dirname(file), fleet))];
-    const valid = Object.values(fleet.validation.manifests).every((e) => e.length === 0) && fleet.validation.composition.length === 0;
+    const dryRun = flags['dry-run'];
+    const { edited, validation, valid, files } = await editProposalFile(file, ops, { dryRun });
 
     for (const op of ops) {
       const args = Object.entries(op)
@@ -87,6 +84,7 @@ export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
     const approval = approvalStatus(edited);
     if (approval !== 'none') this.log(`  approval: ${approval === 'current' ? chalk.green('current') : chalk.yellow('stale — the proposal changed after it was approved')}`);
     this.log(valid ? chalk.green('  ✓ every manifest and the composition validate\n') : chalk.red('  ✗ validation failed — see validation in --json\n'));
+    if (dryRun) this.log(chalk.dim('  dry run: nothing was written\n'));
     if (!valid) this.warnings.push('derived manifests or composition do not validate after the edits');
 
     return {
@@ -97,9 +95,10 @@ export default class DecomposeEdit extends BaseCommand<DecomposeEditResult> {
       domains: edited.domains.map((d) => d.id),
       approval,
       suggestions: (edited.suggestions ?? []).length,
-      validation: fleet.validation,
+      validation,
       valid,
-      files: files.sort(),
+      dryRun,
+      files,
     };
   }
 }

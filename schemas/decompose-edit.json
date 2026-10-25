@@ -55,6 +55,10 @@
       "ops": {
         "type": "string",
         "description": "Named edits as a JSON list (or @file): any edit kind, including comment, suggest, accept-suggestion, reject-suggestion and approve"
+      },
+      "dry-run": {
+        "type": "boolean",
+        "description": "Apply and validate the edits, but write nothing"
       }
     },
     "required": [
@@ -74,6 +78,7 @@
       "suggestions",
       "validation",
       "valid",
+      "dryRun",
       "files"
     ],
     "properties": {
@@ -140,11 +145,16 @@
       "valid": {
         "type": "boolean"
       },
+      "dryRun": {
+        "type": "boolean",
+        "description": "True when the edits were only applied and validated, not written (ADR-117 §4)."
+      },
       "files": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "What was written; empty on a dry run."
       }
     },
     "additionalProperties": false

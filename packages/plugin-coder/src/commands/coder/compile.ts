@@ -23,6 +23,8 @@ export interface CoderCompileOptions {
   model?: string;
   context?: string[];
   endpoint?: string;
+  /** Send the intent to a hosted model over the `api` transport (ADR-117 §1). */
+  api?: boolean;
   out?: string;
   /** Return an invalid candidate instead of failing closed (debug/eval). */
   allowInvalid?: boolean;
@@ -42,9 +44,11 @@ export async function coderCompileCommand(
 ): Promise<IntentCompileResult> {
   const started = Date.now();
 
-  const transport: CoderTransport | undefined = options.endpoint
-    ? { kind: 'serve', endpoint: options.endpoint }
-    : undefined;
+  const transport: CoderTransport | undefined = options.api
+    ? { kind: 'api', provider: 'anthropic' }
+    : options.endpoint
+      ? { kind: 'serve', endpoint: options.endpoint }
+      : undefined;
 
   const request: IntentCompileRequest = {
     intent: options.intent,
@@ -138,7 +142,7 @@ export default class CoderCompile extends BaseCommand<IntentCompileResult> {
     }),
     model: Flags.string({
       char: 'm',
-      description: 'MLX model dir/id to pass through to coder (--model)',
+      description: 'Model to run: an MLX model dir/id for local coder (--model), or a hosted model id with --api',
     }),
     context: Flags.string({
       char: 'c',
@@ -148,6 +152,11 @@ export default class CoderCompile extends BaseCommand<IntentCompileResult> {
     endpoint: Flags.string({
       char: 'e',
       description: 'Use a running `coder serve` SSE endpoint instead of a subprocess',
+    }),
+    api: Flags.boolean({
+      description: 'Send the intent to a hosted model (Anthropic; needs ANTHROPIC_API_KEY) instead of a local coder (ADR-117)',
+      default: false,
+      exclusive: ['endpoint'],
     }),
     out: Flags.string({
       char: 'o',
@@ -168,6 +177,7 @@ export default class CoderCompile extends BaseCommand<IntentCompileResult> {
       ...(flags.model ? { model: flags.model } : {}),
       ...(flags.context ? { context: flags.context } : {}),
       ...(flags.endpoint ? { endpoint: flags.endpoint } : {}),
+      ...(flags.api ? { api: true } : {}),
       ...(flags.out ? { out: flags.out } : {}),
       allowInvalid: flags['allow-invalid'],
     });
