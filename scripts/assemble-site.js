@@ -70,6 +70,7 @@ const PAGES = [
   'cli-architecture.html',
   'runtime-architecture.html',
   'derived-contracts.html',
+  'decomposition-architecture.html',
 ];
 
 for (const page of PAGES) {
