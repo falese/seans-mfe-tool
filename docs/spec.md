@@ -343,6 +343,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-116](./architecture-decisions/ADR-116-decomposition-workspace.md) | The decomposition workspace is a stateless UI for the product owner over decomposition.yaml — local first, deployable by design; every change, the agent's included, is an edit to that document | Decomposition / agreement / UI | Accepted (impl phased, #425) |
 | [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Implemented |
 | [ADR-118](./architecture-decisions/ADR-118-decompose-package.md) | The decomposition proposal model is a package, @seans-mfe/decompose; every command, plugin and library that reads or changes a proposal calls it in-process, and the CLI is one of its callers rather than the only door to it | Decomposition / packaging / layering | Implemented |
+| [ADR-119](./architecture-decisions/ADR-119-flows-as-data.md) | A flow is a YAML description of steps, their commands, their inputs and outputs and the human gates between them; its state is derived from the artifacts on disk, never recorded; flow:status reports it and names the next command | CLI / workflow | Implemented |
 
 ### Proposed — filed, not ratified
 
