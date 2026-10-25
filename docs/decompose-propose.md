@@ -107,6 +107,29 @@ refuses to start if any of them is taken. An approval is committed to the reposi
 covering only the proposal directory; `--no-commit` turns that off. Comments and
 approvals are recorded under git's `user.name`, or under `--who`.
 
+### Asking the agent (ADR-117)
+
+With `ANTHROPIC_API_KEY` set, the workspace's agent pane takes plain-language requests, such as
+*"Split hazards out of cargo — they're a separate team"* or *"Why is constants.ts shared?"*.
+The same thing works from the command line:
+
+```bash
+export ANTHROPIC_API_KEY=…
+seans-mfe-tool coder:suggest ./evidence/proposal "Split hazards out of cargo — they're a separate team"
+```
+
+The model sees the whole proposal, including its conversation, and answers in the named edits
+above, never in free text. Each edit is checked before anyone sees it:
+`decompose:edit --dry-run` applies it on top of the edits that passed before it and validates
+the derived fleet. An edit that fails is dropped, and the reason is shown. The rest become
+pending suggestions. The question and the answer are added to the proposal's comments, so the
+next question has the conversation as context. Nothing changes until a person accepts a
+suggestion.
+
+The key is read from the environment only. `--model` picks another model, and
+`decompose:workspace --no-agent` turns the pane off. Each question is one request to the
+provider, and the pane never asks on its own.
+
 ## What the proposal holds
 
 | Section | |

@@ -591,7 +591,10 @@
       own. Every click is one of the same named actions, so it is checked the same way, and the
       plan file stays the only record. The AI agent works there too. It answers a question such as
       "split hazards out of cargo" with suggested changes. Each suggestion is tried on a copy of
-      the plan first, and nothing changes until a person accepts it.
+      the plan first: one that would break the plan is dropped, with the reason shown, and the
+      rest wait until a person accepts them. The agent is a hosted model reached through the
+      platform's coder plugin, using an API key the engineer sets; without one, the rest of the
+      workspace works the same.
     </p>
 
     <p>
@@ -844,7 +847,7 @@
           <tr><td>4 · People agree: review package and Figma page</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/443">#443</a></td></tr>
           <tr><td>4 · People agree: the workspace's plan, actions and data service</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/449">#449</a>, decisions <a href="https://github.com/falese/seans-mfe-tool/pull/436">#436</a></td></tr>
           <tr><td>4 · People agree: the workspace's screens and <code>decompose:workspace</code></td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
-          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
+          <tr><td>4 · People agree: the agent answers questions in the workspace</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/425">#425</a></td></tr>
           <tr><td>Screens to editable Figma designs</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/435">#435</a></td></tr>
           <tr><td>5–7 · Build, move, switch over</td><td><span class="pill next">next</span></td><td><a href="https://github.com/falese/seans-mfe-tool/issues/410">#410</a></td></tr>
           <tr><td>8 · Check nothing changed</td><td><span class="pill done">built</span></td><td><a href="https://github.com/falese/seans-mfe-tool/pull/446">#446</a></td></tr>

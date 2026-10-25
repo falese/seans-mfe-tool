@@ -4,10 +4,7 @@ title: >-
   The coder seam gains an API transport to a hosted model and prompt adaptors that live in this
   repository; whatever the transport, coder's output is a typed artifact the deterministic floor
   checks before anything acts on it
-status: Accepted
-impl:
-  stage: phased
-  refs: ["#425"]
+status: Implemented
 date: 2026-10-25
 deciders: [sean]
 area: Generation / coder seam / transports
@@ -19,8 +16,19 @@ superseded-by: []
 implements-pdr: [9, 10, 11]
 implemented-by:
   - src/decompose/propose/status.ts
+  - src/decompose/propose/edit-file.ts
+  - packages/plugin-coder/src/api-runner.ts
+  - packages/plugin-coder/src/adaptors/decomposition-edit.ts
+  - packages/plugin-coder/src/suggest.ts
+  - packages/plugin-coder/src/commands/coder/suggest.ts
+  - packages/plugin-workspace/src/api/server.ts
 verified-by:
   - src/decompose/propose/__tests__/status.test.ts
+  - src/decompose/propose/__tests__/edit-file.test.ts
+  - packages/plugin-coder/src/__tests__/api-runner.test.ts
+  - packages/plugin-coder/src/adaptors/__tests__/decomposition-edit.test.ts
+  - packages/plugin-coder/src/__tests__/suggest.test.ts
+  - packages/plugin-workspace/src/api/__tests__/server.test.ts
 tracked-by: ["#410", "#425"]
 summary: >-
   `@seans-mfe/plugin-coder` gains a third transport beside `subprocess` and `serve`: `api`,
@@ -111,9 +119,35 @@ What survives is written to the document as pending suggestions (ADR-116 §4).
 
 As implemented (#425, part 1), the check runs on every pending suggestion each time the workspace
 reads the proposal (`proposalStatus`), so a suggestion that was valid when made, and is not after
-a later edit, shows as failing rather than stale-but-green. The `api` transport and the
-`decomposition-edit` adaptor are the rest of #425. Nothing the model
+a later edit, shows as failing rather than stale-but-green. Nothing the model
 says changes the document until a person accepts it.
+
+## As implemented (#425, part 4)
+
+- **Transport.** `CoderTransport` has `{ kind: 'api', provider: 'anthropic', model? }`, served by
+  `makeApiRunner` (`packages/plugin-coder/src/api-runner.ts`) through the official SDK. The key is
+  read from `ANTHROPIC_API_KEY` only; without it, a `ValidationError` names the variable.
+  `coder:compile --api` uses this transport for intent → manifest; its DSL oracle is unchanged.
+- **Prompt adaptors.** `PromptAdaptor` is `{ id, version, system, assemble, output }`.
+  `runPromptAdaptor` sends the system prompt and the assembled context first, both marked for
+  prompt caching, and the request last. It asks for structured output in the adaptor's zod schema
+  and opts into the provider's server-side fallback for declined requests. It then checks
+  `stop_reason` before reading anything: a refusal or a truncated answer is a `BusinessError`.
+  Provider errors map to `SecurityError` (key refused) or `NetworkError` (unreachable,
+  rate-limited, failed).
+- **The schema is enforced by parsing, not decoding.** The SDK's structured-output transform
+  carries a literal `kind` as a description rather than a constraint. So the answer is parsed
+  again against the adaptor's schema, and the CLI parses each edit a third time when it
+  dry-applies it.
+- **The oracle.** `decompose:edit --dry-run` applies and validates without writing.
+  `coder:suggest <proposal> "<request>"` (`suggestEdits`) dry-runs each edit on top of the ones
+  that passed before it, and drops a failure with its reason. It then writes, in one
+  `decompose:edit`, the question (signed by the asker) and the answer (signed `agent`) as
+  comments, and each survivor as a pending suggestion.
+- **The workspace.** `GET /api/agent` and `POST /api/ask` (Mesh: `getAgent`, `askAgent`) run
+  `coder:suggest`, one question at a time. `decompose:workspace` connects the agent when
+  `ANTHROPIC_API_KEY` is set; `--no-agent` turns it off. The agent pane shows the answer and any
+  edits the check dropped.
 
 ## Boundaries
 
