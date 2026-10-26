@@ -6,11 +6,11 @@ journeys:
     steps:
       - goto: /
       - wait: 300
-      - click: "a[href='/docking']"
-      - click: "a[href='/life-support']"
+      - click: "a[href$='docking']"
+      - click: "a[href$='life-support']"
   - name: cargo-and-crew
     steps:
       - goto: /cargo
       - wait: 300
-      - click: "a[href='/crew']"
-      - click: "a[href='/concourse']"
+      - click: "a[href$='crew']"
+      - click: "a[href$='concourse']"

@@ -451,14 +451,14 @@
     steps:
       - goto: /
       - wait: 300
-      - click: "a[href='/docking']"
-      - click: "a[href='/life-support']"
+      - click: "a[href$='docking']"
+      - click: "a[href$='life-support']"
   - name: cargo-and-crew
     steps:
       - goto: /cargo
       - wait: 300
-      - click: "a[href='/crew']"
-      - click: "a[href='/concourse']"</pre></div>
+      - click: "a[href$='crew']"
+      - click: "a[href$='concourse']"</pre></div>
       <p>The command that uses the file is <code>seans-mfe-tool decompose:capture http://localhost:5090 --journeys journeys.yaml</code>. The other actions are <code>fill</code> and <code>press</code>. Without a file, the tools only explore links.</p>
     </div>
     <div class="io two">
