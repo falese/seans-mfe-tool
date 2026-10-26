@@ -360,7 +360,7 @@ components:
       properties:
         PassengerId: { type: integer, example: 30017 }
         PassengerName: { type: string, example: Rosa Delgado }
-        DockingNo: { type: integer, example: 4025, description: The harbormaster's docking_id, third format, no prefix }
+        DockingNo: { type: integer, example: 4025, description: "The harbormaster's docking_id, third format, no prefix" }
         CabinClass:
           type: string
           example: BUSINESS
