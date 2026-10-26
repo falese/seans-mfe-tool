@@ -38,6 +38,7 @@ on:
       - 'docs/runtime-architecture.html'
       - 'docs/derived-contracts.html'
       - 'docs/decomposition-architecture.html'
+      - 'docs/workspace-prototype.html'
       - 'docs/slides/**'
       - 'docs/media/**'
       # The API reference is generated from these (ADR-104).
@@ -61,6 +62,7 @@ on:
       - 'docs/runtime-architecture.html'
       - 'docs/derived-contracts.html'
       - 'docs/decomposition-architecture.html'
+      - 'docs/workspace-prototype.html'
       - 'docs/slides/**'
       - 'docs/media/**'
       # The API reference is generated from these (ADR-104).

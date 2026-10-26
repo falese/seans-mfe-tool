@@ -51,3 +51,16 @@ describe('assemble-site — optional cards', () => {
     expect(fs.readFileSync(path.join(out, '404.html'), 'utf8')).toBe(landing(out));
   });
 });
+
+describe('assemble-site — the workspace prototype', () => {
+  it('publishes the clickable prototype and links it from the landing page', () => {
+    const out = assemble([]);
+    expect(fs.existsSync(path.join(out, 'workspace-prototype.html'))).toBe(true);
+    expect(landing(out)).toContain('href="workspace-prototype.html"');
+  });
+
+  it('is self-contained: no remote script, stylesheet, image or font', () => {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', '..', 'docs', 'workspace-prototype.html'), 'utf8');
+    expect(html).not.toMatch(/<(script|link|img|iframe)\b[^>]*\b(?:src|href)\s*=\s*["'](?:https?:)?\/\//i);
+  });
+});
