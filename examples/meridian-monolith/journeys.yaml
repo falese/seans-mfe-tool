@@ -1,0 +1,16 @@
+# Journeys for decompose:capture, written by hand for the reference app.
+# Pass them with:  seans-mfe-tool decompose:capture http://localhost:5090 --journeys journeys.yaml
+# Each journey runs in a fresh browser. A selector is any Playwright selector.
+journeys:
+  - name: station-overview
+    steps:
+      - goto: /
+      - wait: 300
+      - click: "a[href='/docking']"
+      - click: "a[href='/life-support']"
+  - name: cargo-and-crew
+    steps:
+      - goto: /cargo
+      - wait: 300
+      - click: "a[href='/crew']"
+      - click: "a[href='/concourse']"

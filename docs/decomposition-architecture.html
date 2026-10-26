@@ -443,6 +443,24 @@
       </ol>
       <p class="eg"><b>Example.</b> On the reference app, the capture finds that the docking board and the traffic log both ask the harbormaster backend for docking data.</p>
     </div>
+    <div class="how">
+      <b>An example journeys file</b>
+      <p>A person can give this file to step 1. Each journey starts in a fresh browser. Each line is one action. A selector can be any Playwright selector. The file is <code>examples/meridian-monolith/journeys.yaml</code>.</p>
+      <div class="frame"><pre style="margin:0;font-size:12px;line-height:1.5;white-space:pre-wrap">journeys:
+  - name: station-overview
+    steps:
+      - goto: /
+      - wait: 300
+      - click: "a[href='/docking']"
+      - click: "a[href='/life-support']"
+  - name: cargo-and-crew
+    steps:
+      - goto: /cargo
+      - wait: 300
+      - click: "a[href='/crew']"
+      - click: "a[href='/concourse']"</pre></div>
+      <p>The command that uses the file is <code>seans-mfe-tool decompose:capture http://localhost:5090 --journeys journeys.yaml</code>. The other actions are <code>fill</code> and <code>press</code>. Without a file, the tools only explore links.</p>
+    </div>
     <div class="io two">
       <div><b>Goes in</b>The running monolith, and optional journeys</div>
       <div><b>Comes out</b>A <em>recording</em>: screens, screen areas, data requests and answers, errors and screenshots</div>
