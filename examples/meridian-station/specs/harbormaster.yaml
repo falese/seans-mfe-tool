@@ -200,7 +200,7 @@ components:
         line_id: { type: integer, example: 7 }
         docking_id: { type: integer, example: 4021 }
         sku: { type: string, example: CRYO-CELL-42 }
-        description: { type: string, example: Cryogenic fuel cells, crated }
+        description: { type: string, example: 'Cryogenic fuel cells, crated' }
         qty: { type: integer, example: 12 }
         declared_mass_kg: { type: number, example: 1840.5 }
         hazard_class:
