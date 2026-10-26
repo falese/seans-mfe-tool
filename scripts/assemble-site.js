@@ -71,6 +71,7 @@ const PAGES = [
   'runtime-architecture.html',
   'derived-contracts.html',
   'decomposition-architecture.html',
+  'workspace-prototype.html',
 ];
 
 for (const page of PAGES) {

@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decomposition workspace prototype</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f0f2f5; --ink: #1c2330; --ink-2: #4a5568; --ink-3: #6b7686;
+    --rule: #d9dde4; --accent: #2f5fe0; --accent-bg: #e8eefc; --good: #1f7a3d; --good-bg: #e4f4e9;
+    --warn: #8a5a00; --warn-bg: #fdf1d9; --bad: #b3261e; --bad-bg: #fbe7e5; --info: #0b5fa5; --info-bg: #e3f0fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11151c; --surface: #1a202b; --surface-2: #222a37; --ink: #e8ecf2; --ink-2: #b6bfcc; --ink-3: #8c97a7;
+      --rule: #333c4b; --accent: #7d9cff; --accent-bg: #223056; --good: #6fd08c; --good-bg: #17301f;
+      --warn: #f0c36b; --warn-bg: #352a10; --bad: #ff8b82; --bad-bg: #3a1a18; --info: #7ec1f5; --info-bg: #14283a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11151c; --surface: #1a202b; --surface-2: #222a37; --ink: #e8ecf2; --ink-2: #b6bfcc; --ink-3: #8c97a7;
+    --rule: #333c4b; --accent: #7d9cff; --accent-bg: #223056; --good: #6fd08c; --good-bg: #17301f;
+    --warn: #f0c36b; --warn-bg: #352a10; --bad: #ff8b82; --bad-bg: #3a1a18; --info: #7ec1f5; --info-bg: #14283a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px 48px; }
+
+  .notice { background: var(--info-bg); border-bottom: 1px solid var(--rule); color: var(--ink); }
+  .notice .wrap { padding-top: 10px; padding-bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: 13.5px; }
+  .notice b { color: var(--info); }
+  .notice .grow { flex: 1 1 360px; }
+  .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+  header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 18px 0 10px; }
+  header.top h1 { font-size: 21px; margin: 0 6px 0 0; }
+  .app { color: var(--ink-3); }
+  .badge { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--rule); }
+  .badge.good { background: var(--good-bg); color: var(--good); border-color: transparent; }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+  .badge.info { background: var(--info-bg); color: var(--info); border-color: transparent; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  .layout > * { min-width: 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip { border: 1.5px solid var(--c); color: var(--c); background: var(--surface); border-radius: 999px; padding: 3px 14px; cursor: pointer; font-size: 14px; }
+  .chip[aria-pressed="true"] { background: var(--c); color: #fff; }
+  .chip:focus-visible, .tab:focus-visible, .route:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .routes { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
+  .route { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; cursor: pointer; color: var(--ink-2); }
+  .route[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .stagewrap { position: relative; width: 100%; background: #0a0e1a; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .stage { position: absolute; left: 0; top: 0; width: 930px; height: 540px; transform-origin: 0 0; background: #0a0e1a; color: #c9d3ee; font: 12px/1.35 system-ui, sans-serif; }
+  .stage .m { position: absolute; }
+  .menu { left: 10px; top: 106px; width: 178px; }
+  .menu .mi { border: 1px solid #27325a; border-radius: 6px; background: #101730; padding: 7px 10px; margin-bottom: 8px; }
+  .menu .mi b { display: block; color: #eef2ff; font-size: 12px; }
+  .menu .mi span { color: #8794bd; font-size: 10px; }
+  .menu .brand { color: #eef2ff; font-size: 17px; font-weight: 700; margin: -2px 0 6px 2px; }
+  .menu .pill { float: right; background: #d6455d; color: #fff; border-radius: 9px; padding: 0 6px; font-size: 10px; }
+  .berth { top: 34px; width: 144px; height: 62px; border: 1px solid #3a2f73; background: #14102e; border-radius: 4px; padding: 6px 8px; color: #a9a0e6; font-size: 10px; }
+  .berth b { color: #d8d2ff; }
+  .mainbox { left: 200px; top: 106px; width: 520px; height: 330px; background: #0f1530; border: 1px solid #27325a; border-radius: 4px; padding: 12px 14px; overflow: hidden; }
+  .statbox { left: 726px; top: 106px; width: 194px; height: 150px; background: #0f1530; border: 1px solid #27325a; border-radius: 4px; padding: 10px; overflow: hidden; }
+  .mainbox h3, .statbox h3 { margin: 0 0 8px; color: #eef2ff; font-size: 14px; }
+  .row { display: flex; gap: 10px; border-top: 1px solid #1d2748; padding: 5px 0; color: #aab6dd; font-size: 11px; }
+  .row b { color: #eef2ff; font-weight: 600; min-width: 92px; }
+  .row i { margin-left: auto; color: #e8a838; font-style: normal; font-size: 10px; }
+  .empty { color: #5d6a96; font-size: 11px; margin-top: 30px; text-align: center; }
+
+  .ov { position: absolute; border: 2px solid var(--c); border-radius: 2px; cursor: pointer; background: transparent; padding: 0; }
+  .ov > span { position: absolute; left: -2px; top: -2px; max-width: 100%; background: var(--c); color: #fff; font: 10px/1.35 system-ui, sans-serif; padding: 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ov.sel { border-width: 3px; background: color-mix(in srgb, var(--c) 16%, transparent); }
+  .ov.dim { opacity: 0.35; }
+  .ov.root { border-width: 1px; border-color: #8a8f98; pointer-events: none; }
+  .ov.root > span { background: #4b5160; }
+  .cpl { position: absolute; border: 2px dashed #e5334d; pointer-events: none; }
+  .cpl > span { position: absolute; left: -2px; bottom: -17px; background: #e5334d; color: #fff; font: 10px/1.5 system-ui, sans-serif; padding: 0 5px; white-space: nowrap; }
+  .toggles { display: flex; gap: 16px; font-size: 13px; color: var(--ink-2); margin: 8px 0 12px; flex-wrap: wrap; }
+
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 20px; margin: 0 0 2px; }
+  .card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); margin: 14px 0 4px; }
+  .card.domain { border-left: 4px solid var(--c); }
+  .mono { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  ul.plain { margin: 0; padding: 0; list-style: none; }
+  ul.plain li { padding: 1px 0; }
+  .bars { display: grid; grid-template-columns: 90px 1fr 36px; gap: 3px 10px; align-items: center; font-size: 13px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--c); }
+  .muted { color: var(--ink-3); }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--rule); margin-bottom: 14px; }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 18px; cursor: pointer; color: var(--ink-2); }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab .n { background: var(--info); color: var(--surface); border-radius: 9px; padding: 0 6px; font-size: 11px; margin-left: 6px; }
+
+  form.f { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--rule); }
+  form.f:first-of-type { border-top: 0; padding-top: 0; }
+  form.f h3 { margin: 0; }
+  .fr { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  select, input[type=text], textarea { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+  textarea { width: 100%; min-height: 72px; resize: vertical; }
+  input[type=text] { flex: 1 1 140px; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 6px 16px; cursor: pointer; }
+  .btn.ghost { background: none; color: var(--accent); }
+  .btn.good { background: var(--good); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .msg { padding: 8px 12px; border-radius: 6px; font-size: 14px; margin-top: 4px; }
+  .msg.ok { background: var(--good-bg); color: var(--good); }
+  .msg.no { background: var(--bad-bg); color: var(--bad); }
+  .sug { border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; background: var(--surface); }
+  .sug .hd { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .sug .req { font-size: 13px; color: var(--ink-3); margin: 2px 0 6px; }
+  .check { border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; font-size: 14px; }
+  .check.good { background: var(--good-bg); } .check.warn { background: var(--warn-bg); } .check.info { background: var(--info-bg); } .check.bad { background: var(--bad-bg); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 600; }
+  .conv { font-size: 13.5px; border-top: 1px solid var(--rule); padding: 8px 0; }
+  .conv .by { color: var(--ink-3); font-size: 12.5px; }
+  footer.note { color: var(--ink-3); font-size: 13px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<div class="notice">
+  <div class="wrap">
+    <div class="grow"><b>Prototype.</b> Click anything. The data is example data modelled on the reference app (<code>meridian-monolith</code>), the agent's answers are canned, and nothing is saved. The real workspace runs on your machine with <code>decompose:workspace</code>.</div>
+    <div><button class="linkbtn" id="reset" type="button">Reset the prototype</button> &middot; <a href="decomposition-architecture.html">How it works</a> &middot; <a href="index.html">Home</a></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Decomposition workspace</h1>
+    <span class="app">meridian-ops</span>
+    <span class="badge" id="b-domains"></span>
+    <span class="badge" id="b-valid"></span>
+    <span class="badge" id="b-approval"></span>
+    <span class="badge info" id="b-sugg"></span>
+  </header>
+
+  <div class="layout">
+    <section aria-label="The map">
+      <div class="chips" id="chips" role="group" aria-label="Domains"></div>
+      <div class="routes" id="routes" role="tablist" aria-label="Screens"></div>
+      <div class="stagewrap" id="stagewrap"><div class="stage" id="stage"></div></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="t-cpl" checked> Show hidden links between pieces</label>
+        <span class="muted">Click a box on the screen, or a chip, to look at that piece.</span>
+      </div>
+      <div class="card domain" id="detail"></div>
+    </section>
+
+    <aside aria-label="Shape, ask and approve">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div id="panel"></div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    What is real here: the actions (rename, merge, split, move a file, comment, accept, approve) are the same named actions the workspace uses, each checked before it lands, and an approval names the exact version it covers. What is not: the screens are a drawing, the scores are examples, and the agent is a script. Source: <code>docs/workspace-prototype.html</code>.
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- example data, modelled on examples/meridian-monolith ----------
+  var FILE_DATA = {
+    'src/App.tsx': { cap: 'App', ep: [] },
+    'src/layout/Sidebar.tsx': { cap: 'Sidebar', ep: [] },
+    'src/layout/BerthStrip.tsx': { cap: 'BerthStrip', ep: [] },
+    'src/components/DockingBoard.tsx': { cap: 'DockingBoard', ep: ['GET /api/harbormaster/dockings'] },
+    'src/components/TrafficLog.tsx': { cap: 'TrafficLog', ep: ['GET /api/harbormaster/dockings'] },
+    'src/components/BerthTile.tsx': { cap: 'BerthTile', ep: ['GET /api/harbormaster/berths'] },
+    'src/pages/cargo/CargoManifest.tsx': { cap: 'CargoManifest', ep: ['GET /api/harbormaster/manifest_lines', 'GET /api/ledger/valuations'] },
+    'src/pages/cargo/HazardSummary.tsx': { cap: 'HazardSummary', ep: ['GET /api/harbormaster/dockings'] },
+    'src/pages/cargo/index.tsx': { cap: 'CargoPage', ep: [] },
+    'src/pages/LifeSupportPage.tsx': { cap: 'TelemetryDashboard', ep: ['GET /api/stationos/telemetry'] },
+    'src/components/AlertsFeed.tsx': { cap: 'AlertsFeed', ep: ['GET /api/stationos/telemetry'] },
+    'src/components/ModuleStatus.tsx': { cap: 'ModuleStatus', ep: ['GET /api/stationos/modules'] },
+    'src/components/crew/CrewRoster.tsx': { cap: 'CrewRoster', ep: ['GET /api/stationos/crew', 'GET /api/stationos/certifications'] },
+    'src/components/crew/PayStatus.tsx': { cap: 'PayStatus', ep: ['GET /api/ledger/payroll'] },
+    'src/pages/ConcoursePage.tsx': { cap: 'MarketDirectory', ep: ['GET /api/stationos/vendors', 'GET /api/stationos/stalls', 'GET /api/ledger/settlements', 'GET /api/harbormaster/dockings'] },
+    'src/pages/SimulatorPage.tsx': { cap: 'SimulatorPage', ep: [] },
+    'src/simulator/DockingSimulation.tsx': { cap: 'DockingSimulation', ep: [] },
+    'src/simulator/GameEngine.ts': { cap: 'GameEngine', ep: [] },
+    'src/simulator/useDockingPhysics.ts': { cap: 'useDockingPhysics', ep: [] },
+    'src/simulator/useInput.ts': { cap: 'useInput', ep: [] },
+    'src/utils/helpers.ts': { cap: 'helpers', ep: [] },
+    'src/api/client.ts': { cap: 'client', ep: [] },
+    'src/store/AppContext.tsx': { cap: 'AppContext', ep: [] },
+    'src/components/StatusChip.tsx': { cap: 'StatusChip', ep: [] },
+    'src/types.ts': { cap: 'types', ep: [] },
+    'src/utils/constants.ts': { cap: 'constants', ep: [] }
+  };
+
+  var ROUTES = [
+    { path: '/', main: null, status: 'src/components/ModuleStatus.tsx' },
+    { path: '/docking', main: 'src/components/DockingBoard.tsx', status: 'src/components/TrafficLog.tsx' },
+    { path: '/simulator', main: 'src/pages/SimulatorPage.tsx', status: null },
+    { path: '/life-support', main: 'src/pages/LifeSupportPage.tsx', status: 'src/components/AlertsFeed.tsx' },
+    { path: '/cargo', main: 'src/pages/cargo/CargoManifest.tsx', status: 'src/pages/cargo/HazardSummary.tsx' },
+    { path: '/crew', main: 'src/components/crew/CrewRoster.tsx', status: 'src/components/crew/PayStatus.tsx' },
+    { path: '/concourse', main: 'src/pages/ConcoursePage.tsx', status: null }
+  ];
+
+  // A hidden link: `file` reads `field`, which `dataFile`'s piece loads.
+  var COUPLINGS = [
+    { file: 'src/layout/Sidebar.tsx', field: 'telemetry', dataFile: 'src/pages/LifeSupportPage.tsx', route: '*', box: 'menu' },
+    { file: 'src/pages/cargo/HazardSummary.tsx', field: 'dockings', dataFile: 'src/components/DockingBoard.tsx', route: '/cargo', box: 'status' },
+    { file: 'src/pages/ConcoursePage.tsx', field: 'dockings', dataFile: 'src/components/DockingBoard.tsx', route: '/concourse', box: 'main' }
+  ];
+
+  var PALETTE = ['#3b6ff5', '#8455d6', '#1f9d55', '#e08a1e', '#d6455d', '#e0508f', '#0e9aa7', '#7a8a00', '#b5651d'];
+
+  function initialDoc() {
+    function d(id, color, shell, files, reasons, ev) {
+      return { id: id, mfe: 'meridian-ops-' + id, shell: shell, color: color, files: files, reasons: reasons, evidence: ev };
+    }
+    return {
+      domains: [
+        d('shell', '#8a8f98', true, ['src/App.tsx', 'src/layout/Sidebar.tsx', 'src/layout/BerthStrip.tsx'],
+          ['Only the app’s entry reaches these files', 'Navigation and the berth strip frame stay in the shell'], { route: null, data: null, imports: 1 }),
+        d('docking', '#8455d6', false, ['src/components/DockingBoard.tsx', 'src/components/TrafficLog.tsx', 'src/components/BerthTile.tsx'],
+          ['Route /docking fills the main area', 'The berth tile in the always-on strip reads dockings, so it joins docking'], { route: 1, data: 0.9, imports: 0.8 }),
+        d('simulator', '#e0508f', false, ['src/pages/SimulatorPage.tsx', 'src/simulator/DockingSimulation.tsx', 'src/simulator/GameEngine.ts', 'src/simulator/useDockingPhysics.ts', 'src/simulator/useInput.ts'],
+          ['Route /simulator fills the main area', 'Nothing here calls a backend'], { route: 1, data: null, imports: 1 }),
+        d('life-support', '#d6455d', false, ['src/pages/LifeSupportPage.tsx', 'src/components/AlertsFeed.tsx', 'src/components/ModuleStatus.tsx'],
+          ['Route /life-support fills the main area', 'ModuleStatus reads modules from StationOS'], { route: 1, data: 0.85, imports: 0.7 }),
+        d('cargo', '#3b6ff5', false, ['src/pages/cargo/CargoManifest.tsx', 'src/pages/cargo/HazardSummary.tsx', 'src/pages/cargo/index.tsx'],
+          ['Route /cargo fills the main area', 'Manifest lines and valuations come from two backends no other screen uses together'], { route: 1, data: 0.8, imports: 0.6 }),
+        d('crew', '#e08a1e', false, ['src/components/crew/CrewRoster.tsx', 'src/components/crew/PayStatus.tsx'],
+          ['Route /crew fills the main area', 'Roster and certifications come from StationOS, pay from the ledger'], { route: 1, data: 0.9, imports: 0.9 }),
+        d('concourse', '#1f9d55', false, ['src/pages/ConcoursePage.tsx'],
+          ['Route /concourse fills the main area', 'Reads vendors and stalls (StationOS), settlements (ledger) and inbound dockings (harbormaster)'], { route: 1, data: 0.7, imports: 0.5 })
+      ],
+      shared: ['src/utils/helpers.ts', 'src/api/client.ts', 'src/store/AppContext.tsx', 'src/components/StatusChip.tsx', 'src/types.ts', 'src/utils/constants.ts'],
+      suggestions: [
+        { id: 's1', by: 'agent', request: 'What should the shell be called?',
+          explanation: 'Every domain composes into it, and the app itself calls it the console (App.tsx renders the station console). Naming the shell after it makes the plan read the way the team talks.',
+          edit: { kind: 'rename-domain', from: 'shell', to: 'console' } },
+        { id: 's2', by: 'agent', request: 'Can hazards be their own team?',
+          explanation: 'HazardSummary reads docking data and only renders hazard rows. Splitting it out gives a hazmat team one screen area and moves the docking coupling with it.',
+          edit: { kind: 'split-domain', domain: 'cargo', files: ['src/pages/cargo/HazardSummary.tsx'], into: 'hazmat' } }
+      ],
+      comments: [],
+      approval: null,
+      nextSug: 3
+    };
+  }
+
+  // ---------- the model: named edits, each checked before it lands ----------
+  var NAME = /^[a-z][a-z0-9-]*$/;
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function find(doc, id) { for (var i = 0; i < doc.domains.length; i++) if (doc.domains[i].id === id) return doc.domains[i]; return null; }
+  function owner(doc, file) { for (var i = 0; i < doc.domains.length; i++) if (doc.domains[i].files.indexOf(file) !== -1) return doc.domains[i]; return null; }
+  function endpointsOf(dom) { var out = []; dom.files.forEach(function (f) { (FILE_DATA[f] ? FILE_DATA[f].ep : []).forEach(function (e) { if (out.indexOf(e) === -1) out.push(e); }); }); return out; }
+  function backendsOf(dom) { var out = []; endpointsOf(dom).forEach(function (e) { var b = e.split('/')[2]; if (out.indexOf(b) === -1) out.push(b); }); return out; }
+  function capsOf(dom) { return dom.files.map(function (f) { return FILE_DATA[f] ? FILE_DATA[f].cap : f; }); }
+  function nextColor(doc) { var used = doc.domains.map(function (x) { return x.color; }); for (var i = 0; i < PALETTE.length; i++) if (used.indexOf(PALETTE[i]) === -1) return PALETTE[i]; return PALETTE[doc.domains.length % PALETTE.length]; }
+  function checkName(doc, name, except) {
+    if (!name) return 'Give the domain a name.';
+    if (!NAME.test(name)) return '“' + name + '” is not a valid name: use lowercase letters, digits and hyphens, starting with a letter.';
+    var dup = find(doc, name);
+    if (dup && except.indexOf(dup.id) === -1) return 'A domain called “' + name + '” already exists.';
+    return null;
+  }
+  function validate(doc) {
+    var errs = [];
+    doc.domains.forEach(function (d) {
+      if (d.files.length === 0) errs.push(d.id + ' would be left with no files.');
+    });
+    if (!doc.domains.some(function (d) { return d.shell; })) errs.push('There would be no shell to compose the others into.');
+    return errs;
+  }
+
+  // Returns { doc } on success or { error } when the edit is refused.
+  function applyEdit(doc0, edit, who) {
+    var doc = clone(doc0), e = edit, err, a, b, dom, i;
+    switch (e.kind) {
+      case 'rename-domain':
+        a = find(doc, e.from); if (!a) return { error: 'There is no domain “' + e.from + '”.' };
+        if (e.from === e.to) return { error: 'The new name is the same as the old one.' };
+        err = checkName(doc, e.to, [e.from]); if (err) return { error: err };
+        a.id = e.to; a.mfe = 'meridian-ops-' + e.to; break;
+      case 'merge-domains':
+        a = find(doc, e.domains[0]); b = find(doc, e.domains[1]);
+        if (!a || !b) return { error: 'Pick two domains that exist.' };
+        if (a === b) return { error: 'Pick two different domains to merge.' };
+        err = checkName(doc, e.into, e.domains); if (err) return { error: err };
+        a.files = a.files.concat(b.files); a.shell = a.shell || b.shell;
+        a.reasons = a.reasons.concat(['Merged with ' + b.id]);
+        doc.domains = doc.domains.filter(function (x) { return x !== b; });
+        a.id = e.into; a.mfe = 'meridian-ops-' + e.into; break;
+      case 'split-domain':
+        a = find(doc, e.domain); if (!a) return { error: 'There is no domain “' + e.domain + '”.' };
+        err = checkName(doc, e.into, []); if (err) return { error: err };
+        for (i = 0; i < e.files.length; i++) if (a.files.indexOf(e.files[i]) === -1) return { error: e.files[i] + ' is not in ' + a.id + '.' };
+        a.files = a.files.filter(function (f) { return e.files.indexOf(f) === -1; });
+        doc.domains.push({ id: e.into, mfe: 'meridian-ops-' + e.into, shell: false, color: nextColor(doc), files: e.files.slice(),
+          reasons: ['Split out of ' + a.id], evidence: { route: null, data: null, imports: null } });
+        break;
+      case 'move-file':
+        dom = find(doc, e.to); if (!dom) return { error: 'There is no domain “' + e.to + '”.' };
+        a = owner(doc, e.file);
+        if (a && a.id === e.to) return { error: e.file + ' is already in ' + e.to + '.' };
+        if (!a && doc.shared.indexOf(e.file) === -1) return { error: 'There is no file ' + e.file + '.' };
+        if (a) a.files = a.files.filter(function (f) { return f !== e.file; }); else doc.shared = doc.shared.filter(function (f) { return f !== e.file; });
+        dom.files.push(e.file); break;
+      case 'comment':
+        doc.comments.push({ by: who || 'you', at: new Date().toLocaleString(), text: e.text, about: e.about || null });
+        return { doc: doc };
+      case 'approve':
+        break;
+      default: return { error: 'Unknown action.' };
+    }
+    var errs = validate(doc);
+    if (errs.length) return { error: errs[0] };
+    return { doc: doc };
+  }
+
+  function decisionHash(doc) {
+    var s = JSON.stringify(doc.domains.map(function (d) { return [d.id, d.mfe, d.shell, d.files.slice().sort()]; }).sort()) + JSON.stringify(doc.shared.slice().sort());
+    var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(16);
+  }
+  function approvalStatus(doc) { if (!doc.approval) return 'none'; return doc.approval.hash === decisionHash(doc) ? 'current' : 'stale'; }
+  function activeCouplings(doc) {
+    return COUPLINGS.filter(function (c) { var a = owner(doc, c.file), b = owner(doc, c.dataFile); return a && b && a !== b; })
+      .map(function (c) { var a = owner(doc, c.file), b = owner(doc, c.dataFile); return { c: c, from: a, to: b }; });
+  }
+  function suggestionCheck(doc, s) { var r = applyEdit(doc, s.edit, 'agent'); return r.error ? { ok: false, error: r.error } : { ok: true }; }
+
+  // ---------- state and rendering ----------
+  var S;
+  function reset() { S = { doc: initialDoc(), selected: 'cargo', route: '/cargo', tab: 'shape', msg: null, agent: null, showCpl: true }; }
+  reset();
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  var $ = function (id) { return document.getElementById(id); };
+  function opts(items, sel) { return items.map(function (x) { return '<option value="' + esc(x.v) + '"' + (x.v === sel ? ' selected' : '') + '>' + esc(x.t) + '</option>'; }).join(''); }
+  function domOpts(sel, except) { return opts(S.doc.domains.filter(function (d) { return d.id !== except; }).map(function (d) { return { v: d.id, t: d.id }; }), sel); }
+
+  function renderHeader() {
+    var doc = S.doc, errs = validate(doc), st = approvalStatus(doc);
+    $('b-domains').textContent = doc.domains.length + ' domains';
+    var v = $('b-valid'); v.textContent = errs.length ? 'Invalid' : 'Valid'; v.className = 'badge ' + (errs.length ? 'bad' : 'good');
+    var a = $('b-approval'); a.textContent = st === 'current' ? 'Approved' : st === 'stale' ? 'Approval out of date' : 'Not approved'; a.className = 'badge ' + (st === 'current' ? 'good' : st === 'stale' ? 'warn' : '');
+    $('b-sugg').textContent = doc.suggestions.length + (doc.suggestions.length === 1 ? ' suggestion' : ' suggestions');
+  }
+
+  function renderChips() {
+    $('chips').innerHTML = S.doc.domains.map(function (d) {
+      return '<button type="button" class="chip" style="--c:' + d.color + '" data-dom="' + esc(d.id) + '" aria-pressed="' + (d.id === S.selected) + '">' + esc(d.id) + '</button>';
+    }).join('');
+  }
+
+  function renderRoutes() {
+    $('routes').innerHTML = ROUTES.map(function (r) {
+      return '<button type="button" role="tab" class="route" data-route="' + esc(r.path) + '" aria-selected="' + (r.path === S.route) + '">' + esc(r.path) + '</button>';
+    }).join('');
+  }
+
+  var STAGE_W = 930, STAGE_H = 540;
+  var MAIN_ROWS = {
+    '/docking': ['Docking board', [['VR-88213', 'Berth 1', 'docking'], ['VR-49008', 'Berth 2', 'docked'], ['VR-91102', 'Berth 3', 'departing'], ['VR-77045', 'Berth 5', 'docked']]],
+    '/simulator': ['Docking simulator', [['First-person 3D docking gameplay', '', '']]],
+    '/life-support': ['Telemetry dashboard', [['Oxygen', '20.9 %', 'nominal'], ['CO2', '0.04 %', 'nominal'], ['Cabin pressure', '101.3 kPa', 'nominal']]],
+    '/cargo': ['Cargo manifest', [['CRYO-CELL-42', '1,840.5 kg', 'CRYO'], ['MED-ISO-9', '18.2 kg', 'RADIOLOGICAL'], ['ACID-H2SO4', '3,100 kg', 'CORROSIVE'], ['BIO-CULT-3', '240 kg', 'BIO'], ['SCRAP-ALLOY', '15,000 kg', 'NONE']]],
+    '/crew': ['Crew roster', [['Okafor, A.', 'Engineer', 'certified'], ['Lindqvist, M.', 'Medic', 'certified'], ['Park, J.', 'Pilot', 'renewal due']]],
+    '/concourse': ['Concourse directory', [['Vendors', 'Stalls', 'Settlements'], ['Inbound supplies', '', 'from docking']]]
+  };
+  var STATUS_TITLE = { '/': 'Module status', '/docking': 'Traffic log', '/life-support': 'Alerts feed', '/cargo': 'Hazard summary', '/crew': 'Pay status' };
+
+  function stageHtml() {
+    var h = '<div class="m menu"><div class="brand">Meridian Station</div>' +
+      [['Docking Control', 'Berths, traffic, assignments'], ['Docking Simulator', 'First-person 3D docking gameplay'], ['Life Support', 'Telemetry, environment, alerts'], ['Cargo Operations', 'Manifests, hazards, valuations'], ['Crew Services', 'Roster, certifications, pay'], ['Concourse', 'Vendors, stalls, settlements']]
+        .map(function (m, i) { return '<div class="mi"><b>' + m[0] + (i === 2 ? '<span class="pill">6</span>' : '') + '</b><span>' + m[1] + '</span></div>'; }).join('') + '</div>';
+    var berths = ['VR-88213', 'VR-49008', 'VR-91102', 'berth available', 'VR-77045', 'berth available'];
+    berths.forEach(function (b, i) { h += '<div class="m berth" style="left:' + (9 + i * 152) + 'px"><b>docking</b><br>' + b + '</div>'; });
+    var rt = ROUTES.filter(function (r) { return r.path === S.route; })[0];
+    var mr = MAIN_ROWS[S.route];
+    if (mr) {
+      h += '<div class="m mainbox"><h3>' + mr[0] + '</h3>' + mr[1].map(function (r) { return '<div class="row"><b>' + r[0] + '</b><span>' + r[1] + '</span><i>' + r[2] + '</i></div>'; }).join('') + '</div>';
+    } else { h += '<div class="m mainbox"><div class="empty">Select a domain from the menu</div></div>'; }
+    if (STATUS_TITLE[S.route]) h += '<div class="m statbox"><h3>' + STATUS_TITLE[S.route] + '</h3><div class="row"><b>…</b></div><div class="row"><b>…</b></div></div>';
+    // overlays
+    var doc = S.doc;
+    function ov(file, x, y, w, hh, slot, key) {
+      var d = owner(doc, file); if (!d) return '';
+      var cls = 'ov' + (d.id === S.selected ? ' sel' : (S.selected ? ' dim' : ''));
+      return '<button type="button" class="' + cls + '" style="--c:' + d.color + ';left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + hh + 'px" data-dom="' + esc(d.id) + '" title="' + esc(d.id + ' · ' + d.mfe + ' · ' + slot) + '" aria-label="' + esc(d.id + ', ' + slot) + '"><span>' + esc(d.id + ' · ' + d.mfe + ' · ' + slot) + '</span></button>';
+    }
+    var shell = doc.domains.filter(function (d) { return d.shell; })[0];
+    if (shell) h += '<div class="ov root" style="left:0;top:0;width:' + STAGE_W + 'px;height:' + STAGE_H + 'px"><span>' + esc(shell.id + ' · ' + shell.mfe + ' · root') + '</span></div>';
+    h += ov('src/layout/Sidebar.tsx', 10, 106, 178, 420, 'menu', 'menu');
+    berths.forEach(function (b, i) { h += ov('src/components/BerthTile.tsx', 9 + i * 152, 34, 144, 62, 'berth.' + (i + 1), 'berth'); });
+    if (rt.main) h += ov(rt.main, 200, 106, 520, 330, 'main', 'main');
+    if (rt.status) h += ov(rt.status, 726, 106, 194, 150, 'status', 'status');
+    if (S.showCpl) {
+      activeCouplings(doc).forEach(function (x) {
+        if (x.c.route !== '*' && x.c.route !== S.route) return;
+        var r = x.c.box === 'menu' ? [10, 106, 178, 420] : x.c.box === 'status' ? [726, 106, 194, 150] : [200, 106, 520, 330];
+        h += '<div class="cpl" style="left:' + (r[0] + 4) + 'px;top:' + (r[1] + 4) + 'px;width:' + (r[2] - 8) + 'px;height:' + (r[3] - 8) + 'px"><span>' + esc('coupling: ' + x.from.id + ' reads ' + x.to.id + '’s ' + x.c.field) + '</span></div>';
+      });
+    }
+    return h;
+  }
+  function renderStage() { $('stage').innerHTML = stageHtml(); fitStage(); }
+  function fitStage() {
+    var w = $('stagewrap').clientWidth || STAGE_W, s = w / STAGE_W;
+    $('stage').style.transform = 'scale(' + s + ')';
+    $('stagewrap').style.height = Math.round(STAGE_H * s) + 'px';
+  }
+
+  function renderDetail() {
+    var d = find(S.doc, S.selected);
+    if (!d) { S.selected = S.doc.domains[0].id; d = S.doc.domains[0]; }
+    var names = ['route', 'data', 'imports', 'runtime', 'co-change', 'ownership'];
+    var bars = names.map(function (n) {
+      var v = d.evidence[n === 'co-change' ? 'cochange' : n]; var has = typeof v === 'number';
+      return '<span>' + n + '</span><span class="bar"><i style="width:' + (has ? Math.round(v * 100) : 0) + '%"></i></span><span class="muted">' + (has ? v.toFixed(1) : '—') + '</span>';
+    }).join('');
+    var cpl = activeCouplings(S.doc).filter(function (x) { return x.from === d || x.to === d; });
+    d.color && ($('detail').style.setProperty('--c', d.color));
+    $('detail').innerHTML =
+      '<h2>' + esc(d.id) + (d.shell ? ' <span class="badge">shell</span>' : '') + '</h2><div class="muted mono">' + esc(d.mfe) + '</div>' +
+      '<h3>Data</h3>' + (backendsOf(d).length ? '<div>' + esc(backendsOf(d).join(', ')) + '</div><ul class="plain mono">' + endpointsOf(d).map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>' : '<div class="muted">No backend: this piece calls no API.</div>') +
+      '<h3>Capabilities</h3><div>' + esc(capsOf(d).join(', ')) + '</div>' +
+      '<h3>Evidence <span class="muted" style="text-transform:none;letter-spacing:0">(example scores, 0 to 1)</span></h3><div class="bars">' + bars + '</div>' +
+      '<h3>Why it is drawn here</h3><ul class="plain">' + d.reasons.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+      (cpl.length ? '<h3>Hidden links</h3><ul class="plain">' + cpl.map(function (x) { return '<li>' + esc(x.from.id + ' reads ' + x.to.id + '’s ' + x.c.field + ' in ' + x.c.file.split('/').pop()) + '</li>'; }).join('') + '</ul>' : '') +
+      '<h3>Files</h3><ul class="plain mono">' + d.files.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>';
+  }
+
+  function renderTabs() {
+    var n = S.doc.suggestions.length;
+    $('tabs').innerHTML = [['shape', 'Shape'], ['agent', 'Agent'], ['approve', 'Approve']].map(function (t) {
+      return '<button type="button" role="tab" class="tab" data-tab="' + t[0] + '" aria-selected="' + (S.tab === t[0]) + '">' + t[1] + (t[0] === 'agent' && n ? '<span class="n">' + n + '</span>' : '') + '</button>';
+    }).join('');
+  }
+
+  function msgHtml() { return S.msg ? '<div class="msg ' + (S.msg.ok ? 'ok' : 'no') + '" role="status">' + esc(S.msg.text) + '</div>' : ''; }
+
+  function panelShape() {
+    var doc = S.doc, ds = doc.domains;
+    var splitDom = ds.filter(function (d) { return d.id === (S.splitDom || '') })[0] || ds[0];
+    var allFiles = [];
+    ds.forEach(function (d) { d.files.forEach(function (f) { allFiles.push({ v: f, t: f.replace('src/', '') + '  (' + d.id + ')' }); }); });
+    doc.shared.forEach(function (f) { allFiles.push({ v: f, t: f.replace('src/', '') + '  (shared)' }); });
+    return '<div class="card">' +
+      '<form class="f" data-form="rename"><h3>Rename a domain</h3><div class="fr"><select name="a" aria-label="Domain">' + domOpts(S.selected) + '</select><input type="text" name="to" placeholder="new name" aria-label="New name" autocomplete="off"><button class="btn" type="submit">Rename</button></div></form>' +
+      '<form class="f" data-form="merge"><h3>Merge two domains</h3><div class="fr"><select name="a" aria-label="First domain">' + domOpts(ds[0].id) + '</select><span>and</span><select name="b" aria-label="Second domain">' + domOpts(ds[1] ? ds[1].id : '') + '</select></div><div class="fr"><input type="text" name="into" placeholder="name for the merged domain" aria-label="Merged name" autocomplete="off"><button class="btn" type="submit">Merge</button></div></form>' +
+      '<form class="f" data-form="split"><h3>Split a file out of a domain</h3><div class="fr"><select name="a" aria-label="Domain" data-splitdom>' + domOpts(splitDom.id) + '</select><select name="file" aria-label="File">' + opts(splitDom.files.map(function (f) { return { v: f, t: f.replace('src/', '') }; }), '') + '</select></div><div class="fr"><input type="text" name="into" placeholder="name for the new domain" aria-label="New domain name" autocomplete="off"><button class="btn" type="submit">Split</button></div></form>' +
+      '<form class="f" data-form="move"><h3>Move a file</h3><div class="fr"><select name="file" aria-label="File">' + opts(allFiles, '') + '</select><span>to</span><select name="to" aria-label="Target domain">' + domOpts(S.selected) + '</select><button class="btn" type="submit">Move</button></div></form>' +
+      '<form class="f" data-form="comment"><h3>Leave a comment</h3><div class="fr"><input type="text" name="text" placeholder="what should the next reader know?" aria-label="Comment" autocomplete="off"><button class="btn" type="submit">Comment</button></div></form>' +
+      msgHtml() + '</div>';
+  }
+
+  function sugCard(s) {
+    var chk = suggestionCheck(S.doc, s);
+    return '<div class="sug"><div class="hd"><strong>' + esc(describe(s.edit)) + '</strong><span class="badge ' + (chk.ok ? 'good' : 'bad') + '">' + (chk.ok ? 'Checks out' : 'Would fail') + '</span></div>' +
+      '<div class="req">Asked: “' + esc(s.request) + '”</div><div>' + esc(s.explanation) + '</div>' +
+      (chk.ok ? '' : '<div class="msg no" style="margin-top:8px">' + esc(chk.error) + '</div>') +
+      '<div class="fr" style="margin-top:10px"><button class="btn" type="button" data-accept="' + esc(s.id) + '"' + (chk.ok ? '' : ' disabled') + '>Accept</button><button class="btn ghost" type="button" data-reject="' + esc(s.id) + '">Reject</button></div></div>';
+  }
+  function describe(e) {
+    if (e.kind === 'rename-domain') return 'Rename ' + e.from + ' to ' + e.to;
+    if (e.kind === 'split-domain') return 'Split ' + e.files.map(function (f) { return f.split('/').pop(); }).join(', ') + ' out of ' + e.domain + ' into ' + e.into;
+    if (e.kind === 'move-file') return 'Move ' + e.file.split('/').pop() + ' to ' + e.to;
+    if (e.kind === 'merge-domains') return 'Merge ' + e.domains.join(' and ') + ' into ' + e.into;
+    return e.kind;
+  }
+
+  function panelAgent() {
+    var out = '<div class="card"><form data-form="ask"><textarea name="q" placeholder="Ask the agent, for example: split hazards out of cargo" aria-label="Ask the agent"></textarea><div class="fr" style="margin-top:8px"><button class="btn" type="submit">Ask</button><span class="muted">Try: “split hazards out of cargo”, “rename the simulator”, “why is constants.ts shared?”, “move everything into docking”.</span></div></form>';
+    if (S.agent) {
+      out += '<div class="sug" style="margin-top:12px"><div class="req">You asked: “' + esc(S.agent.q) + '”</div><div>' + esc(S.agent.answer) + '</div>' +
+        (S.agent.dropped || []).map(function (d) { return '<div class="msg no" style="margin-top:8px">Dropped: ' + esc(d.what) + ' — ' + esc(d.why) + '</div>'; }).join('') + '</div>';
+    }
+    out += '<div class="muted" style="font-size:13px;margin-top:8px">In the real workspace the agent is a hosted model reached with your API key. Here its answers are scripted. Either way, each edit it proposes is tried on a copy of the plan first, and nothing changes until a person accepts it.</div></div>';
+    out += '<h3 style="margin:6px 0 8px;font-size:16px">Suggestions</h3>';
+    out += S.doc.suggestions.length ? S.doc.suggestions.map(sugCard).join('') : '<div class="muted">No suggestions waiting.</div>';
+    return out;
+  }
+
+  function panelApprove() {
+    var doc = S.doc, st = approvalStatus(doc), errs = validate(doc), cpl = activeCouplings(doc).length;
+    var head = st === 'current'
+      ? '<div class="check good">Approved by ' + esc(doc.approval.by) + ', ' + esc(doc.approval.at) + '. This is the version that will be built.</div>'
+      : st === 'stale'
+        ? '<div class="check warn">The plan changed after ' + esc(doc.approval.by) + ' approved it. Review it and approve again.</div>'
+        : '<div class="check info">Nothing is built until someone approves.</div>';
+    var rows = doc.domains.map(function (d) {
+      return '<tr><td>' + esc(d.id) + (d.shell ? ' (shell)' : '') + '</td><td class="mono">' + esc(d.mfe) + '</td><td>' + esc(capsOf(d).join(', ')) + '</td><td>' + esc(backendsOf(d).join(', ') || '—') + '</td></tr>';
+    }).join('');
+    var conv = doc.comments.length ? doc.comments.map(function (c) { return '<div class="conv"><div class="by">' + esc(c.by) + ' · ' + esc(c.at) + (c.about ? ' · on ' + esc(c.about) : '') + '</div>' + esc(c.text) + '</div>'; }).join('') : '<div class="muted">No comments yet. Add one on the Shape tab; comments do not make an approval go out of date.</div>';
+    return '<div class="card">' + head +
+      '<button type="button" class="btn good" id="approve"' + (errs.length ? ' disabled' : '') + '>' + (st === 'current' ? 'Approve again' : 'Approve this proposal') + '</button></div>' +
+      '<div class="check ' + (errs.length ? 'bad' : 'good') + '">' + (errs.length ? esc(errs[0]) : 'Every derived manifest and the composition validate') + '</div>' +
+      '<div class="check ' + (cpl ? 'warn' : 'good') + '">' + (cpl ? cpl + (cpl === 1 ? ' coupling' : ' couplings') + ' to resolve' : 'No couplings left to resolve') + '</div>' +
+      '<div class="check info">' + doc.shared.length + ' shared files to place</div>' +
+      '<div class="check info">' + doc.suggestions.length + ' agent ' + (doc.suggestions.length === 1 ? 'suggestion' : 'suggestions') + ' waiting</div>' +
+      '<div class="card" style="margin-top:14px;overflow-x:auto"><table><thead><tr><th>Domain</th><th>MFE</th><th>Screens</th><th>Data</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="card"><h2 style="font-size:17px">Conversation</h2>' + conv + '</div>';
+  }
+
+  function renderPanel() { $('panel').innerHTML = S.tab === 'shape' ? panelShape() : S.tab === 'agent' ? panelAgent() : panelApprove(); }
+  function renderAll() { renderHeader(); renderChips(); renderRoutes(); renderStage(); renderDetail(); renderTabs(); renderPanel(); }
+
+  // ---------- actions ----------
+  function run(edit, okText) {
+    var r = applyEdit(S.doc, edit, 'you');
+    if (r.error) { S.msg = { ok: false, text: 'Refused: ' + r.error }; return false; }
+    S.doc = r.doc; S.msg = { ok: true, text: okText }; return true;
+  }
+  function selectAfter(id) { if (find(S.doc, id)) S.selected = id; }
+
+  function agentAnswer(q) {
+    var t = q.toLowerCase(), doc = S.doc, dropped = [], made = false;
+    function suggest(edit, request, explanation) {
+      var dup = doc.suggestions.some(function (s) { return JSON.stringify(s.edit) === JSON.stringify(edit); });
+      if (dup) return false;
+      var chk = applyEdit(doc, edit, 'agent');
+      if (chk.error) { dropped.push({ what: describe(edit), why: chk.error }); return false; }
+      doc.suggestions.push({ id: 's' + (doc.nextSug++), by: 'agent', request: request, explanation: explanation, edit: edit }); made = true; return true;
+    }
+    var answer;
+    if (/everything|all of it|all the files/.test(t)) {
+      var cg = find(doc, 'cargo');
+      suggest({ kind: 'split-domain', domain: 'cargo', files: cg ? cg.files.slice() : [], into: 'everything' }, q, 'Move all of cargo into one new domain.');
+      answer = 'I tried moving everything out of cargo into one place. Each edit is checked on a copy of the plan first, and that one would leave cargo with no files, so it is dropped. Ask for one specific change instead.';
+    } else if (/hazard|hazmat/.test(t)) {
+      var cargo = find(doc, 'cargo');
+      if (cargo && cargo.files.indexOf('src/pages/cargo/HazardSummary.tsx') !== -1) {
+        suggest({ kind: 'split-domain', domain: 'cargo', files: ['src/pages/cargo/HazardSummary.tsx'], into: 'hazmat' }, q, 'HazardSummary reads docking data and only renders hazard rows. Splitting it out gives a hazmat team one screen area and moves the docking coupling with it.');
+        answer = made ? 'Yes: HazardSummary can stand alone. I have added it as a suggestion below.' : 'That suggestion is already waiting below.';
+      } else answer = 'HazardSummary is no longer in cargo, so there is nothing left to split.';
+    } else if (/simulat/.test(t)) {
+      if (find(doc, 'simulator')) {
+        suggest({ kind: 'rename-domain', from: 'simulator', to: 'docking-simulation' }, q, 'The app’s own constants call it docking-simulation, so the plan will read the way the code does.');
+        answer = made ? 'I would name it docking-simulation, which is the id the code already uses.' : 'That rename is already waiting below.';
+      } else answer = 'The simulator has already been renamed.';
+    } else if (/constants|why.*shared|shared/.test(t)) {
+      if (doc.shared.indexOf('src/utils/constants.ts') !== -1 && find(doc, 'shell')) {
+        suggest({ kind: 'move-file', file: 'src/utils/constants.ts', to: find(doc, 'shell').id }, q, 'constants.ts holds the console’s domain menu and berth list, so only the shell really needs it. The draft filed it as shared because several screens import it.');
+        answer = 'constants.ts holds the console’s domain menu and berth list. Several screens import it, which is why the draft filed it as shared, but the shell is its real owner.';
+      } else answer = 'constants.ts has already been placed.';
+    } else if (/shell|console|name/.test(t)) {
+      if (find(doc, 'shell')) {
+        suggest({ kind: 'rename-domain', from: 'shell', to: 'console' }, q, 'Every domain composes into it, and the app itself calls it the console. Naming the shell after it makes the plan read the way the team talks.');
+        answer = made ? 'I would call it console, which is what the app calls it.' : 'That rename is already waiting below.';
+      } else answer = 'The shell has already been renamed.';
+    } else {
+      answer = 'I could not turn that into an edit this prototype knows. Try “split hazards out of cargo”, “rename the simulator”, “why is constants.ts shared?”, or “move everything into docking”.';
+    }
+    S.agent = { q: q, answer: answer, dropped: dropped };
+    doc.comments.push({ by: 'you', at: new Date().toLocaleString(), text: q, about: null });
+    doc.comments.push({ by: 'agent', at: new Date().toLocaleString(), text: answer, about: null });
+  }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('button, input'); if (!t) return;
+    if (t.id === 'reset') { reset(); renderAll(); return; }
+    if (t.dataset.dom) { S.selected = t.dataset.dom; renderChips(); renderStage(); renderDetail(); if (S.tab === 'shape') renderPanel(); return; }
+    if (t.dataset.route) { S.route = t.dataset.route; renderRoutes(); renderStage(); return; }
+    if (t.dataset.tab) { S.tab = t.dataset.tab; S.msg = null; renderTabs(); renderPanel(); return; }
+    if (t.dataset.accept) {
+      var s = S.doc.suggestions.filter(function (x) { return x.id === t.dataset.accept; })[0];
+      if (s) { var ok = run(s.edit, 'Accepted: ' + describe(s.edit) + '.'); if (ok) { S.doc.suggestions = S.doc.suggestions.filter(function (x) { return x.id !== s.id; }); selectAfter(s.edit.into || s.edit.to || s.edit.domain || S.selected); } renderAll(); }
+      return;
+    }
+    if (t.dataset.reject) { S.doc.suggestions = S.doc.suggestions.filter(function (x) { return x.id !== t.dataset.reject; }); S.msg = { ok: true, text: 'Rejected.' }; renderAll(); return; }
+    if (t.id === 'approve') {
+      var st = approvalStatus(S.doc);
+      if (validate(S.doc).length) return;
+      S.doc.approval = { by: 'you', at: new Date().toLocaleString(), hash: decisionHash(S.doc) }; S.doc.comments.push({ by: 'you', at: new Date().toLocaleString(), text: st === 'stale' ? 'Approved again.' : 'Approved this proposal.', about: null });
+      renderAll(); return;
+    }
+    if (t.id === 't-cpl') { S.showCpl = t.checked; renderStage(); }
+  });
+
+  document.addEventListener('change', function (ev) {
+    var t = ev.target;
+    if (t.matches && t.matches('[data-splitdom]')) { S.splitDom = t.value; renderPanel(); }
+  });
+
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target.closest('form'); if (!f || !f.dataset.form) return;
+    ev.preventDefault();
+    var v = function (n) { var e = f.elements[n]; return e ? e.value.trim() : ''; };
+    var k = f.dataset.form, ok = false;
+    if (k === 'rename') { ok = run({ kind: 'rename-domain', from: v('a'), to: v('to') }, 'Renamed ' + v('a') + ' to ' + v('to') + '.'); if (ok) selectAfter(v('to')); }
+    if (k === 'merge') { ok = run({ kind: 'merge-domains', domains: [v('a'), v('b')], into: v('into') || v('a') }, 'Merged ' + v('a') + ' and ' + v('b') + ' into ' + (v('into') || v('a')) + '.'); if (ok) selectAfter(v('into') || v('a')); }
+    if (k === 'split') { ok = run({ kind: 'split-domain', domain: v('a'), files: [v('file')], into: v('into') }, 'Split ' + v('file').split('/').pop() + ' out of ' + v('a') + ' into ' + v('into') + '.'); if (ok) selectAfter(v('into')); }
+    if (k === 'move') { ok = run({ kind: 'move-file', file: v('file'), to: v('to') }, 'Moved ' + v('file').split('/').pop() + ' to ' + v('to') + '.'); if (ok) selectAfter(v('to')); }
+    if (k === 'comment') { if (!v('text')) { S.msg = { ok: false, text: 'Refused: write something first.' }; } else { ok = run({ kind: 'comment', text: v('text'), about: S.selected }, 'Comment added. It does not change the approval.'); } }
+    if (k === 'ask') { var q = v('q'); if (q) { agentAnswer(q); } else { S.msg = { ok: false, text: 'Ask a question first.' }; } }
+    renderAll();
+  });
+
+  window.addEventListener('resize', fitStage);
+  renderAll();
+})();
+</script>
+</body>
+</html>
