@@ -254,7 +254,7 @@
       <dt>Data helper</dt><dd>A small service for one piece. It gets the data of that piece from the backends and returns it in one consistent shape. It is a <em>backend for frontend</em> (BFF).</dd>
       <dt>API description</dt><dd>A machine-readable list of what a backend accepts and returns, in OpenAPI format.</dd>
       <dt>The plan</dt><dd>One file, <code>decomposition.yaml</code>. It lists the proposed pieces and the evidence for each. The tools derive everything else from it.</dd>
-      <dt>The workspace</dt><dd>The review screen for product owners. It shows the plan on the real screens. It changes the plan only through named actions. When a person approves, it records the exact version of the plan.</dd>
+      <dt>The workspace</dt><dd>The tool where people review, discuss, shape and approve the plan. It shows the plan on the real screens. It changes the plan only through named actions. When a person approves, it records the exact version of the plan.</dd>
     </dl>
   </section>
 
@@ -296,8 +296,8 @@
 
             <rect x="668" y="34" width="190" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
             <text x="763" y="58" fill="var(--accent)">4 · people approve</text>
-            <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">review the plan on the real</text>
-            <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">screens, then approve it</text>
+            <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">discuss and shape the plan in</text>
+            <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">the workspace, then approve it</text>
 
             <rect x="668" y="176" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="763" y="200" fill="var(--ink)">5 · build the pieces</text>
@@ -501,97 +501,85 @@
   </section>
 
 
-  <!-- ============ STEP 4 + FIGMA ============ -->
+  <!-- ============ STEP 4 — the workspace ============ -->
   <section class="fig">
     <span class="fignum">Step 4 — people approve</span>
-    <h2>Review the plan on the real screens</h2>
+    <h2>Review, discuss and approve in the workspace</h2>
     <p class="claim">
-      A plan that is a list is hard to judge. So the tools make a review package. It has a
-      written summary. It also has each screen of the app with a coloured box around each
-      suggested piece. The package is a web page and a Figma page. The reviewer can approve the
-      plan. The reviewer can also rename, merge or split pieces, or move a file. Each change is a
-      named action. So everything that depends on it moves too. The tools check the plan again
-      immediately.
+      The workspace is the place where people agree on the plan. It shows the plan on the real
+      screens, with a coloured box around each piece. On the same screen, people read the
+      evidence and change the plan. They merge, split and rename pieces and move files. They
+      discuss the plan in comments and with the agent. Then they approve. One tool holds the
+      review, the conversation and the decision.
+    </p>
+    <p class="claim">
+      The workspace keeps no data of its own. Each action is a named action. So the tools check
+      it at once, and everything that depends on it moves too. The plan file stays the only
+      record. It also holds the comments, the questions and the approval.
+    </p>
+    <p class="claim">
+      The AI agent works in the same screen. A person can ask a question, for example "split
+      hazards out of cargo". The agent answers with suggested changes. The tools try each
+      suggestion on a copy of the plan. If a suggestion breaks the plan, the tools drop it and
+      show the reason. The other suggestions wait until a person accepts them. The agent is a
+      hosted model. It uses the coder plugin of the platform and an API key that the engineer
+      sets. Without a key, the rest of the workspace works in the same way.
     </p>
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 290" role="img" aria-label="Changes come from a reviewer using named actions, from the AI agent, and from the workspace, a review screen for product owners. They all change the one plan file. From the plan come the review package (a written summary, the screens with a box per piece as a web page and as a Figma page), and the pieces themselves.">
+        <svg viewBox="0 0 880 270" role="img" aria-label="People work in the workspace: they review, rename, merge, split, move files, comment and approve. The AI agent suggests changes, and a person accepts or rejects each one. All of this changes the one plan file, which the tools check after every change. From the plan come the review package for people outside the workspace (a written summary, the screens with a box per piece as a web page, and the same in Figma), and after approval, the pieces themselves.">
           <defs>
             <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
             </marker>
           </defs>
           <g font-size="10" text-anchor="middle">
-            <rect x="20" y="30" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="120" y="53" fill="currentColor">a reviewer</text>
-            <text x="120" y="70" font-size="8.5" fill="var(--ink-3)">rename, merge, split, move a file</text>
-            <rect x="20" y="116" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="120" y="139" fill="currentColor">the AI agent</text>
-            <text x="120" y="156" font-size="8.5" fill="var(--ink-3)">suggests names and fixes</text>
-            <rect x="20" y="202" width="200" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)" stroke-dasharray="4 3"/>
-            <text x="120" y="225" fill="currentColor">the workspace</text>
-            <text x="120" y="242" font-size="8.5" fill="var(--ink-3)">for product owners · one command</text>
+            <rect x="20" y="30" width="230" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="135" y="54" fill="var(--accent)">people, in the workspace</text>
+            <text x="135" y="74" font-size="8.5" fill="var(--ink-3)">review, rename, merge, split,</text>
+            <text x="135" y="88" font-size="8.5" fill="var(--ink-3)">move a file, comment, approve</text>
+            <rect x="20" y="146" width="230" height="64" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="135" y="170" fill="currentColor">the AI agent</text>
+            <text x="135" y="188" font-size="8.5" fill="var(--ink-3)">suggests changes; a person</text>
+            <text x="135" y="200" font-size="8.5" fill="var(--ink-3)">accepts or rejects each one</text>
 
-            <rect x="320" y="104" width="220" height="80" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
-            <text x="430" y="138" font-size="12" fill="var(--accent)">the plan</text>
-            <text x="430" y="158" font-size="8.5" fill="var(--ink-3)">one file, checked after every change</text>
+            <rect x="330" y="92" width="220" height="86" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="440" y="126" font-size="12" fill="var(--accent)">the plan</text>
+            <text x="440" y="146" font-size="8.5" fill="var(--ink-3)">one file, checked after every change</text>
+            <text x="440" y="160" font-size="8.5" fill="var(--ink-3)">with the comments and the approval</text>
 
-            <rect x="640" y="18" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="39" fill="var(--gen)">written summary</text>
-            <text x="750" y="55" font-size="8.5" fill="var(--ink-3)">pieces, reasons, risks, tests</text>
-            <rect x="640" y="82" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="103" fill="var(--gen)">screens with boxes</text>
-            <text x="750" y="119" font-size="8.5" fill="var(--ink-3)">a web page</text>
-            <rect x="640" y="146" width="220" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
-            <text x="750" y="167" fill="var(--gen)">the same, in Figma</text>
-            <text x="750" y="183" font-size="8.5" fill="var(--ink-3)">one frame per screen</text>
-            <rect x="640" y="210" width="220" height="56" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
-            <text x="750" y="232" fill="currentColor">after approval: the pieces</text>
-            <text x="750" y="248" font-size="8.5" fill="var(--ink-3)">built from the plan in step 5</text>
+            <rect x="650" y="14" width="210" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="755" y="35" fill="var(--gen)">written summary</text>
+            <text x="755" y="51" font-size="8.5" fill="var(--ink-3)">pieces, reasons, risks, tests</text>
+            <rect x="650" y="76" width="210" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="755" y="97" fill="var(--gen)">screens with boxes</text>
+            <text x="755" y="113" font-size="8.5" fill="var(--ink-3)">a web page</text>
+            <rect x="650" y="138" width="210" height="50" rx="2" fill="var(--gen-bg)" stroke="var(--gen)"/>
+            <text x="755" y="159" fill="var(--gen)">the same, in Figma</text>
+            <text x="755" y="175" font-size="8.5" fill="var(--ink-3)">one frame per screen</text>
+            <rect x="650" y="204" width="210" height="52" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>
+            <text x="755" y="226" fill="currentColor">after approval: the pieces</text>
+            <text x="755" y="242" font-size="8.5" fill="var(--ink-3)">built from the plan in step 5</text>
           </g>
           <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#d1)">
-            <path d="M220 58 C 270 58, 270 130, 314 134"/>
-            <path d="M220 144 L 314 144"/>
-            <path d="M220 230 C 270 230, 270 158, 314 154"/>
-            <path d="M540 128 C 590 128, 590 43, 634 43"/>
-            <path d="M540 138 L 634 107"/>
-            <path d="M540 150 L 634 171"/>
-            <path d="M540 160 C 590 160, 590 238, 634 238"/>
+            <path d="M250 72 C 290 72, 290 124, 324 128"/>
+            <path d="M250 178 C 290 178, 290 146, 324 142"/>
+            <path d="M550 120 C 600 120, 600 39, 644 39"/>
+            <path d="M550 130 L 644 101"/>
+            <path d="M550 140 L 644 163"/>
+            <path d="M550 150 C 600 150, 600 230, 644 230"/>
           </g>
         </svg>
       </div>
       <figcaption>
-        Each piece has its own colour in the boxes. Each box shows the name of the piece, its position on the screen and its backends. A dashed red box shows a hidden link, where one piece reads the data of another piece.
+        People change the plan in the workspace. The review package shows the plan to people who
+        are outside the workspace, for example in a pull request or in Figma. In the package, each
+        piece has its own colour. Each box shows the name of the piece, its position on the screen
+        and its backends. A dashed red box shows a hidden link, where one piece reads the data of
+        another piece.
       </figcaption>
     </figure>
-
-    <div class="must">
-      <b>It must</b>
-      <ul>
-        <li>Show each suggested piece on at least one real screen. Warn about each piece that no screen shows.</li>
-        <li>Keep the plan valid after each change. Refuse an invalid change and give the reason.</li>
-        <li>Work without the internet. The Figma page has its own screenshots.</li>
-        <li>Treat the approval of the plan as the decision. Do not build anything before it.</li>
-      </ul>
-    </div>
-
-    <h3>The workspace: the same review, for product owners</h3>
-    <p class="claim">
-      A product owner must not need to read a plan file or open a terminal. The workspace is a
-      screen that shows the plan on the real app, as below. The owner can merge or split pieces,
-      rename them, move a file, add comments and approve. The workspace keeps no data of its
-      own. Each click is one of the same named actions, so the tools check it in the same way.
-      The plan file stays the only record.
-    </p>
-    <p class="claim">
-      The AI agent also works there. A person can ask a question, for example "split hazards out
-      of cargo". The agent answers with suggested changes. The tools try each suggestion on a
-      copy of the plan. If a suggestion breaks the plan, the tools drop it and show the reason.
-      The other suggestions wait until a person accepts them. The agent is a hosted model. It
-      uses the coder plugin of the platform and an API key that the engineer sets. Without a key,
-      the rest of the workspace works in the same way.
-    </p>
 
     <p>
       <a href="workspace-prototype.html">Try a clickable prototype of the workspace.</a> It has
@@ -627,12 +615,16 @@
     </figure>
 
     <div class="must">
-      <b>The workspace must</b>
+      <b>It must</b>
       <ul>
-        <li>Keep no data of its own. After a reload, in a second tab or after a restart, it shows the same plan.</li>
+        <li>Show each suggested piece on at least one real screen. Warn about each piece that no screen shows.</li>
+        <li>Keep no data of its own. After a reload, in a second tab or after a restart, the workspace shows the same plan.</li>
         <li>Change the plan only through the named actions. Refuse an invalid change and give the reason.</li>
+        <li>Keep the conversation with the decision. Store comments, questions and answers in the plan.</li>
         <li>Hold each agent suggestion until a person accepts or rejects it. Show if the suggestion still works.</li>
         <li>Record who approved, when, and the exact version of the plan. A later change to the pieces makes the approval out of date. A comment does not.</li>
+        <li>Treat the approval of the plan as the decision. Do not build anything before it.</li>
+        <li>Make the review package without the internet. The Figma page has its own screenshots.</li>
         <li>Run on the own machine of the person.</li>
       </ul>
     </div>
