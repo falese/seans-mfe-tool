@@ -29,8 +29,9 @@ import type { CargoManifestOutputs, HazardSummaryOutputs } from './types';
  *
  */
 export class meridiancargoopsMFE extends AngularRemoteMFE {
-  constructor(manifest: any) {
-    super(manifest);
+  // `deps` is the base class's injection seam (telemetry, ws client, …); #349.
+  constructor(manifest: any, deps?: ConstructorParameters<typeof AngularRemoteMFE>[1]) {
+    super(manifest, deps);
   }
 
   // ---------------------------------------------------------------------------

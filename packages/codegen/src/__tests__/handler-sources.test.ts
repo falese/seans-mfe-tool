@@ -137,7 +137,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'),
       );
       expect(mfe!.content).toContain(`import { handlerRegistry } from './handler-registry';`);
-      expect(mfe!.content).toMatch(/super\(manifest,\s*\{\s*customHandlers:\s*handlerRegistry\s*\}\)/);
+      expect(mfe!.content).toMatch(/super\(manifest,\s*\{\s*\.\.\.deps,\s*customHandlers:\s*handlerRegistry\s*\}\)/);
     });
 
     it('suppresses the stub method for hooks with a source', async () => {
@@ -162,8 +162,8 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'),
       );
       expect(mfe!.content).not.toContain(`import { handlerRegistry }`);
-      // The plain constructor — no customHandlers argument — must remain.
-      expect(mfe!.content).toMatch(/super\(manifest\);/);
+      // No registry: deps are forwarded as given, with no customHandlers added.
+      expect(mfe!.content).toMatch(/super\(manifest,\s*deps\);/);
     });
   });
 
@@ -197,7 +197,7 @@ describe('codegen: manifest-declared handler sources (ADR-040)', () => {
         (f) => f.path === path.join(basePath, 'src', 'platform', 'base-mfe', 'mfe.ts'),
       );
       expect(mfe!.content).toContain(`import { handlerRegistry } from './handler-registry';`);
-      expect(mfe!.content).toMatch(/super\(manifest,\s*\{\s*customHandlers:\s*handlerRegistry\s*\}\)/);
+      expect(mfe!.content).toMatch(/super\(manifest,\s*\{\s*\.\.\.deps,\s*customHandlers:\s*handlerRegistry\s*\}\)/);
     });
 
     it('suppresses the stub method for Angular hooks with a source', async () => {

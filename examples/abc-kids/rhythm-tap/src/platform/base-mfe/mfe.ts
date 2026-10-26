@@ -62,8 +62,9 @@ import type { PlayGameOutputs, ShowCoverOutputs, GetGameInfoOutputs } from './ty
  *
  */
 export class abckidsrhythmtapMFE extends RemoteMFE {
-  constructor(manifest: any) {
-    super(manifest);
+  // `deps` is the base class's injection seam (telemetry, ws client, …); #349.
+  constructor(manifest: any, deps?: ConstructorParameters<typeof RemoteMFE>[1]) {
+    super(manifest, deps);
   }
 
   // ---------------------------------------------------------------------------
