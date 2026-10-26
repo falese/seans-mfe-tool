@@ -73,11 +73,12 @@ import { handlerRegistry } from './handler-registry';
  *<% }); %>
  */
 export class <%= className %> extends RemoteMFE {
-  constructor(manifest: any) {
+  // `deps` is the base class's injection seam (telemetry, ws client, …); #349.
+  constructor(manifest: any, deps?: ConstructorParameters<typeof RemoteMFE>[1]) {
 <% if (handlerSources && handlerSources.length > 0) { -%>
-    super(manifest, { customHandlers: handlerRegistry });
+    super(manifest, { ...deps, customHandlers: handlerRegistry });
 <% } else { -%>
-    super(manifest);
+    super(manifest, deps);
 <% } -%>
   }
 

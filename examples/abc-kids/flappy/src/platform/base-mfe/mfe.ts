@@ -64,8 +64,9 @@ import { handlerRegistry } from './handler-registry';
  *
  */
 export class abckidsflappyMFE extends RemoteMFE {
-  constructor(manifest: any) {
-    super(manifest, { customHandlers: handlerRegistry });
+  // `deps` is the base class's injection seam (telemetry, ws client, …); #349.
+  constructor(manifest: any, deps?: ConstructorParameters<typeof RemoteMFE>[1]) {
+    super(manifest, { ...deps, customHandlers: handlerRegistry });
   }
 
   // ---------------------------------------------------------------------------

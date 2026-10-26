@@ -73,7 +73,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "57ca55181dd79ea76c4b5ec8954847006b96eae9d6217fecebaaee80167cee8c"
+        "sha256": "1e46a2216d461a939666c399f01ed600f960d6549b36c7c0f6b5259acc397dae"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -166,7 +166,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "429aca7b0dab6f7f04189d165f13fb0d5f3b26bae5b5f0c3627db82f3934bf8b"
+        "sha256": "76e24e20641a418ea0f90006189a94bbcbcbd908df694a69628d3f8ba402a3cf"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -259,7 +259,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "85d1b2387b6c87b0e4923aff9003709ee7b9b1e889d5a6bc52c9e2ea12e13821"
+        "sha256": "4997344c516d52e52b5f0b6f909ad8efb88df03830ea5d40026075ea64265791"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -382,7 +382,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "407776a40e0933f92a60ab5fa0aa954cc3462286a9dc513617c08a4bc8f6d3bf"
+        "sha256": "bf85187f2080d84fc85b7fc1dbf7f04cefbe9b1f1e1f6af95792539b44642459"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -500,7 +500,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "3e0c72b5c6f481dbe0e747e4082db3e43d63dec5437fc68878c9df934c58dd4b"
+        "sha256": "ff1989687a13c46f989678e5c47bb32c8f35e781be01e563bf0b9b30c5a91176"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -591,7 +591,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "e4050ac08291eb4b9bd5348be0a3bffde313d18e3ff544719bee95daa523d0bc"
+        "sha256": "ab022877306d3893fc89351fe47d15da93c93eb9368ffcbb336de91d480bd046"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -689,7 +689,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "69d6fcf17658acee590dd30d1acb6a886d18d1eac270eaed008d6c423df181ed"
+        "sha256": "e8e596f6f358bd904a8ff4377fcf0b755a351e22bb69c6f614e9e720245fd1c3"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -782,7 +782,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "89a91da1fdf41e8a9beba6404ba165bf92093aacb7c5773b9045ab6b5db5bbcb"
+        "sha256": "7567c4420b2ebbe7269b38507c1c5ab5e6635af0cd4fb0c29c6b3872b15df084"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -875,7 +875,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "cca97c304ab1181afd0d3a54a15c743d805d9983f4a374dddd3c68c3a77c7c0f"
+        "sha256": "7d7015fd255fc7d220422563a64415fec7777c7d44e89c9f55eb97d74b570b89"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -998,7 +998,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "2b54bbe5689062a5899d5c458de648982d0d8cd4474bd7db926fa63e7f75d92a"
+        "sha256": "9b6fea5ba95fcb5980fdc3266c5165c5de28e5997607b7e80798edff7c2d8948"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1131,7 +1131,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "b0d2bfbf7a0331600957be09c4751dcb3501a07f533e52218787d58c31a41e7f"
+        "sha256": "86851002a5d70860cf052c7ebe496460919268b6ac9b4753499deaa90948ceb8"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1224,7 +1224,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "dfe9bcf1117a46956c11c22e06805d4db8d456ae44c088e04ea5ee6013679f91"
+        "sha256": "746d169bc37ae6b34f2b447c2bc72f07dc94c580811531736e710920f93e32f2"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1317,7 +1317,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "b88a1c64f8a479399354cf9c83490b9aff757f62fcb08e903f42cebd930b82a8"
+        "sha256": "0a0b582023b295d82d61d7d05521fc8702f6330afc7fc26e7102cbdf25c69bdb"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1410,7 +1410,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "1872cfe1280c44dcdf9c9d4a9fe8d508467716b6c3cb3ee57adfb7377850e469"
+        "sha256": "101c695e2568d8615525f9622aefcd1fb883d63fb9a8e127488f0ad74982b439"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1532,7 +1532,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "747cd1d99231e27de268fc99fe55ab9eda3d6de7bb4467ff3b71d95e35293390"
+        "sha256": "b2bdc60c214b7d496018723bb1f1a12ea9fe7087ac795894b0ad29ba475765c5"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1688,7 +1688,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "11d2ceb6c370b0a1d6045a12dde44b6c007fb23e45f7bda949f30c791eb0595e"
+        "sha256": "849f592cc99ce8b6924954ba05d4fc9dcb40c6e058d0e9871f15a3d3d78e0cd8"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -1804,7 +1804,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "a8ffdc06b1dbd7291684f2e805db0b181ecd63ec8cc9d0281ae17ed73530134d"
+        "sha256": "d41b39044c0bc94a8de2432a2e81e3d2f39ae5f34464a5f97ef3ee79f2b3ecb8"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2076,7 +2076,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "0da8d377ffa903c1c5bc1be0ab30a6cc2320e5e8396bc861159f12a95b3cb6b2"
+        "sha256": "22b6054ccff391db5c74d0c77dd6c18d18a87be28a0e1a80aada3bdf731d69cc"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2324,7 +2324,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "5eea2177123a37339fe247eebcb2c13eb603343751332fa4b9762e9e70bc5591"
+        "sha256": "f5fa8032b82c4602bf6ea16774ddd312da646682476f7d321c970b492263f589"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2481,7 +2481,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "90295447a61de254531bf867c8c43bf62d4adaccd9d1692c14841cc9003ab238"
+        "sha256": "b9a44b87d4accac7c29995c35f5eeb1beeb330dff4db7cc07401c7c6ba401a77"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
@@ -2629,7 +2629,7 @@
       {
         "path": "<cwd>/src/platform/base-mfe/mfe.ts",
         "overwrite": true,
-        "sha256": "dafea7ca76b3b01de532f548840d724d379b1ecd3b455d8fbab152cd91984097"
+        "sha256": "df6c5a376416090ff987e6b72b64a6a99d689eea54f977c115d6f10084e05848"
       },
       {
         "path": "<cwd>/src/platform/base-mfe/types.ts",
