@@ -808,9 +808,7 @@
 
     <p class="vs-note">
       <strong>Many teams, one platform standard, one product.</strong> Teams building independently is
-      the goal, not the problem. They don't have to build everything the same way. They only have to
-      agree on the standard that lets their capabilities work together: each team decides <em>what</em>
-      it builds, and everyone agrees on <em>how</em> it connects.
+      the goal, not the problem. They don't have to build everything the same way. They agree on one standard so that their capabilities work together. Each team decides <em>what</em> it builds. Everyone agrees on <em>how</em> it connects.
     </p>
   </section>
 
@@ -839,8 +837,7 @@
           <span class="promise-n">Promise 02</span>
           <h3>One platform standard</h3>
           <p>
-            Every capability, whoever built it, offers the same ten abilities in the same order, names
-            screen spaces with the same grammar, and fails in the same describable ways.
+            Every capability offers the same ten abilities in the same order. All capabilities name screen spaces with the same grammar. They fail in the same describable ways, whoever built them.
           </p>
           <p class="paths">packages/contracts/ · packages/runtime/src/base-mfe.ts · slot-grammar.ts</p>
         </article>
@@ -1148,9 +1145,7 @@
         </svg>
       </div>
       <figcaption>
-        The middle strip is the platform contract. Because every capability provides the same three things,
-        the build system can create them independently and the runtime can compose them without knowing
-        anything about how any of them was made.
+        The middle strip is the platform contract. Every capability provides the same three things. So the build system can create each capability alone. The runtime can compose them and does not need to know how they were made.
       </figcaption>
     </figure>
   </section>
@@ -1201,7 +1196,7 @@
           <div class="stage-n" aria-hidden="true">2</div>
           <p class="stage-phase">Capability definition</p>
           <h3>The team writes the capability definition</h3>
-          <p>One short file describes the capability: what it offers, what data it needs, what technology it is written in, and which named spaces it can appear in. <strong>This file is the source of truth for what the capability is meant to do.</strong> It says nothing about live data, what is deployed, or what a customer currently sees.</p>
+          <p>One short file describes the capability. It lists what the capability offers, what data it needs, what technology it uses, and which named spaces it can fill. <strong>This file is the source of truth for what the capability is meant to do.</strong> It says nothing about live data, what is deployed, or what a customer currently sees.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
             <p>One definition declares three capabilities (a full docking board, a single berth tile and a traffic log) and the two backend systems it reads from. It states that the team writes Angular.</p>
@@ -1252,7 +1247,7 @@
           <div class="stage-n" aria-hidden="true">5</div>
           <p class="stage-phase">Platform standard</p>
           <h3>It meets the platform standard</h3>
-          <p>The generated wrapper makes the capability predictable to the rest of the platform: a system that knows nothing about how it was built can start, show, refresh, health-check, describe and query it, in a defined order and with defined failures.</p>
+          <p>The generated wrapper makes the capability predictable. A system that knows nothing about how it was built can start it, show it, refresh it, check its health, describe it and query it. Each action has a defined order and defined failures.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
             <p>An Angular capability that the runtime drives exactly the way it drives a React one. The platform never needs to know it is Angular.</p>
@@ -1289,12 +1284,12 @@
           <p>A rule in the product's own composition document, outside every capability, states which capability appears, in which named space and under which conditions. Changing what the product shows means editing a rule, and no team has to ship code.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>One rule covers all six berths: when the console asks for a berth, place a berth tile in the space named after that berth, and pass it the berth identifier.</p>
+            <p>One rule covers all six berths. When the console asks for a berth, the rule places a berth tile in the space with that berth's name. It passes the berth identifier to the tile.</p>
             <p class="paths">examples/meridian-station/control-plane/control-plane.yaml → rules.json (generated)</p>
           </div>
           <div class="concrete" data-feature="letterpop">
             <span class="lbl">For Letter Pop</span>
-            <p>One rule covers all thirteen games: when the arcade opens a game, place that game's play capability into the arcade's main space, and its cover into the information space.</p>
+            <p>One rule covers all thirteen games. When the arcade opens a game, the rule places the play capability of that game in the main space of the arcade. It places the cover in the information space.</p>
             <p class="paths">examples/abc-kids/control-plane/control-plane.yaml → rules.json (generated)</p>
           </div>
         </li>
@@ -1303,7 +1298,7 @@
           <div class="stage-n" aria-hidden="true">8</div>
           <p class="stage-phase">Runtime</p>
           <h3>The runtime composes it into the product</h3>
-          <p>No one builds the screen directly. A host publishes empty named spaces; the composition rules resolve which capability belongs in each; the runtime places them as they arrive, waits for spaces that are not open yet, and keeps the rest of the screen working if one capability fails.</p>
+          <p>No one builds the screen directly. A host publishes empty named spaces. The composition rules decide which capability belongs in each space. The runtime places each capability as it arrives. It waits for spaces that are not open. If one capability fails, the rest of the screen keeps working.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
             <p>The station console publishes three kinds of space: a main work area, a status rail, and one space per berth. Six tiles from one capability fill six of those spaces independently.</p>
@@ -1323,7 +1318,7 @@
           <p>The customer sees none of this. They see a single, coherent product and have no way of telling how many teams, technologies or releases were involved.</p>
           <div class="concrete" data-feature="berth">
             <span class="lbl">For the berth tile</span>
-            <p>An operator sees one station console with a berth strip, a docking board, a traffic log, life support, cargo and crew, made from six independently released capabilities.</p>
+            <p>An operator sees one station console. It has a berth strip, a docking board, a traffic log, life support, cargo and crew. Six independently released capabilities make it.</p>
             <p class="paths">examples/meridian-station/shell/</p>
           </div>
           <div class="concrete" data-feature="letterpop">
@@ -1352,7 +1347,7 @@
       <article class="part" data-layer="intent">
         <p class="part-kind">Definition · foundational</p>
         <h3>Capability definition</h3>
-        <p class="part-what">A single short document per capability, written by the team that owns it, declaring what it does, what data it needs, and which spaces on a screen it can fill.</p>
+        <p class="part-what">One short document per capability. The team that owns the capability writes it. It states what the capability does, what data it needs, and which spaces on a screen it can fill.</p>
         <p class="part-why"><span>Why it matters</span> It is the source of truth for <em>what the capability is meant to do</em>. The code, the data service, the packaging and the validation are all derived from it, so the description and the shipped software cannot drift apart unnoticed. It is <em>not</em> the source of truth for runtime state, live data or what is currently deployed.</p>
         <p class="paths">packages/dsl/ · mfe-manifest.yaml (21 in the repository) · schemas/dsl/</p>
       </article>
@@ -1368,7 +1363,7 @@
       <article class="part" data-layer="build">
         <p class="part-kind">Build</p>
         <h3>Technology adapters</h3>
-        <p class="part-what">Small plug-ins that teach the build system a new front-end technology. Two ship today; adding a third is a new plug-in, not a change to the build system.</p>
+        <p class="part-what">Small plug-ins that teach the build system a front-end technology. The platform has adapters for React and Angular. Swift and Rust adapters add a native build to the same capability. A new adapter is a new plug-in. It is not a change to the build system.</p>
         <p class="part-why"><span>Why it matters</span> Teams can pick their own technology, and a choice made today does not turn into a platform-wide migration later. The framework field accepts any name rather than a fixed list.</p>
         <p class="paths">packages/framework-react/ · packages/framework-angular/ · src/framework/loader.ts</p>
       </article>
@@ -1376,7 +1371,7 @@
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
         <h3>The platform standard</h3>
-        <p class="part-what">Ten things every capability must be able to do (start up, show itself, refresh, check access, report health, describe itself, publish its data shape, answer a data question, raise an event, and report state upward), plus strict rules about the order they may happen in.</p>
+        <p class="part-what">Every capability must do ten things. It must start up, show itself, refresh, check access, report health and describe itself. It must also publish its data shape, answer a data question, raise an event and report state upward. Strict rules set the order of these actions.</p>
         <p class="part-why"><span>Why it matters</span> This agreement lets a system that knows nothing about a team or its technology operate the capability that team built. In the code it is the <em>platform contract</em>: ten platform capabilities on a shared base class.</p>
         <p class="paths">packages/contracts/ · packages/runtime/src/base-mfe.ts</p>
       </article>
@@ -1392,7 +1387,7 @@
       <article class="part" data-layer="runtime">
         <p class="part-kind">Run time</p>
         <h3>Runtime composition</h3>
-        <p class="part-what">Three cooperating parts: a <em>rules service</em> that resolves "this person did this" into "show that capability", a <em>message channel</em> that carries the request and the answer, and a <em>layout manager</em> that places the result into the right named space and keeps it healthy. In the code these are the control plane's registry and daemon, plus the runtime's layout manager.</p>
+        <p class="part-what">Three parts work together. A <em>rules service</em> changes "this person did this" into "show that capability". A <em>message channel</em> carries the request and the answer. A <em>layout manager</em> puts the result in the correct named space and keeps it healthy. In the code these are the control plane's registry and daemon, plus the runtime's layout manager.</p>
         <p class="part-why"><span>Why it matters</span> Decisions about what appears where live outside the capabilities, so they can change without any team shipping code. It is also the single point every screen depends on.</p>
         <p class="paths">packages/control-plane/ (registry + daemon) · packages/runtime/src/layout-manager.ts</p>
       </article>
@@ -1408,16 +1403,16 @@
       <article class="part" data-layer="data">
         <p class="part-kind">Run time</p>
         <h3>Data &amp; integration</h3>
-        <p class="part-what">Each capability gets its own small data service that sits in front of the company's real systems and returns data in one consistent shape, however inconsistent the sources are.</p>
+        <p class="part-what">Each capability gets its own small data service. The service sits in front of the real systems of the company. It returns data in one consistent shape, also when the sources are not consistent.</p>
         <p class="part-why"><span>Why it matters</span> Differences between the underlying systems stop at the data service and never reach the team building the capability. The reference product sits in front of systems that name the same thing in different ways and wrap their answers differently, to show that the translation works.</p>
         <p class="paths">packages/bff-plugin/ · src/commands/api.ts · examples/meridian-station/*/specs/</p>
       </article>
 
       <article class="part" data-layer="data">
-        <p class="part-kind">Run time · partly complete</p>
+        <p class="part-kind">Run time</p>
         <h3>Access &amp; identity</h3>
-        <p class="part-what">A place in the standard for every capability to check whether the current person may use it, a signature-verifying token handler in the runtime, and request identity carried into every data call.</p>
-        <p class="part-why"><span>Why it matters</span> The <em>place</em> for authorisation is designed and present at every boundary. The <em>policy</em> is not: the check that generated capabilities inherit approves everyone, and the data layer decodes the caller's token for identity without verifying it. Anyone planning a production rollout should treat it as designed but unfinished.</p>
+        <p class="part-what">The standard has a place for each capability to check if the current person may use it. The runtime has a token handler that verifies signatures. Each data call carries the identity of the request.</p>
+        <p class="part-why"><span>Why it matters</span> The <em>place</em> for authorisation is present at every boundary. The <em>policy</em> comes from the team that adopts the platform. The check that generated capabilities inherit approves every request. The data layer reads the identity from the token and does not verify its signature. A production rollout must add its own authorisation policy.</p>
         <p class="paths">packages/runtime/src/handlers/auth.ts · doAuthorizeAccess() · platform/bff/mesh-context.js</p>
       </article>
 
@@ -1440,7 +1435,7 @@
       <article class="part" data-layer="build">
         <p class="part-kind">Guidance</p>
         <h3>Knowing what to run next</h3>
-        <p class="part-what">Most work in SMT takes several commands in a set order. <code>flow:status</code> looks at a working folder and lists which steps are done, which went out of date because something before them changed, and which are waiting on a person. It ends with the exact next command, with its details already filled in. The order is written down once per task, as data, and the decomposition task is the first one.</p>
+        <p class="part-what">Most work in SMT takes several commands in a set order. <code>flow:status</code> looks at a working folder. It lists which steps are done, which are out of date because an earlier step changed, and which wait for a person. It ends with the exact next command, with its details already filled in. The order is written down once per task, as data, and the decomposition task is the first one.</p>
         <p class="part-why"><span>Why it matters</span> Nobody has to remember the order or read it in the docs, and an AI assistant can ask instead of guessing. A step counts as out of date only when what it was built from really changed, so switching branches cannot fake it.</p>
         <p class="paths">src/commands/flow/ · flows/ · packages/flow/ · PDR-012 · ADR-119</p>
       </article>
@@ -1448,7 +1443,7 @@
       <article class="part" data-layer="contract">
         <p class="part-kind">Foundational</p>
         <h3>Governance &amp; drift control</h3>
-        <p class="part-what">Automated checks that regenerate every reference capability from its definition and fail if the shipped code has drifted; that confirm each definition agrees with its packaging; that keep recorded decisions and published documentation consistent with the code; and that warn teams when a platform change reaches files the platform does not own.</p>
+        <p class="part-what">Automated checks do four jobs. They regenerate each reference capability from its definition and fail if the shipped code differs. They confirm that each definition agrees with its packaging. They keep recorded decisions and published documentation consistent with the code. They warn teams when a platform change reaches files that the platform does not own.</p>
         <p class="part-why"><span>Why it matters</span> These checks keep 21 independently released capabilities consistent without a release train. One of them was added after a real incident, described in the trade-offs section.</p>
         <p class="paths">scripts/check-mfe-drift · check-mfe-consistency · check-adr · packages/codegen/src/platform-migrations.ts</p>
       </article>
@@ -1465,9 +1460,7 @@
           <h2 class="section-title wide">The detailed system map</h2>
           <p class="lede">
             Everything above, one level down, for architects and engineers. It tells the same story with the
-            same grouping by purpose, and this is where the repository's own names appear. Read it left to
-            right: who uses it, what they declare, what gets built, the platform standard everything
-            inherits, how capabilities are composed at run time, and where real data comes from. Use the
+            same grouping by purpose, and this is where the repository's own names appear. Read it from left to right. It shows who uses the platform and what they declare. It shows what the platform builds and the standard that everything inherits. It shows how the platform composes capabilities at run time. It shows where real data comes from. Use the
             legend to isolate one layer at a time.
           </p>
         </div>
@@ -1627,7 +1620,7 @@
 
               <rect class="card l-runtime" x="1096" y="372" width="230" height="112" rx="9"></rect>
               <text class="c-title s" x="1114" y="398">The layout manager</text>
-              <text class="c-desc"><tspan x="1114" y="420">Places each arriving capability in</tspan><tspan x="1114" y="436">its named space, waits for spaces</tspan><tspan x="1114" y="452">not yet open, and heals failures.</tspan></text>
+              <text class="c-desc"><tspan x="1114" y="420">Places each arriving capability in</tspan><tspan x="1114" y="436">its named space, waits for spaces</tspan><tspan x="1114" y="452">not open, and heals failures.</tspan></text>
               <text class="paths-t paths" x="1114" y="472">runtime/src/layout-manager.ts</text>
 
               <rect class="card l-runtime" x="1096" y="500" width="230" height="112" rx="9"></rect>
@@ -1705,9 +1698,7 @@
     <p class="kicker">Technical traceability</p>
     <h2 class="section-title wide">Where each idea is implemented</h2>
     <p class="lede">
-      Every concept on this page exists in the repository. Turn on
-      <strong>Show technical implementation</strong> in the bar at the top and repository paths appear
-      inside the diagrams, on every card and at every step of the walkthrough. The table below is the
+      Every concept on this page exists in the repository. Turn on <em>Show technical implementation</em> in the bar at the top. Repository paths then show inside the diagrams, on each card and at each step of the walkthrough. The table below is the
       short version, with the plain-English term on the left and the code on the right.
     </p>
 
@@ -1765,8 +1756,7 @@
           <span class="tag tag-fact">fact</span>
           <h3>Teams can work independently while still adhering to shared standards.</h3>
           <p>21 reference capabilities across two products, each with its own definition, its own container
-          image and its own address. Every one of them inherits the same lifecycle from the same base class,
-          and a drift check re-derives all 21 from their definitions on every change.</p>
+          image and its own address. Each one inherits the same lifecycle from the same base class. A drift check derives all 21 again from their definitions on every change.</p>
           <p class="paths">examples/*/mfe-manifest.yaml · scripts/check-mfe-drift.ts</p>
         </li>
         <li>
@@ -1780,8 +1770,7 @@
         <li>
           <span class="tag tag-fact">fact</span>
           <h3>Platform decisions are made once instead of by every team.</h3>
-          <p>Lifecycle order, timeout behaviour, retry policy, error classification, space naming and message
-          shape all live in one dependency-free foundation package that every other part depends on. A team
+          <p>One dependency-free foundation package holds the lifecycle order, timeout behaviour, retry policy, error classification, space naming and message shape. Every other part depends on this package. A team
           adopting the platform inherits all of it and decides none of it.</p>
           <p class="paths">packages/contracts/ · packages/runtime/</p>
         </li>
@@ -1796,9 +1785,7 @@
         <li>
           <span class="tag tag-fact">fact</span>
           <h3>Different implementation technologies participate through one contract.</h3>
-          <p>React and Angular capabilities are driven identically by the runtime, and the technology field
-          in a definition accepts any name rather than a fixed list, so an unknown value produces a warning
-          instead of an error. Supporting a third technology means adding a plug-in package; the build
+          <p>The runtime drives React and Angular capabilities in the same way. The technology field in a definition accepts any name and not a fixed list. An unknown value gives a warning, not an error. Supporting a third technology means adding a plug-in package; the build
           system and the platform standard stay as they are.</p>
           <p class="paths">packages/framework-{react,angular}/ · FrameworkSchema (open string)</p>
         </li>
@@ -1850,11 +1837,7 @@
         <span class="tag tag-cost">trade-off</span>
         <span class="tag tag-fact">fact</span>
         <h3>Governance is a permanent cost that needs people.</h3>
-        <p>Keeping 21 independently released capabilities consistent without a release train takes
-        ongoing work: drift checks, consistency checks, decision-record consistency checks,
-        generated-documentation checks, composition validation, and a schema regeneration gate. Several
-        of these must be run in a specific order, and at least one silently checks a stale build if the
-        packages were not rebuilt first.</p>
+        <p>To keep 21 independently released capabilities consistent without a release train, the team does ongoing work. The work includes drift checks, consistency checks, decision-record checks, generated-documentation checks, composition validation and a schema regeneration gate. Some of these checks must run in a specific order. At least one checks an old build, with no warning, if the packages were not rebuilt first.</p>
         <p><strong>An organisation adopting this inherits the checks as well as the platform.</strong>
         Without them, the independence the platform gives teams turns back into the fragmentation it was built to prevent.</p>
         <p class="paths">CLAUDE.md "Verification gates before push" · scripts/check-*.ts</p>
@@ -1864,8 +1847,7 @@
         <span class="tag tag-fact">fact</span>
         <h3>Everything depends on one foundation, so a change there reaches everything.</h3>
         <p>A single dependency-free package holds the shared standard, and every other part of the platform
-        depends on it. That keeps the design disciplined, but it also means a rename inside it can change
-        generated code in 21 capabilities with no runtime file anywhere in the diff. The project's own
+        depends on it. This keeps the design disciplined. It also means that a rename inside the package can change generated code in 21 capabilities with no runtime file in the change. The project's own
         memory file warns about exactly this.</p>
         <p>The benefit and the risk come from the same design. A contract that every capability shares
         cannot also be cheap to change.</p>
@@ -1880,25 +1862,24 @@
         state in memory with a time-based eviction, so a restart forgets which capabilities exist.
         Debugging also crosses boundaries: a problem may live in a capability, in a composition rule, in
         the layout manager, or in the connection between them.</p>
-        <p><strong>Durability and production operation of the control plane are still unfinished.</strong></p>
+        <p><strong>A production control plane needs durable storage for its state.</strong></p>
         <p class="paths">packages/control-plane/registry/simple-registry.js</p>
       </li>
       <li>
         <span class="tag tag-cost">trade-off</span>
         <span class="tag tag-inf">inference</span>
-        <h3>The standard has a designed hole where authorisation policy belongs.</h3>
+        <h3>The standard leaves authorisation policy to the team that adopts it.</h3>
         <p>Checking access is one of the ten standard abilities, and a signature-verifying token handler
         exists in the runtime. But the check that generated capabilities inherit approves everyone, and the
         data layer decodes the caller's token to extract an identity without verifying its signature.</p>
         <p>The reading here is that the <em>place</em> for authorisation is designed correctly and the
         <em>policy</em> is left to whoever adopts the platform. <strong>That is an inference
-        from the code, not a statement the repository makes.</strong> Either way, a production rollout
-        should treat authorisation as work not yet done.</p>
+        from the code, not a statement the repository makes.</strong> Either way, a production rollout must add its own authorisation policy.</p>
         <p class="paths">packages/runtime/src/handlers/auth.ts · <code>doAuthorizeAccess()</code> → true · platform/bff/mesh-context.js</p>
       </li>
     </ol>
 
-    <h3 class="sub">Two more things worth knowing before deciding</h3>
+    <h3 class="sub">Two more facts</h3>
     <ol class="obs">
       <li>
         <span class="tag tag-fact">fact</span>
@@ -1909,12 +1890,9 @@
       </li>
       <li>
         <span class="tag tag-inf">inference</span>
-        <h3>Maturity is uneven, and the project says so.</h3>
-        <p>The build side is described as complete; the run-time platform is still in progress; the shared
-        packages are not yet published for outside use; and packaging targets a local development container
-        rather than a production environment. The project's own status page warns that it drifts and points
-        to generated sources instead. <strong>It is a strong internal platform that is not yet ready for
-        outside use.</strong></p>
+        <h3>Maturity is different in the two systems.</h3>
+        <p>The project describes the build side as complete. The run-time platform has a reference implementation. The shared packages are not published for outside use. The packaging command targets a local development container, not a production environment. The project's own status page warns that it drifts and points
+        to generated sources instead. <strong>The platform is for internal use today.</strong></p>
         <p class="paths">docs/PROJECT-STATUS.md · docs/MERGE-PLAN.md</p>
       </li>
     </ol>
@@ -1943,28 +1921,10 @@
       </div>
       <!-- END GENERATED: repo-metrics -->
 
-      <h3 class="sub">Where the decisions stand</h3>
-      <p class="lede">
-        Every architecture decision is written down with its own status. This is a summary of that
-        register, generated from the decision files themselves so it always matches them. "Open" means a decision is written down and not yet ratified, or ratified and not yet
-        built; those are the ones worth asking about.
-      </p>
-      <!-- BEGIN GENERATED: decision-status -->
-      <div class="metrics">
-        <div class="metric"><b>83</b><span>Implemented — decided and built</span></div>
-        <div class="metric"><b>22</b><span>Accepted — decided, build outstanding</span></div>
-        <div class="metric"><b>10</b><span>Proposed — written down, not yet agreed</span></div>
-        <div class="metric"><b>1</b><span>Deferred — postponed on purpose</span></div>
-        <div class="metric"><b>4</b><span>Superseded — replaced by a later decision</span></div>
-      </div>
-      <!-- END GENERATED: decision-status -->
-
       <h3 class="sub">Why the demo products matter more than the counts</h3>
       <p class="lede">
         Both reference products are rebuilt from their definitions on every change and compared byte for
-        byte against what is committed. The second product was built to model messy real-world systems:
-        backends that name the same thing in different ways, wrap their answers differently, and have
-        gaps in their data. <span class="tag tag-inf">inference</span> That suggests the platform is being
+        byte against what is committed. The second product models messy real-world systems. Its backends name the same thing in different ways, wrap their answers in different ways, and have gaps in their data. <span class="tag tag-inf">inference</span> That suggests the platform is being
         tested against realistic conditions rather than a tidy demo.
       </p>
 
