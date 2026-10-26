@@ -125,15 +125,23 @@ const rows = [];
 for (const app of corpus.apps) {
   if (only && app.name !== only) continue;
   log(`\n===== ${app.name} (${app.stack})`);
-  const dir = path.join(work, 'src', app.name);
-  clone(app.repo, app.commit, dir);
-  const { file, from, to } = app.setup.replace;
-  const target = path.join(dir, file);
-  fs.writeFileSync(target, fs.readFileSync(target, 'utf8').replace(from, to));
-  const pkgFile = path.join(dir, 'package.json');
-  const pkg = JSON.parse(fs.readFileSync(pkgFile, 'utf8'));
-  pkg.proxy = `http://localhost:${corpus.backend.port}`;
-  fs.writeFileSync(pkgFile, `${JSON.stringify(pkg, null, 2)}\n`);
+  const repoDir = path.join(work, 'src', app.name);
+  clone(app.repo, app.commit, repoDir);
+  // `root` is the package inside the repo (a monorepo keeps its frontend in a subdirectory).
+  const dir = path.join(repoDir, app.root ?? '.');
+  for (const { file, from, to } of [app.setup.replace].flat()) {
+    const target = path.join(dir, file);
+    const text = fs.readFileSync(target, 'utf8');
+    if (!text.includes(from)) fail(`${app.name}: setup change not found in ${file}: ${from}`);
+    fs.writeFileSync(target, text.replace(from, to.replaceAll('{backend}', String(corpus.backend.port))));
+  }
+  // Create React App reads its dev proxy from package.json; a Vite app sets it in its config.
+  if (!app.start) {
+    const pkgFile = path.join(dir, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgFile, 'utf8'));
+    pkg.proxy = `http://localhost:${corpus.backend.port}`;
+    fs.writeFileSync(pkgFile, `${JSON.stringify(pkg, null, 2)}\n`);
+  }
   if (!fs.existsSync(path.join(dir, 'node_modules'))) run('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps'], { cwd: dir });
   // fsevents 1.x (CRA 1's watcher) is a native module current Node on macOS
   // can't load: "fsevents.watch is not a function". Without it chokidar falls
@@ -144,9 +152,11 @@ for (const app of corpus.apps) {
     fs.rmSync(fsevents, { recursive: true, force: true });
   }
   // Webpack 3/4 predate Node 17's OpenSSL 3.
-  const server = start(app.name, 'npm', ['start'], {
+  // `start` replaces `npm start`; {port} is filled in. Only the CRA-era apps need the OpenSSL flag.
+  const [startCmd, ...startArgs] = (app.start ?? ['npm', 'start']).map((a) => a.replaceAll('{port}', String(app.port)));
+  const server = start(app.name, startCmd, startArgs, {
     cwd: dir,
-    env: { ...process.env, BROWSER: 'none', PORT: String(app.port), NODE_OPTIONS: '--openssl-legacy-provider' },
+    env: { ...process.env, BROWSER: 'none', PORT: String(app.port), ...(app.start ? {} : { NODE_OPTIONS: '--openssl-legacy-provider' }) },
   });
   const url = `http://localhost:${app.port}`;
   await waitFor(url, server, app.name);

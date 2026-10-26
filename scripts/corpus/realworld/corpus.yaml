@@ -38,3 +38,15 @@ apps:
     port: 4200
     setup:
       replace: { file: src/config/settings.ts, from: "https://api.realworld.io/api/", to: "/api/" }
+  - name: conduit-modern
+    repo: TonyMckes/conduit-realworld-example-app
+    commit: 5e127d8569b300e0a21dc2c20ea680da4967b1aa
+    license: MIT
+    stack: React 19, React Router 7 (browser history), context + hooks, axios, JavaScript (Vite 7)
+    port: 4300
+    # The frontend lives in a subdirectory and ships its own Express/Postgres backend, which is
+    # not used: the same Go reference backend serves every app, so only the dev proxy changes.
+    root: frontend
+    start: [npm, run, dev, --, --port, "{port}", --strictPort]
+    setup:
+      replace: { file: vite.config.js, from: "http://localhost:3001", to: "http://localhost:{backend}" }
