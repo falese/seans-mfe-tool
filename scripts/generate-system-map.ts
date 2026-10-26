@@ -33,7 +33,6 @@ import { PLATFORM_CAPABILITIES } from '@seans-mfe/contracts';
 const REPO_ROOT = path.resolve(__dirname, '..');
 const PAGE = path.join(REPO_ROOT, 'docs', 'system-map.html');
 const METRICS_REGION = 'repo-metrics';
-const DECISIONS_REGION = 'decision-status';
 
 const exists = (p: string): boolean => fs.existsSync(p);
 
@@ -103,42 +102,6 @@ function render(metrics: readonly Metric[]): string {
   return ['      <div class="metrics">', rows, '      </div>'].join('\n');
 }
 
-/**
- * The decision register, rolled up by lifecycle tier.
- *
- * Read straight from each ADR's frontmatter — the source of truth under
- * ADR-075 — rather than from any hand-kept summary. An executive's question is
- * not "how many decisions exist" but "which are still open", so ratified-and-
- * built is one bucket and everything unfinished is broken out.
- */
-function decisionStatus(): { tier: string; count: number; note: string }[] {
-  const adrDir = path.join(REPO_ROOT, 'docs', 'architecture-decisions');
-  const statuses: string[] = [];
-  for (const file of fs.readdirSync(adrDir)) {
-    if (!/^ADR-\d+.*\.md$/.test(file)) continue;
-    const text = fs.readFileSync(path.join(adrDir, file), 'utf8');
-    const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
-    if (!frontmatter) continue;
-    const status = /^status:\s*(.+)$/m.exec(frontmatter[1]);
-    if (status) statuses.push(status[1].trim());
-  }
-  const count = (s: string): number => statuses.filter((x) => x === s).length;
-  return [
-    { tier: 'Implemented', count: count('Implemented'), note: 'decided and built' },
-    { tier: 'Accepted', count: count('Accepted'), note: 'decided, build outstanding' },
-    { tier: 'Proposed', count: count('Proposed'), note: 'written down, not yet agreed' },
-    { tier: 'Deferred', count: count('Deferred'), note: 'postponed on purpose' },
-    { tier: 'Superseded', count: count('Superseded'), note: 'replaced by a later decision' },
-  ].filter((row) => row.count > 0);
-}
-
-function renderDecisions(rows: readonly { tier: string; count: number; note: string }[]): string {
-  const cells = rows
-    .map((r) => `        <div class="metric"><b>${r.count}</b><span>${r.tier} — ${r.note}</span></div>`)
-    .join('\n');
-  return ['      <div class="metrics">', cells, '      </div>'].join('\n');
-}
-
 /** Replace the content between the markers, leaving the authored prose alone. */
 function splice(text: string, body: string, region: string): { text: string; changed: boolean } {
   const begin = `<!-- BEGIN GENERATED: ${region} -->`;
@@ -156,12 +119,8 @@ function main(): void {
   const check = process.argv.includes('--check');
   const current = fs.readFileSync(PAGE, 'utf8');
   const metrics = measure();
-  const decisions = decisionStatus();
 
-  const first = splice(current, render(metrics), METRICS_REGION);
-  const second = splice(first.text, renderDecisions(decisions), DECISIONS_REGION);
-  const text = second.text;
-  const changed = first.changed || second.changed;
+  const { text, changed } = splice(current, render(metrics), METRICS_REGION);
 
   if (check) {
     if (changed) {
@@ -170,17 +129,13 @@ function main(): void {
       console.error('\nRun: npm run build:system-map  (then commit the result)');
       process.exit(1);
     }
-    console.log(
-      `OK    docs/system-map.html — ${metrics.length} measured counts and ` +
-        `${decisions.length} decision tiers match.`,
-    );
+    console.log(`OK    docs/system-map.html — ${metrics.length} measured counts match.`);
     return;
   }
 
   fs.writeFileSync(PAGE, text);
   console.log(`${changed ? 'WROTE' : 'OK   '} docs/system-map.html`);
   for (const m of metrics) console.log(`  ${String(m.value).padStart(4)}  ${m.label}`);
-  for (const d of decisions) console.log(`  ${String(d.count).padStart(4)}  ${d.tier} — ${d.note}`);
 }
 
 main();
