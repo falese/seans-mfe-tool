@@ -203,6 +203,17 @@
   .pill.done { background: var(--gen-bg); color: var(--gen); }
   .pill.next { background: var(--dev-bg); color: var(--dev); }
   .pill.gate { background: var(--accent-bg); color: var(--accent); }
+  .pill.tool { background: var(--gen-bg); color: var(--gen); }
+  .pill.agent { background: var(--dev-bg); color: var(--dev); }
+  .pill.person { background: var(--accent-bg); color: var(--accent); }
+  .roles { margin: 1rem 0 0; display: grid; gap: 0.45rem; max-width: var(--measure); }
+  .roles > div { display: grid; grid-template-columns: 5.2rem 1fr; gap: 0.7rem; align-items: baseline; font-size: 0.93rem; }
+  @media (max-width: 560px) { .roles > div { grid-template-columns: 1fr; gap: 0.15rem; } }
+  .how { margin: 1rem 0 0; padding: 0.8rem 1rem 0.7rem; background: var(--surface); border: 1px solid var(--rule); max-width: var(--measure); }
+  .how > b { font-family: var(--display); font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 0.35rem; }
+  .how ol { margin: 0; padding-left: 1.25rem; }
+  .how li { margin: 0 0 0.35rem; font-size: 0.93rem; }
+  .how .eg { margin: 0.6rem 0 0; font-size: 0.9rem; color: var(--ink-2); }
   .io { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 1.1rem 0 0; }
   @media (max-width: 680px) { .io { grid-template-columns: 1fr; } }
   .io div { background: var(--surface); border: 1px solid var(--rule); padding: 0.7rem 0.85rem; font-size: 0.92rem; }
@@ -253,6 +264,8 @@
       <dt>Backend</dt><dd>A service that supplies data to the screens.</dd>
       <dt>Data helper</dt><dd>A small service for one piece. It gets the data of that piece from the backends and returns it in one consistent shape. It is a <em>backend for frontend</em> (BFF).</dd>
       <dt>API description</dt><dd>A machine-readable list of what a backend accepts and returns, in OpenAPI format.</dd>
+      <dt>Tools</dt><dd>Code that follows fixed rules. The same input always gives the same output. No model runs inside the tools.</dd>
+      <dt>Agent</dt><dd>An AI assistant that makes judgment calls, for example a name or a split. It uses the same commands as a person, or it is the hosted model in the workspace. The tools check each result.</dd>
       <dt>The plan</dt><dd>One file, <code>decomposition.yaml</code>. It lists the proposed pieces and the evidence for each. The tools derive everything else from it.</dd>
       <dt>Bundle</dt><dd>The folder of data that steps 1 to 3 produce: the recording, the map of the code, the plan and the screens. Apps and tools read it.</dd>
       <dt>Publish</dt><dd>Send the plan and its evidence to the workspace.</dd>
@@ -274,7 +287,7 @@
 
     <figure>
       <div class="frame">
-        <svg viewBox="0 0 880 300" role="img" aria-label="Eight steps in two rows: watch the app, read the code, suggest the pieces, people approve, build the pieces, move the code, switch over one at a time, check nothing changed. A person approves in step 4. A person signs off in step 8.">
+        <svg viewBox="0 0 880 300" role="img" aria-label="Eight steps in two rows: watch the app, read the code, suggest the pieces, people approve, build the pieces, move the code, switch over one at a time, check nothing changed. A person approves in step 4 and signs off in step 8. Tools do most of the work. An agent helps in steps 3, 4, 5 and 6.">
           <defs>
             <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <polygon points="0,0 10,5 0,10" fill="currentColor"/>
@@ -285,41 +298,49 @@
             <text x="115" y="58" fill="var(--ink)">1 · watch the app</text>
             <text x="115" y="80" font-size="8.5" fill="var(--ink-3)">use it like a person would,</text>
             <text x="115" y="94" font-size="8.5" fill="var(--ink-3)">record everything it does</text>
+            <text x="115" y="110" font-size="8.5" fill="var(--gen)">tools</text>
 
             <rect x="236" y="34" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="331" y="58" fill="var(--ink)">2 · read the code</text>
             <text x="331" y="80" font-size="8.5" fill="var(--ink-3)">which screen uses which</text>
             <text x="331" y="94" font-size="8.5" fill="var(--ink-3)">files and which data</text>
+            <text x="331" y="110" font-size="8.5" fill="var(--gen)">tools</text>
 
             <rect x="452" y="34" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="547" y="58" fill="var(--ink)">3 · suggest the pieces</text>
             <text x="547" y="80" font-size="8.5" fill="var(--ink-3)">a plan, with the reasons</text>
             <text x="547" y="94" font-size="8.5" fill="var(--ink-3)">for every cut</text>
+            <text x="547" y="110" font-size="8.5" fill="var(--dev)">tools · agent can refine</text>
 
             <rect x="668" y="34" width="190" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
             <text x="763" y="58" fill="var(--accent)">4 · people approve</text>
             <text x="763" y="80" font-size="8.5" fill="var(--ink-3)">discuss and shape the plan in</text>
             <text x="763" y="94" font-size="8.5" fill="var(--ink-3)">the workspace, then approve it</text>
+            <text x="763" y="110" font-size="8.5" fill="var(--accent)">people decide · tools check</text>
 
             <rect x="668" y="176" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="763" y="200" fill="var(--ink)">5 · build the pieces</text>
             <text x="763" y="222" font-size="8.5" fill="var(--ink-3)">an empty piece per area,</text>
             <text x="763" y="236" font-size="8.5" fill="var(--ink-3)">plus the monolith as one piece</text>
+            <text x="763" y="252" font-size="8.5" fill="var(--dev)">tools · agent wraps</text>
 
             <rect x="452" y="176" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="547" y="200" fill="var(--ink)">6 · move the code</text>
             <text x="547" y="222" font-size="8.5" fill="var(--ink-3)">screens and good tests move</text>
             <text x="547" y="236" font-size="8.5" fill="var(--ink-3)">into their new piece</text>
+            <text x="547" y="252" font-size="8.5" fill="var(--dev)">agent · tools check</text>
 
             <rect x="236" y="176" width="190" height="84" rx="2" fill="var(--surface-2)" stroke="var(--ink-3)"/>
             <text x="331" y="200" fill="var(--ink)">7 · switch over</text>
             <text x="331" y="222" font-size="8.5" fill="var(--ink-3)">one screen area at a time,</text>
             <text x="331" y="236" font-size="8.5" fill="var(--ink-3)">monolith to new piece</text>
+            <text x="331" y="252" font-size="8.5" fill="var(--gen)">tools · people approve</text>
 
             <rect x="20" y="176" width="190" height="84" rx="2" fill="var(--accent-bg)" stroke="var(--accent)" stroke-width="1.6"/>
             <text x="115" y="200" fill="var(--accent)">8 · check nothing changed</text>
             <text x="115" y="222" font-size="8.5" fill="var(--ink-3)">after every switch. A person</text>
             <text x="115" y="236" font-size="8.5" fill="var(--ink-3)">signs off at the end</text>
+            <text x="115" y="252" font-size="8.5" fill="var(--gen)">tools · people sign off</text>
           </g>
           <g stroke="currentColor" fill="none" stroke-opacity="0.6" marker-end="url(#p1)">
             <path d="M210 76 L 230 76"/>
@@ -337,11 +358,57 @@
       </div>
       <div class="key">
         <span><i class="swatch" style="background:var(--accent)"></i>a person approves</span>
+        <span><i class="swatch sw-gen"></i>tools do the work</span>
+        <span><i class="swatch sw-dev"></i>an agent does the work</span>
       </div>
       <figcaption>
         Why use a recording and not the old tests? Monoliths rarely have good tests. The recording shows what the app really does.
       </figcaption>
     </figure>
+  </section>
+
+
+  <!-- ============ WHO DOES THE WORK ============ -->
+  <section class="fig">
+    <span class="fignum">Who does the work</span>
+    <h2>Tools repeat. An agent helps with judgment. People decide.</h2>
+    <p class="claim">
+      Each step has up to three kinds of worker. <em>Tools</em> do the work that must give the same
+      result every time. An <em>agent</em> helps where the work needs judgment, for example a
+      name or a split. <em>People</em> make the decisions. The tools check each result of the
+      agent before it counts.
+    </p>
+    <p class="claim">
+      Steps 1 and 2 need no agent. Step 3 gives the same draft with or without one. The agent
+      is optional in steps 1 to 4. It does real work in steps 5 and 6.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Step</th><th>Tools</th><th>Agent</th><th>People</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Watch the app</td><td>Drive the app, record it, and replay it</td><td>Can write journeys (optional)</td><td>Give the address of the app</td></tr>
+          <tr><td>2 · Read the code</td><td>Parse the code, make the map, sort the tests</td><td>None</td><td>None</td></tr>
+          <tr><td>3 · Suggest the pieces</td><td>Draft the pieces with fixed rules, score each clue, infer the API descriptions</td><td>Can rename, merge and split (optional)</td><td>None</td></tr>
+          <tr><td>4 · People approve</td><td>Show the plan, check every change, record the approval</td><td>Answers questions with suggestions (optional)</td><td>Shape the plan and approve it</td></tr>
+          <tr><td>5 · Build the pieces</td><td>Generate an empty piece and a data helper for each area</td><td>Makes the monolith run as one piece</td><td>Review</td></tr>
+          <tr><td>6 · Move the code</td><td>Run the checks of the repository</td><td>Moves the code and the tests into the new pieces</td><td>Review each change</td></tr>
+          <tr><td>7 · Switch over</td><td>Change one placement, run the step 8 check, undo a switch that fails</td><td>None</td><td>Approve each switch</td></tr>
+          <tr><td>8 · Prove parity</td><td>Replay the journeys and compare</td><td>None</td><td>Sign off</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="must">
+      <b>The rules that keep the agent safe</b>
+      <ul>
+        <li>An agent never writes the files that the platform generates. It writes only the files that developers own.</li>
+        <li>The tools try each change of the agent on a copy of the plan. They drop a change that breaks the plan and show the reason.</li>
+        <li>Nothing is built before a person approves the plan.</li>
+        <li>Each switch in step 7 passes the step 8 check and has its own pull request.</li>
+        <li>The key for the hosted model comes from the environment only. A person can switch the agent off.</li>
+      </ul>
+    </div>
   </section>
 
 
@@ -356,6 +423,22 @@
       is on the screen, which code drew each part, which data the screen asked for, and any
       errors. It also saves a screenshot.
     </p>
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Drive the app in a browser and record it. The same journeys always give the same recording.</span></div>
+      <div><span class="pill agent">Agent</span><span>Can write journeys from the route table and the forms. This is optional.</span></div>
+      <div><span class="pill person">People</span><span>Give the address of the app. Write journeys if you want to.</span></div>
+    </div>
+    <div class="how">
+      <b>How it works</b>
+      <ol>
+        <li>Someone starts the monolith in development mode and gives its address to the tools.</li>
+        <li>The tools open the app in a browser, like a user. They run each journey. Then they follow links alone.</li>
+        <li>After each step, the tools write down what the screen shows. They note which code drew each area.</li>
+        <li>They also write down each question that the screen sent to a backend, and each answer.</li>
+        <li>They freeze the clock and keep the answers. A later run can then replay the same session.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> On the reference app, the capture finds that the docking board and the traffic log both ask the harbormaster backend for docking data.</p>
+    </div>
     <div class="io">
       <div><b>Goes in</b>The running monolith, and optional journeys</div>
       <div><b>What happens</b>A browser clicks through the app. The clock is frozen, so dates do not change between runs</div>
@@ -386,6 +469,21 @@
       screen uses but does not show. This is a hidden link between areas. A screenshot cannot
       show it.
     </p>
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Read the source code with a parser. The tools do not run the app. The same code always gives the same map.</span></div>
+      <div><span class="pill person">People</span><span>Nothing to do in this step.</span></div>
+    </div>
+    <div class="how">
+      <b>How it works</b>
+      <ol>
+        <li>The tools read each source file and the way that files import each other.</li>
+        <li>They find the routes. They decide which screen each file belongs to. A file that several screens use is shared.</li>
+        <li>They find each backend call in the code, also when a helper function hides it.</li>
+        <li>They match each call in the code to the calls in the recording.</li>
+        <li>They read the tests. They mark each test keep, rewrite or throw away, and give a reason.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> The hazard summary shows no docking data on screen, but the code reads it to filter. The recording cannot see this. The map shows it as a hidden link.</p>
+    </div>
     <div class="io">
       <div><b>Goes in</b>The source code of the app, and the recording from step 1</div>
       <div><b>What happens</b>The tools read the code and do not run it. Then they match the map to the recording</div>
@@ -415,6 +513,22 @@
       the same answer. This lets people check and repeat the result.
     </p>
 
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Draft the pieces with fixed rules. The same evidence always gives the same draft. They also write an API description for each backend.</span></div>
+      <div><span class="pill agent">Agent</span><span>Can make judgment calls: a name, a merge, a split, a file that the rules cannot place. Each call is a named edit that the tools check. This is optional.</span></div>
+      <div><span class="pill person">People</span><span>Nothing to do in this step. You review the result in step 4.</span></div>
+    </div>
+    <div class="how">
+      <b>How it works</b>
+      <ol>
+        <li>Each screen that fills the main area starts a piece. The files that only that screen uses join it.</li>
+        <li>The files that only the entry of the app uses form the shell.</li>
+        <li>A file that is left joins the piece that supplies at least half of the data that it reads.</li>
+        <li>A file that many pieces use gets a suggestion: split it, copy it, replace it with one data helper for each piece, or remove it.</li>
+        <li>The tools score each piece on six clues. A reviewer can then see why a line is in this place.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> On the reference app, the rules put 26 of 27 files in the correct piece. The agent fixes the last one: it moves the constants file to the console.</p>
+    </div>
     <figure>
       <div class="frame">
         <svg viewBox="0 0 880 270" role="img" aria-label="Six clues feed the suggestion: which screen, which data, which files import which, what the recording saw, which files change together, and who owns them. The result is the plan: pieces with a score per clue, shared files, hidden links, test sorting, and where each piece appears on screen.">
@@ -534,6 +648,23 @@
       sets. Without a key, the rest of the workspace works in the same way.
     </p>
 
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Show the plan on the real screens. Check every change at once. Record the approval.</span></div>
+      <div><span class="pill agent">Agent</span><span>Answers a question with suggested changes. A person accepts or rejects each one. This is optional.</span></div>
+      <div><span class="pill person">People</span><span>Shape the plan and approve it. This is the main step for a product owner.</span></div>
+    </div>
+    <div class="how">
+      <b>How it works</b>
+      <ol>
+        <li>The engineer publishes the plan and the evidence to the workspace.</li>
+        <li>You open the workspace. You see each screen of the app with a box around each piece.</li>
+        <li>You click a piece. You see its data, its files, and the reasons for its boundary.</li>
+        <li>You change the plan: rename a piece, merge two, split one, or move a file. The tools check each change at once.</li>
+        <li>You can ask the agent, for example "split hazards out of cargo". The tools try each suggestion on a copy. You accept or reject it.</li>
+        <li>You approve. The tools record who approved, when, and which version. A later change to the pieces makes the approval out of date.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> You rename the shell to console and approve. The name changes in every chip, box and label, and the approval names that version.</p>
+    </div>
     <figure>
       <div class="frame">
         <svg viewBox="0 0 880 330" role="img" aria-label="The engineer publishes the plan and the evidence bundle from the repository to the workspace, which runs on the engineer's machine or as a hosted service. People review, discuss, shape and approve there, and the AI agent suggests changes that a person accepts or rejects. The changes of people return to the repository, and the tools check each one again. From the plan in the repository come the review package (a written summary, the screens with a box per piece as a web page, and the same in Figma) and, after approval, the pieces themselves.">
@@ -725,6 +856,38 @@
       point that area at its new piece and not at the monolith. After each switch, step 8 checks
       that nothing changed. If something changed, the tools undo that one switch.
     </p>
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Generate the empty pieces. Change one placement at a time. Run the step 8 check. Undo a switch that fails.</span></div>
+      <div><span class="pill agent">Agent</span><span>Makes the monolith run as one piece. Moves the code and the tests into the new pieces. It writes only the files that developers own.</span></div>
+      <div><span class="pill person">People</span><span>Review and approve each pull request.</span></div>
+    </div>
+    <div class="how">
+      <b>Step 5 · how it works</b>
+      <ol>
+        <li>The tools read the approved plan. They generate an empty piece and a data helper for each area.</li>
+        <li>An agent changes the build of the monolith, so that the monolith also runs as one piece in the new shell.</li>
+        <li>The tools write a composition that places the monolith everywhere. At first, users see no difference.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> After this step, the shell shows the monolith as before. The new pieces exist but show nothing yet.</p>
+    </div>
+    <div class="how">
+      <b>Step 6 · how it works</b>
+      <ol>
+        <li>For one area, the agent moves its screens into the new piece.</li>
+        <li>The tests that are marked keep move with the screens. The agent writes new tests for the tests that are marked rewrite.</li>
+        <li>The agent never edits a generated file. The tools run the checks of the repository on the result.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> The cargo screens move into the cargo piece. The shell still shows the monolith.</p>
+    </div>
+    <div class="how">
+      <b>Step 7 · how it works</b>
+      <ol>
+        <li>The tools change one rule in the composition. The rule now places the new piece, and not the monolith, in one screen area.</li>
+        <li>They run the step 8 check against the recording.</li>
+        <li>If the check passes, the change goes into its own pull request. A person approves it. If it fails, the tools undo that one switch.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> The cargo manifest area now shows the cargo piece. Users see the same screen.</p>
+    </div>
     <div class="io">
       <div><b>Step 5 · build</b>An empty piece and data helper for each area in the plan. The monolith is also one piece. At first, each screen still shows the monolith.</div>
       <div><b>Step 6 · move</b>The code of each screen and the tests that are marked <em>keep</em> move into its piece. Tests that are marked <em>rewrite</em> get new tests that check behaviour.</div>
@@ -753,6 +916,20 @@
       changed.
     </p>
 
+    <div class="roles">
+      <div><span class="pill tool">Tools</span><span>Replay the journeys and compare. The same journeys and the same data give the same verdict.</span></div>
+      <div><span class="pill person">People</span><span>Sign off at the end.</span></div>
+    </div>
+    <div class="how">
+      <b>How it works</b>
+      <ol>
+        <li>The tools run the check on the monolith alone first. It must pass against itself.</li>
+        <li>They replay the journeys of step 1 against the new version, with the same frozen clock and the same recorded answers.</li>
+        <li>On each screen they compare four things: what is shown, which data is asked for, new errors, and how it looks.</li>
+        <li>They write a report: the same, or exactly what changed and in which screen area.</li>
+      </ol>
+      <p class="eg"><b>Example.</b> On the reference app, a change of one heading colour fails every step. The report names the area that drew it.</p>
+    </div>
     <figure>
       <div class="frame">
         <svg viewBox="0 0 880 250" role="img" aria-label="The recording from step 1 provides the journeys, the frozen clock and the recorded answers. The new version is driven through them. Four comparisons per screen: what is shown, what data is asked for, new errors, and how it looks. The result is a report: same, or exactly what changed.">
