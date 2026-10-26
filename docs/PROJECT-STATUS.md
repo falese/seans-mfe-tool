@@ -21,6 +21,10 @@ Read this before starting any new work. Then read `CLAUDE.md` for coding convent
 > fourteen stacked PRs; #455 then simplified them, #454). Steps 5–7 (scaffold, move, switch
 > over) are not built.
 >
+> **Backlog pass (2026-10-26).** Closed 23 issues that were finished or no longer planned: the
+> orchestration set (#17–#20), the Mesh TypeScript migration (#66, #70–#72), #25, #34, #38, #144,
+> #146, #147, #210, #291, #297, and the delivered #452, #442, #425, #204, #57, #58.
+>
 > **Currency note (2026-07-26).** Reconciled against the ADR register, the open
 > issue list, and the working tree. The June entry claimed the Runtime Platform
 > was the primary active stream; in practice the last two months were the slot
@@ -186,12 +190,12 @@ and this repo owns the canonical control plane.
 fleets; the two byte-identical copies are gone and each fleet keeps only its `rules.json`.
 
 **Still open:** persistence as a manifest field (§2), `platform:init` generating the shell plus
-its control plane in one command (§3), and generated registration blocks (§4). Absorbs #144.
+its control plane in one command (§3), and generated registration blocks (§4). Absorbs #144 (closed; rewritten into this epic).
 
 ### One fleet-description engine (#330)
 
 `explain` / `system:map` / `status` as renderings over a single pure `describe()` layer, rather
-than three discovery walks. Supersedes the approach in #146 and #147.
+than three discovery walks. Supersedes the approach in #146 and #147 (both closed).
 
 ### abc-kids → Meridian engineering-discipline parity (#289)
 
@@ -221,28 +225,21 @@ work landed via ADR-024/025/076 and the control-plane stream rather than through
 
 ---
 
-## 📋 Planned (no issues yet)
+## 📋 Planned
 
 ### Lifecycle Engine Enhancements
 
-**5 enhancements** to the lifecycle engine — all ADRs written, GitHub issues not yet created.
+**5 enhancements** to the lifecycle engine — all ADRs written; the three unbuilt ones are tracked as #63, #62 and #64.
 
 | Enhancement                | ADR     | Status                                                     |
 | -------------------------- | ------- | ---------------------------------------------------------- |
 | Timeout protection         | ADR-029 | ✅ Implemented — `packages/runtime/src/timeout-wrapper.ts`  |
 | Error classification       | ADR-030 | ✅ Implemented — `packages/contracts/src/error-classifier.ts` (note: its pattern branch is unreachable from the CLI path — tracked in #139) |
-| Parallel handler execution | ADR-028 | 📋 Proposed — no issue yet                                  |
-| Conditional execution      | ADR-031 | 📋 Proposed — no issue yet                                  |
-| Inter-hook communication   | ADR-032 | 📋 Proposed — no issue yet                                  |
+| Parallel handler execution | ADR-028 | 📋 Proposed — #63                                          |
+| Conditional execution      | ADR-031 | 📋 Proposed — #62                                          |
+| Inter-hook communication   | ADR-032 | 📋 Proposed — #64                                          |
 
-**Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)  
-**Issue templates ready:** see GitHub Issues in git history (archive removed from the tree; #239)
-
-To create issues:
-
-```bash
-# See docs/archive/planning/GITHUB-ISSUES-LIFECYCLE-ENHANCEMENTS.md for gh issue create commands
-```
+**Requirements doc:** [`docs/requirements/lifecycle-enhancements.md`](./requirements/lifecycle-enhancements.md)
 
 ---
 
