@@ -443,6 +443,31 @@
       </ol>
       <p class="eg"><b>Example.</b> On the reference app, the capture finds that the docking board and the traffic log both ask the harbormaster backend for docking data.</p>
     </div>
+    <div class="how">
+      <b>An example journeys file</b>
+      <p>A person can give a file like this to step 1. This file has run: it is the one that captured the RealWorld "Conduit" apps in the test corpus. Each journey starts in a fresh browser, and each line is one action. A selector can be any Playwright selector. The file is <code>scripts/corpus/realworld/journeys.yaml</code>.</p>
+      <div class="frame"><pre style="margin:0;font-size:12px;line-height:1.5;white-space:pre-wrap">journeys:
+  - name: browse
+    steps:
+      - goto: /
+      - wait: 300
+      - click: ".sidebar .tag-pill >> text=history"
+      - click: "text=Notes on the Analytical Engine"
+      - click: ".article-meta .author >> nth=0"
+      - click: "text=Favorited Articles"
+  - name: signed-in
+    steps:
+      - goto: /
+      - click: "nav >> text=Sign in"
+      - fill: { selector: "input[placeholder=Email]", value: "grace@conduit.test" }
+      - fill: { selector: "input[placeholder=Password]", value: "password123" }
+      - press: { selector: "input[placeholder=Password]", key: Enter }
+      - wait: 500
+      - click: "text=Your Feed"
+      - click: "nav >> text=Settings"
+      - click: "nav a[href$=editor]"</pre></div>
+      <p>The command that uses the file is <code>seans-mfe-tool decompose:capture http://localhost:4100 --journeys journeys.yaml</code>. The actions are <code>goto</code>, <code>click</code>, <code>fill</code>, <code>press</code> and <code>wait</code>. Without a file, the tools only explore links.</p>
+    </div>
     <div class="io two">
       <div><b>Goes in</b>The running monolith, and optional journeys</div>
       <div><b>Comes out</b>A <em>recording</em>: screens, screen areas, data requests and answers, errors and screenshots</div>
