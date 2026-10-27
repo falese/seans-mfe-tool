@@ -72,6 +72,7 @@ const PAGES = [
   'derived-contracts.html',
   'decomposition-architecture.html',
   'workspace-prototype.html',
+  'generator-in-ci.html',
 ];
 
 for (const page of PAGES) {

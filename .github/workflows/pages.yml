@@ -13,6 +13,7 @@
 #   /system-map.html               docs/system-map.html         — the system map
 #   /cli-architecture.html         docs/cli-architecture.html   — CLI schematics
 #   /derived-contracts.html        docs/derived-contracts.html  — how contracts are derived
+#   /generator-in-ci.html          docs/generator-in-ci.html    — the generator in the build and in CI
 #   /slides/platform-architecture.html|.pdf                 — the deck
 #   /media/*                       docs/media/*                 — the overview reel + poster
 #   /api/                          TypeDoc HTML (ADR-104)       — the API reference
@@ -39,6 +40,7 @@ on:
       - 'docs/derived-contracts.html'
       - 'docs/decomposition-architecture.html'
       - 'docs/workspace-prototype.html'
+      - 'docs/generator-in-ci.html'
       - 'docs/slides/**'
       - 'docs/media/**'
       # The API reference is generated from these (ADR-104).
@@ -63,6 +65,7 @@ on:
       - 'docs/derived-contracts.html'
       - 'docs/decomposition-architecture.html'
       - 'docs/workspace-prototype.html'
+      - 'docs/generator-in-ci.html'
       - 'docs/slides/**'
       - 'docs/media/**'
       # The API reference is generated from these (ADR-104).
