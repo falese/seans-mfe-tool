@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="How the seans-mfe-tool generator runs in the build of any MFE, and in each GitHub Actions workflow that exercises it.">
+<title>The generator in the build</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%231467C6%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2720.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2717%27%20width%3D%2721%27%20height%3D%274%27%20rx%3D%272%27%20fill%3D%27%238FC4FF%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2724%27%20width%3D%2721%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --paper:#F5F7F9; --surface:#FFFFFF; --surface-2:#EDF1F5; --ink:#131C26; --ink-2:#33424F;
+    --muted:#5A6B79; --rule:#DCE3EA; --rule-2:#C6D0DA; --accent:#1467C6;
+    --gen:#0A8272; --gen-bg:#DCECEF; --dev:#AE6B14; --dev-bg:#F6E8D3;
+    --bad:#B3261E; --bad-bg:#F8E1DF;
+    --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --shadow: 0 1px 2px rgba(19,28,38,.05), 0 6px 20px -12px rgba(19,28,38,.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0E141A; --surface:#161E27; --surface-2:#1D2732; --ink:#E7EDF3; --ink-2:#C0CCD8;
+      --muted:#93A3B1; --rule:#2A3440; --rule-2:#3A4855; --accent:#6CB2F7;
+      --gen:#4FC3B0; --gen-bg:#12302C; --dev:#E5A44F; --dev-bg:#38280F;
+      --bad:#F28B82; --bad-bg:#3A1F1D;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0E141A; --surface:#161E27; --surface-2:#1D2732; --ink:#E7EDF3; --ink-2:#C0CCD8;
+    --muted:#93A3B1; --rule:#2A3440; --rule-2:#3A4855; --accent:#6CB2F7;
+    --gen:#4FC3B0; --gen-bg:#12302C; --dev:#E5A44F; --dev-bg:#38280F;
+    --bad:#F28B82; --bad-bg:#3A1F1D;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 64px 24px 96px; }
+  .back { font-family:var(--mono); font-size:12px; letter-spacing:.08em; }
+  .back a { color:var(--muted); text-decoration:none; }
+  .back a:hover { color:var(--accent); }
+  .eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:28px 0 18px; }
+  h1 { font-family:var(--display); font-size:clamp(32px,5.2vw,48px); line-height:1.08; letter-spacing:-.028em; font-weight:700; margin:0 0 22px; max-width:20ch; text-wrap:balance; }
+  .standfirst { max-width:64ch; font-size:19px; color:var(--ink-2); margin:0 0 36px; }
+  h2 { font-family:var(--display); font-size:15px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:52px 0 16px; padding-top:22px; border-top:1px solid var(--rule); }
+  h3 { font-family:var(--display); font-size:19px; margin:28px 0 6px; letter-spacing:-.01em; }
+  p { margin:0 0 14px; max-width:68ch; }
+  a { color:var(--accent); }
+  code { font-family:var(--mono); font-size:.86em; background:var(--surface-2); padding:1px 5px; border-radius:4px; }
+  pre { font-family:var(--mono); font-size:13.5px; line-height:1.55; background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:14px 18px; overflow-x:auto; box-shadow:var(--shadow); margin:0 0 18px; }
+  pre code { background:none; padding:0; font-size:inherit; }
+  .callout { background:var(--surface); border:1px solid var(--rule); border-left:4px solid var(--accent); border-radius:10px; padding:16px 20px; margin:0 0 20px; box-shadow:var(--shadow); max-width:72ch; }
+  .callout p:last-child { margin-bottom:0; }
+  .callout b.k { font-family:var(--display); }
+  .grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; margin:0 0 20px; }
+  .tile { background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:18px 20px; box-shadow:var(--shadow); }
+  .tile b { display:block; font-family:var(--display); font-size:16px; margin-bottom:6px; }
+  .tile span { display:block; font-size:15.5px; color:var(--ink-2); }
+  .tile em { display:block; font-style:normal; font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:10px; }
+  .scroll { overflow-x:auto; margin:0 0 20px; border:1px solid var(--rule); border-radius:10px; background:var(--surface); box-shadow:var(--shadow); }
+  table { border-collapse:collapse; width:100%; font-size:15px; line-height:1.45; min-width:640px; }
+  th { font-family:var(--display); font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); text-align:left; padding:10px 14px; border-bottom:1px solid var(--rule-2); background:var(--surface-2); }
+  td { padding:10px 14px; border-bottom:1px solid var(--rule); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .tag { display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.04em; padding:1px 7px; border-radius:99px; white-space:nowrap; }
+  .tag.gen { background:var(--gen-bg); color:var(--gen); }
+  .tag.dev { background:var(--dev-bg); color:var(--dev); }
+  .tag.bad { background:var(--bad-bg); color:var(--bad); }
+  .tag.none { background:var(--surface-2); color:var(--muted); }
+  figure { margin:0 0 22px; }
+  figure svg { width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--rule); border-radius:12px; box-shadow:var(--shadow); }
+  figcaption { font-size:14px; color:var(--muted); margin-top:8px; max-width:72ch; }
+  svg text { font-family:var(--display); fill:var(--ink); }
+  svg .sm { font-size:11.5px; fill:var(--muted); }
+  svg .md { font-size:13px; font-weight:600; }
+  svg .mono { font-family:var(--mono); font-size:11.5px; }
+  svg .box { fill:var(--surface-2); stroke:var(--rule-2); stroke-width:1.2; }
+  svg .gbox { fill:var(--gen-bg); stroke:var(--gen); stroke-width:1.2; }
+  svg .dbox { fill:var(--dev-bg); stroke:var(--dev); stroke-width:1.2; }
+  svg .line { stroke:var(--muted); stroke-width:1.4; fill:none; }
+  svg .arrow { fill:var(--muted); }
+  ol.steps { counter-reset:s; list-style:none; padding:0; margin:0 0 20px; max-width:72ch; }
+  ol.steps li { counter-increment:s; position:relative; padding:0 0 14px 44px; }
+  ol.steps li::before { content:counter(s); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%; background:var(--accent); color:var(--paper); font-family:var(--display); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  ol.steps b { font-family:var(--display); }
+  footer { margin-top:56px; padding-top:20px; border-top:1px solid var(--rule); font-size:14px; color:var(--muted); }
+  footer a { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="back"><a href="index.html">&larr; seans-mfe-tool documentation</a></div>
+  <p class="eyebrow">System guide &middot; build and CI</p>
+  <h1>The generator in the build</h1>
+  <p class="standfirst">
+    Every MFE is described by one file, <code>mfe-manifest.yaml</code>. The generator turns that file
+    into the platform layer of the MFE. This page shows when it runs, which GitHub Actions workflow
+    runs it, and what each failing check means.
+  </p>
+
+  <h2>The short version</h2>
+  <div class="grid3">
+    <div class="tile">
+      <b>It runs first in every MFE build</b>
+      <span>An MFE's <code>build</code> script is <code>remote:generate</code>, then the bundler, then the BFF build. The platform layer is rebuilt from the manifest each time.</span>
+      <em>ADR-043</em>
+    </div>
+    <div class="tile">
+      <b>It splits files by owner</b>
+      <span>Generator-owned files are rewritten on every run. Developer-owned files are written once and then left alone.</span>
+      <em>ADR-082, ADR-091</em>
+    </div>
+    <div class="tile">
+      <b>CI proves both halves</b>
+      <span>The <code>Tests</code> workflow regenerates every example MFE and fails on any difference. The <code>Composition</code> workflow builds them for real.</span>
+      <em>test.yml, composition.yml</em>
+    </div>
+  </div>
+
+  <h2>1. What runs in one MFE's build</h2>
+  <p>A generated MFE carries this build script. Angular is the same with <code>ng build</code> in place of <code>rspack build</code>.</p>
+<pre><code>seans-mfe-tool remote:generate  &amp;&amp;  rspack build  &amp;&amp;  mesh build
+                                                  <span style="opacity:.6">(only if the manifest has a data: section)</span></code></pre>
+
+  <figure>
+    <svg viewBox="0 0 860 250" role="img" aria-label="The manifest feeds the generator, which writes generator-owned and developer-owned files; the bundler then builds dist.">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow"/></marker></defs>
+      <rect class="box" x="16" y="95" width="150" height="58" rx="8"/>
+      <text class="md" x="91" y="120" text-anchor="middle">mfe-manifest.yaml</text>
+      <text class="sm" x="91" y="138" text-anchor="middle">source of truth</text>
+
+      <rect class="box" x="226" y="70" width="190" height="108" rx="8"/>
+      <text class="md" x="321" y="94" text-anchor="middle">remote:generate</text>
+      <text class="sm" x="321" y="114" text-anchor="middle">1 validate  2 pick framework</text>
+      <text class="sm" x="321" y="130" text-anchor="middle">3 plan  4 render</text>
+      <text class="sm" x="321" y="146" text-anchor="middle">5 write, by owner</text>
+
+      <rect class="gbox" x="486" y="22" width="190" height="78" rx="8"/>
+      <text class="md" x="581" y="46" text-anchor="middle">Generator-owned</text>
+      <text class="sm" x="581" y="64" text-anchor="middle">platform/base-mfe, platform/bff,</text>
+      <text class="sm" x="581" y="80" text-anchor="middle">remote entry, public/</text>
+      <rect class="dbox" x="486" y="124" width="190" height="78" rx="8"/>
+      <text class="md" x="581" y="148" text-anchor="middle">Developer-owned</text>
+      <text class="sm" x="581" y="166" text-anchor="middle">features, App, package.json,</text>
+      <text class="sm" x="581" y="182" text-anchor="middle">bundler config</text>
+
+      <rect class="box" x="736" y="95" width="108" height="58" rx="8"/>
+      <text class="md" x="790" y="120" text-anchor="middle">bundler</text>
+      <text class="sm" x="790" y="138" text-anchor="middle">writes dist/</text>
+
+      <path class="line" d="M166 124H224" marker-end="url(#a1)"/>
+      <path class="line" d="M416 108L484 66" marker-end="url(#a1)"/>
+      <path class="line" d="M416 140L484 162" marker-end="url(#a1)"/>
+      <path class="line" d="M676 61L710 61L710 110L734 118" marker-end="url(#a1)"/>
+      <path class="line" d="M676 163L710 163L710 135L734 130" marker-end="url(#a1)"/>
+      <text class="sm" x="450" y="236" text-anchor="middle">Re-stamped every run (green)  &middot;  seeded once, then never overwritten (amber)</text>
+    </svg>
+    <figcaption>Order inside the build. The generator always comes before the bundler, so the bundler never sees a platform layer older than the manifest.</figcaption>
+  </figure>
+
+  <h3>Inside <code>remote:generate</code></h3>
+  <ol class="steps">
+    <li><b>Validate.</b> The manifest is checked, including its mesh plugin and transform settings (ADR-027). A bad manifest stops here and nothing is written.</li>
+    <li><b>Pick the framework.</b> One rule reads <code>framework</code>/<code>bundler</code> or <code>targets.web</code> (ADR-092). If neither is set, you get React with rspack. The CLI loads the matching framework plugin and passes its variant to the generator (ADR-036, ADR-061).</li>
+    <li><b>Plan.</b> Capabilities are sorted into the platform ones and your own. Lifecycle hooks are collected in order. A hook with a <code>source</code> is wired through a generated handler registry instead of an empty stub (ADR-040).</li>
+    <li><b>Render.</b> The variant supplies a list of files to emit. Each entry names a template, an output path and an owner (ADR-093). Plugins can add entries, such as the BFF files (ADR-094).</li>
+    <li><b>Write.</b> Generator-owned files are written every time. A developer-owned file that already exists is skipped and listed as <em>Kept</em>. <code>--force</code> is the only way to overwrite one, and it prints each file it replaced (ADR-091).</li>
+  </ol>
+  <p>Steps 1 to 4 never touch the disk. They return a list of files and a list of warnings. Only step 5 writes, and the CLI decides how to show the warnings.</p>
+
+  <h2>2. Which workflow runs it</h2>
+  <p>Four workflows in <code>.github/workflows/</code> matter here. Only two of them run the generator.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Workflow</th><th>Runs when</th><th>Runs the generator?</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td><b>Tests</b><br><code>test.yml</code></td><td>Push to <code>main</code> or <code>develop</code>. Pull requests into <code>main</code>, <code>develop</code> or <code>claude/**</code>.</td><td><span class="tag gen">yes, in 5 gates</span></td><td>Generated files match their manifests, the output is unchanged unless you meant it, and a fresh scaffold compiles.</td></tr>
+      <tr><td><b>Composition</b><br><code>composition.yml</code></td><td>Pull requests and pushes to <code>main</code> that touch templates, runtime, contracts, control plane or the Meridian and flappy examples. Also by hand.</td><td><span class="tag gen">yes, inside Docker</span></td><td>The generated MFEs build as images, start, and compose in a real browser.</td></tr>
+      <tr><td><b>Publish docs site</b><br><code>pages.yml</code></td><td>Changes to the HTML docs, the API reference sources, or the site scripts.</td><td><span class="tag none">no</span></td><td>This page: it publishes HTML. It does read <code>packages/codegen/src</code>, but only to build the API reference.</td></tr>
+      <tr><td><b>API docs</b><br><code>api-docs.yml</code></td><td>Changes under the contracts, runtime and dsl sources.</td><td><span class="tag none">no</span></td><td>The committed <code>docs/api</code> matches the source.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>3. The Tests workflow, step by step</h2>
+  <p>The <code>quality</code> job runs on Node 20. It installs, lints, typechecks and builds, then runs these gates in this order. The five that run the generator are marked.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Step name in CI</th><th>Command</th><th>Generator</th><th>It fails when</th></tr></thead>
+    <tbody>
+      <tr><td>Generated schemas are committed</td><td><code>git diff --exit-code schemas/</code></td><td><span class="tag none">no</span></td><td>A command flag changed and <code>npm run build</code> was not committed.</td></tr>
+      <tr><td>Manifest field reference is current</td><td><code>build:manifest-reference:check</code></td><td><span class="tag none">no</span></td><td>The manifest schema changed and the reference page was not regenerated.</td></tr>
+      <tr><td><b>MFE drift gate</b></td><td><code>check:mfe-drift:check</code></td><td><span class="tag gen">yes</span></td><td>A generator-owned file in an example MFE differs from a fresh generation. Also reports leftover generated files the manifest no longer produces.</td></tr>
+      <tr><td><b>Codegen behaviour freeze</b></td><td><code>build:codegen-snapshot:check</code></td><td><span class="tag gen">yes</span></td><td>Any file the generator emits, developer-owned included, differs from the committed baseline across both reference fleets.</td></tr>
+      <tr><td><b>Published packages can generate an MFE</b></td><td><code>check:publish-shape</code></td><td><span class="tag gen">yes</span></td><td>Packed tarballs, unpacked into an empty folder, cannot generate an MFE. For example, a package shipped without its templates.</td></tr>
+      <tr><td>Slot placement targets resolve</td><td><code>slots:validate</code></td><td><span class="tag none">no</span></td><td>A registry rule points at a slot no MFE declares.</td></tr>
+      <tr><td>Composition compiles</td><td><code>compose:validate --check</code></td><td><span class="tag none">no</span></td><td>The committed <code>rules.json</code> is not what <code>control-plane.yaml</code> compiles to.</td></tr>
+      <tr><td>MFE consistency gate</td><td><code>check:mfe-consistency</code></td><td><span class="tag none">no</span></td><td>Manifest, <code>package.json</code> and federation <code>shared</code> disagree, such as a wrong dependency version. Reads developer-owned files, which drift cannot see.</td></tr>
+      <tr><td>ADR, system map, contract and index checks</td><td><code>check:adr</code> and the <code>:check</code> builds</td><td><span class="tag none">no</span></td><td>A generated document disagrees with the repository.</td></tr>
+      <tr><td><b>Meridian regen invariant</b></td><td><code>examples/meridian-station/scripts/generate.mjs --check</code></td><td><span class="tag gen">yes</span></td><td>Re-running <code>remote:generate</code> across the Meridian fleet, plus its seeds, changes anything.</td></tr>
+      <tr><td><b>Template typecheck</b></td><td><code>check:template-typecheck</code></td><td><span class="tag gen">yes</span></td><td>A freshly scaffolded MFE, with a real <code>npm install</code>, does not typecheck against the runtime's public exports.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p><b class="k">Why drift and the snapshot are separate gates.</b> The drift gate compares generated bytes to what is on disk, and only for generator-owned files. The snapshot gate compares everything the generator emits to a baseline file. A change to a developer-owned template, such as <code>App.tsx.ejs</code>, passes drift and fails the snapshot. That is the intent: you review it as part of the change.</p>
+  </div>
+
+  <h3>Other jobs in the same workflow</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>Job</th><th>Environment</th><th>What it does with generated output</th></tr></thead>
+    <tbody>
+      <tr><td><code>swift</code></td><td>Container <code>swift:6.0</code></td><td>Builds and tests every generated <code>examples/**/swift</code> package. The SwiftUI views are compiled out on Linux, so they are not covered.</td></tr>
+      <tr><td><code>rust</code></td><td>Container <code>rust:1</code></td><td>Builds, tests, lints and format-checks every generated crate with warnings as errors, then re-tests on Rust 1.75, the version the crate declares.</td></tr>
+      <tr><td><code>rust-wasm</code></td><td>Ubuntu 24.04 runner</td><td>Builds the browser crates for WebAssembly and mounts each in Chromium through the runtime's shell adaptor.</td></tr>
+      <tr><td><code>test</code>, <code>e2e</code>, <code>perf</code>, <code>doc-links</code>, <code>adr-governance</code></td><td>Runner</td><td>Unit tests, browser tests, performance, link checks, and ADR review on pull requests. They do not run the generator directly.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The Swift and Rust jobs run in language containers because they need those toolchains and no Node. Each script is called with <code>--require</code>, so a missing toolchain fails the job. Without the flag the script skips and exits 0.</p>
+
+  <h2>4. The Composition workflow</h2>
+  <p>The Tests workflow checks files. This one checks that the files work together. It runs on Node 22 and finishes in this order:</p>
+  <ol class="steps">
+    <li><b>Build the CLI.</b> <code>npm run build</code>, then <code>npm run docker:build:cli</code>. The compiled <code>dist/</code> is baked into the CLI image.</li>
+    <li><b>Build five services, one at a time.</b> Registry, daemon, shell, <code>meridian-console</code> and <code>abc-kids-flappy</code>. Each image's build stage runs <code>npm run build</code>, which is where <code>remote:generate</code> runs again, using the CLI image. Building one at a time avoids the memory exhaustion that parallel builds cause.</li>
+    <li><b>Start the stack</b> and wait for each service to answer, up to five minutes each.</li>
+    <li><b>Register <code>rules.json</code></b> with the registry.</li>
+    <li><b>Drive the composition</b> in Chromium with Playwright, across two applications.</li>
+    <li><b>On failure,</b> upload the report and container logs, kept for seven days. The stack is always torn down.</li>
+  </ol>
+  <p>It is limited to paths that can change what gets built: templates, runtime, contracts, the React framework package, the control plane, the CLI Dockerfile, and the two example apps.</p>
+
+  <h2>5. What happens when you change something</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>You change</th><th>Checks that react</th><th>What you do</th></tr></thead>
+    <tbody>
+      <tr><td>A <strong>generator-owned</strong> template or the generator code</td><td>Drift, snapshot, Meridian regen, template typecheck, Swift/Rust if their packages changed, Composition</td><td>Run <code>npm run build:packages</code>, then <code>npm run check:mfe-drift</code> to rewrite the example files. Run <code>npm run build:codegen-snapshot</code> and review the diff. Commit both.</td></tr>
+      <tr><td>A <strong>developer-owned</strong> template, such as <code>App.tsx.ejs</code></td><td>Snapshot. Drift stays green.</td><td>Regenerate the snapshot and review it. Existing MFEs keep their old copy, so add a <code>PLATFORM_MIGRATIONS</code> entry in the same commit (ADR-082).</td></tr>
+      <tr><td>A pinned dependency version</td><td>MFE consistency. Drift stays green, because <code>package.json</code> is developer-owned.</td><td>Run <code>check:mfe-consistency</code> and fix the pins.</td></tr>
+      <tr><td>An example's <code>mfe-manifest.yaml</code></td><td>Drift, consistency, Meridian regen</td><td>Run <code>remote:generate</code> in that MFE and commit the result.</td></tr>
+      <tr><td>The runtime's public exports</td><td>Template typecheck, Composition</td><td>Run <code>npm run build</code> first. The gate checks the last build, not your source.</td></tr>
+      <tr><td>This page or another HTML doc</td><td>Publish docs site only</td><td>Nothing. It builds a preview artifact on a pull request and deploys on <code>main</code>.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>6. Reading a red check</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Symptom</th><th>Likely cause</th><th>First move</th></tr></thead>
+    <tbody>
+      <tr><td>Drift gate lists a file under <code>platform/</code></td><td>Someone edited a generator-owned file by hand, or a template changed without regenerating.</td><td><code>npm run check:mfe-drift</code>, then commit. Never keep a hand edit there.</td></tr>
+      <tr><td>Drift gate is red in CI, green on your machine</td><td>Stale build. The script resolves the codegen package to its compiled output.</td><td><code>npm run clean &amp;&amp; npm run build</code>, then rerun.</td></tr>
+      <tr><td>Snapshot gate shows a diff you did not expect</td><td>A template or generator change reached files you did not think about.</td><td>Read the diff. It is never noise. Regenerate only if it is intended.</td></tr>
+      <tr><td>Consistency gate fails on a version</td><td>A pin changed in the generator but the example's <code>package.json</code> still has the old one.</td><td>Update the example's dependencies, then rerun both consistency and drift.</td></tr>
+      <tr><td>Publish-shape fails with a missing template</td><td>A package does not list its templates in its published files.</td><td>Fix the package's <code>files</code> list.</td></tr>
+      <tr><td>Swift or Rust job fails on a type error</td><td>The emitted code does not compile. Text-based tests cannot see this.</td><td>Reproduce with <code>check:swift-build</code> or <code>check:rust-build</code> if you have the toolchain.</td></tr>
+      <tr><td>Composition fails at "ready"</td><td>An image built but the service did not start, or the remote entry is missing.</td><td>Open the <code>composition-failure</code> artifact and read <code>compose-logs.txt</code>.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>7. How this page reaches the site</h2>
+  <p>The <code>Publish docs site</code> workflow owns the whole site. It does not run the generator. It builds the slide deck and the API reference when it can, then <code>scripts/assemble-site.js</code> copies each HTML page into <code>_site/</code>. <code>scripts/check-site.js</code> fails the build on a broken link or an external asset. A pull request uploads a 14-day preview artifact. A push to <code>main</code> deploys to GitHub Pages. This page is self-contained, with no external fonts, scripts or images, because that check rejects them.</p>
+
+  <div class="callout">
+    <p><b class="k">What this guide does not cover.</b> It does not describe how a decomposition produces a manifest. See the <a href="decomposition-architecture.html">decomposition architecture</a>. For the shape of the packages, see the <a href="cli-architecture.html">generator CLI schematics</a>.</p>
+  </div>
+
+  <footer>
+    Sources: <code>.github/workflows/test.yml</code>, <code>composition.yml</code>, <code>pages.yml</code>;
+    <code>packages/codegen/src/unified-generator.ts</code>; ADR-027, 036, 040, 043, 061, 082, 091&ndash;095, 097, 099.
+    Step and gate names are copied from the workflow files. If a workflow is renamed, update this page.
+  </footer>
+</div>
+</body>
+</html>
