@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="How the seans-mfe-tool generator runs in the build of any MFE, and in each GitHub Actions workflow that exercises it.">
+<meta name="description" content="How the seans-mfe-tool generator runs in the build of any MFE, what any CI system must do to run it, and how this repository does it on GitHub Actions.">
 <title>The generator in the build</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%231467C6%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%2720.5%27%20y%3D%277%27%20width%3D%276%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2717%27%20width%3D%2721%27%20height%3D%274%27%20rx%3D%272%27%20fill%3D%27%238FC4FF%27%2F%3E%3Crect%20x%3D%275.5%27%20y%3D%2724%27%20width%3D%2721%27%20height%3D%273%27%20rx%3D%271.5%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E">
 <style>
@@ -95,26 +95,27 @@
   <h1>The generator in the build</h1>
   <p class="standfirst">
     Every MFE is described by one file, <code>mfe-manifest.yaml</code>. The generator turns that file
-    into the platform layer of the MFE. This page shows when it runs, which GitHub Actions workflow
-    runs it, and what each failing check means.
+    into the platform layer of the MFE, and it runs as the first step of the MFE's own build. Because
+    of that, any CI system that builds an MFE runs the generator. This page says what a CI system must
+    provide, gives a checked recipe, and then shows how this repository does it on GitHub Actions.
   </p>
 
   <h2>The short version</h2>
   <div class="grid3">
     <div class="tile">
-      <b>It runs first in every MFE build</b>
-      <span>An MFE's <code>build</code> script is <code>remote:generate</code>, then the bundler, then the BFF build. The platform layer is rebuilt from the manifest each time.</span>
+      <b>The build runs it</b>
+      <span>An MFE's <code>build</code> script is <code>remote:generate</code>, then the bundler, then the BFF build. A CI job that runs <code>npm run build</code> has run the generator.</span>
       <em>ADR-043</em>
     </div>
     <div class="tile">
       <b>It splits files by owner</b>
-      <span>Generator-owned files are rewritten on every run. Developer-owned files are written once and then left alone.</span>
+      <span>Generator-owned files are rewritten on every run. Developer-owned files are written once and then left alone. That split is what makes a CI check possible.</span>
       <em>ADR-082, ADR-091</em>
     </div>
     <div class="tile">
-      <b>CI proves both halves</b>
-      <span>The <code>Tests</code> workflow regenerates every example MFE and fails on any difference. The <code>Composition</code> workflow builds them for real.</span>
-      <em>test.yml, composition.yml</em>
+      <b>The checks are commands</b>
+      <span>Every gate is a CLI or <code>npm run</code> command with an exit code. GitHub Actions only decides when to run them.</span>
+      <em>Portable by design</em>
     </div>
   </div>
 
@@ -167,105 +168,129 @@
     <li><b>Render.</b> The variant supplies a list of files to emit. Each entry names a template, an output path and an owner (ADR-093). Plugins can add entries, such as the BFF files (ADR-094).</li>
     <li><b>Write.</b> Generator-owned files are written every time. A developer-owned file that already exists is skipped and listed as <em>Kept</em>. <code>--force</code> is the only way to overwrite one, and it prints each file it replaced (ADR-091).</li>
   </ol>
-  <p>Steps 1 to 4 never touch the disk. They return a list of files and a list of warnings. Only step 5 writes, and the CLI decides how to show the warnings.</p>
+  <p>Steps 1 to 4 never touch the disk. They return a list of files and a list of warnings. Only step 5 writes.</p>
 
-  <h2>2. Which workflow runs it</h2>
-  <p>Four workflows in <code>.github/workflows/</code> matter here. Only two of them run the generator.</p>
+  <h2>2. What any CI system must provide</h2>
+  <p>The generator is a command-line program. It has no CI-specific code and reads no CI environment variables. These are the requirements, and nothing else is needed.</p>
   <div class="scroll"><table>
-    <thead><tr><th>Workflow</th><th>Runs when</th><th>Runs the generator?</th><th>What it proves</th></tr></thead>
+    <thead><tr><th>Need</th><th>Detail</th></tr></thead>
     <tbody>
-      <tr><td><b>Tests</b><br><code>test.yml</code></td><td>Push to <code>main</code> or <code>develop</code>. Pull requests into <code>main</code>, <code>develop</code> or <code>claude/**</code>.</td><td><span class="tag gen">yes, in 5 gates</span></td><td>Generated files match their manifests, the output is unchanged unless you meant it, and a fresh scaffold compiles.</td></tr>
-      <tr><td><b>Composition</b><br><code>composition.yml</code></td><td>Pull requests and pushes to <code>main</code> that touch templates, runtime, contracts, control plane or the Meridian and flappy examples. Also by hand.</td><td><span class="tag gen">yes, inside Docker</span></td><td>The generated MFEs build as images, start, and compose in a real browser.</td></tr>
-      <tr><td><b>Publish docs site</b><br><code>pages.yml</code></td><td>Changes to the HTML docs, the API reference sources, or the site scripts.</td><td><span class="tag none">no</span></td><td>This page: it publishes HTML. It does read <code>packages/codegen/src</code>, but only to build the API reference.</td></tr>
-      <tr><td><b>API docs</b><br><code>api-docs.yml</code></td><td>Changes under the contracts, runtime and dsl sources.</td><td><span class="tag none">no</span></td><td>The committed <code>docs/api</code> matches the source.</td></tr>
+      <tr><td><b>Node and npm</b></td><td>The CLI declares Node 20 or newer and npm 10 or newer in its <code>engines</code> field.</td></tr>
+      <tr><td><b>The CLI on <code>PATH</code></b></td><td>The build script calls <code>seans-mfe-tool</code> by name, and the generated <code>package.json</code> does not install it. Your CI image or an earlier step must. In this repo the Docker images carry it. This is the one prerequisite that is easy to miss.</td></tr>
+      <tr><td><b>A checkout with the manifest</b></td><td>Run from the MFE's directory. Outside one, <code>remote:generate</code> exits 64.</td></tr>
+      <tr><td><b>No install for generation</b></td><td><code>remote:generate</code> needs the CLI, not the MFE's own <code>node_modules</code>. The bundler step does need <code>npm ci</code>.</td></tr>
+      <tr><td><b>Toolchains for native targets</b></td><td>Only if the manifest declares <code>targets.swift</code> or <code>targets.rust</code>, and only to build and test those outputs.</td></tr>
     </tbody>
   </table></div>
+  <p>Exit codes are plain: zero is success. Under <code>--json</code> a command prints exactly one result object on stdout and everything else goes to stderr, so a pipeline can parse it. A failed <code>mfe:validate</code> exits 65, and the object names each problem's rule, file, line and fix.</p>
 
-  <h2>3. The Tests workflow, step by step</h2>
-  <p>The <code>quality</code> job runs on Node 20. It installs, lints, typechecks and builds, then runs these gates in this order. The five that run the generator are marked.</p>
+  <h2>3. The portable recipe</h2>
+  <p>This runs in any CI that can run shell commands. The sequence has two checks because they see different failures, as the results below show.</p>
+<pre><code># run from the MFE's directory, on a clean checkout
+seans-mfe-tool mfe:validate           # is the MFE internally consistent?
+seans-mfe-tool remote:generate        # rewrite generator-owned files only
+git diff --exit-code                  # did that change anything committed?
+npm ci &amp;&amp; npm run build               # then build as usual</code></pre>
+
+  <h3>Checked against a fresh scaffold</h3>
+  <p>These results come from running the recipe on an MFE made with <code>remote:init demo --host meridian</code>, generated once and committed, using the CLI from a local build of this repository. Each row changes one thing and records the exit codes.</p>
   <div class="scroll"><table>
-    <thead><tr><th>Step name in CI</th><th>Command</th><th>Generator</th><th>It fails when</th></tr></thead>
+    <thead><tr><th>Scenario</th><th><code>mfe:validate</code></th><th><code>remote:generate</code></th><th><code>git diff --exit-code</code></th><th>Meaning</th></tr></thead>
     <tbody>
-      <tr><td>Generated schemas are committed</td><td><code>git diff --exit-code schemas/</code></td><td><span class="tag none">no</span></td><td>A command flag changed and <code>npm run build</code> was not committed.</td></tr>
-      <tr><td>Manifest field reference is current</td><td><code>build:manifest-reference:check</code></td><td><span class="tag none">no</span></td><td>The manifest schema changed and the reference page was not regenerated.</td></tr>
-      <tr><td><b>MFE drift gate</b></td><td><code>check:mfe-drift:check</code></td><td><span class="tag gen">yes</span></td><td>A generator-owned file in an example MFE differs from a fresh generation. Also reports leftover generated files the manifest no longer produces.</td></tr>
-      <tr><td><b>Codegen behaviour freeze</b></td><td><code>build:codegen-snapshot:check</code></td><td><span class="tag gen">yes</span></td><td>Any file the generator emits, developer-owned included, differs from the committed baseline across both reference fleets.</td></tr>
-      <tr><td><b>Published packages can generate an MFE</b></td><td><code>check:publish-shape</code></td><td><span class="tag gen">yes</span></td><td>Packed tarballs, unpacked into an empty folder, cannot generate an MFE. For example, a package shipped without its templates.</td></tr>
-      <tr><td>Slot placement targets resolve</td><td><code>slots:validate</code></td><td><span class="tag none">no</span></td><td>A registry rule points at a slot no MFE declares.</td></tr>
-      <tr><td>Composition compiles</td><td><code>compose:validate --check</code></td><td><span class="tag none">no</span></td><td>The committed <code>rules.json</code> is not what <code>control-plane.yaml</code> compiles to.</td></tr>
-      <tr><td>MFE consistency gate</td><td><code>check:mfe-consistency</code></td><td><span class="tag none">no</span></td><td>Manifest, <code>package.json</code> and federation <code>shared</code> disagree, such as a wrong dependency version. Reads developer-owned files, which drift cannot see.</td></tr>
-      <tr><td>ADR, system map, contract and index checks</td><td><code>check:adr</code> and the <code>:check</code> builds</td><td><span class="tag none">no</span></td><td>A generated document disagrees with the repository.</td></tr>
-      <tr><td><b>Meridian regen invariant</b></td><td><code>examples/meridian-station/scripts/generate.mjs --check</code></td><td><span class="tag gen">yes</span></td><td>Re-running <code>remote:generate</code> across the Meridian fleet, plus its seeds, changes anything.</td></tr>
-      <tr><td><b>Template typecheck</b></td><td><code>check:template-typecheck</code></td><td><span class="tag gen">yes</span></td><td>A freshly scaffolded MFE, with a real <code>npm install</code>, does not typecheck against the runtime's public exports.</td></tr>
+      <tr><td>Clean scaffold, regenerated</td><td><span class="tag gen">0</span></td><td><span class="tag gen">0</span></td><td><span class="tag gen">0</span></td><td>Generation is repeatable. Nothing changes.</td></tr>
+      <tr><td>A hand edit to a generator-owned file, committed</td><td><span class="tag gen">0</span></td><td><span class="tag gen">0</span></td><td><span class="tag bad">1</span></td><td>Only the diff step catches it. Generation silently restored the file, and the diff shows the one line it removed.</td></tr>
+      <tr><td>Manifest changed, platform files not regenerated</td><td><span class="tag gen">0</span></td><td><span class="tag gen">0</span></td><td><span class="tag bad">1</span></td><td>The diff shows the stale <code>bootstrap.ts</code> and <code>mfe.test.ts</code>.</td></tr>
+      <tr><td>A manifest dependency removed from <code>package.json</code></td><td><span class="tag bad">65</span></td><td><span class="tag gen">0</span></td><td><span class="tag none">n/a</span></td><td>Only validate catches it. <code>package.json</code> is developer-owned, so generation leaves it alone. Validate reported 4 problems.</td></tr>
+      <tr><td>A developer-owned file edited, then regenerated</td><td><span class="tag none">n/a</span></td><td><span class="tag gen">0</span></td><td><span class="tag none">n/a</span></td><td>The edit survives. The run lists <code>src/App.tsx</code> under <em>Kept (developer-owned)</em>.</td></tr>
+      <tr><td>Scaffold with no <code>--host</code></td><td><span class="tag bad">65</span></td><td><span class="tag gen">0</span></td><td><span class="tag none">n/a</span></td><td>Validate requires a <code>hosts:</code> list (ADR-107). Add one before wiring the check into CI.</td></tr>
     </tbody>
   </table></div>
-
   <div class="callout">
-    <p><b class="k">Why drift and the snapshot are separate gates.</b> The drift gate compares generated bytes to what is on disk, and only for generator-owned files. The snapshot gate compares everything the generator emits to a baseline file. A change to a developer-owned template, such as <code>App.tsx.ejs</code>, passes drift and fails the snapshot. That is the intent: you review it as part of the change.</p>
+    <p><b class="k">Keep both checks.</b> <code>mfe:validate</code> alone misses a hand edit to a platform file. The generate-and-diff pair alone misses a bad dependency version. The platform repo runs the same pairing at fleet scale as <code>check:mfe-drift:check</code> and <code>check:mfe-consistency</code>.</p>
   </div>
+  <p><b>Not covered by this check.</b> It ran with the CLI from a local build, not from a package installed from a registry. The publish-shape gate below covers packaging. A developer-owned file that has fallen behind a platform change is reported as a migration warning in the validate output (ADR-082). Warnings do not fail the run, so read the summary line.</p>
 
-  <h3>Other jobs in the same workflow</h3>
+  <h2>4. The gates, without the CI system</h2>
+  <p>The platform repo runs more gates than a consumer needs. Each is a command, so each can move to any CI. "When" is the reason to run it, not a GitHub trigger.</p>
   <div class="scroll"><table>
-    <thead><tr><th>Job</th><th>Environment</th><th>What it does with generated output</th></tr></thead>
+    <thead><tr><th>Gate</th><th>Command</th><th>Runs the generator</th><th>Run it when</th><th>Fails when</th></tr></thead>
     <tbody>
-      <tr><td><code>swift</code></td><td>Container <code>swift:6.0</code></td><td>Builds and tests every generated <code>examples/**/swift</code> package. The SwiftUI views are compiled out on Linux, so they are not covered.</td></tr>
-      <tr><td><code>rust</code></td><td>Container <code>rust:1</code></td><td>Builds, tests, lints and format-checks every generated crate with warnings as errors, then re-tests on Rust 1.75, the version the crate declares.</td></tr>
-      <tr><td><code>rust-wasm</code></td><td>Ubuntu 24.04 runner</td><td>Builds the browser crates for WebAssembly and mounts each in Chromium through the runtime's shell adaptor.</td></tr>
-      <tr><td><code>test</code>, <code>e2e</code>, <code>perf</code>, <code>doc-links</code>, <code>adr-governance</code></td><td>Runner</td><td>Unit tests, browser tests, performance, link checks, and ADR review on pull requests. They do not run the generator directly.</td></tr>
+      <tr><td colspan="5"><b>Any repository that contains MFEs</b></td></tr>
+      <tr><td>Consistency</td><td><code>seans-mfe-tool mfe:validate [dir]</code></td><td><span class="tag none">no</span></td><td>Every change</td><td>Manifest, <code>package.json</code> and federation <code>shared</code> disagree.</td></tr>
+      <tr><td>Generate and diff</td><td><code>remote:generate</code> then <code>git diff --exit-code</code></td><td><span class="tag gen">yes</span></td><td>Every change</td><td>A committed generator-owned file is stale or hand-edited.</td></tr>
+      <tr><td>Build</td><td><code>npm run build</code></td><td><span class="tag gen">yes</span></td><td>Every change</td><td>The bundle or BFF does not build.</td></tr>
+      <tr><td colspan="5"><b>The platform repository, where the generator and templates change</b></td></tr>
+      <tr><td>Drift, whole fleet</td><td><code>npm run check:mfe-drift:check</code></td><td><span class="tag gen">yes</span></td><td>Any change to <code>packages/codegen/**</code></td><td>A generator-owned file in an example MFE differs from a fresh generation. Also reports leftover generated files.</td></tr>
+      <tr><td>Behaviour freeze</td><td><code>npm run build:codegen-snapshot:check</code></td><td><span class="tag gen">yes</span></td><td>Same</td><td>Any emitted file, developer-owned included, differs from the committed baseline.</td></tr>
+      <tr><td>Publish shape</td><td><code>npm run check:publish-shape</code></td><td><span class="tag gen">yes</span></td><td>Same</td><td>Packed tarballs in an empty folder cannot generate an MFE, such as a package that ships without its templates.</td></tr>
+      <tr><td>Fleet consistency</td><td><code>npm run check:mfe-consistency</code></td><td><span class="tag none">no</span></td><td>Same, plus runtime or example changes</td><td>As the single-MFE check, across every example.</td></tr>
+      <tr><td>Fleet regeneration</td><td><code>node examples/meridian-station/scripts/generate.mjs --check</code></td><td><span class="tag gen">yes</span></td><td>Meridian or template changes</td><td>Regenerating the fleet and its seeds changes anything.</td></tr>
+      <tr><td>Template typecheck</td><td><code>npm run check:template-typecheck</code></td><td><span class="tag gen">yes</span></td><td>Runtime or template changes</td><td>A fresh scaffold, with a real install, does not typecheck against the runtime's exports. Run <code>npm run build</code> first.</td></tr>
+      <tr><td>Swift build</td><td><code>bash scripts/check-swift-build.sh --require</code></td><td><span class="tag gen">via examples</span></td><td>Swift plugin changes</td><td>A generated Swift package does not compile or its tests fail. Needs a Swift 6 toolchain. SwiftUI views are not compiled on Linux.</td></tr>
+      <tr><td>Rust build</td><td><code>bash scripts/check-rust-build.sh --require</code></td><td><span class="tag gen">via examples</span></td><td>Rust plugin changes</td><td>A generated crate fails build, test, clippy or format. Needs Rust and, for the MSRV pass, Rust 1.75.</td></tr>
+      <tr><td>Rust in the browser</td><td><code>bash scripts/check-rust-wasm.sh --require</code></td><td><span class="tag gen">via examples</span></td><td>Rust browser-build changes</td><td>A wasm crate fails to build or does not mount in Chromium. Run <code>npm run build</code> first.</td></tr>
+      <tr><td>Whole-stack composition</td><td>build and start the fleet, then run the Playwright composition spec</td><td><span class="tag gen">yes, in each image build</span></td><td>Templates, runtime, contracts or control-plane changes</td><td>The built MFEs do not start or do not compose in a browser.</td></tr>
     </tbody>
   </table></div>
-  <p>The Swift and Rust jobs run in language containers because they need those toolchains and no Node. Each script is called with <code>--require</code>, so a missing toolchain fails the job. Without the flag the script skips and exits 0.</p>
+  <div class="callout">
+    <p><b class="k">Always pass <code>--require</code> to the native gates in CI.</b> Without it each script skips with a notice when its toolchain is missing, and exits 0. That is right on a laptop and wrong in a pipeline, where a skipped gate looks like a passed one.</p>
+  </div>
+  <p><b>Why drift and the snapshot are separate gates.</b> Drift compares generated bytes to what is on disk, for generator-owned files only. The snapshot compares everything the generator emits to a baseline file. A change to a developer-owned template, such as <code>App.tsx.ejs</code>, passes drift and fails the snapshot, which is the intent: you review it as part of the change.</p>
 
-  <h2>4. The Composition workflow</h2>
-  <p>The Tests workflow checks files. This one checks that the files work together. It runs on Node 22 and finishes in this order:</p>
-  <ol class="steps">
-    <li><b>Build the CLI.</b> <code>npm run build</code>, then <code>npm run docker:build:cli</code>. The compiled <code>dist/</code> is baked into the CLI image.</li>
-    <li><b>Build five services, one at a time.</b> Registry, daemon, shell, <code>meridian-console</code> and <code>abc-kids-flappy</code>. Each image's build stage runs <code>npm run build</code>, which is where <code>remote:generate</code> runs again, using the CLI image. Building one at a time avoids the memory exhaustion that parallel builds cause.</li>
-    <li><b>Start the stack</b> and wait for each service to answer, up to five minutes each.</li>
-    <li><b>Register <code>rules.json</code></b> with the registry.</li>
-    <li><b>Drive the composition</b> in Chromium with Playwright, across two applications.</li>
-    <li><b>On failure,</b> upload the report and container logs, kept for seven days. The stack is always torn down.</li>
-  </ol>
-  <p>It is limited to paths that can change what gets built: templates, runtime, contracts, the React framework package, the control plane, the CLI Dockerfile, and the two example apps.</p>
-
-  <h2>5. What happens when you change something</h2>
+  <h2>5. A worked example: this repository on GitHub Actions</h2>
+  <p>Everything above is what this repository's workflows run. The workflow files add only scheduling, environments and publishing. Use this table to port each piece to another CI.</p>
   <div class="scroll"><table>
-    <thead><tr><th>You change</th><th>Checks that react</th><th>What you do</th></tr></thead>
+    <thead><tr><th>Workflow</th><th>Trigger</th><th>What it runs</th><th>The idea to port</th></tr></thead>
     <tbody>
-      <tr><td>A <strong>generator-owned</strong> template or the generator code</td><td>Drift, snapshot, Meridian regen, template typecheck, Swift/Rust if their packages changed, Composition</td><td>Run <code>npm run build:packages</code>, then <code>npm run check:mfe-drift</code> to rewrite the example files. Run <code>npm run build:codegen-snapshot</code> and review the diff. Commit both.</td></tr>
+      <tr><td><b>Tests</b><br><code>test.yml</code>, job <code>quality</code></td><td>Push to <code>main</code> or <code>develop</code>. Pull requests into <code>main</code>, <code>develop</code> or <code>claude/**</code>.</td><td>Node 20. <code>npm ci</code>, lint, typecheck, build, then the gates in section 4 in order. Five of them run the generator: drift, snapshot, publish shape, fleet regeneration and template typecheck.</td><td>One job, sequential steps, fail on first red. Match pull-request triggers on the <em>head</em> branch pattern too, because stacked pull requests are based on other branches and would otherwise run no checks.</td></tr>
+      <tr><td><code>test.yml</code>, jobs <code>swift</code>, <code>rust</code></td><td>Same</td><td>Run in <code>swift:6.0</code> and <code>rust:1</code> containers, with <code>--require</code>.</td><td>Use the language's own image rather than installing a toolchain onto a Node runner.</td></tr>
+      <tr><td><code>test.yml</code>, job <code>rust-wasm</code></td><td>Same</td><td>Ubuntu 24.04 runner. <code>npm ci</code>, <code>npm run build</code>, Chromium, then the script.</td><td>Pin the OS image where a browser's installer depends on it.</td></tr>
+      <tr><td><b>Composition</b><br><code>composition.yml</code></td><td>Pull requests and pushes to <code>main</code> that touch templates, runtime, contracts, the control plane, the CLI Dockerfile or the two example apps. Also by hand.</td><td>Node 22. Build the CLI and its image, build five services one at a time, start the stack, register <code>rules.json</code>, drive it in Chromium.</td><td>Path-filter the slow job so it runs only on changes that can affect it. Build images sequentially, because building them in parallel exhausts memory. Always tear the stack down and keep logs on failure.</td></tr>
+      <tr><td><b>Publish docs site</b><br><code>pages.yml</code></td><td>Changes to the HTML docs, the API reference sources or the site scripts.</td><td>Does not run the generator. It assembles the static site, checks links and external assets, and deploys on <code>main</code>. A pull request gets a 14-day preview artifact.</td><td>Separate publishing from verification, so a docs failure cannot block a code merge.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The Composition workflow is where generation meets the build. Each image's build stage runs <code>npm run build</code> using the CLI image, so <code>remote:generate</code> runs a second time there, inside the container, on the committed manifest.</p>
+
+  <h2>6. What happens when you change something</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>You change</th><th>Gates that react</th><th>What you do</th></tr></thead>
+    <tbody>
+      <tr><td>A <strong>generator-owned</strong> template or the generator code</td><td>Drift, snapshot, fleet regeneration, template typecheck, native gates if their packages changed, composition</td><td>Run <code>npm run build:packages</code>, then <code>npm run check:mfe-drift</code> to rewrite the example files. Run <code>npm run build:codegen-snapshot</code> and review the diff. Commit both.</td></tr>
       <tr><td>A <strong>developer-owned</strong> template, such as <code>App.tsx.ejs</code></td><td>Snapshot. Drift stays green.</td><td>Regenerate the snapshot and review it. Existing MFEs keep their old copy, so add a <code>PLATFORM_MIGRATIONS</code> entry in the same commit (ADR-082).</td></tr>
-      <tr><td>A pinned dependency version</td><td>MFE consistency. Drift stays green, because <code>package.json</code> is developer-owned.</td><td>Run <code>check:mfe-consistency</code> and fix the pins.</td></tr>
-      <tr><td>An example's <code>mfe-manifest.yaml</code></td><td>Drift, consistency, Meridian regen</td><td>Run <code>remote:generate</code> in that MFE and commit the result.</td></tr>
-      <tr><td>The runtime's public exports</td><td>Template typecheck, Composition</td><td>Run <code>npm run build</code> first. The gate checks the last build, not your source.</td></tr>
-      <tr><td>This page or another HTML doc</td><td>Publish docs site only</td><td>Nothing. It builds a preview artifact on a pull request and deploys on <code>main</code>.</td></tr>
+      <tr><td>A pinned dependency version</td><td>Consistency. Drift stays green, because <code>package.json</code> is developer-owned.</td><td>Run <code>check:mfe-consistency</code> and fix the pins.</td></tr>
+      <tr><td>An MFE's <code>mfe-manifest.yaml</code></td><td>Generate and diff, consistency, fleet regeneration</td><td>Run <code>remote:generate</code> in that MFE and commit the result.</td></tr>
+      <tr><td>The runtime's public exports</td><td>Template typecheck, composition</td><td>Run <code>npm run build</code> first. The gate checks the last build, not your source.</td></tr>
     </tbody>
   </table></div>
 
-  <h2>6. Reading a red check</h2>
+  <h2>7. Reading a red check</h2>
   <div class="scroll"><table>
     <thead><tr><th>Symptom</th><th>Likely cause</th><th>First move</th></tr></thead>
     <tbody>
-      <tr><td>Drift gate lists a file under <code>platform/</code></td><td>Someone edited a generator-owned file by hand, or a template changed without regenerating.</td><td><code>npm run check:mfe-drift</code>, then commit. Never keep a hand edit there.</td></tr>
-      <tr><td>Drift gate is red in CI, green on your machine</td><td>Stale build. The script resolves the codegen package to its compiled output.</td><td><code>npm run clean &amp;&amp; npm run build</code>, then rerun.</td></tr>
-      <tr><td>Snapshot gate shows a diff you did not expect</td><td>A template or generator change reached files you did not think about.</td><td>Read the diff. It is never noise. Regenerate only if it is intended.</td></tr>
-      <tr><td>Consistency gate fails on a version</td><td>A pin changed in the generator but the example's <code>package.json</code> still has the old one.</td><td>Update the example's dependencies, then rerun both consistency and drift.</td></tr>
-      <tr><td>Publish-shape fails with a missing template</td><td>A package does not list its templates in its published files.</td><td>Fix the package's <code>files</code> list.</td></tr>
-      <tr><td>Swift or Rust job fails on a type error</td><td>The emitted code does not compile. Text-based tests cannot see this.</td><td>Reproduce with <code>check:swift-build</code> or <code>check:rust-build</code> if you have the toolchain.</td></tr>
-      <tr><td>Composition fails at "ready"</td><td>An image built but the service did not start, or the remote entry is missing.</td><td>Open the <code>composition-failure</code> artifact and read <code>compose-logs.txt</code>.</td></tr>
+      <tr><td>Generate-and-diff or drift lists a file under <code>platform/</code></td><td>A hand edit to a generator-owned file, or a template change without regenerating.</td><td>Regenerate and commit. Never keep a hand edit there.</td></tr>
+      <tr><td>Drift is red in CI, green on your machine</td><td>Stale build. The script resolves the codegen package to its compiled output.</td><td><code>npm run clean &amp;&amp; npm run build</code>, then rerun.</td></tr>
+      <tr><td>Snapshot shows a diff you did not expect</td><td>A template or generator change reached files you did not think about.</td><td>Read the diff. It is never noise. Regenerate only if it is intended.</td></tr>
+      <tr><td>Consistency fails on a version</td><td>A pin changed in the generator but the example's <code>package.json</code> still has the old one.</td><td>Update the example's dependencies, then rerun consistency and drift.</td></tr>
+      <tr><td><code>seans-mfe-tool: command not found</code> in the build step</td><td>The CLI is not on <code>PATH</code> in this CI image.</td><td>Install it before the build. See section 2.</td></tr>
+      <tr><td>Validate fails with <code>hosts-declared</code></td><td>The manifest has no <code>hosts:</code> list.</td><td>Add the shell's control-plane namespace, or scaffold with <code>--host</code>.</td></tr>
+      <tr><td>Publish shape fails with a missing template</td><td>A package does not list its templates in its published files.</td><td>Fix the package's <code>files</code> list.</td></tr>
+      <tr><td>Swift or Rust fails on a type error</td><td>The emitted code does not compile. Text-based tests cannot see this.</td><td>Reproduce with <code>check:swift-build</code> or <code>check:rust-build</code> if you have the toolchain.</td></tr>
+      <tr><td>Composition fails waiting for a service</td><td>An image built but the service did not start, or the remote entry is missing.</td><td>Read the container logs the job saved.</td></tr>
     </tbody>
   </table></div>
 
-  <h2>7. How this page reaches the site</h2>
-  <p>The <code>Publish docs site</code> workflow owns the whole site. It does not run the generator. It builds the slide deck and the API reference when it can, then <code>scripts/assemble-site.js</code> copies each HTML page into <code>_site/</code>. <code>scripts/check-site.js</code> fails the build on a broken link or an external asset. A pull request uploads a 14-day preview artifact. A push to <code>main</code> deploys to GitHub Pages. This page is self-contained, with no external fonts, scripts or images, because that check rejects them.</p>
+  <h2>8. How this page reaches the site</h2>
+  <p>The <code>Publish docs site</code> workflow owns the whole site. <code>scripts/assemble-site.js</code> copies each HTML page into <code>_site/</code>, and <code>scripts/check-site.js</code> fails the build on a broken link or an external asset. This page is self-contained, with no external fonts, scripts or images, because that check rejects them.</p>
 
   <div class="callout">
-    <p><b class="k">What this guide does not cover.</b> It does not describe how a decomposition produces a manifest. See the <a href="decomposition-architecture.html">decomposition architecture</a>. For the shape of the packages, see the <a href="cli-architecture.html">generator CLI schematics</a>.</p>
+    <p><b class="k">Related.</b> For the shape of the packages, see the <a href="cli-architecture.html">generator CLI schematics</a>. For how a decomposition produces a manifest, see the <a href="decomposition-architecture.html">decomposition architecture</a>.</p>
   </div>
 
   <footer>
     Sources: <code>.github/workflows/test.yml</code>, <code>composition.yml</code>, <code>pages.yml</code>;
-    <code>packages/codegen/src/unified-generator.ts</code>; ADR-027, 036, 040, 043, 061, 082, 091&ndash;095, 097, 099.
-    Step and gate names are copied from the workflow files. If a workflow is renamed, update this page.
+    <code>packages/codegen/src/unified-generator.ts</code>; ADR-027, 036, 040, 043, 061, 082, 091&ndash;095, 097, 099, 107.
+    The recipe results in section 3 were measured by running the commands, not copied from the workflow files.
+    Step and gate names in section 5 are copied from the workflow files. If a workflow is renamed, update this page.
   </footer>
 </div>
 </body>
