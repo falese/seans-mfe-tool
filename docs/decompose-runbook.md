@@ -1,7 +1,8 @@
 # Decompose a monolith — start to finish
 
 This guide walks one monolith through every step that is built today, using the reference app
-`examples/meridian-monolith`. Each command's own page is reference: flags, formats, limits. This page gives the
+`examples/meridian-monolith`. To see it first, watch the
+[108-second demo](./media/decompose-demo.webm) of the same run. Each command's own page is reference: flags, formats, limits. This page gives the
 order, and what to check between steps.
 
 **When you lose your place, run `flow:status`.** It reads the evidence folder and prints which
