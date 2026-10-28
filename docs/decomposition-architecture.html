@@ -136,6 +136,10 @@
   section.fig + section.fig { border-top: 1px solid var(--rule-soft); padding-top: 2.5rem; }
 
   figure { margin: 1.4rem 0 0; }
+  .reel video {
+    display: block; width: 100%; height: auto; aspect-ratio: 16 / 9;
+    border-radius: 12px; border: 1px solid var(--rule); background: #06081a;
+  }
   .frame {
     background: var(--surface); border: 1px solid var(--rule);
     padding: 1.1rem; overflow-x: auto;
@@ -251,6 +255,21 @@
       This page explains each step, who does the work in it, and the rules that the step must
       follow. It ends with the evidence that the tools meet those rules.
     </p>
+    <figure class="reel">
+      <video controls muted playsinline preload="metadata" width="1280" height="720"
+             poster="media/decompose-demo-poster.png" aria-describedby="decompose-demo-caption">
+        <source src="media/decompose-demo.webm" type="video/webm">
+        <a href="media/decompose-demo.webm">Download the 108-second demo (WebM, 3.7&nbsp;MB)</a>
+      </video>
+      <figcaption id="decompose-demo-caption">
+        The tools run against the reference monolith, in 108 seconds. Capture watches the running
+        app, analyze reads its code, and propose suggests seven pieces. The review package draws
+        them over the real screens. In the workspace a piece is renamed and the plan is approved,
+        and <code>flow:status</code> then shows what changed and what to run next. Every number on
+        screen is from this run. There is no sound; the captions are part of the video. Recorded
+        on 28 October 2026.
+      </figcaption>
+    </figure>
   </header>
 
 
