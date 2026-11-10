@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 import type { AddressInfo } from 'net';
+import { crossSiteRefusal } from '../local-only';
 
 export interface FrontOptions {
   /** The MFE's built standalone page (rspack output). */
@@ -66,6 +67,14 @@ function serveStatic(dist: string, pathname: string, res: http.ServerResponse): 
 
 export function startFront(opts: FrontOptions): Promise<RunningFront> {
   const server = http.createServer((req, res) => {
+    // The page's own requests only: /graphql reaches a BFF that edits a
+    // repository, and a form POST from any other page would otherwise be
+    // passed straight through to it (local-only.ts).
+    const refusal = crossSiteRefusal(req);
+    if (refusal) {
+      res.writeHead(403, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ message: refusal }));
+    }
     const { pathname } = new URL(req.url ?? '/', 'http://localhost');
     if (pathname === '/graphql') return proxy(req, res, opts.bff);
     if (pathname === '/api/screenshot' && req.method === 'GET') return proxy(req, res, opts.api);

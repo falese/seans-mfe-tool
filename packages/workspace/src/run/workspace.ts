@@ -186,18 +186,31 @@ export async function startWorkspace(opts: WorkspaceOptions): Promise<RunningWor
         : err;
     });
 
+    // The page's door first, so the BFF can be told which origin it answers:
+    // the workspace's own page, under both loopback names, and no other
+    // (../local-only.ts — a loopback port is reachable from any open tab).
+    const bffUrl = `http://127.0.0.1:${BFF_PORT}`;
+    front = await startFront({ dist: path.join(mfeDir, 'dist'), bff: bffUrl, api: api.url, port: opts.port });
+    const pagePort = new URL(front.url).port;
+    const pageOrigins = [`http://127.0.0.1:${pagePort}`, `http://localhost:${pagePort}`];
+
     let output = '';
     bff = spawn(process.execPath, ['server.js'], {
       cwd: mfeDir,
-      env: { ...process.env, ...opts.childEnv, PORT: String(BFF_PORT), HOST: '127.0.0.1', NODE_ENV: 'production' },
+      env: {
+        ...process.env,
+        ...opts.childEnv,
+        PORT: String(BFF_PORT),
+        HOST: '127.0.0.1',
+        NODE_ENV: 'production',
+        CORS_ORIGIN: pageOrigins.join(','),
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     bff.stdout?.on('data', (d: Buffer) => (output += d.toString('utf8')));
     bff.stderr?.on('data', (d: Buffer) => (output += d.toString('utf8')));
-    const bffUrl = `http://127.0.0.1:${BFF_PORT}`;
     await waitForHealth(`${bffUrl}/health`, bff, () => output);
 
-    front = await startFront({ dist: path.join(mfeDir, 'dist'), bff: bffUrl, api: api.url, port: opts.port });
     const agent = 'agent' in agentState ? `connected${agentState.agent.model ? ` (${agentState.agent.model})` : ''}` : agentState.unavailable;
     return { url: front.url, api: api.url, bff: bffUrl, approvals, agent, close };
   } catch (err) {

@@ -35,9 +35,32 @@ app.use(helmet({
   },
 }));
 
+// The origins this BFF serves: CORS_ORIGIN, comma-separated; every origin when
+// it is unset or "*".
+const allowedOrigins = (process.env.CORS_ORIGIN ?? '*')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const servesEveryOrigin = allowedOrigins.includes('*');
+
+// CORS only tells a browser whether a page may READ a response. A form-style
+// POST is sent either way, and GraphQL accepts form bodies — so when the
+// origins are named, a request from any other one is refused outright rather
+// than answered and merely hidden from the page that sent it.
+if (!servesEveryOrigin) {
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const origin = req.headers.origin;
+    if (origin !== undefined && !allowedOrigins.includes(origin)) {
+      res.status(403).json({ error: 'Forbidden', message: `origin ${origin} is not served by this BFF` });
+      return;
+    }
+    next();
+  });
+}
+
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: servesEveryOrigin ? '*' : allowedOrigins,
   credentials: true,
 }));
 

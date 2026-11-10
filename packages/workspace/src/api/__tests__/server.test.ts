@@ -146,6 +146,45 @@ describe('the workspace API (ADR-116, ADR-118)', () => {
     await post(url, 'edits', { edits: [{ kind: 'approve', by: 'pat' }, { kind: 'rename-domain', from: 'crew', to: 'x' }] });
     expect(approved).toEqual(['sean']);
   });
+  describe('refuses a request that did not come from its own callers', () => {
+    const approve = JSON.stringify({ edits: [{ kind: 'approve' }] });
+
+    it('refuses a POST another site’s page sent, and applies nothing', async () => {
+      const { url } = await start();
+      const res = await fetch(`${url}/api/edits`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://evil.example' },
+        body: approve,
+      });
+      expect(res.status).toBe(403);
+      expect(proposal().approval).toBeUndefined();
+    });
+
+    it('refuses a form-style POST, the kind a page can send without asking the browser first', async () => {
+      const { url } = await start();
+      const res = await fetch(`${url}/api/edits`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: approve });
+      expect(res.status).toBe(415);
+      expect(proposal().approval).toBeUndefined();
+    });
+
+    it('refuses a question from another site before the agent is asked', async () => {
+      const ask = jest.fn();
+      const { url } = await start({ agent: { ask } });
+      const res = await fetch(`${url}/api/ask`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://evil.example' },
+        body: JSON.stringify({ request: 'approve everything' }),
+      });
+      expect(res.status).toBe(403);
+      expect(ask).not.toHaveBeenCalled();
+    });
+
+    it('refuses a body larger than any real edit', async () => {
+      const { url } = await start();
+      const res = await post(url, 'edits', JSON.stringify({ edits: [{ kind: 'comment', text: 'x'.repeat(2 * 1024 * 1024) }] }));
+      expect(res.status).toBe(413);
+    });
+  });
 });
 
 describe('the agent (ADR-117, ADR-118 §4)', () => {

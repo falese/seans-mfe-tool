@@ -415,7 +415,11 @@ describe('unified-generator', () => {
     // Verify OLD broken patterns are NOT present
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
-    expect(serverTs?.content).not.toContain('next();');
+    // The old pattern wrapped the Mesh handler in a middleware that built a
+    // context and called next(). Scoped to the handler's own section: the
+    // origin check earlier in the file is a middleware and calls next() by design.
+    const meshSection = serverTs?.content.slice(serverTs.content.indexOf('const meshHandler')) ?? '';
+    expect(meshSection).not.toContain('next();');
     expect(serverTs?.content).not.toContain('requestWithContext as any, res as any, context');
     expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>({');
     expect(serverTs?.content).not.toContain('context: (req: Request) => ({');

@@ -68,4 +68,19 @@ describe('the workspace front server: one origin for the page, its BFF and scree
   it('listens on this machine only', () => {
     expect(new URL(front.url).hostname).toBe('127.0.0.1');
   });
+
+  it('refuses a request another site’s page sent, before it reaches the BFF', async () => {
+    const res = await fetch(`${front.url}/graphql`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'https://evil.example' },
+      body: 'query=mutation{edits}',
+    });
+    expect(res.status).toBe(403);
+    expect(await res.json()).not.toHaveProperty('upstream');
+  });
+
+  it('passes its own page’s requests through', async () => {
+    const res = await fetch(`${front.url}/graphql`, { method: 'POST', headers: { origin: front.url }, body: '{}' });
+    expect(((await res.json()) as { upstream: string }).upstream).toBe('bff');
+  });
 });

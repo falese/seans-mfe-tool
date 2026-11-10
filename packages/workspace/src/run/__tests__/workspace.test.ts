@@ -55,15 +55,21 @@ describe('stopping the workspace', () => {
     // A BFF that answers /health and refuses to die politely.
     fs.writeFileSync(
       path.join(mfe, 'server.js'),
-      "process.on('SIGTERM', () => {}); require('fs').writeFileSync('trace.txt', String(process.env.TRACEPARENT)); require('http').createServer((q, s) => s.end('ok')).listen(Number(process.env.PORT), process.env.HOST);"
+      "process.on('SIGTERM', () => {}); require('fs').writeFileSync('trace.txt', String(process.env.TRACEPARENT)); require('fs').writeFileSync('cors.txt', String(process.env.CORS_ORIGIN)); require('http').createServer((q, s) => s.end('ok')).listen(Number(process.env.PORT), process.env.HOST);"
     );
     const proposal = fs.mkdtempSync(path.join(os.tmpdir(), 'proposal-'));
     fs.writeFileSync(path.join(proposal, 'decomposition.yaml'), 'version: 1\n');
 
     const traceparent = '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01';
     const ws = await startWorkspace({ proposalDir: proposal, port: 0, who: 't', commit: false, log: () => undefined, mfeDir: mfe, childEnv: { TRACEPARENT: traceparent } });
+    const page = new URL(ws.url);
     await ws.close();
     expect(await portIsFree(BFF_PORT)).toBe(true);
+    // The BFF answers the workspace's own page and no other origin: it is told
+    // which origins those are, under both loopback names.
+    expect(fs.readFileSync(path.join(mfe, 'cors.txt'), 'utf8').split(',').sort()).toEqual(
+      [`http://127.0.0.1:${page.port}`, `http://localhost:${page.port}`].sort(),
+    );
     // The BFF's work is attributed to the command that started it (ADR-081, ADR-118 §5).
     expect(fs.readFileSync(path.join(mfe, 'trace.txt'), 'utf8')).toBe(traceparent);
   }, 20000);
