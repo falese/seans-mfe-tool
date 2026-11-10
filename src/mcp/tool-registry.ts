@@ -104,7 +104,7 @@ export async function loadToolRegistry(
  * Map an MCP tool name and its input arguments to CLI argv.
  *
  * Examples:
- *   mfe:deploy  → ["deploy", "--json"]
+ *   mfe:schemas → ["schemas", "--json"]
  *   mfe:bff:init → ["bff:init", "--json"]
  *   mfe:validate (command "mfe:validate") → ["mfe:validate", "--json"]
  */

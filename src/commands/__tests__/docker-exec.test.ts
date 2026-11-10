@@ -1,9 +1,9 @@
 /**
  * Docker is run with an argument array, never a shell string.
  *
- * `deploy` and `build:docker` used to build `docker …` as a template string
- * for `execSync`, so a name such as `x; touch /tmp/pwned` ran on the host —
- * and both commands are MCP tools, which put that string within reach of any
+ * `build:docker` used to build `docker …` as a template string for `execSync`
+ * (as did `deploy`, since removed — ADR-122), so a tag such as
+ * `x; touch /tmp/pwned` ran on the host — and the command is an MCP tool, which put that string within reach of any
  * text an agent reads. These tests hold the two properties that close it:
  * nothing reaches a shell, and a value that is not a Docker name is refused
  * before anything is spawned.
@@ -11,8 +11,7 @@
 
 import { execFileSync, execSync } from 'child_process';
 import { ValidationError } from '@seans-mfe/contracts';
-import { runDocker, assertImageName, assertImageRef, assertPort } from '../_docker';
-import { deployCommand } from '../deploy';
+import { runDocker, assertImageRef } from '../_docker';
 import { buildDockerCommand } from '../build/docker';
 import { loadFrameworkPlugin } from '../../framework/loader';
 
@@ -56,17 +55,9 @@ describe('runDocker', () => {
   });
 });
 
-describe('name, reference and port validation', () => {
-  it.each(INJECTIONS)('refuses %j as an image name', (value) => {
-    expect(() => assertImageName(value, 'name')).toThrow(ValidationError);
-  });
-
+describe('image reference validation', () => {
   it.each(INJECTIONS)('refuses %j as an image reference', (value) => {
     expect(() => assertImageRef(value, 'tag')).toThrow(ValidationError);
-  });
-
-  it.each(['my-app', 'app2', 'meridian.cargo_ops'])('accepts %j as an image name', (value) => {
-    expect(() => assertImageName(value, 'name')).not.toThrow();
   });
 
   it.each(['my-mfe:latest', 'localhost:5000/team/app:1.2.3', 'ghcr.io/org/app'])(
@@ -75,45 +66,6 @@ describe('name, reference and port validation', () => {
       expect(() => assertImageRef(value, 'tag')).not.toThrow();
     },
   );
-
-  it.each([Number.NaN, 0, -1, 65536, 80.5])('refuses port %p', (value) => {
-    expect(() => assertPort(value, 'port')).toThrow(ValidationError);
-  });
-
-  it('accepts a port in range', () => {
-    expect(() => assertPort(8080, 'port')).not.toThrow();
-  });
-});
-
-describe('deploy', () => {
-  it.each(INJECTIONS)('refuses the name %j before running anything', async (name) => {
-    await expect(deployCommand({ name, type: 'remote', env: 'development', port: 8080 })).rejects.toThrow(
-      ValidationError,
-    );
-    expect(mockExecFile).not.toHaveBeenCalled();
-    expect(mockExec).not.toHaveBeenCalled();
-  });
-
-  it('refuses a name under --dry-run too: the plan must be one that could run', async () => {
-    await expect(
-      deployCommand({ name: 'x; id', type: 'remote', env: 'development', port: 8080, dryRun: true }),
-    ).rejects.toThrow(ValidationError);
-  });
-
-  it('refuses a port that is not a port', async () => {
-    await expect(deployCommand({ name: 'app', type: 'remote', env: 'development', port: Number.NaN })).rejects.toThrow(
-      ValidationError,
-    );
-    expect(mockExecFile).not.toHaveBeenCalled();
-  });
-
-  it('passes every docker argument as its own array element', async () => {
-    await deployCommand({ name: 'app', type: 'remote', env: 'development', port: 8080 });
-    expect(mockExec).not.toHaveBeenCalled();
-    const run = mockExecFile.mock.calls.find(([, args]) => (args as string[])[0] === 'run');
-    expect(run?.[0]).toBe('docker');
-    expect(run?.[1]).toEqual(expect.arrayContaining(['--name', 'app-dev', '-p', '8080:80', 'app:development']));
-  });
 });
 
 describe('build:docker', () => {

@@ -22,7 +22,8 @@ import { ValidationError } from '@seans-mfe/contracts';
  *
  * Distinct from CATALOG_EXCLUDED, which removes a command from the catalog
  * altogether. These are real commands with real contracts; what they lack is
- * a way to be useful to a caller that waits for one answer.
+ * a way to be useful to a caller that waits for one answer: each starts a
+ * server and does not return.
  */
 export const MCP_DEFAULT_OFF: Record<string, string> = {
   'build:dev':
@@ -31,8 +32,6 @@ export const MCP_DEFAULT_OFF: Record<string, string> = {
     'starts a Mesh dev server that outlives the call; nothing an agent holds can stop it',
   'decompose:workspace':
     'starts the workspace servers for a person to use in a browser; it does not return while they run',
-  deploy:
-    'stops and removes an existing container of the same name before it starts a new one, without asking',
 };
 
 interface PropertySchema {

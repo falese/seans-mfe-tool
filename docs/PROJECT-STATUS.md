@@ -44,7 +44,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | oclif replaces Commander; dual bin entries (Bun dev / Node publish)               | `bin/dev.ts`, `bin/run.js`                        |
 | `BaseCommand` with `--json` envelope and typed exit codes                         | `packages/oclif-base/`                            |
 | `CommandResult<T>`, typed error taxonomy, sysexits exit codes                     | `packages/contracts/`                             |
-| All commands ported: `bff/*`, `remote/*`, `api`, `deploy`, `schemas`, `mcp:serve` | `src/commands/`                                   |
+| All commands ported: `bff/*`, `remote/*`, `api`, `schemas`, `mcp:serve` (`deploy` was ported too, and removed in ADR-122) | `src/commands/`                                   |
 | oclif hooks: init, prerun, postrun (graphql-ws telemetry), command_not_found      | `src/hooks/`                                      |
 | MCP server with federated tool registry                                           | `src/mcp/`, `src/commands/mcp/serve.ts`           |
 | Auto-generated JSON schemas for all command inputs/outputs                        | `schemas/*.json`                                  |
@@ -71,7 +71,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | Abstract `BaseFrameworkPlugin` (core owns build/scaffold/Docker shape)            | `packages/contracts/src/framework-plugin.ts`      |
 | Concrete `ReactRspackPlugin` / `AngularWebpackPlugin`                              | `packages/framework-react/`, `packages/framework-angular/` |
 | `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`           | `src/framework/loader.ts`                         |
-| `build:dev/prod/docker/check`, `remote:init`, `deploy` delegate to the plugin     | `src/commands/build/`, `src/commands/remote/`     |
+| `build:dev/prod/docker/check`, `remote:init` delegate to the plugin               | `src/commands/build/`, `src/commands/remote/`     |
 | Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `packages/dsl/src/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
 | Authoring guide                                                                   | [`docs/framework-plugin-authoring.md`](./framework-plugin-authoring.md) |
 

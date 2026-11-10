@@ -86,8 +86,8 @@ module.exports = tseslint.config(
   },
   {
     // A command line built by interpolation and handed to a shell is command
-    // injection waiting for its input: `deploy` and `build:docker` both did it
-    // with a name the caller chose, and both are MCP tools (ADR-019). Pass an
+    // injection waiting for its input: `build:docker` did it with a tag the
+    // caller chose (as did `deploy`, since removed), and it is an MCP tool (ADR-019). Pass an
     // argument array to execFile/spawn instead — see src/commands/_docker.ts.
     files: ['src/**/*.ts', 'packages/*/src/**/*.{ts,js}'],
     rules: {

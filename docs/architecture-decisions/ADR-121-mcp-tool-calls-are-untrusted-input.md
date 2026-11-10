@@ -9,7 +9,7 @@ deciders: [sean]
 area: CLI / MCP / safety
 enforcement: code
 tags: [mcp, agent, security, cli]
-relates-to: [18, 19, 62, 77]
+relates-to: [18, 19, 77, 122]
 supersedes: []
 superseded-by: []
 implements-pdr: [3]
@@ -26,7 +26,7 @@ verified-by:
 tracked-by: []
 summary: >-
   The MCP server validates every tool call against the tool's input schema before it spawns
-  anything, confines the call's working directory to a root chosen at startup, leaves four
+  anything, confines the call's working directory to a root chosen at startup, leaves three
   commands out of the tool list unless the operator allows them, stops a timed-out call
   together with the processes it started, and no longer lists tools from external MCP servers
   it cannot call. Command code runs Docker with an argument array, never a shell string.
@@ -53,8 +53,8 @@ SEC-06) read the path from `tools/call` to the command line and found:
   `decompose:workspace`, which start a server and do not return, so a call to one could only
   end at the five-minute timeout. The timeout sent `SIGTERM` to the child alone, and the
   server it had started kept running.
-- `deploy` and `build:docker` built `docker …` as a template string for `execSync`, from a
-  name and a tag the caller chose. `x; touch /tmp/pwned` as a name ran on the host.
+- `deploy` (since removed, ADR-122) and `build:docker` built `docker …` as a template string
+  for `execSync`, from a name and a tag the caller chose. `x; touch /tmp/pwned` as a name ran on the host.
 - A third tool source listed tools from external MCP servers named in
   `~/.config/seans-mfe/mcp.json`. `tools/call` only spawns this CLI, so each of those tools
   resolved to a command that does not exist. Loading the list ran whatever command the file
@@ -90,16 +90,15 @@ in the root. A relative `cwd` resolves against the root.
 `executeToolCall` applies no root when none is passed. That is the library default and keeps
 its existing callers working; the command always passes one.
 
-### 3. Four commands are off by default
+### 3. Three commands are off by default
 
-`MCP_DEFAULT_OFF` names `build:dev`, `bff:dev`, `decompose:workspace` and `deploy`, each with
-its reason. They are left out of `tools/list` unless the operator starts the server with
+`MCP_DEFAULT_OFF` names `build:dev`, `bff:dev` and `decompose:workspace`, each with its reason. They are left out of `tools/list` unless the operator starts the server with
 `--allow <command>`. An id that is not in the list is a validation error, so a typo does not
 look like a missing tool.
 
 This is separate from `CATALOG_EXCLUDED`. These commands keep their schemas in `schemas/`: they
-are real commands with real contracts. What three of them lack is a way to answer a caller that
-waits for one result, and the fourth removes a running container without asking.
+are real commands with real contracts. What they lack is a way to answer a caller that waits
+for one result: each starts a server and does not return.
 
 ### 4. A timed-out call is stopped with what it started
 
@@ -118,8 +117,7 @@ that forwards `tools/call` to the server that owns the tool, with tests.
 ### 6. Command code does not hand a shell an interpolated string
 
 Docker runs through `runDocker` (`src/commands/_docker.ts`), which passes an argument array to
-`execFileSync`. Image names, image references and ports are checked against Docker's grammar
-first, so a value cannot be read as a Docker option either. A lint rule refuses `exec` and
+`execFileSync`. An image reference is checked against Docker's grammar first, so a value cannot be read as a Docker option either. A lint rule refuses `exec` and
 `execSync` called with an interpolated template literal in `src` and `packages/*/src`.
 
 ## Boundaries
@@ -135,12 +133,10 @@ first, so a value cannot be read as a Docker option either. A lint rule refuses 
 - **No cancellation and no concurrency limit.** A client cannot cancel a running call, and
   nothing bounds how many run at once.
 - **Plugin tools are validated only as far as their schema goes.** See §1.
-- **`deploy` is unchanged apart from §6.** It is off by default here; whether it stays in the
-  CLI is ADR-062's question.
 
 ## Consequences
 
-Better: text an agent reads can no longer reach a shell through these two commands, cannot
+Better: text an agent reads can no longer reach a shell through `build:docker`, cannot
 pass a flag the tool never offered, and cannot point a command at a directory outside the
 project. A tool call that would have hung for five minutes is no longer offered.
 
@@ -156,5 +152,5 @@ schema dialect. It is small, and `tool-policy.test.ts` runs it against the real 
 
 - ADR-018 — the one-line JSON envelope each child prints.
 - ADR-019 — one child process per tool call; this record adds what is checked before the spawn.
-- ADR-062 — `deploy` as a development convenience.
+- ADR-122 — `deploy`, one of the two commands §6 was written for, has since been removed.
 - ADR-077 — the agent contract and the catalog derived from the oclif registry.

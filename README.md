@@ -144,7 +144,6 @@ Every command, in one place. `seans-mfe-tool <command> --help` has the flags;
 | `design:export <url>` | Export a running screen as a Figma import bundle (proof of concept) | no |
 | `coder:compile <intent>` | Compile a described intent into a manifest through a model (proof of concept) | — |
 | `adr:status`, `adr:validate`, `sentinel:validate` | This repository's own governance checks | — |
-| `deploy <name>` | Run the MFE in a local Docker container. Development only, and it does not yet work with the projects `remote:generate` produces | yes |
 
 "no" marks a command that writes files and has no preview yet.
 
@@ -194,11 +193,11 @@ seans-mfe-tool bff:validate [--manifest <path>]
 seans-mfe-tool api <name> [--spec openapi.yaml] [--database sqlite|mongodb] [--port 3001]
 ```
 
-### Deploy / package
+### Deploying
 
-```bash
-seans-mfe-tool deploy <name> --type <shell|remote|api> [options]
-```
+There is no `deploy` command. `build:docker` writes a hardened Dockerfile for
+the MFE and, with `--build`, builds the image; running it is yours. Deployment
+targets will return as plugins (ADR-122).
 
 ### Plugins (`@seans-mfe/*` core, `@falese/*` third-party — ADR-021, ADR-022)
 
@@ -319,9 +318,9 @@ read — so the server checks it before anything runs (ADR-121):
   tool does not declare, a wrong type or a missing required one is refused.
 - **`cwd` is confined** to the tree the server was started for: the directory
   it was launched in, or `--root <dir>`.
-- **Four commands are off by default**: `build:dev`, `bff:dev` and
-  `decompose:workspace` start a server and never return, and `deploy` removes
-  a running container. Offer one with `--allow <command>` (repeatable).
+- **Three commands are off by default**: `build:dev`, `bff:dev` and
+  `decompose:workspace` start a server and never return. Offer one with
+  `--allow <command>` (repeatable).
 - **A call that times out** (`--timeout-ms`, default 5 minutes) is stopped
   together with every process it started.
 

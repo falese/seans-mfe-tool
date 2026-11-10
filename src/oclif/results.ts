@@ -29,19 +29,6 @@ import type { MutatingResult } from '@seans-mfe/contracts';
 import type { ProposalStatus } from '@seans-mfe/decompose';
 
 // ---------------------------------------------------------------------------
-// deploy
-// ---------------------------------------------------------------------------
-
-export interface DeployResult extends MutatingResult {
-  appName: string;
-  environment: 'development' | 'production';
-  containerId?: string;
-  ports: number[];
-  generatedFiles: string[];
-  mode?: string;
-}
-
-// ---------------------------------------------------------------------------
 // api
 // ---------------------------------------------------------------------------
 

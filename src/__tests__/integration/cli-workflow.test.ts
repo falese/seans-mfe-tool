@@ -5,7 +5,6 @@
  *
  *   remote:init  →  edit manifest  →  remote:generate
  *                                 ↘   schemas
- *                                 ↘   deploy --dry-run
  *
  * No file-system or process mocking — the only thing we sidestep is the
  * package-install step on remote:init (via the public --skip-install flag),

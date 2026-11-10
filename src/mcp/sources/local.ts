@@ -1,6 +1,6 @@
 /**
  * Local MCP source — discovers tools from the CLI's own schemas/ directory.
- * Tool names are the command id in the "mfe:" namespace (mfe:deploy,
+ * Tool names are the command id in the "mfe:" namespace (mfe:build:prod,
  * mfe:bff:init, mfe:validate).
  *
  * Refs #113 (C5)

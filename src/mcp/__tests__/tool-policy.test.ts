@@ -21,7 +21,7 @@ import { executeToolCall } from '../server';
 
 const SCHEMAS = path.join(__dirname, '..', '..', '..', 'schemas');
 
-const DEPLOY_INPUT = {
+const TOOL_INPUT = {
   type: 'object',
   properties: {
     name: { type: 'string' },
@@ -37,10 +37,10 @@ const DEPLOY_INPUT = {
 };
 
 const tool: McpToolDefinition = {
-  name: 'mfe:deploy',
-  description: 'deploy',
-  inputSchema: DEPLOY_INPUT,
-  command: 'deploy',
+  name: 'mfe:api',
+  description: 'a tool',
+  inputSchema: TOOL_INPUT,
+  command: 'api',
 };
 
 function fakeChild(opts: { hang?: boolean } = {}): { kill: jest.Mock; pid: number } & Record<string, unknown> {
@@ -66,24 +66,24 @@ afterEach(() => {
 
 describe('validateToolInput', () => {
   it('accepts input that matches the schema', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: 'app', type: 'remote', 'dry-run': true, specs: ['a.yaml'] })).toEqual([]);
+    expect(validateToolInput(TOOL_INPUT, { name: 'app', type: 'remote', 'dry-run': true, specs: ['a.yaml'] })).toEqual([]);
   });
 
   it('accepts a number where the command takes a string: argv is text either way', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: 'app', type: 'remote', port: 8080 })).toEqual([]);
+    expect(validateToolInput(TOOL_INPUT, { name: 'app', type: 'remote', port: 8080 })).toEqual([]);
   });
 
   it('refuses a key the tool does not declare', () => {
-    const problems = validateToolInput(DEPLOY_INPUT, { name: 'app', type: 'remote', privileged: true });
+    const problems = validateToolInput(TOOL_INPUT, { name: 'app', type: 'remote', privileged: true });
     expect(problems).toEqual([expect.stringContaining('privileged')]);
   });
 
   it('refuses a missing required argument', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: 'app' })).toEqual([expect.stringContaining('type')]);
+    expect(validateToolInput(TOOL_INPUT, { name: 'app' })).toEqual([expect.stringContaining('type')]);
   });
 
   it('refuses a value outside the enum', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: 'app', type: 'cluster' })).toEqual([expect.stringContaining('type')]);
+    expect(validateToolInput(TOOL_INPUT, { name: 'app', type: 'cluster' })).toEqual([expect.stringContaining('type')]);
   });
 
   it.each([
@@ -93,15 +93,15 @@ describe('validateToolInput', () => {
     ['a string for an array', { name: 'app', type: 'remote', specs: 'a.yaml' }, 'specs'],
     ['an object inside an array', { name: 'app', type: 'remote', specs: [{}] }, 'specs'],
   ])('refuses %s', (_label, input, field) => {
-    expect(validateToolInput(DEPLOY_INPUT, input as Record<string, unknown>)).toEqual([expect.stringContaining(field)]);
+    expect(validateToolInput(TOOL_INPUT, input as Record<string, unknown>)).toEqual([expect.stringContaining(field)]);
   });
 
   it('refuses a positional that the CLI would read as a flag', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: '--force', type: 'remote' })).toEqual([expect.stringContaining('name')]);
+    expect(validateToolInput(TOOL_INPUT, { name: '--force', type: 'remote' })).toEqual([expect.stringContaining('name')]);
   });
 
   it('refuses a value carrying a NUL or a newline', () => {
-    expect(validateToolInput(DEPLOY_INPUT, { name: 'a\nb', type: 'remote' })).toEqual([expect.stringContaining('name')]);
+    expect(validateToolInput(TOOL_INPUT, { name: 'a\nb', type: 'remote' })).toEqual([expect.stringContaining('name')]);
   });
 
   it('passes a schema with no declared properties through: a third-party tool that predates them', () => {
@@ -151,7 +151,7 @@ describe('confineCwd', () => {
 });
 
 describe('the default tool catalog', () => {
-  it('leaves out commands that never return and the one that removes a container', async () => {
+  it('leaves out commands that never return', async () => {
     const names = (await loadToolRegistry(SCHEMAS)).map((t) => t.command);
     for (const id of Object.keys(MCP_DEFAULT_OFF)) expect(names).not.toContain(id);
     expect(names).toContain('remote:generate');
@@ -159,14 +159,14 @@ describe('the default tool catalog', () => {
   });
 
   it('gives a reason for each one it leaves out', () => {
-    expect(Object.keys(MCP_DEFAULT_OFF).sort()).toEqual(['bff:dev', 'build:dev', 'decompose:workspace', 'deploy']);
+    expect(Object.keys(MCP_DEFAULT_OFF).sort()).toEqual(['bff:dev', 'build:dev', 'decompose:workspace']);
     for (const reason of Object.values(MCP_DEFAULT_OFF)) expect(reason.length).toBeGreaterThan(20);
   });
 
   it('offers one again when the operator allows it by command id', async () => {
     const names = (await loadToolRegistry(SCHEMAS, { allow: ['build:dev'] })).map((t) => t.command);
     expect(names).toContain('build:dev');
-    expect(names).not.toContain('deploy');
+    expect(names).not.toContain('bff:dev');
   });
 });
 
@@ -174,7 +174,7 @@ describe('executeToolCall', () => {
   const options = { schemasDir: SCHEMAS, cliBin: '/fake/cli.js', timeoutMs: 5000 };
 
   it('refuses invalid input without spawning', async () => {
-    const result = await executeToolCall('mfe:deploy', { name: 'app', type: 'remote', privileged: true }, options, tool);
+    const result = await executeToolCall('mfe:api', { name: 'app', type: 'remote', privileged: true }, options, tool);
     expect(result.ok).toBe(false);
     expect(result.error?.type).toBe('validation');
     expect(result.error?.message).toContain('privileged');
@@ -183,7 +183,7 @@ describe('executeToolCall', () => {
 
   it('refuses a cwd outside the root without spawning', async () => {
     const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-root-')));
-    const result = await executeToolCall('mfe:deploy', { name: 'app', type: 'remote', cwd: os.homedir() }, { ...options, root }, tool);
+    const result = await executeToolCall('mfe:api', { name: 'app', type: 'remote', cwd: os.homedir() }, { ...options, root }, tool);
     expect(result.ok).toBe(false);
     expect(result.error?.type).toBe('validation');
     expect(result.error?.message).toContain('outside');
@@ -194,14 +194,14 @@ describe('executeToolCall', () => {
   it('runs in the root when the call names no cwd', async () => {
     const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-root-')));
     spawnMock.mockReturnValue(fakeChild());
-    await executeToolCall('mfe:deploy', { name: 'app', type: 'remote' }, { ...options, root }, tool);
+    await executeToolCall('mfe:api', { name: 'app', type: 'remote' }, { ...options, root }, tool);
     expect((spawnMock.mock.calls[0][2] as { cwd?: string }).cwd).toBe(root);
     await fs.remove(root);
   });
 
   it('starts the child as a process-group leader, so its own children can be stopped with it', async () => {
     spawnMock.mockReturnValue(fakeChild());
-    await executeToolCall('mfe:deploy', { name: 'app', type: 'remote' }, options, tool);
+    await executeToolCall('mfe:api', { name: 'app', type: 'remote' }, options, tool);
     expect((spawnMock.mock.calls[0][2] as { detached?: boolean }).detached).toBe(process.platform !== 'win32');
   });
 
@@ -210,7 +210,7 @@ describe('executeToolCall', () => {
     spawnMock.mockReturnValue(child);
     const kill = jest.spyOn(process, 'kill').mockImplementation(() => true);
 
-    const result = await executeToolCall('mfe:deploy', { name: 'app', type: 'remote' }, { ...options, timeoutMs: 20 }, tool);
+    const result = await executeToolCall('mfe:api', { name: 'app', type: 'remote' }, { ...options, timeoutMs: 20 }, tool);
 
     expect(result.error?.type).toBe('timeout');
     if (process.platform === 'win32') {
@@ -227,7 +227,7 @@ describe('executeToolCall', () => {
       throw new Error('ESRCH');
     });
 
-    await executeToolCall('mfe:deploy', { name: 'app', type: 'remote' }, { ...options, timeoutMs: 20 }, tool);
+    await executeToolCall('mfe:api', { name: 'app', type: 'remote' }, { ...options, timeoutMs: 20 }, tool);
 
     expect(child.kill).toHaveBeenCalledWith('SIGTERM');
   });

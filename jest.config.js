@@ -71,7 +71,7 @@ module.exports = {
   ],
   
   // Coverage thresholds. Phase 1.1 adds per-file thresholds for the four
-  // newly-covered files (api.ts, deploy.ts, schemas.ts; graphql-ws-client.ts's
+  // newly-covered files (api.ts, schemas.ts; graphql-ws-client.ts's
   // entry went with its class in #387 — the file is an interface now)
   // and tightens the global floor.
   //
@@ -103,12 +103,6 @@ module.exports = {
     },
     // Phase 1.1: command-layer coverage targets
     'packages/plugin-api/src/commands/api.ts': {
-      branches: 85,
-      functions: 90,
-      lines: 90,
-      statements: 90
-    },
-    'src/commands/deploy.ts': {
       branches: 85,
       functions: 90,
       lines: 90,

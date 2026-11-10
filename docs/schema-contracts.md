@@ -313,9 +313,9 @@ runtime does once an MFE is loaded.
 | local | the CLI's own `schemas/` | `mfe:` |
 | plugin | installed oclif plugins carrying a `schemas/` directory | the plugin's topic |
 
-Four commands have a schema but are not offered as tools unless the operator starts the server
-with `--allow <command>`: `build:dev`, `bff:dev`, `decompose:workspace` and `deploy`. The first
-three start a server and do not return; `deploy` removes a running container. Every call is
+Three commands have a schema but are not offered as tools unless the operator starts the server
+with `--allow <command>`: `build:dev`, `bff:dev` and `decompose:workspace`. Each starts a server
+and does not return. Every call is
 checked against the tool's `inputSchema` before anything is spawned, and its `cwd` must sit
 inside the server's `--root` (ADR-121).
 
