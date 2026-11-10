@@ -1,21 +1,10 @@
-# Agent System — seans-mfe-tool
+# Agent System — seans-mfe-tool (archived)
+
+> **Archived 2026-11-10.** This page sat at `docs/README.md`, where a reader expects the documentation
+> index. It describes a Copilot agent workflow whose agent definition files are no longer in the
+> repository. Kept for the record; the index is [`docs/README.md`](../README.md).
 
 This directory contains agent definitions for GitHub Copilot to perform specialized development tasks. Agents work together in a coordinated workflow to maintain code quality and traceability.
-
-## Platform documentation
-
-- [Getting started](./getting-started.md)
-- [Current architecture](./architecture-current-state.md)
-- [Runtime platform](./architecture-runtime-platform.md)
-- [Slot contract](./slot-contract.md)
-- [Query capability](./query-capability.md)
-- [Schema & contract architecture](./schema-contracts.md) — contracts, schemas, and how they reach runtime and plugins ([typeset](./derived-contracts.html))
-- [Generator CLI schematics](./cli-architecture.html) — the component architecture, in six drawings
-- [CLI contract](./cli-contract.md) — envelope, `--json`, exit codes
-- [DSL manifest schema](./schemas/dsl-manifest.md)
-- [Manifest field reference](./schemas/manifest-fields.md) (generated)
-- [ADR index](./spec.md#adr-index)
-- [ABC Kids end-to-end example](../examples/abc-kids/README.md)
 
 ## Available Agents
 

@@ -62,16 +62,17 @@
     "check:rust-wasm": "bash scripts/check-rust-wasm.sh"
   },
   "keywords": [
-    "module-federation",
-    "react",
-    "mui",
-    "rspack",
     "microfrontend",
+    "module-federation",
+    "codegen",
+    "react",
+    "angular",
+    "mcp",
     "cli"
   ],
   "author": "Sean",
   "license": "MIT",
-  "description": "CLI tool for scaffolding Module Federation applications with React and MUI",
+  "description": "Generate, validate and compose micro-frontends from a manifest, with a shared runtime lifecycle contract",
   "bin": {
     "seans-mfe-tool": "./bin/run.js"
   },

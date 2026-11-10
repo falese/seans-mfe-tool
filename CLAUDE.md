@@ -12,7 +12,7 @@ Full spec: `@docs/spec.md`
 
 ## Stack
 
-- **Runtime:** Node ≥18 (published), Bun (dev entry — no transpile)
+- **Runtime:** Node ≥20 (`package.json` `engines`), Bun (dev entry — no transpile)
 - **Language:** TypeScript (strict, no `any`)
 - **CLI framework:** oclif (colon topics, plugin architecture)
 - **Packages:** `packages/*` — see `packages/README.md` for the layers and the import direction between them

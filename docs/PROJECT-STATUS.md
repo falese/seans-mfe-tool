@@ -102,8 +102,8 @@ the `overwrite` flag on the generation plan, enforced by regenerating and diffin
 ### ADR Governance under Drift Control (ADR-075)
 
 Frontmatter is the source of truth; [`docs/spec.md#adr-index`](./spec.md#adr-index) and the PDR↔ADR
-map are generated from it. `adr:status` and `adr:validate` ship as commands. **79 ADRs**: 52
-Implemented, 14 Accepted, 11 Proposed, 1 Deferred, 1 Superseded.
+map are generated from it. `adr:status` and `adr:validate` ship as commands. The count and the status
+of each are in that generated index; a number written here went stale (it said 79 when there were 120).
 
 ### Agent Contract (ADR-077, epic #139)
 
