@@ -17,11 +17,44 @@ import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import { loadToolRegistry, buildArgv, McpToolDefinition } from './tool-registry';
 import type { CommandResult } from '@seans-mfe/contracts';
+import { validateToolInput, confineCwd } from './policy';
 
 export interface McpServerOptions {
   schemasDir:  string;
   cliBin:      string;
   timeoutMs:   number;
+  /**
+   * The directory tree tool calls may run in (ADR-121). A call's `cwd` must be
+   * at or under it, and a call that names none runs in it. Unset means no
+   * confinement — the library default; `mcp:serve` always sets it.
+   */
+  root?:       string;
+  /** Command ids from MCP_DEFAULT_OFF the operator has chosen to offer. */
+  allow?:      string[];
+}
+
+const invalid = (message: string): ToolCallResult => ({
+  ok: false,
+  error: { type: 'validation', code: 400, message },
+  stderr: '',
+});
+
+/**
+ * Stop a timed-out child and everything it started. The child is a process
+ * group leader (spawned detached), so a negative pid signals the group: a dev
+ * server or `npm install` it launched goes with it instead of being orphaned.
+ * Falls back to the child alone where groups do not exist or the signal fails.
+ */
+function stopChild(child: { pid?: number; kill: (signal: NodeJS.Signals) => unknown }): void {
+  if (process.platform !== 'win32' && typeof child.pid === 'number') {
+    try {
+      process.kill(-child.pid, 'SIGTERM');
+      return;
+    } catch {
+      // fall through
+    }
+  }
+  child.kill('SIGTERM');
 }
 
 export interface ToolCallResult {
@@ -56,22 +89,29 @@ export async function executeToolCall(
   const cliBin = options.cliBin;
   const timeoutMs = options.timeoutMs ?? 300_000;
 
+  // The caller is an agent acting on text it has read, so the call is checked
+  // against what the tool declares before anything runs (ADR-121).
+  if (tool) {
+    const problems = validateToolInput(tool.inputSchema, input);
+    if (problems.length > 0) {
+      return invalid(`Invalid arguments for ${toolName}: ${problems.join('; ')}`);
+    }
+  }
+
   // Reserved execution argument (#279): run the child in the requested
   // directory. Validated here — the child would otherwise fail with an
   // opaque ENOENT before the CLI even parses argv.
-  const requestedCwd = typeof input.cwd === 'string' ? input.cwd : undefined;
-  if (requestedCwd !== undefined) {
+  let requestedCwd = typeof input.cwd === 'string' ? input.cwd : undefined;
+  if (options.root !== undefined) {
+    try {
+      requestedCwd = await confineCwd(options.root, requestedCwd ?? '.');
+    } catch (err) {
+      return invalid((err as Error).message);
+    }
+  } else if (requestedCwd !== undefined) {
     const stat = await fs.stat(requestedCwd).catch(() => null);
     if (!stat || !stat.isDirectory()) {
-      return {
-        ok: false,
-        error: {
-          type: 'validation',
-          code: 400,
-          message: `cwd is not an existing directory: ${requestedCwd}`,
-        },
-        stderr: '',
-      };
+      return invalid(`cwd is not an existing directory: ${requestedCwd}`);
     }
   }
 
@@ -83,13 +123,15 @@ export async function executeToolCall(
     const child = spawn('node', [cliBin, ...argv], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
+      // A process-group leader, so a timeout can stop what it started too.
+      detached: process.platform !== 'win32',
       ...(requestedCwd !== undefined ? { cwd: requestedCwd } : {}),
     });
 
     const timer = setTimeout(() => {
       if (!settled) {
         settled = true;
-        child.kill('SIGTERM');
+        stopChild(child);
         resolve({
           ok:    false,
           error: { type: 'timeout', code: 124, message: `Tool call timed out after ${timeoutMs}ms` },
@@ -148,13 +190,18 @@ export async function executeToolCall(
  * runtime dependency before the C-epic contracts package ships.
  */
 export async function startMcpServer(options: McpServerOptions): Promise<void> {
-  const tools = await loadToolRegistry(options.schemasDir, { cliName: 'seans-mfe-tool' });
+  const tools = await loadToolRegistry(options.schemasDir, { cliName: 'seans-mfe-tool', allow: options.allow });
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
   process.stdin.setEncoding('utf8');
   let buffer = '';
 
-  process.stdin.on('data', async (chunk: string) => {
+  // Calls still being answered. The client closing stdin must not cut them
+  // off: `end` used to exit at once, so a call whose answer was not already
+  // written — any call that awaited anything — was dropped without a reply.
+  const inFlight = new Set<Promise<void>>();
+
+  const onData = async (chunk: string): Promise<void> => {
     buffer += chunk;
     const lines = buffer.split('\n');
     buffer = lines.pop() ?? '';
@@ -177,11 +224,19 @@ export async function startMcpServer(options: McpServerOptions): Promise<void> {
         process.stdout.write(JSON.stringify(errResponse) + '\n');
       }
     }
+  };
+
+  process.stdin.on('data', (chunk: string) => {
+    const work = onData(chunk).finally(() => inFlight.delete(work));
+    inFlight.add(work);
   });
 
+
   // This is the process's own stdio loop ending (parent disconnected) —
-  // there is no caller above it to throw to.
-  process.stdin.on('end', () => { process.exit(0); });
+  // there is no caller above it to throw to. Answer what is in flight first.
+  process.stdin.on('end', () => {
+    void Promise.allSettled([...inFlight]).then(() => process.exit(0));
+  });
 }
 
 async function handleRequest(

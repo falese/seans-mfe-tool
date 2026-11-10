@@ -255,31 +255,38 @@ Long-form capability reference: [`PLATFORM-CONTRACT.md`](./docs/PLATFORM-CONTRAC
 
 ## MCP server — CLI as agent tools
 
-`seans-mfe-tool mcp:serve` exposes every CLI command as a Model Context Protocol
-tool so AI agents (Claude, Copilot, …) can invoke them. Each tool call spawns
+`seans-mfe-tool mcp:serve` exposes the CLI's commands as Model Context Protocol
+tools so AI agents (Claude, Copilot, …) can invoke them. Each tool call spawns
 `seans-mfe-tool <cmd> --json` as a child process, isolating `process.exit` and
-cwd mutations (ADR-019).
+cwd mutations (ADR-019). Use the colon form: `mcp serve` with a space prints
+the topic help and does not start the server.
 
-Tools are discovered from three federated sources:
+```json
+// Claude Desktop / any MCP client
+{ "mcpServers": { "seans-mfe": { "command": "seans-mfe-tool", "args": ["mcp:serve"] } } }
+```
+
+Tools are discovered from two sources:
 
 | Source | Prefix | How it works |
 |--------|--------|--------------|
 | Local | `mfe:` | Reads `schemas/*.json` bundled with the CLI |
 | Plugins | topic (e.g. `daemon:`) | Reads installed oclif plugins that ship `schemas/` |
-| Remote | server name | Spawns/connects to entries in `~/.config/seans-mfe/mcp.json` |
 
-```json
-// ~/.config/seans-mfe/mcp.json — proxy external MCP servers
-{
-  "servers": [
-    { "name": "coder",  "command": "bunx", "args": ["@falese/coder-mcp"] },
-    { "name": "daemon", "url": "http://daemon.local:8080/mcp" }
-  ]
-}
-```
-
-Each entry's `name` becomes the tool prefix (`coder:refactor`, `daemon:start`, …).
 Name collisions across sources are a startup error.
+
+A tool call is untrusted input — the caller is an agent acting on text it has
+read — so the server checks it before anything runs (ADR-121):
+
+- **Arguments are validated** against the tool's input schema. An argument the
+  tool does not declare, a wrong type or a missing required one is refused.
+- **`cwd` is confined** to the tree the server was started for: the directory
+  it was launched in, or `--root <dir>`.
+- **Four commands are off by default**: `build:dev`, `bff:dev` and
+  `decompose:workspace` start a server and never return, and `deploy` removes
+  a running container. Offer one with `--allow <command>` (repeatable).
+- **A call that times out** (`--timeout-ms`, default 5 minutes) is stopped
+  together with every process it started.
 
 ---
 

@@ -344,6 +344,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-118](./architecture-decisions/ADR-118-decompose-package.md) | The decomposition proposal model is a package, @seans-mfe/decompose; every command, plugin and library that reads or changes a proposal calls it in-process, and the CLI is one of its callers rather than the only door to it | Decomposition / packaging / layering | Implemented |
 | [ADR-119](./architecture-decisions/ADR-119-flows-as-data.md) | A flow is a YAML description of steps, their commands, their inputs and outputs and the human gates between them; its state is derived from the artifacts on disk, never recorded; flow:status reports it and names the next command | CLI / workflow | Implemented |
 | [ADR-120](./architecture-decisions/ADR-120-decomposition-agent-and-package.md) | The decomposition proposal model is a package that every caller reaches in-process, and the workspace's agent reaches a hosted model through the coder seam's API transport, its edits checked by the same deterministic floor before anything acts on them | Decomposition / packaging / agent | Implemented |
+| [ADR-121](./architecture-decisions/ADR-121-mcp-tool-calls-are-untrusted-input.md) | An MCP tool call is untrusted input: it is checked against the tool's schema, held inside a root directory, and offered only tools that can answer | CLI / MCP / safety | Implemented |
 
 ### Proposed — filed, not ratified
 
