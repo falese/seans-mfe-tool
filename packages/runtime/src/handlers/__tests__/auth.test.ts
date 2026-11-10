@@ -91,3 +91,50 @@ describe('platform.checkPermissions', () => {
     await expect(checkPermissions(context, [])).rejects.toThrow(/Insufficient permissions/);
   });
 });
+
+/**
+ * Telemetry leaves the process. A bearer token in it is a credential in
+ * whatever stores the events, and the decoded claims are personal data; the
+ * event needs neither to say who failed and why.
+ */
+describe('auth telemetry carries no credential and no claims', () => {
+  const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1LTEifQ.c2lnbmF0dXJl';
+  const CLAIMS = { sub: 'u-1', email: 'person@example.com', roles: ['viewer'], iat: 1 };
+  const emitted = (emit: jest.Mock): string => JSON.stringify(emit.mock.calls);
+
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'testsecret';
+  });
+
+  it('does not emit the token when validation fails', async () => {
+    const emit = jest.fn();
+    jest.spyOn(require('jsonwebtoken'), 'verify').mockImplementation(() => { throw new Error('jwt expired'); });
+    await expect(validateJWT({ jwt: TOKEN, emit } as any)).rejects.toThrow(/jwt expired/);
+    expect(emitted(emit)).not.toContain(TOKEN);
+    expect(emit.mock.calls[0][0].metadata).not.toHaveProperty('token');
+  });
+
+  it('emits the subject, not the claims, when validation succeeds', async () => {
+    const emit = jest.fn();
+    jest.spyOn(require('jsonwebtoken'), 'verify').mockReturnValue(CLAIMS);
+    await validateJWT({ jwt: TOKEN, emit } as any);
+    const { metadata } = emit.mock.calls[0][0];
+    expect(metadata).not.toHaveProperty('user');
+    expect(metadata.subject).toBe('u-1');
+    expect(emitted(emit)).not.toContain('person@example.com');
+    expect(emitted(emit)).not.toContain(TOKEN);
+  });
+
+  it.each([
+    ['denied', ['admin']],
+    ['granted', ['viewer']],
+  ])('emits the subject, not the claims, when permission is %s', async (_outcome, required) => {
+    const emit = jest.fn();
+    const run = checkPermissions({ user: CLAIMS, emit } as any, required);
+    await (required[0] === 'admin' ? expect(run).rejects.toThrow(/Insufficient permissions/) : run);
+    const { metadata } = emit.mock.calls[0][0];
+    expect(metadata).not.toHaveProperty('user');
+    expect(metadata.subject).toBe('u-1');
+    expect(emitted(emit)).not.toContain('person@example.com');
+  });
+});
