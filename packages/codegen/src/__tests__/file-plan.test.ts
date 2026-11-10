@@ -258,3 +258,47 @@ describe('the template-root table is not prototype-bearing', () => {
     expect(Object.keys(roots).sort()).toEqual(['__proto__', 'variant']);
   });
 });
+
+describe('a planned path that leaves the project', () => {
+  // Output paths are built from manifest values — a capability name becomes a
+  // directory — and manifests are increasingly written by a model. Whatever
+  // the schema lets through, the generator writes inside the project or not
+  // at all.
+  it.each([
+    ['climbs out with ..', 'src/features/../../../etc/cron.d/x'],
+    ['starts with ..', '../outside.ts'],
+    ['is absolute', '/etc/passwd'],
+    ['climbs out with a Windows separator', 'src\\..\\..\\outside.ts'],
+  ])('is refused when it %s', async (_label, out) => {
+    const io = fakeIO({ '/tpl/a.ejs': 'A' });
+    const { files, diagnostics } = await resolveFilePlan(
+      [{ template: 'a.ejs', out, owner: 'developer' }],
+      { basePath: '/out', roots: { variant: '/tpl' }, vars: {}, ctx, io },
+    );
+
+    expect(files).toEqual([]);
+    expect(io.rendered).toEqual([]);
+    expect(diagnostics).toEqual([expect.objectContaining({ severity: 'error', code: 'path-escape', target: out })]);
+  });
+
+  it('still emits the files beside it', async () => {
+    const io = fakeIO({ '/tpl/a.ejs': 'A' });
+    const { files } = await resolveFilePlan(
+      [
+        { content: 'x', out: '../outside.ts', owner: 'developer' },
+        { template: 'a.ejs', out: 'src/a.ts', owner: 'generator' },
+      ],
+      { basePath: '/out', roots: { variant: '/tpl' }, vars: {}, ctx, io },
+    );
+    expect(files.map((f) => f.path)).toEqual(['/out/src/a.ts']);
+  });
+
+  it('lets a file name that merely contains dots through', async () => {
+    const io = fakeIO({});
+    const { files } = await resolveFilePlan(
+      [{ content: 'x', out: 'src/a..b/.meshrc.yaml', owner: 'generator' }],
+      { basePath: '/out', roots: { variant: '/tpl' }, vars: {}, ctx, io },
+    );
+    expect(files).toHaveLength(1);
+  });
+});

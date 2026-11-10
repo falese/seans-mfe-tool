@@ -8,6 +8,6 @@
 
 > `const` **DataPluginSchema**: `ZodRecord`\<`ZodString`, `ZodUnknown`\>
 
-Defined in: [packages/dsl/src/schema.ts:433](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L433)
+Defined in: [packages/dsl/src/schema.ts:449](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L449)
 
 Mesh plugin - flexible schema with validation

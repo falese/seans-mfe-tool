@@ -8,4 +8,4 @@
 
 > **ObservabilityConfig** = `z.infer`\<*typeof* [`ObservabilityConfigSchema`](../variables/ObservabilityConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:530](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L530)
+Defined in: [packages/dsl/src/schema.ts:546](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L546)

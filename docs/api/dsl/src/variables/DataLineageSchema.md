@@ -8,6 +8,6 @@
 
 > `const` **DataLineageSchema**: `ZodObject`\<\{ `openapi`: `ZodOptional`\<`ZodString`\>; `service`: `ZodOptional`\<`ZodString`\>; `version`: `ZodOptional`\<`ZodString`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:454](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L454)
+Defined in: [packages/dsl/src/schema.ts:470](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L470)
 
 Data lineage tracking

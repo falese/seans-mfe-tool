@@ -8,7 +8,8 @@
     "name": {
       "description": "Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case.",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
     },
     "version": {
       "description": "Manifest version. Bump on any breaking change to capability inputs or outputs.",
@@ -219,7 +220,8 @@
       "items": {
         "type": "object",
         "propertyNames": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
         },
         "additionalProperties": {
           "type": "object",
