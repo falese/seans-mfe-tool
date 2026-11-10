@@ -15,7 +15,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { TimeoutError, SystemError } from '@seans-mfe/contracts';
 
 jest.mock('fs-extra');
@@ -23,7 +23,8 @@ jest.mock('child_process');
 jest.mock('path');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
-const mockExec = execSync as jest.MockedFunction<typeof execSync>;
+// docker runs through execFileSync('docker', [...args]) — see ../_docker.ts.
+const mockExec = execFileSync as unknown as jest.Mock;
 const mockPath = path as jest.Mocked<typeof path>;
 
 // Import after mocks

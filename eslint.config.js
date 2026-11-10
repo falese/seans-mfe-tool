@@ -85,6 +85,30 @@ module.exports = tseslint.config(
     },
   },
   {
+    // A command line built by interpolation and handed to a shell is command
+    // injection waiting for its input: `deploy` and `build:docker` both did it
+    // with a name the caller chose, and both are MCP tools (ADR-019). Pass an
+    // argument array to execFile/spawn instead — see src/commands/_docker.ts.
+    files: ['src/**/*.ts', 'packages/*/src/**/*.{ts,js}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.name=/^(exec|execSync)$/][arguments.0.type='TemplateLiteral'][arguments.0.expressions.length>0]",
+          message:
+            'Do not interpolate into a shell command. Use execFile/execFileSync or spawn with an argument array.',
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name=/^(exec|execSync)$/][callee.object.name=/^(cp|childProcess|child_process)$/][arguments.0.type='TemplateLiteral'][arguments.0.expressions.length>0]",
+          message:
+            'Do not interpolate into a shell command. Use execFile/execFileSync or spawn with an argument array.',
+        },
+      ],
+    },
+  },
+  {
     // Tests use Jest globals and looser typing conventions.
     files: ['**/__tests__/**', '**/*.{test,spec}.{js,ts}', 'tests/**', 'jest.setup.js'],
     languageOptions: {

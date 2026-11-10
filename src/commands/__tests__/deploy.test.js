@@ -1,7 +1,12 @@
 // src/commands/__tests__/deploy.test.js
 const fs = require('fs-extra');
 const path = require('path');
-const { execSync } = require('child_process');
+const childProcess = require('child_process');
+
+// deploy runs docker through execFileSync('docker', [...args]) — never a shell
+// string (see ../_docker.ts). These tests were written against the command
+// line, so each call is presented to them as the line it amounts to.
+const execSync = jest.fn();
 const {
   deployCommand,
   verifyProjectStructure,
@@ -34,7 +39,10 @@ describe('Deploy Command', () => {
     fs.pathExists.mockResolvedValue(true);
     path.resolve.mockImplementation((...args) => args.join('/'));
     path.join.mockImplementation((...args) => args.join('/'));
+    execSync.mockReset();
     execSync.mockImplementation(() => '');
+    childProcess.execFileSync.mockImplementation((file, args, opts) =>
+      execSync([file, ...args].join(' '), opts));
   });
 
   describe('verifyProjectStructure', () => {

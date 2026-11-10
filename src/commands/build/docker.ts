@@ -6,7 +6,6 @@
  */
 
 import * as path from 'path';
-import { execSync } from 'child_process';
 import * as fs from 'fs-extra';
 import { Flags } from '@oclif/core';
 import chalk = require('chalk');
@@ -18,6 +17,7 @@ import { resolveFrameworkName } from '@seans-mfe/codegen';
 import { ValidationError } from '@seans-mfe/contracts';
 import type { DockerStrategy } from '@seans-mfe/contracts';
 import type { BuildDockerResult } from '../../oclif/results';
+import { runDocker, assertImageRef } from '../_docker';
 
 export interface BuildDockerOptions {
   framework?: string;
@@ -131,6 +131,9 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
 
   console.log(chalk.blue(`\nGenerating Dockerfile for ${plugin.displayName}...\n`));
 
+  // Checked before the Dockerfile is written, so a refused tag leaves nothing behind.
+  if (opts.build && opts.tag !== undefined) assertImageRef(opts.tag, 'tag');
+
   const content = generateDockerfile(strategy, name);
   await fs.outputFile(outputPath, content);
   console.log(chalk.green(`✓ Dockerfile written to ${outputPath}`));
@@ -140,7 +143,7 @@ export async function buildDockerCommand(opts: BuildDockerOptions): Promise<Buil
 
   if (opts.build) {
     console.log(chalk.blue(`\nRunning: docker build -t ${tag} ${cwd}\n`));
-    execSync(`docker build -t ${tag} ${cwd}`, { stdio: 'inherit' });
+    runDocker(['build', '-t', tag, cwd], { stdio: 'inherit' });
     console.log(chalk.green(`✓ Image built: ${tag}`));
     built = true;
   }

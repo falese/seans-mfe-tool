@@ -1,5 +1,4 @@
 import { Args, Flags } from '@oclif/core';
-import { execSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -7,6 +6,7 @@ import * as os from 'os';
 import { BaseCommand } from '../oclif/BaseCommand';
 import { ValidationError, BusinessError, SystemError, TimeoutError } from '@seans-mfe/contracts';
 import type { DeployResult, PlannedChange } from '../oclif/results';
+import { runDocker, assertImageName, assertPort } from './_docker';
 
 interface DeployOptions {
   name: string;
@@ -168,13 +168,10 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     // Build image
     console.log(chalk.blue('\nBuilding Docker image...'));
     try {
-      execSync(
-        `docker build -t ${imageTag} --target development ${tempDir}`,
-        {
-          stdio: 'inherit',
-          env: { ...process.env, DOCKER_BUILDKIT: '1' }
-        }
-      );
+      runDocker(['build', '-t', imageTag, '--target', 'development', tempDir], {
+        stdio: 'inherit',
+        env: { ...process.env, DOCKER_BUILDKIT: '1' },
+      });
     } catch (error: unknown) {
       if (errorMessage(error).includes('Build failed')) {
         throw error;
@@ -184,8 +181,8 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
 
     // Stop existing container if it exists
     try {
-      execSync(`docker stop ${containerName}`, { stdio: 'ignore' });
-      execSync(`docker rm ${containerName}`, { stdio: 'ignore' });
+      runDocker(['stop', containerName], { stdio: 'ignore' });
+      runDocker(['rm', containerName], { stdio: 'ignore' });
       console.log(chalk.blue(`Removed existing container: ${containerName}`));
     } catch {
       // Container doesn't exist, continue
@@ -193,15 +190,17 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
 
     // Run container with development settings
     console.log(chalk.blue('\nStarting development container...'));
-    execSync(
-      `docker run -d \
-        --name ${containerName} \
-        -p ${port}:80 \
-        -v ${projectDir}/src:/app/src \
-        -v ${projectDir}/public:/app/public \
-        --env-file .env.development \
-        ${imageTag}`,
-      { stdio: 'inherit' }
+    runDocker(
+      [
+        'run', '-d',
+        '--name', containerName,
+        '-p', `${port}:80`,
+        '-v', `${projectDir}/src:/app/src`,
+        '-v', `${projectDir}/public:/app/public`,
+        '--env-file', '.env.development',
+        imageTag,
+      ],
+      { stdio: 'inherit' },
     );
 
     // Wait for container to be ready
@@ -217,7 +216,7 @@ async function developmentDeploy(options: DeployOptions): Promise<void> {
     // Stream logs if requested
     if (options.logs) {
       console.log(chalk.blue('\nStreaming container logs...'));
-      execSync(`docker logs -f ${containerName}`, { stdio: 'inherit' });
+      runDocker(['logs', '-f', containerName], { stdio: 'inherit' });
     }
 
   } catch (error: unknown) {
@@ -234,10 +233,9 @@ async function waitForContainer(containerName: string, timeout: number = 30000):
   const startTime = Date.now();
   while (Date.now() - startTime < timeout) {
     try {
-      const status = execSync(
-        `docker inspect -f '{{.State.Status}}' ${containerName}`,
-        { encoding: 'utf8' }
-      ).trim();
+      const status = runDocker(['inspect', '-f', '{{.State.Status}}', containerName], {
+        encoding: 'utf8',
+      }).trim();
 
       if (status === 'running') {
         return true;
@@ -270,6 +268,11 @@ async function deployCommand(options: DeployOptions & { dryRun?: boolean }): Pro
     if (options.env !== 'development') {
       throw new ValidationError(`Unknown environment: ${options.env}`, 'env', 'enum');
     }
+
+    // Before the dry-run branch as well as the real one: a plan is only worth
+    // printing if it is one that could run. See ./_docker.ts.
+    assertImageName(options.name, 'name');
+    assertPort(options.port ?? 8080, 'port');
 
     if (options.dryRun) {
       const containerName = `${options.name}-dev`;
