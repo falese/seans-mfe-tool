@@ -1,0 +1,35 @@
+# Dependency updates, opened as pull requests so the full suite runs on each.
+#
+# Scoped to what ships: the root workspace (the CLI and every package under
+# packages/*, one lockfile), the two control-plane services, and the workflows
+# themselves. The example fleets are generator output; their dependency
+# versions come from DEPENDENCY_VERSIONS in packages/codegen and are held there.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Patch and minor together: one PR, one CI run. Majors arrive alone.
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /packages/control-plane/daemon
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: npm
+    directory: /packages/control-plane/registry
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
