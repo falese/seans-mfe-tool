@@ -41,10 +41,12 @@ Read these before deploying anything from this repository.
 - **The control plane has no authentication.** The registry accepts a
   registration from any caller, and the shell loads the script that
   registration names. Run it only on a network where every peer is trusted. It
-  is a reference implementation today, not a hardened service.
-- **A generated BFF's `context.userId` is read from the token without checking
-  its signature.** Do not authorize on it. Verify the token, or authorize in the
-  service the BFF calls.
+  is part of the product and is not hardened yet; that work is planned and not
+  started.
+- **A generated BFF does not verify tokens.** It forwards the bearer token to the
+  services behind it. The id it reads from the token is named
+  `context.unverifiedUserId` for that reason (ADR-123). Do not authorize on it:
+  verify the token, or authorize in the service the BFF calls.
 - **MCP tool calls run with the server's environment**, including any API keys
   in it.
 - **Evidence bundles from `decompose:capture` store API responses as

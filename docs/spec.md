@@ -345,6 +345,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-120](./architecture-decisions/ADR-120-decomposition-agent-and-package.md) | The decomposition proposal model is a package that every caller reaches in-process, and the workspace's agent reaches a hosted model through the coder seam's API transport, its edits checked by the same deterministic floor before anything acts on them | Decomposition / packaging / agent | Implemented |
 | [ADR-121](./architecture-decisions/ADR-121-mcp-tool-calls-are-untrusted-input.md) | An MCP tool call is untrusted input: it is checked against the tool's schema, held inside a root directory, and offered only tools that can answer | CLI / MCP / safety | Implemented |
 | [ADR-122](./architecture-decisions/ADR-122-deploy-command-removed.md) | There is no `deploy` command; deployment returns as a plugin-resolved target axis, and `build:docker` is the way to an image until it does | Deploy / plugins / scope | Implemented |
+| [ADR-123](./architecture-decisions/ADR-123-bff-context-unverified-user-id.md) | A generated BFF names the id it reads from an unverified token `unverifiedUserId` | BFF / context / security | Implemented |
 
 ### Proposed — filed, not ratified
 

@@ -173,6 +173,19 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
     pattern: /\binstanceof\s+NetworkError\b/,
     exempt: /^\s*(?:\/\/|\*|\/\*)/,
   },
+  {
+    id: 'bff-context-unverified-user-id',
+    since: '1.0.0',
+    failsAt: '2.0.0',
+    adr: 'ADR-123',
+    message:
+      "the BFF context field `userId` is now `unverifiedUserId`: it is read out of the bearer token without checking the token's signature, so it was never an identity to trust",
+    fix: "If the code only logs or labels with it, rename the read to `context.unverifiedUserId`. If it decides what a caller may see or do, do not rename it: verify the token first (the service this BFF calls receives the token in `context.jwt` and can), and use the subject from the verified token. Also check `operationHeaders` in mfe-manifest.yaml for `{context.userId}`; this check reads code, not the manifest.",
+    // The old field read off a Mesh context, however the context is named or
+    // destructured. A `userId` from anywhere else — verified claims, request
+    // params — is not this field and is left alone.
+    pattern: /\b(?:context|ctx)\.userId\b|\{[^}]*\buserId\b[^}]*\}\s*=\s*(?:context|ctx)\b/,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

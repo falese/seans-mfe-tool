@@ -76,14 +76,16 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-// Context fields (jwt, requestId, userId, headers) are injected per-request
+// Context fields (jwt, requestId, unverifiedUserId, headers) are injected per-request
 // by mesh-context.js via Mesh additionalEnvelopPlugins (ADR-027).
 //
 // MeshContext documents the shape available to resolvers and operationHeaders.
 interface MeshContext {
   jwt?: string;
   requestId: string;
-  userId?: string;
+  // Read from the token's payload; the signature is NOT verified (ADR-123).
+  // Never authorize on it.
+  unverifiedUserId?: string;
   // Raw request headers — exposed so resolver-level logic (e.g. the demo-mode
   // mock switch, ADR-052) can read request headers like `x-bff-mode`.
   headers: Record<string, string | string[] | undefined>;
