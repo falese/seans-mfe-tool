@@ -345,12 +345,16 @@ jobs:
         run: npm ci
 
       - name: Dependency advisories (production dependencies)
-        # Report-only, and deliberately: 45 advisories stood when this step was
-        # added, 41 of them in the copy of npm that @oclif/plugin-plugins
-        # bundles, which only a major upgrade of that plugin removes. A gate
-        # that is red on day one gets ignored or deleted. The flip condition is
-        # the doc-links one: make it required in the commit that makes it clean.
-        run: npm audit --omit=dev || echo "::warning title=npm audit::production dependencies have open advisories — see the step log"
+        # Report-only, and deliberately. 35 moderate advisories stand, none high
+        # or critical: 30 are glob and minimatch inside the copy of npm that
+        # @oclif/plugin-plugins bundles, and the rest are minimatch under
+        # @oclif/core 4. Both clear only with the oclif 5 / plugin-plugins 7
+        # majors. A gate that is red on day one gets ignored or deleted; the
+        # flip condition is the doc-links one: make it required in the commit
+        # that makes it clean. Until then a NEW high or critical fails here.
+        run: |
+          npm audit --omit=dev || echo "::warning title=npm audit::production dependencies have open moderate advisories — see the step log"
+          npm audit --omit=dev --audit-level=high
 
       - name: Lint
         run: npm run lint
