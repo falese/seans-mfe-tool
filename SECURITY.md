@@ -38,11 +38,18 @@ The parts of this repository that take input someone else controls:
 
 Read these before deploying anything from this repository.
 
-- **The control plane has no authentication.** The registry accepts a
-  registration from any caller, and the shell loads the script that
-  registration names. Run it only on a network where every peer is trusted. It
-  is part of the product and is not hardened yet; that work is planned and not
-  started.
+- **The control plane is only partly hardened.** A registry write needs a
+  token (`REGISTRY_TOKEN`, ADR-124), and a shell can restrict the origins it
+  loads remotes from (`allowedRemoteOrigins`). Still open: the daemon and the
+  registry's GraphQL endpoint take messages from any caller, an MFE that does
+  not declare `authorizeAccess` is treated as authorized, and nothing here is
+  transport security. Run it on a network where every peer is trusted, and put
+  TLS in front of it.
+- **The example fleets use a published development token**, `local-dev-only`.
+  Set `REGISTRY_TOKEN` to a real secret before a registry is reachable by
+  anything you do not trust.
+- **A shell loads remotes from anywhere unless told otherwise.** Set
+  `allowedRemoteOrigins` on its `LayoutManager`.
 - **A generated BFF does not verify tokens.** It forwards the bearer token to the
   services behind it. The id it reads from the token is named
   `context.unverifiedUserId` for that reason (ADR-123). Do not authorize on it:

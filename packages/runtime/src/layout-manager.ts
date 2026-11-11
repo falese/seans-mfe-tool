@@ -66,6 +66,13 @@ export interface LayoutManagerConfig {
    * composes via its guaranteed imperative handle (isolation).
    */
   hostFramework?: string;
+  /**
+   * Origins this shell loads module-federation remotes from (ADR-124). The
+   * shell's own origin is always allowed. A placement naming any other origin
+   * is refused before its script is fetched. Omit to load from anywhere —
+   * safe only when everything that can write to the registry is trusted.
+   */
+  allowedRemoteOrigins?: readonly string[];
   /** contentType → adaptor (the provider registry, keyed by handle kind).
    *  Merged over the built-in defaults. */
   adaptors?: Record<string, ExperienceAdaptor>;
@@ -140,7 +147,10 @@ export class LayoutManager {
   private currentStatus: TransportStatus = 'connecting';
 
   constructor(private readonly config: LayoutManagerConfig) {
-    this.adaptors = { ...defaultAdaptors(), ...(config.adaptors ?? {}) };
+    this.adaptors = {
+      ...defaultAdaptors({ allowedRemoteOrigins: config.allowedRemoteOrigins }),
+      ...(config.adaptors ?? {}),
+    };
   }
 
   /** Connect to the daemon. The layout stays empty until experiences arrive. */

@@ -9,13 +9,37 @@ against one.
 
 | Service | Source | Default port | Role |
 |---|---|---|---|
-| `registry/` | `simple-registry.js`, `slot-target.js` | 4000 | Stores MFE registrations, evaluates placement rules, publishes resolved components |
+| `registry/` | `simple-registry.js`, `slot-target.js`, `write-auth.js` | 4000 | Stores MFE registrations, evaluates placement rules, publishes resolved components |
 | `daemon/` | `simple-daemon.js` | 3004 | Relays renderer actions to the registry and the resolved experience back |
 
 This is the one control-plane implementation (ADR-078). There is no abstract base
 to extend: ADR-059's `BaseControlPlane` was retired by ADR-105 once the external
 implementations it anticipated had moved in here. A host connects to it with a
 `LayoutManager` over a `GraphQLTransportWsDaemonTransport`.
+
+## Who may write to the registry
+
+A registration decides what a shell loads, so a write needs the fleet's token
+(**ADR-124**):
+
+```bash
+REGISTRY_TOKEN=<a secret> node simple-registry.js
+curl -X POST "$REGISTRY/mfes" -H "Authorization: Bearer $REGISTRY_TOKEN" \
+  -H 'Content-Type: application/json' -d @registration.json
+```
+
+| | |
+|---|---|
+| `POST /mfes`, `POST /render` | need `Authorization: Bearer <REGISTRY_TOKEN>`; 401 without it |
+| No `REGISTRY_TOKEN` set | every write is refused with 503 |
+| `GET /mfes`, `GET /rules`, `GET /` | open |
+
+The example fleets default the token to `local-dev-only` so they run with one
+command. It is published and is not a secret; the registry warns when it starts
+with it. The guard is `registry/write-auth.js`.
+
+Not covered yet: the registry's GraphQL endpoint and the daemon take messages
+from any caller. See `SECURITY.md` at the repository root.
 
 ## What lives here, and what does not
 

@@ -8,7 +8,7 @@
 
 > `const` **SLOT\_STAMP\_ATTRIBUTES**: `object`
 
-Defined in: [packages/runtime/src/layout-manager.ts:621](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L621)
+Defined in: [packages/runtime/src/layout-manager.ts:631](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L631)
 
 What a mounted slot is stamped with, beside data-layout-slot and
 data-slot-state. A public DOM contract: tests, design capture and error

@@ -6,7 +6,7 @@
 
 # Class: LayoutManager
 
-Defined in: [packages/runtime/src/layout-manager.ts:115](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L115)
+Defined in: [packages/runtime/src/layout-manager.ts:122](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L122)
 
 ## Constructors
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-manager.ts:115](https://github.com/fale
 
 > **new LayoutManager**(`config`): `LayoutManager`
 
-Defined in: [packages/runtime/src/layout-manager.ts:142](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L142)
+Defined in: [packages/runtime/src/layout-manager.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L149)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/runtime/src/layout-manager.ts:142](https://github.com/fale
 
 > **get** **activeSlots**(): `string`[]
 
-Defined in: [packages/runtime/src/layout-manager.ts:182](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L182)
+Defined in: [packages/runtime/src/layout-manager.ts:192](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L192)
 
 Slot ids currently mounted (mainly for tests and shell debugging).
 
@@ -48,7 +48,7 @@ Slot ids currently mounted (mainly for tests and shell debugging).
 
 > **sendAction**(`componentId`, `actionType`, `data`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-manager.ts:403](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L403)
+Defined in: [packages/runtime/src/layout-manager.ts:413](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L413)
 
 Send an action up the control plane, carrying the session context.
 
@@ -76,7 +76,7 @@ Send an action up the control plane, carrying the session context.
 
 > **start**(): `void`
 
-Defined in: [packages/runtime/src/layout-manager.ts:147](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L147)
+Defined in: [packages/runtime/src/layout-manager.ts:157](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L157)
 
 Connect to the daemon. The layout stays empty until experiences arrive.
 
@@ -90,7 +90,7 @@ Connect to the daemon. The layout stays empty until experiences arrive.
 
 > **stop**(): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-manager.ts:164](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L164)
+Defined in: [packages/runtime/src/layout-manager.ts:174](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-manager.ts#L174)
 
 #### Returns
 

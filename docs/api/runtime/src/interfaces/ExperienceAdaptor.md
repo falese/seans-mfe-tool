@@ -6,7 +6,7 @@
 
 # Interface: ExperienceAdaptor
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:105](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L105)
+Defined in: [packages/runtime/src/layout-adaptors.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L106)
 
 ## Methods
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:105](https://github.com/fal
 
 > **mount**(`experience`, `slot`, `helpers`): `Promise`\<`void` \| [`UnmountFn`](../type-aliases/UnmountFn.md)\>
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:106](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L106)
+Defined in: [packages/runtime/src/layout-adaptors.ts:107](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L107)
 
 #### Parameters
 

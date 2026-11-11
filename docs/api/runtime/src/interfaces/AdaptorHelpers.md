@@ -6,7 +6,7 @@
 
 # Interface: AdaptorHelpers
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:55](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L55)
+Defined in: [packages/runtime/src/layout-adaptors.ts:56](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L56)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:55](https://github.com/fale
 
 > `optional` **channel**: [`DaemonWebSocketClient`](DaemonWebSocketClient.md)
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:63](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L63)
+Defined in: [packages/runtime/src/layout-adaptors.ts:64](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L64)
 
 A virtual daemon channel for this slot (ADR-057): the host's single socket,
 scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
@@ -26,7 +26,7 @@ scoped to this slot. Injected into a composed MFE's `deps.wsClient` so its
 
 > `optional` **hostFramework**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L79)
+Defined in: [packages/runtime/src/layout-adaptors.ts:80](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L80)
 
 The host's framework (e.g. 'react'), when known. Threaded for ADR-056
 handle negotiation: a provider will pick the MFE's native handle when the
@@ -40,7 +40,7 @@ of this value — it is carried, not yet acted on.
 
 > `optional` **providerValues**: `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:86](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L86)
+Defined in: [packages/runtime/src/layout-adaptors.ts:87](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L87)
 
 Host-injected provider values (theme, locale, auth claims, router state, …)
 that cross the interface as DATA (ADR-060 value-injection). The MFE island
@@ -53,7 +53,7 @@ shared reconciler, so isolation, polyglot, and multi-version React all hold.
 
 > `optional` **session**: [`SessionContext`](../../../contracts/src/interfaces/SessionContext.md)
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:71](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L71)
+Defined in: [packages/runtime/src/layout-adaptors.ts:72](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L72)
 
 The session this experience was rendered for, when known.
 
@@ -63,7 +63,7 @@ The session this experience was rendered for, when known.
 
 > `optional` **provideSlot**(`slotId`, `element`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:69](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L69)
+Defined in: [packages/runtime/src/layout-adaptors.ts:70](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L70)
 
 Contribute a named slot to the host layout (ADR-058): the MFE renders a
 region and registers its element so the host routes later experiences
@@ -89,7 +89,7 @@ region and registers its element so the host routes later experiences
 
 > **reportError**(`error`, `info?`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:93](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L93)
+Defined in: [packages/runtime/src/layout-adaptors.ts:94](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L94)
 
 Report an unrecovered error from inside the mounted island (ADR-060). The
 MFE's framework error boundary / lifecycle `error` phase routes here via its
@@ -118,7 +118,7 @@ the control plane; it is slot-isolated and never cascades to siblings.
 
 > **sendAction**(`actionType`, `data`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:57](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L57)
+Defined in: [packages/runtime/src/layout-adaptors.ts:58](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L58)
 
 Send an action back up the control plane for this experience.
 

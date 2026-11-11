@@ -19,6 +19,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATION="$(dirname "$HERE")"
 RULES="${RULES:-$STATION/control-plane/rules.json}"
 REGISTRY=${REGISTRY:-http://localhost:4500}
+# The registry accepts a write only with its token (ADR-124). The default is
+# the development token the compose file also defaults to; it is not a secret.
 
 if [ ! -f "$RULES" ]; then
   echo "rules file not found: $RULES" >&2
@@ -34,6 +36,7 @@ for i in $(seq 0 $((count - 1))); do
 
   curl -fsS -X POST "$REGISTRY/mfes" \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${REGISTRY_TOKEN:-local-dev-only}" \
     -d "$doc" > /dev/null
 
   echo " registered $name ($routes route(s): $capabilities)"

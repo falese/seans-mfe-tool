@@ -188,3 +188,90 @@ describe('moduleFederationAdaptor mount serialization (keyed-slot fan-out)', () 
     expect(started).toEqual(['layout-mfe-boom', 'layout-mfe-after']);
   });
 });
+
+/**
+ * The shell loads only remotes from origins it was told to trust (ADR-124).
+ *
+ * A placement arrives from the control plane carrying a `remoteEntryUrl`, and
+ * the adaptor injects it as a <script> into the shell's own page. Whoever can
+ * put a URL in a placement runs code as the shell. The registry's write token
+ * is the first guard; this is the second, and the one the shell owns: an
+ * allow-list of origins, checked before anything is fetched.
+ */
+import { SecurityError } from '@seans-mfe/contracts';
+import { remoteOriginAllowed, createModuleFederationAdaptor, defaultAdaptors } from '../layout-adaptors';
+
+describe('remoteOriginAllowed', () => {
+  const allowed = ['https://mfe.example.com', 'http://localhost:5001'];
+  const page = 'https://shell.example.com';
+
+  it.each([
+    'https://mfe.example.com/remoteEntry.js',
+    'http://localhost:5001/remoteEntry.js',
+    'https://mfe.example.com:443/deep/path/remoteEntry.js?v=2',
+  ])('allows %s', (url) => {
+    expect(remoteOriginAllowed(url, allowed, page)).toBe(true);
+  });
+
+  it('allows a relative URL: it is the shell’s own origin', () => {
+    expect(remoteOriginAllowed('/wasm/remoteEntry.js', allowed, page)).toBe(true);
+  });
+
+  it.each([
+    ['another host', 'https://evil.example/remoteEntry.js'],
+    ['a look-alike host', 'https://mfe.example.com.evil.example/remoteEntry.js'],
+    ['the right host on another scheme', 'http://mfe.example.com/remoteEntry.js'],
+    ['the right host on another port', 'http://localhost:5002/remoteEntry.js'],
+    ['userinfo dressed as the host', 'https://mfe.example.com@evil.example/remoteEntry.js'],
+    ['a protocol-relative URL to another host', '//evil.example/remoteEntry.js'],
+    ['a data URL', 'data:text/javascript,alert(1)'],
+    ['a javascript URL', 'javascript:alert(1)'],
+    ['something that is not a URL', 'http://'],
+  ])('refuses %s', (_label, url) => {
+    expect(remoteOriginAllowed(url, allowed, page)).toBe(false);
+  });
+
+  it('refuses a relative URL when there is no page to resolve it against', () => {
+    expect(remoteOriginAllowed('/remoteEntry.js', allowed, undefined)).toBe(false);
+  });
+
+  it('ignores a trailing slash or path on a configured origin', () => {
+    expect(remoteOriginAllowed('https://mfe.example.com/r.js', ['https://mfe.example.com/'], page)).toBe(true);
+  });
+});
+
+describe('a module-federation adaptor with an allow-list', () => {
+  const experience = (remoteEntryUrl: string): RenderedExperience =>
+    ({
+      id: 'exp-1',
+      contentType: 'module-federation',
+      output: { remoteEntryUrl, scope: 'some_scope', module: './App' },
+    }) as unknown as RenderedExperience;
+  const helpers = {} as never;
+
+  it('refuses a remote from an origin it was not given, before touching the page', async () => {
+    const adaptor = createModuleFederationAdaptor({ allowedOrigins: ['https://mfe.example.com'] });
+    const slot = new FakeSlot();
+
+    await expect(adaptor.mount(experience('https://evil.example/remoteEntry.js'), slot, helpers)).rejects.toThrow(
+      SecurityError,
+    );
+    await expect(adaptor.mount(experience('https://evil.example/remoteEntry.js'), slot, helpers)).rejects.toThrow(
+      /evil\.example/,
+    );
+    expect(slot.children).toEqual([]);
+  });
+
+  it('is what LayoutManager’s default adaptors carry when origins are named', async () => {
+    const adaptors = defaultAdaptors({ allowedRemoteOrigins: ['https://mfe.example.com'] });
+    await expect(
+      adaptors['module-federation'].mount(experience('https://evil.example/remoteEntry.js'), new FakeSlot(), helpers),
+    ).rejects.toThrow(SecurityError);
+  });
+
+  it('still reports an incomplete placement as that, not as an origin problem', async () => {
+    const adaptor = createModuleFederationAdaptor({ allowedOrigins: ['https://mfe.example.com'] });
+    const incomplete = { id: 'exp-2', contentType: 'module-federation', output: { scope: 's' } } as unknown as RenderedExperience;
+    await expect(adaptor.mount(incomplete, new FakeSlot(), helpers)).rejects.toThrow(/missing/);
+  });
+});

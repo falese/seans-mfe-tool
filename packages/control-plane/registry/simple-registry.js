@@ -32,6 +32,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocketServer } from 'ws';
 import { validateSlotTarget } from './slot-target.js';
+import { createWriteGuard } from './write-auth.js';
 
 // How long a component stays in memory before being evicted.
 // Keeps the in-memory store from growing forever in a long-running demo.
@@ -426,15 +427,19 @@ async function startRegistry(port = 4000) {
 
   app.use(express.json());
 
+  // Writes need the registry's token (ADR-124): a registration decides what
+  // the shell loads and where the daemon sends user tokens. Reads stay open.
+  const writeGuard = createWriteGuard();
+
   // REST: inject a component directly — used by `make form`
-  app.post('/render', (req, res) => {
+  app.post('/render', writeGuard, (req, res) => {
     const { type, data } = req.body;
     const component = registry.renderComponent({ type, data });
     res.json({ success: true, component });
   });
 
   // REST: register an MFE + its resolution routes (PLATFORM-CONTRACT v3.2)
-  app.post('/mfes', (req, res) => {
+  app.post('/mfes', writeGuard, (req, res) => {
     try {
       const { registration, routes } = req.body;
       registry.registerMfe(registration, routes || []);
