@@ -171,6 +171,7 @@ place, so they cannot disagree with a copy here.
 | Decomposition playbook — stages, gates, naming, stop-and-ask; its mechanical rules as a Sentinel `ValidatePort` over `decomposition.yaml` (#420, ADR-089) | `.agents/skills/decompose-monolith/SKILL.md`; `src/sentinel/decomposition.ts` |
 | `decompose:verify` — the parity gate: replay a baseline's journeys against a candidate, compare regions, calls, console and per-region pixels (ADR-113) | `src/commands/decompose/verify.ts`; core `src/decompose/verify/`; explainer `docs/decompose-verify.md` |
 | `flow:status` — where a directory stands in a flow and the next command, derived from its files (PDR-012, ADR-119) | `src/commands/flow/status.ts`; definitions `flows/*.yaml`; checks `src/flow/index.ts`; engine `packages/flow/src/`; explainer `docs/flows.md` |
+| `test:generate` — an MFE's tests from a capture: each capability alone in jsdom, every journey in Playwright with per-capability visual baselines, the BFF's provider and connector contract, the monolith's kept tests moved (PDR-014, ADR-129) | `src/commands/test/generate.ts`; core `src/testgen/`; explainer `docs/test-generate.md` |
 | RealWorld reverse-engineering corpus — pinned apps, journeys, seed, one-command run; findings (#442) | `scripts/corpus/realworld/`; report `docs/decompose-corpus.md` |
 | Plugin skeleton | `examples/plugin-skeleton/` |
 | ADRs | `docs/architecture-decisions/` |

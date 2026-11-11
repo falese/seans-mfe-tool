@@ -33,6 +33,7 @@ A single PDR is typically implemented by several ADRs, which are in turn detaile
 | [PDR-009](./PDR-009-generative-software-system.md) | A generative software system — business intents compile to the platform contract | Accepted | ADR-084/085/086/087; composes PDR-006/003/001 |
 | [PDR-010](./PDR-010-governance-generation-kernel.md) | The governance+generation machinery is a reusable, self-hosting kernel | Accepted | ADR-089/090; composes PDR-009/006/003, reuses ADR-082/075 |
 | [PDR-011](./PDR-011-agent-driven-monolith-decomposition.md) | An agent decomposes a running monolith into SMT MFEs from observed evidence, and proves the result behaves the same | Proposed | ADR-109–113 (Proposed); epic #410; composes PDR-009/007/003/001 |
+| [PDR-014](./PDR-014-tests-are-generated.md) | Tests are a generated platform artifact — functional, visual and contract tests from observed behaviour | Accepted | ADR-129; `test:generate`; #418 |
 
 ## Conventions
 

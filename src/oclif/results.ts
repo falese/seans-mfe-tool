@@ -522,3 +522,34 @@ export interface FlowStatusResult {
   /** The proposal as the workspace reads it (ADR-116 §3); only with `--proposal`. */
   proposal?: FlowProposalStatus;
 }
+
+// ---------------------------------------------------------------------------
+// test:generate (PDR-014, ADR-129)
+// ---------------------------------------------------------------------------
+
+/** What test:generate wrote into one MFE. */
+export interface GeneratedMfeTestsSummary {
+  mfe: string;
+  dir: string;
+  /** Capabilities with an alone (jsdom) test, and how many captured states each covers. */
+  alone: Array<{ capability: string; cases: number }>;
+  /** Capabilities with no alone test, and why. */
+  skipped: Array<{ capability: string; reason: string }>;
+  /** The Playwright journey spec: journeys, per-step capability checks, visual baselines. */
+  journeys: { journeys: number; checks: number; baselines: number };
+  /** BFF operations with a contract test, and those no recording covers. */
+  contract: { operations: number; unrecorded: string[] };
+  /** The monolith's tests: moved (keep), replaced by characterization (rewrite), dropped (discard). */
+  migrated: { kept: string[]; rewritten: Array<{ file: string; reasons: string[] }>; discarded: Array<{ file: string; reasons: string[] }> };
+  /** Files written, relative to the MFE. */
+  written: string[];
+  /** Files left as a developer changed them. */
+  kept: string[];
+  /** The MFE's TESTS.md. */
+  report: string;
+}
+
+export interface TestGenerateResult {
+  evidence: string;
+  mfes: GeneratedMfeTestsSummary[];
+}
