@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import * as ts from 'typescript';
-import { applyEdits, dumpYaml, type Decomposition } from '@seans-mfe/decompose';
+import { applyEdits, dumpYaml, writeSpecs, type Decomposition, type OpenApiDocument } from '@seans-mfe/decompose';
 import { readProject } from '../../source/load';
 import { buildSourceGraph } from '../../source/graph';
 import { inventoryTests } from '../../source/tests';
@@ -37,6 +37,18 @@ describe('decompose:port on meridian-monolith', () => {
     proposalDir = path.join(work, 'evidence', 'proposal');
     await fs.ensureDir(proposalDir);
     await fs.writeFile(path.join(proposalDir, 'decomposition.yaml'), dumpYaml(doc));
+    // Each backend's spec, as decompose:propose would infer it: one list operation per endpoint called.
+    const specs: Record<string, OpenApiDocument> = {};
+    for (const e of [...new Set([...doc.domains.flatMap((d) => d.endpoints), ...Object.values(doc.fileEndpoints ?? {}).flat()])]) {
+      const [, backend, ...rest] = (e.split(' ')[1] ?? '').split('/').filter(Boolean);
+      const p = `/${rest.join('/')}`;
+      const id = `list${rest.map((r) => r.replace(/(^|_)([a-z])/g, (_m, _u, c: string) => c.toUpperCase())).join('')}`;
+      specs[backend] ??= { openapi: '3.0.3', info: { title: backend, version: '1' }, paths: {} };
+      specs[backend].paths[p] = {
+        get: { operationId: id, responses: { '200': { description: 'ok', content: { 'application/json': { schema: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' } } } } } } } } },
+      };
+    }
+    await writeSpecs(proposalDir, { specs });
     fleet = path.join(work, 'fleet');
     await scaffoldFleet({ proposalDir, outDir: fleet, appDir: MONOLITH });
     await fs.writeJson(path.join(proposalDir, 'scaffold.json'), { fleetDir: fleet });
@@ -97,6 +109,25 @@ describe('decompose:port on meridian-monolith', () => {
       { capability: 'SimulatorPage', into: 'meridian-ops-shell/main' },
       { capability: 'EmptySlot', into: 'meridian-ops-shell/aside' },
     ]);
+  });
+
+  it('reroutes the monolith\'s HTTP instance to the MFE\'s BFF, and leaves the client above it unchanged (ADR-127 §2)', () => {
+    const client = read('meridian-ops-cargo', 'src', 'monolith', 'src', 'api', 'client.ts');
+    expect(client).toContain('const http = bffHttp;');
+    expect(client).toContain("import { bffHttp } from '../../__port__/bff-http';");
+    expect(client).not.toMatch(/from 'axios'/);
+    expect(read('meridian-ops-cargo', 'src', 'monolith', '__port__', 'bff-http.ts')).toContain("import { query } from '../../platform/bff/bff';");
+    const cargo = result.mfes.find((m) => m.domain === 'cargo');
+    expect(cargo?.bff.rerouted).toEqual(['src/api/client.ts']);
+    expect(cargo?.bff.operations).toEqual(['GET /api/harbormaster/dockings', 'GET /api/harbormaster/manifest_lines', 'GET /api/ledger/valuations']);
+  });
+
+  it('fronts what the shell reads across a coupling and through the tiles it renders, and leaves the rest empty (ADR-127 §1, §3)', () => {
+    const shell = result.mfes.find((m) => m.domain === 'shell');
+    expect(shell?.bff.operations).toEqual(['GET /api/harbormaster/berths', 'GET /api/harbormaster/dockings', 'GET /api/ledger/charges', 'GET /api/stationos/telemetry']);
+    const ops = read('meridian-ops-shell', 'src', 'monolith', '__port__', 'bff-operations.ts');
+    expect(ops).toMatch(/"path": "\/api\/stationos\/modules",\s*"value": \[\]/);
+    expect(fs.existsSync(path.join(fleet, 'meridian-ops-shell', 'specs', 'stationos.yaml'))).toBe(true);
   });
 
   it('reports what it leaves to the agent: couplings and the repeated tile', () => {

@@ -87,7 +87,7 @@ describe('compareBundles', () => {
       bundle(step()),
       bundle(cand, { 'j.0.r0': { method: 'GET', url: '/api/hm/dockings' }, 'j.0.r1': { method: 'GET', url: '/api/hm/berths' } })
     ).journeys[0].steps[0];
-    expect(s.network).toEqual({ missing: [], extra: ['GET /api/hm/dockings'] });
+    expect(s.network).toEqual({ missing: [], extra: ['GET /api/hm/dockings'], repeated: [] });
     expect(s.console).toEqual({ new: ['error: TypeError: x is undefined', 'pageerror: boom'] });
     expect(s.ok).toBe(false);
   });
@@ -131,6 +131,58 @@ describe('compareBundles', () => {
     expect(report.summary.visualFailures).toBe(1);
     // A pixel budget lets a known amount through.
     expect(compareBundles(bundle(layout(step())), bundle(layout(step())), { screenshot, maxDiffPixels: 1 }).parity).toBe(true);
+  });
+});
+
+describe('network parity through BFFs (ADR-127 §4)', () => {
+  // Two steps: the baseline loads berths at the first and nothing at the second.
+  const base: BundleView = {
+    journeys: [{ name: 'j', steps: [step({ id: 'j.0', requests: ['b0'] }), step({ id: 'j.1', requests: [] })] }],
+    requests: { b0: { method: 'GET', url: '/api/hm/berths' } },
+  };
+  const bff = (id: string, calls: string[]) => ({ method: 'POST', url: `http://localhost:5205/graphql#${id}`, calls });
+
+  it('reads a request to a BFF as the backend calls it stands for', () => {
+    const cand: BundleView = {
+      journeys: [{ name: 'j', steps: [step({ id: 'j.0', requests: ['c0'] }), step({ id: 'j.1', requests: [] })] }],
+      requests: { c0: bff('c0', ['GET /api/hm/berths']) },
+    };
+    const report = compareBundles(base, cand);
+    expect(report.journeys[0].steps[0].network).toEqual({ missing: [], extra: [], repeated: [] });
+    expect(report.parity).toBe(true);
+  });
+
+  it('counts a domain re-loading data the monolith had already loaded as a repeat, not a failure', () => {
+    const cand: BundleView = {
+      journeys: [{ name: 'j', steps: [step({ id: 'j.0', requests: ['c0', 'c1'] }), step({ id: 'j.1', requests: ['c2'] })] }],
+      requests: {
+        c0: bff('c0', ['GET /api/hm/berths']),
+        c1: { method: 'POST', url: 'http://localhost:5206/graphql', calls: ['GET /api/hm/berths'] },
+        c2: bff('c2', ['GET /api/hm/berths']),
+      },
+    };
+    const report = compareBundles(base, cand);
+    expect(report.journeys[0].steps.map((s) => s.network)).toEqual([
+      { missing: [], extra: [], repeated: ['GET /api/hm/berths'] },
+      { missing: [], extra: [], repeated: ['GET /api/hm/berths'] },
+    ]);
+    expect(report.parity).toBe(true);
+  });
+
+  it('still fails a BFF call the monolith never made by then, and a call it made that nothing makes', () => {
+    const cand: BundleView = {
+      journeys: [{ name: 'j', steps: [step({ id: 'j.0', requests: ['c0'] }), step({ id: 'j.1', requests: [] })] }],
+      requests: { c0: bff('c0', ['GET /api/hm/dockings']) },
+    };
+    expect(compareBundles(base, cand).journeys[0].steps[0].network).toEqual({ missing: ['GET /api/hm/berths'], extra: ['GET /api/hm/dockings'], repeated: [] });
+  });
+
+  it('keeps the exact rule for a call made directly: a repeat is extra', () => {
+    const cand: BundleView = {
+      journeys: [{ name: 'j', steps: [step({ id: 'j.0', requests: ['d0', 'd1'] }), step({ id: 'j.1', requests: [] })] }],
+      requests: { d0: { method: 'GET', url: '/api/hm/berths' }, d1: { method: 'GET', url: '/api/hm/berths' } },
+    };
+    expect(compareBundles(base, cand).journeys[0].steps[0].network).toEqual({ missing: [], extra: ['GET /api/hm/berths'], repeated: [] });
   });
 });
 

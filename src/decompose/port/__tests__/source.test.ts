@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { closure, declaringFile, exportsByName, importsOf, packageOf, providerTree, pruneUnusedImports, resolveRelative, routesBlocks, type Read } from '../source';
+import { closure, declaringFile, rerouteTransport, exportsByName, importsOf, packageOf, providerTree, pruneUnusedImports, resolveRelative, routesBlocks, type Read } from '../source';
 
 const MONOLITH = path.resolve(__dirname, '../../../../examples/meridian-monolith');
 const read: Read = (f) => {
@@ -57,5 +57,20 @@ describe('reading the monolith for a port (ADR-126)', () => {
     const src = "import React from 'react';\nimport A from './A';\nimport { B, C } from './B';\nexport const x = <B />;\n";
     expect(pruneUnusedImports(ts, 'x.tsx', src)).toBe("import React from 'react';\nimport { B, C } from './B';\nexport const x = <B />;\n");
     expect(importsOf(ts, 'x.tsx', src)[2].named).toEqual([{ imported: 'B', local: 'B' }, { imported: 'C', local: 'C' }]);
+  });
+
+  it('reroutes the monolith\'s HTTP instance and fetch calls to the BFF shim, and nothing else (ADR-127 §2)', () => {
+    const client = read('src/api/client.ts') as string;
+    const r = rerouteTransport(ts, 'src/api/client.ts', client, '../__port__/bff-http');
+    expect(r.uses).toEqual(['bffHttp']);
+    expect(r.text).toContain('const http = bffHttp;');
+    expect(r.text).toContain("import { bffHttp } from '../__port__/bff-http';");
+    expect(r.text).not.toMatch(/from 'axios'/);
+    // Everything above the transport is untouched.
+    expect(r.text).toContain("export const getBerths = () => hm<Berth>('/berths');");
+    const f = rerouteTransport(ts, 'x.ts', "export const a = () => fetch('/api/x').then((r) => r.json());\nconst b = window.fetch;\n", './shim');
+    expect(f.text).toContain("bffFetch('/api/x')");
+    expect(f.uses).toEqual(['bffFetch']);
+    expect(rerouteTransport(ts, 'y.ts', 'const x = new XMLHttpRequest();', './shim').unsupported).toEqual(['y.ts: uses XMLHttpRequest']);
   });
 });

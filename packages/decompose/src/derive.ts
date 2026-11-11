@@ -19,6 +19,7 @@ import {
 } from '@seans-mfe/dsl';
 import type { Decomposition, Domain } from './model';
 import { hoistsOf, restrictSpec, type OpenApiDocument } from './openapi';
+import { splitBackendUrl } from './backends';
 
 /** Per backend: its OpenAPI document (inferred or published) and the recorded responses by operationId (ADR-112). */
 export interface BackendSpecs {
@@ -78,6 +79,30 @@ const platformCapabilities = [
   },
 ];
 
+/**
+ * Everything a domain's MFE reads once ported (ADR-127 §1): the calls its own
+ * files make, the reads across a coupling (the proposal's "its BFF should
+ * source it itself"), and the calls of a repeated capability it renders
+ * itself. Its BFF fronts all of them, so no MFE reads another's data at runtime.
+ */
+export function readsOf(doc: Decomposition, domain: Domain): { endpoints: string[]; backends: string[] } {
+  const endpoints = new Set(domain.endpoints);
+  for (const c of doc.couplings) if (c.domain === domain.id && c.endpoint) endpoints.add(c.endpoint);
+  for (const r of doc.repeated) {
+    if (!domain.files.includes(r.renderedBy)) continue;
+    const owner = doc.domains.find((d) => d.id === r.domain);
+    const file = owner?.capabilities.find((c) => c.name === r.capability)?.file;
+    for (const e of (file && doc.fileEndpoints?.[file]) || []) endpoints.add(e);
+  }
+  const layout = { gateway: doc.app.gateway !== false };
+  const backends = new Set(domain.backends);
+  for (const e of endpoints) {
+    const url = e.split(' ')[1];
+    if (url) backends.add(splitBackendUrl(url, layout).backend);
+  }
+  return { endpoints: [...endpoints].sort(), backends: [...backends].sort() };
+}
+
 function bffFor(domain: Domain, backends: BackendSpecs | undefined, gateway: boolean): BffInputs | undefined {
   if (!backends) return undefined;
   const specs: Record<string, OpenApiDocument> = {};
@@ -85,6 +110,8 @@ function bffFor(domain: Domain, backends: BackendSpecs | undefined, gateway: boo
   for (const b of domain.backends) {
     const full = backends.specs[b];
     if (!full) continue;
+    // Only what the domain calls: restrictSpec keeps the whole document when nothing matches.
+    if (!domain.endpoints.some((e) => splitBackendUrl(e.split(' ')[1] ?? '', { gateway }).backend === b)) continue;
     const doc = restrictSpec(full, domain.endpoints, b, { gateway });
     specs[b] = doc;
     const recorded = backends.mocks?.[b] ?? {};
@@ -155,7 +182,10 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
   const bff: Record<string, BffInputs> = {};
   const errors: Record<string, string[]> = {};
   const parsed: DSLManifest[] = [];
-  doc.domains.forEach((domain, i) => {
+  doc.domains.forEach((declared, i) => {
+    // The MFE's data is what its ported code reads (ADR-127 §1), not only what the domain owns.
+    const reads = readsOf(doc, declared);
+    const domain: Domain = { ...declared, endpoints: reads.endpoints, backends: reads.backends };
     // Only an explicit `false` is one API: a document built in code may lack the field.
     const inputs = bffFor(domain, backends, doc.app.gateway !== false);
     if (inputs) bff[domain.mfe] = inputs;

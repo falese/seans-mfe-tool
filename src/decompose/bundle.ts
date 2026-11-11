@@ -37,6 +37,8 @@ export interface RawRequest {
   body?: unknown;
   /** Set when the request failed or was not answered. */
   failure?: string;
+  /** The body of a GraphQL request to a BFF (ADR-127 §4). */
+  postData?: string;
 }
 
 export interface RawStep {
@@ -197,6 +199,7 @@ export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
         failure: r.failure ?? null,
         initiator: r.initiator,
         attributedTo,
+        ...(r.postData ? { postData: r.postData } : {}),
       });
       const key = responseKey(r.method, url);
       if (!(key in responses) && r.status !== undefined && r.failure === undefined) {

@@ -252,3 +252,65 @@ export function pruneUnusedImports(ts: Ts, file: string, text: string): string {
   }
   return out;
 }
+
+export interface Rerouted {
+  text: string;
+  /** Which shim exports the file now uses. */
+  uses: Array<'bffHttp' | 'bffFetch'>;
+  /** Transport the shim cannot take over, to report. */
+  unsupported: string[];
+}
+
+/**
+ * ADR-127 §2: the file's HTTP transport, rerouted to the MFE's BFF. An axios
+ * instance (`axios.create(...)`) or axios itself becomes `bffHttp`; a `fetch`
+ * call becomes `bffFetch`. The code that uses them is left as it is.
+ */
+export function rerouteTransport(ts: Ts, file: string, text: string, shim: string): Rerouted {
+  const sf = parse(ts, file, text);
+  const axiosName = importsOf(ts, file, text).find((i) => i.spec === 'axios')?.defaultName;
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  const uses = new Set<'bffHttp' | 'bffFetch'>();
+  const unsupported: string[] = [];
+  const visit = (node: TS.Node): void => {
+    if (axiosName && ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+      const target = node.expression;
+      if (ts.isIdentifier(target.expression) && target.expression.text === axiosName && target.name.text === 'create') {
+        edits.push({ start: node.getStart(sf), end: node.getEnd(), text: 'bffHttp' });
+        uses.add('bffHttp');
+        return;
+      }
+    }
+    if (axiosName && ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === axiosName) {
+      edits.push({ start: node.expression.getStart(sf), end: node.expression.getEnd(), text: 'bffHttp' });
+      uses.add('bffHttp');
+      return;
+    }
+    if (axiosName && ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === axiosName) {
+      unsupported.push(`${file}: calls ${axiosName}(…) directly`);
+    }
+    if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      const isFetch =
+        (ts.isIdentifier(callee) && callee.text === 'fetch') ||
+        (ts.isPropertyAccessExpression(callee) && callee.name.text === 'fetch' && ts.isIdentifier(callee.expression) && ['window', 'globalThis', 'self'].includes(callee.expression.text));
+      if (isFetch) {
+        edits.push({ start: callee.getStart(sf), end: callee.getEnd(), text: 'bffFetch' });
+        uses.add('bffFetch');
+      }
+    }
+    if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'XMLHttpRequest') {
+      unsupported.push(`${file}: uses XMLHttpRequest`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  if (edits.length === 0) return { text, uses: [], unsupported };
+  let out = text;
+  for (const e of edits.sort((a, b) => b.start - a.start)) out = out.slice(0, e.start) + e.text + out.slice(e.end);
+  const names = [...uses].sort();
+  const decls = importsOf(ts, file, out);
+  const at = decls.length > 0 ? decls[decls.length - 1].end + 1 : 0;
+  out = `${out.slice(0, at)}import { ${names.join(', ')} } from '${shim}';\n${out.slice(at)}`;
+  return { text: pruneUnusedImports(ts, file, out), uses: names, unsupported };
+}

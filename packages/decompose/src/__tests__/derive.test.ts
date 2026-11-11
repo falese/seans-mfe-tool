@@ -1,4 +1,4 @@
-import { deriveFleet, EMPTY_SLOT } from '../derive';
+import { deriveFleet, EMPTY_SLOT, readsOf } from '../derive';
 import { inferSpecs } from '../openapi';
 import type { Decomposition } from '../model';
 
@@ -129,5 +129,17 @@ describe('deriveFleet', () => {
     expect(byState['meridian.root']).toEqual(['App→root', 'EmptySlot→meridian-console/main', 'EmptySlot→meridian-console/aside']);
     // Docking fills main; aside is cleared. Repeated slots are never cleared this way.
     expect(byState['meridian.open.docking']).toEqual(['DockingBoard→meridian-console/main', 'EmptySlot→meridian-console/aside']);
+  });
+
+  it('gives each MFE a BFF over everything its code reads: its own calls, coupled reads, and tiles it renders (ADR-127 §1)', () => {
+    const d = doc({
+      couplings: [{ file: 'src/App.tsx', domain: 'console', field: 'charges', endpoint: 'GET /api/ledger/charges', owner: 'docking', kind: 'shell-read', note: '' }],
+      fileEndpoints: { 'src/BerthTile.tsx': ['GET /api/harbormaster/dockings'] },
+      repeated: [{ capability: 'BerthTile', domain: 'docking', slot: 'berth-tile.{id}', renderedBy: 'src/App.tsx' }],
+    });
+    expect(readsOf(d, d.domains[0])).toEqual({ endpoints: ['GET /api/harbormaster/dockings', 'GET /api/ledger/charges'], backends: ['harbormaster', 'ledger'] });
+    expect(readsOf(d, d.domains[1]).endpoints).toEqual(['GET /api/harbormaster/dockings', 'GET /api/ledger/charges']);
+    const console = deriveFleet(d).manifests['meridian-console'] as { data?: { sources: Array<{ name: string }> } };
+    expect(console.data?.sources.map((s) => s.name)).toEqual(['harbormaster', 'ledger']);
   });
 });

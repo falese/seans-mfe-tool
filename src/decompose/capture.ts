@@ -218,7 +218,7 @@ async function runJourney(
     cdp.on('Network.requestWillBeSent', (e: {
       requestId: string;
       type?: string;
-      request: { method: string; url: string };
+      request: { method: string; url: string; postData?: string };
       initiator?: { stack?: CdpStackTrace };
     }) => {
       if (e.type && CODE_TYPES.has(e.type)) {
@@ -232,6 +232,8 @@ async function runJourney(
         method: e.request.method,
         url: e.request.url,
         initiator: initiatorFiles(e.initiator?.stack, options.sourceRoot),
+        // A GraphQL request's document says which backend calls it stands for (ADR-127 §4).
+        ...(e.request.postData && isBffRequest(e.request.method, e.request.url, options.url) ? { postData: e.request.postData } : {}),
       };
       requests.push(req);
       byId.set(e.requestId, req);
@@ -356,6 +358,16 @@ async function runJourney(
   }
 }
 
+/** A GraphQL POST to an origin other than the app's: a ported MFE's BFF (ADR-127 §4). */
+export function isBffRequest(method: string, url: string, appUrl: string): boolean {
+  try {
+    const u = new URL(url);
+    return method.toUpperCase() === 'POST' && u.origin !== new URL(appUrl).origin && /\/graphql\/?$/.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+
 export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: number; mimeType: string; body: string; miss: boolean };
 
 /**
@@ -367,6 +379,9 @@ export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: num
 export function replayAnswer(method: string, url: string, appUrl: string, recorded: Record<string, RecordedResponse>): ReplayAnswer {
   if (isInfrastructureRequest(url)) return { kind: 'continue' };
   const hit = recorded[responseKey(method, relativeUrl(url, appUrl))];
+  // A ported MFE's BFF, on its own origin: it answers from its demo fixtures, the capture (ADR-127 §4).
+  // Its CORS preflight goes through too, or the browser never sends the request.
+  if (!hit && (isBffRequest(method, url, appUrl) || isBffRequest('POST', url, appUrl) && method.toUpperCase() === 'OPTIONS')) return { kind: 'continue' };
   if (!hit) return { kind: 'fulfill', status: 404, mimeType: 'application/json', body: '{"error":"not recorded"}', miss: true };
   return { kind: 'fulfill', status: hit.status, mimeType: hit.mimeType, body: typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body), miss: false };
 }

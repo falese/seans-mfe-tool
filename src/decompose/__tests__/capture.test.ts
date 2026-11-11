@@ -21,6 +21,14 @@ describe('performStep', () => {
 });
 
 describe('replayAnswer', () => {
+  it('lets an unrecorded GraphQL request to another origin reach its BFF, which answers from the capture (ADR-127 §4)', () => {
+    expect(replayAnswer('POST', 'http://localhost:5205/graphql', 'http://localhost:5199', {})).toEqual({ kind: 'continue' });
+    // The CORS preflight the browser sends first.
+    expect(replayAnswer('OPTIONS', 'http://localhost:5205/graphql', 'http://localhost:5199', {})).toEqual({ kind: 'continue' });
+    // The app's own GraphQL endpoint is still answered from the recording, or missed.
+    expect(replayAnswer('POST', 'http://localhost:5199/graphql', 'http://localhost:5199', {})).toMatchObject({ kind: 'fulfill', status: 404, miss: true });
+  });
+
   it('lets a composed shell reach its control plane: that is not the app\'s data', () => {
     expect(replayAnswer('POST', 'http://localhost:5199/__control-plane/graphql', 'http://localhost:5199', {})).toEqual({ kind: 'continue' });
   });

@@ -6,7 +6,9 @@
  * Per step it compares four things:
  *
  *   content  the same regions, with the same text, under the same parents
- *   network  the same backend calls
+ *   network  the same backend calls; a request to a BFF counts as the backend calls it
+ *            stands for, and a domain re-loading data the baseline had already loaded
+ *            is a repeat, not a failure (ADR-127 §4)
  *   console  no error the baseline did not already have
  *   visual   each region's own pixels (its nested regions excluded), compared
  *            by content so a region that moved on the page still matches;
@@ -33,8 +35,11 @@ export interface StepView {
 
 export interface BundleView {
   journeys: Array<{ name: string; steps: StepView[] }>;
-  /** Request id → its method and app-relative URL. */
-  requests: Record<string, { method: string; url: string }>;
+  /**
+   * Request id → its method and app-relative URL; for a request to a BFF, the
+   * backend calls it stands for (ADR-127 §4).
+   */
+  requests: Record<string, { method: string; url: string; calls?: string[] }>;
 }
 
 export interface StepParity {
@@ -50,7 +55,8 @@ export interface StepParity {
     moved: Array<{ region: string; baseline: string; candidate: string }>;
     added: string[];
   };
-  network: { missing: string[]; extra: string[] };
+  /** `repeated`: calls through a BFF to data the baseline had already loaded by this step. */
+  network: { missing: string[]; extra: string[]; repeated: string[] };
   console: { new: string[] };
   visual: { compared: number; failed: string[] };
 }
@@ -124,17 +130,45 @@ function emptyStep(id: string): StepParity {
     ok: false,
     missing: true,
     content: { missing: [], changed: [], moved: [], added: [] },
-    network: { missing: [], extra: [] },
+    network: { missing: [], extra: [], repeated: [] },
     console: { new: [] },
     visual: { compared: 0, failed: [] },
   };
 }
 
+type Calls = (id: string) => { keys: string[]; viaBff: boolean };
+
+/**
+ * ADR-113's exact rule for calls made directly; for calls through a BFF
+ * (ADR-127 §4), one the baseline had already made by this step is a repeat.
+ */
+function compareNetwork(baseCalls: string[], candidate: Array<{ keys: string[]; viaBff: boolean }>, loadedBefore: Set<string>): StepParity['network'] {
+  const remaining = [...baseCalls];
+  const consume = (k: string): boolean => {
+    const i = remaining.indexOf(k);
+    if (i < 0) return false;
+    remaining.splice(i, 1);
+    return true;
+  };
+  const extra: string[] = [];
+  const repeated: string[] = [];
+  for (const c of candidate.filter((x) => !x.viaBff)) for (const k of c.keys) if (!consume(k)) extra.push(k);
+  for (const c of candidate.filter((x) => x.viaBff)) {
+    for (const k of c.keys) {
+      if (consume(k)) continue;
+      if (loadedBefore.has(k) || baseCalls.includes(k)) repeated.push(k);
+      else extra.push(k);
+    }
+  }
+  return { missing: remaining, extra, repeated };
+}
+
 function compareStep(
   base: StepView,
   cand: StepView,
-  calls: { baseline: (id: string) => string; candidate: (id: string) => string },
-  opts: CompareOptions
+  calls: { baseline: Calls; candidate: Calls },
+  opts: CompareOptions,
+  loadedBefore: Set<string> = new Set()
 ): StepParity {
   const b = keyed(base.regions);
   const c = keyed(cand.regions);
@@ -153,9 +187,8 @@ function compareStep(
   }
   for (const [key, { region }] of c) if (!baseKeys.has(key) && norm(region.ownText)) content.added.push(`${key}: ${norm(region.ownText)}`);
 
-  const baseCalls = base.requests.map(calls.baseline);
-  const candCalls = cand.requests.map(calls.candidate);
-  const network = { missing: minus(baseCalls, candCalls), extra: minus(candCalls, baseCalls) };
+  const baseCalls = base.requests.flatMap((id) => calls.baseline(id).keys);
+  const network = compareNetwork(baseCalls, cand.requests.map(calls.candidate), loadedBefore);
   const consoleNew = minus(errorsOf(cand), errorsOf(base));
 
   const visual: StepParity['visual'] = { compared: 0, failed: [] };
@@ -187,17 +220,21 @@ function compareStep(
 }
 
 export function compareBundles(baseline: BundleView, candidate: BundleView, opts: CompareOptions = {}): ParityReport {
-  const call = (requests: BundleView['requests']) => (id: string) => {
+  const call = (requests: BundleView['requests']): Calls => (id: string) => {
     const r = requests[id];
-    return r ? `${r.method} ${r.url}` : `? ${id}`;
+    if (!r) return { keys: [`? ${id}`], viaBff: false };
+    return r.calls ? { keys: r.calls, viaBff: true } : { keys: [`${r.method} ${r.url}`], viaBff: false };
   };
   const calls = { baseline: call(baseline.requests), candidate: call(candidate.requests) };
   const summary: ParityReport['summary'] = { steps: 0, stepsAtParity: 0, regions: 0, regionsAtParity: 0, requests: 0, newConsoleErrors: 0, visualFailures: 0 };
   const journeys = baseline.journeys.map((j) => {
     const other = candidate.journeys.find((x) => x.name === j.name);
+    // What the baseline had loaded by each step: a domain re-loading it through its BFF repeats it.
+    const loaded = new Set<string>();
     const steps = j.steps.map((s, k) => {
       const cand = other?.steps[k];
-      const result = cand ? compareStep(s, cand, calls, opts) : emptyStep(s.id);
+      const result = cand ? compareStep(s, cand, calls, opts, new Set(loaded)) : emptyStep(s.id);
+      for (const id of s.requests) for (const key of calls.baseline(id).keys) loaded.add(key);
       summary.steps += 1;
       summary.regions += s.regions.length;
       summary.requests += s.requests.length;

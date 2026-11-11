@@ -92,6 +92,15 @@ describe('buildBundle', () => {
     expect(requests[1].attributedTo).toEqual([]);
   });
 
+  it('keeps the document of a GraphQL request to a BFF, which says what backend calls it stands for (ADR-127 §4)', () => {
+    const r = run();
+    r.requests.push({ step: 1, method: 'POST', url: 'http://localhost:5205/graphql', initiator: [], status: 200, postData: '{"query":"{ r: listDockings { id } }"}' });
+    const b = buildBundle([r], { appUrl: APP, viewport: { width: 1440, height: 900 }, clock: '2026-10-24T00:00:00.000Z' });
+    const requests = b.files['requests.json'] as Array<{ url: string; postData?: string }>;
+    expect(requests.find((x) => x.url.endsWith('/graphql'))?.postData).toBe('{"query":"{ r: listDockings { id } }"}');
+    expect(requests.filter((x) => 'postData' in x)).toHaveLength(1);
+  });
+
   it('records the first response for each request, keyed for replay', () => {
     const responses = bundle.files['responses.json'] as Record<string, { body: unknown }>;
     expect(Object.keys(responses).sort()).toEqual([

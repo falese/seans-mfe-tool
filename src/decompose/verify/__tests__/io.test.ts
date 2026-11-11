@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { readBundleView, renderParityMarkdown, screenshotReader } from '../io';
+import { bffTranslator, readBundleView, renderParityMarkdown, screenshotReader } from '../io';
 import type { ParityReport } from '../parity';
 
 describe('readBundleView', () => {
@@ -28,6 +28,23 @@ describe('readBundleView', () => {
   });
 });
 
+describe('bffTranslator (ADR-127 §4)', () => {
+  it('reads a GraphQL request to a BFF as backend calls, using the proposal\'s specs, and leaves other requests alone', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bffview-'));
+    const specs = path.join(dir, 'proposal', 'specs');
+    fs.mkdirSync(specs, { recursive: true });
+    fs.writeFileSync(
+      path.join(specs, 'harbormaster.yaml'),
+      'openapi: 3.0.3\ninfo: { title: harbormaster, version: "1" }\npaths:\n  /berths:\n    get:\n      operationId: listBerths\n      responses: { "200": { description: ok } }\n'
+    );
+    fs.writeFileSync(path.join(dir, 'proposal', 'decomposition.yaml'), 'app: { gateway: true }\n');
+    const translate = await bffTranslator(dir);
+    expect(translate({ method: 'POST', url: 'http://localhost:5205/graphql', postData: JSON.stringify({ query: 'query { r: listBerths { id } }' }) })).toEqual(['GET /api/harbormaster/berths']);
+    expect(translate({ method: 'GET', url: '/api/harbormaster/berths' })).toBeUndefined();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
 describe('renderParityMarkdown', () => {
   const report: ParityReport = {
     parity: false,
@@ -36,7 +53,7 @@ describe('renderParityMarkdown', () => {
         name: 'home',
         ok: false,
         steps: [
-          { id: 'home.0', ok: true, content: { missing: [], changed: [], moved: [], added: [] }, network: { missing: [], extra: [] }, console: { new: [] }, visual: { compared: 3, failed: [] } },
+          { id: 'home.0', ok: true, content: { missing: [], changed: [], moved: [], added: [] }, network: { missing: [], extra: [], repeated: [] }, console: { new: [] }, visual: { compared: 3, failed: [] } },
           {
             id: 'home.1',
             ok: false,

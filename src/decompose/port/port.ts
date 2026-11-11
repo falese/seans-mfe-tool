@@ -19,10 +19,11 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BusinessError, ValidationError } from '@seans-mfe/contracts';
 import { compileControlPlane, DSLManifestSchema, parseAndValidateDirectory, type DSLManifest } from '@seans-mfe/dsl';
-import { approvalStatus, deriveFleet, dumpYaml, EMPTY_SLOT, readDecomposition, readSpecs, type Decomposition, type Domain } from '@seans-mfe/decompose';
+import { approvalStatus, bffOperations, deriveFleet, dumpYaml, EMPTY_SLOT, emptyResponses, readDecomposition, readSpecs, type Decomposition, type Domain } from '@seans-mfe/decompose';
 import { loadTypeScript } from '../source/load';
 import { validateDecomposition } from '../../sentinel/decomposition';
 import { routesModule } from '../scaffold/shell';
+import { operationsModule, shimModule } from './shim';
 import {
   closure,
   declaringFile,
@@ -31,6 +32,7 @@ import {
   importsOf,
   providerTree,
   pruneUnusedImports,
+  rerouteTransport,
   resolveRelative,
   routesBlocks,
   type ProviderTree,
@@ -59,6 +61,8 @@ export interface PortedMfe {
   kept: string[];
   /** Packages added to package.json. */
   packages: string[];
+  /** ADR-127: the endpoints its BFF fronts, and the copied files whose transport now goes through it. */
+  bff: { operations: string[]; rerouted: string[] };
 }
 
 export interface PortResult {
@@ -290,23 +294,42 @@ export async function portFleet(opts: PortOptions): Promise<PortResult> {
   const providerFiles = tree.imports.map((i) => resolveRelative(entry, i.spec, plain)).filter((f): f is string => Boolean(f));
   const mfes: PortedMfe[] = [];
   const copiedBy = new Map<string, string[]>();
+  // ADR-127: each MFE reads only through its own BFF, generated from these specs.
+  const allSpecs = await readSpecs(proposalDir);
+  const fleet = deriveFleet(doc, allSpecs);
+  const layout = { gateway: doc.app.gateway !== false };
   for (const domain of doc.domains) {
     const dir = path.join(fleetDir, domain.mfe);
     if (!(await fs.pathExists(dir))) throw new BusinessError(`${dir} is missing — scaffold the fleet again`, 'NOT_SCAFFOLDED', { dir });
     const read = domain.shell ? reader(appDir, new Map([[shellRoot.file, rewritten.text]])) : plain;
     const { files, packages } = closure(ts, [...domain.capabilities.map((c) => c.file), ...providerFiles], read);
+
+    const bff = fleet.bff[domain.mfe];
+    const ops = Object.entries(bff?.specs ?? {}).flatMap(([b, spec]) => bffOperations(spec, b, layout));
+    const fronted = new Set(ops.map((o) => `${o.method} ${o.path}`));
+    const empties = Object.entries(allSpecs?.specs ?? {})
+      .flatMap(([b, spec]) => emptyResponses(spec, b, layout))
+      .filter((e) => !fronted.has(`${e.method} ${e.path}`));
+    const rerouted: string[] = [];
     for (const f of files) {
       const target = path.join(dir, 'src', 'monolith', f);
-      if ((await fs.pathExists(target)) && !opts.force && (await fs.readFile(target, 'utf8')) !== read(f)) {
+      const r = rerouteTransport(ts, f, read(f) as string, rel(f, '__port__/bff-http'));
+      warnings.push(...r.unsupported.map((u) => `${domain.mfe}: ${u} — not rerouted to its BFF`));
+      if (r.uses.length > 0) rerouted.push(f);
+      if ((await fs.pathExists(target)) && !opts.force && (await fs.readFile(target, 'utf8')) !== r.text) {
         warnings.push(`${domain.mfe}: src/monolith/${f} was changed since the last port — kept (--force replaces it)`);
       } else {
         await fs.ensureDir(path.dirname(target));
-        await fs.writeFile(target, read(f) as string);
+        await fs.writeFile(target, r.text);
       }
       copiedBy.set(f, [...(copiedBy.get(f) ?? []), domain.mfe]);
     }
+    await fs.ensureDir(path.join(dir, 'src', 'monolith', '__port__'));
+    if (rerouted.length > 0) {
+      await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'bff-operations.ts'), operationsModule(ops, empties));
+      await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'bff-http.ts'), shimModule(ops.length > 0));
+    }
     if (domain.shell && rewritten.slots.length > 0) {
-      await fs.ensureDir(path.join(dir, 'src', 'monolith', '__port__'));
       await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'slots.tsx'), SLOTS_MODULE);
     }
 
@@ -361,11 +384,18 @@ export async function portFleet(opts: PortOptions): Promise<PortResult> {
       added.push(p);
     }
     if (added.length > 0) await fs.writeFile(pkgFile, `${JSON.stringify(pkg, null, 2)}\n`);
-    mfes.push({ name: domain.mfe, domain: domain.id, files, capabilities: ported, kept, packages: added });
+    mfes.push({
+      name: domain.mfe,
+      domain: domain.id,
+      files,
+      capabilities: ported,
+      kept,
+      packages: added,
+      bff: { operations: ops.map((o) => `${o.method} ${o.path}`).sort(), rerouted },
+    });
   }
 
   // ADR-126 §4: the proposal's own composition, compiled.
-  const fleet = deriveFleet(doc, await readSpecs(proposalDir));
   const manifests: DSLManifest[] = [];
   for (const d of doc.domains) {
     const r = await parseAndValidateDirectory(path.join(fleetDir, d.mfe));

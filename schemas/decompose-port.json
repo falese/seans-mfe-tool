@@ -56,7 +56,8 @@
             "files",
             "capabilities",
             "kept",
-            "packages"
+            "packages",
+            "bff"
           ],
           "properties": {
             "name": {
@@ -91,6 +92,29 @@
                 "type": "string"
               },
               "description": "Packages added to the MFE's package.json, at the monolith's versions."
+            },
+            "bff": {
+              "type": "object",
+              "required": [
+                "operations",
+                "rerouted"
+              ],
+              "properties": {
+                "operations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rerouted": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "ADR-127: the endpoints the MFE's BFF fronts, and the copied files whose HTTP transport now goes through it."
             }
           },
           "additionalProperties": false

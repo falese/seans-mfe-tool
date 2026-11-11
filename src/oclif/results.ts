@@ -460,6 +460,8 @@ export interface DecomposePortResult {
     kept: string[];
     /** Packages added to the MFE's package.json, at the monolith's versions. */
     packages: string[];
+    /** ADR-127: the endpoints the MFE's BFF fronts, and the copied files whose HTTP transport now goes through it. */
+    bff: { operations: string[]; rerouted: string[] };
   }>;
   /** Shell route blocks that became declared slots, as `<file>: <slot>`. */
   slots: string[];
