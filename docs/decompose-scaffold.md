@@ -37,7 +37,7 @@ fleet/
   control-plane/
     control-plane.yaml            the monolith in the root, for every state key (ADR-111 §3)
     rules.json                    compiled from it (ADR-083)
-    target.yaml                   the approved proposal's own composition: where strangling ends
+    target.yaml                   the approved proposal's own composition, which decompose:port composes
   README.md                       how to run it
 ```
 
@@ -81,9 +81,9 @@ Getting the second row took three fixes outside scaffold, each now in the code:
 
 ## Limits
 
-- **Strangling is not built.** The legacy capability renders the whole app into `root`, so no
-  placement is smaller than the app. ADR-125 (Proposed) describes region mounting and URL-driven
-  state keys; #419 builds on it once it is accepted.
+- **There is no strangling.** The next step ports every domain and composes the proposal
+  directly ([decompose-port](./decompose-port.md), PDR-013). Strangling a monolith that must keep
+  serving production is deferred (ADR-125).
 - **The monolith's build change is the agent's.** Scaffold writes what to change, not the change:
   a monolith's bundler config is its own code.
 - **The Figma component library per MFE** waits on the `design:export` rework (#421).

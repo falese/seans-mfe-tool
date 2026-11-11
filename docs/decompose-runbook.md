@@ -30,8 +30,8 @@ The report lists each step with its state and ends with the command to run next:
   next: seans-mfe-tool decompose:present /work/evidence/proposal
 ```
 
-The steps below are the same ones, in order. Each names what it writes. Steps 6–7 (move, switch
-over) are not built yet ([#419](https://github.com/falese/seans-mfe-tool/issues/419)).
+The steps below are the same ones, in order. Each names what it writes. Moving the code is step 6;
+there is no switch-over step, because the proposal is composed directly (PDR-013).
 The order and the commands live in one place, `flows/decompose.yaml`; `flow:status` reads it.
 
 ## Before you start
@@ -126,15 +126,21 @@ per domain with its BFF's specs and recorded fixtures, the monolith as one MFE
 `README.md` says how to run it; `legacy-<app>/MONOLITH-FEDERATION.md` says what the monolith's
 own build needs. → [decompose-scaffold](./decompose-scaffold.md)
 
-## 6–7. Move, switch over
+## 6. Port every domain
 
-Not built yet ([#419](https://github.com/falese/seans-mfe-tool/issues/419)). Moving one placement
-at a time needs the monolith to mount single regions; ADR-125 proposes how, and is not accepted.
+```bash
+seans-mfe-tool decompose:port ./evidence/proposal
+```
+
+Copies each domain's code into its MFE, wraps it in the monolith's providers, turns the shell's
+route blocks into slots, and composes the approved proposal directly. Then build the fleet, run
+it, and check it (step 8): the differences are the port work left, mostly state the monolith
+shared for free. → [decompose-port](./decompose-port.md)
 
 ## 8. Check nothing changed
 
-Once the composed app runs (after step 5, the legacy wrapper alone), replay the captured
-journeys against it:
+Once the composed app runs — after step 5 with the legacy wrapper alone, and after step 6 with
+every domain ported — replay the captured journeys against it:
 
 ```bash
 seans-mfe-tool decompose:verify ./evidence --url http://localhost:<the composed shell>

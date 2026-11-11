@@ -1,6 +1,6 @@
 ---
 name: decompose-monolith
-description: Decompose a running React monolith into SMT MFEs and BFFs with the decompose:* commands — capture, analyze, propose, shape, approve, scaffold, verify — with the human gates, naming rules and stop-and-ask conditions, and the recipe for the first composed parity run.
+description: Decompose a running React monolith into SMT MFEs and BFFs with the decompose:* commands — capture, analyze, propose, shape, approve, scaffold, port, verify — with the human gates, naming rules, stop-and-ask conditions, and the recipes for the composed parity runs.
 ---
 
 # Decompose a monolith (PDR-011, epic #410)
@@ -27,7 +27,9 @@ from the files and prints the next command with its arguments filled in
 | **Gate** | **A person approves** (workspace Approve tab, or an `approve` edit they ran) | `flow:status` shows `approved by <name>`. You do not approve |
 | 5 | `decompose:scaffold ./evidence/proposal --app-dir <app-dir>` | No structural refusal; read every warning |
 | 6 | Give the monolith its remote entry (`<fleet>/legacy-<app>/MONOLITH-FEDERATION.md`) | The patched monolith alone is still at parity: `decompose:verify ./evidence` |
-| 7 | Run the fleet; `decompose:verify ./evidence --url http://localhost:5199` | 7/7-style: every step, every region, 0 console, 0 visual |
+| 7 | Run the fleet; `decompose:verify ./evidence --url http://localhost:5199` | The legacy wrapper alone is at parity: every step, every region, 0 console, 0 visual |
+| 8 | `decompose:port ./evidence/proposal`, rebuild, re-register `rules.json` | Read every warning: duplicated files and couplings are your port work |
+| 9 | `decompose:verify` again; fix what it lists, in developer-owned files only | At parity. State any `--max-diff-pixels` budget and why |
 | **Gate** | **A person signs off** each parity report | — |
 
 Scoring against an answer key (`decompose:score --answer-key`) is for reference
@@ -93,10 +95,28 @@ finished assembling. Capture waits on `[data-composition="pending"]`,
 `[data-slot-state="pending"]`, in-flight scripts and a busy main thread; a
 wrapper of your own must mark itself the same way.
 
-## Where this stops today
+## The port (PDR-013, ADR-126)
 
-Strangling — moving one placement at a time from the legacy wrapper to a new MFE
-(#419) — needs ADR-125, which is **Proposed**: the legacy capability renders the
-whole app into `root`, so there is nothing smaller to move until the monolith
-can mount single regions. Do not build on ADR-125 until it is accepted.
-`control-plane/target.yaml` is where strangling ends.
+There is no strangling: port every domain, compose the proposal directly, prove parity once.
+`decompose:port` does the mechanical part. Then you:
+
+1. **Build for the gate in development mode.** Capture maps regions through React's development
+   metadata. `NODE_ENV=development npx rspack build --mode development` in each MFE (the
+   generated config takes `NODE_ENV` from the environment), and run the shell with
+   `SHELL_REACT_ENV=development` so its React matches.
+2. **Re-register `rules.json`** after every port or composition change; the registry is in
+   memory.
+3. **Read the parity report as a work list.**
+   - *Extra calls, each endpoint N times*: every MFE's copy of a shared store is loading it. On
+     meridian the fix was to keep the store on `window` under one key, started by whichever MFE
+     mounts first (`useSyncExternalStore`), in each copy of `src/store/AppContext.tsx`. Say in
+     the PR that it is remaining coupling; the real fix is each domain loading its slice through
+     its BFF.
+   - *A screen's content still showing on the next screen*: a slot the new state does not fill.
+     The composition places `EmptySlot` there; if it does not, re-derive.
+   - *1–3 changed pixels on a panel's border*: antialiasing where a slot wrapper now sits. Budget
+     it with `--max-diff-pixels`, and say so.
+4. Never edit generator-owned files, and never re-run `decompose:port --force` over your edits —
+   it keeps changed files by default and names them.
+
+Strangling a monolith that must keep serving production (ADR-125) is deferred. Do not build on it.
