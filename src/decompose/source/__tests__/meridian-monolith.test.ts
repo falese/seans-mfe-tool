@@ -34,6 +34,17 @@ describe('decompose:analyze on meridian-monolith', () => {
     expect(graph.routes.map((r) => r.path)).toEqual(['*', '/', '/cargo', '/concourse', '/crew', '/docking', '/life-support', '/simulator']);
   });
 
+  it('resolves each exported client function to the one endpoint it reads, through its wrapper (ADR-128 §2)', () => {
+    const client = graph.files.find((f) => f.file === 'src/api/client.ts');
+    const fn = (name: string) => client?.functions?.find((f) => f.name === name);
+    expect(fn('getBerths')).toEqual({ name: 'getBerths', params: [], endpoints: [{ method: 'GET', url: '/api/harbormaster/berths' }] });
+    expect(fn('getDockings')).toMatchObject({ params: ['berthId'], endpoints: [{ method: 'GET', url: '/api/harbormaster/dockings' }] });
+    expect(fn('getModules')?.endpoints).toEqual([{ method: 'GET', url: '/api/stationos/modules' }]);
+    // The wrappers themselves are not exported, and the template they hold is not a call.
+    expect(fn('hm')).toBeUndefined();
+    expect(client?.functions).toHaveLength(13);
+  });
+
   it('finds the 13 endpoints the M2 capture observed (16 requests), all in the one API client', () => {
     const client = graph.files.find((f) => f.file === 'src/api/client.ts');
     expect(client?.apiClient).toBe(true);

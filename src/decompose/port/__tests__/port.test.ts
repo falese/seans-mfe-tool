@@ -111,22 +111,26 @@ describe('decompose:port on meridian-monolith', () => {
     ]);
   });
 
-  it('reroutes the monolith\'s HTTP instance to the MFE\'s BFF, and leaves the client above it unchanged (ADR-127 §2)', () => {
+  it('rewrites each data function in place: the BFF through the base class when composed, the monolith\'s code alone (ADR-128)', () => {
     const client = read('meridian-ops-cargo', 'src', 'monolith', 'src', 'api', 'client.ts');
-    expect(client).toContain('const http = bffHttp;');
-    expect(client).toContain("import { bffHttp } from '../../__port__/bff-http';");
-    expect(client).not.toMatch(/from 'axios'/);
-    expect(read('meridian-ops-cargo', 'src', 'monolith', '__port__', 'bff-http.ts')).toContain("import { query } from '../../platform/bff/bff';");
+    expect(client).toMatch(/export const getManifestLines = \(\) => viaBff\(\(\) => hm<ManifestLine>\('\/manifest_lines'\), \{ document: "query \{ listManifestLines \{ id \} \}", field: "listManifestLines" \}\);/);
+    // Data cargo's BFF does not front: empty when composed, still the monolith's call alone.
+    expect(client).toContain("export const getModules = () => viaBff(() => sos<Module>('/modules'), { empty: [] });");
+    // The monolith's transport stays, for the standalone path.
+    expect(client).toContain("import axios from 'axios';");
+    expect(read('meridian-ops-cargo', 'src', 'monolith', '__port__', 'via-bff.ts')).toContain("import { mfe } from '../../platform/base-mfe/bootstrap';");
     const cargo = result.mfes.find((m) => m.domain === 'cargo');
-    expect(cargo?.bff.rerouted).toEqual(['src/api/client.ts']);
     expect(cargo?.bff.operations).toEqual(['GET /api/harbormaster/dockings', 'GET /api/harbormaster/manifest_lines', 'GET /api/ledger/valuations']);
+    expect(cargo?.bff.inlined).toHaveLength(13);
+    expect(cargo?.bff.monolith).toEqual([]);
   });
 
   it('fronts what the shell reads across a coupling and through the tiles it renders, and leaves the rest empty (ADR-127 §1, §3)', () => {
     const shell = result.mfes.find((m) => m.domain === 'shell');
     expect(shell?.bff.operations).toEqual(['GET /api/harbormaster/berths', 'GET /api/harbormaster/dockings', 'GET /api/ledger/charges', 'GET /api/stationos/telemetry']);
-    const ops = read('meridian-ops-shell', 'src', 'monolith', '__port__', 'bff-operations.ts');
-    expect(ops).toMatch(/"path": "\/api\/stationos\/modules",\s*"value": \[\]/);
+    const client = read('meridian-ops-shell', 'src', 'monolith', 'src', 'api', 'client.ts');
+    expect(client).toContain("export const getModules = () => viaBff(() => sos<Module>('/modules'), { empty: [] });");
+    expect(client).toMatch(/export const getTelemetry = \(\) => viaBff\(\(\) => sos<Reading>\('\/telemetry'\), \{ document: "query \{ listTelemetry/);
     expect(fs.existsSync(path.join(fleet, 'meridian-ops-shell', 'specs', 'stationos.yaml'))).toBe(true);
   });
 

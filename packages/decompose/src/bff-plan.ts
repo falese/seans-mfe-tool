@@ -1,18 +1,18 @@
 /**
- * How a ported MFE reads through its BFF (ADR-127 §2), derived from the
- * OpenAPI documents its BFF is generated from (ADR-112).
+ * A BFF's operations, as the port and verify need them, derived from the
+ * OpenAPI documents the BFF is generated from (ADR-112).
  *
- * The monolith's client code asks for `GET /api/<backend>/<path>` and expects
- * the REST body back. The BFF is GraphQL Mesh over the same documents: each
- * operation is a root field named by its `operationId`, field names are
- * camel-cased by the naming-convention transform, and an envelope's list is
- * hoisted to its own root field (`hoistsOf`). So each endpoint becomes one
- * GraphQL document whose aliases restore the REST property names, plus how to
- * put a hoisted list back. The answer is the REST body, and the client code
- * above the transport stays unchanged.
+ * The BFF is GraphQL Mesh over those documents: each operation is a root field
+ * named by its `operationId`, field names are camel-cased by the
+ * naming-convention transform, and an envelope's list is hoisted to its own
+ * root field (`hoistsOf`).
  *
- * Pure: no file system. The port writes these as data into the MFE; verify uses
- * `backendCallsOf` to read a candidate's GraphQL traffic as backend calls.
+ * - `bffReads` — one GraphQL document per endpoint in the BFF's own shape: what
+ *   a ported data function runs through `mfe.query()` when composed (ADR-128).
+ * - `bffOperations` / `backendCallsOf` — read a candidate's GraphQL traffic as
+ *   the backend calls it stands for, for the parity gate (ADR-127 §4).
+ *
+ * Pure: no file system.
  */
 
 import { hoistsOf, type OpenApiDocument, type OperationObject, type SchemaObject } from './openapi';
@@ -29,13 +29,6 @@ export interface BffOperation {
   variables: Array<{ name: string; in: 'path' | 'query'; type: 'String' | 'Int' | 'Float' | 'Boolean' }>;
   /** An envelope's list the BFF hoists to its own root field, to put back under `prop`. */
   hoist?: { prop: string; field: string };
-}
-
-export interface EmptyResponse {
-  method: string;
-  path: string;
-  /** The REST body with every list empty: what an MFE gets for data it does not own. */
-  value: unknown;
 }
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
@@ -94,16 +87,6 @@ function selection(doc: OpenApiDocument, schema: SchemaObject | undefined, skip?
   return fields.length > 0 ? ` { ${fields.join(' ')} }` : '';
 }
 
-function emptyOf(doc: OpenApiDocument, schema: SchemaObject | undefined): unknown {
-  const s = resolve(doc, schema);
-  if (!s) return null;
-  if (s.type === 'array') return [];
-  if (s.type === 'object' && s.properties) {
-    return Object.fromEntries(Object.entries(s.properties).map(([k, v]) => [k, emptyOf(doc, v)]));
-  }
-  return null;
-}
-
 const graphqlType = (s: SchemaObject | undefined): string =>
   s?.type === 'integer' ? 'Int' : s?.type === 'number' ? 'Float' : s?.type === 'boolean' ? 'Boolean' : 'String';
 
@@ -145,11 +128,6 @@ export function bffOperations(doc: OpenApiDocument, backend: string, layout: Bac
     });
   }
   return out;
-}
-
-/** Every operation of a backend's document as an empty REST body (ADR-127 §3). */
-export function emptyResponses(doc: OpenApiDocument, backend: string, layout: BackendLayout): EmptyResponse[] {
-  return [...operationsOf(doc)].map(({ method, path, op }) => ({ method, path: `${prefixOf(backend, layout)}${path}`, value: emptyOf(doc, okSchema(doc, op)) }));
 }
 
 /** The root fields a GraphQL document selects (aliases resolved). */
@@ -194,4 +172,62 @@ export function backendCallsOf(document: string, ops: Array<Pick<BffOperation, '
     if (op) calls.add(`${op.method} ${op.path}`);
   }
   return [...calls];
+}
+
+/** One endpoint read the BFF's way (ADR-128 §2, §5): the field it returns, already camel-cased and unwrapped. */
+export interface BffRead {
+  method: string;
+  /** The app-relative path template the monolith's function calls. */
+  path: string;
+  /** The root field whose value the function returns: the operation, or the list a hoist unwraps. */
+  field: string;
+  document: string;
+  variables: BffOperation['variables'];
+  /** What the field holds with no data: the value a composed MFE returns for data it does not front (§3). */
+  empty: unknown;
+}
+
+function graphSelection(doc: OpenApiDocument, schema: SchemaObject | undefined): string {
+  const s = resolve(doc, schema);
+  if (!s) return '';
+  if (s.type === 'array') return graphSelection(doc, s.items);
+  if (s['x-smt-mixed'] || s.type !== 'object' || !s.properties || Object.keys(s.properties).length === 0) return '';
+  const fields = Object.keys(s.properties).map((p) => `${graphqlName(p)}${graphSelection(doc, s.properties?.[p])}`);
+  return ` { ${fields.join(' ')} }`;
+}
+
+function graphEmpty(doc: OpenApiDocument, schema: SchemaObject | undefined): unknown {
+  const s = resolve(doc, schema);
+  if (!s) return null;
+  if (s.type === 'array') return [];
+  if (s.type === 'object' && s.properties) {
+    return Object.fromEntries(Object.entries(s.properties).map(([k, v]) => [graphqlName(k), graphEmpty(doc, v)]));
+  }
+  return null;
+}
+
+/** Every operation of a backend's document as a read in the BFF's own shape (ADR-128). */
+export function bffReads(doc: OpenApiDocument, backend: string, layout: BackendLayout): BffRead[] {
+  const hoists = hoistsOf(doc);
+  const out: BffRead[] = [];
+  for (const { method, path, op } of operationsOf(doc)) {
+    if (!op.operationId) continue;
+    const hoist = hoists.find((h) => h.pathConfig[0] === op.operationId);
+    const schema = okSchema(doc, op);
+    // A hoisted list is its own root field, without the operation's arguments.
+    const params = hoist ? [] : (op.parameters ?? []).filter((p) => NAME.test(p.name));
+    const decl = params.map((p) => `$${p.name}: ${graphqlType(p.schema)}${p.required ? '!' : ''}`).join(', ');
+    const args = params.length > 0 ? `(${params.map((p) => `${p.name}: $${p.name}`).join(', ')})` : '';
+    const field = hoist ? hoist.newFieldName : op.operationId;
+    const target = hoist ? schema?.properties?.[hoist.pathConfig[1]] : schema;
+    out.push({
+      method,
+      path: `${prefixOf(backend, layout)}${path}`,
+      field,
+      document: `query${decl ? ` (${decl})` : ''} { ${field}${args}${graphSelection(doc, target)} }`,
+      variables: params.map((p) => ({ name: p.name, in: p.in, type: graphqlType(p.schema) as BffOperation['variables'][number]['type'] })),
+      empty: hoist ? [] : graphEmpty(doc, target),
+    });
+  }
+  return out;
 }

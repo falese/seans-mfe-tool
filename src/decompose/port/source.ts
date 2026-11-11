@@ -253,64 +253,77 @@ export function pruneUnusedImports(ts: Ts, file: string, text: string): string {
   return out;
 }
 
-export interface Rerouted {
+/** How one exported data function reads once ported (ADR-128 §2–4). */
+export type FunctionRead =
+  | { name: string; read: { document: string; field: string }; variables: Record<string, string>; unless: string[] }
+  | { name: string; empty: unknown }
+  | { name: string; monolith: string };
+
+export interface Inlined {
   text: string;
-  /** Which shim exports the file now uses. */
-  uses: Array<'bffHttp' | 'bffFetch'>;
-  /** Transport the shim cannot take over, to report. */
-  unsupported: string[];
+  /** Functions now reading through the BFF when composed, or empty when composed. */
+  inlined: string[];
+  /** Functions left on the monolith's code in both modes, with why. */
+  monolith: string[];
 }
 
 /**
- * ADR-127 §2: the file's HTTP transport, rerouted to the MFE's BFF. An axios
- * instance (`axios.create(...)`) or axios itself becomes `bffHttp`; a `fetch`
- * call becomes `bffFetch`. The code that uses them is left as it is.
+ * ADR-128 §2: each exported data function rewritten where it stands, so it
+ * runs the monolith's code standalone and reads through the MFE's BFF — with
+ * the base class's query capability — when a host has composed it.
+ *
+ *   export const getBerths = () => hm<Berth>('/berths');
+ *   export const getBerths = () => viaBff(() => hm<Berth>('/berths'), { document: '…', field: 'listBerths' });
  */
-export function rerouteTransport(ts: Ts, file: string, text: string, shim: string): Rerouted {
+export function inlineReads(ts: Ts, file: string, text: string, plan: FunctionRead[], helper: string): Inlined {
   const sf = parse(ts, file, text);
-  const axiosName = importsOf(ts, file, text).find((i) => i.spec === 'axios')?.defaultName;
   const edits: Array<{ start: number; end: number; text: string }> = [];
-  const uses = new Set<'bffHttp' | 'bffFetch'>();
-  const unsupported: string[] = [];
-  const visit = (node: TS.Node): void => {
-    if (axiosName && ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
-      const target = node.expression;
-      if (ts.isIdentifier(target.expression) && target.expression.text === axiosName && target.name.text === 'create') {
-        edits.push({ start: node.getStart(sf), end: node.getEnd(), text: 'bffHttp' });
-        uses.add('bffHttp');
-        return;
-      }
-    }
-    if (axiosName && ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === axiosName) {
-      edits.push({ start: node.expression.getStart(sf), end: node.expression.getEnd(), text: 'bffHttp' });
-      uses.add('bffHttp');
+  const inlined: string[] = [];
+  const monolith: string[] = [];
+  const byName = new Map(plan.map((p) => [p.name, p]));
+
+  const second = (p: FunctionRead): string | undefined => {
+    if ('monolith' in p) return undefined;
+    if ('empty' in p) return `{ empty: ${JSON.stringify(p.empty)} }`;
+    const vars = Object.entries(p.variables).map(([v, expr]) => (v === expr ? v : `${v}: ${expr}`));
+    const read = `{ document: ${JSON.stringify(p.read.document)}, field: ${JSON.stringify(p.read.field)}${vars.length ? `, variables: { ${vars.join(', ')} }` : ''} }`;
+    // A parameter the BFF cannot take: the BFF only answers when it is not given.
+    return p.unless.length > 0 ? `${read}, ${p.unless.map((u) => `${u} === undefined`).join(' && ')}` : read;
+  };
+  const isAsync = (n: TS.Node): boolean => (ts.canHaveModifiers(n) ? ts.getModifiers(n) : undefined)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword) ?? false;
+  const exported = (n: TS.Node): boolean => (ts.canHaveModifiers(n) ? ts.getModifiers(n) : undefined)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+
+  const rewrite = (name: string, fn: TS.ArrowFunction | TS.FunctionExpression | TS.FunctionDeclaration): void => {
+    const p = byName.get(name);
+    if (!p || !fn.body) return;
+    if ('monolith' in p) {
+      monolith.push(`${name}: ${p.monolith}`);
       return;
     }
-    if (axiosName && ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === axiosName) {
-      unsupported.push(`${file}: calls ${axiosName}(…) directly`);
+    const tail = second(p) as string;
+    const asyncKw = isAsync(fn) ? 'async ' : '';
+    const body = fn.body.getText(sf);
+    if (ts.isArrowFunction(fn)) {
+      edits.push({ start: fn.body.getStart(sf), end: fn.body.getEnd(), text: `viaBff(${asyncKw}() => ${body}, ${tail})` });
+    } else {
+      edits.push({ start: fn.body.getStart(sf), end: fn.body.getEnd(), text: `{\n  return viaBff(${asyncKw}() => ${body}, ${tail});\n}` });
     }
-    if (ts.isCallExpression(node)) {
-      const callee = node.expression;
-      const isFetch =
-        (ts.isIdentifier(callee) && callee.text === 'fetch') ||
-        (ts.isPropertyAccessExpression(callee) && callee.name.text === 'fetch' && ts.isIdentifier(callee.expression) && ['window', 'globalThis', 'self'].includes(callee.expression.text));
-      if (isFetch) {
-        edits.push({ start: callee.getStart(sf), end: callee.getEnd(), text: 'bffFetch' });
-        uses.add('bffFetch');
+    inlined.push(name);
+  };
+
+  for (const st of sf.statements) {
+    if (ts.isFunctionDeclaration(st) && st.name && exported(st)) rewrite(st.name.text, st);
+    if (ts.isVariableStatement(st) && exported(st)) {
+      for (const d of st.declarationList.declarations) {
+        if (ts.isIdentifier(d.name) && d.initializer && (ts.isArrowFunction(d.initializer) || ts.isFunctionExpression(d.initializer))) rewrite(d.name.text, d.initializer);
       }
     }
-    if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'XMLHttpRequest') {
-      unsupported.push(`${file}: uses XMLHttpRequest`);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sf);
-  if (edits.length === 0) return { text, uses: [], unsupported };
+  }
+  if (edits.length === 0) return { text, inlined, monolith };
   let out = text;
   for (const e of edits.sort((a, b) => b.start - a.start)) out = out.slice(0, e.start) + e.text + out.slice(e.end);
-  const names = [...uses].sort();
   const decls = importsOf(ts, file, out);
   const at = decls.length > 0 ? decls[decls.length - 1].end + 1 : 0;
-  out = `${out.slice(0, at)}import { ${names.join(', ')} } from '${shim}';\n${out.slice(at)}`;
-  return { text: pruneUnusedImports(ts, file, out), uses: names, unsupported };
+  out = `${out.slice(0, at)}// decompose:port (ADR-128): each data function runs the monolith's own code standalone, and reads\n// through this MFE's BFF with the base class's query capability when a host has composed it.\nimport { viaBff } from '${helper}';\n${out.slice(at)}`;
+  return { text: out, inlined, monolith };
 }

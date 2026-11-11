@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { closure, declaringFile, rerouteTransport, exportsByName, importsOf, packageOf, providerTree, pruneUnusedImports, resolveRelative, routesBlocks, type Read } from '../source';
+import { closure, declaringFile, inlineReads, exportsByName, importsOf, packageOf, providerTree, pruneUnusedImports, resolveRelative, routesBlocks, type Read } from '../source';
 
 const MONOLITH = path.resolve(__dirname, '../../../../examples/meridian-monolith');
 const read: Read = (f) => {
@@ -59,18 +59,37 @@ describe('reading the monolith for a port (ADR-126)', () => {
     expect(importsOf(ts, 'x.tsx', src)[2].named).toEqual([{ imported: 'B', local: 'B' }, { imported: 'C', local: 'C' }]);
   });
 
-  it('reroutes the monolith\'s HTTP instance and fetch calls to the BFF shim, and nothing else (ADR-127 §2)', () => {
+  it('rewrites each data function in place: the monolith\'s call kept as the standalone path (ADR-128 §2)', () => {
     const client = read('src/api/client.ts') as string;
-    const r = rerouteTransport(ts, 'src/api/client.ts', client, '../__port__/bff-http');
-    expect(r.uses).toEqual(['bffHttp']);
-    expect(r.text).toContain('const http = bffHttp;');
-    expect(r.text).toContain("import { bffHttp } from '../__port__/bff-http';");
-    expect(r.text).not.toMatch(/from 'axios'/);
-    // Everything above the transport is untouched.
-    expect(r.text).toContain("export const getBerths = () => hm<Berth>('/berths');");
-    const f = rerouteTransport(ts, 'x.ts', "export const a = () => fetch('/api/x').then((r) => r.json());\nconst b = window.fetch;\n", './shim');
-    expect(f.text).toContain("bffFetch('/api/x')");
-    expect(f.uses).toEqual(['bffFetch']);
-    expect(rerouteTransport(ts, 'y.ts', 'const x = new XMLHttpRequest();', './shim').unsupported).toEqual(['y.ts: uses XMLHttpRequest']);
+    const r = inlineReads(
+      ts,
+      'src/api/client.ts',
+      client,
+      [
+        { name: 'getBerths', read: { document: 'query { listBerths { berthId } }', field: 'listBerths' }, variables: {}, unless: [] },
+        { name: 'getDockings', read: { document: 'query { listDockings { id } }', field: 'listDockings' }, variables: {}, unless: ['berthId'] },
+        { name: 'getModules', empty: [] },
+        { name: 'getCrew', monolith: 'no spec' },
+      ],
+      '../__port__/via-bff'
+    );
+    expect(r.text).toContain(
+      "export const getBerths = () => viaBff(() => hm<Berth>('/berths'), { document: \"query { listBerths { berthId } }\", field: \"listBerths\" });"
+    );
+    // A parameter the BFF cannot take keeps the monolith's call whenever it is given.
+    expect(r.text).toContain('field: "listDockings" }, berthId === undefined);');
+    expect(r.text).toContain("export const getModules = () => viaBff(() => sos<Module>('/modules'), { empty: [] });");
+    expect(r.text).toContain("export const getCrew = () => sos<CrewMember>('/crew');");
+    expect(r.text).toContain("import { viaBff } from '../__port__/via-bff';");
+    // The monolith's transport stays: it is the standalone path.
+    expect(r.text).toContain("import axios from 'axios';");
+    expect(r).toMatchObject({ inlined: ['getBerths', 'getDockings', 'getModules'], monolith: ['getCrew: no spec'] });
+  });
+
+  it('wraps block-bodied and declared functions too, keeping async', () => {
+    const src = "export async function load(id) {\n  const r = await http.get(`/x/${id}`);\n  return r.data;\n}\nexport const other = async () => {\n  return 1;\n};\n";
+    const r = inlineReads(ts, 'x.ts', src, [{ name: 'load', read: { document: 'q', field: 'f' }, variables: { id: 'id' }, unless: [] }, { name: 'other', empty: null }], './via-bff');
+    expect(r.text).toContain('return viaBff(async () => {\n  const r = await http.get(`/x/${id}`);\n  return r.data;\n}, { document: "q", field: "f", variables: { id } });');
+    expect(r.text).toContain('export const other = async () => viaBff(async () => {\n  return 1;\n}, { empty: null });');
   });
 });

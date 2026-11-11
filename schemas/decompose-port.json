@@ -97,7 +97,8 @@
               "type": "object",
               "required": [
                 "operations",
-                "rerouted"
+                "inlined",
+                "monolith"
               ],
               "properties": {
                 "operations": {
@@ -106,7 +107,13 @@
                     "type": "string"
                   }
                 },
-                "rerouted": {
+                "inlined": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "monolith": {
                   "type": "array",
                   "items": {
                     "type": "string"
@@ -114,7 +121,7 @@
                 }
               },
               "additionalProperties": false,
-              "description": "ADR-127: the endpoints the MFE's BFF fronts, and the copied files whose HTTP transport now goes through it."
+              "description": "ADR-127, ADR-128: the endpoints the MFE's BFF fronts; the data functions (`file#name`) that\nread through it when composed and run the monolith's code standalone; and those left on the\nmonolith's code in both modes, with why."
             }
           },
           "additionalProperties": false

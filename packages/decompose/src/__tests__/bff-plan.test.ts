@@ -1,4 +1,4 @@
-import { backendCallsOf, bffOperations, emptyResponses, graphqlName, rootFields } from '../bff-plan';
+import { backendCallsOf, bffOperations, bffReads, graphqlName, rootFields } from '../bff-plan';
 import type { OpenApiDocument } from '../openapi';
 
 const ledger: OpenApiDocument = {
@@ -60,18 +60,32 @@ describe('reading through the BFF (ADR-127 §2)', () => {
     });
   });
 
-  it('knows each operation\'s empty REST body, for data an MFE does not own (ADR-127 §3)', () => {
-    expect(emptyResponses(ledger, 'ledger', { gateway: true })[0]).toEqual({
-      method: 'GET',
-      path: '/api/ledger/charges',
-      value: { result: [], meta: { cursor: null, hasMore: null } },
-    });
-  });
-
   it('reads a request to a BFF as the backend calls it stands for (ADR-127 §4)', () => {
     const ops = bffOperations(ledger, 'ledger', { gateway: true });
     expect(rootFields('query ($id: String!) { r: getDocking(id: $id) { Data: data { BerthId: berthId } } other }')).toEqual(['getDocking', 'other']);
     expect(backendCallsOf(ops[0].document, ops)).toEqual(['GET /api/ledger/charges']);
     expect(backendCallsOf('{ charges { chargeId } unknownField }', ops)).toEqual(['GET /api/ledger/charges']);
+  });
+
+  it('reads each endpoint in the BFF\'s own shape: camel-cased, the envelope\'s list unwrapped (ADR-128 §5)', () => {
+    const reads = bffReads(ledger, 'ledger', { gateway: true });
+    expect(reads[0]).toEqual({
+      method: 'GET',
+      path: '/api/ledger/charges',
+      field: 'charges',
+      document: 'query { charges { chargeId amountCents } }',
+      variables: [],
+      empty: [],
+    });
+    expect(reads[1]).toEqual({
+      method: 'GET',
+      path: '/api/ledger/dockings/{id}',
+      field: 'getDocking',
+      document: 'query ($id: String!) { getDocking(id: $id) { data { berthId } } }',
+      variables: [{ name: 'id', in: 'path', type: 'String' }],
+      empty: { data: { berthId: null } },
+    });
+    // Verify still reads the hoisted field as the operation's backend call.
+    expect(backendCallsOf(reads[0].document, bffOperations(ledger, 'ledger', { gateway: true }))).toEqual(['GET /api/ledger/charges']);
   });
 });

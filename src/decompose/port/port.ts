@@ -19,11 +19,13 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { BusinessError, ValidationError } from '@seans-mfe/contracts';
 import { compileControlPlane, DSLManifestSchema, parseAndValidateDirectory, type DSLManifest } from '@seans-mfe/dsl';
-import { approvalStatus, bffOperations, deriveFleet, dumpYaml, EMPTY_SLOT, emptyResponses, readDecomposition, readSpecs, type Decomposition, type Domain } from '@seans-mfe/decompose';
+import { approvalStatus, bffReads, type BffRead, deriveFleet, dumpYaml, EMPTY_SLOT, readDecomposition, readSpecs, type Decomposition, type Domain } from '@seans-mfe/decompose';
 import { loadTypeScript } from '../source/load';
 import { validateDecomposition } from '../../sentinel/decomposition';
 import { routesModule } from '../scaffold/shell';
-import { operationsModule, shimModule } from './shim';
+import { viaBffModule } from './shim';
+import { buildSourceGraph, type FileNode } from '../source/graph';
+import { readProject } from '../source/load';
 import {
   closure,
   declaringFile,
@@ -32,7 +34,8 @@ import {
   importsOf,
   providerTree,
   pruneUnusedImports,
-  rerouteTransport,
+  inlineReads,
+  type FunctionRead,
   resolveRelative,
   routesBlocks,
   type ProviderTree,
@@ -61,8 +64,11 @@ export interface PortedMfe {
   kept: string[];
   /** Packages added to package.json. */
   packages: string[];
-  /** ADR-127: the endpoints its BFF fronts, and the copied files whose transport now goes through it. */
-  bff: { operations: string[]; rerouted: string[] };
+  /**
+   * ADR-127, ADR-128: the endpoints its BFF fronts; the data functions (`file#name`) that read
+   * through it when composed; and those left on the monolith's code in both modes, with why.
+   */
+  bff: { operations: string[]; inlined: string[]; monolith: string[] };
 }
 
 export interface PortResult {
@@ -257,6 +263,43 @@ describe('${cap}', () => {
 const replaceable = (text: string | undefined, cap: string): boolean =>
   text === undefined || text.includes(`TODO: Implement ${cap}`) || text.includes(PORT_MARK) || text.includes('TODO: Add more tests based on capability');
 
+const fits = (template: string, url: string): boolean => {
+  const t = template.split('/').filter(Boolean);
+  const u = url.split('/').filter(Boolean);
+  return t.length === u.length && t.every((s, i) => s === u[i] || s.startsWith('{') || u[i].startsWith('{'));
+};
+
+/**
+ * How one exported data function reads once ported (ADR-128 §2–4): through the
+ * BFF when its MFE fronts its endpoint, empty when it does not, or on the
+ * monolith's code when it is a write, reads several endpoints, or has no spec.
+ */
+export function planRead(
+  fn: NonNullable<FileNode['functions']>[number],
+  fronted: BffRead[],
+  every: BffRead[]
+): FunctionRead {
+  if (fn.endpoints.length !== 1) return { name: fn.name, monolith: `reads ${fn.endpoints.length} endpoints` };
+  const ep = fn.endpoints[0];
+  if (ep.method !== 'GET') return { name: fn.name, monolith: `${ep.method} is a write; writes are not through the BFF yet` };
+  const mine = fronted.find((r) => r.method === ep.method && fits(r.path, ep.url));
+  if (!mine) {
+    const any = every.find((r) => r.method === ep.method && fits(r.path, ep.url));
+    return any ? { name: fn.name, empty: any.empty } : { name: fn.name, monolith: `${ep.method} ${ep.url} is in no backend's spec` };
+  }
+  // Path parameters the function passes by name become variables; any other parameter keeps the monolith's call.
+  const urlSegs = ep.url.split('/').filter(Boolean);
+  const tplSegs = mine.path.split('/').filter(Boolean);
+  const variables: Record<string, string> = {};
+  for (const v of mine.variables.filter((x) => x.in === 'path')) {
+    const at = tplSegs.indexOf(`{${v.name}}`);
+    const name = /^\{([A-Za-z_$][\w$]*)\}$/.exec(urlSegs[at] ?? '')?.[1];
+    if (name && fn.params.includes(name)) variables[v.name] = name;
+  }
+  const unless = fn.params.filter((p) => !Object.values(variables).includes(p));
+  return { name: fn.name, read: { document: mine.document, field: mine.field }, variables, unless };
+}
+
 export async function portFleet(opts: PortOptions): Promise<PortResult> {
   const ts = await loadTypeScript();
   const proposalDir = path.resolve(opts.proposalDir);
@@ -298,37 +341,43 @@ export async function portFleet(opts: PortOptions): Promise<PortResult> {
   const allSpecs = await readSpecs(proposalDir);
   const fleet = deriveFleet(doc, allSpecs);
   const layout = { gateway: doc.app.gateway !== false };
+  // Which endpoint each exported data function reads, through its wrappers (ADR-128 §2).
+  const graph = buildSourceGraph((await readProject(ts, appDir)).facts);
+  const everyRead = Object.entries(allSpecs?.specs ?? {}).flatMap(([b, spec]) => bffReads(spec, b, layout));
   for (const domain of doc.domains) {
     const dir = path.join(fleetDir, domain.mfe);
     if (!(await fs.pathExists(dir))) throw new BusinessError(`${dir} is missing — scaffold the fleet again`, 'NOT_SCAFFOLDED', { dir });
     const read = domain.shell ? reader(appDir, new Map([[shellRoot.file, rewritten.text]])) : plain;
     const { files, packages } = closure(ts, [...domain.capabilities.map((c) => c.file), ...providerFiles], read);
 
-    const bff = fleet.bff[domain.mfe];
-    const ops = Object.entries(bff?.specs ?? {}).flatMap(([b, spec]) => bffOperations(spec, b, layout));
-    const fronted = new Set(ops.map((o) => `${o.method} ${o.path}`));
-    const empties = Object.entries(allSpecs?.specs ?? {})
-      .flatMap(([b, spec]) => emptyResponses(spec, b, layout))
-      .filter((e) => !fronted.has(`${e.method} ${e.path}`));
-    const rerouted: string[] = [];
+    // ADR-128: each data function reads through this MFE's BFF when composed — what the BFF
+    // fronts (ADR-127 §1) — and is empty when composed for data it does not.
+    const fronted = Object.entries(fleet.bff[domain.mfe]?.specs ?? {}).flatMap(([b, spec]) => bffReads(spec, b, layout));
+    const inlined: string[] = [];
+    const onMonolith: string[] = [];
     for (const f of files) {
       const target = path.join(dir, 'src', 'monolith', f);
-      const r = rerouteTransport(ts, f, read(f) as string, rel(f, '__port__/bff-http'));
-      warnings.push(...r.unsupported.map((u) => `${domain.mfe}: ${u} — not rerouted to its BFF`));
-      if (r.uses.length > 0) rerouted.push(f);
-      if ((await fs.pathExists(target)) && !opts.force && (await fs.readFile(target, 'utf8')) !== r.text) {
+      const node = graph.files.find((n) => n.file === f);
+      let text = read(f) as string;
+      // Only where the HTTP calls are made: a function that reads by calling those (a store's
+      // loader) reads through them, already rewritten.
+      if (node?.apiClient && node.functions) {
+        const r = inlineReads(ts, f, text, node.functions.map((fn) => planRead(fn, fronted, everyRead)), rel(f, '__port__/via-bff'));
+        text = r.text;
+        inlined.push(...r.inlined.map((n) => `${f}#${n}`));
+        onMonolith.push(...r.monolith.map((m) => `${f}#${m}`));
+      }
+      if ((await fs.pathExists(target)) && !opts.force && (await fs.readFile(target, 'utf8')) !== text) {
         warnings.push(`${domain.mfe}: src/monolith/${f} was changed since the last port — kept (--force replaces it)`);
       } else {
         await fs.ensureDir(path.dirname(target));
-        await fs.writeFile(target, r.text);
+        await fs.writeFile(target, text);
       }
       copiedBy.set(f, [...(copiedBy.get(f) ?? []), domain.mfe]);
     }
+    for (const m of onMonolith) warnings.push(`${domain.mfe}: ${m} — runs the monolith's code in both modes`);
     await fs.ensureDir(path.join(dir, 'src', 'monolith', '__port__'));
-    if (rerouted.length > 0) {
-      await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'bff-operations.ts'), operationsModule(ops, empties));
-      await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'bff-http.ts'), shimModule(ops.length > 0));
-    }
+    if (inlined.length > 0) await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'via-bff.ts'), viaBffModule());
     if (domain.shell && rewritten.slots.length > 0) {
       await fs.writeFile(path.join(dir, 'src', 'monolith', '__port__', 'slots.tsx'), SLOTS_MODULE);
     }
@@ -391,7 +440,7 @@ export async function portFleet(opts: PortOptions): Promise<PortResult> {
       capabilities: ported,
       kept,
       packages: added,
-      bff: { operations: ops.map((o) => `${o.method} ${o.path}`).sort(), rerouted },
+      bff: { operations: fronted.map((o) => `${o.method} ${o.path}`).sort(), inlined, monolith: onMonolith },
     });
   }
 

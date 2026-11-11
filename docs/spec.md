@@ -350,6 +350,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-124](./architecture-decisions/ADR-124-registry-writes-need-a-token-shell-allow-lists-origins.md) | A registry write needs the fleet's token, and a shell loads remotes only from origins it allows | Control plane / security / composition | Implemented |
 | [ADR-126](./architecture-decisions/ADR-126-port-by-copy-compose-target-shell-routes-by-url.md) | decompose:port copies each domain's source into its MFE and wraps it in the monolith's own providers, turns the shell's route blocks into declared slots, composes the proposal directly, and the shell enters state keys from the URL | Decomposition / port | Implemented |
 | [ADR-127](./architecture-decisions/ADR-127-port-reads-through-each-mfe-bff.md) | A ported MFE reads only through its own BFF: the port reroutes the monolith's HTTP transport to GraphQL documents derived from the BFF's specs, each BFF fronts everything its MFE reads, and parity counts a domain re-loading data the monolith had already loaded as a repeat, not a failure | Decomposition / port / data | Implemented |
+| [ADR-128](./architecture-decisions/ADR-128-port-inlines-bff-reads-on-each-function.md) | A ported MFE runs either way: each of the monolith's data functions is rewritten in place to read through the MFE's BFF with the base class's query capability when a host has composed it, and to run the monolith's own code when it runs alone | Decomposition / port / data | Implemented |
 
 ### Proposed — filed, not ratified
 
