@@ -37,6 +37,8 @@ interface ReactRootLike {
 export class RemoteMFE extends BaseRemoteMFE {
   /** React roots keyed by containerId — reused on re-render, unmounted on cleanup */
   private reactRoots: Map<string, ReactRootLike> = new Map();
+  /** The element each root was created on: an id can come to name a new element. */
+  private rootElements: Map<string, unknown> = new Map();
 
   /**
    * Get shared dependencies for Module Federation
@@ -88,8 +90,15 @@ export class RemoteMFE extends BaseRemoteMFE {
       throw new SystemError(`[RemoteMFE] DOM container #${containerId} not found`);
     }
 
-    // Reuse root if one already exists for this container
+    // Reuse the root for this container — unless the id now names a different
+    // element. The LayoutManager re-provides a slot with a fresh container under
+    // the same id; rendering into the old root would draw into the detached
+    // element and leave the visible one empty.
     let root = this.reactRoots.get(containerId);
+    if (root && this.rootElements.get(containerId) !== element) {
+      root.unmount();
+      root = undefined;
+    }
     if (!root) {
       // @ts-ignore — react-dom/client types not in root tsconfig; browser-only code
       const { createRoot } = await import('react-dom/client');
@@ -97,6 +106,7 @@ export class RemoteMFE extends BaseRemoteMFE {
       // narrow `root` out of the `| undefined` it inherits from Map.get().
       root = createRoot(element) as ReactRootLike;
       this.reactRoots.set(containerId, root);
+      this.rootElements.set(containerId, element);
     }
 
     // @ts-ignore — react types not in root tsconfig; browser-only code
@@ -141,6 +151,7 @@ export class RemoteMFE extends BaseRemoteMFE {
     if (root) {
       root.unmount();
       this.reactRoots.delete(containerId);
+      this.rootElements.delete(containerId);
     }
   }
 }

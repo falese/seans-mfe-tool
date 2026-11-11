@@ -1301,7 +1301,7 @@ webpack/rspack federation runtimes are structurally compatible here.
 
 > `protected` **getSharedDependencies**(): `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/runtime/src/remote-mfe.ts:44](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L44)
+Defined in: [packages/runtime/src/remote-mfe.ts:46](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L46)
 
 Get shared dependencies for Module Federation
 
@@ -1524,7 +1524,7 @@ Called by doRender() instead of going through the Module Federation container AP
 
 > `protected` **mountComponent**(`Component`, `props`, `containerId`): `Promise`\<`unknown`\>
 
-Defined in: [packages/runtime/src/remote-mfe.ts:77](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L77)
+Defined in: [packages/runtime/src/remote-mfe.ts:79](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L79)
 
 Mount React component to DOM using React 18 createRoot.
 Reuses an existing root for the containerId when re-rendering.
@@ -1681,7 +1681,7 @@ Error if transition is invalid
 
 > **unmount**(`containerId`): `void`
 
-Defined in: [packages/runtime/src/remote-mfe.ts:139](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L139)
+Defined in: [packages/runtime/src/remote-mfe.ts:149](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/remote-mfe.ts#L149)
 
 Unmount a previously rendered component and release the React root.
 Call from the shell's useEffect cleanup to avoid memory leaks.
