@@ -413,6 +413,38 @@ export interface DecomposePresentResult {
 }
 
 // ---------------------------------------------------------------------------
+// decompose:scaffold (#417, ADR-111)
+// ---------------------------------------------------------------------------
+
+export interface DecomposeScaffoldMfe {
+  name: string;
+  dir: string;
+  /** `domain`: one of the proposal's domains. `legacy`: the monolith, whole (ADR-111 §1). */
+  role: 'domain' | 'legacy';
+  capabilities: string[];
+  /** Files the generator wrote, and developer-owned files it found and kept. */
+  generated: number;
+  kept: number;
+}
+
+export interface DecomposeScaffoldResult {
+  fleetDir: string;
+  app: string;
+  namespace: string;
+  /** The approval hash the fleet was scaffolded from (ADR-116 §5). */
+  approvedHash: string;
+  mfes: DecomposeScaffoldMfe[];
+  legacy: { mfe: string; capability: string; remoteEntry: string };
+  shell: { dir: string; port: number };
+  /** The starting composition, its compiled payload, and the proposal's own composition. */
+  controlPlane: string;
+  rules: string;
+  target: string;
+  files: number;
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------
 // decompose:workspace / decompose:ask (ADR-116, ADR-117, ADR-118)
 // ---------------------------------------------------------------------------
 

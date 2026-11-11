@@ -60,8 +60,9 @@ steps:
   - id: scaffold
     title: Generate the MFEs, their BFFs and the legacy wrapper
     after: [approve]
-    available: false
-    issue: '#410'
+    produces: [proposal/scaffold.json]
+    from: [proposal/decomposition.yaml]
+    command: seans-mfe-tool decompose:scaffold {root}/proposal --app-dir {appDir}
 
   - id: verify
     title: Prove the composed app behaves like the monolith

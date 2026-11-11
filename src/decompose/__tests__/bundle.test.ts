@@ -1,4 +1,4 @@
-import { buildBundle, isDevServerRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
+import { buildBundle, isDevServerRequest, isInfrastructureRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
 import type { Region } from '../regions';
 
 const region = (id: string, file: string, ownText: string): Region => ({
@@ -146,6 +146,13 @@ describe('dev-server traffic (#442)', () => {
     expect(isDevServerRequest('/ws')).toBe(true);
     expect(isDevServerRequest('/api/tags')).toBe(false);
     expect(isDevServerRequest('/api/ws/messages')).toBe(false);
+  });
+
+  it('treats a composed shell\'s control-plane traffic as infrastructure, not the app\'s (ADR-111, ADR-113)', () => {
+    expect(isInfrastructureRequest('http://localhost:5199/__control-plane/graphql')).toBe(true);
+    expect(isInfrastructureRequest('/__webpack_hmr')).toBe(true);
+    expect(isInfrastructureRequest('/api/__control-plane')).toBe(false);
+    expect(isInfrastructureRequest('/api/tags')).toBe(false);
   });
   it('leaves dev-server requests out of the bundle', () => {
     const r = run();

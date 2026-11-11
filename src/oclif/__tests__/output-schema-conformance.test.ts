@@ -113,6 +113,7 @@ const NO_FIXTURE: Record<string, string> = {
   'decompose:workspace': 'serves the workspace until stopped, from a built MFE and a proposal no fixture commits — its parts run in packages/workspace/src/run/__tests__/ and the MFE’s own suite',
   'decompose:ask': 'calls a hosted model with a key from the environment — its flow runs against an injected model in packages/decompose/src/__tests__/ask.test.ts and src/decompose/__tests__/agent.test.ts',
   'decompose:present': 'needs a proposal and a captured evidence bundle with screenshots, which no fixture commits — rendering runs in src/decompose/propose/__tests__/present.test.ts',
+  'decompose:scaffold': 'needs an approved decomposition.yaml, which no fixture commits — the whole scaffold runs on the reference monolith in src/decompose/scaffold/__tests__/scaffold.test.ts',
   'decompose:verify': 'needs a captured evidence bundle (and a running app, or a second bundle), which no fixture commits — the comparison runs in src/decompose/verify/__tests__/parity.test.ts',
 };
 

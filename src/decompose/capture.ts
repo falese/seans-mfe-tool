@@ -14,7 +14,7 @@
 import { launchBrowser, type ChromiumLike } from '../design/dom-capture';
 import { ValidationError } from '@seans-mfe/contracts';
 import { initiatorFiles, type CdpStackTrace } from './attribution';
-import { isDevServerRequest, relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
+import { isInfrastructureRequest, relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
 import type { Journey, JourneyStep } from './journeys';
 import { probeElements, routePath, type ProbeResult } from './page-probe';
 import { assembleRegions, normalizeSourcePath } from './regions';
@@ -74,7 +74,23 @@ interface BrowserWithContexts {
 }
 
 const API_TYPES = new Set(['XHR', 'Fetch']);
+/**
+ * Code still loading: not recorded, but a step is not settled while it is in
+ * flight. A composed app loads each remote's chunks after the page itself, and
+ * those chunks then make the API calls the step is about (ADR-111).
+ */
+export const CODE_TYPES = new Set(['Script', 'Stylesheet']);
+/** A page that takes longer than this to answer a trivial query is busy, not settled. */
+export const BUSY_MS = 100;
 const STEP_TIMEOUT = 15_000;
+
+/**
+ * A composed app is still assembling while its shell awaits its first
+ * experience (decompose:scaffold's shell marks itself) or a slot awaits its
+ * remote (the LayoutManager's `data-slot-state`, ADR-060). Neither is network
+ * traffic the settle loop can see, so a step waits for both (ADR-113).
+ */
+export const COMPOSITION_PENDING = '[data-composition="pending"], [data-slot-state="pending"]';
 /** An explored link is on the page or it is not; no need to wait long for it. */
 const EXPLORE_TIMEOUT = 2_000;
 
@@ -195,6 +211,7 @@ async function runJourney(
     const requests: RawRequest[] = [];
     const byId = new Map<string, RawRequest>();
     const inFlight = new Set<string>();
+    const loadingCode = new Set<string>();
     let lastActivity = Date.now();
     const pending: Array<Promise<void>> = [];
 
@@ -204,6 +221,11 @@ async function runJourney(
       request: { method: string; url: string };
       initiator?: { stack?: CdpStackTrace };
     }) => {
+      if (e.type && CODE_TYPES.has(e.type)) {
+        loadingCode.add(e.requestId);
+        lastActivity = Date.now();
+        return;
+      }
       if (!e.type || !API_TYPES.has(e.type)) return;
       const req: RawRequest = {
         step: current,
@@ -222,6 +244,11 @@ async function runJourney(
       req.status = e.response.status;
       req.mimeType = e.response.mimeType;
     });
+    const codeDone = (e: { requestId: string }): void => {
+      if (loadingCode.delete(e.requestId)) lastActivity = Date.now();
+    };
+    cdp.on('Network.loadingFinished', codeDone);
+    cdp.on('Network.loadingFailed', codeDone);
     cdp.on('Network.loadingFinished', (e: { requestId: string }) => {
       const req = byId.get(e.requestId);
       if (!req) return;
@@ -270,7 +297,14 @@ async function runJourney(
       const started = Date.now();
       await page.waitForTimeout(100);
       while (Date.now() - started < STEP_TIMEOUT) {
-        if (inFlight.size === 0 && Date.now() - lastActivity >= options.settleMs) break;
+        if (inFlight.size === 0 && loadingCode.size === 0 && Date.now() - lastActivity >= options.settleMs) {
+          const asked = Date.now();
+          const assembling = await page.evaluate<boolean>(`document.querySelector(${JSON.stringify(COMPOSITION_PENDING)}) !== null`).catch(() => false);
+          // A page slow to answer is busy on its main thread — rendering what it just loaded,
+          // before that render makes its own requests — so it is not settled either.
+          if (!assembling && Date.now() - asked < BUSY_MS) break;
+          lastActivity = Date.now();
+        }
         await page.waitForTimeout(50);
       }
       await Promise.all(pending.splice(0));
@@ -327,10 +361,11 @@ export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: num
 /**
  * How a replay answers one intercepted call: from the recording, or 404 for
  * a call never recorded (reported as a miss). The dev server's own traffic is
- * never recorded (#442), so it goes through to the server instead of failing.
+ * never recorded (#442), nor a composed shell's control-plane calls, so both go
+ * through to the server instead of failing.
  */
 export function replayAnswer(method: string, url: string, appUrl: string, recorded: Record<string, RecordedResponse>): ReplayAnswer {
-  if (isDevServerRequest(url)) return { kind: 'continue' };
+  if (isInfrastructureRequest(url)) return { kind: 'continue' };
   const hit = recorded[responseKey(method, relativeUrl(url, appUrl))];
   if (!hit) return { kind: 'fulfill', status: 404, mimeType: 'application/json', body: '{"error":"not recorded"}', miss: true };
   return { kind: 'fulfill', status: hit.status, mimeType: hit.mimeType, body: typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body), miss: false };

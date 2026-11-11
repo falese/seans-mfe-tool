@@ -1,4 +1,4 @@
-import { performStep, replayAnswer } from '../capture';
+import { BUSY_MS, CODE_TYPES, COMPOSITION_PENDING, performStep, replayAnswer } from '../capture';
 
 const page = (click: () => Promise<void>) =>
   ({ click, goto: jest.fn(), fill: jest.fn(), press: jest.fn(), waitForTimeout: jest.fn() }) as unknown as Parameters<typeof performStep>[0];
@@ -21,6 +21,9 @@ describe('performStep', () => {
 });
 
 describe('replayAnswer', () => {
+  it('lets a composed shell reach its control plane: that is not the app\'s data', () => {
+    expect(replayAnswer('POST', 'http://localhost:5199/__control-plane/graphql', 'http://localhost:5199', {})).toEqual({ kind: 'continue' });
+  });
   const recorded = { 'GET /api/tags': { status: 200, mimeType: 'application/json', body: { tags: ['x'] } } };
   it('answers a recorded call from the recording, and an unrecorded one with a 404 it reports', () => {
     expect(replayAnswer('GET', 'http://localhost:4100/api/tags', 'http://localhost:4100', recorded)).toEqual({ kind: 'fulfill', status: 200, mimeType: 'application/json', body: '{"tags":["x"]}', miss: false });
@@ -28,5 +31,21 @@ describe('replayAnswer', () => {
   });
   it('lets the dev server’s own traffic through: it is never recorded, so a 404 would be a new error (#442)', () => {
     expect(replayAnswer('GET', 'http://localhost:4100/sockjs-node/info?t=1', 'http://localhost:4100', recorded)).toEqual({ kind: 'continue' });
+  });
+});
+
+describe('a composed app settles when its composition has (ADR-111, ADR-113)', () => {
+  it('waits for a shell still awaiting its first experience, and for slots the LayoutManager has not filled', () => {
+    // A composed step is not over when the network goes quiet: the shell is still waiting on the
+    // control plane, or a slot on its remote. A monolith has neither marker, so nothing changes there.
+    expect(COMPOSITION_PENDING).toBe('[data-composition="pending"], [data-slot-state="pending"]');
+  });
+
+  it('is not settled while code is loading: a remote\'s chunks make the step\'s API calls once they arrive', () => {
+    expect([...CODE_TYPES]).toEqual(['Script', 'Stylesheet']);
+  });
+
+  it('is not settled while the page is too busy to answer: a large first render precedes its own requests', () => {
+    expect(BUSY_MS).toBe(100);
   });
 });
