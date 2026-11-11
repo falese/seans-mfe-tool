@@ -118,6 +118,16 @@ export abstract class BaseMFE {
     this.deps.wsClient = wsClient;
   }
 
+  /**
+   * Whether a host has composed this MFE: the LayoutManager attaches its
+   * control plane to every MFE it mounts (ADR-057), and nothing else does. A
+   * ported monolith's data functions read through the BFF when this is true
+   * and run the monolith's own code when it is not (ADR-128 §1).
+   */
+  public inControlPlane(): boolean {
+    return this.deps.wsClient !== undefined;
+  }
+
   // ===========================================================================
   // State Management (REQ-056)
   // ===========================================================================
