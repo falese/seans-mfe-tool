@@ -109,11 +109,13 @@ There is no strangling: port every domain, compose the proposal directly, prove 
 3. **Serve each MFE with its BFF in demo mode:** `npx mesh build`, then
    `DEMO_MODE=true PORT=<port> npx ts-node --transpile-only server.ts`. Demo mode answers from the
    captured responses, so the gate needs no backend.
-4. **Read the parity report as a work list.** Every read already goes through the MFE's own BFF
-   and no state is shared (ADR-127), so what is left is real:
+4. **Read the parity report as a work list.** Composed, every data function already reads through
+   the MFE's own BFF by `mfe.query()`, and no state is shared (ADR-127, ADR-128); run alone, the same
+   functions run the monolith's code. So what is left is real:
    - *Text replaced by "BFF request failed"*: a BFF not running, or its fixtures missing.
    - *Content empty where the monolith had data*: a read the analysis missed, so the MFE's BFF
-     does not front it. Fix the proposal (a coupling or a file's endpoints), re-scaffold, re-port.
+     does not front it — or the BFF's shape differs from what the monolith's function returned:
+     edit that function's `viaBff` branch, it is developer-owned. Fix the proposal (a coupling or a file's endpoints), re-scaffold, re-port.
    - *"repeated through a BFF"*: a domain loading data it reads. Not a failure; say in the PR which
      repeats you accept.
    - *A screen's content still showing on the next screen*: a slot the new state does not fill.

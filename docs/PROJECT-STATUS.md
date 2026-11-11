@@ -171,9 +171,9 @@ What changed, and what was measured and left alone:
 wrapper is at parity with the monolith: 7/7 steps, 153/153 regions, no new console errors, no
 visual failures ([decompose-scaffold](./decompose-scaffold.md)).
 
-**Ported and composed through BFFs (#419, PDR-013, ADR-127).** `decompose:port` ports every
-domain, routes every read its code makes through the MFE's own BFF, and composes the proposal
-directly. On meridian-monolith, with no hand edits: 7/7 steps, 153/153 regions, no missing or
+**Ported and composed through BFFs (#419, PDR-013, ADR-127, ADR-128).** `decompose:port` ports
+every domain and rewrites each data function in place: composed, it reads through the MFE's own BFF
+by `mfe.query()`; run alone, it runs the monolith's code. It composes the proposal directly. On meridian-monolith, with no hand edits: 7/7 steps, 153/153 regions, no missing or
 extra backend calls, no console errors, with a stated 3-pixel antialiasing budget; the browser makes
 no direct backend call and no MFE shares state ([decompose-port](./decompose-port.md)). Strangling a
 live monolith is deferred (ADR-125).
