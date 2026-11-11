@@ -203,7 +203,7 @@ function featureSource(o: {
     return target ? i.text.replace(/(['"])[^'"]+\1/, `'${toCopy(target)}'`) : i.text;
   });
   const ported = o.named ? `import { ${o.component} as Ported } from '${toCopy(o.componentFile)}';` : `import Ported from '${toCopy(o.componentFile)}';`;
-  const body = o.tree.jsx.replace('__CHILD__', '<Ported {...props} />');
+  const body = o.tree.jsx.replace('__CHILD__', '<Rendered {...props} />');
   const inner = o.slots ? `<SlotRegistrar.Provider value={provideSlot}>\n      ${body}\n    </SlotRegistrar.Provider>` : body;
   return `/**
  * ${o.cap} — ${PORT_MARK} from ${o.componentFile} (ADR-126 §2).
@@ -215,6 +215,9 @@ function featureSource(o: {
  */
 import React from 'react';
 ${[...providerImports, ported, ...(o.slots ? [`import { SlotRegistrar, type ProvideSlot } from '../../monolith/__port__/slots';`] : [])].join('\n')}
+
+// The host's props are untyped; the monolith's component is rendered with what it is given.
+const Rendered = Ported as unknown as React.ComponentType<Record<string, unknown>>;
 
 export interface ${o.cap}Props {
   provideSlot?: ${o.slots ? 'ProvideSlot' : '(slotId: string, element: HTMLElement | null) => void'};
