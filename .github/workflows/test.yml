@@ -345,13 +345,13 @@ jobs:
         run: npm ci
 
       - name: Dependency advisories (production dependencies)
-        # Report-only, and deliberately. 35 moderate advisories stand, none high
-        # or critical: 30 are glob and minimatch inside the copy of npm that
-        # @oclif/plugin-plugins bundles, and the rest are minimatch under
-        # @oclif/core 4. Both clear only with the oclif 5 / plugin-plugins 7
-        # majors. A gate that is red on day one gets ignored or deleted; the
-        # flip condition is the doc-links one: make it required in the commit
-        # that makes it clean. Until then a NEW high or critical fails here.
+        # The moderates are report-only, and deliberately. 35 stand, none high
+        # or critical. All but two are glob and minimatch inside the copy of
+        # npm that @oclif/plugin-plugins bundles. Moving to oclif 5 and
+        # plugin-plugins 7 was tried and leaves 33: the advisories are against
+        # npm itself, so they clear when npm ships fixed dependencies, or if
+        # the CLI stops bundling a plugin installer. A NEW high or critical
+        # fails the second command.
         run: |
           npm audit --omit=dev || echo "::warning title=npm audit::production dependencies have open moderate advisories — see the step log"
           npm audit --omit=dev --audit-level=high
