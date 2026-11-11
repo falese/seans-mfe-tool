@@ -47,7 +47,7 @@
     "@seans-mfe/oclif-base": "file:../oclif-base",
     "chalk": "^4.1.2",
     "ejs": "^3.1.10",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.4.1",
     "js-yaml": "^4.1.0",
     "@seans-mfe/codegen": "file:../codegen"
   },
