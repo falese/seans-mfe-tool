@@ -159,7 +159,7 @@
     "@seans-mfe/decompose": "file:packages/decompose",
     "@seans-mfe/flow": "file:packages/flow",
     "@oclif/core": "^4.10.5",
-    "@oclif/plugin-help": "^6.2.44",
+    "@oclif/plugin-help": "^7.0.7",
     "@oclif/plugin-plugins": "^5.4.61",
     "@seans-mfe/contracts": "file:packages/contracts",
     "@seans-mfe/oclif-base": "file:packages/oclif-base",
