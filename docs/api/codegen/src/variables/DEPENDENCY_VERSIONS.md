@@ -212,6 +212,10 @@ Based on GraphQL Mesh v0.100.x stable releases
 
 > **filterSchema**: `string` = `'^0.104.37'`
 
+#### meshTransforms.hoistField
+
+> **hoistField**: `string` = `'^0.105.19'`
+
 #### meshTransforms.namingConvention
 
 > **namingConvention**: `string` = `'^0.105.19'`

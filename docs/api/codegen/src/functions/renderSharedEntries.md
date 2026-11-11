@@ -8,7 +8,7 @@
 
 > **renderSharedEntries**(`deps`, `indent`): `string`
 
-Defined in: [packages/codegen/src/dependencies.ts:159](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L159)
+Defined in: [packages/codegen/src/dependencies.ts:166](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L166)
 
 Render module-federation `shared` entries (no trailing comma).
 

@@ -127,6 +127,13 @@ export function resolveNeededMeshPluginsAndTransforms(manifest: DSLManifest): {
   if (performanceConfig.rateLimit?.enabled) neededTransforms.add('rateLimit');
   if (performanceConfig.filterSchema?.enabled) neededTransforms.add('filterSchema');
   if (manifest.transforms && manifest.transforms.length > 0) neededTransforms.add('resolversComposition');
+  // Source-level transforms each need their own Mesh package, or `mesh build`
+  // fails with "Unable to find transform matching hoistField".
+  for (const source of manifest.data?.sources ?? []) {
+    for (const t of (source as { transforms?: Array<Record<string, unknown>> }).transforms ?? []) {
+      if ('hoistField' in t) neededTransforms.add('hoistField');
+    }
+  }
   // Demo-mode mock switch (ADR-052) is implemented as a resolversComposition transform.
   if (manifest.data?.mockSwitch?.enabled) neededTransforms.add('resolversComposition');
 

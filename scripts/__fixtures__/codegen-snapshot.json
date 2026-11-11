@@ -1482,7 +1482,7 @@
       {
         "path": "<cwd>/package.json",
         "overwrite": false,
-        "sha256": "ed8ecc9a6caee2ee3f40480c14e95dfcdf1afcea1f788d3fa7a69fbc0291305f"
+        "sha256": "b0acf4c41c163ba8eee6f588a4e5c62b2c059d818363d253224d66c8b85ff7d3"
       },
       {
         "path": "<cwd>/public/index.html",
@@ -1633,7 +1633,7 @@
       {
         "path": "<cwd>/package.json",
         "overwrite": false,
-        "sha256": "717f546bcaa542ba27caa87acb538de775d202f706203a94b3ca23f74d5dbb0b"
+        "sha256": "e4646c1acebb693af8deb29a5d2ea487c754a44efc6870fdb633219c5fa9dc6a"
       },
       {
         "path": "<cwd>/public/demo.html",
@@ -1871,7 +1871,7 @@
       {
         "path": "<cwd>/package.json",
         "overwrite": false,
-        "sha256": "626df0e1e93aba33e3b006f3d217d49d6e675bdd0130e27c25dd3d02a02f2eab"
+        "sha256": "7a312ddd250fac3286e92e175335c97821d492b35088f9a528f6e2d081dc0a71"
       },
       {
         "path": "<cwd>/public/demo.html",
@@ -2274,7 +2274,7 @@
       {
         "path": "<cwd>/package.json",
         "overwrite": false,
-        "sha256": "439316c02eaf5af3418a5a1f1cdde917450d03280b704e83238c38ac73ca0676"
+        "sha256": "2c1e1ae03acec4fc80bff729e4abf4e4ffb9cfb2759f5f815feb7b76b99f7e9d"
       },
       {
         "path": "<cwd>/public/index.html",
@@ -2579,7 +2579,7 @@
       {
         "path": "<cwd>/package.json",
         "overwrite": false,
-        "sha256": "70751c0f1c1eefe51d8a48788795328113dbf2fbdd16aa08de0cb8fee8e1b5c9"
+        "sha256": "ee44c6584708e361c90996ff602c1de1a91b630a9d143eac40c4ac58f8efaee4"
       },
       {
         "path": "<cwd>/public/index.html",
