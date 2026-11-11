@@ -147,7 +147,7 @@ non-engineers: [`docs/decomposition-architecture.html`](./decomposition-architec
 | `flow:status` — where you are and the next command, by content (PDR-012, ADR-119) | `packages/flow/`, `flows/`, `src/commands/flow/` | #453 |
 | `decompose:scaffold` — approved proposal → generated fleet, legacy wrapper, shell, starting composition (ADR-111, #417) | `src/decompose/scaffold/`, `docs/decompose-scaffold.md` | this PR |
 | Playbook skill and its mechanical rules as a Sentinel `ValidatePort` (#420) | `.agents/skills/decompose-monolith/`, `src/sentinel/decomposition.ts` | this PR |
-| `decompose:port` — every domain into its MFE, the proposal composed directly (ADR-126, PDR-013, #419) | `src/decompose/port/`, `docs/decompose-port.md` | this PR |
+| `decompose:port` — every domain into its MFE, every read through its own BFF, the proposal composed directly (ADR-126, ADR-127, PDR-013, #419) | `src/decompose/port/`, `docs/decompose-port.md` | this PR |
 
 **Simplified before steps 5–7 (#454, done in #455).**
 
@@ -171,15 +171,16 @@ What changed, and what was measured and left alone:
 wrapper is at parity with the monolith: 7/7 steps, 153/153 regions, no new console errors, no
 visual failures ([decompose-scaffold](./decompose-scaffold.md)).
 
-**Ported and composed (#419, PDR-013).** Strangling is no longer the default: `decompose:port`
-ports every domain and composes the proposal directly. On meridian-monolith, after one agent edit
-(the shared store made a window-scoped singleton across MFEs), the composed fleet is at parity:
-7/7 steps, 153/153 regions, network and console clean, with a stated 3-pixel antialiasing budget
-([decompose-port](./decompose-port.md)). Strangling a live monolith is deferred (ADR-125).
+**Ported and composed through BFFs (#419, PDR-013, ADR-127).** `decompose:port` ports every
+domain, routes every read its code makes through the MFE's own BFF, and composes the proposal
+directly. On meridian-monolith, with no hand edits: 7/7 steps, 153/153 regions, no missing or
+extra backend calls, no console errors, with a stated 3-pixel antialiasing budget; the browser makes
+no direct backend call and no MFE shares state ([decompose-port](./decompose-port.md)). Strangling a
+live monolith is deferred (ADR-125).
 
-**Not built:** per-MFE generated tests, contract tests and migrated keepers (#418); domains still
-call their backends directly rather than through their BFFs; the Figma library per MFE (#421);
-authenticated capture and redaction (#424). The agent has been exercised against the live API only with a refused
+**Not built:** per-MFE generated tests, contract tests and migrated keepers (#418); writes through
+a BFF (mutations are not inferred); the Figma library per MFE (#421); authenticated capture and
+redaction (#424). The agent has been exercised against the live API only with a refused
 key. The clustering thresholds are tuned on one subject.
 
 ---

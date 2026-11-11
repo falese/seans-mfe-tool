@@ -1,8 +1,9 @@
-# `decompose:port` — every domain into its MFE, composed directly
+# `decompose:port` — every domain into its MFE, reading through its own BFF
 
-After `decompose:scaffold`, each domain MFE has a stub per capability. `decompose:port` fills them
-with the monolith's own code and composes the approved proposal directly: no legacy wrapper, no
-strangler steps (PDR-013, ADR-126).
+After `decompose:scaffold`, each domain MFE has a stub per capability and a generated BFF.
+`decompose:port` fills the stubs with the monolith's own code, routes every read that code makes
+through the MFE's own BFF, and composes the approved proposal directly: no legacy wrapper, no
+strangler steps, no state shared between MFEs (PDR-013, ADR-126, ADR-127).
 
 ```bash
 seans-mfe-tool decompose:port ./evidence/proposal
@@ -15,7 +16,8 @@ It finds the fleet from `proposal/scaffold.json` and the monolith's source from 
 
 | | Where it lands |
 |---|---|
-| Copies each domain's capability files and everything they import, **unchanged** | `<mfe>/src/monolith/<original path>` |
+| Copies each domain's capability files and everything they import, **unchanged above the transport** | `<mfe>/src/monolith/<original path>` |
+| Reroutes the copied code's HTTP transport (`axios.create(...)`, `fetch`) to the MFE's BFF | the copies, plus `src/monolith/__port__/bff-http.ts` and `bff-operations.ts` |
 | Renders each capability inside the providers the monolith's entry renders around its root | `<mfe>/src/features/<Cap>/<Cap>.tsx` |
 | Turns each `<Routes>` block in the shell whose routes render other domains' pages into the declared slot those pages are placed in | the shell MFE's copy of the layout, and `src/monolith/__port__/slots.tsx` |
 | Gives the shell an `EmptySlot` capability, placed wherever a state leaves a slot empty | `<shell mfe>/src/features/EmptySlot/` |
@@ -27,49 +29,78 @@ Everything it writes is developer-owned (ADR-087). A re-run rewrites only what i
 feature file or a copied file a developer changed is kept and named in a warning (`--force`
 replaces it).
 
-It reports what it does not do: files now copied into several MFEs, couplings the proposal named,
-and repeated placements (one tile per berth) that stay rendered by their parent.
+## How a read reaches the BFF
 
-## Then: the port work that is judgment
+Each MFE's BFF is GraphQL Mesh over the OpenAPI documents the proposal inferred (ADR-012,
+ADR-112), and it fronts **everything that MFE's code reads**: the domain's own calls, reads across
+a coupling the proposal named, and the calls of a repeated capability the MFE renders itself
+(ADR-127 §1). So the shell, which owns no data, still has a BFF: its sidebar reads telemetry and
+its berth strip renders the berth tiles.
 
-The copy is faithful, so the first composed run shows exactly what sharing the monolith did for
-free. On meridian-monolith the first run was 0/7 steps, for two reasons:
+The port writes, per MFE, one GraphQL document per endpoint its BFF fronts. Each document is
+derived from the same specs the BFF is generated from, with aliases that restore the REST property
+names and a list hoisted out of its envelope put back where it was. The monolith's client code
+calls `http.get('/api/ledger/charges')` as before and gets the same body back:
 
-1. **Production builds hide the components.** Capture maps regions through React's development
-   metadata, as it did for the monolith. Build each MFE with
-   `NODE_ENV=development npx rspack build --mode development` and run the shell with
-   `SHELL_REACT_ENV=development`.
-2. **Every store call was made three times.** Each MFE carries its own copy of the monolith's
-   `AppProvider`, and each is its own React root, so a context cannot be shared. The agent's edit,
-   applied to each MFE's copy of
-   `examples/meridian-monolith/src/store/AppContext.tsx`: keep the store on `window` under one key,
-   loaded by whichever MFE mounts first and subscribed to by the rest
-   (`useSyncExternalStore`). Each MFE still runs alone. It is flagged as remaining coupling:
-   the MFEs agree on the key and the shape, and the next step is each domain loading its own
-   slice through its BFF.
+```
+http.get('/api/ledger/charges')
+  → query { r: listCharges { meta { cursor hasMore } } h: charges { chargeId amountCents … } }
+  → { result: [...], meta: { cursor, hasMore } }
+```
 
-The same run found a runtime defect, fixed with it: `RemoteMFE` reused a React root cached by
-container id after the LayoutManager re-provided the slot with a new element under that id, so it
-rendered into the detached element and left the visible slot empty.
+A read the MFE's BFF does not front (a copied store that loaded everything the monolith loaded)
+returns that endpoint's body with every list empty, and makes no request. Writes are refused until
+mutations are inferred. The transports the port cannot take over (XMLHttpRequest, calling axios as
+a function) are reported, not rewritten.
+
+## Running it for the parity gate
+
+1. **Build each MFE for the gate:** `npm install`, `npx mesh build` (where it has a BFF), and
+   `NODE_ENV=development npx rspack build --mode development` — capture maps regions through
+   React's development metadata, as it did for the monolith.
+2. **Serve each MFE with its BFF, in demo mode:** `DEMO_MODE=true PORT=<port> npx ts-node
+   --transpile-only server.ts`. Demo mode answers from `mocks.json`, which scaffold filled with the
+   captured responses (ADR-052), so the run is deterministic and needs no backend.
+3. **The shell** with `SHELL_REACT_ENV=development`, the control plane, and `rules.json`
+   registered, as for the legacy run.
+4. `seans-mfe-tool decompose:verify ./evidence --url http://localhost:5199`
+
+Verify lets each BFF request through to the BFF and reads it as the backend calls it stands for.
+A call the monolith never made by that step is extra; one it made that nothing makes is missing; a
+domain re-loading data the monolith had already loaded is **repeated** — reported, not failed
+(ADR-127 §4).
 
 ## On meridian-monolith
 
-| Candidate | Steps | Regions | Network | Console | Visual |
+| Run | Steps | Regions | Network | Console | Visual |
 |---|---|---|---|---|---|
-| Ported, before the agent's edits | 0 / 7 | 0 / 153 | 10 extra calls per screen | 0 | — |
-| With the store edit and development builds | 7 / 7 | 153 / 153 | at parity | 0 | 0, with `--max-diff-pixels 3` |
-| Same, no pixel budget | 2 / 7 | 143 / 153 | at parity | 0 | 10 |
+| Ported through the BFFs, no edits | 7 / 7 | 153 / 153 | at parity: 0 missing, 0 extra, 16 repeats | 0 | 0, with `--max-diff-pixels 3` |
+| Same, no pixel budget | 2 / 7 | 145 / 153 | at parity | 0 | 8 |
 
-The ten strict failures are 1–3 pixels each, with a channel difference of at most 9, on the
-rounded dashed borders of the panels where a slot's wrapper now sits: antialiasing, not a change
-anyone can see. The budget is stated rather than hidden.
+The browser made **no direct backend call**: all 32 reads went through the six BFFs. No MFE shares
+state with another; each copy of the monolith's store is byte-identical to the original and loads
+only what its MFE's BFF fronts. Both runs were the same twice over.
+
+The eight strict failures are 1–2 pixels each, with a channel difference of at most 9, on the
+rounded dashed borders where a slot's wrapper sits: antialiasing. The budget is stated, not
+hidden.
+
+Getting here fixed, along the way:
+
+- **A runtime defect.** `RemoteMFE` reused a React root cached by container id after the
+  LayoutManager re-provided the slot with a new element under that id, rendering into the detached
+  element.
+- **A generator defect.** A data source's `hoistField` transform did not add
+  `@graphql-mesh/transform-hoist-field` to `package.json`, so `mesh build` failed; meridian-station's
+  MFEs had it added by hand.
+- **Replay.** A BFF's CORS preflight has to reach it, or the browser never sends the request.
 
 ## Limits
 
 - **Repeated placements stay local.** `BerthTile` is rendered by the shell's `BerthStrip`, as in
-  the monolith; the composition cannot bind one placement per berth until the keys are known.
+  the monolith; its data comes through the shell's BFF (ADR-127 §1), so it is duplicated code, not
+  runtime coupling. Composing it per berth needs the keys bound in the composition.
+- **Domains load overlapping data.** The shell and docking both load berths, dockings and charges.
+  That is the cost of each deploying alone; the parity report counts every repeat.
 - **The shell knows the route table** (`shell/src/routes.ts`) until routing proper (#423).
-- **BFFs are generated but unused.** The ported components still call the backends directly. Moving
-  a domain onto its BFF changes the calls the browser makes, so network parity is then checked at
-  the BFF's upstream calls (#418).
 - **Behavior in a different shell** is proved only by each MFE's own tests (#418, PDR-013).

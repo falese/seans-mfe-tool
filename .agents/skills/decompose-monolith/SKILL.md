@@ -106,17 +106,23 @@ There is no strangling: port every domain, compose the proposal directly, prove 
    `SHELL_REACT_ENV=development` so its React matches.
 2. **Re-register `rules.json`** after every port or composition change; the registry is in
    memory.
-3. **Read the parity report as a work list.**
-   - *Extra calls, each endpoint N times*: every MFE's copy of a shared store is loading it. On
-     meridian the fix was to keep the store on `window` under one key, started by whichever MFE
-     mounts first (`useSyncExternalStore`), in each copy of `src/store/AppContext.tsx`. Say in
-     the PR that it is remaining coupling; the real fix is each domain loading its slice through
-     its BFF.
+3. **Serve each MFE with its BFF in demo mode:** `npx mesh build`, then
+   `DEMO_MODE=true PORT=<port> npx ts-node --transpile-only server.ts`. Demo mode answers from the
+   captured responses, so the gate needs no backend.
+4. **Read the parity report as a work list.** Every read already goes through the MFE's own BFF
+   and no state is shared (ADR-127), so what is left is real:
+   - *Text replaced by "BFF request failed"*: a BFF not running, or its fixtures missing.
+   - *Content empty where the monolith had data*: a read the analysis missed, so the MFE's BFF
+     does not front it. Fix the proposal (a coupling or a file's endpoints), re-scaffold, re-port.
+   - *"repeated through a BFF"*: a domain loading data it reads. Not a failure; say in the PR which
+     repeats you accept.
    - *A screen's content still showing on the next screen*: a slot the new state does not fill.
      The composition places `EmptySlot` there; if it does not, re-derive.
-   - *1–3 changed pixels on a panel's border*: antialiasing where a slot wrapper now sits. Budget
-     it with `--max-diff-pixels`, and say so.
-4. Never edit generator-owned files, and never re-run `decompose:port --force` over your edits —
+   - *1–3 changed pixels on a panel's border*: antialiasing where a slot wrapper sits. Budget it
+     with `--max-diff-pixels`, and say so.
+5. Never share state between MFEs to make parity pass — not on `window`, not through a module both
+   import. If two domains need the same data, each reads it through its own BFF.
+6. Never edit generator-owned files, and never re-run `decompose:port --force` over your edits —
    it keeps changed files by default and names them.
 
 Strangling a monolith that must keep serving production (ADR-125) is deferred. Do not build on it.
