@@ -48,6 +48,17 @@ export interface DerivedFleet {
 
 const BASE_PORT = 5201;
 
+/**
+ * The shell's capability that renders nothing (ADR-126 §4a). Placement is
+ * desired state per address and nothing retracts one, so a state that leaves
+ * a slot empty places this there: the monolith's `element={null}`.
+ */
+export const EMPTY_SLOT = 'EmptySlot';
+
+/** The shell's non-repeated slots: the ones a state can leave empty. */
+const clearable = (doc: Decomposition, shell: Domain): string[] =>
+  doc.slots.filter((s) => s.provider === shell.id && !s.repeated).map((s) => s.id);
+
 const platformCapabilities = [
   {
     Load: {
@@ -130,6 +141,11 @@ function manifestFor(doc: Decomposition, domain: Domain, index: number, bff?: Bf
   if (domain.shell) {
     const provided = doc.slots.filter((s) => s.provider === domain.id);
     if (provided.length > 0) manifest.providesSlots = provided.map((s) => ({ id: s.id }));
+    if (clearable(doc, domain).length > 0) {
+      (manifest.capabilities as unknown[]).splice(domain.capabilities.length, 0, {
+        [EMPTY_SLOT]: { type: 'domain', description: 'Renders nothing: what a state shows in a slot it does not fill (ADR-126 §4a)' },
+      });
+    }
   }
   return manifest;
 }
@@ -153,6 +169,9 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
 
   const shell = doc.domains.find((d) => d.shell);
   const routes: ControlPlaneDocument['routes'] = [];
+  // ADR-126 §4a: every state says what every clearable slot shows, nothing included.
+  const empties = (filled: string[]): ControlPlaneDocument['routes'][number]['place'] =>
+    shell ? clearable(doc, shell).filter((s) => !filled.includes(s)).map((s) => ({ capability: EMPTY_SLOT, into: `${shell.mfe}/${s}` })) : [];
   if (shell && shell.capabilities.length > 0) {
     const root = doc.routes.find((r) => r.stateKey === `${doc.app.namespace}.root`);
     routes.push({
@@ -160,6 +179,7 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
       place: [
         { capability: shell.capabilities[0].name, into: 'root' },
         ...(root?.place ?? []).map((p) => ({ capability: p.capability, into: `${shell.mfe}/${p.slot}` })),
+        ...empties((root?.place ?? []).map((p) => p.slot)),
       ],
     });
   }
@@ -167,10 +187,13 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
     if (r.stateKey === `${doc.app.namespace}.root`) continue;
     routes.push({
       when: r.stateKey,
-      place: r.place.map((p) => ({
-        capability: p.capability,
-        into: shell ? `${shell.mfe}/${p.slot}` : p.slot,
-      })),
+      place: [
+        ...r.place.map((p) => ({
+          capability: p.capability,
+          into: shell ? `${shell.mfe}/${p.slot}` : p.slot,
+        })),
+        ...empties(r.place.map((p) => p.slot)),
+      ],
     });
   }
   // Repeated placements (one tile per berth) need their keys bound with `forEach`,

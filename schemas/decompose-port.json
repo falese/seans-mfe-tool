@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:port.json",
+  "title": "decompose:port",
+  "description": "Port every domain of an approved, scaffolded proposal into its MFE and compose the proposal directly: copies each domain's source, wraps it in the monolith's providers, turns the shell's route blocks into slots (ADR-126).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The proposal directory (holding the approved decomposition.yaml)"
+      },
+      "fleet": {
+        "type": "string",
+        "description": "The scaffolded fleet (default: what decompose:scaffold recorded)"
+      },
+      "app-dir": {
+        "type": "string",
+        "description": "The monolith's source (default: what decompose:analyze recorded)"
+      },
+      "force": {
+        "type": "boolean",
+        "description": "Replace feature files and copies a developer has changed"
+      }
+    },
+    "required": [
+      "proposal"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "fleetDir",
+      "mfes",
+      "slots",
+      "duplicated",
+      "controlPlane",
+      "rules",
+      "routes",
+      "warnings"
+    ],
+    "properties": {
+      "fleetDir": {
+        "type": "string"
+      },
+      "mfes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "domain",
+            "files",
+            "capabilities",
+            "kept",
+            "packages"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Monolith files copied under the MFE's `src/monolith/`."
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Capabilities whose feature file renders the ported component; and those kept because a developer changed them."
+            },
+            "kept": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Packages added to the MFE's package.json, at the monolith's versions."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "slots": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Shell route blocks that became declared slots, as `<file>: <slot>`."
+      },
+      "duplicated": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "file",
+            "mfes"
+          ],
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "mfes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "Files copied into more than one MFE: shared code to split, duplicate or replace."
+      },
+      "controlPlane": {
+        "type": "string"
+      },
+      "rules": {
+        "type": "string"
+      },
+      "routes": {
+        "type": "string",
+        "description": "The shell's path → state key table."
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

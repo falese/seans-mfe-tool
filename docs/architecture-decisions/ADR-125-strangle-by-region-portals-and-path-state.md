@@ -4,7 +4,7 @@ title: >-
   A strangler step swaps one region of the monolith, which keeps a single React tree and renders
   each placed region into its slot through a portal; the shell enters state keys from the URL
   by the proposal's route table
-status: Proposed
+status: Deferred
 date: 2026-11-11
 deciders: [sean]
 area: Decomposition / strangler
@@ -34,6 +34,11 @@ rationale-summary: >-
   one step would give the parity gate nothing smaller than the whole migration to judge.
 long-form: true
 ---
+
+> **Deferred (2026-11-11, PDR-013).** Decomposition now ports every domain and composes the
+> proposal directly; strangling is for a monolith that must keep running through the migration,
+> and none needs it yet. §4's URL-driven state keys were needed regardless and are decided in
+> ADR-126 instead.
 
 ## Context
 

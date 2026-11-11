@@ -83,6 +83,9 @@ describe('the decomposition flow (PDR-012, ADR-119)', () => {
     });
     write(path.join(bundle, 'proposal', 'scaffold.json'), '{}');
     expect(stateOf('scaffold')?.state).toBe('done');
+    // Port then compose (PDR-013): no strangler steps between scaffold and verify.
+    expect(state().next).toEqual({ step: 'port', command: `seans-mfe-tool decompose:port ${path.join(bundle, 'proposal')}`, placeholders: [] });
+    write(path.join(bundle, 'proposal', 'port.json'), '{}');
     expect(state().next?.step).toBe('verify');
   });
 

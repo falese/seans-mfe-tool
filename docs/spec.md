@@ -348,6 +348,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-122](./architecture-decisions/ADR-122-deploy-command-removed.md) | There is no `deploy` command; deployment returns as a plugin-resolved target axis, and `build:docker` is the way to an image until it does | Deploy / plugins / scope | Implemented |
 | [ADR-123](./architecture-decisions/ADR-123-bff-context-unverified-user-id.md) | A generated BFF names the id it reads from an unverified token `unverifiedUserId` | BFF / context / security | Implemented |
 | [ADR-124](./architecture-decisions/ADR-124-registry-writes-need-a-token-shell-allow-lists-origins.md) | A registry write needs the fleet's token, and a shell loads remotes only from origins it allows | Control plane / security / composition | Implemented |
+| [ADR-126](./architecture-decisions/ADR-126-port-by-copy-compose-target-shell-routes-by-url.md) | decompose:port copies each domain's source into its MFE and wraps it in the monolith's own providers, turns the shell's route blocks into declared slots, composes the proposal directly, and the shell enters state keys from the URL | Decomposition / port | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -364,7 +365,6 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
-| [ADR-125](./architecture-decisions/ADR-125-strangle-by-region-portals-and-path-state.md) | A strangler step swaps one region of the monolith, which keeps a single React tree and renders each placed region into its slot through a portal; the shell enters state keys from the URL by the proposal's route table | Decomposition / strangler | Proposed |
 
 ### Deferred — postponed on purpose
 
@@ -373,6 +373,7 @@ _Deliberately not decided yet; the ADR records why._
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
 | [ADR-007](./architecture-decisions/ADR-007-authorization-expression-grammar.md) | Authorization Expression Grammar | DSL / security | Deferred |
+| [ADR-125](./architecture-decisions/ADR-125-strangle-by-region-portals-and-path-state.md) | A strangler step swaps one region of the monolith, which keeps a single React tree and renders each placed region into its slot through a portal; the shell enters state keys from the URL by the proposal's route table | Decomposition / strangler | Deferred |
 
 ### Superseded — replaced, kept for provenance
 

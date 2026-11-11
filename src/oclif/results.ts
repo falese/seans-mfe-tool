@@ -445,6 +445,34 @@ export interface DecomposeScaffoldResult {
 }
 
 // ---------------------------------------------------------------------------
+// decompose:port (#419, ADR-126)
+// ---------------------------------------------------------------------------
+
+export interface DecomposePortResult {
+  fleetDir: string;
+  mfes: Array<{
+    name: string;
+    domain: string;
+    /** Monolith files copied under the MFE's `src/monolith/`. */
+    files: string[];
+    /** Capabilities whose feature file renders the ported component; and those kept because a developer changed them. */
+    capabilities: string[];
+    kept: string[];
+    /** Packages added to the MFE's package.json, at the monolith's versions. */
+    packages: string[];
+  }>;
+  /** Shell route blocks that became declared slots, as `<file>: <slot>`. */
+  slots: string[];
+  /** Files copied into more than one MFE: shared code to split, duplicate or replace. */
+  duplicated: Array<{ file: string; mfes: string[] }>;
+  controlPlane: string;
+  rules: string;
+  /** The shell's path → state key table. */
+  routes: string;
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------
 // decompose:workspace / decompose:ask (ADR-116, ADR-117, ADR-118)
 // ---------------------------------------------------------------------------
 

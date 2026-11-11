@@ -28,6 +28,28 @@ export interface ShellOptions {
   proxy: { context: string[]; target: string } | null;
 }
 
+/**
+ * The shell's route table (ADR-126 §5): which state key a path enters. Empty
+ * while the monolith routes itself (the legacy composition); decompose:port
+ * writes the proposal's table.
+ */
+export function routesModule(routes: Array<{ path: string; stateKey: string }>): string {
+  return `/**
+ * Path → state key, from the approved decomposition.yaml (ADR-126 §5). Written by
+ * decompose:${routes.length > 0 ? 'port' : 'scaffold'}; regenerate rather than edit.
+ * Exact path first, then the longest prefix; a path with no route keeps the current state.
+ */
+export const ROUTES: ReadonlyArray<{ path: string; stateKey: string }> = ${JSON.stringify(routes, null, 2)};
+
+export function stateFor(pathname: string): string | null {
+  const exact = ROUTES.find((r) => r.path === pathname);
+  if (exact) return exact.stateKey;
+  const prefix = ROUTES.filter((r) => r.path !== '/' && pathname.startsWith(\`\${r.path}/\`)).sort((a, b) => b.path.length - a.path.length)[0];
+  return prefix ? prefix.stateKey : null;
+}
+`;
+}
+
 /** The `<style>` and stylesheet `<link>` elements of an HTML document's head. */
 export function headStylesOf(html: string): string {
   const head = /<head[^>]*>([\s\S]*?)<\/head>/i.exec(html)?.[1] ?? '';
@@ -147,24 +169,27 @@ import App from './App';
 const container = document.getElementById('root');
 if (container) createRoot(container).render(<App />);
 `,
+    'src/routes.ts': routesModule([]),
     'src/App.tsx': `/**
  * ${o.title} shell — a generic, daemon-driven layout host (ADR-055).
  *
- * It knows no MFE. It starts the project in ${o.namespace}.root once the
- * control plane is connected, and mounts whatever the daemon publishes. It
- * shows nothing of its own: the connection state is on attributes, not on
+ * It knows no MFE. Once the control plane is connected it enters
+ * ${o.namespace}.root, then the state key for the URL (./routes.ts, ADR-126 §5),
+ * and again on every history change; it mounts whatever the daemon publishes.
+ * It shows nothing of its own: the connection state is on attributes, not on
  * screen, so the parity gate compares only what the MFEs draw (ADR-113).
  */
 import React, { useEffect, useRef } from 'react';
 import { GraphQLTransportWsDaemonTransport, LayoutManager, type WebSocketLike } from '@seans-mfe-tool/runtime';
+import { stateFor } from './routes';
 
 declare const process: { env: { DAEMON_WS_URL?: string } };
 const DAEMON_WS_URL: string = process.env.DAEMON_WS_URL || '${o.daemonWsUrl}';
 const ROOT_STATE = '${o.namespace}.root';
 
-/** Ask the control plane for the root experience: a STATE_UPDATE action (ADR-054). */
-async function enterRoot(sessionId: string): Promise<void> {
-  const id = \`\${ROOT_STATE}-\${Date.now()}\`;
+/** Ask the control plane for a state's experience: a STATE_UPDATE action (ADR-054). */
+async function enterState(sessionId: string, stateKey: string): Promise<void> {
+  const id = \`\${stateKey}-\${Date.now()}\`;
   const message = {
     direction: 'ACTION',
     kind: 'ACTION',
@@ -172,7 +197,7 @@ async function enterRoot(sessionId: string): Promise<void> {
       id,
       componentId: 'shell',
       actionType: 'STATE_UPDATE',
-      stateKey: ROOT_STATE,
+      stateKey,
       data: {},
       timestamp: new Date().toISOString(),
       context: { sessionId, application: 'web' },
@@ -184,6 +209,25 @@ async function enterRoot(sessionId: string): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: 'mutation($m:String!){sendMessage(message:$m)}', variables: { m: JSON.stringify(message) } }),
   });
+}
+
+/** Call \`onChange\` after every pushState, replaceState and popstate; returns the undo. */
+function watchHistory(onChange: () => void): () => void {
+  const { pushState, replaceState } = window.history;
+  window.history.pushState = function (...args: Parameters<History['pushState']>) {
+    pushState.apply(this, args);
+    onChange();
+  };
+  window.history.replaceState = function (...args: Parameters<History['replaceState']>) {
+    replaceState.apply(this, args);
+    onChange();
+  };
+  window.addEventListener('popstate', onChange);
+  return () => {
+    window.history.pushState = pushState;
+    window.history.replaceState = replaceState;
+    window.removeEventListener('popstate', onChange);
+  };
 }
 
 const App: React.FC = () => {
@@ -203,6 +247,16 @@ const App: React.FC = () => {
     arrived.observe(host, { childList: true });
     const sessionId = \`shell-\${Date.now()}-\${Math.random().toString(36).slice(2)}\`;
     let entered = false;
+    let current: string | null = null;
+    const follow = async (): Promise<void> => {
+      const key = stateFor(window.location.pathname);
+      if (!key || key === current) return;
+      current = key;
+      await enterState(sessionId, key);
+    };
+    const unwatch = watchHistory(() => {
+      if (entered) void follow();
+    });
     const manager = new LayoutManager({
       container: host,
       transport: new GraphQLTransportWsDaemonTransport(
@@ -215,7 +269,11 @@ const App: React.FC = () => {
         host.dataset.controlPlane = status;
         if (status === 'connected' && !entered) {
           entered = true;
-          void enterRoot(sessionId);
+          // The root first: it places the frame every other state composes into.
+          void enterState(sessionId, ROOT_STATE).then(() => {
+            current = ROOT_STATE;
+            return follow();
+          });
         }
       },
       onError: (error) => {
@@ -224,6 +282,7 @@ const App: React.FC = () => {
     });
     manager.start();
     return () => {
+      unwatch();
       arrived.disconnect();
       void manager.stop();
     };

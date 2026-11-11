@@ -1,4 +1,4 @@
-import { deriveFleet } from '../derive';
+import { deriveFleet, EMPTY_SLOT } from '../derive';
 import { inferSpecs } from '../openapi';
 import type { Decomposition } from '../model';
 
@@ -56,7 +56,8 @@ describe('deriveFleet', () => {
       namespace: 'meridian',
       mfes: ['meridian-console', 'meridian-docking'],
       routes: [
-        { when: 'meridian.root', place: [{ capability: 'App', into: 'root' }] },
+        // The root fills no slot of its own, so it clears main (ADR-126 §4a).
+        { when: 'meridian.root', place: [{ capability: 'App', into: 'root' }, { capability: 'EmptySlot', into: 'meridian-console/main' }] },
         { when: 'meridian.open.docking', place: [{ capability: 'DockingBoard', into: 'meridian-console/main' }] },
       ],
     });
@@ -109,5 +110,24 @@ describe('deriveFleet', () => {
       // A domain with no backend has no BFF.
       expect(fleet.bff['meridian-console']).toBeUndefined();
     });
+  });
+
+  it('places EmptySlot into every shell slot a state leaves unfilled, so leaving a screen clears it (ADR-126 §4a)', () => {
+    const d = doc({
+      slots: [
+        { id: 'main', provider: 'console', repeated: false },
+        { id: 'aside', provider: 'console', repeated: false },
+        { id: 'berth-tile.{id}', provider: 'console', repeated: true },
+      ],
+    });
+    const fleet = deriveFleet(d);
+    expect(fleet.validation).toEqual({ manifests: { 'meridian-console': [], 'meridian-docking': [] }, composition: [] });
+    const shellCaps = (fleet.manifests['meridian-console'].capabilities as Array<Record<string, unknown>>).map((c) => Object.keys(c)[0]);
+    expect(shellCaps).toContain(EMPTY_SLOT);
+    const byState = Object.fromEntries(fleet.composition.routes.map((r) => [r.when, r.place.map((p) => `${p.capability}→${p.into}`)]));
+    // The root fills nothing but the frame: both slots are cleared.
+    expect(byState['meridian.root']).toEqual(['App→root', 'EmptySlot→meridian-console/main', 'EmptySlot→meridian-console/aside']);
+    // Docking fills main; aside is cleared. Repeated slots are never cleared this way.
+    expect(byState['meridian.open.docking']).toEqual(['DockingBoard→meridian-console/main', 'EmptySlot→meridian-console/aside']);
   });
 });
