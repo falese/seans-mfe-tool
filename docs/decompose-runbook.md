@@ -24,14 +24,14 @@ The report lists each step with its state and ends with the command to run next:
   ○ Shape the proposal — merge, split, rename, ask the agent — 1 suggestion waiting
   ↻ Write the review package — proposal/decomposition.yaml changed after proposal/PROPOSAL.md was written
   ✓ Approve the proposal — approved by Sean
-  ✗ Generate the MFEs, their BFFs and the legacy wrapper — not built yet (#410)
+  · Generate the MFEs, their BFFs and the legacy wrapper — waits on present
   · Prove the composed app behaves like the monolith — waits on scaffold
 
   next: seans-mfe-tool decompose:present /work/evidence/proposal
 ```
 
-The steps below are the same ones, in order. Each names what it writes. Steps 5–7 (build, move, switch
-over) are not built yet ([#410](https://github.com/falese/seans-mfe-tool/issues/410)).
+The steps below are the same ones, in order. Each names what it writes. Steps 6–7 (move, switch
+over) are not built yet ([#419](https://github.com/falese/seans-mfe-tool/issues/419)).
 The order and the commands live in one place, `flows/decompose.yaml`; `flow:status` reads it.
 
 ## Before you start
@@ -114,14 +114,27 @@ seans-mfe-tool decompose:edit ./evidence/proposal/decomposition.yaml \
 An approval records exactly which version of the plan was approved. Any later change to the
 pieces makes it out of date, and `flow:status` says so.
 
-## 5–7. Build, move, switch over
+## 5. Build the fleet
 
-Not built yet ([#410](https://github.com/falese/seans-mfe-tool/issues/410)). `flow:status` shows
-this step as not available, and stops here.
+```bash
+seans-mfe-tool decompose:scaffold ./evidence/proposal --app-dir /abs/path/to/examples/meridian-monolith
+```
+
+Only an approved proposal, unchanged since, is built. It writes `../fleet/`: one generated MFE
+per domain with its BFF's specs and recorded fixtures, the monolith as one MFE
+(`legacy-<app>`), a shell, and a composition that shows the monolith everywhere. The fleet's
+`README.md` says how to run it; `legacy-<app>/MONOLITH-FEDERATION.md` says what the monolith's
+own build needs. → [decompose-scaffold](./decompose-scaffold.md)
+
+## 6–7. Move, switch over
+
+Not built yet ([#419](https://github.com/falese/seans-mfe-tool/issues/419)). Moving one placement
+at a time needs the monolith to mount single regions; ADR-125 proposes how, and is not accepted.
 
 ## 8. Check nothing changed
 
-Once the split app runs, replay the captured journeys against it:
+Once the composed app runs (after step 5, the legacy wrapper alone), replay the captured
+journeys against it:
 
 ```bash
 seans-mfe-tool decompose:verify ./evidence --url http://localhost:<the composed shell>
