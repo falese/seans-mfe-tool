@@ -23,7 +23,7 @@ import { buildBundle, readReplaySource, stableStringify, writeBundle } from '../
 import { captureEvidence } from '../../decompose/capture';
 import { parseJourneys } from '../../decompose/journeys';
 import type { SourceGraph } from '../../decompose/source/graph';
-import { readBundleView, renderParityMarkdown, screenshotReader } from '../../decompose/verify/io';
+import { bffTranslator, readBundleView, renderParityMarkdown, screenshotReader } from '../../decompose/verify/io';
 import { compareBundles, routeGaps } from '../../decompose/verify/parity';
 import type { DecomposeVerifyResult } from '../../oclif/results';
 
@@ -86,7 +86,8 @@ export default class DecomposeVerify extends BaseCommand<DecomposeVerifyResult> 
       await writeBundle(candidateDir, buildBundle(outcome.runs, { appUrl: url, viewport: meta.viewport, clock: replay.clock }));
     }
 
-    const candidate = await readBundleView(candidateDir);
+    // A ported MFE reads through its BFF: its GraphQL requests count as the backend calls they stand for (ADR-127 §4).
+    const candidate = await readBundleView(candidateDir, await bffTranslator(baselineDir));
     const report = compareBundles(baseline, candidate, { screenshot: screenshotReader(baselineDir, candidateDir), maxDiffPixels: flags['max-diff-pixels'], pixelTolerance: flags['pixel-tolerance'] });
     const graphFile = path.join(baselineDir, 'source', 'graph.json');
     const routes = (await fs.pathExists(graphFile)) ? ((await fs.readJson(graphFile)) as SourceGraph).routes.map((r) => r.path) : [];

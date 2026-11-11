@@ -69,6 +69,7 @@ const NOT_IN_THIS_REPO = [
   /^src\/commands\/topic\//,           // the naming convention, spelled out
   /^packages\/(config|telemetry)$/,     // proposed, not yet created
   /^src\/adaptors\//,                   // coder's tree, not this one
+  /^src\/monolith\//,                   // a ported MFE's copy of the monolith (decompose:port, ADR-126)
 ];
 
 /**

@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/decompose:scaffold.json",
+  "title": "decompose:scaffold",
+  "description": "Scaffold the fleet an approved decomposition proposal describes: one generated MFE and BFF per domain, the monolith as a legacy-wrapper MFE, a generic shell, and a composition that starts with the monolith everywhere (ADR-111).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "proposal": {
+        "type": "string",
+        "description": "The proposal directory (holding an approved decomposition.yaml)"
+      },
+      "out": {
+        "type": "string",
+        "description": "Directory to write the fleet into (default: <proposal>/../../fleet)"
+      },
+      "app-dir": {
+        "type": "string",
+        "description": "The monolith's source directory; its public/index.html styles the shell's page"
+      },
+      "app-url": {
+        "type": "string",
+        "description": "Where the monolith is served, for its remote entry (default: the evidence bundle's app)"
+      },
+      "daemon": {
+        "type": "string",
+        "description": "The control-plane daemon's graphql-ws URL the shell connects to",
+        "default": "ws://localhost:3004/graphql"
+      },
+      "runtime-dir": {
+        "type": "string",
+        "description": "A built dist/runtime to point each package.json at (the runtime is not on npm yet, ADR-064)"
+      },
+      "force": {
+        "type": "boolean",
+        "description": "Scaffold into a non-empty directory; developer-owned files are kept"
+      }
+    },
+    "required": [
+      "proposal"
+    ],
+    "x-positional": [
+      "proposal"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "fleetDir",
+      "app",
+      "namespace",
+      "approvedHash",
+      "mfes",
+      "legacy",
+      "shell",
+      "controlPlane",
+      "rules",
+      "target",
+      "files",
+      "warnings"
+    ],
+    "properties": {
+      "fleetDir": {
+        "type": "string"
+      },
+      "app": {
+        "type": "string"
+      },
+      "namespace": {
+        "type": "string"
+      },
+      "approvedHash": {
+        "type": "string",
+        "description": "The approval hash the fleet was scaffolded from (ADR-116 §5)."
+      },
+      "mfes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "dir",
+            "role",
+            "capabilities",
+            "generated",
+            "kept"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "dir": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "domain",
+                "legacy"
+              ],
+              "description": "`domain`: one of the proposal's domains. `legacy`: the monolith, whole (ADR-111 §1)."
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "generated": {
+              "type": "number",
+              "description": "Files the generator wrote, and developer-owned files it found and kept."
+            },
+            "kept": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "legacy": {
+        "type": "object",
+        "required": [
+          "mfe",
+          "capability",
+          "remoteEntry"
+        ],
+        "properties": {
+          "mfe": {
+            "type": "string"
+          },
+          "capability": {
+            "type": "string"
+          },
+          "remoteEntry": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "shell": {
+        "type": "object",
+        "required": [
+          "dir",
+          "port"
+        ],
+        "properties": {
+          "dir": {
+            "type": "string"
+          },
+          "port": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "controlPlane": {
+        "type": "string",
+        "description": "The starting composition, its compiled payload, and the proposal's own composition."
+      },
+      "rules": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "files": {
+        "type": "number"
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

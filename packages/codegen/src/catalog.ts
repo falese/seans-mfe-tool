@@ -52,6 +52,7 @@ export const DEPENDENCY_VERSIONS = {
     filterSchema: '^0.104.37',
     resolversComposition: '^0.104.36',
     cache: '^0.105.37',
+    hoistField: '^0.105.19',
   },
 
   // Core Dependencies

@@ -47,6 +47,12 @@ export interface FileNode {
   endpoints: Endpoint[];
   /** True when the file holds the HTTP call sites (an API client). */
   apiClient: boolean;
+  /**
+   * The file's exported functions that reach endpoints, by exported name, with
+   * their parameters and the endpoints they reach through wrappers: what
+   * decompose:port rewrites in place (ADR-128 §2). Absent when there are none.
+   */
+  functions?: Array<{ name: string; params: string[]; endpoints: Endpoint[] }>;
   /** Store fields read through a hook, and the endpoints that load them. */
   storeReads: Array<{ hook: string; store: string; field: string; endpoints: Endpoint[] }>;
   /** Landmarks the file renders (`main`, `nav`, `aside`, `header`, `footer`). */
@@ -336,6 +342,15 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
           if (concrete(fn, ep) && !endpoints.some((e) => e.method === ep.method && e.url === ep.url)) endpoints.push(ep);
         }
       }
+      const exportedAs = new Map(Object.entries(f.exports).map(([exported, local]) => [local, exported]));
+      const functions = f.functions
+        .filter((fn) => exportedAs.has(fn.name) && exportedAs.get(fn.name) !== 'default')
+        .map((fn) => ({
+          name: exportedAs.get(fn.name) as string,
+          params: fn.params,
+          endpoints: (endpointsOf.get(key({ file: f.file, name: fn.name })) ?? []).filter((ep) => concrete(fn, ep)),
+        }))
+        .filter((fn) => fn.endpoints.length > 0);
       const storeReads: FileNode['storeReads'] = [];
       for (const read of f.hookReads) {
         const hook = resolveName(f.file, read.hook);
@@ -352,6 +367,7 @@ export function buildSourceGraph(all: FileFacts[]): SourceGraph {
         packages: packagesOf.get(f.file) ?? [],
         endpoints: endpoints.sort((a, b) => a.url.localeCompare(b.url) || a.method.localeCompare(b.method)),
         apiClient: f.functions.some((fn) => fn.http.length > 0),
+        ...(functions.length > 0 ? { functions } : {}),
         storeReads,
         landmarks: f.landmarks,
         renders: f.renders.map((r) => {

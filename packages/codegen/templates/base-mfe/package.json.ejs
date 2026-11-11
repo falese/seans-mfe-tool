@@ -44,6 +44,9 @@
 <%_ if (neededTransforms.includes('resolversComposition')) { _%>
     "@graphql-mesh/transform-resolvers-composition": "<%= dependencyVersions.meshTransforms.resolversComposition %>",
 <%_ } _%>
+<%_ if (neededTransforms.includes('hoistField')) { _%>
+    "@graphql-mesh/transform-hoist-field": "<%= dependencyVersions.meshTransforms.hoistField %>",
+<%_ } _%>
     "express": "<%= dependencyVersions.core.express %>",
     "graphql": "<%= dependencyVersions.core.graphql %>",
     "cors": "<%= dependencyVersions.core.cors %>",

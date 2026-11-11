@@ -114,7 +114,7 @@ jobs:
         run: bash examples/meridian-station/scripts/register-station.sh
 
       - name: Chromium
-        run: npx playwright install --with-deps chromium
+        run: bash scripts/ci/install-chromium.sh
 
       - name: Drive the composition
         run: npx playwright test -c examples/meridian-station/playwright.config.ts cross-app-composition.spec.ts --reporter=list,html

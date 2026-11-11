@@ -3,18 +3,26 @@ id: 0111
 title: >-
   During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation,
   and composes through the existing adaptor — no special legacy path in the runtime
-status: Proposed
+status: Accepted
+impl:
+  stage: phased
+  refs: ["#419"]
 date: 2026-10-03
 deciders: [sean]
 area: Decomposition / strangler
 enforcement: tooling
 tags: [decomposition, strangler, module-federation, legacy, composition]
-relates-to: [55, 56, 60, 83, 110]
+relates-to: [55, 56, 60, 83, 110, 125]
 supersedes: []
 superseded-by: []
 implements-pdr: [11]
-implemented-by: []
-verified-by: []
+implemented-by:
+  - src/decompose/scaffold/legacy.ts
+  - src/decompose/scaffold/scaffold.ts
+  - src/commands/decompose/scaffold.ts
+verified-by:
+  - src/decompose/scaffold/__tests__/legacy.test.ts
+  - src/decompose/scaffold/__tests__/scaffold.test.ts
 tracked-by: ["#410", "#417", "#419"]
 summary: >-
   The agent adds a Module Federation remote entry to the monolith's own build and generates a

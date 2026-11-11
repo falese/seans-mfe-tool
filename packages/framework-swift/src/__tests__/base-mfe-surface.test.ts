@@ -83,6 +83,7 @@ const ABSENT: Record<string, string> = {
     'hook timeout/retry (ADR-029/030) is not rendered natively; a native hook runs once, untimed',
   manifest: 'replaced by MFEIdentity + ManifestMetadata, regenerated at swift build time',
   attachControlPlane: 'no native analogue of DaemonWebSocketClient (ADR-096 Boundaries)',
+  inControlPlane: 'reads whether a host attached its DaemonWebSocketClient, which has no native analogue (ADR-096 Boundaries); a ported web monolith uses it (ADR-128)',
   assertCapabilityImplemented:
     'Swift uses fatalError in the open func default — a crash, not a typed error',
   constructor: 'MFEBase.init(identity:deps:) takes no manifest — ManifestMetadata replaces it',

@@ -75,9 +75,18 @@ describe('the decomposition flow (PDR-012, ADR-119)', () => {
     expect(stateOf('present')?.state).toBe('stale');
     write(path.join(bundle, 'proposal', 'PROPOSAL.md'), '# proposal');
     expect(stateOf('approve')).toMatchObject({ state: 'done', detail: 'approved by sean' });
-    expect(stateOf('scaffold')).toMatchObject({ state: 'unavailable', detail: 'not built yet (#410)' });
-    expect(state().next).toBeNull();
-    expect(state().summary).toMatch(/scaffold/);
+    // Approved: scaffold is next, with the monolith's source filled in from what analyze recorded.
+    expect(state().next).toEqual({
+      step: 'scaffold',
+      command: `seans-mfe-tool decompose:scaffold ${path.join(bundle, 'proposal')} --app-dir /apps/monolith`,
+      placeholders: [],
+    });
+    write(path.join(bundle, 'proposal', 'scaffold.json'), '{}');
+    expect(stateOf('scaffold')?.state).toBe('done');
+    // Port then compose (PDR-013): no strangler steps between scaffold and verify.
+    expect(state().next).toEqual({ step: 'port', command: `seans-mfe-tool decompose:port ${path.join(bundle, 'proposal')}`, placeholders: [] });
+    write(path.join(bundle, 'proposal', 'port.json'), '{}');
+    expect(state().next?.step).toBe('verify');
   });
 
   it('says an approval is stale once the proposal changes after it', () => {

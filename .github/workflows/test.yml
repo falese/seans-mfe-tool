@@ -182,7 +182,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: bash scripts/ci/install-chromium.sh
 
       - name: Run E2E tests
         run: npx playwright test
@@ -619,7 +619,7 @@ jobs:
           cargo install wasm-bindgen-cli --version 0.2.128 --locked
 
       - name: Chromium
-        run: npx playwright install --with-deps chromium
+        run: bash scripts/ci/install-chromium.sh
 
       - name: Build, lint and mount every generated WASM remote
         run: bash scripts/check-rust-wasm.sh --require

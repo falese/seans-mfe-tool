@@ -1,4 +1,4 @@
-import { buildBundle, isDevServerRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
+import { buildBundle, isDevServerRequest, isInfrastructureRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
 import type { Region } from '../regions';
 
 const region = (id: string, file: string, ownText: string): Region => ({
@@ -92,6 +92,15 @@ describe('buildBundle', () => {
     expect(requests[1].attributedTo).toEqual([]);
   });
 
+  it('keeps the document of a GraphQL request to a BFF, which says what backend calls it stands for (ADR-127 §4)', () => {
+    const r = run();
+    r.requests.push({ step: 1, method: 'POST', url: 'http://localhost:5205/graphql', initiator: [], status: 200, postData: '{"query":"{ r: listDockings { id } }"}' });
+    const b = buildBundle([r], { appUrl: APP, viewport: { width: 1440, height: 900 }, clock: '2026-10-24T00:00:00.000Z' });
+    const requests = b.files['requests.json'] as Array<{ url: string; postData?: string }>;
+    expect(requests.find((x) => x.url.endsWith('/graphql'))?.postData).toBe('{"query":"{ r: listDockings { id } }"}');
+    expect(requests.filter((x) => 'postData' in x)).toHaveLength(1);
+  });
+
   it('records the first response for each request, keyed for replay', () => {
     const responses = bundle.files['responses.json'] as Record<string, { body: unknown }>;
     expect(Object.keys(responses).sort()).toEqual([
@@ -146,6 +155,13 @@ describe('dev-server traffic (#442)', () => {
     expect(isDevServerRequest('/ws')).toBe(true);
     expect(isDevServerRequest('/api/tags')).toBe(false);
     expect(isDevServerRequest('/api/ws/messages')).toBe(false);
+  });
+
+  it('treats a composed shell\'s control-plane traffic as infrastructure, not the app\'s (ADR-111, ADR-113)', () => {
+    expect(isInfrastructureRequest('http://localhost:5199/__control-plane/graphql')).toBe(true);
+    expect(isInfrastructureRequest('/__webpack_hmr')).toBe(true);
+    expect(isInfrastructureRequest('/api/__control-plane')).toBe(false);
+    expect(isInfrastructureRequest('/api/tags')).toBe(false);
   });
   it('leaves dev-server requests out of the bundle', () => {
     const r = run();

@@ -5,7 +5,9 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
+import { backendCallsOf, bffOperations, readSpecs } from '@seans-mfe/decompose';
 import type { BundleView, ParityReport, StepView } from './parity';
 
 export interface LoadedBundle extends BundleView {
@@ -13,7 +15,40 @@ export interface LoadedBundle extends BundleView {
   dir: string;
 }
 
-export async function readBundleView(dir: string): Promise<LoadedBundle> {
+/** Reads a bundle request as the backend calls it stands for, or undefined when it is not a BFF request. */
+export type Translate = (r: { method: string; url: string; postData?: string }) => string[] | undefined;
+
+/**
+ * ADR-127 §4: how to read a candidate's GraphQL requests to its BFFs, from the
+ * baseline's proposal — its specs (`proposal/specs/*.yaml`) and backend layout.
+ * Without a proposal nothing is translated.
+ */
+export async function bffTranslator(baselineDir: string): Promise<Translate> {
+  const proposal = path.join(baselineDir, 'proposal');
+  const backends = await readSpecs(proposal);
+  if (!backends) return () => undefined;
+  let gateway = true;
+  const docFile = path.join(proposal, 'decomposition.yaml');
+  if (await fs.pathExists(docFile)) {
+    const app = (yaml.load(await fs.readFile(docFile, 'utf8')) as { app?: { gateway?: boolean } } | undefined)?.app;
+    gateway = app?.gateway !== false;
+  }
+  const ops = Object.entries(backends.specs).flatMap(([b, spec]) => bffOperations(spec, b, { gateway }));
+  return (r) => {
+    if (r.method.toUpperCase() !== 'POST' || !r.postData || !/\/graphql\/?(\?|$)/.test(r.url)) return undefined;
+    let document: unknown;
+    try {
+      document = (JSON.parse(r.postData) as { query?: unknown }).query;
+    } catch {
+      return undefined;
+    }
+    if (typeof document !== 'string') return undefined;
+    const calls = backendCallsOf(document, ops);
+    return calls.length > 0 ? calls : undefined;
+  };
+}
+
+export async function readBundleView(dir: string, translate: Translate = () => undefined): Promise<LoadedBundle> {
   const metaFile = path.join(dir, 'bundle.json');
   if (!(await fs.pathExists(metaFile))) throw new ValidationError(`${dir} is not an evidence bundle (no bundle.json)`, 'bundle', 'bundle.json');
   const meta = (await fs.readJson(metaFile)) as { app?: string; journeys?: string[] };
@@ -27,7 +62,10 @@ export async function readBundleView(dir: string): Promise<LoadedBundle> {
   const requests: BundleView['requests'] = {};
   const listFile = path.join(dir, 'requests.json');
   if (await fs.pathExists(listFile)) {
-    for (const r of (await fs.readJson(listFile)) as Array<{ id: string; method: string; url: string }>) requests[r.id] = { method: r.method, url: r.url };
+    for (const r of (await fs.readJson(listFile)) as Array<{ id: string; method: string; url: string; postData?: string }>) {
+      const calls = translate(r);
+      requests[r.id] = calls ? { method: r.method, url: r.url, calls } : { method: r.method, url: r.url };
+    }
   }
   return { app: meta.app ?? '', dir, journeys, requests };
 }
@@ -65,6 +103,7 @@ export function renderParityMarkdown(report: ParityReport, gaps: { routes: strin
       for (const a of st.content.added) lines.push(`- new text: ${a}`);
       for (const n of st.network.missing) lines.push(`- call not made: ${n}`);
       for (const n of st.network.extra) lines.push(`- extra call: ${n}`);
+      for (const n of st.network.repeated ?? []) lines.push(`- repeated through a BFF (not a failure, ADR-127): ${n}`);
       for (const e of st.console.new) lines.push(`- new console error: ${e}`);
       if (st.visual.failed.length > 0) lines.push(`- pixels changed: ${st.visual.failed.join(', ')}`);
       lines.push('');

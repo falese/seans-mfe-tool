@@ -19,6 +19,7 @@ import {
 } from '@seans-mfe/dsl';
 import type { Decomposition, Domain } from './model';
 import { hoistsOf, restrictSpec, type OpenApiDocument } from './openapi';
+import { splitBackendUrl } from './backends';
 
 /** Per backend: its OpenAPI document (inferred or published) and the recorded responses by operationId (ADR-112). */
 export interface BackendSpecs {
@@ -48,6 +49,17 @@ export interface DerivedFleet {
 
 const BASE_PORT = 5201;
 
+/**
+ * The shell's capability that renders nothing (ADR-126 §4a). Placement is
+ * desired state per address and nothing retracts one, so a state that leaves
+ * a slot empty places this there: the monolith's `element={null}`.
+ */
+export const EMPTY_SLOT = 'EmptySlot';
+
+/** The shell's non-repeated slots: the ones a state can leave empty. */
+const clearable = (doc: Decomposition, shell: Domain): string[] =>
+  doc.slots.filter((s) => s.provider === shell.id && !s.repeated).map((s) => s.id);
+
 const platformCapabilities = [
   {
     Load: {
@@ -67,6 +79,30 @@ const platformCapabilities = [
   },
 ];
 
+/**
+ * Everything a domain's MFE reads once ported (ADR-127 §1): the calls its own
+ * files make, the reads across a coupling (the proposal's "its BFF should
+ * source it itself"), and the calls of a repeated capability it renders
+ * itself. Its BFF fronts all of them, so no MFE reads another's data at runtime.
+ */
+export function readsOf(doc: Decomposition, domain: Domain): { endpoints: string[]; backends: string[] } {
+  const endpoints = new Set(domain.endpoints);
+  for (const c of doc.couplings) if (c.domain === domain.id && c.endpoint) endpoints.add(c.endpoint);
+  for (const r of doc.repeated) {
+    if (!domain.files.includes(r.renderedBy)) continue;
+    const owner = doc.domains.find((d) => d.id === r.domain);
+    const file = owner?.capabilities.find((c) => c.name === r.capability)?.file;
+    for (const e of (file && doc.fileEndpoints?.[file]) || []) endpoints.add(e);
+  }
+  const layout = { gateway: doc.app.gateway !== false };
+  const backends = new Set(domain.backends);
+  for (const e of endpoints) {
+    const url = e.split(' ')[1];
+    if (url) backends.add(splitBackendUrl(url, layout).backend);
+  }
+  return { endpoints: [...endpoints].sort(), backends: [...backends].sort() };
+}
+
 function bffFor(domain: Domain, backends: BackendSpecs | undefined, gateway: boolean): BffInputs | undefined {
   if (!backends) return undefined;
   const specs: Record<string, OpenApiDocument> = {};
@@ -74,6 +110,8 @@ function bffFor(domain: Domain, backends: BackendSpecs | undefined, gateway: boo
   for (const b of domain.backends) {
     const full = backends.specs[b];
     if (!full) continue;
+    // Only what the domain calls: restrictSpec keeps the whole document when nothing matches.
+    if (!domain.endpoints.some((e) => splitBackendUrl(e.split(' ')[1] ?? '', { gateway }).backend === b)) continue;
     const doc = restrictSpec(full, domain.endpoints, b, { gateway });
     specs[b] = doc;
     const recorded = backends.mocks?.[b] ?? {};
@@ -130,6 +168,11 @@ function manifestFor(doc: Decomposition, domain: Domain, index: number, bff?: Bf
   if (domain.shell) {
     const provided = doc.slots.filter((s) => s.provider === domain.id);
     if (provided.length > 0) manifest.providesSlots = provided.map((s) => ({ id: s.id }));
+    if (clearable(doc, domain).length > 0) {
+      (manifest.capabilities as unknown[]).splice(domain.capabilities.length, 0, {
+        [EMPTY_SLOT]: { type: 'domain', description: 'Renders nothing: what a state shows in a slot it does not fill (ADR-126 §4a)' },
+      });
+    }
   }
   return manifest;
 }
@@ -139,7 +182,10 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
   const bff: Record<string, BffInputs> = {};
   const errors: Record<string, string[]> = {};
   const parsed: DSLManifest[] = [];
-  doc.domains.forEach((domain, i) => {
+  doc.domains.forEach((declared, i) => {
+    // The MFE's data is what its ported code reads (ADR-127 §1), not only what the domain owns.
+    const reads = readsOf(doc, declared);
+    const domain: Domain = { ...declared, endpoints: reads.endpoints, backends: reads.backends };
     // Only an explicit `false` is one API: a document built in code may lack the field.
     const inputs = bffFor(domain, backends, doc.app.gateway !== false);
     if (inputs) bff[domain.mfe] = inputs;
@@ -153,6 +199,9 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
 
   const shell = doc.domains.find((d) => d.shell);
   const routes: ControlPlaneDocument['routes'] = [];
+  // ADR-126 §4a: every state says what every clearable slot shows, nothing included.
+  const empties = (filled: string[]): ControlPlaneDocument['routes'][number]['place'] =>
+    shell ? clearable(doc, shell).filter((s) => !filled.includes(s)).map((s) => ({ capability: EMPTY_SLOT, into: `${shell.mfe}/${s}` })) : [];
   if (shell && shell.capabilities.length > 0) {
     const root = doc.routes.find((r) => r.stateKey === `${doc.app.namespace}.root`);
     routes.push({
@@ -160,6 +209,7 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
       place: [
         { capability: shell.capabilities[0].name, into: 'root' },
         ...(root?.place ?? []).map((p) => ({ capability: p.capability, into: `${shell.mfe}/${p.slot}` })),
+        ...empties((root?.place ?? []).map((p) => p.slot)),
       ],
     });
   }
@@ -167,10 +217,13 @@ export function deriveFleet(doc: Decomposition, backends?: BackendSpecs): Derive
     if (r.stateKey === `${doc.app.namespace}.root`) continue;
     routes.push({
       when: r.stateKey,
-      place: r.place.map((p) => ({
-        capability: p.capability,
-        into: shell ? `${shell.mfe}/${p.slot}` : p.slot,
-      })),
+      place: [
+        ...r.place.map((p) => ({
+          capability: p.capability,
+          into: shell ? `${shell.mfe}/${p.slot}` : p.slot,
+        })),
+        ...empties(r.place.map((p) => p.slot)),
+      ],
     });
   }
   // Repeated placements (one tile per berth) need their keys bound with `forEach`,

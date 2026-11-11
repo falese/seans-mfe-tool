@@ -60,12 +60,20 @@ steps:
   - id: scaffold
     title: Generate the MFEs, their BFFs and the legacy wrapper
     after: [approve]
-    available: false
-    issue: '#410'
+    produces: [proposal/scaffold.json]
+    from: [proposal/decomposition.yaml]
+    command: seans-mfe-tool decompose:scaffold {root}/proposal --app-dir {appDir}
+
+  - id: port
+    title: Port every domain into its MFE and compose the proposal directly
+    after: [scaffold]
+    produces: [proposal/port.json]
+    from: [proposal/decomposition.yaml]
+    command: seans-mfe-tool decompose:port {root}/proposal
 
   - id: verify
     title: Prove the composed app behaves like the monolith
-    after: [scaffold]
+    after: [port]
     produces: [../verify/parity.json]
     check: at-parity
     command: seans-mfe-tool decompose:verify {root}

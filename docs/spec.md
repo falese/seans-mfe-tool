@@ -335,6 +335,7 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-108](./architecture-decisions/ADR-108-layout-manager-is-the-sole-mounter.md) | The LayoutManager is the only thing that mounts an MFE — no host-side component may drive a presentation handle itself | Runtime / composition / mounting | Implemented |
 | [ADR-109](./architecture-decisions/ADR-109-decomposition-evidence-bundle.md) | A decomposition starts from an evidence bundle — what the running app did, keyed by region and interaction and joined to source — and every later stage reads only that bundle | Decomposition / capture | Accepted (impl phased, #437) |
 | [ADR-110](./architecture-decisions/ADR-110-decomposition-proposal.md) | A decomposition is agreed as one reviewable document, decomposition.yaml, from which the manifests and composition are derived — humans edit the proposal, never the derived files | Decomposition / proposal | Accepted (impl phased, #422) |
+| [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Accepted (impl phased, #419) |
 | [ADR-112](./architecture-decisions/ADR-112-openapi-inference-from-traffic.md) | When a backend has no spec, the toolchain infers an OpenAPI document from recorded traffic and client code, marks it inferred, and the BFF consumes it like any other source | Decomposition / BFF / specs | Accepted (impl phased, #418) |
 | [ADR-113](./architecture-decisions/ADR-113-decomposition-parity-gate.md) | A decomposition step is accepted only when the composed app passes the parity gate — the captured journeys produce the same regions, the same backend calls, the same visuals and no new errors as the monolith | Decomposition / regression | Accepted (impl phased, #418) |
 | [ADR-114](./architecture-decisions/ADR-114-generated-apis-honor-declared-pagination.md) | A generated list endpoint pages the way its spec declares — the page-size parameter, its default, and offset or 1-based page — and keeps the old behavior only where the spec is silent | API generation / controllers / pagination | Implemented |
@@ -347,6 +348,9 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-122](./architecture-decisions/ADR-122-deploy-command-removed.md) | There is no `deploy` command; deployment returns as a plugin-resolved target axis, and `build:docker` is the way to an image until it does | Deploy / plugins / scope | Implemented |
 | [ADR-123](./architecture-decisions/ADR-123-bff-context-unverified-user-id.md) | A generated BFF names the id it reads from an unverified token `unverifiedUserId` | BFF / context / security | Implemented |
 | [ADR-124](./architecture-decisions/ADR-124-registry-writes-need-a-token-shell-allow-lists-origins.md) | A registry write needs the fleet's token, and a shell loads remotes only from origins it allows | Control plane / security / composition | Implemented |
+| [ADR-126](./architecture-decisions/ADR-126-port-by-copy-compose-target-shell-routes-by-url.md) | decompose:port copies each domain's source into its MFE and wraps it in the monolith's own providers, turns the shell's route blocks into declared slots, composes the proposal directly, and the shell enters state keys from the URL | Decomposition / port | Implemented |
+| [ADR-127](./architecture-decisions/ADR-127-port-reads-through-each-mfe-bff.md) | A ported MFE reads only through its own BFF: the port reroutes the monolith's HTTP transport to GraphQL documents derived from the BFF's specs, each BFF fronts everything its MFE reads, and parity counts a domain re-loading data the monolith had already loaded as a repeat, not a failure | Decomposition / port / data | Implemented |
+| [ADR-128](./architecture-decisions/ADR-128-port-inlines-bff-reads-on-each-function.md) | A ported MFE runs either way: each of the monolith's data functions is rewritten in place to read through the MFE's BFF with the base class's query capability when a host has composed it, and to run the monolith's own code when it runs alone | Decomposition / port / data | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -363,7 +367,6 @@ _A decision has been written down but not agreed. Do not build against these._
 | [ADR-048](./architecture-decisions/ADR-048-dependency-update-and-vulnerability-response.md) | Dependency Update and Vulnerability Response Policy | Dependencies / security | Proposed |
 | [ADR-049](./architecture-decisions/ADR-049-release-versioning-and-publish-automation.md) | Release, Versioning, and Publish Automation | Release / packages | Proposed |
 | [ADR-090](./architecture-decisions/ADR-090-drift-auditor-typed-output.md) | The drift auditor emits a typed HardenedCheck or SemanticFinding — the same typed-artifact contract as generation, turned on governance | Kernel / drift-auditor | Proposed |
-| [ADR-111](./architecture-decisions/ADR-111-legacy-module-federation-wrap.md) | During decomposition the monolith runs as one generated SMT MFE, wrapped by Module Federation, and composes through the existing adaptor — no special legacy path in the runtime | Decomposition / strangler | Proposed |
 
 ### Deferred — postponed on purpose
 
@@ -372,6 +375,7 @@ _Deliberately not decided yet; the ADR records why._
 | ADR | Title | Area | Status |
 |-----|-------|------|--------|
 | [ADR-007](./architecture-decisions/ADR-007-authorization-expression-grammar.md) | Authorization Expression Grammar | DSL / security | Deferred |
+| [ADR-125](./architecture-decisions/ADR-125-strangle-by-region-portals-and-path-state.md) | A strangler step swaps one region of the monolith, which keeps a single React tree and renders each placed region into its slot through a portal; the shell enters state keys from the URL by the proposal's route table | Decomposition / strangler | Deferred |
 
 ### Superseded — replaced, kept for provenance
 

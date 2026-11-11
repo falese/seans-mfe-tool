@@ -66,9 +66,11 @@ pixel-identical: the clean run differs by 0 pixels.
 
 - **Baselines are machine-specific.** Fonts and rasterisation differ between machines, so
   capture the baseline where the gate runs, as with any screenshot test.
-- **Network parity is at the browser.** Once a domain's BFF sits between the screen and its
-  backends, its screens call `/graphql` rather than the REST paths the monolith called.
-  Comparing at the BFF's upstream calls comes with the contract tests (#418).
+- **Network parity through a BFF is by backend call.** A ported MFE's screens call its BFF's
+  `/graphql`; verify lets those requests through to the BFF (in demo mode, answering from the
+  capture) and counts each as the backend calls its root fields stand for, using the proposal's
+  specs. A domain re-loading data the monolith had already loaded is reported as *repeated*, not
+  failed (ADR-127 §4). What the BFF itself sends upstream is for the contract tests (#418).
 - **The catch-all route counts as visited.** `*` matches any path, so it never shows up as a
   coverage gap.
 - **Still to come under #418:**

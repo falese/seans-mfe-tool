@@ -526,6 +526,10 @@ Defined in: [packages/codegen/src/render-model.ts:82](https://github.com/falese/
 
 > **filterSchema**: `string` = `'^0.104.37'`
 
+#### dependencyVersions.meshTransforms.hoistField
+
+> **hoistField**: `string` = `'^0.105.19'`
+
 #### dependencyVersions.meshTransforms.namingConvention
 
 > **namingConvention**: `string` = `'^0.105.19'`

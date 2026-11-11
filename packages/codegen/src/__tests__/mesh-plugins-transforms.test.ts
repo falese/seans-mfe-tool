@@ -37,6 +37,19 @@ describe('resolveNeededMeshPluginsAndTransforms', () => {
     expect(neededTransforms).toContain('resolversComposition');
   });
 
+  it('adds hoistField when a data source declares one, so mesh build can find it', () => {
+    const manifest = {
+      ...baseManifest,
+      data: {
+        sources: [
+          { name: 'ledger', handler: { openapi: { source: './specs/ledger.yaml' } }, transforms: [{ hoistField: [{ typeName: 'Query', pathConfig: ['listCharges', 'result'], newFieldName: 'charges' }] }] },
+        ],
+      },
+    } as unknown as DSLManifest;
+    expect(resolveNeededMeshPluginsAndTransforms(manifest).neededTransforms).toContain('hoistField');
+    expect(resolveNeededMeshPluginsAndTransforms(baseManifest).neededTransforms).not.toContain('hoistField');
+  });
+
   it('adds resolversComposition when the demo-mode mock switch is enabled (ADR-052)', () => {
     const manifest = {
       ...baseManifest,

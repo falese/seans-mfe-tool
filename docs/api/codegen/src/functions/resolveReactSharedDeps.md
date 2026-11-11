@@ -8,7 +8,7 @@
 
 > **resolveReactSharedDeps**(`manifest`): `Record`\<`string`, `string`\>
 
-Defined in: [packages/codegen/src/dependencies.ts:141](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L141)
+Defined in: [packages/codegen/src/dependencies.ts:148](https://github.com/falese/seans-mfe-tool/blob/main/packages/codegen/src/dependencies.ts#L148)
 
 Module-federation `shared` deps for a React MFE (#294): framework singletons
 plus the design-system — NOT arbitrary runtime libs, which are usually wrong

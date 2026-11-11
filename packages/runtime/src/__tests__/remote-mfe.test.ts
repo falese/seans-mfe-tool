@@ -781,6 +781,27 @@ describe('RemoteMFE React adapter', () => {
     expect(firstRoot.render).toHaveBeenCalledTimes(2);
   });
 
+  it('creates a fresh root when the container id now names a different element', async () => {
+    // The LayoutManager re-provides a slot with a new container under the same
+    // id. Rendering into the cached root would draw into the detached element
+    // and leave the visible one empty.
+    let el: { id: string } = { id: 'host' };
+    (global as any).document = { getElementById: (id: string) => (id === 'host' ? el : null) };
+    const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });
+    await (mfe as any).doLoad(makeContext());
+
+    await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+    const firstRoot = (mfe as any).reactRoots.get('host');
+    el = { id: 'host' };
+    await (mfe as any).doRender(makeContext({ component: 'Widget', containerId: 'host' }));
+
+    const { createRoot } = await import('react-dom/client');
+    expect(createRoot).toHaveBeenCalledTimes(2);
+    expect(createRoot).toHaveBeenLastCalledWith(el);
+    expect(firstRoot.unmount).toHaveBeenCalledTimes(1);
+    expect((mfe as any).reactRoots.get('host')).not.toBe(firstRoot);
+  });
+
   it('errors when the DOM container is not found', async () => {
     installDocumentStub();
     const mfe = new TestRemoteMFE(buildManifest(), { telemetry }, { Widget: class {} });

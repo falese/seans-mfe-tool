@@ -413,6 +413,72 @@ export interface DecomposePresentResult {
 }
 
 // ---------------------------------------------------------------------------
+// decompose:scaffold (#417, ADR-111)
+// ---------------------------------------------------------------------------
+
+export interface DecomposeScaffoldMfe {
+  name: string;
+  dir: string;
+  /** `domain`: one of the proposal's domains. `legacy`: the monolith, whole (ADR-111 §1). */
+  role: 'domain' | 'legacy';
+  capabilities: string[];
+  /** Files the generator wrote, and developer-owned files it found and kept. */
+  generated: number;
+  kept: number;
+}
+
+export interface DecomposeScaffoldResult {
+  fleetDir: string;
+  app: string;
+  namespace: string;
+  /** The approval hash the fleet was scaffolded from (ADR-116 §5). */
+  approvedHash: string;
+  mfes: DecomposeScaffoldMfe[];
+  legacy: { mfe: string; capability: string; remoteEntry: string };
+  shell: { dir: string; port: number };
+  /** The starting composition, its compiled payload, and the proposal's own composition. */
+  controlPlane: string;
+  rules: string;
+  target: string;
+  files: number;
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------
+// decompose:port (#419, ADR-126)
+// ---------------------------------------------------------------------------
+
+export interface DecomposePortResult {
+  fleetDir: string;
+  mfes: Array<{
+    name: string;
+    domain: string;
+    /** Monolith files copied under the MFE's `src/monolith/`. */
+    files: string[];
+    /** Capabilities whose feature file renders the ported component; and those kept because a developer changed them. */
+    capabilities: string[];
+    kept: string[];
+    /** Packages added to the MFE's package.json, at the monolith's versions. */
+    packages: string[];
+    /**
+     * ADR-127, ADR-128: the endpoints the MFE's BFF fronts; the data functions (`file#name`) that
+     * read through it when composed and run the monolith's code standalone; and those left on the
+     * monolith's code in both modes, with why.
+     */
+    bff: { operations: string[]; inlined: string[]; monolith: string[] };
+  }>;
+  /** Shell route blocks that became declared slots, as `<file>: <slot>`. */
+  slots: string[];
+  /** Files copied into more than one MFE: shared code to split, duplicate or replace. */
+  duplicated: Array<{ file: string; mfes: string[] }>;
+  controlPlane: string;
+  rules: string;
+  /** The shell's path → state key table. */
+  routes: string;
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------
 // decompose:workspace / decompose:ask (ADR-116, ADR-117, ADR-118)
 // ---------------------------------------------------------------------------
 

@@ -37,6 +37,8 @@ export interface RawRequest {
   body?: unknown;
   /** Set when the request failed or was not answered. */
   failure?: string;
+  /** The body of a GraphQL request to a BFF (ADR-127 §4). */
+  postData?: string;
 }
 
 export interface RawStep {
@@ -114,6 +116,22 @@ export function isDevServerRequest(url: string): boolean {
   return /^\/(sockjs-node|__webpack_hmr|webpack-dev-server|ws$|@vite\/)/.test(p) || /\.hot-update\.(json|js)$/.test(p);
 }
 
+/**
+ * Where a composed shell's page reaches the control plane's daemon: its own
+ * origin, proxied (decompose:scaffold, ADR-111). That traffic is the
+ * composition's plumbing, not anything the app does, so a capture does not
+ * record it and a replay lets it through — otherwise the shell could never ask
+ * for the experience it is meant to show (ADR-113).
+ */
+export const CONTROL_PLANE_PATH = '/__control-plane';
+
+/** Traffic that is not the app's: the dev server's own, and a composed shell's control-plane calls. */
+export function isInfrastructureRequest(url: string): boolean {
+  if (isDevServerRequest(url)) return true;
+  const p = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+  return p === CONTROL_PLANE_PATH || p.startsWith(`${CONTROL_PLANE_PATH}/`);
+}
+
 export function responseKey(method: string, url: string): string {
   return `${method.toUpperCase()} ${url}`;
 }
@@ -137,7 +155,7 @@ export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
 
     // Stable ids: per step, sorted by method then URL, then original order.
     const ids = new Map<RawRequest, string>();
-    const appRequests = run.requests.filter((r) => !isDevServerRequest(r.url));
+    const appRequests = run.requests.filter((r) => !isInfrastructureRequest(r.url));
     for (let k = 0; k < run.steps.length; k += 1) {
       appRequests
         .map((r, order) => ({ r, order, url: relativeUrl(r.url, meta.appUrl) }))
@@ -181,6 +199,7 @@ export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
         failure: r.failure ?? null,
         initiator: r.initiator,
         attributedTo,
+        ...(r.postData ? { postData: r.postData } : {}),
       });
       const key = responseKey(r.method, url);
       if (!(key in responses) && r.status !== undefined && r.failure === undefined) {

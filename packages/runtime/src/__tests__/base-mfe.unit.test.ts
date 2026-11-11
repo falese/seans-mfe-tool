@@ -169,6 +169,13 @@ describe('BaseMFE updateControlPlaneState', () => {
     expect((mfe as any).deps.wsClient).toBe(wsClient);
   });
 
+  it('is in the control plane only once a host has attached it (ADR-128 §1)', () => {
+    // An MFE's own entry never attaches one: standalone.
+    expect(mfe.inControlPlane()).toBe(false);
+    mfe.attachControlPlane({ connected: true, mutation: jest.fn() } as any);
+    expect(mfe.inControlPlane()).toBe(true);
+  });
+
   it('propagates error from doUpdateControlPlaneState', async () => {
     jest.spyOn(mfe as any, 'doUpdateControlPlaneState').mockRejectedValue(new Error('control-plane error'));
     const context = { timestamp: new Date(), requestId: 'upd-4', inputs: { stateKey: 'error.escalation', stateData: {} } };
