@@ -145,9 +145,9 @@ non-engineers: [`docs/decomposition-architecture.html`](./decomposition-architec
 | The agent: hosted model through the coder seam, every edit checked (ADR-117, folded into ADR-120) | `packages/plugin-coder/`, `decompose:ask` | #451 |
 | The proposal model as a package; consumers realigned (ADR-118) | `packages/decompose/` | #451 |
 | `flow:status` — where you are and the next command, by content (PDR-012, ADR-119) | `packages/flow/`, `flows/`, `src/commands/flow/` | #453 |
-| `decompose:scaffold` — approved proposal → generated fleet, legacy wrapper, shell, starting composition (ADR-111, #417) | `src/decompose/scaffold/`, `docs/decompose-scaffold.md` | this PR |
-| Playbook skill and its mechanical rules as a Sentinel `ValidatePort` (#420) | `.agents/skills/decompose-monolith/`, `src/sentinel/decomposition.ts` | this PR |
-| `decompose:port` — every domain into its MFE, every read through its own BFF, the proposal composed directly (ADR-126, ADR-127, PDR-013, #419) | `src/decompose/port/`, `docs/decompose-port.md` | this PR |
+| `decompose:scaffold` — approved proposal → generated fleet, legacy wrapper, shell, starting composition (ADR-111, #417) | `src/decompose/scaffold/`, `docs/decompose-scaffold.md` | #480 |
+| Playbook skill and its mechanical rules as a Sentinel `ValidatePort` (#420) | `.agents/skills/decompose-monolith/`, `src/sentinel/decomposition.ts` | #480 |
+| `decompose:port` — every domain into its MFE, every read through its own BFF, the proposal composed directly (ADR-126, ADR-127, PDR-013, #419) | `src/decompose/port/`, `docs/decompose-port.md` | #480 |
 
 **Simplified before steps 5–7 (#454, done in #455).**
 
