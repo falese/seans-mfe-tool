@@ -35,7 +35,7 @@
     }
   },
   "devDependencies": {
-    "@angular/core": "^17.3.12",
+    "@angular/core": "^22.2.5",
     "typescript": "^5.9.3"
   },
   "license": "MIT"
