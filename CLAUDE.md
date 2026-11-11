@@ -12,7 +12,7 @@ Full spec: `@docs/spec.md`
 
 ## Stack
 
-- **Runtime:** Node ≥18 (published), Bun (dev entry — no transpile)
+- **Runtime:** Node ≥20 (`package.json` `engines`), Bun (dev entry — no transpile)
 - **Language:** TypeScript (strict, no `any`)
 - **CLI framework:** oclif (colon topics, plugin architecture)
 - **Packages:** `packages/*` — see `packages/README.md` for the layers and the import direction between them
@@ -201,7 +201,7 @@ place, so they cannot disagree with a copy here.
 - **MCP child-process per tool call.** Spawn `seans-mfe-tool <cmd> --json`. Isolates `process.exit` and cwd mutations; concurrency-safe.
 - **Bun for dev, Node for publish.** `bin/dev.ts` / `bin/run.js` split is permanent.
 - **Framework-agnostic codegen.** `framework` and `bundler` are DSL manifest fields; new framework support = new template variant (ADR-034).
-- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check`, `remote:init`, and `deploy` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
+- **Framework plugins, not hardcoded variants.** `build:dev`, `build:prod`, `build:docker`, `build:check` and `remote:init` all resolve the framework via `loadFrameworkPlugin()` (ADR-036). Adding a new framework = publishing `@seans-mfe/framework-<name>`.
 - **A second build is a framework plugin with a `targetId`, not a new plugin kind.**
   `targets.swift` in a manifest emits a Swift Package beside the web remote
   (ADR-095); `targets.rust` emits a Cargo library crate (ADR-099). The plugin carries both halves — build lifecycle and

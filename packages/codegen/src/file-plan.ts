@@ -203,6 +203,12 @@ function joinPath(...parts: string[]): string {
     .replace(/\/{2,}/g, '/');
 }
 
+/** Absolute, or carrying a `..` segment under either separator. */
+function leavesProject(out: string): boolean {
+  if (out.startsWith('/') || out.startsWith('\\') || /^[A-Za-z]:/.test(out)) return true;
+  return out.split(/[\\/]/).includes('..');
+}
+
 /**
  * Turn a plan into concrete files.
  *
@@ -227,6 +233,20 @@ export async function resolveFilePlan(
     // stated once — as FileSpec.owner. It used to be 25 inline booleans, where
     // moving a file between the halves was invisible in review (ADR-082).
     const overwrite = spec.owner === 'generator';
+
+    // Output paths are built from manifest values — a capability name becomes a
+    // directory. Whatever the schema let through, a file is written inside the
+    // project or not at all.
+    if (leavesProject(spec.out)) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'path-escape',
+        target: spec.out,
+        message: `"${spec.out}" would be written outside the project and was not generated`,
+      });
+      continue;
+    }
+
     const outPath = joinPath(basePath, spec.out);
 
     if (spec.content !== undefined) {

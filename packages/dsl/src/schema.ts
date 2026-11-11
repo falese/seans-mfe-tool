@@ -385,8 +385,24 @@ export const CapabilityConfigSchema = z.object({
 });
 export type CapabilityConfig = z.infer<typeof CapabilityConfigSchema>;
 
+/**
+ * A capability name becomes a directory under src/features and a class name.
+ * Held to an identifier-like grammar so it cannot carry a path or code: a
+ * manifest may be written by a model (coder:compile, the decomposition flow).
+ */
+const CAPABILITY_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/**
+ * The MFE's name becomes a package name, an image name and a registry key.
+ * One path segment, starting with a letter or digit.
+ */
+const MFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 /** Capability entry (name → config) */
-export const CapabilityEntrySchema = z.record(z.string(), CapabilityConfigSchema);
+export const CapabilityEntrySchema = z.record(
+  z.string().regex(CAPABILITY_NAME, 'a capability name is a letter, then letters, digits, - or _'),
+  CapabilityConfigSchema,
+);
 export type CapabilityEntry = z.infer<typeof CapabilityEntrySchema>;
 
 // =============================================================================
@@ -655,6 +671,7 @@ export type ProvidesSlots = z.infer<typeof ProvidesSlotsSchema>;
 export const DSLManifestSchema = z.object({
   // Core identity (required)
   name: z.string().min(1, 'Name is required')
+    .regex(MFE_NAME, 'name must start with a letter or digit and use only letters, digits, ".", "_" or "-"')
     .describe('Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case.'),
   version: z.string().regex(/^\d+\.\d+\.\d+/, 'Version must be semver (e.g., 1.0.0)')
     .describe('Manifest version. Bump on any breaking change to capability inputs or outputs.'),

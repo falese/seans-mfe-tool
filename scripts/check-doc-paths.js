@@ -42,6 +42,9 @@ const HISTORICAL = [
   /^docs\/product-decisions\//,
   /^docs\/requirements\//,
   /^docs\/archive\//,
+  // A review is dated and names the commit it read; the fixes it leads to are
+  // what make its citations stale.
+  /^docs\/reviews\//,
   /^docs\/(MERGE-PLAN|RESTRUCTURE-PLAN|generator-extraction-plan)\.md$/,
   /^docs\/(bff-refactor-analysis|gate-self-verification-audit)\.md$/,
   /^docs\/coder-intent-manifest-adaptor-spec\.md$/,

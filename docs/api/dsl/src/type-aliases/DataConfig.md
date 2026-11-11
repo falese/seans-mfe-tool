@@ -8,4 +8,4 @@
 
 > **DataConfig** = `z.infer`\<*typeof* [`DataConfigSchema`](../variables/DataConfigSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:475](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L475)
+Defined in: [packages/dsl/src/schema.ts:491](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L491)

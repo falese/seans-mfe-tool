@@ -35,9 +35,32 @@ app.use(helmet({
   },
 }));
 
+// The origins this BFF serves: CORS_ORIGIN, comma-separated; every origin when
+// it is unset or "*".
+const allowedOrigins = (process.env.CORS_ORIGIN ?? '*')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const servesEveryOrigin = allowedOrigins.includes('*');
+
+// CORS only tells a browser whether a page may READ a response. A form-style
+// POST is sent either way, and GraphQL accepts form bodies — so when the
+// origins are named, a request from any other one is refused outright rather
+// than answered and merely hidden from the page that sent it.
+if (!servesEveryOrigin) {
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const origin = req.headers.origin;
+    if (origin !== undefined && !allowedOrigins.includes(origin)) {
+      res.status(403).json({ error: 'Forbidden', message: `origin ${origin} is not served by this BFF` });
+      return;
+    }
+    next();
+  });
+}
+
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: servesEveryOrigin ? '*' : allowedOrigins,
   credentials: true,
 }));
 
@@ -53,14 +76,16 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 
 // GraphQL BFF endpoint (Mesh v0.100.x)
 // Following REQ-BFF-003: JWT Authentication Forwarding
-// Context fields (jwt, requestId, userId, headers) are injected per-request
+// Context fields (jwt, requestId, unverifiedUserId, headers) are injected per-request
 // by mesh-context.js via Mesh additionalEnvelopPlugins (ADR-027).
 //
 // MeshContext documents the shape available to resolvers and operationHeaders.
 interface MeshContext {
   jwt?: string;
   requestId: string;
-  userId?: string;
+  // Read from the token's payload; the signature is NOT verified (ADR-123).
+  // Never authorize on it.
+  unverifiedUserId?: string;
   // Raw request headers — exposed so resolver-level logic (e.g. the demo-mode
   // mock switch, ADR-052) can read request headers like `x-bff-mode`.
   headers: Record<string, string | string[] | undefined>;

@@ -5,11 +5,16 @@ running, federable MFE. Closes documentation gaps **G27/G29** (no documented zer
 path) and establishes the onboarding baseline referenced by the
 [Documentation KPI Framework](./archive/platform-design-review/documentation-kpi-framework.md).
 
-**Audience:** a new contributor or adopter who has cloned the repo and has Node ≥18 (and
+**Audience:** a new contributor or adopter who has cloned the repo and has Node ≥20 (and
 optionally Bun for the fastest dev entry — ADR-020).
 
-> Every command accepts `--json` for a machine-readable `CommandResult<T>` envelope and every
-> mutating command accepts `--dry-run`. See the [CLI Contract](./cli-contract.md).
+> Every command accepts `--json` for a machine-readable `CommandResult<T>` envelope, and the
+> commands that scaffold or generate accept `--dry-run`.
+
+> **This guide works from a checkout of this repository.** The CLI and
+> `@seans-mfe-tool/runtime` are not on npm yet (ADR-064), so a project scaffolded somewhere else
+> cannot `npm install` the runtime. Scaffold under `examples/` or another directory inside the
+> checkout, where the runtime resolves from `dist/runtime`. See the [CLI Contract](./cli-contract.md).
 
 ---
 
@@ -17,7 +22,7 @@ optionally Bun for the fastest dev entry — ADR-020).
 
 | Tool | Version | Why |
 | --- | --- | --- |
-| Node | ≥18 | Published runtime |
+| Node | ≥20 | Required by `package.json` `engines` |
 | npm | bundled with Node | Install + scripts |
 | Bun | latest (optional) | Dev entry, no transpile (`bin/dev.ts`) |
 | Docker | optional | `build:docker` and example image builds |

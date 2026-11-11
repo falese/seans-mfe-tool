@@ -307,7 +307,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "1a657e1e9ad8cddc0be66a439779bebe3f9cf199c4f31cc1057dfb4d592af365"
+        "sha256": "9769f10ea586f5cbcea411131f96f848d57e1c9d9836c108b075152efc7616af"
       },
       {
         "path": "<cwd>/docker-compose.yaml",
@@ -352,7 +352,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "a1d9baf8a3c8661743980cac0ceab1b4111c42de7e8aa3ac70590e10d163d7ea"
+        "sha256": "f6154ed78cb6ed010d1c96001792b49efef39a6101d2a1fe548d58e5cf687a6f"
       },
       {
         "path": "<cwd>/src/App.tsx",
@@ -402,7 +402,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -923,7 +923,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "1a657e1e9ad8cddc0be66a439779bebe3f9cf199c4f31cc1057dfb4d592af365"
+        "sha256": "9769f10ea586f5cbcea411131f96f848d57e1c9d9836c108b075152efc7616af"
       },
       {
         "path": "<cwd>/angular.json",
@@ -963,7 +963,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "ae0e66b1cab1b72ee003e9b384de1cfab1dfe25d376a8d6e33bf39eb621105f9"
+        "sha256": "3a719277425613632509136aaf1857c19829e272393f10ae54a54a2e94ea8d2b"
       },
       {
         "path": "<cwd>/setup.jest.ts",
@@ -1018,7 +1018,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -1457,7 +1457,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "248a1cfd49d696d62eb8dfe6d973080e3459fe9db2314b24b4dabbc8506bba83"
+        "sha256": "5ec021ef274926b3616883b5734062afc5dfc79770087d97773e7a9136beffc0"
       },
       {
         "path": "<cwd>/angular.json",
@@ -1497,7 +1497,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "664d225a22394baf1e2e633d19975e6444d6cea02ef8509f14abc17dacec1fd0"
+        "sha256": "a25802fd82ec0483121fcccf56d6f251ddc6581b179de991d59b9c8e9f9b0e22"
       },
       {
         "path": "<cwd>/setup.jest.ts",
@@ -1552,7 +1552,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -1618,7 +1618,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "27fca6f513e55285b2c802fa42aa98da29fab023f02947a50e5c4ca048f993df"
+        "sha256": "4bdec12c629c014a85630d1391cb8bf3d0e5d8e43080e994e24d80de92a7a721"
       },
       {
         "path": "<cwd>/docker-compose.yaml",
@@ -1663,7 +1663,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "7da3f05ace3a0ac0882d6ab51693bbb84d6de1fecece3b614cd35943783074d7"
+        "sha256": "518bc320c9997bc85a58076c1ea3a9c03cf4e26cd9001bea917bcf89c1b38129"
       },
       {
         "path": "<cwd>/src/App.tsx",
@@ -1708,7 +1708,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -1856,7 +1856,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "7ac2c7c1c5e4b0ab0e39c50fed46f8b0fe62f5de315d7a8dbca7edad75cdf054"
+        "sha256": "5e007db663d3b3f9d6343d3e9f2908e44b114a7514bc5d3dd38d59b97d1239db"
       },
       {
         "path": "<cwd>/docker-compose.yaml",
@@ -2051,7 +2051,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "cdd15ac42ff08fe72afab1a5d88cbb306ce2e2d624c3568f60fb5af0a27a9258"
+        "sha256": "2f153e1bd75b17595153cba3bf5ec382f64ae764292cdc83b042974ff770e399"
       },
       {
         "path": "<cwd>/src/App.tsx",
@@ -2096,7 +2096,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -2249,7 +2249,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "93a2c803cde1bc40a88049e75e2dd1560c36bea7b7e9a7ad9912dde1ea86e573"
+        "sha256": "6d6ffd627beb963e7499818b0613b37edf1c3492439bf1c0134a953fd7f109e3"
       },
       {
         "path": "<cwd>/angular.json",
@@ -2289,7 +2289,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "a852ebf816b755d2b36c9980d77d623cbc8671f5345cd87439b24e0ef794e5df"
+        "sha256": "bb16dc969674fb30d12ca2a1649982025aa2f4d7ac0cb7d2f2f8e38743dd0877"
       },
       {
         "path": "<cwd>/setup.jest.ts",
@@ -2344,7 +2344,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -2411,7 +2411,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "67ea3493b26499865d8a67dc7684083039f9a80d31e2b90909cfc84339db8f98"
+        "sha256": "99d269c40ec33c9670de9dafb553ea3ec8869d00eb525e776b00a2e3d89237ec"
       },
       {
         "path": "<cwd>/docker-compose.yaml",
@@ -2456,7 +2456,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "34eafae75980f0af84a57d7d115bf2f5e2173f32b41d05f4179824a760914f21"
+        "sha256": "2ab24b222b3c6e8cedea7dfc9c5936e89a2cf0d85a54ceecb7e7675b01c0ee52"
       },
       {
         "path": "<cwd>/src/App.tsx",
@@ -2501,7 +2501,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",
@@ -2554,7 +2554,7 @@
       {
         "path": "<cwd>/.meshrc.yaml",
         "overwrite": true,
-        "sha256": "2fea6b1cf094406ec59854f840de30c9c53572c17dce2e1bc181ba55164d74bd"
+        "sha256": "37589c614ec37725f68ef61a5d3b44f450cd150adafd740e56b1cd3028f249b0"
       },
       {
         "path": "<cwd>/angular.json",
@@ -2594,7 +2594,7 @@
       {
         "path": "<cwd>/server.ts",
         "overwrite": true,
-        "sha256": "c9f6075aa2242a12d031a6b544f3b6f96e80ea4dc2226458ab00b3f359b0244c"
+        "sha256": "315904b271fca17ee33afd2eb98a296efe66701abbda92f5f2f8bf9474f9db01"
       },
       {
         "path": "<cwd>/setup.jest.ts",
@@ -2649,7 +2649,7 @@
       {
         "path": "<cwd>/src/platform/bff/mesh-context.js",
         "overwrite": true,
-        "sha256": "dd14efa9d6a494b23232ba27c1e36498eab96dc64114a34c6a2bf9a541ea85cc"
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
       },
       {
         "path": "<cwd>/src/platform/bff/mock-switch.js",

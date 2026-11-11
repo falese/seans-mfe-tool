@@ -1,10 +1,16 @@
 /**
- * MCP tool registry with federation.
+ * MCP tool registry.
  *
- * Aggregates tools from three sources:
+ * Aggregates tools from two sources:
  *   1. Local  — CLI's own schemas/; tools prefixed "mfe:"
  *   2. Plugin — installed oclif plugins with schemas/; prefixed by topic
- *   3. Remote — servers listed in ~/.config/seans-mfe/mcp.json; prefixed by name
+ *
+ * Every tool offered is one `tools/call` can run: the server only ever spawns
+ * this CLI (ADR-019). A third source used to list tools from external MCP
+ * servers named in ~/.config/seans-mfe/mcp.json; nothing proxied a call to
+ * them, so each resolved to a command that does not exist, and loading the
+ * list ran whatever command the file named. It is removed until there is a
+ * proxy to put behind it (ADR-121 §5).
  *
  * Tool name collisions across sources abort startup with a SystemError so
  * conflicts are never silently hidden.
@@ -15,7 +21,7 @@
 import { SystemError } from '@seans-mfe/contracts';
 import { loadLocalTools } from './sources/local';
 import { loadPluginTools } from './sources/plugin';
-import { loadRemoteTools } from './sources/remote';
+import { MCP_DEFAULT_OFF } from './policy';
 
 export interface McpToolDefinition {
   name:        string;
@@ -33,7 +39,8 @@ export interface McpToolDefinition {
 export interface RegistryOptions {
   schemasDir: string;
   cliName?: string;
-  remoteMcpConfigPath?: string;
+  /** Command ids from MCP_DEFAULT_OFF to offer anyway (`mcp:serve --allow`). */
+  allow?: string[];
 }
 
 export async function loadToolRegistry(
@@ -41,15 +48,19 @@ export async function loadToolRegistry(
   options: Partial<RegistryOptions> = {},
 ): Promise<McpToolDefinition[]> {
   const cliName = options.cliName ?? 'seans-mfe-tool';
-  const remoteMcpConfigPath = options.remoteMcpConfigPath; // undefined = default path
-
-  const [localTools, pluginTools, remoteTools] = await Promise.all([
+  const [localTools, pluginTools] = await Promise.all([
     loadLocalTools(schemasDir),
     loadPluginTools(cliName),
-    loadRemoteTools(remoteMcpConfigPath),
   ]);
 
-  const all = [...localTools, ...pluginTools, ...remoteTools];
+  // Tools that cannot answer an agent usefully are left out unless the
+  // operator names them (ADR-121). The catalog in schemas/ is unchanged.
+  const allowed = new Set(options.allow ?? []);
+  const offered = localTools.filter(
+    (t) => t.command === undefined || !(t.command in MCP_DEFAULT_OFF) || allowed.has(t.command),
+  );
+
+  const all = [...offered, ...pluginTools];
 
   // Collision detection — fail loudly at startup
   const seen = new Map<string, string>();
@@ -65,7 +76,7 @@ export async function loadToolRegistry(
   }
 
   // Every tool accepts a reserved `cwd` (#279): the directory the child CLI
-  // runs in. Injected centrally so all sources (local, plugin, remote)
+  // runs in. Injected centrally so both sources (local, plugin)
   // advertise it without each schema having to declare it.
   for (const tool of all) {
     const schema = tool.inputSchema as {
@@ -79,7 +90,8 @@ export async function loadToolRegistry(
           type: 'string',
           description:
             'Working directory for this call — the directory the command operates on ' +
-            '(e.g. the MFE folder for remote:generate). Must exist. Defaults to the server\'s cwd.',
+            '(e.g. the MFE folder for remote:generate). Must exist, inside the directory the server ' +
+            'was started for. Relative paths resolve against that directory, which is also the default.',
         },
       };
     }
@@ -92,7 +104,7 @@ export async function loadToolRegistry(
  * Map an MCP tool name and its input arguments to CLI argv.
  *
  * Examples:
- *   mfe:deploy  → ["deploy", "--json"]
+ *   mfe:schemas → ["schemas", "--json"]
  *   mfe:bff:init → ["bff:init", "--json"]
  *   mfe:validate (command "mfe:validate") → ["mfe:validate", "--json"]
  */

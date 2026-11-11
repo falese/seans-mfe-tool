@@ -29,6 +29,10 @@ services:
     build: ../../packages/control-plane/registry
     environment:
       PORT: 4500
+      # Writes need this token (ADR-124). The default is published and is not a
+      # secret: set REGISTRY_TOKEN before the registry is reachable by anything
+      # you do not trust. scripts/register-station.sh reads the same variable.
+      REGISTRY_TOKEN: ${REGISTRY_TOKEN:-local-dev-only}
     ports:
       - "4500:4500"
 

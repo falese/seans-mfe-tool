@@ -24,6 +24,11 @@ on:
   pull_request:
     branches: [main, develop, 'claude/**']
 
+# Read-only unless a job says otherwise. The two jobs that comment on a pull
+# request ask for pull-requests: write themselves.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,13 +39,14 @@ jobs:
         node-version: [20.x, 22.x]
 
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -164,10 +170,10 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: 'npm'
@@ -195,10 +201,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: 'npm'
@@ -236,10 +242,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
@@ -269,13 +275,13 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # The report diffs against the base branch, so it needs the history.
           fetch-depth: 0
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: 'npm'
@@ -327,16 +333,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Dependency advisories (production dependencies)
+        # The moderates are report-only, and deliberately. 35 stand, none high
+        # or critical. All but two are glob and minimatch inside the copy of
+        # npm that @oclif/plugin-plugins bundles. Moving to oclif 5 and
+        # plugin-plugins 7 was tried and leaves 33: the advisories are against
+        # npm itself, so they clear when npm ships fixed dependencies, or if
+        # the CLI stops bundling a plugin installer. A NEW high or critical
+        # fails the second command.
+        run: |
+          npm audit --omit=dev || echo "::warning title=npm audit::production dependencies have open moderate advisories — see the step log"
+          npm audit --omit=dev --audit-level=high
 
       - name: Lint
         run: npm run lint
@@ -510,7 +528,7 @@ jobs:
     container: swift:6.0
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Swift version
         run: swift --version
@@ -540,7 +558,7 @@ jobs:
     container: rust:1
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Toolchain components
         run: |
@@ -580,7 +598,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:

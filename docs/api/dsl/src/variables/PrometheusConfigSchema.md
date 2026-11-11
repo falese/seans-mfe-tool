@@ -8,6 +8,6 @@
 
 > `const` **PrometheusConfigSchema**: `ZodObject`\<\{ `enabled`: `ZodDefault`\<`ZodBoolean`\>; `endpoint`: `ZodDefault`\<`ZodString`\>; `port`: `ZodDefault`\<`ZodNumber`\>; \}, `$strip`\>
 
-Defined in: [packages/dsl/src/schema.ts:498](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L498)
+Defined in: [packages/dsl/src/schema.ts:514](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L514)
 
 Prometheus observability configuration

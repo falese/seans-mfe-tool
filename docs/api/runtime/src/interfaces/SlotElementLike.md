@@ -6,7 +6,7 @@
 
 # Interface: SlotElementLike
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:37](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L37)
+Defined in: [packages/runtime/src/layout-adaptors.ts:38](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L38)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:37](https://github.com/fale
 
 > **innerHTML**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:38](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L38)
+Defined in: [packages/runtime/src/layout-adaptors.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L39)
 
 ## Methods
 
@@ -22,7 +22,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:38](https://github.com/fale
 
 > **addEventListener**(`type`, `listener`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L48)
+Defined in: [packages/runtime/src/layout-adaptors.ts:49](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L49)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:48](https://github.com/fale
 
 > **appendChild**(`child`): `unknown`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:39](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L39)
+Defined in: [packages/runtime/src/layout-adaptors.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L40)
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:39](https://github.com/fale
 
 > **remove**(): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:40](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L40)
+Defined in: [packages/runtime/src/layout-adaptors.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L41)
 
 #### Returns
 
@@ -74,7 +74,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:40](https://github.com/fale
 
 > `optional` **removeAttribute**(`name`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:47](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L47)
+Defined in: [packages/runtime/src/layout-adaptors.ts:48](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L48)
 
 Optional so a host's own `createSlotElement` that predates it still type-
 checks; every DOM element has it. Without it, cleared stamps are blanked
@@ -96,7 +96,7 @@ rather than removed (#408).
 
 > **setAttribute**(`name`, `value`): `void`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:41](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L41)
+Defined in: [packages/runtime/src/layout-adaptors.ts:42](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L42)
 
 #### Parameters
 

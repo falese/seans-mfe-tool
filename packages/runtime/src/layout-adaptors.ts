@@ -28,6 +28,7 @@ import {
   isModuleFederationOutput,
   EXPERIENCE_CONTENT_TYPES,
   BusinessError,
+  SecurityError,
   SystemError,
 } from '@seans-mfe/contracts';
 import type { DaemonWebSocketClient } from './graphql-ws-client';
@@ -349,10 +350,88 @@ async function mountModuleFederation(
     );
 }
 
-export function defaultAdaptors(): Record<string, ExperienceAdaptor> {
+/**
+ * Whether `remoteEntryUrl` is served from one of `allowedOrigins`, or from the
+ * page's own origin (ADR-124).
+ *
+ * Compared as parsed origins — scheme, host and port together — never as
+ * string prefixes: `https://mfe.example.com.evil.example` starts with an
+ * allowed origin and is not one. A relative URL resolves against `pageOrigin`
+ * and is the shell's own, so it is allowed; with no page to resolve against
+ * it is refused. Anything that does not parse, or has no origin of its own
+ * (`data:`, `javascript:`), is refused.
+ */
+export function remoteOriginAllowed(
+  remoteEntryUrl: string,
+  allowedOrigins: readonly string[],
+  pageOrigin: string | undefined = (globalThis as { location?: { origin?: string } }).location?.origin,
+): boolean {
+  let origin: string;
+  try {
+    origin = new URL(remoteEntryUrl, pageOrigin).origin;
+  } catch {
+    return false;
+  }
+  if (origin === 'null') return false;
+  if (pageOrigin !== undefined && origin === pageOrigin) return true;
+
+  return allowedOrigins.some((allowed) => {
+    try {
+      return new URL(allowed).origin === origin;
+    } catch {
+      return false;
+    }
+  });
+}
+
+export interface ModuleFederationAdaptorOptions {
+  /**
+   * Origins this shell loads remotes from, e.g. `['https://mfe.example.com']`.
+   * The shell's own origin is always allowed. Omit to load from anywhere,
+   * which is only safe when everything that can write to the registry is
+   * trusted.
+   */
+  allowedOrigins?: readonly string[];
+}
+
+/**
+ * The module-federation adaptor, holding the shell's allow-list (ADR-124).
+ *
+ * A placement's `remoteEntryUrl` is injected as a <script> into the shell's
+ * own page, so whoever can put a URL in a placement runs code as the shell.
+ * With `allowedOrigins` set, a remote from any other origin is refused with a
+ * SecurityError before anything is fetched or added to the page.
+ */
+export function createModuleFederationAdaptor(options: ModuleFederationAdaptorOptions = {}): ExperienceAdaptor {
+  const { allowedOrigins } = options;
+  if (allowedOrigins === undefined) return moduleFederationAdaptor;
+
+  return {
+    mount(experience, slot, helpers) {
+      const output = experience.output;
+      const url = isModuleFederationOutput(output) ? output.remoteEntryUrl : undefined;
+      // An incomplete placement is the base adaptor's to report, in its words.
+      if (typeof url === 'string' && url !== '' && !remoteOriginAllowed(url, allowedOrigins)) {
+        return Promise.reject(
+          new SecurityError(
+            `Refusing to load the remote for experience "${experience.id}" from ${url}: ` +
+              'its origin is not one this shell allows (allowedRemoteOrigins)',
+          ),
+        );
+      }
+      return moduleFederationAdaptor.mount(experience, slot, helpers);
+    },
+  };
+}
+
+export function defaultAdaptors(
+  options: { allowedRemoteOrigins?: readonly string[] } = {},
+): Record<string, ExperienceAdaptor> {
   return {
     [EXPERIENCE_CONTENT_TYPES.html]: htmlAdaptor,
     [EXPERIENCE_CONTENT_TYPES.json]: jsonAdaptor,
-    [EXPERIENCE_CONTENT_TYPES.moduleFederation]: moduleFederationAdaptor,
+    [EXPERIENCE_CONTENT_TYPES.moduleFederation]: createModuleFederationAdaptor({
+      allowedOrigins: options.allowedRemoteOrigins,
+    }),
   };
 }

@@ -6,7 +6,12 @@
  *
  *   jwt        — Bearer token from Authorization header
  *   requestId  — x-request-id header or a generated UUID
- *   userId     — decoded `sub` / `userId` from the JWT payload
+ *   unverifiedUserId — the `sub` / `userId` claim read out of the token WITHOUT
+ *                checking its signature (ADR-123). The BFF holds no key, so it
+ *                cannot check; anyone can send a token that claims to be
+ *                anyone. Good for a log line or a cache hint. Never authorize
+ *                on it: verify the token, or let the service this BFF calls
+ *                decide, which receives the token itself.
  *   headers    — plain object of all request headers
  *                (supports context.headers['x-bff-mode'] for mock-switch)
  *
@@ -19,7 +24,7 @@
 
 const crypto = require('crypto');
 
-function extractUserIdFromToken(authHeader) {
+function readUnverifiedUserId(authHeader) {
   if (!authHeader) return undefined;
   try {
     const token = authHeader.replace('Bearer ', '');
@@ -51,7 +56,7 @@ module.exports = [
       extendContext({
         jwt: authHeader ? authHeader.replace('Bearer ', '') : undefined,
         requestId: headers['x-request-id'] || crypto.randomUUID(),
-        userId: extractUserIdFromToken(authHeader),
+        unverifiedUserId: readUnverifiedUserId(authHeader),
         headers,
       });
     },

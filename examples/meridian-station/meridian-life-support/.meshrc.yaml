@@ -29,7 +29,7 @@ serve:
   playground: true
 
 
-# Context injection plugin (ADR-027): injects jwt, requestId, userId, headers
+# Context injection plugin (ADR-027): injects jwt, requestId, unverifiedUserId, headers
 # into every GraphQL execution context from the incoming HTTP request.
 additionalEnvelopPlugins: ./src/platform/bff/mesh-context.js
 

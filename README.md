@@ -106,12 +106,47 @@ bun bin/dev.ts <cmd> [args]
 seans-mfe-tool <cmd> [args]      # when installed globally
 ```
 
+Requires Node 20 or later. The CLI and the runtime are not on npm yet: today
+you run them from a checkout of this repository (ADR-064 covers publishing).
+
 All commands accept `--json` for a machine-readable `CommandResult<T>` envelope
-(ADR-018), and all mutating commands accept `--dry-run`.
+(ADR-018). The commands that generate or scaffold (`remote:init`,
+`remote:generate`, `bff:init`, `bff:build`, `api`, `compose:build`) accept
+`--dry-run`; the table below marks them.
 
 ---
 
 ## CLI command surface
+
+Every command, in one place. `seans-mfe-tool <command> --help` has the flags;
+`seans-mfe-tool schemas` lists each command's input and output contract.
+
+| Command | What it does | `--dry-run` |
+|---|---|---|
+| `remote:init <name>` | Scaffold a new MFE project and its manifest | yes |
+| `remote:generate` | Generate an MFE's files from its manifest | yes |
+| `remote:generate:capability <name>` | Generate one capability | yes |
+| `mfe:validate [dir]` | Check an MFE is consistent with its manifest, and report code that needs a platform migration | — |
+| `build:check` | Check the local toolchain for the MFE's framework | — |
+| `build:dev` | Start the dev server | — |
+| `build:prod` | Production build | — |
+| `build:docker` | Write a Dockerfile; `--build` also builds the image | no |
+| `bff:init`, `bff:build` | Scaffold and build the GraphQL BFF | yes |
+| `bff:validate`, `bff:dev` | Validate the BFF config; run it with reload | — |
+| `compose:build <project>` | Compile `control-plane.yaml` into the registry's `rules.json` | yes |
+| `compose:validate <project>` | Validate the composition; `--check` fails on a stale `rules.json` | — |
+| `slots:validate` | Check every placement targets a slot some MFE declares | — |
+| `mcp:serve` | Serve the commands to AI agents as MCP tools | — |
+| `schemas` | List the command contracts | — |
+| `api <name>` | Generate an Express API from an OpenAPI spec | yes |
+| `flow:status [dir]` | Where a directory stands in a multi-step flow, and the next command | — |
+| `decompose:capture`, `analyze`, `propose`, `present`, `workspace`, `verify` | Propose and verify a split of a running monolith into MFEs (early; see [the runbook](./docs/decompose-runbook.md)) | no |
+| `design:export <url>` | Export a running screen as a Figma import bundle (proof of concept) | no |
+| `coder:compile <intent>` | Compile a described intent into a manifest through a model (proof of concept) | — |
+| `adr:status`, `adr:validate`, `sentinel:validate` | This repository's own governance checks | — |
+
+"no" marks a command that writes files and has no preview yet.
+
 
 ### Scaffold and generate MFEs
 
@@ -158,23 +193,22 @@ seans-mfe-tool bff:validate [--manifest <path>]
 seans-mfe-tool api <name> [--spec openapi.yaml] [--database sqlite|mongodb] [--port 3001]
 ```
 
-### Deploy / package
+### Deploying
 
-```bash
-seans-mfe-tool deploy <name> --type <shell|remote|api> [options]
-```
+There is no `deploy` command. `build:docker` writes a hardened Dockerfile for
+the MFE and, with `--build`, builds the image; running it is yours. Deployment
+targets will return as plugins (ADR-122).
 
 ### Plugins (`@seans-mfe/*` core, `@falese/*` third-party — ADR-021, ADR-022)
 
 ```bash
-seans-mfe-tool plugins install coder             # shortname → @seans-mfe scope
-seans-mfe-tool plugins install @falese/coder-plugin
 seans-mfe-tool plugins                           # list installed
-seans-mfe-tool plugins uninstall coder
+seans-mfe-tool plugins install <package>         # a bare name resolves to the @seans-mfe scope
+seans-mfe-tool plugins uninstall <package>
 ```
 
-Reserved topics (available once the plugin is installed):
-`coder:*` (`@falese/coder-plugin`).
+`coder:compile` ships with the CLI (`@seans-mfe/plugin-coder`). It is the seam
+to a model; the model engine itself stays external (ADR-085).
 
 > **The control plane is not a plugin.** The registry and daemon ship with the
 > platform and this repository owns the canonical implementation (PDR-008,
@@ -196,8 +230,8 @@ name: my-feature
 version: 1.0.0
 type: remote
 language: typescript
-framework: react          # angular | react | vue | svelte | vanilla
-bundler: rspack           # webpack | rspack | vite | esbuild
+framework: react          # react and angular ship; any other name needs its framework plugin
+bundler: rspack           # rspack (React) or webpack (Angular)
 
 endpoint:    http://localhost:3001
 remoteEntry: http://localhost:3001/remoteEntry.js
@@ -234,7 +268,9 @@ rather than failing validation, and fail loudly only at `loadFrameworkPlugin()`.
 
 ## Runtime package
 
-The runtime ships as **`@seans-mfe-tool/runtime`** (`packages/runtime/`).
+The runtime is **`@seans-mfe-tool/runtime`** (`packages/runtime/`). It is not
+published to npm yet (ADR-064): a generated MFE resolves it from this
+repository's `dist/runtime`, or from the CLI Docker image, which carries it.
 
 ```typescript
 import { BaseMFE, RemoteMFE } from '@seans-mfe-tool/runtime';
@@ -255,31 +291,38 @@ Long-form capability reference: [`PLATFORM-CONTRACT.md`](./docs/PLATFORM-CONTRAC
 
 ## MCP server — CLI as agent tools
 
-`seans-mfe-tool mcp:serve` exposes every CLI command as a Model Context Protocol
-tool so AI agents (Claude, Copilot, …) can invoke them. Each tool call spawns
+`seans-mfe-tool mcp:serve` exposes the CLI's commands as Model Context Protocol
+tools so AI agents (Claude, Copilot, …) can invoke them. Each tool call spawns
 `seans-mfe-tool <cmd> --json` as a child process, isolating `process.exit` and
-cwd mutations (ADR-019).
+cwd mutations (ADR-019). Use the colon form: `mcp serve` with a space prints
+the topic help and does not start the server.
 
-Tools are discovered from three federated sources:
+```json
+// Claude Desktop / any MCP client
+{ "mcpServers": { "seans-mfe": { "command": "seans-mfe-tool", "args": ["mcp:serve"] } } }
+```
+
+Tools are discovered from two sources:
 
 | Source | Prefix | How it works |
 |--------|--------|--------------|
 | Local | `mfe:` | Reads `schemas/*.json` bundled with the CLI |
 | Plugins | topic (e.g. `daemon:`) | Reads installed oclif plugins that ship `schemas/` |
-| Remote | server name | Spawns/connects to entries in `~/.config/seans-mfe/mcp.json` |
 
-```json
-// ~/.config/seans-mfe/mcp.json — proxy external MCP servers
-{
-  "servers": [
-    { "name": "coder",  "command": "bunx", "args": ["@falese/coder-mcp"] },
-    { "name": "daemon", "url": "http://daemon.local:8080/mcp" }
-  ]
-}
-```
-
-Each entry's `name` becomes the tool prefix (`coder:refactor`, `daemon:start`, …).
 Name collisions across sources are a startup error.
+
+A tool call is untrusted input — the caller is an agent acting on text it has
+read — so the server checks it before anything runs (ADR-121):
+
+- **Arguments are validated** against the tool's input schema. An argument the
+  tool does not declare, a wrong type or a missing required one is refused.
+- **`cwd` is confined** to the tree the server was started for: the directory
+  it was launched in, or `--root <dir>`.
+- **Three commands are off by default**: `build:dev`, `bff:dev` and
+  `decompose:workspace` start a server and never return. Offer one with
+  `--allow <command>` (repeatable).
+- **A call that times out** (`--timeout-ms`, default 5 minutes) is stopped
+  together with every process it started.
 
 ---
 
@@ -338,58 +381,7 @@ To exercise it exactly as GitHub Pages serves it, run a static server over `docs
 npx http-server docs -p 8080 -c-1   # then http://localhost:8080/system-map.html
 ```
 
-### How deployment works
-
-The [`Publish docs site`](./.github/workflows/pages.yml) workflow is the repository's
-**single** GitHub Pages publisher. On a push to `main` that touches the site sources it
-assembles a `_site/` directory, verifies it, and deploys:
-
-```
-/                                    docs/index.html         — landing page
-/404.html                            docs/index.html         — fallback for a bad URL
-/system-map.html                     docs/system-map.html    — the system map
-/slides/platform-architecture.html   built from docs/slides/ — the architecture deck
-/slides/platform-architecture.pdf
-```
-
-Four things this deliberately does *not* do:
-
-- **No build step for the map.** `docs/system-map.html` is copied verbatim. It is
-  self-contained by design, so there is no bundler, no base-path rewriting, and nothing
-  to keep in sync.
-- **The map never waits on the deck.** The deck needs Marp and a headless browser — the
-  most failure-prone steps in the pipeline — so both are non-fatal. If the deck cannot be
-  built, [`scripts/assemble-site.js`](./scripts/assemble-site.js) removes its card from
-  the landing page and the site publishes without it, with a workflow warning. A failed
-  deck build costs you the deck, never the system map, and never leaves a link to a page
-  that was not published. (The card is delimited in `docs/index.html` by
-  `<!-- deck-card:start -->` / `<!-- deck-card:end -->`; the script errors out if those
-  markers go missing rather than publishing a dangling link.)
-- **No root-relative paths.** The site is served from `/seans-mfe-tool/`, not `/`, so
-  every in-site link is relative. [`scripts/check-site.js`](./scripts/check-site.js) runs
-  in the workflow and fails the build on any root-relative link, unresolvable in-site
-  link, or externally-loaded asset.
-- **No second Pages publisher.** [`slides.yml`](./.github/workflows/slides.yml) builds
-  the deck and keeps it as a workflow artifact for PR review, but does not deploy — two
-  workflows uploading a Pages artifact would each overwrite the other's whole site.
-
-To reproduce either outcome locally:
-
-```bash
-# deck present
-mkdir -p _site/slides && echo '<html><title>deck</title></html>' > _site/slides/platform-architecture.html
-node scripts/assemble-site.js _site && node scripts/check-site.js _site
-
-# deck build failed
-rm -rf _site && node scripts/assemble-site.js _site && node scripts/check-site.js _site
-```
-
-Pull requests touching the site build and verify it, and upload a `docs-site-preview`
-artifact instead of deploying.
-
-> **One-time repository setting:** GitHub Pages must be set to build from **GitHub
-> Actions** — *Settings → Pages → Build and deployment → Source: GitHub Actions*. This
-> cannot be set from a workflow.
+How the site is assembled and deployed: [`docs/docs-site.md`](./docs/docs-site.md).
 
 ---
 

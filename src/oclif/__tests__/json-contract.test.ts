@@ -255,24 +255,6 @@ describe('JSON contract: --dry-run', () => {
       await fs.remove(tmpDir);
     }
   });
-
-  it('deploy --dry-run: ok=true, dryRun=true', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-b9-'));
-    try {
-      const { stdout, code } = await runCli(
-        ['deploy', 'dry-deploy', '--type', 'shell', '--json', '--dry-run'],
-        { cwd: tmpDir },
-      );
-      expect(code).toBe(0);
-      const env = parseEnvelope(stdout);
-      expect(env.ok).toBe(true);
-      const data = env.data as Record<string, unknown>;
-      expect(data.dryRun).toBe(true);
-      expect(Array.isArray(data.plannedChanges)).toBe(true);
-    } finally {
-      await fs.remove(tmpDir);
-    }
-  });
 });
 
 // ---------------------------------------------------------------------------

@@ -65,7 +65,7 @@ generator. The core owns the shape of build/scaffold/Docker operations
 - Abstract `BaseFrameworkPlugin` in `packages/contracts/`
 - Concrete `ReactRspackPlugin` / `AngularWebpackPlugin` (`packages/framework-react/`, `packages/framework-angular/`)
 - `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`
-- `build:dev/prod/docker/check`, `remote:init`, and `deploy` delegate to the resolved plugin
+- `build:dev/prod/docker/check`, and `remote:init` delegate to the resolved plugin
 - Open `framework`/`bundler` manifest fields (`packages/dsl/src/schema.ts`) — unknown values warn on stderr, fail only at resolution
 
 **Status**: ✅ Complete (Issues #167–185, PRs #187–188, May 2026)
@@ -142,7 +142,6 @@ graph TB
         RemoteInit["remote/init.ts<br/>Initialize Workspace"]
         BFF["bff/{init,build,dev,validate}.ts<br/>BFF Management"]
         API["api.ts<br/>API Generation"]
-        Deploy["deploy.ts<br/>Docker/K8s Deploy"]
     end
 
     subgraph "Code Generation Engine"
@@ -198,7 +197,6 @@ graph TB
     CLI --> RemoteInit
     CLI --> BFF
     CLI --> API
-    CLI --> Deploy
 
     RemoteGen --> UnifiedGen
     RemoteInit --> UnifiedGen
@@ -265,7 +263,6 @@ graph TB
 - `mfe remote:init` — Initialize workspace structure
 - `mfe bff:init / bff:validate / bff:build / bff:dev` — BFF management
 - `mfe api` — Generate API from OpenAPI spec
-- `mfe deploy` — Docker/K8s deployment
 - `mfe schemas` — Live tool catalog
 - `mfe mcp:serve` — MCP server (child-process isolation)
 
@@ -299,12 +296,6 @@ graph TB
 - Generates Express REST API
 - Creates database models (MongoDB/SQLite)
 - Generates controllers and routes
-
-#### deploy.js
-
-- Docker container build
-- Kubernetes manifest generation
-- Deployment orchestration
 
 ### 3. Code Generation Engine
 

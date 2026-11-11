@@ -59,7 +59,8 @@ the registration instead of calling HTTP capability endpoints (the BaseMFE
 lifecycle runs in the shell's LayoutManager).
 
 ```bash
-curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -d '{
+curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer ${REGISTRY_TOKEN:-local-dev-only}" -d '{
   "registration": {
     "name": "abc-kids-flappy",
     "version": "1.0.0",
@@ -75,7 +76,8 @@ curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -
   ]
 }'
 
-curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' -d '{
+curl -s -X POST http://localhost:4000/mfes -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer ${REGISTRY_TOKEN:-local-dev-only}" -d '{
   "registration": {
     "name": "abc-kids-hockey",
     "version": "1.0.0",

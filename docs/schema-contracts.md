@@ -306,13 +306,18 @@ runtime does once an MFE is loaded.
 
 ## 7. How contracts reach agents
 
-`mcp:serve` builds its tool list from three sources:
+`mcp:serve` builds its tool list from two sources:
 
 | Source | Origin | Tool prefix |
 | --- | --- | --- |
 | local | the CLI's own `schemas/` | `mfe:` |
 | plugin | installed oclif plugins carrying a `schemas/` directory | the plugin's topic |
-| remote | servers listed in `~/.config/seans-mfe/mcp.json` | the server name |
+
+Three commands have a schema but are not offered as tools unless the operator starts the server
+with `--allow <command>`: `build:dev`, `bff:dev` and `decompose:workspace`. Each starts a server
+and does not return. Every call is
+checked against the tool's `inputSchema` before anything is spawned, and its `cwd` must sit
+inside the server's `--root` (ADR-121).
 
 `loadLocalTools` walks `schemas/` one level deep and turns each file into a tool:
 `bff-init.json` becomes `mfe:bff:init`, with `schema.input` as the `inputSchema` and

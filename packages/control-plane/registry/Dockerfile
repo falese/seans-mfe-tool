@@ -14,7 +14,7 @@ COPY package*.json ./
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    npm install --omit=dev --no-audit --no-fund
+    npm ci --omit=dev --no-audit --no-fund
 
 # Copy source code. Glob, not a named file: the registry was split into
 # simple-registry.js + slot-target.js (ADR-073 §5), and a single-file COPY
@@ -26,4 +26,8 @@ COPY *.js ./
 EXPOSE 4000
 
 # Start the registry
+# The service needs nothing root has: it reads its own files and listens on a
+# high port. `node` is the unprivileged user the base image ships.
+USER node
+
 CMD ["node", "simple-registry.js"]

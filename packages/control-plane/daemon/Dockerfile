@@ -15,7 +15,7 @@ COPY package*.json ./
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    npm install --omit=dev --no-audit --no-fund
+    npm ci --omit=dev --no-audit --no-fund
 
 # Copy source code
 COPY simple-daemon.js ./
@@ -26,4 +26,8 @@ ENV DAEMON_PORT=3004
 EXPOSE 3004
 
 # Start the daemon
+# The service needs nothing root has: it reads its own files and listens on a
+# high port. `node` is the unprivileged user the base image ships.
+USER node
+
 CMD ["node", "simple-daemon.js"]

@@ -6,7 +6,7 @@
 
 # Interface: SlotErrorInfo
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:97](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L97)
+Defined in: [packages/runtime/src/layout-adaptors.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L98)
 
 Describes a slot-scoped failure (ADR-060) for fallback + escalation.
 
@@ -16,7 +16,7 @@ Describes a slot-scoped failure (ADR-060) for fallback + escalation.
 
 > **capability**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L100)
+Defined in: [packages/runtime/src/layout-adaptors.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L101)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:100](https://github.com/fal
 
 > **mfe**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L99)
+Defined in: [packages/runtime/src/layout-adaptors.ts:100](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L100)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:99](https://github.com/fale
 
 > `optional` **phase**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L102)
+Defined in: [packages/runtime/src/layout-adaptors.ts:103](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L103)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:102](https://github.com/fal
 
 > **reason**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:101](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L101)
+Defined in: [packages/runtime/src/layout-adaptors.ts:102](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L102)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:101](https://github.com/fal
 
 > **slot**: `string`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:98](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L98)
+Defined in: [packages/runtime/src/layout-adaptors.ts:99](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L99)

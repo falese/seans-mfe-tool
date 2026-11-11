@@ -27,7 +27,7 @@ for i in $(seq 0 $((count - 1))); do
   doc="$(jq -c ".[$i]" "$RULES")"
   name="$(printf '%s' "$doc" | jq -r '.registration.name')"
   caps="$(printf '%s' "$doc" | jq -r '[.routes[].resolve.capability] | unique | join("/")')"
-  curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -d "$doc" > /dev/null
+  curl -fsS -X POST "$REGISTRY/mfes" -H "Content-Type: application/json" -H "Authorization: Bearer ${REGISTRY_TOKEN:-local-dev-only}" -d "$doc" > /dev/null
   echo " registered $name ($caps)"
 done
 

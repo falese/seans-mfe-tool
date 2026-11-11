@@ -3,6 +3,23 @@ import type { Context } from '../context';
 import { SecurityError } from '@seans-mfe/contracts';
 
 /**
+ * Who an auth event is about, as telemetry may carry it: the subject id and
+ * nothing else. Telemetry leaves the process, so it never carries the bearer
+ * token (a credential wherever the events are stored) or the decoded claims
+ * (personal data). `sub` is the JWT subject; `id`/`userId` cover claims that
+ * name it differently.
+ */
+function subjectOf(user: unknown): string | undefined {
+  if (typeof user !== 'object' || user === null) return undefined;
+  const claims = user as Record<string, unknown>;
+  for (const key of ['sub', 'id', 'userId']) {
+    const value = claims[key];
+    if (typeof value === 'string' || typeof value === 'number') return String(value);
+  }
+  return undefined;
+}
+
+/**
  * Validates JWT in context and sets context.user
  * Emits telemetry events for success/failure
  *
@@ -64,7 +81,7 @@ export async function validateJWT(context: Context): Promise<void> {
         capability: context.capability || 'unknown',
         phase: context.phase || 'unknown',
         status: 'success',
-        metadata: { source: 'platform.validateJWT', user: decoded, severity: 'info' },
+        metadata: { source: 'platform.validateJWT', subject: subjectOf(decoded), severity: 'info' },
         timestamp: new Date(),
       });
     }
@@ -78,7 +95,6 @@ export async function validateJWT(context: Context): Promise<void> {
         metadata: {
           source: 'platform.validateJWT',
           error: (error as Error).message,
-          token,
           severity: 'error',
         },
         timestamp: new Date(),
@@ -111,7 +127,7 @@ export async function checkPermissions(context: Context, requiredRoles: string[]
           source: 'platform.checkPermissions',
           required: requiredRoles,
           actual: userRoles,
-          user: context.user,
+          subject: subjectOf(context.user),
           severity: 'warn',
         },
         timestamp: new Date(),
@@ -131,7 +147,7 @@ export async function checkPermissions(context: Context, requiredRoles: string[]
         source: 'platform.checkPermissions',
         required: requiredRoles,
         actual: userRoles,
-        user: context.user,
+        subject: subjectOf(context.user),
         severity: 'info',
       },
       timestamp: new Date(),

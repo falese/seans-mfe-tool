@@ -8,4 +8,4 @@
 
 > **DataSource** = `z.infer`\<*typeof* [`DataSourceSchema`](../variables/DataSourceSchema.md)\>
 
-Defined in: [packages/dsl/src/schema.ts:411](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L411)
+Defined in: [packages/dsl/src/schema.ts:427](https://github.com/falese/seans-mfe-tool/blob/main/packages/dsl/src/schema.ts#L427)

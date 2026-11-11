@@ -81,8 +81,15 @@ export type {
   TransportStatus,
   WebSocketLike,
 } from './layout-transport';
-export { htmlAdaptor, jsonAdaptor, moduleFederationAdaptor } from './layout-adaptors';
+export {
+  htmlAdaptor,
+  jsonAdaptor,
+  moduleFederationAdaptor,
+  createModuleFederationAdaptor,
+  remoteOriginAllowed,
+} from './layout-adaptors';
 export type {
+  ModuleFederationAdaptorOptions,
   ExperienceAdaptor,
   AdaptorHelpers,
   SlotElementLike,

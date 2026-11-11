@@ -48,7 +48,7 @@ In `packages/plugin-bff/src/shared.ts`:
   pinned per ADR-050 dependency governance.
 
 The `meshrc.yaml.ejs` template injects an envelop context plugin
-(`./src/platform/bff/mesh-context.js`) that puts `jwt`, `requestId`, `userId`, and request
+(`./src/platform/bff/mesh-context.js`) that puts `jwt`, `requestId`, `unverifiedUserId` (read from the token without checking its signature, ADR-123), and request
 headers into every GraphQL execution context (ADR-027).
 
 ## 3. Performance & observability plugins (ADR-027)

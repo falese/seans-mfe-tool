@@ -8,7 +8,7 @@
 
 > **validateJWT**(`context`): `Promise`\<`void`\>
 
-Defined in: [packages/runtime/src/handlers/auth.ts:16](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/auth.ts#L16)
+Defined in: [packages/runtime/src/handlers/auth.ts:33](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/handlers/auth.ts#L33)
 
 Validates JWT in context and sets context.user
 Emits telemetry events for success/failure

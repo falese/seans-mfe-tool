@@ -8,4 +8,4 @@
 
 > `const` **moduleFederationAdaptor**: [`ExperienceAdaptor`](../interfaces/ExperienceAdaptor.md)
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:258](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L258)
+Defined in: [packages/runtime/src/layout-adaptors.ts:259](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L259)

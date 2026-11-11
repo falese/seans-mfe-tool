@@ -16,6 +16,7 @@ import * as path from 'path';
 import type { AddressInfo } from 'net';
 import { ValidationError } from '@seans-mfe/contracts';
 import { EditOpSchema, editProposalFile, loadProposalStatus, type AskResult } from '@seans-mfe/decompose';
+import { crossSiteRefusal } from '../local-only';
 
 /** The agent questions go to (ADR-117); the command that starts the workspace supplies it. */
 export interface WorkspaceAgent {
@@ -40,6 +41,8 @@ export interface WorkspaceApiOptions {
   agent?: WorkspaceAgent;
   /** Why no agent is connected, in words the page can show. */
   agentUnavailable?: string;
+  /** Browser origins answered besides this server's own. None by default: its caller is the BFF, not a page. */
+  allowedOrigins?: readonly string[];
 }
 
 export interface RunningApi {
@@ -68,9 +71,24 @@ const problem = (res: http.ServerResponse, status: number, message: string, type
 const failure = (res: http.ServerResponse, status: number, err: unknown) =>
   err instanceof Error ? problem(res, status, err.message, err.name) : problem(res, status, String(err));
 
+/** Far above any real batch of edits or question; a request beyond it is not one. */
+const MAX_BODY_BYTES = 1024 * 1024;
+
+class BodyTooLarge extends ValidationError {
+  constructor() {
+    super(`the request body is larger than ${MAX_BODY_BYTES} bytes`, 'body', 'max-size');
+    this.name = 'BodyTooLarge';
+  }
+}
+
 async function readBody(req: http.IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
+  let size = 0;
+  for await (const chunk of req) {
+    size += (chunk as Buffer).length;
+    if (size > MAX_BODY_BYTES) throw new BodyTooLarge();
+    chunks.push(chunk as Buffer);
+  }
   return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
 }
 
@@ -107,7 +125,8 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
     let body: unknown;
     try {
       body = await readBody(req);
-    } catch {
+    } catch (err) {
+      if (err instanceof BodyTooLarge) return failure(res, 413, err);
       return problem(res, 422, 'the request body is not JSON');
     }
     const list = (body as { edits?: unknown }).edits;
@@ -143,7 +162,8 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
     let body: unknown;
     try {
       body = await readBody(req);
-    } catch {
+    } catch (err) {
+      if (err instanceof BodyTooLarge) return failure(res, 413, err);
       return problem(res, 422, 'the request body is not JSON');
     }
     const request = (body as { request?: unknown }).request;
@@ -168,6 +188,16 @@ export function createWorkspaceHandler(opts: Omit<WorkspaceApiOptions, 'port'>):
   }
 
   return (req, res) => {
+    // Before anything is read or routed: this server edits a repository and
+    // records approvals, so only its own callers are answered (local-only.ts).
+    const refusal = crossSiteRefusal(req, opts.allowedOrigins);
+    if (refusal) return problem(res, 403, refusal);
+    // A JSON content type cannot be sent cross-site without the browser asking
+    // first; text/plain and form bodies can, so they are not accepted at all.
+    if (req.method === 'POST' && !/^application\/json\b/i.test(req.headers['content-type'] ?? '')) {
+      return problem(res, 415, 'POST bodies must be application/json');
+    }
+
     const url = new URL(req.url ?? '/', 'http://localhost');
     const route = `${req.method} ${url.pathname}`;
     const handle = async () => {

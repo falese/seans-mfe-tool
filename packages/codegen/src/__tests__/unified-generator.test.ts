@@ -403,7 +403,7 @@ describe('unified-generator', () => {
     expect(serverTs?.content).toContain('interface MeshContext {');
     expect(serverTs?.content).toContain('jwt?: string;');
     expect(serverTs?.content).toContain('requestId: string;');
-    expect(serverTs?.content).toContain('userId?: string;');
+    expect(serverTs?.content).toContain('unverifiedUserId?: string;');
     
     // Verify handler instantiation — ADR-027: zero-arg call; context injected via
     // mesh-context.js Envelop plugin (additionalEnvelopPlugins in .meshrc.yaml)
@@ -415,13 +415,17 @@ describe('unified-generator', () => {
     // Verify OLD broken patterns are NOT present
     expect(serverTs?.content).not.toContain('next: NextFunction');
     expect(serverTs?.content).not.toContain('(req as any).meshContext');
-    expect(serverTs?.content).not.toContain('next();');
+    // The old pattern wrapped the Mesh handler in a middleware that built a
+    // context and called next(). Scoped to the handler's own section: the
+    // origin check earlier in the file is a middleware and calls next() by design.
+    const meshSection = serverTs?.content.slice(serverTs.content.indexOf('const meshHandler')) ?? '';
+    expect(meshSection).not.toContain('next();');
     expect(serverTs?.content).not.toContain('requestWithContext as any, res as any, context');
     expect(serverTs?.content).not.toContain('createBuiltMeshHTTPHandler<MeshContext>({');
     expect(serverTs?.content).not.toContain('context: (req: Request) => ({');
     
-    // extractUserIdFromToken lives in mesh-context.js, not server.ts
-    expect(serverTs?.content).not.toContain('function extractUserIdFromToken(');
+    // readUnverifiedUserId lives in mesh-context.js, not server.ts
+    expect(serverTs?.content).not.toContain('function readUnverifiedUserId(');
   });
 
   it('generates mesh-context.js with Envelop plugin for context injection', async () => {
@@ -439,11 +443,11 @@ describe('unified-generator', () => {
     // Verify all four fields are injected
     expect(meshContextJs?.content).toContain('jwt:');
     expect(meshContextJs?.content).toContain('requestId:');
-    expect(meshContextJs?.content).toContain('userId:');
+    expect(meshContextJs?.content).toContain('unverifiedUserId:');
     expect(meshContextJs?.content).toContain('headers,');
 
     // Verify helper function lives here
-    expect(meshContextJs?.content).toContain('function extractUserIdFromToken(');
+    expect(meshContextJs?.content).toContain('function readUnverifiedUserId(');
     expect(meshContextJs?.content).toContain('Buffer.from(token.split(\'.\')[1], \'base64\')');
   });
 

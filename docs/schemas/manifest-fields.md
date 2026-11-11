@@ -19,7 +19,7 @@ indexes. This page answers only *what is allowed*.
 
 | Field | Type | Constraints | Description |
 |---|---|---|---|
-| `name` | `string` | min length 1 | Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case. |
+| `name` | `string` | pattern `^[A-Za-z0-9][A-Za-z0-9._-]*$`, min length 1 | Unique MFE identifier. Used as the registry key and as the generated class/module name. kebab-case. |
 | `version` | `string` | pattern `^\d+\.\d+\.\d+` | Manifest version. Bump on any breaking change to capability inputs or outputs. |
 | `type` | `tool` \| `agent` \| `feature` \| `service` \| `remote` \| `shell` \| `bff` | — | Architectural role of this MFE. |
 | `language` | `javascript` \| `typescript` \| `python` \| `go` \| `rust` \| `java` | — | Implementation language. Only javascript/typescript generate code today. |

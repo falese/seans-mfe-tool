@@ -331,3 +331,32 @@ describe('findMigrationHits over real generated shapes', () => {
     }
   });
 });
+
+describe('bff-context-unverified-user-id', () => {
+  const entry = byId('bff-context-unverified-user-id');
+  const hits = (text: string, path = 'src/handlers/orders.ts'): number =>
+    findMigrationHits(entry, { path, text }).length;
+
+  it('catches a resolver reading the old field off the Mesh context', () => {
+    expect(hits('const orders = await api.list({ owner: context.userId });')).toBe(1);
+    expect(hits('if (ctx.userId !== order.owner) return null;')).toBe(1);
+    expect(hits('const { userId } = context;')).toBe(1);
+  });
+
+  it('leaves the new name alone', () => {
+    expect(hits('log.info({ hint: context.unverifiedUserId });')).toBe(0);
+    expect(hits('const { unverifiedUserId } = context;')).toBe(0);
+  });
+
+  it('leaves a userId that is not on the context alone', () => {
+    expect(hits('const userId = claims.sub;')).toBe(0);
+    expect(hits('return fetchOrders({ userId: verified.sub });')).toBe(0);
+    expect(hits('const { userId } = req.params;')).toBe(0);
+  });
+
+  it('tells the developer what the field is and is not', () => {
+    expect(entry.fix).toMatch(/unverifiedUserId/);
+    expect(entry.fix).toMatch(/verif/);
+    expect(entry.adr).toBe('ADR-123');
+  });
+});

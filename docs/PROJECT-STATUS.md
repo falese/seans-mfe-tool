@@ -44,7 +44,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | oclif replaces Commander; dual bin entries (Bun dev / Node publish)               | `bin/dev.ts`, `bin/run.js`                        |
 | `BaseCommand` with `--json` envelope and typed exit codes                         | `packages/oclif-base/`                            |
 | `CommandResult<T>`, typed error taxonomy, sysexits exit codes                     | `packages/contracts/`                             |
-| All commands ported: `bff/*`, `remote/*`, `api`, `deploy`, `schemas`, `mcp:serve` | `src/commands/`                                   |
+| All commands ported: `bff/*`, `remote/*`, `api`, `schemas`, `mcp:serve` (`deploy` was ported too, and removed in ADR-122) | `src/commands/`                                   |
 | oclif hooks: init, prerun, postrun (graphql-ws telemetry), command_not_found      | `src/hooks/`                                      |
 | MCP server with federated tool registry                                           | `src/mcp/`, `src/commands/mcp/serve.ts`           |
 | Auto-generated JSON schemas for all command inputs/outputs                        | `schemas/*.json`                                  |
@@ -71,7 +71,7 @@ All 26 issues (#90–#115) closed. Full detail: [`docs/archive/agent-plans/oclif
 | Abstract `BaseFrameworkPlugin` (core owns build/scaffold/Docker shape)            | `packages/contracts/src/framework-plugin.ts`      |
 | Concrete `ReactRspackPlugin` / `AngularWebpackPlugin`                              | `packages/framework-react/`, `packages/framework-angular/` |
 | `loadFrameworkPlugin()` resolution; `--framework` flag on `remote:init`           | `src/framework/loader.ts`                         |
-| `build:dev/prod/docker/check`, `remote:init`, `deploy` delegate to the plugin     | `src/commands/build/`, `src/commands/remote/`     |
+| `build:dev/prod/docker/check`, `remote:init` delegate to the plugin               | `src/commands/build/`, `src/commands/remote/`     |
 | Open `framework`/`bundler` manifest fields (unknown → stderr warn, not error)     | `packages/dsl/src/schema.ts` (`FrameworkSchema`/`BundlerSchema`; ADR-036, #181) |
 | Authoring guide                                                                   | [`docs/framework-plugin-authoring.md`](./framework-plugin-authoring.md) |
 
@@ -102,8 +102,8 @@ the `overwrite` flag on the generation plan, enforced by regenerating and diffin
 ### ADR Governance under Drift Control (ADR-075)
 
 Frontmatter is the source of truth; [`docs/spec.md#adr-index`](./spec.md#adr-index) and the PDR↔ADR
-map are generated from it. `adr:status` and `adr:validate` ship as commands. **79 ADRs**: 52
-Implemented, 14 Accepted, 11 Proposed, 1 Deferred, 1 Superseded.
+map are generated from it. `adr:status` and `adr:validate` ship as commands. The count and the status
+of each are in that generated index; a number written here went stale (it said 79 when there were 120).
 
 ### Agent Contract (ADR-077, epic #139)
 

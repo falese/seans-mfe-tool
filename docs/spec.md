@@ -288,7 +288,6 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-058](./architecture-decisions/ADR-058-slot-provider-mfes.md) | Slot-provider MFEs: MFEs contribute named slots to the host layout | Runtime / slots / composition | Implemented → ADR-068 |
 | [ADR-060](./architecture-decisions/ADR-060-contextualized-vm-composition.md) | Contextualized VM composition: value-injection, slot-scoped self-healing, and control-plane re-resolution | Runtime / composition / resilience / context | Implemented |
 | [ADR-061](./architecture-decisions/ADR-061-dsl-and-codegen-as-packages.md) | `@seans-mfe/dsl` and `@seans-mfe/codegen` as first-class packages; framework variant is injected, not resolved | Codegen / DSL / packaging | Implemented |
-| [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Implemented |
 | [ADR-063](./architecture-decisions/ADR-063-api-generation-as-a-plugin-axis.md) | API-backend generation is a plugin axis, not a wrapper around one OSS codegen | Codegen / API / plugins | Implemented |
 | [ADR-064](./architecture-decisions/ADR-064-runtime-as-a-published-package.md) | The runtime's future is a semver-published package, not a staged `dist/runtime` folder | Runtime / packaging / distribution | Accepted (impl deferred, #252) |
 | [ADR-065](./architecture-decisions/ADR-065-generated-api-reference.md) | Generated API Reference with Drift Gate; DSL Manifest JSON Schema from the Zod Source of Truth | Docs / tooling / packaging | Implemented → ADR-104 |
@@ -344,6 +343,10 @@ _Ratified decisions. These describe how the platform works today._
 | [ADR-118](./architecture-decisions/ADR-118-decompose-package.md) | The decomposition proposal model is a package, @seans-mfe/decompose; every command, plugin and library that reads or changes a proposal calls it in-process, and the CLI is one of its callers rather than the only door to it | Decomposition / packaging / layering | Implemented |
 | [ADR-119](./architecture-decisions/ADR-119-flows-as-data.md) | A flow is a YAML description of steps, their commands, their inputs and outputs and the human gates between them; its state is derived from the artifacts on disk, never recorded; flow:status reports it and names the next command | CLI / workflow | Implemented |
 | [ADR-120](./architecture-decisions/ADR-120-decomposition-agent-and-package.md) | The decomposition proposal model is a package that every caller reaches in-process, and the workspace's agent reaches a hosted model through the coder seam's API transport, its edits checked by the same deterministic floor before anything acts on them | Decomposition / packaging / agent | Implemented |
+| [ADR-121](./architecture-decisions/ADR-121-mcp-tool-calls-are-untrusted-input.md) | An MCP tool call is untrusted input: it is checked against the tool's schema, held inside a root directory, and offered only tools that can answer | CLI / MCP / safety | Implemented |
+| [ADR-122](./architecture-decisions/ADR-122-deploy-command-removed.md) | There is no `deploy` command; deployment returns as a plugin-resolved target axis, and `build:docker` is the way to an image until it does | Deploy / plugins / scope | Implemented |
+| [ADR-123](./architecture-decisions/ADR-123-bff-context-unverified-user-id.md) | A generated BFF names the id it reads from an unverified token `unverifiedUserId` | BFF / context / security | Implemented |
+| [ADR-124](./architecture-decisions/ADR-124-registry-writes-need-a-token-shell-allow-lists-origins.md) | A registry write needs the fleet's token, and a shell loads remotes only from origins it allows | Control plane / security / composition | Implemented |
 
 ### Proposed — filed, not ratified
 
@@ -379,6 +382,7 @@ _Retired by a later decision. Kept so the reasoning stays traceable._
 | [ADR-025](./architecture-decisions/ADR-025-platform-handler-interface.md) | Platform Handler Interface & Execution Model | Runtime handlers | Superseded → ADR-076 |
 | [ADR-039](./architecture-decisions/ADR-039-structured-logger-no-console-log.md) | Structured logger — no console.log in production code | CLI / logging | Superseded → ADR-081 |
 | [ADR-059](./architecture-decisions/ADR-059-base-control-plane.md) | BaseControlPlane: abstract base for all control-plane implementations | Runtime / control-plane / abstract-base | Superseded → ADR-105 |
+| [ADR-062](./architecture-decisions/ADR-062-deploy-is-dev-convenience-production-is-a-plugin-axis.md) | `deploy` is a dev-convenience wrapper; production deployment returns as a plugin-resolved target axis | Deploy / plugins / scope | Superseded → ADR-122 |
 | [ADR-117](./architecture-decisions/ADR-117-coder-api-transport-and-prompt-adaptors.md) | The coder seam gains an API transport to a hosted model and prompt adaptors that live in this repository; whatever the transport, coder's output is a typed artifact the deterministic floor checks before anything acts on it | Generation / coder seam / transports | Superseded → ADR-120 |
 
 <!-- END GENERATED: adr-index -->
