@@ -25,7 +25,7 @@
     "@seans-mfe/contracts": "file:../contracts",
     "@seans-mfe/dsl": "file:../dsl",
     "ejs": "^3.1.10",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.4.1",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
