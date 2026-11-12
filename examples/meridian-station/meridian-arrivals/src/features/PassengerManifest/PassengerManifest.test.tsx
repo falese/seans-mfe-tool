@@ -3,14 +3,14 @@
  */
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 
 const queryMock = jest.fn();
 jest.mock('../../platform/bff/bff', () => ({
   query: (...args: unknown[]) => queryMock(...args),
 }));
 
-import { PassengerManifest, groupByDocking } from './PassengerManifest';
+import { PassengerManifest, groupByDocking, matches } from './PassengerManifest';
 
 const DATA = {
   passengers: [
@@ -50,6 +50,31 @@ describe('PassengerManifest', () => {
     const ivo = (await screen.findByText('Ivo Marek')).closest('li') as HTMLElement;
     expect(within(ivo).getByText('FLAGGED')).toBeInTheDocument();
     expect(screen.getByText('DCK-009999 · no Harbormaster record')).toBeInTheDocument();
+  });
+
+  it('matches a passenger by name, any case, and by clearance', () => {
+    expect(matches(DATA.passengers[1], 'marek', 'ALL')).toBe(true);
+    expect(matches(DATA.passengers[1], 'marek', 'CLEARED')).toBe(false);
+    expect(matches(DATA.passengers[1], '', 'FLAGGED')).toBe(true);
+  });
+
+  it('narrows the manifest by name search, and says when nobody matches', async () => {
+    render(<PassengerManifest />);
+    const search = await screen.findByRole('searchbox', { name: 'Search passengers' });
+    fireEvent.change(search, { target: { value: 'lena' } });
+    expect(screen.getByText('Lena Brandt')).toBeInTheDocument();
+    expect(screen.queryByText('Rosa Delgado')).not.toBeInTheDocument();
+    fireEvent.change(search, { target: { value: 'nobody' } });
+    expect(screen.getByText('No passenger matches.')).toBeInTheDocument();
+  });
+
+  it('filters by clearance, keeping each group\'s heading and tally for what it shows', async () => {
+    render(<PassengerManifest />);
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Clearance' }), { target: { value: 'FLAGGED' } });
+    expect(screen.getByText('Ivo Marek')).toBeInTheDocument();
+    expect(screen.queryByText('Rosa Delgado')).not.toBeInTheDocument();
+    expect(screen.getByText('1 flagged')).toBeInTheDocument();
+    expect(screen.queryByText('DCK-004030 · VR-72410')).not.toBeInTheDocument();
   });
 
   it('shows the error when the BFF fails', async () => {

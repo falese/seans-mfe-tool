@@ -13,6 +13,7 @@
  *         - click: "text=Docking"          # any Playwright selector
  *         - fill: { selector: "#q", value: "VR" }
  *         - press: { selector: "#q", key: Enter }
+ *         - select: { selector: "#status", value: FLAGGED }   # a dropdown option, by value
  *         - wait: 250                      # milliseconds
  */
 
@@ -26,6 +27,7 @@ const StepSchema = z.union([
   z.object({ click: z.string().min(1) }).strict(),
   z.object({ fill: z.object({ selector: z.string().min(1), value: z.string() }).strict() }).strict(),
   z.object({ press: z.object({ selector: z.string().min(1), key: z.string().min(1) }).strict() }).strict(),
+  z.object({ select: z.object({ selector: z.string().min(1), value: z.string() }).strict() }).strict(),
   z.object({ wait: z.number().int().nonnegative() }).strict(),
 ]);
 
@@ -43,6 +45,7 @@ export function describeStep(step: JourneyStep): string {
   if ('click' in step) return `click ${step.click}`;
   if ('fill' in step) return `fill ${step.fill.selector}`;
   if ('press' in step) return `press ${step.press.key} on ${step.press.selector}`;
+  if ('select' in step) return `select ${step.select.value} in ${step.select.selector}`;
   return `wait ${step.wait}ms`;
 }
 
@@ -85,7 +88,7 @@ export function parseJourneys(text: string): Journey[] {
       const parsed = StepSchema.safeParse(s);
       if (!parsed.success) {
         throw new ValidationError(
-          `journey "${name}", step ${k + 1}: expected one of goto, click, fill, press, wait — got ${JSON.stringify(s)}`,
+          `journey "${name}", step ${k + 1}: expected one of goto, click, fill, press, select, wait — got ${JSON.stringify(s)}`,
           'journeys.steps',
           'step'
         );

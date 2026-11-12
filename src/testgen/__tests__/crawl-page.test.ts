@@ -59,3 +59,41 @@ describe('numberControls', () => {
     ]);
   });
 });
+
+describe('FIND_CONTROLS, forms', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <label for="q">Search passengers</label><input id="q" type="search" value="Ros" />
+      <input type="email" placeholder="Email" />
+      <input type="number" aria-label="Quantity" value="2" />
+      <textarea aria-label="Notes"></textarea>
+      <label>Clearance <select><option value="ALL">All</option><option value="FLAGGED" selected>Flagged</option></select></label>
+      <input type="hidden" name="secret" value="x" />
+      <input type="checkbox" aria-label="Only mine" checked />`;
+  });
+
+  it('finds text fields by label, placeholder or aria-label, with their input type', () => {
+    const fields = find().controls.filter((c) => (c as { input?: string }).input !== undefined);
+    expect(fields).toEqual([
+      { role: 'searchbox', name: 'Search passengers', input: 'search' },
+      { role: 'textbox', name: 'Email', input: 'email' },
+      { role: 'spinbutton', name: 'Quantity', input: 'number' },
+      { role: 'textbox', name: 'Notes', input: 'textarea' },
+    ]);
+  });
+
+  it('finds a dropdown with its option values', () => {
+    expect(find().controls.find((c) => c.role === 'combobox')).toEqual({ role: 'combobox', name: 'Clearance', options: ['ALL', 'FLAGGED'] });
+  });
+
+  it('reads every form value, so a fill is a new state', () => {
+    expect((find() as unknown as { values: string[] }).values).toEqual([
+      'searchbox:Search passengers=Ros',
+      'textbox:Email=',
+      'spinbutton:Quantity=2',
+      'textbox:Notes=',
+      'combobox:Clearance=FLAGGED',
+      'checkbox:Only mine=true',
+    ]);
+  });
+});

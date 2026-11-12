@@ -36,6 +36,13 @@ journeys:
       - click: role=tab[name="📦 PassengerManifest"s]
 ```
 
+Forms are crawled too. A text field is filled with a value of its type, or, for free text and
+search, with a word from the page's data and with one no page shows (the empty state); each
+other option of a dropdown is chosen (`select:`). Each form action is tried once, so every value
+is covered without every combination. On meridian-arrivals, a name search and a clearance
+filter take the crawl to 11 states and 32 interactions, and the recording to 33 journeys and
+126 checks.
+
 Edit the crawled file freely (add `fill` steps, drop what is not worth holding, rename) and
 commit it. `test:generate --url` records it and regenerates the tests; the recording itself is
 not kept unless you pass `--record-to`. On meridian-arrivals the crawl finds 2 states and 4

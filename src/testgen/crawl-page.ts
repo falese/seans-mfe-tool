@@ -17,6 +17,8 @@ import { selectorFor, type Control, type CrawlDriver, type CrawlState } from './
 interface RawControl {
   role: string;
   name: string;
+  input?: string;
+  options?: string[];
 }
 
 /**
@@ -26,7 +28,8 @@ interface RawControl {
  * import. `__tests__/crawl-page.test.ts` runs it in jsdom.
  */
 export const FIND_CONTROLS = `(() => {
-  const ROLES = ['button', 'link', 'tab', 'menuitem', 'checkbox', 'radio', 'switch', 'option'];
+  const ROLES = ['button', 'link', 'tab', 'menuitem', 'checkbox', 'radio', 'switch', 'option', 'textbox', 'searchbox', 'spinbutton', 'combobox'];
+  const FIELD_TYPES = { text: 'textbox', search: 'searchbox', email: 'textbox', tel: 'textbox', url: 'textbox', password: 'textbox', number: 'spinbutton', date: 'textbox' };
   const collapse = (s) => (s || '').replace(/\\s+/g, ' ').trim();
   const roleOf = (el) => {
     const explicit = el.getAttribute('role');
@@ -37,11 +40,24 @@ export const FIND_CONTROLS = `(() => {
       const href = el.href;
       return href.startsWith(location.origin) && !href.startsWith('javascript:') ? 'link' : null;
     }
+    if (tag === 'textarea') return 'textbox';
+    if (tag === 'select') return el.multiple || el.size > 1 ? null : 'combobox';
     if (tag === 'input') {
-      if (el.type === 'checkbox' || el.type === 'radio') return el.type;
-      if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') return 'button';
+      const type = (el.getAttribute('type') || 'text').toLowerCase();
+      if (type === 'checkbox' || type === 'radio') return type;
+      if (type === 'button' || type === 'submit' || type === 'reset') return 'button';
+      return FIELD_TYPES[type] || null;
     }
     return null;
+  };
+  const isField = (el) => el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'reset'].includes((el.getAttribute('type') || 'text').toLowerCase()));
+  const labelText = (el) => {
+    const labels = el.labels ? Array.from(el.labels) : [];
+    return collapse(labels.map((l) => {
+      const copy = l.cloneNode(true);
+      copy.querySelectorAll('select, input, textarea').forEach((x) => x.remove());
+      return copy.textContent;
+    }).join(' '));
   };
   const nameOf = (el) => {
     const label = el.getAttribute('aria-label');
@@ -51,6 +67,7 @@ export const FIND_CONTROLS = `(() => {
       const text = collapse(by.split(/\\s+/).map((id) => (document.getElementById(id) || {}).textContent || '').join(' '));
       if (text) return text;
     }
+    if (isField(el) || el.tagName === 'SELECT') return labelText(el) || collapse(el.getAttribute('placeholder') || el.getAttribute('title') || '');
     return collapse(el.textContent) || collapse(el.getAttribute('title') || el.value || '');
   };
   const visible = (el) => {
@@ -66,14 +83,21 @@ export const FIND_CONTROLS = `(() => {
     return true;
   };
   const controls = [];
-  for (const el of Array.from(document.querySelectorAll('button, a[href], summary, input, [role]'))) {
+  const values = [];
+  for (const el of Array.from(document.querySelectorAll('button, a[href], summary, input, textarea, select, [role]'))) {
     const role = roleOf(el);
     if (!role || !visible(el)) continue;
     const name = nameOf(el);
-    if (name) controls.push({ role, name });
+    if (!name) continue;
+    const control = { role, name };
+    if (el.tagName === 'SELECT') control.options = Array.from(el.options).map((o) => o.value);
+    else if (isField(el)) control.input = el.tagName === 'TEXTAREA' ? 'textarea' : (el.getAttribute('type') || 'text').toLowerCase();
+    controls.push(control);
+    if (control.options || control.input !== undefined) values.push(role + ':' + name + '=' + el.value);
+    else if (role === 'checkbox' || role === 'radio' || role === 'switch') values.push(role + ':' + name + '=' + String(!!el.checked));
   }
   const route = location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname + location.search;
-  return { path: route, text: ((document.body && document.body.innerText) || (document.body && document.body.textContent) || '').slice(0, 20000), controls };
+  return { path: route, text: ((document.body && document.body.innerText) || (document.body && document.body.textContent) || '').slice(0, 20000), controls, values };
 })()`;
 
 /** Raw controls numbered among their equals (same role and name), as `selectorFor` addresses them. */
@@ -85,7 +109,7 @@ export function numberControls(raw: RawControl[]): Control[] {
     const key = `${c.role}\0${c.name}`;
     const index = seen.get(key) ?? 0;
     seen.set(key, index + 1);
-    return { role: c.role, name: c.name, index, of: totals.get(key) ?? 1 };
+    return { ...c, index, of: totals.get(key) ?? 1 };
   });
 }
 
@@ -94,6 +118,7 @@ interface CrawlPage {
   click(selector: string, opts?: { timeout?: number }): Promise<void>;
   fill(selector: string, value: string, opts?: { timeout?: number }): Promise<void>;
   press(selector: string, key: string, opts?: { timeout?: number }): Promise<void>;
+  selectOption(selector: string, value: string, opts?: { timeout?: number }): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
   waitForLoadState(state: 'networkidle', opts?: { timeout?: number }): Promise<void>;
   evaluate<T>(fn: string): Promise<T>;
@@ -124,13 +149,13 @@ export async function pageDriver(opts: { url: string; viewport: { width: number;
           await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => undefined);
         }
         await page.waitForTimeout(opts.settleMs);
-        const seen = await page.evaluate<{ path: string; text: string; controls: RawControl[] }>(FIND_CONTROLS);
+        const seen = await page.evaluate<{ path: string; text: string; controls: RawControl[]; values: string[] }>(FIND_CONTROLS);
         const controls: Control[] = [];
         for (const c of numberControls(seen.controls)) {
           // Only what the runner will find again, exactly once.
           if ((await page.locator(selectorFor(c)).count()) === 1) controls.push(c);
         }
-        return { path: seen.path, text: seen.text, controls };
+        return { path: seen.path, text: seen.text, controls, values: seen.values };
       } finally {
         await page.close();
       }

@@ -209,10 +209,22 @@ authors:
   Selectors that do not resolve to exactly one element on the live page are dropped, so the
   file names nothing the runner cannot find.
 
+**Forms.** A text field is filled, not clicked: a typed field (`email`, `url`, `tel`, `number`,
+`date`, `password`) with a value of its type; a free-text or search field with the median word
+of the page's text (the page's data, not its title — a likely match) and with a word no page
+shows (the empty, no-results state). A dropdown has each of its other options chosen, up to
+five, through the DSL's `select` step. Form values are part of a state's identity, so a fill
+that shows nothing until submitted is still a new state. A form action — a value into a field,
+an option of a dropdown — is performed once, from the first state that offers it: every value
+is exercised without trying every combination. Clicks are still tried in every state.
+
 `test:generate <mfe> --url <url>` records the journey file against the running MFE and generates
 the tests from the recording. With no journey file it crawls first and writes one. The recording
 is a means, not an artifact: the journey file and the generated tests are what is committed.
 `--evidence` still generates from an existing bundle, as decomposition does.
+
+Generated journey specs compare console errors with source locations masked: a rebuild renames
+the bundle (`main.c8107cfa.js:42548`) without changing what was logged.
 
 ### 10. Generated with the MFE: platform conformance
 

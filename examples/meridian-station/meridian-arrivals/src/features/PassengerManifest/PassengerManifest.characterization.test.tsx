@@ -14,8 +14,13 @@ import React from 'react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import { PassengerManifest } from './PassengerManifest';
 import { installRecordedNetwork, missingText, type RecordedNetwork, type RecordedResponse } from '../../__smt__/recorded-network';
-import recorded from '../../__smt__/recorded.json';
-import evidence from './__characterization__/PassengerManifest.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read, not imported: an MFE's tsconfig need not allow JSON modules (an Angular spec config does not).
+const json = <T,>(file: string): T => JSON.parse(readFileSync(join(__dirname, file), 'utf8')) as T;
+const recorded = json<Record<string, unknown>>('../../__smt__/recorded.json');
+const evidence = json<{ app: string; clock: string; cases: Array<{ step: string; path: string; regions: Array<{ region: string; text: string }>; calls: string[]; consoleErrors: string[] }> }>('./__characterization__/PassengerManifest.json');
 
 /** What jsdom logs and a browser never would. */
 const JSDOM_NOISE = [/not wrapped in act\(/, /Not implemented: /, /ReactDOMTestUtils\.act/];

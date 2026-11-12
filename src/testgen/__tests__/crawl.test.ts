@@ -1,4 +1,4 @@
-import { crawl, journeysYaml, selectorFor, stateSignature, type CrawlDriver, type CrawlState } from '../crawl';
+import { crawl, journeysYaml, sampleInputs, selectorFor, stateSignature, type CrawlDriver, type CrawlState } from '../crawl';
 import { parseJourneys, type JourneyStep } from '../../decompose/journeys';
 
 describe('selectorFor', () => {
@@ -91,3 +91,63 @@ describe('crawl', () => {
   });
 });
 
+
+/** A passenger list with a name search and a clearance dropdown; values change what is shown. */
+function formApp(): CrawlDriver {
+  const people = ['Rosa Delgado', 'Ivo Marek', 'Lena Novak'];
+  const clearance: Record<string, string> = { 'Rosa Delgado': 'CLEARED', 'Ivo Marek': 'FLAGGED', 'Lena Novak': 'PENDING' };
+  return {
+    async open(steps: JourneyStep[]) {
+      let q = '';
+      let c = 'ALL';
+      for (const s of steps) {
+        if ('fill' in s) q = s.fill.value;
+        if ('select' in s) c = s.select.value;
+      }
+      const shown = people.filter((p) => p.toLowerCase().includes(q.toLowerCase()) && (c === 'ALL' || clearance[p] === c));
+      return {
+        path: '/',
+        text: shown.length > 0 ? `Passengers ${shown.join(' ')}` : 'Passengers No passenger matches',
+        controls: [
+          { role: 'searchbox', name: 'Search passengers', index: 0, of: 1, input: 'search' },
+          { role: 'combobox', name: 'Clearance', index: 0, of: 1, options: ['ALL', 'CLEARED', 'FLAGGED', 'PENDING'] },
+        ],
+        values: [`searchbox:Search passengers=${q}`, `combobox:Clearance=${c}`],
+      };
+    },
+  };
+}
+
+describe('crawl, with forms', () => {
+  it('fills a text box with a word from the data the page shows and with one it does not: a match and the empty state', async () => {
+    const result = await crawl(formApp(), { start: '/', maxInteractions: 50 });
+    const first = result.journeys.filter((j) => j.steps.length === 2 && 'fill' in j.steps[1]).map((j) => (j.steps[1] as { fill: { value: string } }).fill.value);
+    // The median word of the page, not its title: on a data page that falls in the data.
+    expect(first).toEqual(['Marek', 'zzzz-no-match']);
+  });
+
+  it('chooses each option of a dropdown other than the current one', async () => {
+    const result = await crawl(formApp(), { start: '/', maxInteractions: 50 });
+    const first = result.journeys.filter((j) => j.steps.length === 2 && 'select' in j.steps[1]).map((j) => (j.steps[1] as { select: { value: string } }).select.value);
+    expect(first).toEqual(['CLEARED', 'FLAGGED', 'PENDING']);
+  });
+
+  it('treats form values as part of a state, so a fill that shows nothing yet is still a new state', async () => {
+    const result = await crawl(formApp(), { start: '/', maxInteractions: 200 });
+    expect(result.states).toBeGreaterThan(4);
+  });
+
+  it('performs each form action once, not once per combination: every value, without the explosion', async () => {
+    const result = await crawl(formApp(), { start: '/', maxInteractions: 200 });
+    const actions = result.journeys.map((j) => JSON.stringify(j.steps[j.steps.length - 1])).filter((a) => a.includes('fill') || a.includes('select'));
+    expect(new Set(actions).size).toBe(actions.length);
+    expect(result.truncated).toBe(false);
+  });
+
+  it('suggests values by input type', () => {
+    expect(sampleInputs({ role: 'textbox', name: 'Email', index: 0, of: 1, input: 'email' }, 'x')).toEqual(['test@example.com']);
+    expect(sampleInputs({ role: 'spinbutton', name: 'Qty', index: 0, of: 1, input: 'number' }, 'x')).toEqual(['1']);
+    expect(sampleInputs({ role: 'searchbox', name: 'Q', index: 0, of: 1, input: 'search' }, 'Vessel Registry 8 vessels')).toEqual(['Registry', 'zzzz-no-match']);
+    expect(sampleInputs({ role: 'searchbox', name: 'Q', index: 0, of: 1, input: 'search' }, '12 34')).toEqual(['zzzz-no-match']);
+  });
+});

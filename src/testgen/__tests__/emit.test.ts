@@ -54,6 +54,15 @@ describe('generated sources', () => {
     expect(files['connector.contract.ts']).not.toContain('reports an upstream failure');
   });
 
+  it('compares console errors with source locations masked: a rebuild renames the bundle', () => {
+    const js = ts.transpileModule(/(function consoleKey[\s\S]*?\n}\n)/.exec(files['journeys.spec.ts'])?.[1] ?? 'missing', { compilerOptions: { target: ts.ScriptTarget.ES2022 } });
+    const consoleKey = new Function(`${js.outputText}; return consoleKey;`)() as (t: string) => string;
+    expect(consoleKey('Warning: x\n    at Tabs (http://localhost:5008/main.c8107cfac3fe0a0e.js:42548:75)')).toBe(
+      consoleKey('Warning: x\n    at Tabs (http://localhost:5008/main.9dbe186b68f666d5.js:42577:75)')
+    );
+    expect(consoleKey('Warning: x')).not.toBe(consoleKey('Warning: y'));
+  });
+
   it('runs the connector live, past the demo-mode switch (ADR-052)', () => {
     expect(files['connector.contract.ts']).toContain("'x-bff-mode': 'live'");
     expect(files['connector.contract.ts']).toContain('options.fetchFn =');

@@ -41,6 +41,14 @@ export function groupByDocking(passengers: Passenger[], dockings: Docking[]): Ar
   });
 }
 
+/** Clearance filter values: every passenger, or one clearance status. */
+const CLEARANCES = ['ALL', 'CLEARED', 'FLAGGED', 'PENDING'];
+
+/** Whether a passenger is shown: the name contains the search (any case), and the clearance fits. */
+export function matches(p: Passenger, search: string, clearance: string): boolean {
+  return p.passengerName.toLowerCase().includes(search.trim().toLowerCase()) && (clearance === 'ALL' || p.clearanceStatus === clearance);
+}
+
 /** "6 cleared · 1 flagged · 1 pending", omitting zeroes. */
 function tally(passengers: Passenger[]): string {
   const count = (s: string) => passengers.filter((p) => p.clearanceStatus === s).length;
@@ -61,6 +69,8 @@ export type PassengerManifestProps = Record<string, never>;
 export const PassengerManifest: React.FC<PassengerManifestProps> = () => {
   const [data, setData] = useState<ManifestData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [clearance, setClearance] = useState('ALL');
 
   useEffect(() => {
     query<ManifestData>(MANIFEST_QUERY).then(setData).catch((err) => setError(String(err?.message ?? err)));
@@ -69,11 +79,38 @@ export const PassengerManifest: React.FC<PassengerManifestProps> = () => {
   if (error) return <div style={wrap}><p style={{ color: '#c33b4e' }}>Passenger manifest unavailable: {error}</p></div>;
   if (!data) return <div style={wrap}><p style={{ color: '#5d6690' }}>Reading the manifests…</p></div>;
 
+  const shown = data.passengers.filter((p) => matches(p, search, clearance));
+
   return (
     <div style={wrap}>
       <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>🧳 Passenger Manifest</h2>
-      <p style={{ margin: '0 0 16px', color: '#5d6690', fontSize: 12 }}>StationOS passengers · Harbormaster arrivals</p>
-      {groupByDocking(data.passengers, data.listDockings).map((g) => (
+      <p style={{ margin: '0 0 12px', color: '#5d6690', fontSize: 12 }}>StationOS passengers · Harbormaster arrivals</p>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <input
+          type="search"
+          aria-label="Search passengers"
+          placeholder="Search by name"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, background: '#141a33', color: '#dfe4ff', border: '1px solid #1c2340', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+        />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8b93b5' }}>
+          Clearance
+          <select
+            value={clearance}
+            onChange={(e) => setClearance(e.target.value)}
+            style={{ background: '#141a33', color: '#dfe4ff', border: '1px solid #1c2340', borderRadius: 6, padding: '5px 6px', fontSize: 12 }}
+          >
+            {CLEARANCES.map((c) => (
+              <option key={c} value={c}>
+                {c === 'ALL' ? 'All' : c}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {shown.length === 0 && <p style={{ color: '#5d6690', fontSize: 12 }}>No passenger matches.</p>}
+      {groupByDocking(shown, data.listDockings).map((g) => (
         <section key={g.dockingNo} style={group} data-docking={g.dockingNo}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
             <strong style={{ fontSize: 13 }}>

@@ -9,8 +9,13 @@
  * the built Mesh answering its GraphQL from these recordings — is
  * ../contract/connector.contract.ts, run by `npm run test:contract`.
  */
-import fixtures from '../contract/recorded.json';
-import mocks from '../mocks.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read, not imported: an MFE's tsconfig need not allow JSON modules.
+const json = (file: string): unknown => JSON.parse(readFileSync(join(__dirname, file), 'utf8'));
+const fixtures = json('../contract/recorded.json') as { operations: unknown[] };
+const mocks = json('../mocks.json');
 import { schemaErrors, type Schema } from '../contract/schema-check';
 
 interface Recorded { call: string; field: string; hoist?: { prop: string; field: string }; schema: Schema; status: number; body: unknown }

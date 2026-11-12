@@ -20,7 +20,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import evidence from './characterization/evidence.json';
 
-type Action = { goto: string } | { click: string } | { fill: { selector: string; value: string } } | { press: { selector: string; key: string } } | { wait: number };
+type Action = { goto: string } | { click: string } | { fill: { selector: string; value: string } } | { press: { selector: string; key: string } } | { select: { selector: string; value: string } } | { wait: number };
 interface Rect { x: number; y: number; width: number; height: number }
 
 const TARGET = new URL(process.env.SMT_TARGET_URL ?? evidence.app);
@@ -78,11 +78,20 @@ function missingText(pageText: string, expected: string): string | null {
   return null;
 }
 
+/**
+ * A console message as compared with the baseline's: source locations masked, since a rebuild
+ * renames the bundle (`main.c8107cfa.js:42548:75`) without changing what was logged.
+ */
+function consoleKey(text: string): string {
+  return text.replace(/https?:\/\/[^\s)]+/g, '<src>').replace(/\s+/g, ' ').trim();
+}
+
 async function act(page: Page, a: Action): Promise<void> {
   if ('goto' in a) await page.goto(new URL(a.goto, TARGET).toString());
   else if ('click' in a) await page.click(a.click);
   else if ('fill' in a) await page.fill(a.fill.selector, a.fill.value);
   else if ('press' in a) await page.press(a.press.selector, a.press.key);
+  else if ('select' in a) await page.selectOption(a.select.selector, a.select.value);
   else await page.waitForTimeout(a.wait);
 }
 
@@ -150,7 +159,8 @@ for (const journey of evidence.journeys) {
             expect(shot).toMatchSnapshot(`${cap.visual.name}.png`);
           }
         }
-        const fresh = errors.splice(0).filter((e) => !step.consoleErrors.some((known) => e.includes(known) || known.includes(e)));
+        const known = new Set(step.consoleErrors.map(consoleKey));
+        const fresh = errors.splice(0).filter((e) => !known.has(consoleKey(e)));
         expect(fresh, 'new console errors').toEqual([]);
       });
     }

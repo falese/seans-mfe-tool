@@ -51,6 +51,7 @@ interface PageLike {
   click(selector: string, opts?: { timeout?: number }): Promise<void>;
   fill(selector: string, value: string, opts?: { timeout?: number }): Promise<void>;
   press(selector: string, key: string, opts?: { timeout?: number }): Promise<void>;
+  selectOption(selector: string, value: string, opts?: { timeout?: number }): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
   evaluate<T>(fn: () => T): Promise<T>;
   evaluate<T>(fn: string): Promise<T>;
@@ -408,7 +409,7 @@ export function replayAnswer(method: string, url: string, appUrl: string, record
  * or skipped, rather than aborting the capture (#442).
  */
 export async function performStep(
-  page: Pick<PageLike, 'goto' | 'click' | 'fill' | 'press' | 'waitForTimeout'>,
+  page: Pick<PageLike, 'goto' | 'click' | 'fill' | 'press' | 'selectOption' | 'waitForTimeout'>,
   step: JourneyStep,
   appUrl: string,
   opts: { optional: boolean; fallbackHref?: string }
@@ -423,6 +424,8 @@ export async function performStep(
       await page.fill(step.fill.selector, step.fill.value, { timeout });
     } else if ('press' in step) {
       await page.press(step.press.selector, step.press.key, { timeout });
+    } else if ('select' in step) {
+      await page.selectOption(step.select.selector, step.select.value, { timeout });
     } else {
       await page.waitForTimeout(step.wait);
     }
