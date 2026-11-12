@@ -29,7 +29,7 @@ describe('generated sources', () => {
     expect(files['connector.contract.ts']).toContain('const ISO = /^\\d{4}-\\d{2}-\\d{2}T');
     expect(files['journeys.spec.ts']).toContain("pageText.replace(/\\s+/g, '')");
     expect(files['journeys.spec.ts']).toContain('/\\/graphql\\/?(\\?|$)/');
-    expect(files['playwright.config.ts']).toContain('testMatch: /characterization\\.spec\\.ts$/');
+    expect(files['playwright.config.ts']).toContain('testMatch: /characterization\\.e2e\\.ts$/');
     expect(files['alone.test.tsx']).toContain('/not wrapped in act\\(/');
   });
 

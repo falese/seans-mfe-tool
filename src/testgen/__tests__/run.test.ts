@@ -10,7 +10,7 @@ const rules = [
       { when: { stateKey: 'meridian.open.arrivals' }, resolve: { capability: 'PassengerManifest', props: { slot: 'console/status' } } },
     ],
   },
-  { registration: { name: 'docking' }, routes: [{ when: { stateKey: 'meridian.berth.b1' }, resolve: { capability: 'BerthTile', props: { slot: 'console/berth.b1' } } }] },
+  { registration: { name: 'docking' }, routes: [{ when: { stateKey: 'meridian.berth.b1' }, resolve: { capability: 'BerthTile', props: { slot: 'console/berth.b1', berthId: 'b1' } } }] },
 ];
 
 describe('compositionOf', () => {
@@ -26,6 +26,11 @@ describe('compositionOf', () => {
       ['meridian.berth.b1', ['docking/BerthTile→console/berth.b1']],
       ['meridian.open.arrivals', ['arrivals/VesselRegistry→console/main', 'arrivals/PassengerManifest→console/status']],
     ]);
+  });
+
+  it('carries the props each placement passes, beside its slot', () => {
+    expect(c.actions[1].placements[0].props).toEqual({ berthId: 'b1' });
+    expect(c.actions[0].placements[0].props).toEqual({});
   });
 
   it('carries each placement\'s remote entry, to tell an unserved remote from a broken one', () => {
@@ -64,6 +69,11 @@ describe('replayLookup', () => {
   it('answers a request to an MFE\'s origin from that MFE\'s recording, by body first', () => {
     expect(replayLookup('POST', 'http://localhost:5008/graphql', '{"query":"{ b }"}', responses)?.body).toEqual({ data: { b: 2 } });
     expect(replayLookup('POST', 'http://localhost:5008/graphql', '{"query":"{ a }"}', responses)?.body).toEqual({ data: { a: 1 } });
+  });
+
+  it('answers a call recorded through the capability host by its full URL: the host is not the MFE\'s origin', () => {
+    const hosted = new Map([['http://localhost:5180', { [bodyKey('POST', 'http://localhost:5004/graphql', '{"query":"{ c }"}')]: { status: 200, mimeType: 'application/json', body: { data: { c: 3 } } } }]]);
+    expect(replayLookup('POST', 'http://localhost:5004/graphql', '{"query":"{ c }"}', hosted)?.body).toEqual({ data: { c: 3 } });
   });
 
   it('lets anything else through', () => {

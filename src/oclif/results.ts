@@ -578,3 +578,11 @@ export interface TestRunResult {
   report: { json: string; markdown: string };
   summary: RunReport;
 }
+
+/** test:host — the capability host it served (ADR-129 §13). */
+export interface TestHostResult {
+  mfe: string;
+  url: string;
+  capabilities: string[];
+  remoteEntryUrl: string;
+}

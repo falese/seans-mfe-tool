@@ -178,6 +178,11 @@ describe('dev-server traffic (#442)', () => {
     expect(isInfrastructureRequest('/api/__control-plane')).toBe(false);
     expect(isInfrastructureRequest('/api/tags')).toBe(false);
   });
+
+  it('treats the capability host\'s own runtime as infrastructure: the host is not the MFE (ADR-129 §13)', () => {
+    expect(isInfrastructureRequest('http://localhost:51234/__smt-host/runtime/layout-adaptors.js')).toBe(true);
+    expect(isInfrastructureRequest('http://localhost:5004/graphql')).toBe(false);
+  });
   it('leaves dev-server requests out of the bundle', () => {
     const r = run();
     r.requests.push({ step: 0, method: 'GET', url: 'http://localhost:5090/sockjs-node/info?t=1', initiator: [], status: 200, mimeType: 'application/json', body: {} });

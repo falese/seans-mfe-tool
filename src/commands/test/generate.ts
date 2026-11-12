@@ -21,6 +21,7 @@ import { BaseCommand } from '../../oclif/BaseCommand';
 import { readJourneysFile } from '../../decompose/journeys';
 import { generateFleetTests, generateTests, type GeneratedMfeTests } from '../../testgen/generate';
 import { crawlToFile, parseViewport, recordJourneys } from '../../testgen/record';
+import { HOST_PORT, withHost } from '../../testgen/host';
 import type { TestGenerateResult } from '../../oclif/results';
 
 export default class TestGenerate extends BaseCommand<TestGenerateResult> {
@@ -34,13 +35,21 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
 
   static examples = [
     '$ seans-mfe-tool test:generate ./my-mfe --url http://localhost:5008 --upstream',
+    '$ seans-mfe-tool test:generate ./meridian-cargo-ops --host --remote http://localhost:5004 --upstream',
     '$ seans-mfe-tool test:generate ./my-mfe --evidence ./evidence',
     '$ seans-mfe-tool test:generate ./evidence/proposal --proposal',
   ];
 
   static flags = {
     ...BaseCommand.baseFlags,
-    evidence: Flags.string({ description: 'The evidence bundle (default with --proposal: the bundle holding the proposal)', exclusive: ['url'] }),
+    evidence: Flags.string({ description: 'The evidence bundle (default with --proposal: the bundle holding the proposal)', exclusive: ['url', 'host'] }),
+    host: Flags.boolean({
+      description: 'Record the MFE through the capability host: each capability mounted by the platform, as a shell mounts it, in any framework (ADR-129 §13)',
+      default: false,
+      exclusive: ['url'],
+    }),
+    remote: Flags.string({ description: 'With --host, the origin the MFE is served from (default: its manifest\'s remoteEntry)' }),
+    port: Flags.integer({ description: 'With --host, the port to serve the host on: the journey spec replays against test:host there', default: HOST_PORT }),
     url: Flags.string({
       description: 'Record the MFE running here: its journey file is driven and the tests generated from what it did. With no journey file, the MFE is crawled first and one written',
     }),
@@ -78,8 +87,7 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
     const outDir = path.resolve(o.recordTo ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'smt-record-'))));
     const journeys = await readJourneysFile(file);
     this.log(chalk.blue(`  recording ${journeys.length} journey(s) from ${path.relative(process.cwd(), file)} against ${url}`));
-    const { stats } = await recordJourneys({ url, journeys, outDir, viewport, clock, settleMs: 500 });
-    if (stats.sourceCoverage.mappedToSource === 0) this.warnings.push('no region maps to a source file — record a React development build');
+    await recordJourneys({ url, journeys, outDir, viewport, clock, settleMs: 500 });
     return outDir;
   }
 
@@ -95,13 +103,15 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
       const marker = path.join(target, 'tests.json');
       await fs.writeJson(marker, { mfes: results.map((r) => r.mfe) }, { spaces: 2 });
       await writeProvenance(marker, [path.join(target, 'decomposition.yaml'), path.join(evidence, 'requests.json')]);
-    } else if (flags.url) {
-      evidence = await this.record(target, flags.url, {
+    } else if (flags.url || flags.host) {
+      const record = (url: string) =>
+        this.record(target, url, {
         journeys: flags.journeys,
         recordTo: flags['record-to'],
         clock: flags.clock,
-        viewport: flags.viewport,
-      });
+          viewport: flags.viewport,
+        });
+      evidence = flags.host ? await withHost(target, { remote: flags.remote, port: flags.port }, (url) => record(url)) : await record(flags.url as string);
       results = [await generateTests({ mfeDir: target, evidenceDir: evidence, appDir: flags['app-dir'], force: flags.force, upstream: flags.upstream })];
       if (!flags['record-to']) await fs.remove(evidence);
     } else {
@@ -122,7 +132,8 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
       if (r.removed.length > 0) this.log(chalk.gray(`      removed ${r.removed.length} file(s) no longer generated`));
       for (const k of r.kept) this.warnings.push(`${r.mfe}: ${k} was changed since it was generated — kept (--force replaces it)`);
     }
-    this.log(chalk.gray('\n  next: in each MFE, npm test; npm run test:contract; SMT_TARGET_URL=<the captured app> npm run test:e2e — then any shell it composes into\n'));
+    const e2e = flags.host ? `seans-mfe-tool test:host ${args.target} --port ${flags.port} & npm run test:e2e` : 'SMT_TARGET_URL=<the captured app> npm run test:e2e';
+    this.log(chalk.gray(`\n  next: in each MFE, npm test; npm run test:contract; ${e2e} — then any shell it composes into\n`));
     return {
       evidence,
       mfes: results.map(({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, removed, warnings, report }) => ({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, removed, warnings, report })),

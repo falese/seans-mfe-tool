@@ -7,7 +7,7 @@
  *   src/features/<Cap>/<Cap>.characterization.test.tsx   each capability alone, in jsdom (§3)
  *   src/features/<Cap>/__characterization__/<Cap>.json   its cases
  *   src/__smt__/recorded-network.ts, recorded.json        the harness and the capture's responses
- *   e2e/characterization.spec.ts                          every journey: text, calls, console, pixels (§4)
+ *   e2e/characterization.e2e.ts                          every journey: text, calls, console, pixels (§4)
  *   e2e/characterization/evidence.json, baselines/*.png   its data and the visual baselines
  *   playwright.characterization.config.ts
  *   src/platform/bff/__tests__/contract.test.ts           the BFF's provider contract (§5)
@@ -25,6 +25,8 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { BusinessError, ValidationError } from '@seans-mfe/contracts';
+import { resolveWebTarget } from '@seans-mfe/codegen';
+import type { DSLManifest } from '@seans-mfe/dsl';
 import { bffOperations, readDecomposition, readSpecs, type Decomposition, type HoistRule, type OpenApiDocument } from '@seans-mfe/decompose';
 import { parseJourneys } from '../decompose/journeys';
 import { planContracts, upstreamRequests, type ContractPlan, type RecordedResponse } from './contract';
@@ -172,6 +174,8 @@ export async function readEvidence(dir: string): Promise<{ evidence: Evidence; r
 
 interface Manifest {
   name: string;
+  framework?: string;
+  targets?: { web?: { framework?: string; bundler?: string } };
   capabilities: Array<Record<string, { type?: string } | undefined>>;
   data?: {
     sources?: Array<{
@@ -206,9 +210,14 @@ export function testTarget(manifest: Manifest, doc?: Decomposition): TestTarget 
     .map(([name]) => name);
   const component = (name: string) => domain?.capabilities.find((c) => c.name === name)?.component ?? name;
   const repeated = new Map((doc?.repeated ?? []).map((r) => [r.capability, r.renderedBy]));
+  // Alone tests render React components in jsdom. Another framework's capability is held by
+  // the browser tiers, which mount it through the platform (ADR-129 §13).
+  const { framework } = resolveWebTarget(manifest as unknown as DSLManifest);
+  const otherFramework = framework !== 'react' ? `alone tests render React in jsdom; an ${framework} capability is held by its journey spec and its pack, recorded through the capability host` : null;
   const capabilities = own.map((name) => {
     const by = repeated.get(name);
-    return { name, component: component(name), ...(by ? { notAlone: `drawn by ${by} once per item, with props only it has; its journey checks cover it` } : {}) };
+    const notAlone = by ? `drawn by ${by} once per item, with props only it has; its journey checks cover it` : otherFramework;
+    return { name, component: component(name), ...(notAlone ? { notAlone } : {}) };
   });
   // Where a capability's view stops: every capability a composition places, anywhere.
   const placed = doc
@@ -351,13 +360,13 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
   const manifest = yaml.load(await fs.readFile(manifestFile, 'utf8')) as Manifest;
   const doc = opts.proposalDir ? await readDecomposition(path.join(path.resolve(opts.proposalDir), 'decomposition.yaml')) : undefined;
   const { evidence, responses } = await readEvidence(evidenceDir);
-  // Steps were captured, yet no element mapped to a component: the page is a production
-  // build (no React debug source) or not the app. Generating from it would write an empty
+  // Steps were captured, yet nothing mapped to a capability: no boundary stamp (not recorded
+  // through the host) and no React debug source (a production build), or not the app. Generating from it would write an empty
   // suite and remove the real one, so stop before anything is written.
   const steps = evidence.journeys.flatMap((j) => j.steps);
   if (steps.length > 0 && steps.every((s) => s.regions.length === 0)) {
     throw new BusinessError(
-      `none of ${steps.length} captured steps attributed anything to source — record against a development build (React's debug source), not a production one; nothing was written`,
+      `none of ${steps.length} captured steps attributed anything to a capability — record through the capability host (--host), which works for any framework and build, or against a React development build; nothing was written`,
       'NOTHING_ATTRIBUTED',
       { evidence: evidenceDir, steps: steps.length }
     );
@@ -403,7 +412,7 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
     await out.write(`e2e/packs/${pack.capability}.json`, json({ _comment: `${GENERATED_MARK}. Run by test:run in a composition.`, ...pack }));
   }
   await out.write('e2e/characterization/evidence.json', json(journeyEvidence(plan, responses, specs, gateway, hoists)));
-  await out.write('e2e/characterization.spec.ts', journeySpecSource(plan.mfe, plan.app));
+  await out.write('e2e/characterization.e2e.ts', journeySpecSource(plan.mfe, plan.app));
   await out.write('playwright.characterization.config.ts', playwrightConfigSource(plan.viewport));
 
   // §5 — the BFF's contract.

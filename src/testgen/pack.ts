@@ -31,6 +31,18 @@ export interface PackCase {
   steps: PackStep[];
   /** Console errors its recording already had, by `consoleKey`: pinned, not new. */
   knownConsole: string[];
+  /**
+   * The props it was mounted with: the capability host takes them from its route
+   * (`/#/BerthTile?berthId=b2`, ADR-129 §13). A host placement passing others shows
+   * something else, so the case is not that placement's.
+   */
+  props: Record<string, string>;
+}
+
+/** Props from a hosted route's query: `/BerthTile?berthId=b2` → `{ berthId: 'b2' }`. */
+export function routeProps(route: string): Record<string, string> {
+  const q = route.indexOf('?');
+  return q < 0 ? {} : Object.fromEntries(new URLSearchParams(route.slice(q + 1)).entries());
 }
 
 export interface CapabilityPack {
@@ -68,9 +80,10 @@ export function planPacks(plan: TestPlan): CapabilityPack[] {
         for (const e of journey.steps[k].consoleErrors) known.add(consoleKey(e));
       }
       const cases = byCapability.get(capability) ?? [];
-      const key = JSON.stringify(steps.map((s) => s.action));
-      if (!cases.some((c) => JSON.stringify(c.steps.map((s) => s.action)) === key)) {
-        cases.push({ name: journey.name, expect: on(first)?.regions ?? [], steps, knownConsole: [...known] });
+      const props = routeProps(journey.steps[first].path);
+      const key = JSON.stringify([props, steps.map((s) => s.action)]);
+      if (!cases.some((c) => JSON.stringify([c.props, c.steps.map((s) => s.action)]) === key)) {
+        cases.push({ name: journey.name, expect: on(first)?.regions ?? [], steps, knownConsole: [...known], props });
       }
       byCapability.set(capability, cases);
     }

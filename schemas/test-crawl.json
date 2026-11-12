@@ -8,12 +8,24 @@
     "properties": {
       "url": {
         "type": "string",
-        "description": "The running MFE (its standalone page)"
+        "description": "The running MFE (its standalone page); omit with --host"
       },
       "out": {
         "type": "string",
-        "description": "The journey file to write",
-        "default": "./journeys.yaml"
+        "description": "The journey file to write (default: ./journeys.yaml, or <mfe>/journeys.yaml with --host)"
+      },
+      "host": {
+        "type": "string",
+        "description": "Crawl this MFE directory through the capability host: each capability mounted by the platform, in any framework (ADR-129 §13)"
+      },
+      "remote": {
+        "type": "string",
+        "description": "With --host, the origin the MFE is served from (default: its manifest's remoteEntry)"
+      },
+      "port": {
+        "type": "string",
+        "description": "With --host, the port to serve the host on",
+        "default": 5180
       },
       "max": {
         "type": "string",
@@ -35,9 +47,7 @@
         "default": 300
       }
     },
-    "required": [
-      "url"
-    ],
+    "required": [],
     "x-positional": [
       "url"
     ]

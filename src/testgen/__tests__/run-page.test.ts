@@ -77,17 +77,26 @@ const composition: Composition = {
 
 /** The shell: what each action mounts. */
 function mount(stateKey: string): void {
+  if (stateKey === 'm.berths') {
+    // One capability, placed twice: the composition tells each tile its berth.
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div data-layout-slot="console/b1" data-smt-mfe="docking" data-smt-capability="Tile">b1 DOCKED</div>' +
+        '<div data-layout-slot="console/b2" data-smt-mfe="docking" data-smt-capability="Tile">b2 FREE</div>'
+    );
+    return;
+  }
   if (stateKey === 'm.root') {
-    document.body.innerHTML = '<div data-smt-mfe="console" data-smt-capability="Console"><nav><button id="tab">Tabs</button></nav></div>';
+    document.body.innerHTML = '<div data-layout-slot="root" data-smt-mfe="console" data-smt-capability="Console"><nav><button id="tab">Tabs</button></nav></div>';
     noise.root.forEach(logError);
     return;
   }
   document.body.insertAdjacentHTML(
     'beforeend',
-    `<div data-smt-mfe="arrivals" data-smt-capability="Registry" data-slot-state="ready">
+    `<div data-layout-slot="console/main" data-smt-mfe="arrivals" data-smt-capability="Registry" data-slot-state="ready">
        <h2>Vessel Registry</h2><p id="count">8 vessels</p><button id="flagged">Flagged</button>
      </div>
-     <div data-smt-mfe="broken" data-smt-capability="Thing" data-slot-state="error"><div role="alert">Failed to load module</div></div>`
+     <div data-layout-slot="console/side" data-smt-mfe="broken" data-smt-capability="Thing" data-slot-state="error"><div role="alert">Failed to load module</div></div>`
   );
   noise.open.forEach(logError);
   document.getElementById('flagged')?.addEventListener('click', () => {
@@ -118,7 +127,7 @@ const pack = (steps: CapabilityPack['cases'][number]['steps'], knownConsole: str
   capability: 'Registry',
   app: 'http://localhost:5008',
   clock: '2026-11-12T04:06:00.000Z',
-  cases: [{ name: 'crawl-000', expect: [{ region, text: 'Vessel Registry 8 vessels' }], steps, knownConsole }],
+  cases: [{ name: 'crawl-000', expect: [{ region, text: 'Vessel Registry 8 vessels' }], steps, knownConsole, props: {} }],
 });
 
 describe('fireAction', () => {
@@ -203,6 +212,46 @@ describe('runComposed', () => {
       const r = await runComposed(opts([pack(flagged, ['Warning: list key at Row (<src>)'])]), chromium);
       expect(r.actions[1].consoleErrors).toEqual([]);
       expect(r.packs[0].cases[0].ok).toBe(true);
+    });
+  });
+
+  describe('a capability placed more than once', () => {
+    const berths: Composition = {
+      root: 'm.root',
+      actions: [
+        { stateKey: 'm.root', placements: [{ mfe: 'console', capability: 'Console', slot: 'root', props: {} }] },
+        {
+          stateKey: 'm.berths',
+          placements: [
+            { mfe: 'docking', capability: 'Tile', slot: 'console/b1', props: { berthId: 'b1' } },
+            { mfe: 'docking', capability: 'Tile', slot: 'console/b2', props: { berthId: 'b2' } },
+          ],
+        },
+      ],
+    };
+    const tile = (cases: Array<{ name: string; text: string; props: Record<string, string> }>): CapabilityPack => ({
+      mfe: 'docking',
+      capability: 'Tile',
+      app: 'http://localhost:5180',
+      clock: '2026-11-12T04:06:00.000Z',
+      cases: cases.map((c) => ({ name: c.name, expect: [{ region: 'capability:Tile', text: c.text }], steps: [], knownConsole: [], props: c.props })),
+    });
+    const run = (p: CapabilityPack) => runComposed({ shellUrl: 'http://localhost:5000', daemonUrl: 'http://localhost:4504', composition: berths, packs: [p], responses: new Map(), mountTimeout: 50 }, chromium);
+
+    it('runs each case in the slot whose placement passes the props it was recorded with', async () => {
+      const r = await run(tile([{ name: 'b1', text: 'b1 DOCKED', props: { berthId: 'b1' } }, { name: 'b2', text: 'b2 FREE', props: { berthId: 'b2' } }]));
+      expect(r.packs.map((p) => [p.slot, p.cases.map((c) => [c.name, c.ok])])).toEqual([
+        ['console/b1', [['b1', true]]],
+        ['console/b2', [['b2', true]]],
+      ]);
+    });
+
+    it('says a placement passes props no case was recorded with, instead of checking another slot', async () => {
+      const r = await run(tile([{ name: 'b1', text: 'b1 DOCKED', props: { berthId: 'b1' } }]));
+      expect(r.packs.map((p) => [p.slot, p.cases.length, p.otherProps])).toEqual([
+        ['console/b1', 1, undefined],
+        ['console/b2', 0, { berthId: 'b2' }],
+      ]);
     });
   });
 });

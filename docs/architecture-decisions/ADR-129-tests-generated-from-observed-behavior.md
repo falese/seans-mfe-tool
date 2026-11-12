@@ -124,7 +124,7 @@ It runs in the MFE's plain `npm test`.
 
 ### 4. Journeys: Playwright, text, calls, console and pixels
 
-`e2e/characterization.spec.ts` replays every journey in which one of the MFE's capabilities
+`e2e/characterization.e2e.ts` replays every journey in which one of the MFE's capabilities
 appears, against `SMT_TARGET_URL` (default: the captured app), on the captured clock, fulfilling
 recorded REST responses and letting everything else through, so a composed app's BFFs answer in
 demo mode. After each step, for each capability on screen:
@@ -306,6 +306,45 @@ nothing in the run names an MFE. A placed capability with no pack is listed as m
 behaviour-checked. Composed cases check text, not pixels: a slot's layout is the host's, so the
 per-capability baselines stay in each MFE's own journey spec. The report is
 `<project>/test-results/test-run/report.{md,json}`, and the command fails when any tier does.
+
+### 13. Recorded through the platform, in any framework: the capability host
+
+Region attribution read React's development fiber (ADR-109 §2), so a recording saw nothing
+of an Angular MFE, or of a React production build, and each framework's standalone page is its
+own (Angular's generated one renders none of its capabilities). The recording surface is now
+the one the platform owns. `test:host <mfe>` serves a page that mounts each capability
+through the shell's own adaptor (`moduleFederationAdaptor`, ADR-100), through the remote's
+sealed mount handle, which brings its own framework: a tab per capability (host chrome), and
+the selected one in a slot carrying the boundary stamp a shell's slot carries (#408).
+`test:crawl --host` and `test:generate --host` crawl and record it.
+
+- **The stamp is the boundary.** An element with `data-smt-capability`, no component owner
+  and no landmark starts a region named `capability:<Capability>`. React's attribution, where
+  there is any, nests inside it, so a React development build loses nothing. A composed
+  shell's slots are landmarks already, so its captures do not change.
+- **Props ride the route.** `/#/BerthTile?berthId=b2` mounts the capability with the props a
+  composition would pass it. Each pack case records the props it was mounted with, and
+  `test:run` runs a case only in a slot whose placement passes the same props. A placement
+  passing props no case was recorded with is reported as such, and is not checked against
+  another slot's content. `test:run` finds each placement by its slot as well as its stamp,
+  so a capability placed six times is checked six times.
+- **The host is not the MFE.** It serves the runtime under `/__smt-host/`, which capture
+  treats as infrastructure (never recorded, never replayed). The MFE's own calls go to its
+  origin and are recorded by URL. It listens on 5180 by default, the port recordings name,
+  so the journey spec replays against `test:host` without flags.
+- **Alone tests stay React's.** They render a component in jsdom. A capability of another
+  framework is held by its journey spec and its pack, and `TESTS.md` says so.
+- The generated journey spec is `e2e/characterization.e2e.ts`, not `*.spec.ts`, which every
+  Jest default `testMatch` collects and a developer's Jest config is theirs to keep.
+
+Recording through the host found a runtime defect: outside a webpack host, the adaptor handed
+each `container.init` a fresh share scope, so a remote mounted once and never again. It now
+keeps one for the page's life.
+
+On meridian-station, the three Angular MFEs (cargo-ops, docking-control, life-support) and
+React's concourse are recorded through the host from their production builds. Each MFE's
+suites pass, every pack passes in its slots, and a changed heading in cargo-ops' Angular
+`HazardSummary` failed that capability in both browser tiers and nothing else.
 
 ## Boundaries
 

@@ -125,11 +125,14 @@ export function isDevServerRequest(url: string): boolean {
  */
 export const CONTROL_PLANE_PATH = '/__control-plane';
 
-/** Traffic that is not the app's: the dev server's own, and a composed shell's control-plane calls. */
+/** Where the capability host serves the runtime it mounts through (ADR-129 §13): never the MFE's. */
+export const HOST_PATH = '/__smt-host';
+
+/** Traffic that is not the app's: the dev server's own, a composed shell's control-plane calls, the capability host's runtime. */
 export function isInfrastructureRequest(url: string): boolean {
   if (isDevServerRequest(url)) return true;
   const p = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
-  return p === CONTROL_PLANE_PATH || p.startsWith(`${CONTROL_PLANE_PATH}/`);
+  return p === CONTROL_PLANE_PATH || p.startsWith(`${CONTROL_PLANE_PATH}/`) || p.startsWith(`${HOST_PATH}/`);
 }
 
 export function responseKey(method: string, url: string): string {

@@ -7,7 +7,9 @@
  * walked past to the app component that used them, so a `<Link>` belongs to
  * the `Sidebar` that rendered it. Without development metadata, regions fall
  * back to page landmarks and carry no source file — the bundle records that
- * instead of guessing (ADR-109, Boundaries).
+ * instead of guessing (ADR-109, Boundaries). In every framework, an element the
+ * platform mounted a capability into carries its boundary stamp (#408), and is a
+ * region named for that capability (ADR-129 §13).
  *
  * The browser half (`page-probe.ts`) only reports per-element facts; grouping
  * them into regions happens here, in plain functions that are testable
@@ -101,6 +103,9 @@ function union(a: Rect | undefined, b: Rect): Rect {
   };
 }
 
+/** The boundary stamp the platform puts on the element it mounts a capability into (#408). */
+const CAPABILITY_STAMP = 'data-smt-capability';
+
 interface Draft {
   key: string;
   component: string;
@@ -139,7 +144,14 @@ export function assembleRegions(facts: ElementFact[]): { regions: Region[]; cove
     let key: string | null;
     let component: string;
     let file: string | null;
-    if (anyOwner) {
+    const stamped = !f.owner && !f.landmark ? f.data?.[CAPABILITY_STAMP] : undefined;
+    if (stamped) {
+      // The platform mounted a capability here (#408, ADR-129 §13): a boundary in any
+      // framework. React attribution, where there is any, nests inside it.
+      key = `capability:${stamped}:${f.i}`;
+      component = stamped;
+      file = null;
+    } else if (anyOwner) {
       if (!f.owner) {
         regionKey[f.i] = inherited;
         if (inherited && f.text) drafts.get(inherited)?.texts.push(f.text);
@@ -185,7 +197,8 @@ export function assembleRegions(facts: ElementFact[]): { regions: Region[]; cove
   }
 
   // Stable ids: file#Component, numbered when a component appears more than once.
-  const base = (d: Draft) => (d.key.startsWith('landmark:') ? d.key : `${d.file ?? '?'}#${d.component}`);
+  const base = (d: Draft) =>
+    d.key.startsWith('landmark:') ? d.key : d.key.startsWith('capability:') ? `capability:${d.component}` : `${d.file ?? '?'}#${d.component}`;
   const counts = new Map<string, number>();
   for (const key of order) {
     const b = base(drafts.get(key) as Draft);

@@ -73,6 +73,23 @@ describe('planPacks', () => {
   });
 });
 
+describe('planPacks — props', () => {
+  it('records the props a hosted capability was mounted with, from its route', () => {
+    const hosted = {
+      ...plan,
+      journeys: [
+        { name: 'b2', steps: [{ id: 'b2.0', action: { goto: '/#/BerthTile?berthId=b2' }, path: '/BerthTile?berthId=b2', capabilities: [cap('BerthTile', 'b2 DOCKED')], consoleErrors: [] }] },
+        { name: 'plain', steps: [{ id: 'p.0', action: { goto: '/' }, path: '/', capabilities: [cap('BerthTile', 'b1 DOCKED')], consoleErrors: [] }] },
+      ],
+    } as unknown as TestPlan;
+    const tile = planPacks(hosted).find((p) => p.capability === 'BerthTile');
+    expect(tile?.cases.map((c) => [c.name, c.props])).toEqual([
+      ['b2', { berthId: 'b2' }],
+      ['plain', {}],
+    ]);
+  });
+});
+
 describe('consoleKey', () => {
   it('masks sources and whitespace, so a rebuilt bundle\'s line numbers do not make an old error new', () => {
     expect(consoleKey('TypeError: x is undefined\n   at f (http://localhost:5000/main.cf64.js:49245:14)')).toBe(consoleKey('TypeError: x is undefined at f (http://localhost:5000/main.aa01.js:7:1)'));

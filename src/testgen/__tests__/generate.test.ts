@@ -119,7 +119,7 @@ describe('generateTests', () => {
         'src/__smt__/recorded-network.ts',
         'src/features/DockingBoard/DockingBoard.characterization.test.tsx',
         'src/features/DockingBoard/__characterization__/DockingBoard.json',
-        'e2e/characterization.spec.ts',
+        'e2e/characterization.e2e.ts',
         'e2e/characterization/baselines/tour-0-DockingBoard.png',
         'e2e/packs/DockingBoard.json',
         'playwright.characterization.config.ts',
@@ -286,5 +286,12 @@ describe('testTarget', () => {
       ['Board', 'DockingBoard', false],
       ['BerthTile', 'BerthTile', true],
     ]);
+  });
+
+  it('renders capabilities alone only where the web build is React, and says why not elsewhere', () => {
+    const angular = testTarget({ name: 'cargo', framework: 'angular', capabilities: [{ CargoManifest: { type: 'domain' } }] });
+    expect(angular.capabilities[0].notAlone).toBe('alone tests render React in jsdom; an angular capability is held by its journey spec and its pack, recorded through the capability host');
+    expect(testTarget({ name: 'x', framework: 'react', capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBeUndefined();
+    expect(testTarget({ name: 'x', capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBeUndefined();
   });
 });

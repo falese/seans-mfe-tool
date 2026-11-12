@@ -99,6 +99,45 @@ describe('assembleRegions', () => {
   });
 });
 
+describe('assembleRegions — capability boundary stamps', () => {
+  const stamp = (cap: string) => ({ 'data-smt-mfe': 'meridian-cargo-ops', 'data-smt-capability': cap });
+
+  it('makes a stamped element a region named for its capability, in any framework', () => {
+    // An Angular remote mounted by the platform: no React owner anywhere.
+    const facts = [
+      fact(0, -1, { tag: 'body' }),
+      fact(1, 0, { tag: 'nav', landmark: 'nav', text: 'CargoManifest HazardSummary' }),
+      fact(2, 0, { data: stamp('CargoManifest') }),
+      fact(3, 2, { tag: 'h2', text: 'Cargo manifest' }),
+      fact(4, 2, { tag: 'td', text: 'CRG-1001' }),
+    ];
+    const { regions } = assembleRegions(facts);
+    expect(regions.map((r) => [r.id, r.component, r.ownText])).toEqual([
+      ['landmark:nav', 'nav', 'CargoManifest HazardSummary'],
+      ['capability:CargoManifest', 'CargoManifest', 'Cargo manifest CRG-1001'],
+    ]);
+    expect(regions[1].data).toMatchObject(stamp('CargoManifest'));
+  });
+
+  it('keeps React attribution inside the stamp: components nest under the capability', () => {
+    const facts = [
+      fact(0, -1, { tag: 'body' }),
+      fact(1, 0, { data: stamp('VesselRegistry') }),
+      fact(2, 1, { owner: owner(1, 'VesselRegistry', 'src/features/VesselRegistry.tsx'), text: '8 vessels' }),
+    ];
+    const { regions } = assembleRegions(facts);
+    expect(regions.map((r) => [r.id, r.parent])).toEqual([
+      ['capability:VesselRegistry', null],
+      ['src/features/VesselRegistry.tsx#VesselRegistry', 'capability:VesselRegistry'],
+    ]);
+  });
+
+  it('leaves a stamped slot that is a landmark as it was: a composed shell\'s capture does not change', () => {
+    const facts = [fact(0, -1, { tag: 'body' }), fact(1, 0, { landmark: 'slot:console/main', data: stamp('CargoManifest'), text: 'x' })];
+    expect(assembleRegions(facts).regions.map((r) => r.id)).toEqual(['landmark:slot:console/main']);
+  });
+});
+
 describe('normalizeSourcePath', () => {
   it('makes paths relative to the source root when one is given', () => {
     expect(normalizeSourcePath('/work/app/src/components/X.tsx', '/work/app')).toBe('src/components/X.tsx');

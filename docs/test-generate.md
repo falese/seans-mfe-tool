@@ -6,12 +6,18 @@ showed at each step, the calls behind it, the console and a screenshot. That rec
 specification, and the tests hold the MFE to it.
 
 ```bash
-# an MFE you built: record its journey file against it running, and generate
-# (with no journeys.yaml, it crawls the MFE and writes one first)
-seans-mfe-tool test:generate ./my-mfe --url http://localhost:5008 --upstream
+# an MFE you built, in any framework: crawl and record it through the capability host,
+# which mounts each capability as a shell does (with no journeys.yaml, it crawls first)
+seans-mfe-tool test:generate ./my-mfe --host --remote http://localhost:5004 --upstream
 
 # just the journey file: every control in every state, one journey per interaction
-seans-mfe-tool test:crawl http://localhost:5008 --out ./my-mfe/journeys.yaml
+seans-mfe-tool test:crawl --host ./my-mfe --remote http://localhost:5004
+
+# the host on its own: open it, or replay the journey spec against it
+seans-mfe-tool test:host ./my-mfe --remote http://localhost:5004    # http://localhost:5180
+
+# a page as it is (a monolith, a React development build's standalone page)
+seans-mfe-tool test:generate ./my-mfe --url http://localhost:5008 --upstream
 
 # every MFE of a ported decomposition
 seans-mfe-tool test:generate ./evidence/proposal --proposal
@@ -19,6 +25,28 @@ seans-mfe-tool test:generate ./evidence/proposal --proposal
 # from a capture you already have
 seans-mfe-tool test:generate ./my-mfe --evidence ./evidence
 ```
+
+## Any framework: the capability host
+
+`--host` records the MFE the way a shell composes it: SMT serves a page that mounts each
+capability through the platform's own adaptor, into a slot with the boundary stamp a shell's
+slot carries, and reads that stamp to know what is whose. Nothing framework-specific is read, so
+an Angular MFE, or a React production build, records exactly like a React development build.
+The tabs along the top are the host's, not the MFE's.
+
+Props ride the route: `goto: /#/BerthTile?berthId=b2` mounts BerthTile as the console places it
+in berth b2. Write those journeys by hand where a composition passes props. `test:run` runs each
+case only where the placement passes the props it was recorded with.
+
+| meridian-station, through the host | Jest | Contracts | Journeys | Packs in their slots |
+|---|---|---|---|---|
+| cargo-ops (Angular) | 43 → 53 | 26 → 35 | 7 / 7 | 5 / 5 |
+| docking-control (Angular) | 51 → 61 | 26 → 35 | 19 / 19 | 11 / 11, BerthTile once per berth |
+| life-support (Angular) | 44 → 52 | 20 → 27 | 13 / 13 | 7 / 7 |
+| concourse (React, production build) | 42 → 61 | 46 → 62 | 3 / 3 | 3 / 3 |
+
+Alone tests render React in jsdom, so an Angular MFE has none. Its journey spec and its pack
+hold its capabilities instead, and `TESTS.md` says so.
 
 ## The journey file is the source
 
@@ -53,7 +81,7 @@ interactions, and the recording gives 5 journeys, 11 checks and 11 baselines.
 | Suite | Files | Runs with | It fails when |
 |---|---|---|---|
 | **Alone**: each capability rendered by itself in jsdom, at every path it was first captured at, with no host, shell or backend | `src/features/<Cap>/<Cap>.characterization.test.tsx` and `__characterization__/<Cap>.json`; `src/__smt__/recorded-network.ts`, `recorded.json` | `npm test` | a region's text is missing or out of order, a call behind it is not made, something unrecorded is requested, or a new console error appears |
-| **Journeys**: every captured journey replayed in Chromium against any URL, step by step | `e2e/characterization.spec.ts`, `e2e/characterization/evidence.json`, `playwright.characterization.config.ts` | `npm run test:e2e` | the same, per step, in a browser; a GraphQL request counts as the backend calls it stands for |
+| **Journeys**: every captured journey replayed in Chromium against any URL, step by step | `e2e/characterization.e2e.ts`, `e2e/characterization/evidence.json`, `playwright.characterization.config.ts` | `npm run test:e2e` | the same, per step, in a browser; a GraphQL request counts as the backend calls it stands for |
 | **Visual**: one baseline per capability per step, cut from the capture's screenshot | `e2e/characterization/baselines/*.png` | `npm run test:e2e` | any pixel of the capability differs, with other placements inside it masked (`SMT_MAX_DIFF_PIXELS` sets a budget) |
 | **Contract, provider**: what each backend sent against the BFF's spec, and the demo fixtures against what it sent | `src/platform/bff/__tests__/contract.test.ts`, `contract/recorded.json`, `contract/schema-check.ts` | `npm test` | a recorded response breaks its spec, or `mocks.json` no longer matches it |
 | **Contract, connector**: the built Mesh, in-process, its upstream answered from the recordings | `src/platform/bff/contract/connector.contract.ts` | `npm run test:contract` | the BFF drops, adds or changes a value the backend sent |
@@ -93,7 +121,9 @@ test, naming the missing word. Recolouring the DELINQUENT badge fails only the j
 
 ## Running the journeys
 
-Point the spec at the monolith first. It must pass there, which proves the capture replays
+An MFE recorded through the host replays against it: `seans-mfe-tool test:host ./my-mfe &` then
+`npm run test:e2e` (the spec's default target is the host's port, 5180). Otherwise point the
+spec at the monolith first. It must pass there, which proves the capture replays
 deterministically (ADR-113 §3). Then point it at the composed shell:
 
 ```bash
@@ -199,9 +229,10 @@ steps, then proposed, approved, scaffolded and ported with no edits, then `test:
   cover it.
 - **jsdom is not a browser.** A capability that needs WebGL or real layout may not render alone.
   Its alone test then fails, honestly, and the journey spec is the one that holds it.
-- **Record against a development build.** Regions are attributed to components through React's
-  debug source, which a production build drops. A recording that attributes nothing is refused
-  before anything is written, rather than replacing the suite with an empty one.
+- **`--url` needs a React development build; `--host` needs nothing.** A page recorded as it is
+  is attributed through React's debug source, which a production build drops. Through the host,
+  the boundary stamp does it. A recording that attributes nothing is refused before anything is
+  written, rather than replacing the suite with an empty one.
 - **Composed checks are text, not pixels.** A slot's layout is the host's. Each MFE's own
   journey spec holds its per-capability baselines.
 - **Reads only.** Writes are not contract-tested: replaying a write against a stub proves nothing

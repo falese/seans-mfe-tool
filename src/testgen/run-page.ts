@@ -79,7 +79,12 @@ export async function fireAction(daemonUrl: string, stateKey: string): Promise<v
   if (!res.ok) throw new NetworkError(`the control plane's daemon answered ${res.status} to ${stateKey}`, res.status);
 }
 
-const stampOf = (p: Placement) => `[data-smt-mfe="${p.mfe}"][data-smt-capability="${p.capability}"]`;
+/** Its slot, by id as well as stamp: a capability placed in several slots is in each of them. */
+const stampOf = (p: Placement) => `[data-layout-slot="${p.slot}"][data-smt-mfe="${p.mfe}"][data-smt-capability="${p.capability}"]`;
+
+/** Whether a case was recorded with the props this placement passes. */
+const sameProps = (a: Record<string, string> = {}, b: Record<string, string> = {}) =>
+  Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k, v]) => b[k] === v);
 
 /** Wait for a placement's slot to carry its stamp; the slot's own state says ready or not. */
 async function mounted(page: Page, p: Placement, timeout: number): Promise<{ mounted: boolean; error?: string }> {
@@ -220,7 +225,10 @@ export async function runComposed(o: ComposedOptions, chromium?: ChromiumLike): 
         const pack = packFor(p);
         if (!pack) continue;
         const run: PackRun = { mfe: p.mfe, capability: p.capability, slot: p.slot, stateKey: a.stateKey, cases: [] };
-        for (const c of pack.cases) {
+        const cases = pack.cases.filter((c) => sameProps(c.props, p.props));
+        // Recorded, but never with what this placement passes: it shows something else.
+        if (cases.length === 0) run.otherProps = p.props ?? {};
+        for (const c of cases) {
           const page = await context.newPage();
           const errors = listen(page);
           try {

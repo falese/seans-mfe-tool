@@ -34,6 +34,8 @@ export interface Placement {
   slot: string;
   /** Where its MFE is loaded from: probed when it does not mount, to tell unserved from broken. */
   remoteEntryUrl?: string;
+  /** What the composition passes it, beside its slot. */
+  props?: Record<string, string>;
 }
 
 export interface Composition {
@@ -44,7 +46,7 @@ export interface Composition {
 
 interface RuleDoc {
   registration: { name: string; remoteEntryUrl?: string };
-  routes: Array<{ when: { stateKey?: string }; resolve: { capability: string; props?: { slot?: string } } }>;
+  routes: Array<{ when: { stateKey?: string }; resolve: { capability: string; props?: { slot?: string } & Record<string, unknown> } }>;
 }
 
 export function compositionOf(rules: RuleDoc[]): Composition {
@@ -52,9 +54,13 @@ export function compositionOf(rules: RuleDoc[]): Composition {
   for (const doc of rules) {
     for (const r of doc.routes) {
       const key = r.when.stateKey;
-      const slot = r.resolve.props?.slot;
-      if (!key || !slot) continue;
-      byKey.set(key, [...(byKey.get(key) ?? []), { mfe: doc.registration.name, capability: r.resolve.capability, slot, ...(doc.registration.remoteEntryUrl ? { remoteEntryUrl: doc.registration.remoteEntryUrl } : {}) }]);
+      const { slot, ...rest } = r.resolve.props ?? {};
+      if (!key || typeof slot !== 'string') continue;
+      const props = Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, String(v)]));
+      byKey.set(key, [
+        ...(byKey.get(key) ?? []),
+        { mfe: doc.registration.name, capability: r.resolve.capability, slot, props, ...(doc.registration.remoteEntryUrl ? { remoteEntryUrl: doc.registration.remoteEntryUrl } : {}) },
+      ]);
     }
   }
   const root = [...byKey.entries()].find(([, ps]) => ps.some((p) => p.slot === 'root'))?.[0] ?? null;
@@ -95,10 +101,16 @@ export function replayLookup(
   } catch {
     return undefined;
   }
-  const recorded = responses.get(u.origin);
-  if (!recorded) return undefined;
-  const rel = u.pathname + u.search;
-  return (body ? recorded[bodyKey(method, rel, body)] : undefined) ?? recorded[responseKey(method, rel)];
+  const find = (recorded: Record<string, RecordedResponse> | undefined, key: string) =>
+    recorded ? ((body ? recorded[bodyKey(method, key, body)] : undefined) ?? recorded[responseKey(method, key)]) : undefined;
+  // Same-origin calls are recorded by path; a call to another origin (a hosted MFE's BFF) by its URL.
+  const own = find(responses.get(u.origin), u.pathname + u.search);
+  if (own) return own;
+  for (const recorded of responses.values()) {
+    const hit = find(recorded, url);
+    if (hit) return hit;
+  }
+  return undefined;
 }
 
 export type SuiteResult = { passed: number; failed: number; failures?: string[] } | { skipped: string };
@@ -117,6 +129,8 @@ export interface PackRun {
   slot: string;
   stateKey: string;
   cases: Array<{ name: string; ok: boolean; failure?: string }>;
+  /** Set when no case was recorded with the props this placement passes: they are here. */
+  otherProps?: Record<string, string>;
 }
 
 export interface RunReport {
@@ -234,6 +248,11 @@ export function renderRunReport(r: RunReport): string {
   lines.push('', '### Capability packs, in their slots', '');
   for (const p of r.composed.packs) {
     const ok = p.cases.filter((c) => c.ok).length;
+    if (p.otherProps) {
+      const query = new URLSearchParams(p.otherProps).toString();
+      lines.push(`- ○ ${p.mfe} / ${p.capability} in \`${p.slot}\` (\`${p.stateKey}\`): passes ${JSON.stringify(p.otherProps)}, which no case was recorded with — add a journey that starts \`goto: /#/${p.capability}${query ? `?${query}` : ''}\``);
+      continue;
+    }
     lines.push(`- ${ok === p.cases.length ? '✓' : '✗'} ${p.mfe} / ${p.capability} in \`${p.slot}\` (\`${p.stateKey}\`): ${ok} / ${p.cases.length} cases`);
   }
   for (const p of r.composed.packs) for (const c of p.cases.filter((x) => !x.ok)) lines.push(`- ✗ \`${p.stateKey}\` → ${p.mfe} / ${p.capability} in \`${p.slot}\`, case ${c.name}: ${c.failure ?? 'failed'}`);

@@ -14,6 +14,19 @@
         "type": "string",
         "description": "The evidence bundle (default with --proposal: the bundle holding the proposal)"
       },
+      "host": {
+        "type": "boolean",
+        "description": "Record the MFE through the capability host: each capability mounted by the platform, as a shell mounts it, in any framework (ADR-129 §13)"
+      },
+      "remote": {
+        "type": "string",
+        "description": "With --host, the origin the MFE is served from (default: its manifest's remoteEntry)"
+      },
+      "port": {
+        "type": "string",
+        "description": "With --host, the port to serve the host on: the journey spec replays against test:host there",
+        "default": 5180
+      },
       "url": {
         "type": "string",
         "description": "Record the MFE running here: its journey file is driven and the tests generated from what it did. With no journey file, the MFE is crawled first and one written"
