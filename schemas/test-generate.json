@@ -29,6 +29,10 @@
       "force": {
         "type": "boolean",
         "description": "Replace generated files a developer has changed"
+      },
+      "upstream": {
+        "type": "boolean",
+        "description": "Record each BFF spec operation the capture has no response for from its server, for the contract tests (an MFE read through its BFF shows the browser only the BFF)"
       }
     },
     "required": [
@@ -62,6 +66,7 @@
             "migrated",
             "written",
             "kept",
+            "warnings",
             "report"
           ],
           "properties": {
@@ -227,6 +232,13 @@
                 "type": "string"
               },
               "description": "Files left as a developer changed them."
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "What could not be generated, with why."
             },
             "report": {
               "type": "string",

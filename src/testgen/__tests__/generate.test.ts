@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { decodePng } from '../../decompose/verify/png';
 import { encodePng } from '../png';
-import { generateTests, testTarget } from '../generate';
+import { generateTests, manifestHoists, testTarget } from '../generate';
 import type { Decomposition } from '@seans-mfe/decompose';
 
 const screenshot = () => {
@@ -173,6 +173,67 @@ describe('generateTests', () => {
     const again = await run();
     expect(again.kept).toEqual([]);
     expect(await fs.readFile(path.join(f.mfe, 'src/__smt__/recorded.json'), 'utf8')).toContain('d2');
+  });
+});
+
+describe('generateTests --upstream', () => {
+  let root: string;
+  beforeEach(async () => {
+    root = await fs.mkdtemp(path.join(os.tmpdir(), 'testgen-up-'));
+  });
+  afterEach(() => fs.remove(root));
+
+  it('records what the capture never saw from each spec server, for the contract tests only', async () => {
+    const f = await fixture(root);
+    // A capture of an MFE that reads through its own BFF holds GraphQL, not the backend's REST.
+    await fs.writeJson(path.join(f.evidence, 'responses.json'), { 'POST /graphql': { status: 200, mimeType: 'application/json', body: { data: {} } } });
+    const spec = path.join(f.mfe, 'specs', 'harbormaster.yaml');
+    const doc = yaml.load(await fs.readFile(spec, 'utf8')) as Record<string, unknown>;
+    await fs.writeFile(spec, yaml.dump({ ...doc, servers: [{ url: 'http://harbormaster-api:5101/api' }] }));
+    const asked: string[] = [];
+    const r = await generateTests({
+      mfeDir: f.mfe,
+      evidenceDir: f.evidence,
+      upstream: true,
+      fetchUpstream: async (url) => {
+        asked.push(url);
+        return { status: 200, mimeType: 'application/json', body: [{ id: 'd9' }] };
+      },
+    });
+    expect(asked).toEqual(['http://harbormaster-api:5101/api/dockings']);
+    expect(r.contract).toEqual({ operations: 1, unrecorded: [] });
+    const recorded = (await fs.readJson(path.join(f.mfe, 'src/platform/bff/contract/recorded.json'))) as { operations: Array<{ url: string; body: unknown }> };
+    expect(recorded.operations[0].body).toEqual([{ id: 'd9' }]);
+    // The alone tests' network is the capture's alone.
+    expect(Object.keys(await fs.readJson(path.join(f.mfe, 'src/__smt__/recorded.json')))).toEqual(['POST /graphql']);
+  });
+
+  it('says which server it could not reach, and goes on', async () => {
+    const f = await fixture(root);
+    await fs.writeJson(path.join(f.evidence, 'responses.json'), {});
+    const spec = path.join(f.mfe, 'specs', 'harbormaster.yaml');
+    const doc = yaml.load(await fs.readFile(spec, 'utf8')) as Record<string, unknown>;
+    await fs.writeFile(spec, yaml.dump({ ...doc, servers: [{ url: 'http://nowhere:1/api' }] }));
+    const r = await generateTests({ mfeDir: f.mfe, evidenceDir: f.evidence, upstream: true, fetchUpstream: async () => Promise.reject(new Error('ECONNREFUSED')) });
+    expect(r.warnings).toEqual(['upstream http://nowhere:1/api/dockings: ECONNREFUSED — no contract test for GET /api/harbormaster/dockings']);
+    expect(r.contract.unrecorded).toEqual(['GET /api/harbormaster/dockings']);
+  });
+});
+
+describe('manifestHoists', () => {
+  it('reads the hoists the BFF is configured with, by spec file; a source with none hoists nothing', () => {
+    expect(
+      manifestHoists({
+        name: 'm',
+        capabilities: [],
+        data: {
+          sources: [
+            { handler: { openapi: { source: './specs/station-os.yaml' } }, transforms: [{ hoistField: [{ typeName: 'Query', pathConfig: ['GetPassengers', 'Data'], newFieldName: 'passengers' }] }] },
+            { handler: { openapi: { source: './specs/harbormaster.yaml' } } },
+          ],
+        },
+      })
+    ).toEqual({ 'station-os': [{ typeName: 'Query', pathConfig: ['GetPassengers', 'Data'], newFieldName: 'passengers' }], harbormaster: [] });
   });
 });
 

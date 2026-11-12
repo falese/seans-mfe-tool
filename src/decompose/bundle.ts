@@ -37,7 +37,7 @@ export interface RawRequest {
   body?: unknown;
   /** Set when the request failed or was not answered. */
   failure?: string;
-  /** The body of a GraphQL request to a BFF (ADR-127 §4). */
+  /** The body of a GraphQL request: to a BFF it says which backend calls it stands for (ADR-127 §4). */
   postData?: string;
 }
 
@@ -136,6 +136,28 @@ export function responseKey(method: string, url: string): string {
   return `${method.toUpperCase()} ${url}`;
 }
 
+/**
+ * FNV-1a over a string's UTF-16 code units, as 8 hex digits. Generated tests
+ * carry the same few lines (testgen/harness.ts), so all three agree on a key.
+ */
+export function bodyHash(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+/**
+ * The key a response is also recorded under when its request had a body: one
+ * GraphQL endpoint answers many documents, and `METHOD url` alone keeps only the
+ * first (ADR-129).
+ */
+export function bodyKey(method: string, url: string, body: string): string {
+  return `${responseKey(method, url)} #${bodyHash(body)}`;
+}
+
 /** Fold raw journey runs into the bundle's files. Pure: same runs, same bundle. */
 export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
   const files: Record<string, unknown> = {};
@@ -202,8 +224,13 @@ export function buildBundle(runs: JourneyRun[], meta: BundleMeta): Bundle {
         ...(r.postData ? { postData: r.postData } : {}),
       });
       const key = responseKey(r.method, url);
-      if (!(key in responses) && r.status !== undefined && r.failure === undefined) {
-        responses[key] = { status: r.status, mimeType: r.mimeType ?? 'application/octet-stream', body: r.body ?? null };
+      if (r.status !== undefined && r.failure === undefined) {
+        const recorded = { status: r.status, mimeType: r.mimeType ?? 'application/octet-stream', body: r.body ?? null };
+        if (!(key in responses)) responses[key] = recorded;
+        if (r.postData) {
+          const byBody = bodyKey(r.method, url, r.postData);
+          if (!(byBody in responses)) responses[byBody] = recorded;
+        }
       }
     }
 

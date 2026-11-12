@@ -24,6 +24,9 @@ implemented-by:
   - src/testgen/png.ts
   - src/testgen/generate.ts
   - src/commands/test/generate.ts
+  - src/decompose/bundle.ts
+  - src/decompose/capture.ts
+  - packages/decompose/src/bff-plan.ts
 verified-by:
   - src/testgen/__tests__/select.test.ts
   - src/testgen/__tests__/plan.test.ts
@@ -32,6 +35,9 @@ verified-by:
   - src/testgen/__tests__/contract.test.ts
   - src/testgen/__tests__/png.test.ts
   - src/testgen/__tests__/generate.test.ts
+  - src/decompose/__tests__/bundle.test.ts
+  - src/decompose/__tests__/capture.test.ts
+  - packages/decompose/src/__tests__/bff-plan.test.ts
 tracked-by: ["#410", "#418"]
 summary: >-
   Implements ADR-113 §2 and §5 for each MFE's own CI, as a core command rather than a decomposition
@@ -136,6 +142,25 @@ demo mode. After each step, for each capability on screen:
   instant it names, because Mesh's DateTime scalar re-serialises `…:00Z` as `…:00.000Z`.
 
 Operations no recording answers are listed as untested, not skipped silently.
+
+### 5a. An MFE that reads through its own BFF
+
+Built natively, not ported, an MFE's screens call one GraphQL endpoint for every read, and the
+browser never sees the backends behind it. Three things follow, first met building
+meridian-arrivals:
+
+- **One endpoint, many documents.** Capture keeps the body of every GraphQL POST, on any origin,
+  and records each response under `METHOD url #<FNV-1a of the body>` as well as the bare key
+  (`bodyKey`). Capture's replay, the alone harness and the journey spec all look the body key up
+  first. The bare key still holds the first response, so existing bundles replay as before.
+- **Upstream traffic is recorded on request.** `--upstream` asks each spec's server for the GET
+  operations the capture holds no response for, for the contract tests only. The alone and
+  journey suites still answer from the capture alone.
+- **The BFF's real configuration.** Root fields are each operation id camel-cased, as the
+  naming-convention transform renames them (`list_vessels` → `listVessels`). Hoists are the
+  manifest's `hoistField` rules, not ones inferred from the spec (`bffOperations` takes them).
+  The connector expects back the recording as far as the spec declares it. Fields the backend
+  sends beyond its spec are not exposed by the BFF, and `TESTS.md` names them.
 
 ### 6. Migrated: keepers move with their code
 

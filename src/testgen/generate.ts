@@ -25,9 +25,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { ValidationError } from '@seans-mfe/contracts';
-import { bffOperations, readDecomposition, readSpecs, type Decomposition, type OpenApiDocument } from '@seans-mfe/decompose';
+import { bffOperations, readDecomposition, readSpecs, type Decomposition, type HoistRule, type OpenApiDocument } from '@seans-mfe/decompose';
 import { parseJourneys } from '../decompose/journeys';
-import { planContracts, type ContractPlan, type RecordedResponse } from './contract';
+import { planContracts, upstreamRequests, type ContractPlan, type RecordedResponse } from './contract';
 import { aloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from './emit';
 import { GENERATED_MARK, RECORDED_NETWORK } from './harness';
 import { planTests, type Evidence, type EvidenceRequest, type EvidenceStep, type TestPlan, type TestTarget } from './plan';
@@ -44,6 +44,27 @@ export interface GenerateOptions {
   appDir?: string;
   /** Replace files a developer has changed since they were generated. */
   force?: boolean;
+  /**
+   * Record, from each spec's server, the GET operations the capture holds no
+   * response for: a capture of an MFE that reads through its BFF sees only the
+   * BFF, never the backends behind it (ADR-129 §5).
+   */
+  upstream?: boolean;
+  /** How `upstream` fetches; injectable for tests. */
+  fetchUpstream?: (url: string) => Promise<RecordedResponse>;
+}
+
+async function fetchJson(url: string): Promise<RecordedResponse> {
+  const res = await fetch(url, { headers: { accept: 'application/json' } });
+  const mimeType = res.headers.get('content-type')?.split(';')[0] ?? 'application/octet-stream';
+  const text = await res.text();
+  let body: unknown = text;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    // not JSON: keep the text
+  }
+  return { status: res.status, mimeType, body };
 }
 
 export interface GeneratedMfeTests {
@@ -59,6 +80,8 @@ export interface GeneratedMfeTests {
   written: string[];
   /** Files left alone because a developer changed them. */
   kept: string[];
+  /** What could not be generated, with why. */
+  warnings: string[];
   report: string;
 }
 
@@ -127,6 +150,28 @@ export async function readEvidence(dir: string): Promise<{ evidence: Evidence; r
 interface Manifest {
   name: string;
   capabilities: Array<Record<string, { type?: string } | undefined>>;
+  data?: {
+    sources?: Array<{
+      handler?: { openapi?: { source?: string } };
+      transforms?: Array<{ hoistField?: HoistRule[] }>;
+    }>;
+  };
+}
+
+/**
+ * The `hoistField` rules the MFE's BFF is configured with, by spec (the
+ * file name under specs/), from its manifest: what its graph really exposes
+ * (ADR-129 §5). Empty when the manifest declares no sources.
+ */
+export function manifestHoists(manifest: Manifest): Record<string, HoistRule[]> {
+  const out: Record<string, HoistRule[]> = {};
+  for (const s of manifest.data?.sources ?? []) {
+    const file = s.handler?.openapi?.source;
+    if (!file) continue;
+    const backend = path.basename(file).replace(/\.ya?ml$|\.json$/, '');
+    out[backend] = (s.transforms ?? []).flatMap((t) => t.hoistField ?? []);
+  }
+  return out;
 }
 
 /** What the planner needs to know about the MFE, from its manifest and, when there is one, the proposal. */
@@ -195,10 +240,10 @@ async function appDirOf(evidenceDir: string, given?: string): Promise<string | u
 }
 
 /** The Playwright spec's data: journeys, the responses they replay, and BFF field → backend call. */
-function journeyEvidence(plan: TestPlan, responses: Record<string, RecordedResponse>, specs: Record<string, OpenApiDocument>, gateway: boolean) {
+function journeyEvidence(plan: TestPlan, responses: Record<string, RecordedResponse>, specs: Record<string, OpenApiDocument>, gateway: boolean, hoists: Record<string, HoistRule[]>) {
   const bff: Record<string, string> = {};
   for (const [b, spec] of Object.entries(specs)) {
-    for (const op of bffOperations(spec, b, { gateway })) {
+    for (const op of bffOperations(spec, b, { gateway }, hoists[b])) {
       bff[op.field] = `${op.method} ${op.path}`;
       if (op.hoist) bff[op.hoist.field] = `${op.method} ${op.path}`;
     }
@@ -220,7 +265,7 @@ function report(plan: TestPlan, contract: ContractPlan, migrated: GeneratedMfeTe
     `| Alone — ${plan.capabilities.filter((c) => !c.skipped).length} capabilities, ${plan.capabilities.reduce((n, c) => n + c.cases.length, 0)} states | \`npm test\` | each capability rendered by itself shows what it showed, makes its calls, logs no new error |`,
     `| Journeys — ${plan.journeys.filter((j) => j.steps.some((s) => s.capabilities.length > 0)).length} journeys, ${checks} checks, ${baselines} baselines | \`npm run test:e2e\` | the same, in a browser, step by step, plus pixels |`,
     `| Contract — ${contract.operations.length} operations | \`npm test\`, then \`npm run test:contract\` | what the backends sent is what the specs say, the demo fixtures are it, and the connector returns it |`,
-    `| Moved from the monolith — ${migrated.kept.length} | \`npm test\` | tests triaged keep |`,
+    ...(migrated.kept.length + migrated.rewritten.length + migrated.discarded.length > 0 ? [`| Moved from the monolith — ${migrated.kept.length} | \`npm test\` | tests triaged keep |`] : []),
     '',
     '## Capabilities',
     '',
@@ -229,8 +274,13 @@ function report(plan: TestPlan, contract: ContractPlan, migrated: GeneratedMfeTe
     lines.push(c.skipped ? `- **${c.capability}** — no alone test: ${c.skipped}` : `- **${c.capability}** — ${c.cases.map((k) => `\`${k.path}\` (${k.step})`).join(', ')}`);
   }
   lines.push('', '## Contract', '');
-  for (const o of contract.operations) lines.push(`- \`${o.call}\` — recorded as \`${o.url}\``);
-  for (const u of contract.unrecorded) lines.push(`- \`${u}\` — **untested**: the capture never called it`);
+  for (const o of contract.operations) {
+    lines.push(`- \`${o.call}\` — recorded as \`${o.url}\``);
+    if (o.undeclared.length > 0) lines.push(`  - the backend also sends ${o.undeclared.map((u) => `\`${u}\``).join(', ')}, which its spec does not declare, so the BFF does not expose them`);
+  }
+  for (const u of contract.unrecorded) {
+    lines.push(`- \`${u}\` — **untested**: ${u.includes('{') ? 'no recording — it takes a path parameter no recorded call supplied' : 'no recording — the capture never called it (try --upstream)'}`);
+  }
   if (contract.operations.length + contract.unrecorded.length === 0) lines.push('No BFF.');
   if (migrated.kept.length + migrated.rewritten.length + migrated.discarded.length > 0) {
     lines.push('', '## From the monolith’s suite', '');
@@ -280,6 +330,7 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
   const { evidence, responses } = await readEvidence(evidenceDir);
   const plan = planTests(evidence, testTarget(manifest, doc));
   const out = await OwnedWriter.open(dir, opts.force ?? false);
+  const warnings: string[] = [];
 
   // §3 — alone, per capability.
   await out.write('src/__smt__/recorded-network.ts', RECORDED_NETWORK);
@@ -287,12 +338,13 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
   for (const c of plan.capabilities) {
     if (c.skipped) continue;
     const base = `src/features/${c.capability}`;
-    await out.write(`${base}/__characterization__/${c.capability}.json`, json({ _comment: `${GENERATED_MARK}.`, clock: plan.clock, cases: c.cases }));
+    await out.write(`${base}/__characterization__/${c.capability}.json`, json({ _comment: `${GENERATED_MARK}.`, app: plan.app, clock: plan.clock, cases: c.cases }));
     await out.write(`${base}/${c.capability}.characterization.test.tsx`, aloneTestSource(c.capability, plan.app));
   }
 
   // §4 — journeys, with a baseline per capability per step.
   const specs = (await readSpecs(dir))?.specs ?? {};
+  const hoists = manifestHoists(manifest);
   const gateway = doc?.app.gateway !== false;
   let checks = 0;
   let baselines = 0;
@@ -312,12 +364,24 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
       }
     }
   }
-  await out.write('e2e/characterization/evidence.json', json(journeyEvidence(plan, responses, specs, gateway)));
+  await out.write('e2e/characterization/evidence.json', json(journeyEvidence(plan, responses, specs, gateway, hoists)));
   await out.write('e2e/characterization.spec.ts', journeySpecSource(plan.mfe, plan.app));
   await out.write('playwright.characterization.config.ts', playwrightConfigSource(plan.viewport));
 
   // §5 — the BFF's contract.
-  const contract = planContracts(specs, responses, { gateway });
+  const upstream: Record<string, RecordedResponse> = {};
+  if (opts.upstream) {
+    const get = opts.fetchUpstream ?? fetchJson;
+    for (const r of upstreamRequests(specs, { gateway })) {
+      if (r.key in responses) continue;
+      try {
+        upstream[r.key] = await get(r.url);
+      } catch (err) {
+        warnings.push(`upstream ${r.url}: ${err instanceof Error ? err.message : String(err)} — no contract test for ${r.key}`);
+      }
+    }
+  }
+  const contract = planContracts(specs, { ...upstream, ...responses }, { gateway }, hoists);
   if (Object.keys(specs).length > 0) {
     await out.write('src/platform/bff/contract/recorded.json', json({ _comment: `${GENERATED_MARK}.`, operations: contract.operations, unrecorded: contract.unrecorded }));
     await out.write('src/platform/bff/contract/schema-check.ts', SCHEMA_CHECK);
@@ -368,12 +432,13 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
     migrated,
     written: out.written,
     kept: out.kept,
+    warnings,
     report: path.join(dir, 'TESTS.md'),
   };
 }
 
 /** Every MFE of a ported decomposition (ADR-129 §8): the fleet from `proposal/scaffold.json`. */
-export async function generateFleetTests(opts: { proposalDir: string; evidenceDir?: string; fleetDir?: string; appDir?: string; force?: boolean }): Promise<GeneratedMfeTests[]> {
+export async function generateFleetTests(opts: { proposalDir: string; evidenceDir?: string; fleetDir?: string; appDir?: string; force?: boolean; upstream?: boolean }): Promise<GeneratedMfeTests[]> {
   const proposalDir = path.resolve(opts.proposalDir);
   const doc = await readDecomposition(path.join(proposalDir, 'decomposition.yaml'));
   const scaffold = path.join(proposalDir, 'scaffold.json');
@@ -384,7 +449,7 @@ export async function generateFleetTests(opts: { proposalDir: string; evidenceDi
   for (const d of doc.domains) {
     const mfeDir = path.join(fleetDir, d.mfe);
     if (!(await fs.pathExists(path.join(mfeDir, 'mfe-manifest.yaml')))) continue;
-    results.push(await generateTests({ mfeDir, evidenceDir, proposalDir, appDir: opts.appDir, force: opts.force }));
+    results.push(await generateTests({ mfeDir, evidenceDir, proposalDir, appDir: opts.appDir, force: opts.force, upstream: opts.upstream }));
   }
   return results;
 }

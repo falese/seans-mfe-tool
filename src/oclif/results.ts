@@ -545,6 +545,8 @@ export interface GeneratedMfeTestsSummary {
   written: string[];
   /** Files left as a developer changed them. */
   kept: string[];
+  /** What could not be generated, with why. */
+  warnings: string[];
   /** The MFE's TESTS.md. */
   report: string;
 }

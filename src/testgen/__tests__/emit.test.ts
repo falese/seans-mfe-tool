@@ -37,8 +37,17 @@ describe('generated sources', () => {
     expect(files['journeys.spec.ts']).toContain("process.env.SMT_TARGET_URL ?? evidence.app");
   });
 
+  it('answers a GraphQL document with the response recorded for it, hashed as capture hashes it', () => {
+    expect(files['journeys.spec.ts']).toContain('function bodyHash(text: string): string {');
+    expect(files['journeys.spec.ts']).toContain("responses[`${key} #${bodyHash(body)}`]");
+  });
+
   it('runs the connector live, past the demo-mode switch (ADR-052)', () => {
     expect(files['connector.contract.ts']).toContain("'x-bff-mode': 'live'");
     expect(files['connector.contract.ts']).toContain('options.fetchFn =');
+    // The spec's server is wherever it is: the request is matched by the spec path it ends with.
+    expect(files['connector.contract.ts']).toContain('u.pathname.endsWith(r.pathname)');
+    // Mesh adds the spec's default parameters, so a recording matches on the ones it was made with.
+    expect(files['connector.contract.ts']).toContain('[...r.searchParams].every(([k, v]) => u.searchParams.get(k) === v)');
   });
 });

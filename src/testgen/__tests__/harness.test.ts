@@ -3,11 +3,13 @@
  * the way an MFE's ts-jest would, and run.
  */
 import * as ts from 'typescript';
+import { bodyHash as captureHash, bodyKey } from '../../decompose/bundle';
 import { RECORDED_NETWORK } from '../harness';
 
 interface Harness {
-  installRecordedNetwork(r: Record<string, { status: number; mimeType: string; body: unknown }>): { calls: string[]; unexpected: string[]; restore(): void };
+  installRecordedNetwork(r: Record<string, { status: number; mimeType: string; body: unknown }>, o?: { appOrigin?: string }): { calls: string[]; unexpected: string[]; restore(): void };
   missingText(page: string, expected: string): string | null;
+  bodyHash(text: string): string;
   requestKey(method: string, url: string): string;
 }
 
@@ -70,6 +72,36 @@ describe('the generated recorded-network harness', () => {
     }
   });
 
+  it('hashes a body exactly as decompose:capture keys it', () => {
+    for (const text of ['', '{"query":"{ a }"}', '{"query":"{ listVessels { vesselName } }"} — ₢ ✓']) expect(h.bodyHash(text)).toBe(captureHash(text));
+  });
+
+  it('answers each GraphQL document with the response recorded for it, by fetch and by XHR', async () => {
+    const one = '{"query":"{ a }"}';
+    const two = '{"query":"{ b }"}';
+    const net = h.installRecordedNetwork({
+      'POST /graphql': { status: 200, mimeType: 'application/json', body: { data: { a: 1 } } },
+      [bodyKey('POST', '/graphql', two)]: { status: 200, mimeType: 'application/json', body: { data: { b: 2 } } },
+    });
+    try {
+      const f = globalThis.fetch as unknown as (u: string, i: { method: string; body: string }) => Promise<{ json(): Promise<unknown> }>;
+      expect(await (await f('/graphql', { method: 'POST', body: two })).json()).toEqual({ data: { b: 2 } });
+      expect(await (await f('/graphql', { method: 'POST', body: one })).json()).toEqual({ data: { a: 1 } });
+      const Xhr = (globalThis as unknown as { XMLHttpRequest: new () => Record<string, unknown> & { open(m: string, u: string): void; send(b?: string): void } }).XMLHttpRequest;
+      const x = new Xhr();
+      const done = new Promise<void>((resolve) => {
+        x.onloadend = () => resolve();
+      });
+      x.open('POST', '/graphql');
+      x.send(two);
+      await done;
+      expect(JSON.parse(x.responseText as string)).toEqual({ data: { b: 2 } });
+      expect(net.unexpected).toEqual([]);
+    } finally {
+      net.restore();
+    }
+  });
+
   it('restores the globals it replaced', () => {
     const before = globalThis.fetch;
     h.installRecordedNetwork({}).restore();
@@ -80,6 +112,17 @@ describe('the generated recorded-network harness', () => {
     expect(h.missingText('Docking board3 vessels', 'Docking board 3')).toBeNull();
     expect(h.missingText('3 Docking board', 'Docking board 3')).toBe('3');
     expect(h.missingText('Docking', 'Docking board')).toBe('board');
+  });
+
+  it('answers a call to the captured app’s own origin by the app-relative key, whatever jsdom’s origin is', async () => {
+    const net = h.installRecordedNetwork(responses, { appOrigin: 'http://localhost:5008' });
+    try {
+      const f = globalThis.fetch as unknown as (u: string) => Promise<{ status: number }>;
+      expect((await f('http://localhost:5008/api/harbormaster/berths')).status).toBe(200);
+      expect(net.calls).toEqual(['GET /api/harbormaster/berths']);
+    } finally {
+      net.restore();
+    }
   });
 
   it('keys requests relative to the origin, other origins absolute', () => {

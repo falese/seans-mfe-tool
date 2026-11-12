@@ -14,7 +14,7 @@
 import { launchBrowser, type ChromiumLike } from '../design/dom-capture';
 import { ValidationError } from '@seans-mfe/contracts';
 import { initiatorFiles, type CdpStackTrace } from './attribution';
-import { isInfrastructureRequest, relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
+import { bodyKey, isInfrastructureRequest, relativeUrl, responseKey, type JourneyRun, type RawRequest, type RawStep, type RecordedResponse } from './bundle';
 import type { Journey, JourneyStep } from './journeys';
 import { probeElements, routePath, type ProbeResult } from './page-probe';
 import { assembleRegions, normalizeSourcePath } from './regions';
@@ -189,8 +189,8 @@ async function runJourney(
           { urlPattern: '*', resourceType: 'Fetch', requestStage: 'Request' },
         ],
       });
-      cdp.on('Fetch.requestPaused', (e: { requestId: string; request: { method: string; url: string } }) => {
-        const answer = replayAnswer(e.request.method, e.request.url, options.url, recorded);
+      cdp.on('Fetch.requestPaused', (e: { requestId: string; request: { method: string; url: string; postData?: string } }) => {
+        const answer = replayAnswer(e.request.method, e.request.url, options.url, recorded, e.request.postData);
         if (answer.kind === 'continue') {
           void cdp.send('Fetch.continueRequest', { requestId: e.requestId }).catch(() => undefined);
           return;
@@ -233,7 +233,8 @@ async function runJourney(
         url: e.request.url,
         initiator: initiatorFiles(e.initiator?.stack, options.sourceRoot),
         // A GraphQL request's document says which backend calls it stands for (ADR-127 §4).
-        ...(e.request.postData && isBffRequest(e.request.method, e.request.url, options.url) ? { postData: e.request.postData } : {}),
+        // Kept for any GraphQL request, so its response is recorded per document too (ADR-129).
+        ...(e.request.postData && isGraphqlPost(e.request.method, e.request.url) ? { postData: e.request.postData } : {}),
       };
       requests.push(req);
       byId.set(e.requestId, req);
@@ -368,6 +369,15 @@ export function isBffRequest(method: string, url: string, appUrl: string): boole
   }
 }
 
+/** A GraphQL request, on any origin: its document is what it asks for. */
+export function isGraphqlPost(method: string, url: string): boolean {
+  try {
+    return method.toUpperCase() === 'POST' && /\/graphql\/?$/.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
 export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: number; mimeType: string; body: string; miss: boolean };
 
 /**
@@ -376,9 +386,11 @@ export type ReplayAnswer = { kind: 'continue' } | { kind: 'fulfill'; status: num
  * never recorded (#442), nor a composed shell's control-plane calls, so both go
  * through to the server instead of failing.
  */
-export function replayAnswer(method: string, url: string, appUrl: string, recorded: Record<string, RecordedResponse>): ReplayAnswer {
+export function replayAnswer(method: string, url: string, appUrl: string, recorded: Record<string, RecordedResponse>, body?: string): ReplayAnswer {
   if (isInfrastructureRequest(url)) return { kind: 'continue' };
-  const hit = recorded[responseKey(method, relativeUrl(url, appUrl))];
+  const rel = relativeUrl(url, appUrl);
+  // The response recorded for this document first, then the first for the URL (ADR-129).
+  const hit = (body ? recorded[bodyKey(method, rel, body)] : undefined) ?? recorded[responseKey(method, rel)];
   // A ported MFE's BFF, on its own origin: it answers from its demo fixtures, the capture (ADR-127 §4).
   // Its CORS preflight goes through too, or the browser never sends the request.
   if (!hit && (isBffRequest(method, url, appUrl) || isBffRequest('POST', url, appUrl) && method.toUpperCase() === 'OPTIONS')) return { kind: 'continue' };

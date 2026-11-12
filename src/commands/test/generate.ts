@@ -41,6 +41,10 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
     fleet: Flags.string({ description: 'With --proposal, the fleet (default: what decompose:scaffold recorded)' }),
     'app-dir': Flags.string({ description: 'The monolith\'s source, for moving its kept tests (default: what decompose:analyze recorded)' }),
     force: Flags.boolean({ char: 'f', description: 'Replace generated files a developer has changed', default: false }),
+    upstream: Flags.boolean({
+      description: 'Record each BFF spec operation the capture has no response for from its server, for the contract tests (an MFE read through its BFF shows the browser only the BFF)',
+      default: false,
+    }),
   };
 
   protected async runCommand(): Promise<TestGenerateResult> {
@@ -50,7 +54,7 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
     let evidence: string;
     if (flags.proposal) {
       evidence = path.resolve(flags.evidence ?? path.join(target, '..'));
-      results = await generateFleetTests({ proposalDir: target, evidenceDir: evidence, fleetDir: flags.fleet, appDir: flags['app-dir'], force: flags.force });
+      results = await generateFleetTests({ proposalDir: target, evidenceDir: evidence, fleetDir: flags.fleet, appDir: flags['app-dir'], force: flags.force, upstream: flags.upstream });
       // Which proposal and capture the fleet's tests were generated from, by content (ADR-119).
       const marker = path.join(target, 'tests.json');
       await fs.writeJson(marker, { mfes: results.map((r) => r.mfe) }, { spaces: 2 });
@@ -58,7 +62,7 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
     } else {
       if (!flags.evidence) throw new ValidationError('--evidence is required for a single MFE', 'evidence', 'required');
       evidence = path.resolve(flags.evidence);
-      results = [await generateTests({ mfeDir: target, evidenceDir: evidence, appDir: flags['app-dir'], force: flags.force })];
+      results = [await generateTests({ mfeDir: target, evidenceDir: evidence, appDir: flags['app-dir'], force: flags.force, upstream: flags.upstream })];
     }
 
     for (const r of results) {
@@ -69,9 +73,13 @@ export default class TestGenerate extends BaseCommand<TestGenerateResult> {
       );
       for (const s of r.skipped) this.log(chalk.gray(`      ${s.capability}: ${s.reason}`));
       for (const u of r.contract.unrecorded) this.warnings.push(`${r.mfe}: ${u} has no recording — no contract test`);
+      this.warnings.push(...r.warnings.map((w) => `${r.mfe}: ${w}`));
       for (const k of r.kept) this.warnings.push(`${r.mfe}: ${k} was changed since it was generated — kept (--force replaces it)`);
     }
-    this.log(chalk.gray('\n  next: in each MFE, npm test; npm run test:e2e against the monolith, then the composed shell (SMT_TARGET_URL)\n'));
-    return { evidence, mfes: results.map(({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, report }) => ({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, report })) };
+    this.log(chalk.gray('\n  next: in each MFE, npm test; npm run test:contract; SMT_TARGET_URL=<the captured app> npm run test:e2e — then any shell it composes into\n'));
+    return {
+      evidence,
+      mfes: results.map(({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, warnings, report }) => ({ mfe, dir, alone, skipped, journeys, contract, migrated, written, kept, warnings, report })),
+    };
   }
 }

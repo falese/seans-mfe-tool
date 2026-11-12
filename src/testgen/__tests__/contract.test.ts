@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import type { OpenApiDocument } from '@seans-mfe/decompose';
-import { planContracts } from '../contract';
+import { planContracts, upstreamRequests } from '../contract';
 import { SCHEMA_CHECK } from '../emit';
 
 const spec: OpenApiDocument = {
@@ -47,6 +47,10 @@ describe('planContracts', () => {
     ]);
   });
 
+  it('records where the upstream answers each one: the spec path, parameters filled, with its query', () => {
+    expect(plan.operations.map((o) => o.upstream)).toEqual(['/charges?limit=50', '/charges/CHG-1']);
+  });
+
   it('carries the hoist and the document that restores the REST names', () => {
     const list = plan.operations[0];
     expect(list.hoist).toEqual({ prop: 'result', field: 'charges' });
@@ -57,8 +61,43 @@ describe('planContracts', () => {
     expect(plan.operations[1].schema).toEqual({ type: 'object', properties: { chargeId: { type: 'string' }, amountCents: { type: 'integer' } } });
   });
 
+  it('expects back what the spec declares, and names what the backend sends beyond it', () => {
+    const extra = planContracts(
+      { ledger: spec },
+      { 'GET /api/ledger/charges/CHG-1': { status: 200, mimeType: 'application/json', body: { chargeId: 'CHG-1', amountCents: 5, createdAt: 'x', id: 7 } } },
+      { gateway: true }
+    ).operations[0];
+    expect(extra.expected).toEqual({ chargeId: 'CHG-1', amountCents: 5 });
+    expect(extra.undeclared).toEqual(['$.createdAt', '$.id']);
+    const list = plan.operations[0];
+    expect(list.expected).toEqual(body);
+    expect(list.undeclared).toEqual([]);
+  });
+
   it('says which operations no recording covers', () => {
     expect(plan.unrecorded).toEqual(['GET /api/ledger/payroll']);
+  });
+});
+
+describe('upstreamRequests', () => {
+  it('asks each spec server for its GET operations that need no argument, keyed as planContracts looks them up', () => {
+    expect(upstreamRequests({ ledger: spec }, { gateway: true })).toEqual([
+      { key: 'GET /api/ledger/charges', url: 'http://localhost:5102/charges' },
+      { key: 'GET /api/ledger/payroll', url: 'http://localhost:5102/payroll' },
+    ]);
+  });
+
+  it('pairs a snake_case operation with its recording under the name the BFF gives it', () => {
+    const harbormaster = {
+      ...spec,
+      servers: [{ url: 'http://harbormaster-api:5101/api' }],
+      paths: { '/vessels': { get: { operationId: 'list_vessels', responses: { '200': { description: 'ok', content: { 'application/json': { schema: { type: 'array', items: { type: 'object', properties: { vessel_name: { type: 'string' } } } } } } } } } } },
+      components: {},
+    } as OpenApiDocument;
+    const [req] = upstreamRequests({ harbormaster }, { gateway: true });
+    expect(req).toEqual({ key: 'GET /api/harbormaster/vessels', url: 'http://harbormaster-api:5101/api/vessels' });
+    const plan = planContracts({ harbormaster }, { [req.key]: { status: 200, mimeType: 'application/json', body: [{ vessel_name: 'Solace' }] } }, { gateway: true });
+    expect(plan.operations.map((o) => [o.field, o.schema.type])).toEqual([['listVessels', 'array']]);
   });
 });
 

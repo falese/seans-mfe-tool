@@ -47,9 +47,9 @@ describe('codegen characterization', () => {
   });
 
   it('covers every manifest in the repository', () => {
-    // 21 MFEs across the two fleets. A manifest silently dropping out of the
+    // 22 MFEs across the two fleets (meridian-arrivals is the 22nd). A manifest silently dropping out of the
     // walk would otherwise weaken the freeze without failing anything.
-    expect(snapshot).toHaveLength(21);
+    expect(snapshot).toHaveLength(22);
   });
 
   it('parses and generates every manifest without error', () => {

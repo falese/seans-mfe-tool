@@ -28,6 +28,34 @@ Each MFE also gets a `TESTS.md`: what each suite covers, the operations no recor
 what happened to each of the monolith's tests (kept, rewritten as characterization, discarded,
 with the reasons).
 
+## An MFE built natively, not ported
+
+`meridian-station/meridian-arrivals` was made with `remote:init` and `remote:generate` like the
+rest of the fleet. Its screens read through its own BFF, so a capture of it sees only the BFF:
+
+```bash
+# serve it (a development build: capture maps regions through React's development metadata)
+npx mesh build && NODE_ENV=development npx rspack build --mode development
+PORT=5008 npx ts-node --transpile-only server.ts
+
+seans-mfe-tool decompose:capture http://localhost:5008 --journeys journeys.yaml --out ./evidence
+seans-mfe-tool test:generate . --evidence ./evidence --upstream
+```
+
+- **Each GraphQL document is answered with its own response.** Capture records them by body as
+  well as by URL, and the generated tests look the body up first.
+- **`--upstream`** records each spec operation the capture holds no response for from its
+  server, so the contract tests have the backends' real payloads. Without it, those operations
+  are listed in `TESTS.md` as untested.
+- **The BFF's own configuration is what is tested:** its hoists from the manifest, its root
+  fields as the naming convention renames them. Fields a backend sends beyond its spec are not
+  exposed by the BFF; `TESTS.md` names them (meridian's three backends all send `id`,
+  `createdAt` and `updatedAt`, which the fleet's specs do not declare).
+
+On meridian-arrivals: 47 Jest tests (the 10 hand-written ones included), 16 connector contracts
+and both journeys pass against the running MFE. Rewording "delinquent operator" fails the alone
+test, naming the missing word. Recolouring the DELINQUENT badge fails only the journey pixels.
+
 ## Running the journeys
 
 Point the spec at the monolith first. It must pass there, which proves the capture replays

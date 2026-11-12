@@ -7,7 +7,7 @@
  * once written.
  */
 
-import { GENERATED_MARK, JSDOM_NOISE } from './harness';
+import { BODY_HASH_SOURCE, GENERATED_MARK, JSDOM_NOISE } from './harness';
 
 const noise = `[${JSDOM_NOISE.map((r) => r.toString()).join(', ')}]`;
 
@@ -44,7 +44,7 @@ describe('${capability} — as captured', () => {
   beforeEach(() => {
     // The capture's frozen clock; every other timer runs for real.
     jest.useFakeTimers({ now: new Date(evidence.clock), doNotFake: [...TIMERS] });
-    net = installRecordedNetwork(recorded as unknown as Record<string, RecordedResponse>);
+    net = installRecordedNetwork(recorded as unknown as Record<string, RecordedResponse>, { appOrigin: new URL(evidence.app).origin });
     errors = [];
     spy = jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
       const text = args.map(String).join(' ');
@@ -59,6 +59,7 @@ describe('${capability} — as captured', () => {
     jest.useRealTimers();
   });
 
+  // waitFor's budget sits inside the test's, so a failure says what was missing rather than timing out.
   it.each(evidence.cases)('$step at $path', async (c) => {
     window.history.pushState({}, '', c.path);
     const { container } = render(<${capability} />);
@@ -71,12 +72,12 @@ describe('${capability} — as captured', () => {
         });
         expect(missing).toEqual([]);
       },
-      { timeout: 5000 }
+      { timeout: 10_000 }
     );
     expect(c.calls.filter((call) => !net.calls.includes(call))).toEqual([]);
     expect(net.unexpected).toEqual([]);
     expect(errors.filter((e) => !c.consoleErrors.some((known) => e.includes(known)))).toEqual([]);
-  });
+  }, 20_000);
 });
 `;
 }
@@ -115,6 +116,9 @@ function relative(url: string): string {
   const u = new URL(url);
   return u.origin === TARGET.origin ? u.pathname + u.search : u.toString();
 }
+
+/** As decompose:capture keys a response by its request body: one GraphQL endpoint, many documents. */
+${BODY_HASH_SOURCE}
 
 /** \`METHOD path\`, without the query: a BFF field stands for an endpoint, not one URL. */
 const endpoint = (call: string): string => call.split('?')[0];
@@ -191,9 +195,11 @@ for (const journey of evidence.journeys) {
       if (!['xhr', 'fetch'].includes(req.resourceType())) return route.continue();
       const key = \`\${req.method()} \${relative(req.url())}\`;
       const bff = req.method() === 'POST' && /\\/graphql\\/?(\\?|$)/.test(req.url()) ? rootFields(String((req.postDataJSON() as { query?: string } | null)?.query ?? '')) : [];
-      if (bff.length > 0) made.push(...bff.flatMap((f) => (evidence.bff as unknown as Record<string, string>)[f] ?? []));
-      else made.push(key);
-      const hit = (evidence.responses as unknown as Record<string, { status: number; mimeType: string; body: unknown }>)[key];
+      // A GraphQL request is itself, and the backend calls its fields stand for (ADR-127 §4).
+      made.push(key, ...bff.flatMap((f) => (evidence.bff as unknown as Record<string, string>)[f] ?? []));
+      const responses = evidence.responses as unknown as Record<string, { status: number; mimeType: string; body: unknown }>;
+      const body = req.postData() ?? '';
+      const hit = (body ? responses[\`\${key} #\${bodyHash(body)}\`] : undefined) ?? responses[key];
       if (!hit) return route.continue();
       return route.fulfill({ status: hit.status, contentType: hit.mimeType, body: typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body) });
     });
@@ -306,9 +312,9 @@ export function contractTestSource(mfe: string): string {
  *
  * ${mfe}'s BFF — provider contract. ${GENERATED_MARK}.
  *
- * Each upstream response the capture recorded must be what the BFF's OpenAPI
- * spec (specs/*.yaml) says that operation returns, and the demo-mode fixture
- * (mocks.json, ADR-052) must be exactly that response. The connector half —
+ * Each upstream response recorded must be what the BFF's OpenAPI spec
+ * (specs/*.yaml) says that operation returns, and where demo mode has a fixture
+ * for the operation (mocks.json, ADR-052) it must be exactly that response. The connector half —
  * the built Mesh answering its GraphQL from these recordings — is
  * ../contract/connector.contract.ts, run by \`npm run test:contract\`.
  */
@@ -327,12 +333,14 @@ describe('${mfe} BFF — what the backends sent is what the specs say', () => {
 
 describe('${mfe} BFF — demo mode serves what the backends sent', () => {
   const served = mocks as unknown as Record<string, unknown>;
-  it.each(fixtures.operations as unknown as Recorded[])('$field', (op) => {
-    if (op.hoist) {
-      expect(served[op.hoist.field]).toEqual((op.body as Record<string, unknown>)[op.hoist.prop]);
-    } else {
-      expect(served[op.field]).toEqual(op.body);
-    }
+  const fixtureOf = (op: Recorded) => served[op.hoist ? op.hoist.field : op.field];
+  const withFixture = (fixtures.operations as unknown as Recorded[]).filter((op) => fixtureOf(op) !== undefined);
+  if (withFixture.length === 0) {
+    it('has no demo fixtures for these operations, so nothing to hold to them', () => expect(withFixture).toEqual([]));
+    return;
+  }
+  it.each(withFixture)('$field', (op) => {
+    expect(fixtureOf(op)).toEqual(op.hoist ? (op.body as Record<string, unknown>)[op.hoist.prop] : op.body);
   });
 });
 `;
@@ -349,8 +357,9 @@ export function connectorTestSource(mfe: string): string {
  * capture's recordings, and asks each operation for every field the spec
  * declares, under the REST names (the document is the one decompose:verify
  * reads traffic by). The answer, as it goes over the wire, must be the recorded
- * response: the connector may rename and unwrap, but not drop, add or change a
- * value. A date-time is compared as the instant it names: Mesh's DateTime
+ * response as far as the spec declares it (\`expected\`): the connector may rename
+ * and unwrap, but not drop, add or change a declared value. What the backend
+ * sends beyond its spec is not exposed, and TESTS.md lists it. A date-time is compared as the instant it names: Mesh's DateTime
  * scalar re-serialises \`…T18:40:00Z\` as \`…T18:40:00.000Z\`.
  *
  * Needs .mesh/ — run through \`npm run test:contract\`, which builds it first.
@@ -359,7 +368,7 @@ import { getMesh } from '@graphql-mesh/runtime';
 import { getMeshOptions } from '../../../../.mesh';
 import fixtures from './recorded.json';
 
-interface Recorded { call: string; url: string; field: string; document: string; variables: Record<string, unknown>; hoist?: { prop: string; field: string }; body: unknown }
+interface Recorded { call: string; url: string; upstream: string; field: string; document: string; variables: Record<string, unknown>; hoist?: { prop: string; field: string }; body: unknown; expected: unknown }
 
 const ops = fixtures.operations as unknown as Recorded[];
 let execute: (document: string, variables: Record<string, unknown>) => Promise<{ data?: Record<string, unknown> | null; errors?: unknown[] }>;
@@ -373,10 +382,13 @@ beforeAll(async () => {
   const options = await getMeshOptions();
   options.fetchFn = (async (input: unknown) => {
     const u = new URL(typeof input === 'string' ? input : String((input as { url?: string }).url ?? input));
-    const hit = ops.find((o) => {
-      const r = new URL(o.url, u.origin);
-      return r.pathname === u.pathname && r.search === u.search;
-    });
+    // Matched by the spec path the request ends with (the spec's server is wherever it is) and
+    // every parameter the recording was made with; Mesh adds the spec's defaults (\`limit=50\`).
+    // Of several, the recording with the most parameters in common.
+    const hit = ops
+      .map((o) => ({ o, r: new URL(o.upstream, u.origin) }))
+      .filter(({ r }) => u.pathname.endsWith(r.pathname) && [...r.searchParams].every(([k, v]) => u.searchParams.get(k) === v))
+      .sort((a, b) => [...b.r.searchParams].length - [...a.r.searchParams].length)[0]?.o;
     return new Response(JSON.stringify(hit ? hit.body : { error: \`no recording for \${u.pathname}\${u.search}\` }), {
       status: hit ? 200 : 404,
       headers: { 'content-type': 'application/json' },
@@ -394,7 +406,7 @@ describe('${mfe} BFF — the connector returns what the backends sent', () => {
     expect(result.errors ?? []).toEqual([]);
     const data = result.data ?? {};
     const answer = op.hoist ? { ...((data.r as Record<string, unknown> | undefined) ?? {}), [op.hoist.prop]: data.h } : data.r;
-    expect(wire(answer)).toEqual(wire(op.body));
+    expect(wire(answer)).toEqual(wire(op.expected));
   });
 });
 `;

@@ -15,14 +15,14 @@
  * Pure: no file system.
  */
 
-import { hoistsOf, type OpenApiDocument, type OperationObject, type SchemaObject } from './openapi';
+import { hoistsOf, type HoistRule, type OpenApiDocument, type OperationObject, type SchemaObject } from './openapi';
 import type { BackendLayout } from './backends';
 
 export interface BffOperation {
   method: string;
   /** The app-relative path template the client calls: `/api/harbormaster/dockings`, `/api/x/{id}`. */
   path: string;
-  /** The GraphQL root field: the operation's id. */
+  /** The GraphQL root field: the operation's id, camel-cased as the BFF exposes it. */
   field: string;
   document: string;
   /** Variables the document takes, and where each comes from in the request. */
@@ -101,9 +101,12 @@ function* operationsOf(doc: OpenApiDocument): Generator<{ method: string; path: 
   }
 }
 
-/** One GraphQL document per operation of a backend's document (ADR-127 §2). */
-export function bffOperations(doc: OpenApiDocument, backend: string, layout: BackendLayout): BffOperation[] {
-  const hoists = hoistsOf(doc);
+/**
+ * One GraphQL document per operation of a backend's document (ADR-127 §2).
+ * `hoists` are the BFF's configured `hoistField` rules; by default, those a
+ * derived BFF is generated with (`hoistsOf`).
+ */
+export function bffOperations(doc: OpenApiDocument, backend: string, layout: BackendLayout, hoists: HoistRule[] = hoistsOf(doc)): BffOperation[] {
   const out: BffOperation[] = [];
   for (const { method, path, op } of operationsOf(doc)) {
     if (!op.operationId) continue;
@@ -116,12 +119,14 @@ export function bffOperations(doc: OpenApiDocument, backend: string, layout: Bac
     const roots: string[] = [];
     const rest = selection(doc, schema, hoist?.pathConfig[1]);
     // A response that is only the hoisted list keeps no fields of its own to ask for.
-    if (!hoist || rest) roots.push(`r: ${op.operationId}${args}${rest}`);
+    // The naming convention renames operation ids too (`list_vessels` → `listVessels`); hoists are configured by the raw id.
+    const field = graphqlName(op.operationId);
+    if (!hoist || rest) roots.push(`r: ${field}${args}${rest}`);
     if (hoist) roots.push(`h: ${hoist.newFieldName}${selection(doc, schema?.properties?.[hoist.pathConfig[1]])}`);
     out.push({
       method,
       path: `${prefixOf(backend, layout)}${path}`,
-      field: op.operationId,
+      field,
       document: `query${decl ? ` (${decl})` : ''} { ${roots.join(' ')} }`,
       variables,
       ...(hoist ? { hoist: { prop: hoist.pathConfig[1], field: hoist.newFieldName } } : {}),
@@ -218,7 +223,7 @@ export function bffReads(doc: OpenApiDocument, backend: string, layout: BackendL
     const params = hoist ? [] : (op.parameters ?? []).filter((p) => NAME.test(p.name));
     const decl = params.map((p) => `$${p.name}: ${graphqlType(p.schema)}${p.required ? '!' : ''}`).join(', ');
     const args = params.length > 0 ? `(${params.map((p) => `${p.name}: $${p.name}`).join(', ')})` : '';
-    const field = hoist ? hoist.newFieldName : op.operationId;
+    const field = hoist ? hoist.newFieldName : graphqlName(op.operationId);
     const target = hoist ? schema?.properties?.[hoist.pathConfig[1]] : schema;
     out.push({
       method,
