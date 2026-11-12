@@ -28,6 +28,10 @@ implemented-by:
   - src/testgen/crawl.ts
   - src/testgen/crawl-page.ts
   - src/testgen/record.ts
+  - src/testgen/spec-contract.ts
+  - packages/codegen/templates/base-mfe/mfe.test.ts.ejs
+  - packages/codegen/templates/base-mfe-angular/mfe.test.ts.ejs
+  - packages/runtime/src/base-mfe.ts
   - src/decompose/bundle.ts
   - src/decompose/capture.ts
   - packages/decompose/src/bff-plan.ts
@@ -41,6 +45,8 @@ verified-by:
   - src/testgen/__tests__/generate.test.ts
   - src/testgen/__tests__/crawl.test.ts
   - src/testgen/__tests__/crawl-page.test.ts
+  - src/testgen/__tests__/spec-contract.test.ts
+  - packages/runtime/src/__tests__/error-result-lifecycle.test.ts
   - src/decompose/__tests__/bundle.test.ts
   - src/decompose/__tests__/capture.test.ts
   - packages/decompose/src/__tests__/bff-plan.test.ts
@@ -207,6 +213,49 @@ authors:
 the tests from the recording. With no journey file it crawls first and writes one. The recording
 is a means, not an artifact: the journey file and the generated tests are what is committed.
 `--evidence` still generates from an existing bundle, as decomposition does.
+
+### 10. Generated with the MFE: platform conformance
+
+`remote:generate` writes `src/platform/base-mfe/mfe.test.ts` (generator-owned, held by
+`check:mfe-drift`, both framework lanes). It is the MFE's conformance suite: the class
+constructed from its own manifest and held to the platform contract, not checked for the
+shape of its methods:
+
+- every capability in `@seans-mfe/contracts` exists (ADR-041, ADR-080);
+- it starts `uninitialized`, loads to `ready` offering exactly the manifest's domain
+  capabilities, and refuses to render before it has loaded (ADR-042);
+- each domain capability renders into a container and draws, and an unknown component is
+  a typed `ValidationError`;
+- health, describe, schema, authorizeAccess, refresh, emit (with and without telemetry),
+  updateControlPlaneState (no control plane) answer as the contract says;
+- query asks the BFF the manifest derives and answers a transport failure in the envelope
+  (ADR-053, ADR-106), or, with no `data:`, answers `{ data: null }` with no request (ADR-070);
+- each lifecycle hook the manifest declares on load and render runs in its phase, before
+  hooks ahead of after hooks, and each `error` hook runs when its capability fails, with no
+  `after` hook.
+
+The last check found that a failure a capability *reports* (`{ status: 'error' }`, as `doLoad`
+and `doRender` answer) never ran the declared error hooks and ran the after hooks as if it had
+succeeded. `BaseMFE.executeCapability` now treats a reported failure as ADR-042 says: error
+phase, no after phase. It does **not** move the MFE to the `error` state. ADR-042 says it
+should, but one MFE instance renders into many slots (six BerthTiles from one instance). In
+`error`, its next render in every other slot would throw. That conflict is left to its own
+decision.
+
+### 11. Generated with the MFE: the BFF's contract from its specs
+
+For an MFE with `data:` sources, `remote:generate` reads the OpenAPI documents the manifest
+names and writes `src/platform/bff/contract/spec.json` and `spec.contract.ts` (generator-owned,
+re-stamped every run). For each read operation it synthesises an upstream answer from the
+response schema: every declared field, the spec's `example` first (Mesh infers a scalar's type
+from it), two distinct items per list. The test runs the built Mesh against it and expects
+every declared value back, then fails each upstream once and expects a GraphQL error, not
+data. Writes, and parameters the BFF does not take, are listed as uncovered. A recording
+(§5) later adds the same test over real traffic. Both run under `npm run test:contract`, which
+new MFEs now get in `package.json`.
+
+The generated tests read their data files with `fs` rather than importing JSON: an Angular
+spec tsconfig does not allow JSON modules.
 
 ## Boundaries
 

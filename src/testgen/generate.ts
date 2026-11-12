@@ -317,7 +317,7 @@ function report(plan: TestPlan, contract: ContractPlan, migrated: GeneratedMfeTe
 
 const SCRIPTS: Record<string, string> = {
   'test:e2e': 'playwright test -c playwright.characterization.config.ts',
-  'test:contract': "mesh build && jest --testRegex 'contract/connector\\.contract\\.ts$'",
+  'test:contract': "mesh build && jest --testRegex 'contract/[^/]+\\.contract\\.ts$'",
 };
 
 /** The scripts, the Playwright dependency, and keeping Jest off the Playwright spec. Only adds. */

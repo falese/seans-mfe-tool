@@ -12,6 +12,7 @@ const files: Record<string, string> = {
   'playwright.config.ts': playwrightConfigSource({ width: 1440, height: 900 }),
   'contract.test.ts': contractTestSource('meridian-ops-cargo'),
   'connector.contract.ts': connectorTestSource('meridian-ops-cargo'),
+  'spec.contract.ts': connectorTestSource('meridian-ops-cargo', { data: './spec.json', from: 'its specs', mark: 'MARK', failures: true }),
   'schema-check.ts': SCHEMA_CHECK,
   'recorded-network.ts': RECORDED_NETWORK,
 };
@@ -31,15 +32,26 @@ describe('generated sources', () => {
     expect(files['alone.test.tsx']).toContain('/not wrapped in act\\(/');
   });
 
+  it('reads its data with fs, so no MFE needs resolveJsonModule', () => {
+    for (const name of ['alone.test.tsx', 'contract.test.ts', 'connector.contract.ts', 'spec.contract.ts']) expect(files[name]).not.toMatch(/^import \w+ from '[^']+\.json';/m);
+  });
+
   it('names the capability and where its data lives', () => {
     expect(files['alone.test.tsx']).toContain("import { CargoManifest } from './CargoManifest';");
-    expect(files['alone.test.tsx']).toContain("import evidence from './__characterization__/CargoManifest.json';");
+    expect(files['alone.test.tsx']).toContain("json<{ app: string;");
+    expect(files['alone.test.tsx']).toContain("'./__characterization__/CargoManifest.json'");
     expect(files['journeys.spec.ts']).toContain("process.env.SMT_TARGET_URL ?? evidence.app");
   });
 
   it('answers a GraphQL document with the response recorded for it, hashed as capture hashes it', () => {
     expect(files['journeys.spec.ts']).toContain('function bodyHash(text: string): string {');
     expect(files['journeys.spec.ts']).toContain("responses[`${key} #${bodyHash(body)}`]");
+  });
+
+  it('the spec variant reads its own data and also fails each upstream once', () => {
+    expect(files['spec.contract.ts']).toContain("join(__dirname, './spec.json')");
+    expect(files['spec.contract.ts']).toContain('reports an upstream failure as an error, not as data');
+    expect(files['connector.contract.ts']).not.toContain('reports an upstream failure');
   });
 
   it('runs the connector live, past the demo-mode switch (ADR-052)', () => {

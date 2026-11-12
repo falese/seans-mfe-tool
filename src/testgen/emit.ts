@@ -29,8 +29,13 @@ import React from 'react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import { ${capability} } from './${capability}';
 import { installRecordedNetwork, missingText, type RecordedNetwork, type RecordedResponse } from '../../__smt__/recorded-network';
-import recorded from '../../__smt__/recorded.json';
-import evidence from './__characterization__/${capability}.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read, not imported: an MFE's tsconfig need not allow JSON modules (an Angular spec config does not).
+const json = <T,>(file: string): T => JSON.parse(readFileSync(join(__dirname, file), 'utf8')) as T;
+const recorded = json<Record<string, unknown>>('../../__smt__/recorded.json');
+const evidence = json<{ app: string; clock: string; cases: Array<{ step: string; path: string; regions: Array<{ region: string; text: string }>; calls: string[]; consoleErrors: string[] }> }>('./__characterization__/${capability}.json');
 
 /** What jsdom logs and a browser never would. */
 const JSDOM_NOISE = ${noise};
@@ -318,8 +323,13 @@ export function contractTestSource(mfe: string): string {
  * the built Mesh answering its GraphQL from these recordings — is
  * ../contract/connector.contract.ts, run by \`npm run test:contract\`.
  */
-import fixtures from '../contract/recorded.json';
-import mocks from '../mocks.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read, not imported: an MFE's tsconfig need not allow JSON modules.
+const json = (file: string): unknown => JSON.parse(readFileSync(join(__dirname, file), 'utf8'));
+const fixtures = json('../contract/recorded.json') as { operations: unknown[] };
+const mocks = json('../mocks.json');
 import { schemaErrors, type Schema } from '../contract/schema-check';
 
 interface Recorded { call: string; field: string; hoist?: { prop: string; field: string }; schema: Schema; status: number; body: unknown }
@@ -347,14 +357,19 @@ describe('${mfe} BFF — demo mode serves what the backends sent', () => {
 }
 
 /** Jest, node, after \`mesh build\`: the connector itself, upstream answered from the recordings (§5). */
-export function connectorTestSource(mfe: string): string {
+/**
+ * The connector test over one data file: the capture's recordings (`recorded.json`, test:generate),
+ * or answers synthesised from the specs (`spec.json`, remote:generate — ADR-129 §11). The spec
+ * variant also fails each upstream once and expects a GraphQL error, not data.
+ */
+export function connectorTestSource(mfe: string, source: { data: string; from: string; mark: string; failures: boolean } = { data: './recorded.json', from: "the capture's recordings", mark: GENERATED_MARK, failures: false }): string {
   return `/**
  * @jest-environment node
  *
- * ${mfe}'s BFF — connector contract. ${GENERATED_MARK}.
+ * ${mfe}'s BFF — connector contract. ${source.mark}.
  *
- * Runs the built Mesh in-process with its upstream fetch answered from the
- * capture's recordings, and asks each operation for every field the spec
+ * Runs the built Mesh in-process with its upstream fetch answered from
+ * ${source.from}, and asks each operation for every field the spec
  * declares, under the REST names (the document is the one decompose:verify
  * reads traffic by). The answer, as it goes over the wire, must be the recorded
  * response as far as the spec declares it (\`expected\`): the connector may rename
@@ -366,12 +381,18 @@ export function connectorTestSource(mfe: string): string {
  */
 import { getMesh } from '@graphql-mesh/runtime';
 import { getMeshOptions } from '../../../../.mesh';
-import fixtures from './recorded.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read, not imported: an MFE's tsconfig need not allow JSON modules (an Angular spec config does not).
+const fixtures = JSON.parse(readFileSync(join(__dirname, '${source.data}'), 'utf8')) as { operations: unknown[] };
 
 interface Recorded { call: string; url: string; upstream: string; field: string; document: string; variables: Record<string, unknown>; hoist?: { prop: string; field: string }; body: unknown; expected: unknown }
 
 const ops = fixtures.operations as unknown as Recorded[];
 let execute: (document: string, variables: Record<string, unknown>) => Promise<{ data?: Record<string, unknown> | null; errors?: unknown[] }>;
+/** The upstream path answered 500 instead, while set. */
+let failing: string | null = null;
 
 const ISO = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})$/;
 /** JSON as sent, with each date-time as its instant. */
@@ -389,6 +410,9 @@ beforeAll(async () => {
       .map((o) => ({ o, r: new URL(o.upstream, u.origin) }))
       .filter(({ r }) => u.pathname.endsWith(r.pathname) && [...r.searchParams].every(([k, v]) => u.searchParams.get(k) === v))
       .sort((a, b) => [...b.r.searchParams].length - [...a.r.searchParams].length)[0]?.o;
+    if (hit && failing === hit.upstream) {
+      return new Response(JSON.stringify({ error: 'upstream failure' }), { status: 500, headers: { 'content-type': 'application/json' } });
+    }
     return new Response(JSON.stringify(hit ? hit.body : { error: \`no recording for \${u.pathname}\${u.search}\` }), {
       status: hit ? 200 : 404,
       headers: { 'content-type': 'application/json' },
@@ -409,5 +433,19 @@ describe('${mfe} BFF — the connector returns what the backends sent', () => {
     expect(wire(answer)).toEqual(wire(op.expected));
   });
 });
-`;
+${source.failures ? FAILURES : ''}`;
 }
+
+/** The spec variant's second half: an upstream failure is an error the client sees, not data. */
+const FAILURES = `
+describe('the connector reports an upstream failure as an error, not as data', () => {
+  afterEach(() => {
+    failing = null;
+  });
+  it.each(ops)('$call', async (op) => {
+    failing = op.upstream;
+    const result = await execute(op.document, op.variables);
+    expect((result.errors ?? []).length).toBeGreaterThan(0);
+  });
+});
+`;

@@ -96,13 +96,13 @@ describe('codegen ↔ platform contract pin', () => {
     const spec = files.find((f) => f.path.endsWith(path.join('platform', 'base-mfe', 'mfe.test.ts')));
     expect(spec).toBeDefined();
 
+    // The conformance suite (ADR-129 §10) renders each domain capability from its DOMAIN list.
+    const domain = JSON.parse(/const DOMAIN: string\[\] = (\[.*\]);/.exec(spec!.content)?.[1] ?? 'null') as string[];
+    expect(domain).toEqual(['PlayGame']);
     for (const name of PLATFORM_CAPABILITIES) {
-      expect(spec!.content).not.toContain(`should call ${name}() and return an object`);
-      expect(spec!.content).not.toContain(
-        `should call ${PLATFORM_CAPABILITY_SPECS[name].manifestKey}() and return an object`
-      );
+      expect(domain).not.toContain(name);
+      expect(domain).not.toContain(PLATFORM_CAPABILITY_SPECS[name].manifestKey);
     }
-    expect(spec!.content).toContain('should call PlayGame() and return an object');
   });
 
   it('applies the same classification to the Angular variant', async () => {
@@ -129,9 +129,11 @@ describe('codegen ↔ platform contract pin', () => {
     expect(mfe).toBeDefined();
     expect(spec).toBeDefined();
 
+    const domain = JSON.parse(/const DOMAIN: string\[\] = (\[.*\]);/.exec(spec!.content)?.[1] ?? 'null') as string[];
+    expect(domain).toEqual(['PlayGame']);
     for (const name of PLATFORM_CAPABILITIES) {
       expect(mfe!.content).not.toContain(`${PLATFORM_CAPABILITY_SPECS[name].manifestKey}Outputs`);
-      expect(spec!.content).not.toContain(`should call ${name}() and return an object`);
+      expect(domain).not.toContain(name);
     }
   });
 
