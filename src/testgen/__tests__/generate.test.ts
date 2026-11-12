@@ -121,6 +121,7 @@ describe('generateTests', () => {
         'src/features/DockingBoard/__characterization__/DockingBoard.json',
         'e2e/characterization.spec.ts',
         'e2e/characterization/baselines/tour-0-DockingBoard.png',
+        'e2e/packs/DockingBoard.json',
         'playwright.characterization.config.ts',
         'src/platform/bff/__tests__/contract.test.ts',
         'src/platform/bff/contract/connector.contract.ts',

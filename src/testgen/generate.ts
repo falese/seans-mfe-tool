@@ -31,6 +31,7 @@ import { planContracts, upstreamRequests, type ContractPlan, type RecordedRespon
 import { aloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from './emit';
 import { GENERATED_MARK, RECORDED_NETWORK } from './harness';
 import { planTests, type Evidence, type EvidenceRequest, type EvidenceStep, type TestPlan, type TestTarget } from './plan';
+import { planPacks } from './pack';
 import { baselinePng } from './png';
 
 export interface GenerateOptions {
@@ -385,6 +386,10 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
         baselines += 1;
       }
     }
+  }
+  // §12 — each capability's pack, for any host that composes it (test:run).
+  for (const pack of planPacks(plan)) {
+    await out.write(`e2e/packs/${pack.capability}.json`, json({ _comment: `${GENERATED_MARK}. Run by test:run in a composition.`, ...pack }));
   }
   await out.write('e2e/characterization/evidence.json', json(journeyEvidence(plan, responses, specs, gateway, hoists)));
   await out.write('e2e/characterization.spec.ts', journeySpecSource(plan.mfe, plan.app));

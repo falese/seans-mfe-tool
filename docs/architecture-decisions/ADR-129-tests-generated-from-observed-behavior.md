@@ -269,8 +269,41 @@ new MFEs now get in `package.json`.
 The generated tests read their data files with `fs` rather than importing JSON: an Angular
 spec tsconfig does not allow JSON modules.
 
+### 12. A composition's tests, run together: `test:run`
+
+Each MFE owns its tests (§1–§11). A composition is the control plane's `rules.json`
+(ADR-083): for each action, which MFE's capability goes into which slot. `test:run <project>`
+reads it and runs, in one report:
+
+1. **Each MFE's own suites**, in its own directory, from the composition's `mfes:` list:
+   `npm test`'s Jest (conformance, alone, provider contract, its developer's tests), then its
+   connector contracts after a `mesh build`. A placement with no directory there (a second
+   build, another project's MFE) is listed, not guessed at.
+2. **Every action, fired in the running shell** the way the platform delivers one: posted to
+   the daemon, which relays it to the connected shells. The root action first, until the root
+   placement is there. Each placement is checked to mount in its slot, found by its boundary
+   stamp (#408), with the slot's own `data-slot-state` as the verdict. When one does not mount,
+   its remote entry is probed, so a remote that is not served (no answer, an error, or a dev
+   server's HTML fallback) reads as the environment and not as a defect in the MFE.
+3. **Each placed capability's pack, inside its slot.** `test:generate` writes
+   `e2e/packs/<Capability>.json`: the capability's recorded states, cut loose from the page they
+   were recorded on. A case starts where a journey first shows the capability, since how the page got
+   there is the host's business, and keeps each step while the capability stays on screen. The run
+   performs each step inside the slot, on the MFE's recorded responses (answered by origin and
+   body) and recorded clock, and checks the text after it. A step whose control is not inside
+   the capability (the standalone page's own tabs) is skipped when it changed nothing the
+   capability shows, and fails otherwise.
+
+Add an MFE to the composition, or move a capability to another slot, and the aggregate follows:
+nothing in the run names an MFE. A placed capability with no pack is listed as mounted but not
+behaviour-checked. Composed cases check text, not pixels: a slot's layout is the host's, so the
+per-capability baselines stay in each MFE's own journey spec. The report is
+`<project>/test-results/test-run/report.{md,json}`, and the command fails when any tier does.
+
 ## Boundaries
 
+- `test:run`'s composed tier needs the fleet running (the shell, the daemon, every remote).
+  It checks a composition on the machine it runs on; CI runs it where the fleet is up.
 - Only captured behaviour is specified. A state no journey reached has no test, and `TESTS.md`
   says so. Coverage is the journeys'.
 - Alone tests render a capability with no host. They prove what its own code and its data show,

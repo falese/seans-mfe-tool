@@ -129,6 +129,8 @@
     "e2e/characterization/baselines/crawl-032-3-PassengerManifest.png": "1aea46caf73e38af8e462fc8602c531c166a5aebd3684dcc545907c7d49942d7",
     "e2e/characterization/baselines/crawl-032-4-PassengerManifest.png": "203ac26c4ae19009ead07c34a8ed3361884ff13c6756d6faa5ee64c808dd774e",
     "e2e/characterization/evidence.json": "3061f50c8c2b00255b6c6f8ac5297854e55a1bd2c16605536f60ca9c3734e789",
+    "e2e/packs/PassengerManifest.json": "1bd7c86c332af957f2793e2f8b64173040611b677f72e037b4e7a1af2eba6d02",
+    "e2e/packs/VesselRegistry.json": "85446d8147c7ee37f09341b26a1139ddc1ea692a311af2c7626405cb64e593eb",
     "playwright.characterization.config.ts": "c0932e80aff0fa0ecdad1b42c5f38544a0396503eed576e0fb36472e28e04691",
     "src/__smt__/recorded-network.ts": "54c184b837c5c6df9ec0f1f90f3c640bc021df244c98dd341fcba8b473b84f8a",
     "src/__smt__/recorded.json": "2fd221f35dd09a8fcf2e4b661a303a1937964741f9da48aa3b90887dad1949ee",

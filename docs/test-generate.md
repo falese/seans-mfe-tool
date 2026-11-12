@@ -105,6 +105,36 @@ SMT_TARGET_URL=http://localhost:5199 npm run test:e2e    # the composed shell
 When the page carries the `data-smt-capability` stamps (#408), text checks are scoped to each
 capability's slot. On the monolith, which has none, they read the whole page.
 
+## A composition's tests, together
+
+Each MFE's tests run in its own CI. `test:run` runs every MFE of a composition together,
+from the control plane's `rules.json`:
+
+```bash
+examples/meridian-station/scripts/dev-up.sh            # the shell, the daemon, every remote
+node bin/run.js test:run examples/meridian-station     # --suites unit,contract,composed
+```
+
+It runs each MFE's `npm test` and connector contracts, then fires every action in the running
+shell, checks each placement mounts in its slot, and runs each placed capability's pack
+(`e2e/packs/<Capability>.json`, written by `test:generate`) inside that slot, on the MFE's
+recorded data and clock. The report is `<project>/test-results/test-run/report.md`.
+
+On meridian-station (10 MFEs, 16 actions), in four minutes:
+
+| Tier | Result |
+|---|---|
+| Each MFE's Jest | 459 passed, 9 MFEs |
+| Connector contracts | 246 passed, 7 BFFs |
+| Placements mounted | 21 of 24 |
+| Arrivals' packs, in their slots | 23 of 23 cases |
+
+The three that did not mount are not served in a plain `dev-up.sh`: abc-kids' flappy (another
+fleet's remote), the docking simulator, and crew's wasm build, which needs the Rust toolchain.
+The report says so for each, quoting the remote entry or the slot's own error, so an environment gap
+does not read as a regression. Placements whose MFE has no pack yet are listed as mounted but
+not behaviour-checked. Record one with `test:generate`.
+
 ## Your files
 
 Everything it writes is the MFE's own. `.smt/tests.json` records what was written; a re-run
@@ -161,6 +191,8 @@ steps, then proposed, approved, scaffolded and ported with no edits, then `test:
   cover it.
 - **jsdom is not a browser.** A capability that needs WebGL or real layout may not render alone.
   Its alone test then fails, honestly, and the journey spec is the one that holds it.
+- **Composed checks are text, not pixels.** A slot's layout is the host's. Each MFE's own
+  journey spec holds its per-capability baselines.
 - **Reads only.** Writes are not contract-tested: replaying a write against a stub proves nothing
   about it.
 - **Baselines belong to a machine.** Fonts and rasterisation differ between machines. Capture

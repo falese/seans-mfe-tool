@@ -27,6 +27,7 @@ export type {
 export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
 import type { MutatingResult } from '@seans-mfe/contracts';
 import type { ProposalStatus } from '@seans-mfe/decompose';
+import type { RunReport } from '../testgen/run';
 
 // ---------------------------------------------------------------------------
 // api
@@ -568,4 +569,12 @@ export interface TestCrawlResult {
   journeys: number;
   /** True when --max ended the crawl before every control was tried. */
   truncated: boolean;
+}
+
+/** test:run: a composition's MFEs' tests, run together (ADR-129 §12). */
+export interface TestRunResult {
+  project: string;
+  ok: boolean;
+  report: { json: string; markdown: string };
+  summary: RunReport;
 }
