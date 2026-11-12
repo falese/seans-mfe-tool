@@ -32,7 +32,8 @@
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Container)`, expected a ReactNode. at Container (<src>) at StandaloneApp (<src>)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(ButtonBase)`, expected a ReactNode. at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
-      ]
+      ],
+      "props": {}
     },
     {
       "name": "crawl-000",
@@ -48,7 +49,8 @@
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Box)`, expected a ReactNode. at Box (<src>) at StandaloneApp (<src>)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Container)`, expected a ReactNode. at Container (<src>) at StandaloneApp (<src>)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(ButtonBase)`, expected a ReactNode. at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
-      ]
+      ],
+      "props": {}
     }
   ]
 }

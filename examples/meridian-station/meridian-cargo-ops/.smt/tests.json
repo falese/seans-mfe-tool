@@ -19,16 +19,18 @@
     "e2e/characterization/baselines/crawl-006-0-CargoManifest.png": "81ce58c7e09a1488e718bba529c29aed1054f00d3b8b26efc0303866075af8fe",
     "e2e/characterization/baselines/crawl-006-1-HazardSummary.png": "88ce2ca5527247cf2bf0c3f6a1a503c68006a2e0c33721301e0a857c90cc1268",
     "e2e/characterization/baselines/crawl-006-2-HazardSummary.png": "88ce2ca5527247cf2bf0c3f6a1a503c68006a2e0c33721301e0a857c90cc1268",
-    "e2e/characterization/evidence.json": "38745492dc29688325f523c4844cdc25a6e48298d7d6fae8fa4bff6c7c03280e",
-    "e2e/packs/CargoManifest.json": "289a5f20dd9eab53f03d0f5d6372ca6edd15bbfcc550d896eeaa7155786d4a32",
-    "e2e/packs/HazardSummary.json": "90453f24a3e09c0b8142b38966bcb9f97276e8e8f463a2b08da371dbe095715a",
+    "e2e/characterization/evidence.json": "bf0b1478a188eb53a82b3928598591be6deb93d5929ff2313f64ac958c86eeb3",
+    "e2e/packs/CargoManifest.json": "1c45e56e3f95ec2440fc3a4bbddf30538a544f3268a317fe3abdeb74fa5eb1d4",
+    "e2e/packs/HazardSummary.json": "a5840b750c79caf27ce998ccdafc7e616f1fa22a3442f9024be386452b942dbb",
     "playwright.characterization.config.ts": "4d363bb40270ca688542b1b1460a00c013f044f9d3a2c39067528cc06b0c6db6",
     "src/__smt__/recorded-network.ts": "54c184b837c5c6df9ec0f1f90f3c640bc021df244c98dd341fcba8b473b84f8a",
     "src/__smt__/recorded.json": "d5f280ef0e8944113d7cd2bbf44e8a7a8ad90e5caf4ac8db45a40d1f4fc5015c",
+    "src/features/CargoManifest/CargoManifest.characterization.test.ts": "4ae65f7b18e99338446647c27f8e1a4addf5bd89a44ee8dddeeed4587fd8be1a",
+    "src/features/HazardSummary/HazardSummary.characterization.test.ts": "e11d04b0b53702ea057036ffadab226e18d69f57e20181749bf948f2fcc9cffd",
     "src/platform/bff/__tests__/contract.test.ts": "a5f30619e4fff609dac9e2b27308acda8625b772d1c70fe43f9487e0b273aac0",
     "src/platform/bff/contract/connector.contract.ts": "f5f9f4c2dea175558830e433f4b8369cdf292c72ae4b16012b8ed4f1d9a38b7f",
-    "src/platform/bff/contract/recorded.json": "384cb13daf674e5629bdb35e3afc11d7f7bf788a95a252fd6952fe0c89c2a257",
+    "src/platform/bff/contract/recorded.json": "ba8a40cecb6917f55c2508ff16a48608a23dc7ab8bd7ee67d9eb7ebced0a7a46",
     "src/platform/bff/contract/schema-check.ts": "6bb6ed0bb495483c876c93b4a1d254d10452dad5dc807c0c05c6cd91290b0f3d",
-    "TESTS.md": "e3c149b0c9f549b523760e6b89740cbefd32278eb6ac0f7520bd03023fae420a"
+    "TESTS.md": "438fbebd18f017430d2e73d3ae66c0f8d5eb81bb9504727637d8b0858b504c9a"
   }
 }

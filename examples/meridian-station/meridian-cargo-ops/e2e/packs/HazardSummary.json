@@ -3,7 +3,7 @@
   "mfe": "meridian-cargo-ops",
   "capability": "HazardSummary",
   "app": "http://localhost:5180/",
-  "clock": "2026-11-12T17:58:00.000Z",
+  "clock": "2026-11-12T23:04:00.000Z",
   "cases": [
     {
       "name": "crawl-006",
@@ -26,7 +26,8 @@
           ]
         }
       ],
-      "knownConsole": []
+      "knownConsole": [],
+      "props": {}
     },
     {
       "name": "crawl-002",
@@ -37,7 +38,8 @@
         }
       ],
       "steps": [],
-      "knownConsole": []
+      "knownConsole": [],
+      "props": {}
     }
   ]
 }

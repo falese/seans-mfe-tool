@@ -20,7 +20,8 @@
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Box)`, expected a ReactNode. \n    at Box (http://localhost:5008/main.9c2fba17e49a0f7e.js:56154:60)\n    at StandaloneApp (http://localhost:5008/main.9c2fba17e49a0f7e.js:107571:73)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Container)`, expected a ReactNode. \n    at Container (http://localhost:5008/main.9c2fba17e49a0f7e.js:53906:19)\n    at StandaloneApp (http://localhost:5008/main.9c2fba17e49a0f7e.js:107571:73)",
         "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(ButtonBase)`, expected a ReactNode. \n    at ButtonBase (http://localhost:5008/main.9c2fba17e49a0f7e.js:8351:75)\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at Tab (http://localhost:5008/main.9c2fba17e49a0f7e.js:39630:76)\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at Tabs (http://localhost:5008/main.9c2fba17e49a0f7e.js:42548:75)\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at Box (http://localhost:5008/main.9c2fba17e49a0f7e.js:56154:60)\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at Box (http://localhost:5008/main.9c2fba17e49a0f7e.js:56154:60)\n    at div\n    at http://localhost:5008/main.9c2fba17e49a0f7e.js:803:54\n    at Container (http://localhost:5008/main.9c2fba17e49a0f7e.js:53906:19)\n    at StandaloneApp (http://localhost:5008/main.9c2fba17e49a0f7e.js:107571:73)"
-      ]
+      ],
+      "props": {}
     }
   ]
 }

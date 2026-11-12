@@ -3,7 +3,7 @@
   "mfe": "meridian-docking-control",
   "capability": "DockingBoard",
   "app": "http://localhost:5180/",
-  "clock": "2026-11-12T18:23:00.000Z",
+  "clock": "2026-11-12T23:05:00.000Z",
   "cases": [
     {
       "name": "crawl-004",

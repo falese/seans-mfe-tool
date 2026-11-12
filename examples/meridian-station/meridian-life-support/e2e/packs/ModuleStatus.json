@@ -3,7 +3,7 @@
   "mfe": "meridian-life-support",
   "capability": "ModuleStatus",
   "app": "http://localhost:5180/",
-  "clock": "2026-11-12T18:12:00.000Z",
+  "clock": "2026-11-12T23:06:00.000Z",
   "cases": [
     {
       "name": "crawl-008",
@@ -26,7 +26,8 @@
           ]
         }
       ],
-      "knownConsole": []
+      "knownConsole": [],
+      "props": {}
     },
     {
       "name": "crawl-002",
@@ -37,7 +38,8 @@
         }
       ],
       "steps": [],
-      "knownConsole": []
+      "knownConsole": [],
+      "props": {}
     }
   ]
 }
