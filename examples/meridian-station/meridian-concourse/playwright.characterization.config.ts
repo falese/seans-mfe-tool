@@ -6,7 +6,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: /characterization\.spec\.ts$/,
+  // Not *.spec.ts: every Jest default testMatch takes that, and a developer's Jest config is theirs.
+  testMatch: /characterization\.e2e\.ts$/,
   snapshotPathTemplate: '{testDir}/characterization/baselines/{arg}{ext}',
   workers: 1,
   timeout: 120_000,

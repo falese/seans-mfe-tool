@@ -1,5 +1,5 @@
 {
-  "POST /graphql": {
+  "POST http://localhost:5006/graphql": {
     "body": {
       "data": {
         "listDockings": [
@@ -179,7 +179,7 @@
     "mimeType": "application/json",
     "status": 200
   },
-  "POST /graphql #40f72c9a": {
+  "POST http://localhost:5006/graphql #40f72c9a": {
     "body": {
       "data": {
         "listDockings": [

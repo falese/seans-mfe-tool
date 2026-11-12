@@ -1,0 +1,64 @@
+# Crawled from http://localhost:5180/ by seans-mfe-tool test:crawl (ADR-129 §9): 4 state(s), 12 interaction(s).
+# One journey per interaction, each replayable from the start. Edit freely: change what is filled,
+# remove what is not worth testing, rename journeys. test:generate records these and writes the tests.
+journeys:
+  - name: crawl-000
+    steps:
+      - goto: /
+  - name: crawl-001
+    steps:
+      - goto: /
+      - click: role=tab[name="TelemetryDashboard"s]
+  - name: crawl-002
+    steps:
+      - goto: /
+      - click: role=tab[name="ModuleStatus"s]
+  - name: crawl-003
+    steps:
+      - goto: /
+      - click: role=tab[name="AlertsFeed"s]
+  - name: crawl-004
+    steps:
+      - goto: /
+      - click: role=tab[name="TelemetryDashboard"s]
+      - click: role=tab[name="TelemetryDashboard"s]
+  - name: crawl-005
+    steps:
+      - goto: /
+      - click: role=tab[name="TelemetryDashboard"s]
+      - click: role=tab[name="ModuleStatus"s]
+  - name: crawl-006
+    steps:
+      - goto: /
+      - click: role=tab[name="TelemetryDashboard"s]
+      - click: role=tab[name="AlertsFeed"s]
+  - name: crawl-007
+    steps:
+      - goto: /
+      - click: role=tab[name="ModuleStatus"s]
+      - click: role=tab[name="TelemetryDashboard"s]
+  - name: crawl-008
+    steps:
+      - goto: /
+      - click: role=tab[name="ModuleStatus"s]
+      - click: role=tab[name="ModuleStatus"s]
+  - name: crawl-009
+    steps:
+      - goto: /
+      - click: role=tab[name="ModuleStatus"s]
+      - click: role=tab[name="AlertsFeed"s]
+  - name: crawl-010
+    steps:
+      - goto: /
+      - click: role=tab[name="AlertsFeed"s]
+      - click: role=tab[name="TelemetryDashboard"s]
+  - name: crawl-011
+    steps:
+      - goto: /
+      - click: role=tab[name="AlertsFeed"s]
+      - click: role=tab[name="ModuleStatus"s]
+  - name: crawl-012
+    steps:
+      - goto: /
+      - click: role=tab[name="AlertsFeed"s]
+      - click: role=tab[name="AlertsFeed"s]

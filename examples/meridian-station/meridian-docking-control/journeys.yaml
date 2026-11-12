@@ -1,0 +1,83 @@
+# Crawled from http://localhost:5180/ by seans-mfe-tool test:crawl (ADR-129 §9): 4 state(s), 12 interaction(s).
+# One journey per interaction, each replayable from the start. Edit freely: change what is filled,
+# remove what is not worth testing, rename journeys. test:generate records these and writes the tests.
+journeys:
+  - name: crawl-000
+    steps:
+      - goto: /
+  - name: crawl-001
+    steps:
+      - goto: /
+      - click: role=tab[name="DockingBoard"s]
+  - name: crawl-002
+    steps:
+      - goto: /
+      - click: role=tab[name="BerthTile"s]
+  - name: crawl-003
+    steps:
+      - goto: /
+      - click: role=tab[name="TrafficLog"s]
+  - name: crawl-004
+    steps:
+      - goto: /
+      - click: role=tab[name="DockingBoard"s]
+      - click: role=tab[name="DockingBoard"s]
+  - name: crawl-005
+    steps:
+      - goto: /
+      - click: role=tab[name="DockingBoard"s]
+      - click: role=tab[name="BerthTile"s]
+  - name: crawl-006
+    steps:
+      - goto: /
+      - click: role=tab[name="DockingBoard"s]
+      - click: role=tab[name="TrafficLog"s]
+  - name: crawl-007
+    steps:
+      - goto: /
+      - click: role=tab[name="BerthTile"s]
+      - click: role=tab[name="DockingBoard"s]
+  - name: crawl-008
+    steps:
+      - goto: /
+      - click: role=tab[name="BerthTile"s]
+      - click: role=tab[name="BerthTile"s]
+  - name: crawl-009
+    steps:
+      - goto: /
+      - click: role=tab[name="BerthTile"s]
+      - click: role=tab[name="TrafficLog"s]
+  - name: crawl-010
+    steps:
+      - goto: /
+      - click: role=tab[name="TrafficLog"s]
+      - click: role=tab[name="DockingBoard"s]
+  - name: crawl-011
+    steps:
+      - goto: /
+      - click: role=tab[name="TrafficLog"s]
+      - click: role=tab[name="BerthTile"s]
+  - name: crawl-012
+    steps:
+      - goto: /
+      - click: role=tab[name="TrafficLog"s]
+      - click: role=tab[name="TrafficLog"s]
+  # Written by hand: BerthTile as the console places it, once per berth (rules.json passes berthId).
+  - name: berth-b1
+    steps:
+      - goto: /#/BerthTile?berthId=b1
+  - name: berth-b2
+    steps:
+      - goto: /#/BerthTile?berthId=b2
+  - name: berth-b3
+    steps:
+      - goto: /#/BerthTile?berthId=b3
+  - name: berth-b4
+    steps:
+      - goto: /#/BerthTile?berthId=b4
+  - name: berth-b5
+    steps:
+      - goto: /#/BerthTile?berthId=b5
+  - name: berth-b6
+    steps:
+      - goto: /#/BerthTile?berthId=b6
