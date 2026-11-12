@@ -1430,6 +1430,148 @@
     ]
   },
   {
+    "manifestDir": "meridian-station/meridian-arrivals",
+    "framework": "react",
+    "bundler": "rspack",
+    "preservedCapabilities": [
+      "PassengerManifest",
+      "VesselRegistry"
+    ],
+    "fileCount": 26,
+    "files": [
+      {
+        "path": "<cwd>/__mocks__/fileMock.js",
+        "overwrite": false,
+        "sha256": "8bc4a42f32769be0684c6d94bb734c1c49a9d551a8e9ea39cd43f242814c4720"
+      },
+      {
+        "path": "<cwd>/.dockerignore",
+        "overwrite": true,
+        "sha256": "d7e2e98d41493b2c5b355d75b69b93f0ceb593208a578e0da2477acfd3751253"
+      },
+      {
+        "path": "<cwd>/.gitignore",
+        "overwrite": true,
+        "sha256": "132c50ea04330f1adf017827f21a5ab9e3b1bb9d5ca1e0472f896be6522d3537"
+      },
+      {
+        "path": "<cwd>/.meshrc.yaml",
+        "overwrite": true,
+        "sha256": "3023af85cc663eecacb6605077bc7ce62bcf44acbdffc3d19104ea5b329fde68"
+      },
+      {
+        "path": "<cwd>/docker-compose.yaml",
+        "overwrite": false,
+        "sha256": "602d5128d398456cda123a23dea5014279432a5440cd6f62c8a88f11bf292b15"
+      },
+      {
+        "path": "<cwd>/Dockerfile",
+        "overwrite": false,
+        "sha256": "3f3f3522e5a78b25c9048d1291ff7cd5b391fb8e8def8905ba9fe796093c7904"
+      },
+      {
+        "path": "<cwd>/package.json",
+        "overwrite": false,
+        "sha256": "a9c1f3a39b8e75865010b57d3ed9923cf7cb7d77266a676b23ae8577c1a57768"
+      },
+      {
+        "path": "<cwd>/public/demo.html",
+        "overwrite": true,
+        "sha256": "6431a51e9c322fe3bf605425b2393a80531fc8f1f09da0ccdb8ded1a5966ae10"
+      },
+      {
+        "path": "<cwd>/public/favicon.ico",
+        "overwrite": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "<cwd>/public/index.html",
+        "overwrite": true,
+        "sha256": "4f43304991236605696423db929f0ace9f5e52fc84651f6b66aa56082bedc74a"
+      },
+      {
+        "path": "<cwd>/README.md",
+        "overwrite": false,
+        "sha256": "238119a76fdba32e538464beb17bdf5b8683ad79d9f4b45abad98b331d3d8238"
+      },
+      {
+        "path": "<cwd>/rspack.config.js",
+        "overwrite": false,
+        "sha256": "34d6e1885d331fa4a8124aca35e2c49e8abc9019b195daaf40175fb052bdd022"
+      },
+      {
+        "path": "<cwd>/server.ts",
+        "overwrite": true,
+        "sha256": "3d22ecba6f5c7e002d0fb5fdb2a5151c57fcf30afc3e2bece88c0c7f716a10d9"
+      },
+      {
+        "path": "<cwd>/src/App.tsx",
+        "overwrite": false,
+        "sha256": "5fa17583a57582399b1dc91d480a989e4c027a00e81aa50f9980f38b730edc09"
+      },
+      {
+        "path": "<cwd>/src/index.tsx",
+        "overwrite": false,
+        "sha256": "77227badf031e2b51f795d21f704fb04a4cdf0467459d54d1c4f55598c1120b9"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/bootstrap.ts",
+        "overwrite": true,
+        "sha256": "6b2b943b14c55728888864254a649e6fe932ea399fb36e5a96d0802d5c6212d0"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.test.ts",
+        "overwrite": true,
+        "sha256": "754fe8d1e933d3f272cac21647503538579a10a1ea0830ed849163d85471de7a"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/mfe.ts",
+        "overwrite": true,
+        "sha256": "3d25fa07640aab6083f844824575d9dac8c9889a350c04a7bb50305476395122"
+      },
+      {
+        "path": "<cwd>/src/platform/base-mfe/types.ts",
+        "overwrite": true,
+        "sha256": "dbb1298c7251010e7f715675fafa720cec910904cc622ab89d3661bd3a24e98d"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.test.ts",
+        "overwrite": true,
+        "sha256": "bbeb3415cc723532e565389862950d80d6271b99bde13fc0a8726eef123bab15"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/bff.ts",
+        "overwrite": true,
+        "sha256": "a33004933dde227b56e363cd4b1608c2086a80f8f6f9eced1d5fdd86311b15bd"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mesh-context.js",
+        "overwrite": true,
+        "sha256": "ed17f266824690c9b7efe4123ca4cece150b934947712cd7f1be5a20abf92802"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mock-switch.js",
+        "overwrite": true,
+        "sha256": "f7f18b1dca25addbbdd97f92508300b948c7147dbf2e78304be4bfa50b29c338"
+      },
+      {
+        "path": "<cwd>/src/platform/bff/mocks.json",
+        "overwrite": false,
+        "sha256": "5abeecdb84ddf4d9a1530339ac5e6dac1ec8cd53562ccd587440de87bb10333f"
+      },
+      {
+        "path": "<cwd>/src/remote.tsx",
+        "overwrite": true,
+        "sha256": "785e2832439d0a9c3bc11d111db1fd86b043f35b1cfeae0aa3e5ac63e4f59c98"
+      },
+      {
+        "path": "<cwd>/tsconfig.json",
+        "overwrite": false,
+        "sha256": "9d891efa5f6a45ecb983c7811602b8cf5b461195dbb9e6b4ebd76dfc220dc8ff"
+      }
+    ]
+  },
+  {
     "manifestDir": "meridian-station/meridian-cargo-ops",
     "framework": "angular",
     "bundler": "webpack",

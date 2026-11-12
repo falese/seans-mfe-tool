@@ -1,0 +1,12 @@
+# What decompose:capture drives meridian-arrivals through, standalone, for
+# test:generate (ADR-129). Re-capture and re-generate after changing either
+# capability or this file:
+#
+#   seans-mfe-tool decompose:capture http://localhost:5008 --journeys journeys.yaml --out <bundle>
+#   seans-mfe-tool test:generate . --evidence <bundle> --upstream
+journeys:
+  - name: arrivals-desk
+    steps:
+      - goto: /
+      - click: "role=tab[name=/PassengerManifest/]"
+      - click: "role=tab[name=/VesselRegistry/]"
