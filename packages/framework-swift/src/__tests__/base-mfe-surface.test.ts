@@ -87,6 +87,8 @@ const ABSENT: Record<string, string> = {
   assertCapabilityImplemented:
     'Swift uses fatalError in the open func default — a crash, not a typed error',
   constructor: 'MFEBase.init(identity:deps:) takes no manifest — ManifestMetadata replaces it',
+  reportedFailures:
+    'the generated native doLoad/doRender fail by throwing, never by returning a .error status, so their error phase runs and their after phase does not already (ADR-042, ADR-129 §10); a hand-written Swift subclass returning .error would not get this',
 };
 
 /** Member declarations on the class, skipping locals and object literals. */
