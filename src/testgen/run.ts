@@ -124,7 +124,12 @@ export interface RunReport {
   ok: boolean;
   mfes: MfeRun[];
   composed: {
-    actions: Array<{ stateKey: string; placements: Array<Placement & { mounted: boolean; error?: string }> }>;
+    actions: Array<{
+      stateKey: string;
+      placements: Array<Placement & { mounted: boolean; error?: string }>;
+      /** Console errors mounting it raised that neither the shell nor a placement's recording had. */
+      consoleErrors: string[];
+    }>;
     packs: PackRun[];
     /** Placed capabilities with no pack: their MFE has not been recorded. */
     unpacked: Array<{ mfe: string; capability: string }>;
@@ -210,7 +215,7 @@ const failed = (s: SuiteResult): boolean => !('skipped' in s) && s.failed > 0;
 export function runOk(report: Omit<RunReport, 'ok'>): boolean {
   if (report.mfes.some((m) => failed(m.unit) || failed(m.contract))) return false;
   if ('skipped' in report.composed) return true;
-  return report.composed.actions.every((a) => a.placements.every((p) => p.mounted)) && report.composed.packs.every((p) => p.cases.every((c) => c.ok));
+  return report.composed.actions.every((a) => a.placements.every((p) => p.mounted) && (a.consoleErrors ?? []).length === 0) && report.composed.packs.every((p) => p.cases.every((c) => c.ok));
 }
 
 export function renderRunReport(r: RunReport): string {
@@ -222,9 +227,10 @@ export function renderRunReport(r: RunReport): string {
     lines.push(`Not run: ${r.composed.skipped}.`);
     return `${lines.join('\n')}\n`;
   }
-  lines.push('| Action | Placements mounted |', '|---|---|');
-  for (const a of r.composed.actions) lines.push(`| \`${a.stateKey}\` | ${a.placements.filter((p) => p.mounted).length} / ${a.placements.length} |`);
+  lines.push('| Action | Placements mounted | New console errors |', '|---|---|---|');
+  for (const a of r.composed.actions) lines.push(`| \`${a.stateKey}\` | ${a.placements.filter((p) => p.mounted).length} / ${a.placements.length} | ${(a.consoleErrors ?? []).length} |`);
   for (const a of r.composed.actions) for (const p of a.placements.filter((x) => !x.mounted)) lines.push(`- ✗ \`${a.stateKey}\` → ${p.mfe} / ${p.capability} did not mount in \`${p.slot}\`${p.error ? `: ${p.error}` : ''}`);
+  for (const a of r.composed.actions) for (const e of a.consoleErrors ?? []) lines.push(`- ✗ \`${a.stateKey}\` raised a console error on mounting: ${e.split('\n')[0].slice(0, 200)}`);
   lines.push('', '### Capability packs, in their slots', '');
   for (const p of r.composed.packs) {
     const ok = p.cases.filter((c) => c.ok).length;

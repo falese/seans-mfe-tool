@@ -11,7 +11,7 @@ import { NetworkError } from '@seans-mfe/contracts';
 import { launchBrowser, type ChromiumLike } from '../design/dom-capture';
 import type { JourneyStep } from '../decompose/journeys';
 import type { RecordedResponse } from './contract';
-import type { CapabilityPack } from './pack';
+import { consoleKey, type CapabilityPack } from './pack';
 import { remoteServed, replayLookup, type Composition, type PackRun, type Placement, type RunReport } from './run';
 
 interface Locator {
@@ -40,6 +40,7 @@ interface Page {
   locator(selector: string): Locator;
   route(pattern: string, handler: (route: Route) => Promise<void>): Promise<void>;
   on(event: 'pageerror', handler: (e: Error) => void): void;
+  on(event: 'console', handler: (m: { type(): string; text(): string }) => void): void;
   clock: { setFixedTime(time: Date): Promise<void> };
   close(): Promise<void>;
 }
@@ -114,6 +115,20 @@ async function compose(page: Page, o: ComposedOptions, stateKey: string): Promis
   if (stateKey !== o.composition.root) await fireAction(o.daemonUrl, stateKey);
 }
 
+/** Every console error and uncaught page error a page raises, from now on. */
+function listen(page: Page): string[] {
+  const errors: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  page.on('pageerror', (e) => errors.push(String(e)));
+  return errors;
+}
+
+/** Errors not already accounted for by any of `known` (sets of `consoleKey`s). */
+const fresh = (errors: string[], ...known: Array<Set<string>>): string[] =>
+  errors.filter((e, i) => !known.some((k) => k.has(consoleKey(e))) && errors.findIndex((x) => consoleKey(x) === consoleKey(e)) === i);
+
 /** The first chunk of `expected` a text does not show, in order, whitespace aside; null when it shows all. */
 function missingText(pageText: string, expected: string): string | null {
   const page = pageText.replace(/\s+/g, '');
@@ -167,10 +182,19 @@ export async function runComposed(o: ComposedOptions, chromium?: ChromiumLike): 
   const timeout = o.mountTimeout ?? 20_000;
   const actions: Exclude<RunReport['composed'], { skipped: string }>['actions'] = [];
   const packs: PackRun[] = [];
+  // Console errors are reported once, at the first tier that sees them: the shell's own
+  // (the root action alone) are nobody's; an action's mount errors are the action's; what
+  // a pack case's steps raise beyond those is the case's. What a capability's recording
+  // already had is pinned, not new (characterization), as in its journey spec.
+  const shell = new Set<string>();
+  const mountErrors = new Map<string, Set<string>>();
+  const packFor = (p: Placement) => o.packs.find((x) => x.mfe === p.mfe && x.capability === p.capability);
+  const recorded = (ps: Placement[]) => new Set(ps.flatMap((p) => packFor(p)?.cases.flatMap((c) => c.knownConsole ?? []) ?? []));
   try {
-    // Every action: does each placement it makes mount in its slot?
+    // Every action: does each placement it makes mount in its slot? Root first.
     for (const a of o.composition.actions) {
       const page = await context.newPage();
+      const errors = listen(page);
       try {
         await compose(page, o, a.stateKey);
         const placements = [];
@@ -181,7 +205,10 @@ export async function runComposed(o: ComposedOptions, chromium?: ChromiumLike): 
           const why = !m.mounted && p.remoteEntryUrl ? await remoteServed(p.remoteEntryUrl) : null;
           placements.push({ ...p, ...m, ...(why ? { error: why } : {}) });
         }
-        actions.push({ stateKey: a.stateKey, placements });
+        const keys = new Set(errors.map(consoleKey));
+        if (a.stateKey === o.composition.root) for (const k of keys) shell.add(k);
+        mountErrors.set(a.stateKey, keys);
+        actions.push({ stateKey: a.stateKey, placements, consoleErrors: a.stateKey === o.composition.root ? [] : fresh(errors, shell, recorded(a.placements)) });
       } finally {
         await page.close();
       }
@@ -190,13 +217,12 @@ export async function runComposed(o: ComposedOptions, chromium?: ChromiumLike): 
     // Every placed capability with a pack: its cases, inside its slot, on its recorded data.
     for (const a of o.composition.actions) {
       for (const p of a.placements) {
-        const pack = o.packs.find((x) => x.mfe === p.mfe && x.capability === p.capability);
+        const pack = packFor(p);
         if (!pack) continue;
         const run: PackRun = { mfe: p.mfe, capability: p.capability, slot: p.slot, stateKey: a.stateKey, cases: [] };
         for (const c of pack.cases) {
           const page = await context.newPage();
-          const errors: string[] = [];
-          page.on('pageerror', (e) => errors.push(String(e)));
+          const errors = listen(page);
           try {
             await page.clock.setFixedTime(new Date(pack.clock));
             await page.route('**/*', async (route) => {
@@ -231,7 +257,8 @@ export async function runComposed(o: ComposedOptions, chromium?: ChromiumLike): 
               failure = await shows(slot, step.expect, 10_000);
               before = after;
             }
-            if (!failure && errors.length > 0) failure = `page error: ${errors[0]}`;
+            const raised = fresh(errors, shell, mountErrors.get(a.stateKey) ?? new Set(), new Set(c.knownConsole ?? []));
+            if (!failure && raised.length > 0) failure = `new console error: ${raised[0]}${raised.length > 1 ? ` (and ${raised.length - 1} more)` : ''}`;
             run.cases.push({ name: c.name, ok: failure === null, ...(failure ? { failure } : {}) });
           } catch (err) {
             run.cases.push({ name: c.name, ok: false, failure: err instanceof Error ? err.message.split('\n')[0] : String(err) });

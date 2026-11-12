@@ -3,7 +3,7 @@
   "mfe": "meridian-arrivals",
   "capability": "VesselRegistry",
   "app": "http://localhost:5008",
-  "clock": "2026-11-12T04:06:00.000Z",
+  "clock": "2026-11-12T12:09:00.000Z",
   "cases": [
     {
       "name": "crawl-001",
@@ -25,6 +25,13 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Tabs)`, expected a ReactNode. at Tabs (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Box)`, expected a ReactNode. at Box (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Container)`, expected a ReactNode. at Container (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(ButtonBase)`, expected a ReactNode. at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -35,7 +42,13 @@
           "text": "🛳️ Vessel Registry 8 vessels · 2 with a delinquent operator Registry Vessel Capacity Latest docking Operator Ledger VR-88213 Aurora Freight Nine 300 t DOCKED DCK-004021 Helios Cargo Lines GOOD ₢ 12,500.00 VR-77045 Cinder Hauler 850 t DOCKED DCK-004027 Vulcan Bulk Haulage DELINQUENT −₢ 21,500.00 VR-91102 Starlark 60 t DOCKED DCK-004025 Meridian Transit GOOD ₢ 8,900.00 VR-66320 Pale Horizon 280 t SCHEDULED DCK-004029 Helios Cargo Lines GOOD ₢ 12,500.00 VR-55871 Kestrel Run 90 t SCHEDULED DCK-004026 Quickstep Couriers GOOD ₢ 3,100.00 VR-49008 Iron Meridian 880 t DOCKED DCK-004022 Vulcan Bulk Haulage DELINQUENT −₢ 21,500.00 VR-83555 Nightjar 85 t SCHEDULED DCK-004028 Quickstep Couriers GOOD ₢ 3,100.00 VR-72410 Solace 65 t APPROACH DCK-004030 Meridian Transit GOOD ₢ 8,900.00"
         }
       ],
-      "steps": []
+      "steps": [],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Tabs)`, expected a ReactNode. at Tabs (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Box)`, expected a ReactNode. at Box (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(Container)`, expected a ReactNode. at Container (<src>) at StandaloneApp (<src>)",
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `ForwardRef(ButtonBase)`, expected a ReactNode. at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
+      ]
     }
   ]
 }

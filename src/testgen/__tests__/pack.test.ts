@@ -1,4 +1,4 @@
-import { planPacks } from '../pack';
+import { consoleKey, planPacks } from '../pack';
 import type { TestPlan } from '../plan';
 import type { JourneyStep } from '../../decompose/journeys';
 
@@ -18,7 +18,7 @@ const plan = {
       steps: [
         { id: 'crawl-005.0', action: { goto: '/' }, path: '/', capabilities: [cap('VesselRegistry', '8 vessels')], consoleErrors: [] },
         { id: 'crawl-005.1', action: { click: 'role=tab[name="Manifest"s]' }, path: '/', capabilities: [cap('PassengerManifest', 'Rosa Ivo')], consoleErrors: [] },
-        { id: 'crawl-005.2', action: { fill: { selector: 'role=searchbox[name="Search"s]', value: 'Ivo' } }, path: '/', capabilities: [cap('PassengerManifest', 'Ivo')], consoleErrors: [] },
+        { id: 'crawl-005.2', action: { fill: { selector: 'role=searchbox[name="Search"s]', value: 'Ivo' } }, path: '/', capabilities: [cap('PassengerManifest', 'Ivo')], consoleErrors: ['Warning: Each child in a list should have a unique "key" prop.\n    at Row (http://localhost:5008/main.4f1e.js:120:9)'] },
         { id: 'crawl-005.3', action: { click: 'role=tab[name="Vessels"s]' }, path: '/', capabilities: [cap('VesselRegistry', '8 vessels')], consoleErrors: [] },
       ],
     },
@@ -53,6 +53,11 @@ describe('planPacks', () => {
     expect(manifest?.cases[0].steps[0].expect).toEqual([{ region: 'PassengerManifest#0', text: 'Ivo' }]);
   });
 
+  it('carries the console errors its recording already had, masked: characterization pins them', () => {
+    expect(manifest?.cases[0].knownConsole).toEqual(['Warning: Each child in a list should have a unique "key" prop. at Row (<src>)']);
+    expect(manifest?.cases[1].knownConsole).toEqual([]);
+  });
+
   it('keeps one case per distinct sequence of steps', () => {
     const vessels = packs.find((p) => p.capability === 'VesselRegistry');
     expect(vessels?.cases.map((c) => c.steps.length)).toEqual([0]);
@@ -65,5 +70,11 @@ describe('planPacks', () => {
   it('never carries a goto: navigation is the host\'s', () => {
     const steps = packs.flatMap((p) => p.cases.flatMap((c) => c.steps.map((s) => s.action as JourneyStep)));
     expect(steps.some((s) => 'goto' in s)).toBe(false);
+  });
+});
+
+describe('consoleKey', () => {
+  it('masks sources and whitespace, so a rebuilt bundle\'s line numbers do not make an old error new', () => {
+    expect(consoleKey('TypeError: x is undefined\n   at f (http://localhost:5000/main.cf64.js:49245:14)')).toBe(consoleKey('TypeError: x is undefined at f (http://localhost:5000/main.aa01.js:7:1)'));
   });
 });

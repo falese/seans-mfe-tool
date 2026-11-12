@@ -167,6 +167,20 @@ describe('generateTests', () => {
     expect(await fs.readFile(test, 'utf8')).not.toContain('// mine');
   });
 
+  it('refuses a recording that attributed nothing to source, and writes and removes nothing', async () => {
+    await run();
+    const baseline = path.join(f.mfe, 'e2e/characterization/baselines/tour-0-DockingBoard.png');
+    // A production build: the page rendered, but no element maps to a component.
+    for (const name of await fs.readdir(path.join(f.evidence, 'journeys'))) {
+      const file = path.join(f.evidence, 'journeys', name);
+      const j = (await fs.readJson(file)) as { steps: Array<{ regions: unknown[] }> };
+      for (const step of j.steps) step.regions = [];
+      await fs.writeJson(file, j);
+    }
+    await expect(run()).rejects.toMatchObject({ code: 'NOTHING_ATTRIBUTED' });
+    expect(await fs.pathExists(baseline)).toBe(true);
+  });
+
   it('removes what it no longer generates, unless a developer changed it', async () => {
     await run();
     const baseline = path.join(f.mfe, 'e2e/characterization/baselines/tour-0-DockingBoard.png');

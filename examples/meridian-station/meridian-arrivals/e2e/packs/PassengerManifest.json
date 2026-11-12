@@ -3,7 +3,7 @@
   "mfe": "meridian-arrivals",
   "capability": "PassengerManifest",
   "app": "http://localhost:5008",
-  "clock": "2026-11-12T04:06:00.000Z",
+  "clock": "2026-11-12T12:09:00.000Z",
   "cases": [
     {
       "name": "crawl-026",
@@ -53,6 +53,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -103,6 +106,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -153,6 +159,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -203,6 +212,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -239,6 +251,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -278,6 +293,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -314,6 +332,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -353,6 +374,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -389,6 +413,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -428,6 +455,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -467,6 +497,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -503,6 +536,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -539,6 +575,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -578,6 +617,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -600,6 +642,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -625,6 +670,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -650,6 +698,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -675,6 +726,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -700,6 +754,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -725,6 +782,9 @@
             }
           ]
         }
+      ],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
       ]
     },
     {
@@ -735,7 +795,10 @@
           "text": "🧳 Passenger Manifest StationOS passengers · Harbormaster arrivals Clearance DCK-004025 · VR-91102 DOCKED 6 cleared · 1 flagged · 1 pending Rosa Delgado BUSINESS CLEARED Ken Watanabe ECONOMY CLEARED Fatima Al-Sayed STATEROOM CLEARED Marcus Boone ECONOMY FLAGGED Lena Novak ECONOMY CLEARED Yusuf Kamara BUSINESS CLEARED Ada Lindqvist ECONOMY PENDING Silas Ward ECONOMY CLEARED DCK-004030 · VR-72410 APPROACH 2 pending Owen Hale ECONOMY PENDING Mei Fong BUSINESS PENDING"
         }
       ],
-      "steps": []
+      "steps": [],
+      "knownConsole": [
+        "Warning: Failed %s type: %s%s prop Invalid prop `children` supplied to `TransitionGroup`, expected a ReactNode. at TransitionGroup (<src>) at TouchRipple (<src>) at button at <src> at ButtonBase (<src>) at <src> at Tab (<src>) at div at <src> at div at <src> at div at <src> at Tabs (<src>) at div at <src> at Box (<src>) at div at <src> at Box (<src>) at div at <src> at Container (<src>) at StandaloneApp (<src>)"
+      ]
     }
   ]
 }

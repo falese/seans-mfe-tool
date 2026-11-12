@@ -294,6 +294,13 @@ reads it and runs, in one report:
    the capability (the standalone page's own tabs) is skipped when it changed nothing the
    capability shows, and fails otherwise.
 
+**Console errors are reported once, at the first tier that sees them.** The errors raised
+composing the root action alone are the shell's own, and are never charged to an MFE. Mounting
+an action is charged with what it raises beyond those, and a pack case with what its steps raise
+beyond both. An error a capability's own recording already had (each case carries them, masked
+of sources as the journey spec masks them) is pinned, not new, as characterization pins
+everything else. Page errors count the same way.
+
 Add an MFE to the composition, or move a capability to another slot, and the aggregate follows:
 nothing in the run names an MFE. A placed capability with no pack is listed as mounted but not
 behaviour-checked. Composed cases check text, not pixels: a slot's layout is the host's, so the

@@ -36,15 +36,23 @@ function locator(selector: string, root: ParentNode = document): unknown {
   };
 }
 
+/** The current page's console: what the shell and its MFEs log, per scenario. */
+let consoleOf: Array<(m: { type(): string; text(): string }) => void> = [];
+const noise = { root: [] as string[], open: [] as string[], click: [] as string[] };
+const logError = (text: string) => consoleOf.forEach((h) => h({ type: () => 'error', text: () => text }));
+
 const page = () => ({
   goto: async () => {
     document.body.innerHTML = '';
+    consoleOf = consoleOf.slice(-1);
   },
   waitForLoadState: async () => undefined,
   waitForTimeout: async () => undefined,
   locator: (s: string) => locator(s),
   route: async () => undefined,
-  on: () => undefined,
+  on: (event: string, h: (m: { type(): string; text(): string }) => void) => {
+    if (event === 'console') consoleOf.push(h);
+  },
   clock: { setFixedTime: async () => undefined },
   close: async () => undefined,
 });
@@ -71,6 +79,7 @@ const composition: Composition = {
 function mount(stateKey: string): void {
   if (stateKey === 'm.root') {
     document.body.innerHTML = '<div data-smt-mfe="console" data-smt-capability="Console"><nav><button id="tab">Tabs</button></nav></div>';
+    noise.root.forEach(logError);
     return;
   }
   document.body.insertAdjacentHTML(
@@ -80,8 +89,10 @@ function mount(stateKey: string): void {
      </div>
      <div data-smt-mfe="broken" data-smt-capability="Thing" data-slot-state="error"><div role="alert">Failed to load module</div></div>`
   );
+  noise.open.forEach(logError);
   document.getElementById('flagged')?.addEventListener('click', () => {
     (document.getElementById('count') as HTMLElement).textContent = '2 vessels';
+    noise.click.forEach(logError);
   });
 }
 
@@ -89,6 +100,10 @@ const posted: string[] = [];
 beforeEach(() => {
   jest.useRealTimers();
   posted.length = 0;
+  consoleOf = [];
+  noise.root = [];
+  noise.open = [];
+  noise.click = [];
   global.fetch = jest.fn(async (_url: unknown, init?: { body?: string }) => {
     const m = JSON.parse(JSON.parse(init?.body ?? '{}').variables.m) as { payload: { stateKey: string } };
     posted.push(m.payload.stateKey);
@@ -98,12 +113,12 @@ beforeEach(() => {
 });
 
 const region = 'src/Registry.tsx#Registry';
-const pack = (steps: CapabilityPack['cases'][number]['steps']): CapabilityPack => ({
+const pack = (steps: CapabilityPack['cases'][number]['steps'], knownConsole: string[] = []): CapabilityPack => ({
   mfe: 'arrivals',
   capability: 'Registry',
   app: 'http://localhost:5008',
   clock: '2026-11-12T04:06:00.000Z',
-  cases: [{ name: 'crawl-000', expect: [{ region, text: 'Vessel Registry 8 vessels' }], steps }],
+  cases: [{ name: 'crawl-000', expect: [{ region, text: 'Vessel Registry 8 vessels' }], steps, knownConsole }],
 });
 
 describe('fireAction', () => {
@@ -157,5 +172,37 @@ describe('runComposed', () => {
       { mfe: 'console', capability: 'Console' },
       { mfe: 'broken', capability: 'Thing' },
     ]);
+  });
+
+  describe('console errors, each reported once, at the first tier that sees it', () => {
+    const flagged = [{ action: { click: '#flagged' }, expect: [{ region, text: 'Vessel Registry 2 vessels' }] }];
+
+    it('never blames an MFE for the shell\'s own: the root action alone is the baseline', async () => {
+      noise.root = ['Warning: Failed prop type: Invalid prop `children` supplied to `ThemeProvider`\n  at ThemeProvider (http://localhost:5000/main.cf64.js:49245:14)'];
+      const r = await runComposed(opts([pack(flagged)]), chromium);
+      expect(r.actions.map((a) => a.consoleErrors)).toEqual([[], []]);
+      expect(r.packs[0].cases[0]).toEqual({ name: 'crawl-000', ok: true });
+    });
+
+    it('reports an error raised by mounting an action against the action, not its cases', async () => {
+      noise.open = ['TypeError: Cannot read properties of undefined (reading \'berths\')'];
+      const r = await runComposed(opts([pack(flagged)]), chromium);
+      expect(r.actions[1].consoleErrors).toEqual(['TypeError: Cannot read properties of undefined (reading \'berths\')']);
+      expect(r.packs[0].cases[0].ok).toBe(true);
+    });
+
+    it('fails a case on an error its own steps raise', async () => {
+      noise.click = ['Error: flagged filter exploded'];
+      const r = await runComposed(opts([pack(flagged)]), chromium);
+      expect(r.packs[0].cases[0]).toEqual({ name: 'crawl-000', ok: false, failure: 'new console error: Error: flagged filter exploded' });
+    });
+
+    it('lets through what the capability\'s recording already had: characterization pins it', async () => {
+      noise.click = ['Warning: list key\n at Row (http://localhost:5008/main.aa.js:1:1)'];
+      noise.open = ['Warning: list key\n at Row (http://localhost:5008/main.aa.js:9:9)'];
+      const r = await runComposed(opts([pack(flagged, ['Warning: list key at Row (<src>)'])]), chromium);
+      expect(r.actions[1].consoleErrors).toEqual([]);
+      expect(r.packs[0].cases[0].ok).toBe(true);
+    });
   });
 });

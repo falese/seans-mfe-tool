@@ -82,7 +82,7 @@ describe('renderRunReport', () => {
       { mfe: 'docking-wasm', dir: null, unit: { skipped: 'no MFE directory: a second build of another MFE' }, contract: { skipped: 'no MFE directory: a second build of another MFE' } },
     ],
     composed: {
-      actions: [{ stateKey: 'meridian.open.arrivals', placements: [{ mfe: 'arrivals', capability: 'VesselRegistry', slot: 'console/main', mounted: true }] }],
+      actions: [{ stateKey: 'meridian.open.arrivals', placements: [{ mfe: 'arrivals', capability: 'VesselRegistry', slot: 'console/main', mounted: true }], consoleErrors: ['TypeError: berths is undefined\n  at Board (http://x/main.js:1:1)'] }],
       packs: [{ mfe: 'arrivals', capability: 'PassengerManifest', slot: 'console/status', stateKey: 'meridian.open.arrivals', cases: [{ name: 'crawl-012', ok: false, failure: 'PassengerManifest#0: "Nobody"' }] }],
       unpacked: [{ mfe: 'console', capability: 'StationConsole' }],
     },
@@ -95,5 +95,7 @@ describe('renderRunReport', () => {
     expect(md).toContain('| console | 30 / 0 | no BFF |');
     expect(md).toContain('- ✗ `meridian.open.arrivals` → arrivals / PassengerManifest in `console/status`, case crawl-012: PassengerManifest#0: "Nobody"');
     expect(md).toContain('console / StationConsole — no pack: run test:generate in it');
+    expect(md).toContain('| `meridian.open.arrivals` | 1 / 1 | 1 |');
+    expect(md).toContain('- ✗ `meridian.open.arrivals` raised a console error on mounting: TypeError: berths is undefined');
   });
 });

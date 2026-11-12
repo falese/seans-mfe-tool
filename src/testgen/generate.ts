@@ -24,7 +24,7 @@ import { createHash } from 'crypto';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
-import { ValidationError } from '@seans-mfe/contracts';
+import { BusinessError, ValidationError } from '@seans-mfe/contracts';
 import { bffOperations, readDecomposition, readSpecs, type Decomposition, type HoistRule, type OpenApiDocument } from '@seans-mfe/decompose';
 import { parseJourneys } from '../decompose/journeys';
 import { planContracts, upstreamRequests, type ContractPlan, type RecordedResponse } from './contract';
@@ -351,6 +351,17 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
   const manifest = yaml.load(await fs.readFile(manifestFile, 'utf8')) as Manifest;
   const doc = opts.proposalDir ? await readDecomposition(path.join(path.resolve(opts.proposalDir), 'decomposition.yaml')) : undefined;
   const { evidence, responses } = await readEvidence(evidenceDir);
+  // Steps were captured, yet no element mapped to a component: the page is a production
+  // build (no React debug source) or not the app. Generating from it would write an empty
+  // suite and remove the real one, so stop before anything is written.
+  const steps = evidence.journeys.flatMap((j) => j.steps);
+  if (steps.length > 0 && steps.every((s) => s.regions.length === 0)) {
+    throw new BusinessError(
+      `none of ${steps.length} captured steps attributed anything to source — record against a development build (React's debug source), not a production one; nothing was written`,
+      'NOTHING_ATTRIBUTED',
+      { evidence: evidenceDir, steps: steps.length }
+    );
+  }
   const plan = planTests(evidence, testTarget(manifest, doc));
   const out = await OwnedWriter.open(dir, opts.force ?? false);
   const warnings: string[] = [];

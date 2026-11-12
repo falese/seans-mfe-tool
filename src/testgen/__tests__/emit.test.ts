@@ -5,6 +5,7 @@
 import * as ts from 'typescript';
 import { aloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from '../emit';
 import { RECORDED_NETWORK } from '../harness';
+import { consoleKey } from '../pack';
 
 const files: Record<string, string> = {
   'alone.test.tsx': aloneTestSource('CargoManifest', 'http://localhost:5090'),
@@ -70,5 +71,13 @@ describe('generated sources', () => {
     expect(files['connector.contract.ts']).toContain('u.pathname.endsWith(r.pathname)');
     // Mesh adds the spec's default parameters, so a recording matches on the ones it was made with.
     expect(files['connector.contract.ts']).toContain('[...r.searchParams].every(([k, v]) => u.searchParams.get(k) === v)');
+  });
+});
+
+describe('the journey spec\'s console rule', () => {
+  it('is the composed run\'s: one error is one error in either tier', () => {
+    const src = files['journeys.spec.ts'].match(/function consoleKey\(text: string\): string \{\n([\s\S]*?)\n\}/)?.[1] ?? '';
+    const emitted = new Function('text', src) as (t: string) => string;
+    for (const t of ['TypeError: x\n  at f (http://localhost:5000/main.cf64.js:49245:14)', 'Warning: a  b']) expect(emitted(t)).toBe(consoleKey(t));
   });
 });

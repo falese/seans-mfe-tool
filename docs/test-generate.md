@@ -128,6 +128,14 @@ On meridian-station (10 MFEs, 16 actions), in four minutes:
 | Connector contracts | 246 passed, 7 BFFs |
 | Placements mounted | 21 of 24 |
 | Arrivals' packs, in their slots | 23 of 23 cases |
+| New console errors | 3, one per unserved remote |
+
+Console errors are reported once, at the first tier that sees them. The shell's own, raised
+composing the root action alone, are nobody's. An action is charged with what mounting it
+raises beyond those, and a case with what its steps raise beyond both. What a capability's
+recording already had is pinned, not new. Planting a `console.error` in arrivals' clearance
+filter failed exactly the 11 cases that use the filter, each naming the error, and left the
+other 12 green.
 
 The three that did not mount are not served in a plain `dev-up.sh`: abc-kids' flappy (another
 fleet's remote), the docking simulator, and crew's wasm build, which needs the Rust toolchain.
@@ -191,6 +199,9 @@ steps, then proposed, approved, scaffolded and ported with no edits, then `test:
   cover it.
 - **jsdom is not a browser.** A capability that needs WebGL or real layout may not render alone.
   Its alone test then fails, honestly, and the journey spec is the one that holds it.
+- **Record against a development build.** Regions are attributed to components through React's
+  debug source, which a production build drops. A recording that attributes nothing is refused
+  before anything is written, rather than replacing the suite with an empty one.
 - **Composed checks are text, not pixels.** A slot's layout is the host's. Each MFE's own
   journey spec holds its per-capability baselines.
 - **Reads only.** Writes are not contract-tested: replaying a write against a stub proves nothing

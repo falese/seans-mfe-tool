@@ -29,6 +29,8 @@ export interface PackCase {
   /** What the capability shows when it is first on screen. */
   expect: RegionExpectation[];
   steps: PackStep[];
+  /** Console errors its recording already had, by `consoleKey`: pinned, not new. */
+  knownConsole: string[];
 }
 
 export interface CapabilityPack {
@@ -40,6 +42,14 @@ export interface CapabilityPack {
   cases: PackCase[];
 }
 
+/**
+ * A console message with its sources masked: a rebuilt bundle moves line numbers and hashes,
+ * not the error. The same rule as the journey spec's (emit.ts).
+ */
+export function consoleKey(text: string): string {
+  return text.replace(/https?:\/\/[^\s)]+/g, '<src>').replace(/\s+/g, ' ').trim();
+}
+
 export function planPacks(plan: TestPlan): CapabilityPack[] {
   const byCapability = new Map<string, PackCase[]>();
   for (const journey of plan.journeys) {
@@ -49,16 +59,18 @@ export function planPacks(plan: TestPlan): CapabilityPack[] {
       const first = journey.steps.findIndex((_s, k) => on(k) !== undefined);
       if (first < 0) continue;
       const steps: PackStep[] = [];
+      const known = new Set(journey.steps[first].consoleErrors.map(consoleKey));
       for (let k = first + 1; k < journey.steps.length; k += 1) {
         const shown = on(k);
         const action = journey.steps[k].action;
         if (!shown || 'goto' in action) break;
         steps.push({ action, expect: shown.regions });
+        for (const e of journey.steps[k].consoleErrors) known.add(consoleKey(e));
       }
       const cases = byCapability.get(capability) ?? [];
       const key = JSON.stringify(steps.map((s) => s.action));
       if (!cases.some((c) => JSON.stringify(c.steps.map((s) => s.action)) === key)) {
-        cases.push({ name: journey.name, expect: on(first)?.regions ?? [], steps });
+        cases.push({ name: journey.name, expect: on(first)?.regions ?? [], steps, knownConsole: [...known] });
       }
       byCapability.set(capability, cases);
     }
