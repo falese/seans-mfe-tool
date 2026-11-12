@@ -66,7 +66,7 @@ so instead of hiding the row.
 | `meridian-cargo-ops/` | 5004 | Angular · the flagship split-document `CargoManifest` |
 | `meridian-crew-services/` | 5005 | React · StationOS + StellarLedger · **MCP-scaffolded** |
 | `meridian-concourse/` | 5006 | React · all three sources on one screen · **MCP-scaffolded** |
-| `meridian-arrivals/` | 5008 | React · Harbormaster vessels + StationOS passengers + StellarLedger accounts — the three resources no other MFE read · **tests generated** by `test:generate` (ADR-129); see its `TESTS.md`. Standalone only: not yet placed in the shell's composition |
+| `meridian-arrivals/` | 5008 | React · Harbormaster vessels + StationOS passengers + StellarLedger accounts — the three resources no other MFE read · **tests generated** by `test:generate` (ADR-129); see its `TESTS.md`. Opened from the console's **Arrivals Desk** card (`meridian.open.arrivals`) |
 | `packages/control-plane` registry / daemon | 4500 / 4504 | The platform's own dev-grade control plane, shared with abc-kids (in-memory registry). This fleet owns only `control-plane/rules.json` |
 | `apis/harbormaster-api` | 5101 | Generated · sqlite · snake_case, bare arrays, `X-Total-Count` |
 | `apis/stellar-ledger-api` | 5102 | Generated · mongodb · camelCase `{result, meta}`, integer cents |
