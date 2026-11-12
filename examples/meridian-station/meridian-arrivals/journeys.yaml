@@ -1,12 +1,25 @@
-# What decompose:capture drives meridian-arrivals through, standalone, for
-# test:generate (ADR-129). Re-capture and re-generate after changing either
-# capability or this file:
-#
-#   seans-mfe-tool decompose:capture http://localhost:5008 --journeys journeys.yaml --out <bundle>
-#   seans-mfe-tool test:generate . --evidence <bundle> --upstream
+# Crawled from http://localhost:5008 by seans-mfe-tool test:crawl (ADR-129 §9): 2 state(s), 4 interaction(s).
+# One journey per interaction, each replayable from the start. Edit freely: add fill/press steps,
+# remove what is not worth testing, rename journeys. test:generate records these and writes the tests.
 journeys:
-  - name: arrivals-desk
+  - name: crawl-000
     steps:
       - goto: /
-      - click: "role=tab[name=/PassengerManifest/]"
-      - click: "role=tab[name=/VesselRegistry/]"
+  - name: crawl-001
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-002
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-003
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-004
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - click: role=tab[name="📦 PassengerManifest"s]
