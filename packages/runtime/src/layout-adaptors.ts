@@ -193,6 +193,13 @@ interface MfContainer {
   get(module: string): Promise<() => RemoteModuleExports>;
 }
 
+/**
+ * The share scope a host that is not a webpack build offers its remotes. One object for
+ * the page's life: a container initialised once refuses a second, different one, so a
+ * fresh `{}` per mount let a remote mount once and never again.
+ */
+const hostShareScope: Record<string, unknown> = {};
+
 /* istanbul ignore next -- browser-only DOM glue; integration-covered by the shell's jsdom suite (App.test.tsx), untestable under jest's node environment */
 async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promise<MfContainer> {
   const globalScope = globalThis as unknown as Record<string, MfContainer | undefined>;
@@ -215,7 +222,7 @@ async function loadRemoteContainer(remoteEntryUrl: string, scope: string): Promi
   }
   const shareScope = typeof __webpack_share_scopes__ === 'object' && __webpack_share_scopes__
     ? __webpack_share_scopes__.default
-    : {};
+    : hostShareScope;
   await container.init(shareScope);
   return container;
 }

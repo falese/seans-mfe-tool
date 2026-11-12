@@ -8,7 +8,7 @@
 
 > **createModuleFederationAdaptor**(`options`): [`ExperienceAdaptor`](../interfaces/ExperienceAdaptor.md)
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:405](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L405)
+Defined in: [packages/runtime/src/layout-adaptors.ts:412](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L412)
 
 The module-federation adaptor, holding the shell's allow-list (ADR-124).
 

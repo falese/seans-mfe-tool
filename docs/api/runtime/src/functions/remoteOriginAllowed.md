@@ -8,7 +8,7 @@
 
 > **remoteOriginAllowed**(`remoteEntryUrl`, `allowedOrigins`, `pageOrigin`): `boolean`
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:364](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L364)
+Defined in: [packages/runtime/src/layout-adaptors.ts:371](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L371)
 
 Whether `remoteEntryUrl` is served from one of `allowedOrigins`, or from the
 page's own origin (ADR-124).
